@@ -332,7 +332,7 @@ def mode_list_checks():
                    + ty_color + " %-6s " + tty.normal
                    + "%s\n") % \
                   (check_plugin_name, what, title))
-        except Exception, e:
+        except Exception as e:
             console.error("ERROR in check %r: %s\n" % (check_plugin_name, e))
 
 
@@ -385,7 +385,7 @@ def mode_dump_agent(hostname):
         console.output(output)
         if has_errors:
             sys.exit(1)
-    except Exception, e:
+    except Exception as e:
         if cmk.debug.enabled():
             raise
         raise MKBailOut("Unhandled exception: %s" % e)

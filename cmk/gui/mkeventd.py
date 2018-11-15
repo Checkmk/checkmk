@@ -215,12 +215,12 @@ def query_ec_directly(query):
                 break
 
         return ast.literal_eval(response_text)
-    except SyntaxError, e:
+    except SyntaxError as e:
         raise MKGeneralException(
             _("Invalid response from event daemon: "
               "<pre>%s</pre>") % response_text)
 
-    except Exception, e:
+    except Exception as e:
         raise MKGeneralException(_("Cannot connect to event daemon via %s: %s") % (socket_path, e))
 
 
@@ -340,7 +340,7 @@ def event_rule_matches_non_inverted(rule_pack, rule, event):
 
     try:
         match_groups = match(rule.get("match"), event["text"], complete=False)
-    except Exception, e:
+    except Exception as e:
         return _("Invalid regular expression: %s") % e
     if match_groups == False:
         return _("The message text does not match the required pattern.")
@@ -397,7 +397,7 @@ def check_timeperiod(tpname):
             return _("The timeperiod %s is not known to the local monitoring core") % tpname
         elif int(answer) == 0:
             return _("The timeperiod %s is currently not active") % tpname
-    except Exception, e:
+    except Exception as e:
         if config.debug:
             raise
         return _("Cannot update timeperiod information for %s: %s") % (tpname, e)

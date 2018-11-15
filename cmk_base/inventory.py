@@ -81,7 +81,7 @@ def do_inv(hostnames):
                 hostname=hostname,
                 ipaddress=ipaddress,
                 do_status_data_inv=config.do_status_data_inventory_for(hostname))
-        except Exception, e:
+        except Exception as e:
             if cmk.debug.enabled():
                 raise
 
@@ -375,7 +375,7 @@ def _run_inventory_export_hooks(hostname, inventory_tree):
         try:
             func = inventory_plugins.inv_export[hookname]["export_function"]
             func(hostname, params, inventory_tree.get_raw_tree())
-        except Exception, e:
+        except Exception as e:
             if cmk.debug.enabled():
                 raise
             raise MKGeneralException("Failed to execute export hook %s: %s" % (hookname, e))

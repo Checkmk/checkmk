@@ -83,7 +83,7 @@ def remove_nonrelated_site_folders(effective_hosts):
     file_vars = {}
     try:
         execfile(cmk.paths.check_mk_config_dir + "/distributed_wato.mk", file_vars_g, file_vars)
-    except Exception, e:
+    except Exception as e:
         # Return on any error
         return
     our_site = file_vars.get("distributed_wato_site")

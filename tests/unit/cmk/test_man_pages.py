@@ -117,7 +117,7 @@ def test_manpage_catalog_headers():
     for name, path in man_pages.all_man_pages().items():
         try:
             parsed = man_pages._parse_man_page_header(name, path)
-        except Exception, e:
+        except Exception as e:
             if cmk.debug.enabled():
                 raise
             parsed = man_pages._create_fallback_man_page(name, path, e)

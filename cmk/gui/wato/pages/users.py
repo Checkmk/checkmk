@@ -128,7 +128,7 @@ class ModeUsers(WatoMode):
 
                 try:
                     job.start()
-                except background_job.BackgroundJobAlreadyRunning, e:
+                except background_job.BackgroundJobAlreadyRunning as e:
                     raise MKUserError(None,
                                       _("Another synchronization job is already running: %s") % e)
 

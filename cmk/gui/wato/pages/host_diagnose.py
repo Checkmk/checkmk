@@ -107,7 +107,7 @@ class ModeDiagHost(WatoMode):
         if html.var('_try'):
             try:
                 self._validate_diag_html_vars()
-            except MKUserError, e:
+            except MKUserError as e:
                 html.add_user_error(e.varname, e)
             return
 

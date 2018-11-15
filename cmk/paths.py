@@ -178,7 +178,7 @@ def _get_core_name():
         for l in open(os.path.join(omd_root, "etc/omd/site.conf")):
             if l.startswith("CONFIG_CORE='"):
                 return l.split("'")[1]
-    except IOError, e:
+    except IOError as e:
         # At least in test environment the file is not available. We only added this try/except for
         # this case. This should better be solved in a cleaner way.
         if e.errno == 2:

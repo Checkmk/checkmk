@@ -270,7 +270,7 @@ class ModeEditLDAPConnection(LDAPMode):
                     table.row()
                     try:
                         state, msg = test_func(connection, address)
-                    except Exception, e:
+                    except Exception as e:
                         state = False
                         msg = _('Exception: %s') % html.render_text(e)
                         logger.exception()
@@ -331,7 +331,7 @@ class ModeEditLDAPConnection(LDAPMode):
         try:
             ldap_users = connection.get_users()
             msg = _('Found no user object for synchronization. Please check your filter settings.')
-        except Exception, e:
+        except Exception as e:
             ldap_users = None
             msg = "%s" % e
             if 'successful bind must be completed' in msg:
@@ -360,7 +360,7 @@ class ModeEditLDAPConnection(LDAPMode):
         try:
             ldap_groups = connection.get_groups()
             msg = _('Found no group object for synchronization. Please check your filter settings.')
-        except Exception, e:
+        except Exception as e:
             ldap_groups = None
             msg = "%s" % e
             if 'successful bind must be completed' in msg:

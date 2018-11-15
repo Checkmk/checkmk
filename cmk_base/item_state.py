@@ -249,7 +249,7 @@ def continue_on_counter_wrap():
 def get_rate(user_key, this_time, this_val, allow_negative=False, onwrap=SKIP, is_rate=False):
     try:
         return _get_counter(user_key, this_time, this_val, allow_negative, is_rate)[1]
-    except MKCounterWrapped, e:
+    except MKCounterWrapped as e:
         if onwrap is RAISE:
             raise
         elif onwrap is SKIP:

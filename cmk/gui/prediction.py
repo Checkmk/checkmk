@@ -250,7 +250,7 @@ def get_rrd_data(hostname, service_description, varname, cf, fromtime, untiltime
 
     try:
         response = sites.live().query_row(query)[0]
-    except Exception, e:
+    except Exception as e:
         if config.debug:
             raise
         raise MKGeneralException("Cannot get historic metrics via Livestatus: %s" % e)

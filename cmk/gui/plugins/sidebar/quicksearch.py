@@ -169,9 +169,9 @@ class QuicksearchSnapin(SidebarSnapin):
 
         try:
             generate_results(q)
-        except MKException, e:
+        except MKException as e:
             html.show_error(e)
-        except Exception, e:
+        except Exception as e:
             logger.exception()
             if config.debug:
                 raise
@@ -492,7 +492,7 @@ class LivestatusQuicksearch(LivestatusSearchBase):
     def generate_dropdown_results(self):
         try:
             self._query_data()
-        except TooManyRowsError, e:
+        except TooManyRowsError as e:
             html.show_warning(e)
 
         self._evaluate_results()

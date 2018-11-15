@@ -149,7 +149,7 @@ def open_log(log_file_path, fallback_to=None):
     try:
         logfile = file(log_file_path, "a")
         logfile.flush()
-    except Exception, e:
+    except Exception as e:
         logger.exception("Cannot open log file '%s': %s", log_file_path, e)
 
         if fallback_to:

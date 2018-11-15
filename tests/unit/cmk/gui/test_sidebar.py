@@ -97,7 +97,7 @@ def test_user_config_move_snapin_before(mocker, move_id, before_id, result):
 
     try:
         move = user_config.get_snapin(move_id)
-    except KeyError, e:
+    except KeyError as e:
         if result is None:
             assert "does not exist" in "%s" % e
             return

@@ -1284,7 +1284,7 @@ class html(HTMLGenerator):
                 json_request = self.var("request", "{}")
                 request = json.loads(json_request)
                 request["request_format"] = "json"
-            except ValueError, e:  # Python3: json.JSONDecodeError
+            except ValueError as e:  # Python3: json.JSONDecodeError
                 raise MKUserError("request",
                                   _("Failed to parse JSON request: '%s': %s") % (json_request, e))
 

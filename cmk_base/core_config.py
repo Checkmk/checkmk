@@ -287,7 +287,7 @@ def do_update(core, with_precompile):
         if with_precompile:
             core.precompile()
 
-    except Exception, e:
+    except Exception as e:
         console.error("Configuration Error: %s\n" % e)
         if cmk.debug.enabled():
             raise
@@ -475,7 +475,7 @@ def _verify_cluster_address_family(hostname):
 def ip_address_of(hostname, family=None):
     try:
         return ip_lookup.lookup_ip_address(hostname, family)
-    except Exception, e:
+    except Exception as e:
         if config.is_cluster(hostname):
             return ""
         else:

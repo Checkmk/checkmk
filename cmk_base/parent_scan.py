@@ -168,7 +168,7 @@ def scan_parents_of(hosts, silent=False, settings=None):
                               stdout=subprocess.PIPE,
                               stderr=subprocess.STDOUT,
                               close_fds=True)))
-        except Exception, e:
+        except Exception as e:
             if cmk.debug.enabled():
                 raise
             procs.append((host, None, "ERROR: %s" % e))

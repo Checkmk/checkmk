@@ -92,7 +92,7 @@ def find_pid_and_configfile():
                         # another process as parent!
                     if os.path.exists(configfile):
                         return int(pid), user, configfile
-            except Exception, e:
+            except Exception as e:
                 if opt_debug:
                     raise
 
@@ -214,13 +214,13 @@ def find_apache_properties(nagiosuser, nagios_htdocs_dir):
                                                 dir + "/application/config/config.php"):
                                             result['pnphtdocsdir'] = dir
                                             result['pnptemplates'] = dir + "/templates"
-                                except Exception, e:
+                                except Exception as e:
                                     pass
                             if file_good:
                                 auth_names += new_auth_names
                                 auth_files += new_auth_files
 
-                        except Exception, e:
+                        except Exception as e:
                             pass
                     if len(auth_files) > 0:
                         nagios_htpasswd_file = auth_files[0]
@@ -614,7 +614,7 @@ try:
                 result['htpasswd_file'] = nagios_htpasswd_file
             if nagios_auth_name:
                 result['nagios_auth_name'] = nagios_auth_name
-        except Exception, e:
+        except Exception as e:
             sys.stderr.write("\033[1;41;35m Cannot determine Apache properties. \033[0m\n"
                              "Reason: %s\n" % e)
 
@@ -636,11 +636,11 @@ try:
             print "# %s" % descr
             print "# NOT DETECTED: %s" % var
 
-except Sorry, e:
+except Sorry as e:
     sys.stderr.write("\033[1;41;35m Sorry: %s \033[0m\n" % e.reason)
     sys.exit(1)
 
-except Exception, e:
+except Exception as e:
     if opt_debug:
         raise
     else:

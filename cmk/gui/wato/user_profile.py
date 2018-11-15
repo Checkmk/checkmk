@@ -222,7 +222,7 @@ def page_user_profile(change_pw=False):
                 login.set_auth_cookie(config.user.id)
 
             success = True
-        except MKUserError, e:
+        except MKUserError as e:
             html.add_user_error(e.varname, e)
     else:
         users = userdb.load_users()

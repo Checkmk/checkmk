@@ -217,7 +217,7 @@ def paint_perfometer(row):
         title, h = Perfometer(row).render()
         if title is None and h is None:
             return "", ""
-    except Exception, e:
+    except Exception as e:
         logger.exception()
         if config.debug:
             raise

@@ -133,7 +133,7 @@ class TCPDataSource(CheckMKAgentDataSource):
         except MKTerminate:
             raise
 
-        except socket.error, e:
+        except socket.error as e:
             if cmk.debug.enabled():
                 raise
             raise MKAgentError("Communication failed: %s" % e)
@@ -160,7 +160,7 @@ class TCPDataSource(CheckMKAgentDataSource):
                 output = self._decrypt_package(output[2:], encryption_settings["passphrase"])
             except ValueError:
                 raise MKAgentError("Unsupported protocol version: %s" % output[:2])
-            except Exception, e:
+            except Exception as e:
                 if encryption_settings["use_regular"] == "enforce":
                     raise MKAgentError("Failed to decrypt agent output: %s" % e)
                 else:
@@ -279,7 +279,7 @@ class TCPDataSource(CheckMKAgentDataSource):
                         return False
 
             return True
-        except Exception, e:
+        except Exception as e:
             if cmk.debug.enabled():
                 raise
             raise MKGeneralException(

@@ -97,7 +97,7 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
             output += self._fetch_ipmi_firmware_section(connection)
 
             return output
-        except Exception, e:
+        except Exception as e:
             if cmk.debug.enabled():
                 raise
 
@@ -125,7 +125,7 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
 
         try:
             sdr = ipmi_sdr.SDR(connection)
-        except NotImplementedError, e:
+        except NotImplementedError as e:
             self._logger.verbose("Failed to fetch sensor data: %r" % e)
             self._logger.debug("Exception", exc_info=e)
             return ""

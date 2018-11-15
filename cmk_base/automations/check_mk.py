@@ -706,7 +706,7 @@ class AutomationDeleteHosts(Automation):
 
         try:
             ds_directories = os.listdir(cmk.paths.data_source_cache_dir)
-        except OSError, e:
+        except OSError as e:
             if e.errno == 2:
                 ds_directories = []
             else:
@@ -716,7 +716,7 @@ class AutomationDeleteHosts(Automation):
             filename = "%s/%s/%s" % (cmk.paths.data_source_cache_dir, data_source_name, hostname)
             try:
                 os.unlink(filename)
-            except OSError, e:
+            except OSError as e:
                 if e.errno == 2:
                     pass
                 else:
@@ -807,7 +807,7 @@ class AutomationRestart(Automation):
                 except ImportError:
                     pass
 
-            except Exception, e:
+            except Exception as e:
                 if backup_path:
                     os.rename(backup_path, objects_file)
                 if cmk.debug.enabled():
@@ -834,7 +834,7 @@ class AutomationRestart(Automation):
                     "Configuration for monitoring core is invalid. Rolling back. "
                     "The broken file has been copied to \"%s\" for analysis." % broken_config_path)
 
-        except Exception, e:
+        except Exception as e:
             if backup_path and os.path.exists(backup_path):
                 os.remove(backup_path)
             if cmk.debug.enabled():
@@ -946,7 +946,7 @@ class AutomationGetCheckInformation(Automation):
                     "service_description", "%s")
                 check_infos[check_plugin_name]["snmp"] = cmk_base.check_utils.is_snmp_check(
                     check_plugin_name)
-            except Exception, e:
+            except Exception as e:
                 if cmk.debug.enabled():
                     raise
                 raise MKAutomationError(
@@ -1053,7 +1053,7 @@ class AutomationScanParents(Automation):
             gateways = cmk_base.parent_scan.scan_parents_of(
                 hostnames, silent=True, settings=settings)
             return gateways
-        except Exception, e:
+        except Exception as e:
             raise MKAutomationError("%s" % e)
 
 
@@ -1138,7 +1138,7 @@ class AutomationDiagHost(Automation):
                     p = subprocess.Popen(['traceroute', family_flag, '-n', ipaddress],
                                          stdout=subprocess.PIPE,
                                          stderr=subprocess.STDOUT)
-                except OSError, e:
+                except OSError as e:
                     if e.errno == 2:
                         return 1, "Cannot find binary <tt>traceroute</tt>."
                     else:
@@ -1221,7 +1221,7 @@ class AutomationDiagHost(Automation):
             else:
                 return 1, "Command not implemented"
 
-        except Exception, e:
+        except Exception as e:
             if cmk.debug.enabled():
                 raise
             return 1, str(e)
@@ -1308,7 +1308,7 @@ class AutomationActiveCheck(Automation):
             output = output.split("|", 1)[0]  # Drop performance data
             return status, output
 
-        except Exception, e:
+        except Exception as e:
             if cmk.debug.enabled():
                 raise
             return 3, "UNKNOWN - Cannot execute command: %s" % e
@@ -1378,14 +1378,14 @@ class AutomationGetAgentOutput(Automation):
                     try:
                         for oid, value in snmp.walk_for_export(access_data, oid):
                             lines.append("%s %s\n" % (oid, value))
-                    except Exception, e:
+                    except Exception as e:
                         if cmk.debug.enabled():
                             raise
                         success = False
                         output += "OID '%s': %s\n" % (oid, e)
 
                 info = "".join(lines)
-        except Exception, e:
+        except Exception as e:
             success = False
             output = "Failed to fetch data from %s: %s\n" % (hostname, e)
             if cmk.debug.enabled():

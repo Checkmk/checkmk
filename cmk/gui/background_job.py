@@ -261,7 +261,7 @@ class BackgroundProcess(multiprocessing.Process):
 
         try:
             func_ptr(*args, **kwargs)
-        except Exception, e:
+        except Exception as e:
             logger = job_interface.get_logger()
             logger.error("Exception in background function:\n%s" % (traceback.format_exc()))
             job_interface.send_exception(_("Exception: %s") % (e))
@@ -409,7 +409,7 @@ class BackgroundJob(object):
     def _delete_work_dir(self):
         try:
             shutil.rmtree(self._work_dir)
-        except OSError, e:
+        except OSError as e:
             if e.errno == 2:  # No such file or directory
                 pass
             else:
@@ -523,7 +523,7 @@ class BackgroundJob(object):
             p = self._background_process_class(job_parameters)
             p.start()
             self._jobstatus.update_status({"pid": p.pid})
-        except Exception, e:
+        except Exception as e:
             self._logger.error("Error while starting subprocess: %s" % e)
         os._exit(0)
 

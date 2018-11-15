@@ -417,7 +417,7 @@ def do_login():
             else:
                 userdb.on_failed_login(username)
                 raise MKUserError(None, _('Invalid credentials.'))
-        except MKUserError, e:
+        except MKUserError as e:
             html.add_user_error(e.varname, e)
             return "%s" % e
 

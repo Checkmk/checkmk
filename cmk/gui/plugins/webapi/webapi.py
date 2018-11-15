@@ -684,7 +684,7 @@ class APICallRules(APICallCollection):
                 try:
                     rule_vs.validate_datatype(value, "test_value")
                     rule_vs.validate_value(value, "test_value")
-                except MKException, e:
+                except MKException as e:
                     # TODO: The abstract MKException should never be instanciated directly
                     # Change this call site and make MKException an abstract base class
                     raise MKException("ERROR: %s. Affected Rule %r" % (str(e), rule))

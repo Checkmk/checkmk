@@ -91,7 +91,7 @@ def render_mkeventd_performance():
 
     try:
         entries = mkeventd_performance_entries(only_sites)
-    except Exception, e:
+    except Exception as e:
         html.show_error(e)
         return
 

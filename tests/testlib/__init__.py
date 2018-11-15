@@ -997,7 +997,7 @@ class WebSession(requests.Session):
         # Trying to workaround this by trying the problematic request a second time.
         try:
             response = func(url, **kwargs)
-        except requests.ConnectionError, e:
+        except requests.ConnectionError as e:
             if allow_retry and "Connection aborted" in "%s" % e:
                 response = func(url, **kwargs)
             else:
@@ -1295,7 +1295,7 @@ class CMKWebSession(WebSession):
                     "hostname": hostname,
                 }),
             })
-        except AssertionError, e:
+        except AssertionError as e:
             if "No such host" in "%s" % e:
                 return False
             else:
@@ -1344,7 +1344,7 @@ class CMKWebSession(WebSession):
                     "folder": folder_path,
                 }),
             })
-        except AssertionError, e:
+        except AssertionError as e:
             if "does not exist" in "%s" % e:
                 return False
             else:

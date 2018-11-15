@@ -256,7 +256,7 @@ def print_man_page_table():
     for name, path in sorted(all_man_pages().items()):
         try:
             table.append((name, _get_title_from_man_page(path)))
-        except MKGeneralException, e:
+        except MKGeneralException as e:
             sys.stderr.write("ERROR: %s" % e)
 
     tty.print_table(['Check type', 'Title'], [tty.bold, tty.normal], table)
@@ -278,7 +278,7 @@ def load_man_page_catalog():
     for name, path in all_man_pages().items():
         try:
             parsed = _parse_man_page_header(name, path)
-        except Exception, e:
+        except Exception as e:
             if cmk.debug.enabled():
                 raise
             parsed = _create_fallback_man_page(name, path, e)
@@ -503,7 +503,7 @@ def load_man_page(name):
                 current_variable, restofline = line.split(':', 1)
                 current_section.append((current_variable, restofline.lstrip()))
 
-        except Exception, e:
+        except Exception as e:
             raise MKGeneralException("Syntax error in %s line %d (%s).\n" % (path, lineno + 1, e))
 
     header = {}
@@ -552,7 +552,7 @@ class ManPageRenderer(object):
     def paint(self):
         try:
             self._paint_man_page()
-        except Exception, e:
+        except Exception as e:
             sys.stdout.write("ERROR: Invalid check manpage %s: %s\n" % (self.name, e))
 
     def _paint_man_page(self):

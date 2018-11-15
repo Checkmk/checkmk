@@ -113,7 +113,7 @@ def do_localize(args):
         try:
             f(lang)
             write_alias(alias)
-        except LocalizeException, e:
+        except LocalizeException as e:
             logger.error("%s" % e)
             sys.exit(1)
     else:

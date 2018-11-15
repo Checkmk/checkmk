@@ -43,7 +43,7 @@ def do_compress_history(args):
         try:
             logger.verbose("%s...", filename)
             compress_history_file(filename, filename + ".compressed")
-        except Exception, e:
+        except Exception as e:
             if cmk.debug.enabled():
                 raise
             raise MKBailOut("%s" % e)

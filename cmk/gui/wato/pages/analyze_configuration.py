@@ -288,7 +288,7 @@ class ModeAnalyzeConfig(WatoMode):
             except Queue.Empty:
                 time.sleep(0.5)  # wait some time to prevent CPU hogs
 
-            except Exception, e:
+            except Exception as e:
                 logger.exception()
                 html.show_error("%s: %s" % (site_id, e))
 

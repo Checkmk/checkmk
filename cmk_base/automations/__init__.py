@@ -76,13 +76,13 @@ class Automations(object):
 
             result = automation.execute(args)
 
-        except (MKAutomationError, MKTimeout), e:
+        except (MKAutomationError, MKTimeout) as e:
             console.error("%s\n" % cmk_base.utils.make_utf8("%s" % e))
             if cmk.debug.enabled():
                 raise
             sys.exit(1)
 
-        except Exception, e:
+        except Exception as e:
             if cmk.debug.enabled():
                 raise
             console.error("%s\n" % cmk_base.utils.make_utf8("%s" % e))

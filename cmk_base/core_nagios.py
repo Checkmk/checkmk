@@ -67,12 +67,12 @@ class NagiosCore(core_config.MonitoringCore):
                 create_config(tmp, hostnames=None)
                 os.rename(tmp.name, cmk.paths.nagios_objects_file)
 
-        except Exception, e:
+        except Exception as e:
             # In case an exception happens cleanup the tempfile created for writing
             try:
                 if tmp_path:
                     os.unlink(tmp_path)
-            except IOError, e:
+            except IOError as e:
                 if e.errno == errno.ENOENT:  # No such file or directory
                     pass
 
@@ -951,7 +951,7 @@ def precompile_hostchecks():
     for host in config.all_active_hosts():
         try:
             _precompile_hostcheck(host)
-        except Exception, e:
+        except Exception as e:
             if cmk.debug.enabled():
                 raise
             console.error("Error precompiling checks for host %s: %s\n" % (host, e))

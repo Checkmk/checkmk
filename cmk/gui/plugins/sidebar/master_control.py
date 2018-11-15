@@ -131,7 +131,7 @@ class MasterControlSnapin(SidebarSnapin):
 
             try:
                 _render_master_control_site(site_id)
-            except Exception, e:
+            except Exception as e:
                 logger.exception()
                 write_snapin_exception(e)
             finally:

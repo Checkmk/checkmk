@@ -111,7 +111,7 @@ def edit_dictionaries(dictionaries,
                         v = vs.from_html_vars(vp + name)
                         vs.validate_value(v, vp + name)
                         new_value[keyname][name] = v
-                    except MKUserError, e:
+                    except MKUserError as e:
                         messages.append("%s: %s" % (vs.title(), e))
                         html.add_user_error(e.varname, e)
 
@@ -121,17 +121,17 @@ def edit_dictionaries(dictionaries,
                     edited_value = entries.from_html_vars(keyname)
                     entries.validate_value(edited_value, keyname)
                     new_value[keyname].update(edited_value)
-                except MKUserError, e:
+                except MKUserError as e:
                     messages.append("%s: %s" % (entries.title() or _("Properties"), e))
                     html.add_user_error(e.varname, e)
-                except Exception, e:
+                except Exception as e:
                     messages.append("%s: %s" % (entries.title() or _("Properties"), e))
                     html.add_user_error(None, e)
 
             if validate and not html.has_user_errors():
                 try:
                     validate(new_value[keyname])
-                except MKUserError, e:
+                except MKUserError as e:
                     messages.append(e)
                     html.add_user_error(e.varname, e)
 
@@ -202,14 +202,14 @@ def edit_valuespec(vs,
             new_value = vs.from_html_vars(varprefix)
             vs.validate_value(new_value, varprefix)
 
-        except MKUserError, e:
+        except MKUserError as e:
             messages.append("%s: %s" % (vs.title(), e.message))
             html.add_user_error(e.varname, e.message)
 
         if validate and not html.has_user_errors():
             try:
                 validate(new_value)
-            except MKUserError, e:
+            except MKUserError as e:
                 messages.append(e.message)
                 html.add_user_error(e.varname, e.message)
 

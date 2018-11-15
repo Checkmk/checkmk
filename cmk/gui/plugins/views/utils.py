@@ -564,7 +564,7 @@ def get_perfdata_nth_value(row, n, remove_unit=False):
             while len(number) > 0 and not number[-1].isdigit():
                 number = number[:-1]
         return number
-    except Exception, e:
+    except Exception as e:
         return str(e)
 
 

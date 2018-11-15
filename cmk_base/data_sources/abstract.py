@@ -139,7 +139,7 @@ class DataSource(object):
         except MKTerminate:
             raise
 
-        except Exception, e:
+        except Exception as e:
             self._logger.verbose("ERROR: %s" % e)
             if cmk.debug.enabled():
                 raise
@@ -233,19 +233,19 @@ class DataSource(object):
         try:
             try:
                 os.makedirs(os.path.dirname(cachefile))
-            except OSError, e:
+            except OSError as e:
                 if e.errno == 17:  # File exists
                     pass
                 else:
                     raise
-        except Exception, e:
+        except Exception as e:
             raise MKGeneralException(
                 "Cannot create directory %r: %s" % (os.path.dirname(cachefile), e))
 
         self._logger.debug("Write data to cache file %s" % (cachefile))
         try:
             store.save_file(cachefile, self._to_cache_file(raw_data))
-        except Exception, e:
+        except Exception as e:
             raise MKGeneralException("Cannot write cache file %s: %s" % (cachefile, e))
 
     def _from_cache_file(self, raw_data):
@@ -416,7 +416,7 @@ class DataSource(object):
 
         try:
             os.makedirs(os.path.dirname(file_path))
-        except OSError, e:
+        except OSError as e:
             if e.errno == 17:  # File exists
                 pass
             else:

@@ -987,7 +987,7 @@ class BIJobManager(object):
             try:
                 check_aggregation_title_uniqueness(
                     g_bi_cache_manager.get_compiled_trees()["aggr_ref"])
-            except MKConfigError, e:
+            except MKConfigError as e:
                 error_info += str(e)
 
             g_bi_cache_manager.get_compiled_trees()["compiled_all"] = True

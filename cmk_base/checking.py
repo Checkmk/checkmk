@@ -294,7 +294,7 @@ def execute_check(multi_host_sections, hostname, ipaddress, check_plugin_name, i
         try:
             section_content = multi_host_sections.get_section_content(
                 hostname, ipaddress, section_name, for_discovery=False)
-        except MKParseFunctionError, e:
+        except MKParseFunctionError as e:
             x = e.exc_info()
             # re-raise the original exception to not destory the trace. This may raise a MKCounterWrapped
             # exception which need to lead to a skipped check instead of a crash
@@ -323,7 +323,7 @@ def execute_check(multi_host_sections, hostname, ipaddress, check_plugin_name, i
                                        cmk_base.check_utils.is_snmp_check(check_plugin_name))
         item_state.raise_counter_wrap()
 
-    except item_state.MKCounterWrapped, e:
+    except item_state.MKCounterWrapped as e:
         # handle check implementations that do not yet support the
         # handling of wrapped counters via exception on their own.
         # Do not submit any check result in that case:
@@ -333,7 +333,7 @@ def execute_check(multi_host_sections, hostname, ipaddress, check_plugin_name, i
     except MKTimeout:
         raise
 
-    except Exception, e:
+    except Exception as e:
         if cmk.debug.enabled():
             raise
         result = 3, cmk_base.crash_reporting.create_crash_dump(
@@ -651,7 +651,7 @@ def _open_checkresult_file():
         try:
             _checkresult_file_fd, _checkresult_file_path = \
                 tempfile.mkstemp('', 'c', cmk.paths.check_result_path)
-        except Exception, e:
+        except Exception as e:
             raise MKGeneralException(
                 "Cannot create check result file in %s: %s" % (cmk.paths.check_result_path, e))
 
@@ -690,7 +690,7 @@ def _open_command_pipe():
                 signal.alarm(3)  # three seconds to open pipe
                 _nagios_command_pipe = file(cmk.paths.nagios_command_pipe_path, 'w')
                 signal.alarm(0)  # cancel alarm
-            except Exception, e:
+            except Exception as e:
                 _nagios_command_pipe = False
                 raise MKGeneralException("Error writing to command pipe: %s" % e)
 

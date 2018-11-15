@@ -113,7 +113,7 @@ def do_restore(tarname):
                                 shutil.rmtree(p)
                             else:
                                 os.remove(p)
-                        except Exception, e:
+                        except Exception as e:
                             console.warning("  Cannot delete %s: %s", p, e)
         else:
             basedir = os.path.dirname(absdir)

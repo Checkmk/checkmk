@@ -796,11 +796,11 @@ class ModeEditRuleset(WatoMode):
         if rulespec.valuespec:
             try:
                 value_html = rulespec.valuespec.value_to_text(value)
-            except Exception, e:
+            except Exception as e:
                 try:
                     reason = "%s" % e
                     rulespec.valuespec.validate_datatype(value, "")
-                except Exception, e:
+                except Exception as e:
                     reason = "%s" % e
 
                 value_html = '<img src="images/icon_alert.png" class=icon>' \
@@ -1427,7 +1427,7 @@ class EditRuleMode(WatoMode):
             try:
                 valuespec.validate_datatype(self._rule.value, "ve")
                 valuespec.render_input("ve", self._rule.value)
-            except Exception, e:
+            except Exception as e:
                 if config.debug:
                     raise
                 else:

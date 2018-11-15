@@ -123,7 +123,7 @@ class HtmlTest(object):
 
         try:
             assert tools.compare_html(self.return_value, return_value)
-        except Exception, e:
+        except Exception as e:
             print tools.bcolors.WARNING + "Test failed: the return value differs!\n%s" % self
             print tools.bcolors.WARNING + "EXPECTED: \n%s" % self.return_value
             print tools.bcolors.WARNING + "RETURNED: \n%s" % return_value
@@ -131,7 +131,7 @@ class HtmlTest(object):
 
         try:
             assert tools.compare_html(self.expected_html, html_code)
-        except Exception, e:
+        except Exception as e:
             print tools.bcolors.WARNING + "Test failed: generated html code differs!\n%s" % self
             print tools.bcolors.WARNING + "EXPECTED: \n%s" % self.expected_html
             print tools.bcolors.WARNING + "GENERATED: \n%s" % html_code
@@ -139,7 +139,7 @@ class HtmlTest(object):
 
         try:
             assert tools.compare_attributes(tools.get_attributes(html), self.state_out)
-        except Exception, e:
+        except Exception as e:
             print tools.bcolors.WARNING + "Test failed: output attributes differ!\n%s" % self
             print tools.bcolors.WARNING + "EXPECTED: \n%s" % pprint.pformat(self.state_out)
             print tools.bcolors.WARNING + "ATTRIBUTES: \n%s" % pprint.pformat({key: val for key, val in tools.get_attributes(html).iteritems() if key in self.state_out})
@@ -235,7 +235,7 @@ def load_html_test(test_name, test_files_dir = unit_test_files_dir):
     try:
         with open("%s/%s.unittest" % (test_files_dir.rstrip('/'), test_name), "r") as tfile:
             tests = ast.literal_eval(tfile.read())
-    except Exception, e:
+    except Exception as e:
         print tools.bcolors.WARNING + "\nERROR: No test file for test '%s'.\n" % test_name \
                + "Generate a test file first, e.g. by calling 'py.test -sv -m html_gentest -k test_generate_integration'.\n"
         raise e
@@ -246,7 +246,7 @@ def load_html_test(test_name, test_files_dir = unit_test_files_dir):
         tests = [HtmlTest().from_dict(test) for test in tests]
         assert all(test.validate() for test in tests)
         return tests
-    except Exception, e:
+    except Exception as e:
         print tools.bcolors.WARNING + "WARNING! Unit test %s could not be validated." % test_name
         raise e
         return None

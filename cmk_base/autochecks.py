@@ -64,12 +64,12 @@ def read_autochecks_of(hostname, world="config"):
     check_config = cmk_base.config.get_check_variables()
     try:
         autochecks_raw = eval(file(filepath).read(), check_config, check_config)
-    except SyntaxError, e:
+    except SyntaxError as e:
         cmk_base.console.verbose("Syntax error in file %s: %s\n", filepath, e, stream=sys.stderr)
         if cmk.debug.enabled():
             raise
         return []
-    except Exception, e:
+    except Exception as e:
         cmk_base.console.verbose("Error in file %s:\n%s\n", filepath, e, stream=sys.stderr)
         if cmk.debug.enabled():
             raise

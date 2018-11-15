@@ -392,7 +392,7 @@ class ModeTimeperiodImportICal(WatoMode):
 
         try:
             data = self._parse_ical(content, ical['horizon'])
-        except Exception, e:
+        except Exception as e:
             if config.debug:
                 raise
             raise MKUserError('ical_file', _('Failed to parse file: %s') % e)

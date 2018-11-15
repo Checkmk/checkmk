@@ -127,7 +127,7 @@ class ModeParentScan(WatoMode):
             ]
             result = "%s\n%s: %s<br>\n" % (json.dumps(counts), host_name, message)
 
-        except Exception, e:
+        except Exception as e:
             result = json.dumps(['failed', 1, 0, 0, 0, 0, 0, 1]) + "\n"
             if site_id:
                 msg = _("Error during parent scan of %s on site %s: %s") % (host_name, site_id, e)

@@ -445,14 +445,14 @@ class InterfaceGLPI(TicketInterface):
                 'login_name': self.__username,
                 'login_password': self.__password
             })
-        except InterfaceGLPI.Fault, f:
+        except InterfaceGLPI.Fault as f:
             log.error("GLPI fault code %s, details: %s", f.faultCode, f.faultString)
             raise
         except InterfaceGLPI.ResponseError:
             # response error seems to hold no data?
             log.exception("response error on login. Is host and port configured correctly?")
             raise
-        except InterfaceGLPI.ProtocolError, e:
+        except InterfaceGLPI.ProtocolError as e:
             log.error("protocol error %s on login. Headers: %s", e.errcode, e.headers)
             raise
 
@@ -640,7 +640,7 @@ def main():
 if __name__ == "__main__":
     try:
         main()
-    except Exception, e:
+    except Exception as e:
         if log is not None:
             log.exception("Unhandled exception")
         else:

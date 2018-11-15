@@ -230,7 +230,7 @@ class ModeBulkDiscovery(WatoMode):
             self._job.set_function(self._job.do_execute, self._mode, self._use_cache, self._do_scan,
                                    self._error_handling, tasks)
             self._job.start()
-        except Exception, e:
+        except Exception as e:
             if config.debug:
                 raise
             logger.exception("Failed to start bulk discovery")

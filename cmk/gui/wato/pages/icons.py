@@ -140,7 +140,7 @@ class ModeIcons(WatoMode):
         try:
             file_name = os.path.basename(icon_info['icon'][0])
             im.save(dest_dir + '/' + file_name, 'PNG', pnginfo=meta)
-        except IOError, e:
+        except IOError as e:
             # Might happen with interlaced PNG files and PIL version < 1.1.7
             raise MKUserError(None, _('Unable to upload icon: %s') % e)
 

@@ -233,7 +233,7 @@ class SnapshotCreationBase(object):
                 if p.returncode != 0:
                     raise MKGeneralException(_("Activate changes error. Unable to prepare site snapshots. Failed command: %r; StdOut: %r; StdErr: %s") %\
                                                         (command, stdout, stderr))
-            except OSError, e:
+            except OSError as e:
                 raise MKGeneralException(
                     _("Activate changes error. Unable to prepare site snapshots. Failed command: %r, Exception: %s"
                      ) % (command, e))
@@ -541,7 +541,7 @@ def extract_domains(tar, domains):
             exit_code = p.wait()
             if exit_code:
                 return ["%s - %s" % (domain["title"], stderr)]
-        except Exception, e:
+        except Exception as e:
             return ["%s - %s" % (domain["title"], str(e))]
 
         return []

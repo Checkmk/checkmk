@@ -250,7 +250,7 @@ class ModeDiscovery(WatoMode):
     def page(self):
         try:
             check_table = self._get_check_table()
-        except Exception, e:
+        except Exception as e:
             logger.exception()
             if config.debug:
                 raise
@@ -739,7 +739,7 @@ class ModeDiscovery(WatoMode):
                 rulespec.valuespec.validate_value(params, "")
                 paramtext = rulespec.valuespec.value_to_text(params)
                 html.write_html(paramtext)
-            except Exception, e:
+            except Exception as e:
                 if config.debug:
                     err = traceback.format_exc()
                 else:
@@ -860,7 +860,7 @@ class ModeAjaxExecuteCheck(WatoWebApiMode):
                 self._site,
                 "active-check", [self._host_name, self._check_type, self._item],
                 sync=False)
-        except Exception, e:
+        except Exception as e:
             state = 3
             output = "%s" % e
 

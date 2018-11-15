@@ -348,7 +348,7 @@ def locally_deliver_raw_context(raw_context, analyse=False):
             notify_log("Preparing plain email notifications for %s" % contactname)
             notify_plain_email(raw_context)
 
-    except Exception, e:
+    except Exception as e:
         if cmk.debug.enabled():
             raise
         notify_log("ERROR: %s\n%s" % (e, format_exception()))
@@ -552,7 +552,7 @@ def notify_rulebased(raw_context, analyse=False):
                     else:
                         call_notification_script(plugin, context)
 
-            except Exception, e:
+            except Exception as e:
                 if cmk.debug.enabled():
                     raise
                 fe = format_exception()
@@ -1444,7 +1444,7 @@ def handle_spoolfile(spoolfile):
         locally_deliver_raw_context(data["context"])
         return 0  # No error handling for async delivery
 
-    except Exception, e:
+    except Exception as e:
         notify_log("ERROR %s\n%s" % (e, format_exception()))
         return 2
 
@@ -1602,7 +1602,7 @@ def remove_if_orphaned(bulk_dir, max_age, ref_time=None):
         notify_log("Warning: removing orphaned empty bulk directory %s" % bulk_dir)
         try:
             os.rmdir(bulk_dir)
-        except Exception, e:
+        except Exception as e:
             notify_log("    -> Error removing it: %s" % e)
 
 
@@ -1710,7 +1710,7 @@ def notify_bulk(dirname, uuids):
     for mtime, uuid in uuids:
         try:
             params, context = eval(file(dirname + "/" + uuid).read())
-        except Exception, e:
+        except Exception as e:
             if cmk.debug.enabled():
                 raise
             notify_log("    Deleting corrupted or empty bulk file %s/%s: %s" % (dirname, uuid, e))
@@ -1757,7 +1757,7 @@ def notify_bulk(dirname, uuids):
             path = os.path.join(dirname, uuid)
             try:
                 os.remove(path)
-            except Exception, e:
+            except Exception as e:
                 notify_log("Cannot remove %s: %s" % (path, e))
 
     # Repeat with unhandled uuids (due to different parameters)
@@ -1767,7 +1767,7 @@ def notify_bulk(dirname, uuids):
     # Remove directory. Not neccessary if emtpy
     try:
         os.rmdir(dirname)
-    except Exception, e:
+    except Exception as e:
         if not unhandled_uuids:
             notify_log("Warning: cannot remove directory %s: %s" % (dirname, e))
 
@@ -1950,7 +1950,7 @@ def core_notification_log(plugin, plugin_context):
 def _send_livestatus_command(command):
     try:
         livestatus.LocalConnection().command("[%d] %s" % (time.time(), command.encode("utf-8")))
-    except Exception, e:
+    except Exception as e:
         if cmk.debug.enabled():
             raise
         notify_log("WARNING: cannot send livestatus command: %s" % e)

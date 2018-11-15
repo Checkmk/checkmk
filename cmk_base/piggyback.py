@@ -51,7 +51,7 @@ def get_piggyback_raw_data(piggyback_max_cachefile_age, hostname):
                                                                  hostname):
         try:
             raw_data = file(piggyback_file_path).read()
-        except IOError, e:
+        except IOError as e:
             console.verbose("Cannot read piggyback raw data from host %s: %s\n" % (source_host, e))
             continue
 
@@ -82,7 +82,7 @@ def _get_piggyback_files(piggyback_max_cachefile_age, hostname):
     # this as regular case: No piggyback files for the current host.
     try:
         source_host_names = os.listdir(piggyback_dir)
-    except OSError, e:
+    except OSError as e:
         if e.errno == 2:  # No such file or directory
             return files
         else:
@@ -96,7 +96,7 @@ def _get_piggyback_files(piggyback_max_cachefile_age, hostname):
 
         try:
             file_age = cmk_base.utils.cachefile_age(piggyback_file_path)
-        except MKGeneralException, e:
+        except MKGeneralException as e:
             continue  # File might've been deleted. That's ok.
 
         # Skip piggyback files that are outdated at all
@@ -129,7 +129,7 @@ def _is_piggyback_file_outdated(status_file_path, piggyback_file_path):
         # but only writes them at microsecond resolution.
         # (We're using os.utime() in _store_status_file_of())
         return os.stat(status_file_path)[8] > os.stat(piggyback_file_path)[8]
-    except OSError, e:
+    except OSError as e:
         if e.errno == 2:  # No such file or directory
             return True
         else:
@@ -144,7 +144,7 @@ def _remove_piggyback_file(piggyback_file_path):
     try:
         os.remove(piggyback_file_path)
         return True
-    except OSError, e:
+    except OSError as e:
         if e.errno == 2:  # No such file or directory
             return False
         else:
@@ -194,7 +194,7 @@ def _store_status_file_of(status_file_path, piggyback_file_paths):
         for piggyback_file_path in piggyback_file_paths:
             try:
                 os.utime(piggyback_file_path, status_file_times)
-            except OSError, e:
+            except OSError as e:
                 if e.errno == 2:  # No such file or directory
                     continue
                 else:
@@ -277,7 +277,7 @@ def _cleanup_old_piggybacked_files(piggyback_max_cachefile_age):
         # Remove empty backed host directory
         try:
             os.rmdir(backed_host_dir_path)
-        except OSError, e:
+        except OSError as e:
             if e.errno == 39:  #Directory not empty
                 pass
             else:

@@ -225,7 +225,7 @@ def load_user_visuals(what, builtin_visuals, skip_func, lock):
 
             visuals.update(user_visuals)
 
-        except SyntaxError, e:
+        except SyntaxError as e:
             raise MKGeneralException(_("Cannot load %s from %s: %s") % (what, path, e))
 
     return visuals
@@ -425,7 +425,7 @@ def page_list(what,
             elif c == False:
                 html.footer()
                 return
-        except MKUserError, e:
+        except MKUserError as e:
             html.user_error(e)
 
     keys_sorted = sorted(visuals.keys(), cmp=lambda a, b: -cmp(a[0], b[0]) or cmp(a[1], b[1]))
@@ -591,7 +591,7 @@ def page_create_visual(what, info_keys, next_url=None):
             html.response.http_redirect(next_url)
             return
 
-        except MKUserError, e:
+        except MKUserError as e:
             html.user_error(e)
 
     html.begin_form('create_visual')
@@ -918,7 +918,7 @@ def page_edit_visual(what,
                 html.footer()
                 return
 
-        except MKUserError, e:
+        except MKUserError as e:
             html.user_error(e)
 
     html.begin_form("visual", method="POST")
@@ -996,7 +996,7 @@ def show_filter(f):
         #TODO: Plug context html.plug()
         f.display()
         # TODO: html.unplug()
-    except Exception, e:
+    except Exception as e:
         #TODO: html.plugged_text = ''
         #TODO: html.unplug()
         logger.exception()

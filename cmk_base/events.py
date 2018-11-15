@@ -102,9 +102,9 @@ def event_keepalive(event_function,
                     try:
                         new_data = ""
                         new_data = os.read(0, 32768)
-                    except IOError, e:
+                    except IOError as e:
                         new_data = ""
-                    except Exception, e:
+                    except Exception as e:
                         if cmk.debug.enabled():
                             raise
                         log_function("Cannot read data from CMC: %s" % e)
@@ -119,7 +119,7 @@ def event_keepalive(event_function,
                 try:
                     context = raw_context_from_string(data.rstrip('\n'))
                     event_function(context)
-                except Exception, e:
+                except Exception as e:
                     if cmk.debug.enabled():
                         raise
                     log_function("ERROR %s\n%s" % (e, traceback.format_exc()))
@@ -129,9 +129,9 @@ def event_keepalive(event_function,
                 sys.stdout.flush()
 
         # Fix vor Python 2.4:
-        except SystemExit, e:
+        except SystemExit as e:
             sys.exit(e)
-        except Exception, e:
+        except Exception as e:
             if cmk.debug.enabled():
                 raise
             log_function("ERROR %s\n%s" % (e, traceback.format_exc()))
@@ -139,7 +139,7 @@ def event_keepalive(event_function,
         if call_every_loop:
             try:
                 call_every_loop()
-            except Exception, e:
+            except Exception as e:
                 if cmk.debug.enabled():
                     raise
                 log_function("ERROR %s\n%s" % (e, traceback.format_exc()))
@@ -392,7 +392,7 @@ def complete_raw_context(raw_context, with_dump, event_log):
 
         convert_context_to_unicode(raw_context)
 
-    except Exception, e:
+    except Exception as e:
         event_log("Error on completing raw context: %s" % e)
 
     if with_dump:

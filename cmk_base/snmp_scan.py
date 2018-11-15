@@ -51,7 +51,7 @@ def gather_snmp_check_plugin_names(access_data,
                 do_snmp_scan=do_snmp_scan,
                 for_inv=for_inventory,
                 for_mgmt_board=for_mgmt_board))
-    except Exception, e:
+    except Exception as e:
         if on_error == "raise":
             raise
         elif on_error == "warn":

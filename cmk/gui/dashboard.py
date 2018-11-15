@@ -549,7 +549,7 @@ def draw_dashboard(name):
             dashlet_title_html = render_dashlet_title_html(dashlet_instance)
             dashlet_content_html = render_dashlet_content(dashlet_instance, is_update=False)
 
-        except Exception, e:
+        except Exception as e:
             dashlet_content_html = render_dashlet_exception_content(dashlet_instance, nr, e)
 
         # Now after the dashlet content has been calculated render the whole dashlet
@@ -905,7 +905,7 @@ def ajax_dashlet():
     try:
         dashlet_content_html = render_dashlet_content(
             dashlet_instance, stash_html_vars=False, is_update=True)
-    except Exception, e:
+    except Exception as e:
         dashlet_content_html = render_dashlet_exception_content(dashlet_instance, ident, e)
 
     html.write_html(dashlet_content_html)
@@ -1090,7 +1090,7 @@ def choose_view(name):
             html.response.http_redirect('edit_dashlet.py?name=%s&id=%d' % (name, dashlet_id))
             return
 
-        except MKUserError, e:
+        except MKUserError as e:
             html.user_error(e)
 
     html.begin_form('choose_view')
@@ -1292,7 +1292,7 @@ def page_edit_dashlet():
             html.footer()
             return
 
-        except MKUserError, e:
+        except MKUserError as e:
             html.user_error(e)
 
     html.begin_form("dashlet", method="POST")
@@ -1355,7 +1355,7 @@ def page_delete_dashlet():
             visuals.save('dashboards', dashboards)
 
             html.message(_('The dashlet has been deleted.'))
-        except MKUserError, e:
+        except MKUserError as e:
             html.div(e.message, class_="error")
             return
 

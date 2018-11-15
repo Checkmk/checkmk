@@ -50,17 +50,19 @@ def check_df_netscaler(item, params, info):
 
 
 check_info["df_netscaler"] = {
-    "check_function"          : check_df_netscaler,
-    "inventory_function"      : inventory_df_netscaler,
-    "default_levels_variable" : "filesystem_default_levels",
-    "service_description"     : "Filesystem %s",
-    "has_perfdata"            : True,
-    "group"                   : "filesystem",
-    "includes"                : [ "size_trend.include", "df.include" ],
-    "snmp_info"               : (".1.3.6.1.4.1.5951.4.1.1.41.8.1", [
-                                            1, # sysHealthDiskName
-                                            2, # sysHealthDiskSize
-                                            3, # sysHealthDiskAvail
-                                        ]),
-    "snmp_scan_function"      : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.5951.1"),
+    "check_function": check_df_netscaler,
+    "inventory_function": inventory_df_netscaler,
+    "default_levels_variable": "filesystem_default_levels",
+    "service_description": "Filesystem %s",
+    "has_perfdata": True,
+    "group": "filesystem",
+    "includes": ["size_trend.include", "df.include"],
+    "snmp_info": (
+        ".1.3.6.1.4.1.5951.4.1.1.41.8.1",
+        [
+            1,  # sysHealthDiskName
+            2,  # sysHealthDiskSize
+            3,  # sysHealthDiskAvail
+        ]),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.5951.1"),
 }

@@ -34,8 +34,10 @@ def parse_cisco_secure(info):
         mac = ":".join(["%02s" % hex(ord(m))[2:] for m in lastmac]).replace(' ', '0')
         # violationCount is initialized with 0 when security is enabled. When not, the
         # value is reported as empty string. saveint() makes life easier here.
-        parsed.append((names[num][0], int(names[num][1]), {'1': 'yes', '2': 'no'}.get(is_enabled),
-                       int(status), saveint(violationCount), mac))
+        parsed.append((names[num][0], int(names[num][1]), {
+            '1': 'yes',
+            '2': 'no'
+        }.get(is_enabled), int(status), saveint(violationCount), mac))
     return parsed
 
 
@@ -44,14 +46,14 @@ def inventory_cisco_secure(parsed):
     for _name, op_state, is_enabled, status, _violationCount, _lastmac in parsed:
         # if portsecurity enabled and port up OR currently there is sercurity issue`
         if status == 3 or (is_enabled != 'no' and op_state == 1):
-            return [ (None, None) ]
+            return [(None, None)]
 
 
 def check_cisco_secure(item, params, parsed):
     secure_states = {
-        1 : "full Operational",
-        2 : "could not be enabled due to certain reasons",
-        3 : "shutdown due to security violation"
+        1: "full Operational",
+        2: "could not be enabled due to certain reasons",
+        3: "shutdown due to security violation"
     }
 
     at_least_one_problem = False

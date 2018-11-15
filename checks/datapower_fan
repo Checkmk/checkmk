@@ -26,15 +26,15 @@
 #
 
 datapower_fan_ids = {
-    "1":  "CPU 1",
-    "2":  "CPU 2",
-    "3":  "Chassis 1",
-    "4":  "Chassis 2",
-    "5":  "Chassis 3",
-    "6":  "Chassis 4",
-    "7":  "Chassis 5",
-    "8":  "Chassis 6",
-    "9":  "Chassis 7",
+    "1": "CPU 1",
+    "2": "CPU 2",
+    "3": "Chassis 1",
+    "4": "Chassis 2",
+    "5": "Chassis 3",
+    "6": "Chassis 4",
+    "7": "Chassis 5",
+    "8": "Chassis 6",
+    "9": "Chassis 7",
     "10": "Chassis 8",
     "11": "Tray 1 Fan 1",
     "12": "Tray 1 Fan 2",
@@ -52,16 +52,18 @@ datapower_fan_ids = {
     "24": "Hard Disk Tray Fan 2",
 }
 
+
 def inventory_datapower_fan(info):
     for fan_id, _speed, _status in info:
         yield datapower_fan_ids[fan_id], None
+
 
 def check_datapower_fan(item, _no_params, info):
     datapower_fan_status = {
         "1": (2, "reached lower non-recoverable limit: "),
         "2": (2, "reached lower critical limit: "),
         "3": (1, "reached lower non-critical limit: "),
-        "4": (0, ""), # OK
+        "4": (0, ""),  # OK
         "5": (1, "reached upper non-critical limit: "),
         "6": (2, "reached upper critical limit: "),
         "7": (2, "reached upper non-recoverable limit: "),

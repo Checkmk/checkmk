@@ -28,8 +28,10 @@
 # 1  Raid Set # 00        3 2250.5GB    0.0GB 123                Normal
 # ( # Name Disks TotalCap  FreeCap DiskChannels State )
 
+
 def inventory_arc_raid_status(info):
-    return [ ( x[0], saveint(x[-5]) ) for x in info ]
+    return [(x[0], saveint(x[-5])) for x in info]
+
 
 def check_arc_raid_status(item, params, info):
     for line in info:
@@ -39,7 +41,7 @@ def check_arc_raid_status(item, params, info):
 
             raid_state = line[-1]
             label = ""
-            if raid_state in [ "Degarde", "Incompleted" ]:
+            if raid_state in ["Degarde", "Incompleted"]:
                 state = 2
                 label = "(!!)"
             elif raid_state == "Rebuilding":
@@ -48,23 +50,23 @@ def check_arc_raid_status(item, params, info):
             elif raid_state != "Normal":
                 state = 2
                 label = "(!!)"
-            messages.append("Raid in state: %s%s" % ( raid_state, label ))
+            messages.append("Raid in state: %s%s" % (raid_state, label))
 
             # Check the number of disks
             i_disks = params
             c_disks = saveint(line[-5])
             if i_disks != c_disks:
-                messages.append("Number of disks has changed from %d to %d(!!)" %
-                                                                (i_disks, c_disks))
+                messages.append(
+                    "Number of disks has changed from %d to %d(!!)" % (i_disks, c_disks))
                 state = 2
 
             return state, ", ".join(messages)
 
     return 3, "Array not found"
 
-check_info["arc_raid_status"] = {
-    "check_function"        : check_arc_raid_status,
-    "inventory_function"    : inventory_arc_raid_status,
-    "service_description"   : "Raid Array #%s",
-}
 
+check_info["arc_raid_status"] = {
+    "check_function": check_arc_raid_status,
+    "inventory_function": inventory_arc_raid_status,
+    "service_description": "Raid Array #%s",
+}

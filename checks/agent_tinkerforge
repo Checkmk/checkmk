@@ -37,4 +37,5 @@ def agent_tinkerforge_arguments(params, hostname, ipaddress):
 
     return " ".join(map(str, args))
 
+
 special_agent_info['tinkerforge'] = agent_tinkerforge_arguments

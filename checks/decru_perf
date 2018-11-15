@@ -24,17 +24,18 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 def inventory_decru_perf(info):
     perf_names = {
-       1 : "read (bytes/s)", # readBytesPerSec
-       2 : "write (bytes/s)", # writeBytesPerSec
-       3 : "operations (/s)", # opsPerSec
-       4 : "CIFS read (bytes/s)", # cifs-readBytesPerSec
-       5 : "CIFS write (bytes/s)", # cifs-writeBytesPerSec
-       6 : "CIFS operations (/s)", # cifs-opsPerSec
-       7 : "NFS read (bytes/s)", # nfs-readBytesPerSec
-       8 : "NFS write (bytes/s)", # nfs-writeBytesPerSec
-       9 : "NFS operations (/s)", # nfs-opsPerSec
+        1: "read (bytes/s)",  # readBytesPerSec
+        2: "write (bytes/s)",  # writeBytesPerSec
+        3: "operations (/s)",  # opsPerSec
+        4: "CIFS read (bytes/s)",  # cifs-readBytesPerSec
+        5: "CIFS write (bytes/s)",  # cifs-writeBytesPerSec
+        6: "CIFS operations (/s)",  # cifs-opsPerSec
+        7: "NFS read (bytes/s)",  # nfs-readBytesPerSec
+        8: "NFS write (bytes/s)",  # nfs-writeBytesPerSec
+        9: "NFS operations (/s)",  # nfs-opsPerSec
     }
 
     inventory = []
@@ -42,8 +43,9 @@ def inventory_decru_perf(info):
         def_name = "unknown %s" % index
         name = perf_names.get(int(index), def_name)
         item = "%s: %s" % (index, name)
-        inventory.append( ( item, rate, None ) )
+        inventory.append((item, rate, None))
     return inventory
+
 
 def check_decru_perf(item, _no_params, info):
     index, _name = item.split(":", 1)
@@ -62,6 +64,6 @@ check_info["decru_perf"] = {
     'service_description':     'COUNTER %s',
     'has_perfdata':            True,
     'snmp_info':               ('.1.3.6.1.4.1.12962.1.1.2.1.1', [1, 2]),
-    'snmp_scan_function':      \
+    'snmp_scan_function':       \
      lambda oid: "datafort" in oid('.1.3.6.1.2.1.1.1.0').lower(),
 }

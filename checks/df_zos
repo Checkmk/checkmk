@@ -80,6 +80,7 @@ def parse_df_zos(info):
 
 df_zos_exclude_list = ['AUTOMNT', 'TFS', 'NFS']
 
+
 def inventory_df_zos(parsed):
     mplist = []
 
@@ -107,8 +108,8 @@ def check_df_zos(item, params, parsed):
 
     for filesystem in parsed.keys():
         (size_mb, used_mb, avail_mb) = map(float, parsed[filesystem]['size'][0:3])
-        size_mb  /= 1024
-        used_mb  /= 1024
+        size_mb /= 1024
+        used_mb /= 1024
         avail_mb /= 1024
         fslist.append((filesystem, size_mb, avail_mb, 0))
 
@@ -116,12 +117,12 @@ def check_df_zos(item, params, parsed):
 
 
 check_info['df_zos'] = {
-    'parse_function'          : parse_df_zos,
-    'check_function'          : check_df_zos,
-    'inventory_function'      : inventory_df_zos,
-    'service_description'     : "Filesystem %s",
-    'has_perfdata'            : True,
-    'group'                   : 'filesystem',
-    'default_levels_variable' : "filesystem_default_levels",
-    'includes'                : [ 'size_trend.include', 'df.include' ],
+    'parse_function': parse_df_zos,
+    'check_function': check_df_zos,
+    'inventory_function': inventory_df_zos,
+    'service_description': "Filesystem %s",
+    'has_perfdata': True,
+    'group': 'filesystem',
+    'default_levels_variable': "filesystem_default_levels",
+    'includes': ['size_trend.include', 'df.include'],
 }

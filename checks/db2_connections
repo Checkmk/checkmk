@@ -31,12 +31,14 @@
 # latency 0:1.03
 
 factory_settings["db2_connections_default_levels"] = {
-    "levels_total" : (150, 200),
+    "levels_total": (150, 200),
 }
+
 
 def inventory_db2_connections(parsed):
     for item in parsed[1]:
         yield item, None
+
 
 def check_db2_connections(item, params, parsed):
     db = parsed[1].get(item)
@@ -67,13 +69,14 @@ def check_db2_connections(item, params, parsed):
 
         yield 0, "Latency: %.2f ms" % ms, [("latency", ms)]
 
+
 check_info['db2_connections'] = {
-    "parse_function"          : parse_db2_dbs,
-    "service_description"     : "DB2 Connections %s",
-    "check_function"          : check_db2_connections,
-    "inventory_function"      : inventory_db2_connections,
-    "has_perfdata"            : True,
-    "group"                   : "db2_connections",
-    "default_levels_variable" : "db2_connections_default_levels",
-    "includes"                : ["db2.include"]
+    "parse_function": parse_db2_dbs,
+    "service_description": "DB2 Connections %s",
+    "check_function": check_db2_connections,
+    "inventory_function": inventory_db2_connections,
+    "has_perfdata": True,
+    "group": "db2_connections",
+    "default_levels_variable": "db2_connections_default_levels",
+    "includes": ["db2.include"]
 }

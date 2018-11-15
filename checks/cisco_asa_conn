@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # example output
 
 
@@ -42,21 +41,22 @@ def parse_cisco_asa_conn(info):
     # parsed = { u'4': [u'outside-adsl', u'1', u'1', u'8.8.8.8'] }
     return parsed
 
+
 def inventory_cisco_asa_conn(parsed):
     for key, values in parsed.iteritems():
         if values[1] == "1" and len(values) == 4:
-            yield ( key, None )
+            yield (key, None)
 
 
 def check_cisco_asa_conn(item, _no_params, parsed):
     translate_status = {
-        "1" : (0, "up"),
-        "2" : (2, "down"),
-        "3" : (3, "testing"),
-        "4" : (3, "unknown"),
-        "5" : (2, "dormant"),
-        "6" : (2, "not present"),
-        "7" : (2, "lower layer down"),
+        "1": (0, "up"),
+        "2": (2, "down"),
+        "3": (3, "testing"),
+        "4": (3, "unknown"),
+        "5": (2, "dormant"),
+        "6": (2, "not present"),
+        "7": (2, "lower layer down"),
     }
 
     for key, values in parsed.iteritems():
@@ -65,7 +65,7 @@ def check_cisco_asa_conn(item, _no_params, parsed):
 
             if not values[3] == "":
                 yield 0, "IP: %s" % values[3]
-            else: # CRIT if no IP is assigned
+            else:  # CRIT if no IP is assigned
                 yield 2, "IP: Not found!"
 
             state, state_readable = translate_status[values[2]]

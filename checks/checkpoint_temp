@@ -24,10 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
-factory_settings['checkpoint_temp_default_levels'] = {
-    "levels": (50, 60)
-}
+factory_settings['checkpoint_temp_default_levels'] = {"levels": (50, 60)}
 
 
 def format_item_checkpoint_temp(name):
@@ -42,31 +39,36 @@ def inventory_checkpoint_temp(info):
 def check_checkpoint_temp(item, params, info):
     for name, value, unit, dev_status in info:
         if format_item_checkpoint_temp(name) == item:
-            unit  = unit.replace("degree", "").strip().lower()
+            unit = unit.replace("degree", "").strip().lower()
             state, state_readable = checkpoint_sensorstatus_to_nagios[dev_status]
 
             if value == "":
                 return state, "Status: %s" % state_readable
 
-            return check_temperature(float(value), params,
-                                     "checkpoint_temp_%s" % item,
-                                     dev_unit=unit,
-                                     dev_status=state,
-                                     dev_status_name=state_readable)
+            return check_temperature(
+                float(value),
+                params,
+                "checkpoint_temp_%s" % item,
+                dev_unit=unit,
+                dev_status=state,
+                dev_status_name=state_readable)
 
 
 check_info['checkpoint_temp'] = {
-    'check_function'          : check_checkpoint_temp,
-    'inventory_function'      : inventory_checkpoint_temp,
-    'service_description'     : "Temperature %s",
-    'has_perfdata'            : True,
-    'group'                   : 'temperature',
-    'snmp_scan_function'      : scan_checkpoint,
-    'snmp_info'               : ( '.1.3.6.1.4.1.2620.1.6.7.8.1.1', [2,  # tempertureSensorName
-                                                                    3,  # tempertureSensorValue
-                                                                    4,  # tempertureSensorUnit
-                                                                    6   # tempertureSensorStatus
-                                                                    ]),
-    'includes'                : [ 'checkpoint.include', 'temperature.include' ],
-    'default_levels_variable' : 'checkpoint_temp_default_levels'
+    'check_function': check_checkpoint_temp,
+    'inventory_function': inventory_checkpoint_temp,
+    'service_description': "Temperature %s",
+    'has_perfdata': True,
+    'group': 'temperature',
+    'snmp_scan_function': scan_checkpoint,
+    'snmp_info': (
+        '.1.3.6.1.4.1.2620.1.6.7.8.1.1',
+        [
+            2,  # tempertureSensorName
+            3,  # tempertureSensorValue
+            4,  # tempertureSensorUnit
+            6  # tempertureSensorStatus
+        ]),
+    'includes': ['checkpoint.include', 'temperature.include'],
+    'default_levels_variable': 'checkpoint_temp_default_levels'
 }

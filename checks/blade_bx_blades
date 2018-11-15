@@ -26,8 +26,8 @@
 
 
 def inventory_blade_bx_blades(info):
-    for id_, status, _serial, _name  in info:
-        if status != "3": # blade not present
+    for id_, status, _serial, _name in info:
+        if status != "3":  # blade not present
             yield id_, None
 
 
@@ -41,7 +41,7 @@ def check_blade_bx_blades(item, _no_params, info):
         "6": (0, "standby"),
     }
 
-    for id_, status, serial, name  in info:
+    for id_, status, serial, name in info:
         if id_ == item:
             state, state_readable = status_codes[status]
             if name:

@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 def check_mailboxes_arguments(params):
     args = []
 
@@ -72,9 +73,8 @@ def check_mailboxes_arguments(params):
 
 
 active_check_info['mailboxes'] = {
-    "command_line"        : '$USER1$/check_mailboxes $ARG1$',
-    "argument_function"   : check_mailboxes_arguments,
-    "service_description" : lambda params: params['service_description'],
-    "has_perfdata"        : True,
+    "command_line": '$USER1$/check_mailboxes $ARG1$',
+    "argument_function": check_mailboxes_arguments,
+    "service_description": lambda params: params['service_description'],
+    "has_perfdata": True,
 }
-

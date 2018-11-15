@@ -31,20 +31,21 @@
 
 # Suggested by customer
 factory_settings["barracuda_mailq_default_levels"] = {
-    "deferred" : (80, 100),
-    "active"   : (80, 100),
+    "deferred": (80, 100),
+    "active": (80, 100),
 }
 
 
 def inventory_barracuda_mailqueues(info):
-    return [ ("", {}) ]
+    return [("", {})]
 
 
 def check_barracuda_mailqueues(_no_item, params, info):
     in_queue_str, active_queue_str, deferred_queue_str, daily_sent = info[0]
     for queue_type, queue in [
-        ("Active",   int(active_queue_str)),
-        ("Deferred", int(deferred_queue_str)), ]:
+        ("Active", int(active_queue_str)),
+        ("Deferred", int(deferred_queue_str)),
+    ]:
         state = 0
         infotext = "%s: %s" % (queue_type, queue)
         warn, crit = params[queue_type.lower()]
@@ -56,7 +57,7 @@ def check_barracuda_mailqueues(_no_item, params, info):
         if state:
             infotext += " (warn/crit at %d/%d %s mails)" % (warn, crit, queue_type.lower())
 
-        yield state, infotext, [ ("mail_queue_%s_length" % queue_type.lower(), queue, warn, crit) ]
+        yield state, infotext, [("mail_queue_%s_length" % queue_type.lower(), queue, warn, crit)]
 
     yield 0, "Incoming: %s" % in_queue_str
     if daily_sent:

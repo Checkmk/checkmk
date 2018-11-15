@@ -24,27 +24,30 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-blade_bx_cpuload_default_levels = ( 5, 20 )
+blade_bx_cpuload_default_levels = (5, 20)
+
 
 def inventory_blade_bx_load(info):
     if len(info) > 0:
-        return [ (None, "blade_bx_cpuload_default_levels")]
+        return [(None, "blade_bx_cpuload_default_levels")]
+
 
 def check_blade_bx_load(item, params, info):
-    return check_cpu_load_generic(params, [ float(l[2]) for l in info ])
+    return check_cpu_load_generic(params, [float(l[2]) for l in info])
+
 
 check_info['blade_bx_load'] = {
-    "check_function"      : check_blade_bx_load,
-    "inventory_function"  : inventory_blade_bx_load ,
-    "service_description" : "CPU load",
-    "has_perfdata"        : True,
+    "check_function": check_blade_bx_load,
+    "inventory_function": inventory_blade_bx_load,
+    "service_description": "CPU load",
+    "has_perfdata": True,
     # Note: I'm not sure if this check is working at all. If yes,
     # then the SNMP implementation of that device must be broken.
     # It would use the same MIB as ucd_snmp_load, but with other
     # semantics. Please compare. Please mail us an cmk --snmpwalk of
     # such a device, if you have one.
-    "snmp_info"           : (".1.3.6.1.4.1.2021.10.1", [ 1, 2, 6 ]),
-    "snmp_scan_function"  : lambda oid: "BX600" in oid(".1.3.6.1.2.1.1.1.0"),
-    "group"               : "cpu_load",
-    "includes"            : ["cpu_load.include"],
+    "snmp_info": (".1.3.6.1.4.1.2021.10.1", [1, 2, 6]),
+    "snmp_scan_function": lambda oid: "BX600" in oid(".1.3.6.1.2.1.1.1.0"),
+    "group": "cpu_load",
+    "includes": ["cpu_load.include"],
 }

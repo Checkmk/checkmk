@@ -69,13 +69,14 @@ dell_powerconnect_psu_supply_map = {
 }
 
 dell_powerconnect_psu_status2nagios_map = {
-    'normal'         : 0,
-    'warning'        : 1,
-    'critical'       : 2,
-    'shutdown'       : 3,
-    'notPresent'     : 1,
-    'notFunctioning' : 2,
+    'normal': 0,
+    'warning': 1,
+    'critical': 2,
+    'shutdown': 3,
+    'notPresent': 1,
+    'notFunctioning': 2,
 }
+
 
 def inventory_dell_powerconnect_psu(checkname, info):
     inventory = []
@@ -90,6 +91,7 @@ def inventory_dell_powerconnect_psu(checkname, info):
            and ('M6220' not in hw_ident or name != 'System'):
             inventory.append((name, None))
     return inventory
+
 
 def check_dell_powerconnect_psu(item, _not_used, info):
     for _device_id, name, state, supply in info[1]:

@@ -24,19 +24,16 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 dotnet_clrmemory_defaultlevels = {
-    "upper": (10.0, 15.0)        # 10.0 percent specified by customer,
-                                 # various sources (including MS) give
-                                 # around 5-10% as healthy values
+    "upper": (10.0, 15.0)  # 10.0 percent specified by customer,
+    # various sources (including MS) give
+    # around 5-10% as healthy values
 }
 
 
 def check_dotnet_clrmemory(item, params, parsed):
-    yield wmi_yield_raw_fraction(parsed[""], item, "PercentTimeinGC",
-                                 label="% time in GC",
-                                 perfvar="percent",
-                                 levels=params)
+    yield wmi_yield_raw_fraction(
+        parsed[""], item, "PercentTimeinGC", label="% time in GC", perfvar="percent", levels=params)
 
 
 check_info['dotnet_clrmemory'] = {

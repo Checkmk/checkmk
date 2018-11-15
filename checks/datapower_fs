@@ -24,17 +24,19 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 def inventory_datapower_fs(info):
     if info:
         # only discover filesystems with a defined total size > 0
         if saveint(info[0][0]) != 0:
-                yield "Encrypted", {}
+            yield "Encrypted", {}
         if saveint(info[0][2]) != 0:
-                yield "Unencrypted", {}
+            yield "Unencrypted", {}
         if saveint(info[0][4]) != 0:
-                yield "Temporary", {}
+            yield "Temporary", {}
         if saveint(info[0][6]) != 0:
-                yield "Internal", {}
+            yield "Internal", {}
+
 
 def check_datapower_fs(item, params, info):
     if item == "Encrypted":
@@ -47,7 +49,7 @@ def check_datapower_fs(item, params, info):
         i = 6
 
     avail_mb = float(info[0][i])
-    size_mb = float(info[0][i+1])
+    size_mb = float(info[0][i + 1])
     fslist = [(item, size_mb, avail_mb, 0)]
 
     return df_check_filesystem_list(item, params, fslist)
@@ -72,4 +74,3 @@ check_info["datapower_fs"] = {
                               ]),
     "snmp_scan_function"      : lambda oid: oid(".1.3.6.1.2.1.1.2.0") in [ ".1.3.6.1.4.1.14685.1.7",  ".1.3.6.1.4.1.14685.1.3" ],
 }
-

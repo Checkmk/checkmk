@@ -24,33 +24,37 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 def inventory_dell_chassis_io(info):
     if info:
-        return [ ( None, None ) ]
+        return [(None, None)]
+
 
 def check_dell_chassis_io(_no_item, _no_params, info):
 
     state_table = {
-        "1" : ( "other, ", 1 ),
-        "2" : ( "unknown, ", 1 ),
-        "3" : ( "normal", 0 ),
-        "4" : ( "nonCritical, ", 1 ),
-        "5" : ( "Critical, ", 2 ),
-        "6" : ( "NonRecoverable, ", 2 ),
+        "1": ("other, ", 1),
+        "2": ("unknown, ", 1),
+        "3": ("normal", 0),
+        "4": ("nonCritical, ", 1),
+        "5": ("Critical, ", 2),
+        "6": ("NonRecoverable, ", 2),
     }
-    infotext, state = state_table.get(info[0][0], ("unknown state", 3 ))
+    infotext, state = state_table.get(info[0][0], ("unknown state", 3))
 
     infotext = "Status: " + infotext
 
     return state, infotext
 
-check_info["dell_chassis_io"] = {
-    "check_function"        : check_dell_chassis_io,
-    "inventory_function"    : inventory_dell_chassis_io,
-    "service_description"   : "Overall IO Module Status",
-    "snmp_info"             : ( ".1.3.6.1.4.1.674.10892.2.3.1", [
-                                      "2", # drsIOMCurrStatus
-                              ]),
-    "snmp_scan_function"    : lambda oid: oid('.1.3.6.1.2.1.1.2.0') == ".1.3.6.1.4.1.674.10892.2",
-}
 
+check_info["dell_chassis_io"] = {
+    "check_function": check_dell_chassis_io,
+    "inventory_function": inventory_dell_chassis_io,
+    "service_description": "Overall IO Module Status",
+    "snmp_info": (
+        ".1.3.6.1.4.1.674.10892.2.3.1",
+        [
+            "2",  # drsIOMCurrStatus
+        ]),
+    "snmp_scan_function": lambda oid: oid('.1.3.6.1.2.1.1.2.0') == ".1.3.6.1.4.1.674.10892.2",
+}

@@ -8,16 +8,15 @@
 # .1.3.6.1.4.1.9.9.719.1.9.44.1.13 cucsComputeRackUnitMbTempStatsIoh1Temp
 # .1.3.6.1.4.1.9.9.719.1.9.44.1.21 cucsComputeRackUnitMbTempStatsRearTemp
 
-factory_settings["cisco_ucs_temp_env_default_levels"] = {
-        "levels": (30, 35)
-}
+factory_settings["cisco_ucs_temp_env_default_levels"] = {"levels": (30, 35)}
+
 
 def parse_cisco_ucs_temp_env(info):
     new_info = {
-        "Ambient"   : info[0][0],
-        "Front"     : info[0][1],
-        "IO-Hub"    : info[0][2],
-        "Rear"      : info[0][3]
+        "Ambient": info[0][0],
+        "Front": info[0][1],
+        "IO-Hub": info[0][2],
+        "Rear": info[0][3]
     }
     return new_info
 
@@ -33,20 +32,22 @@ def check_cisco_ucs_temp_env(item, params, info):
             yield check_temperature(int(temp), params, "cisco_ucs_temp_env_%s" % name)
 
 
-check_info["cisco_ucs_temp_env"]  = {
-    "parse_function"            : parse_cisco_ucs_temp_env,
-    "inventory_function"        : inventory_cisco_ucs_temp_env,
-    "check_function"            : check_cisco_ucs_temp_env,
-    "default_levels_variable"   : "cisco_ucs_temp_env_default_levels",
-    "service_description"       : "Temperature %s",
-    "has_perfdata"              : True,
-    "snmp_scan_function"        : scan_cisco_ucs,
-    "snmp_info"                 : (".1.3.6.1.4.1.9.9.719.1.9.44.1", [
-                                        "4",  # cucsComputeRackUnitMbTempStatsAmbientTemp
-                                        "8",  # cucsComputeRackUnitMbTempStatsFrontTemp
-                                        "13", # cucsComputeRackUnitMbTempStatsIoh1Temp
-                                        "21", # cucsComputeRackUnitMbTempStatsRearTemp
-                                    ]),
-    "includes"                  : [ "cisco_ucs.include", "temperature.include" ],
-    "group"                     : "temperature",
+check_info["cisco_ucs_temp_env"] = {
+    "parse_function": parse_cisco_ucs_temp_env,
+    "inventory_function": inventory_cisco_ucs_temp_env,
+    "check_function": check_cisco_ucs_temp_env,
+    "default_levels_variable": "cisco_ucs_temp_env_default_levels",
+    "service_description": "Temperature %s",
+    "has_perfdata": True,
+    "snmp_scan_function": scan_cisco_ucs,
+    "snmp_info": (
+        ".1.3.6.1.4.1.9.9.719.1.9.44.1",
+        [
+            "4",  # cucsComputeRackUnitMbTempStatsAmbientTemp
+            "8",  # cucsComputeRackUnitMbTempStatsFrontTemp
+            "13",  # cucsComputeRackUnitMbTempStatsIoh1Temp
+            "21",  # cucsComputeRackUnitMbTempStatsRearTemp
+        ]),
+    "includes": ["cisco_ucs.include", "temperature.include"],
+    "group": "temperature",
 }

@@ -24,16 +24,20 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 def bintec_sensors_scan(oid):
     return oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.272.4")
 
-bintec_sensors_info = ( ".1.3.6.1.4.1.272.4.17.7.1.1.1", [
-                             2, # sensorNumber
-                             3, # sensorDescr
-                             4, # sensorType
-                             5, # sensorValue
-                             7, # sensorMeasurementUnit
-                      ])
+
+bintec_sensors_info = (
+    ".1.3.6.1.4.1.272.4.17.7.1.1.1",
+    [
+        2,  # sensorNumber
+        3,  # sensorDescr
+        4,  # sensorType
+        5,  # sensorValue
+        7,  # sensorMeasurementUnit
+    ])
 
 #   .--fans----------------------------------------------------------------.
 #   |                          __                                          |
@@ -45,31 +49,34 @@ bintec_sensors_info = ( ".1.3.6.1.4.1.272.4.17.7.1.1.1", [
 #   '----------------------------------------------------------------------'
 
 factory_settings["bintec_sensors_fan_default_levels"] = {
-    "lower" : (2000, 1000),
+    "lower": (2000, 1000),
 }
+
 
 def inventory_bintec_sensors_fan(info):
     inventory = []
     for _sensor_id, sensor_descr, sensor_type, _sensor_value, _sensor_unit in info:
         if sensor_type == "2":
-            inventory.append( (sensor_descr, {}) )
+            inventory.append((sensor_descr, {}))
     return inventory
+
 
 def check_bintec_sensors_fan(item, params, info):
     for _sensor_id, sensor_descr, _sensor_type, sensor_value, _sensor_unit in info:
         if sensor_descr == item:
             return check_fan(int(sensor_value), params)
 
+
 check_info["bintec_sensors.fan"] = {
-    "check_function"             : check_bintec_sensors_fan,
-    "inventory_function"         : inventory_bintec_sensors_fan,
-    "service_description"        : "%s",
-    "snmp_info"                  : bintec_sensors_info,
-    "snmp_scan_function"         : bintec_sensors_scan,
-    "has_perfdata"               : True,
-    "default_levels_variable"    : "bintec_sensors_fan_default_levels",
-    "group"                      : "hw_fans",
-    "includes"                   : [ "fan.include" ],
+    "check_function": check_bintec_sensors_fan,
+    "inventory_function": inventory_bintec_sensors_fan,
+    "service_description": "%s",
+    "snmp_info": bintec_sensors_info,
+    "snmp_scan_function": bintec_sensors_scan,
+    "has_perfdata": True,
+    "default_levels_variable": "bintec_sensors_fan_default_levels",
+    "group": "hw_fans",
+    "includes": ["fan.include"],
 }
 
 #.
@@ -82,9 +89,7 @@ check_info["bintec_sensors.fan"] = {
 #   |                                        |_|                           |
 #   '----------------------------------------------------------------------'
 
-factory_settings["bintec_sensors_temp_default_levels"] = {
-    "levels" : (35, 40)
-}
+factory_settings["bintec_sensors_temp_default_levels"] = {"levels": (35, 40)}
 
 
 def inventory_bintec_sensors_temp(info):
@@ -102,15 +107,15 @@ def check_bintec_sensors_temp(item, params, info):
 
 
 check_info["bintec_sensors.temp"] = {
-    "check_function"          : check_bintec_sensors_temp,
-    "inventory_function"      : inventory_bintec_sensors_temp,
-    "service_description"     : "Temperature %s",
-    "group"                   : "temperature",
-    "has_perfdata"            : True,
-    "snmp_info"               : bintec_sensors_info,
-    "snmp_scan_function"      : bintec_sensors_scan,
-    "includes"                : [ "temperature.include" ],
-    "default_levels_variable" : "bintec_sensors_temp_default_levels"
+    "check_function": check_bintec_sensors_temp,
+    "inventory_function": inventory_bintec_sensors_temp,
+    "service_description": "Temperature %s",
+    "group": "temperature",
+    "has_perfdata": True,
+    "snmp_info": bintec_sensors_info,
+    "snmp_scan_function": bintec_sensors_scan,
+    "includes": ["temperature.include"],
+    "default_levels_variable": "bintec_sensors_temp_default_levels"
 }
 
 #.
@@ -123,12 +128,14 @@ check_info["bintec_sensors.temp"] = {
 #   |                                        |___/                         |
 #   '----------------------------------------------------------------------'
 
+
 def inventory_bintec_sensors_voltage(info):
     inventory = []
     for _sensor_id, sensor_descr, sensor_type, _sensor_value, _sensor_unit in info:
         if sensor_type == "3":
-            inventory.append( (sensor_descr, None ) )
+            inventory.append((sensor_descr, None))
     return inventory
+
 
 def check_bintec_sensors_voltage(item, _no_params, info):
     for _sensor_id, sensor_descr, _sensor_type, sensor_value, _sensor_unit in info:
@@ -136,19 +143,20 @@ def check_bintec_sensors_voltage(item, _no_params, info):
             sensor_value = int(sensor_value) / 1000.0
 
             message = "%s is at %s V" % (sensor_descr, sensor_value)
-            perfdata = [ ("voltage", str(sensor_value)+"V") ]
+            perfdata = [("voltage", str(sensor_value) + "V")]
 
             return 0, message, perfdata
 
     return 3, "Sensor %s not found" % item
 
+
 check_info["bintec_sensors.voltage"] = {
-    "check_function"        : check_bintec_sensors_voltage,
-    "inventory_function"    : inventory_bintec_sensors_voltage,
-    "service_description"   : "Voltage %s",
-    "has_perfdata"          : True,
-    "snmp_info"             : bintec_sensors_info,
-    "snmp_scan_function"    : bintec_sensors_scan,
+    "check_function": check_bintec_sensors_voltage,
+    "inventory_function": inventory_bintec_sensors_voltage,
+    "service_description": "Voltage %s",
+    "has_perfdata": True,
+    "snmp_info": bintec_sensors_info,
+    "snmp_scan_function": bintec_sensors_scan,
 }
 
 #.

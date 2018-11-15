@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 def agent_storeonce_arguments(params, hostname, ipaddress):
     args = ''
 
@@ -35,5 +36,6 @@ def agent_storeonce_arguments(params, hostname, ipaddress):
         args += "--no-cert-check "
 
     return args
+
 
 special_agent_info['storeonce'] = agent_storeonce_arguments

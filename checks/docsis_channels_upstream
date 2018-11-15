@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # Old comments:
 # Strange: Channel IDs seem to be not unique. But the second
 # usage has '0' in the docsIfUpChannelFrequency...
@@ -63,23 +62,23 @@
 # [[u'3', u'104052489', u'22364', u'23308', u'389']],
 # []]
 
-
 factory_settings["docsis_channels_upstream_default_levels"] = {
-    "signal_noise"   : ( 10.0, 5.0 ), # dB
-    "corrected"      : ( 5.0, 8.0 ), # Percent
-    "uncorrectable"  : ( 1.0, 2.0 ), # Percent
+    "signal_noise": (10.0, 5.0),  # dB
+    "corrected": (5.0, 8.0),  # Percent
+    "uncorrectable": (1.0, 2.0),  # Percent
 }
 
 
 def parse_docsis_channels_upstream(info):
-    freq_info      = info[0]
-    freq_info_dict = dict([ (x[0], x[1:]) for x in freq_info ])
-    sig_info_dict  = dict([ (x[0], x[1:]) for x in info[1] ])
-    cm_info_dict   = dict([ (x[0], x[1:]) for x in info[2] ])
+    freq_info = info[0]
+    freq_info_dict = dict([(x[0], x[1:]) for x in freq_info])
+    sig_info_dict = dict([(x[0], x[1:]) for x in info[1]])
+    cm_info_dict = dict([(x[0], x[1:]) for x in info[2]])
 
     parsed = {}
     for endoid, (cid, freq_str) in freq_info_dict.items():
-        unique_name = cid if len(freq_info) == len({x[1] for x in freq_info}) else ('%s.%s' % (endoid, cid))
+        unique_name = cid if len(freq_info) == len({x[1] for x in freq_info
+                                                   }) else ('%s.%s' % (endoid, cid))
 
         data = []
         if endoid in sig_info_dict:
@@ -105,8 +104,8 @@ def check_docsis_channels_upstream(item, params, parsed):
         mhz, unerroreds, correcteds, uncorrectables, signal_noise = entry[:5]
 
         # Signal Noise
-        noise_db   = float(signal_noise) / 10
-        infotext   = "Signal/Noise ratio: %.2f dB" % noise_db
+        noise_db = float(signal_noise) / 10
+        infotext = "Signal/Noise ratio: %.2f dB" % noise_db
         warn, crit = params['signal_noise']
 
         state = 0
@@ -118,40 +117,46 @@ def check_docsis_channels_upstream(item, params, parsed):
         if state:
             infotext += " (warn/crit below %.1f/%.1f dB)" % (warn, crit)
 
-        yield state, infotext, [ ('signal_noise', noise_db, warn, crit ) ]
+        yield state, infotext, [('signal_noise', noise_db, warn, crit)]
 
-        fields = [( "frequency", float(mhz) / 1000000, "Frequency", "%.2f", " MHz" )]
+        fields = [("frequency", float(mhz) / 1000000, "Frequency", "%.2f", " MHz")]
         if len(entry) >= 6:
             total, active, registered, avg_util = entry[5:9]
-            fields += [
-                ( "total",      int(total),      "Modems total",         "%d", "" ),
-                ( "active",     int(active),     "Active",               "%d", "" ),
-                ( "registered", int(registered), "Registered",           "%d", "" ),
-                ( "util",       int(avg_util),   "Aaverage utilization", "%d", "%" )]
+            fields += [("total", int(total), "Modems total", "%d", ""),
+                       ("active", int(active), "Active", "%d", ""),
+                       ("registered", int(registered), "Registered", "%d", ""),
+                       ("util", int(avg_util), "Aaverage utilization", "%d", "%")]
 
         for varname, value, title, form, unit in fields:
-            yield 0, title + ": " + (form + "%s") % (value, unit), [ (varname, value) ]
+            yield 0, title + ": " + (form + "%s") % (value, unit), [(varname, value)]
 
         # Handle codewords. These are counters.
-        now   = time.time()
+        now = time.time()
         rates = {}
         total_rate = 0.0
-        for what, counter in [
-            ( "unerrored",     int(unerroreds),   ),
-            ( "corrected",     int(correcteds),   ),
-            ( "uncorrectable", int(uncorrectables))]:
+        for what, counter in [(
+                "unerrored",
+                int(unerroreds),
+        ), (
+                "corrected",
+                int(correcteds),
+        ), ("uncorrectable", int(uncorrectables))]:
             rate = get_rate("docsis_channels_upstream.%s.%s" % (item, what), now, counter)
             rates[what] = rate
             total_rate += rate
 
         if total_rate:
-            for what, title in [
-                ( "corrected",     "corrected errors",     ),
-                ( "uncorrectable", "uncorrectable errors", )]:
-                ratio      = rates[what] / total_rate
-                perc       = 100.0 * ratio
+            for what, title in [(
+                    "corrected",
+                    "corrected errors",
+            ), (
+                    "uncorrectable",
+                    "uncorrectable errors",
+            )]:
+                ratio = rates[what] / total_rate
+                perc = 100.0 * ratio
                 warn, crit = params[what]
-                infotext   = "%s %s" % (get_percent_human_readable(perc), title)
+                infotext = "%s %s" % (get_percent_human_readable(perc), title)
 
                 if perc >= crit:
                     state = 2
@@ -161,48 +166,53 @@ def check_docsis_channels_upstream(item, params, parsed):
                 if state:
                     infotext += " (warn/crit at %.1f/%.1f%%)" % (warn, crit)
 
-                yield state, infotext, [ ("codewords_" + what, ratio, warn/100.0, crit/100.0) ]
+                yield state, infotext, [("codewords_" + what, ratio, warn / 100.0, crit / 100.0)]
 
 
 check_info["docsis_channels_upstream"] = {
-    "parse_function"          : parse_docsis_channels_upstream,
-    "inventory_function"      : inventory_docsis_channels_upstream,
-    "check_function"          : check_docsis_channels_upstream,
-    "service_description"     : "Upstream Channel %s",
-    "has_perfdata"            : True,
-    "snmp_scan_function"      : docsis_scan_function,
-    "snmp_info"               : [( ".1.3.6.1.2.1.10.127.1.1.2.1", [
-                                        OID_END,
-                                        "1",    # DOCS-IF-MIB::docsIfUpChannelId
-                                        "2",    # DOCS-IF-MIB::docsIfUpChannelFrequency
-                                 ]),
-                                 ( ".1.3.6.1.2.1.10.127.1.1.4.1", [
-                                        OID_END,
-                                        "2",    # DOCS-IF-MIB::docsIfSigQUnerroreds:
-                                                # "Codewords received on this channel without error.
-                                                # This includes all codewords, whether or not they
-                                                # were part of frames destined for this device."
-
-                                        "3",    # DOCS-IF-MIB::docsIfSigQCorrecteds:
-                                                # "Codewords received on this channel with correctable
-                                                # errors. This includes all codewords, whether or not
-                                                # they were part of frames destined for this device."
-
-                                        "4",    # DOCS-IF-MIB::docsIfSigQUncorrectables:
-                                                # "Codewords received on this channel with uncorrectable
-                                                # errors. This includes all codewords, whether or not
-                                                # they were part of frames destined for this device."
-
-                                        "5",    # DOCS-IF-MIB::docsIfSigQSignalNoise
-                                 ]),
-                                 ( ".1.3.6.1.4.1.9.9.116.1.4.1.1" , [
-                                        OID_END,
-                                        "3",    # CISCO-DOCS-EXT-MIB::cdxIfUpChannelCmTotal
-                                        "4",    # CISCO-DOCS-EXT-MIB::cdxIfUpChannelCmActive
-                                        "5",    # CISCO-DOCS-EXT-MIB::cdxIfUpChannelCmRegistered
-                                        "7",    # CISCO-DOCS-EXT-MIB::cdxIfUpChannelAvgUtil
-                                ])],
-    "default_levels_variable" : "docsis_channels_upstream_default_levels",
-    "group"                   : "docsis_channels_upstream",
-    "includes"                : [ "docsis.include" ],
+    "parse_function": parse_docsis_channels_upstream,
+    "inventory_function": inventory_docsis_channels_upstream,
+    "check_function": check_docsis_channels_upstream,
+    "service_description": "Upstream Channel %s",
+    "has_perfdata": True,
+    "snmp_scan_function": docsis_scan_function,
+    "snmp_info": [
+        (
+            ".1.3.6.1.2.1.10.127.1.1.2.1",
+            [
+                OID_END,
+                "1",  # DOCS-IF-MIB::docsIfUpChannelId
+                "2",  # DOCS-IF-MIB::docsIfUpChannelFrequency
+            ]),
+        (
+            ".1.3.6.1.2.1.10.127.1.1.4.1",
+            [
+                OID_END,
+                "2",  # DOCS-IF-MIB::docsIfSigQUnerroreds:
+                # "Codewords received on this channel without error.
+                # This includes all codewords, whether or not they
+                # were part of frames destined for this device."
+                "3",  # DOCS-IF-MIB::docsIfSigQCorrecteds:
+                # "Codewords received on this channel with correctable
+                # errors. This includes all codewords, whether or not
+                # they were part of frames destined for this device."
+                "4",  # DOCS-IF-MIB::docsIfSigQUncorrectables:
+                # "Codewords received on this channel with uncorrectable
+                # errors. This includes all codewords, whether or not
+                # they were part of frames destined for this device."
+                "5",  # DOCS-IF-MIB::docsIfSigQSignalNoise
+            ]),
+        (
+            ".1.3.6.1.4.1.9.9.116.1.4.1.1",
+            [
+                OID_END,
+                "3",  # CISCO-DOCS-EXT-MIB::cdxIfUpChannelCmTotal
+                "4",  # CISCO-DOCS-EXT-MIB::cdxIfUpChannelCmActive
+                "5",  # CISCO-DOCS-EXT-MIB::cdxIfUpChannelCmRegistered
+                "7",  # CISCO-DOCS-EXT-MIB::cdxIfUpChannelAvgUtil
+            ])
+    ],
+    "default_levels_variable": "docsis_channels_upstream_default_levels",
+    "group": "docsis_channels_upstream",
+    "includes": ["docsis.include"],
 }

@@ -24,108 +24,104 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # snmp_scan_function
 # .1.3.6.1.2.1.1.1.0 = "AirLaser IP1000"  < matches airlaser
 # .1.3.6.1.4.1.2800.2.1.1.0 3             < Version of management agent ( exists )
 # snmp_info
 # .1.3.6.1.4.1.2800.2.1.3                 < AirLaser Status
 
-
 # Migrate to factory settings?
 airlaser_default_levels = {
-     "opttxTempValue"   : (60, 80),
-     "chassisTempValue" : (60, 70),
-     "chassisFrontScreenTempValue" : (40, 55),
-     "optrxTempValue"   : (50, 60),
-     "apmodTempValue"   : (60, 70),  }
+    "opttxTempValue": (60, 80),
+    "chassisTempValue": (60, 70),
+    "chassisFrontScreenTempValue": (40, 55),
+    "optrxTempValue": (50, 60),
+    "apmodTempValue": (60, 70),
+}
 
 
 def parse_cbl_airlaser(info):
 
-    airlaser_status_names = { 0: 'undefined', 1: 'active', 2: 'standby',
-                    3 : 'warning', 4: 'failure', 5: 'not_installed' }
-
-
-# I have my own little MIB right here, their MIB is
-# just a long list, not structured.
-    airlaser_sensors = {
-       "chassis" : {
-      # Name of OID,    Value,    specific OID (not used), Position in SNMP data
-          "chassisFrontScreenTempStatus"   : ( None, "2.1.1.0",  0 ),
-          "chassisFrontScreenTempValue"    : ( None, "2.1.2.0",  1 ),
-          "chassisHeatingStatus"           : ( None, "2.1.7.0",  6 ),
-          "chassisTempStatus"              : ( None, "2.1.8.0",  7 ),
-          "chassisTempValue"               : ( None, "2.1.9.0",  8 ),
-          "chassisFan1Status"              : ( None, "2.1.10.0", 9 ),
-          "chassisFan2Status"              : ( None, "2.1.12.0", 11),
-             },
-       "power"    : {
-          "psStatus48V"                    : ( None, "2.2.2.0",  1),
-          "psStatus230V"                   : ( None, "2.2.3.0",  2),
-          "psStatus5V"                     : ( None, "2.2.4.0",  3),
-          "psStatus3V3"                    : ( None, "2.2.8.0",  7),
-          "psStatus2V5"                    : ( None, "2.2.12.0", 11),
-             },
-
-       "module"   : {
-           "apmodTempStatus"               : (None, "2.3.6.0",   5),
-           "apmodTempValue"                : (None, "2.3.7.0",   6),
-             },
-
-       "opttx"    : {
-           "opttxTempValue"                : (None, "2.4.3.0",   2),
-           "opttxStatusTemp"               : (None, "2.4.4.0",   3),
-             },
-
-       "optrx"    : {
-           "optrxStatusTemp"               : (None, "2.5.3.0",   2),
-           # this is mislabeled "optrxValueTemp"
-           "optrxTempValue"                : (None, "2.5.4.0",   3),
-           #"optrxOptValue"
-           # .1.3.6.1.4.1.2800.2.2.5.8.0  -10
-           #"optrxOptMargin"
-           # .1.3.6.1.4.1.2800.2.2.5.9.0  22
-             },
+    airlaser_status_names = {
+        0: 'undefined',
+        1: 'active',
+        2: 'standby',
+        3: 'warning',
+        4: 'failure',
+        5: 'not_installed'
     }
 
+    # I have my own little MIB right here, their MIB is
+    # just a long list, not structured.
+    airlaser_sensors = {
+        "chassis": {
+            # Name of OID,    Value,    specific OID (not used), Position in SNMP data
+            "chassisFrontScreenTempStatus": (None, "2.1.1.0", 0),
+            "chassisFrontScreenTempValue": (None, "2.1.2.0", 1),
+            "chassisHeatingStatus": (None, "2.1.7.0", 6),
+            "chassisTempStatus": (None, "2.1.8.0", 7),
+            "chassisTempValue": (None, "2.1.9.0", 8),
+            "chassisFan1Status": (None, "2.1.10.0", 9),
+            "chassisFan2Status": (None, "2.1.12.0", 11),
+        },
+        "power": {
+            "psStatus48V": (None, "2.2.2.0", 1),
+            "psStatus230V": (None, "2.2.3.0", 2),
+            "psStatus5V": (None, "2.2.4.0", 3),
+            "psStatus3V3": (None, "2.2.8.0", 7),
+            "psStatus2V5": (None, "2.2.12.0", 11),
+        },
+        "module": {
+            "apmodTempStatus": (None, "2.3.6.0", 5),
+            "apmodTempValue": (None, "2.3.7.0", 6),
+        },
+        "opttx": {
+            "opttxTempValue": (None, "2.4.3.0", 2),
+            "opttxStatusTemp": (None, "2.4.4.0", 3),
+        },
+        "optrx": {
+            "optrxStatusTemp": (None, "2.5.3.0", 2),
+            # this is mislabeled "optrxValueTemp"
+            "optrxTempValue": (None, "2.5.4.0", 3),
+            #"optrxOptValue"
+            # .1.3.6.1.4.1.2800.2.2.5.8.0  -10
+            #"optrxOptMargin"
+            # .1.3.6.1.4.1.2800.2.2.5.9.0  22
+        },
+    }
 
     # load the info into a dict separated by the different MIB regions
     # Selfest (info[0] is not handled here.
     data = {
-        "chassis" :  info[1],
-        "power"   :  info[2],
-        "module"  :  info[3],
-        "opttx"   :  info[4],
-        "optrx"   :  info[5],
+        "chassis": info[1],
+        "power": info[2],
+        "module": info[3],
+        "opttx": info[4],
+        "optrx": info[5],
     }
-
 
     # update values from one dict into the other by picking the "offsetted" values
     # (optimize at will, if we can make it one-dict-for-all then we 100% sanitized their MIB)
     for hwclass, sensors in airlaser_sensors.iteritems():
         for sensor in sensors:
             # we could remove the offset hack by parsing our OID
-            sub_oid   = sensors[sensor][1]
-            offset    = sensors[sensor][2]
-
+            sub_oid = sensors[sensor][1]
+            offset = sensors[sensor][2]
 
             if "Status" in sensor:
                 value = airlaser_status_names[int(data[hwclass][offset][0])]
             else:
                 value = saveint(data[hwclass][offset][0])
-            sensors[sensor] = ( value, sub_oid, offset)
+            sensors[sensor] = (value, sub_oid, offset)
 
     return airlaser_sensors
 
 
-
 def check_cbl_airlaser_hw(item, params, info):
-
 
     airlaser_info = parse_cbl_airlaser(info)
 
-    state  = 0
+    state = 0
     msgtxt = ""
     perfdata = []
 
@@ -137,7 +133,7 @@ def check_cbl_airlaser_hw(item, params, info):
                 if sensor in params.keys():
                     warn, crit = params[sensor]
                     perfdata.append(("%s" % sensor, "%d" % val, warn, crit, 0, 90))
-                    if   val > crit:
+                    if val > crit:
                         state = max(state, 2)
                     elif val > warn:
                         state = max(state, 1)
@@ -173,7 +169,7 @@ def inventory_cbl_airlaser(info):
     # start passing parameters, but since we might also need some for optics
     # this may change to using factory settings.
     # Or we just hardcode the margins we got from the vendor.
-    return [ (None, "airlaser_default_levels") ]
+    return [(None, "airlaser_default_levels")]
 
 
 def check_cbl_airlaser_status(item, _no_params, info):
@@ -210,10 +206,9 @@ check_info["cbl_airlaser.status"]  = {
 
 }
 
-
-check_info["cbl_airlaser.hardware"]  = {
-    "check_function"       : check_cbl_airlaser_hw,
-    "inventory_function"   : inventory_cbl_airlaser,
-    "service_description"  : "CBL Airlaser Hardware",
-    "has_perfdata"         : True,
+check_info["cbl_airlaser.hardware"] = {
+    "check_function": check_cbl_airlaser_hw,
+    "inventory_function": inventory_cbl_airlaser,
+    "service_description": "CBL Airlaser Hardware",
+    "has_perfdata": True,
 }

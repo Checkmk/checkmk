@@ -36,10 +36,10 @@ def check_docker_node_disk_usage(item, params, parsed):
         return
 
     for key, param, conversion_func in (
-            ('Size', 'size', get_filesize_human_readable),
-            ('Reclaimable', 'reclaimable', get_filesize_human_readable),
-            ('TotalCount', 'count', lambda x: x),
-            ('Active', 'active', lambda x: x),
+        ('Size', 'size', get_filesize_human_readable),
+        ('Reclaimable', 'reclaimable', get_filesize_human_readable),
+        ('TotalCount', 'count', lambda x: x),
+        ('Active', 'active', lambda x: x),
     ):
         value = data[key]
 

@@ -36,9 +36,10 @@
 # VMToolsState Running
 # AgentVersion 7.6.0.5026
 
+
 def parse_citrix_state(info):
     parsed = {
-        "instance"    : {},
+        "instance": {},
     }
     for line in info:
         if line[0] == "Controller":
@@ -46,8 +47,8 @@ def parse_citrix_state(info):
         elif line[0] == "HostingServer":
             parsed["hosting_server"] = " ".join(line[1:])
         elif line[0] in [
-                "FaultState", "MaintenanceMode", "PowerState",
-                "RegistrationState", "VMToolsState" ]:
+                "FaultState", "MaintenanceMode", "PowerState", "RegistrationState", "VMToolsState"
+        ]:
             parsed["instance"][line[0]] = line[1]
 
     return parsed
@@ -65,7 +66,7 @@ def parse_citrix_state(info):
 
 def inventory_citrix_state_controller(parsed):
     if "controller" in parsed:
-        return [ (None, None) ]
+        return [(None, None)]
 
 
 def check_citrix_state_controller(_no_item, _no_params, parsed):
@@ -73,9 +74,9 @@ def check_citrix_state_controller(_no_item, _no_params, parsed):
 
 
 check_info["citrix_state.controller"] = {
-    "inventory_function"    : inventory_citrix_state_controller,
-    "check_function"        : check_citrix_state_controller,
-    "service_description"   : "Citrix Controller",
+    "inventory_function": inventory_citrix_state_controller,
+    "check_function": check_citrix_state_controller,
+    "service_description": "Citrix Controller",
 }
 
 #.
@@ -91,7 +92,7 @@ check_info["citrix_state.controller"] = {
 
 def inventory_citrix_state_hosting_server(parsed):
     if "hosting_server" in parsed:
-        return [ (None, None) ]
+        return [(None, None)]
 
 
 def check_citrix_state_hosting_server(_no_item, _no_params, parsed):
@@ -99,9 +100,9 @@ def check_citrix_state_hosting_server(_no_item, _no_params, parsed):
 
 
 check_info["citrix_state.hosting_server"] = {
-    "inventory_function"    : inventory_citrix_state_hosting_server,
-    "check_function"        : check_citrix_state_hosting_server,
-    "service_description"   : "Citrix Hosting Server",
+    "inventory_function": inventory_citrix_state_hosting_server,
+    "check_function": check_citrix_state_hosting_server,
+    "service_description": "Citrix Hosting Server",
 }
 
 #.
@@ -117,43 +118,43 @@ check_info["citrix_state.hosting_server"] = {
 
 def inventory_citrix_state(parsed):
     if parsed["instance"]:
-        return [ (None, {}) ]
+        return [(None, {})]
 
 
 def check_citrix_state(_no_item, params, parsed):
     map_states = {
-        "maintenancemode" : {
-            "False" : 0,
-            "True"  : 1,
+        "maintenancemode": {
+            "False": 0,
+            "True": 1,
         },
-        "powerstate" : {
-            "Unmanaged"     : 1,
-            "Unknown"       : 1,
-            "Unavailable"   : 2,
-            "Off"           : 2,
-            "On"            : 0,
-            "Suspended"     : 2,
-            "TurningOn"     : 1,
-            "TurningOff"    : 1,
+        "powerstate": {
+            "Unmanaged": 1,
+            "Unknown": 1,
+            "Unavailable": 2,
+            "Off": 2,
+            "On": 0,
+            "Suspended": 2,
+            "TurningOn": 1,
+            "TurningOff": 1,
         },
-        "vmtoolsstate" : {
-            "NotPresent"    : 2,
-            "Unknown"       : 3,
-            "NotStarted"    : 1,
-            "Running"       : 0,
+        "vmtoolsstate": {
+            "NotPresent": 2,
+            "Unknown": 3,
+            "NotStarted": 1,
+            "Running": 0,
         },
-        "registrationstate" : {
-            "Unregistered"  : 2,
-            "Initializing"  : 1,
-            "Registered"    : 0,
-            "AgentError"    : 2,
+        "registrationstate": {
+            "Unregistered": 2,
+            "Initializing": 1,
+            "Registered": 0,
+            "AgentError": 2,
         },
-        "faultstate" : {
-            "None"          : 0,
-            "FailedToStart" : 2,
-            "StuckOnBoot"   : 2,
-            "Unregistered"  : 2,
-            "MaxCapacity"   : 1,
+        "faultstate": {
+            "None": 0,
+            "FailedToStart": 2,
+            "StuckOnBoot": 2,
+            "Unregistered": 2,
+            "MaxCapacity": 1,
         },
     }
     map_states.update(params)
@@ -164,9 +165,9 @@ def check_citrix_state(_no_item, params, parsed):
 
 
 check_info["citrix_state"] = {
-    "parse_function"            : parse_citrix_state,
-    "inventory_function"        : inventory_citrix_state,
-    "check_function"            : check_citrix_state,
-    "service_description"       : "Citrix Instance State",
-    "group"                     : "citrix_state",
+    "parse_function": parse_citrix_state,
+    "inventory_function": inventory_citrix_state,
+    "check_function": check_citrix_state,
+    "service_description": "Citrix Instance State",
+    "group": "citrix_state",
 }

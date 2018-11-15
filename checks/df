@@ -90,10 +90,10 @@
 # C:\Program Files\Vision Solutions\Double-Take\Service\MountDir\usauhtest0010_c061b170-ad3f-473f-92ce-088c97fce98e_C\ NTFS 41835516 11895180 29940336 29% C:\Program Files\Vision Solutions\Double-Take\Service\MountDir\usauhtest0010_c061b170-ad3f-473f-92ce-088c97fce98e_C\
 
 inventory_df_rules = []
-inventory_df_exclude_fs = [ 'tmpfs', 'nfs', 'smbfs', 'cifs', 'iso9660' ]
+inventory_df_exclude_fs = ['tmpfs', 'nfs', 'smbfs', 'cifs', 'iso9660']
+
 
 def parse_df(info):
-
     def parse_blocks_subsection(blocks_subsection):
         volume_info = {}
         df_blocks = []
@@ -104,16 +104,18 @@ def parse_df(info):
             except ValueError:
                 pass
             else:
-                line = [ line[0], None ] + line[1:]
+                line = [line[0], None] + line[1:]
 
             # Handle known cases, where the file system contains spaces
             for index, entry in enumerate(line):
                 if entry == "NTFS":
-                    line = [ " ".join(line[:index]) ] + [line[index]] + line[index+1:index+5] + [ " ".join(line[index+5:]) ]
+                    line = [" ".join(line[:index])] + [line[index]] + line[index + 1:index + 5] + [
+                        " ".join(line[index + 5:])
+                    ]
                     break
 
             if line[2] == "File" and line[3] == "System":
-                line =  [ line[0], " ".join(line[1:4]) ] + line[4:]
+                line = [line[0], " ".join(line[1:4])] + line[4:]
 
             fs_type = line[1]
             # This particular bit of magic originated in Werk #2671 and has the purpose of avoiding duplicate checks,
@@ -127,7 +129,7 @@ def parse_df(info):
                     continue
 
             else:
-                mountpoint = " ".join(line[6:]).replace('\\', '/') # Windows \ is replaced with /
+                mountpoint = " ".join(line[6:]).replace('\\', '/')  # Windows \ is replaced with /
 
             # exclude filesystems without size
             try:
@@ -141,16 +143,16 @@ def parse_df(info):
             # Beware(2): the column used_mb does not account for the reserved space for
             # superusers. So we rather use the column 'avail' and subtract that from total
             # to compute the used space.
-            size_mb    = int(line[2]) / 1024.0
-            avail_mb   = int(line[4]) / 1024.0
-            used_mb    = int(line[3]) / 1024.0
-            reserved_mb = size_mb - avail_mb - used_mb # reserved for root
+            size_mb = int(line[2]) / 1024.0
+            avail_mb = int(line[4]) / 1024.0
+            used_mb = int(line[3]) / 1024.0
+            reserved_mb = size_mb - avail_mb - used_mb  # reserved for root
             df_blocks.append((mountpoint, size_mb, avail_mb, reserved_mb))
 
             volume_name = line[0]
             volume_info[mountpoint] = {
-                "volume_name"   : volume_name,
-                "fs_type"       : fs_type,
+                "volume_name": volume_name,
+                "fs_type": fs_type,
             }
 
         return df_blocks, volume_info
@@ -163,7 +165,7 @@ def parse_df(info):
             except ValueError:
                 pass
             else:
-                line = [ line[0], None ] + line[1:]
+                line = [line[0], None] + line[1:]
 
             try:
                 inodes_total = int(line[2])
@@ -174,7 +176,6 @@ def parse_df(info):
             mountpoint = line[-1]
             df_inodes.append((mountpoint, inodes_total, inodes_avail))
         return df_inodes
-
 
     blocks_subsection = []
     inodes_subsection = []
@@ -197,7 +198,6 @@ def parse_df(info):
 
 
 def inventory_df(parsed):
-
     def is_mountpoint(inventory_entry):
         return "patterns" not in inventory_entry[1]
 
@@ -213,12 +213,11 @@ def inventory_df(parsed):
 
         mountpoint = line[0]
         if mountpoint in inventory_df_exclude_mountpoints:
-            continue # exclude this mount point (/tmp, /proc, whatever user wants)
-        if volume_info[mountpoint]["fs_type"] in ignore_fs_types and mountpoint not in never_ignore_mountpoints:
-            continue # ignore this filesystem type
+            continue  # exclude this mount point (/tmp, /proc, whatever user wants)
+        if volume_info[mountpoint][
+                "fs_type"] in ignore_fs_types and mountpoint not in never_ignore_mountpoints:
+            continue  # ignore this filesystem type
         mplist.append(mountpoint)
-
-
 
     if include_volume_name:
         inventory = []
@@ -238,7 +237,9 @@ def check_df(item, params, parsed):
     (df_blocks, volume_info), df_inodes = parsed
 
     df_blocks = _filter_docker_filesystems(df_blocks)
-    volume_and_mp_to_mp = { ("%s %s" % (volume_info[mp]["volume_name"], mp)) : mp for mp in volume_info }
+    volume_and_mp_to_mp = {
+        ("%s %s" % (volume_info[mp]["volume_name"], mp)): mp for mp in volume_info
+    }
     if "patterns" in params or item in volume_info:
         mountpoint = item
     elif item in volume_and_mp_to_mp:
@@ -252,17 +253,19 @@ def check_df(item, params, parsed):
 # And also exclude docker mounts in containers which are reported
 # by the agent when the agent is executed in the container context
 def _filter_docker_filesystems(df_blocks):
-    return [ e for e in df_blocks if not e[0].startswith("/var/lib/docker/")
-             and e[0] not in [ "/etc/resolv.conf", "/etc/hostname", "/etc/hosts" ] ]
+    return [
+        e for e in df_blocks if not e[0].startswith("/var/lib/docker/") and
+        e[0] not in ["/etc/resolv.conf", "/etc/hostname", "/etc/hosts"]
+    ]
 
 
 check_info['df'] = {
-    "parse_function"          : parse_df,
-    "inventory_function"      : inventory_df,
-    "check_function"          : check_df,
-    "service_description"     : "Filesystem %s",
-    "has_perfdata"            : True,
-    "group"                   : "filesystem",
-    "default_levels_variable" : "filesystem_default_levels",
-    "includes"                : [ "size_trend.include", "df.include" ],
+    "parse_function": parse_df,
+    "inventory_function": inventory_df,
+    "check_function": check_df,
+    "service_description": "Filesystem %s",
+    "has_perfdata": True,
+    "group": "filesystem",
+    "default_levels_variable": "filesystem_default_levels",
+    "includes": ["size_trend.include", "df.include"],
 }

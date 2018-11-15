@@ -43,18 +43,16 @@ def check_bvip_poe(_no_item, params, info):
         state = 1
     else:
         state = 0
-    return state, "%.3f W" % watt, [ ('power', watt )]
+    return state, "%.3f W" % watt, [('power', watt)]
 
 
 check_info["bvip_poe"] = {
-    "check_function"        : check_bvip_poe,
-    "inventory_function"    : inventory_bvip_poe,
-    "service_description"   : "POE Power",
-    "snmp_scan_function"    : bvip_scan_function,
-    "snmp_info"             : (".1.3.6.1.4.1.3967.1.1", [ 10 ]),
-    "includes"              : [ 'bvip.include' ],
-    "has_perfdata"          : True,
-    "group"                 : "epower_single",
-
+    "check_function": check_bvip_poe,
+    "inventory_function": inventory_bvip_poe,
+    "service_description": "POE Power",
+    "snmp_scan_function": bvip_scan_function,
+    "snmp_info": (".1.3.6.1.4.1.3967.1.1", [10]),
+    "includes": ['bvip.include'],
+    "has_perfdata": True,
+    "group": "epower_single",
 }
-

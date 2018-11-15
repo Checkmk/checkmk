@@ -24,10 +24,12 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-db2_mem_default_levels = ( 10.0, 5.0 )
+db2_mem_default_levels = (10.0, 5.0)
+
 
 def inventory_db2_mem(info):
-    return [ (x[1], db2_mem_default_levels ) for x in info if x[0] == "Instance"]
+    return [(x[1], db2_mem_default_levels) for x in info if x[0] == "Instance"]
+
 
 def check_db2_mem(item, params, info):
     if not info:
@@ -58,7 +60,7 @@ def check_db2_mem(item, params, info):
         return
 
     left = limit - usage
-    perc_level = ( 100.0 / limit ) * left
+    perc_level = (100.0 / limit) * left
     label = " (Warn/Crit %d%%/%d%%)" % (warn, crit)
 
     if perc_level <= crit:
@@ -73,15 +75,15 @@ def check_db2_mem(item, params, info):
                     (get_bytes_human_readable(limit),
                      get_bytes_human_readable(usage),
                      perc_level, label)
-    perf = [("mem", usage, 0, 0, 0, limit )]
+    perf = [("mem", usage, 0, 0, 0, limit)]
 
     return state, message, perf
 
 
 check_info['db2_mem'] = {
-    "check_function"          : check_db2_mem,
-    "inventory_function"      : inventory_db2_mem,
-    "service_description"     : "Mem of %s",
-    "has_perfdata"            : True,
-    "group"                   : "db2_mem"
+    "check_function": check_db2_mem,
+    "inventory_function": inventory_db2_mem,
+    "service_description": "Mem of %s",
+    "has_perfdata": True,
+    "group": "db2_mem"
 }

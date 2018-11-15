@@ -46,10 +46,11 @@ def parse_ddn_s2a_stats(info):
 
 ddn_s2a_readhits_default_levels = (85.0, 70.0)
 
+
 def inventory_ddn_s2a_stats_readhits(parsed):
     if u"All_ports_Read_Hits" in parsed:
         yield "Total", "ddn_s2a_readhits_default_levels"
-    for nr, _  in enumerate(parsed.get(u"Read_Hits",[])):
+    for nr, _ in enumerate(parsed.get(u"Read_Hits", [])):
         yield "%d" % (nr + 1), "ddn_s2a_readhits_default_levels"
 
 
@@ -58,16 +59,16 @@ def check_ddn_s2a_stats_readhits(item, params, parsed):
     if item == "Total":
         read_hits = float(parsed[u"All_ports_Read_Hits"])
     else:
-        read_hits = float(parsed[u"Read_Hits"][int(item)-1])
+        read_hits = float(parsed[u"Read_Hits"][int(item) - 1])
 
     infotext = "%.1f%%" % read_hits
     if params is None:
-        perfdata = [ ("read_hits", read_hits) ] # TODO: Define metric
+        perfdata = [("read_hits", read_hits)]  # TODO: Define metric
         status = 0
     else:
         warn, crit = params
         levelstext = " (warn/crit below %.1f/%.1f%%)" % params
-        perfdata = [ ("read_hits", read_hits, warn, crit) ]
+        perfdata = [("read_hits", read_hits, warn, crit)]
         if read_hits < crit:
             status = 2
             infotext += levelstext
@@ -81,11 +82,11 @@ def check_ddn_s2a_stats_readhits(item, params, parsed):
 
 
 check_info["ddn_s2a_stats.readhits"] = {
-    "inventory_function"    : inventory_ddn_s2a_stats_readhits,
-    "check_function"        : check_ddn_s2a_stats_readhits,
-    "service_description"   : "DDN S2A Read Hits %s",
-    "has_perfdata"          : True,
-    "group"                 : "read_hits",
+    "inventory_function": inventory_ddn_s2a_stats_readhits,
+    "check_function": check_ddn_s2a_stats_readhits,
+    "service_description": "DDN S2A Read Hits %s",
+    "has_perfdata": True,
+    "group": "read_hits",
 }
 
 #.
@@ -105,27 +106,26 @@ check_info["ddn_s2a_stats.readhits"] = {
 #   '----------------------------------------------------------------------'
 
 factory_settings["ddn_s2a_stats_io_default_levels"] = {
-    "total" : (28000, 33000),
+    "total": (28000, 33000),
 }
 
 
 def inventory_ddn_s2a_stats_io(parsed):
-    if  u"All_ports_Read_IOs" in parsed:
+    if u"All_ports_Read_IOs" in parsed:
         yield "Total", {}
     for nr, _ in enumerate(parsed.get(u"Read_IOs", [])):
         yield "%d" % (nr + 1), {}
 
 
 def check_ddn_s2a_stats_io(item, params, parsed):
-
     def check_io_levels(value, levels, infotext_formatstring, perfname=None):
         infotext = infotext_formatstring % value
         if levels is None:
-            perfdata = [ (perfname, value) ]
+            perfdata = [(perfname, value)]
             status = 0
         else:
             warn, crit = levels
-            perfdata = [ (perfname, value, warn, crit) ]
+            perfdata = [(perfname, value, warn, crit)]
             levelstext = " (warn/crit at %.2f/%.2f 1/s)" % (warn, crit)
             if value >= crit:
                 status = 2
@@ -144,8 +144,8 @@ def check_ddn_s2a_stats_io(item, params, parsed):
         read_ios_s = float(parsed[u"All_ports_Read_IOs"])
         write_ios_s = float(parsed[u"All_ports_Write_IOs"])
     else:
-        read_ios_s = float(parsed[u"Read_IOs"][int(item)-1])
-        write_ios_s = float(parsed[u"Write_IOs"][int(item)-1])
+        read_ios_s = float(parsed[u"Read_IOs"][int(item) - 1])
+        write_ios_s = float(parsed[u"Write_IOs"][int(item) - 1])
     total_ios_s = read_ios_s + write_ios_s
 
     yield check_io_levels(read_ios_s, params.get("read"), "Read: %.2f 1/s", "disk_read_ios")
@@ -154,12 +154,12 @@ def check_ddn_s2a_stats_io(item, params, parsed):
 
 
 check_info["ddn_s2a_stats.io"] = {
-    "default_levels_variable"   : "ddn_s2a_stats_io_default_levels",
-    "inventory_function"        : inventory_ddn_s2a_stats_io,
-    "check_function"            : check_ddn_s2a_stats_io,
-    "service_description"       : "DDN S2A IO %s",
-    "has_perfdata"              : True,
-    "group"                     : "storage_iops",
+    "default_levels_variable": "ddn_s2a_stats_io_default_levels",
+    "inventory_function": inventory_ddn_s2a_stats_io,
+    "check_function": check_ddn_s2a_stats_io,
+    "service_description": "DDN S2A IO %s",
+    "has_perfdata": True,
+    "group": "storage_iops",
 }
 
 #.
@@ -173,28 +173,27 @@ check_info["ddn_s2a_stats.io"] = {
 #   '----------------------------------------------------------------------'
 
 factory_settings["ddn_s2a_stats_default_levels"] = {
-    "total" : (4800*1024*1024, 5500*1024*1024),
+    "total": (4800 * 1024 * 1024, 5500 * 1024 * 1024),
 }
 
 
 def inventory_ddn_s2a_stats(parsed):
     if u"All_ports_Read_MBs" in parsed:
         yield "Total", {}
-    for nr, _value in enumerate(parsed.get(u"Read_MBs",[])):
+    for nr, _value in enumerate(parsed.get(u"Read_MBs", [])):
         yield "%d" % (nr + 1), {}
 
 
 def check_ddn_s2a_stats(item, params, parsed):
-
     def check_datarate_levels(value, value_mb, levels, infotext_formatstring, perfname=None):
         infotext = infotext_formatstring % value_mb
         if levels is None:
-            perfdata = [ (perfname, value) ]
+            perfdata = [(perfname, value)]
             status = 0
         else:
             warn, crit = levels
-            warn_mb, crit_mb = [x/(1024*1024.0) for x in levels]
-            perfdata = [ (perfname, value, warn, crit) ]
+            warn_mb, crit_mb = [x / (1024 * 1024.0) for x in levels]
+            perfdata = [(perfname, value, warn, crit)]
             levelstext = " (warn/crit at %.2f/%.2f MB/s)" % (warn_mb, crit_mb)
             if value >= crit:
                 status = 2
@@ -209,7 +208,6 @@ def check_ddn_s2a_stats(item, params, parsed):
             return status, infotext
         return status, infotext, perfdata
 
-
     if item == "Total":
         read_mb_s = float(parsed[u"All_ports_Read_MBs"])
         write_mb_s = float(parsed[u"All_ports_Write_MBs"])
@@ -221,18 +219,20 @@ def check_ddn_s2a_stats(item, params, parsed):
     write = write_mb_s * 1024 * 1024
     total = total_mb_s * 1024 * 1024
 
-    yield check_datarate_levels(read, read_mb_s, params.get("read"), "Read: %.2f MB/s", "disk_read_throughput")
-    yield check_datarate_levels(write, write_mb_s, params.get("write"), "Write: %.2f MB/s", "disk_write_throughput")
+    yield check_datarate_levels(read, read_mb_s, params.get("read"), "Read: %.2f MB/s",
+                                "disk_read_throughput")
+    yield check_datarate_levels(write, write_mb_s, params.get("write"), "Write: %.2f MB/s",
+                                "disk_write_throughput")
     yield check_datarate_levels(total, total_mb_s, params.get("total"), "Total: %.2f MB/s")
 
 
 check_info["ddn_s2a_stats"] = {
-    "default_levels_variable"   : "ddn_s2a_stats_default_levels",
-    "parse_function"            : parse_ddn_s2a_stats,
-    "inventory_function"        : inventory_ddn_s2a_stats,
-    "check_function"            : check_ddn_s2a_stats,
-    "service_description"       : "DDN S2A Data Rate %s",
-    "includes"                  : [ "ddn_s2a.include" ],
-    "group"                     : "storage_throughput",
-    "has_perfdata"              : True,
+    "default_levels_variable": "ddn_s2a_stats_default_levels",
+    "parse_function": parse_ddn_s2a_stats,
+    "inventory_function": inventory_ddn_s2a_stats,
+    "check_function": check_ddn_s2a_stats,
+    "service_description": "DDN S2A Data Rate %s",
+    "includes": ["ddn_s2a.include"],
+    "group": "storage_throughput",
+    "has_perfdata": True,
 }

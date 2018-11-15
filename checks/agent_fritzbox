@@ -28,6 +28,7 @@
 #     'timeout': 10,
 # }
 
+
 def agent_fritzbox_arguments(params, hostname, ipaddress):
     args = ''
 
@@ -36,5 +37,6 @@ def agent_fritzbox_arguments(params, hostname, ipaddress):
 
     args += " " + quote_shell_string(ipaddress)
     return args
+
 
 special_agent_info['fritzbox'] = agent_fritzbox_arguments

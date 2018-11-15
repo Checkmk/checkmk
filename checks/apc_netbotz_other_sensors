@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # Max. eigth sensors
 # .1.3.6.1.4.1.5528.100.4.2.10.1.4.399845582 Wasserstand_FG1
 # .1.3.6.1.4.1.5528.100.4.2.10.1.4.3502248167 Ethernet Link Status
@@ -42,7 +41,7 @@
 def inventory_apc_netbotz_other_sensors(info):
     for _sensor_label, _error_state, state_readable in info:
         if state_readable != "":
-            return [ (None, None) ]
+            return [(None, None)]
 
 
 def check_apc_netbotz_other_sensors(_no_item, _no_params, info):

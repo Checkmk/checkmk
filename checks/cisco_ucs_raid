@@ -31,8 +31,9 @@
 # .1.3.6.1.4.1.9.9.719.1.45.1.1.14 cucsStorageControllerSerial
 # .1.3.6.1.4.1.9.9.719.1.45.1.1.7  cucsStorageControllerOperability
 
+
 def inventory_cisco_ucs_raid(info):
-        return [ (None, None) ]
+    return [(None, None)]
 
 
 def check_cisco_ucs_raid(_no_item, _no_params, info):
@@ -42,16 +43,18 @@ def check_cisco_ucs_raid(_no_item, _no_params, info):
                 (state_readable, model, vendor, serial)
 
 
-check_info["cisco_ucs_raid"]  = {
-    "check_function"     : check_cisco_ucs_raid,
-    "inventory_function" : inventory_cisco_ucs_raid,
+check_info["cisco_ucs_raid"] = {
+    "check_function": check_cisco_ucs_raid,
+    "inventory_function": inventory_cisco_ucs_raid,
     "service_description": "RAID Controller",
-    "snmp_scan_function" : scan_cisco_ucs,
-    "snmp_info"          : (".1.3.6.1.4.1.9.9.719.1.45.1.1", [
-                                "5",  # cucsStorageControllerModel
-                                "17", # cucsStorageControllerVendor
-                                "14", # cucsStorageControllerSerial
-                                "7",  # cucsStorageControllerOperability
-                            ]),
-    "includes"           : [ "cisco_ucs.include" ]
+    "snmp_scan_function": scan_cisco_ucs,
+    "snmp_info": (
+        ".1.3.6.1.4.1.9.9.719.1.45.1.1",
+        [
+            "5",  # cucsStorageControllerModel
+            "17",  # cucsStorageControllerVendor
+            "14",  # cucsStorageControllerSerial
+            "7",  # cucsStorageControllerOperability
+        ]),
+    "includes": ["cisco_ucs.include"]
 }

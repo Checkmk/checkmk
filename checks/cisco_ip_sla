@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 factory_settings['cisco_ip_sla_default_levels'] = {
     'state': 'active',
     'connection_lost_occured': 'no',
@@ -39,8 +38,7 @@ def parse_cisco_ip_sla(info):
     # since the RTT Index, Owner and Tag don't have to be set we use
     # indices for the different items
     precisions = [list_.pop() for list_ in info[0]]
-    precisions = {str(i): 'ms' if p[0] == '1' else 'us'
-                  for i, p in enumerate(precisions)}
+    precisions = {str(i): 'ms' if p[0] == '1' else 'us' for i, p in enumerate(precisions)}
 
     rtt_types = {
         '1': 'echo',
@@ -99,24 +97,25 @@ def parse_cisco_ip_sla(info):
 
     #contains description, parse function, unit and type
     contents = [
-        ( # rttMonEchoAdminEntry
+        (  # rttMonEchoAdminEntry
             ('Target address', to_ip_address, '', None),
             ('Source address', to_ip_address, '', None),
         ),
-        ( # rttMonCtrlAdminEntry
+        (  # rttMonCtrlAdminEntry
             ('Owner', None, '', None),
             ('Tag', None, '', None),
             ('RTT type', lambda x: rtt_types.get(x, 'unknown'), '', 'option'),
             ('Threshold', int, 'ms', 'option'),
         ),
-        ( # rttMonCtrlOperEntry
+        (  # rttMonCtrlOperEntry
             ('State', lambda x: states.get(x, 'unknown'), '', 'option'),
             ('Text', None, '', None),
             ('Connection lost occured', lambda x: 'yes' if x == '1' else 'no', '', 'option'),
             ('Timeout occured', lambda x: 'yes' if x == '1' else 'no', '', 'option'),
-            ('Completion time over treshold occured', lambda x: 'yes' if x == '1' else 'no', '', 'option'),
+            ('Completion time over treshold occured', lambda x: 'yes' if x == '1' else 'no', '',
+             'option'),
         ),
-        ( # rttMonLatestRttOperEntry
+        (  # rttMonLatestRttOperEntry
             ('Latest RTT completion time', int, 'ms/us', 'level'),
             ('Latest RTT state', lambda x: rtt_states.get(x, 'unknown'), '', 'option'),
         ),
@@ -135,9 +134,7 @@ def parse_cisco_ip_sla(info):
                     value = parser(value)
                 if unit == 'ms/us':
                     unit = precisions[index]
-                parsed[index].append(
-                    (description, value, unit, type_)
-                )
+                parsed[index].append((description, value, unit, type_))
 
     return parsed
 
@@ -159,9 +156,7 @@ def check_cisco_ip_sla(item, params, parsed):
             infotext = '%s: %s' % (description, value)
         perfdata = []
 
-        param = params.get(
-            description.lower().replace(' ', '_')
-        )
+        param = params.get(description.lower().replace(' ', '_'))
 
         if type_ == 'option':
             if param and param != value:
@@ -177,45 +172,52 @@ def check_cisco_ip_sla(item, params, parsed):
             if state:
                 infotext += ' (warn/crit at %s/%s)' % (warn, crit)
             factor = 1e3 if unit == 'ms' else 1e6
-            perfdata = [('rtt', value/factor, warn/factor, crit/factor)]
+            perfdata = [('rtt', value / factor, warn / factor, crit / factor)]
 
         yield state, infotext, perfdata
 
 
 check_info['cisco_ip_sla'] = {
-    'parse_function':           parse_cisco_ip_sla,
-    'inventory_function':       inventory_cisco_ip_sla,
-    'check_function':           check_cisco_ip_sla,
-    'service_description':      'Cisco IP SLA %s',
-    'group':                    'cisco_ip_sla',
-    'default_levels_variable':  'cisco_ip_sla_default_levels',
-    'has_perfdata':             True,
-    'snmp_scan_function':       lambda oid: oid('.1.3.6.1.2.1.1.2.0') in [
-                                    '.1.3.6.1.4.1.9.1.2068',
-                                ],
-    'snmp_info': [('.1.3.6.1.4.1.9.9.42.1.2.2.1', [
-                        BINARY(2),  # rttMonEchoAdminTargetAddress
-                        BINARY(6),  # rttMonEchoAdminSourceAddress
-                        # only needed to determine the unit (ms/us)
-                        37, # rttMonEchoAdminPrecision
-                  ]),
-                  ('.1.3.6.1.4.1.9.9.42.1.2.1.1', [
-                        2,  # rttMonCtrlAdminOwner
-                        3,  # rttMonCtrlAdminTag
-                        4,  # rttMonCtrlAdminRttType
-                        5,  # rttMonCtrlAdminThreshold
-                  ]),
-                  ('.1.3.6.1.4.1.9.9.42.1.2.9.1', [
-                        10, # rttMonCtrlOperState
-                        2,  # rttMonCtrlOperDiagText
-                        5,  # rttMonCtrlOperConnectionLostOccurred
-                        6,  # rttMonCtrlOperTimeoutOccurred
-                        7,  # rttMonCtrlOperOverThresholdOccurred
-                  ]),
-                  ('.1.3.6.1.4.1.9.9.42.1.2.10.1', [
-                        1,  # rttMonLatestRttOperCompletionTime
-                        2,  # rttMonLatestRttOperSense
-                  ]),
-                 ],
+    'parse_function': parse_cisco_ip_sla,
+    'inventory_function': inventory_cisco_ip_sla,
+    'check_function': check_cisco_ip_sla,
+    'service_description': 'Cisco IP SLA %s',
+    'group': 'cisco_ip_sla',
+    'default_levels_variable': 'cisco_ip_sla_default_levels',
+    'has_perfdata': True,
+    'snmp_scan_function': lambda oid: oid('.1.3.6.1.2.1.1.2.0') in [
+        '.1.3.6.1.4.1.9.1.2068',],
+    'snmp_info': [
+        (
+            '.1.3.6.1.4.1.9.9.42.1.2.2.1',
+            [
+                BINARY(2),  # rttMonEchoAdminTargetAddress
+                BINARY(6),  # rttMonEchoAdminSourceAddress
+                # only needed to determine the unit (ms/us)
+                37,  # rttMonEchoAdminPrecision
+            ]),
+        (
+            '.1.3.6.1.4.1.9.9.42.1.2.1.1',
+            [
+                2,  # rttMonCtrlAdminOwner
+                3,  # rttMonCtrlAdminTag
+                4,  # rttMonCtrlAdminRttType
+                5,  # rttMonCtrlAdminThreshold
+            ]),
+        (
+            '.1.3.6.1.4.1.9.9.42.1.2.9.1',
+            [
+                10,  # rttMonCtrlOperState
+                2,  # rttMonCtrlOperDiagText
+                5,  # rttMonCtrlOperConnectionLostOccurred
+                6,  # rttMonCtrlOperTimeoutOccurred
+                7,  # rttMonCtrlOperOverThresholdOccurred
+            ]),
+        (
+            '.1.3.6.1.4.1.9.9.42.1.2.10.1',
+            [
+                1,  # rttMonLatestRttOperCompletionTime
+                2,  # rttMonLatestRttOperSense
+            ]),
+    ],
 }
-

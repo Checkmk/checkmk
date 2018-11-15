@@ -38,8 +38,7 @@ def scan_checkpoint(oid):
 
 
 checkpoint_sensorstatus_to_nagios = {
-    "0" : (0, "sensor in range"),
-    "1" : (2, "sensor out of range"),
-    "2" : (3, "reading error"),
+    "0": (0, "sensor in range"),
+    "1": (2, "sensor out of range"),
+    "2": (3, "reading error"),
 }
-

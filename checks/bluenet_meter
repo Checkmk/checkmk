@@ -39,19 +39,21 @@ def parse_bluenet_meter(info):
 
 
 check_info["bluenet_meter"] = {
-    "parse_function"          : parse_bluenet_meter,
-    "inventory_function"      : inventory_elphase,
-    "check_function"          : check_elphase,
-    "service_description"     : "Powermeter %s",
-    "group"                   : "ups_outphase",
-    "has_perfdata"            : True,
-    "snmp_info"               : (".1.3.6.1.4.1.21695.1.10.7.2.1", [
-                                        1, # e3lpmMeter
-                                        5, # e3lpmPowerP
-                                        7, # e3lpmPowerS
-                                        8, # e3lpmUrms
-                                        9, # e3lpmIrms
-                               ]),
-    "snmp_scan_function"      : lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.21695.1",
-    "includes"                : ["elphase.include"],
+    "parse_function": parse_bluenet_meter,
+    "inventory_function": inventory_elphase,
+    "check_function": check_elphase,
+    "service_description": "Powermeter %s",
+    "group": "ups_outphase",
+    "has_perfdata": True,
+    "snmp_info": (
+        ".1.3.6.1.4.1.21695.1.10.7.2.1",
+        [
+            1,  # e3lpmMeter
+            5,  # e3lpmPowerP
+            7,  # e3lpmPowerS
+            8,  # e3lpmUrms
+            9,  # e3lpmIrms
+        ]),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.21695.1",
+    "includes": ["elphase.include"],
 }

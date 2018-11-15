@@ -24,16 +24,14 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # .1.3.6.1.4.1.9.2.1.57.0 13 --> OLD-CISCO-CPU-MIB::avgBusy1.0
-
 
 cisco_oldcpu_default_levels = (80.0, 90.0)
 
 
 def inventory_cisco_oldcpu(info):
     if info[0][0]:
-        return [ (None, "cisco_oldcpu_default_levels") ]
+        return [(None, "cisco_oldcpu_default_levels")]
 
 
 def check_cisco_oldcpu(_no_item, params, info):

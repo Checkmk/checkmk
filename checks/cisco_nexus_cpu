@@ -24,9 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # .1.3.6.1.4.1.9.9.305.1.1.1.0 1 --> CISCO-SYSTEM-EXT-MIB::cseSysCPUUtilization.0
-
 
 factory_settings["cisco_nexus_cpu_default_levels"] = {
     'levels': (80.0, 90.0),
@@ -35,7 +33,7 @@ factory_settings["cisco_nexus_cpu_default_levels"] = {
 
 def inventory_cisco_nexus_cpu(info):
     if info[0][0]:
-        return [ (None, {}) ]
+        return [(None, {})]
 
 
 def check_cisco_nexus_cpu(_no_item, params, info):

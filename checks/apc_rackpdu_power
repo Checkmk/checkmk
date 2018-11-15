@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # .1.3.6.1.4.1.318.1.1.12.1.1.0  "sf9pdu1" --> PowerNet-MIB::rPDUIdentName.0
 # .1.3.6.1.4.1.318.1.1.12.1.9.0 1 --> PowerNet-MIB::rPDUIdentDeviceNumPhases.0
 # .1.3.6.1.4.1.318.1.1.12.1.16.0 0 --> PowerNet-MIB::rPDUIdentDevicePowerWatts.0
@@ -42,7 +41,6 @@
 # .1.3.6.1.4.1.318.1.1.12.2.3.1.1.3.2 1 --> PowerNet-MIB::rPDULoadStatusLoadStates.2
 # .1.3.6.1.4.1.318.1.1.12.2.3.1.1.3.3 1 --> PowerNet-MIB::rPDULoadStatusLoadStates.3
 
-
 # examples num phase/banks: 1/0,    => parsed = device phase
 #                           1/2,    => parsed = device phase + 2 banks
 #                           3/0     => parsed = device phase + 3 phases
@@ -51,17 +49,18 @@
 def parse_apc_rackpdu_power(info):
     def get_status_info(amperage_str, device_state):
         return float(amperage_str) / 10, {
-               "1" : (0, "load normal"),
-               "2" : (2, "load low"),
-               "3" : (1, "load near over load"),
-               "4" : (2, "load over load"), }[device_state]
+            "1": (0, "load normal"),
+            "2": (2, "load low"),
+            "3": (1, "load near over load"),
+            "4": (2, "load over load"),
+        }[device_state]
 
     parsed = {}
     device_info, bank_info, phase_info = info
     pdu_ident_name, power_str = device_info[0]
     device_name = "Device %s" % pdu_ident_name
 
-    parsed.setdefault( device_name, { "power" : float(power_str) } )
+    parsed.setdefault(device_name, {"power": float(power_str)})
 
     if len(device_info) == len(phase_info):
         parsed[device_name]["current"] = get_status_info(*phase_info[0][1:])
@@ -70,13 +69,13 @@ def parse_apc_rackpdu_power(info):
     if int(bank_info[0][0]):
         parsed[device_name]["current"] = get_status_info(*phase_info[0][1:])
         phase_info = phase_info[1:]
-        name_part  = "Bank"
+        name_part = "Bank"
     else:
         name_part = "Phase"
 
     for oid_end, amperage_str, device_state in phase_info:
-        parsed.setdefault( "%s %s" % (name_part, oid_end),
-                           { "current" : get_status_info( amperage_str, device_state ) } )
+        parsed.setdefault("%s %s" % (name_part, oid_end),
+                          {"current": get_status_info(amperage_str, device_state)})
 
     return parsed
 

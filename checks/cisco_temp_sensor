@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # OIDs for name and type of the sensors (type 8 = temperature sensor)
 # SNMPv2-SMI::mib-2.47.1.1.1.1.2.21594 = STRING: "module-1 Crossbar(s5)"
 # SNMPv2-SMI::mib-2.47.1.1.1.1.2.21601 = STRING: "module-1 QEng1Sn1(s12)"
@@ -127,47 +126,49 @@ def parse_cisco_temp_sensor(info):
     # Create main dictionary (only of temperature sensors)
     sensors = []
     for id_, sensortype, scale, precision, value, sensorstate in state_info:
-        value     = float(value) / (10**int(precision))
+        value = float(value) / (10**int(precision))
         threshold = thresholds[id_] / (10**int(precision))
 
-        sensors.append( ( id_, descriptions.get(id_), sensortype, scale,
-                        value, sensorstate, threshold ) )
+        sensors.append((id_, descriptions.get(id_), sensortype, scale, value, sensorstate,
+                        threshold))
     return sensors
 
+
 def inventory_cisco_temp_sensor(info):
-#    sensors = parse_cisco_temp_sensor(info)
+    #    sensors = parse_cisco_temp_sensor(info)
     inventory = []
-#    for id, descr, sensortype, scale, value, sensorstate, levels in sensors:
-#        # Use all temperature sensors with a non-empty description and valid threshold
-#        if descr != None and sensortype == '8' and len(levels) in [ 2, 4 ]:
-#            warn, crit = saveint(levels[0]), saveint(levels[1])
-#            inventory.append(( descr, (warn, crit) ))
+    #    for id, descr, sensortype, scale, value, sensorstate, levels in sensors:
+    #        # Use all temperature sensors with a non-empty description and valid threshold
+    #        if descr != None and sensortype == '8' and len(levels) in [ 2, 4 ]:
+    #            warn, crit = saveint(levels[0]), saveint(levels[1])
+    #            inventory.append(( descr, (warn, crit) ))
     return inventory
+
 
 def check_cisco_temp_sensor(item, params, info):
     sensors = parse_cisco_temp_sensor(info)
     for _id, descr, _sensortype, _scale, _temp, _sensorstate, _levels in sensors:
         if item == descr:
-#            # Use built in levels if no levels are configured
-#            if params:
-#                warn, crit = params
-#            else:
-#                warn, crit = levels[0:2]
-#                # convert threshold milli values to native unit
-#                if scale == "8":
-#                    temp = temp/1000
-#                    warn = warn/1000
-#
-#            # convert milli temperature to native unit
-#            if scale == "8":
-#                crit = crit/1000
-#
-#            if sensorstate == "2":
-#                return (3, "Data from sensor currently not available")
-#            elif sensorstate == "3":
-#                return (3, "Sensor is broken")
-#
-#            return check_temperature(temp, (warn, crit))
+            #            # Use built in levels if no levels are configured
+            #            if params:
+            #                warn, crit = params
+            #            else:
+            #                warn, crit = levels[0:2]
+            #                # convert threshold milli values to native unit
+            #                if scale == "8":
+            #                    temp = temp/1000
+            #                    warn = warn/1000
+            #
+            #            # convert milli temperature to native unit
+            #            if scale == "8":
+            #                crit = crit/1000
+            #
+            #            if sensorstate == "2":
+            #                return (3, "Data from sensor currently not available")
+            #            elif sensorstate == "3":
+            #                return (3, "Sensor is broken")
+            #
+            #            return check_temperature(temp, (warn, crit))
             return 3, "This check is obsolete, please re-inventorize this host"
 
 

@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 def inventory_docker_container_cpu(info):
     if info:
         return [(None, {})]
@@ -53,10 +54,10 @@ def check_docker_container_cpu(_no_item, params, info):
 
 
 check_info["docker_container_cpu"] = {
-    "check_function":       check_docker_container_cpu,
-    "inventory_function":   inventory_docker_container_cpu,
-    "service_description":  "CPU utilization",
-    "has_perfdata":         True,
-    "includes":             ["cpu_util.include"],
-    "group":                "cpu_utilization_os",
+    "check_function": check_docker_container_cpu,
+    "inventory_function": inventory_docker_container_cpu,
+    "service_description": "CPU utilization",
+    "has_perfdata": True,
+    "includes": ["cpu_util.include"],
+    "group": "cpu_utilization_os",
 }

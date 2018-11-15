@@ -39,14 +39,14 @@ def check_dell_eql_storage(item, _no_params, info):
 
             # Health Status:
             health_states = {
-                    "0" :  "Unknown",
-                    "1" :  "Normal",
-                    "2" :  "Warning",
-                    "3" :  "Critical",
+                "0": "Unknown",
+                "1": "Normal",
+                "2": "Warning",
+                "3": "Critical",
             }
             if health_state == "1":
                 state = 0
-            elif health_state in [ "2", "0" ]:
+            elif health_state in ["2", "0"]:
                 state = 1
             else:
                 state = 2
@@ -54,19 +54,19 @@ def check_dell_eql_storage(item, _no_params, info):
 
             # Raid Status
             raid_states = {
-                    "1" : "Ok",
-                    "2" : "Degraded",
-                    "3" : "Verifying",
-                    "4" : "Reconstructing",
-                    "5" : "Failed",
-                    "6" : "CatastrophicLoss",
-                    "7" : "Expanding",
-                    "8" : "Mirroring",
+                "1": "Ok",
+                "2": "Degraded",
+                "3": "Verifying",
+                "4": "Reconstructing",
+                "5": "Failed",
+                "6": "CatastrophicLoss",
+                "7": "Expanding",
+                "8": "Mirroring",
             }
 
             if raid_state == "1":
                 state = 0
-            elif raid_state in [ "3", "4", "7", "8"]:
+            elif raid_state in ["3", "4", "7", "8"]:
                 state = 1
             else:
                 state = 2
@@ -74,10 +74,10 @@ def check_dell_eql_storage(item, _no_params, info):
 
             # Storage
             total_bytes = int(total_storage) * 1048576
-            used_bytes  = int(used_storage) * 1048576
-            repl_bytes  = int(repl_storage) * 1048576
-            snap_bytes  = int(snap_storage) * 1048576
-            perfdata = [("fs_used", used_bytes),("fs_size", total_bytes)]
+            used_bytes = int(used_storage) * 1048576
+            repl_bytes = int(repl_storage) * 1048576
+            snap_bytes = int(snap_storage) * 1048576
+            perfdata = [("fs_used", used_bytes), ("fs_size", total_bytes)]
             yield 0, "Used: %s/%s (Snapshots: %s, Replication: %s)" % \
                     (get_bytes_human_readable(used_bytes), \
                      get_bytes_human_readable(total_bytes),\

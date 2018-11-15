@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # Example SNMP walk:
 #
 # InTaskName: The actual name of the task as it appears in the SERVER.TASK statistic on the server.
@@ -38,9 +37,9 @@
 # .1.3.6.1.4.1.334.72.1.1.6.1.2.1.4.7 tm_grab
 # .1.3.6.1.4.1.334.72.1.1.6.1.2.1.4.8 Router
 
-
 inv_domino_tasks_rules = []
 inv_domino_tasks = []
+
 
 # Bring the SNMP data in the format expected by the common ps functions.
 # e.g.:
@@ -59,23 +58,22 @@ def inventory_domino_tasks(parsed):
 
 
 def check_domino_tasks(item, params, parsed):
-    return check_ps_common(item, params, parsed, info_name = "Tasks")
+    return check_ps_common(item, params, parsed, info_name="Tasks")
 
 
 check_info['domino_tasks'] = {
-    "parse_function"      : parse_domino_tasks,
-    "check_function"      : check_domino_tasks,
-    "inventory_function"  : inventory_domino_tasks,
-    "has_perfdata"        : True,
-    "group"               : "domino_tasks",
-    "service_description" : "Domino Task %s",
-    "includes"            : [ "ps.include" ],
-    "node_info"           : True, # add first column with actual host name
-    "snmp_scan_function"  : lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.311.1.1.3.1.2",
-    "snmp_info"           : (".1.3.6.1.4.1.334.72.1.1.6.1.2.1",
-                                [
-                                    4, # InTaskName
-                                ]
-                            ),
+    "parse_function": parse_domino_tasks,
+    "check_function": check_domino_tasks,
+    "inventory_function": inventory_domino_tasks,
+    "has_perfdata": True,
+    "group": "domino_tasks",
+    "service_description": "Domino Task %s",
+    "includes": ["ps.include"],
+    "node_info": True,  # add first column with actual host name
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.311.1.1.3.1.2",
+    "snmp_info": (
+        ".1.3.6.1.4.1.334.72.1.1.6.1.2.1",
+        [
+            4,  # InTaskName
+        ]),
 }
-

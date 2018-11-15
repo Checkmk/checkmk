@@ -27,11 +27,12 @@
 
 def parse_blade_bays(info):
     map_states = {
-        "0"   : (0, 'standby'),
-        "1"   : (0, 'on'),
-        "2"   : (1, 'not present'),
-        "3"   : (1, 'switched off'),
-        "255" : (2, 'not applicable'), }
+        "0": (0, 'standby'),
+        "1": (0, 'on'),
+        "2": (1, 'not present'),
+        "3": (1, 'switched off'),
+        "255": (2, 'not applicable'),
+    }
 
     parsed = {}
     for pd_oidend, name, state, ty, identifier, \
@@ -47,25 +48,26 @@ def parse_blade_bays(info):
             itemname = "%s %s" % (itemname, oid)
 
         try:
-            power     = int(power_str.rstrip("W"))
+            power = int(power_str.rstrip("W"))
             power_max = int(power_max_str.rstrip("W"))
         except ValueError:
             power = 0
 
-        parsed.setdefault(itemname, {
-            "type"         : ty.split("(")[0],
-            "id"           : identifier,
-            "power_max"    : power_max,
-            "device_state" : map_states.get(state, (3, "unhandled[%s]" % state)),
-            "power"        : power,
-        })
+        parsed.setdefault(
+            itemname, {
+                "type": ty.split("(")[0],
+                "id": identifier,
+                "power_max": power_max,
+                "device_state": map_states.get(state, (3, "unhandled[%s]" % state)),
+                "power": power,
+            })
 
     return parsed
 
 
 def inventory_blade_bays(parsed):
     for entry, attrs in parsed.items():
-        if attrs["device_state"][1] in [ "standby", "on" ]:
+        if attrs["device_state"][1] in ["standby", "on"]:
             yield entry, {}
 
 

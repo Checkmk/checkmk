@@ -31,7 +31,7 @@ barracuda_system_cpu_util_default_levels = (80.0, 90.0)
 
 
 def inventory_barracuda_system_cpu_util(info):
-    return [(None, "barracuda_system_cpu_util_default_levels" )]
+    return [(None, "barracuda_system_cpu_util_default_levels")]
 
 
 def check_barracuda_system_cpu_util(_no_item, params, info):
@@ -52,8 +52,3 @@ check_info['barracuda_system_cpu_util'] = {
     'includes'                  : [ "cpu_util.include" ],
     'group'                     : "cpu_utilization",
 }
-
-
-
-
-

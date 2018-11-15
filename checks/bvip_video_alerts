@@ -32,18 +32,17 @@ def inventory_bvip_video_alerts(info):
 
 def check_bvip_video_alerts(item, _no_params, info):
     for cam, alerts in info:
-        if cam.replace('\x00',"") == item:
+        if cam.replace('\x00', "") == item:
             if alerts != '0':
                 return 2, "Device on Alarm State"
             return 0, "No alarms"
 
 
 check_info["bvip_video_alerts"] = {
-    "check_function"        : check_bvip_video_alerts,
-    "inventory_function"    : inventory_bvip_video_alerts,
-    "service_description"   : "Video Alerts",
-    "snmp_scan_function"    : bvip_scan_function,
-    "snmp_info"             : (".1.3.6.1.4.1.3967.1", [ "1.1.3.1" , "3.1.1"]),
-    "includes"              : [ 'bvip.include' ],
+    "check_function": check_bvip_video_alerts,
+    "inventory_function": inventory_bvip_video_alerts,
+    "service_description": "Video Alerts",
+    "snmp_scan_function": bvip_scan_function,
+    "snmp_info": (".1.3.6.1.4.1.3967.1", ["1.1.3.1", "3.1.1"]),
+    "includes": ['bvip.include'],
 }
-

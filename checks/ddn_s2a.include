@@ -28,6 +28,7 @@
 # status@item_count@item[1].name@item[1].value@...item[n].name@item[n].value@$
 # Beware, though: Item names are not always unique!
 
+
 def parse_ddn_s2a_api_response(info):
     response_string = " ".join(info[0])
     raw_fields = response_string.split("@")

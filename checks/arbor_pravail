@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # .1.3.6.1.4.1.9694.1.6.2.3.0 2070 --> PRAVAIL-MIB::deviceCpuLoadAvg1min.0
 # .1.3.6.1.4.1.9694.1.6.2.4.0 2059 --> PRAVAIL-MIB::deviceCpuLoadAvg5min.0
 # .1.3.6.1.4.1.9694.1.6.2.5.0 2059 --> PRAVAIL-MIB::deviceCpuLoadAvg15min.0
@@ -38,67 +37,66 @@ def parse_pravail(info):
     # peakflow SP and TMS have the same info in different oid ranges
     valid = info[0]
     return {
-        "cpu_loads"  : valid[:3],
-        "disk"       : valid[3],
-        "memory"     : valid[4:6],
-        "host_fault" : valid[6],
-        "drop_rate"  : valid[7],
+        "cpu_loads": valid[:3],
+        "disk": valid[3],
+        "memory": valid[4:6],
+        "host_fault": valid[6],
+        "drop_rate": valid[7],
     }
 
 
 check_info["arbor_pravail"] = {
-    "check_function"          : check_arbor_memory,
-    "inventory_function"      : inventory_arbor_memory,
-    "parse_function"          : parse_pravail,
-    "service_description"     : "Memory",
-    "has_perfdata"            : True,
-    "group"                   : "memory_arbor",
-    'default_levels_variable' : 'arbor_memory_default_levels',
-    "snmp_info"               : (".1.3.6.1.4.1.9694.1.6.2", ["3.0", # deviceCpuLoadAvg1min
-                                                             "4.0", # deviceCpuLoadAvg5min
-                                                             "5.0", # deviceCpuLoadAvg15min
-                                                             "6.0", # deviceDiskUsage
-                                                             "7.0", # devicePhysicalMemoryUsage
-                                                             "8.0", # deviceSwapSpaceUsage
-                                                             "1.0", # pravailHostFault
-                                                             "39.0",# pravailOverrunDropRatePps
-                                                             ]
-                               ),
-    "snmp_scan_function"      : lambda oid: oid(".1.3.6.1.2.1.1.1.0").startswith("Pravail"),
-    "includes"                : ["arbor.include"]
+    "check_function": check_arbor_memory,
+    "inventory_function": inventory_arbor_memory,
+    "parse_function": parse_pravail,
+    "service_description": "Memory",
+    "has_perfdata": True,
+    "group": "memory_arbor",
+    'default_levels_variable': 'arbor_memory_default_levels',
+    "snmp_info": (
+        ".1.3.6.1.4.1.9694.1.6.2",
+        [
+            "3.0",  # deviceCpuLoadAvg1min
+            "4.0",  # deviceCpuLoadAvg5min
+            "5.0",  # deviceCpuLoadAvg15min
+            "6.0",  # deviceDiskUsage
+            "7.0",  # devicePhysicalMemoryUsage
+            "8.0",  # deviceSwapSpaceUsage
+            "1.0",  # pravailHostFault
+            "39.0",  # pravailOverrunDropRatePps
+        ]),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.1.0").startswith("Pravail"),
+    "includes": ["arbor.include"]
 }
-
 
 check_info["arbor_pravail.cpu_load"] = {
-    "check_function"        : check_arbor_cpu_load,
-    "inventory_function"    : inventory_arbor_cpu_load,
-    "service_description"   : "CPU load",
-    "has_perfdata"          : True,
-    "group"                 : "cpu_load",
-    "includes"              : ["cpu_load.include"],
+    "check_function": check_arbor_cpu_load,
+    "inventory_function": inventory_arbor_cpu_load,
+    "service_description": "CPU load",
+    "has_perfdata": True,
+    "group": "cpu_load",
+    "includes": ["cpu_load.include"],
 }
-
 
 check_info["arbor_pravail.disk_usage"] = {
-    "check_function"        : check_arbor_disk_usage,
-    "inventory_function"    : inventory_arbor_disk_usage,
-    "service_description"   : "Disk Usage %s",
-    "has_perfdata"          : True,
-    "group"                 : "filesystem",
-    "default_levels_variable" : "filesystem_default_levels",
+    "check_function": check_arbor_disk_usage,
+    "inventory_function": inventory_arbor_disk_usage,
+    "service_description": "Disk Usage %s",
+    "has_perfdata": True,
+    "group": "filesystem",
+    "default_levels_variable": "filesystem_default_levels",
 }
 
-
 check_info["arbor_pravail.host_fault"] = {
-    "check_function"        : check_arbor_host_fault,
-    "inventory_function"    : inventory_arbor_host_fault,
-    "service_description"   : "Host Fault",
+    "check_function": check_arbor_host_fault,
+    "inventory_function": inventory_arbor_host_fault,
+    "service_description": "Host Fault",
 }
 
 check_info["arbor_pravail.drop_rate"] = {
-    "check_function"        : check_arbor_drop_rate,
-    "inventory_function"    : inventory_arbor_drop_rate,
-    "service_description"   : "%s drop rate",
-    "has_perfdata"          : True,
-    "group"                 : "generic_rate",
+    "check_function": check_arbor_drop_rate,
+    "inventory_function": inventory_arbor_drop_rate,
+    "service_description": "%s drop rate",
+    "has_perfdata": True,
+    "group": "generic_rate",
 }

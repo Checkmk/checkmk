@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # Note: The CMCIII checks for Water IN/OUT and similar stuff are
 # deep and fundamentally broken (such as the implementation of
 # Rittal). Need to rewrite an make *one* check with subchecks.
@@ -52,6 +51,7 @@
 #  ['40.0 \xb0C'],
 #  ...
 # ]]
+
 
 def parse_cmciii_lcp_water(info):
     units = {}
@@ -90,16 +90,19 @@ def check_cmciii_lcp_water(item, params, parsed):
 
     # ['18.2 \xb0C', '50.0 \xb0C', '40.0 \xb0C', '13.0 \xb0C', '10.0 \xb0C', '3 %', 'OK']
 
-    temperatures = [ float(x.split()[0]) for x in lines[0:5] ]
+    temperatures = [float(x.split()[0]) for x in lines[0:5]]
     temp = temperatures[0]
     limits = temperatures[1:]
     status_name = lines[-1]
 
-    status, info_text, perf_data = check_temperature(temp, params, "cmciii_lcp_water_"+item,
-        dev_levels = (limits[1], limits[0]),
-        dev_levels_lower = (limits[2], limits[3]),
-        dev_status = parse_status(status_name),
-        dev_status_name = status_name)
+    status, info_text, perf_data = check_temperature(
+        temp,
+        params,
+        "cmciii_lcp_water_" + item,
+        dev_levels=(limits[1], limits[0]),
+        dev_levels_lower=(limits[2], limits[3]),
+        dev_status=parse_status(status_name),
+        dev_status_name=status_name)
 
     yield status, "Temperature: " + info_text, perf_data
 

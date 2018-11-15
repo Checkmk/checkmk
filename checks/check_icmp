@@ -66,7 +66,7 @@ def check_icmp_arguments(params):
     elif target[0] == "indexed_ipv6address":
         args.append("$HOST_ADDRESS_6_%s$" % target[1])
 
-    else: # custom
+    else:  # custom
         args.append(quote_shell_string(target[1]))
     return " ".join(args)
 
@@ -82,9 +82,8 @@ def check_icmp_description(params):
 
 
 active_check_info['icmp'] = {
-    "command_line"        : '$USER1$/check_icmp $ARG1$',
-    "argument_function"   : check_icmp_arguments,
-    "service_description" : check_icmp_description,
-    "has_perfdata"        : True,
+    "command_line": '$USER1$/check_icmp $ARG1$',
+    "argument_function": check_icmp_arguments,
+    "service_description": check_icmp_description,
+    "has_perfdata": True,
 }
-

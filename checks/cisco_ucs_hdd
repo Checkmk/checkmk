@@ -33,33 +33,38 @@
 # .1.3.6.1.4.1.9.9.719.1.45.4.1.13 cucsStorageLocalDiskSize
 # .1.3.6.1.4.1.9.9.719.1.45.4.1.12 cucsStorageLocalDiskSerial
 
+
 def inventory_cisco_ucs_hdd(info):
     for status, ident, _model, _vendor, _size, _serial in info:
-        if status != '6': # do not discover removed HDDs
+        if status != '6':  # do not discover removed HDDs
             yield ident, None
 
 
 def check_cisco_ucs_hdd(item, _no_params, info):
     for status, ident, model, vendor, size, serial in info:
         if ident == item:
-            state, state_readable = map_operability.get(status, (3, "Unknown, status code %s" % status))
-            size_readable = get_bytes_human_readable(int(size) * 1024 * 1024) # size is returned in MB
+            state, state_readable = map_operability.get(status,
+                                                        (3, "Unknown, status code %s" % status))
+            size_readable = get_bytes_human_readable(
+                int(size) * 1024 * 1024)  # size is returned in MB
             return state, "Status: %s, Size: %s, Model: %s, Vendor: %s, SN: %s" % \
                 (state_readable, size_readable, model, vendor, serial)
 
 
-check_info["cisco_ucs_hdd"]  = {
-    "check_function"     : check_cisco_ucs_hdd,
-    "inventory_function" : inventory_cisco_ucs_hdd,
+check_info["cisco_ucs_hdd"] = {
+    "check_function": check_cisco_ucs_hdd,
+    "inventory_function": inventory_cisco_ucs_hdd,
     "service_description": "HDD %s",
-    "snmp_scan_function" : scan_cisco_ucs,
-    "snmp_info"          : (".1.3.6.1.4.1.9.9.719.1.45.4.1", [
-                                "9",  # cucsStorageLocalDiskOperability
-                                "6",  # cucsStorageLocalDiskId
-                                "7",  # cucsStorageLocalDiskModel
-                                "14", # cucsStorageLocalDiskVendor
-                                "13", # cucsStorageLocalDiskSize
-                                "12", # cucsStorageLocalDiskSerial
-                            ]),
-    "includes"           : [ "cisco_ucs.include" ]
+    "snmp_scan_function": scan_cisco_ucs,
+    "snmp_info": (
+        ".1.3.6.1.4.1.9.9.719.1.45.4.1",
+        [
+            "9",  # cucsStorageLocalDiskOperability
+            "6",  # cucsStorageLocalDiskId
+            "7",  # cucsStorageLocalDiskModel
+            "14",  # cucsStorageLocalDiskVendor
+            "13",  # cucsStorageLocalDiskSize
+            "12",  # cucsStorageLocalDiskSerial
+        ]),
+    "includes": ["cisco_ucs.include"]
 }

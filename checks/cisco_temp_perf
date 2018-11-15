@@ -42,18 +42,20 @@
 #                    1000 C.
 
 cisco_temp_perf_envmon_states = {
-  1: "normal",
-  2: "warning",
-  3: "critical",
-  4: "shutdown",
-  5: "notPresent",
-  6: "notFunctioning"
+    1: "normal",
+    2: "warning",
+    3: "critical",
+    4: "shutdown",
+    5: "notPresent",
+    6: "notFunctioning"
 }
 
+
 def inventory_cisco_temp_perf(info):
-#    for line in info:
-#        yield cisco_sensor_item(line[0], line[4]), None
+    #    for line in info:
+    #        yield cisco_sensor_item(line[0], line[4]), None
     return []
+
 
 def check_cisco_temp_perf(item, _no_params, info):
     for statustext, _temp, _max_temp, _state, oid_end in info:

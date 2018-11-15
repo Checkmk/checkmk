@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # Good docs:
 # http://www.cisco.com/en/US/tech/tk648/tk362/technologies_tech_note09186a0080094a91.shtml
 #.1.3.6.1.4.1.9.9.106.1.1.1.0 5
@@ -65,13 +64,12 @@
 #.1.3.6.1.4.1.9.9.106.1.2.1.1.17.1.192  1
 #.1.3.6.1.4.1.9.9.106.1.2.1.1.17.7.193  1
 
-
 # we'll be alerting if the state is not either 5 or 6.
 # We could also not inventorize if the state isn't 5/6 but
 # since you have to configure a group, to even show up in the
 # MIB it's supposedly ok to alert if something isn't right there.
 # otherwise modify the inventory.
-hsrp_states = { 1: "initial", 2: "learn", 3: "listen", 4: "speak", 5: "standby", 6: "active" }
+hsrp_states = {1: "initial", 2: "learn", 3: "listen", 4: "speak", 5: "standby", 6: "active"}
 
 
 def inventory_cisco_hsrp(info):
@@ -82,9 +80,9 @@ def inventory_cisco_hsrp(info):
         hsrp_state = int(hsrp_state)
         # if the group is in a working state (both routers see and talk to each other),
         # inventorize HSRP group name+IP and the standby state as seen from "this" box.
-        if hsrp_state in [ 5, 6 ]:
-            vip_grp = "%s-%s" % ( vip, hsrp_grp )
-            inventory.append( (vip_grp, (hsrp_grp, hsrp_state)) )
+        if hsrp_state in [5, 6]:
+            vip_grp = "%s-%s" % (vip, hsrp_grp)
+            inventory.append((vip_grp, (hsrp_grp, hsrp_state)))
 
     return inventory
 
@@ -99,7 +97,7 @@ def check_cisco_hsrp(item, params, info):
         hsrp_state = int(hsrp_state)
 
         if "-" in item:
-            vip_grp = "%s-%s" % ( vip, hsrp_grp )
+            vip_grp = "%s-%s" % (vip, hsrp_grp)
         else:
             vip_grp = vip
 
@@ -110,7 +108,7 @@ def check_cisco_hsrp(item, params, info):
 
             if hsrp_state_wanted in [3, 5, 6] and hsrp_state == hsrp_state_wanted:
                 state = 0
-                msgtxt = "Redundancy Group %s is OK" %  vip_grp
+                msgtxt = "Redundancy Group %s is OK" % vip_grp
             # otherwise if it's a good one, but flipped, then we are in a failover
             elif hsrp_state in [5, 6]:
                 state = 1
@@ -126,16 +124,19 @@ def check_cisco_hsrp(item, params, info):
 
 
 check_info["cisco_hsrp"] = {
-    "inventory_function"    : inventory_cisco_hsrp,
-    "check_function"        : check_cisco_hsrp,
-    "service_description"   : "HSRP Group %s",
-    "snmp_info"             : ( ".1.3.6.1.4.1.9.9.106.1.2.1.1", [
-                                      OID_END,
-                                      "11", # cHsrpGrpVirtualIpAddr
-                                      "13", # cHsrpGrpActiveRouter
-                                      "14", # cHsrpGrpStandbyRouter
-                                      "15", # cHsrpGrpStandbyState
-                                      "16", # cHsrpGrpVirtualMacAddr
-                                    ]),
-    "snmp_scan_function"   : lambda oid: "cisco" in oid(".1.3.6.1.2.1.1.1.0").lower() and oid(".1.3.6.1.4.1.9.9.106.1.1.1.0"),
+    "inventory_function": inventory_cisco_hsrp,
+    "check_function": check_cisco_hsrp,
+    "service_description": "HSRP Group %s",
+    "snmp_info": (
+        ".1.3.6.1.4.1.9.9.106.1.2.1.1",
+        [
+            OID_END,
+            "11",  # cHsrpGrpVirtualIpAddr
+            "13",  # cHsrpGrpActiveRouter
+            "14",  # cHsrpGrpStandbyRouter
+            "15",  # cHsrpGrpStandbyState
+            "16",  # cHsrpGrpVirtualMacAddr
+        ]),
+    "snmp_scan_function":
+        lambda oid: "cisco" in oid(".1.3.6.1.2.1.1.1.0").lower() and oid(".1.3.6.1.4.1.9.9.106.1.1.1.0"),
 }

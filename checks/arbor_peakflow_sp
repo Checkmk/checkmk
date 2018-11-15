@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
 # .1.3.6.1.4.1.9694.1.4.2.1.1.0 796 --> PEAKFLOW-SP-MIB::deviceCpuLoadAvg1min.0
 # .1.3.6.1.4.1.9694.1.4.2.1.2.0 742 --> PEAKFLOW-SP-MIB::deviceCpuLoadAvg5min.0
 # .1.3.6.1.4.1.9694.1.4.2.1.3.0 742 --> PEAKFLOW-SP-MIB::deviceCpuLoadAvg15min.0
@@ -41,11 +40,7 @@
 
 def parse_peakflow_sp(info):
     valid = info[0]
-    res = {
-        'cpu_loads' : valid[:3],
-        'disk'      : valid[3],
-        'memory'    : valid[4:6]
-    }
+    res = {'cpu_loads': valid[:3], 'disk': valid[3], 'memory': valid[4:6]}
     if valid[6]:
         # this value appears to be optional
         res['flows'] = valid[6]
@@ -54,44 +49,44 @@ def parse_peakflow_sp(info):
 
 
 check_info["arbor_peakflow_sp"] = {
-    "check_function"          : check_arbor_memory,
-    "inventory_function"      : inventory_arbor_memory,
-    "parse_function"          : parse_peakflow_sp,
-    "service_description"     : "Memory",
-    "has_perfdata"            : True,
-    "group"                   : "memory_arbor",
-    'default_levels_variable' : 'arbor_memory_default_levels',
-    "snmp_info"               : (".1.3.6.1.4.1.9694.1.4.2.1", ["1.0",  # deviceCpuLoadAvg1min
-                                                               "2.0",  # deviceCpuLoadAvg5min
-                                                               "3.0",  # deviceCpuLoadAvg15min
-                                                               "4.0",  # deviceDiskUsage
-                                                               "7.0",  # devicePhysicalMemoryUsage
-                                                               "10.0", # deviceSwapSpaceUsage
-                                                               "12.0", # deviceTotalFlowsHC
-                                                               ]
-                               ),
-    "snmp_scan_function"      : lambda oid: oid(".1.3.6.1.2.1.1.1.0").startswith("Peakflow SP"),
-    "includes"                : ["arbor.include"]
+    "check_function": check_arbor_memory,
+    "inventory_function": inventory_arbor_memory,
+    "parse_function": parse_peakflow_sp,
+    "service_description": "Memory",
+    "has_perfdata": True,
+    "group": "memory_arbor",
+    'default_levels_variable': 'arbor_memory_default_levels',
+    "snmp_info": (
+        ".1.3.6.1.4.1.9694.1.4.2.1",
+        [
+            "1.0",  # deviceCpuLoadAvg1min
+            "2.0",  # deviceCpuLoadAvg5min
+            "3.0",  # deviceCpuLoadAvg15min
+            "4.0",  # deviceDiskUsage
+            "7.0",  # devicePhysicalMemoryUsage
+            "10.0",  # deviceSwapSpaceUsage
+            "12.0",  # deviceTotalFlowsHC
+        ]),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.1.0").startswith("Peakflow SP"),
+    "includes": ["arbor.include"]
 }
-
 
 check_info["arbor_peakflow_sp.cpu_load"] = {
-    "check_function"        : check_arbor_cpu_load,
-    "inventory_function"    : inventory_arbor_cpu_load,
-    "service_description"   : "CPU load",
-    "has_perfdata"          : True,
-    "group"                 : "cpu_load",
-    "includes"              : ["cpu_load.include"],
+    "check_function": check_arbor_cpu_load,
+    "inventory_function": inventory_arbor_cpu_load,
+    "service_description": "CPU load",
+    "has_perfdata": True,
+    "group": "cpu_load",
+    "includes": ["cpu_load.include"],
 }
 
-
 check_info["arbor_peakflow_sp.disk_usage"] = {
-    "check_function"          : check_arbor_disk_usage,
-    "inventory_function"      : inventory_arbor_disk_usage,
-    "service_description"     : "Disk Usage %s",
-    "has_perfdata"            : True,
-    "group"                   : "filesystem",
-    "default_levels_variable" : "filesystem_default_levels",
+    "check_function": check_arbor_disk_usage,
+    "inventory_function": inventory_arbor_disk_usage,
+    "service_description": "Disk Usage %s",
+    "has_perfdata": True,
+    "group": "filesystem",
+    "default_levels_variable": "filesystem_default_levels",
 }
 
 
@@ -106,9 +101,8 @@ def check_arbor_peakflow_sp_flows(no_item, params, parsed):
 
 
 check_info["arbor_peakflow_sp.flows"] = {
-    "check_function"      : check_arbor_peakflow_sp_flows,
-    "inventory_function"  : inventory_arbor_peakflow_sp_flows,
-    "service_description" : "Flow Count",
-    "has_perfdata"        : True,
+    "check_function": check_arbor_peakflow_sp_flows,
+    "inventory_function": inventory_arbor_peakflow_sp_flows,
+    "service_description": "Flow Count",
+    "has_perfdata": True,
 }
-

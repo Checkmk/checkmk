@@ -28,8 +28,9 @@
 def inventory_casa_fan(info):
     inventory = []
     for nr, _speed in info[0]:
-        inventory.append( (nr, None) )
+        inventory.append((nr, None))
     return inventory
+
 
 def check_casa_fan(item, no_params, info):
     for idx, (nr, speed) in enumerate(info[0]):
@@ -49,12 +50,12 @@ def check_casa_fan(item, no_params, info):
 
 
 check_info["casa_fan"] = {
-    "check_function"        : check_casa_fan,
-    "inventory_function"    : inventory_casa_fan,
-    "service_description"   : "Fan %s",
-    "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.20858.2."),
-    "snmp_info"             : [
-               ( ".1.3.6.1.4.1.20858.10.31.1.1.1.2", [ OID_END, '' ] ), # FAN Speed
-               ( ".1.3.6.1.4.1.20858.10.33.1.4.1.4", [ OID_END, '' ] ), # FAN State
-                              ]
+    "check_function": check_casa_fan,
+    "inventory_function": inventory_casa_fan,
+    "service_description": "Fan %s",
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.20858.2."),
+    "snmp_info": [
+        (".1.3.6.1.4.1.20858.10.31.1.1.1.2", [OID_END, '']),  # FAN Speed
+        (".1.3.6.1.4.1.20858.10.33.1.4.1.4", [OID_END, '']),  # FAN State
+    ]
 }

@@ -33,6 +33,7 @@
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 def inventory_dell_poweredge_cpu(info):
     for _chassisIndex, _Index, StateSettings, _Status, LocationName in info[0]:
         if LocationName != "" and StateSettings != "1":
@@ -48,19 +49,20 @@ def check_dell_poweredge_cpu(item, _no_params, info):
                     BrandName = line[2]
 
             state_table = {
-                "1" : ("other",           1),
-                "2" : ("unknown",         1),
-                "3" : ("",                0),
-                "4" : ("non-critical",    1),
-                "5" : ("critical",        2),
-                "6" : ("non-recoverable", 2),
+                "1": ("other", 1),
+                "2": ("unknown", 1),
+                "3": ("", 0),
+                "4": ("non-critical", 1),
+                "5": ("critical", 2),
+                "6": ("non-recoverable", 2),
             }
 
-            infotext, state = state_table.get(Status, ( "unknown state", 2 ))
+            infotext, state = state_table.get(Status, ("unknown state", 2))
             if BrandName:
                 infotext += " " + BrandName
 
             return state, infotext
+
 
 #.
 #   .--memory--------------------------------------------------------------.
@@ -72,37 +74,40 @@ def check_dell_poweredge_cpu(item, _no_params, info):
 #   |                                                  |___/               |
 #   '----------------------------------------------------------------------'
 
+
 def inventory_dell_poweredge_mem(info):
     inventory = []
     for line in info:
         location = line[1]
         if location != "":
-            inventory.append( ( location, None ) )
+            inventory.append((location, None))
     return inventory
+
 
 def check_dell_poweredge_mem(item, _no_params, info):
     di = dict()
     for status, location, size, di['Speed'], di['MFR'], di['P/N'], di['S/N'] in info:
 
-        di['Size'] = str(saveint(size)/1024/1024)+"GB"
+        di['Size'] = str(saveint(size) / 1024 / 1024) + "GB"
         if item == location:
             state_table = {
-                "1" : ( "other", 1 ),
-                "2" : ( "unknown", 1 ),
-                "3" : ( "", 0 ),
-                "4" : ( "nonCritical", 1 ),
-                "5" : ( "Critical", 2 ),
-                "6" : ( "NonRecoverable", 2 ),
+                "1": ("other", 1),
+                "2": ("unknown", 1),
+                "3": ("", 0),
+                "4": ("nonCritical", 1),
+                "5": ("Critical", 2),
+                "6": ("NonRecoverable", 2),
             }
-            infotext, state = state_table.get(status, ( "unknown state", 2 ))
-            for  parameter, value in di.items():
-                infotext += ", %s: %s" % ( parameter, value )
+            infotext, state = state_table.get(status, ("unknown state", 2))
+            for parameter, value in di.items():
+                infotext += ", %s: %s" % (parameter, value)
 
-            infotext = re.sub("^, ","", infotext)
+            infotext = re.sub("^, ", "", infotext)
 
             return state, infotext
 
     return 3, "Memory Device not found"
+
 
 #.
 #   .--netdev--------------------------------------------------------------.
@@ -114,47 +119,50 @@ def check_dell_poweredge_mem(item, _no_params, info):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 def inventory_dell_poweredge_netdev(info):
     inventory = []
     for line in info:
         if line[1] != "2" and line[4] != "":
-            inventory.append( ( line[4], None ) )
+            inventory.append((line[4], None))
     return inventory
+
 
 def check_dell_poweredge_netdev(item, _no_params, info):
     di = dict()
     for status, connection_status, di['Product'], cur_mac, fqdd in info:
         if item == fqdd:
-            di['MAC'] =  '-'.join( [ "%02X" % ord( c ) for c in cur_mac ] ).strip()
+            di['MAC'] = '-'.join(["%02X" % ord(c) for c in cur_mac]).strip()
             state_table = {
-                "1" : ( "other,", 1 ),
-                "2" : ( "unknown,", 1 ),
-                "3" : ( "", 0 ),
-                "4" : ( "nonCritical,", 1 ),
-                "5" : ( "Critical,", 2 ),
-                "6" : ( "NonRecoverable,", 2 ),
+                "1": ("other,", 1),
+                "2": ("unknown,", 1),
+                "3": ("", 0),
+                "4": ("nonCritical,", 1),
+                "5": ("Critical,", 2),
+                "6": ("NonRecoverable,", 2),
             }
             connection_table = {
-                "1" : ( "connected, ", 0 ),
-                "2" : ( "disconnected, ", 2 ),
-                "3" : ( "driverBad, ", 2 ),
-                "4" : ( "driverDisabled, ", 2 ),
-                "10" : ( "hardwareInitializing, ", 2 ),
-                "11" : ( "hardwareResetting, ", 2 ),
-                "12" : ( "hardwareClosing, ", 2 ),
-                "13" : ( "hardwareNotReady, ", 2 ),
+                "1": ("connected, ", 0),
+                "2": ("disconnected, ", 2),
+                "3": ("driverBad, ", 2),
+                "4": ("driverDisabled, ", 2),
+                "10": ("hardwareInitializing, ", 2),
+                "11": ("hardwareResetting, ", 2),
+                "12": ("hardwareClosing, ", 2),
+                "13": ("hardwareNotReady, ", 2),
             }
-            dev_state_txt, dev_state = state_table.get(status, ( "unknown device status,", 2 ))
-            conn_state_txt, conn_state = connection_table.get(connection_status, ( "", 0 ))
+            dev_state_txt, dev_state = state_table.get(status, ("unknown device status,", 2))
+            conn_state_txt, conn_state = connection_table.get(connection_status, ("", 0))
             state = max(dev_state, conn_state)
             infotext = "%s %s" % (dev_state_txt, conn_state_txt)
             for parameter, value in di.items():
-                infotext += "%s: %s, " % ( parameter, value )
-            infotext = re.sub(", $","", infotext)
+                infotext += "%s: %s, " % (parameter, value)
+            infotext = re.sub(", $", "", infotext)
 
             return state, infotext
 
     return 3, "network device not found"
+
 
 #.
 #   .--PCI-----------------------------------------------------------------.
@@ -166,13 +174,15 @@ def check_dell_poweredge_netdev(item, _no_params, info):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 def inventory_dell_poweredge_pci(info):
     inventory = []
     for line in info:
         fqdd = line[4]
         if fqdd != "":
-            inventory.append( ( fqdd, None ) )
+            inventory.append((fqdd, None))
     return inventory
+
 
 def check_dell_poweredge_pci(item, _no_params, info):
     di = dict()
@@ -180,22 +190,23 @@ def check_dell_poweredge_pci(item, _no_params, info):
 
         if item == fqdd:
             state_table = {
-                "1" : ( "other", 1 ),
-                "2" : ( "unknown", 1 ),
-                "3" : ( "", 0 ),
-                "4" : ( "nonCritical", 1 ),
-                "5" : ( "Critical", 2 ),
-                "6" : ( "NonRecoverable", 2 ),
+                "1": ("other", 1),
+                "2": ("unknown", 1),
+                "3": ("", 0),
+                "4": ("nonCritical", 1),
+                "5": ("Critical", 2),
+                "6": ("NonRecoverable", 2),
             }
-            infotext, state = state_table.get(status, ( "unknown state", 2 ))
-            for  parameter, value in di.items():
-                infotext += ", %s: %s" % ( parameter, value )
+            infotext, state = state_table.get(status, ("unknown state", 2))
+            for parameter, value in di.items():
+                infotext += ", %s: %s" % (parameter, value)
 
-            infotext = re.sub("^, ","", infotext)
+            infotext = re.sub("^, ", "", infotext)
 
             return state, infotext
 
     return 3, "Memory Device not found"
+
 
 #.
 #   .--status--------------------------------------------------------------.
@@ -207,28 +218,32 @@ def check_dell_poweredge_pci(item, _no_params, info):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 def inventory_dell_poweredge_status(info):
     if info:
-        return [ ( None, None ) ]
+        return [(None, None)]
+
 
 def check_dell_poweredge_status(item, _no_params, info):
     di = dict()
-    di['racURL'], di['Chassis'], di['Slot'], di['Model'],  status, di['ServiceTag'], di['ExpressServiceCode'] = info[0]
+    di['racURL'], di['Chassis'], di['Slot'], di['Model'], status, di['ServiceTag'], di[
+        'ExpressServiceCode'] = info[0]
 
     state_table = {
-        "1" : ( "other, ", 1 ),
-        "2" : ( "unknown, ", 1 ),
-        "3" : ( "", 0 ),
-        "4" : ( "nonCritical, ", 1 ),
-        "5" : ( "Critical, ", 2 ),
-        "6" : ( "NonRecoverable, ", 2 ),
+        "1": ("other, ", 1),
+        "2": ("unknown, ", 1),
+        "3": ("", 0),
+        "4": ("nonCritical, ", 1),
+        "5": ("Critical, ", 2),
+        "6": ("NonRecoverable, ", 2),
     }
     infotext, state = state_table.get(status, "2")
     for parameter, value in di.items():
-        infotext += "%s: %s, " % ( parameter, value )
-    infotext = re.sub(", $","", infotext)
+        infotext += "%s: %s, " % (parameter, value)
+    infotext = re.sub(", $", "", infotext)
 
     return state, infotext
+
 
 #.
 #   .--power---------------------------------------------------------------.
@@ -240,19 +255,22 @@ def check_dell_poweredge_status(item, _no_params, info):
 #   |                   |_|                                                |
 #   '----------------------------------------------------------------------'
 
+
 def inventory_dell_poweredge_amperage_power(info):
     inventory = []
     for line in info:
-        if line[6] != "" and line[5] in ( "24", "26" ):
-            inventory.append( ( line[6], None ) )
+        if line[6] != "" and line[5] in ("24", "26"):
+            inventory.append((line[6], None))
     return inventory
+
 
 def inventory_dell_poweredge_amperage_current(info):
     inventory = []
     for line in info:
-        if line[6] != "" and line[5] in ( "23", "25" ):
-            inventory.append( ( line[6], None ) )
+        if line[6] != "" and line[5] in ("23", "25"):
+            inventory.append((line[6], None))
     return inventory
+
 
 def check_dell_poweredge_amperage(item, _no_params, info):
     for _chassisIndex, _Index, _StateSettings, Status, Reading, ProbeType, LocationName, \
@@ -260,16 +278,16 @@ def check_dell_poweredge_amperage(item, _no_params, info):
 
         if item == LocationName:
             state_table = {
-                "1" : ( "other", 1 ),
-                "2" : ( "unknown", 1 ),
-                "3" : ( "", 0 ),
-                "4" : ( "nonCriticalUpper", 1 ),
-                "5" : ( "CriticalUpper", 2 ),
-                "6" : ( "NonRecoverableUpper", 2 ),
-                "7" : ( "nonCriticalLower", 1 ),
-                "8" : ( "CriticalLower", 2 ),
-                "9" : ( "NonRecoverableLower", 2 ),
-                "10" : ( "failed", 2 ),
+                "1": ("other", 1),
+                "2": ("unknown", 1),
+                "3": ("", 0),
+                "4": ("nonCriticalUpper", 1),
+                "5": ("CriticalUpper", 2),
+                "6": ("NonRecoverableUpper", 2),
+                "7": ("nonCriticalLower", 1),
+                "8": ("CriticalLower", 2),
+                "9": ("NonRecoverableLower", 2),
+                "10": ("failed", 2),
             }
             state_txt, state = state_table.get(Status, "2")
 
@@ -280,20 +298,21 @@ def check_dell_poweredge_amperage(item, _no_params, info):
                 limittext = ""
                 maxi = ""
 
-            if ProbeType in ( "23", "25" ): # Amps
-                current = str(int(Reading)/10.0)
-                infotext = "%s Ampere %s" % ( current, state_txt )
-                perfdata = [( "current", current+"A", UpperNonCritical, UpperCritical, "", maxi )]
-            elif ProbeType in ( "24", "26" ): # Watts
-                infotext = "%s Watt %s" % ( Reading, state_txt )
-                perfdata = [( "power", Reading+"W", UpperNonCritical, UpperCritical, "", maxi )]
+            if ProbeType in ("23", "25"):  # Amps
+                current = str(int(Reading) / 10.0)
+                infotext = "%s Ampere %s" % (current, state_txt)
+                perfdata = [("current", current + "A", UpperNonCritical, UpperCritical, "", maxi)]
+            elif ProbeType in ("24", "26"):  # Watts
+                infotext = "%s Watt %s" % (Reading, state_txt)
+                perfdata = [("power", Reading + "W", UpperNonCritical, UpperCritical, "", maxi)]
             else:
                 infotext = "Unknown Probe Type %s" % ProbeType
                 return 3, infotext
 
-            return state, infotext+limittext, perfdata
+            return state, infotext + limittext, perfdata
 
     return 3, "Amperage Device not found"
+
 
 #.
 #   .--temperature---------------------------------------------------------.
@@ -304,6 +323,7 @@ def check_dell_poweredge_amperage(item, _no_params, info):
 #   |      \__\___|_| |_| |_| .__/ \___|_|  \__,_|\__|\__,_|_|  \___|      |
 #   |                       |_|                                            |
 #   '----------------------------------------------------------------------'
+
 
 def dell_poweredge_temp_makeitem(chassisIndex, Index, LocationName):
     if LocationName:
@@ -338,19 +358,23 @@ def check_dell_poweredge_temp(item, params, info):
                 lower_levels = None, None
 
             state_table = {
-                 "1" : ("other",               1),
-                 "2" : ("unknown",             1),
-                 "3" : ("",                    0),
-                 "4" : ("nonCriticalUpper",    1),
-                 "5" : ("CriticalUpper",       2),
-                 "6" : ("NonRecoverableUpper", 2),
-                 "7" : ("nonCriticalLower",    1),
-                 "8" : ("CriticalLower",       2),
-                 "9" : ("NonRecoverableLower", 2),
-                "10" : ("failed",              2),
+                "1": ("other", 1),
+                "2": ("unknown", 1),
+                "3": ("", 0),
+                "4": ("nonCriticalUpper", 1),
+                "5": ("CriticalUpper", 2),
+                "6": ("NonRecoverableUpper", 2),
+                "7": ("nonCriticalLower", 1),
+                "8": ("CriticalLower", 2),
+                "9": ("NonRecoverableLower", 2),
+                "10": ("failed", 2),
             }
             state_txt, state = state_table.get(Status, ("unknown state", 3))
             if state:
                 yield state, state_txt
-            yield check_temperature(temp, params, "dell_poweredge_temp_%s" % item,
-                                    dev_levels=levels, dev_levels_lower=lower_levels)
+            yield check_temperature(
+                temp,
+                params,
+                "dell_poweredge_temp_%s" % item,
+                dev_levels=levels,
+                dev_levels_lower=lower_levels)

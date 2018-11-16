@@ -112,7 +112,7 @@ else ifneq ($(filter $(DISTRO_CODE),el6),)
     PATCHES += patches/0009-cryptography-1.5.3-disable-version-warning.patch
 else
     MODULES += asn1crypto-0.24.0.tar.gz
-    MODULES += cryptography-2.3.1.tar.gz
+    MODULES += cryptography-2.4.1.tar.gz
 endif
 
 MODULES += certifi-2018.10.15.tar.gz

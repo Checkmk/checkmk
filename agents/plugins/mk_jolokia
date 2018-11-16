@@ -191,7 +191,6 @@ def fetch_var(protocol,
               port,
               path,
               suburi,
-              itemspec,
               service_url,
               service_user,
               service_password,
@@ -220,12 +219,12 @@ def fetch_var(protocol,
     # Only take the value of the object. If the value is an object
     # take the first items first value.
     # {'Catalina:host=localhost,path=\\/test,type=Manager': {'activeSessions': 0}}
-    if 'value' not in obj:
+    try:
+        return obj['value']
+    except KeyError:
         if VERBOSE:
             sys.stderr.write("ERROR: not found: %s\n" % path)
         return []
-    val = obj.get('value', None)
-    return make_item_list((), val, itemspec)
 
 
 # convert single values into lists of items in
@@ -281,11 +280,11 @@ def extract_item(key, itemspec):
 
 
 def fetch_metric(inst, path, title, itemspec, inst_add=None):
-    values = fetch_var(inst["protocol"], inst["server"], inst["port"], path, inst["suburi"],
-                       itemspec, inst["service_url"], inst["service_user"],
-                       inst["service_password"])
+    value = fetch_var(inst["protocol"], inst["server"], inst["port"], path, inst["suburi"],
+                      inst["service_url"], inst["service_user"], inst["service_password"])
+    item_list = make_item_list((), value, itemspec)
 
-    for subinstance, value in values:
+    for subinstance, value in item_list:
         if not subinstance and not title:
             sys.stderr.write("INTERNAL ERROR: %s\n" % value)
             continue
@@ -315,18 +314,18 @@ def _get_queries(do_search, inst, itemspec, title, path, mbean):
     if not do_search:
         return [(mbean + "/" + path, title, itemspec)]
 
+    value = fetch_var(
+        inst["protocol"],
+        inst["server"],
+        inst["port"],
+        mbean,
+        inst["suburi"],
+        None,
+        None,
+        None,
+        function="search")
     try:
-        paths = fetch_var(
-            inst["protocol"],
-            inst["server"],
-            inst["port"],
-            mbean,
-            inst["suburi"],
-            "",
-            None,
-            None,
-            None,
-            function="search")[0][1]
+        paths = make_item_list((), value, "")[0][1]
     except IndexError:
         return []
 
@@ -388,8 +387,9 @@ def prepare_http_opener(inst):
 
 def generate_jolokia_info(inst):
     # Determine type of server
-    server_info = fetch_var(inst["protocol"], inst["server"], inst["port"], "", inst["suburi"], "",
-                            None, None, None)
+    value = fetch_var(inst["protocol"], inst["server"], inst["port"], "", inst["suburi"], None,
+                      None, None)
+    server_info = make_item_list((), value, "")
 
     if not server_info:
         sys.stderr.write("%s ERROR: Empty server info\n" % (inst["instance"],))

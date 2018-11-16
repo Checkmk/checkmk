@@ -17,7 +17,7 @@ install:
 	install -m 755 omd.bin $(DESTDIR)$(OMD_ROOT)/bin/omd
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/python/omdlib
 	install -m 644 omdlib/*.py $(DESTDIR)$(OMD_ROOT)/lib/python/omdlib/
-	sed -i 's|###OMD_VERSION###|$(OMD_VERSION)|g' $(DESTDIR)$(OMD_ROOT)/lib/python/omdlib/__init__.py
+	sed -i 's|###OMD_VERSION###|$(OMD_VERSION)|g' $(DESTDIR)$(OMD_ROOT)/bin/omd $(DESTDIR)$(OMD_ROOT)/lib/python/omdlib/__init__.py
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/omd/htdocs
 	install -m 644 index.py $(DESTDIR)$(OMD_ROOT)/share/omd/htdocs
 	install -m 644 logout.php $(DESTDIR)$(OMD_ROOT)/share/omd/htdocs

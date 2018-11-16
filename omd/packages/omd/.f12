@@ -27,4 +27,4 @@ echo $OLD_VERSION
 
 echo "Keeping version number in 'omd' at $OLD_VERSION"
 sudo sed -i "s|###OMD_VERSION###|$OLD_VERSION|g" $ROOT/lib/python/omdlib/__init__.py
-sudo sed -i "s|#!/omd/versions/.*/bin/python|#!/omd/versions/$OLD_VERSION/bin/python|g" $ROOT/bin/omd
+sudo sed -i 's|#!/omd/versions/.*/bin/python|#!/omd/versions/$OLD_VERSION/bin/python|g' $ROOT/bin/omd

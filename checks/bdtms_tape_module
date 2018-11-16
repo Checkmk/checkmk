@@ -36,13 +36,13 @@ def check_bdtms_tape_module(item, _no_params, info):
         return 0 if status.lower() == 'ok' else 2
 
     for device in info:
-        device_id, module_status, _board_status, _power_status = device
+        device_id, module_status, board_status, power_status = device
         if device_id != item:
             continue
 
         yield state(module_status), "Module: %s" % module_status.lower()
-        yield state(module_status), "Board: %s" % module_status.lower()
-        yield state(module_status), "Power supply: %s" % module_status.lower()
+        yield state(board_status), "Board: %s" % board_status.lower()
+        yield state(power_status), "Power supply: %s" % power_status.lower()
 
 
 check_info['bdtms_tape_module'] = {

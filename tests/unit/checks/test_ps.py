@@ -1,6 +1,8 @@
 from collections import namedtuple
 import pytest
 from cmk_base.check_api import MKGeneralException
+from cmk.gui.exceptions import MKUserError
+from cmk.regex import forbid_re_delimiters_inside_groups
 from checktestlib import CheckResult, assertCheckResultsEqual
 
 pytestmark = pytest.mark.checks
@@ -165,7 +167,6 @@ input_ids = [
 @pytest.mark.parametrize("capture, result", zip(generate_inputs(), result_parse), ids=input_ids)
 def test_parse_ps(check_manager, capture, result):
     check = check_manager.get_check("ps")
-    #assert check.context["ps_merge_wmic_info"](capture) == result
 
     parsed = check.run_parse(capture)
     assert parsed[0] == result[0]  # cpu_cores
@@ -589,3 +590,69 @@ def test_check_ps_common_count(check_manager, levels, reference):
 
     output = CheckResult(check.context["check_ps_common"]('empty', params, parsed, cpu_cores=1))
     assertCheckResultsEqual(output, reference)
+
+
+@pytest.mark.parametrize('pattern', ["(test)$", 'foo\\b', '^bar', '\\bfoo\\b', '(a)\\b'])
+def test_validate_ps_allowed_regex(pattern):
+    assert forbid_re_delimiters_inside_groups(pattern, '') is None
+
+
+@pytest.mark.parametrize('pattern', ["(test$)", '(foo\\b)', '(^bar)', '(\\bfoo\\b)'])
+def test_validate_ps_forbidden_regex(pattern):
+    with pytest.raises(MKUserError):
+        forbid_re_delimiters_inside_groups(pattern, '')
+
+
+def test_subset_patterns(check_manager):
+
+    check = check_manager.get_check("ps")
+
+    parsed = check.run_parse(
+        splitter("""(user,0,0,0.5) main
+(user,0,0,0.4) main_dev
+(user,0,0,0.1) main_dev
+(user,0,0,0.5) main_test"""))[1]
+
+    # Boundary in match is necessary otherwise main instance accumulates all
+    wato_rule = [({
+        'cpu_rescale_max': True,
+        'default_params': {
+            'levels': (1, 1, 99999, 99999)
+        },
+        'match': '~(main.*)\\b',
+        'descr': '%s'
+    }, [], ["@all"], {})]
+
+    discovered = [
+        ('main', {
+            'cpu_rescale_max': True,
+            'levels': (1, 1, 99999, 99999),
+            'process': '~main\\b',
+            'user': None,
+        }),
+        ('main_dev', {
+            'cpu_rescale_max': True,
+            'levels': (1, 1, 99999, 99999),
+            'process': '~main_dev\\b',
+            'user': None,
+        }),
+        ('main_test', {
+            'cpu_rescale_max': True,
+            'levels': (1, 1, 99999, 99999),
+            'process': '~main_test\\b',
+            'user': None,
+        }),
+    ]
+
+    assert check.context["inventory_ps_common"]([], wato_rule, parsed) == discovered
+
+    def counted_reference(count):
+        return CheckResult([
+            (0, "%s process%s" % (count, '' if count == 1 else 'es'), [("count", count, 100000,
+                                                                        100000, 0, None)]),
+            (0, "0.5% CPU", [("pcpu", 0.5, None, None, None, None)]),
+        ])
+
+    for (item, params), count in zip(discovered, [1, 2, 1]):
+        output = CheckResult(check.context["check_ps_common"](item, params, parsed, cpu_cores=1))
+        assertCheckResultsEqual(output, counted_reference(count))

@@ -593,7 +593,7 @@ class Site(object):
 
         execute("sudo /bin/cp -pr %s %s" % (src_path, self.version.version_path()))
 
-        execute("sudo sed -i \"s|%s|%s|g\" %s/bin/omd" %
+        execute("sudo sed -i \"s|%s|%s|g\" %s/lib/python/omdlib/__init__.py" %
             (src_version, new_version_name, self.version.version_path()))
 
         execute("sudo sed -i \"s|%s|%s|g\" %s/share/omd/omd.info" %

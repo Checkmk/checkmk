@@ -69,6 +69,101 @@ DEFAULT_CONFIG = {
     "instances": [{}],
 }
 
+QUERY_SPECS_GENERIC = [
+    ("java.lang:type=Memory", "NonHeapMemoryUsage/used", "NonHeapMemoryUsage", [], False),
+    ("java.lang:type=Memory", "NonHeapMemoryUsage/max", "NonHeapMemoryMax", [], False),
+    ("java.lang:type=Memory", "HeapMemoryUsage/used", "HeapMemoryUsage", [], False),
+    ("java.lang:type=Memory", "HeapMemoryUsage/max", "HeapMemoryMax", [], False),
+    ("java.lang:type=Threading", "ThreadCount", "ThreadCount", [], False),
+    ("java.lang:type=Threading", "DaemonThreadCount", "DeamonThreadCount", [], False),
+    ("java.lang:type=Threading", "PeakThreadCount", "PeakThreadCount", [], False),
+    ("java.lang:type=Threading", "TotalStartedThreadCount", "TotalStartedThreadCount", [], False),
+    ("java.lang:type=Runtime", "Uptime", "Uptime", [], False),
+    ("java.lang:type=GarbageCollector,name=*", "CollectionCount", "", [], False),
+    ("java.lang:type=GarbageCollector,name=*", "CollectionTime", "", [], False),
+    ("java.lang:name=CMS%20Perm%20Gen,type=MemoryPool", "Usage/used", "PermGenUsage", [], False),
+    ("java.lang:name=CMS%20Perm%20Gen,type=MemoryPool", "Usage/max", "PermGenMax", [], False),
+    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "OffHeapHits",
+     "", [], True),
+    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "OnDiskHits",
+     "", [], True),
+    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
+     "InMemoryHitPercentage", "", [], True),
+    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "CacheMisses",
+     "", [], True),
+    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
+     "OnDiskHitPercentage", "", [], True),
+    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
+     "MemoryStoreObjectCount", "", [], True),
+    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
+     "DiskStoreObjectCount", "", [], True),
+    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
+     "CacheMissPercentage", "", [], True),
+    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
+     "CacheHitPercentage", "", [], True),
+    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
+     "OffHeapHitPercentage", "", [], True),
+    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
+     "InMemoryMisses", "", [], True),
+    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
+     "OffHeapStoreObjectCount", "", [], True),
+    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
+     "WriterQueueLength", "", [], True),
+    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
+     "WriterMaxQueueSize", "", [], True),
+    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "OffHeapMisses",
+     "", [], True),
+    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "InMemoryHits",
+     "", [], True),
+    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
+     "AssociatedCacheName", "", [], True),
+    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "ObjectCount",
+     "", [], True),
+    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "OnDiskMisses",
+     "", [], True),
+    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "CacheHits", "",
+     [], True),
+]
+
+QUERY_SPECS_SPECIFIC = {
+    "weblogic": [
+        ("*:*", "CompletedRequestCount", None, ["ServerRuntime"], False),
+        ("*:*", "QueueLength", None, ["ServerRuntime"], False),
+        ("*:*", "StandbyThreadCount", None, ["ServerRuntime"], False),
+        ("*:*", "PendingUserRequestCount", None, ["ServerRuntime"], False),
+        ("*:Name=ThreadPoolRuntime,*", "ExecuteThreadTotalCount", None, ["ServerRuntime"], False),
+        ("*:*", "ExecuteThreadIdleCount", None, ["ServerRuntime"], False),
+        ("*:*", "HoggingThreadCount", None, ["ServerRuntime"], False),
+        ("*:Type=WebAppComponentRuntime,*", "OpenSessionsCurrentCount", None,
+         ["ServerRuntime", "ApplicationRuntime"], False),
+    ],
+    "tomcat": [
+        ("*:type=Manager,*", "activeSessions,maxActiveSessions", None, ["path", "context"], False),
+        ("*:j2eeType=Servlet,name=default,*", "stateName", None, ["WebModule"], False),
+        # Check not yet working
+        ("*:j2eeType=Servlet,name=default,*", "requestCount", None, ["WebModule"], False),
+        ("*:name=*,type=ThreadPool", "maxThreads", None, [], False),
+        ("*:name=*,type=ThreadPool", "currentThreadCount", None, [], False),
+        ("*:name=*,type=ThreadPool", "currentThreadsBusy", None, [], False),
+        # too wide location for addressing the right info
+        # ( "*:j2eeType=Servlet,*", "requestCount", None, [ "WebModule" ] , False),
+    ],
+    "jboss": [("*:type=Manager,*", "activeSessions,maxActiveSessions", None, ["path", "context"],
+               False),],
+}
+
+#   ('*:j2eeType=WebModule,name=/--/localhost/-/%(app)s,*/state', None, [ "name" ]),
+#   ('*:j2eeType=Servlet,WebModule=/--/localhost/-/%(app)s,name=%(servlet)s,*/requestCount',
+#    None, [ "WebModule", "name" ]),
+#   ("Catalina:J2EEApplication=none,J2EEServer=none,WebModule=*,j2eeType=Servlet,name=*",
+#    None, [ "WebModule", "name" ]),
+
+# We have to deal with socket timeouts. Python > 2.6
+# supports timeout parameter for the urllib2.urlopen method
+# but we are on a python 2.5 system here which seem to use the
+# default socket timeout. We are local here so  set it to 1 second.
+socket.setdefaulttimeout(1.0)
+
 
 class SkipInstance(RuntimeError):
     pass
@@ -444,102 +539,6 @@ def sanitize_config(config):
         config["server"] = socket.getfqdn()
 
     return config
-
-
-QUERY_SPECS_GENERIC = [
-    ("java.lang:type=Memory", "NonHeapMemoryUsage/used", "NonHeapMemoryUsage", [], False),
-    ("java.lang:type=Memory", "NonHeapMemoryUsage/max", "NonHeapMemoryMax", [], False),
-    ("java.lang:type=Memory", "HeapMemoryUsage/used", "HeapMemoryUsage", [], False),
-    ("java.lang:type=Memory", "HeapMemoryUsage/max", "HeapMemoryMax", [], False),
-    ("java.lang:type=Threading", "ThreadCount", "ThreadCount", [], False),
-    ("java.lang:type=Threading", "DaemonThreadCount", "DeamonThreadCount", [], False),
-    ("java.lang:type=Threading", "PeakThreadCount", "PeakThreadCount", [], False),
-    ("java.lang:type=Threading", "TotalStartedThreadCount", "TotalStartedThreadCount", [], False),
-    ("java.lang:type=Runtime", "Uptime", "Uptime", [], False),
-    ("java.lang:type=GarbageCollector,name=*", "CollectionCount", "", [], False),
-    ("java.lang:type=GarbageCollector,name=*", "CollectionTime", "", [], False),
-    ("java.lang:name=CMS%20Perm%20Gen,type=MemoryPool", "Usage/used", "PermGenUsage", [], False),
-    ("java.lang:name=CMS%20Perm%20Gen,type=MemoryPool", "Usage/max", "PermGenMax", [], False),
-    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "OffHeapHits",
-     "", [], True),
-    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "OnDiskHits",
-     "", [], True),
-    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
-     "InMemoryHitPercentage", "", [], True),
-    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "CacheMisses",
-     "", [], True),
-    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
-     "OnDiskHitPercentage", "", [], True),
-    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
-     "MemoryStoreObjectCount", "", [], True),
-    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
-     "DiskStoreObjectCount", "", [], True),
-    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
-     "CacheMissPercentage", "", [], True),
-    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
-     "CacheHitPercentage", "", [], True),
-    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
-     "OffHeapHitPercentage", "", [], True),
-    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
-     "InMemoryMisses", "", [], True),
-    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
-     "OffHeapStoreObjectCount", "", [], True),
-    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
-     "WriterQueueLength", "", [], True),
-    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
-     "WriterMaxQueueSize", "", [], True),
-    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "OffHeapMisses",
-     "", [], True),
-    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "InMemoryHits",
-     "", [], True),
-    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
-     "AssociatedCacheName", "", [], True),
-    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "ObjectCount",
-     "", [], True),
-    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "OnDiskMisses",
-     "", [], True),
-    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "CacheHits", "",
-     [], True),
-]
-
-QUERY_SPECS_SPECIFIC = {
-    "weblogic": [
-        ("*:*", "CompletedRequestCount", None, ["ServerRuntime"], False),
-        ("*:*", "QueueLength", None, ["ServerRuntime"], False),
-        ("*:*", "StandbyThreadCount", None, ["ServerRuntime"], False),
-        ("*:*", "PendingUserRequestCount", None, ["ServerRuntime"], False),
-        ("*:Name=ThreadPoolRuntime,*", "ExecuteThreadTotalCount", None, ["ServerRuntime"], False),
-        ("*:*", "ExecuteThreadIdleCount", None, ["ServerRuntime"], False),
-        ("*:*", "HoggingThreadCount", None, ["ServerRuntime"], False),
-        ("*:Type=WebAppComponentRuntime,*", "OpenSessionsCurrentCount", None,
-         ["ServerRuntime", "ApplicationRuntime"], False),
-    ],
-    "tomcat": [
-        ("*:type=Manager,*", "activeSessions,maxActiveSessions", None, ["path", "context"], False),
-        ("*:j2eeType=Servlet,name=default,*", "stateName", None, ["WebModule"], False),
-        # Check not yet working
-        ("*:j2eeType=Servlet,name=default,*", "requestCount", None, ["WebModule"], False),
-        ("*:name=*,type=ThreadPool", "maxThreads", None, [], False),
-        ("*:name=*,type=ThreadPool", "currentThreadCount", None, [], False),
-        ("*:name=*,type=ThreadPool", "currentThreadsBusy", None, [], False),
-        # too wide location for addressing the right info
-        # ( "*:j2eeType=Servlet,*", "requestCount", None, [ "WebModule" ] , False),
-    ],
-    "jboss": [("*:type=Manager,*", "activeSessions,maxActiveSessions", None, ["path", "context"],
-               False),],
-}
-
-#   ('*:j2eeType=WebModule,name=/--/localhost/-/%(app)s,*/state', None, [ "name" ]),
-#   ('*:j2eeType=Servlet,WebModule=/--/localhost/-/%(app)s,name=%(servlet)s,*/requestCount',
-#    None, [ "WebModule", "name" ]),
-#   ("Catalina:J2EEApplication=none,J2EEServer=none,WebModule=*,j2eeType=Servlet,name=*",
-#    None, [ "WebModule", "name" ]),
-
-# We have to deal with socket timeouts. Python > 2.6
-# supports timeout parameter for the urllib2.urlopen method
-# but we are on a python 2.5 system here which seem to use the
-# default socket timeout. We are local here so  set it to 1 second.
-socket.setdefaulttimeout(1.0)
 
 
 def main(configs_iterable=None):

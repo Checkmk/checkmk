@@ -335,7 +335,7 @@ class ModeAnalyzeConfig(WatoMode):
             log.init_logging()
 
             if config.site_is_local(site_id):
-                results_data = watolib.check_analyze_config()
+                results_data = watolib.AutomationCheckAnalyzeConfig().execute()
 
             else:
                 results_data = watolib.do_remote_automation(

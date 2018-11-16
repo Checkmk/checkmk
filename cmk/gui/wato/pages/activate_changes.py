@@ -29,6 +29,7 @@ remote sites in distributed WATO."""
 import ast
 import tarfile
 import os
+from typing import NamedTuple, List
 
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
@@ -495,17 +496,25 @@ class ModeAjaxActivationState(WatoWebApiMode):
 
 register_page_handler("ajax_activation_state", lambda: ModeAjaxActivationState().handle_page())
 
-
-def do_activate_changes_automation():
-    watolib.verify_slave_site_config(html.var("site_id"))
-
-    try:
-        domains = ast.literal_eval(html.var("domains"))
-    except SyntaxError:
-        raise watolib.MKAutomationException(
-            _("Garbled automation response: '%s'") % html.var("domains"))
-
-    return watolib.execute_activate_changes(domains)
+ActivateChangesRequest = NamedTuple("ActivateChangesRequest", [("site_id", str),
+                                                               ("domains", List[str])])
 
 
-watolib.register_automation_command("activate-changes", do_activate_changes_automation)
+@watolib.automation_command_registry.register
+class AutomationActivateChanges(watolib.AutomationCommand):
+    def command_name(self):
+        return "activate-changes"
+
+    def get_request(self):
+        site_id = html.var("site_id")
+        self._verify_slave_site_config(site_id)
+
+        try:
+            domains = ast.literal_eval(html.var("domains"))
+        except SyntaxError:
+            raise watolib.MKAutomationException(_("Invalid request: %r") % html.var("domains"))
+
+        return ActivateChangesRequest(site_id=site_id, domains=domains)
+
+    def execute(self, request):
+        return watolib.execute_activate_changes(request.domains)

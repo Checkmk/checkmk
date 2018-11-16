@@ -29,6 +29,7 @@ import re
 from typing import Dict, Pattern  # pylint:disable=unused-import
 
 from cmk.exceptions import MKGeneralException
+from cmk.gui.exceptions import MKUserError
 from cmk.i18n import _
 
 g_compiled_regexes = {}  # type: Dict[str, Pattern]
@@ -67,3 +68,17 @@ def escape_regex_chars(match):
             r += "\\"
         r += c
     return r
+
+
+def forbid_re_delimiters_inside_groups(pattern, varprefix):
+    # Used as input validation in PS check wato config
+    group_re = r'\(.*?\)'
+    for match in re.findall(group_re, pattern):
+        for char in ['\\b', '$', '^']:
+            if char in match:
+                raise MKUserError(
+                    varprefix,
+                    _('"%s" is not allowed inside the regular expression group %s. '
+                      'Bounding characters inside groups will vanish after discovery, '
+                      'because processes are instanced for every matching group. '
+                      'Thus enforce delimiters outside the group.') % (char, match))

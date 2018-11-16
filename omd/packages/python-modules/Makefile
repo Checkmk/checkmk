@@ -245,6 +245,7 @@ dump-Pipfile:
 	@echo ''
 	@echo '[packages]'
 	@echo $(patsubst %.zip,%,$(patsubst %.tar.gz,%,$(MODULES))) | tr ' ' '\n' | sed 's/-\([0-9.]*\)$$/ = "==\1"/'
+	@echo 'python-snap7 = "==0.5"  # actually some unknown version between 0.4 and 0.5... >:-('
 	@echo ''
 	@echo '[requires]'
 	@echo 'python_version = "2.7"'

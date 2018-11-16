@@ -68,14 +68,21 @@ MODULES += psutil-5.4.3.tar.gz # needed for mkbench
 #    0x009080af (OpenSSL 0.9.8j 07 Jan 2009): sles11sp2 sles11sp3 sles11sp4
 #    0x009080bf (OpenSSL 0.9.8k 25 Mar 2009): lucid
 #    0x009080ff (OpenSSL 0.9.8o 01 Jun 2010): squeeze
-#    0x10000003 (OpenSSL 1.0.0 29 Mar 2010): centos60
+#    0x10000003 (OpenSSL 1.0.0 29 Mar 2010): el6
 #    0x1000100f (OpenSSL 1.0.1 14 Mar 2012): precise
-#    0x1000105f (OpenSSL 1.0.1e 11 Feb 2013): centos70 cma wheezy
+#    0x1000105f (OpenSSL 1.0.1e 11 Feb 2013): el7 cma wheezy
 #    0x1000106f (OpenSSL 1.0.1f 6 Jan 2014): trusty utopic vivid
 #    0x1000109f (OpenSSL 1.0.1i 6 Aug 2014): sles12 sles12sp1
 #    0x1000114f (OpenSSL 1.0.1t  3 May 2016): jessie
 #    0x1000204f (OpenSSL 1.0.2d 9 Jul 2015): wily
-#    0x1000207f (OpenSSL 1.0.2g  1 Mar 2016): xenial
+#    0x1000207f (OpenSSL 1.0.2g  1 Mar 2016): artful xenial yakkety zesty
+#    0x100020af (OpenSSL 1.0.2j-fips  26 Sep 2016): sles12sp2-64
+#    0x100020af (OpenSSL 1.0.2j-fips  26 Sep 2016): sles12sp3-64
+#    0x100020cf (OpenSSL 1.0.2l  25 May 2017): cma-stretch-64
+#    0x100020cf (OpenSSL 1.0.2l  25 May 2017): stretch-64
+#    0x1010007f (OpenSSL 1.1.0g  2 Nov 2017): bionic-64
+#    0x1010008f (OpenSSL 1.1.0h-fips  27 Mar 2018): sles15-64
+#    0x1010100f (OpenSSL 1.1.1  11 Sep 2018): cosmic-64
 #
 # Starting with version 1.5, cryptography has dropped support for OpenSSL 0.9.8,
 # see https://cryptography.io/en/latest/faq/#installing-cryptography-with-openssl-0-9-8-fails.
@@ -111,22 +118,16 @@ else ifneq ($(filter $(DISTRO_CODE),el6),)
     MODULES += cryptography-1.5.3.tar.gz
     PATCHES += patches/0004-CMS_DEBUG_DECRYPT-fix.patch
     PATCHES += patches/0009-cryptography-1.5.3-disable-version-warning.patch
-else ifneq ($(filter $(DISTRO_CODE),sles15 cosmic),)
-# cryptography-1.9 is not compatible with the OpenSSL 1.1.0h on SLES15. For the
-# moment we only use the new version on this platfrom. Make the others also use
-# this version in the future.
-    MODULES += asn1crypto-0.24.0.tar.gz
-    MODULES += cryptography-2.3.1.tar.gz
 else
     MODULES += asn1crypto-0.24.0.tar.gz
-    MODULES += cryptography-1.9.tar.gz
+    MODULES += cryptography-2.3.1.tar.gz
 endif
 
 MODULES += certifi-2018.10.15.tar.gz
 MODULES += chardet-3.0.4.tar.gz
 MODULES += urllib3-1.24.1.tar.gz
 # Added for NetApp special agent, but may be used in other components too in future
-MODULES+=requests-2.13.0.tar.gz
+MODULES += requests-2.13.0.tar.gz
 # Has requests as dependency -> must be built after
 MODULES += pyOpenSSL-16.2.0.tar.gz
 # Added for check_bi_aggr with kerberos support

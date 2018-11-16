@@ -329,8 +329,7 @@ def query_instance(inst):
                 mbean_search_results[mbean] = paths
 
             for mbean_exp in paths:
-                queries.append( (inst, "%s/%s" % (urllib2.quote(mbean_exp), path), path,
-                                    itemspec, mbean_exp) )
+                queries.append((inst, "%s/%s" % (urllib2.quote(mbean_exp), path), path, itemspec))
         else:
             queries.append( (inst, mbean + "/" + path, title, itemspec) )
 
@@ -365,8 +364,7 @@ def query_instance(inst):
                     mbean_search_results[mbean] = paths
 
                 for mbean_exp in paths:
-                    queries.append( (inst, "%s/%s" % (urllib2.quote(mbean_exp), path), path,
-                                        itemspec, mbean_exp) )
+                    queries.append((inst, "%s/%s" % (urllib2.quote(mbean_exp), path), path, itemspec))
             else:
                 queries.append( (inst, mbean + "/" + path, title, itemspec) )
 

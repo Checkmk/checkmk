@@ -14,6 +14,7 @@ MODULES += setuptools-40.6.2.zip  # needed by rrdtool bindings
 # Modules really needed on all platforms
 MODULES += pysphere-0.1.7.zip
 MODULES += pyasn1-0.4.2.tar.gz
+MODULES += pyasn1-modules-0.2.2.tar.gz
 MODULES += pycryptodomex-3.4.7.tar.gz
 MODULES += ordereddict-1.1.tar.gz # needed by pysmi
 MODULES += ply-3.11.tar.gz # needed by pysmi
@@ -26,6 +27,7 @@ MODULES += pymssql-2.1.3.tar.gz # needed for check_sql (together with freetds)
 LEGACY_LDAP=0
 ifeq ($(DISTRO_CODE),el5)
     LEGACY_LDAP=1
+    PATCHES += patches/0019-PyNaCl-fortify-source.patch
 endif
 
 ifeq ($(LEGACY_LDAP), 1)
@@ -120,6 +122,9 @@ else
     MODULES += cryptography-1.9.tar.gz
 endif
 
+MODULES += certifi-2018.10.15.tar.gz
+MODULES += chardet-3.0.4.tar.gz
+MODULES += urllib3-1.24.1.tar.gz
 # Added for NetApp special agent, but may be used in other components too in future
 MODULES+=requests-2.13.0.tar.gz
 # Has requests as dependency -> must be built after
@@ -130,6 +135,8 @@ MODULES += requests-kerberos-0.11.0.tar.gz
 # Added for tinkerforge special agent
 MODULES += tinkerforge-2.1.15.tar.gz
 # Added for check_sftp
+MODULES += bcrypt-3.1.4.tar.gz
+MODULES += PyNaCl-1.3.0.tar.gz
 MODULES += paramiko-2.1.2.tar.gz
 # Added for IPMI monitoring of management interface
 MODULES += pbr-4.0.0.tar.gz

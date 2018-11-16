@@ -97,17 +97,21 @@ class ModeAutomation(WatoWebApiMode):
             raise MKAuthException(_("Invalid automation secret."))
 
     def page(self):
+        # TODO: Refactor these two calls to also use the automation_command_registry
         if self._command == "checkmk-automation":
             self._execute_cmk_automation()
+            return
 
         elif self._command == "push-profile":
             self._execute_push_profile()
+            return
 
-        elif watolib.automation_command_exists(self._command):
-            self._execute_automation_command()
-
-        else:
+        try:
+            automation_command = watolib.automation_command_registry[self._command]
+        except KeyError:
             raise MKGeneralException(_("Invalid automation command: %s.") % self._command)
+
+        self._execute_automation_command(automation_command)
 
     def _execute_cmk_automation(self):
         cmk_command = html.var("automation")
@@ -156,10 +160,10 @@ class ModeAutomation(WatoWebApiMode):
 
         return True
 
-    def _execute_automation_command(self):
+    def _execute_automation_command(self, automation_command):
         try:
             # Don't use write_text() here (not needed, because no HTML document is rendered)
-            html.write(repr(watolib.execute_automation_command(self._command)))
+            html.write(repr(automation_command().execute()))
         except Exception, e:
             logger.exception()
             if config.debug:

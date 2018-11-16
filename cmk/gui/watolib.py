@@ -42,6 +42,8 @@
 #   |  Doing this that must be done when the module WATO is loaded.        |
 #   '----------------------------------------------------------------------'
 
+import typing
+import abc
 import re
 import os
 import shutil
@@ -207,7 +209,6 @@ if config.mkeventd_enabled:
     backup_paths.append(("dir", "mkeventd_mkp", _mkp_rule_pack_dir))
 
 backup_domains = {}
-automation_commands = {}
 g_rulespecs = None
 g_rulegroups = {}
 
@@ -3094,6 +3095,81 @@ class CREHost(WithPermissionsAndAttributes):
 
 
 #.
+#   .--Automations---------------------------------------------------------.
+#   |        _         _                        _   _                      |
+#   |       / \  _   _| |_ ___  _ __ ___   __ _| |_(_) ___  _ __  ___      |
+#   |      / _ \| | | | __/ _ \| '_ ` _ \ / _` | __| |/ _ \| '_ \/ __|     |
+#   |     / ___ \ |_| | || (_) | | | | | | (_| | |_| | (_) | | | \__ \     |
+#   |    /_/   \_\__,_|\__\___/|_| |_| |_|\__,_|\__|_|\___/|_| |_|___/     |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Managing the available automation calls                              |
+#   '----------------------------------------------------------------------'
+
+
+class AutomationCommand(object):
+    """Abstract base class for all automation commands"""
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractmethod
+    def command_name(self):
+        # type: () -> str
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def get_request(self):
+        # type: () -> ...
+        """Get request variables from environment
+
+        In case an automation command needs to read variables from the HTTP request this has to be done
+        in this method. The request produced by this function is 1:1 handed over to the execute() method."""
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def execute(self, request):
+        # type: (...) -> ...
+        raise NotImplementedError()
+
+    def _verify_slave_site_config(self, site_id):
+        # type: (str) -> None
+        if not site_id:
+            raise MKGeneralException(_("Missing variable siteid"))
+
+        our_id = config.omd_site()
+
+        if not config.is_single_local_site():
+            raise MKGeneralException(
+                _("Configuration error. You treat us as "
+                  "a <b>slave</b>, but we have an own distributed WATO configuration!"))
+
+        if our_id is not None and our_id != site_id:
+            raise MKGeneralException(
+                _("Site ID mismatch. Our ID is '%s', but you are saying we are '%s'.") % (our_id,
+                                                                                          site_id))
+
+        # Make sure there are no local changes we would lose!
+        changes = ActivateChanges()
+        changes.load()
+        pending = list(reversed(changes.grouped_changes()))
+        if pending:
+            message = _("There are %d pending changes that would get lost. The most recent are: "
+                       ) % len(pending)
+            message += ", ".join(change["text"] for _change_id, change in pending[:10])
+
+            raise MKGeneralException(message)
+
+
+class AutomationCommandRegistry(cmk.plugin_registry.ClassRegistry):
+    def plugin_base_class(self):
+        return AutomationCommand
+
+    def _register(self, plugin_class):
+        self._entries[plugin_class().command_name()] = plugin_class
+
+
+automation_command_registry = AutomationCommandRegistry()
+
+#.
 #   .--Attributes----------------------------------------------------------.
 #   |              _   _   _        _ _           _                        |
 #   |             / \ | |_| |_ _ __(_) |__  _   _| |_ ___  ___             |
@@ -4694,81 +4770,62 @@ def update_replication_status(site_id, vars_):
         save_site_replication_status(site_id, repl_status)
 
 
-def automation_push_snapshot():
-    site_id = html.var("siteid")
-
-    verify_slave_site_config(site_id)
-
-    tarcontent = html.request.uploaded_file("snapshot")
-    if not tarcontent:
-        raise MKGeneralException(_('Invalid call: The snapshot is missing.'))
-    tarcontent = tarcontent[2]
-
-    multitar.extract_from_buffer(tarcontent, replication_paths)
-
-    try:
-        save_site_globals_on_slave_site(tarcontent)
-
-        confirm_all_local_changes()  # pending changes are lost
-
-        call_hook_snapshot_pushed()
-
-        # Create rule making this site only monitor our hosts
-        create_distributed_wato_file(site_id, is_slave=True)
-    except Exception:
-        raise MKGeneralException(
-            _("Failed to deploy configuration: \"%s\". "
-              "Please note that the site configuration has been synchronized "
-              "partially.") % traceback.format_exc())
-
-    log_audit(None, "replication", _("Synchronized with master (my site id is %s.)") % site_id)
-
-    return True
+PushSnapshotRequest = typing.NamedTuple("PushSnapshotRequest", [("site_id", str),
+                                                                ("tar_content", str)])
 
 
-def save_site_globals_on_slave_site(tarcontent):
-    tmp_dir = cmk.paths.tmp_dir + "/sitespecific-%s" % id(html)
-    try:
-        if not os.path.exists(tmp_dir):
-            store.mkdir(tmp_dir)
+@automation_command_registry.register
+class AutomationPushSnapshot(AutomationCommand):
+    def command_name(self):
+        return "push-snapshot"
 
-        multitar.extract_from_buffer(tarcontent, [("dir", "sitespecific", tmp_dir)])
+    def get_request(self):
+        # type: () -> PushSnapshotRequest
+        site_id = html.var("siteid")
+        self._verify_slave_site_config(site_id)
 
-        site_globals = store.load_data_from_file(tmp_dir + "/sitespecific.mk", {})
-        save_site_global_settings(site_globals)
-    finally:
-        shutil.rmtree(tmp_dir)
+        snapshot = html.request.uploaded_file("snapshot")
+        if not snapshot:
+            raise MKGeneralException(_('Invalid call: The snapshot is missing.'))
 
+        return PushSnapshotRequest(site_id=site_id, tar_content=snapshot[2])
 
-automation_commands["push-snapshot"] = automation_push_snapshot
+    def execute(self, request):
+        # type: (PushSnapshotRequest) -> bool
+        multitar.extract_from_buffer(request.tar_content, replication_paths)
 
+        try:
+            self._save_site_globals_on_slave_site(request.tar_content)
 
-def verify_slave_site_config(site_id):
-    if not site_id:
-        raise MKGeneralException(_("Missing variable siteid"))
+            confirm_all_local_changes()  # pending changes are lost
 
-    our_id = config.omd_site()
+            hooks.call("snapshot-pushed")
 
-    if not config.is_single_local_site():
-        raise MKGeneralException(
-            _("Configuration error. You treat us as "
-              "a <b>slave</b>, but we have an own distributed WATO configuration!"))
+            # Create rule making this site only monitor our hosts
+            create_distributed_wato_file(request.site_id, is_slave=True)
+        except Exception:
+            raise MKGeneralException(
+                _("Failed to deploy configuration: \"%s\". "
+                  "Please note that the site configuration has been synchronized "
+                  "partially.") % traceback.format_exc())
 
-    if our_id is not None and our_id != site_id:
-        raise MKGeneralException(
-            _("Site ID mismatch. Our ID is '%s', but you are saying we are '%s'.") % (our_id,
-                                                                                      site_id))
+        log_audit(None, "replication",
+                  _("Synchronized with master (my site id is %s.)") % request.site_id)
 
-    # Make sure there are no local changes we would lose!
-    changes = ActivateChanges()
-    changes.load()
-    pending = list(reversed(changes.grouped_changes()))
-    if pending:
-        message = _("There are %d pending changes that would get lost. The most recent are: "
-                   ) % len(pending)
-        message += ", ".join(change["text"] for _change_id, change in pending[:10])
+        return True
 
-        raise MKGeneralException(message)
+    def _save_site_globals_on_slave_site(self, tarcontent):
+        tmp_dir = cmk.paths.tmp_dir + "/sitespecific-%s" % id(html)
+        try:
+            if not os.path.exists(tmp_dir):
+                store.mkdir(tmp_dir)
+
+            multitar.extract_from_buffer(tarcontent, [("dir", "sitespecific", tmp_dir)])
+
+            site_globals = store.load_data_from_file(tmp_dir + "/sitespecific.mk", {})
+            save_site_global_settings(site_globals)
+        finally:
+            shutil.rmtree(tmp_dir)
 
 
 # TODO: Recode to new sync?
@@ -6958,10 +7015,6 @@ class BuiltinHosttagsConfiguration(HosttagsConfiguration):
 
 def register_hook(name, func):
     hooks.register(name, func)
-
-
-def call_hook_snapshot_pushed():
-    hooks.call("snapshot-pushed")
 
 
 def call_hook_hosts_changed(folder):
@@ -9485,17 +9538,24 @@ def edit_users(changed_users):
 #   | The WATO folders network scan for new hosts.                         |
 #   '----------------------------------------------------------------------'
 
-
-def do_network_scan_automation():
-    folder_path = html.var("folder")
-    if folder_path is None:
-        raise MKGeneralException(_("Folder path is missing"))
-    folder = Folder.folder(folder_path)
-
-    return do_network_scan(folder)
+NetworkScanRequest = typing.NamedTuple("NetworkScanRequest", [("folder_path", str)])
 
 
-automation_commands["network-scan"] = do_network_scan_automation
+@automation_command_registry.register
+class AutomationNetworkScan(AutomationCommand):
+    def command_name(self):
+        return "network-scan"
+
+    def get_request(self):
+        # type: () -> NetworkScanRequest
+        folder_path = html.var("folder")
+        if folder_path is None:
+            raise MKGeneralException(_("Folder path is missing"))
+        return NetworkScanRequest(folder_path=folder_path)
+
+    def execute(self, request):
+        folder = Folder.folder(request.folder_path)
+        return do_network_scan(folder)
 
 
 # This is executed in the site the host is assigned to.
@@ -9908,21 +9968,26 @@ class ACTestRegistry(cmk.plugin_registry.ClassRegistry):
 ac_test_registry = ACTestRegistry()
 
 
-def check_analyze_config():
-    results = []
-    for test_cls in ac_test_registry.values():
-        test = test_cls()
+@automation_command_registry.register
+class AutomationCheckAnalyzeConfig(AutomationCommand):
+    def command_name(self):
+        return "check-analyze-config"
 
-        if not test.is_relevant():
-            continue
+    def get_request(self):
+        return None
 
-        for result in test.run():
-            results.append(result)
+    def execute(self, _unused_request):
+        results = []
+        for test_cls in ac_test_registry.values():
+            test = test_cls()
 
-    return results
+            if not test.is_relevant():
+                continue
 
+            for result in test.run():
+                results.append(result)
 
-automation_commands["check-analyze-config"] = check_analyze_config
+        return results
 
 
 def site_is_using_livestatus_proxy(site_id):
@@ -10125,18 +10190,6 @@ class WatoBackgroundJob(gui_background_job.GUIBackgroundJob):
 
 def add_replication_paths(paths):
     replication_paths.extend(paths)
-
-
-def register_automation_command(cmd, func):
-    automation_commands[cmd] = func
-
-
-def automation_command_exists(cmd):
-    return cmd in automation_commands
-
-
-def execute_automation_command(cmd):
-    return automation_commands[cmd]()
 
 
 def site_neutral_path(path):

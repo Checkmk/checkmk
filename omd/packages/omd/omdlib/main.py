@@ -2720,7 +2720,7 @@ def main_rm(site, args, options=None):
             kill_site_user_processes(site, exclude_current_and_parents=True)
 
     if tmpfs_mounted(site.name):
-        unmount_tmpfs(site.name, kill=kill)
+        unmount_tmpfs(site, kill=kill)
 
     if not reuse:
         remove_from_fstab(site)
@@ -2756,7 +2756,7 @@ def main_disable(site, args, options):
         sys.exit(0)
 
     stop_if_not_stopped(site)
-    unmount_tmpfs(site.name, kill = "kill" in options)
+    unmount_tmpfs(site, kill = "kill" in options)
     sys.stdout.write("Disabling Apache configuration for this site...")
     delete_apache_hook(site.name)
     ok()
@@ -2840,7 +2840,7 @@ def main_mv_or_cp(old_site, what, args, options=None):
                  "PIDs: %s" % (action, old_site.name, old_site.name, " ".join(pids)))
 
     if what == "mv":
-        unmount_tmpfs(old_site.name, kill = "kill" in options)
+        unmount_tmpfs(old_site, kill = "kill" in options)
         if not reuse:
             remove_from_fstab(old_site)
 
@@ -3050,7 +3050,7 @@ def main_update(site, args, options=None):
 
     # Unmount tmp. We need to recreate the files and directories
     # from the new version after updating.
-    unmount_tmpfs(site.name)
+    unmount_tmpfs(site)
 
     # Source version: the version of the site we deal with
     from_version = site.version

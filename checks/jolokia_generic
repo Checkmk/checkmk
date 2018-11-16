@@ -89,8 +89,12 @@ check_info["jolokia_generic.string"] = {
 #   '----------------------------------------------------------------------'
 
 def inventory_jolokia_generic_rate(parsed):
-    for item in parsed:
-        if parsed[item]["type"] == "rate":
+    for item, data in parsed.iteritems():
+        if data.get("type") == "rate":
+            try:
+                float(data["value"])
+            except (KeyError, ValueError):
+                continue
             yield item, {}
 
 
@@ -164,8 +168,12 @@ check_info["jolokia_generic.rate"] = {
 #   '----------------------------------------------------------------------'
 
 def inventory_jolokia_generic(parsed):
-    for item in parsed:
-        if parsed[item]["type"] == "number":
+    for item, data in parsed.iteritems():
+        if data.get("type") == "number":
+            try:
+                float(data["value"])
+            except (KeyError, ValueError):
+                continue
             yield item, {}
 
 

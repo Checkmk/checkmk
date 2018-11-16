@@ -41,8 +41,8 @@ def check_bdtms_tape_module(item, _no_params, info):
             continue
 
         yield state(module_status), "Module: %s" % module_status.lower()
-        yield state(module_status), "Board: %s" % module_status.lower()
-        yield state(module_status), "Power supply: %s" % module_status.lower()
+        yield state(board_status), "Board: %s" % board_status.lower()
+        yield state(power_status), "Power supply: %s" % power_status.lower()
 
 
 check_info['bdtms_tape_module'] = {

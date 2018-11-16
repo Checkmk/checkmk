@@ -1,0 +1,13 @@
+Title: jolokia_generic: Don't discover wrong types
+Level: 1
+Component: checks
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p8
+Date: 1542375396
+
+The jolokia generic check no longer discovers services that would
+ -- due to the wrong value type -- go to UNKNOWN anyway.
+

@@ -363,7 +363,7 @@ class Integer(ValueSpec):
         return text
 
     def validate_datatype(self, value, varprefix):
-        if isinstance(value, numbers.Integral):
+        if not isinstance(value, numbers.Integral):
             raise MKUserError(
                 varprefix,
                 _("The value %r has the wrong type %s, but must be of type int") %

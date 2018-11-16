@@ -894,8 +894,20 @@ class APICallSites(APICallCollection):
                 "required_output_format": "python",
                 "locking": False,
             },
+            "get_all_sites": {
+                "handler": self._get_all,
+                "required_permissions": required_permissions,
+                "required_output_format": "python",
+                "locking": False,
+            },
             "set_site": {
                 "handler": self._set,
+                "required_permissions": required_permissions,
+                "required_input_format": "python",
+                "locking": True,
+            },
+            "set_all_sites": {
+                "handler": self._set_all,
                 "required_permissions": required_permissions,
                 "required_input_format": "python",
                 "locking": True,
@@ -932,6 +944,15 @@ class APICallSites(APICallCollection):
         sites_dict["configuration_hash"] = compute_config_hash(existing_site)
         return sites_dict
 
+    def _get_all(self, request):
+        validate_request_keys(request)
+
+        site_mgmt = watolib.SiteManagementFactory().factory()
+        all_sites = site_mgmt.load_sites()
+        sites_dict = {"sites": all_sites}
+        sites_dict["configuration_hash"] = compute_config_hash(all_sites)
+        return sites_dict
+
     def _set(self, request):
         validate_request_keys(
             request, required_keys=["site_config", "site_id"], optional_keys=["configuration_hash"])
@@ -947,6 +968,21 @@ class APICallSites(APICallCollection):
 
         all_sites[request["site_id"]] = request["site_config"]
         site_mgmt.save_sites(all_sites)
+
+    def _set_all(self, request):
+        validate_request_keys(
+            request, required_keys=["sites"], optional_keys=["configuration_hash"])
+
+        site_mgmt = watolib.SiteManagementFactory().factory()
+
+        all_sites = site_mgmt.load_sites()
+        if "configuration_hash" in request:
+            validate_config_hash(request["configuration_hash"], all_sites)
+
+        for site_id, site_config in request["sites"].iteritems():
+            site_mgmt.validate_configuration(site_id, site_config, request["sites"])
+
+        site_mgmt.save_sites(request["sites"])
 
     def _delete(self, request):
         validate_request_keys(

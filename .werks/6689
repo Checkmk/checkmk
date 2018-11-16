@@ -1,0 +1,53 @@
+Title: WATO API: Introduced new functions set_all_sites/get_all_sites
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1542637612
+Class: feature
+
+The new request <tt>get_all_sites</tt> allows you to fetch all site configurations with a single call.
+This call returns a python dictionary with the following content
+
+F+:
+{'configuration_hash': 'bba0d7cd362dc42af2f36f3d7dfed193',
+ 'sites': {'heute': {'alias': u'Local site heute',
+                     'disable_wato': True,
+                     'disabled': False,
+                     'insecure': False,
+                     'multisiteurl': '',
+                     'persist': False,
+                     'replicate_ec': False,
+                     'replication': '',
+                     'socket': 'tcp:1.2.3.4:6557',
+                     'timeout': 10,
+                     'user_login': True}}}
+F-:
+
+The response from the previous call can be modified, e.g. add a new site and written back with the request <tt>set_all_sites</tt>.
+F+:
+{'configuration_hash': '3a11df6985ff799eca7310f35a8f575d',
+ 'sites': {'heute': {'alias': u'Local site heute',
+                     'disable_wato': True,
+                     'disabled': False,
+                     'insecure': False,
+                     'multisiteurl': '',
+                     'persist': False,
+                     'replicate_ec': False,
+                     'replication': '',
+                     'socket': 'tcp:1.2.3.4:6557',
+                     'timeout': 10,
+                     'user_login': True},
+           'new_site': {'alias': u'Local site heute',
+                        'disable_wato': True,
+                        'disabled': False,
+                        'insecure': False,
+                        'multisiteurl': '',
+                        'persist': False,
+                        'replicate_ec': False,
+                        'replication': '',
+                        'socket': 'tcp:1.2.3.4:6557',
+                        'timeout': 10,
+                        'user_login': True}}}
+F-:

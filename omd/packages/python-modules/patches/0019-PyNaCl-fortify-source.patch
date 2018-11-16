@@ -1,0 +1,10 @@
+--- dest/PyNaCl-1.3.0/src/libsodium/configure	2018-09-26 20:57:49.000000000 +0200
++++ dest/PyNaCl-1.3.0.patched/src/libsodium/configure	2018-11-15 14:21:19.735003757 +0100
+@@ -6742,6 +6742,7 @@
+   ;
+   return 0;
+ }
++#error No chance...
+ _ACEOF
+ if ac_fn_c_try_link "$LINENO"; then :
+   ax_cv_check_cflags___D_FORTIFY_SOURCE_2=yes

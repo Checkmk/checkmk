@@ -226,7 +226,7 @@ function permitted_maps($username) {
 def create_auth_file(callee, users=None):
     import cmk.gui.userdb as userdb  # TODO: Cleanup
     if users is None:
-        userdb.load_users()
+        users = userdb.load_users()
 
     store.mkdir(g_auth_base_dir)
 

@@ -45,7 +45,7 @@ import cmk.gui.userdb as userdb
 import cmk.gui.sites as sites
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
-from cmk.gui.exceptions import MKException, MKGeneralException, MKAuthException, MKUserError, RequestTimeout
+from cmk.gui.exceptions import MKException, MKGeneralException, MKAuthException, MKUserError
 
 
 def get_inventory_data(inventory_tree, tree_path):
@@ -200,7 +200,7 @@ def get_history_deltas(hostname, search_timestamp=None):
         return tree_lookup[timestamp]
 
     delta_history = []
-    for idx, timestamp in enumerate(required_timestamps):
+    for _idx, timestamp in enumerate(required_timestamps):
         cached_delta_path = os.path.join(cmk.paths.var_dir, "inventory_delta_cache", hostname,
                                          "%s_%s" % (previous_timestamp, timestamp))
 
@@ -229,7 +229,7 @@ def get_history_deltas(hostname, search_timestamp=None):
             delta_history.append((timestamp, delta_data))
         except RequestTimeout:
             raise
-        except Exception, e:
+        except Exception:
             return []  # No inventory for this host
 
         previous_timestamp = timestamp
@@ -475,8 +475,8 @@ class InventoryHousekeeping(object):
         self._inventory_delta_cache_path = Path(cmk.paths.var_dir) / "inventory_delta_cache"
 
     def run(self):
-        if not self._inventory_delta_cache_path.exists() or not self._inventory_archive_path.exists(
-        ):  # pylint: disable=no-member
+        if not self._inventory_delta_cache_path.exists() or not self._inventory_archive_path.exists(# pylint: disable=no-member
+        ):
             return
 
         last_cleanup = self._inventory_delta_cache_path / "last_cleanup"
@@ -519,7 +519,7 @@ class InventoryHousekeeping(object):
         timestamps = set(["None"])  # 'None' refers to the histories start
         try:
             timestamps.add("%d" % (self._inventory_path / hostname).stat().st_mtime)
-        except OSError, e:
+        except OSError:
             pass
 
         for filename in [

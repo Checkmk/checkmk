@@ -473,18 +473,19 @@ def check_jolokia_metrics_tp(item, params, info):
 
     def check_thread_levels(what):
         threads_abs = int(threadpool_info[what])
-        threads_rel = threads_abs / max_threads
-        infotext = "%s: %d (%.1f%%)" % (what, threads_abs, threads_rel)
+        threads_perc = threads_abs * 100. / max_threads
+        infotext = "%s: %d (%s)" % (what, threads_abs, get_percent_human_readable(threads_perc))
         status = 0
 
         _params = params.get(what)
         if _params and _params[0] != None and _params[1] != None:
             warn, crit = params[what]
-            levelstext = " (warn/crit at %d/%d%%)" % (warn, crit)
-            if threads_rel >= crit:
+            levelstext = " (warn/crit at %s/%s)" % (get_percent_human_readable(warn),
+                                                    get_percent_human_readable(crit))
+            if threads_perc >= crit:
                 status = 2
                 infotext += levelstext
-            elif threads_rel >= warn:
+            elif threads_perc >= warn:
                 status = 1
                 infotext += levelstext
         else:

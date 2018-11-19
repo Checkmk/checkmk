@@ -1,0 +1,11 @@
+Title: jolokia_metrics.tp: Fix percentage of tomcat threadpool info
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1542615887
+Class: fix
+
+Previously the value shown as percentage was too small by a factor of 100
+and rounded to 1 decimal digit.

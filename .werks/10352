@@ -1,0 +1,11 @@
+Title: aruba_aps, aruba_clients, aruba_cpu_util: New checks for Aruba devices
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1571389693
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 1.7.0i1
+
+

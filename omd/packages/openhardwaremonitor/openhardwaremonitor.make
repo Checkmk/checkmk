@@ -24,7 +24,7 @@ $(OPENHARDWAREMONITOR)-dist: $(OPENHARDWAREMONITOR_DIST)
 #	      .
 
 #$(OPENHARDWAREMONITOR_DIR)/Bin/Release/OpenHardwareMonitorCLI.exe $(OPENHARDWAREMONITOR_DIR)/Bin/Release/OpenHardwareMonitorLib.dll:  $(OPENHARDWAREMONITOR_UNPACK) $(OPENHARDWAREMONITOR_DIR)/OpenHardwareMonitorCLI $(OPENHARDWAREMONITOR_DIR)/OpenHardwareMonitor.sln
-$(PACKAGE_DIR)/$(OPENHARDWAREMONITOR)/OpenHardwareMonitorCLI.exe $(PACKAGE_DIR)/$(OPENHARDWAREMONITOR)/OpenHardwareMonitorLib.dll:  $(OPENHARDWAREMONITOR_UNPACK) $(OPENHARDWAREMONITOR_DIR)/OpenHardwareMonitorCLI $(OPENHARDWAREMONITOR_DIR)/OpenHardwareMonitor.sln
+$(PACKAGE_DIR)/$(OPENHARDWAREMONITOR)/OpenHardwareMonitorCLI.exe:  $(OPENHARDWAREMONITOR_UNPACK) $(OPENHARDWAREMONITOR_DIR)/OpenHardwareMonitorCLI $(OPENHARDWAREMONITOR_DIR)/OpenHardwareMonitor.sln
 # The strange "cat" below is necessary because the extremely ancient Mono
 # versions coming with even the latest Ubuntus still contain the rather severe
 # bug https://github.com/mono/mono/issues/6752. ("...System.Exception: Magic
@@ -35,6 +35,8 @@ $(PACKAGE_DIR)/$(OPENHARDWAREMONITOR)/OpenHardwareMonitorCLI.exe $(PACKAGE_DIR)/
 	       /target:OpenHardwareMonitorCLI | cat
 	cp $(OPENHARDWAREMONITOR_DIR)/Bin/Release/OpenHardwareMonitorCLI.exe $(PACKAGE_DIR)/$(OPENHARDWAREMONITOR)
 	cp $(OPENHARDWAREMONITOR_DIR)/Bin/Release/OpenHardwareMonitorLib.dll $(PACKAGE_DIR)/$(OPENHARDWAREMONITOR)
+
+$(PACKAGE_DIR)/$(OPENHARDWAREMONITOR)/OpenHardwareMonitorLib.dll: $(PACKAGE_DIR)/$(OPENHARDWAREMONITOR)/OpenHardwareMonitorCLI.exe
 
 $(OPENHARDWAREMONITOR_DIR)/OpenHardwareMonitorCLI: $(PACKAGE_DIR)/$(OPENHARDWAREMONITOR)/OpenHardwareMonitorCLI
 	cp -r $< $(OPENHARDWAREMONITOR_DIR)/
@@ -55,7 +57,7 @@ $(OPENHARDWAREMONITOR)-setup:
 	    mono-complete \
 	    mono-xbuild
 
-$(OPENHARDWAREMONITOR_DIST): $(PACKAGE_DIR)/$(OPENHARDWAREMONITOR)/OpenHardwareMonitorCLI.exe $(PACKAGE_DIR)/$(OPENHARDWAREMONITOR)/OpenHardwareMonitorLib.dll
+$(OPENHARDWAREMONITOR_DIST): $(PACKAGE_DIR)/$(OPENHARDWAREMONITOR)/OpenHardwareMonitorCLI.exe
 	$(TOUCH) $@
 
 $(OPENHARDWAREMONITOR)-clean-ohm: clean

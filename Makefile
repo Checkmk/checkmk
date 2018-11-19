@@ -257,6 +257,11 @@ $(DISTNAME).tar.gz: mk-livestatus-$(VERSION).tar.gz .werks/werks $(JAVASCRIPT_MI
 	@echo "   FINISHED. "
 	@echo "=============================================================================="
 
+omd/packages/openhardwaremonitor/OpenHardwareMonitorCLI.exe:
+	$(MAKE) -C omd openhardwaremonitor-dist
+
+omd/packages/openhardwaremonitor/OpenHardwareMonitorLib.dll: omd/packages/openhardwaremonitor/OpenHardwareMonitorCLI.exe
+
 .werks/werks: $(WERKS)
 	PYTHONPATH=. python scripts/precompile-werks.py .werks .werks/werks cre
 

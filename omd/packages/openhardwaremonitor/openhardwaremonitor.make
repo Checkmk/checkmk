@@ -4,6 +4,7 @@ OPENHARDWAREMONITOR_DIR := $(OPENHARDWAREMONITOR)-$(OPENHARDWAREMONITOR_VERS)
 
 OPENHARDWAREMONITOR_INSTALL := $(BUILD_HELPER_DIR)/$(OPENHARDWAREMONITOR_DIR)-install
 OPENHARDWAREMONITOR_UNPACK := $(BUILD_HELPER_DIR)/$(OPENHARDWAREMONITOR_DIR)-unpack
+OPENHARDWAREMONITOR_DIST := $(BUILD_HELPER_DIR)/$(OPENHARDWAREMONITOR_DIR)-dist
 
 .PHONY: $(OPENHARDWAREMONITOR) $(OPENHARDWAREMONITOR)-setup $(OPENHARDWAREMONITOR)-clean-ohm $(OPENHARDWAREMONITOR)-dist $(OPENHARDWAREMONITOR)-build $(OPENHARDWAREMONITOR)-install $(OPENHARDWAREMONITOR)-skel $(OPENHARDWAREMONITOR)-clean
 
@@ -15,13 +16,15 @@ $(OPENHARDWAREMONITOR):
 
 $(OPENHARDWAREMONITOR)-install: $(OPENHARDWAREMONITOR_INSTALL)
 
+$(OPENHARDWAREMONITOR)-dist: $(OPENHARDWAREMONITOR_DIST)
+
 # OpenHardwareMonitorCLI.exe OpenHardwareMonitorLib.dll: $(OPENHARDWAREMONITOR_DIR)/Bin/Release/OpenHardwareMonitorCLI.exe $(OPENHARDWAREMONITOR_DIR)/Bin/Release/OpenHardwareMonitorLib.dll
 #	cp -p $(OPENHARDWAREMONITOR_DIR)/Bin/Release/OpenHardwareMonitorCLI.exe  \
 #	      $(OPENHARDWAREMONITOR_DIR)/Bin/Release/OpenHardwareMonitorLib.dll \
 #	      .
 
 #$(OPENHARDWAREMONITOR_DIR)/Bin/Release/OpenHardwareMonitorCLI.exe $(OPENHARDWAREMONITOR_DIR)/Bin/Release/OpenHardwareMonitorLib.dll:  $(OPENHARDWAREMONITOR_UNPACK) $(OPENHARDWAREMONITOR_DIR)/OpenHardwareMonitorCLI $(OPENHARDWAREMONITOR_DIR)/OpenHardwareMonitor.sln
-OpenHardwareMonitorCLI.exe OpenHardwareMonitorLib.dll:  $(OPENHARDWAREMONITOR_UNPACK) $(OPENHARDWAREMONITOR_DIR)/OpenHardwareMonitorCLI $(OPENHARDWAREMONITOR_DIR)/OpenHardwareMonitor.sln
+$(PACKAGE_DIR)/$(OPENHARDWAREMONITOR)/OpenHardwareMonitorCLI.exe $(PACKAGE_DIR)/$(OPENHARDWAREMONITOR)/OpenHardwareMonitorLib.dll:  $(OPENHARDWAREMONITOR_UNPACK) $(OPENHARDWAREMONITOR_DIR)/OpenHardwareMonitorCLI $(OPENHARDWAREMONITOR_DIR)/OpenHardwareMonitor.sln
 # The strange "cat" below is necessary because the extremely ancient Mono
 # versions coming with even the latest Ubuntus still contain the rather severe
 # bug https://github.com/mono/mono/issues/6752. ("...System.Exception: Magic
@@ -30,6 +33,8 @@ OpenHardwareMonitorCLI.exe OpenHardwareMonitorLib.dll:  $(OPENHARDWAREMONITOR_UN
 	       /p:TargetFrameworkVersion="v4.5" \
 	       $(OPENHARDWAREMONITOR_DIR)/OpenHardwareMonitor.sln \
 	       /target:OpenHardwareMonitorCLI | cat
+	cp $(OPENHARDWAREMONITOR_DIR)/Bin/Release/OpenHardwareMonitorCLI.exe $(PACKAGE_DIR)/$(OPENHARDWAREMONITOR)
+	cp $(OPENHARDWAREMONITOR_DIR)/Bin/Release/OpenHardwareMonitorLib.dll $(PACKAGE_DIR)/$(OPENHARDWAREMONITOR)
 
 $(OPENHARDWAREMONITOR_DIR)/OpenHardwareMonitorCLI: $(PACKAGE_DIR)/$(OPENHARDWAREMONITOR)/OpenHardwareMonitorCLI
 	cp -r $< $(OPENHARDWAREMONITOR_DIR)/
@@ -50,7 +55,8 @@ $(OPENHARDWAREMONITOR)-setup:
 	    mono-complete \
 	    mono-xbuild
 
-$(OPENHARDWAREMONITOR)-dist: OpenHardwareMonitorCLI.exe OpenHardwareMonitorLib.dll
+$(OPENHARDWAREMONITOR_DIST): $(PACKAGE_DIR)/$(OPENHARDWAREMONITOR)/OpenHardwareMonitorCLI.exe $(PACKAGE_DIR)/$(OPENHARDWAREMONITOR)/OpenHardwareMonitorLib.dll
+	$(TOUCH) $@
 
 $(OPENHARDWAREMONITOR)-clean-ohm: clean
 	rm -f OpenHardwareMonitorCLI.exe OpenHardwareMonitorLib.dll

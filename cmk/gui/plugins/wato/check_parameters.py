@@ -1430,14 +1430,16 @@ register_rule(
                                 ),
                                 title=_("Regular expression matching command line"),
                                 label=_("Command line:"),
-                                help=_("This regex must match the <i>beginning</i> of the complete "
-                                       "command line of the process including arguments.<br>"
-                                       "When using groups, matches will be instantiated "
-                                       "during process discovery. e.g. (py.*) will match python, python_dev "
-                                       "and python_test and discover 3 services. At check time, because "
-                                       "python is a substring of python_test and python_dev it will aggregate"
-                                       "all process that start with python. If that is not the intended behavior "
-                                       "please use a delimiter like '$' or '\\b' around the group, e.g. (py.*)$"),
+                                help=
+                                _("This regex must match the <i>beginning</i> of the complete "
+                                  "command line of the process including arguments.<br>"
+                                  "When using groups, matches will be instantiated "
+                                  "during process discovery. e.g. (py.*) will match python, python_dev "
+                                  "and python_test and discover 3 services. At check time, because "
+                                  "python is a substring of python_test and python_dev it will aggregate"
+                                  "all process that start with python. If that is not the intended behavior "
+                                  "please use a delimiter like '$' or '\\b' around the group, e.g. (py.*)$"
+                                 ),
                                 forth=lambda x: x[1:],  # remove ~
                                 back=lambda x: "~" + x,  # prefix ~
                             ),

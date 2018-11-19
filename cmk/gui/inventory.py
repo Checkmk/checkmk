@@ -260,13 +260,13 @@ def _filter_tree(struct_tree):
 
 
 def _get_permitted_inventory_paths():
+    """
+    Returns either a list of permitted paths or
+    None in case the user is allowed to see the whole tree.
+    """
     cache_varname = "permitted_inventory_paths"
     if html.is_cached(cache_varname):
         return html.get_cached(cache_varname)
-    """
-Returns either a list of permitted paths or
-None in case the user is allowed to see the whole tree.
-"""
     contact_groups = userdb.load_group_information().get("contact", {})
     user_groups = userdb.contactgroups_of_user(config.user.id)
     if not user_groups:

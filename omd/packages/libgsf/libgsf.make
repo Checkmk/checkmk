@@ -12,11 +12,15 @@ $(LIBGSF): $(LIBGSF_BUILD)
 
 $(LIBGSF)-install: $(LIBGSF_INSTALL)
 
-$(LIBGSF_BUILD): $(LIBGSF_UNPACK)
+
 ifneq ($(filter $(DISTRO_CODE),sles15),)
-	tar xJf $(LIBGSF_DIR).tar.xz
+$(LIBGSF_BUILD): $(LIBGSF_UNPACK)
 	cd $(LIBGSF_DIR) && ./configure --prefix=$(OMD_ROOT)
 	$(MAKE) -C $(LIBGSF_DIR)
+	$(TOUCH) $@
+else
+$(LIBGSF_BUILD):
+	$(TOUCH) $@
 endif
 
 $(LIBGSF_INSTALL): $(LIBGSF_BUILD)

@@ -42,7 +42,7 @@ import cmk
 import cmk.defines as defines
 import cmk.tty as tty
 import cmk.cpu_tracking as cpu_tracking
-from cmk.exceptions import MKGeneralException
+from cmk.exceptions import MKGeneralException, MKTimeout
 from cmk.regex import regex
 
 import cmk_base.utils
@@ -53,7 +53,7 @@ import cmk_base.ip_lookup as ip_lookup
 import cmk_base.data_sources as data_sources
 import cmk_base.item_state as item_state
 import cmk_base.check_table as check_table
-from cmk_base.exceptions import MKTimeout, MKParseFunctionError
+from cmk_base.exceptions import MKParseFunctionError
 import cmk_base.check_utils
 import cmk_base.decorator
 import cmk_base.check_api_utils as check_api_utils

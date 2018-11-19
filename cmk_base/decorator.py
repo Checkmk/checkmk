@@ -26,12 +26,12 @@
 
 import cmk
 import cmk.defines as defines
-from cmk.exceptions import MKGeneralException
+from cmk.exceptions import MKGeneralException, MKTimeout
 
 import cmk_base.config as config
 import cmk_base.console as console
 import cmk_base.crash_reporting
-from cmk_base.exceptions import MKTimeout, MKAgentError, MKSNMPError, MKIPAddressLookupError
+from cmk_base.exceptions import MKAgentError, MKSNMPError, MKIPAddressLookupError
 
 try:
     import cmk_base.cee.keepalive as keepalive

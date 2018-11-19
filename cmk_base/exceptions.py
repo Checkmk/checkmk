@@ -74,10 +74,3 @@ class MKSNMPError(Exception):
 
 class MKSkipCheck(Exception):
     pass
-
-
-# This exception is raised when a previously configured timeout is reached.
-# It is used during keepalive mode. It is also used by the automations
-# which have a timeout set.
-class MKTimeout(Exception):
-    pass

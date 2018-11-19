@@ -29,13 +29,13 @@ import sys
 import pprint
 
 import cmk.debug
+from cmk.exceptions import MKTimeout
 from cmk.plugin_loader import load_plugins
 
 import cmk_base.utils
 import cmk_base.config as config
 import cmk_base.console as console
 import cmk_base.profiling as profiling
-from cmk_base.exceptions import MKTimeout
 import cmk_base.check_api as check_api
 
 

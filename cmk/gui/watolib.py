@@ -100,7 +100,7 @@ from cmk.gui.i18n import _u, _
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 from cmk.gui.log import logger
-from cmk.gui.exceptions import MKGeneralException, MKAuthException, MKUserError
+from cmk.gui.exceptions import MKGeneralException, MKAuthException, MKUserError, RequestTimeout
 from cmk.gui.valuespec import (
     Dictionary,
     Integer,
@@ -5553,7 +5553,9 @@ class ActivateChangesManager(ActivateChanges):
                 try:
                     try:
                         manager.load_activation(activation_id)
-                    except MKUserError:
+                    except RequestTimeout:
+                        raise
+                    except Exception:
                         # Not existant anymore!
                         delete = True
                         raise

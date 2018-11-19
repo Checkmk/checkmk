@@ -1,0 +1,10 @@
+Title: WATO snapshot maintenace: Fixed bug which prevented cleanup of statefiles in tmp dir
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1542298205
+Class: fix
+
+Due to this bug there could be lots of directories/files in <tt>~/tmp/check_mk/wato/activation</tt>.

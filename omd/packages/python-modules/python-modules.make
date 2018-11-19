@@ -39,8 +39,8 @@ PYTHON_MODULES_LIST += pymssql-2.1.3.tar.gz # needed for check_sql (together wit
 LEGACY_LDAP=0
 ifeq ($(DISTRO_CODE),el5)
     LEGACY_LDAP=1
-    PYTHON_MODULES_PATCHES += patches/0018-mysqlclient-fortify-source.patch
-    PYTHON_MODULES_PATCHES += patches/0019-PyNaCl-fortify-source.patch
+    PYTHON_MODULES_PATCHES += $(PACKAGE_DIR)/$(PYTHON_MODULES)/patches/0018-mysqlclient-fortify-source.patch
+    PYTHON_MODULES_PATCHES += $(PACKAGE_DIR)/$(PYTHON_MODULES)/patches/0019-PyNaCl-fortify-source.patch
 endif
 
 ifeq ($(LEGACY_LDAP), 1)
@@ -120,8 +120,8 @@ else ifneq ($(filter $(DISTRO_CODE),el6),)
 # (https://github.com/pyca/cryptography/blob/master/CHANGELOG.rst),
 # so we stick with 1.5.3.
     PYTHON_MODULES_LIST += cryptography-1.5.3.tar.gz
-    PYTHON_MODULES_PATCHES += patches/0004-CMS_DEBUG_DECRYPT-fix.patch
-    PYTHON_MODULES_PATCHES += patches/0009-cryptography-1.5.3-disable-version-warning.patch
+    PYTHON_MODULES_PATCHES += $(PACKAGE_DIR)/$(PYTHON_MODULES)/patches/0004-CMS_DEBUG_DECRYPT-fix.patch
+    PYTHON_MODULES_PATCHES += $(PACKAGE_DIR)/$(PYTHON_MODULES)/patches/0009-cryptography-1.5.3-disable-version-warning.patch
 else
     PYTHON_MODULES_LIST  += asn1crypto-0.24.0.tar.gz
     PYTHON_MODULES_LIST  += cryptography-2.4.1.tar.gz

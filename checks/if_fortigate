@@ -34,37 +34,39 @@ def check_if_fortigate(item, params, parsed):
 
 
 check_info["if_fortigate"] = {
-    'parse_function'            : parse_if64,
-    'inventory_function'        : inventory_if_fortigate,
-    'check_function'            : check_if_fortigate,
-    'service_description'       : 'Interface %s',
-    'snmp_info'                 : ( ".1.3.6.1.2.1", [
-                                             "2.2.1.1",         # ifIndex                   0
-                                             "2.2.1.2",         # ifDescr                   1
-                                             "2.2.1.3",         # ifType                    2
-                                             "2.2.1.5",         # ifSpeed                   3
-                                             "2.2.1.8",         # ifOperStatus              4
-                                             "31.1.1.1.6",      # ifHCInOctets              5
-                                             "31.1.1.1.7",      # ifHCInUcastPkts           6
-                                             "31.1.1.1.8",      # ifHCInMulticastPkts       7
-                                             "31.1.1.1.9",      # ifHCInBroadcastPkts       8
-                                             "2.2.1.13",        # ifInDiscards              9
-                                             "2.2.1.14",        # ifInErrors               10
-                                             "31.1.1.1.10",     # ifHCOutOctets            11
-                                             "31.1.1.1.11",     # ifHCOutUcastPkts         12
-                                             "31.1.1.1.12",     # ifHCOutMulticastPkts     13
-                                             "31.1.1.1.13",     # ifHCOutBroadcastPkts     14
-                                             "2.2.1.19",        # ifOutDiscards            15
-                                             "2.2.1.20",        # ifOutErrors              16
-                                             "2.2.1.21",        # ifOutQLen                17
-                                             "31.1.1.1.18",     # ifAlias                  18
-                                             BINARY("2.2.1.6"), # ifPhysAddress            19
-                                             "31.1.1.1.15",     # ifHighSpeed              -1  (parse_if64 assumes this is the last element)
-                                      ]),
-    'snmp_scan_function'        : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.12356"),
-    'has_perfdata'              : True,
-    'includes'                  : [ "if.include", "if64.include" ],
-    'group'                     : 'if',
-    'node_info'                 : True,
-    'default_levels_variable'   : 'if_default_levels',
+    'parse_function': parse_if64,
+    'inventory_function': inventory_if_fortigate,
+    'check_function': check_if_fortigate,
+    'service_description': 'Interface %s',
+    'snmp_info': (
+        ".1.3.6.1.2.1",
+        [
+            "2.2.1.1",  # ifIndex                   0
+            "2.2.1.2",  # ifDescr                   1
+            "2.2.1.3",  # ifType                    2
+            "2.2.1.5",  # ifSpeed                   3
+            "2.2.1.8",  # ifOperStatus              4
+            "31.1.1.1.6",  # ifHCInOctets           5
+            "31.1.1.1.7",  # ifHCInUcastPkts        6
+            "31.1.1.1.8",  # ifHCInMulticastPkts    7
+            "31.1.1.1.9",  # ifHCInBroadcastPkts    8
+            "2.2.1.13",  # ifInDiscards             9
+            "2.2.1.14",  # ifInErrors               10
+            "31.1.1.1.10",  # ifHCOutOctets         11
+            "31.1.1.1.11",  # ifHCOutUcastPkts      12
+            "31.1.1.1.12",  # ifHCOutMulticastPkts  13
+            "31.1.1.1.13",  # ifHCOutBroadcastPkts  14
+            "2.2.1.19",  # ifOutDiscards            15
+            "2.2.1.20",  # ifOutErrors              16
+            "2.2.1.21",  # ifOutQLen                17
+            "31.1.1.1.18",  # ifAlias               18
+            BINARY("2.2.1.6"),  # ifPhysAddress     19
+            "31.1.1.1.15",  # ifHighSpeed           -1  (parse_if64 assumes this is the last element)
+        ]),
+    'snmp_scan_function': lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.12356"),
+    'has_perfdata': True,
+    'includes': ["if.include", "if64.include"],
+    'group': 'if',
+    'node_info': True,
+    'default_levels_variable': 'if_default_levels',
 }

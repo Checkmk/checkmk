@@ -475,7 +475,7 @@ class InventoryHousekeeping(object):
         self._inventory_delta_cache_path = Path(cmk.paths.var_dir) / "inventory_delta_cache"
 
     def run(self):
-        if not self._inventory_delta_cache_path.exists() or not self._inventory_archive_path.exists(# pylint: disable=no-member
+        if not self._inventory_delta_cache_path.exists() or not self._inventory_archive_path.exists(  # pylint: disable=no-member
         ):
             return
 

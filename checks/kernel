@@ -108,9 +108,10 @@ check_info["kernel"] = {
 #   '----------------------------------------------------------------------'
 
 
-@discover
-def inventory_cpu_utilization(line):
-    return len(line) > 0 and line[0] == 'cpu'
+def inventory_cpu_utilization(info):
+    for x in info:
+        if len(x) > 0 and x[0] == 'cpu':
+            return [(None, {})]
 
 
 def transform_cpu_info(element):

@@ -151,9 +151,9 @@ def load_delta_tree(hostname, timestamp):
     return delta_history[0][1][3]
 
 
-def get_history_deltas(hostname, search_timestamp = None):
+def get_history_deltas(hostname, search_timestamp=None):
     if '/' in hostname:
-        return None # just for security reasons
+        return None  # just for security reasons
 
     inventory_path = "%s/inventory/%s" % (cmk.paths.var_dir, hostname)
     if not os.path.exists(inventory_path):
@@ -176,10 +176,11 @@ def get_history_deltas(hostname, search_timestamp = None):
         if new_timestamp_idx == 0:
             required_timestamps = [search_timestamp]
         else:
-            previous_timestamp = all_timestamps[new_timestamp_idx-1]
+            previous_timestamp = all_timestamps[new_timestamp_idx - 1]
             required_timestamps = [search_timestamp]
 
     tree_lookup = {}
+
     def get_tree(timestamp):
         if timestamp is None:
             return StructuredDataTree()
@@ -190,19 +191,17 @@ def get_history_deltas(hostname, search_timestamp = None):
         if timestamp == latest_timestamp:
             inventory_tree = load_filtered_inventory_tree(hostname)
             if inventory_tree is None:
-               return
+                return
             tree_lookup[timestamp] = inventory_tree
         else:
             inventory_archive_path = "%s/%s" % (inventory_archive_dir, timestamp)
-            tree_lookup[timestamp] = _filter_tree(StructuredDataTree().load_from(inventory_archive_path))
+            tree_lookup[timestamp] = _filter_tree(
+                StructuredDataTree().load_from(inventory_archive_path))
         return tree_lookup[timestamp]
-
 
     delta_history = []
     for idx, timestamp in enumerate(required_timestamps):
-        cached_delta_path = os.path.join(cmk.paths.var_dir,
-                                         "inventory_delta_cache",
-                                         hostname,
+        cached_delta_path = os.path.join(cmk.paths.var_dir, "inventory_delta_cache", hostname,
                                          "%s_%s" % (previous_timestamp, timestamp))
 
         cached_data = None
@@ -225,18 +224,17 @@ def get_history_deltas(hostname, search_timestamp = None):
             delta_data = current_tree.compare_with(previous_tree)
             new, changed, removed, delta_tree = delta_data
 
-            cmk.store.save_file(cached_delta_path, repr((new, changed, removed, delta_tree.get_raw_tree())))
+            cmk.store.save_file(cached_delta_path,
+                                repr((new, changed, removed, delta_tree.get_raw_tree())))
             delta_history.append((timestamp, delta_data))
         except htmllib.RequestTimeout:
             raise
         except Exception, e:
-            return [] # No inventory for this host
+            return []  # No inventory for this host
 
         previous_timestamp = timestamp
 
     return delta_history
-
-
 
 
 def parent_path(invpath):
@@ -477,17 +475,20 @@ class InventoryHousekeeping(object):
         self._inventory_delta_cache_path = Path(cmk.paths.var_dir) / "inventory_delta_cache"
 
     def run(self):
-        if not self._inventory_delta_cache_path.exists() or not self._inventory_archive_path.exists(): # pylint: disable=no-member
+        if not self._inventory_delta_cache_path.exists() or not self._inventory_archive_path.exists(
+        ):  # pylint: disable=no-member
             return
 
         last_cleanup = self._inventory_delta_cache_path / "last_cleanup"
         # TODO: remove with pylint 2
-        if last_cleanup.exists() and time.time() - last_cleanup.stat().st_mtime < 3600 * 12: # pylint: disable=no-member
+        if last_cleanup.exists() and time.time() - last_cleanup.stat().st_mtime < 3600 * 12:  # pylint: disable=no-member
             return
 
         # TODO: remove with pylint 2
-        inventory_archive_hosts = set([x.name for x in self._inventory_archive_path.iterdir() if x.is_dir()]) # pylint: disable=no-member
-        inventory_delta_cache_hosts = set([x.name for x in self._inventory_delta_cache_path.iterdir() if x.is_dir()]) # pylint: disable=no-member
+        inventory_archive_hosts = set(
+            [x.name for x in self._inventory_archive_path.iterdir() if x.is_dir()])  # pylint: disable=no-member
+        inventory_delta_cache_hosts = set(
+            [x.name for x in self._inventory_delta_cache_path.iterdir() if x.is_dir()])  # pylint: disable=no-member
 
         folders_to_delete = inventory_delta_cache_hosts - inventory_archive_hosts
         for foldername in folders_to_delete:
@@ -496,7 +497,11 @@ class InventoryHousekeeping(object):
         inventory_delta_cache_hosts -= folders_to_delete
         for hostname in inventory_delta_cache_hosts:
             available_timestamps = self._get_timestamps_for_host(hostname)
-            for filename in [x.name for x in (self._inventory_delta_cache_path / hostname).iterdir() if not x.is_dir()]:
+            for filename in [
+                    x.name
+                    for x in (self._inventory_delta_cache_path / hostname).iterdir()
+                    if not x.is_dir()
+            ]:
                 delete = False
                 try:
                     first, second = filename.split("_")
@@ -508,17 +513,17 @@ class InventoryHousekeeping(object):
                     (self._inventory_delta_cache_path / hostname / filename).unlink()
 
         # TODO: remove with pylint 2
-        last_cleanup.touch() # pylint: disable=no-member
-
+        last_cleanup.touch()  # pylint: disable=no-member
 
     def _get_timestamps_for_host(self, hostname):
-        timestamps = set(["None"]) # 'None' refers to the histories start
+        timestamps = set(["None"])  # 'None' refers to the histories start
         try:
             timestamps.add("%d" % (self._inventory_path / hostname).stat().st_mtime)
         except OSError, e:
             pass
 
-        for filename in [x for x in (self._inventory_archive_path / hostname).iterdir() if not x.is_dir()]:
+        for filename in [
+                x for x in (self._inventory_archive_path / hostname).iterdir() if not x.is_dir()
+        ]:
             timestamps.add(filename.name)
         return timestamps
-

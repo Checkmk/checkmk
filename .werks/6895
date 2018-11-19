@@ -1,0 +1,16 @@
+Title: hp_msa_volume: Use volume-name as item identifier
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1542637650
+Class: fix
+
+Previously the durable-id has been used as identifier of items for the
+check hp_msa_volume (and its sub checks io and df). The durable-id is not
+guaranteed to be unique for different controllers of a volume. This werk
+changes the unique identifier for items from durable-id to volume-name.
+As soon as a discovery is executed the hp_msa_volume check items appear
+with volume-name.
+

@@ -135,37 +135,56 @@
 #   '----------------------------------------------------------------------'
 
 
+def _get_item_data(item, parsed):
+    # ensure backward compatibility: get data in case either item is
+    # "durable-id" (old) or item is "volume-name" (new)
+    for k, v in parsed.iteritems():
+        if item in [k, v["durable-id"]]:
+            return {item: v}
+    return {}
+
+
+def check_hp_msa_volume_health(item, params, parsed):
+    parsed = _get_item_data(item, parsed)
+    return check_hp_msa_health(item, params, parsed)
+
+
 def parse_hp_msa_volume(info):
-    parsed = {}
-    now = time.time()
+    # use numerical id (2nd row from left) as uid for items,
+    # in case of several values the values are whitespace separated as usual
+    item_type_idx = 0
+    numerical_id_idx = 1
+    key_idx = 2
+    value_idx = 3
+    min_list_elements_cnt_with_values = 4
+    pre_parsed = {}
+
     for line in info:
-        if line[0] == "volumes":
-            if line[2] == "durable-id":
-                volume_id = " ".join(line[3:])
-                parsed[volume_id] = {"item_type": line[0]}
-            else:
-                parsed[volume_id][line[2]] = " ".join(line[3:])
-        else:
-            if line[2] == "volume-name":
-                volume_name = " ".join(line[3:])
-            else:
-                for key, values in parsed.items():
-                    if volume_name == values["volume-name"]:
-                        if line[2] == "data-read-numeric":
-                            parsed[key][line[2]] = \
-                                get_rate("%s_read" % key, now, int(line[3]))
-                        elif line[2] == "data-written-numeric":
-                            parsed[key][line[2]] = \
-                                get_rate("%s_write" % key, now, int(line[3]))
-                        else:
-                            parsed[key][line[2]] = " ".join(line[3:])
+        if len(line) < min_list_elements_cnt_with_values:
+            # make parsing robust against too short lists
+            continue
+        item_type = line[item_type_idx]
+        numerical_id = line[numerical_id_idx]
+        key = line[key_idx]
+        values = " ".join(line[value_idx:])
+        pre_parsed.setdefault(numerical_id, {}).setdefault(key, values)
+        # set item type for lists with "volumes" in first element only
+        # which is the case in case the 3rd element is "durable-id"
+        if key == "durable-id":
+            pre_parsed.setdefault(numerical_id, {}).setdefault("item_type", item_type)
+
+    # replace numerical id with volume-name as uid for items, convert data
+    parsed = {}
+    for v in pre_parsed.itervalues():
+        parsed.setdefault(v['volume-name'], v)
+
     return parsed
 
 
 check_info['hp_msa_volume'] = {
     'parse_function': parse_hp_msa_volume,
     'inventory_function': inventory_hp_msa_health,
-    'check_function': check_hp_msa_health,
+    'check_function': check_hp_msa_volume_health,
     'service_description': 'Volume Health %s',
     'includes': ["hp_msa.include"],
 }
@@ -187,6 +206,7 @@ def inventory_hp_msa_volume_df(parsed):
 
 
 def check_hp_msa_volume_df(item, params, parsed):
+    parsed = _get_item_data(item, parsed)
     if item in parsed:
         yield 0, "%s (%s)" % (parsed[item]["virtual-disk-name"], parsed[item]["raidtype"])
 
@@ -221,9 +241,12 @@ check_info['hp_msa_volume.df'] = {
 def check_hp_msa_volume_io(item, params, parsed):
     disks = {}
     for key, values in parsed.items():
+        now = time.time()
+        read_numeric = values["data-read-numeric"]
+        written_numeric = values["data-written-numeric"]
         disks[key] = {
-            "read_throughput": values["data-read-numeric"],
-            "write_throughput": values["data-written-numeric"],
+            "read_throughput": get_rate("%s_read" % key, now, int(read_numeric)),
+            "write_throughput": get_rate("%s_writte" % key, now, int(written_numeric)),
         }
 
     if item != "SUMMARY":

@@ -45,7 +45,7 @@ import cmk.gui.userdb as userdb
 import cmk.gui.sites as sites
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
-from cmk.gui.exceptions import MKException, MKGeneralException, MKAuthException, MKUserError
+from cmk.gui.exceptions import MKException, MKGeneralException, MKAuthException, MKUserError, RequestTimeout
 
 
 def get_inventory_data(inventory_tree, tree_path):

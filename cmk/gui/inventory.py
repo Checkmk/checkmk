@@ -227,7 +227,7 @@ def get_history_deltas(hostname, search_timestamp=None):
             cmk.store.save_file(cached_delta_path,
                                 repr((new, changed, removed, delta_tree.get_raw_tree())))
             delta_history.append((timestamp, delta_data))
-        except htmllib.RequestTimeout:
+        except RequestTimeout:
             raise
         except Exception, e:
             return []  # No inventory for this host

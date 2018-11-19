@@ -60,6 +60,7 @@ from UserDict import DictMixin
 from enum import Enum
 import json
 
+import cmk.log
 import cmk.paths
 import cmk.defines as defines
 
@@ -4681,3 +4682,19 @@ class SiteChoice(DropdownChoice):
     def _site_choices(self):
         import cmk.gui.config as config  # FIXME
         return config.site_attribute_choices()
+
+
+class LogLevelChoice(DropdownChoice):
+    def __init__(self, **kwargs):
+        kwargs.setdefault("default_value", cmk.log.INFO)
+        kwargs.update({
+            "choices": [
+                (cmk.log.CRITICAL, _("Critical")),
+                (cmk.log.ERROR, _("Error")),
+                (cmk.log.WARNING, _("Warning")),
+                (cmk.log.INFO, _("Informational")),
+                (cmk.log.VERBOSE, _("Verbose")),
+                (cmk.log.DEBUG, _("Debug")),
+            ],
+        })
+        super(LogLevelChoice, self).__init__(**kwargs)

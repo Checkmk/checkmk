@@ -64,6 +64,7 @@ from cmk.gui.valuespec import (
     Checkbox,
     ID,
     ListOfCAs,
+    LogLevelChoice,
 )
 
 from cmk.gui.plugins.wato import (
@@ -114,16 +115,9 @@ def web_log_level_elements():
            "details for each executed compilation.")),
     ]:
         elements.append((level_id,
-                         DropdownChoice(
+                         LogLevelChoice(
                              title=title,
                              help=help_text,
-                             choices=[
-                                 (logging.CRITICAL, _("Critical")),
-                                 (logging.ERROR, _("Error")),
-                                 (logging.WARNING, _("Warning")),
-                                 (logging.INFO, _("Informational")),
-                                 (logging.DEBUG, _("Debug")),
-                             ],
                              default_value=logging.WARNING,
                          )))
 

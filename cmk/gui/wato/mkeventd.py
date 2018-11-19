@@ -81,6 +81,7 @@ from cmk.gui.valuespec import (
     IPv4Network,
     Foldable,
     DualListChoice,
+    LogLevelChoice,
 )
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
@@ -3255,20 +3256,10 @@ if mkeventd_enabled:
              _("Log level for the SNMP trap processing mechanics. Setting this to debug will enable "
                "detailed log entries for each received SNMP trap.")),
         ]:
-            elements.append((component,
-                             DropdownChoice(
-                                 title=title,
-                                 help=help_txt,
-                                 choices=[
-                                     (cmk.log.CRITICAL, _("Critical")),
-                                     (cmk.log.ERROR, _("Error")),
-                                     (cmk.log.WARNING, _("Warning")),
-                                     (cmk.log.INFO, _("Informational")),
-                                     (cmk.log.VERBOSE, _("Verbose")),
-                                     (cmk.log.DEBUG, _("Debug")),
-                                 ],
-                                 default_value=cmk.log.INFO,
-                             )))
+            elements.append((component, LogLevelChoice(
+                title=title,
+                help=help_txt,
+            )))
         return elements
 
     register_configvar(

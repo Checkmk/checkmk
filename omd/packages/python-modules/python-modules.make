@@ -189,6 +189,8 @@ PYTHON_MODULES_LIST += PyYAML-3.13.tar.gz
 PYTHON_MODULES_LIST += websocket_client-0.54.0.tar.gz
 PYTHON_MODULES_LIST += kubernetes-8.0.0.tar.gz
 
+# NOTE: Cruel hack below! We need to have a recent GCC visible in the PATH
+# because the SSSE3 detection in pycryptodomex is slightly broken. :-/
 $(PYTHON_MODULES_BUILD): $(PYTHON_BUILD) $(FREETDS_BUILD) $(PYTHON_MODULES_PATCHING)
 	set -e ; cd $(PYTHON_MODULES_DIR) ; \
 	    $(MKDIR) $(PACKAGE_PYTHON_MODULES_PYTHONPATH) ; \
@@ -197,6 +199,7 @@ $(PYTHON_MODULES_BUILD): $(PYTHON_BUILD) $(FREETDS_BUILD) $(PYTHON_MODULES_PATCH
 	    export CPATH="$(PACKAGE_FREETDS_DESTDIR)/include" ; \
 	    export LDFLAGS="$(PACKAGE_PYTHON_LDFLAGS) $(PACKAGE_FREETDS_LDFLAGS)" ; \
 	    export LD_LIBRARY_PATH="$(PACKAGE_PYTHON_LD_LIBRARY_PATH)" ; \
+	    PATH="$(abspath ./bin):$$PATH" ; \
 	    for M in $(PYTHON_MODULES_LIST); do \
 		echo "Building $$M..." ; \
 		PKG=$${M//.tar.gz/} ; \

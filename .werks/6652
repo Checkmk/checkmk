@@ -1,0 +1,12 @@
+Title: Predictive Levels for CPU utilization in Linux/Unix
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1543243736
+Class: feature
+
+Linux CPU utilization can now be monitored using predictive levels for the
+thresholds to warning and critical states. This confiruration is directly
+accessible in WATO.

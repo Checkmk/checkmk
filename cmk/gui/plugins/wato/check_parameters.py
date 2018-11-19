@@ -9358,18 +9358,16 @@ cpu_util_common_elements = [
                 "exceeding a utilization threshold over an extended period of time."
                 "This is currently only supported on linux and windows agents "
                 "as well as devices monitored through the host-resource mib"))),
-    (
-        "core_util_graph",
-        Checkbox(
-            title=_("Graphs for individual cores"),
-            label=_("Enable performance graph for utilization of individual cores"),
-            help=_("This adds another graph to the performance CPU utilization "
-                   "details page, showing utilization of individual cores. "
-                   "Please note that this graph may be impractical on "
-                   "device with very many cores. "
-                   "This is currently only supported on linux and windows agents "
-                   "as well as devices monitored through the host-resource mib")),
-    ),
+    ("core_util_graph",
+     Checkbox(
+         title=_("Graphs for individual cores"),
+         label=_("Enable performance graph for utilization of individual cores"),
+         help=_("This adds another graph to the performance CPU utilization "
+                "details page, showing utilization of individual cores. "
+                "Please note that this graph may be impractical on "
+                "device with very many cores. "
+                "This is currently only supported on linux and windows agents "
+                "as well as devices monitored through the host-resource mib"))),
 ]
 
 register_check_parameters(
@@ -9392,62 +9390,62 @@ register_check_parameters(
                  default_value=15,
                  label=_("Compute average over last "),
              )),
-            (
-                "levels",
-                Levels(
-                    title=_("Levels on total CPU utilization"),
-                    unit="%",
-                    default_levels=(85, 90),
-                    default_difference=(5, 8),
-                    default_value=None,
-                ),
-            ),
+            ("levels",
+             Levels(
+                 title=_("Levels on total CPU utilization"),
+                 unit="%",
+                 default_levels=(85, 90),
+                 default_difference=(5, 8),
+                 default_value=None,
+             )),
         ] + cpu_util_common_elements,
     ),
     None,
     match_type="dict",
 )
 
+
+def transform_cpu_iowait(params):
+    if isinstance(params, tuple):
+        return {"iowait": params}
+
+    return params
+
+
 register_check_parameters(
     subgroup_os,
     "cpu_iowait",
     _("CPU utilization on Linux/UNIX"),
     Transform(
-        Dictionary(
-            elements=[
-                (
-                    "iowait",
-                    Tuple(
-                        title=_("Levels on disk wait (IO wait)"),
-                        elements=[
-                            Percentage(title=_("Warning at a disk wait of"), default_value=30.0),
-                            Percentage(title=_("Critical at a disk wait of"), default_value=50.0)
-                        ],
-                        help=
-                        _("The CPU utilization sums up the percentages of CPU time that is used "
-                          "for user processes, kernel routines (system), disk wait (sometimes also "
-                          "called IO wait) or nothing (idle). "
-                          "Currently you can only set warning/critical levels to the disk wait. This "
-                          "is the total percentage of time all CPUs have nothing else to do then waiting "
-                          "for data coming from or going to disk. If you have a significant disk wait "
-                          "the the bottleneck of your server is IO. Please note that depending on the "
-                          "applications being run this might or might not be totally normal.")),
-                ),
-                ("util",
-                 Tuple(
-                     title=_("Levels on total CPU utilization"),
-                     elements=[
-                         Percentage(title=_("Warning at a utilization of"), default_value=90.0),
-                         Percentage(title=_("Critical at a utilization of"), default_value=95.0)
-                     ],
-                     help=
-                     _("Here you can set levels on the total CPU utilization, i.e. the sum of "
-                       "<i>system</i>, <i>user</i> and <i>iowait</i>. The levels are always applied "
-                       "on the average utiliazation since the last check - which is usually one minute."
-                      ),
-                 )),
-            ] + cpu_util_common_elements,),
-        forth=lambda old: not isinstance(old, dict) and {"iowait": old} or old,
+        Dictionary(elements=[
+            ("util",
+             Levels(
+                 title=_("Levels on total CPU utilization"),
+                 unit="%",
+                 default_levels=(90, 95),
+                 default_difference=(5, 8),
+                 default_value=None,
+                 help=
+                 _("The CPU utilization sums up the percentages of CPU time that is used "
+                   "for user processes, kernel routines (system), disk wait (sometimes also "
+                   "called IO wait) or nothing (idle). The levels are always applied "
+                   "on the average utiliazation since the last check - which is usually one minute."
+                  ),
+             )),
+            ("iowait",
+             Tuple(
+                 title=_("Levels on disk wait (IO wait)"),
+                 elements=[
+                     Percentage(title=_("Warning at a disk wait of"), default_value=30.0),
+                     Percentage(title=_("Critical at a disk wait of"), default_value=50.0)
+                 ],
+                 help=
+                 _("The disk wait is the total percentage of time all CPUs have nothing else to do but waiting "
+                   "for data coming from or going to disk. If you have a significant disk wait "
+                   "the the bottleneck of your server is IO. Please note that depending on the "
+                   "applications being run this might or might not be totally normal."))),
+        ] + cpu_util_common_elements),
+        forth=transform_cpu_iowait,
     ),
     None,
     "dict",

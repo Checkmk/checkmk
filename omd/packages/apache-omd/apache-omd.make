@@ -81,15 +81,17 @@ $(APACHE_INSTALL):
 	$(LN) -sf $(HTPASSWD_BIN) $(DESTDIR)$(OMD_ROOT)/bin/htpasswd
 	$(TOUCH) $@
 
-	# This file is loaded by php-wrapper on RedHat/CentOS < 7
-	if [ $(CENTOS_WORKAROUND) -eq 1 ]; then \
-		cp /etc/php.ini $(SKEL)/etc/apache/php.ini; \
-		echo -e "\n\n; OMD OMD OMD OMD OMD OMD\n\nmemory_limit=64M\n\n[Session]\nsession.save_path=###ROOT###/tmp/php/session\nupload_tmp_dir=###ROOT###/tmp/php/upload\nsoap.wsdl_cache_dir=###ROOT###/tmp/php/wsdl-cache\n" >> $(SKEL)/etc/apache/php.ini; \
-	fi
 	$(MKDIR) $(BUILD_HELPER_DIR)
 	$(TOUCH) $@
 	
 $(APACHE_SKEL):	$(APACHE_INSTALL)
+	# This file is loaded by php-wrapper on RedHat/CentOS < 7
+	if [ $(CENTOS_WORKAROUND) -eq 1 ]; then \
+		$(MKDIR) $(SKEL)/etc/apache/
+		cp /etc/php.ini $(SKEL)/etc/apache/php.ini; \
+		echo -e "\n\n; OMD OMD OMD OMD OMD OMD\n\nmemory_limit=64M\n\n[Session]\nsession.save_path=###ROOT###/tmp/php/session\nupload_tmp_dir=###ROOT###/tmp/php/upload\nsoap.wsdl_cache_dir=###ROOT###/tmp/php/wsdl-cache\n" >> $(SKEL)/etc/apache/php.ini; \
+	fi
+
 	# Create working directories
 	$(MKDIR) $(SKEL)/var/log/apache
 	$(MKDIR) $(SKEL)/var/www

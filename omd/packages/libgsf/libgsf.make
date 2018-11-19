@@ -20,6 +20,7 @@ $(LIBGSF_BUILD): $(LIBGSF_UNPACK)
 	$(TOUCH) $@
 else
 $(LIBGSF_BUILD):
+	mkdir -p $(BUILD_HELPER_DIR)
 	$(TOUCH) $@
 endif
 

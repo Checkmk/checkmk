@@ -1,0 +1,16 @@
+Title: winperf_processor.util predictive levels retrieval
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0p8
+Date: 1542729817
+Class: fix
+
+Werk 6126 changed the metric name(performance data value) but missed
+changing this name in the variable for retrieval of data to generate the
+predictive levels.
+
+If retrieval of rrd is gives a response but without data, then exception is
+raised too.
+

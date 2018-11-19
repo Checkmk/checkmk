@@ -1,0 +1,16 @@
+Title: if_fortigate: Fix incorrect usage of Name as Alias
+Level: 1
+Component: checks
+Class: fix
+Compatible: incomp
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1542291923
+
+Werk #4539 introduced special handling for interfaces of
+Fortigate firewalls, but incorrectly substituted the ifName
+for the ifAlias, leading to incompatibilities for users
+using the alias as an item. Rediscovery is required
+to get the proper alias back as an item. If you do not
+use the alias, this does not affect you.

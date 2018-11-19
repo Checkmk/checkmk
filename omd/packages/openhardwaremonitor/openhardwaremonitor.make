@@ -44,7 +44,9 @@ $(OPENHARDWAREMONITOR_DIR)/OpenHardwareMonitorCLI: $(PACKAGE_DIR)/$(OPENHARDWARE
 $(OPENHARDWAREMONITOR_DIR)/OpenHardwareMonitor.sln: $(PACKAGE_DIR)/$(OPENHARDWAREMONITOR)/OpenHardwareMonitor.sln
 	cp $<  $(OPENHARDWAREMONITOR_DIR)/
 
-$(OPENHARDWAREMONITOR_INSTALL): $(PACKAGE_DIR)/$(OPENHARDWAREMONITOR)/OpenHardwareMonitorCLI.exe $(PACKAGE_DIR)/$(OPENHARDWAREMONITOR)/OpenHardwareMonitorLib.dll
+# Remove dependencies for now, to avoid triggering rebuild in chroots:
+# $(PACKAGE_DIR)/$(OPENHARDWAREMONITOR)/OpenHardwareMonitorCLI.exe $(PACKAGE_DIR)/$(OPENHARDWAREMONITOR)/OpenHardwareMonitorLib.dll
+$(OPENHARDWAREMONITOR_INSTALL):
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/check_mk/agents/windows/ohm
 	install -m 755 $(PACKAGE_DIR)/$(OPENHARDWAREMONITOR)/OpenHardwareMonitorCLI.exe $(DESTDIR)$(OMD_ROOT)/share/check_mk/agents/windows/ohm
 	install -m 755 $(PACKAGE_DIR)/$(OPENHARDWAREMONITOR)/OpenHardwareMonitorLib.dll $(DESTDIR)$(OMD_ROOT)/share/check_mk/agents/windows/ohm

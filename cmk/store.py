@@ -35,7 +35,7 @@ import pprint
 import tempfile
 import time
 
-from cmk.exceptions import MKGeneralException
+from cmk.exceptions import MKGeneralException, MKTimeout
 from cmk.i18n import _
 
 # TODO: Make all methods handle paths the same way. e.g. mkdir() and makedirs()
@@ -104,6 +104,8 @@ def load_mk_file(path, default=None, lock=False):
             else:
                 raise
 
+    except MKTimeout:
+        raise
     except Exception, e:
         # TODO: How to handle debug mode or logging?
         raise MKGeneralException(_("Cannot read configuration file \"%s\": %s") % (path, e))
@@ -143,6 +145,8 @@ def load_data_from_file(path, default=None, lock=False):
 
             raise
 
+    except MKTimeout:
+        raise
     except Exception, e:
         if lock:
             release_lock(path)
@@ -215,6 +219,8 @@ def save_file(path, content, mode=0660):
 
         os.rename(tmp_path, path)
 
+    except MKTimeout:
+        raise
     except Exception, e:
         # In case an exception happens during saving cleanup the tempfile created for writing
         try:

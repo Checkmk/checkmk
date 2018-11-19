@@ -69,7 +69,7 @@ def check_cpu_util(util, params, this_time=None, cores=None):
     if "average" in params:
         util_avg = get_average("cpu_utilization.avg", this_time, util, params["average"])
         check_against = util_avg
-        perfvar = "avg"
+        perfvar = "util_average"
         infotext += ", %dmin average: %.1f%%" % (params["average"], util_avg)
     else:
         check_against = util

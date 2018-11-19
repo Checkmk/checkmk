@@ -17,7 +17,6 @@ discovery = {
     '': [
         ('Instance1 MBean Mitglieder_Anzahl', {}),
         ('Instance2 MBean Mitglieder Anzahl', {}),
-        ('JIRA,com.atlassian.jira:type=web.requests,invocation.count MBean jira.name', {}),
         ('JIRA,com.atlassian.jira:type=web.requests,invocation.count MBean jira.value', {}),
     ],
     'rate': [],

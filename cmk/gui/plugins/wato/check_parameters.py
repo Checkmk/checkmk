@@ -24,8 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import re
 import cmk.defines as defines
-import cmk.regex as regex
 
 from cmk.gui.plugins.wato.active_checks import check_icmp_params
 
@@ -1380,6 +1380,20 @@ def convert_inventory_processes(old_dict):
     return new_dict
 
 
+def forbid_re_delimiters_inside_groups(pattern, varprefix):
+    # Used as input validation in PS check wato config
+    group_re = r'\(.*?\)'
+    for match in re.findall(group_re, pattern):
+        for char in ['\\b', '$', '^']:
+            if char in match:
+                raise MKUserError(
+                    varprefix,
+                    _('"%s" is not allowed inside the regular expression group %s. '
+                      'Bounding characters inside groups will vanish after discovery, '
+                      'because processes are instanced for every matching group. '
+                      'Thus enforce delimiters outside the group.') % (char, match))
+
+
 register_rule(
     group + '/' + subgroup_inventory,
     varname="inventory_processes_rules",
@@ -1426,7 +1440,7 @@ register_rule(
                                 RegExp(
                                     size=50,
                                     mode=RegExp.prefix,
-                                    validate=regex.forbid_re_delimiters_inside_groups,
+                                    validate=forbid_re_delimiters_inside_groups,
                                 ),
                                 title=_("Regular expression matching command line"),
                                 label=_("Command line:"),

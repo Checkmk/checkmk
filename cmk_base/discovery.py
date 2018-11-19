@@ -33,7 +33,7 @@ import signal
 from cmk.regex import regex
 import cmk.tty as tty
 import cmk.paths
-from cmk.exceptions import MKGeneralException
+from cmk.exceptions import MKGeneralException, MKTimeout
 
 import cmk_base.crash_reporting
 import cmk_base.config as config
@@ -45,7 +45,7 @@ import cmk_base.checking as checking
 import cmk_base.data_sources as data_sources
 import cmk_base.check_table as check_table
 import cmk_base.core
-from cmk_base.exceptions import MKParseFunctionError, MKTimeout
+from cmk_base.exceptions import MKParseFunctionError
 import cmk_base.cleanup
 import cmk_base.check_utils
 import cmk_base.decorator

@@ -29,10 +29,10 @@ from typing import Optional  # pylint: disable=unused-import
 import cmk.gui.http_status
 from cmk.gui.i18n import _
 
-from cmk.exceptions import MKGeneralException, MKException
+from cmk.exceptions import MKGeneralException, MKException, MKTimeout
 
 
-class RequestTimeout(MKException):
+class RequestTimeout(MKTimeout):
     """Is raised from the alarm signal handler (handle_request_timeout()) to
     abort page processing before the system apache times out."""
     pass

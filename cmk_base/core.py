@@ -33,13 +33,12 @@ import sys
 import cmk.paths
 import cmk.debug
 import cmk.tty as tty
-from cmk.exceptions import MKGeneralException
+from cmk.exceptions import MKGeneralException, MKTimeout
 
 import cmk_base.console as console
 import cmk_base.config as config
 import cmk_base.core_config as core_config
 import cmk_base.nagios_utils
-from cmk_base.exceptions import MKTimeout
 from cmk_base import config_cache
 import cmk_base.cleanup
 

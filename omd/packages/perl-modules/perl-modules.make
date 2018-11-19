@@ -137,7 +137,7 @@ $(PERL_MODULES_INSTALL): $(PERL_MODULES_BUILD)
 	$(TOUCH) $@
 
 $(PERL_MODULES_SKEL): $(PERL_MODULES_INSTALL)
-	echo "install  --install_base  ###ROOT###/local/lib/perl5" > $(PERL_MODULES_SKEL)/.modulebuildrc
+	echo "install  --install_base  ###ROOT###/local/lib/perl5" > $(SKEL)/.modulebuildrc
 	$(TOUCH) $@
 
 perl-modules-clean:

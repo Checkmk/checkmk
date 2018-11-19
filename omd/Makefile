@@ -310,14 +310,17 @@ setversion:
 test:
 	t/test_all.sh
 
-cma: check-edition
+cma-pre: check-edition
 	# make the cmc the default core
 	sed -i 's/default)/default) echo "cmc"; exit;/g' packages/omd/CORE.hook
 	# enable the event console by default
 	sed -i 's/default)/default) echo "on"; exit;/g' packages/check_mk/MKEVENTD.hook
-	
-	make PACKAGES="$(PACKAGES) cma" build pack
-	
+
+cma-install:
+	make -C packages/cma install
+
+cma: cma-pre $(PACKAGES) cma-install pack 
+
 	# Create info file to mark minimal cma firmware version requirement
 	@if [ "$(DISTRO_CODE)" = "stretch" ]; then \
 	    MIN_VERSION=1.4.0 ; \

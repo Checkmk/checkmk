@@ -30,10 +30,9 @@ def parse_k8s_namespaces(info):
     return json.loads(info[0][0])
 
 
-def inventory_k8s_namespaces(parsed):
-    for namespace, status in parsed.iteritems():
-        if status.get('status').get('phase', '') == 'Active':
-            yield namespace, {}
+@discover
+def inventory_k8s_namespaces(_namespace, status):
+    return status.get('status', {}).get('phase', '') == 'Active'
 
 
 @get_parsed_item_data

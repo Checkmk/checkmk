@@ -30,10 +30,9 @@ def parse_k8s_persistent_volumes(info):
     return json.loads(info[0][0])
 
 
-def inventory_k8s_persistent_volumes(parsed):
-    for pc, status in parsed.iteritems():
-        if status.get('status').get('phase', '') == 'Bound':
-            yield pc, {}
+@discover
+def inventory_k8s_persistent_volumes(_pv, status):
+    return status.get('status', {}).get('phase', '') == 'Bound'
 
 
 @get_parsed_item_data

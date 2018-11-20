@@ -30,11 +30,6 @@ def parse_k8s_storage_classes(info):
     return json.loads(info[0][0])
 
 
-def inventory_k8s_storage_classes(parsed):
-    for storage_name in parsed:
-        yield storage_name, {}
-
-
 @get_parsed_item_data
 def check_k8s_storage_classes(_no_item, _no_params, storage):
     reclaim_policy = storage.get('reclaim_policy')
@@ -48,7 +43,7 @@ def check_k8s_storage_classes(_no_item, _no_params, storage):
 
 check_info['k8s_storage_classes'] = {
     'parse_function': parse_k8s_storage_classes,
-    'inventory_function': inventory_k8s_storage_classes,
+    'inventory_function': discover(),
     'check_function': check_k8s_storage_classes,
     'service_description': 'Storage class %s',
 }

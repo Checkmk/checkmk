@@ -30,11 +30,9 @@ def parse_k8s_persistent_volume_claims(info):
     return json.loads(info[0][0])
 
 
-def inventory_k8s_persistent_volume_claims(parsed):
-    for claim, data in parsed.iteritems():
-        if data.get('phase', '') != 'Bound':
-            continue
-        yield claim, {}
+@discover
+def inventory_k8s_persistent_volume_claims(_claim, data):
+    return data.get('phase', '') == 'Bound'
 
 
 @get_parsed_item_data

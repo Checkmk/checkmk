@@ -30,11 +30,6 @@ def parse_k8s_roles(info):
     return json.loads(info[0][0])
 
 
-def inventory_k8s_roles(parsed):
-    for role in parsed:
-        yield role, {}
-
-
 @get_parsed_item_data
 def check_k8s_roles(item, _no_params, role):
     age = time.time() - role['creation_timestamp']
@@ -49,7 +44,7 @@ def check_k8s_roles(item, _no_params, role):
 
 check_info['k8s_roles'] = {
     'parse_function': parse_k8s_roles,
-    'inventory_function': inventory_k8s_roles,
+    'inventory_function': discover(),
     'check_function': check_k8s_roles,
     'service_description': 'Role %s',
 }

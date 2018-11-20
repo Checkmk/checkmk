@@ -148,7 +148,7 @@ def find_apache_properties(nagiosuser, nagios_htdocs_dir):
         apache_conffile = None
         apache_confdir = None
         httpd_root = ""
-        for line in os.popen("%s -V 2>&1" % apache_binary):
+        for line in os.popen("%s -V 2>&1" % apache_binary):  # nosec
             parts = line.split()
             if parts[0] == "-D" and len(parts) > 1:
                 p = parts[1].split("=")
@@ -229,7 +229,6 @@ def find_apache_properties(nagiosuser, nagios_htdocs_dir):
             except:
                 if opt_debug:
                     raise
-                pass
 
     except:
         if opt_debug:
@@ -237,8 +236,8 @@ def find_apache_properties(nagiosuser, nagios_htdocs_dir):
         apache_confdir = None
         nagios_htpasswd_file = None
 
-    www_groups = os.popen("id -nG " + wwwuser).read().split()
-    nagios_groups = os.popen("id -nG " + nagiosuser).read().split()
+    www_groups = os.popen("id -nG " + wwwuser).read().split()  # nosec
+    nagios_groups = os.popen("id -nG " + nagiosuser).read().split()  # nosec
     common_groups = [g for g in www_groups if g in nagios_groups]
     if len(common_groups) > 1:
         if 'nagios' in common_groups:
@@ -447,7 +446,7 @@ try:
 
         # Nagios version
         result['nagios_version'] = ""
-        for line in os.popen(result["nagios_binary"] + " --version 2>/dev/null"):
+        for line in os.popen(result["nagios_binary"] + " --version 2>/dev/null"):  # nosec
             if line.startswith("Nagios Core") or line.startswith("Icinga Core"):
                 result['nagios_version'] = line.split()[2]
 
@@ -504,7 +503,7 @@ try:
             for stats_name in ["stats", "tats"]:
                 try:
                     stats_bin = result['nagios_binary'] + stats_name
-                    for line in os.popen(stats_bin + " 2>/dev/null"):
+                    for line in os.popen(stats_bin + " 2>/dev/null"):  # nosec
                         if line.startswith("Status File:"):
                             parts = line.split()
                             nagios_status_file = parts[-1]

@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
-import os, sys
+import sys
+import subprocess
 
 if sys.argv[1] == '--css':
     first = "/*-"
@@ -38,7 +39,9 @@ sepmid = sep + '-' * (width - len(sep) - 1) + '+'
 title = " ".join(sys.argv[1:])
 first_line = first + "-" + title
 print first_line + '-' * (width - len(first_line) - 1) + '.'
-for line in os.popen("figlet -c -w %d '%s'" % (width - 7, title), "r"):
+for line in subprocess.Popen(["figlet", "-c", "-w", "%s" % (width - 7), title],
+                             shell=False,
+                             stdout=subprocess.PIPE).stdout:
     line = line[:-1]
     print(cont + "|%-" + str(width - len(cont) - 2) + "s|") % line
 print sepmid

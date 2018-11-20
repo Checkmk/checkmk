@@ -185,7 +185,7 @@ def change_werk_version(werk_id, new_version):
 
 
 def git_add(werk):
-    os.system("git add %d" % werk["id"])
+    os.system("git add %d" % werk["id"])  # nosec
 
 
 def git_commit(werk, custom_files):
@@ -204,19 +204,20 @@ def git_commit(werk, custom_files):
             files_to_commit.append("%s/%s" % (git_top_level(), entry))
 
         os.chdir(g_base_dir)
-        os.system(
-            "git commit %s -m %s" % (" ".join(files_to_commit),
-                                     quote_shell_string(title + "\n\n" + werk["description"])))
+        cmd = "git commit %s -m %s" % (" ".join(files_to_commit),
+                                       quote_shell_string(title + "\n\n" + werk["description"]))
+        os.system(cmd)  # nosec
 
     else:
         if something_in_git_index():
             dash_a = ''
-            os.system("cd '%s' ; git add .werks" % git_top_level())
+            os.system("cd '%s' ; git add .werks" % git_top_level())  # nosec
         else:
             dash_a = '-a'
 
-        os.system("git commit %s -m %s" %
-                  (dash_a, quote_shell_string(title + "\n\n" + werk["description"])))
+        cmd = "git commit %s -m %s" % (dash_a,
+                                       quote_shell_string(title + "\n\n" + werk["description"]))
+        os.system(cmd)  # nosec
 
 
 def git_top_level():
@@ -561,7 +562,7 @@ def get_werk_arg(args):
 
 def main_blame(args):
     id = get_werk_arg(args)
-    os.system("git blame %d" % id)
+    os.system("git blame %d" % id)  # nosec
 
 
 def main_url(args):
@@ -594,7 +595,7 @@ def main_resolve(args):
 
 def main_delete(args):
     for ids in args:
-        if 0 == os.system("git rm %s" % ids):
+        if 0 == os.system("git rm %s" % ids):  # nosec
             sys.stdout.write("Deleted werk %s (%s).\n" % (ids, g_werks[int(ids)]["description"]))
 
 
@@ -686,7 +687,7 @@ def edit_werk(werkid, custom_files=[], commit=True):
     if not editor:
         bail_out("No editor available (please set EDITOR).\n")
 
-    if 0 == os.system("bash -c '%s +8 %s'" % (editor, werkid)):
+    if 0 == os.system("bash -c '%s +8 %s'" % (editor, werkid)):  # nosec
         load_werks()
         werk = g_werks[werkid]
         git_add(g_werks[werkid])
@@ -701,8 +702,9 @@ def main_commit(args):
         sys.stdout.write("Commiting:\n")
         for id in g_modified:
             list_werk(g_werks[id])
-        if 0 == os.system("git commit -m 'Updated werk entries %s' ." % (", ".join(
-            ["#%04d" % id for id in g_modified]))):
+        cmd = "git commit -m 'Updated werk entries %s' ." % (", ".join(
+            ["#%04d" % id for id in g_modified]))
+        if 0 == os.system(cmd):  # nosec
             sys.stdout.write("--> Successfully committed %d werks.\n" % len(g_modified))
         else:
             bail_out("Cannot commit.")
@@ -723,12 +725,12 @@ def main_pick(args):
 
 def werk_cherry_pick(commit_id, no_commit):
     # Cherry-pick the commit in question from the other branch
-    os.system("git cherry-pick --no-commit '%s'" % commit_id)
+    os.system("git cherry-pick --no-commit '%s'" % commit_id)  # nosec
 
     # Find werks that have been cherry-picked and change their version
     # to our current version
     load_werks()  # might have changed
-    for line in os.popen("git status --porcelain"):
+    for line in os.popen("git status --porcelain"):  # nosec
         # M  .werks/103
         #  M werk
         status, filename = line.strip().split(None, 1)
@@ -740,7 +742,7 @@ def werk_cherry_pick(commit_id, no_commit):
 
     # Commit
     if not no_commit:
-        os.system("git commit -C '%s'" % commit_id)
+        os.system("git commit -C '%s'" % commit_id)  # nosec
 
     else:
         sys.stdout.write("We don't commit yet. Here is the status:\n")
@@ -808,7 +810,7 @@ def main_fetch_ids(args):
     sys.stdout.write(
         'Reserved %d additional IDs now. You have %d reserved IDs now.\n' % (num, len(my_ids)))
 
-    if 0 == os.system("git commit -m 'Reserved %d Werk IDS' ." % num):
+    if 0 == os.system("git commit -m 'Reserved %d Werk IDS' ." % num):  # nosec
         sys.stdout.write("--> Successfully committed reserved werk IDS. Please push it soon!\n")
     else:
         bail_out("Cannot commit.")

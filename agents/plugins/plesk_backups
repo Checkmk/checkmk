@@ -33,7 +33,8 @@
 import datetime
 import sys
 import time
-from ftplib import FTP
+# Bandit complains about insecure protocol (B321). THis is the only possible protocol. Allow it.
+from ftplib import FTP  # nosec
 
 import MySQLdb
 
@@ -95,7 +96,8 @@ for domain, p in domains.iteritems():
             output.append('%s 4' % domain)  # Backup nicht konfiguriert
             continue
 
-        ftp = FTP(
+        # Bandit complains about insecure protocol (B321). THis is the only possible protocol. Allow it.
+        ftp = FTP(  # nosec
             p['backup_ftp_settinghost'],
             p['backup_ftp_settinglogin'],
             p['backup_ftp_settingpassword'],

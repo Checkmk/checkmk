@@ -167,7 +167,8 @@ def file_available(working_dir):
 def create_testfile(paths):
     path = paths["local_put_path"]
     if not os.path.isfile(path):
-        os.system('echo "This is a test by Check_MK" > %s' % path)
+        with open(path, "w") as f:
+            f.write("This is a test by Check_MK\n")
 
 
 def put_file(paths):

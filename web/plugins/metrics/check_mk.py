@@ -3728,7 +3728,7 @@ metric_info["usrv_queue_latency"] = {
     "color": "42/a"
 }
 
-metric_info["srv_sproc_latency"] = {
+metric_info["usrv_sproc_latency"] = {
     "title" : _("USrv - Sproc Latency"),
     "unit": "s",
     "color": "42/a"

@@ -10,6 +10,7 @@ import shutil
 from testlib import cmk_path, cmc_path, cme_path, repo_path
 import testlib.pylint_cmk as pylint_cmk
 
+
 @pytest.fixture(scope="function")
 def pylint_test_dir():
     base_path = os.environ.get("WORKDIR")
@@ -36,6 +37,9 @@ def pylint_test_dir():
 def test_pylint(pylint_test_dir):
     # Only specify the path to python packages or modules here
     modules_or_packages = [
+        # OMD
+        "omd/packages/omd/omdlib",
+
         # Check_MK base
         "cmk_base",
         # TODO: Check if this kind of "overlay" really works.
@@ -69,7 +73,7 @@ def test_pylint(pylint_test_dir):
 
     # We use our own search logic to find scripts without python extension
     search_paths = [
-        "omd/packages/omd",
+        "omd/packages/omd.bin",
         "bin",
         "notifications",
         "agents/plugins",
@@ -83,7 +87,7 @@ def test_pylint(pylint_test_dir):
     for path in search_paths:
         abs_path = cmk_path() + "/" + path
         for fname in pylint_cmk.get_pylint_files(abs_path, "*"):
-           modules_or_packages.append(path + "/" + fname)
+            modules_or_packages.append(path + "/" + fname)
 
     exit_code = pylint_cmk.run_pylint(cmk_path(), modules_or_packages)
     assert exit_code == 0, "PyLint found an error"
@@ -139,7 +143,8 @@ def inv_tree(path, default_value=None):
 def _compile_bakery_plugins(pylint_test_dir):
     with open(pylint_test_dir + "/cmk_bakery_plugins.py", "w") as f:
 
-        pylint_cmk.add_file(f, os.path.realpath(os.path.join(cmc_path(), "cmk_base/cee/agent_bakery_plugins.py")))
+        pylint_cmk.add_file(
+            f, os.path.realpath(os.path.join(cmc_path(), "cmk_base/cee/agent_bakery_plugins.py")))
         # This pylint warning is incompatible with our "concatenation technology".
         f.write("# pylint: disable=reimported\n")
 

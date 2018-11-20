@@ -297,31 +297,44 @@ def get_levels(hostname, service_description, dsname, params, cf, levels_factor=
     # print prediction.keys()
     reference = dict(zip(prediction["columns"], prediction["points"][index]))
     # print "Reference: %s" % reference
+    return estimate_levels(reference, params, levels_factor)
+
+
+def estimate_levels(reference, params, levels_factor):
     ref_value = reference["average"]
+    if not ref_value:  # No reference data available
+        return ref_value, [(None, None), (None, None)]
+
     stdev = reference["stdev"]
     levels = []
-    if not ref_value:  # No reference data available
-        levels = ((None, None), (None, None))
-    else:
-        for what, sig in [("upper", 1), ("lower", -1)]:
-            p = "levels_" + what
-            if p in params:
-                how, (warn, crit) = params[p]
-                if how == "absolute":
-                    this_levels = (ref_value + (sig * warn * levels_factor),
-                                   ref_value + (sig * crit * levels_factor))
-                elif how == "relative":
-                    this_levels = (ref_value + sig * (ref_value * warn / 100),
-                                   ref_value + sig * (ref_value * crit / 100))
-                else:  #  how == "stdev":
-                    this_levels = (ref_value + sig * (stdev * warn),
-                                   ref_value + sig * (stdev * crit))
+    for what, sig in [("upper", 1), ("lower", -1)]:
+        p = "levels_" + what
+        if p in params:
+            this_levels = estimate_level_bounds(ref_value, stdev, sig, params[p], levels_factor)
 
-                if what == "upper" and "levels_upper_min" in params:
-                    limit_warn, limit_crit = params["levels_upper_min"]
-                    this_levels = (max(limit_warn, this_levels[0]), max(limit_crit, this_levels[1]))
-                levels.append(this_levels)
-            else:
-                levels.append((None, None))
-
+            if what == "upper" and "levels_upper_min" in params:
+                limit_warn, limit_crit = params["levels_upper_min"]
+                this_levels = (max(limit_warn, this_levels[0]), max(limit_crit, this_levels[1]))
+            levels.append(this_levels)
+        else:
+            levels.append((None, None))
     return ref_value, levels
+
+
+def estimate_level_bounds(ref_value, stdev, sig, params, levels_factor):
+    how, (warn, crit) = params
+    if how == "absolute":
+        return (
+            ref_value + (sig * warn * levels_factor),
+            ref_value + (sig * crit * levels_factor),
+        )
+    elif how == "relative":
+        return (
+            ref_value + sig * (ref_value * warn / 100.0),
+            ref_value + sig * (ref_value * crit / 100.0),
+        )
+    # how == "stdev":
+    return (
+        ref_value + sig * (stdev * warn),
+        ref_value + sig * (stdev * crit),
+    )

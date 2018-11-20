@@ -44,16 +44,24 @@ from cmk.gui.valuespec import (
 from cmk.gui.i18n import _
 
 from cmk.gui.plugins.wato import (
-    configvar_order,
+    config_variable_group_registry,
+    ConfigVariableGroup,
     register_configvar,
     site_neutral_path,
 )
 
-group = _("Notifications")
-configvar_order()[group] = 15
+
+@config_variable_group_registry.register
+class ConfigVariableNotifications(ConfigVariableGroup):
+    def title(self):
+        return _("Notifications")
+
+    def sort_index(self):
+        return 15
+
 
 register_configvar(
-    group,
+    ConfigVariableNotifications,
     "enable_rulebased_notifications",
     Checkbox(
         title=_("Rule based notifications"),
@@ -67,7 +75,7 @@ register_configvar(
     need_restart=True)
 
 register_configvar(
-    group,
+    ConfigVariableNotifications,
     "notification_fallback_email",
     EmailAddress(
         title=_("Fallback email address for notifications"),
@@ -85,7 +93,7 @@ register_configvar(
     domain="check_mk")
 
 register_configvar(
-    group,
+    ConfigVariableNotifications,
     "notification_backlog",
     Integer(
         title=_("Store notifications for rule analysis"),
@@ -100,7 +108,7 @@ register_configvar(
     domain="check_mk")
 
 register_configvar(
-    group,
+    ConfigVariableNotifications,
     "notification_bulk_interval",
     Age(
         title=_("Interval for checking for ripe bulk notifications"),
@@ -113,7 +121,7 @@ register_configvar(
     need_restart=True)
 
 register_configvar(
-    group,
+    ConfigVariableNotifications,
     "notification_plugin_timeout",
     Age(
         title=_("Notification plugin timeout"),
@@ -123,7 +131,7 @@ register_configvar(
     domain="check_mk")
 
 register_configvar(
-    group,
+    ConfigVariableNotifications,
     "notification_logging",
     Transform(
         DropdownChoice(
@@ -137,7 +145,7 @@ register_configvar(
     domain="check_mk")
 
 register_configvar(
-    group,
+    ConfigVariableNotifications,
     "mkeventd_service_levels",
     ListOf(
         Tuple(
@@ -173,7 +181,7 @@ register_configvar(
 )
 
 register_configvar(
-    group,
+    ConfigVariableNotifications,
     "failed_notification_horizon",
     Age(
         title=_("Failed notification horizon"),

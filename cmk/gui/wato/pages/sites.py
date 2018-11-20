@@ -753,8 +753,7 @@ class ModeEditSiteGlobals(ModeSites, GlobalSettingsMode):
             self._current_settings = self._site.get("globals", {})
 
     def title(self):
-        return _("Edit site specific global settings of %s") % \
-               html.render_tt(self._site_id)
+        return _("Edit site specific global settings of %r") % self._site_id
 
     def buttons(self):
         super(ModeEditSiteGlobals, self).buttons()
@@ -772,16 +771,16 @@ class ModeEditSiteGlobals(ModeSites, GlobalSettingsMode):
         if not varname:
             return
 
-        _domain, valuespec, need_restart, _allow_reset, _in_global_settings = watolib.configvars(
-        )[varname]
+        config_variable = watolib.config_variable_registry[varname]()
         def_value = self._global_settings.get(varname, self._default_values[varname])
 
-        if action == "reset" and not watolib.is_a_checkbox(valuespec):
+        if action == "reset" and not watolib.is_a_checkbox(config_variable.valuespec()):
             c = wato_confirm(
                 _("Removing site specific configuration variable"),
                 _("Do you really want to remove the configuration variable <b>%s</b> "
                   "of the specific configuration of this site and that way use the global value "
-                  "of <b><tt>%s</tt></b>?") % (varname, valuespec.value_to_text(def_value)))
+                  "of <b><tt>%s</tt></b>?") %
+                (varname, config_variable.valuespec().value_to_text(def_value)))
 
         else:
             if not html.check_transaction():
@@ -802,7 +801,11 @@ class ModeEditSiteGlobals(ModeSites, GlobalSettingsMode):
             self._site_mgmt.save_sites(self._configured_sites, activate=False)
 
             watolib.add_change(
-                "edit-configvar", msg, sites=[self._site_id], need_restart=need_restart)
+                "edit-configvar",
+                msg,
+                sites=[self._site_id],
+                need_restart=config_variable.need_restart(),
+            )
 
             if action == "_reset":
                 return "edit_site_globals", msg
@@ -836,5 +839,4 @@ class ModeEditSiteGlobals(ModeSites, GlobalSettingsMode):
                       "You cannot configure specific settings for it."))
                 return
 
-        group_names = self._group_names(show_all=True)
-        self._show_configuration_variables(group_names)
+        self._show_configuration_variables(self._groups(show_all=True))

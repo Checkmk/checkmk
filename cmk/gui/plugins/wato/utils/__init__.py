@@ -125,8 +125,10 @@ from cmk.gui.watolib import (
     transform_simple_to_multi_host_rule_match_conditions,
 )
 from cmk.gui.plugins.watolib.utils import (
-    configvar_order,
-    register_configvar_group,
+    config_variable_group_registry,
+    ConfigVariableGroup,
+    config_variable_registry,
+    ConfigVariable,
     register_configvar,
 )
 import cmk.gui.forms as forms

@@ -90,6 +90,9 @@ from cmk.gui.exceptions import MKUserError, MKGeneralException
 from cmk.gui.wato.pages.global_settings import GlobalSettingsMode, EditGlobalSettingMode
 
 from cmk.gui.plugins.wato.utils import (
+    config_variable_group_registry,
+    ConfigVariableGroup,
+    config_variable_registry,
     ConfigDomainGUI,
     WatoMode,
     WatoModule,
@@ -108,11 +111,9 @@ from cmk.gui.plugins.wato.utils import (
     register_rulegroup,
     register_rule,
     register_configvar,
-    register_configvar_group,
     register_modules,
     wato_confirm,
     search_form,
-    configvar_order,
     site_neutral_path,
 )
 
@@ -2230,9 +2231,12 @@ class ModeEventConsoleSettings(EventConsoleMode, GlobalSettingsMode):
         self._default_values = ConfigDomainEventConsole().default_globals()
         self._current_settings = watolib.load_configuration_settings()
 
-    def _group_names(self, show_all=False):
-        group_names = [e[1] for e in ec_config_variable_groups()]
-        return sorted(group_names, key=lambda a: configvar_order().get(a, 999))
+    def _groups(self, show_all=False):
+        return [
+            g for g in sorted([g_class() for g_class in config_variable_group_registry.values()],
+                              key=lambda grp: grp.sort_index())
+            if isinstance(g, ConfigVariableGroupEventConsole)
+        ]
 
     def title(self):
         if self._search:
@@ -2252,16 +2256,20 @@ class ModeEventConsoleSettings(EventConsoleMode, GlobalSettingsMode):
         action = html.var("_action")
         if not varname:
             return
-        _domain, valuespec, _need_restart, _allow_reset, _in_global_settings = watolib.configvars(
-        )[varname]
-        def_value = valuespec.default_value()
 
-        if action == "reset" and not isinstance(valuespec, Checkbox):
+        try:
+            config_variable = config_variable_registry[varname]()
+        except KeyError:
+            raise MKUserError("_varname", _("The requested global setting does not exist."))
+
+        def_value = config_variable.valuespec().default_value()
+
+        if action == "reset" and not isinstance(config_variable.valuespec(), Checkbox):
             c = wato_confirm(
                 _("Resetting configuration variable"),
                 _("Do you really want to reset the configuration variable <b>%s</b> "
                   "back to the default value of <b><tt>%s</tt></b>?") %
-                (varname, valuespec.value_to_text(def_value)))
+                (varname, config_variable.valuespec().value_to_text(def_value)))
         else:
             if not html.check_transaction():
                 return
@@ -2289,15 +2297,38 @@ class ModeEventConsoleSettings(EventConsoleMode, GlobalSettingsMode):
         return "mkeventd_edit_configvar"
 
     def page(self):
-        self._show_configuration_variables(self._group_names())
+        self._show_configuration_variables(self._groups())
 
 
-def ec_config_variable_groups():
-    return [
-        ("ec", _("Event Console: Generic")),
-        ("ec_log", _("Event Console: Logging & Diagnose")),
-        ("ec_snmp", _("Event Console: SNMP traps")),
-    ]
+class ConfigVariableGroupEventConsole(ConfigVariableGroup):
+    pass
+
+
+@config_variable_group_registry.register
+class ConfigVariableGroupEventConsoleGeneric(ConfigVariableGroupEventConsole):
+    def title(self):
+        return _("Event Console: Generic")
+
+    def sort_index(self):
+        return 18
+
+
+@config_variable_group_registry.register
+class ConfigVariableGroupEventConsoleLogging(ConfigVariableGroupEventConsole):
+    def title(self):
+        return _("Event Console: Logging & Diagnose")
+
+    def sort_index(self):
+        return 19
+
+
+@config_variable_group_registry.register
+class ConfigVariableGroupEventConsoleSNMP(ConfigVariableGroupEventConsole):
+    def title(self):
+        return _("Event Console: SNMP traps")
+
+    def sort_index(self):
+        return 20
 
 
 @mode_registry.register
@@ -2733,13 +2764,7 @@ if mkeventd_enabled:
 #   '----------------------------------------------------------------------'
 
 if mkeventd_enabled:
-    start_order = 18
-    groups = {}
-    for index, (group_id, group_name) in enumerate(ec_config_variable_groups()):
-        register_configvar_group(group_name, order=start_order + index)
-        groups[group_id] = group_name
-
-    register_configvar(groups["ec"],
+    register_configvar(ConfigVariableGroupEventConsoleGeneric,
         "remote_status",
         Optional(
             Tuple(
@@ -2788,7 +2813,7 @@ if mkeventd_enabled:
     )
 
     register_configvar(
-        groups["ec"],
+        ConfigVariableGroupEventConsoleGeneric,
         "replication",
         Optional(
             Dictionary(
@@ -2881,7 +2906,7 @@ if mkeventd_enabled:
     )
 
     register_configvar(
-        groups["ec"],
+        ConfigVariableGroupEventConsoleGeneric,
         "retention_interval",
         Age(
             title=_("State Retention Interval"),
@@ -2893,7 +2918,7 @@ if mkeventd_enabled:
     )
 
     register_configvar(
-        groups["ec"],
+        ConfigVariableGroupEventConsoleGeneric,
         "housekeeping_interval",
         Age(
             title=_("Housekeeping Interval"),
@@ -2906,7 +2931,7 @@ if mkeventd_enabled:
     )
 
     register_configvar(
-        groups["ec"],
+        ConfigVariableGroupEventConsoleGeneric,
         "statistics_interval",
         Age(
             title=_("Statistics Interval"),
@@ -2919,7 +2944,7 @@ if mkeventd_enabled:
     )
 
     register_configvar(
-        groups["ec"],
+        ConfigVariableGroupEventConsoleGeneric,
         "log_messages",
         Checkbox(
             title=_("Syslog-like message logging"),
@@ -2934,7 +2959,7 @@ if mkeventd_enabled:
     )
 
     register_configvar(
-        groups["ec"],
+        ConfigVariableGroupEventConsoleGeneric,
         "rule_optimizer",
         Checkbox(
             title=_("Optimize rule execution"),
@@ -2945,7 +2970,7 @@ if mkeventd_enabled:
     )
 
     register_configvar(
-        groups["ec"],
+        ConfigVariableGroupEventConsoleGeneric,
         "actions",
         vs_mkeventd_actions,
         allow_reset=False,
@@ -2953,7 +2978,7 @@ if mkeventd_enabled:
     )
 
     register_configvar(
-        groups["ec"],
+        ConfigVariableGroupEventConsoleGeneric,
         "archive_orphans",
         Checkbox(
             title=_("Force message archiving"),
@@ -2967,7 +2992,7 @@ if mkeventd_enabled:
     )
 
     register_configvar(
-        groups["ec"],
+        ConfigVariableGroupEventConsoleGeneric,
         "hostname_translation",
         HostnameTranslation(
             title=_("Hostname translation for incoming messages"),
@@ -3057,7 +3082,7 @@ if mkeventd_enabled:
     )
 
     register_configvar(
-        groups["ec"],
+        ConfigVariableGroupEventConsoleGeneric,
         "event_limit",
         Dictionary(
             title=_("Limit amount of current events"),
@@ -3096,7 +3121,7 @@ if mkeventd_enabled:
     )
 
     register_configvar(
-        groups["ec"],
+        ConfigVariableGroupEventConsoleGeneric,
         "history_rotation",
         DropdownChoice(
             title=_("Event history logfile rotation"),
@@ -3108,7 +3133,7 @@ if mkeventd_enabled:
     )
 
     register_configvar(
-        groups["ec"],
+        ConfigVariableGroupEventConsoleGeneric,
         "history_lifetime",
         Integer(
             title=_("Event history lifetime"),
@@ -3121,7 +3146,7 @@ if mkeventd_enabled:
     )
 
     register_configvar(
-        groups["ec"],
+        ConfigVariableGroupEventConsoleGeneric,
         "socket_queue_len",
         Integer(
             title=_("Max. number of pending connections to the status socket"),
@@ -3139,7 +3164,7 @@ if mkeventd_enabled:
     )
 
     register_configvar(
-        groups["ec"],
+        ConfigVariableGroupEventConsoleGeneric,
         "eventsocket_queue_len",
         Integer(
             title=_("Max. number of pending connections to the event socket"),
@@ -3156,7 +3181,7 @@ if mkeventd_enabled:
     )
 
     register_configvar(
-        groups["ec_snmp"],
+        ConfigVariableGroupEventConsoleSNMP,
         "translate_snmptraps",
         Transform(
             CascadingDropdown(
@@ -3185,7 +3210,7 @@ if mkeventd_enabled:
     )
 
     register_configvar(
-        groups["ec_snmp"],
+        ConfigVariableGroupEventConsoleSNMP,
         "snmp_credentials",
         ListOf(
             Dictionary(
@@ -3225,7 +3250,7 @@ if mkeventd_enabled:
     )
 
     register_configvar(
-        groups["ec_log"],
+        ConfigVariableGroupEventConsoleLogging,
         "debug_rules",
         Checkbox(
             title=_("Debug rule execution"),
@@ -3263,7 +3288,7 @@ if mkeventd_enabled:
         return elements
 
     register_configvar(
-        groups["ec_log"],
+        ConfigVariableGroupEventConsoleLogging,
         "log_level",
         Transform(
             Dictionary(
@@ -3285,7 +3310,7 @@ if mkeventd_enabled:
     )
 
     register_configvar(
-        groups["ec_log"],
+        ConfigVariableGroupEventConsoleLogging,
         "log_rulehits",
         Checkbox(
             title=_("Log rule hits"),

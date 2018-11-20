@@ -34,10 +34,8 @@ import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
 
 from cmk.gui.plugins.watolib.utils import (
-    configvar_show_in_global_settings,
-    configvar_groups,
-    configvar_order,
-    configvars,
+    config_variable_group_registry,
+    config_variable_registry,
     ConfigDomain,
 )
 from cmk.gui.plugins.wato.utils import mode_registry
@@ -67,27 +65,30 @@ class GlobalSettingsMode(WatoMode):
         self._search = watolib.get_search_expression()
         self._show_only_modified = html.has_var("show_only_modified")
 
-    def _group_names(self, show_all=False):
-        group_names = []
+    def _groups(self, show_all=False):
+        groups = []
 
-        for group_name, group_vars in configvar_groups().items():
+        for group_class in config_variable_group_registry.values():
+            group = group_class()
             add = False
-            for domain, varname, _valuespec in group_vars:
-                if not show_all and (not configvars()[varname][4] or not domain.in_global_settings):
+            for config_variable_class in group.config_variables():
+                config_variable = config_variable_class()
+                if not show_all and (not config_variable.in_global_settings() or
+                                     not config_variable.domain().in_global_settings):
                     continue  # do not edit via global settings
 
                 add = True
                 break
 
             if add:
-                group_names.append(group_name)
+                groups.append(group)
 
-        return sorted(group_names, key=lambda a: configvar_order().get(a, 999))
+        return groups
 
     def _edit_mode(self):
         return "edit_configvar"
 
-    def _show_configuration_variables(self, group_names):
+    def _show_configuration_variables(self, groups):
         search_form(_("Search for settings:"))
         search = self._search
 
@@ -102,14 +103,19 @@ class GlobalSettingsMode(WatoMode):
 
         at_least_one_painted = False
         html.open_div(class_="globalvars")
-        for group_name in group_names:
+        for group in sorted(groups, key=lambda g: g.sort_index()):
             header_is_painted = False  # needed for omitting empty groups
 
-            for domain, varname, valuespec in configvar_groups()[group_name]:
-                if not domain.enabled():
+            for config_variable_class in group.config_variables():
+                config_variable = config_variable_class()
+                varname = config_variable.ident()
+                valuespec = config_variable.valuespec()
+
+                if not config_variable.domain().enabled():
                     continue
 
-                if domain == watolib.ConfigDomainCore and varname not in self._default_values:
+                if config_variable.domain(
+                ) == watolib.ConfigDomainCore and varname not in self._default_values:
                     if config.debug:
                         raise MKGeneralException(
                             "The configuration variable <tt>%s</tt> is unknown to "
@@ -117,7 +123,7 @@ class GlobalSettingsMode(WatoMode):
                     else:
                         continue
 
-                if not configvar_show_in_global_settings(varname):
+                if not config_variable.in_global_settings():
                     continue
 
                 if self._show_only_modified and varname not in self._current_settings:
@@ -126,8 +132,8 @@ class GlobalSettingsMode(WatoMode):
                 help_text = valuespec.help() or ''
                 title_text = valuespec.title()
 
-                if search and search not in group_name.lower() \
-                        and search not in domain.ident.lower() \
+                if search and search not in group.title().lower() \
+                        and search not in config_variable.domain().ident.lower() \
                           and search not in varname \
                           and search not in help_text.lower() \
                           and search not in title_text.lower():
@@ -136,7 +142,7 @@ class GlobalSettingsMode(WatoMode):
 
                 if not header_is_painted:
                     # always open headers when searching
-                    forms.header(group_name, isopen=search or self._show_only_modified)
+                    forms.header(group.title(), isopen=search or self._show_only_modified)
                     header_is_painted = True
 
                 default_value = self._default_values[varname]
@@ -208,8 +214,8 @@ class EditGlobalSettingMode(WatoMode):
     def _from_vars(self):
         self._varname = html.get_ascii_input("varname")
         try:
-            self._domain, self._valuespec, self._need_restart, \
-            self._allow_reset, _in_global_settings = configvars()[self._varname]
+            self._config_variable = config_variable_registry[self._varname]()
+            self._valuespec = self._config_variable.valuespec()
         except KeyError:
             raise MKUserError("varname",
                               _("The global setting \"%s\" does not exist.") % self._varname)
@@ -254,8 +260,8 @@ class EditGlobalSettingMode(WatoMode):
             "edit-configvar",
             msg,
             sites=self._affected_sites(),
-            domains=[self._domain],
-            need_restart=self._need_restart)
+            domains=[self._config_variable.domain()],
+            need_restart=self._config_variable.need_restart())
 
         return self._back_mode()
 
@@ -311,7 +317,7 @@ class EditGlobalSettingMode(WatoMode):
 
         forms.end()
         html.button("save", _("Save"))
-        if self._allow_reset and is_configured:
+        if self._config_variable.allow_reset() and is_configured:
             curvalue = self._current_settings[self._varname]
             html.button(
                 "_reset",
@@ -361,15 +367,15 @@ class ModeEditGlobals(GlobalSettingsMode):
 
         action = html.var("_action")
 
-        domain, valuespec, need_restart, _allow_reset, _in_global_settings = configvars()[varname]
+        config_variable = config_variable_registry[varname]()
         def_value = self._default_values[varname]
 
-        if action == "reset" and not watolib.is_a_checkbox(valuespec):
+        if action == "reset" and not watolib.is_a_checkbox(config_variable.valuespec()):
             c = wato_confirm(
                 _("Resetting configuration variable"),
                 _("Do you really want to reset the configuration variable <b>%s</b> "
                   "back to the default value of <b><tt>%s</tt></b>?") %
-                (varname, valuespec.value_to_text(def_value)))
+                (varname, config_variable.valuespec().value_to_text(def_value)))
         else:
             if not html.check_transaction():
                 return
@@ -384,7 +390,11 @@ class ModeEditGlobals(GlobalSettingsMode):
                 varname, "on" if self._current_settings[varname] else "off")
             watolib.save_global_settings(self._current_settings)
 
-            watolib.add_change("edit-configvar", msg, domains=[domain], need_restart=need_restart)
+            watolib.add_change(
+                "edit-configvar",
+                msg,
+                domains=[config_variable.domain()],
+                need_restart=config_variable.need_restart())
 
             if action == "_reset":
                 return "globalvars", msg
@@ -393,7 +403,7 @@ class ModeEditGlobals(GlobalSettingsMode):
             return ""
 
     def page(self):
-        self._show_configuration_variables(self._group_names())
+        self._show_configuration_variables(self._groups())
 
 
 @mode_registry.register

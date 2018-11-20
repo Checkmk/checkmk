@@ -22,7 +22,7 @@ for part in parts:
     tarfile = part + ".tar.gz"
     filelist = []
     filelists[part] = filelist
-    for fn in os.popen("tar tzf %s" % tarfile, "r"):
+    for fn in os.popen("tar tzf %s" % tarfile, "r"):  # nosec
         fn = fn.strip()
         if not fn.endswith("/"):
             filelist.append(fn)

@@ -87,7 +87,7 @@ $(APACHE_INSTALL):
 $(APACHE_SKEL):	$(APACHE_INSTALL)
 	# This file is loaded by php-wrapper on RedHat/CentOS < 7
 	if [ $(CENTOS_WORKAROUND) -eq 1 ]; then \
-		$(MKDIR) $(SKEL)/etc/apache/
+		$(MKDIR) $(SKEL)/etc/apache/; \
 		cp /etc/php.ini $(SKEL)/etc/apache/php.ini; \
 		echo -e "\n\n; OMD OMD OMD OMD OMD OMD\n\nmemory_limit=64M\n\n[Session]\nsession.save_path=###ROOT###/tmp/php/session\nupload_tmp_dir=###ROOT###/tmp/php/upload\nsoap.wsdl_cache_dir=###ROOT###/tmp/php/wsdl-cache\n" >> $(SKEL)/etc/apache/php.ini; \
 	fi

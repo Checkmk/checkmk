@@ -2018,7 +2018,7 @@ def validate_config_change_commands(config_hooks, settings):
 
         # Check if value is valid. Choices are either a list of allowed
         # keys or a regular expression
-        if type(hook["choices"]) == list:
+        if isinstance(hook["choices"], list):
             choices = [var for (var, _descr) in hook["choices"]]
             if value not in choices:
                 bail_out("Invalid value %r for %r. Allowed are: %s\n" % \
@@ -2048,7 +2048,7 @@ def config_set(site, config_hooks, args):
 
     # Check if value is valid. Choices are either a list of allowed
     # keys or a regular expression
-    if type(hook["choices"]) == list:
+    if isinstance(hook["choices"], list):
         choices = [var for (var, _descr) in hook["choices"]]
         if value not in choices:
             sys.stderr.write("Invalid value for '%s'. Allowed are: %s\n" % \
@@ -2199,7 +2199,7 @@ def config_configure_hook(site, config_hooks, hook_name):
     descr = hook["description"].replace("\n\n", "\001").replace("\n", " ").replace("\001", "\n\n")
     value = site.conf[hook_name]
     choices = hook["choices"]
-    if type(choices) == list:
+    if isinstance(choices, list):
         dialog_function = dialog_menu
     else:
         dialog_function = dialog_regex

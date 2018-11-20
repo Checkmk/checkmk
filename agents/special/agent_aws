@@ -31,6 +31,8 @@ import sys
 import argparse
 import boto3
 
+import cmk.password_store
+
 
 def parse_arguments(argv):
     parser = argparse.ArgumentParser(description=__doc__)
@@ -41,8 +43,11 @@ def parse_arguments(argv):
     return parser.parse_args(argv)
 
 
-def main():
-    args = parse_arguments(sys.argv[1:])
+def main(args=None):
+    if args is None:
+        cmk.password_store.replace_passwords()
+        args = sys.argv[1:]
+    args = parse_arguments(args)
 
     if not args.aws_access_key_id or not args.aws_secret_access_key or not args.region:
         sys.stderr.write("Access key ID, secret access key and region must be set.\n")

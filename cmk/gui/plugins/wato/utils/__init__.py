@@ -906,14 +906,14 @@ def PredictiveLevels(**args):
                       ])),
                      ("stdev", _("In relation to standard deviation"),
                       Tuple(elements=[
-                          Percentage(
+                          Float(
                               title=_("Warning at"),
                               unit=_("times the standard deviation above the predicted value"),
-                              default_value=2),
-                          Percentage(
+                              default_value=2.0),
+                          Float(
                               title=_("Critical at"),
                               unit=_("times the standard deviation above the predicted value"),
-                              default_value=4),
+                              default_value=4.0),
                       ])),
                  ])),
             ("levels_upper_min",
@@ -955,14 +955,14 @@ def PredictiveLevels(**args):
                       ])),
                      ("stdev", _("In relation to standard deviation"),
                       Tuple(elements=[
-                          Percentage(
+                          Float(
                               title=_("Warning at"),
                               unit=_("times the standard deviation below the predicted value"),
-                              default_value=2),
-                          Percentage(
+                              default_value=2.0),
+                          Float(
                               title=_("Critical at"),
                               unit=_("times the standard deviation below the predicted value"),
-                              default_value=4),
+                              default_value=4.0),
                       ])),
                  ])),
         ])

@@ -298,30 +298,42 @@ check_info['emcvnx_storage_pools.tieringtypes'] = {
 #   '----------------------------------------------------------------------'
 
 
-def check_emcvnx_storage_pools_deduplication(item, params, parsed):
-    if item in parsed:
-        data = parsed[item]
-        state = data["Deduplication State"]
-        status = data["Deduplication Status"].split("(")[0]
-        rate = data["Deduplication Rate"]
-        savings = float(data["Efficiency Savings (GBs)"]) * 1024**3
-        percent_completed = float(data["Deduplication Percent Completed"])
-        remaining_size = float(data["Deduplication Remaining Size (GBs)"]) * 1024**3
-        shared_capacity = float(data["Deduplication Shared Capacity (GBs)"]) * 1024**3
+def _emcvnx_get_text_perf(data, key, perfname, format_func=get_bytes_human_readable, factor=1024
+                          **3):
+    field = data.get(key, "unknown")
+    try:
+        value = float(field) * factor
+        return format_func(value), [(perfname, value)]
+    except ValueError:
+        return str(field), []
 
-        infotext = ("State: %s, Status: %s, Rate: %s, Efficiency savings: %s, " +\
-                    "Percent completed: %s, Remaining size: %s, Shared capacity: %s") % \
-                   (state, status, rate, get_bytes_human_readable(savings),
-                    get_percent_human_readable(percent_completed),
-                    get_bytes_human_readable(remaining_size),
-                    get_bytes_human_readable(shared_capacity))
 
-        return 0, infotext, [
-            ("emcvnx_dedupl_perc_completed", percent_completed),
-            ("emcvnx_dedupl_remaining_size", remaining_size),
-            ("emcvnx_dedupl_efficiency_savings", savings),
-            ("emcvnx_dedupl_shared_capacity", shared_capacity),
-        ]
+@get_parsed_item_data
+def check_emcvnx_storage_pools_deduplication(_no_item, _no_params, data):
+
+    yield 0, "State: %s" % data.get("Deduplication State", "unknown")
+    yield 0, "Status: %s" % data.get("Deduplication Status", "unknown").split("(")[0]
+    yield 0, "Rate: %s" % data.get("Deduplication Rate", "unknown")
+
+    txt, perf = _emcvnx_get_text_perf(data, "Efficiency Savings (GBs)",
+                                      "emcvnx_dedupl_efficiency_savings")
+    yield 0, "Efficiency savings: %s" % txt, perf
+
+    txt, perf = _emcvnx_get_text_perf(
+        data,
+        "Deduplication Percent Completed",
+        "emcvnx_dedupl_perc_completed",
+        format_func=get_percent_human_readable,
+        factor=1.0)
+    yield 0, "Percent completed: %s" % txt, perf
+
+    txt, perf = _emcvnx_get_text_perf(data, "Deduplication Remaining Size (GBs)",
+                                      "emcvnx_dedupl_remaining_size")
+    yield 0, "Remaining size: %s" % txt, perf
+
+    txt, perf = _emcvnx_get_text_perf(data, "Deduplication Shared Capacity (GBs)",
+                                      "emcvnx_dedupl_shared_capacity")
+    yield 0, "Shared capacity: %s" % txt, perf
 
 
 check_info['emcvnx_storage_pools.deduplication'] = {

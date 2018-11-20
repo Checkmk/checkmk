@@ -70,5 +70,7 @@ $(PNP4NAGIOS_INSTALL): $(PNP4NAGIOS_BUILD)
 	install -m 644 $(PACKAGE_DIR)/$(PNP4NAGIOS)/ui-facelift/images/* $(DESTDIR)$(OMD_ROOT)/share/pnp4nagios/htdocs/media/css/ui-facelift/images
 	$(TOUCH) $@
 
+$(PNP4NAGIOS)-skel:
+
 $(PNP4NAGIOS)-clean:
 	rm -rf $(PNP4NAGIOS_DIR) $(BUILD_HELPER_DIR)/$(PNP4NAGIOS_DIR)*

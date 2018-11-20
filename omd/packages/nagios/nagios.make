@@ -74,6 +74,8 @@ $(NAGIOS_INSTALL):
 	install -m 644 $(PACKAGE_DIR)/$(NAGIOS)/diskspace $(DESTDIR)$(OMD_ROOT)/share/diskspace/nagios
 	$(TOUCH) $@
   
+$(NAGIOS)-skel:
+
 $(NAGIOS)-clean:
 	rm -rf $(NAGIOS_DIR) $(BUILD_HELPER_DIR)/$(NAGIOS)*
 

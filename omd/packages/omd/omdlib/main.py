@@ -395,12 +395,11 @@ def find_processes_of_user(username):
 
 def groupdel(groupname):
     try:
-        p = subprocess.Popen(
-            ["groupdel", groupname],
-            stdin=open(os.devnull, "r"),
-            stdout=open(os.devnull, "w"),
-            stderr=subprocess.PIPE,
-            close_fds=True)
+        p = subprocess.Popen(["groupdel", groupname],
+                             stdin=open(os.devnull, "r"),
+                             stdout=open(os.devnull, "w"),
+                             stderr=subprocess.PIPE,
+                             close_fds=True)
     except OSError, e:
         bail_out("\n" + tty_error + ": Failed to delete group '%s': %s" % (groupname, e))
 
@@ -447,12 +446,11 @@ def add_user_to_group(user, group):
 
 def userdel(name):
     try:
-        p = subprocess.Popen(
-            ["userdel", "-r", name],
-            stdin=open(os.devnull, "r"),
-            stdout=open(os.devnull, "w"),
-            stderr=subprocess.PIPE,
-            close_fds=True)
+        p = subprocess.Popen(["userdel", "-r", name],
+                             stdin=open(os.devnull, "r"),
+                             stdout=open(os.devnull, "w"),
+                             stderr=subprocess.PIPE,
+                             close_fds=True)
     except OSError, e:
         bail_out("\n" + tty_error + ": Failed to delete user '%s': %s" % (name, e))
 
@@ -554,8 +552,8 @@ def user_verify(site, allow_populated=False):
         bail_out(tty_error + ": primary group for siteuser must be %s" % name)
 
     if not user_has_group(g_info.APACHE_USER, name):
-        bail_out(tty_error + ": apache user %s must be member of group %s" % (g_info.APACHE_USER,
-                                                                              name))
+        bail_out(tty_error +
+                 ": apache user %s must be member of group %s" % (g_info.APACHE_USER, name))
 
     if not user_has_group(name, "omd"):
         bail_out(tty_error + ": siteuser must be member of group omd")
@@ -857,8 +855,8 @@ def walk_skel(root, handler, args, depth_first, exclude_if_in=None, relbase='.')
                     # If running in interactive mode ask the user to terminate or retry
                     # In case of non interactive mode just throw the exception
                     if opt_conflict == 'ask':
-                        options = [("retry", "Retry the operation"), ("continue",
-                                                                      "Continue with next files"),
+                        options = [("retry", "Retry the operation"),
+                                   ("continue", "Continue with next files"),
                                    ("abort", "Stop here and abort update!")]
                         choice = ask_user_choices(
                             'Problem occured',
@@ -941,8 +939,8 @@ def patch_template_file(src, dst, old_site, new_site):
             ("keep", "Keep half-converted version of the file"),
             ("restore", "Restore your original version of the file"),
             ("install", "Install the default version of the file"),
-            ("brute", "Simply replace /%s/ with /%s/ in that file" % (old_site.name,
-                                                                      new_site.name)),
+            ("brute",
+             "Simply replace /%s/ with /%s/ in that file" % (old_site.name, new_site.name)),
             ("shell", "Open a shell for looking around"),
             ("abort", "Stop here and abort!"),
         ]
@@ -968,8 +966,8 @@ def patch_template_file(src, dst, old_site, new_site):
             elif choice == "diff":
                 os.system("diff -u %s %s%s" % (old_orig_path, new_orig_path, pipe_pager()))
             elif choice == "brute":
-                os.system("sed 's@/%s/@/%s/@g' %s.orig > %s" % (old_site.name, new_site.name, dst,
-                                                                dst))
+                os.system(
+                    "sed 's@/%s/@/%s/@g' %s.orig > %s" % (old_site.name, new_site.name, dst, dst))
                 changed = len([
                     l for l in os.popen("diff %s.orig %s" % (dst, dst)).readlines()
                     if l.startswith(">")
@@ -1050,8 +1048,8 @@ def merge_update_file(site, relpath, old_version, new_version):
                         break
             file("%s-%s" % (user_path, version), "w").write(
                 replace_tags(skel_content, replacements))
-        version_patch = os.popen("diff -u %s-%s %s-%s" % (user_path, old_version, user_path,
-                                                          new_version)).read()
+        version_patch = os.popen(
+            "diff -u %s-%s %s-%s" % (user_path, old_version, user_path, new_version)).read()
 
         # First try to merge the changes in the version into the users' file
         merge = '--merge' if patch_has_merge() else ''
@@ -1125,10 +1123,10 @@ def merge_update_file(site, relpath, old_version, new_version):
         elif choice == "shell":
             relname = relpath.split("/")[-1]
             sys.stdout.write(" %-25s: the current half-merged file\n" % relname)
-            sys.stdout.write(" %-25s: the default version of %s\n" % (relname + "." + old_version,
-                                                                      old_version))
-            sys.stdout.write(" %-25s: the default version of %s\n" % (relname + "." + new_version,
-                                                                      new_version))
+            sys.stdout.write(
+                " %-25s: the default version of %s\n" % (relname + "." + old_version, old_version))
+            sys.stdout.write(
+                " %-25s: the default version of %s\n" % (relname + "." + new_version, new_version))
             sys.stdout.write(" %-25s: your original version\n" % (relname + ".orig"))
             if os.path.exists(reject_file):
                 sys.stdout.write(" %-25s: changes that haven't been merged\n" % relname + ".rej")
@@ -1246,12 +1244,13 @@ def update_file(relpath, site, old_version, new_version, old_perms):
 
     # 2b) user's file has a different content or type
     elif not old_type:
-        if user_confirms(site, "Conflict at " + relpath, "The new version ships the %s %s, "
-                         "but you have created a %s in that place "
-                         "yourself. Shall we keep your %s or replace "
-                         "is with my %s?" % (new_type, relpath, user_type, user_type, new_type),
-                         relpath, "keep", "Keep your %s" % user_type, "replace",
-                         "Replace your %s with the new default %s" % (user_type, new_type)):
+        if user_confirms(
+                site, "Conflict at " + relpath, "The new version ships the %s %s, "
+                "but you have created a %s in that place "
+                "yourself. Shall we keep your %s or replace "
+                "is with my %s?" % (new_type, relpath, user_type, user_type, new_type), relpath,
+                "keep", "Keep your %s" % user_type, "replace",
+                "Replace your %s with the new default %s" % (user_type, new_type)):
             sys.stdout.write(StateMarkers.warn + " Keeping your   %s\n" % fn)
         else:
             create_skeleton_file(new_skel, site.dir, relpath, replacements)
@@ -1264,12 +1263,12 @@ def update_file(relpath, site, old_version, new_version, old_perms):
 
     # 3b) same, but user has not deleted and changed type
     elif not new_type and user_changed_type:
-        if user_confirms(site, "Obsolete file " + relpath, "The %s %s has become obsolete in "
-                         "this version, but you have changed it into a "
-                         "%s. Do you want to keep your %s or "
-                         "may I delete it for you, please?" % (old_type, relpath, user_type,
-                                                               user_type), relpath, "keep",
-                         "Keep your %s" % user_type, "delete", "Delete it"):
+        if user_confirms(
+                site, "Obsolete file " + relpath, "The %s %s has become obsolete in "
+                "this version, but you have changed it into a "
+                "%s. Do you want to keep your %s or "
+                "may I delete it for you, please?" % (old_type, relpath, user_type, user_type),
+                relpath, "keep", "Keep your %s" % user_type, "delete", "Delete it"):
             sys.stdout.write(StateMarkers.warn + " Keeping your   %s\n" % fn)
         else:
             delete_user_file(user_path)
@@ -1277,13 +1276,14 @@ def update_file(relpath, site, old_version, new_version, old_perms):
 
     # 3c) same, but user has changed it contents
     elif not new_type and user_changed_content:
-        if user_confirms(site, "Changes in obsolete %s %s" % (old_type, relpath),
-                         "The %s %s has become obsolete in "
-                         "the new version, but you have changed its contents. "
-                         "Do you want to keep your %s or "
-                         "may I delete it for you, please?" % (old_type, relpath, user_type),
-                         relpath, "keep", "keep your %s, though it is obsolete" % user_type,
-                         "delete", "delete your %s" % user_type):
+        if user_confirms(
+                site, "Changes in obsolete %s %s" % (old_type, relpath),
+                "The %s %s has become obsolete in "
+                "the new version, but you have changed its contents. "
+                "Do you want to keep your %s or "
+                "may I delete it for you, please?" % (old_type, relpath, user_type), relpath,
+                "keep", "keep your %s, though it is obsolete" % user_type, "delete",
+                "delete your %s" % user_type):
             sys.stdout.write(StateMarkers.warn + " Keeping your   %s\n" % fn)
         else:
             delete_user_file(user_path)
@@ -1291,13 +1291,13 @@ def update_file(relpath, site, old_version, new_version, old_perms):
 
     # 3d) same, but it is a directory which is not empty
     elif not new_type and non_empty_directory:
-        if user_confirms(site, "Non empty obsolete directory %s" % (relpath),
-                         "The directory %s has become obsolete in "
-                         "the new version, but you have contents in it. "
-                         "Do you want to keep your directory or "
-                         "may I delete it for you, please?" % (relpath), relpath, "keep",
-                         "keep your directory, though it is obsolete", "delete",
-                         "delete your directory"):
+        if user_confirms(
+                site, "Non empty obsolete directory %s" % (relpath),
+                "The directory %s has become obsolete in "
+                "the new version, but you have contents in it. "
+                "Do you want to keep your directory or "
+                "may I delete it for you, please?" % (relpath), relpath, "keep",
+                "keep your directory, though it is obsolete", "delete", "delete your directory"):
             sys.stdout.write(StateMarkers.warn + " Keeping your   %s\n" % fn)
         else:
             delete_user_file(user_path)
@@ -1312,8 +1312,8 @@ def update_file(relpath, site, old_version, new_version, old_perms):
     #    file. We simply do nothing in that case. The user surely has
     #    a good reason why he deleted the file.
     elif not user_type and not we_changed:
-        sys.stdout.write(
-            StateMarkers.good + " Unwanted       %s (unchanged, deleted by you)\n" % fn)
+        sys.stdout.write(StateMarkers.good +
+                         " Unwanted       %s (unchanged, deleted by you)\n" % fn)
 
     # 4b) File changed in new version. Simply warn if user has deleted it.
     elif not user_type:
@@ -1363,8 +1363,8 @@ def update_file(relpath, site, old_version, new_version, old_perms):
         else:
             os.remove(user_path)
             os.symlink(os.readlink(new_path), user_path)
-            sys.stdout.write(StateMarkers.warn + " Set link       %s to new target %s\n" %
-                             (fn, os.readlink(new_path)))
+            sys.stdout.write(StateMarkers.warn +
+                             " Set link       %s to new target %s\n" % (fn, os.readlink(new_path)))
 
     # E ---> FILE TYPE HAS CHANGED (NASTY)
 
@@ -1381,9 +1381,9 @@ def update_file(relpath, site, old_version, new_version, old_perms):
                 "the %s of your copy of that %s. "
                 "Do you want to keep your version or replace "
                 "it with the new default? " % (old_type, relpath, new_type,
-                                               user_changed_type and "type" or "content",
-                                               old_type), relpath, "keep",
-                "Keep your %s" % user_type, "replace", "Replace it with the new %s" % new_type):
+                                               user_changed_type and "type" or "content", old_type),
+                relpath, "keep", "Keep your %s" % user_type, "replace",
+                "Replace it with the new %s" % new_type):
             sys.stdout.write(StateMarkers.warn + " Keeping your version of %s\n" % fn)
         else:
             create_skeleton_file(new_skel, site.dir, relpath, replacements)
@@ -1392,20 +1392,21 @@ def update_file(relpath, site, old_version, new_version, old_perms):
 
     # 10) The user has changed the file type, we just the content
     elif old_type != user_type:
-        if user_confirms(site, "Type change conflicts with content change at " + relpath,
-                         "Usually %s is a %s in both the "
-                         "old and new version. But you have changed it "
-                         "into a %s. Do you want to keep that or may "
-                         "I replace your %s with the new default "
-                         "%s, please?" % (relpath, old_type, user_type, user_type,
-                                          new_type), relpath, "keep", "Keep your %s" % user_type,
-                         "replace", "Replace it with the new %s" % new_type):
+        if user_confirms(
+                site, "Type change conflicts with content change at " + relpath,
+                "Usually %s is a %s in both the "
+                "old and new version. But you have changed it "
+                "into a %s. Do you want to keep that or may "
+                "I replace your %s with the new default "
+                "%s, please?" % (relpath, old_type, user_type, user_type, new_type), relpath,
+                "keep", "Keep your %s" % user_type, "replace",
+                "Replace it with the new %s" % new_type):
             sys.stdout.write(StateMarkers.warn + " Keeping your %s %s.\n" % (user_type, fn))
         else:
             create_skeleton_file(new_skel, site.dir, relpath, replacements)
-            sys.stdout.write(
-                StateMarkers.warn + " Delete your %s and created new default %s %s.\n" %
-                (user_type, new_type, fn))
+            sys.stdout.write(StateMarkers.warn +
+                             " Delete your %s and created new default %s %s.\n" %
+                             (user_type, new_type, fn))
 
     # 11) This case should never happen, if I've not lost something
     else:
@@ -1414,15 +1415,15 @@ def update_file(relpath, site, old_version, new_version, old_perms):
                 "%s, and I do not have the "
                 "slightest idea what's going on here. May "
                 "I please install the new default %s "
-                "here, or do you want to keep your %s?" % (relpath, new_type,
-                                                           user_type), relpath, "keep",
-                "Keep your %s" % user_type, "replace", "Replace it with the new %s" % new_type):
+                "here, or do you want to keep your %s?" % (relpath, new_type, user_type), relpath,
+                "keep", "Keep your %s" % user_type, "replace",
+                "Replace it with the new %s" % new_type):
             sys.stdout.write(StateMarkers.warn + " Keeping your %s %s.\n" % (user_type, fn))
         else:
             create_skeleton_file(new_skel, site.dir, relpath, replacements)
-            sys.stdout.write(
-                StateMarkers.warn + " Delete your %s and created new default %s %s.\n" %
-                (user_type, new_type, fn))
+            sys.stdout.write(StateMarkers.warn +
+                             " Delete your %s and created new default %s %s.\n" %
+                             (user_type, new_type, fn))
 
     # Now the new file/link/directory is in place, deleted or whatever. The
     # user might have interferred and changed things. We need to make sure
@@ -1445,13 +1446,14 @@ def update_file(relpath, site, old_version, new_version, old_perms):
         if old_type == new_type \
             and user_perm != old_perm \
             and old_perm != new_perm:
-            if user_confirms(site, "Permission conflict at " + relpath,
-                             "The proposed permissions of %s have changed from %04o "
-                             "to %04o in the new version, but you have set %04o. "
-                             "May I use the new default permissions or do "
-                             "you want to keep yours?" % (relpath, old_perm, new_perm, user_perm),
-                             relpath, "keep", "Keep permissions at %04o" % user_perm, "default",
-                             "Set permission to %04o" % new_perm):
+            if user_confirms(
+                    site, "Permission conflict at " + relpath,
+                    "The proposed permissions of %s have changed from %04o "
+                    "to %04o in the new version, but you have set %04o. "
+                    "May I use the new default permissions or do "
+                    "you want to keep yours?" % (relpath, old_perm, new_perm, user_perm), relpath,
+                    "keep", "Keep permissions at %04o" % user_perm, "default",
+                    "Set permission to %04o" % new_perm):
                 what = "keep"
             else:
                 what = "default"
@@ -1463,28 +1465,29 @@ def update_file(relpath, site, old_version, new_version, old_perms):
 
         # Permissions are not correct: all other cases (where type is as expected)
         elif old_perm != new_perm:
-            if user_confirms(site, "Wrong permission of " + relpath,
-                             "The proposed permissions of %s are %04o, but currently are "
-                             "%04o. May I use the new default "
-                             "permissions or keep yours?" % (relpath, new_perm, user_perm), relpath,
-                             "keep", "Keep permissions at %04o" % user_perm, "default",
-                             "Set permission to %04o" % new_perm):
+            if user_confirms(
+                    site, "Wrong permission of " + relpath,
+                    "The proposed permissions of %s are %04o, but currently are "
+                    "%04o. May I use the new default "
+                    "permissions or keep yours?" % (relpath, new_perm, user_perm), relpath, "keep",
+                    "Keep permissions at %04o" % user_perm, "default",
+                    "Set permission to %04o" % new_perm):
                 what = "keep"
             else:
                 what = "default"
 
         if what == "keep":
-            sys.stdout.write(StateMarkers.warn + " Permissions    %04o %s (unchanged)\n" %
-                             (user_perm, fn))
+            sys.stdout.write(StateMarkers.warn +
+                             " Permissions    %04o %s (unchanged)\n" % (user_perm, fn))
         elif what == "default":
             try:
                 os.chmod(user_path, new_perm)
-                sys.stdout.write(StateMarkers.good + " Permissions    %04o -> %04o %s\n" %
-                                 (user_perm, new_perm, fn))
+                sys.stdout.write(StateMarkers.good +
+                                 " Permissions    %04o -> %04o %s\n" % (user_perm, new_perm, fn))
             except Exception, e:
-                sys.stdout.write(
-                    StateMarkers.error + " Permission:    cannot change %04o -> %04o %s: %s\n" %
-                    (user_perm, new_perm, fn, e))
+                sys.stdout.write(StateMarkers.error +
+                                 " Permission:    cannot change %04o -> %04o %s: %s\n" %
+                                 (user_perm, new_perm, fn, e))
 
 
 def filetype(p):
@@ -2022,8 +2025,8 @@ def validate_config_change_commands(config_hooks, settings):
                         (value, key, ", ".join(choices)))
         else:
             if not hook["choices"].match(value):
-                bail_out("Invalid value %r for %r. Does not match allowed pattern.\n" % (value,
-                                                                                         key))
+                bail_out(
+                    "Invalid value %r for %r. Does not match allowed pattern.\n" % (value, key))
 
 
 def config_set(site, config_hooks, args):
@@ -2289,8 +2292,9 @@ def clear_environment():
 def set_environment(site):
     putenv("OMD_SITE", site.name)
     putenv("OMD_ROOT", site.dir)
-    putenv("PATH", "%s/local/bin:%s/bin:/usr/local/bin:/bin:/usr/bin:/sbin:/usr/sbin" % (site.dir,
-                                                                                         site.dir))
+    putenv(
+        "PATH",
+        "%s/local/bin:%s/bin:/usr/local/bin:/bin:/usr/bin:/sbin:/usr/sbin" % (site.dir, site.dir))
     putenv("USER", site.name)
 
     putenv("LD_LIBRARY_PATH", "%s/local/lib:%s/lib" % (site.dir, site.dir))
@@ -2635,16 +2639,16 @@ def main_create(site, args, options=None):
         welcome_message(site, admin_password)
 
     else:
-        sys.stdout.write("Create new site %s in disabled state and with empty %s.\n" % (site.name,
-                                                                                        site.dir))
+        sys.stdout.write(
+            "Create new site %s in disabled state and with empty %s.\n" % (site.name, site.dir))
         sys.stdout.write("You can now mount a filesystem to %s.\n" % (site.dir))
         sys.stdout.write("Afterwards you can initialize the site with 'omd init'.\n")
 
 
 def welcome_message(site, admin_password):
     sys.stdout.write("Created new site %s with version %s.\n\n" % (site.name, omdlib.__version__))
-    sys.stdout.write("  The site can be started with %somd start %s%s.\n" % (tty_bold, site.name,
-                                                                             tty_normal))
+    sys.stdout.write(
+        "  The site can be started with %somd start %s%s.\n" % (tty_bold, site.name, tty_normal))
     sys.stdout.write("  The default web UI is available at %shttp://%s/%s/%s\n" %
                      (tty_bold, hostname(), site.name, tty_normal))
     sys.stdout.write("\n")
@@ -2939,8 +2943,8 @@ def main_mv_or_cp(old_site, what, args, options=None):
         if not reuse:
             remove_from_fstab(old_site)
 
-    sys.stdout.write("%sing site %s to %s..." % (what == "mv" and "Mov" or "Copy", old_site.name,
-                                                 new_site.name))
+    sys.stdout.write(
+        "%sing site %s to %s..." % (what == "mv" and "Mov" or "Copy", old_site.name, new_site.name))
     sys.stdout.flush()
 
     # Create new user. Note: even on mv we need to create a new user.
@@ -3165,10 +3169,10 @@ def main_update(site, args, options=None):
         elif len(possible_versions) == 1:
             to_version = possible_versions[0]
         else:
-            ok, to_version = dialog_menu("Choose target version",
-                                         "Please choose the version this site should be updated to",
-                                         [(v, "Version %s" % v) for v in possible_versions],
-                                         possible_versions[0], "Update now", "Cancel")
+            ok, to_version = dialog_menu(
+                "Choose target version", "Please choose the version this site should be updated to",
+                [(v, "Version %s" % v) for v in possible_versions], possible_versions[0],
+                "Update now", "Cancel")
             if not ok:
                 bail_out("Aborted.")
         exec_other_omd(site, to_version, "update")
@@ -3273,8 +3277,8 @@ def main_umount(site, args, options=None):
                     "Cannot unmount tmpfs of site '%s' while it is running.\n" % site.name)
                 continue
 
-            sys.stdout.write("%sUnmounting tmpfs of site %s%s..." % (tty_bold, site.name,
-                                                                     tty_normal))
+            sys.stdout.write(
+                "%sUnmounting tmpfs of site %s%s..." % (tty_bold, site.name, tty_normal))
             sys.stdout.flush()
 
             if not show_success(unmount_tmpfs(site, False, kill="kill" in options)):
@@ -3341,8 +3345,8 @@ def main_init_action(site, command, args, options=None):
         if command == "status" and bare:
             sys.stdout.write('[%s]\n' % site.name)
         elif not parallel:
-            sys.stdout.write("%sDoing '%s' on site %s:%s\n" % (tty_bold, command, site.name,
-                                                               tty_normal))
+            sys.stdout.write(
+                "%sDoing '%s' on site %s:%s\n" % (tty_bold, command, site.name, tty_normal))
         else:
             parallel_output(site.name, "Invoking '%s'\n" % (command))
         sys.stdout.flush()
@@ -3896,11 +3900,10 @@ def site_user_processes(site, exclude_current_and_parents):
     if exclude_current_and_parents:
         exclude = get_current_and_parent_pids()
 
-    p = subprocess.Popen(
-        ["ps", "-U", site.name, "-o", "pid", "--no-headers"],
-        close_fds=True,
-        stdin=open(os.devnull),
-        stdout=subprocess.PIPE)
+    p = subprocess.Popen(["ps", "-U", site.name, "-o", "pid", "--no-headers"],
+                         close_fds=True,
+                         stdin=open(os.devnull),
+                         stdout=subprocess.PIPE)
     exclude.append(p.pid)
 
     pids = []
@@ -4279,8 +4282,8 @@ class VersionInfo(object):
                         else:
                             info[var.strip()] = value
                     except Exception:
-                        bail_out('Unable to parse line "%s" in file "%s"' % (line,
-                                                                             info_dir + "/" + f))
+                        bail_out(
+                            'Unable to parse line "%s" in file "%s"' % (line, info_dir + "/" + f))
         return info
 
 
@@ -4372,11 +4375,11 @@ commands = [
           "Issue a reload of the system apache instead of a restart"),
      ], "Rename a site", ""),
     ("cp", True, False, 1, 1, False, "NEWNAME",
-     lambda site, args, opts: main_mv_or_cp(site, "cp", args, opts),
-     [("uid", "u", True, "create site user with UID ARG"),
-      ("gid", "g", True, "create site group with GID ARG"),
-      ("reuse", None, False, "do not create a site user, reuse existing one")] + exclude_options +
-     [
+     lambda site, args, opts: main_mv_or_cp(site, "cp", args, opts), [
+         ("uid", "u", True, "create site user with UID ARG"),
+         ("gid", "g", True, "create site group with GID ARG"),
+         ("reuse", None, False, "do not create a site user, reuse existing one")
+     ] + exclude_options + [
          ("conflict", None, True,
           "non-interactive conflict resolution. ARG is install, keepold, abort or ask"),
          ("tmpfs-size", "t", True,

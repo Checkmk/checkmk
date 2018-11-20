@@ -1,0 +1,12 @@
+Title: Fixed crash in Windows Agent on MS Exchange Servers
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1542729746
+Class: fix
+
+Some Windows checks may produce invalid UTF-16 symbols or symbols
+which are difficult to convert into UTF-8. Now the lines containing such symbols 
+are removed from Windows Agent output.

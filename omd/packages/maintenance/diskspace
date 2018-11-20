@@ -1,6 +1,11 @@
 #!/usr/bin/env python
 
-import os, sys, time, random, glob, traceback
+import os
+import sys
+import time
+import random
+import glob
+import traceback
 import subprocess
 
 from cmk.render import fmt_bytes
@@ -132,9 +137,9 @@ def collect_file_infos():
 
 def get_free_space():
     # FIXME: Take eventual root reserved space into account
-    for l in os.popen('df -P -B1 ' + omd_root).readlines():
+    for l in subprocess.check_output(['df', '-P', '-B1', omd_root]).split("\n"):
         if l[0] == '/':
-            vol, size_bytes, used_bytes, free_bytes, used_perc, mp = l.split()
+            _vol, _size_bytes, _used_bytes, free_bytes, _used_perc, _mp = l.split()
             return int(free_bytes)
 
 
@@ -183,7 +188,7 @@ def cleanup_aged():
     max_age = time.time() - max_file_age
 
     for plugin in plugins.values():
-        for path, (size, mtime) in plugin.get('file_infos', {}).items():
+        for path, (_size, mtime) in plugin.get('file_infos', {}).items():
             if mtime < max_age:
                 if delete_file(path, 'too old'):
                     del plugin['file_infos'][path]

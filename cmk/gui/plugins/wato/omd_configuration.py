@@ -47,6 +47,8 @@ from cmk.gui.valuespec import (
 )
 
 from cmk.gui.plugins.wato import (
+    config_variable_group_registry,
+    ConfigVariableGroup,
     config_domain_registry,
     ConfigDomain,
     ConfigDomainOMD,
@@ -57,7 +59,15 @@ from cmk.gui.plugins.wato import (
     wato_fileheader,
 )
 
-group = _('Site Management')
+
+@config_variable_group_registry.register
+class ConfigVariableGroupSiteManagement(ConfigVariableGroup):
+    def title(self):
+        return _('Site Management')
+
+    def sort_index(self):
+        return 30
+
 
 #.
 #   .--omd config----------------------------------------------------------.
@@ -72,7 +82,7 @@ group = _('Site Management')
 #   '----------------------------------------------------------------------'
 
 register_configvar(
-    group,
+    ConfigVariableGroupSiteManagement,
     "site_autostart",
     Checkbox(
         title=_("Start during system boot"),
@@ -97,7 +107,7 @@ def _monitoring_core_choices():
 
 
 register_configvar(
-    group,
+    ConfigVariableGroupSiteManagement,
     "site_core",
     DropdownChoice(
         title=_("Monitoring core"),
@@ -111,7 +121,7 @@ register_configvar(
 )
 
 register_configvar(
-    group,
+    ConfigVariableGroupSiteManagement,
     "site_livestatus_tcp",
     Optional(
         LivestatusViaTCP(),
@@ -126,7 +136,7 @@ register_configvar(
 )
 
 register_configvar(
-    group,
+    ConfigVariableGroupSiteManagement,
     "site_mkeventd",
     Optional(
         ListChoice(
@@ -152,7 +162,7 @@ register_configvar(
 )
 
 register_configvar(
-    group,
+    ConfigVariableGroupSiteManagement,
     "site_nsca",
     Optional(
         Integer(
@@ -250,7 +260,7 @@ class ConfigDomainDiskspace(ConfigDomain):
 
 
 register_configvar(
-    group,
+    ConfigVariableGroupSiteManagement,
     "diskspace_cleanup",
     Dictionary(
         title=_("Automatic disk space cleanup"),
@@ -416,7 +426,7 @@ class ConfigDomainApache(ConfigDomain):
 
 
 register_configvar(
-    group,
+    ConfigVariableGroupSiteManagement,
     "apache_process_tuning",
     Dictionary(
         title=_("Apache process tuning"),
@@ -525,7 +535,7 @@ class ConfigDomainRRDCached(ConfigDomain):
 
 
 register_configvar(
-    group,
+    ConfigVariableGroupSiteManagement,
     "rrdcached_tuning",
     Dictionary(
         title=_("RRDCached tuning"),

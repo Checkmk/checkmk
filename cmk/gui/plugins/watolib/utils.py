@@ -26,6 +26,7 @@
 
 import os
 import pprint
+from typing import Text  # pylint: disable=unused-import
 
 import cmk.store as store
 
@@ -91,7 +92,7 @@ class ConfigDomain(object):
 
             # FIXME: Do not modify the dict while iterating over it.
             for varname in list(settings.keys()):
-                if varname not in _configvars:
+                if varname not in config_variable_registry:
                     del settings[varname]
 
             return settings
@@ -122,7 +123,10 @@ class ConfigDomain(object):
     def _get_global_config_var_names(self):
         """Returns a list of all global config variable names
         associated with this config domain."""
-        return [varname for (varname, var) in configvars().items() if var[0] == self.__class__]
+        return [
+            varname for (varname, v) in config_variable_registry.items()
+            if v().domain() == self.__class__
+        ]
 
 
 class ConfigDomainRegistry(cmk.plugin_registry.ClassRegistry):
@@ -149,33 +153,107 @@ config_domain_registry = ConfigDomainRegistry()
 #   |  also in the code for distributed WATO (handling of site specific    |
 #   |  globals).
 #   '----------------------------------------------------------------------'
-# TODO: Refactor to a plugin registry
-
-_configvars = {}
-_configvar_groups = {}
-_configvar_order = {}
 
 
-def configvars():
-    return _configvars
+class ConfigVariableGroup(object):
+    # TODO: The identity of a configuration variable group should be a pure
+    # internal unique key and it should not be localized. The title of a
+    # group was always used as identity. Check all call sites and introduce
+    # internal IDs in case it is sure that we can change it without bad side
+    # effects.
+    def ident(self):
+        # type: () -> Text
+        """Unique internal key of this group"""
+        return self.title()
+
+    def title(self):
+        # type: () -> Text
+        """Human readable title of this group"""
+        raise NotImplementedError()
+
+    def sort_index(self):
+        # type: () -> int
+        """Returns an integer to control the sorting of the groups in lists"""
+        raise NotImplementedError()
+
+    def config_variables(self):
+        # type: () -> List[ConfigVariable]
+        """Returns a list of configuration variable classes that belong to this group"""
+        return [v for v in config_variable_registry.values() if v().group() == self.__class__]
 
 
-def configvar_groups():
-    return _configvar_groups
+class ConfigVariableGroupRegistry(cmk.plugin_registry.ClassRegistry):
+    def plugin_base_class(self):
+        return ConfigVariableGroup
+
+    def _register(self, plugin_class):
+        self._entries[plugin_class().ident()] = plugin_class
+
+
+config_variable_group_registry = ConfigVariableGroupRegistry()
+
+
+class ConfigVariable(object):
+    def group(self):
+        # type () -> Type[ConfigVariableGroup]
+        """Returns the class of the configuration variable group this configuration variable belongs to"""
+        raise NotImplementedError()
+
+    def ident(self):
+        # type: () -> Text
+        """Returns the internal identifier of this configuration variable"""
+        raise NotImplementedError()
+
+    def valuespec(self):
+        # type: () -> Valuespec
+        """Returns the valuespec object of this configuration variable"""
+        raise NotImplementedError()
+
+    def domain(self):
+        # type: () -> Type[ConfigDomain]
+        """Returns the class of the config domain this configuration variable belongs to"""
+        return config_domain_registry["check_mk"]
+
+    # TODO: This is boolean flag which defaulted to None in case a variable declaration did not
+    # provide this attribute.
+    # Investigate:
+    # - Is this needed per config variable or do we need this only per config domain?
+    # - Can't we simplify this to simply be a boolean?
+    def need_restart(self):
+        # type: () -> Optional[bool]
+        """Whether or not a change to this setting enforces a "restart" during activate changes instead of just a synchronization"""
+        return None
+
+    # TODO: Investigate: Which use cases do we have here? Can this be dropped?
+    def allow_reset(self):
+        # type: () -> bool
+        """Whether or not the user is allowed to change this setting to factory settings"""
+        return True
+
+    def in_global_settings(self):
+        # type: () -> bool
+        """Whether or not to show this option on the global settings page"""
+        return True
+
+
+class ConfigVariableRegistry(cmk.plugin_registry.ClassRegistry):
+    def plugin_base_class(self):
+        return ConfigVariable
+
+    def _register(self, plugin_class):
+        self._entries[plugin_class().ident()] = plugin_class
+
+
+config_variable_registry = ConfigVariableRegistry()
 
 
 def configvar_order():
-    return _configvar_order
+    raise NotImplementedError(
+        "Please don't use this API anymore. Have a look at werk #6911 for further information.")
 
 
-def configvar_show_in_global_settings(varname):
-    try:
-        return configvars()[varname][-1]
-    except KeyError:
-        return False
-
-
-# domain is one of the ConfigDomain classes
+# TODO: This function has been replaced with config_variable_registry and
+# ConfigVariable() in 1.6. Drop this API with 1.7 latest.
 def register_configvar(group,
                        varname,
                        valuespec,
@@ -192,10 +270,18 @@ def register_configvar(group,
     if isinstance(domain, basestring):
         domain = ConfigDomain.get_class(domain)
 
-    _configvar_groups.setdefault(group, []).append((domain, varname, valuespec))
-    _configvars[varname] = domain, valuespec, need_restart, allow_reset, in_global_settings
+    # New API is to hand over the class via group argument
+    if isinstance(group, basestring):
+        group = config_variable_group_registry[group]
 
-
-def register_configvar_group(title, order=None):
-    if order is not None:
-        configvar_order()[title] = 18
+    cls = type(
+        "LegacyConfigVariable%s" % varname.title(), (ConfigVariable,), {
+            "group": lambda self: group,
+            "ident": lambda self: varname,
+            "valuespec": lambda self: valuespec,
+            "domain": lambda self: domain,
+            "need_restart": lambda self: need_restart,
+            "allow_reset": lambda self: allow_reset,
+            "in_global_settings": lambda self: in_global_settings,
+        })
+    config_variable_registry.register_plugin(cls)

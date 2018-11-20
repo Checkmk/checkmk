@@ -134,8 +134,8 @@ if cmk.is_managed_edition():
 from cmk.gui.plugins.watolib.utils import (
     ConfigDomain,
     config_domain_registry,
+    config_variable_registry,
     wato_fileheader,
-    configvars,
 )
 
 import cmk.gui.plugins.watolib
@@ -3927,8 +3927,11 @@ def load_configuration_settings(site_specific=False):
 
 def save_global_settings(vars_, site_specific=False):
     per_domain = {}
-    for varname, (domain, _valuespec, _need_restart, _allow_reset,
-                  _in_global_settings) in configvars().items():
+    # TODO: Uee _get_global_config_var_names() from domain class?
+    for config_variable_class in config_variable_registry.values():
+        config_variable = config_variable_class()
+        domain = config_variable.domain()
+        varname = config_variable.ident()
         if varname not in vars_:
             continue
         per_domain.setdefault(domain.ident, {})[varname] = vars_[varname]
@@ -8993,8 +8996,8 @@ def find_usages_of_contact_group(name):
     global_config = load_configuration_settings()
 
     # Used in default_user_profile?
-    (domain, valuespec, _need_restart, _allow_reset,
-     _in_global_settings) = configvars()['default_user_profile']
+    config_variable = config_variable_registry['default_user_profile']
+    domain = config_variable.domain()
     configured = global_config.get('default_user_profile', {})
     default_value = domain().default_globals()["default_user_profile"]
     if (configured and name in configured['contactgroups']) \
@@ -9004,14 +9007,14 @@ def find_usages_of_contact_group(name):
                                                 ('varname', 'default_user_profile')])))
 
     # Is the contactgroup used in mkeventd notify (if available)?
-    if 'mkeventd_notify_contactgroup' in configvars():
-        (domain, valuespec, _need_restart, _allow_reset,
-         _in_global_settings) = configvars()['mkeventd_notify_contactgroup']
+    if 'mkeventd_notify_contactgroup' in config_variable_registry:
+        config_variable = config_variable_registry['mkeventd_notify_contactgroup']()
+        domain = config_variable.domain()
         configured = global_config.get('mkeventd_notify_contactgroup')
         default_value = domain().default_globals()["mkeventd_notify_contactgroup"]
         if (configured and name == configured) \
            or name == default_value:
-            used_in.append(('%s' % (valuespec.title()),
+            used_in.append(('%s' % (config_variable.valuespec().title()),
                             folder_preserving_link([('mode', 'edit_configvar'),
                                                     ('varname', 'mkeventd_notify_contactgroup')])))
 

@@ -68,7 +68,8 @@ from cmk.gui.valuespec import (
 )
 
 from cmk.gui.plugins.wato import (
-    configvar_order,
+    config_variable_group_registry,
+    ConfigVariableGroup,
     site_neutral_path,
     register_configvar,
     register_rulegroup,
@@ -85,6 +86,8 @@ from cmk.gui.plugins.wato import (
     TimeperiodSelection,
 )
 
+from cmk.gui.plugins.wato.omd_configuration import ConfigVariableGroupSiteManagement
+
 #   .--Global Settings-----------------------------------------------------.
 #   |  ____ _       _           _   ____       _   _   _                   |
 #   | / ___| | ___ | |__   __ _| | / ___|  ___| |_| |_(_)_ __   __ _ ___   |
@@ -96,8 +99,14 @@ from cmk.gui.plugins.wato import (
 #   | Global configuration settings for main.mk and multisite.mk           |
 #   '----------------------------------------------------------------------'
 
-group = _("User Interface")
-configvar_order()[group] = 20
+
+@config_variable_group_registry.register
+class ConfigVariableGroupUserInterface(ConfigVariableGroup):
+    def title(self):
+        return _("User Interface")
+
+    def sort_index(self):
+        return 20
 
 
 def web_log_level_elements():
@@ -125,7 +134,7 @@ def web_log_level_elements():
 
 
 register_configvar(
-    group,
+    ConfigVariableGroupUserInterface,
     "ui_theme",
     DropdownChoice(
         title=_("User interface theme"),
@@ -136,14 +145,14 @@ register_configvar(
 )
 
 register_configvar(
-    group,
+    ConfigVariableGroupUserInterface,
     "bulk_discovery_default_settings",
     vs_bulk_discovery(),
     domain="multisite",
 )
 
 register_configvar(
-    group,
+    ConfigVariableGroupUserInterface,
     "log_levels",
     Dictionary(
         title=_("Logging"),
@@ -156,7 +165,7 @@ register_configvar(
 )
 
 register_configvar(
-    group,
+    ConfigVariableGroupUserInterface,
     "debug",
     Checkbox(
         title=_("Debug mode"),
@@ -168,7 +177,7 @@ register_configvar(
     domain="multisite")
 
 register_configvar(
-    group,
+    ConfigVariableGroupUserInterface,
     "profile",
     DropdownChoice(
         title=_("Profile requests"),
@@ -189,7 +198,7 @@ register_configvar(
     domain="multisite")
 
 register_configvar(
-    group,
+    ConfigVariableGroupUserInterface,
     "debug_livestatus_queries",
     Checkbox(
         title=_("Debug Livestatus queries"),
@@ -200,7 +209,7 @@ register_configvar(
     domain="multisite")
 
 register_configvar(
-    group,
+    ConfigVariableGroupUserInterface,
     "selection_livetime",
     Integer(
         title=_('Checkbox Selection Livetime'),
@@ -215,7 +224,7 @@ register_configvar(
 )
 
 register_configvar(
-    group,
+    ConfigVariableGroupUserInterface,
     "show_livestatus_errors",
     Checkbox(
         title=_("Show MK Livestatus error messages"),
@@ -228,7 +237,7 @@ register_configvar(
     domain="multisite")
 
 register_configvar(
-    group,
+    ConfigVariableGroupUserInterface,
     "enable_sounds",
     Checkbox(
         title=_("Enable sounds in views"),
@@ -241,7 +250,7 @@ register_configvar(
     domain="multisite")
 
 register_configvar(
-    group,
+    ConfigVariableGroupUserInterface,
     "context_buttons_to_show",
     Optional(
         Integer(title=_("show"), label=_("buttons"), minvalue=1, maxvalue=100, size=2),
@@ -253,7 +262,7 @@ register_configvar(
     domain="multisite")
 
 register_configvar(
-    group,
+    ConfigVariableGroupUserInterface,
     "soft_query_limit",
     Integer(
         title=_("Soft query limit"),
@@ -265,7 +274,7 @@ register_configvar(
     domain="multisite")
 
 register_configvar(
-    group,
+    ConfigVariableGroupUserInterface,
     "hard_query_limit",
     Integer(
         title=_("Hard query limit"),
@@ -278,7 +287,7 @@ register_configvar(
     domain="multisite")
 
 register_configvar(
-    group,
+    ConfigVariableGroupUserInterface,
     "quicksearch_dropdown_limit",
     Integer(
         title=_("Number of elements to show in Quicksearch"),
@@ -291,7 +300,7 @@ register_configvar(
     domain="multisite")
 
 register_configvar(
-    group,
+    ConfigVariableGroupUserInterface,
     "quicksearch_search_order",
     ListOf(
         Tuple(
@@ -324,7 +333,7 @@ register_configvar(
     domain="multisite")
 
 register_configvar(
-    group,
+    ConfigVariableGroupUserInterface,
     "table_row_limit",
     Integer(
         title=_("Limit the number of rows shown in tables"),
@@ -336,7 +345,7 @@ register_configvar(
     domain="multisite")
 
 register_configvar(
-    group,
+    ConfigVariableGroupUserInterface,
     "start_url",
     TextAscii(
         title=_("Start URL to display in main frame"),
@@ -350,7 +359,7 @@ register_configvar(
     domain="multisite")
 
 register_configvar(
-    group,
+    ConfigVariableGroupUserInterface,
     "page_heading",
     TextUnicode(
         title=_("Page title"),
@@ -361,7 +370,7 @@ register_configvar(
     domain="multisite")
 
 register_configvar(
-    group,
+    ConfigVariableGroupUserInterface,
     "pagetitle_date_format",
     DropdownChoice(
         title=_("Date format for page titles"),
@@ -376,7 +385,7 @@ register_configvar(
     domain="multisite")
 
 register_configvar(
-    group,
+    ConfigVariableGroupUserInterface,
     "escape_plugin_output",
     Checkbox(
         title=_("Escape HTML codes in plugin output"),
@@ -392,7 +401,7 @@ register_configvar(
     domain="multisite")
 
 register_configvar(
-    group,
+    ConfigVariableGroupUserInterface,
     "crash_report_target",
     TextAscii(
         title=_("Fallback mail address for crash reports"),
@@ -404,7 +413,7 @@ register_configvar(
     domain="multisite")
 
 register_configvar(
-    group,
+    ConfigVariableGroupUserInterface,
     "multisite_draw_ruleicon",
     Checkbox(
         title=_("Show icon linking to WATO parameter editor for services"),
@@ -491,7 +500,7 @@ def validate_virtual_host_trees(value, varprefix):
 
 
 register_configvar(
-    group,
+    ConfigVariableGroupUserInterface,
     "virtual_host_trees",
     Transform(
         ListOf(
@@ -535,7 +544,7 @@ register_configvar(
 )
 
 register_configvar(
-    group,
+    ConfigVariableGroupUserInterface,
     "reschedule_timeout",
     Float(
         title=_("Timeout for rescheduling checks in Multisite"),
@@ -549,7 +558,7 @@ register_configvar(
     domain="multisite")
 
 register_configvar(
-    group,
+    ConfigVariableGroupUserInterface,
     "sidebar_show_version_in_sidebar",
     Checkbox(
         title=_("Show Check_MK edition & version in sidebar"),
@@ -560,7 +569,7 @@ register_configvar(
     domain="multisite")
 
 register_configvar(
-    group,
+    ConfigVariableGroupUserInterface,
     "sidebar_update_interval",
     Float(
         title=_("Interval of sidebar status updates"),
@@ -574,7 +583,7 @@ register_configvar(
     domain="multisite")
 
 register_configvar(
-    group,
+    ConfigVariableGroupUserInterface,
     "sidebar_notify_interval",
     Optional(
         Float(minvalue=10.0, unit="sec", display_format="%.1f"),
@@ -586,7 +595,7 @@ register_configvar(
     domain="multisite")
 
 register_configvar(
-    group,
+    ConfigVariableGroupUserInterface,
     "adhoc_downtime",
     Optional(
         Dictionary(
@@ -620,7 +629,7 @@ register_configvar(
 )
 
 register_configvar(
-    group,
+    ConfigVariableGroupUserInterface,
     "auth_by_http_header",
     Optional(
         TextAscii(
@@ -648,7 +657,7 @@ register_configvar(
     domain="multisite")
 
 register_configvar(
-    group,
+    ConfigVariableGroupUserInterface,
     "staleness_threshold",
     Float(
         title=_('Staleness value to mark hosts / services stale'),
@@ -663,7 +672,7 @@ register_configvar(
 )
 
 register_configvar(
-    group,
+    ConfigVariableGroupUserInterface,
     "login_screen",
     Dictionary(
         title=_("Customize login screen"),
@@ -710,7 +719,7 @@ register_configvar(
     domain="multisite")
 
 register_configvar(
-    group,
+    ConfigVariableGroupUserInterface,
     "user_localizations",
     Transform(
         ListOf(
@@ -735,7 +744,7 @@ register_configvar(
 )
 
 register_configvar(
-    group,
+    ConfigVariableGroupUserInterface,
     "user_icons_and_actions",
     Transform(
         ListOf(
@@ -818,7 +827,7 @@ register_configvar(
 )
 
 register_configvar(
-    group,
+    ConfigVariableGroupUserInterface,
     "user_downtime_timeranges",
     ListOf(
         Dictionary(
@@ -857,7 +866,7 @@ def get_builtin_icons():
 
 
 register_configvar(
-    group,
+    ConfigVariableGroupUserInterface,
     "builtin_icon_visibility",
     Transform(
         ListOf(
@@ -909,7 +918,7 @@ register_configvar(
 )
 
 register_configvar(
-    group,
+    ConfigVariableGroupUserInterface,
     "service_view_grouping",
     ListOf(
         Dictionary(
@@ -944,7 +953,7 @@ register_configvar(
 )
 
 register_configvar(
-    group,
+    ConfigVariableGroupUserInterface,
     "topology_default_filter_group",
     Optional(
         DropdownChoice(
@@ -961,7 +970,7 @@ register_configvar(
     domain="multisite")
 
 register_configvar(
-    group,
+    ConfigVariableGroupUserInterface,
     "view_action_defaults",
     Dictionary(
         title=_("View action defaults"),
@@ -995,7 +1004,7 @@ register_configvar(
     domain="multisite")
 
 register_configvar(
-    _("Site Management"),
+    ConfigVariableGroupSiteManagement,
     "trusted_certificate_authorities",
     Dictionary(
         title=_("Trusted certificate authorities for SSL"),
@@ -1041,11 +1050,18 @@ register_configvar(
 #   | Global Configuration for WATO                                        |
 #   '----------------------------------------------------------------------'
 
-group = _("Administration Tool (WATO)")
-configvar_order()[group] = 25
+
+@config_variable_group_registry.register
+class ConfigVariableWATO(ConfigVariableGroup):
+    def title(self):
+        return _("Administration Tool (WATO)")
+
+    def sort_index(self):
+        return 25
+
 
 register_configvar(
-    group,
+    ConfigVariableWATO,
     "wato_max_snapshots",
     Integer(
         title=_("Number of configuration snapshots to keep"),
@@ -1057,7 +1073,7 @@ register_configvar(
     domain="multisite")
 
 register_configvar(
-    group,
+    ConfigVariableWATO,
     "wato_activation_method",
     DropdownChoice(
         title=_("WATO restart mode for Nagios"),
@@ -1069,7 +1085,7 @@ register_configvar(
     domain="multisite")
 
 register_configvar(
-    group,
+    ConfigVariableWATO,
     "wato_legacy_eval",
     Checkbox(
         title=_("Use unsafe legacy encoding for distributed WATO"),
@@ -1084,7 +1100,7 @@ register_configvar(
     domain="multisite")
 
 register_configvar(
-    group,
+    ConfigVariableWATO,
     "wato_hide_filenames",
     Checkbox(
         title=_("Hide internal folder names in WATO"),
@@ -1097,7 +1113,7 @@ register_configvar(
     domain="multisite")
 
 register_configvar(
-    group,
+    ConfigVariableWATO,
     "wato_upload_insecure_snapshots",
     Checkbox(
         title=_("Allow upload of insecure WATO snapshots"),
@@ -1111,7 +1127,7 @@ register_configvar(
     domain="multisite")
 
 register_configvar(
-    group,
+    ConfigVariableWATO,
     "wato_hide_hosttags",
     Checkbox(
         title=_("Hide hosttags in WATO folder view"),
@@ -1121,7 +1137,7 @@ register_configvar(
     domain="multisite")
 
 register_configvar(
-    group,
+    ConfigVariableWATO,
     "wato_hide_varnames",
     Checkbox(
         title=_("Hide names of configuration variables"),
@@ -1132,7 +1148,7 @@ register_configvar(
     domain="multisite")
 
 register_configvar(
-    group,
+    ConfigVariableWATO,
     "wato_hide_help_in_lists",
     Checkbox(
         title=_("Hide help text of rules in list views"),
@@ -1142,7 +1158,7 @@ register_configvar(
     domain="multisite")
 
 register_configvar(
-    group,
+    ConfigVariableWATO,
     "wato_use_git",
     Checkbox(
         title=_("Use GIT version control for WATO"),
@@ -1158,7 +1174,7 @@ register_configvar(
     domain="multisite")
 
 register_configvar(
-    group,
+    ConfigVariableWATO,
     "wato_pprint_config",
     Checkbox(
         title=_("Pretty-Print configuration files"),
@@ -1171,7 +1187,7 @@ register_configvar(
     domain="multisite")
 
 register_configvar(
-    group,
+    ConfigVariableWATO,
     "wato_hide_folders_without_read_permissions",
     Checkbox(
         title=_("Hide folders without read permissions"),
@@ -1183,7 +1199,7 @@ register_configvar(
     domain="multisite")
 
 register_configvar(
-    group,
+    ConfigVariableWATO,
     "wato_icon_categories",
     ListOf(
         Tuple(
@@ -1212,11 +1228,18 @@ register_configvar(
 #   | Global settings for users and LDAP connector.                        |
 #   '----------------------------------------------------------------------'
 
-group = _("User Management")
-configvar_order()[group] = 40
+
+@config_variable_group_registry.register
+class ConfigVariableUserManagement(ConfigVariableGroup):
+    def title(self):
+        return _("User Management")
+
+    def sort_index(self):
+        return 40
+
 
 register_configvar(
-    group,
+    ConfigVariableUserManagement,
     "lock_on_logon_failures",
     Optional(
         Integer(
@@ -1237,7 +1260,7 @@ register_configvar(
     domain="multisite")
 
 register_configvar(
-    group,
+    ConfigVariableUserManagement,
     "password_policy",
     Dictionary(
         title=_('Password policy for local accounts'),
@@ -1278,7 +1301,7 @@ register_configvar(
 )
 
 register_configvar(
-    group,
+    ConfigVariableUserManagement,
     "user_idle_timeout",
     Optional(
         Age(
@@ -1300,7 +1323,7 @@ register_configvar(
     domain="multisite")
 
 register_configvar(
-    group,
+    ConfigVariableUserManagement,
     "single_user_session",
     Optional(
         Age(
@@ -1360,7 +1383,7 @@ def default_user_profile_elements():
 
 
 register_configvar(
-    group,
+    ConfigVariableUserManagement,
     "default_user_profile",
     Dictionary(
         title=_("Default user profile"),
@@ -1374,7 +1397,7 @@ register_configvar(
 )
 
 register_configvar(
-    group,
+    ConfigVariableUserManagement,
     "save_user_access_times",
     Checkbox(
         title=_("Save last access times of users"),
@@ -1396,11 +1419,18 @@ register_configvar(
 #   |  Operation mode of Check_MK                                          |
 #   '----------------------------------------------------------------------'
 
-group = _("Execution of checks")
-configvar_order()[group] = 10
+
+@config_variable_group_registry.register
+class ConfigVariableCheckExecution(ConfigVariableGroup):
+    def title(self):
+        return _("Execution of checks")
+
+    def sort_index(self):
+        return 10
+
 
 register_configvar(
-    group,
+    ConfigVariableCheckExecution,
     "use_new_descriptions_for",
     ListChoice(
         title=_("Use new service descriptions"),
@@ -1479,7 +1509,7 @@ register_configvar(
 )
 
 register_configvar(
-    group,
+    ConfigVariableCheckExecution,
     "tcp_connect_timeout",
     Float(
         title=_("Agent TCP connect timeout"),
@@ -1494,7 +1524,7 @@ register_configvar(
 )
 
 register_configvar(
-    group,
+    ConfigVariableCheckExecution,
     "simulation_mode",
     Checkbox(
         title=_("Simulation mode"),
@@ -1506,7 +1536,7 @@ register_configvar(
 )
 
 register_configvar(
-    group,
+    ConfigVariableCheckExecution,
     "restart_locking",
     DropdownChoice(
         title=_("Simultanous activation of changes"),
@@ -1523,7 +1553,7 @@ register_configvar(
 )
 
 register_configvar(
-    group,
+    ConfigVariableCheckExecution,
     "agent_simulator",
     Checkbox(
         title=_("SNMP Agent Simulator"),
@@ -1534,7 +1564,7 @@ register_configvar(
 )
 
 register_configvar(
-    group, "delay_precompile",
+    ConfigVariableCheckExecution, "delay_precompile",
     Checkbox(
         title=_("Delay precompiling of host checks"),
         label=_("delay precompiling"),
@@ -1546,7 +1576,7 @@ register_configvar(
                "of Nagios for the first couple of minutes after the restart. ")))
 
 register_configvar(
-    group,
+    ConfigVariableCheckExecution,
     "cluster_max_cachefile_age",
     Integer(
         title=_("Maximum cache file age for clusters"),
@@ -1559,7 +1589,7 @@ register_configvar(
 )
 
 register_configvar(
-    group,
+    ConfigVariableCheckExecution,
     "piggyback_max_cachefile_age",
     Age(title=_("Maximum age for piggyback files"),
         help=_("The maximum age for piggy back data from another host to be valid for monitoring. "
@@ -1568,7 +1598,7 @@ register_configvar(
 )
 
 register_configvar(
-    group,
+    ConfigVariableCheckExecution,
     "check_mk_perfdata_with_times",
     Checkbox(
         title=_("Check_MK with times performance data"),
@@ -1580,7 +1610,7 @@ register_configvar(
 )
 
 register_configvar(
-    group,
+    ConfigVariableCheckExecution,
     "use_dns_cache",
     Checkbox(
         title=_("Use DNS lookup cache"),
@@ -1598,7 +1628,7 @@ register_configvar(
 )
 
 register_configvar(
-    group,
+    ConfigVariableCheckExecution,
     "use_inline_snmp",
     Checkbox(
         title=_("Use Inline SNMP"),
@@ -1615,7 +1645,7 @@ register_configvar(
 )
 
 register_configvar(
-    group,
+    ConfigVariableCheckExecution,
     "record_inline_snmp_stats",
     Checkbox(
         title=_("Record statistics of Inline SNMP"),
@@ -1628,11 +1658,18 @@ register_configvar(
     ),
 )
 
-group = _("Service discovery")
-configvar_order()[group] = 4
+
+@config_variable_group_registry.register
+class ConfigVariableGroupServiceDiscovery(ConfigVariableGroup):
+    def title(self):
+        return _("Service discovery")
+
+    def sort_index(self):
+        return 4
+
 
 register_configvar(
-    group,
+    ConfigVariableGroupServiceDiscovery,
     "inventory_check_interval",
     Optional(
         Integer(
@@ -1652,7 +1689,8 @@ register_configvar(
 )
 
 register_configvar(
-    group, "inventory_check_severity",
+    ConfigVariableGroupServiceDiscovery,
+    "inventory_check_severity",
     DropdownChoice(
         title=_("Severity of failed service discovery check"),
         help=_("Please select which alarm state the service discovery check services "
@@ -1663,17 +1701,21 @@ register_configvar(
             (2, _("Critical")),
             (3, _("Unknown")),
         ],
-    ))
+    ),
+)
 
 register_configvar(
-    group, "inventory_check_do_scan",
+    ConfigVariableGroupServiceDiscovery,
+    "inventory_check_do_scan",
     DropdownChoice(
         title=_("Service discovery check for SNMP devices"),
         choices=[(True, _("Perform full SNMP scan always, detect new check types")),
-                 (False, _("Just rely on existing check files, detect new items only"))]))
+                 (False, _("Just rely on existing check files, detect new items only"))]),
+)
 
 register_configvar(
-    group, "inventory_check_autotrigger",
+    ConfigVariableGroupServiceDiscovery,
+    "inventory_check_autotrigger",
     Checkbox(
         title=_("Service discovery triggers service discovery check"),
         label=_(
@@ -1682,7 +1724,8 @@ register_configvar(
                "configuration of a host via WATO - may it be via manual changes or a bulk "
                "discovery - the service discovery check is automatically rescheduled in order "
                "to reflect the new service state correctly immediately."),
-    ))
+    ),
+)
 
 #.
 #   .--Rulesets------------------------------------------------------------.

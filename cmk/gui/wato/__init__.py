@@ -340,7 +340,6 @@ from cmk.gui.watolib import (
 )
 from cmk.gui.plugins.watolib.utils import (
     register_configvar,
-    register_configvar_group,
     configvar_order,
 )
 

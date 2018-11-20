@@ -268,7 +268,7 @@ def user_confirms(site, title, message, relpath, yes_choice, yes_text, no_choice
         elif choice == "shell":
             thedir = "/".join(user_path.split("/")[:-1])
             sys.stdout.write("\n Starting BASH. Type CTRL-D to continue.\n\n")
-            os.system("cd '%s' ; bash -i" % thedir)
+            subprocess.Popen(["bash", "-i"], cwd=thedir).wait()
         else:
             return choice == yes_choice
 
@@ -388,7 +388,10 @@ def ask_user_choices(title, message, choices):
 
 def find_processes_of_user(username):
     try:
-        return os.popen("pgrep -u '%s'" % username).read().split()
+        return subprocess.Popen(["pgrep", "-u", username],
+                                stdin=open(os.devnull, "r"),
+                                stdout=subprocess.PIPE,
+                                close_fds=True).stdout.read().split()
     except:
         return []
 
@@ -409,12 +412,16 @@ def groupdel(groupname):
 
 
 def groupadd(groupname, gid=None):
-    cmd = "groupadd "
+    cmd = ["groupadd"]
     if gid is not None:
-        cmd += "-g %d " % int(gid)
-    cmd += groupname
+        cmd += ["-g", "%d" % int(gid)]
+    cmd.append(groupname)
 
-    if os.system(cmd) != 0:
+    if subprocess.Popen(
+            cmd,
+            close_fds=True,
+            stdin=open(os.devnull, "r"),
+    ).wait() != 0:
         bail_out("Cannot create group for site user.")
 
 
@@ -523,8 +530,8 @@ def group_id(name):
 
 
 def user_logged_in(name):
-    # Check, if processes of named user are existing
-    return os.system("ps --no-headers --user '%s' >/dev/null 2>&1" % name) == 0
+    """Check if processes of named user are existing"""
+    return any(p for p in psutil.process_iter() if p.username() == name)
 
 
 def user_verify(site, allow_populated=False):
@@ -579,7 +586,9 @@ def switch_to_site_user(site):
 
 
 def groups_of(username):
-    return map(int, os.popen("id -G '%s'" % username).read().split())
+    group_ids = set([g.gr_gid for g in grp.getgrall() if username in g.gr_mem])
+    group_ids.add(pwd.getpwnam(username).pw_gid)
+    return list(group_ids)
 
 
 #.
@@ -1622,7 +1631,7 @@ def unmount_tmpfs(site, output=True, kill=False):
             sys.stdout.write("Unmounting temporary filesystem...")
 
         for _t in range(0, 10):
-            if os.system("umount '%s'" % site.tmp_dir) == 0:
+            if subprocess.call(["umount", site.tmp_dir]) == 0:
                 if output:
                     ok()
                 return True
@@ -1630,7 +1639,7 @@ def unmount_tmpfs(site, output=True, kill=False):
             if kill:
                 if output:
                     sys.stdout.write("Killing processes still using '%s'\n" % site.tmp_dir)
-                os.system("fuser --silent -k '%s'" % site.tmp_dir)
+                subprocess.call(["fuser", "--silent", "-k", site.tmp_dir])
 
             if output:
                 sys.stdout.write(kill and "K" or ".")
@@ -2362,7 +2371,7 @@ def init_cmd(name, action):
 def reload_apache():
     sys.stdout.write("Reloading Apache...")
     sys.stdout.flush()
-    show_success(os.system("%s graceful" % g_info.APACHE_CTL) >> 8)
+    show_success(subprocess.call([g_info.APACHE_CTL, "graceful"]) >> 8)
 
 
 def restart_apache():

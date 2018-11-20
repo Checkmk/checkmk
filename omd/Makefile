@@ -70,6 +70,9 @@ SKEL := $(DESTDIR)$(OMD_ROOT)/skel
 # filenames and sed arguments should not contain '/'
 NEW_VERSION_STRING := $(subst /,-,$(NEW_VERSION))
 
+PRE_INSTALL := $(BUILD_HELPER_DIR)/pre-install
+PRE_SKEL := $(BUILD_HELPER_DIR)/pre-skel
+
 .PHONY: install-global
 
 check-edition:
@@ -88,16 +91,19 @@ ifeq ($(EDITION),managed)
 	$(MAKE) -C $(PACKAGE_DIR)/check_mk_managed
 endif
 
-pack: check-edition skel
+pack: check-edition
 
 #TODO: Define dependecies here correctly...
-pre-install:
+$(PRE_INSTALL):
 	rm -rf $(DESTDIR)
 	mkdir -p $(DESTDIR)$(OMD_PHYSICAL_BASE)
 	A="$(OMD_PHYSICAL_BASE)" ; ln -s $${A:1} $(DESTDIR)/omd
+	touch $@
 
-install: $(addsuffix -install,$(PACKAGES))
-# TODO: Add hook install target where needed
+$(addsuffix -install,$(PACKAGES)): $(PRE_INSTALL)
+
+install:  $(addsuffix -install,$(PACKAGES))
+	# TODO: Add hook install target where needed
 	@set -e ; cd packages ; for p in $(PACKAGES) ; do \
 	    if [ -d $$p ]; then \
                 for hook in $$(cd $$p ; ls *.hook 2>/dev/null) ; do \
@@ -111,7 +117,7 @@ install: $(addsuffix -install,$(PACKAGES))
 	chmod -R o+Xr $(DESTDIR)$(OMD_ROOT)
 
 
-pre-skel: install-global
+$(PRE_SKEL):
 	# Install skeleton files (subdirs skel/ in packages' directories)
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel
 	@set -e ; cd packages ; for p in $(PACKAGES) ; do \
@@ -119,8 +125,11 @@ pre-skel: install-global
               tar cf - -C $$p/skel --exclude="*~" --exclude=".gitignore" . | tar xvf - -C $(DESTDIR)$(OMD_ROOT)/skel ; \
             fi ;\
         done
+	touch $@
 
-skel: pre-skel $(addsuffix -skel,$(PACKAGES))
+$(addsuffix -skel,$(PACKAGES)): $(PRE_SKEL)
+
+skel: $(addsuffix -skel,$(PACKAGES))
         # Create permissions file for skel
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/omd
 	@set -e ; cd packages ; for p in $(PACKAGES) ; do \
@@ -319,7 +328,7 @@ cma-pre: check-edition
 cma-install:
 	make -C packages/cma install
 
-cma: cma-pre $(PACKAGES) cma-install pack 
+cma: cma-pre $(PACKAGES) cma-install pack
 
 	# Create info file to mark minimal cma firmware version requirement
 	@if [ "$(DISTRO_CODE)" = "stretch" ]; then \
@@ -328,14 +337,14 @@ cma: cma-pre $(PACKAGES) cma-install pack
 	    MIN_VERSION=1.1.2 ; \
 	fi ; \
 	echo -e "MIN_VERSION=$${MIN_VERSION}\n" > $(DESTDIR)/opt/omd/versions/$(OMD_VERSION)/cma.info
-	
+
 	# Mark demo builds in cma.info file
 	@if [ -f packages/nagios/patches/9999-demo-version.dif ]; then \
 	    echo -e "DEMO=1\n" >> $(DESTDIR)/opt/omd/versions/$(OMD_VERSION)/cma.info ; \
 	fi
-	
+
 	rm check-mk-$(EDITION)-bin-$(OMD_VERSION).tar.gz
-	
+
 	if [ "$(DISTRO_CODE)" = "stretch" ]; then \
 	    CMA_PKG_VERSION_TXT="-2" ; \
 	else \

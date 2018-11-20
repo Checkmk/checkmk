@@ -8,7 +8,7 @@ RE2_DIR := $(RE2)-$(RE2_VERS)
 RE2_BUILD := $(BUILD_HELPER_DIR)/$(RE2_DIR)-build
 RE2_UNPACK := $(BUILD_HELPER_DIR)/$(RE2_DIR)-unpack
 
-.PHONY: $(RE2) $(RE2)-install $(RE2)-clean
+.PHONY: $(RE2) $(RE2)-install $(RE2)-skel $(RE2)-clean
 
 $(RE2): $(RE2_BUILD)
 
@@ -39,6 +39,8 @@ $(RE2_BUILD): $(RE2_UNPACK)
 # Makefile doesn't offer an easy way around that.
 	$(RM) $(PACKAGE_RE2_DESTDIR)/lib/*.so*
 	$(TOUCH) $@
+
+$(RE2)-skel:
 
 $(RE2)-clean:
 	$(RM) -r $(RE2_DIR) $(PACKAGE_RE2_DESTDIR) $(BUILD_HELPER_DIR)/$(RE2)*

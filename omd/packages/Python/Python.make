@@ -11,12 +11,7 @@ PYTHON_INSTALL = $(BUILD_HELPER_DIR)/$(PYTHON_DIR)-install
 
 PYTHON_PATCHING = $(BUILD_HELPER_DIR)/$(PYTHON_DIR)-patching
 
-.PHONY: python python-install python-clean upstream
-
-python-debug:
-	echo $(PYTHON_BUILD)
-	echo $(PYTHON)
-	echo $(PYTHON_VERS)
+.PHONY: python python-install python-skel python-clean upstream
 
 python: $(PYTHON_BUILD)
 
@@ -115,6 +110,8 @@ bin/g++:
 	    $(DESTDIR)$(OMD_ROOT)/bin/2to3
 	install -m 644 $(PACKAGE_DIR)/$(PYTHON)/sitecustomize.py $(PACKAGE_DIR)/$(PYTHON)/sitecustomize.pyc $(DESTDIR)$(OMD_ROOT)/lib/python2.7/
 	$(TOUCH) $(PYTHON_INSTALL)
+
+pyhton-skel:
 
 python-clean:
 	$(RM) -r $(DIR) $(BUILD_HELPER_DIR)/$(MSITOOLS)* bin build  $(PACKAGE_PYTHON_DESTDIR)

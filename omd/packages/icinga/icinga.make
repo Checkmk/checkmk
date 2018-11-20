@@ -64,5 +64,7 @@ $(ICINGA_INSTALL): $(ICINGA_BUILD)
 	$(RM) -r $(DESTDIR)/usr
 	$(TOUCH) $@
   
+icinga-skel:
+
 icinga-clean:
 	$(RM) -r $(ICINGA_DIR)

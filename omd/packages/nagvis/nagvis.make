@@ -53,5 +53,7 @@ $(NAGVIS_INSTALL): $(NAGVIS_BUILD)
 	$(RM) -rf $(DESTDIR)$(OMD_ROOT)/share/nagvis/etc
 	$(TOUCH) $@
 
+$(NAGVIS)-skel:
+
 $(NAGVIS)-clean:
 	$(RM) -r $(NAGVIS)-*.*.[0-9] $(NAGVIS)-*.*-nightly $(BUILD_HELPER_DIR)/$(NAGVIS)*

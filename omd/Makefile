@@ -72,6 +72,7 @@ NEW_VERSION_STRING := $(subst /,-,$(NEW_VERSION))
 
 PRE_INSTALL := $(BUILD_HELPER_DIR)/pre-install
 PRE_SKEL := $(BUILD_HELPER_DIR)/pre-skel
+PRE_CMA := $(BUILD_HELPER_DIR)/pre-cma
 
 .PHONY: install-global
 
@@ -117,7 +118,7 @@ install:  $(addsuffix -install,$(PACKAGES))
 	chmod -R o+Xr $(DESTDIR)$(OMD_ROOT)
 
 
-$(PRE_SKEL): install
+$(PRE_SKEL): install-global
 	# Install skeleton files (subdirs skel/ in packages' directories)
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel
 	@set -e ; cd packages ; for p in $(PACKAGES) ; do \
@@ -178,7 +179,7 @@ clean: $(addsuffix -clean,$(PACKAGES))
 
 # Create installations files that do not lie beyond /omd/versions/$(OMD_VERSION)
 # and files not owned by a specific package.
-install-global:
+install-global: install
 	# Create link to default version
 	ln -s $(OMD_VERSION) $(DESTDIR)$(OMD_BASE)/versions/default
 
@@ -319,16 +320,16 @@ setversion:
 test:
 	t/test_all.sh
 
-cma-pre: check-edition
+$(PRE_CMA): check-edition
 	# make the cmc the default core
 	sed -i 's/default)/default) echo "cmc"; exit;/g' packages/omd/CORE.hook
 	# enable the event console by default
 	sed -i 's/default)/default) echo "on"; exit;/g' packages/check_mk/MKEVENTD.hook
 
-cma-install:
+cma-install: $(PACKAGES) $(CMA_PRE)
 	make -C packages/cma install
 
-cma: cma-pre $(PACKAGES) cma-install pack
+cma: cma-install pack
 
 	# Create info file to mark minimal cma firmware version requirement
 	@if [ "$(DISTRO_CODE)" = "stretch" ]; then \

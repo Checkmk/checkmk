@@ -91,10 +91,10 @@ ifeq ($(EDITION),managed)
 	$(MAKE) -C $(PACKAGE_DIR)/check_mk_managed
 endif
 
-pack: check-edition
+pack: skel
 
 #TODO: Define dependecies here correctly...
-$(PRE_INSTALL):
+$(PRE_INSTALL): check-edition
 	rm -rf $(DESTDIR)
 	mkdir -p $(DESTDIR)$(OMD_PHYSICAL_BASE)
 	A="$(OMD_PHYSICAL_BASE)" ; ln -s $${A:1} $(DESTDIR)/omd
@@ -117,7 +117,7 @@ install:  $(addsuffix -install,$(PACKAGES))
 	chmod -R o+Xr $(DESTDIR)$(OMD_ROOT)
 
 
-$(PRE_SKEL):
+$(PRE_SKEL): install
 	# Install skeleton files (subdirs skel/ in packages' directories)
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel
 	@set -e ; cd packages ; for p in $(PACKAGES) ; do \
@@ -178,7 +178,7 @@ clean: $(addsuffix -clean,$(PACKAGES))
 
 # Create installations files that do not lie beyond /omd/versions/$(OMD_VERSION)
 # and files not owned by a specific package.
-install-global: install
+install-global:
 	# Create link to default version
 	ln -s $(OMD_VERSION) $(DESTDIR)$(OMD_BASE)/versions/default
 

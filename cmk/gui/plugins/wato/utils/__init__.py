@@ -116,6 +116,7 @@ from cmk.gui.watolib import (
     ConfigDomainOMD,
     ConfigDomainEventConsole,
     ConfigDomainGUI,
+    ConfigDomainCACertificates,
     LivestatusViaTCP,
     WatoBackgroundJob,
     UserSelection,

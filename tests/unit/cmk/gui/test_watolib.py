@@ -3,9 +3,12 @@ import pytest
 # Triggers plugin loading of plugins.wato which registers all the plugins
 import cmk.gui.wato  # pylint: disable=unused-import
 import cmk.gui.watolib as watolib
+from cmk.gui.valuespec import ValueSpec
 from cmk.gui.plugins.watolib.utils import (
-    config_variable_registry,
     config_variable_group_registry,
+    ConfigVariableGroup,
+    ConfigDomain,
+    config_variable_registry,
     configvar_order,
 )
 
@@ -237,6 +240,16 @@ def test_registered_configvars():
         'wato_upload_insecure_snapshots',
         'wato_use_git',
     ])
+
+
+# Can be removed once we use mypy there
+def test_registered_configvars_types():
+    for var_class in config_variable_registry.values():
+        var = var_class()
+        assert issubclass(var.group(), ConfigVariableGroup)
+        assert issubclass(var.domain(), ConfigDomain)
+        assert isinstance(var.ident(), str)
+        assert isinstance(var.valuespec(), ValueSpec)
 
 
 def test_registered_configvar_groups():

@@ -53,6 +53,7 @@ from cmk.gui.plugins.wato.utils import (
     ConfigDomainEventConsole,
     ConfigDomainGUI,
     ConfigDomainOMD,
+    ConfigDomainCACertificates,
     ContactGroupsAttribute,
     declare_host_attribute,
     EventsMode,

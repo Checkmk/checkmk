@@ -57,12 +57,12 @@ $(PNP4NAGIOS_INSTALL): $(PNP4NAGIOS_BUILD)
 	install -m 644 $(PACKAGE_DIR)/$(PNP4NAGIOS)/diskspace $(DESTDIR)$(OMD_ROOT)/share/diskspace/pnp4nagios
 	
 	# Move default config files to skel
-	mkdir -p skel/etc/pnp4nagios
-	mkdir -p skel/var/pnp4nagios/stats
-	mkdir -p skel/var/pnp4nagios/perfdata
-	mkdir -p skel/var/pnp4nagios/log
-	mkdir -p skel/var/pnp4nagios/spool
-	mkdir -p skel/tmp/pnp4nagios/run
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel/etc/pnp4nagios
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel/var/pnp4nagios/stats
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel/var/pnp4nagios/perfdata
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel/var/pnp4nagios/log
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel/var/pnp4nagios/spool
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel/tmp/pnp4nagios/run
 	
 	# Install the facelift theme for pnp4nagios
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/pnp4nagios/htdocs/media/css/ui-facelift/images

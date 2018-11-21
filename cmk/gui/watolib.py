@@ -10020,38 +10020,64 @@ def site_is_using_livestatus_proxy(site_id):
 #   '----------------------------------------------------------------------'
 
 
-class PasswordStore(object):
-    def _load(self, lock=False):
-        return store.load_from_mk_file(
-            wato_root_dir + "/passwords.mk", key="stored_passwords", default={}, lock=lock)
+class WatoSimpleConfigFile(object):
+    """Manage simple .mk config file containing a single dict variable
 
-    def _load_for_modification(self):
-        return self._load(lock=True)
+    The file handling logic is inherited from cmk.store.load_from_mk_file()
+    and cmk.store.save_to_mk_file().
+    """
+    __metaclass__ = abc.ABCMeta
 
-    def _owned_passwords(self):
+    def __init__(self, config_file_path, config_variable):
+        # type: (Path, str) -> None
+        self._config_file_path = config_file_path
+        self._config_variable = config_variable
+
+    def load_for_reading(self):
+        return self._load_file(lock=False)
+
+    def load_for_modification(self):
+        return self._load_file(lock=True)
+
+    def _load_file(self, lock=False):
+        return cmk.store.load_from_mk_file(
+            "%s" % self._config_file_path, key=self._config_variable, default={}, lock=lock)
+
+    def save(self, cfg):
+        # Should be fixed when using pylint 2.0 (https://github.com/PyCQA/pylint/issues/1660)
+        self._config_file_path.parent.mkdir(mode=0770, exist_ok=True)  # pylint: disable=no-member
+        cmk.store.save_to_mk_file("%s" % self._config_file_path, self._config_variable, cfg)
+
+    def filter_usable_entries(self, entries):
+        return entries
+
+    def filter_editable_entries(self, entries):
+        return entries
+
+
+class PasswordStore(WatoSimpleConfigFile):
+    def __init__(self):
+        super(PasswordStore, self).__init__(
+            config_file_path=Path(wato_root_dir) / "passwords.mk",
+            config_variable="stored_passwords")
+
+    def filter_usable_entries(self, entries):
         if config.user.may("wato.edit_all_passwords"):
-            return self._load()
+            return entries
 
         user_groups = userdb.contactgroups_of_user(config.user.id)
-        return dict([(k, v) for k, v in self._load().items() if v["owned_by"] in user_groups])
 
-    def usable_passwords(self):
-        if config.user.may("wato.edit_all_passwords"):
-            return self._load()
-
-        user_groups = userdb.contactgroups_of_user(config.user.id)
-
-        passwords = self._owned_passwords()
+        passwords = self.filter_editable_entries(entries)
         passwords.update(
-            dict([(k, v) for k, v in self._load().items() if v["shared_with"] in user_groups]))
+            dict([(k, v) for k, v in entries.items() if v["shared_with"] in user_groups]))
         return passwords
 
-    def _save(self, value):
-        return store.save_to_mk_file(
-            wato_root_dir + "/passwords.mk",
-            key="stored_passwords",
-            value=value,
-            pprint_value=config.wato_pprint_config)
+    def filter_editable_entries(self, entries):
+        if config.user.may("wato.edit_all_passwords"):
+            return entries
+
+        user_groups = userdb.contactgroups_of_user(config.user.id)
+        return dict([(k, v) for k, v in entries.items() if v["owned_by"] in user_groups])
 
 
 class UserSelection(DropdownChoice):
@@ -10560,6 +10586,42 @@ def get_hosts_from_checkboxes(filterfunc=None):
     This is needed for bulk operations."""
     folder = Folder.current()
     return [folder.host(host_name) for host_name in get_hostnames_from_checkboxes(filterfunc)]
+
+
+def rule_option_elements(disabling=True):
+    elements = [
+        ("description",
+         TextUnicode(
+             title=_("Description"),
+             help=_("A description or title of this rule"),
+             size=80,
+         )),
+        ("comment", RuleComment()),
+        ("docu_url", DocumentationURL()),
+    ]
+    if disabling:
+        elements += [
+            ("disabled",
+             Checkbox(
+                 title=_("Rule activation"),
+                 help=_("Disabled rules are kept in the configuration but are not applied."),
+                 label=_("do not apply this rule"),
+             )),
+        ]
+    return elements
+
+
+def DocumentationURL():
+    return TextAscii(
+        title=_("Documentation URL"),
+        help=HTML(
+            _("An optional URL pointing to documentation or any other page. This will be displayed "
+              "as an icon %s and open a new page when clicked. "
+              "You can use either global URLs (beginning with <tt>http://</tt>), absolute local urls "
+              "(beginning with <tt>/</tt>) or relative URLs (that are relative to <tt>check_mk/</tt>)."
+             ) % html.render_icon("url")),
+        size=80,
+    )
 
 
 #.

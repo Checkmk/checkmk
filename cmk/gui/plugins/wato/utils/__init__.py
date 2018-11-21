@@ -65,6 +65,11 @@ from cmk.gui.valuespec import (
     ValueSpec,
 )
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode
+from cmk.gui.plugins.wato.utils.simple_modes import (
+    SimpleModeType,
+    SimpleListMode,
+    SimpleEditMode,
+)
 from cmk.gui.plugins.wato.utils.context_buttons import (
     global_buttons,
     changelog_button,
@@ -124,6 +129,7 @@ from cmk.gui.watolib import (
     multifolder_host_rule_match_conditions,
     simple_host_rule_match_conditions,
     transform_simple_to_multi_host_rule_match_conditions,
+    rule_option_elements,
 )
 from cmk.gui.plugins.watolib.utils import (
     config_variable_group_registry,
@@ -133,41 +139,6 @@ from cmk.gui.plugins.watolib.utils import (
     register_configvar,
 )
 import cmk.gui.forms as forms
-
-
-def rule_option_elements(disabling=True):
-    elements = [
-        ("description",
-         TextUnicode(
-             title=_("Description"),
-             help=_("A description or title of this rule"),
-             size=80,
-         )),
-        ("comment", watolib.RuleComment()),
-        (
-            "docu_url",
-            TextAscii(
-                title=_("Documentation URL"),
-                help=HTML(
-                    _("An optional URL pointing to documentation or any other page. This will be displayed "
-                      "as an icon %s and open a new page when clicked. "
-                      "You can use either global URLs (beginning with <tt>http://</tt>), absolute local urls "
-                      "(beginning with <tt>/</tt>) or relative URLs (that are relative to <tt>check_mk/</tt>)."
-                     ) % html.render_icon("url")),
-                size=80,
-            ),
-        ),
-    ]
-    if disabling:
-        elements += [
-            ("disabled",
-             Checkbox(
-                 title=_("Rule activation"),
-                 help=_("Disabled rules are kept in the configuration but are not applied."),
-                 label=_("do not apply this rule"),
-             )),
-        ]
-    return elements
 
 
 def PluginCommandLine():
@@ -564,9 +535,9 @@ class GroupSelection(ElementSelection):
 
 
 def passwordstore_choices():
-    return [
-        (ident, pw["title"]) for ident, pw in watolib.PasswordStore().usable_passwords().items()
-    ]
+    store = watolib.PasswordStore()
+    return [(ident, pw["title"])
+            for ident, pw in store.filter_usable_entries(store.load_for_reading()).items()]
 
 
 class PasswordFromStore(CascadingDropdown):

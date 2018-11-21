@@ -102,4 +102,6 @@ include     packages/apache-omd/apache-omd.make \
     packages/re2/re2.make \
     packages/rrdtool/rrdtool.make \
     packages/snap7/snap7.make \
-    packages/Webinject/Webinject.make
+    packages/Webinject/Webinject.make \
+    $(REPO_PATH)/enterprise/enterprise.make \
+    $(REPO_PATH)/managed/managed.make

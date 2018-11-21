@@ -54,6 +54,13 @@ PACKAGES := \
     snap7 \
     heirloom-pkgtools
 
+ifeq ($(EDITION),enterprise)
+PACKAGES += enterprise
+endif
+ifeq ($(EDITION),managed)
+PACKAGES += enterprise
+PACKAGES += managed
+endif
 
 default: build
 
@@ -83,14 +90,6 @@ check-edition:
 	fi
 
 build: check-edition $(PACKAGES)
-# TODO: Clean up build for enterprise and managed. Those 2 package Makefiles are Symlinked to the top level Makefile.
-ifeq ($(EDITION),enterprise)
-	$(MAKE) -C $(PACKAGE_DIR)/check_mk_enterprise build
-endif
-ifeq ($(EDITION),managed)
-	$(MAKE) -C $(PACKAGE_DIR)/check_mk_enterprise
-	$(MAKE) -C $(PACKAGE_DIR)/check_mk_managed
-endif
 
 pack: skel
 

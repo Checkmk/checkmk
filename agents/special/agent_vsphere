@@ -706,73 +706,75 @@ def convert_hostname(h):
 
 
 def get_counters(esx_version_num):
+    # FIXME: (CMK-1346) The argument 'esx_version_num' is is a string now
+    #        => the comparison below is broken, as
+    #           >>> "6.7" > 7.1
+    #           True
+    #        Not a Problem though -- invalid IDs seem to be ignored.
+    #        So make this a simple global constant.
     needed_ids = [
+        # disk.read/write/deviceLatency/numberRead/numberWrite
+        #  'disk.usage': 131073,
+        #  'disk.numberRead': 131076,
+        131076,
+        #  'disk.numberWrite': 131077,
+        131077,
+        #  'disk.read': 131078,
+        131078,
+        131079,
+        #  'disk.deviceReadLatency': 131083,
+        #  'disk.kernelReadLatency': 131084,
+        #  'disk.totalReadLatency': 131085,
+        #  'disk.queueReadLatency': 131086,
+        #  'disk.deviceWriteLatency': 131087,
+        #  'disk.kernelWriteLatency': 131088,
+        #  'disk.totalWriteLatency': 131089,
+        #  'disk.queueWriteLatency': 131090,
+        #  'disk.deviceLatency': 131091,
+        131091,
+        #  'disk.kernelLatency': 131092,
+        #  'disk.totalLatency': 131093,
+        #  'disk.queueLatency': 131094,
+        #  'disk.maxTotalLatency': 131095,
+        #  'disk.maxQueueDepth': 131096,
+        #  'disk.numberReadAveraged': 131097,
+        #  'disk.numberWriteAveraged': 131098,
         # sys.uptime
         262144,
+        # sys.resourceMem*
+        # 262151, 262155, 262169, 262152, 262154, 262153, 262157, 262156, 262168,
         # mem.*
         # 65635, 65537, 65577, 65625, 65545, 65611, 65573, 65615, 65582,
         # 65549, 65630, 65622, 65618, 65621, 65561, 65623, 65632, 65557,
         # 65628, 65633, 65541, 65643, 65586, 65553, 65569, 65589, 65639,
         # 65620, 65599, 65580, 65619, 65603,
-        #  'disk.deviceLatency': 131091,
-        #  'disk.deviceReadLatency': 131083,
-        #  'disk.deviceWriteLatency': 131087,
-        #  'disk.kernelLatency': 131092,
-        #  'disk.kernelReadLatency': 131084,
-        #  'disk.kernelWriteLatency': 131088,
-        #  'disk.maxQueueDepth': 131096,
-        #  'disk.maxTotalLatency': 131095,
-        #  'disk.numberRead': 131076,
-        #  'disk.numberReadAveraged': 131097,
-        #  'disk.numberWrite': 131077,
-        #  'disk.numberWriteAveraged': 131098,
-        #  'disk.queueLatency': 131094,
-        #  'disk.queueReadLatency': 131086,
-        #  'disk.queueWriteLatency': 131090,
-        #  'disk.read': 131078,
-        #  'disk.totalLatency': 131093,
-        #  'disk.totalReadLatency': 131085,
-        #  'disk.totalWriteLatency': 131089,
-        #  'disk.usage': 131073,
         # datastore counters
-        #  'datastore.datastoreIops': 655367,
-        #  'datastore.datastoreMaxQueueDepth': 655376,
-        #  'datastore.datastoreNormalReadLatency': 655372,
-        #  'datastore.datastoreNormalWriteLatency': 655373,
-        #  'datastore.datastoreReadBytes': 655368,
-        #  'datastore.datastoreReadIops': 655370,
-        #  'datastore.datastoreReadLoadMetric': 655377,
-        #  'datastore.datastoreReadOIO': 655374,
-        #  'datastore.datastoreWriteBytes': 655369,
-        #  'datastore.datastoreWriteIops': 655371,
-        #  'datastore.datastoreWriteLoadMetric': 655378,
-        #  'datastore.datastoreWriteOIO': 655375,
-        #  'datastore.maxTotalLatency': 655379,
         #  'datastore.numberReadAveraged': 655360,
         #  'datastore.numberWriteAveraged': 655361,
         #  'datastore.read': 655362,
-        #  'datastore.sizeNormalizedDatastoreLatency': 655366,
+        655362,
+        #  'datastore.write': 655363,
+        655363,
         #  'datastore.totalReadLatency': 655364,
         #  'datastore.totalWriteLatency': 655365,
-        #  'datastore.write': 655363,
-        655362,
-        655363,
-        655370,
-        655371,
+        #  'datastore.sizeNormalizedDatastoreLatency': 655366,
         655366,
-
-        # disk.read/write/deviceLatency/numberRead/numberWrite
-        131078,
-        131079,
-        131091,
-        131076,
-        131077,
+        #  'datastore.datastoreIops': 655367,
+        #  'datastore.datastoreReadBytes': 655368,
+        #  'datastore.datastoreWriteBytes': 655369,
+        #  'datastore.datastoreReadIops': 655370,
+        655370,
+        #  'datastore.datastoreWriteIops': 655371,
+        655371,
+        #  'datastore.datastoreNormalReadLatency': 655372,
+        #  'datastore.datastoreNormalWriteLatency': 655373,
+        #  'datastore.datastoreReadOIO': 655374,
+        #  'datastore.datastoreWriteOIO': 655375,
+        #  'datastore.datastoreMaxQueueDepth': 655376,
+        #  'datastore.datastoreReadLoadMetric': 655377,
+        #  'datastore.datastoreWriteLoadMetric': 655378,
+        #  'datastore.maxTotalLatency': 655379,
     ]
-
-    #needed_ids = [
-    #    # sys.resourceMem*
-    #    262151, 262155, 262169, 262152, 262154, 262153, 262157, 262156, 262168,
-    #]
 
     # Seems as this is not available in ESX 5.0 but we saw it on 5.1
     if esx_version_num > 5.0:

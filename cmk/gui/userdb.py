@@ -208,10 +208,10 @@ def new_user_template(connection_id):
 
 
 def create_non_existing_user(connection_id, username):
-    users = load_users(lock=True)
-    if username in users:
+    if user_exists(username):
         return  # User exists. Nothing to do...
 
+    users = load_users(lock=True)
     users[username] = new_user_template(connection_id)
     save_users(users)
 

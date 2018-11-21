@@ -19,7 +19,7 @@ ifeq ($(ARCH),i686)
     ARCH=i386
 endif
 
-$(SNAP7_BUILD): $(SNAP7_UNPACK) python 
+$(SNAP7_BUILD): $(SNAP7_UNPACK) $(PYTHON_BUILD)
 	$(MAKE) -C $(SNAP7_DIR)/build/unix -f $(ARCH)_linux.mk
 
 $(SNAP7_INSTALL): $(SNAP7_BUILD)

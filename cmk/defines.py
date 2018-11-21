@@ -91,6 +91,22 @@ def weekday_name(day_num):
     return weekdays()[day_num]
 
 
+def weekday_ids():
+    """Returns a list of the internal week day names"""
+    return [d[0] for d in weekdays_by_name()]
+
+def weekdays_by_name():
+    """Returns a list of two element tuples containing the weekday ID and the human readable day name"""
+    return [
+        ("monday", _("Monday")),
+        ("tuesday", _("Tuesday")),
+        ("wednesday", _("Wednesday")),
+        ("thursday", _("Thursday")),
+        ("friday", _("Friday")),
+        ("saturday", _("Saturday")),
+        ("sunday", _("Sunday")),
+    ]
+
 def weekdays():
     return {
        0: _("Monday"),
@@ -410,4 +426,3 @@ def interface_port_types():
         289: "ptm",
         290: "ghn",
     }
-

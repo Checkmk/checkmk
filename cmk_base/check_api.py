@@ -380,7 +380,7 @@ def check_levels(value, dsname, params, unit="", factor=1.0, scale=1.0, statemar
     # Dictionary -> predictive levels
     else:
         try:
-            ref_value, ((warn_upper, crit_upper), (warn_lower, crit_lower)) = \
+            ref_value, (warn_upper, crit_upper, warn_lower, crit_lower) = \
                       _prediction.get_levels(_hostname, _service_description,
                                 dsname, params, "MAX", levels_factor=factor * scale)
 

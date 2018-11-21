@@ -26,8 +26,8 @@
 
 import sys, os, time, getopt
 
+import cmk.prediction as prediction
 from cmk.exceptions import MKGeneralException
-import cmk_base.prediction as prediction
 
 def usage():
     sys.stderr.write("""== check_cpu_peaks ==
@@ -170,4 +170,3 @@ except Exception, e:
     # Right now no handling of MKGeneralException, etc. is implemented
     sys.stdout.write("UNKNOWN - %s\n" % e)
     sys.exit(3)
-

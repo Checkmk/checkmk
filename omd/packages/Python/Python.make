@@ -11,11 +11,11 @@ PYTHON_INSTALL = $(BUILD_HELPER_DIR)/$(PYTHON_DIR)-install
 
 PYTHON_PATCHING = $(BUILD_HELPER_DIR)/$(PYTHON_DIR)-patching
 
-.PHONY: python python-install python-skel python-clean upstream
+.PHONY: Python Python-install Python-skel Python-clean upstream
 
-python: $(PYTHON_BUILD)
+Python: $(PYTHON_BUILD)
 
-python-install: $(PYTHON_INSTALL)
+Python-install: $(PYTHON_INSTALL)
 
 # Environment variables
 PATH_VAR := PATH="$(abspath bin):$$PATH"
@@ -111,9 +111,9 @@ bin/g++:
 	install -m 644 $(PACKAGE_DIR)/$(PYTHON)/sitecustomize.py $(PACKAGE_DIR)/$(PYTHON)/sitecustomize.pyc $(DESTDIR)$(OMD_ROOT)/lib/python2.7/
 	$(TOUCH) $(PYTHON_INSTALL)
 
-pyhton-skel:
+Python-skel:
 
-python-clean:
+Python-clean:
 	$(RM) -r $(DIR) $(BUILD_HELPER_DIR)/$(MSITOOLS)* bin build  $(PACKAGE_PYTHON_DESTDIR)
 
 upstream:

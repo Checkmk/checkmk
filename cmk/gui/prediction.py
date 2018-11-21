@@ -28,13 +28,11 @@ import os
 import time
 import json
 import livestatus
-
+from cmk import prediction
 import cmk.paths
 import cmk.utils
-import cmk.store as store
 
 import cmk.gui.pages
-import cmk.gui.config as config
 import cmk.gui.sites as sites
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
@@ -57,15 +55,8 @@ def page_graph():
     # Get current value from perf_data via Livestatus
     current_value = get_current_perfdata(host, service, dsname)
 
-    pred_dir = os.path.join(
-        cmk.paths.var_dir,
-        "prediction",
-        host,
-        cmk.utils.pnp_cleanup(service),
-        cmk.utils.pnp_cleanup(dsname),
-    )
-
-    if not os.path.exists(pred_dir):
+    pred_dir = cmk.prediction.predictions_dir(host, service, dsname, create=False)
+    if pred_dir is None:
         raise MKGeneralException(
             _("There is currently no prediction information "
               "available for this service."))
@@ -79,7 +70,7 @@ def page_graph():
         if not f.endswith(".info"):
             continue
 
-        tg_info = store.load_data_from_file(pred_dir + "/" + f)
+        tg_info = cmk.prediction.retrieve_data_for_prediction(pred_dir + "/" + f, timegroup)
         if tg_info is None:
             continue
 
@@ -109,11 +100,11 @@ def page_graph():
 
     # Get prediction data
     path = pred_dir + "/" + timegroup["name"]
-    tg_data = store.load_data_from_file(path)
+    tg_data = cmk.prediction.retrieve_data_for_prediction(path, tg_name)
     if tg_data is None:
         raise MKGeneralException(_("Missing prediction data."))
 
-    swapped = swap_and_compute_levels(tg_data, timegroup)
+    swapped = swap_and_compute_levels(tg_data, timegroup['params'])
     vertical_range = compute_vertical_range(swapped)
     legend = [
         ("#000000", _("Reference")),
@@ -126,11 +117,11 @@ def page_graph():
 
     create_graph(timegroup["name"], graph_size, timegroup["range"], vertical_range, legend)
 
-    if "levels_upper" in timegroup:
+    if "levels_upper" in timegroup['params']:
         render_dual_area(swapped["upper_warn"], swapped["upper_crit"], "#fff000", 0.4)
         render_area_reverse(swapped["upper_crit"], "#ff0000", 0.1)
 
-    if "levels_lower" in timegroup:
+    if "levels_lower" in timegroup['params']:
         render_dual_area(swapped["lower_crit"], swapped["lower_warn"], "#fff000", 0.4)
         render_area(swapped["lower_crit"], "#ff0000", 0.1)
 
@@ -140,30 +131,27 @@ def page_graph():
     time_scala = [[timegroup["range"][0] + i * 3600, "%02d:00" % i] for i in range(0, 25, 2)]
     render_coordinates(vert_scala, time_scala)
 
-    if "levels_lower" in timegroup:
+    if "levels_lower" in timegroup['params']:
         render_dual_area(swapped["average"], swapped["lower_warn"], "#ffffff", 0.5)
         render_curve(swapped["lower_warn"], "#e0e000", square=True)
         render_curve(swapped["lower_crit"], "#f0b0a0", square=True)
 
-    if "levels_upper" in timegroup:
+    if "levels_upper" in timegroup['params']:
         render_dual_area(swapped["upper_warn"], swapped["average"], "#ffffff", 0.5)
         render_curve(swapped["upper_warn"], "#e0e000", square=True)
         render_curve(swapped["upper_crit"], "#f0b0b0", square=True)
     render_curve(swapped["average"], "#000000")
-    render_curve(swapped["average"], "#000000")
+    render_curve(swapped["average"], "#000000")  # repetition makes line bolder
 
     # Try to get current RRD data and render it also
     from_time, until_time = timegroup["range"]
     now = time.time()
     if now >= from_time and now <= until_time:
-        if time.daylight:
-            tz_offset = time.altzone
-        else:
-            tz_offset = time.timezone
-        _rrd_step, rrd_data = get_rrd_data(host, service, dsname, "MAX", from_time, until_time)
+        _rrd_step, rrd_data = prediction.get_rrd_data(host, service, dsname, "MAX", from_time,
+                                                      until_time)
         render_curve(rrd_data, "#0000ff", 2)
         if current_value is not None:
-            rel_time = (now - tz_offset) % timegroup["slice"]
+            rel_time = (now - prediction.timezone_at(now)) % timegroup["slice"]
             render_point(timegroup["range"][0] + rel_time, current_value, "#0000ff")
 
     html.footer()
@@ -234,35 +222,6 @@ def get_current_perfdata(host, service, dsname):
             return float(rest.split(";")[0])
 
 
-# Fetch RRD historic metrics data of a specific service. returns a tuple
-# of (step, [value1, value2, ...])
-# IMPORTANT: Until we have a central library, keep this function in sync with
-# the function get_rrd_data() from modules/prediction.py.
-def get_rrd_data(hostname, service_description, varname, cf, fromtime, untiltime):
-    step = 1
-    rpn = "%s.%s" % (varname, cf.lower())  # "MAX" -> "max"
-    query = "GET services\n" \
-          "Columns: rrddata:m1:%s:%d:%d:%d\n" \
-          "Filter: host_name = %s\n" \
-          "Filter: description = %s\n" % (
-             rpn, fromtime, untiltime, step,
-             livestatus.lqencode(hostname), livestatus.lqencode(service_description))
-
-    try:
-        response = sites.live().query_row(query)[0]
-    except Exception as e:
-        if config.debug:
-            raise
-        raise MKGeneralException("Cannot get historic metrics via Livestatus: %s" % e)
-
-    if not response:
-        raise MKGeneralException("Got no historic metrics")
-
-    _real_fromtime, _real_untiltime, step = response[:3]
-    values = response[3:]
-    return step, values
-
-
 # Compute check levels from prediction data and check parameters
 def swap_and_compute_levels(tg_data, tg_info):
     columns = tg_data["columns"]
@@ -272,13 +231,12 @@ def swap_and_compute_levels(tg_data, tg_info):
         for k, v in row.items():
             swapped[k].append(v)
         if row["average"] is not None and row["stdev"] is not None:
-            upper, lower = compute_levels(tg_info, row["average"], row["stdev"])
-            if upper[0] is not None:
-                swapped.setdefault("upper_warn", []).append(upper[0])
-                swapped.setdefault("upper_crit", []).append(upper[1])
-            if lower[0] is not None:
-                swapped.setdefault("lower_warn", []).append(lower[0])
-                swapped.setdefault("lower_crit", []).append(lower[1])
+            _, (upper_0, upper_1, lower_0, lower_1) = cmk.prediction.estimate_levels(
+                row, tg_info, 1.0)
+            swapped.setdefault("upper_warn", []).append(upper_0 or 0)
+            swapped.setdefault("upper_crit", []).append(upper_1 or 0)
+            swapped.setdefault("lower_warn", []).append(lower_0 or 0)
+            swapped.setdefault("lower_crit", []).append(lower_1 or 0)
         else:
             swapped.setdefault("upper_warn", []).append(0)
             swapped.setdefault("upper_crit", []).append(0)
@@ -290,43 +248,6 @@ def swap_and_compute_levels(tg_data, tg_info):
 
 def stack(apoints, bpoints, scale):
     return [a + scale * b for (a, b) in zip(apoints, bpoints)]
-
-
-# Compute levels according to check parameters. Beware: this
-# code is duplicated from modules/prediction.py. Sorry for this
-# copy&paste. This was neccessary since there is currently no common
-# code between Check_MK CCE and Multisite.
-def compute_levels(params, ref_value, stdev):
-    return compute_level(params, ref_value, stdev, "levels_upper", 1), \
-           compute_level(params, ref_value, stdev, "levels_lower", -1)
-
-
-def compute_level(params, ref_value, stdev, param, sig):
-    if param not in params:
-        return None, None
-
-    how, (warn, crit) = params[param]
-    if how == "absolute":
-        levels = (
-            ref_value + (sig * warn),
-            ref_value + (sig * crit),
-        )
-
-    elif how == "relative":
-        levels = (ref_value + sig * (ref_value * warn / 100),
-                  ref_value + sig * (ref_value * crit / 100))
-
-    else:  #  how == "stdev":
-        levels = (
-            ref_value + sig * (stdev * warn),
-            ref_value + sig * (stdev * crit),
-        )
-
-    if param == "levels_upper" and "levels_upper_min" in params:
-        limit_warn, limit_crit = params["levels_upper_min"]
-        levels = (max(limit_warn, levels[0]), max(limit_crit, levels[1]))
-
-    return levels
 
 
 def compute_vertical_range(swapped):

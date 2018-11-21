@@ -25,83 +25,45 @@
 # Boston, MA 02110-1301 USA.
 """Code for predictive monitoring / anomaly detection"""
 
+import json
+import math
 import os
 import time
-import math
-import ast
 
-import livestatus
-
-import cmk.paths
 import cmk.debug
 import cmk.utils
 import cmk.log
 import cmk.defines as defines
+import cmk.prediction
 from cmk.exceptions import MKGeneralException
 
 logger = cmk.log.get_logger(__name__)
 
 
-# Fetch RRD historic metrics data of a specific service. returns a tuple
-# of (step, [value1, value2, ...])
-# TODO: IMPORTANT: Until we have a central library, keep this function in sync with
-# the function get_rrd_data() from web/prediction.py.
-def get_rrd_data(hostname, service_description, varname, cf, fromtime, untiltime):
-    step = 1
-    rpn = "%s.%s" % (varname, cf.lower())  # "MAX" -> "max"
-
-    lql = "GET services\n" \
-          "Columns: rrddata:m1:%s:%d:%d:%d\n" \
-          "OutputFormat: python\n" \
-          "Filter: host_name = %s\n" \
-          "Filter: description = %s\n" % (
-             rpn, fromtime, untiltime, step, hostname, service_description)
-
-    try:
-        connection = livestatus.SingleSiteConnection("unix:%s" % cmk.paths.livestatus_unix_socket)
-        response = connection.query_value(lql)
-    except Exception as e:
-        if cmk.debug.enabled():
-            raise
-        raise MKGeneralException("Cannot get historic metrics via Livestatus: %s" % e)
-
-    if not response or not response[3:]:
-        raise MKGeneralException("Got no historic metrics")
-
-    step, values = response[2], response[3:]
-    return step, values
+def day_start(timestamp):
+    return (timestamp - cmk.prediction.timezone_at(timestamp)) % 86400
 
 
-# Check wether a certain time stamp lies with in daylight safing time (DST)
-def is_dst(timestamp):
-    return time.localtime(timestamp).tm_isdst
-
-
-# Returns the timezone *including* DST shift at a certain point of time
-def timezone_at(timestamp):
-    if is_dst(timestamp):
-        return time.altzone
-    return time.timezone
+def hour_start(timestamp):
+    return (timestamp - cmk.prediction.timezone_at(timestamp)) % 3600
 
 
 def group_by_wday(t):
     wday = time.localtime(t).tm_wday
-    rel_time = divmod(t - timezone_at(t), 86400)[1]
-    return defines.weekday_ids()[wday], rel_time
+    return defines.weekday_ids()[wday], day_start(t)
 
 
 def group_by_day(t):
-    return "everyday", (t - timezone_at(t)) % 86400
+    return "everyday", day_start(t)
 
 
 def group_by_day_of_month(t):
-    broken = time.localtime(t)
-    mday = broken[2]
-    return str(mday), (t - timezone_at(t)) % 86400
+    mday = time.localtime(t).tm_mday
+    return str(mday), day_start(t)
 
 
 def group_by_everyhour(t):
-    return "everyhour", (t - timezone_at(t)) % 3600
+    return "everyhour", hour_start(t)
 
 
 prediction_periods = {
@@ -129,6 +91,14 @@ prediction_periods = {
 
 
 def get_prediction_timegroup(t, period_info):
+    """
+    Return:
+    timegroup: name of the group, like 'monday' or '12'
+    from_time: absolute epoch time of the first second of the
+    current slice.
+    until_time: absolute epoch time of the first second *not* in the slice
+    rel_time: seconds offset of now in the current slice
+    """
     # Convert to local timezone
     timegroup, rel_time = period_info["groupby"](t)
     from_time = t - rel_time
@@ -136,14 +106,13 @@ def get_prediction_timegroup(t, period_info):
     return timegroup, from_time, until_time, rel_time
 
 
-def compute_prediction(hostname, service_description, pred_file, timegroup, params, period_info,
-                       from_time, dsname, cf):
+def retrieve_grouped_data_from_rrd(hostname, service_description, timegroup, params, period_info,
+                                   from_time, dsname, cf):
     # Collect all slices back into the past until the time horizon
     # is reached
     begin = from_time
     slices = []
     absolute_begin = from_time - params["horizon"] * 86400
-
     # The resolutions of the different time ranges differ. We interpolate
     # to the best resolution. We assume that the youngest slice has the
     # finest resolution. We also assume, that each step is always dividable
@@ -157,30 +126,36 @@ def compute_prediction(hostname, service_description, pred_file, timegroup, para
     while begin >= absolute_begin:
         tg, fr, un = get_prediction_timegroup(begin, period_info)[:3]
         if tg == timegroup:
-            step, data = get_rrd_data(hostname, service_description, dsname, cf, fr, un - 1)
+            step, data = cmk.prediction.get_rrd_data(hostname, service_description, dsname, cf, fr,
+                                                     un - 1)
             if smallest_step is None:
                 smallest_step = step
-            slices.append((fr, step / smallest_step, data))
+            slices.append((fr, step / float(smallest_step), data))
         begin -= period_info["slice"]
+    return slices, smallest_step
 
+
+def consolidate_data(slices):
     # Now we have all the RRD data we need. The next step is to consolidate
     # all that data into one new array.
-    num_points = len(slices[0][2])
+    try:
+        num_points = slices[0][2]
+    except IndexError:
+        raise MKGeneralException("Got no historic metrics")
+
     consolidated = []
-    for i in xrange(num_points):
+    for i in xrange(len(num_points)):
         point_line = []
         for _from_time, scale, data in slices:
-            idx = int(i / float(scale))
-            if idx < len(data):
-                d = data[idx]
-                if d is not None:
-                    point_line.append(d)
-            # else:
-            #     date_str = time.strftime("%Y-%m-%d %H:%M", time.localtime(fr + ((un - fr) * i / float(num_points))))
-            #     print "Keine Daten fur %s / %d/%s/ %.2f " % (date_str, i, float(scale),i/float(scale))
+            if not data:
+                continue
+            idx = int(i / float(scale))  # left data-point mapping
+            d = data[idx]
+            if d is not None:
+                point_line.append(d)
 
         if point_line:
-            average = sum(point_line) / len(point_line)
+            average = sum(point_line) / float(len(point_line))
             consolidated.append([
                 average,
                 min(point_line),
@@ -189,18 +164,89 @@ def compute_prediction(hostname, service_description, pred_file, timegroup, para
             ])
         else:
             consolidated.append([None, None, None, None])
+    return consolidated
 
-    result = {
-        "num_points": num_points,
+
+def aggregate_data_for_prediction_and_save(hostname, service_description, pred_file, params,
+                                           period_info, dsname, cf, now):
+    _clean_predictions_dir(os.path.dirname(pred_file), params)
+
+    timegroup, from_time, until_time, _rel_time = get_prediction_timegroup(now, period_info)
+    logger.verbose("Aggregating data for time group %s", timegroup)
+    slices, smallest_step = retrieve_grouped_data_from_rrd(
+        hostname, service_description, timegroup, params, period_info, from_time, dsname, cf)
+
+    consolidated = consolidate_data(slices)
+
+    data_for_pred = {
+        "num_points": len(consolidated),
         "step": smallest_step,
         "columns": ["average", "min", "max", "stdev"],
         "points": consolidated,
     }
-    return result
+
+    info = {
+        "time": now,
+        "range": (from_time, until_time),
+        "cf": cf,
+        "dsname": dsname,
+        "slice": period_info["slice"],
+        "params": params,
+    }
+
+    with open(pred_file + '.info', "w") as fname:
+        json.dump(info, fname)
+    with open(pred_file, "w") as fname:
+        json.dump(data_for_pred, fname)
+
+    return data_for_pred
 
 
 def stdev(point_line, average):
-    return math.sqrt(sum([(p - average)**2 for p in point_line]) / len(point_line))
+    samples = len(point_line)
+    # In the case of a single data-point an unbiased standard deviation is
+    # undefined. In this case we take the magnitude of the measured value
+    # itself as a measure of the dispersion.
+    if samples == 1:
+        return abs(average)
+    return math.sqrt(abs(sum(p**2 for p in point_line) - average**2 * samples) / float(samples - 1))
+
+
+def is_prediction_up2date(pred_file, timegroup, params):
+    # Check, if we need to (re-)compute the prediction file. This is
+    # the case if:
+    # - no prediction has been done yet for this time group
+    # - the prediction from the last time is outdated
+    # - the prediction from the last time was done with other parameters
+
+    last_info = cmk.prediction.retrieve_data_for_prediction(pred_file + ".info", timegroup)
+    if last_info is None:
+        return False
+
+    period_info = prediction_periods[params["period"]]
+    now = time.time()
+    if last_info["time"] + period_info["valid"] * period_info["slice"] < now:
+        logger.verbose("Prediction of %s outdated", timegroup)
+        return False
+
+    jsonized_params = json.loads(json.dumps(params))
+    if last_info.get('params') != jsonized_params:
+        logger.verbose("Prediction parameters have changed.")
+        return False
+
+    return True
+
+
+def _clean_predictions_dir(pred_dir, params):
+    # Remove all prediction files that result from other
+    # prediction periods. This is e.g. needed if the user switches
+    # the parameter from 'wday' to 'day'.
+    for f in os.listdir(pred_dir):
+        if f.endswith(".info"):
+            info_file = os.path.join(pred_dir, f)
+            info = cmk.prediction.retrieve_data_for_prediction(info_file, '')
+            if info["params"]["period"] != params["period"]:
+                cmk.prediction.clean_prediction_files(info_file[:-5], force=True)
 
 
 # cf: consilidation function (MAX, MIN, AVERAGE)
@@ -212,129 +258,20 @@ def get_levels(hostname, service_description, dsname, params, cf, levels_factor=
     now = time.time()
     period_info = prediction_periods[params["period"]]
 
-    # timegroup: name of the group, like 'monday' or '12'
-    # from_time: absolute epoch time of the first second of the
-    # current slice.
-    # until_time: absolute epoch of the first second *not* in the slice
-    # rel_time: seconds offset of now in the current slice
-    timegroup, from_time, until_time, rel_time = \
-       get_prediction_timegroup(now, period_info)
+    timegroup, rel_time = period_info["groupby"](now)
 
-    # Compute directory for prediction data
-    pred_dir = os.path.join(cmk.paths.var_dir, "prediction", hostname,
-                            cmk.utils.pnp_cleanup(service_description),
-                            cmk.utils.pnp_cleanup(dsname))
-    if not os.path.exists(pred_dir):
-        os.makedirs(pred_dir)
+    pred_dir = cmk.prediction.predictions_dir(hostname, service_description, dsname, create=True)
 
-    pred_file = "%s/%s" % (pred_dir, timegroup)
-    info_file = pred_file + ".info"
+    pred_file = os.path.join(pred_dir, timegroup)
+    cmk.prediction.clean_prediction_files(pred_file)
 
-    # In previous versions it could happen that the files were created with 0 bytes of size
-    # which was never handled correctly so that the prediction could never be used again until
-    # manual removal of the files. Clean this up.
-    for file_path in [pred_file, info_file]:
-        if os.path.exists(file_path) and os.stat(file_path).st_size == 0:
-            os.unlink(file_path)
-
-    # Check, if we need to (re-)compute the prediction file. This is
-    # the case if:
-    # - no prediction has been done yet for this time group
-    # - the prediction from the last time is outdated
-    # - the prediction from the last time has done with other parameters
-    try:
-        last_info = ast.literal_eval(file(info_file).read())
-        for k, v in params.items():
-            if last_info.get(k) != v:
-                logger.verbose("Prediction parameters have changed")
-                last_info = None
-                break
-    except IOError:
-        logger.verbose("No previous prediction for group %s available.", timegroup)
-        last_info = None
-
-    if last_info and last_info["time"] + period_info["valid"] * period_info["slice"] < now:
-        logger.verbose("Prediction of %s outdated", timegroup)
-        last_info = None
-
-    if last_info:
-        prediction = ast.literal_eval(file(pred_file).read())
-
+    if is_prediction_up2date(pred_file, timegroup, params):
+        data_for_pred = cmk.prediction.retrieve_data_for_prediction(pred_file, timegroup)
     else:
-        # Remove all prediction files that result from other
-        # prediction periods. This is e.g. needed if the user switches
-        # the parameter from 'wday' to 'day'.
-        for f in os.listdir(pred_dir):
-            if f.endswith(".info"):
-                try:
-                    info = ast.literal_eval(file(pred_dir + "/" + f).read())
-                    if info["period"] != params["period"]:
-                        logger.verbose("Removing obsolete prediction %s", f[:-5])
-                        os.remove(pred_dir + "/" + f)
-                        os.remove(pred_dir + "/" + f[:-5])
-                except:
-                    pass
+        data_for_pred = aggregate_data_for_prediction_and_save(
+            hostname, service_description, pred_file, params, period_info, dsname, cf, now)
 
-        logger.verbose("Computing prediction for time group %s", timegroup)
-        prediction = compute_prediction(hostname, service_description, pred_file, timegroup, params,
-                                        period_info, from_time, dsname, cf)
-
-        info = {
-            "time": now,
-            "range": (from_time, until_time),
-            "cf": cf,
-            "dsname": dsname,
-            "slice": period_info["slice"],
-        }
-        info.update(params)
-
-        file(info_file, "w").write("%r\n" % info)
-        file(pred_file, "w").write("%r\n" % prediction)
-
-    # Find reference value in prediction
-    index = int(rel_time / prediction["step"])
-    # print "rel_time: %d, step: %d, Index: %d, num_points: %d" % (rel_time, prediction["step"], index, prediction["num_points"])
-    # print prediction.keys()
-    reference = dict(zip(prediction["columns"], prediction["points"][index]))
-    # print "Reference: %s" % reference
-    return estimate_levels(reference, params, levels_factor)
-
-
-def estimate_levels(reference, params, levels_factor):
-    ref_value = reference["average"]
-    if not ref_value:  # No reference data available
-        return ref_value, [None, None, None, None]
-
-    stdev = reference["stdev"]
-    levels = []
-    for what, sig in [("upper", 1), ("lower", -1)]:
-        p = "levels_" + what
-        if p in params:
-            this_levels = estimate_level_bounds(ref_value, stdev, sig, params[p], levels_factor)
-
-            if what == "upper" and "levels_upper_min" in params:
-                limit_warn, limit_crit = params["levels_upper_min"]
-                this_levels = (max(limit_warn, this_levels[0]), max(limit_crit, this_levels[1]))
-            levels.extend(this_levels)
-        else:
-            levels.extend((None, None))
-    return ref_value, levels
-
-
-def estimate_level_bounds(ref_value, stdev, sig, params, levels_factor):
-    how, (warn, crit) = params
-    if how == "absolute":
-        return (
-            ref_value + (sig * warn * levels_factor),
-            ref_value + (sig * crit * levels_factor),
-        )
-    elif how == "relative":
-        return (
-            ref_value + sig * (ref_value * warn / 100.0),
-            ref_value + sig * (ref_value * crit / 100.0),
-        )
-    # how == "stdev":
-    return (
-        ref_value + sig * (stdev * warn),
-        ref_value + sig * (stdev * crit),
-    )
+    # Find reference value in data_for_pred
+    index = int(rel_time / data_for_pred["step"])
+    reference = dict(zip(data_for_pred["columns"], data_for_pred["points"][index]))
+    return cmk.prediction.estimate_levels(reference, params, levels_factor)

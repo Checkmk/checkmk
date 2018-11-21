@@ -1,0 +1,13 @@
+Title: Bug fixing in predictive levels
+Level: 1
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1543928196
+Class: fix
+
+Predictive levels calculations suffered from some buggy behaviors under
+certain configuration conditions like: no predictions after 22:30,
+inhability to fetch data despite months of available perf data, prediction
+pointer offset by an hour in timezones with dayligth savings time.

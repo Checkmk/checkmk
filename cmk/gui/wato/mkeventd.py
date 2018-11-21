@@ -29,6 +29,16 @@ import re
 import time
 import zipfile
 import cStringIO
+from pysmi.compiler import MibCompiler
+from pysmi.parser.smiv1compat import SmiV1CompatParser
+from pysmi.searcher.pypackage import PyPackageSearcher
+from pysmi.searcher.pyfile import PyFileSearcher
+from pysmi.writer.pyfile import PyFileWriter
+from pysmi.reader.localfile import FileReader
+from pysmi.codegen.pysnmp import PySnmpCodeGen
+from pysmi.reader.callback import CallbackReader
+from pysmi.searcher.stub import StubSearcher
+from pysmi.error import PySmiError
 
 try:
     # does not exist in Py3, but is super class of str & unicode in py2
@@ -87,7 +97,10 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 from cmk.gui.exceptions import MKUserError, MKGeneralException
-from cmk.gui.wato.pages.global_settings import GlobalSettingsMode, EditGlobalSettingMode
+from cmk.gui.wato.pages.global_settings import (
+    GlobalSettingsMode,
+    EditGlobalSettingMode,
+)
 
 from cmk.gui.plugins.wato.utils import (
     config_variable_group_registry,
@@ -116,8 +129,6 @@ from cmk.gui.plugins.wato.utils import (
     search_form,
     site_neutral_path,
 )
-
-mkeventd_enabled = config.mkeventd_enabled
 
 mkeventd_status_file = cmk.paths.omd_root + "/var/mkeventd/status"
 
@@ -2471,22 +2482,8 @@ class ModeEventConsoleMIBs(EventConsoleMode):
             raise Exception(_("Invalid filename"))
 
     def _validate_and_compile_mib(self, mibname, content):
-        try:
-            from pysmi.compiler import MibCompiler
-            from pysmi.parser.smiv1compat import SmiV1CompatParser
-            from pysmi.searcher.pypackage import PyPackageSearcher
-            from pysmi.searcher.pyfile import PyFileSearcher
-            from pysmi.writer.pyfile import PyFileWriter
-            from pysmi.reader.localfile import FileReader
-            from pysmi.codegen.pysnmp import PySnmpCodeGen
-            from pysmi.reader.callback import CallbackReader
-            from pysmi.searcher.stub import StubSearcher
-            from pysmi.error import PySmiError
-
-            defaultMibPackages = PySnmpCodeGen.defaultMibPackages
-            baseMibs = PySnmpCodeGen.baseMibs
-        except ImportError as e:
-            raise Exception(_('You are missing the needed pysmi python module (%s).') % e)
+        defaultMibPackages = PySnmpCodeGen.defaultMibPackages
+        baseMibs = PySnmpCodeGen.baseMibs
 
         store.mkdir(cmk.gui.mkeventd.compiled_mibs_dir)
 
@@ -2703,52 +2700,51 @@ class ModeEventConsoleMIBs(EventConsoleMode):
 #   | Declaration of Event Console specific permissions for Multisite      |
 #   '----------------------------------------------------------------------'
 
-if mkeventd_enabled:
-    config.declare_permission_section("mkeventd", _("Event Console"))
+config.declare_permission_section("mkeventd", _("Event Console"))
 
-    config.declare_permission(
-        "mkeventd.config",
-        _("Configuration of Event Console "),
-        _("This permission allows to configure the global settings "
-          "of the event console."),
-        ["admin"],
-    )
+config.declare_permission(
+    "mkeventd.config",
+    _("Configuration of Event Console "),
+    _("This permission allows to configure the global settings "
+      "of the event console."),
+    ["admin"],
+)
 
-    config.declare_permission(
+config.declare_permission(
+    "mkeventd.edit",
+    _("Configuration of event rules"),
+    _("This permission allows the creation, modification and "
+      "deletion of event correlation rules."),
+    ["admin"],
+)
+
+config.declare_permission(
+    "mkeventd.activate",
+    _("Activate changes for event console"),
+    _("Activation of changes for the event console (rule modification, "
+      "global settings) is done separately from the monitoring configuration "
+      "and needs this permission."),
+    ["admin"],
+)
+
+config.declare_permission(
+    "mkeventd.switchmode",
+    _("Switch slave replication mode"),
+    _("This permission is only useful if the Event Console is setup as a replication "
+      "slave. It allows a manual switch between sync and takeover mode."),
+    ["admin"],
+)
+
+register_modules(
+    WatoModule(
+        "mkeventd_rule_packs",
+        _("Event Console"),
+        "mkeventd",
         "mkeventd.edit",
-        _("Configuration of event rules"),
-        _("This permission allows the creation, modification and "
-          "deletion of event correlation rules."),
-        ["admin"],
-    )
-
-    config.declare_permission(
-        "mkeventd.activate",
-        _("Activate changes for event console"),
-        _("Activation of changes for the event console (rule modification, "
-          "global settings) is done separately from the monitoring configuration "
-          "and needs this permission."),
-        ["admin"],
-    )
-
-    config.declare_permission(
-        "mkeventd.switchmode",
-        _("Switch slave replication mode"),
-        _("This permission is only useful if the Event Console is setup as a replication "
-          "slave. It allows a manual switch between sync and takeover mode."),
-        ["admin"],
-    )
-
-    register_modules(
-        WatoModule(
-            "mkeventd_rule_packs",
-            _("Event Console"),
-            "mkeventd",
-            "mkeventd.edit",
-            _("Manage event classification and correlation rules for the "
-              "Event Console"),
-            68,
-        ))
+        _("Manage event classification and correlation rules for the "
+          "Event Console"),
+        68,
+    ))
 
 #.
 #   .--Settings & Rules----------------------------------------------------.
@@ -2763,599 +2759,597 @@ if mkeventd_enabled:
 #   | active checks that query the EC status of a host.                    |
 #   '----------------------------------------------------------------------'
 
-if mkeventd_enabled:
-    register_configvar(ConfigVariableGroupEventConsoleGeneric,
-        "remote_status",
-        Optional(
-            Tuple(
-                elements = [
-                  Integer(
-                      title = _("Port number:"),
-                      help = _("If you are running the Event Console as a non-root (such as in an OMD site) "
-                               "please choose port number greater than 1024."),
-                      minvalue = 1,
-                      maxvalue = 65535,
-                      default_value = 6558,
-                  ),
-                  Checkbox(
-                      title = _("Security"),
-                      label = _("allow execution of commands and actions via TCP"),
-                      help = _("Without this option the access is limited to querying the current "
-                               "and historic event status."),
-                      default_value = False,
-                      true_label = _("allow commands"),
-                      false_label = _("no commands"),
-                  ),
-                  Optional(
-                      ListOfStrings(
-                          help = _("The access to the event status via TCP will only be allowed from "
-                                   "this source IP addresses"),
+register_configvar(ConfigVariableGroupEventConsoleGeneric,
+    "remote_status",
+    Optional(
+        Tuple(
+            elements = [
+              Integer(
+                  title = _("Port number:"),
+                  help = _("If you are running the Event Console as a non-root (such as in an OMD site) "
+                           "please choose port number greater than 1024."),
+                  minvalue = 1,
+                  maxvalue = 65535,
+                  default_value = 6558,
+              ),
+              Checkbox(
+                  title = _("Security"),
+                  label = _("allow execution of commands and actions via TCP"),
+                  help = _("Without this option the access is limited to querying the current "
+                           "and historic event status."),
+                  default_value = False,
+                  true_label = _("allow commands"),
+                  false_label = _("no commands"),
+              ),
+              Optional(
+                  ListOfStrings(
+                      help = _("The access to the event status via TCP will only be allowed from "
+                               "this source IP addresses"),
 
-                          valuespec = IPv4Address(),
-                          orientation = "horizontal",
-                          allow_empty = False,
-                      ),
-                      label = _("Restrict access to the following source IP addresses"),
-                      none_label = _("access unrestricted"),
+                      valuespec = IPv4Address(),
+                      orientation = "horizontal",
+                      allow_empty = False,
+                  ),
+                  label = _("Restrict access to the following source IP addresses"),
+                  none_label = _("access unrestricted"),
+              )
+            ],
+        ),
+        title = _("Access to event status via TCP"),
+        help = _("In Multisite setups if you want <a href=\"%s\">event status checks</a> for hosts that "
+                 "live on a remote site you need to activate remote access to the event status socket "
+                 "via TCP. This allows to query the current event status via TCP. If you do not restrict "
+                 "this to queries also event actions are possible from remote. This feature is not used "
+                 "by the event status checks nor by Multisite so we propose not allowing commands via TCP.") % \
+                                                   "wato.py?mode=edit_ruleset&varname=active_checks%3Amkevents",
+        none_label = _("no access via TCP"),
+    ),
+    domain = ConfigDomainEventConsole,
                   )
-                ],
-            ),
-            title = _("Access to event status via TCP"),
-            help = _("In Multisite setups if you want <a href=\"%s\">event status checks</a> for hosts that "
-                     "live on a remote site you need to activate remote access to the event status socket "
-                     "via TCP. This allows to query the current event status via TCP. If you do not restrict "
-                     "this to queries also event actions are possible from remote. This feature is not used "
-                     "by the event status checks nor by Multisite so we propose not allowing commands via TCP.") % \
-                                                       "wato.py?mode=edit_ruleset&varname=active_checks%3Amkevents",
-            none_label = _("no access via TCP"),
-        ),
-        domain = ConfigDomainEventConsole,
-    )
 
-    register_configvar(
-        ConfigVariableGroupEventConsoleGeneric,
-        "replication",
-        Optional(
-            Dictionary(
-                optional_keys=["takeover", "fallback", "disabled", "logging"],
-                elements=[
-                    ("master",
-                     Tuple(
-                         title=_("Master Event Console"),
-                         help=_(
-                             "Specify the host name or IP address of the master Event Console that "
-                             "you want to replicate from. The port number must be the same as set "
-                             "in the master in <i>Access to event status via TCP</i>."),
-                         elements=[
-                             TextAscii(
-                                 title=_("Hostname/IP address of Master Event Console:"),
-                                 allow_empty=False,
-                                 attrencode=True,
-                             ),
-                             Integer(
-                                 title=_("TCP Port number of status socket:"),
-                                 minvalue=1,
-                                 maxvalue=65535,
-                                 default_value=6558,
-                             ),
-                         ],
-                     )),
-                    ("interval",
-                     Integer(
-                         title=_("Replication interval"),
-                         help=_("The replication will be triggered each this number of seconds"),
-                         label=_("Do a replication every"),
-                         unit=_("sec"),
-                         minvalue=1,
-                         default_value=10,
-                     )),
-                    ("connect_timeout",
-                     Integer(
-                         title=_("Connect Timeout"),
-                         help=_("TCP connect timeout for connecting to the master"),
-                         label=_("Try bringing up TCP connection for"),
-                         unit=_("sec"),
-                         minvalue=1,
-                         default_value=10,
-                     )),
-                    ("takeover",
-                     Integer(
-                         title=_("Automatic takeover"),
-                         help=_("If you enable this option then the slave will automatically "
-                                "takeover and enable event processing if the master is for "
-                                "the configured number of seconds unreachable."),
-                         label=_("Takeover after a master downtime of"),
-                         unit=_("sec"),
-                         minvalue=1,
-                         default_value=30,
-                     )),
-                    ("fallback",
-                     Integer(
-                         title=_("Automatic fallback"),
-                         help=_("If you enable this option then the slave will automatically "
-                                "fallback from takeover mode to slavemode if the master is "
-                                "rechable again within the selected number of seconds since "
-                                "the previous unreachability (not since the takeover)"),
-                         label=_("Fallback if master comes back within"),
-                         unit=_("sec"),
-                         minvalue=1,
-                         default_value=60,
-                     )),
-                    ("disabled",
-                     FixedValue(
-                         True,
-                         totext=_("Replication is disabled"),
-                         title=_("Currently disable replication"),
-                         help=_("This allows you to disable the replication without loosing "
-                                "your settings. If you check this box, then no replication "
-                                "will be done and the Event Console will act as its own master."),
-                     )),
-                    ("logging",
-                     FixedValue(
-                         True,
-                         title=_("Log replication events"),
-                         totext=_("logging is enabled"),
-                         help=_("Enabling this option will create detailed log entries for all "
-                                "replication activities of the slave. If disabled only problems "
-                                "will be logged."),
-                     )),
-                ]),
-            title=_("Enable replication from a master"),
-        ),
-        domain=ConfigDomainEventConsole,
-    )
-
-    register_configvar(
-        ConfigVariableGroupEventConsoleGeneric,
-        "retention_interval",
-        Age(
-            title=_("State Retention Interval"),
-            help=_("In this interval the event daemon will save its state "
-                   "to disk, so that you won't lose your current event "
-                   "state in case of a crash."),
-        ),
-        domain=ConfigDomainEventConsole,
-    )
-
-    register_configvar(
-        ConfigVariableGroupEventConsoleGeneric,
-        "housekeeping_interval",
-        Age(
-            title=_("Housekeeping Interval"),
-            help=_("From time to time the eventd checks for messages that are expected to "
-                   "be seen on a regular base, for events that time out and yet for "
-                   "count periods that elapse. Here you can specify the regular interval "
-                   "for that job."),
-        ),
-        domain=ConfigDomainEventConsole,
-    )
-
-    register_configvar(
-        ConfigVariableGroupEventConsoleGeneric,
-        "statistics_interval",
-        Age(
-            title=_("Statistics Interval"),
-            help=_("The event daemon keeps statistics about the rate of messages, events "
-                   "rule hits, and other stuff. These values are updated in the interval "
-                   "configured here and are available in the sidebar snapin <i>Event Console "
-                   "Performance</i>"),
-        ),
-        domain=ConfigDomainEventConsole,
-    )
-
-    register_configvar(
-        ConfigVariableGroupEventConsoleGeneric,
-        "log_messages",
-        Checkbox(
-            title=_("Syslog-like message logging"),
-            label=_("Log all messages into syslog-like logfiles"),
-            help=_("When this option is enabled, then <b>every</b> incoming message is being "
-                   "logged into the directory <tt>messages</tt> in the Event Consoles state "
-                   "directory. The logfile rotation is analog to that of the history logfiles. "
-                   "Please note that if you have lots of incoming messages then these "
-                   "files can get very large."),
-        ),
-        domain=ConfigDomainEventConsole,
-    )
-
-    register_configvar(
-        ConfigVariableGroupEventConsoleGeneric,
-        "rule_optimizer",
-        Checkbox(
-            title=_("Optimize rule execution"),
-            label=_("enable optimized rule execution"),
-            help=_("This option turns on a faster algorithm for matching events to rules. "),
-        ),
-        domain=ConfigDomainEventConsole,
-    )
-
-    register_configvar(
-        ConfigVariableGroupEventConsoleGeneric,
-        "actions",
-        vs_mkeventd_actions,
-        allow_reset=False,
-        domain=ConfigDomainEventConsole,
-    )
-
-    register_configvar(
-        ConfigVariableGroupEventConsoleGeneric,
-        "archive_orphans",
-        Checkbox(
-            title=_("Force message archiving"),
-            label=_("Archive messages that do not match any rule"),
-            help=_("When this option is enabled then messages that do not match "
-                   "a rule will be archived into the event history anyway (Messages "
-                   "that do match a rule will be archived always, as long as they are not "
-                   "explicitely dropped are being aggregated by counting.)"),
-        ),
-        domain=ConfigDomainEventConsole,
-    )
-
-    register_configvar(
-        ConfigVariableGroupEventConsoleGeneric,
-        "hostname_translation",
-        HostnameTranslation(
-            title=_("Hostname translation for incoming messages"),
-            help=_("When the Event Console receives a message than the host name "
-                   "that is contained in that message will be translated using "
-                   "this configuration. This can be used for unifying host names "
-                   "from message with those of actively monitored hosts. Note: this translation "
-                   "is happening before any rule is being applied.")),
-        domain=ConfigDomainEventConsole,
-    )
-
-    def vs_ec_event_limit_actions(notify_txt):
-        return DropdownChoice(
-            title=_("Action"),
-            help=_("Choose the action the Event Console should trigger once "
-                   "the limit is reached."),
-            choices=[
-                ("stop", _("Stop creating new events")),
-                ("stop_overflow", _("Stop creating new events, create overflow event")),
-                ("stop_overflow_notify",
-                 "%s, %s" % (_("Stop creating new events, create overflow event"), notify_txt)),
-                ("delete_oldest", _("Delete oldest event, create new event")),
-            ],
-            default_value="stop_overflow_notify",
-        )
-
-    def vs_ec_rule_limit():
-        return Dictionary(
-            title=_("Rule limit"),
-            help=_("You can limit the number of current events created by a single "
-                   "rule here. This is meant to "
-                   "prevent you from too generous rules creating a lot of events.<br>"
-                   "Once the limit is reached, the Event Console will stop the rule "
-                   "creating new current events until the number of current "
-                   "events has been reduced to be below this limit. In the "
-                   "moment the limit is reached, the Event Console will notify "
-                   "the configured contacts of the rule or create a notification "
-                   "with empty contact information."),
-            elements=[
-                ("limit",
-                 Integer(
-                     title=_("Limit"),
-                     minvalue=1,
-                     default_value=1000,
-                     unit=_("current events"),
-                 )),
-                ("action",
-                 vs_ec_event_limit_actions("notify contacts in rule or fallback contacts")),
-            ],
-            optional_keys=[],
-        )
-
-    def vs_ec_host_limit(title):
-        return Dictionary(
-            title=title,
-            help=_("You can limit the number of current events created by a single "
-                   "host here. This is meant to "
-                   "prevent you from message storms created by one device.<br>"
-                   "Once the limit is reached, the Event Console will block "
-                   "all future incoming messages sent by this host until the "
-                   "number of current "
-                   "events has been reduced to be below this limit. In the "
-                   "moment the limit is reached, the Event Console will notify "
-                   "the configured contacts of the host."),
-            elements=[
-                ("limit",
-                 Integer(
-                     title=_("Limit"),
-                     minvalue=1,
-                     default_value=1000,
-                     unit=_("current events"),
-                 )),
-                ("action", vs_ec_event_limit_actions("notify contacts of the host")),
-            ],
-            optional_keys=[],
-        )
-
-    register_rule(
-        "eventconsole",
-        "extra_host_conf:_ec_event_limit",
-        Transform(
-            vs_ec_host_limit(title=_("Host event limit")),
-            forth=lambda x: dict([("limit", int(x.split(":")[0])), ("action", x.split(":")[1])]),
-            back=lambda x: "%d:%s" % (x["limit"], x["action"]),
-        ),
-        match="first",
-    )
-
-    register_configvar(
-        ConfigVariableGroupEventConsoleGeneric,
-        "event_limit",
+register_configvar(
+    ConfigVariableGroupEventConsoleGeneric,
+    "replication",
+    Optional(
         Dictionary(
-            title=_("Limit amount of current events"),
-            help=_("This option helps you to protect the Event Console from resoure "
-                   "problems which may occur in case of too many current events at the "
-                   "same time."),
+            optional_keys=["takeover", "fallback", "disabled", "logging"],
             elements=[
-                ("by_host", vs_ec_host_limit(title=_("Host limit"))),
-                ("by_rule", vs_ec_rule_limit()),
-                ("overall",
-                 Dictionary(
-                     title=_("Overall current events"),
-                     help=_("To protect you against a continously growing list of current "
-                            "events created by different hosts or rules, you can configure "
-                            "this overall limit of current events. All currently current events "
-                            "are counted and once the limit is reached, no further events "
-                            "will be currented which means that new incoming messages will be "
-                            "dropped. In the moment the limit is reached, the Event Console "
-                            "will create a notification with empty contact information."),
+                ("master",
+                 Tuple(
+                     title=_("Master Event Console"),
+                     help=_("Specify the host name or IP address of the master Event Console that "
+                            "you want to replicate from. The port number must be the same as set "
+                            "in the master in <i>Access to event status via TCP</i>."),
                      elements=[
-                         ("limit",
-                          Integer(
-                              title=_("Limit"),
-                              minvalue=1,
-                              default_value=10000,
-                              unit=_("current events"),
-                          )),
-                         ("action", vs_ec_event_limit_actions("notify all fallback contacts")),
+                         TextAscii(
+                             title=_("Hostname/IP address of Master Event Console:"),
+                             allow_empty=False,
+                             attrencode=True,
+                         ),
+                         Integer(
+                             title=_("TCP Port number of status socket:"),
+                             minvalue=1,
+                             maxvalue=65535,
+                             default_value=6558,
+                         ),
                      ],
-                     optional_keys=[],
+                 )),
+                ("interval",
+                 Integer(
+                     title=_("Replication interval"),
+                     help=_("The replication will be triggered each this number of seconds"),
+                     label=_("Do a replication every"),
+                     unit=_("sec"),
+                     minvalue=1,
+                     default_value=10,
+                 )),
+                ("connect_timeout",
+                 Integer(
+                     title=_("Connect Timeout"),
+                     help=_("TCP connect timeout for connecting to the master"),
+                     label=_("Try bringing up TCP connection for"),
+                     unit=_("sec"),
+                     minvalue=1,
+                     default_value=10,
+                 )),
+                ("takeover",
+                 Integer(
+                     title=_("Automatic takeover"),
+                     help=_("If you enable this option then the slave will automatically "
+                            "takeover and enable event processing if the master is for "
+                            "the configured number of seconds unreachable."),
+                     label=_("Takeover after a master downtime of"),
+                     unit=_("sec"),
+                     minvalue=1,
+                     default_value=30,
+                 )),
+                ("fallback",
+                 Integer(
+                     title=_("Automatic fallback"),
+                     help=_("If you enable this option then the slave will automatically "
+                            "fallback from takeover mode to slavemode if the master is "
+                            "rechable again within the selected number of seconds since "
+                            "the previous unreachability (not since the takeover)"),
+                     label=_("Fallback if master comes back within"),
+                     unit=_("sec"),
+                     minvalue=1,
+                     default_value=60,
+                 )),
+                ("disabled",
+                 FixedValue(
+                     True,
+                     totext=_("Replication is disabled"),
+                     title=_("Currently disable replication"),
+                     help=_("This allows you to disable the replication without loosing "
+                            "your settings. If you check this box, then no replication "
+                            "will be done and the Event Console will act as its own master."),
+                 )),
+                ("logging",
+                 FixedValue(
+                     True,
+                     title=_("Log replication events"),
+                     totext=_("logging is enabled"),
+                     help=_("Enabling this option will create detailed log entries for all "
+                            "replication activities of the slave. If disabled only problems "
+                            "will be logged."),
+                 )),
+            ]),
+        title=_("Enable replication from a master"),
+    ),
+    domain=ConfigDomainEventConsole,
+)
+
+register_configvar(
+    ConfigVariableGroupEventConsoleGeneric,
+    "retention_interval",
+    Age(
+        title=_("State Retention Interval"),
+        help=_("In this interval the event daemon will save its state "
+               "to disk, so that you won't lose your current event "
+               "state in case of a crash."),
+    ),
+    domain=ConfigDomainEventConsole,
+)
+
+register_configvar(
+    ConfigVariableGroupEventConsoleGeneric,
+    "housekeeping_interval",
+    Age(
+        title=_("Housekeeping Interval"),
+        help=_("From time to time the eventd checks for messages that are expected to "
+               "be seen on a regular base, for events that time out and yet for "
+               "count periods that elapse. Here you can specify the regular interval "
+               "for that job."),
+    ),
+    domain=ConfigDomainEventConsole,
+)
+
+register_configvar(
+    ConfigVariableGroupEventConsoleGeneric,
+    "statistics_interval",
+    Age(
+        title=_("Statistics Interval"),
+        help=_("The event daemon keeps statistics about the rate of messages, events "
+               "rule hits, and other stuff. These values are updated in the interval "
+               "configured here and are available in the sidebar snapin <i>Event Console "
+               "Performance</i>"),
+    ),
+    domain=ConfigDomainEventConsole,
+)
+
+register_configvar(
+    ConfigVariableGroupEventConsoleGeneric,
+    "log_messages",
+    Checkbox(
+        title=_("Syslog-like message logging"),
+        label=_("Log all messages into syslog-like logfiles"),
+        help=_("When this option is enabled, then <b>every</b> incoming message is being "
+               "logged into the directory <tt>messages</tt> in the Event Consoles state "
+               "directory. The logfile rotation is analog to that of the history logfiles. "
+               "Please note that if you have lots of incoming messages then these "
+               "files can get very large."),
+    ),
+    domain=ConfigDomainEventConsole,
+)
+
+register_configvar(
+    ConfigVariableGroupEventConsoleGeneric,
+    "rule_optimizer",
+    Checkbox(
+        title=_("Optimize rule execution"),
+        label=_("enable optimized rule execution"),
+        help=_("This option turns on a faster algorithm for matching events to rules. "),
+    ),
+    domain=ConfigDomainEventConsole,
+)
+
+register_configvar(
+    ConfigVariableGroupEventConsoleGeneric,
+    "actions",
+    vs_mkeventd_actions,
+    allow_reset=False,
+    domain=ConfigDomainEventConsole,
+)
+
+register_configvar(
+    ConfigVariableGroupEventConsoleGeneric,
+    "archive_orphans",
+    Checkbox(
+        title=_("Force message archiving"),
+        label=_("Archive messages that do not match any rule"),
+        help=_("When this option is enabled then messages that do not match "
+               "a rule will be archived into the event history anyway (Messages "
+               "that do match a rule will be archived always, as long as they are not "
+               "explicitely dropped are being aggregated by counting.)"),
+    ),
+    domain=ConfigDomainEventConsole,
+)
+
+register_configvar(
+    ConfigVariableGroupEventConsoleGeneric,
+    "hostname_translation",
+    HostnameTranslation(
+        title=_("Hostname translation for incoming messages"),
+        help=_("When the Event Console receives a message than the host name "
+               "that is contained in that message will be translated using "
+               "this configuration. This can be used for unifying host names "
+               "from message with those of actively monitored hosts. Note: this translation "
+               "is happening before any rule is being applied.")),
+    domain=ConfigDomainEventConsole,
+)
+
+
+def vs_ec_event_limit_actions(notify_txt):
+    return DropdownChoice(
+        title=_("Action"),
+        help=_("Choose the action the Event Console should trigger once "
+               "the limit is reached."),
+        choices=[
+            ("stop", _("Stop creating new events")),
+            ("stop_overflow", _("Stop creating new events, create overflow event")),
+            ("stop_overflow_notify",
+             "%s, %s" % (_("Stop creating new events, create overflow event"), notify_txt)),
+            ("delete_oldest", _("Delete oldest event, create new event")),
+        ],
+        default_value="stop_overflow_notify",
+    )
+
+
+def vs_ec_rule_limit():
+    return Dictionary(
+        title=_("Rule limit"),
+        help=_("You can limit the number of current events created by a single "
+               "rule here. This is meant to "
+               "prevent you from too generous rules creating a lot of events.<br>"
+               "Once the limit is reached, the Event Console will stop the rule "
+               "creating new current events until the number of current "
+               "events has been reduced to be below this limit. In the "
+               "moment the limit is reached, the Event Console will notify "
+               "the configured contacts of the rule or create a notification "
+               "with empty contact information."),
+        elements=[
+            ("limit",
+             Integer(
+                 title=_("Limit"),
+                 minvalue=1,
+                 default_value=1000,
+                 unit=_("current events"),
+             )),
+            ("action", vs_ec_event_limit_actions("notify contacts in rule or fallback contacts")),
+        ],
+        optional_keys=[],
+    )
+
+
+def vs_ec_host_limit(title):
+    return Dictionary(
+        title=title,
+        help=_("You can limit the number of current events created by a single "
+               "host here. This is meant to "
+               "prevent you from message storms created by one device.<br>"
+               "Once the limit is reached, the Event Console will block "
+               "all future incoming messages sent by this host until the "
+               "number of current "
+               "events has been reduced to be below this limit. In the "
+               "moment the limit is reached, the Event Console will notify "
+               "the configured contacts of the host."),
+        elements=[
+            ("limit",
+             Integer(
+                 title=_("Limit"),
+                 minvalue=1,
+                 default_value=1000,
+                 unit=_("current events"),
+             )),
+            ("action", vs_ec_event_limit_actions("notify contacts of the host")),
+        ],
+        optional_keys=[],
+    )
+
+
+register_rule(
+    "eventconsole",
+    "extra_host_conf:_ec_event_limit",
+    Transform(
+        vs_ec_host_limit(title=_("Host event limit")),
+        forth=lambda x: dict([("limit", int(x.split(":")[0])), ("action", x.split(":")[1])]),
+        back=lambda x: "%d:%s" % (x["limit"], x["action"]),
+    ),
+    match="first",
+)
+
+register_configvar(
+    ConfigVariableGroupEventConsoleGeneric,
+    "event_limit",
+    Dictionary(
+        title=_("Limit amount of current events"),
+        help=_("This option helps you to protect the Event Console from resoure "
+               "problems which may occur in case of too many current events at the "
+               "same time."),
+        elements=[
+            ("by_host", vs_ec_host_limit(title=_("Host limit"))),
+            ("by_rule", vs_ec_rule_limit()),
+            ("overall",
+             Dictionary(
+                 title=_("Overall current events"),
+                 help=_("To protect you against a continously growing list of current "
+                        "events created by different hosts or rules, you can configure "
+                        "this overall limit of current events. All currently current events "
+                        "are counted and once the limit is reached, no further events "
+                        "will be currented which means that new incoming messages will be "
+                        "dropped. In the moment the limit is reached, the Event Console "
+                        "will create a notification with empty contact information."),
+                 elements=[
+                     ("limit",
+                      Integer(
+                          title=_("Limit"),
+                          minvalue=1,
+                          default_value=10000,
+                          unit=_("current events"),
+                      )),
+                     ("action", vs_ec_event_limit_actions("notify all fallback contacts")),
+                 ],
+                 optional_keys=[],
+             )),
+        ],
+        optional_keys=[],
+    ),
+    domain=ConfigDomainEventConsole,
+)
+
+register_configvar(
+    ConfigVariableGroupEventConsoleGeneric,
+    "history_rotation",
+    DropdownChoice(
+        title=_("Event history logfile rotation"),
+        help=_("Specify at which time period a new file for the event history will be created."),
+        choices=[("daily", _("daily")), ("weekly", _("weekly"))],
+    ),
+    domain=ConfigDomainEventConsole,
+)
+
+register_configvar(
+    ConfigVariableGroupEventConsoleGeneric,
+    "history_lifetime",
+    Integer(
+        title=_("Event history lifetime"),
+        help=_("After this number of days old logfile of event history "
+               "will be deleted."),
+        unit=_("days"),
+        minvalue=1,
+    ),
+    domain=ConfigDomainEventConsole,
+)
+
+register_configvar(
+    ConfigVariableGroupEventConsoleGeneric,
+    "socket_queue_len",
+    Integer(
+        title=_("Max. number of pending connections to the status socket"),
+        help=_("When the Multisite GUI or the active check check_mkevents connects "
+               "to the socket of the event daemon in order to retrieve information "
+               "about current and historic events then its connection request might "
+               "be queued before being processed. This setting defines the number of unaccepted "
+               "connections to be queued before refusing new connections."),
+        minvalue=1,
+        label="max.",
+        unit=_("pending connections"),
+    ),
+    domain=ConfigDomainEventConsole,
+)
+
+register_configvar(
+    ConfigVariableGroupEventConsoleGeneric,
+    "eventsocket_queue_len",
+    Integer(
+        title=_("Max. number of pending connections to the event socket"),
+        help=_("The event socket is an alternative way for sending events "
+               "to the Event Console. It is used by the Check_MK logwatch check "
+               "when forwarding log messages to the Event Console. "
+               "This setting defines the number of unaccepted "
+               "connections to be queued before refusing new connections."),
+        minvalue=1,
+        label="max.",
+        unit=_("pending connections"),
+    ),
+    domain=ConfigDomainEventConsole,
+)
+
+register_configvar(
+    ConfigVariableGroupEventConsoleSNMP,
+    "translate_snmptraps",
+    Transform(
+        CascadingDropdown(
+            choices=[
+                (False, _("Do not translate SNMP traps")),
+                (True, _("Translate SNMP traps using the available MIBs"),
+                 Dictionary(
+                     elements=[
+                         ("add_description",
+                          FixedValue(
+                              True,
+                              title=_("Add OID descriptions"),
+                              totext=_("Append descriptions of OIDs to message texts"),
+                          )),
+                     ],)),
+            ],),
+        title=_("Translate SNMP traps"),
+        label=_("Use the available SNMP MIBs to translate contents of the SNMP traps"),
+        help=_("When this option is enabled all available SNMP MIB files will be used "
+               "to translate the incoming SNMP traps. Information which can not be "
+               "translated, e.g. because a MIB is missing, are written untouched to "
+               "the event message."),
+        forth=lambda v: v == True and (v, {}) or v,
+    ),
+    domain=ConfigDomainEventConsole,
+)
+
+register_configvar(
+    ConfigVariableGroupEventConsoleSNMP,
+    "snmp_credentials",
+    ListOf(
+        Dictionary(
+            elements=[
+                ("description", TextUnicode(title=_("Description"),)),
+                ("credentials", SNMPCredentials()),
+                ("engine_ids",
+                 ListOfStrings(
+                     valuespec=TextAscii(
+                         size=24,
+                         minlen=2,
+                         allow_empty=False,
+                         regex="^[A-Fa-f0-9]*$",
+                         regex_error=_("The engine IDs have to be configured as hex strings "
+                                       "like <tt>8000000001020304</tt>."),
+                     ),
+                     title=_("Engine IDs (only needed for SNMPv3)"),
+                     help=_("Each SNMPv3 device has it's own engine ID. This is normally "
+                            "automatically generated, but can also be configured manually "
+                            "for some devices. As the engine ID is used for the encryption "
+                            "of SNMPv3 traps sent by the devices, Check_MK needs to know "
+                            "the engine ID to be able to decrypt the SNMP traps.<br>"
+                            "The engine IDs have to be configured as hex strings like "
+                            "<tt>8000000001020304</tt>."),
+                     allow_empty=False,
                  )),
             ],
+            # NOTE: For SNMPv3, this should not be empty, otherwise users will be confused...
+            optional_keys=["engine_ids"],
+        ),
+        title=_("Credentials for processing SNMP traps"),
+        help=_("When you want to process SNMP traps with the Event Console it is "
+               "necessary to configure the credentials to decrypt the incoming traps."),
+        text_if_empty=_("SNMP traps not configured"),
+    ),
+    domain=ConfigDomainEventConsole,
+)
+
+register_configvar(
+    ConfigVariableGroupEventConsoleLogging,
+    "debug_rules",
+    Checkbox(
+        title=_("Debug rule execution"),
+        label=_("enable extensive rule logging"),
+        help=_("This option turns on logging the execution of rules. For each message received "
+               "the execution details of each rule are logged. This creates an immense "
+               "volume of logging and should never be used in productive operation."),
+        default_value=False),
+    domain=ConfigDomainEventConsole,
+)
+
+
+def ec_log_level_elements():
+    elements = []
+
+    for component, title, help_txt in [
+        ("cmk.mkeventd", _("General messages"),
+         _("Log level for all log messages that are not in one of the categories below")),
+        ("cmk.mkeventd.EventServer", _("Processing of incoming events"),
+         _("Log level for the processing of all incoming events")),
+        ("cmk.mkeventd.EventStatus", _("Event database"),
+         _("Log level for managing already created events")),
+        ("cmk.mkeventd.StatusServer", _("Status queries"),
+         _("Log level for handling of incoming queries to the status socket")),
+        ("cmk.mkeventd.lock", _("Locking"),
+         _("Log level for the locking mechanics. Setting this to debug will enable "
+           "log entries for each lock/unlock action.")),
+        ("cmk.mkeventd.EventServer.snmp", _("SNMP trap processing"),
+         _("Log level for the SNMP trap processing mechanics. Setting this to debug will enable "
+           "detailed log entries for each received SNMP trap.")),
+    ]:
+        elements.append((component, LogLevelChoice(
+            title=title,
+            help=help_txt,
+        )))
+    return elements
+
+
+register_configvar(
+    ConfigVariableGroupEventConsoleLogging,
+    "log_level",
+    Transform(
+        Dictionary(
+            title=_("Log level"),
+            help=_("You can configure the Event Console to log more details about it's actions. "
+                   "These information are logged into the file <tt>%s</tt>") %
+            site_neutral_path(cmk.paths.log_dir + "/mkeventd.log"),
+            elements=ec_log_level_elements,
             optional_keys=[],
         ),
-        domain=ConfigDomainEventConsole,
-    )
+        # Transform old values:
+        # 0 -> normal logging
+        # 1 -> verbose logging
+        forth=
+        lambda x: {"cmk.mkeventd": (cmk.log.INFO if x == 0 else cmk.log.VERBOSE)} if x in (0, 1) else x,
+    ),
+    domain=ConfigDomainEventConsole,
+)
 
-    register_configvar(
-        ConfigVariableGroupEventConsoleGeneric,
-        "history_rotation",
-        DropdownChoice(
-            title=_("Event history logfile rotation"),
-            help=_(
-                "Specify at which time period a new file for the event history will be created."),
-            choices=[("daily", _("daily")), ("weekly", _("weekly"))],
-        ),
-        domain=ConfigDomainEventConsole,
-    )
+register_configvar(
+    ConfigVariableGroupEventConsoleLogging,
+    "log_rulehits",
+    Checkbox(
+        title=_("Log rule hits"),
+        label=_("Log hits for rules in log of Event Console"),
+        help=_("If you enable this option then every time an event matches a rule "
+               "(by normal hit, cancelling, counting or dropping) a log entry will be written "
+               "into the log file of the Event Console. Please be aware that this might lead to "
+               "a large number of log entries. "),
+    ),
+    domain=ConfigDomainEventConsole,
+)
 
-    register_configvar(
-        ConfigVariableGroupEventConsoleGeneric,
-        "history_lifetime",
-        Integer(
-            title=_("Event history lifetime"),
-            help=_("After this number of days old logfile of event history "
-                   "will be deleted."),
-            unit=_("days"),
-            minvalue=1,
-        ),
-        domain=ConfigDomainEventConsole,
-    )
+# A few settings for Multisite and WATO
+register_configvar(
+    _("User Interface"),
+    "mkeventd_connect_timeout",
+    Integer(
+        title=_("Connect timeout to status socket of Event Console"),
+        help=_("When the Multisite GUI connects the socket of the event daemon "
+               "in order to retrieve information about current and historic events "
+               "then this timeout will be applied."),
+        minvalue=1,
+        maxvalue=120,
+        unit="sec",
+    ),
+    domain=ConfigDomainEventConsole,
+)
 
-    register_configvar(
-        ConfigVariableGroupEventConsoleGeneric,
-        "socket_queue_len",
-        Integer(
-            title=_("Max. number of pending connections to the status socket"),
-            help=_(
-                "When the Multisite GUI or the active check check_mkevents connects "
-                "to the socket of the event daemon in order to retrieve information "
-                "about current and historic events then its connection request might "
-                "be queued before being processed. This setting defines the number of unaccepted "
-                "connections to be queued before refusing new connections."),
-            minvalue=1,
-            label="max.",
-            unit=_("pending connections"),
-        ),
-        domain=ConfigDomainEventConsole,
-    )
-
-    register_configvar(
-        ConfigVariableGroupEventConsoleGeneric,
-        "eventsocket_queue_len",
-        Integer(
-            title=_("Max. number of pending connections to the event socket"),
-            help=_("The event socket is an alternative way for sending events "
-                   "to the Event Console. It is used by the Check_MK logwatch check "
-                   "when forwarding log messages to the Event Console. "
-                   "This setting defines the number of unaccepted "
-                   "connections to be queued before refusing new connections."),
-            minvalue=1,
-            label="max.",
-            unit=_("pending connections"),
-        ),
-        domain=ConfigDomainEventConsole,
-    )
-
-    register_configvar(
-        ConfigVariableGroupEventConsoleSNMP,
-        "translate_snmptraps",
-        Transform(
-            CascadingDropdown(
-                choices=[
-                    (False, _("Do not translate SNMP traps")),
-                    (True, _("Translate SNMP traps using the available MIBs"),
-                     Dictionary(
-                         elements=[
-                             ("add_description",
-                              FixedValue(
-                                  True,
-                                  title=_("Add OID descriptions"),
-                                  totext=_("Append descriptions of OIDs to message texts"),
-                              )),
-                         ],)),
-                ],),
-            title=_("Translate SNMP traps"),
-            label=_("Use the available SNMP MIBs to translate contents of the SNMP traps"),
-            help=_("When this option is enabled all available SNMP MIB files will be used "
-                   "to translate the incoming SNMP traps. Information which can not be "
-                   "translated, e.g. because a MIB is missing, are written untouched to "
-                   "the event message."),
-            forth=lambda v: v == True and (v, {}) or v,
-        ),
-        domain=ConfigDomainEventConsole,
-    )
-
-    register_configvar(
-        ConfigVariableGroupEventConsoleSNMP,
-        "snmp_credentials",
-        ListOf(
-            Dictionary(
-                elements=[
-                    ("description", TextUnicode(title=_("Description"),)),
-                    ("credentials", SNMPCredentials()),
-                    ("engine_ids",
-                     ListOfStrings(
-                         valuespec=TextAscii(
-                             size=24,
-                             minlen=2,
-                             allow_empty=False,
-                             regex="^[A-Fa-f0-9]*$",
-                             regex_error=_("The engine IDs have to be configured as hex strings "
-                                           "like <tt>8000000001020304</tt>."),
-                         ),
-                         title=_("Engine IDs (only needed for SNMPv3)"),
-                         help=_("Each SNMPv3 device has it's own engine ID. This is normally "
-                                "automatically generated, but can also be configured manually "
-                                "for some devices. As the engine ID is used for the encryption "
-                                "of SNMPv3 traps sent by the devices, Check_MK needs to know "
-                                "the engine ID to be able to decrypt the SNMP traps.<br>"
-                                "The engine IDs have to be configured as hex strings like "
-                                "<tt>8000000001020304</tt>."),
-                         allow_empty=False,
-                     )),
-                ],
-                # NOTE: For SNMPv3, this should not be empty, otherwise users will be confused...
-                optional_keys=["engine_ids"],
-            ),
-            title=_("Credentials for processing SNMP traps"),
-            help=_("When you want to process SNMP traps with the Event Console it is "
-                   "necessary to configure the credentials to decrypt the incoming traps."),
-            text_if_empty=_("SNMP traps not configured"),
-        ),
-        domain=ConfigDomainEventConsole,
-    )
-
-    register_configvar(
-        ConfigVariableGroupEventConsoleLogging,
-        "debug_rules",
-        Checkbox(
-            title=_("Debug rule execution"),
-            label=_("enable extensive rule logging"),
-            help=_("This option turns on logging the execution of rules. For each message received "
-                   "the execution details of each rule are logged. This creates an immense "
-                   "volume of logging and should never be used in productive operation."),
-            default_value=False),
-        domain=ConfigDomainEventConsole,
-    )
-
-    def ec_log_level_elements():
-        elements = []
-
-        for component, title, help_txt in [
-            ("cmk.mkeventd", _("General messages"),
-             _("Log level for all log messages that are not in one of the categories below")),
-            ("cmk.mkeventd.EventServer", _("Processing of incoming events"),
-             _("Log level for the processing of all incoming events")),
-            ("cmk.mkeventd.EventStatus", _("Event database"),
-             _("Log level for managing already created events")),
-            ("cmk.mkeventd.StatusServer", _("Status queries"),
-             _("Log level for handling of incoming queries to the status socket")),
-            ("cmk.mkeventd.lock", _("Locking"),
-             _("Log level for the locking mechanics. Setting this to debug will enable "
-               "log entries for each lock/unlock action.")),
-            ("cmk.mkeventd.EventServer.snmp", _("SNMP trap processing"),
-             _("Log level for the SNMP trap processing mechanics. Setting this to debug will enable "
-               "detailed log entries for each received SNMP trap.")),
-        ]:
-            elements.append((component, LogLevelChoice(
-                title=title,
-                help=help_txt,
-            )))
-        return elements
-
-    register_configvar(
-        ConfigVariableGroupEventConsoleLogging,
-        "log_level",
-        Transform(
-            Dictionary(
-                title=_("Log level"),
-                help=_(
-                    "You can configure the Event Console to log more details about it's actions. "
-                    "These information are logged into the file <tt>%s</tt>") %
-                site_neutral_path(cmk.paths.log_dir + "/mkeventd.log"),
-                elements=ec_log_level_elements,
-                optional_keys=[],
-            ),
-            # Transform old values:
-            # 0 -> normal logging
-            # 1 -> verbose logging
-            forth=
-            lambda x: {"cmk.mkeventd": (cmk.log.INFO if x == 0 else cmk.log.VERBOSE)} if x in (0, 1) else x,
-        ),
-        domain=ConfigDomainEventConsole,
-    )
-
-    register_configvar(
-        ConfigVariableGroupEventConsoleLogging,
-        "log_rulehits",
-        Checkbox(
-            title=_("Log rule hits"),
-            label=_("Log hits for rules in log of Event Console"),
-            help=_(
-                "If you enable this option then every time an event matches a rule "
-                "(by normal hit, cancelling, counting or dropping) a log entry will be written "
-                "into the log file of the Event Console. Please be aware that this might lead to "
-                "a large number of log entries. "),
-        ),
-        domain=ConfigDomainEventConsole,
-    )
-
-    # A few settings for Multisite and WATO
-    register_configvar(
-        _("User Interface"),
-        "mkeventd_connect_timeout",
-        Integer(
-            title=_("Connect timeout to status socket of Event Console"),
-            help=_("When the Multisite GUI connects the socket of the event daemon "
-                   "in order to retrieve information about current and historic events "
-                   "then this timeout will be applied."),
-            minvalue=1,
-            maxvalue=120,
-            unit="sec",
-        ),
-        domain=ConfigDomainEventConsole,
-    )
-
-    register_configvar(
-        _("Administration Tool (WATO)"),
-        "mkeventd_pprint_rules",
-        Checkbox(
-            title=_("Pretty-Print rules in config file of Event Console"),
-            label=_("enable pretty-printing of rules"),
-            help=_(
-                "When the WATO module of the Event Console saves rules to the file "
-                "<tt>mkeventd.d/wato/rules.mk</tt> it usually prints the Python "
-                "representation of the rules-list into one single line by using the "
-                "native Python code generator. Enabling this option switches to <tt>pprint</tt>, "
-                "which nicely indents everything. While this is a bit slower for large "
-                "rulesets it makes debugging and manual editing simpler."),
-        ),
-        domain=ConfigDomainEventConsole,
-    )
+register_configvar(
+    _("Administration Tool (WATO)"),
+    "mkeventd_pprint_rules",
+    Checkbox(
+        title=_("Pretty-Print rules in config file of Event Console"),
+        label=_("enable pretty-printing of rules"),
+        help=_("When the WATO module of the Event Console saves rules to the file "
+               "<tt>mkeventd.d/wato/rules.mk</tt> it usually prints the Python "
+               "representation of the rules-list into one single line by using the "
+               "native Python code generator. Enabling this option switches to <tt>pprint</tt>, "
+               "which nicely indents everything. While this is a bit slower for large "
+               "rulesets it makes debugging and manual editing simpler."),
+    ),
+    domain=ConfigDomainEventConsole,
+)
 
 # Settings that should also be avaiable on distributed Sites that
 # do not run an own eventd but want to query one or send notifications

@@ -1,0 +1,19 @@
+Title: Fix a crash during notification cancelling
+Level: 1
+Component: notifications
+Compatible: compat
+Edition: cre
+Version: 1.5.0p8
+Date: 1542797388
+Class: fix
+
+When a notification was cancelled and the cancelling rule contained
+more contacts than the notification that was going to be cancelled
+the processing of notifications raised an exception. As a result
+no further notifications were processed.
+
+The exception was raised e.g. if a notification for the contact "ab"
+was cancelled for the users "ab" and "cd" using the option "The
+following users" in the contact selection.
+
+With this werk the issue is fixed.

@@ -469,7 +469,7 @@ def notify_rulebased(raw_context, analyse=False):
 
                     remaining = notify_contacts.difference(contacts)
                     if not remaining:
-                        del notifications[key]
+                        del notifications[notify_key]
                     else:
                         new_key = remaining, plugin
                         notifications[new_key] = notifications.pop(notify_key)

@@ -19,7 +19,7 @@ include packages/packages.make
 PACKAGES := \
     libgsf \
     perl-modules \
-    python \
+    Python \
     freetds \
     re2 \
     python-modules \
@@ -121,7 +121,10 @@ $(PRE_SKEL): install-global
 	# Install skeleton files (subdirs skel/ in packages' directories)
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel
 	@set -e ; cd packages ; for p in $(PACKAGES) ; do \
-            if [ -d "$$p" ] && [ -d "$$p/skel" ] ; then  \
+            if [ ! -d "$$p" ] ; then  \
+	       echo "Invalid package: $$p"; exit 1 ; \
+	    fi ; \
+            if [ -d "$$p/skel" ] ; then  \
               tar cf - -C $$p/skel --exclude="*~" --exclude=".gitignore" . | tar xvf - -C $(DESTDIR)$(OMD_ROOT)/skel ; \
             fi ;\
         done

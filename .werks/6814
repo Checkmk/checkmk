@@ -1,0 +1,11 @@
+Title: hp_msa_if: Do not crash if no speed information is available
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p38
+Date: 1542373485
+
+

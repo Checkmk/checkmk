@@ -3,11 +3,10 @@
 # Alias: Monitoring core
 # Menu: Basic
 # Description:
-#  Here you can choose your monitoring core to run. Currently available
-#  are Nagios and Shinken. You also can decide to run no monitoring core in
-#  this instance. This can be useful for instances running a GUI such
-#  as Check_MK Multisite or Thruk which can connect to other monitoring
-#  sites via Livestatus.
+#  Here you can choose your monitoring core to run. You also can decide
+#  to run no monitoring core in this instance. This can be useful for
+#  instances running a GUI only site which can connect to other
+#  monitoring sites via Livestatus.
 
 # Helper function that creates a symlink only if the
 # target of the link exists

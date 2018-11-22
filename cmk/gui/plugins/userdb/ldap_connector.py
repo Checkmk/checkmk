@@ -66,6 +66,8 @@ import ldap
 import ldap.filter
 from ldap.controls import SimplePagedResultsControl
 
+from multiprocessing.pool import ThreadPool
+
 import cmk
 import cmk.paths
 import cmk.log
@@ -92,8 +94,10 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
-from cmk.gui.exceptions import MKGeneralException, MKUserError
+from cmk.gui.exceptions import MKGeneralException, MKUserError, RequestTimeout
 from cmk.gui.plugins.userdb.utils import UserConnector, user_connector_registry
+
+import cmk.gui.sites as sites
 
 if cmk.is_managed_edition():
     import cmk.gui.cme.managed as managed
@@ -1249,7 +1253,7 @@ class LDAPUserConnector(UserConnector):
         self._logger.info(
             'SYNC FINISHED - Duration: %0.3f sec, Queries: %d' % (duration, self._num_queries))
 
-        import cmk.gui.watolib as watolib  # TODO: Cleanup
+        import cmk.gui.watolib as watolib
         if changes and config.wato_enabled and not config.is_wato_slave_site():
             watolib.add_change("edit-users", "<br>\n".join(changes), add_user=False)
 
@@ -2100,7 +2104,7 @@ def ldap_needed_attributes_alias(connection, params):
 
 ldap_attribute_plugins['alias'] = {
     'title': _('Alias'),
-    'help': _('Populates the alias attribute of the WATO user by syncrhonizing an attribute '
+    'help': _('Populates the alias attribute of the WATO user by synchronizing an attribute '
               'from the LDAP user account. By default the LDAP attribute <tt>cn</tt> is used.'),
     'needed_attributes': ldap_needed_attributes_alias,
     'sync_func': ldap_sync_alias,
@@ -2548,7 +2552,6 @@ ldap_attribute_plugins['groups_to_roles'] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-
 # In case the sync is done on the master of a distributed setup the auth serial
 # is increased on the master, but not on the slaves. The user can not access the
 # slave sites anymore with the master sites cookie since the serials differ. In
@@ -2562,49 +2565,74 @@ ldap_attribute_plugins['groups_to_roles'] = {
 # time. In this case the implementation does not scale well. We would need to
 # change this to some kind of profile bulk sync per site.
 # TODO: Should we move this to watolib?
-def synchronize_profile_to_sites(logger, user_id, profile):
-    import cmk.gui.sites as sites
-    import cmk.gui.watolib as watolib  # TODO: Cleanup
 
+
+class SynchronizationResult(object):
+    def __init__(self, site_id, error_text=None, disabled=False, succeeded=False, failed=False):
+        self.site_id = site_id
+        self.error_text = error_text
+        self.failed = failed
+        self.disabled = disabled
+        self.succeeded = succeeded
+
+
+def synchronize_profile_to_sites(logger, user_id, profile):
+    import cmk.gui.watolib as watolib
     remote_sites = [(site_id, config.site(site_id)) for site_id in config.get_login_sites()]
 
     logger.info(
         'Credentials changed: %s. Trying to sync to %d sites' % (user_id, len(remote_sites)))
 
-    num_disabled = 0
-    num_succeeded = 0
-    num_failed = 0
+    synchronization_jobs = []
+    states = sites.states()
+
     for site_id, site in remote_sites:
-        if not site.get("replication"):
-            num_disabled += 1
-            continue
+        synchronization_jobs.append((states, site_id, site, user_id, profile))
 
-        if site.get("disabled"):
-            num_disabled += 1
-            continue
+    pool = ThreadPool()
+    results = pool.map(_sychronize_profile_worker, synchronization_jobs)
+    pool.close()
+    pool.join()
 
-        status = sites.state(site_id, {}).get("state", "unknown")
-        if status == "dead":
-            result = "Site is dead"
-        else:
-            try:
-                result = watolib.push_user_profile_to_site(site, user_id, profile)
-            except Exception as e:
-                result = "%s" % e
-
-        if result == True:
-            num_succeeded += 1
-        else:
-            num_failed += 1
-            logger.info('  FAILED [%s]: %s' % (site_id, result))
-            # Add pending entry to make sync possible later for admins
+    for result in results:
+        if result.error_text:
+            logger.info('  FAILED [%s]: %s' % (result.site_id, result.error_text))
             if config.wato_enabled:
                 watolib.add_change(
                     "edit-users",
-                    _('Password changed (sync failed: %s)') % result,
+                    _('Password changed (sync failed: %s)') % result.error_text,
                     add_user=False,
-                    sites=[site_id],
+                    sites=[result.site_id],
                     need_restart=False)
 
+    num_failed = sum([1 for result in results if result.failed])
+    num_disabled = sum([1 for result in results if result.disabled])
+    num_succeeded = sum([1 for result in results if result.succeeded])
     logger.info(
         '  Disabled: %d, Succeeded: %d, Failed: %d' % (num_disabled, num_succeeded, num_failed))
+
+
+def _sychronize_profile_worker(site_configuration):
+    import cmk.gui.watolib as watolib
+    states, site_id, site, user_id, profile = site_configuration
+
+    if not site.get("replication"):
+        return SynchronizationResult(site_id, disabled=True)
+
+    if site.get("disabled"):
+        return SynchronizationResult(site_id, disabled=True)
+
+    status = states.get(site_id, {}).get("state", "unknown")
+    if status == "dead":
+        return SynchronizationResult(
+            site_id, error_text=_("Site %s is dead") % site_id, failed=True)
+
+    try:
+        result = watolib.push_user_profile_to_site(site, user_id, profile)
+        return SynchronizationResult(site_id, succeeded=True)
+    except RequestTimeout:
+        # This function is currently only used by the background job
+        # which does not have any request timeout set, just in case...
+        raise
+    except Exception, e:
+        return SynchronizationResult(site_id, error_text="%s" % e, failed=True)

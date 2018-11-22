@@ -1,0 +1,14 @@
+Title: if_lancom: Fixed correct interface discovery for newer lancom router
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.6.0i1
+Date: 1542881754
+Class: fix
+
+Newer lancom devices to not authenticate himself as a lancom device in the
+snmp info. This is fixed for now, so the sepcial check plugin for lancom
+interfaces are working correctly again.
+
+This change concerns at least the R800V series and a rediscovery may be needed.

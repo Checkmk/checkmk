@@ -63,6 +63,7 @@ import copy
 import socket
 import time
 import threading
+import signal
 from hashlib import sha256
 from pathlib2 import Path
 
@@ -4207,7 +4208,7 @@ class ConfigDomainLiveproxy(ConfigDomain):
             pidfile = cmk.paths.livestatus_unix_socket + "proxyd.pid"
             try:
                 pid = int(file(pidfile).read().strip())
-                os.kill(pid, 10)
+                os.kill(pid, signal.SIGUSR1)
             except IOError as e:
                 if e.errno == 2:  # No such file or directory
                     pass

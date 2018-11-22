@@ -35,20 +35,6 @@ import pprint
 import cmk.store as store
 from cmk.exceptions import MKGeneralException, MKTimeout
 
-# TODO add type annotations for mypy
-# Example:
-# def f():
-#     # type: () -> bool
-#     """DOCSTRING"""
-#     ... do something
-#     return True
-# def g(x):
-#     # type: (int) -> int
-#     """DOCSTRING"""
-#     ... do something
-#     return x*x
-
-
 #     ____            ____
 #    /    \          /    \     max. 1 per type
 #    | SD | -------> | NA | ------------------------.

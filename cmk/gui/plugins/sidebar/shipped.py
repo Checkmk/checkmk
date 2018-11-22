@@ -34,7 +34,6 @@ import re
 import cmk.paths
 
 import cmk.gui.config as config
-import cmk.gui.views as views
 import cmk.gui.dashboard as dashboard
 import cmk.gui.sites as sites
 from cmk.gui.htmllib import HTML
@@ -45,7 +44,6 @@ from cmk.gui.plugins.sidebar import (
     sidebar_snapins,
     visuals_by_topic,
     bulletlink,
-    link,
     footnotelinks,
     snapin_width,
     snapin_site_choice,
@@ -112,105 +110,6 @@ sidebar_snapins["dashboards"] = {
     "description": _("Links to all dashboards"),
     "render": render_dashboards,
     "allowed": ["user", "admin", "guest"],
-}
-
-#.
-#   .--Hosts---------------------------------------------------------------.
-#   |                       _   _           _                              |
-#   |                      | | | | ___  ___| |_ ___                        |
-#   |                      | |_| |/ _ \/ __| __/ __|                       |
-#   |                      |  _  | (_) \__ \ |_\__ \                       |
-#   |                      |_| |_|\___/|___/\__|___/                       |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-
-def render_hosts(mode):
-    sites.live().set_prepend_site(True)
-    query = "GET hosts\nColumns: name state worst_service_state\nLimit: 100\n"
-    view = "host"
-
-    if mode == "problems":
-        view = "problemsofhost"
-        # Exclude hosts and services in downtime
-        svc_query = "GET services\nColumns: host_name\n"\
-                    "Filter: state > 0\nFilter: scheduled_downtime_depth = 0\n"\
-                    "Filter: host_scheduled_downtime_depth = 0\nAnd: 3"
-        problem_hosts = {x[1] for x in sites.live().query(svc_query)}
-
-        query += "Filter: state > 0\nFilter: scheduled_downtime_depth = 0\nAnd: 2\n"
-        for host in problem_hosts:
-            query += "Filter: name = %s\n" % host
-        query += "Or: %d\n" % (len(problem_hosts) + 1)
-
-    hosts = sites.live().query(query)
-    sites.live().set_prepend_site(False)
-    hosts.sort()
-
-    longestname = 0
-    for site, host, state, worstsvc in hosts:
-        longestname = max(longestname, len(host))
-    if longestname > 15:
-        num_columns = 1
-    else:
-        num_columns = 2
-
-    views.load_views()
-    target = views.get_context_link(config.user.id, view)
-    html.open_table(class_="allhosts")
-    col = 1
-    for site, host, state, worstsvc in hosts:
-        if col == 1:
-            html.open_tr()
-        html.open_td()
-
-        if state > 0 or worstsvc == 2:
-            statecolor = 2
-        elif worstsvc == 1:
-            statecolor = 1
-        elif worstsvc == 3:
-            statecolor = 3
-        else:
-            statecolor = 0
-        html.open_div(class_=["statebullet", "state%d" % statecolor])
-        html.nbsp()
-        html.close_div()
-        link(host, target + "&host=%s&site=%s" % (html.urlencode(host), html.urlencode(site)))
-        html.close_td()
-        if col == num_columns:
-            html.close_tr()
-            col = 1
-        else:
-            col += 1
-
-    if col < num_columns:
-        html.close_tr()
-    html.close_table()
-
-
-snapin_allhosts_styles = """
-  .snapin table.allhosts { width: 100%; }
-  .snapin table.allhosts td { width: 50%; padding: 0px 0px; }
-"""
-
-sidebar_snapins["hosts"] = {
-    "title": _("All Hosts"),
-    "description": _("A summary state of each host with a link to the view "
-                     "showing its services"),
-    "render": lambda: render_hosts("hosts"),
-    "allowed": ["user", "admin", "guest"],
-    "refresh": True,
-    "styles": snapin_allhosts_styles,
-}
-
-sidebar_snapins["problem_hosts"] = {
-    "title": _("Problem Hosts"),
-    "description": _("A summary state of all hosts that have a problem, with "
-                     "links to problems of those hosts"),
-    "render": lambda: render_hosts("problems"),
-    "allowed": ["user", "admin", "guest"],
-    "refresh": True,
-    "styles": snapin_allhosts_styles,
 }
 
 #.

@@ -23,7 +23,6 @@ case "$1" in
             if [ -e $OMD_ROOT/bin/cmc ] ; then echo "cmc"
             elif [ -e $OMD_ROOT/bin/nagios ] ; then echo "nagios"
             elif [ -e $OMD_ROOT/bin/icinga ] ; then echo "icinga"
-            elif [ -e $OMD_ROOT/bin/shinken-arbiter ] ; then echo "shinken"
             else echo "none"
             fi
     ;;
@@ -31,18 +30,17 @@ case "$1" in
             [ ! -e $OMD_ROOT/bin/cmc ] || echo "cmc: Check_MK Micro core"
             [ ! -e $OMD_ROOT/bin/nagios ] || echo "nagios: Nagios"
             [ ! -e $OMD_ROOT/bin/icinga ] || echo "icinga: Icinga"
-            [ ! -e $OMD_ROOT/bin/shinken-arbiter ] || echo "shinken: Shinken"
             echo "none: No monitoring core"
     ;;
     set)
         # cleanup the former selection
-        if [ "$2" != "nagios" ] ; then
-            rm -f $OMD_ROOT/etc/apache/conf.d/nagios.conf
-            rm -f $OMD_ROOT/etc/apache/conf.d/icinga.conf
-        fi
-        if [ "$2" != "shinken" ] ; then
+        if [ -e $OMD_ROOT/etc/apache/conf.d/shinken.conf ] ; then
             rm -f $OMD_ROOT/etc/apache/conf.d/shinken.conf
+        fi
+        if [ -e $OMD_ROOT/etc/apache/conf.d/nagios.conf ] ; then
             rm -f $OMD_ROOT/etc/apache/conf.d/nagios.conf
+        fi
+        if [ -e $OMD_ROOT/etc/apache/conf.d/icinga.conf ] ; then
             rm -f $OMD_ROOT/etc/apache/conf.d/icinga.conf
         fi
         if [ "$2" != "cmc" ] ; then
@@ -61,8 +59,6 @@ case "$1" in
         # now setup the new selection
         if [ "$2" == "nagios" ]
         then
-            make_link ../../nagios/apache.conf $OMD_ROOT/etc/apache/conf.d/nagios.conf
-            make_link ../../icinga/apache.conf $OMD_ROOT/etc/apache/conf.d/icinga.conf
             make_link nagios $OMD_ROOT/etc/init.d/core
             # Refresh Check_MK Configuration after changing back from CMC
             if [ -e $OMD_ROOT/var/check_mk/core/config ] ; then
@@ -70,16 +66,7 @@ case "$1" in
             fi
         elif [ "$2" == "icinga" ]
         then
-            make_link ../../nagios/apache.conf $OMD_ROOT/etc/apache/conf.d/nagios.conf
-            make_link ../../icinga/apache.conf $OMD_ROOT/etc/apache/conf.d/icinga.conf
             make_link icinga $OMD_ROOT/etc/init.d/core
-        elif [ "$2" == "shinken" ]
-        then
-            # Thruk is the default interface, but classic is possible
-            make_link ../../shinken/apache-cgi.conf $OMD_ROOT/etc/apache/conf.d/nagios.conf
-            make_link ../../icinga/apache.conf $OMD_ROOT/etc/apache/conf.d/icinga.conf
-            make_link ../../shinken/apache.conf $OMD_ROOT/etc/apache/conf.d/shinken.conf
-            make_link shinken $OMD_ROOT/etc/init.d/core
         elif [ "$2" == "cmc" ]
         then
             make_link cmc $OMD_ROOT/etc/init.d/core

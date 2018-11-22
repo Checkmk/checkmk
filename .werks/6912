@@ -1,0 +1,11 @@
+Title: nagios: Dropped legacy Nagios GUI
+Level: 1
+Component: packages
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1542884289
+Class: fix
+
+The "classic" Nagios GUI has been removed from our packages for security reasons. It was only left
+for users using the Nagios core in previous versions and was only supporting single site setups.

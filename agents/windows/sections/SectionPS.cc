@@ -233,15 +233,23 @@ bool SectionPS::outputWMI(std::ostream &out) {
 
             auto uptime = static_cast<ULONGLONG>(std::max(timeDiff, 1LL));
 
-            outputProcess(
-                out, std::stoull(result.get<std::string>(L"VirtualSize")),
-                std::stoull(result.get<std::string>(L"WorkingSetSize")),
-                result.get<long long>(L"PagefileUsage"), uptime,
-                std::stoull(result.get<std::wstring>(L"UserModeTime")),
-                std::stoull(result.get<std::wstring>(L"KernelModeTime")),
-                processId, result.get<long long>(L"HandleCount"),
-                result.get<long long>(L"ThreadCount"), user,
-                to_utf8(process_name));
+            try {
+                outputProcess(
+                    out, std::stoull(result.get<std::string>(L"VirtualSize")),
+                    std::stoull(result.get<std::string>(L"WorkingSetSize")),
+                    result.get<long long>(L"PagefileUsage"), uptime,
+                    std::stoull(result.get<std::wstring>(L"UserModeTime")),
+                    std::stoull(result.get<std::wstring>(L"KernelModeTime")),
+                    processId, result.get<long long>(L"HandleCount"),
+                    result.get<long long>(L"ThreadCount"), user,
+                    to_utf8(process_name));
+            } catch (const std::range_error &e) {
+                // catch possible exception when UTF-16 is in not valid range
+                // for Linux toolchain, see FEED-3048
+                Error(_logger)
+                    << "Exception: " << e.what()
+                    << " UTF-16 -> UTF-8 conversion error. Skipping line in PS.";
+            }   
 
             more = result.next();
         }

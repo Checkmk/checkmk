@@ -156,6 +156,26 @@ def check_diskstat_line(this_time, item, params, line, mode='sectors'):
     ios_per_sec = None
     if len(line) >= 6 and line[4] >= 0 and line[5] > 0:
         reads, writes = map(int, line[4:6])
+        if "read_ios" in params:
+            warn, crit = params["read_ios"]
+            if reads >= crit:
+                infos.append('Read operations: %d (!!)' % (reads))
+                status = 2
+            elif reads >= warn:
+                infos.append('Read operations: %d (!)' % (reads))
+                status = max(status, 1)
+        else:
+            warn, crit = None, None
+        if "write_ios" in params:
+            warn, crit = params["write_ios"]
+            if writes >= crit:
+                infos.append('Write operations: %d (!!)' % (writes))
+                status = 2
+            elif writes >= warn:
+                infos.append('Write operations: %d (!)' % (writes))
+                status = max(status, 1)
+        else:
+            warn, crit = None, None
         ios = reads + writes
         ios_per_sec = get_rate(countername + ".ios", this_time, ios)
         infos.append("IOs: %.2f/sec" % ios_per_sec)
@@ -466,6 +486,19 @@ def check_diskstat_dict(item, params, disks):
             ql = disk.pop(what)
             yield check_levels(
                 ql, what, params.get(what), statemarkers=False, infoname="Average %s" % plugin_text)
+
+    # I/O operations
+    for what in "read", "write":
+        if what + "_ios" in disk:
+            ios = disk.pop(what + "_ios")
+            yield check_levels(
+                ios,
+                "disk_" + what + "_ios",
+                params.get(what + "_ios"),
+                unit="1/s",
+                statemarkers=False,
+                infoname="%s operations" % what.title(),
+            )
 
     # All the other metrics are currently not output in the plugin output - simply because
     # of their amount. They are present as performance data and will shown in graphs.

@@ -183,7 +183,7 @@ integrationtest: install-strip openhardwaremonitor
 
 # openhardwaremonitor cannot be built in parallel, ensure non-parallel with -j1:
 openhardwaremonitor:
-	$(MAKE) -j1 -C $(bindir)/../../omd/packages/openhardwaremonitor dist
+	$(MAKE) -j1 -C $(bindir)/../../omd/ openhardwaremonitor-dist
 
 # Force regeneration of coverage data during test run.
 coverage-reset:

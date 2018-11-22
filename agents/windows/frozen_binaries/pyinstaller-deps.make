@@ -85,7 +85,7 @@ new_packages: src/python-$(PYTHON_VERSION).msi
 
 src/vcredist_x86.exe:
 	cd src && \
-		wget https://download.microsoft.com/download/5/D/8/5D8C65CB-C849-4025-8E95-C3966CAFD8AE/vcredist_x86.exe
+		wget https://download.microsoft.com/download/1/1/1/1116b75a-9ec3-481a-a3c8-1777b5381140/vcredist_x86.exe
 
 setup:
 	sudo apt-get install scons upx-ucl wine

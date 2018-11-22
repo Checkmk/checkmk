@@ -83,19 +83,14 @@ PRE_CMA := $(BUILD_HELPER_DIR)/pre-cma
 
 .PHONY: install-global
 
-check-edition:
-	@if [ -z "$(EDITION)" ]; then \
-	    echo "FEHLER: Du musst eine Edition angeben! (EDITION=raw|enterprise|managed)" ; \
-	    exit 1 ; \
-	fi
-
-build: check-edition $(PACKAGES)
+build: $(PACKAGES)
 
 pack: skel
 
 #TODO: Define dependecies here correctly...
-$(PRE_INSTALL): check-edition
+$(PRE_INSTALL):
 	rm -rf $(DESTDIR)
+	rm -rf $(BUILD_HELPER_DIR)/*-install
 	mkdir -p $(DESTDIR)$(OMD_PHYSICAL_BASE)
 	A="$(OMD_PHYSICAL_BASE)" ; ln -s $${A:1} $(DESTDIR)/omd
 	touch $@
@@ -215,7 +210,7 @@ install-global: install
 	fi
 
 
-rpm: check-edition
+rpm:
 	PKG_VERSION=$(OMD_VERSION) ; \
 	PKG_VERSION=$${PKG_VERSION/.cee/} ; \
 	PKG_VERSION=$${PKG_VERSION/.cre/} ; \
@@ -247,16 +242,15 @@ rpm: check-edition
 	mv -v $(RPM_TOPDIR)/SRPMS/*.src.rpm $(REPO_PATH)
 	rm -rf $(RPM_TOPDIR) rpm.buildroot
 
-# Build DEB from prebuild binary. This currently needs 'make dist' and thus only
-# works within a GIT repository.
-deb-environment:
+
+# create a debian/changelog to build the package
+debian/changelog:
+	# Build DEB from prebuild binary. This currently needs 'make dist' and thus only
+	# works within a GIT repository.
 	@if test -z "$(DEBFULLNAME)" || test -z "$(DEBEMAIL)"; then \
 	  echo "please read 'man dch' and set DEBFULLNAME and DEBEMAIL" ;\
 	  exit 1; \
 	fi
-
-# create a debian/changelog to build the package
-deb-changelog: deb-environment
 	# this is a hack!
 	rm -f debian/changelog
 	PKG_VERSION=$(OMD_VERSION) ; \
@@ -267,7 +261,7 @@ deb-changelog: deb-environment
 	    --newversion 0.$(DISTRO_CODE) "`cat debian/changelog.tmpl`"
 	dch --release "releasing ...."
 
-deb: check-edition deb-changelog
+deb: debian/changelog
 	PKG_VERSION=$(OMD_VERSION) ; \
 	PKG_VERSION=$${PKG_VERSION/.cee/} ; \
 	PKG_VERSION=$${PKG_VERSION/.cre/} ; \
@@ -322,7 +316,7 @@ setversion:
 test:
 	t/test_all.sh
 
-$(PRE_CMA): check-edition
+$(PRE_CMA):
 	# make the cmc the default core
 	sed -i 's/default)/default) echo "cmc"; exit;/g' packages/omd/CORE.hook
 	# enable the event console by default

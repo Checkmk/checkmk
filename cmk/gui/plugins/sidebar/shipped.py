@@ -34,7 +34,6 @@ import re
 import cmk.paths
 
 import cmk.gui.config as config
-import cmk.gui.dashboard as dashboard
 import cmk.gui.sites as sites
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
@@ -42,73 +41,11 @@ from cmk.gui.globals import html
 
 from cmk.gui.plugins.sidebar import (
     sidebar_snapins,
-    visuals_by_topic,
     bulletlink,
-    footnotelinks,
     snapin_width,
     snapin_site_choice,
     simplelink,
 )
-
-#.
-#   .--Dashboards----------------------------------------------------------.
-#   |        ____            _     _                         _             |
-#   |       |  _ \  __ _ ___| |__ | |__   ___   __ _ _ __ __| |___         |
-#   |       | | | |/ _` / __| '_ \| '_ \ / _ \ / _` | '__/ _` / __|        |
-#   |       | |_| | (_| \__ \ | | | |_) | (_) | (_| | | | (_| \__ \        |
-#   |       |____/ \__,_|___/_| |_|_.__/ \___/ \__,_|_|  \__,_|___/        |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-
-def render_dashboards():
-    dashboard.load_dashboards()
-
-    def render_topic(topic, s, foldable=True):
-        first = True
-        for t, title, name, _is_view in s:
-            if t == topic:
-                if first:
-                    if foldable:
-                        html.begin_foldable_container(
-                            "dashboards", topic, False, topic, indent=True)
-                    else:
-                        html.open_ul()
-                    first = False
-                bulletlink(
-                    title, 'dashboard.py?name=%s' % name, onclick="return wato_views_clicked(this)")
-
-        if not first:  # at least one item rendered
-            if foldable:
-                html.end_foldable_container()
-            else:
-                html.open_ul()
-
-    by_topic = visuals_by_topic(
-        dashboard.permitted_dashboards().items(), default_order=[_('Overview')])
-    topics = [topic for topic, _entry in by_topic]
-
-    if len(topics) < 2:
-        render_topic(by_topic[0][0], by_topic[0][1], foldable=False)
-
-    else:
-        for topic, s in by_topic:
-            render_topic(topic, s)
-
-    links = []
-    if config.user.may("general.edit_dashboards"):
-        if config.debug:
-            links.append((_("Export"), "export_dashboards.py"))
-        links.append((_("Edit"), "edit_dashboards.py"))
-        footnotelinks(links)
-
-
-sidebar_snapins["dashboards"] = {
-    "title": _("Dashboards"),
-    "description": _("Links to all dashboards"),
-    "render": render_dashboards,
-    "allowed": ["user", "admin", "guest"],
-}
 
 #.
 #   .--Performance---------------------------------------------------------.

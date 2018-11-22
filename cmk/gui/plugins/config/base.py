@@ -152,7 +152,6 @@ custom_links = {}
 
 # Links for everyone
 custom_links['guest'] = [
-    ("Classical Nagios GUI", "../nagios/", "icon_home.png"),
     ("Addons", True, [
         ("NagVis", "../nagvis/", "icon_nagvis.png"),
     ]),
@@ -161,19 +160,19 @@ custom_links['guest'] = [
 # The members of the role 'user' get the same links as the guests
 # but some in addition
 custom_links['user'] = custom_links['guest'] + [("Open Source Components", False, [
-    ("Check_MK", "http://mathias-kettner.com/check_mk.html", None, "_blank"),
-    ("Nagios", "http://www.nagios.org/", None, "_blank"),
-    ("PNP4Nagios", "http://pnp4nagios.org/", None, "_blank"),
-    ("NagVis", "http://nagvis.org/", None, "_blank"),
-    ("RRDTool", "http://oss.oetiker.ch/rrdtool/", None, "_blank"),
+    ("Check_MK", "https://mathias-kettner.com", None, "_blank"),
+    ("Nagios", "https://www.nagios.org/", None, "_blank"),
+    ("PNP4Nagios", "https://pnp4nagios.org/", None, "_blank"),
+    ("NagVis", "https://nagvis.org/", None, "_blank"),
+    ("RRDTool", "https://oss.oetiker.ch/rrdtool/", None, "_blank"),
 ])]
 
 # The admins yet get further links
 custom_links['admin'] = custom_links['user'] + [("Support", False, [
-    ("Mathias Kettner", "http://mathias-kettner.com/"),
-    ("Check_MK Mailinglists", "http://mathias-kettner.com/check_mk_lists.html"),
-    ("Check_MK Exchange", "http://exchange.check-mk.org/", None, "_blank"),
-    ("Monitoring Portal (German)", "http://monitoring-portal.org", None, "_blank"),
+    ("Mathias Kettner", "https://mathias-kettner.com/"),
+    ("Check_MK Mailinglists", "https://mathias-kettner.com/community.php"),
+    ("Check_MK Exchange", "https://mathias-kettner.com/check_mk-exchange.php", None, "_blank"),
+    ("Monitoring Portal (German)", "https://monitoring-portal.org", None, "_blank"),
 ])]
 
 #  __     __         _

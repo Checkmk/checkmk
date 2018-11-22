@@ -34,7 +34,6 @@ import re
 import cmk.paths
 
 import cmk.gui.config as config
-import cmk.gui.sites as sites
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
@@ -42,96 +41,8 @@ from cmk.gui.globals import html
 from cmk.gui.plugins.sidebar import (
     sidebar_snapins,
     bulletlink,
-    snapin_width,
-    snapin_site_choice,
     simplelink,
 )
-
-#.
-#   .--Performance---------------------------------------------------------.
-#   |    ____            __                                                |
-#   |   |  _ \ ___ _ __ / _| ___  _ __ _ __ ___   __ _ _ __   ___ ___      |
-#   |   | |_) / _ \ '__| |_ / _ \| '__| '_ ` _ \ / _` | '_ \ / __/ _ \     |
-#   |   |  __/  __/ |  |  _| (_) | |  | | | | | | (_| | | | | (_|  __/     |
-#   |   |_|   \___|_|  |_|  \___/|_|  |_| |_| |_|\__,_|_| |_|\___\___|     |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-
-def render_performance():
-    only_sites = snapin_site_choice("performance", config.site_choices())
-
-    def write_line(left, right):
-        html.open_tr()
-        html.td(left, class_="left")
-        html.td(html.render_strong(right), class_="right")
-        html.close_tr()
-
-    html.open_table(class_=["content_center", "performance"])
-
-    try:
-        sites.live().set_only_sites(only_sites)
-        data = sites.live().query("GET status\nColumns: service_checks_rate host_checks_rate "
-                                  "external_commands_rate connections_rate forks_rate "
-                                  "log_messages_rate cached_log_messages\n")
-    finally:
-        sites.live().set_only_sites(None)
-
-    for what, col, format_str in \
-        [("Service checks",         0, "%.2f/s"),
-         ("Host checks",            1, "%.2f/s"),
-         ("External commands",      2, "%.2f/s"),
-         ("Livestatus-conn.",       3, "%.2f/s"),
-         ("Process creations",      4, "%.2f/s"),
-         ("New log messages",       5, "%.2f/s"),
-         ("Cached log messages",    6, "%d")]:
-        write_line(what + ":", format_str % sum(row[col] for row in data))
-
-    if only_sites is None and len(config.allsites()) == 1:
-        try:
-            data = sites.live().query("GET status\nColumns: external_command_buffer_slots "
-                                      "external_command_buffer_max\n")
-        finally:
-            sites.live().set_only_sites(None)
-        size = sum([row[0] for row in data])
-        maxx = sum([row[1] for row in data])
-        write_line(_('Com. buf. max/total'), "%d / %d" % (maxx, size))
-
-    html.close_table()
-
-
-sidebar_snapins["performance"] = {
-    "title": _("Server Performance"),
-    "description": _("Live monitor of the overall performance of all monitoring servers"),
-    "refresh": True,
-    "render": render_performance,
-    "allowed": ["admin",],
-    "styles": """
-#snapin_performance select {
-    margin-bottom: 2px;
-    width: 100%%;
-}
-table.performance {
-    width: %dpx;
-    border-radius: 2px;
-    background-color: rgba(0, 0, 0, 0.1);
-    border-style: solid;
-    border-color: rgba(0, 0, 0, 0.3) rgba(255, 255, 255, 0.3) rgba(255, 255, 255, 0.3) rgba(0, 0, 0, 0.3);
-    border-width: 1.5px;
-}
-table.performance td {
-    padding: 0px 2px;
-    font-size: 8pt;
-}
-table.performance td.right {
-    text-align: right;
-    padding: 0px;
-    padding-right: 1px;
-    white-space: nowrap;
-}
-
-""" % (snapin_width - 2)
-}
 
 #.
 #   .--Custom Links--------------------------------------------------------.

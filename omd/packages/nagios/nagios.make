@@ -31,34 +31,10 @@ $(NAGIOS_BUILD): $(NAGIOS_PATCHING)
 	$(TOUCH) $@
 
 $(NAGIOS_INSTALL):
-	$(MAKE) DESTDIR=$(DESTDIR) -C $(NAGIOS_DIR) install-base install-cgis install-html install-classicui
-	rm -f $(DESTDIR)$(OMD_ROOT)/share/nagios/htdocs/config.php.inc
-	
-	# Install Themes
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/nagios/htdocs/themes/classicui 
-	cp -af $(DESTDIR)$(OMD_ROOT)/share/nagios/htdocs/stylesheets $(DESTDIR)$(OMD_ROOT)/share/nagios/htdocs/themes/classicui/
-	cp -af $(DESTDIR)$(OMD_ROOT)/share/nagios/htdocs/images      $(DESTDIR)$(OMD_ROOT)/share/nagios/htdocs/themes/classicui/
-	$(MAKE) DESTDIR=$(DESTDIR) -C $(NAGIOS_DIR) install-exfoliation
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/nagios/htdocs/themes/exfoliation 
-	cp -af $(DESTDIR)$(OMD_ROOT)/share/nagios/htdocs/stylesheets $(DESTDIR)$(OMD_ROOT)/share/nagios/htdocs/themes/exfoliation/
-	cp -af $(DESTDIR)$(OMD_ROOT)/share/nagios/htdocs/images $(DESTDIR)$(OMD_ROOT)/share/nagios/htdocs/themes/exfoliation/
-	# remove original files
-	rm -rf $(DESTDIR)$(OMD_ROOT)/share/nagios/htdocs/stylesheets
-	rm -rf $(DESTDIR)$(OMD_ROOT)/share/nagios/htdocs/images
-	# Link ClassicUI
-	cd $(DESTDIR)$(OMD_ROOT)/share/nagios/htdocs; rm -rf styleshets; ln -sfn themes/classicui/stylesheets
-	cd $(DESTDIR)$(OMD_ROOT)/share/nagios/htdocs; rm -rf images; ln -sfn themes/classicui/images
+	$(MAKE) DESTDIR=$(DESTDIR) -C $(NAGIOS_DIR) install-base
 	
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/nagios
 	install -m 664 $(NAGIOS_DIR)/p1.pl $(DESTDIR)$(OMD_ROOT)/lib/nagios
-	
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/nagios/htdocs/ssi
-	install -m 755 $(PACKAGE_DIR)/$(NAGIOS)/ssi-wrapper.pl $(DESTDIR)$(OMD_ROOT)/share/nagios/htdocs/ssi
-	
-	for f in common avail cmd config extinfo histogram history notifications outages showlog status statusmap statuswml statuswrl summary tac trends ; do \
-		ln -sfn ssi-wrapper.pl $(DESTDIR)$(OMD_ROOT)/share/nagios/htdocs/ssi/$$f-header.ssi ; \
-		ln -sfn ssi-wrapper.pl $(DESTDIR)$(OMD_ROOT)/share/nagios/htdocs/ssi/$$f-footer.ssi ; \
-	done
 	
 	# Copy package documentations to have these information in the binary packages
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAGIOS)

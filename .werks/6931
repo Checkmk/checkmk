@@ -1,0 +1,19 @@
+Title: cmk-update-agent.exe: Fix problem with missing Runtime Library
+Level: 1
+Component: agents
+Compatible: compat
+Edition: cee
+Version: 1.6.0i1
+Date: 1542885280
+Class: fix
+
+Regression since 1.4.0p37 and 1.5.0
+
+On some older Windows Systems and on Systems without a VC++ Runtime Library 2008 (or newer)
+installed, the cmk-update-agent.exe may crash, showing an error like <code>Error loading Python DLL</code>.
+
+We intend to ship a correct version of the needed runtime library within the executable, but this mechanism
+got broken, caused by a sublte change in our build system.
+
+With this werk, the correct DLLs get packaged within the executable and <code>cmk-update-agent.exe</code>
+will work again as intended on affected systems.

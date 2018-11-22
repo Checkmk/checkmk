@@ -60,12 +60,20 @@ bool SectionWinperf::produceOutputInner(std::ostream &out,
                 counterObject.instances();
             // output instances - if any
             if (instances.size() > 0) {
-                out << instances.size() << " instances:";
-                for (std::wstring name : counterObject.instanceNames()) {
-                    std::replace(name.begin(), name.end(), L' ', L'_');
-                    out << " " << Utf8(name);
+                try {
+                    out << instances.size() << " instances:";
+                    for (std::wstring name : counterObject.instanceNames()) {
+                        std::replace(name.begin(), name.end(), L' ', L'_');
+                        out << " " << Utf8(name);
+                    }
+                    out << "\n";
+                } catch (const std::range_error &e) {
+                    // catch possible exception when UTF-16 is in not valid
+                    // range for Linux toolchain,  see FEED-3048
+                    Error(_logger)
+                        << "Exception: " << e.what()
+                        << " UTF-16 -> UTF-8 conversion error. Skipping line Win Perf.";
                 }
-                out << "\n";
             }
 
             // output counters

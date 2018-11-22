@@ -8997,7 +8997,7 @@ def find_usages_of_contact_group(name):
     global_config = load_configuration_settings()
 
     # Used in default_user_profile?
-    config_variable = config_variable_registry['default_user_profile']
+    config_variable = config_variable_registry['default_user_profile']()
     domain = config_variable.domain()
     configured = global_config.get('default_user_profile', {})
     default_value = domain().default_globals()["default_user_profile"]

@@ -1,0 +1,13 @@
+Title: Fixed terminating process on multiple restart requests
+Level: 1
+Component: liveproxy
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.5.0p8
+Date: 1542876290
+
+When sending multiple restart requests (using SIGUSR1) in a short time to the livestatus proxy
+daemon this could lead to a stopped livestatus proxy process. In this situation the process
+had to be started manually again.

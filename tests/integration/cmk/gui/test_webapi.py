@@ -6,11 +6,12 @@ import time
 import os
 import json
 import base64
+import copy
 from PIL import Image
 from StringIO import StringIO
 
 import cmk
-from testlib import web, APIError
+from testlib import web, APIError  # pylint: disable=unused-import
 
 
 def test_global_settings(site, web):
@@ -129,34 +130,46 @@ def test_get_all_sites(web, site):
 
 
 def test_set_site(web, site):
-    response = web.get_site(site.id)
-    assert site.id == response["site_id"]
+    original_site = web.get_site(site.id)
+    assert site.id == original_site["site_id"]
 
-    sitename = "testsite"
-    site_config = response["site_config"]
-    site_config["socket"] = "tcp:1.2.3.4:6557"
+    new_site_id = "testsite"
+    new_site_config = copy.deepcopy(original_site["site_config"])
+    new_site_config["socket"] = "tcp:1.2.3.4:6557"
+
     try:
-        web.set_site(sitename, site_config)
-        response = web.get_site(sitename)
-        assert sitename in response["site_id"]
+        web.set_site(new_site_id, new_site_config)
+
+        new_response = web.get_site(new_site_id)
+        assert new_site_id == new_response["site_id"]
+        assert new_response["site_config"] == new_site_config
+
+        original_response = web.get_site(site.id)
+        assert site.id == original_response["site_id"]
+        assert original_response == original_site
     finally:
-        web.delete_site(sitename)
+        web.delete_site(new_site_id)
 
 
 def test_set_all_sites(web, site):
     response = web.get_all_sites()
     del response["configuration_hash"]
-    sitename = "testsite"
 
-    response["sites"][sitename] = response["sites"][site.id]
-    response["sites"][sitename]["socket"] = "tcp:1.2.3.4:6557"
+    new_site_id = "testsite"
+
+    new_site_config = copy.deepcopy(response["sites"][site.id])
+    new_site_config["socket"] = "tcp:1.2.3.4:6557"
+
+    response["sites"][new_site_id] = new_site_config
 
     try:
         web.set_all_sites(response)
-        response = web.get_site(sitename)
-        assert sitename in response["site_id"]
+
+        response = web.get_site(new_site_id)
+        assert new_site_id == response["site_id"]
+        assert response["site_config"] == new_site_config
     finally:
-        web.delete_site(sitename)
+        web.delete_site(new_site_id)
 
 
 def test_write_host_tags(web, site):

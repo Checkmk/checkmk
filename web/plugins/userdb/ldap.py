@@ -53,13 +53,19 @@ import ldap
 import ldap.filter
 from ldap.controls import SimplePagedResultsControl
 
+from multiprocessing.pool import ThreadPool
+
 import cmk.paths
 
+import sites
 import config
 import watolib
 import log
 import cmk.log
 from lib import *
+
+
+from htmllib import RequestTimeout
 
 # LDAP attributes are case insensitive, we only use lower case!
 # Please note: This are only default values. The user might override this
@@ -1964,6 +1970,16 @@ ldap_attribute_plugins['groups_to_roles'] = {
 # Hopefully we have no large bulks of users changing their passwords at the same
 # time. In this case the implementation does not scale well. We would need to
 # change this to some kind of profile bulk sync per site.
+
+class SynchronizationResult(object):
+    def __init__(self, site_id, error_text=None, disabled=False, succeeded=False, failed=False):
+        self.site_id = site_id
+        self.error_text = error_text
+        self.failed = failed
+        self.disabled = disabled
+        self.succeeded = succeeded
+
+
 def synchronize_profile_to_sites(connection, user_id, profile):
     import sites
     import wato # FIXME: Cleanup!
@@ -1975,37 +1991,50 @@ def synchronize_profile_to_sites(connection, user_id, profile):
     connection._logger.info('Credentials changed: %s. Trying to sync to %d sites' %
                                                     (user_id, len(remote_sites)))
 
-    num_disabled  = 0
-    num_succeeded = 0
-    num_failed    = 0
+    synchronization_jobs = []
+    states = sites.states()
+
     for site_id, site in remote_sites:
-        if not site.get("replication"):
-            num_disabled += 1
-            continue
+        synchronization_jobs.append((states, site_id, site, user_id, profile))
 
-        if site.get("disabled"):
-            num_disabled += 1
-            continue
+    pool = ThreadPool()
+    results = pool.map(_sychronize_profile_worker, synchronization_jobs)
+    pool.close()
+    pool.join()
 
-        status = sites.state(site_id, {}).get("state", "unknown")
-        if status == "dead":
-            result = "Site is dead"
-        else:
-            try:
-                result = watolib.push_user_profile_to_site(site, user_id, profile)
-            except Exception, e:
-                result = "%s" % e
-
-        if result == True:
-            num_succeeded += 1
-        else:
-            num_failed += 1
-            connection._logger.info('  FAILED [%s]: %s' % (site_id, result))
-            # Add pending entry to make sync possible later for admins
+    for result in results:
+        if result.error_text:
+            connection._logger.info('  FAILED [%s]: %s' % (result.site_id, result.error_text))
             if config.wato_enabled:
-                watolib.add_change("edit-users", _('Password changed (sync failed: %s)') % result,
-                    add_user=False, sites=[site_id], need_restart=False)
+                watolib.add_change("edit-users", _('Password changed (sync failed: %s)') % result.error_text,
+                                    add_user=False, sites=[result.site_id], need_restart=False)
 
+    num_failed = sum([1 for result in results if result.failed])
+    num_disabled = sum([1 for result in results if result.disabled])
+    num_succeeded = sum([1 for result in results if result.succeeded])
     connection._logger.info('  Disabled: %d, Succeeded: %d, Failed: %d' %
                     (num_disabled, num_succeeded, num_failed))
 
+
+def _sychronize_profile_worker(site_configuration):
+    states, site_id, site, user_id, profile = site_configuration
+
+    if not site.get("replication"):
+        return SynchronizationResult(site_id, disabled=True)
+
+    if site.get("disabled"):
+        return SynchronizationResult(site_id, disabled=True)
+
+    status = states.get(site_id, {}).get("state", "unknown")
+    if status == "dead":
+        return SynchronizationResult(site_id, error_text=_("Site %s is dead") % site_id, failed=True)
+
+    try:
+        result = watolib.push_user_profile_to_site(site, user_id, profile)
+        return SynchronizationResult(site_id, succeeded=True)
+    except RequestTimeout:
+        # This function is currently only used by the background job
+        # which does not have any request timeout set, just in case...
+        raise
+    except Exception, e:
+        return SynchronizationResult(site_id, error_text="%s" % e, failed=True)

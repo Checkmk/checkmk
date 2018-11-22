@@ -1,0 +1,13 @@
+Title: diskstat: Allow configuration of disk io operations
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1542891708
+Class: feature
+
+This werk adds support for the configuration of disk io
+operation values in rule "Levels for disk IO".
+
+CMK-1285

@@ -3825,7 +3825,6 @@ def update_config_based_host_attributes():
     declare_custom_host_attrs()
 
     Folder.invalidate_caches()
-    Folder.root_folder().rewrite_hosts_files()
 
 
 def _clear_config_based_host_attributes():

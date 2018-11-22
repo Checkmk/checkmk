@@ -27,7 +27,6 @@
 import pytest
 import docker
 import os
-import time
 import subprocess
 
 import testlib
@@ -36,12 +35,10 @@ build_path = os.path.join(testlib.repo_path(), "docker")
 image_prefix = "docker-tests"
 branch_name = os.environ.get("BRANCH", "master")
 
+
 def build_version():
     return testlib.CMKVersion(
-        version=testlib.CMKVersion.DAILY,
-        edition=testlib.CMKVersion.CEE,
-        branch=branch_name
-    )
+        version=testlib.CMKVersion.DAILY, edition=testlib.CMKVersion.CEE, branch=branch_name)
 
 
 @pytest.fixture(scope="session")
@@ -60,17 +57,21 @@ def _image_name(edition, version):
 
 def _prepare_build():
     assert subprocess.Popen(["make", "needed-packages"],
-                            stdout=open(os.devnull, "w"), cwd=build_path).wait() == 0
+                            stdout=open(os.devnull, "w"),
+                            cwd=build_path).wait() == 0
 
 
 def _build(request, client, edition, version, add_args=None):
     _prepare_build()
 
-    image, build_logs = client.images.build(path=build_path, tag=_image_name(edition, version), buildargs={
-        "CMK_VERSION": version.version,
-        "CMK_EDITION": edition,
-        "CMK_DL_CREDENTIALS": ":".join(testlib.get_cmk_download_credentials()),
-    })
+    image, build_logs = client.images.build(
+        path=build_path,
+        tag=_image_name(edition, version),
+        buildargs={
+            "CMK_VERSION": version.version,
+            "CMK_EDITION": edition,
+            "CMK_DL_CREDENTIALS": ":".join(testlib.get_cmk_download_credentials()),
+        })
 
     # TODO: Enable this on CI system. Removing during development slows down testing
     #request.addfinalizer(lambda: client.images.remove(image.id, force=True))
@@ -119,11 +120,7 @@ def _start(request, client, edition="enterprise", version=None, is_update=False,
 
     _image, _build_logs = _build(request, client, edition, version)
 
-    c = client.containers.run(
-        image=_image_name(edition, version),
-        detach=True,
-        **kwargs
-    )
+    c = client.containers.run(image=_image_name(edition, version), detach=True, **kwargs)
 
     try:
         site_id = kwargs.get("environment", {}).get("CMK_SITE_ID", "cmk")
@@ -149,15 +146,17 @@ def _start(request, client, edition="enterprise", version=None, is_update=False,
 
 
 # TODO: Test with all editions (daily for enterprise + last stable for raw/managed)
-@pytest.mark.parametrize("edition", [
-#    "raw",
-    "enterprise",
-#    "managed",
-])
+@pytest.mark.parametrize(
+    "edition",
+    [
+        #    "raw",
+        "enterprise",
+        #    "managed",
+    ])
 def test_start_simple(request, client, edition):
     c = _start(request, client, edition)
 
-    cmds = [ p[-1] for p in c.top()["Processes"] ]
+    cmds = [p[-1] for p in c.top()["Processes"]]
     assert "cron -f" in cmds
 
     # Check postfix / syslog not runnig by default
@@ -183,31 +182,33 @@ def test_start_simple(request, client, edition):
     assert exit_code == 0
 
 
-
 def test_start_cmkadmin_passsword(request, client):
-    c = _start(request, client, environment={
-        "CMK_PASSWORD": "blabla",
-    })
+    c = _start(
+        request, client, environment={
+            "CMK_PASSWORD": "blabla",
+        })
 
-    assert c.exec_run(["htpasswd", "-vb", "/omd/sites/cmk/etc/htpasswd",
-                "cmkadmin", "blabla"])[0] == 0
+    assert c.exec_run(["htpasswd", "-vb", "/omd/sites/cmk/etc/htpasswd", "cmkadmin",
+                       "blabla"])[0] == 0
 
-    assert c.exec_run(["htpasswd", "-vb", "/omd/sites/cmk/etc/htpasswd",
-                "cmkadmin", "blub"])[0] == 3
+    assert c.exec_run(["htpasswd", "-vb", "/omd/sites/cmk/etc/htpasswd", "cmkadmin",
+                       "blub"])[0] == 3
 
 
 def test_start_custom_site_id(request, client):
-    c = _start(request, client, environment={
-        "CMK_SITE_ID": "xyz",
-    })
+    c = _start(
+        request, client, environment={
+            "CMK_SITE_ID": "xyz",
+        })
 
     assert c.exec_run(["omd", "status"], user="xyz")[0] == 0
 
 
 def test_start_enable_livestatus(request, client):
-    c = _start(request, client, environment={
-        "CMK_LIVESTATUS_TCP": "on",
-    })
+    c = _start(
+        request, client, environment={
+            "CMK_LIVESTATUS_TCP": "on",
+        })
 
     exit_code, output = c.exec_run(["omd", "config", "show", "LIVESTATUS_TCP"], user="cmk")
     assert exit_code == 0
@@ -226,10 +227,7 @@ def test_start_with_custom_command(request, client, version):
     edition = "enterprise"
     _build(request, client, edition, version)
     output = client.containers.run(
-        image=_image_name(edition, version),
-        detach=False,
-        command=["bash", "-c", "echo 1"]
-    )
+        image=_image_name(edition, version), detach=False, command=["bash", "-c", "echo 1"])
 
     assert "Created new site" in output
     assert output.endswith("1\n")
@@ -262,11 +260,15 @@ def test_build_using_local_gpg_pubkey(request, client, version):
 
 
 def test_start_enable_mail(request, client):
-    c = _start(request, client, environment={
-        "MAIL_RELAY_HOST": "mailrelay.mydomain.com",
-    }, hostname="myhost.mydomain.com")
+    c = _start(
+        request,
+        client,
+        environment={
+            "MAIL_RELAY_HOST": "mailrelay.mydomain.com",
+        },
+        hostname="myhost.mydomain.com")
 
-    cmds = [ p[-1] for p in c.top()["Processes"] ]
+    cmds = [p[-1] for p in c.top()["Processes"]]
 
     assert "syslogd" in cmds
     assert "/usr/lib/postfix/sbin/master" in cmds
@@ -278,7 +280,7 @@ def test_start_enable_mail(request, client):
 
 
 def test_update(request, client, version):
-    container_name="%s-monitoring" % branch_name
+    container_name = "%s-monitoring" % branch_name
 
     # Pick a random old version that we can use to the setup the initial site with
     # Later this site is being updated to the current daily build
@@ -289,10 +291,15 @@ def test_update(request, client, version):
     )
 
     # 1. create container with old version and add a file to mark the pre-update state
-    c_orig = _start(request, client, version=old_version, name=container_name,
-                    volumes=["/omd/sites"], tmpfs=["/omd/sites/cmk/tmp"])
-    assert c_orig.exec_run(["touch", "pre-update-marker"],
-                           user="cmk", workdir="/omd/sites/cmk")[0] == 0
+    c_orig = _start(
+        request,
+        client,
+        version=old_version,
+        name=container_name,
+        volumes=["/omd/sites"],
+        tmpfs=["/omd/sites/cmk/tmp"])
+    assert c_orig.exec_run(["touch", "pre-update-marker"], user="cmk",
+                           workdir="/omd/sites/cmk")[0] == 0
 
     # 2. stop the container
     c_orig.stop()
@@ -330,10 +337,15 @@ def test_update(request, client, version):
     c_orig.rename("%s-old" % container_name)
 
     # 7. create new container
-    c_new = _start(request, client, version=version, is_update=True,
-                   name=container_name, volumes_from=c_orig.id)
+    c_new = _start(
+        request,
+        client,
+        version=version,
+        is_update=True,
+        name=container_name,
+        volumes_from=c_orig.id)
 
     # 8. verify result
     c_new.exec_run(["omd", "version"], user="cmk")[1].endswith("%s\n" % version.omd_version())
-    assert c_new.exec_run(["test", "-f", "pre-update-marker"],
-                          user="cmk", workdir="/omd/sites/cmk")[0] == 0
+    assert c_new.exec_run(["test", "-f", "pre-update-marker"], user="cmk",
+                          workdir="/omd/sites/cmk")[0] == 0

@@ -231,9 +231,9 @@ def check_cpu_util_unix(values, params, cores=None):
         core_counter = 0
         cores_padded = [line + [0] * (11 - len(line)) for line in cores]
         for core, user, nice, system, _idle, iowait,\
-            irq, softirq, steal, guest, guest_nice in cores_padded:
+            irq, softirq, steal, _guest, _guest_nice in cores_padded:
 
-            total = user + nice + system + iowait + irq + softirq + steal + guest + guest_nice
+            total = user + nice + system + iowait + irq + softirq + steal
             prev_total = get_item_state("cpu.util.%s.total" % core, 0)
             total_diff = total - prev_total
             set_item_state("cpu.util.%s.total" % core, total)
@@ -253,7 +253,7 @@ def check_cpu_util_unix(values, params, cores=None):
                 state = 0
                 if total_perc >= crit:
                     state = 2
-                if total_perc >= warn:
+                elif total_perc >= warn:
                     state = 1
                 if state > 0:
                     yield state, "Core %s: %s (warn/crit at %s/%s)" % \

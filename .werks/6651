@@ -1,0 +1,15 @@
+Title: Single CPU utilization, apply Werk 6735: don't double count guest cputime in total cputime
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1542875627
+Class: fix
+
+Linux kernel includes guest cputime in user cputime and thus guest cputime
+must not be added when calculating total cputime for each core. This bugfix
+was already implement in Werk 6735 for the all cores combined total CPU
+utilization.
+
+Test are included to verify the correct behavior.

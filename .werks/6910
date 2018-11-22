@@ -1,0 +1,10 @@
+Title: cisco_secure: Don't crash upon missing port status
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1542876344
+Class: fix
+
+The check now goes to unknown if the status cannot be determined.

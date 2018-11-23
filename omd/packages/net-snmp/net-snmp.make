@@ -42,9 +42,11 @@ $(NET_SNMP)-install-python:
 	    export LDFLAGS="$(PACKAGE_PYTHON_LDFLAGS)" ; \
 	    export LD_LIBRARY_PATH="$(PACKAGE_PYTHON_LD_LIBRARY_PATH)" ; \
 	    $(PACKAGE_PYTHON_EXECUTABLE) setup.py install --basedir=.. --home=$(DESTDIR)$(OMD_ROOT) \
-	        --prefix='' \
-	        --install-platlib=$(DESTDIR)$(OMD_ROOT)/lib/python \
-	        --install-purelib=$(DESTDIR)$(OMD_ROOT)/lib/python
+		--prefix='' \
+		--install-platlib=$(DESTDIR)$(OMD_ROOT)/lib/python \
+		--install-purelib=$(DESTDIR)$(OMD_ROOT)/lib/python \
+		--root=/ \
+		--single-version-externally-managed
 # For some obscure reason beyond the mental capacities of mere humans, the
 # easy_install mechanism triggered by the setup call above results in the
 # creation of a lib/python/site.py, a copy of site-patch.py from setuptools.

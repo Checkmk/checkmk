@@ -48,8 +48,9 @@ def check_vms_cpu(item, params, info):
         ("system", system),
         ("wait", wait, 0, 0),
     ]
-    if params:
-        warn, crit = params
+    params = transform_cpu_iowait(params)
+    if isinstance(params.get('iowait'), tuple):
+        warn, crit = params['iowait']
         perfdata = [
             ("user", user),
             ("system", system),
@@ -57,10 +58,8 @@ def check_vms_cpu(item, params, info):
         ]
         if wait >= crit:
             state = 2
-            infotext += '(!!)'
         elif wait >= warn:
             state = 1
-            infotext += '(!)'
 
     return (state, infotext, perfdata)
 
@@ -71,4 +70,5 @@ check_info['vms_cpu'] = {
     "service_description": "CPU utilization",
     "has_perfdata": True,
     "group": "cpu_iowait",
+    'includes': ['transforms.include'],
 }

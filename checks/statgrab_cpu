@@ -45,10 +45,9 @@ def check_statgrab_cpu(_no_item, params, info):
         elif var == 'idle':
             idle = int(value)
         elif var == 'iowait':
-            wait = int(value)
+            iowait = int(value)
 
-    # user, nice, system, idle, iowait, hw-int, sw-int, steal
-    values = [user, nice, system, idle, wait, 0, 0, 0]
+    values = transform_cpu_info([user, nice, system, idle, iowait])
 
     return check_cpu_util_unix(values, params)
 
@@ -58,6 +57,6 @@ check_info["statgrab_cpu"] = {
     'inventory_function': inventory_statgrab_cpu,
     'service_description': 'CPU utilization',
     'has_perfdata': True,
-    'includes': ['cpu_util.include'],
+    'includes': ['cpu_util.include', 'transforms.include'],
     'group': 'cpu_iowait',
 }

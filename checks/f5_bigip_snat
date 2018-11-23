@@ -91,12 +91,15 @@ def check_f5_bigip_snat(item, params, parsed):
             if param_var.endswith("_lower") and isinstance(levels, tuple):
                 levels = (None, None) + levels
             value = summed_values[param_var.rstrip("_lower")]
-            state, extra_text, _extra_perfdata = check_levels(value, param_var, levels)
+            state, infotext, _extra_perfdata = check_levels(
+                value,
+                param_var,
+                levels,
+                human_readable_func=
+                lambda x, p=param_var: get_bytes_human_readable(x, base=1000.0) if "octets" in p else str(x),
+                infoname=map_paramvar_to_text[param_var.rstrip("_lower")])
             if state:
-                if "octets" in param_var:
-                    value = get_bytes_human_readable(value, base=1000.0)
-                yield state, "%s: %s%s" % (map_paramvar_to_text[param_var.rstrip("_lower")], value,
-                                           extra_text)
+                yield state, infotext
 
 
 check_info["f5_bigip_snat"] = {

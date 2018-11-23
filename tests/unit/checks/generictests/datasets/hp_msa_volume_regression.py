@@ -80,8 +80,8 @@ checks = {
                               ('growth', 0.0, None, None, None, None),
                               ('trend', 0, None, None, 0, 17481)])])
     ],
-    'io': [('SUMMARY', 'default', [(0, 'Read: 0.00 B/s', []), (0, 'Write: 0.00 B/s', []),
-                                   (0, '', [('disk_read_throughput', 0.0, None, None, None, None),
-                                            ('disk_write_throughput', 0.0, None, None, None,
-                                             None)])])]
+    'io': [('SUMMARY', 'default', [
+        (0, 'Read: 0.00 B/s', [('disk_read_throughput', 0.0, None, None, None, None)]),
+        (0, 'Write: 0.00 B/s', [('disk_write_throughput', 0.0, None, None, None, None)]),
+    ])]
 }

@@ -132,7 +132,6 @@ def test_io_check(check_manager):
             u'raidtype': u'RAID0',
         }
     }
-    _, read, written, both = check.run_check(item_1st, params, parsed)
-    assert read == (0, 'Read: 0.00 B/s', [])
-    assert written == (0, 'Write: 0.00 B/s', [])
-    assert both == (0, '', [('disk_read_throughput', 0.0), ('disk_write_throughput', 0.0)])
+    _, read, written = check.run_check(item_1st, params, parsed)
+    assert read == (0, 'Read: 0.00 B/s', [('disk_read_throughput', 0.0)])
+    assert written == (0, 'Write: 0.00 B/s', [('disk_write_throughput', 0.0)])

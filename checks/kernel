@@ -74,17 +74,7 @@ def check_kernel(item, params, info):
     this_val = int(hits[0][1])
     per_sec = get_rate(None, this_time, this_val)
 
-    if isinstance(params, tuple):
-        warn, crit = params
-    else:
-        warn, crit = None, None
-    perfdata = [(counter, per_sec, warn, crit)]
-    state, text, extraperf = check_levels(per_sec, counter, params)
-    perfdata += extraperf
-    infotext = "%.0f/s" % per_sec
-    if text:
-        infotext += ", " + text
-    return state, infotext, perfdata
+    return check_levels(per_sec, counter, params, unit="/s", infoname=kernel_counter_names[counter])
 
 
 check_info["kernel"] = {
@@ -114,13 +104,6 @@ def inventory_cpu_utilization(info):
             return [(None, {})]
 
 
-def transform_cpu_info(element):
-    transele = [element[0]] + map(int, element[1:])
-    if len(transele) < 8:
-        transele += [0] * 4  # needed for Linux 2.4
-    return transele
-
-
 # Columns of cpu usage /proc/stat:
 # - cpuX: number of CPU or only 'cpu' for aggregation
 # - user: normal processes executing in user mode
@@ -137,9 +120,7 @@ def transform_cpu_info(element):
 
 
 def kernel_check_cpu_utilization(item, params, info):
-    # Convert old style tuple-parameter to new dict
-    if not isinstance(params, dict):
-        params = {"iowait": params}
+    params = transform_cpu_iowait(params)
 
     # Look for entry matching "cpu" (this is the combined load of all cores)
     total = [transform_cpu_info(line) for line in info if line[0] == "cpu"]
@@ -162,5 +143,5 @@ check_info["kernel.util"] = {
     'service_description': 'CPU utilization',
     'has_perfdata': True,
     'group': 'cpu_iowait',
-    'includes': ['cpu_util.include'],
+    'includes': ['cpu_util.include', 'transforms.include'],
 }

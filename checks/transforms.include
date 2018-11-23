@@ -7,7 +7,7 @@
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
-# | Copyright Mathias Kettner 2015             mk@mathias-kettner.de |
+# | Copyright Mathias Kettner 2018             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 #
 # This file is part of Check_MK.
@@ -25,34 +25,10 @@
 # Boston, MA 02110-1301 USA.
 
 
-def check_firewall_if(item, params, parsed):
+def transform_cpu_iowait(params):
+    if params is None:
+        return {}
+    if isinstance(params, tuple):
+        return {"iowait": params}
 
-    infotext_names = {
-        "ip4_in_blocked": "Incoming IPv4 packets blocked: ",
-    }
-
-    this_time = time.time()
-
-    for what in parsed[item]:
-
-        counter = parsed[item][what]
-        rate = get_rate("firewall_if-%s.%s" % (what, item), this_time, counter, onwrap=RAISE)
-
-        if params.get("averaging"):
-            backlog_minutes = params["averaging"]
-            avgrate = get_average("firewall_if-%s.%s" % (what, item), this_time, rate,
-                                  backlog_minutes * 60)
-            check_against = avgrate
-        else:
-            check_against = rate
-
-        status, infotext, extraperf = check_levels(
-            check_against,
-            what,
-            params.get(what),
-            human_readable_func=lambda x: "%.2f pkts/s" % x,
-            infoname=infotext_names[what])
-
-        perfdata = [(what, rate)] + extraperf[:1]
-
-        yield status, infotext, perfdata
+    return params

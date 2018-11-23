@@ -142,11 +142,10 @@ def parse_arguments(argv):
     parser.add_argument(
         "--dump-config", action="store_true", help='''Dump parsed configuration and exit''')
     parser.add_argument(
-        "--pjoin-timeout",
+        "--timeout",
         default=10,
         type=int,
-        help='''Timeout for process joining in seconds
-                        (default 10)''')
+        help='''Timeout for individual processes in seconds (default 10)''')
     parser.add_argument(
         "--piggyback-vms",
         default="",
@@ -664,9 +663,9 @@ def main(argv=None):
 
         write_groups(resources)
 
-        args = ((resource, client, config) for resource in resources)
+        func_args = ((resource, client, config) for resource in resources)
         map_ = map if args.sequential else AsyncMapper(args.timeout, args.debug)
-        for sections in map_(process_resource, args):
+        for sections in map_(process_resource, func_args):
             for section in sections:
                 section.write()
 

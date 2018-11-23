@@ -2910,9 +2910,9 @@ class CREHost(WithPermissionsAndAttributes):
     def validation_errors(self):
         if hooks.registered('validate-host'):
             errors = []
-            for hook_function in hooks.get('validate-host'):
+            for hook in hooks.get('validate-host'):
                 try:
-                    hook_function(self)
+                    hook.handler(self)
                 except MKUserError as e:
                     errors.append("%s" % e)
             return errors
@@ -7018,8 +7018,9 @@ class BuiltinHosttagsConfiguration(HosttagsConfiguration):
 #   '----------------------------------------------------------------------'
 
 
+# TODO: Kept for compatibility with pre-1.6 WATO plugins
 def register_hook(name, func):
-    hooks.register(name, func)
+    hooks.register_from_plugin(name, func)
 
 
 def call_hook_hosts_changed(folder):
@@ -10251,9 +10252,9 @@ def validate_all_hosts(hostnames, force_all=False):
         for name in hostnames:
             eff = all_hosts[name]
             errors = []
-            for hk in hooks.get('validate-all-hosts'):
+            for hook in hooks.get('validate-all-hosts'):
                 try:
-                    hk(eff, all_hosts)
+                    hook.handler(eff, all_hosts)
                 except MKUserError as e:
                     errors.append("%s" % e)
             hosts_errors[name] = errors

@@ -3895,4 +3895,4 @@ define command {
             })
 
 
-hooks.register("pre-activate-changes", mkeventd_update_notifiation_configuration)
+hooks.register_builtin("pre-activate-changes", mkeventd_update_notifiation_configuration)

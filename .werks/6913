@@ -1,0 +1,17 @@
+Title: Allow deletion of hosts that are configured to be their own parents
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0p8
+Date: 1542961768
+Class: fix
+
+The GUI allowed to configure a host as it's own child and informs the user
+about this with a configuration warning message. But it allowed the user to
+save the host.
+
+To fix this the user could not delete the host because the GUI prevents deletion
+of hosts which are still parent hosts. This check is now skipping the relation
+to itself which makes it possible to delete the host without editing the parent
+setting.

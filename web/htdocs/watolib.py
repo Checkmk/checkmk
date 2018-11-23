@@ -2322,6 +2322,14 @@ class CREFolder(BaseFolder):
         for child_key, child in Folder.root_folder().all_hosts_recursively().items():
             for host_name in host_names:
                 if host_name in child.parents():
+                    # The GUI allowed to configure a host as it's own child and
+                    # informs the user about this with a configuration warning
+                    # message. But it allowed the user to save the host which means
+                    # the direct relation needs to be ignored here or it will prevent
+                    # deletion of such a host.
+                    if host_name == child_key:
+                        continue
+
                     hosts_with_children.setdefault(host_name, [])
                     hosts_with_children[host_name].append(child_key)
 

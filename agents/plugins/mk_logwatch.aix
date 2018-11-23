@@ -1,13 +1,32 @@
 #!/usr/bin/ksh
 # Logfile monitoring for AIX via errpt
-# Beware: This Plugin clears the errors after each run,
-# but it creates an detailed backup in /var/log/errpt_TIMESTAMP.log
+
+## Output of errpt looks like this, newest first
+## (timestamp is month-day-hour-minute-year):
+# IDENTIFIER TIMESTAMP  T C RESOURCE_NAME  DESCRIPTION
+# 8650BE3F   0820122810 I H ent2           ETHERCHANNEL RECOVERY
+# F3846E13   0820122510 P H ent2           ETHERCHANNEL FAILOVER
+# 8650BE3F   0820104410 I H ent2           ETHERCHANNEL RECOVERY
+# F3846E13   0820093810 P H ent2           ETHERCHANNEL FAILOVER
+# 8650BE3F   0820090910 I H ent2           ETHERCHANNEL RECOVERY
+#
+
+MK_LOGWATCH_AIX_STATE="$MK_VARDIR/mk_logwatch_aix.last_reported"
 
 echo "<<<logwatch>>>"
 echo "[[[errorlog]]]"
-OUT=$(errpt | awk 'NR>1 { printf "C %s\n", $0 }')
-if [[ $OUT != '' ]];then
-        echo "$OUT"
-        errpt -a > /var/log/errpt_$(date +%s).log
-        errclear 0
+
+# the last line we already reported (may be empty)
+LINE=$(tail -n1 "$MK_LOGWATCH_AIX_STATE" 2> /dev/null)
+
+if [ "$LINE" ]; then  # get rid of all lines after that:
+    OUT=$(errpt | awk '/'"$LINE"'/ {exit}; (NR>1) {printf "C %s\n", $0}')
+else  # LINE is empty -> report all
+    OUT=$(errpt | awk '(NR>1) {printf "C %s\n", $0}')
 fi
+
+if [ "$OUT" ]; then
+    # output data; if successful, remember most recent
+    echo "$OUT" && echo "$OUT" | head -n1 | sed 's/^C\ //' > "$MK_LOGWATCH_AIX_STATE"
+fi
+

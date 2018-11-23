@@ -1,0 +1,17 @@
+Title: mk_logwatch.aix: Don't clear systems error log
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p8
+Date: 1542962724
+
+The systems error log (errpt) is no longer cleared ("errclear 0").
+Previously the errorlog has been cleared after each run of the plugin,
+and a backup file of the error log has been created as
+/var/log/errpt_$DATE.log.
+
+This is no longer the case, as a less intrusive way to avoid
+redundant log messages has been established.

@@ -240,7 +240,7 @@ def create_auth_file(callee, users=None):
 
 
 # TODO: Should we not execute this hook also when folders are modified?
-hooks.register('users-saved', lambda users: create_auth_file("users-saved", users))
-hooks.register('roles-saved', lambda x: create_auth_file("roles-saved"))
-hooks.register('contactgroups-saved', lambda x: create_auth_file("contactgroups-saved"))
-hooks.register('activate-changes', lambda x: create_auth_file("activate-changes"))
+hooks.register_builtin('users-saved', lambda users: create_auth_file("users-saved", users))
+hooks.register_builtin('roles-saved', lambda x: create_auth_file("roles-saved"))
+hooks.register_builtin('contactgroups-saved', lambda x: create_auth_file("contactgroups-saved"))
+hooks.register_builtin('activate-changes', lambda x: create_auth_file("activate-changes"))

@@ -27,6 +27,7 @@
 import sys
 import StringIO
 import traceback
+from typing import NamedTuple
 
 import cmk.gui.config as config
 import cmk.gui.i18n
@@ -45,9 +46,9 @@ def load_plugins(force):
     if loaded_with_language == cmk.gui.i18n.get_current_language() and not force:
         return
 
-    # Cleanup all registered hooks. They need to be renewed by load_plugins()
+    # Cleanup all plugin hooks. They need to be renewed by load_plugins()
     # of the other modules
-    unregister()
+    unregister_plugin_hooks()
 
     # This must be set after plugin loading to make broken plugins raise
     # exceptions all the time and not only the first time (when the plugins
@@ -55,13 +56,30 @@ def load_plugins(force):
     loaded_with_language = cmk.gui.i18n.get_current_language()
 
 
-def unregister():
-    global hooks
-    hooks = {}
+def unregister_plugin_hooks():
+    old_hooks = hooks.copy()
+    for name, registered_hooks in old_hooks.items():
+        hooks_left = [h for h in registered_hooks if h.is_builtin]
+        if hooks_left:
+            hooks[name] = hooks_left
+        else:
+            del hooks[name]
 
 
-def register(name, func):
-    hooks.setdefault(name, []).append(func)
+def register_builtin(name, func):
+    register(name, func, is_builtin=True)
+
+
+def register_from_plugin(name, func):
+    register(name, func, is_builtin=False)
+
+
+Hook = NamedTuple("Hook", [("handler", type(lambda: None)), ("is_builtin", bool)])
+
+
+# Kept public for compatibility with pre 1.6 plugins (is_builtin needs to be optional for pre 1.6)
+def register(name, func, is_builtin=False):
+    hooks.setdefault(name, []).append(Hook(handler=func, is_builtin=is_builtin))
 
 
 def get(name):
@@ -75,10 +93,10 @@ def registered(name):
 
 def call(name, *args):
     n = 0
-    for hk in hooks.get(name, []):
+    for hook in hooks.get(name, []):
         n += 1
         try:
-            hk(*args)
+            hook.handler(*args)
         except Exception as e:
             if config.debug:
                 txt = StringIO.StringIO()

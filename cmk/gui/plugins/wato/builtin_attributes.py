@@ -249,7 +249,7 @@ def validate_host_parents(host):
                  ) % (parent_name, parent.site_id(), host.site_id()))
 
 
-hooks.register('validate-host', validate_host_parents)
+hooks.register_builtin('validate-host', validate_host_parents)
 
 
 class NetworkScanAttribute(ValueSpecAttribute):

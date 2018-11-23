@@ -33,27 +33,41 @@ factory_settings['azure_agent_info_levels'] = {
 }
 
 
+def _update_remaining_reads(parsed, value):
+    try:
+        value = int(value)
+    except ValueError:
+        pass
+
+    current = parsed.get('remaining-reads', '_some_string')
+    if isinstance(current, str):
+        parsed['remaining-reads'] = value
+        return
+    parsed['remaining-reads'] = min(current, value)
+
+
 def parse_azure_agent_info(info):
 
     parsed = {}
     for row in info:
-        k, v = row[0], json.loads(_AZURE_AGENT_SEPARATOR.join(row[1:]))
+        key = row[0]
+        value = _AZURE_AGENT_SEPARATOR.join(row[1:])
 
-        if k == 'remaining-reads':
-            try:
-                v = int(v)
-                v = min(int(parsed.get(k, 'fail')), v)
-            except ValueError:
-                pass
-            parsed[k] = v
+        if key == 'remaining-reads':
+            _update_remaining_reads(parsed, value)
             continue
 
-        elif k == 'issue':
+        try:
+            value = json.loads(value)
+        except ValueError:
+            pass
+
+        if key == 'issue':
             issues = parsed.setdefault('issues', {})
-            issues.setdefault(v['type'], []).append(v)
+            issues.setdefault(value['type'], []).append(value)
             continue
 
-        parsed.setdefault(k, []).append(v)
+        parsed.setdefault(key, []).append(value)
 
     return parsed
 

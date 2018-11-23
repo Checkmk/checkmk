@@ -112,10 +112,7 @@ def check_tinkerforge_ambient(item, params, parsed):
         reading = float(parsed['ambient'][item][0]) / 100.0
         if not params:
             params = None
-        status, infotext, perfdata = check_levels(reading, 'brightness', params, unit="lx")
-        infotext = "%.1f lx" % (reading) + infotext
-        perfdata.append(('brightness', reading))
-        return status, infotext, perfdata
+        return check_levels(reading, 'brightness', params, unit="lx")
 
 
 def check_tinkerforge_humidity(item, params, parsed):

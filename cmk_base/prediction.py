@@ -303,7 +303,7 @@ def get_levels(hostname, service_description, dsname, params, cf, levels_factor=
 def estimate_levels(reference, params, levels_factor):
     ref_value = reference["average"]
     if not ref_value:  # No reference data available
-        return ref_value, [(None, None), (None, None)]
+        return ref_value, [None, None, None, None]
 
     stdev = reference["stdev"]
     levels = []
@@ -315,9 +315,9 @@ def estimate_levels(reference, params, levels_factor):
             if what == "upper" and "levels_upper_min" in params:
                 limit_warn, limit_crit = params["levels_upper_min"]
                 this_levels = (max(limit_warn, this_levels[0]), max(limit_crit, this_levels[1]))
-            levels.append(this_levels)
+            levels.extend(this_levels)
         else:
-            levels.append((None, None))
+            levels.extend((None, None))
     return ref_value, levels
 
 

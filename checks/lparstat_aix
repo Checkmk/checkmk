@@ -126,30 +126,21 @@ def check_lparstat_aix_cpu(_no_item, params, info):
     # You may set a warning/critical level on the io wait
     # percentage. This can be done by setting params to
     # a pair of (warn, crit)
+    params = transform_cpu_iowait(params)
     result = 0
 
-    if isinstance(params, tuple):  # old config only levels io wait
-        warn, crit = params
+    if isinstance(params.get('util'), tuple):
+        warn, crit = params['util']
+        if util >= crit:
+            result = max(result, 2)
+        elif util >= warn:
+            result = max(result, 1)
+    if 'iowait' in params:
+        warn, crit = params['iowait']
         if wait >= crit:
             result = max(result, 2)
-            infotext += "(!!)"
         elif wait >= warn:
             result = max(result, 1)
-            infotext += "(!)"
-
-    elif isinstance(params, dict):
-        if 'util' in params:
-            warn, crit = params['util']
-            if util >= crit:
-                result = max(result, 2)
-            elif util >= warn:
-                result = max(result, 1)
-        if 'iowait' in params:
-            warn, crit = params['iowait']
-            if wait >= crit:
-                result = max(result, 2)
-            elif wait >= warn:
-                result = max(result, 1)
 
     return (result, infotext, perfdata)
 
@@ -160,4 +151,5 @@ check_info['lparstat_aix.cpu_util'] = {
     "service_description": "CPU utilization",
     "has_perfdata": True,
     "group": "cpu_iowait",
+    'includes': ['transforms.include'],
 }

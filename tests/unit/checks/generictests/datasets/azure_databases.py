@@ -60,7 +60,7 @@ checks = {
                     )
                    ],
     'cpu'        : [(u'hugo-server/Testdatabase', 'default',
-                       [(0, '0.0% used', [('util', 0.0, 85., 95., 0, 100)]),
+                       [(0, 'total cpu: 0.0%', [('util', 0.0, 85., 95., 0, 100)]),
                        ],
                     )
                    ],

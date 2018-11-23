@@ -329,7 +329,48 @@ ZERO = _item_state.ZERO
 MKCounterWrapped = _item_state.MKCounterWrapped
 
 
-def check_levels(value, dsname, params, unit="", factor=1.0, scale=1.0, statemarkers=False):
+def _normalize_bounds(levels):
+    if len(levels) == 2:  # upper warn and crit
+        warn_upper, crit_upper = levels[0], levels[1]
+        warn_lower, crit_lower = None, None
+
+    else:  # upper and lower warn and crit
+        warn_upper, crit_upper = levels[0], levels[1]
+        warn_lower, crit_lower = levels[2], levels[3]
+
+    return warn_upper, crit_upper, warn_lower, crit_lower
+
+
+def _check_boundaries(value, levels, human_readable_func=str):
+    def levelsinfo_ty(ty, warn, crit, human_readable_func):
+        if human_readable_func is None:
+            human_readable_func = str
+        return " (warn/crit %s %s/%s)" % (ty, human_readable_func(warn), human_readable_func(crit))
+
+    warn_upper, crit_upper, warn_lower, crit_lower = _normalize_bounds(levels)
+    # Critical cases
+    if crit_upper is not None and value >= crit_upper:
+        return 2, levelsinfo_ty("at", warn_upper, crit_upper, human_readable_func)
+    if crit_lower is not None and value < crit_lower:
+        return 2, levelsinfo_ty("below", warn_lower, crit_lower, human_readable_func)
+
+    # Warning cases
+    if warn_upper is not None and value >= warn_upper:
+        return 1, levelsinfo_ty("at", warn_upper, crit_upper, human_readable_func)
+    if warn_lower is not None and value < warn_lower:
+        return 1, levelsinfo_ty("below", warn_lower, crit_lower, human_readable_func)
+    return 0, ""
+
+
+def check_levels(value,
+                 dsname,
+                 params,
+                 unit="",
+                 factor=1.0,
+                 scale=1.0,
+                 statemarkers=False,
+                 human_readable_func=None,
+                 infoname=None):
     """Generic function for checking a value against levels
 
     This also supports predictive levels.
@@ -344,11 +385,15 @@ def check_levels(value, dsname, params, unit="", factor=1.0, scale=1.0, statemar
     scale:   Scale of the levels in relation to "value" and the value in the RRDs.
              For example if the levels are specified in GB and the RRD store KB, then
              the scale is 1024*1024.
+    human_readable_func: Single argument function to present in a human readable fashion
+                         the value. It has priority over the unit argument.
+    infoname: Perf value name for infotext, defaults to dsname
     """
     if unit:
         unit = " " + unit  # Insert space before MB, GB, etc.
-    perfdata = []
-    infotexts = []
+
+    if human_readable_func is None:
+        human_readable_func = lambda x: "%.2f%s" % (x / scale, unit)
 
     def scale_value(v):
         if v is None:
@@ -356,80 +401,52 @@ def check_levels(value, dsname, params, unit="", factor=1.0, scale=1.0, statemar
 
         return v * factor * scale
 
-    def levelsinfo_ty(ty, warn, crit, unit):
-        return ("warn/crit %s %.2f/%.2f %s" % (ty, warn, crit, unit)).strip()
-
-    # None or (None, None) -> do not check any levels
-    if params is None or params == (None, None):
-        return 0, "", []
+    infotext = "%s: %s" % (infoname or dsname, human_readable_func(value))
+    perf_value = (dsname, value)
+    # None, {} or (None, None) -> do not check any levels
+    if not params or params == (None, None):
+        return 0, infotext, [perf_value]
 
     # Pair of numbers -> static levels
     elif isinstance(params, tuple):
-        if len(params) == 2:  # upper warn and crit
-            warn_upper, crit_upper = scale_value(params[0]), scale_value(params[1])
-            warn_lower, crit_lower = None, None
-
-        else:  # upper and lower warn and crit
-            warn_upper, crit_upper = scale_value(params[0]), scale_value(params[1])
-            warn_lower, crit_lower = scale_value(params[2]), scale_value(params[3])
-
+        levels = map(scale_value, _normalize_bounds(params))
         ref_value = None
 
     # Dictionary -> predictive levels
     else:
         try:
-            ref_value, ((warn_upper, crit_upper), (warn_lower, crit_lower)) = \
+            ref_value, levels = \
                       _prediction.get_levels(host_name(), service_description(),
                                 dsname, params, "MAX", levels_factor=factor * scale)
 
             if ref_value:
-                infotexts.append("predicted reference: %.2f%s" % (ref_value / scale, unit))
+                predictive_levels_msg = "predicted reference: %s" % human_readable_func(ref_value)
             else:
-                infotexts.append("no reference for prediction yet")
+                predictive_levels_msg = "no reference for prediction yet"
 
         except MKGeneralException as e:
             ref_value = None
-            warn_upper, crit_upper, warn_lower, crit_lower = None, None, None, None
-            infotexts.append("no reference for prediction (%s)" % e)
+            levels = [None, None, None, None]
+            predictive_levels_msg = "no reference for prediction (%s)" % e
 
         except Exception as e:
             if _debug.enabled():
                 raise
             return 3, "%s" % e, []
 
+        if predictive_levels_msg:
+            infotext += " (%s)" % predictive_levels_msg
+
+    state, levelstext = _check_boundaries(value, levels, human_readable_func)
+
+    infotext += levelstext
+
+    if statemarkers:
+        infotext += state_markers[state]
+
+    perfdata = [perf_value + tuple(levels[:2])]
     if ref_value:
         perfdata.append(('predict_' + dsname, ref_value))
-
-    # Critical cases
-    if crit_upper is not None and value >= crit_upper:
-        state = 2
-        infotexts.append(levelsinfo_ty("at", warn_upper / scale, crit_upper / scale, unit))
-    elif crit_lower is not None and value < crit_lower:
-        state = 2
-        infotexts.append(levelsinfo_ty("below", warn_lower / scale, crit_lower / scale, unit))
-
-    # Warning cases
-    elif warn_upper is not None and value >= warn_upper:
-        state = 1
-        infotexts.append(levelsinfo_ty("at", warn_upper / scale, crit_upper / scale, unit))
-    elif warn_lower is not None and value < warn_lower:
-        state = 1
-        infotexts.append(levelsinfo_ty("below", warn_lower / scale, crit_lower / scale, unit))
-
-    # OK
-    else:
-        state = 0
-
-    if infotexts:
-        infotext = " (" + ", ".join(infotexts) + ")"
-    else:
-        infotext = ""
-
-    if state and statemarkers:
-        if state == 1:
-            infotext += "(!)"
-        else:
-            infotext += "(!!)"
 
     return state, infotext, perfdata
 

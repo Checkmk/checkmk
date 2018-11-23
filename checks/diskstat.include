@@ -406,50 +406,55 @@ def check_diskstat_dict(item, params, disks):
 
     # Utilization
     if "utilization" in disk:
-        util = disk["utilization"]
-        state, text, extraperf = check_levels(
+        util = disk.pop("utilization")
+        yield check_levels(
             util,
             "disk_utilization",
             params.get("utilization"),
             unit="%",
             scale=0.01,
-            statemarkers=False)
-        yield state, "%sUtilization: %.1f%%%s" % (prefix, util * 100, text), extraperf
+            statemarkers=False,
+            infoname=prefix + "Utilization")
 
     # Throughput
     for what in "read", "write":
         if what + "_throughput" in disk:
-            throughput = disk[what + "_throughput"]
-            state, text, extraperf = check_levels(
+            throughput = disk.pop(what + "_throughput")
+            state, infotext, extraperf = check_levels(
                 throughput,
                 "disk_" + what + "_throughput",
                 params.get(what),
                 unit="MB/s",
                 scale=1048576,
-                statemarkers=False)
-            yield state, "%s: %s/s%s" % (what.title(), get_bytes_human_readable(throughput),
-                                         text), extraperf
+                statemarkers=False,
+                human_readable_func=lambda x: get_bytes_human_readable(x) + '/s',
+                infoname=what.title())
+            yield state, infotext, extraperf
 
     # Average wait from end to end
     for what in ["wait", "read_wait", "write_wait"]:
         if "average_" + what in disk:
-            wait = disk["average_" + what]
-            state, text, extraperf = check_levels(
-                wait, what, params.get(what), unit="ms", scale=0.001, statemarkers=False)
-            yield state, "Average %s: %.2f ms%s" % (what.title().replace("_", " "), wait * 1000,
-                                                    text), extraperf
+            wait = disk.pop("average_" + what)
+            yield check_levels(
+                wait,
+                what,
+                params.get(what),
+                unit="ms",
+                scale=0.001,
+                statemarkers=False,
+                infoname="Average %s" % what.title().replace("_", " "))
 
     # Average disk latency
     if "latency" in disk:
-        latency = disk["latency"]
-        state, text, extraperf = check_levels(
+        latency = disk.pop("latency")
+        yield check_levels(
             latency,
             "disk_latency",
             params.get("latency"),
             unit="ms",
             scale=0.001,
-            statemarkers=False)
-        yield state, "Latency: %.2f ms%s" % (latency * 1000.0, text), extraperf
+            statemarkers=False,
+            infoname='Latency')
 
     # Queue lengths
     for what, plugin_text in [
@@ -458,10 +463,9 @@ def check_diskstat_dict(item, params, disks):
         ("write_ql", "Write Queue Length"),
     ]:
         if what in disk:
-            ql = disk[what]
-            state, levels_text, extraperf = check_levels(
-                ql, what, params.get(what), statemarkers=False)
-            yield state, "Average %s: %.2f%s" % (plugin_text, ql, levels_text), extraperf
+            ql = disk.pop(what)
+            yield check_levels(
+                ql, what, params.get(what), statemarkers=False, infoname="Average %s" % plugin_text)
 
     # All the other metrics are currently not output in the plugin output - simply because
     # of their amount. They are present as performance data and will shown in graphs.
@@ -474,4 +478,5 @@ def check_diskstat_dict(item, params, disks):
             # Currently the levels are not shown in the perfdata
             perfdata.append(("disk_" + key, value))
 
-    yield 0, '', perfdata
+    if perfdata:
+        yield 0, '', perfdata

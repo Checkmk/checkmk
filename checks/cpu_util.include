@@ -40,7 +40,7 @@
 # recognizes it. If the input name doesn't end on a number, this
 # returns consecutive numbers per call so this function has to be
 # called exactly once per core
-def cpu_util_core_name(orig, core_counter):
+def cpu_util_core_name(orig, core_index):
     expr = regex(r"\d+$")
     match = expr.search(orig)
     if match is not None:
@@ -48,9 +48,13 @@ def cpu_util_core_name(orig, core_counter):
     else:
         # fallback: if the cores have odd names, use
         # consecutive numbers for each call
-        num = core_counter
-        core_counter += 1
-    return "cpu_core_util_%s" % num, core_counter
+        num = core_index
+    return "cpu_core_util_%s" % num
+
+
+def transform_cpu_info(element):
+    int_casted_entries = [element[0]] + map(int, element[1:])
+    return int_casted_entries + [0] * (11 - len(int_casted_entries))
 
 
 def check_cpu_util(util, params, this_time=None, cores=None):
@@ -63,64 +67,41 @@ def check_cpu_util(util, params, this_time=None, cores=None):
     elif isinstance(params, tuple):
         params = {"levels": params}
 
-    infotext = "%.1f%% used" % util
+    levels = params.get("levels")
 
     # Averaging
     if "average" in params:
         util_avg = get_average("cpu_utilization.avg", this_time, util, params["average"])
-        check_against = util_avg
-        perfvar = "util_average"
-        infotext += ", %dmin average: %.1f%%" % (params["average"], util_avg)
+        state, infotext, extraperf = check_levels(
+            util_avg,
+            "util_average",
+            levels,
+            human_readable_func=get_percent_human_readable,
+            infoname="%dmin average")
     else:
-        check_against = util
-        perfvar = "util"
+        state, infotext, extraperf = check_levels(
+            util,
+            "util",
+            levels,
+            human_readable_func=get_percent_human_readable,
+            infoname="total cpu")
 
-    levels = params.get("levels")
-    if isinstance(levels, tuple):
-        warn, crit = levels  # only for perfdata
-    else:
-        warn, crit = None, None
-
-    state, extrainfo, extraperf = check_levels(check_against, perfvar, levels)
-    if extrainfo:
-        infotext += "," + extrainfo
-
+    warn, crit = levels if isinstance(levels, tuple) else (None, None)  # only for perfdata
     perfdata = [("util", util, warn, crit, 0, 100)]
     if "average" in params:
         perfdata.append(("util_average", util_avg, warn, crit, 0, 100))
 
-    perfdata += extraperf  # reference curve for predictive levels
+    perfdata += extraperf[1:]  # reference curve for predictive levels
     yield state, infotext, perfdata
 
     if "core_util_time_total" in params:
         threshold, warn, crit = params["core_util_time_total"]
-        for res in cpu_util_time(this_time, "total", util, threshold, warn, crit):
-            yield res
+        yield cpu_util_time(this_time, "total", util, threshold, warn, crit)
 
-    if cores and ("core_util_graph" in params or "core_util_time" in params):
-        core_counter = 0
-        for core, total_perc in cores:
-            if "core_util_graph" in params:
-                core_name, core_counter = cpu_util_core_name(core, core_counter)
-                yield 0, None, [(core_name, total_perc)]
-
-            if "core_util_time" in params:
-                threshold, warn, crit = params["core_util_time"]
-                for res in cpu_util_time(this_time, core, total_perc, threshold, warn, crit):
-                    yield res
-
-            if "levels_single" in params:
-                warn, crit = params["levels_single"]
-                state = 0
-                if total_perc >= crit:
-                    state = 2
-                if total_perc >= warn:
-                    state = 1
-                if state > 0:
-                    yield state, "Core %s: %s (warn/crit at %s/%s)" % \
-                          (core, get_percent_human_readable(total_perc),
-                                 get_percent_human_readable(warn),
-                                 get_percent_human_readable(crit)), []
+    if cores and any([x in params for x in ["core_util_graph", "core_util_time", "levels_single"]]):
+        for core_index, (core, total_perc) in enumerate(cores):
+            for perfdata in util_perfdata(core, total_perc, core_index, this_time, params):
+                yield perfdata
 
 
 # This one can handle user, system and wait. values is a list of:
@@ -138,10 +119,8 @@ def check_cpu_util_unix(values, params, cores=None):
     this_time = time.time()
     # Compute jiffi-differences of all relevant counters
     diff_values = []
-    n = 0
-    for v in values:
-        n += 1
-        countername = "cpu.util.%d" % n
+    for n, v in enumerate(values):
+        countername = "cpu.util.%d" % (n + 1)
         last_val = get_item_state(countername, (0, 0))[1]
         diff_values.append(v - last_val)
         set_item_state(countername, (this_time, v))
@@ -151,87 +130,57 @@ def check_cpu_util_unix(values, params, cores=None):
         raise MKCounterWrapped("Too short time difference since last check")
 
     user = diff_values[0] + diff_values[1]  # add user + nice
-    if len(values) >= 10:  # and (values[8] or values[9]):
-        # https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/kernel/sched/cputime.c
-        # see 'account_guest_time'
-        # if task_nice(p) <= 0:
-        #     cpustat[CPUTIME_USER] += cputime;
-        #     cpustat[CPUTIME_GUEST] += cputime;
-        subtrahend = diff_values[8] + diff_values[9]
-        user -= subtrahend
-        sum_jiffies -= subtrahend
+    # https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/kernel/sched/cputime.c
+    # see 'account_guest_time'
+    # if task_nice(p) <= 0:
+    #     cpustat[CPUTIME_USER] += cputime;
+    #     cpustat[CPUTIME_GUEST] += cputime;
+    subtrahend = diff_values[8] + diff_values[9]
+    user -= subtrahend
+    sum_jiffies -= subtrahend
+
+    user_perc = 100.0 * float(user) / float(sum_jiffies)
+    yield 0, "user: %.1f%%" % user_perc, [("user", user_perc)]
 
     system = diff_values[2] + diff_values[5] + diff_values[6]
-    wait = diff_values[4]
-    user_perc = 100.0 * float(user) / float(sum_jiffies)
     system_perc = 100.0 * float(system) / float(sum_jiffies)
-    wait_perc = 100.0 * float(wait) / float(sum_jiffies)
-    perfdata = [
-        ("user", user_perc),
-        ("system", system_perc),
-        ("wait", wait_perc),
-    ]
-
-    yield 0, "user: %.1f%%, system: %.1f%%" % (user_perc, system_perc), perfdata
+    yield 0, "system: %.1f%%" % system_perc, [("system", system_perc)]
 
     # Handle level on iowait
-    state = 0
-    if "iowait" in params and params["iowait"] is not None:
-        warn, crit = params["iowait"]
-        if wait_perc >= crit:
-            state = 2
-        elif wait_perc >= warn:
-            state = 1
-    yield state, "wait: %.1f%%" % (wait_perc)
+    wait = diff_values[4]
+    wait_perc = 100.0 * float(wait) / float(sum_jiffies)
+
+    yield check_levels(
+        wait_perc, 'wait', params.get('iowait'), human_readable_func=get_percent_human_readable)
 
     # Compute values used in virtualized environments (Xen, etc.)
     # Only do this for counters that have counted at least one tick
     # since the system boot. This avoids silly output in systems
     # where these counters are not being used
-    if len(values) >= 8:  #  and values[7]:
-        steal = diff_values[7]
-        steal_perc = 100.0 * float(steal) / float(sum_jiffies)
-        yield 0, "steal: %.1f%%" % steal_perc, [("steal", steal_perc)]
-    else:
-        steal_perc = 0
+    steal = diff_values[7]
+    steal_perc = 100.0 * float(steal) / float(sum_jiffies)
+    yield 0, "steal: %.1f%%" % steal_perc, [("steal", steal_perc)]
 
-    if len(values) >= 10:
-        guest = diff_values[8] + diff_values[9]
-        guest_perc = 100.0 * float(guest) / float(sum_jiffies)
-        yield 0, "guest: %.1f%%" % guest_perc, [("guest", guest_perc)]
-    else:
-        guest_perc = 0
+    guest = diff_values[8] + diff_values[9]
+    guest_perc = 100.0 * float(guest) / float(sum_jiffies)
+    yield 0, "guest: %.1f%%" % guest_perc, [("guest", guest_perc)]
 
     # Total utilization
     util_total_perc = user_perc + system_perc + wait_perc + steal_perc + guest_perc
-    state = 0
-    levelstext = ""
-    if "util" in params:
-        warn, crit = params["util"]
-        if util_total_perc >= crit:
-            state = 2
-        elif util_total_perc >= warn:
-            state = 1
-        else:
-            state = 0
-        if state:
-            levelstext = " (warn/crit at %.1f%%/%.1f%%)" % (warn, crit)
-
-    yield state, "total: %.1f%%" % util_total_perc + levelstext
+    yield check_levels(
+        util_total_perc,
+        'util',
+        params.get('util'),
+        human_readable_func=get_percent_human_readable,
+        infoname='total')
 
     if "core_util_time_total" in params:
         threshold, warn, crit = params["core_util_time_total"]
-        for res in cpu_util_time(this_time, "total", util_total_perc, threshold, warn, crit):
-            yield res
+        yield cpu_util_time(this_time, "total", util_total_perc, threshold, warn, crit)
 
-    if cores and \
-       ("core_util_graph" in params or
-        "core_util_time" in params or \
-        "levels_single" in params):
-        core_counter = 0
-        cores_padded = [line + [0] * (11 - len(line)) for line in cores]
-        for core, user, nice, system, _idle, iowait,\
-            irq, softirq, steal, _guest, _guest_nice in cores_padded:
+    if cores and any([x in params for x in ["core_util_graph", "core_util_time", "levels_single"]]):
+        for core_index, (core, user, nice, system, _idle, iowait, irq, softirq, steal, _guest,
+                         _guest_nice) in enumerate(cores):
 
             total = user + nice + system + iowait + irq + softirq + steal
             prev_total = get_item_state("cpu.util.%s.total" % core, 0)
@@ -239,27 +188,25 @@ def check_cpu_util_unix(values, params, cores=None):
             set_item_state("cpu.util.%s.total" % core, total)
             total_perc = ((100.0 * total_diff) / sum_jiffies) * len(cores)
 
-            if "core_util_graph" in params:
-                core_name, core_counter = cpu_util_core_name(core, core_counter)
-                yield 0, None, [(core_name, total_perc)]
+            for perfdata in util_perfdata(core, total_perc, core_index, this_time, params):
+                yield perfdata
 
-            if "core_util_time" in params:
-                threshold, warn, crit = params["core_util_time"]
-                for res in cpu_util_time(this_time, core, total_perc, threshold, warn, crit):
-                    yield res
 
-            if "levels_single" in params:
-                warn, crit = params["levels_single"]
-                state = 0
-                if total_perc >= crit:
-                    state = 2
-                elif total_perc >= warn:
-                    state = 1
-                if state > 0:
-                    yield state, "Core %s: %s (warn/crit at %s/%s)" % \
-                          (core, get_percent_human_readable(total_perc),
-                                 get_percent_human_readable(warn),
-                                 get_percent_human_readable(crit)), []
+def util_perfdata(core, total_perc, core_index, this_time, params):
+    if "core_util_graph" in params:
+        yield 0, "", [(cpu_util_core_name(core, core_index), total_perc)]
+
+    if "core_util_time" in params:
+        threshold, warn, crit = params["core_util_time"]
+        yield cpu_util_time(this_time, core, total_perc, threshold, warn, crit)
+
+    state, infotext, _ = check_levels(
+        total_perc,
+        "Core %s" % core,
+        params.get('levels_single'),
+        human_readable_func=get_percent_human_readable)
+    if state:
+        yield state, infotext, []
 
 
 #   .--helper--------------------------------------------------------------.
@@ -277,13 +224,15 @@ def cpu_util_time(this_time, core, perc, threshold, warn_core, crit_core):
     if perc > threshold:
         timestamp = get_item_state(core_state_name, 0)
         high_load_duration = (this_time - timestamp)
+        state, infotext, _ = check_levels(
+            high_load_duration,
+            "%s is under high load for" % core, (warn_core, crit_core),
+            human_readable_func=get_age_human_readable)
         if timestamp == 0:
             set_item_state(core_state_name, this_time)
-        elif high_load_duration > crit_core:
-            yield 2, "%s is under high load for %s minutes (warn/crit at %s/%s minutes)" %\
-                  (core, high_load_duration / 60, warn_core / 60, crit_core / 60), []
-        elif high_load_duration > warn_core:
-            yield 1, "%s is under high load for %s minutes (warn/crit at %s/%s minutes)" %\
-                  (core, high_load_duration / 60, warn_core / 60, crit_core / 60), []
-    else:
-        clear_item_state(core_state_name)
+        elif state:
+            return state, infotext
+        return 0, ""
+
+    clear_item_state(core_state_name)
+    return 0, ""

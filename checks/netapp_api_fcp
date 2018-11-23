@@ -103,8 +103,8 @@ def check_fibrechannel_common(item, params, parsed):
     ]:
         value = fcp_if.get(what)
         if value is not None:
-            value_text = format_func(value)
             state = 0
+            infotext = "%s: %s" % (descr, format_func(value))
             perfdata = [(what, value)]
             if levels_what:
                 if (what, 'predictive') in traffic_levels:
@@ -116,23 +116,17 @@ def check_fibrechannel_common(item, params, parsed):
                     bw_warn_min = traffic_levels[(levels_what, 'lower', 'warn')]
                     bw_crit_min = traffic_levels[(levels_what, 'lower', 'crit')]
                     level_params = (bw_warn, bw_crit, bw_warn_min, bw_crit_min)
-                state, levels_text, perfdata = check_levels(value, what, level_params)
+                state, infotext, perfdata = check_levels(value, what, level_params, infoname=descr)
 
-            yield state, "%s: %s%s" % (descr, value_text, levels_text), perfdata
+            yield state, infotext, perfdata
 
     # Latency
     for what, text in [("latency", "Latency"), ("read_latency", "Read Latency"),
                        ("write_latency", "Write Latency")]:
         value = fcp_if.get("avg_%s" % what)
         if value is not None:
-            state = 0
-
-            perfdata = [("avg_%s_latency" % what, value)]
-            if what in params:
-                state, levels_text, _extraperf = check_levels(
-                    value, "avg_%s_latency" % what, params.get(what), unit="ms")
-
-            yield state, "%s: %.2f ms%s" % (text, value, levels_text), perfdata
+            yield check_levels(
+                value, "avg_%s_latency" % what, params.get(what), unit="ms", infoname=text)
 
 
 def parse_netapp_api_fcp(info):

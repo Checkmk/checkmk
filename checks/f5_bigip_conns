@@ -92,37 +92,20 @@ def check_f5_bigip_conns(item, params, info):
         return
 
     # Current connections
-    for val, dsname, params_values, perfkey, title in [
-        (conns_dict.get("total", None), "conns", params.get("conns"), "connections", "Connections"),
-        (conns_dict.get("total_ssl", None), "ssl_conns", params.get("ssl_conns"), "connections_ssl",
+    for val, params_values, perfkey, title in [
+        (conns_dict.get("total"), params.get("conns"), "connections", "Connections"),
+        (conns_dict.get("total_ssl"), params.get("ssl_conns"), "connections_ssl",
          "SSL connections"),
-        (total_native_compat_rate, "connections_rate", conn_rate_params, "connections_rate",
-         "Connections/s"),
-        (stat_http_req_rate, "http_req_rate", params.get("http_req_rate"), "requests_per_second",
-         "HTTP requests/s"),
+        (total_native_compat_rate, conn_rate_params, "connections_rate", "Connections/s"),
+        (stat_http_req_rate, params.get("http_req_rate"), "requests_per_second", "HTTP requests/s"),
     ]:
-
-        state = 0
-        infotext = "%s:" % title
-        perfdata = []
 
         # SSL may not be configured, eg. on test servers
         if val is None:
-            infotext += " not configured"
+            yield 0, "%s: not configured" % title
         else:
-            if isinstance(params_values, tuple):
-                warn, crit = params_values[:2]
-            else:
-                warn, crit = (None, None)
-            perfdata.append((perfkey, val, warn, crit))
+            yield check_levels(val, perfkey, params_values, infoname=title)
 
-            state, extrainfo, extraperf = check_levels(val, dsname, params_values)
-            infotext += " %s%s" % (val, extrainfo)
-
-            if len(extraperf) > 0:
-                perfdata.append(extraperf[0])
-
-        yield state, infotext, perfdata
 
 
 

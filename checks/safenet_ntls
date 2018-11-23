@@ -122,11 +122,7 @@ def inventory_safenet_ntls_links(parsed):
 
 
 def check_safenet_ntls_links(_no_item, params, parsed):
-    connections = parsed["links"]
-    perfdata = [("connections", connections)]
-    infotext = "%d links" % connections
-    status, extrainfo, extraperf = check_levels(connections, "connections", params)
-    return status, infotext + extrainfo, perfdata + extraperf
+    return check_levels(parsed["links"], "connections", params, unit='links')
 
 
 check_info["safenet_ntls.links"] = {
@@ -160,11 +156,7 @@ def inventory_safenet_ntls_clients(parsed):
 
 
 def check_safenet_ntls_clients(_no_item, params, parsed):
-    connections = parsed["connected_clients"]
-    perfdata = [("connections", connections)]
-    infotext = "%d connected clients" % connections
-    status, extrainfo, extraperf = check_levels(connections, "connections", params)
-    return status, infotext + extrainfo, perfdata + extraperf
+    yield check_levels(parsed["connected_clients"], "connections", params, unit='connected clients')
 
 
 check_info["safenet_ntls.clients"] = {

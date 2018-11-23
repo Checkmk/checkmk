@@ -182,8 +182,8 @@ discovery = {'': [(None, None)]}
 
 checks = {'': [(None,
                 'default',
-                [(3,
-                  "15 min load 0.00 at 16 Cores (0.00 per Core), 'period'",
+                [(0,
+                  "15 min load: 0.00 at 16 Cores (0.00 per Core)",
                   [('load1', 0, None, None, 0, 16),
                    ('load5', 0, None, None, 0, 16),
                    ('load15', 0, None, None, 0, 16)])])]}

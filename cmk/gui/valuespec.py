@@ -3482,7 +3482,7 @@ class Dictionary(ValueSpec):
         self._default_keys = kwargs.get("default_keys", [])  # keys present in default value
         if "optional_keys" in kwargs:
             ok = kwargs["optional_keys"]
-            if isinstance(ok, list):
+            if isinstance(ok, list) and ok:
                 self._required_keys = \
                     [ e[0] for e in self._get_elements() if e[0] not in ok ]
                 self._optional_keys = True

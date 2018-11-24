@@ -182,6 +182,13 @@ class Nodes(object):
                         'memory': parse_memory(capacity.get('memory')),
                         'pods': parse_int(capacity.get('pods')),
                     }
+                allocatable = status.allocatable
+                if allocatable:
+                    node_data['allocatable'] = {
+                        'cpu': parse_cpu(allocatable.get('cpu')),
+                        'memory': parse_memory(allocatable.get('memory')),
+                        'pods': parse_int(allocatable.get('pods')),
+                    }
             view[node.metadata.name] = node_data
         return view
 

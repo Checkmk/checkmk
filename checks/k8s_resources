@@ -44,8 +44,11 @@ def check_k8s_pod_resources(_no_item, _no_params, parsed):
     pods = parsed.get('allocations', {}).get('pods', 0)
     yield 0, 'Pods: %d' % pods
 
+    allocatable = parsed.get('allocatable', {}).get('pods', 0)
+    yield 0, 'Allocatable: %d' % allocatable
+
     capacity = parsed.get('capacity', {}).get('pods', 0)
-    yield 0, 'Capacity: %s' % capacity
+    yield 0, 'Capacity: %d' % capacity
 
 
 check_info['k8s_resources.pods'] = {
@@ -69,6 +72,9 @@ def check_k8s_cpu_resources(_no_item, _no_params, parsed):
         yield 0, 'Limit: n.a.'
     else:
         yield 0, 'Limit: %.3f' % limit
+
+    allocatable = parsed.get('allocatable', {}).get('cpu', 0.0)
+    yield 0, 'Allocatable: %.3f' % allocatable
 
     capacity = parsed.get('capacity', {}).get('cpu', 0.0)
     yield 0, 'Capacity: %.3f' % capacity
@@ -95,6 +101,9 @@ def check_k8s_mem_resources(_no_item, _no_params, parsed):
         yield 0, 'Limit: n.a.'
     else:
         yield 0, 'Limit: %s' % get_bytes_human_readable(limit)
+
+    allocatable = parsed.get('allocatable', {}).get('memory', 0.0)
+    yield 0, 'Allocatable: %s' % get_bytes_human_readable(allocatable)
 
     capacity = parsed.get('capacity', {}).get('memory', 0.0)
     yield 0, 'Capacity: %s' % get_bytes_human_readable(capacity)

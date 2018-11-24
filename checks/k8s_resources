@@ -65,7 +65,9 @@ def check_k8s_cpu_resources(_no_item, _no_params, parsed):
     yield 0, 'Request: %.3f' % request
 
     limit = parsed.get('limits', {}).get('cpu')
-    if limit:
+    if math.isinf(limit):
+        yield 0, 'Limit: n.a.'
+    else:
         yield 0, 'Limit: %.3f' % limit
 
     capacity = parsed.get('capacity', {}).get('cpu', 0.0)
@@ -89,7 +91,9 @@ def check_k8s_mem_resources(_no_item, _no_params, parsed):
     yield 0, 'Request: %s' % get_bytes_human_readable(request)
 
     limit = parsed.get('limits', {}).get('memory')
-    if limit:
+    if math.isinf(limit):
+        yield 0, 'Limit: n.a.'
+    else:
         yield 0, 'Limit: %s' % get_bytes_human_readable(limit)
 
     capacity = parsed.get('capacity', {}).get('memory', 0.0)

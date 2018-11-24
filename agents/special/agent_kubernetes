@@ -221,6 +221,11 @@ class Pods(object):
         return view
 
     def resources_per_node(self):
+        """
+        Returns the limits and requests of all containers grouped by node. If at least
+        one container does not specify a limit, infinity is returned as the container
+        may consume any amount of resources.
+        """
         # TODO: add annotation from below and fix parse_cpu and parse_memory
         view = {}  # type: Dict[str, Dict[str, Dict[str, Optional[float]]]]
         for pod in self.items:
@@ -241,9 +246,13 @@ class Pods(object):
                     if resources:
                         limits = resources.limits
                         if limits:
-                            node_data['limits']['cpu'] += parse_cpu(limits.get('cpu', '0.0'))
+                            node_data['limits']['cpu'] += parse_cpu(limits.get('cpu', 'inf'))
                             node_data['limits']['memory'] += parse_memory(
-                                limits.get('memory', '0.0'))
+                                limits.get('memory', 'inf'))
+                        else:
+                            node_data['limits']['cpu'] += float('inf')
+                            node_data['limits']['memory'] += float('inf')
+
                         requests = resources.requests
                         if requests:
                             node_data['requests']['cpu'] += parse_cpu(requests.get('cpu', '0.0'))

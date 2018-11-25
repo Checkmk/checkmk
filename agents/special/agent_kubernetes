@@ -35,13 +35,14 @@ from __future__ import (
 
 import argparse
 from collections import OrderedDict
-import itertools
 import json
 import logging
 import os
 import sys
 import time
-from typing import Any, Dict, List, Mapping, Optional, Union  # pylint: disable=unused-import
+from typing import (  # pylint: disable=unused-import
+    Any, Callable, Dict, Generic, Hashable, List, Mapping, NewType, Optional, TypeVar, Union,
+)
 
 from kubernetes import client
 
@@ -139,12 +140,40 @@ def parse_memory(value):
     return float(value)
 
 
-class Nodes(object):
+T = TypeVar('T')
+ListElem = TypeVar('ListElem')
+
+
+class ListLike(Generic[ListElem]):
     def __init__(self, items):
-        # type: (List[client.V1Node]) -> None
-        super(Nodes, self).__init__()
+        # type: (List[ListElem]) -> None
         self.items = items
 
+    def filter(self, predicate):
+        # type: (Callable[[ListElem], bool]) -> ListLike
+        return self.__class__([item for item in self.items if predicate(item)])
+
+    def map(self, func):
+        # type: (Callable[[ListElem], T]) -> List[T]
+        return [func(item) for item in self.items]
+
+    def group_by(self, func):
+        # type: (Callable[[ListElem], Hashable]) -> Dict[Hashable, ListLike]
+        d = {}  # type: Dict[Hashable, ListLike]
+        for item in self.items:
+            value = d.setdefault(func(item), self.__class__([]))
+            value.items.append(item)
+        return d
+
+    def fold(self, func, initial):
+        # type: (Callable[[ListElem, T], T], T) -> T
+        result = initial
+        for item in self.items:
+            result = func(item, result)
+        return result
+
+
+class NodeList(ListLike):
     def list_nodes(self):
         # type: () -> Dict[str, List[str]]
         return {'nodes': [node.metadata.name for node in self.items if node.metadata.name]}
@@ -193,12 +222,7 @@ class Nodes(object):
         return view
 
 
-class ComponentStatuses(object):
-    def __init__(self, items):
-        # type: (List[client.V1ComponentStatus]) -> None
-        super(ComponentStatuses, self).__init__()
-        self.items = items
-
+class ComponentStatusList(ListLike):
     def list_statuses(self):
         # type: () -> Dict[str, List[Dict[str, str]]]
         view = {}
@@ -212,12 +236,7 @@ class ComponentStatuses(object):
         return view
 
 
-class Pods(object):
-    def __init__(self, items):
-        # type: (List[client.V1Pod]) -> None
-        super(Pods, self).__init__()
-        self.items = items
-
+class PodList(ListLike):
     def pods_per_node(self):
         # type: () -> Dict[str, Dict[str, Dict[str, int]]]
         view = {}  # type: Dict[str, Dict[str, Dict[str, int]]]
@@ -268,12 +287,7 @@ class Pods(object):
         return view
 
 
-class Namespaces(object):
-    def __init__(self, items):
-        # type: (List[client.V1Namespace]) -> None
-        super(Namespaces, self).__init__()
-        self.items = items
-
+class NamespaceList(ListLike):
     def list_namespaces(self):
         # type: () -> Dict[str, Dict[str, Dict[str, str]]]
         # TODO: namespaces may have resource quotas and limits
@@ -287,12 +301,7 @@ class Namespaces(object):
         }
 
 
-class PersistentVolumes(object):
-    def __init__(self, items):
-        # type: (List[client.V1PersistentVolume]) -> None
-        super(PersistentVolumes, self).__init__()
-        self.items = items
-
+class PersistentVolumeList(ListLike):
     def list_volumes(self):
         # type: () -> Dict[str, Dict[str, Union[str, Optional[float], Dict[str, str]]]]
         # TODO: Output details of the different types of volumes
@@ -307,12 +316,7 @@ class PersistentVolumes(object):
         }
 
 
-class PersistentVolumeClaims(object):
-    def __init__(self, items):
-        # type: (List[client.V1PersistentVolumeClaim]) -> None
-        super(PersistentVolumeClaims, self).__init__()
-        self.items = items
-
+class PersistentVolumeClaimList(ListLike):
     def list_volume_claims(self):
         # type: () -> Dict[str, Dict[str, str]]
         return {
@@ -325,12 +329,7 @@ class PersistentVolumeClaims(object):
         }
 
 
-class StorageClasses(object):
-    def __init__(self, items):
-        # type: (List[client.V1StorageClass]) -> None
-        super(StorageClasses, self).__init__()
-        self.items = items
-
+class StorageClassList(ListLike):
     def list_storage_classes(self):
         view = {}
         for storage_class in self.items:
@@ -344,16 +343,33 @@ class StorageClasses(object):
         return view
 
 
-class Roles(object):
-    def __init__(self, roles, cluster_roles):
-        # type: (List[client.V1Role], List[client.V1ClusterRole]) -> None
-        super(Roles, self).__init__()
-        self.roles = roles
-        self.cluster_roles = cluster_roles
-
+# TODO: combine duplicate logic from ClusterRoleList
+class RoleList(ListLike):
     def list_roles(self):
         view = {}
-        for role in itertools.chain(self.roles, self.cluster_roles):
+        for role in self.items:
+            metadata = role.metadata
+            if not metadata:
+                continue
+            name = metadata.name
+            if not name:
+                continue
+            creation = metadata.creation_timestamp
+            if creation:
+                creation = time.mktime(creation.timetuple())
+
+            view[name] = {
+                'namespace': metadata.namespace,
+                'creation_timestamp': creation,
+            }
+        return view
+
+
+# TODO: combine duplicate logic from RoleList
+class ClusterRoleList(ListLike):
+    def list_roles(self):
+        view = {}
+        for role in self.items:
             metadata = role.metadata
             if not metadata:
                 continue
@@ -475,14 +491,15 @@ class ApiData(object):
         pods = core_api.list_pod_for_all_namespaces()
 
         logging.debug('Assigning collected data')
-        self.storage_classes = StorageClasses(storage_classes.items)
-        self.namespaces = Namespaces(namespaces.items)
-        self.roles = Roles(roles.items, cluster_roles.items)
-        self.component_statuses = ComponentStatuses(component_statuses.items)
-        self.nodes = Nodes(nodes.items)
-        self.persistent_volumes = PersistentVolumes(pvs.items)
-        self.persistent_volume_claims = PersistentVolumeClaims(pvcs.items)
-        self.pods = Pods(pods.items)
+        self.storage_classes = StorageClassList(storage_classes.items)
+        self.namespaces = NamespaceList(namespaces.items)
+        self.roles = RoleList(roles.items)
+        self.cluster_roles = ClusterRoleList(cluster_roles.items)
+        self.component_statuses = ComponentStatusList(component_statuses.items)
+        self.nodes = NodeList(nodes.items)
+        self.persistent_volumes = PersistentVolumeList(pvs.items)
+        self.persistent_volume_claims = PersistentVolumeClaimList(pvcs.items)
+        self.pods = PodList(pods.items)
 
     def cluster_sections(self):
         # type: () -> str
@@ -496,6 +513,7 @@ class ApiData(object):
             self.persistent_volume_claims.list_volume_claims())
         e.get('k8s_storage_classes').insert(self.storage_classes.list_storage_classes())
         e.get('k8s_roles').insert(self.roles.list_roles())
+        e.get('k8s_roles').insert(self.cluster_roles.list_roles())
         return '\n'.join(e.output())
 
     def node_sections(self):

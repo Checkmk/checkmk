@@ -1,4 +1,4 @@
-SHELL = /bin/bash
+SHELL = /bin/bash -e -o pipefail
 
 include Makefile.omd
 include packages/packages.make

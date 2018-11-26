@@ -1,6 +1,4 @@
 # Paths to necessary Tools
-SHELL := /bin/bash
-
 ECHO := $(shell which echo)
 FIND := $(shell which find)
 GCC_SYSTEM := $(shell which gcc)

@@ -159,7 +159,8 @@ def check_cpu_util_unix(values, params, cores=None):
     # where these counters are not being used
     steal = diff_values[7]
     steal_perc = 100.0 * float(steal) / float(sum_jiffies)
-    yield 0, "steal: %.1f%%" % steal_perc, [("steal", steal_perc)]
+    yield check_levels(
+        steal_perc, "steal", params.get('steal'), human_readable_func=get_percent_human_readable)
 
     guest = diff_values[8] + diff_values[9]
     guest_perc = 100.0 * float(guest) / float(sum_jiffies)

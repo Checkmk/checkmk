@@ -9444,6 +9444,15 @@ register_check_parameters(
                    "for data coming from or going to disk. If you have a significant disk wait "
                    "the the bottleneck of your server is IO. Please note that depending on the "
                    "applications being run this might or might not be totally normal."))),
+            ("steal",
+             Tuple(
+                 title=_("Levels on steal CPU utilization"),
+                 elements=[
+                     Percentage(title=_("Warning at a steal time of"), default_value=30.0),
+                     Percentage(title=_("Critical at a steal time of"), default_value=50.0)
+                 ],
+                 help=_("Here you can set levels on the steal CPU utilization."),
+             )),
         ] + cpu_util_common_elements),
         forth=transform_cpu_iowait,
     ),

@@ -1,6 +1,10 @@
 SHELL = /bin/bash -e -o pipefail
 
+BUILD_HELPER_DIR := build-helper
+PACKAGE_DIR := $(shell pwd)/packages
+
 include Makefile.omd
+include $(BUILD_HELPER_DIR)/build-helper-files.make
 include packages/packages.make
 
 # You can build singele packages by calling macke <PACKAGENAME>
@@ -63,6 +67,26 @@ PACKAGES += managed
 endif
 
 default: build
+
+# Workaround: Makefiles evaluate Variables the first time they are read. If a variable is not set the
+# moment it is read, it is replaced with an empty string. Therefor our dependencies get lost, if the
+# inlcuded Makefiles are not ordered correctly. For that reason, we parse the Makefiles for certain
+# variable definitions and write them to an extra Makefile, which we include before the package Makefile.
+$(BUILD_HELPER_DIR)/build-helper-files.make:
+	mkdir -p $(BUILD_HELPER_DIR)
+	$(RM) $@
+	for P in $(PACKAGES); do \
+	  inc_path=$(PACKAGE_DIR)/$$P/$$P.make; \
+	  if [[ $$P == 'enterprise' || $$P == 'managed' ]] ; then \
+	    inc_path=$(REPO_PATH)/$$P/$$P.make; \
+	  fi ; \
+	  P_VAR=$$(echo $${P^^} | tr '-' '_' ); \
+	  egrep -h "$$P_VAR\s:=\s" $$inc_path >> $@ ; \
+	  egrep -h "$${P_VAR}_VERS\s:=\s" $$inc_path >> $@ ; \
+	  egrep -h "$${P_VAR}_DIR\s:=\s" $$inc_path >> $@ ; \
+	  egrep -h "$${P_VAR}_BUILD\s:=\s" $$inc_path >> $@ ; \
+	  egrep -h "$${P_VAR}_INSTALL\s:=\s" $$inc_path >> $@ ; \
+	done
 
 -include .config
 

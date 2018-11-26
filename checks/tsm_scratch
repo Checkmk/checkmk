@@ -47,6 +47,7 @@ def check_tsm_scratch(item, params, info):
             found_item = "%s / %s" % ( inst, library )
         else:
             found_item = library
+
         if found_item == item:
             tapes = saveint(tapes)
             state = 0
@@ -56,7 +57,7 @@ def check_tsm_scratch(item, params, info):
                 state = 1
 
             return state, "Found %d tapes" % tapes, \
-                        [ ("tapes_free"), tapes, warn, crit ]
+                        [ ("tapes_free", tapes, warn, crit) ]
 
 
     return 3, "UNKNOWN - Check no implemented"

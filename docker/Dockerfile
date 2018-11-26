@@ -2,7 +2,7 @@ FROM debian:stretch-slim
 LABEL maintainer="feedback@check-mk.org"
 
 # Pure build time variable declarations (docker build --build-arg KEY=val)
-ARG CMK_VERSION="1.5.0p8"
+ARG CMK_VERSION="1.5.0p9"
 # Choose one of: raw, enterprise, managed
 ARG CMK_EDITION="raw"
 

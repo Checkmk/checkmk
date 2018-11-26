@@ -286,6 +286,7 @@ class LDAPUserConnector(UserConnector):
             return # Use existing connections (if connection settings have not changed)
         else:
             self._logger.info('LDAP CONNECT - Connecting...')
+            self.disconnect()
 
         ldap_test_module()
 
@@ -329,6 +330,7 @@ class LDAPUserConnector(UserConnector):
 
     def disconnect(self):
         self._ldap_obj = None
+        self._ldap_obj_config = None
 
 
     def _discover_nearest_dc(self, domain):

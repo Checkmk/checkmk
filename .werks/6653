@@ -1,0 +1,13 @@
+Title: Threshold Levels for steal cpu time in Linux/Unix
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1543244373
+Class: feature
+
+Steal CPU time is the percentage of time a virtual CPU waits for a real CPU
+while the hypervisor is servicing another virtual processor. Its presense
+can be now monitored by setting up threshold limits as a fraction of the
+total CPU utilization time.

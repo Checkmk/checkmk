@@ -11111,9 +11111,12 @@ register_check_parameters(
              default_value=None,
              default_levels=(500, 1000))),
         ("connections_rate_lower",
-         Levels(
+         Tuple(
              title=_("Minimum connections per second"),
-             default_value=None,
+             elements=[
+                 Integer(title=_("Warning at")),
+                 Integer(title=_("Critical at")),
+             ],
          )),
         ("http_req_rate",
          Levels(

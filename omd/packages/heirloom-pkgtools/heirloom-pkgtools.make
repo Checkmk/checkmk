@@ -16,6 +16,7 @@ $(HEIRLOOM_PKGTOOLS_BUILD): $(HEIRLOOM_PKGTOOLS_PATCHING)
 	cd $(HEIRLOOM_PKGTOOLS_DIR) ; \
 	    find -name Makefile -delete ; \
 	    $(MAKE) -j 1
+	$(TOUCH) $@
 
 $(HEIRLOOM_PKGTOOLS_INSTALL): $(HEIRLOOM_PKGTOOLS_BUILD)
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
@@ -25,6 +26,7 @@ $(HEIRLOOM_PKGTOOLS_INSTALL): $(HEIRLOOM_PKGTOOLS_BUILD)
 	    install -m 644 $(HEIRLOOM_PKGTOOLS_DIR)/man/$$F.1 $(DESTDIR)$(OMD_ROOT)/share/man/man1/; \
 	    gzip -f $(DESTDIR)$(OMD_ROOT)/share/man/man1/$$F.1 ; \
 	done
+	$(TOUCH) $@
 
 $(HEIRLOOM_PKGTOOLS)-skel:
 

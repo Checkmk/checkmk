@@ -4,6 +4,9 @@ NET_SNMP_DIR := $(NET_SNMP)-$(NET_SNMP_VERS)
 
 NET_SNMP_BUILD := $(BUILD_HELPER_DIR)/$(NET_SNMP_DIR)-build
 NET_SNMP_INSTALL := $(BUILD_HELPER_DIR)/$(NET_SNMP_DIR)-install
+NET_SNMP_INSTALL_BASE := $(BUILD_HELPER_DIR)/$(NET_SNMP_DIR)-install-base
+NET_SNMP_INSTALL_PYTHON := $(BUILD_HELPER_DIR)/$(NET_SNMP_DIR)-install-python
+NET_SNMP_INSTALL_PERL := $(BUILD_HELPER_DIR)/$(NET_SNMP_DIR)-install-perl
 NET_SNMP_PATCHING := $(BUILD_HELPER_DIR)/$(NET_SNMP_DIR)-patching
 
 .PHONY: $(NET_SNMP) $(NET_SNMP)-install $(NET_SNMP)-install-base $(NET_SNMP)-install-python $(NET_SNMP)-install-perl $(NET_SNMP)-skel $(NET_SNMP)-clean
@@ -25,17 +28,18 @@ $(NET_SNMP_BUILD): $(NET_SNMP_PATCHING) $(PYTHON_BUILD) $(PERL_MODULES_BUILD)
 	    --prefix=$(OMD_ROOT) && make
 	$(TOUCH) $@
 
-$(NET_SNMP_INSTALL): $(NET_SNMP)-install-base $(NET_SNMP)-install-python $(NET_SNMP)-install-perl
+$(NET_SNMP_INSTALL): $(NET_SNMP_INSTALL_BASE) $(NET_SNMP_INSTALL_PYTHON) $(NET_SNMP_INSTALL_PERL)
 	$(TOUCH) $@
 
-$(NET_SNMP)-install-base:
+$(NET_SNMP_INSTALL_BASE): $(NET_SNMP_BUILD)
 	cd $(NET_SNMP_DIR)/snmplib && make DESTDIR=$(DESTDIR) installlibs
 	cd $(NET_SNMP_DIR)/apps && make DESTDIR=$(DESTDIR) installbin
 	cd $(NET_SNMP_DIR)/man && make DESTDIR=$(DESTDIR) install
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/snmp/mibs
 	cd $(NET_SNMP_DIR)/mibs && make DESTDIR=$(DESTDIR) mibsinstall
+	$(TOUCH) $@
 
-$(NET_SNMP)-install-python:
+$(NET_SNMP_INSTALL_PYTHON): $(NET_SNMP_BUILD)
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/python
 	cd $(NET_SNMP_DIR)/python && \
 		export PYTHONPATH="$$PYTHONPATH:$(PACKAGE_PYTHON_PYTHONPATH):$(DESTDIR)$(OMD_ROOT)/lib/python" ; \
@@ -47,6 +51,7 @@ $(NET_SNMP)-install-python:
 		--install-purelib=$(DESTDIR)$(OMD_ROOT)/lib/python \
 		--root=/ \
 		--single-version-externally-managed
+	$(TOUCH) $@
 # For some obscure reason beyond the mental capacities of mere humans, the
 # easy_install mechanism triggered by the setup call above results in the
 # creation of a lib/python/site.py, a copy of site-patch.py from setuptools.
@@ -56,13 +61,14 @@ $(NET_SNMP)-install-python:
 # out what's really going on here!
 #	$(RM) $(DESTDIR)$(OMD_ROOT)/lib/python/site.py*
 
-$(NET_SNMP)-install-perl:
+$(NET_SNMP_INSTALL_PERL): $(NET_SNMP_BUILD)
 	cd $(NET_SNMP_DIR)/perl && \
 	    make \
 		DESTDIR=$(DESTDIR)$(OMD_ROOT) \
 		INSTALLSITEARCH=/lib/perl5/lib/perl5 \
 		INSTALLSITEMAN3DIR=/share/man/man3 \
 		install
+	$(TOUCH) $@
 
 
 $(NET_SNMP)-skel:

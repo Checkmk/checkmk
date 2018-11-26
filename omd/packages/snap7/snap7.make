@@ -21,10 +21,12 @@ endif
 
 $(SNAP7_BUILD): $(SNAP7_UNPACK) $(PYTHON_BUILD)
 	$(MAKE) -C $(SNAP7_DIR)/build/unix -f $(ARCH)_linux.mk
+	$(TOUCH) $@
 
 $(SNAP7_INSTALL): $(SNAP7_BUILD)
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib
 	install -m 644 $(SNAP7_DIR)/build/bin/$(ARCH)-linux/libsnap7.so $(DESTDIR)$(OMD_ROOT)/lib
+	$(TOUCH) $@
 
 $(SNAP7)-skel:
 

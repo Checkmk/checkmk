@@ -13,6 +13,7 @@ $(NAGVIS): $(NAGVIS_BUILD)
 $(NAGVIS)-install: $(NAGVIS_INSTALL)
 
 $(NAGVIS_BUILD): $(NAGVIS_PATCHING)
+	$(TOUCH) $@
 
 $(NAGVIS_INSTALL): $(NAGVIS_BUILD)
 	cd $(NAGVIS_DIR) ; ./install.sh -q -F -c y -a n \

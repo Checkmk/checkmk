@@ -5,6 +5,7 @@ NAVICLI_DIR := navisphere-64
 NAVICLI_INSTALL := $(BUILD_HELPER_DIR)/$(NAVICLI_DIR)-install
 
 .PHONY: navicli navicli-install navicli-skel navicli-clean
+
 navicli:
 	
 navicli-install: $(NAVICLI_INSTALL)

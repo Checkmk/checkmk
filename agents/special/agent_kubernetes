@@ -34,14 +34,15 @@ from __future__ import (
 )
 
 import argparse
-from collections import OrderedDict
+from collections import OrderedDict, Sequence
+import itertools
 import json
 import logging
 import os
 import sys
 import time
 from typing import (  # pylint: disable=unused-import
-    Any, Callable, Dict, Generic, Hashable, List, Mapping, NewType, Optional, TypeVar, Union,
+    Any, Dict, Generic, List, Mapping, Optional, TypeVar, Union,
 )
 
 from kubernetes import client
@@ -332,71 +333,49 @@ class Role(Metadata):
         super(Role, self).__init__(role.metadata)
 
 
-T = TypeVar('T')
 ListElem = TypeVar('ListElem')
 
 
-class ListLike(Generic[ListElem]):
-    def __init__(self, items):
+class ListLike(Generic[ListElem], Sequence):
+    def __init__(self, elements):
         # type: (List[ListElem]) -> None
-        self.items = items
+        super(ListLike, self).__init__()
+        self.elements = elements
 
-    def filter(self, predicate):
-        # type: (Callable[[ListElem], bool]) -> ListLike
-        return self.__class__([item for item in self.items if predicate(item)])
-
-    def map(self, func):
-        # type: (Callable[[ListElem], T]) -> List[T]
-        return [func(item) for item in self.items]
-
-    def group_by(self, func):
-        # type: (Callable[[ListElem], Optional[str]]) -> Dict[str, ListLike]
-        # TODO: don't drop items which are None
-        d = {}  # type: Dict[str, ListLike]
-        for item in self.items:
-            key = func(item)
-            if key:
-                value = d.setdefault(key, self.__class__([]))
-                value.items.append(item)
-        return d
-
-    def fold(self, func, initial):
-        # type: (Callable[[ListElem, T], T], T) -> T
-        result = initial
-        for item in self.items:
-            result = func(item, result)
-        return result
+    def __getitem__(self, index):
+        return self.elements[index]
 
     def __len__(self):
         # type: () -> int
-        return len(self.items)
+        return len(self.elements)
 
 
 class NodeList(ListLike[Node]):
     def list_nodes(self):
         # type: () -> Dict[str, List[str]]
-        return {'nodes': [node.name for node in self.items if node.name]}
+        return {'nodes': [node.name for node in self if node.name]}
 
     def conditions(self):
         # type: () -> Dict[str, Dict[str, str]]
-        return {node.name: node.conditions for node in self.items if node.name and node.conditions}
+        return {node.name: node.conditions for node in self if node.name and node.conditions}
 
     def resources(self):
         # type: () -> Dict[str, Dict[str, Dict[str, Optional[float]]]]
-        return {node.name: node.resources for node in self.items if node.name}
+        return {node.name: node.resources for node in self if node.name}
 
 
 class ComponentStatusList(ListLike[ComponentStatus]):
     def list_statuses(self):
         # type: () -> Dict[str, List[Dict[str, str]]]
-        return {status.name: status.conditions for status in self.items if status.name}
+        return {status.name: status.conditions for status in self if status.name}
 
 
 class PodList(ListLike[Pod]):
     def pods_per_node(self):
         # type: () -> Dict[str, Dict[str, Dict[str, int]]]
-        by_node = self.group_by(lambda pod: pod.node)
-        return {node: {'allocations': {'pods': len(pods)}} for node, pods in by_node.iteritems()}
+        pods_sorted = sorted(self, key=lambda pod: pod.node)
+        by_node = itertools.groupby(pods_sorted, lambda pod: pod.node)
+        return {node: {'allocations': {'pods': len(list(pods))}} for node, pods in by_node}
 
     def resources_per_node(self):
         # type: () -> Dict[str, Dict[str, Dict[str, float]]]
@@ -405,8 +384,6 @@ class PodList(ListLike[Pod]):
         one container does not specify a limit, infinity is returned as the container
         may consume any amount of resources.
         """
-        by_node = self.group_by(lambda pod: pod.node)
-
         initial = {
             'limits': {
                 'cpu': 0.0,
@@ -418,20 +395,21 @@ class PodList(ListLike[Pod]):
             },
         }
 
-        def merge(pod, resources):
-            r = pod.resources
+        def merge(res_a, res_b):
             return {
                 'limits': {
-                    'cpu': r['limits']['cpu'] + resources['limits']['cpu'],
-                    'memory': r['limits']['memory'] + resources['limits']['memory'],
+                    'cpu': res_a['limits']['cpu'] + res_b['limits']['cpu'],
+                    'memory': res_a['limits']['memory'] + res_b['limits']['memory'],
                 },
                 'requests': {
-                    'cpu': r['requests']['cpu'] + resources['requests']['cpu'],
-                    'memory': r['requests']['memory'] + resources['requests']['memory'],
+                    'cpu': res_a['requests']['cpu'] + res_b['requests']['cpu'],
+                    'memory': res_a['requests']['memory'] + res_b['requests']['memory'],
                 },
             }
 
-        return {node: pods.fold(merge, initial) for node, pods in by_node.iteritems()}
+        pods_sorted = sorted(self, key=lambda pod: pod.node)
+        by_node = itertools.groupby(pods_sorted, lambda pod: pod.node)
+        return {node: reduce(merge, [p.resources for p in pods], initial) for node, pods in by_node}
 
 
 class NamespaceList(ListLike[Namespace]):
@@ -442,7 +420,7 @@ class NamespaceList(ListLike[Namespace]):
                 'status': {
                     'phase': namespace.phase,
                 },
-            } for namespace in self.items if namespace.name
+            } for namespace in self if namespace.name
         }
 
 
@@ -457,7 +435,7 @@ class PersistentVolumeList(ListLike[PersistentVolume]):
                 'status': {
                     'phase': pv.phase,
                 },
-            } for pv in self.items if pv.name
+            } for pv in self if pv.name
         }
 
 
@@ -471,7 +449,7 @@ class PersistentVolumeClaimList(ListLike[PersistentVolumeClaim]):
                 'condition': pvc.conditions,
                 'phase': pvc.phase,
                 'volume': pvc.volume_name,
-            } for pvc in self.items if pvc.name
+            } for pvc in self if pvc.name
         }
 
 
@@ -483,7 +461,7 @@ class StorageClassList(ListLike[StorageClass]):
             storage_class.name: {
                 'provisioner': storage_class.provisioner,
                 'reclaim_policy': storage_class.reclaim_policy
-            } for storage_class in self.items if storage_class.name
+            } for storage_class in self if storage_class.name
         }
 
 
@@ -493,7 +471,7 @@ class RoleList(ListLike[Role]):
             role.name: {
                 'namespace': role.namespace,
                 'creation_timestamp': role.creation_timestamp
-            } for role in self.items if role.name
+            } for role in self if role.name
         }
 
 

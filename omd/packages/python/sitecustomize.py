@@ -1,12 +1,16 @@
 #!/usr/bin/env python
 # Make the site python know about the Check_MK specific python module paths
 
-import sys, os
+import os
+import site
+import sys
 
-# Set the Check_MK version specific python module directory. This is
-# the location for the extra python modules shipped with Check_MK.
+# Set the Check_MK version specific python module directory. This is the
+# location for the extra python modules shipped with Check_MK.
+# NOTE: Modifying sys.path alone is not enough, site.addsitedir makes sure that
+# path configuration files (*.pth) are actually found!
 version_path = os.path.dirname(os.path.dirname(sys.executable))
-sys.path.insert(0, version_path + "/lib/python")
+site.addsitedir(version_path + "/lib/python")
 
 # Regular use case: When "omd" is being executed as root, we don't know
 # anything about the site -> Only set the version specific directory.

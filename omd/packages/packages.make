@@ -17,10 +17,6 @@ TEST := $(shell which test)
 TOUCH := $(shell which touch)
 UNZIP := $(shell which unzip) -o
 
-# Helper files for timestamps
-BUILD_HELPER_DIR := build-helper
-PACKAGE_DIR := $(shell pwd)/packages
-
 # Rules for patching
 $(BUILD_HELPER_DIR)/%-patching: $(BUILD_HELPER_DIR)/%-unpack 
 	set -e ; DIR=$$($(ECHO) $* | $(SED) 's/-[0-9.]\+.*//'); \

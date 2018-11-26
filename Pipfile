@@ -34,7 +34,7 @@ pymssql = "==2.1.3"
 python-ldap = "==2.4.32"
 simplejson = "==3.15.0"
 MySQL-python = "==1.2.5"
-psycopg2 = "==2.7"  # This is actually a lie: We ship 2.6.2, but installation fails for PostgreSQL > 9. Alas, 2.7 removed support for clients < 9.1. >:-(
+psycopg2 = "==2.7.6.1"  # This is actually a lie: We ship 2.6.2, but installation fails for PostgreSQL > 9. Alas, 2.7 removed support for clients < 9.1. >:-(
 dicttoxml = "==1.7.4"
 pycparser = "==2.18"
 enum34 = "==1.1.6"

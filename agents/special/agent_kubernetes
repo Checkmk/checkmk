@@ -35,9 +35,11 @@ from __future__ import (
 
 import argparse
 from collections import OrderedDict, Sequence
+import functools
 import itertools
 import json
 import logging
+import operator
 import os
 import sys
 import time
@@ -129,6 +131,19 @@ def parse_memory(value):
     return float(value)
 
 
+def left_join_dicts(initial, new, operation):
+    d = {}
+    for key, value in initial.iteritems():
+        if isinstance(value, dict):
+            d[key] = left_join_dicts(value, new.get(key, {}), operation)
+        else:
+            if key in new:
+                d[key] = operation(value, new[key])
+            else:
+                d[key] = value
+    return d
+
+
 class Metadata(object):
     def __init__(self, metadata):
         # type: (Optional[client.V1ObjectMeta]) -> None
@@ -159,24 +174,36 @@ class Node(Metadata):
             return None
         return {c.type: c.status for c in conditions}
 
+    @staticmethod
+    def zero_resources():
+        return {
+            'capacity': {
+                'cpu': 0.0,
+                'memory': 0.0,
+                'pods': 0,
+            },
+            'allocatable': {
+                'cpu': 0.0,
+                'memory': 0.0,
+                'pods': 0,
+            },
+        }
+
     @property
     def resources(self):
         # type: () -> Dict[str, Dict[str, float]]
+        view = self.zero_resources()
         if not self._status:
-            return {}
-        view, capacity, allocatable = {}, self._status.capacity, self._status.allocatable
+            return view
+        capacity, allocatable = self._status.capacity, self._status.allocatable
         if capacity:
-            view['capacity'] = {
-                'cpu': parse_cpu(capacity.get('cpu', '0.0')),
-                'memory': parse_memory(capacity.get('memory', '0.0')),
-                'pods': int(capacity.get('pods', '0')),
-            }
+            view['capacity']['cpu'] += parse_cpu(capacity.get('cpu', '0.0'))
+            view['capacity']['memory'] += parse_memory(capacity.get('memory', '0.0'))
+            view['capacity']['pods'] += int(capacity.get('pods', '0'))
         if allocatable:
-            view['allocatable'] = {
-                'cpu': parse_cpu(allocatable.get('cpu', '0.0')),
-                'memory': parse_memory(allocatable.get('memory', '0.0')),
-                'pods': int(allocatable.get('pods', '0')),
-            }
+            view['allocatable']['cpu'] += parse_cpu(allocatable.get('cpu', '0.0'))
+            view['allocatable']['memory'] += parse_memory(allocatable.get('memory', '0.0'))
+            view['allocatable']['pods'] += int(allocatable.get('pods', '0'))
         return view
 
 
@@ -202,9 +229,9 @@ class Pod(Metadata):
         self.node = spec.node_name if spec else None
         self.containers = spec.containers if spec else []
 
-    @property
-    def resources(self):
-        view = {
+    @staticmethod
+    def zero_resources():
+        return {
             'limits': {
                 'cpu': 0.0,
                 'memory': 0.0,
@@ -214,6 +241,10 @@ class Pod(Metadata):
                 'memory': 0.0,
             }
         }
+
+    @property
+    def resources(self):
+        view = self.zero_resources()
         for container in self.containers:
             resources = container.resources
             if not resources:
@@ -354,6 +385,11 @@ class NodeList(ListLike[Node]):
         # type: () -> Dict[str, Dict[str, Dict[str, Optional[float]]]]
         return {node.name: node.resources for node in self if node.name}
 
+    def cluster_resources(self):
+        initial = Node.zero_resources()
+        merge = functools.partial(left_join_dicts, operation=operator.add)
+        return reduce(merge, self.resources().itervalues(), initial)
+
 
 class ComponentStatusList(ListLike[ComponentStatus]):
     def list_statuses(self):
@@ -368,6 +404,9 @@ class PodList(ListLike[Pod]):
         by_node = itertools.groupby(pods_sorted, lambda pod: pod.node)
         return {node: {'allocations': {'pods': len(list(pods))}} for node, pods in by_node}
 
+    def pods_in_cluster(self):
+        return {'allocations': {'pods': len(self)}}
+
     def resources_per_node(self):
         # type: () -> Dict[str, Dict[str, Dict[str, float]]]
         """
@@ -375,32 +414,18 @@ class PodList(ListLike[Pod]):
         one container does not specify a limit, infinity is returned as the container
         may consume any amount of resources.
         """
-        initial = {
-            'limits': {
-                'cpu': 0.0,
-                'memory': 0.0,
-            },
-            'requests': {
-                'cpu': 0.0,
-                'memory': 0.0,
-            },
-        }
-
-        def merge(res_a, res_b):
-            return {
-                'limits': {
-                    'cpu': res_a['limits']['cpu'] + res_b['limits']['cpu'],
-                    'memory': res_a['limits']['memory'] + res_b['limits']['memory'],
-                },
-                'requests': {
-                    'cpu': res_a['requests']['cpu'] + res_b['requests']['cpu'],
-                    'memory': res_a['requests']['memory'] + res_b['requests']['memory'],
-                },
-            }
 
         pods_sorted = sorted(self, key=lambda pod: pod.node)
         by_node = itertools.groupby(pods_sorted, lambda pod: pod.node)
-        return {node: reduce(merge, [p.resources for p in pods], initial) for node, pods in by_node}
+        merge = functools.partial(left_join_dicts, operation=operator.add)
+        return {
+            node: reduce(merge, [p.resources for p in pods
+                                ], Pod.zero_resources()) for node, pods in by_node
+        }
+
+    def cluster_resources(self):
+        merge = functools.partial(left_join_dicts, operation=operator.add)
+        return reduce(merge, [p.resources for p in self], Pod.zero_resources())
 
 
 class NamespaceList(ListLike[Namespace]):
@@ -595,6 +620,9 @@ class ApiData(object):
         e.get('k8s_storage_classes').insert(self.storage_classes.list_storage_classes())
         e.get('k8s_roles').insert(self.roles.list_roles())
         e.get('k8s_roles').insert(self.cluster_roles.list_roles())
+        e.get('k8s_resources').insert(self.nodes.cluster_resources())
+        e.get('k8s_resources').insert(self.pods.cluster_resources())
+        e.get('k8s_resources').insert(self.pods.pods_in_cluster())
         return '\n'.join(e.output())
 
     def node_sections(self):

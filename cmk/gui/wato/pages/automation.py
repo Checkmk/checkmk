@@ -163,7 +163,8 @@ class ModeAutomation(WatoWebApiMode):
     def _execute_automation_command(self, automation_command):
         try:
             # Don't use write_text() here (not needed, because no HTML document is rendered)
-            html.write(repr(automation_command().execute()))
+            automation = automation_command()
+            html.write(repr(automation.execute(automation.get_request())))
         except Exception as e:
             logger.exception()
             if config.debug:

@@ -1,0 +1,10 @@
+Title: tsm_scratch: Fixed wrong format of performance data which caused a TypeError
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1543235854
+Class: fix
+
+

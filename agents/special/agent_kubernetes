@@ -140,6 +140,198 @@ def parse_memory(value):
     return float(value)
 
 
+class Metadata(object):
+    def __init__(self, metadata):
+        # type: (Optional[client.V1ObjectMeta]) -> None
+        if metadata:
+            self.name = metadata.name
+            self.namespace = metadata.namespace
+            self.creation_timestamp = (time.mktime(metadata.creation_timestamp.timetuple())
+                                       if metadata.creation_timestamp else None)
+        else:
+            self.name = None
+            self.namespace = None
+            self.creation_timestamp = None
+
+
+class Node(Metadata):
+    def __init__(self, node):
+        # type: (client.V1Node) -> None
+        super(Node, self).__init__(node.metadata)
+        self._status = node.status
+
+    @property
+    def conditions(self):
+        # type: () -> Optional[Dict[str, str]]
+        if not self._status:
+            return None
+        conditions = self._status.conditions
+        if not conditions:
+            return None
+        return {c.type: c.status for c in conditions}
+
+    @property
+    def resources(self):
+        # type: () -> Dict[str, Dict[str, Optional[float]]]
+        if not self._status:
+            return {}
+        view, capacity, allocatable = {}, self._status.capacity, self._status.allocatable
+        if capacity:
+            view['capacity'] = {
+                'cpu': parse_cpu(capacity.get('cpu')),
+                'memory': parse_memory(capacity.get('memory')),
+                'pods': parse_int(capacity.get('pods')),
+            }
+        if allocatable:
+            view['allocatable'] = {
+                'cpu': parse_cpu(allocatable.get('cpu')),
+                'memory': parse_memory(allocatable.get('memory')),
+                'pods': parse_int(allocatable.get('pods')),
+            }
+        return view
+
+
+class ComponentStatus(Metadata):
+    def __init__(self, status):
+        # type: (client.V1ComponentStatus) -> None
+        super(ComponentStatus, self).__init__(status.metadata)
+        self._conditions = status.conditions
+
+    @property
+    def conditions(self):
+        # type: () -> List[Dict[str, str]]
+        if not self._conditions:
+            return []
+        return [{'type': c.type, 'status': c.status} for c in self._conditions]
+
+
+class Pod(Metadata):
+    def __init__(self, pod):
+        # type: (client.V1Pod) -> None
+        super(Pod, self).__init__(pod.metadata)
+        spec = pod.spec
+        self.node = spec.node_name if spec else None
+        self.containers = spec.containers if spec else []
+
+    @property
+    def resources(self):
+        view = {
+            'limits': {
+                'cpu': 0.0,
+                'memory': 0.0,
+            },
+            'requests': {
+                'cpu': 0.0,
+                'memory': 0.0,
+            }
+        }
+        for container in self.containers:
+            resources = container.resources
+            if not resources:
+                continue
+            limits = resources.limits
+            if limits:
+                view['limits']['cpu'] += parse_cpu(limits.get('cpu', 'inf'))
+                view['limits']['memory'] += parse_memory(limits.get('memory', 'inf'))
+            else:
+                view['limits']['cpu'] += float('inf')
+                view['limits']['memory'] += float('inf')
+            requests = resources.requests
+            if requests:
+                view['requests']['cpu'] += parse_cpu(requests.get('cpu', '0.0'))
+                view['requests']['memory'] += parse_memory(requests.get('memory', '0.0'))
+        return view
+
+
+class Namespace(Metadata):
+    # TODO: namespaces may have resource quotas and limits
+    # https://kubernetes.io/docs/tasks/administer-cluster/namespaces/
+    def __init__(self, namespace):
+        # type: (client.V1Namespace) -> None
+        super(Namespace, self).__init__(namespace.metadata)
+        self._status = namespace.status
+
+    @property
+    def phase(self):
+        # type: () -> Optional[str]
+        if self._status:
+            return self._status.phase
+        return None
+
+
+class PersistentVolume(Metadata):
+    def __init__(self, pv):
+        # type: (client.V1PersistentVolume) -> None
+        super(PersistentVolume, self).__init__(pv.metadata)
+        self._status = pv.status
+        self._spec = pv.spec
+
+    @property
+    def access_modes(self):
+        # type: () -> Optional[List[str]]
+        if self._spec:
+            return self._spec.access_modes
+        return None
+
+    @property
+    def capacity(self):
+        # type: () -> Optional[float]
+        if self._spec and self._spec.capacity:
+            return parse_memory(self._spec.capacity.get('storage'))
+        return None
+
+    @property
+    def phase(self):
+        # type: () -> Optional[str]
+        if self._status:
+            return self._status.phase
+        return None
+
+
+class PersistentVolumeClaim(Metadata):
+    def __init__(self, pvc):
+        # type: (client.V1PersistentVolumeClaim) -> None
+        super(PersistentVolumeClaim, self).__init__(pvc.metadata)
+        self._status = pvc.status
+        self._spec = pvc.spec
+
+    @property
+    def conditions(self):
+        # type: () -> Optional[client.V1PersistentVolumeClaimCondition]
+        # TODO: don't return client specific object
+        if self._status:
+            return self._status.conditions
+        return None
+
+    @property
+    def phase(self):
+        # type: () -> Optional[str]
+        if self._status:
+            return self._status.phase
+        return None
+
+    @property
+    def volume_name(self):
+        # type: () -> Optional[str]
+        if self._spec:
+            return self._spec.volume_name
+        return None
+
+
+class StorageClass(Metadata):
+    def __init__(self, storage_class):
+        # type: (client.V1StorageClass) -> None
+        super(StorageClass, self).__init__(storage_class.metadata)
+        self.provisioner = storage_class.provisioner
+        self.reclaim_policy = storage_class.reclaim_policy
+
+
+class Role(Metadata):
+    def __init__(self, role):
+        # type: (Union[client.V1Role, client.V1ClusterRole]) -> None
+        super(Role, self).__init__(role.metadata)
+
+
 T = TypeVar('T')
 ListElem = TypeVar('ListElem')
 
@@ -158,11 +350,14 @@ class ListLike(Generic[ListElem]):
         return [func(item) for item in self.items]
 
     def group_by(self, func):
-        # type: (Callable[[ListElem], Hashable]) -> Dict[Hashable, ListLike]
-        d = {}  # type: Dict[Hashable, ListLike]
+        # type: (Callable[[ListElem], Optional[str]]) -> Dict[str, ListLike]
+        # TODO: don't drop items which are None
+        d = {}  # type: Dict[str, ListLike]
         for item in self.items:
-            value = d.setdefault(func(item), self.__class__([]))
-            value.items.append(item)
+            key = func(item)
+            if key:
+                value = d.setdefault(key, self.__class__([]))
+                value.items.append(item)
         return d
 
     def fold(self, func, initial):
@@ -172,219 +367,134 @@ class ListLike(Generic[ListElem]):
             result = func(item, result)
         return result
 
+    def __len__(self):
+        # type: () -> int
+        return len(self.items)
 
-class NodeList(ListLike):
+
+class NodeList(ListLike[Node]):
     def list_nodes(self):
         # type: () -> Dict[str, List[str]]
-        return {'nodes': [node.metadata.name for node in self.items if node.metadata.name]}
+        return {'nodes': [node.name for node in self.items if node.name]}
 
     def conditions(self):
-        view = {}
-        for node in self.items:
-            name = node.metadata.name
-            if not name:
-                continue
-            node_data = {}
-            status = node.status
-            if status:
-                conditions = status.conditions
-                if conditions:
-                    for condition in conditions:
-                        node_data[condition.type] = condition.status
-            view[name] = node_data
-        return view
+        # type: () -> Dict[str, Dict[str, str]]
+        return {node.name: node.conditions for node in self.items if node.name and node.conditions}
 
     def resources(self):
         # type: () -> Dict[str, Dict[str, Dict[str, Optional[float]]]]
-        view = {}
-        for node in self.items:
-            if not node.metadata.name:
-                continue
-
-            node_data = {}
-            status = node.status
-            if status:
-                capacity = status.capacity
-                if capacity:
-                    node_data['capacity'] = {
-                        'cpu': parse_cpu(capacity.get('cpu')),
-                        'memory': parse_memory(capacity.get('memory')),
-                        'pods': parse_int(capacity.get('pods')),
-                    }
-                allocatable = status.allocatable
-                if allocatable:
-                    node_data['allocatable'] = {
-                        'cpu': parse_cpu(allocatable.get('cpu')),
-                        'memory': parse_memory(allocatable.get('memory')),
-                        'pods': parse_int(allocatable.get('pods')),
-                    }
-            view[node.metadata.name] = node_data
-        return view
+        return {node.name: node.resources for node in self.items if node.name}
 
 
-class ComponentStatusList(ListLike):
+class ComponentStatusList(ListLike[ComponentStatus]):
     def list_statuses(self):
         # type: () -> Dict[str, List[Dict[str, str]]]
-        view = {}
-        for status in self.items:
-            if not status.metadata or not status.metadata.name or not status.conditions:
-                continue
-            view[status.metadata.name] = [{
-                'type': condition.type,
-                'status': condition.status,
-            } for condition in status.conditions]
-        return view
+        return {status.name: status.conditions for status in self.items if status.name}
 
 
-class PodList(ListLike):
+class PodList(ListLike[Pod]):
     def pods_per_node(self):
         # type: () -> Dict[str, Dict[str, Dict[str, int]]]
-        view = {}  # type: Dict[str, Dict[str, Dict[str, int]]]
-        for pod in self.items:
-            if pod.spec:
-                data = view.setdefault(pod.spec.node_name, {'allocations': {'pods': 0}})
-                data['allocations']['pods'] += 1
-        return view
+        by_node = self.group_by(lambda pod: pod.node)
+        return {node: {'allocations': {'pods': len(pods)}} for node, pods in by_node.iteritems()}
 
     def resources_per_node(self):
+        # type: () -> Dict[str, Dict[str, Dict[str, float]]]
         """
         Returns the limits and requests of all containers grouped by node. If at least
         one container does not specify a limit, infinity is returned as the container
         may consume any amount of resources.
         """
-        # TODO: add annotation from below and fix parse_cpu and parse_memory
-        view = {}  # type: Dict[str, Dict[str, Dict[str, Optional[float]]]]
-        for pod in self.items:
-            if pod.spec:
-                node_data = view.setdefault(pod.spec.node_name, {
-                    'limits': {
-                        'cpu': 0.0,
-                        'memory': 0.0,
-                    },
-                    'requests': {
-                        'cpu': 0.0,
-                        'memory': 0.0,
-                    },
-                })
+        by_node = self.group_by(lambda pod: pod.node)
 
-                for container in pod.spec.containers:
-                    resources = container.resources
-                    if resources:
-                        limits = resources.limits
-                        if limits:
-                            node_data['limits']['cpu'] += parse_cpu(limits.get('cpu', 'inf'))
-                            node_data['limits']['memory'] += parse_memory(
-                                limits.get('memory', 'inf'))
-                        else:
-                            node_data['limits']['cpu'] += float('inf')
-                            node_data['limits']['memory'] += float('inf')
+        initial = {
+            'limits': {
+                'cpu': 0.0,
+                'memory': 0.0,
+            },
+            'requests': {
+                'cpu': 0.0,
+                'memory': 0.0,
+            },
+        }
 
-                        requests = resources.requests
-                        if requests:
-                            node_data['requests']['cpu'] += parse_cpu(requests.get('cpu', '0.0'))
-                            node_data['requests']['memory'] += parse_memory(
-                                requests.get('memory', '0.0'))
-        return view
-
-
-class NamespaceList(ListLike):
-    def list_namespaces(self):
-        # type: () -> Dict[str, Dict[str, Dict[str, str]]]
-        # TODO: namespaces may have resource quotas and limits
-        # https://kubernetes.io/docs/tasks/administer-cluster/namespaces/
-        return {
-            namespace.metadata.name: {
-                'status': {
-                    'phase': namespace.status.phase,
+        def merge(pod, resources):
+            r = pod.resources
+            return {
+                'limits': {
+                    'cpu': r['limits']['cpu'] + resources['limits']['cpu'],
+                    'memory': r['limits']['memory'] + resources['limits']['memory'],
                 },
-            } for namespace in self.items
+                'requests': {
+                    'cpu': r['requests']['cpu'] + resources['requests']['cpu'],
+                    'memory': r['requests']['memory'] + resources['requests']['memory'],
+                },
+            }
+
+        return {node: pods.fold(merge, initial) for node, pods in by_node.iteritems()}
+
+
+class NamespaceList(ListLike[Namespace]):
+    def list_namespaces(self):
+        # type: () -> Dict[str, Dict[str, Dict[str, Optional[str]]]]
+        return {
+            namespace.name: {
+                'status': {
+                    'phase': namespace.phase,
+                },
+            } for namespace in self.items if namespace.name
         }
 
 
-class PersistentVolumeList(ListLike):
+class PersistentVolumeList(ListLike[PersistentVolume]):
     def list_volumes(self):
-        # type: () -> Dict[str, Dict[str, Union[str, Optional[float], Dict[str, str]]]]
+        # type: () -> Dict[str, Dict[str, Union[Optional[List[str]], Optional[float], Dict[str, Optional[str]]]]]
         # TODO: Output details of the different types of volumes
         return {
-            pv.metadata.name: {
-                'access': pv.spec.access_modes,
-                'capacity': parse_memory(pv.spec.capacity['storage']),
+            pv.name: {
+                'access': pv.access_modes,
+                'capacity': pv.capacity,
                 'status': {
-                    'phase': pv.status.phase,
+                    'phase': pv.phase,
                 },
-            } for pv in self.items
+            } for pv in self.items if pv.name
         }
 
 
-class PersistentVolumeClaimList(ListLike):
+class PersistentVolumeClaimList(ListLike[PersistentVolumeClaim]):
     def list_volume_claims(self):
-        # type: () -> Dict[str, Dict[str, str]]
+        # type: () -> Dict[str, Dict[str, Any]]
+        # TODO: Fix "Any"
         return {
-            pvc.metadata.name: {
-                'namespace': pvc.metadata.namespace,
-                'condition': pvc.status.conditions,
-                'phase': pvc.status.phase,
-                'volume': pvc.spec.volume_name,
-            } for pvc in self.items
+            pvc.name: {
+                'namespace': pvc.namespace,
+                'condition': pvc.conditions,
+                'phase': pvc.phase,
+                'volume': pvc.volume_name,
+            } for pvc in self.items if pvc.name
         }
 
 
-class StorageClassList(ListLike):
+class StorageClassList(ListLike[StorageClass]):
     def list_storage_classes(self):
-        view = {}
-        for storage_class in self.items:
-            name = storage_class.metadata.name
-            if not name:
-                continue
-            view[name] = {
+        # type: () -> Dict[Any, Dict[str, Any]]
+        # TODO: should be Dict[str, Dict[str, Optional[str]]]
+        return {
+            storage_class.name: {
                 'provisioner': storage_class.provisioner,
-                'reclaim_policy': storage_class.reclaim_policy,
-            }
-        return view
+                'reclaim_policy': storage_class.reclaim_policy
+            } for storage_class in self.items if storage_class.name
+        }
 
 
-# TODO: combine duplicate logic from ClusterRoleList
-class RoleList(ListLike):
+class RoleList(ListLike[Role]):
     def list_roles(self):
-        view = {}
-        for role in self.items:
-            metadata = role.metadata
-            if not metadata:
-                continue
-            name = metadata.name
-            if not name:
-                continue
-            creation = metadata.creation_timestamp
-            if creation:
-                creation = time.mktime(creation.timetuple())
-
-            view[name] = {
-                'namespace': metadata.namespace,
-                'creation_timestamp': creation,
-            }
-        return view
-
-
-# TODO: combine duplicate logic from RoleList
-class ClusterRoleList(ListLike):
-    def list_roles(self):
-        view = {}
-        for role in self.items:
-            metadata = role.metadata
-            if not metadata:
-                continue
-            name = metadata.name
-            if not name:
-                continue
-            creation = metadata.creation_timestamp
-            if creation:
-                creation = time.mktime(creation.timetuple())
-
-            view[name] = {
-                'namespace': metadata.namespace,
-                'creation_timestamp': creation,
-            }
-        return view
+        return {
+            role.name: {
+                'namespace': role.namespace,
+                'creation_timestamp': role.creation_timestamp
+            } for role in self.items if role.name
+        }
 
 
 class Group(object):
@@ -491,15 +601,17 @@ class ApiData(object):
         pods = core_api.list_pod_for_all_namespaces()
 
         logging.debug('Assigning collected data')
-        self.storage_classes = StorageClassList(storage_classes.items)
-        self.namespaces = NamespaceList(namespaces.items)
-        self.roles = RoleList(roles.items)
-        self.cluster_roles = ClusterRoleList(cluster_roles.items)
-        self.component_statuses = ComponentStatusList(component_statuses.items)
-        self.nodes = NodeList(nodes.items)
-        self.persistent_volumes = PersistentVolumeList(pvs.items)
-        self.persistent_volume_claims = PersistentVolumeClaimList(pvcs.items)
-        self.pods = PodList(pods.items)
+        self.storage_classes = StorageClassList(map(StorageClass, storage_classes.items))
+        self.namespaces = NamespaceList(map(Namespace, namespaces.items))
+        self.roles = RoleList(map(Role, roles.items))
+        self.cluster_roles = RoleList(map(Role, cluster_roles.items))
+        self.component_statuses = ComponentStatusList(
+            map(ComponentStatus, component_statuses.items))
+        self.nodes = NodeList(map(Node, nodes.items))
+        self.persistent_volumes = PersistentVolumeList(map(PersistentVolume, pvs.items))
+        self.persistent_volume_claims = PersistentVolumeClaimList(
+            map(PersistentVolumeClaim, pvcs.items))
+        self.pods = PodList(map(Pod, pods.items))
 
     def cluster_sections(self):
         # type: () -> str

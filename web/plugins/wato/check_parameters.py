@@ -9501,9 +9501,12 @@ register_check_parameters(
                 )
             ),
             ( "connections_rate_lower",
-                Levels(
-                     title = _("Minimum connections per second"),
-                     default_value = None,
+                Tuple(
+                    title=_("Minimum connections per second"),
+                    elements=[
+                        Integer(title=_("Warning at")),
+                        Integer(title=_("Critical at")),
+                    ],
                 )
             ),
         ]),

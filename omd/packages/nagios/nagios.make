@@ -30,7 +30,7 @@ $(NAGIOS_BUILD): $(NAGIOS_PATCHING)
 	$(MAKE) -C $(NAGIOS_DIR) all
 	$(TOUCH) $@
 
-$(NAGIOS_INSTALL):
+$(NAGIOS_INSTALL): $(NAGIOS_BUILD)
 	$(MAKE) DESTDIR=$(DESTDIR) -C $(NAGIOS_DIR) install-base
 	
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/nagios

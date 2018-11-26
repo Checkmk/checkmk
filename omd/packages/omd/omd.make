@@ -1,5 +1,6 @@
 OMD := omd
 OMD_VERS := $(OMD_VERSION)
+OMD_DIR := $(OMD)-$(OMD_VERS)
 
 ifeq ($(DISTRO_NAME),SLES)
     DEFAULT_RUNLEVELS=2 3 5

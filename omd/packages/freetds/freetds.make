@@ -32,6 +32,7 @@ $(FREETDS_BUILD): $(FREETDS_UNPACK)
 $(FREETDS_INSTALL): $(FREETDS_BUILD)
 # At runtime we need only the libraries.
 	$(MAKE) -C $(FREETDS_DIR)/src/dblib DESTDIR=$(DESTDIR) install
+	$(TOUCH) $@
 
 freetds-skel:
 

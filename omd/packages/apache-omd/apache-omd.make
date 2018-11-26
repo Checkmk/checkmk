@@ -73,7 +73,7 @@ $(APACHE)-install: $(APACHE_INSTALL)
 
 $(APACHE)-skel: $(APACHE_SKEL)
 
-$(APACHE_INSTALL):
+$(APACHE_INSTALL): $(APACHE_BUILD)
 	# Install software below $(DESTDIR)$(OMD_ROOT)/{bin,lib,share}
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/omd
 	install -m 644 $(PACKAGE_DIR)/$(APACHE)/apache.conf $(DESTDIR)$(OMD_ROOT)/share/omd/apache.conf

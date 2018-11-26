@@ -28,6 +28,7 @@ $(LIBGSF_INSTALL): $(LIBGSF_BUILD)
 ifneq ($(filter $(DISTRO_CODE),sles15),)
 	$(MAKE) DESTDIR=$(DESTDIR) -C $(LIBGSF_DIR) install
 endif
+	$(TOUCH) $@
 
 $(LIBGSF)-skel:
 

@@ -13,10 +13,11 @@ $(JMX4PERL): $(JMX4PERL_BUILD)
 
 $(JMX4PERL)-install: $(JMX4PERL_INSTALL)
 
-$(JMX4PERL_BUILD): $(JMX4PERL_UNPACK) perl-modules
+$(JMX4PERL_BUILD): $(JMX4PERL_UNPACK) $(PERL_MODULES_BUILD)
 	export PERL5LIB=$(PACKAGE_PERL_MODULES_PERL5LIB); \
 	    cd $(JMX4PERL_DIR) && $(PERL) Build.PL < /dev/null >build.log 2>&1
 	cd $(JMX4PERL_DIR) && ./Build
+	$(TOUCH) $@
 
 $(JMX4PERL_INSTALL): $(JMX4PERL_BUILD)
 	rm -rf $(DESTDIR)$(OMD_ROOT)/skel/etc/jmx4perl
@@ -40,6 +41,7 @@ $(JMX4PERL_INSTALL): $(JMX4PERL_BUILD)
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/jmx4perl/jolokia-$(JOLOKIA_VERSION)
 	rsync -a $(PACKAGE_DIR)/$(JMX4PERL)/jolokia-agents/$(JOLOKIA_VERSION)/ $(DESTDIR)$(OMD_ROOT)/share/jmx4perl/jolokia-$(JOLOKIA_VERSION)/
 	chmod 644 $(DESTDIR)$(OMD_ROOT)/share/jmx4perl/jolokia-$(JOLOKIA_VERSION)/*
+	$(TOUCH) $@
 
 $(JMX4PERL)-skel:
 

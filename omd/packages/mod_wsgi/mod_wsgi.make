@@ -50,7 +50,7 @@ $(MOD_WSGI_BUILD): $(MOD_WSGI_PATCHING) $(PYTHON_BUILD)
 	$(MAKE) -C $(MOD_WSGI_DIR)
 	$(TOUCH) $@
 
-$(MOD_WSGI_INSTALL):
+$(MOD_WSGI_INSTALL): $(MOD_WSGI_BUILD)
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/apache/modules
 	cp $(MOD_WSGI_DIR)/src/server/.libs/mod_wsgi.so $(DESTDIR)$(OMD_ROOT)/lib/apache/modules
 	chmod 644 $(DESTDIR)$(OMD_ROOT)/lib/apache/modules/mod_wsgi.so

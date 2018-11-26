@@ -1,6 +1,7 @@
 import pytest
 import cmk.log
 
+
 def test_get_logger():
     l = cmk.log.get_logger("asd")
     assert l.name == "cmk.asd"
@@ -24,6 +25,9 @@ def test_setup_console_logging(capsys):
     cmk.log.setup_console_logging()
     l = cmk.log.get_logger("test")
     l.info("test123")
+
+    # Cleanup handler registered with cmk.log.setup_console_logging()
+    cmk.log.logger.handlers.pop()
 
     out, err = capsys.readouterr()
     assert out == "test123\n"

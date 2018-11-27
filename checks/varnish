@@ -235,6 +235,156 @@
 # VBE.name(xxx.xxx.xxx.xxx,,80).vcls            1          .   VCL references
 # VBE.name(xxx.xxx.xxx.xxx,,80).happy           0          .   Happy health probes
 
+# Newer agent output has MAIN and MGT prefix keys at the beginning
+# and provide addtional sections MEMPOOL:
+# (LCK, SMA, VBE has the same structure)
+# MGT.uptime Management
+# MGT.child_start Child
+# MGT.child_exit Child
+# MGT.child_stop Child
+# MGT.child_died Child
+# MGT.child_dump Child
+# MGT.child_panic Child
+# MAIN.summs stat
+# MAIN.uptime Child
+# MAIN.sess_conn Sessions
+# MAIN.sess_drop Sessions
+# MAIN.sess_fail Session
+# MAIN.client_req_400 Client
+# MAIN.client_req_417 Client
+# MAIN.client_req Good
+# MAIN.cache_hit Cache
+# MAIN.cache_hitpass Cache
+# MAIN.cache_hitmiss Cache
+# MAIN.cache_miss Cache
+# ...
+# MEMPOOL.busyobj.live In
+# MEMPOOL.busyobj.pool In
+# MEMPOOL.busyobj.sz_wanted Size
+# MEMPOOL.busyobj.sz_actual Size
+# MEMPOOL.busyobj.allocs Allocations
+# MEMPOOL.busyobj.frees Frees
+# MEMPOOL.busyobj.recycle Recycled
+# MEMPOOL.busyobj.timeout Timed
+# MEMPOOL.busyobj.toosmall Too
+# MEMPOOL.busyobj.surplus Too
+# MEMPOOL.busyobj.randry Pool
+# MEMPOOL.req0.live In
+# MEMPOOL.req0.pool In
+# MEMPOOL.req0.sz_wanted Size
+# MEMPOOL.req0.sz_actual Size
+# MEMPOOL.req0.allocs Allocations
+# MEMPOOL.req0.frees Frees
+# MEMPOOL.req0.recycle Recycled
+# MEMPOOL.req0.timeout Timed
+# MEMPOOL.req0.toosmall Too
+# MEMPOOL.req0.surplus Too
+# ...
+
+#.
+#   .--common--------------------------------------------------------------.
+#   |                                                                      |
+#   |               ___ ___  _ __ ___  _ __ ___   ___  _ __                |
+#   |              / __/ _ \| '_ ` _ \| '_ ` _ \ / _ \| '_ \               |
+#   |             | (_| (_) | | | | | | | | | | | (_) | | | |              |
+#   |              \___\___/|_| |_| |_|_| |_| |_|\___/|_| |_|              |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
+def parse_varnish(info):
+    parsed = {}
+    for line in info:
+        parsed_path = _parse_path(line[0])
+        instance = _create_hierarchy(parsed_path, parsed)
+        try:
+            value = int(line[1])
+        except ValueError:
+            value = None
+
+        if line[3].lower() in line[0]:
+            descr = " ".join(line[4:])
+        else:
+            descr = " ".join(line[3:])
+
+        perf_var_name = "varnish_%s_rate" % parsed_path[-1]
+        if perf_var_name.startswith("varnish_n_wrk"):
+            perf_var_name = perf_var_name.replace("n_wrk", "worker")
+        elif perf_var_name.startswith("varnish_n_"):
+            perf_var_name = perf_var_name.replace("n_", "objects_")
+
+        instance.update({
+            "value": value,
+            "descr": descr.replace("/", " "),
+            "perf_var_name": perf_var_name,
+            "params_var_name": parsed_path[-1].split("_", 1)[-1],
+        })
+
+    # Newer output has MAIN or MGT prefix keys,
+    # see above in 'agent output'
+    for key in ["MAIN", "MGT"]:
+        values = parsed.pop(key, {})
+        parsed.update(values)
+    return parsed
+
+
+def _parse_path(raw_path):
+    # Split raw path on ".". We have to deal with different paths:
+    # - 'client_conn'
+    #   => ['client_conn']
+    # - 'LCK.sms.creat'
+    #   => ['LCK', 'sms', 'creat']
+    # - 'VBE.default(127.0.0.1,,81).happy'
+    #   => ['VBE', 'default(127.0.0.1,,81)', 'happy']
+    if '(' not in raw_path:
+        return raw_path.split(".")
+    head, middle = raw_path.split("(", 1)
+    address, tail = middle.split(")", 1)
+    head = head.strip(".").split(".")
+    return head[:-1]\
+           + ["%s(%s)" % (head[-1], address)]\
+           + tail.strip(".").split(".")
+
+
+def _create_hierarchy(path, instance):
+    if not path:
+        return instance
+    head, tail = path[0], path[1:]
+    child = instance.setdefault(head, {})
+    return _create_hierarchy(tail, child)
+
+
+def inventory_varnish(parsed, needed_keys):
+    if all(key in parsed for key in needed_keys):
+        return [(None, {})]
+
+
+def check_varnish_stats(_no_item, params, parsed, expected_keys):
+    this_time = time.time()
+    for key in expected_keys:
+        data = parsed.get(key)
+        if not data:
+            continue
+        descr = "%s/s" % data['descr']
+        yield check_levels(
+            get_rate("varnish.%s" % key, this_time, data['value']),
+            data['perf_var_name'],
+            params.get(data['params_var_name'], (None, None)),
+            human_readable_func=lambda r, d=descr: ("%.1f " + d) % r)
+
+
+def check_varnish_ratio(_no_item, params, parsed, ratio_keys):
+    reference_key, additional_key, perf_key = ratio_keys
+    reference_value = parsed[reference_key]['value']
+    ratio = 0.0
+    total = reference_value + parsed[additional_key]['value']
+    if total > 0:
+        ratio = 100.0 * reference_value / total
+    warn, crit = params["levels_lower"]
+    return check_levels(
+        ratio, perf_key, (None, None, warn, crit), human_readable_func=get_percent_human_readable)
+
+
 #.
 #   .--uptime--------------------------------------------------------------.
 #   |                              _   _                                   |
@@ -248,30 +398,6 @@
 #   '----------------------------------------------------------------------'
 
 
-def parse_varnish(info):
-    parsed = {}
-    for line in info:
-        if "." in line[0]:
-            what, what_item = line[0].split(".", 1)
-        elif "_" in line[0]:
-            what, what_item = line[0].split("_", 1)
-        else:
-            what, what_item = line[0], None
-
-        if what.lower() == line[3].lower():
-            descr = " ".join(line[4:]).replace("/", " ")
-        else:
-            descr = " ".join(line[3:]).replace("/", " ")
-
-        if what_item:
-            parsed.setdefault(what, {})
-            parsed[what].setdefault(what_item, (float(line[1]), descr))
-        else:
-            parsed.setdefault(what, (float(line[1]), descr))
-
-    return parsed
-
-
 def inventory_varnish_uptime(parsed):
     if "uptime" in parsed:
         return [(None, None)]
@@ -279,7 +405,7 @@ def inventory_varnish_uptime(parsed):
 
 def check_varnish_uptime(_no_item, _no_params, parsed):
     if "uptime" in parsed:
-        return check_uptime_seconds(_no_params, parsed["uptime"][0])
+        return check_uptime_seconds(_no_params, parsed["uptime"]["value"])
 
 
 check_info["varnish"] = {
@@ -290,88 +416,6 @@ check_info["varnish"] = {
     "has_perfdata": True,
     "includes": ["uptime.include"],
 }
-
-#.
-#   .--common--------------------------------------------------------------.
-#   |                                                                      |
-#   |               ___ ___  _ __ ___  _ __ ___   ___  _ __                |
-#   |              / __/ _ \| '_ ` _ \| '_ ` _ \ / _ \| '_ \               |
-#   |             | (_| (_) | | | | | | | | | | | (_) | | | |              |
-#   |              \___\___/|_| |_| |_|_| |_| |_|\___/|_| |_|              |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-
-def inventory_varnish(parsed, what, needed_keys):
-    if what in parsed:
-        needed_keys_avail = True
-        for needed_key in needed_keys:
-            if needed_key not in parsed[what]:
-                needed_keys_avail = False
-        if needed_keys_avail is True:
-            return [(None, {})]
-
-
-# use selection to get list of keys from parsed[what] or in case of None all keys
-def check_varnish_stats(_no_item, params, parsed, what, selection):
-    if what in parsed:
-        this_time = time.time()
-
-        whatitemlist = parsed[what]
-        if selection:
-            whatitemlist = [
-                whatitem for key in selection for whatitem in whatitemlist
-                if whatitem.startswith(key)
-            ]
-
-        for whatitem in whatitemlist:
-            state = 0
-            reading, descr = parsed[what][whatitem]
-            rate = get_rate("varnish.%s.%s" % (what, whatitem), this_time, reading)
-            infotext = "%0.1f %s/s" % (rate, descr)
-
-            perfvar = "varnish_%s_%s_rate" % (what, whatitem)
-            if perfvar.startswith("varnish_n_wrk"):
-                perfvar = perfvar.replace("n_wrk", "worker")
-            elif perfvar.startswith("varnish_n_"):
-                perfvar = perfvar.replace("n_", "objects_")
-            perfdata = []
-
-            if params.get(whatitem):
-                warn, crit = params[whatitem]
-                if rate >= crit:
-                    state = 2
-                elif rate >= warn:
-                    state = 1
-                if state > 0:
-                    infotext += " (warn/crit at %s/%s)" % (warn, crit)
-                perfdata.append((perfvar, rate, warn, crit))
-            else:
-                perfdata.append((perfvar, rate))
-
-            yield state, infotext, perfdata
-
-
-def check_varnish_ratio(_no_item, params, parsed, what, ratio_info):
-    if what in parsed:
-        state = 0
-        ratio = 0.0
-        total = parsed[what][ratio_info[0]][0] + parsed[what][ratio_info[1]][0]
-        if total > 0:
-            ratio = parsed[what][ratio_info[0]][0] / total * 100
-
-        infotext = "%.1f%%" % ratio
-        warn, crit = params["levels_lower"]
-
-        if ratio < crit:
-            state = 2
-        elif ratio < warn:
-            state = 1
-        if state > 0:
-            infotext += " (warn/crit below %.1f%%/%.1f%%)" % (warn, crit)
-
-        return state, infotext, [(ratio_info[2], ratio, warn, crit)]
-
 
 #.
 #   .--cache---------------------------------------------------------------.
@@ -386,9 +430,13 @@ def check_varnish_ratio(_no_item, params, parsed, what, ratio_info):
 
 check_info["varnish.cache"] = {
     "inventory_function"      : lambda parsed: \
-        inventory_varnish(parsed, "cache", ["miss"]),
+        inventory_varnish(parsed, ["cache_miss"]),
     "check_function"          : lambda item, params, parsed: \
-        check_varnish_stats(item, params, parsed, "cache", None),
+        check_varnish_stats(item, params, parsed, [
+            "cache_miss",
+            "cache_hit",
+            "cache_hitpass",
+        ]),
     "service_description"     : "Varnish Cache",
     "group"                   : "varnish_cache",
     "has_perfdata"            : True,
@@ -407,9 +455,14 @@ check_info["varnish.cache"] = {
 
 check_info["varnish.client"] = {
     "inventory_function"  : lambda parsed: \
-        inventory_varnish(parsed, "client", ["req"]),
+        inventory_varnish(parsed, ["client_req"]),
     "check_function"      : lambda item, params, parsed: \
-        check_varnish_stats(item, params, parsed, "client", None),
+        check_varnish_stats(item, params, parsed, [
+            "client_drop",
+            "client_req",
+            "client_conn",
+            "client_drop_late",
+        ]),
     "service_description" : "Varnish Client",
     "group"               : "varnish_client",
     "has_perfdata"        : True,
@@ -428,9 +481,19 @@ check_info["varnish.client"] = {
 
 check_info["varnish.backend"] = {
     "inventory_function"  : lambda parsed: \
-        inventory_varnish(parsed, "backend", ["fail", "unhealthy", "busy"]),
+        inventory_varnish(parsed, ["backend_fail", "backend_unhealthy", "backend_busy"]),
     "check_function"      : lambda item, params, parsed: \
-        check_varnish_stats(item, params, parsed, "backend", None),
+        check_varnish_stats(item, params, parsed, [
+            "backend_busy",
+            "backend_unhealthy",
+            "backend_req",
+            "backend_recycle",
+            "backend_retry",
+            "backend_fail",
+            "backend_toolate",
+            "backend_conn",
+            "backend_reuse",
+        ]),
     "service_description" : "Varnish Backend",
     "group"               : "varnish_backend",
     "has_perfdata"        : True,
@@ -449,9 +512,24 @@ check_info["varnish.backend"] = {
 
 check_info["varnish.fetch"] = {
     "inventory_function"  : lambda parsed: \
-        inventory_varnish(parsed, "fetch", ["1xx", "204", "304", "bad", "eof", "failed", "zero"]),
+        inventory_varnish(parsed, ["fetch_1xx", "fetch_204", "fetch_304",
+                                   "fetch_bad", "fetch_eof", "fetch_failed",
+                                   "fetch_zero"]),
     "check_function"      : lambda item, params, parsed: \
-        check_varnish_stats(item, params, parsed, "fetch", None),
+        check_varnish_stats(item, params, parsed, [
+            "fetch_oldhttp",
+            "fetch_head",
+            "fetch_eof",
+            "fetch_zero",
+            "fetch_304",
+            "fetch_length",
+            "fetch_failed",
+            "fetch_bad",
+            "fetch_close",
+            "fetch_1xx",
+            "fetch_chunked",
+            "fetch_204",
+        ]),
     "service_description" : "Varnish Fetch",
     "group"               : "varnish_fetch",
     "has_perfdata"        : True,
@@ -472,9 +550,12 @@ factory_settings["varnish_esi_default_levels"] = {'errors': (1.0, 2.0)}
 
 check_info["varnish.esi"] = {
     "inventory_function"      : lambda parsed: \
-        inventory_varnish(parsed, "esi", ["errors"]),
+        inventory_varnish(parsed, ["esi_errors"]),
     "check_function"          : lambda item, params, parsed: \
-        check_varnish_stats(item, params, parsed, "esi", None),
+        check_varnish_stats(item, params, parsed, [
+            "esi_errors",
+            "esi_warnings",
+        ]),
     "service_description"     : "Varnish ESI",
     "default_levels_variable" : "varnish_esi_default_levels",
     "group"                   : "varnish_esi",
@@ -494,9 +575,13 @@ check_info["varnish.esi"] = {
 
 check_info["varnish.objects"] = {
     "inventory_function"  : lambda parsed: \
-        inventory_varnish(parsed, "n", ["expired", "lru_nuked"]),
+        inventory_varnish(parsed, ["n_expired", "n_lru_nuked"]),
     "check_function"      : lambda item, params, parsed: \
-        check_varnish_stats(item, params, parsed, "n", ["expired", "lru_"]),
+        check_varnish_stats(item, params, parsed, [
+            "n_expired",
+            "n_lru_nuked",
+            "n_lru_moved",
+        ]),
     "service_description" : "Varnish Objects",
     "group"               : "varnish_objects",
     "has_perfdata"        : True,
@@ -515,9 +600,17 @@ check_info["varnish.objects"] = {
 
 check_info["varnish.worker"] = {
     "inventory_function"  : lambda parsed: \
-        inventory_varnish(parsed, "n", ["wrk_failed", "wrk_queued", "wrk_drop"]),
+        inventory_varnish(parsed, ["n_wrk_failed", "n_wrk_queued"]),
     "check_function"      : lambda item, params, parsed: \
-        check_varnish_stats(item, params, parsed, "n", ["wrk"]),
+        check_varnish_stats(item, params, parsed, [
+            "n_wrk_lqueue",
+            "n_wrk_create",
+            "n_wrk_drop",
+            "n_wrk",
+            "n_wrk_failed",
+            "n_wrk_queued",
+            "n_wrk_max",
+        ]),
     "service_description" : "Varnish Worker",
     "group"               : "varnish_worker",
     "has_perfdata"        : True,
@@ -538,9 +631,10 @@ factory_settings["varnish_cache_hit_ratio_default_levels"] = {'levels_lower': (7
 
 check_info["varnish.cache_hit_ratio"] = {
     "inventory_function"      : lambda parsed: \
-        inventory_varnish(parsed, "cache", ["hit", "miss"]),
+        inventory_varnish(parsed, ["cache_miss", "cache_hit"]),
     "check_function"          : lambda item, params, parsed: \
-        check_varnish_ratio(item, params, parsed, 'cache', ('hit', 'miss', 'cache_hit_ratio')),
+        check_varnish_ratio(item, params, parsed,
+                            ('cache_hit', 'cache_miss', 'cache_hit_ratio')),
     "default_levels_variable" : "varnish_cache_hit_ratio_default_levels",
         "service_description"     : "Varnish Cache Hit Ratio",
     "group"                   : "varnish_cache_hit_ratio",
@@ -568,9 +662,10 @@ factory_settings["varnish_backend_success_ratio_default_levels"] = {'levels_lowe
 
 check_info["varnish.backend_success_ratio"] = {
     "inventory_function"      : lambda parsed: \
-        inventory_varnish(parsed, "backend", ["fail", "conn"]),
+        inventory_varnish(parsed, ["backend_fail", "backend_conn"]),
     "check_function"          : lambda item, params, parsed: \
-        check_varnish_ratio(item, params, parsed, 'backend', ('conn', 'fail', 'varnish_backend_success_ratio')),
+        check_varnish_ratio(item, params, parsed,
+                            ('backend_conn', 'backend_fail', 'varnish_backend_success_ratio')),
     "default_levels_variable" : "varnish_backend_success_ratio_default_levels",
         "service_description"     : "Varnish Backend Success Ratio",
     "group"                   : "varnish_backend_success_ratio",
@@ -597,29 +692,20 @@ factory_settings["varnish_worker_thread_ratio_default_levels"] = {'levels_lower'
 
 
 def check_varnish_worker_thread_ratio(_no_item, params, parsed):
-    if "n" in parsed:
-        state = 0
-        ratio = 0.0
-
-        if parsed["n"]["wrk_create"][0] > 0:
-            ratio = parsed["n"]["wrk"][0] / parsed["n"]["wrk_create"][0] * 100
-
-        infotext = "%.1f%%" % ratio
-        warn, crit = params["levels_lower"]
-
-        if ratio < crit:
-            state = 2
-        elif ratio < warn:
-            state = 1
-        if state > 0:
-            infotext += " (warn/crit below %.1f%%/%.1f%%)" % (warn, crit)
-
-        return state, infotext, [("varnish_worker_thread_ratio", ratio, warn, crit)]
+    ratio = 0.0
+    worker_create = parsed["n_wrk_create"]['value']
+    if worker_create > 0:
+        ratio = 100.0 * parsed["n_wrk"]['value'] / worker_create
+    warn, crit = params["levels_lower"]
+    return check_levels(
+        ratio,
+        "varnish_worker_thread_ratio", (None, None, warn, crit),
+        human_readable_func=get_percent_human_readable)
 
 
 check_info["varnish.worker_thread_ratio"] = {
     "inventory_function"      : lambda parsed: \
-        inventory_varnish(parsed, "n", ["wrk", "wrk_create"]),
+        inventory_varnish(parsed, ["n_wrk", "n_wrk_create"]),
     "check_function"          : check_varnish_worker_thread_ratio,
     "service_description"     : "Varnish Worker Thread Ratio",
     "default_levels_variable" : "varnish_worker_thread_ratio_default_levels",

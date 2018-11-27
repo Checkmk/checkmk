@@ -211,7 +211,6 @@ if config.mkeventd_enabled:
 
 backup_domains = {}
 g_rulespecs = None
-g_rulegroups = {}
 
 # Global datastructure holding all attributes (in a defined order)
 # as pairs of (attr, topic). Topic is the title under which the
@@ -7522,20 +7521,58 @@ def user_script_title(what, name):
 #   '----------------------------------------------------------------------
 
 
-# TODO: Better rename this and also get_rulegroup() to rulespec group
-class Rulegroup(object):
-    def __init__(self, name, title=None, help_text=None):
-        self.name = name
-        self.title = title or name
-        self.help = help_text
+class RulespecGroup(object):
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractproperty
+    def name(self):
+        # type: () -> Text
+        """Unique internal key of this group"""
+        raise NotImplementedError()
+
+    @abc.abstractproperty
+    def title(self):
+        # type: () -> Text
+        """Human readable title of this group"""
+        raise NotImplementedError()
+
+    @abc.abstractproperty
+    def help(self):
+        # type: () -> Text
+        """Helpful description of this group"""
+        raise NotImplementedError()
 
 
+class RulespecGroupRegistry(cmk.plugin_registry.ClassRegistry):
+    def plugin_base_class(self):
+        return RulespecGroup
+
+    def _register(self, plugin_class):
+        self._entries[plugin_class().name] = plugin_class
+
+
+rulespec_group_registry = RulespecGroupRegistry()
+
+
+# TODO: Kept for compatibility with pre 1.6 plugins
 def register_rulegroup(group_name, title, help_text):
-    g_rulegroups[group_name] = Rulegroup(group_name, title, help_text)
+    rulespec_group_registry.register_plugin(
+        _get_legacy_rulespec_group_class(group_name, title, help_text))
 
 
 def get_rulegroup(group_name):
-    return g_rulegroups.get(group_name, Rulegroup(group_name))
+    group_class = rulespec_group_registry.get(
+        group_name, _get_legacy_rulespec_group_class(group_name, group_title=None, help_text=None))
+    return group_class()
+
+
+def _get_legacy_rulespec_group_class(group_name, group_title, help_text):
+    group_title = group_title or group_name
+    return type("LegacyRulespecGroup%s" % group_name.title(), (RulespecGroup,), {
+        "name": group_name,
+        "title": group_title,
+        "help": help_text,
+    })
 
 
 class Rulespecs(object):
@@ -7585,18 +7622,14 @@ class Rulespecs(object):
         choices = []
 
         for main_group_name in self.get_main_groups():
-            main_group = g_rulegroups.get(main_group_name)
-            if main_group:
-                main_group_title = main_group.title
-            else:
-                main_group_title = main_group_name
+            main_group = get_rulegroup(main_group_name)
 
             if mode == "static_checks" and main_group_name != "static":
                 continue
             elif mode != "static_checks" and main_group_name == "static":
                 continue
 
-            choices.append((main_group_name, main_group_title))
+            choices.append((main_group_name, main_group.title))
 
             for group_name in self._by_group:
                 if group_name.startswith(main_group_name + "/"):

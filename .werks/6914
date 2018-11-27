@@ -1,0 +1,14 @@
+Title: LDAP: Fixed wrong diagnose results when using fallback server option
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1543237371
+
+The LDAP connection diagnose was showing wrong results for fallback servers
+when a connetion to the server could not be established in the first step.
+
+The diagnose was reusing the established connection to previous servers.

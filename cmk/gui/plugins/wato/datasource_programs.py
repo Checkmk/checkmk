@@ -1295,30 +1295,35 @@ register_rule(
                 title=_("Secret"),
                 allow_empty=False,
             )),
-            ("config",
-             Dictionary(
-                 title=_("Monitoring Settings"),
-                 help=_("You can choose to to monitor all resources known to "
-                        "the Azure API. However, be aware that Microsoft limits"
-                        " API calls to 15,000 per hour (250 per minute)."),
-                 elements=[
-                     ('explicit-config',
-                      ListOf(
-                          _azure_group_config(),
-                          title=_("Explicitly specify groups"),
-                          allow_empty=False,
-                          magic="@-groups-@",
-                      )),
-                     ('fetchall',
-                      FixedValue(
-                          "fetchall",
-                          title=_(
-                              "Monitor all available resource groups (overrides previous settings)"
-                          ),
-                          totext="",
-                      )),
-                 ],
-             )),
+            (
+                "config",
+                Dictionary(
+                    title=_("Monitoring Settings"),
+                    # Since we introduced this, Microsoft has already reduced the number
+                    # of allowed API requests. At the time of this writing (11/2018)
+                    # you can find the number here:
+                    # https://docs.microsoft.com/de-de/azure/azure-resource-manager/resource-manager-request-limits
+                    help=_("You can choose to to monitor all resources known to "
+                           "the Azure API. However, be aware that Microsoft limits"
+                           " API calls to %s per hour (%s per minute).") % ("12000", "200"),
+                    elements=[
+                        ('explicit-config',
+                         ListOf(
+                             _azure_group_config(),
+                             title=_("Explicitly specify groups"),
+                             allow_empty=False,
+                             magic="@-groups-@",
+                         )),
+                        ('fetchall',
+                         FixedValue(
+                             "fetchall",
+                             title=
+                             _("Monitor all available resource groups (overrides previous settings)"
+                              ),
+                             totext="",
+                         )),
+                    ],
+                )),
             ("--piggyback-vms",
              DropdownChoice(
                  title=_("Create piggyback VM data"),

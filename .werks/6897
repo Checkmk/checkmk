@@ -1,0 +1,13 @@
+Title: juniper_gbp_state: Add IPv6 support
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1543314263
+Class: feature
+
+Previously the juniper_bgp_state check supported IPv4 addresses only.
+This werk adds support for IPv6 addresses.
+
+CMK-1334

@@ -3374,6 +3374,7 @@ for volume_info in ["NFS", "NFSv4", "NFSv4.1", "CIFS", "SAN", "FCP", "ISCSI"]:
         ("latency", "s"),
         ("ios", "1/s"),
         ("throughput", "bytes/s"),
+        ("ops", "1/s"),
     ]:
 
         volume = volume_info.lower().replace(".", "_")
@@ -5403,6 +5404,8 @@ for protocol in ["nfs", "cifs", "san", "fcp", "iscsi", "nfsv4", "nfsv4_1"]:
     df_netapp_perfvarnames.append("%s_write_data" % protocol)
     df_netapp_perfvarnames.append("%s_read_latency" % protocol)
     df_netapp_perfvarnames.append("%s_write_latency" % protocol)
+    df_netapp_perfvarnames.append("%s_read_ops" % protocol)
+    df_netapp_perfvarnames.append("%s_write_ops" % protocol)
 
 # TODO: this special regex construct below, needs to be replaced by something managable
 # The current df_translation implementation is unable to automatically detect new parameters
@@ -9275,6 +9278,14 @@ for what, text in [
         "metrics": [
             ("%s_read_latency" % what, "-area"),
             ("%s_write_latency" % what, "area"),
+        ],
+    }
+
+    graph_info["%s_ops" % what] = {
+        "title": _("%s latency") % text,
+        "metrics": [
+            ("%s_read_ops" % what, "-area"),
+            ("%s_write_ops" % what, "area"),
         ],
     }
 

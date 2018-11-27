@@ -9282,7 +9282,7 @@ for what, text in [
     }
 
     graph_info["%s_ops" % what] = {
-        "title": _("%s latency") % text,
+        "title": _("%s operations") % text,
         "metrics": [
             ("%s_read_ops" % what, "-area"),
             ("%s_write_ops" % what, "area"),

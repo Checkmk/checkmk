@@ -3152,6 +3152,8 @@ class StatusServer(ECServerThread):
             event["comment"] = comment
         if contact:
             event["contact"] = contact
+        if user:
+            event["owner"] = user
         self._history.add(event, "UPDATE", user)
 
     def handle_command_create(self, arguments):
@@ -3169,6 +3171,8 @@ class StatusServer(ECServerThread):
         if not event:
             raise MKClientError("No event with id %s" % event_id)
         event["state"] = int(newstate)
+        if user:
+            event["owner"] = user
         self._history.add(event, "CHANGESTATE", user)
 
     def handle_command_reload(self):
@@ -3209,6 +3213,8 @@ class StatusServer(ECServerThread):
     def handle_command_action(self, arguments):
         event_id, user, action_id = arguments
         event = self._event_status.event(int(event_id))
+        if user:
+            event["owner"] = user
 
         if action_id == "@NOTIFY":
             cmk.ec.actions.do_notify(
@@ -3764,6 +3770,8 @@ class EventStatus(object):
         for nr, event in enumerate(self._events):
             if event["id"] == event_id:
                 event["phase"] = "closed"
+                if user:
+                    event["owner"] = user
                 self._history.add(event, "DELETE", user)
                 self._remove_event_by_nr(nr)
                 return

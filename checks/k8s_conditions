@@ -1,0 +1,64 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2018             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+def parse_k8s_conditions(info):
+    import json
+    return json.loads(info[0][0])
+
+
+@discover
+def inventory_k8s_conditions(condition, _value):
+    return condition in {
+        "DiskPressure",
+        "OutOfDisk",
+        "MemoryPressure",
+        "Ready",
+        "NetworkUnavailable",
+        "KernelDeadlock",
+    }
+
+
+@get_parsed_item_data
+def check_k8s_conditions(item, _no_params, value):
+    expected_values = {
+        "DiskPressure": "False",
+        "OutOfDisk": "False",
+        "MemoryPressure": "False",
+        "Ready": "True",
+        "NetworkUnavailable": "False",
+        "KernelDeadlock": "False",
+    }
+    status = 0 if value == expected_values[item] else 2
+    return status, value
+
+
+check_info['k8s_conditions'] = {
+    'parse_function': parse_k8s_conditions,
+    'inventory_function': inventory_k8s_conditions,
+    'check_function': check_k8s_conditions,
+    'service_description': 'Condition %s',
+}

@@ -293,7 +293,27 @@ from cmk.gui.plugins.wato import (
     PredictiveLevels,
     EventsMode,
     mode_registry,
+    RulespecGroupCheckParametersApplications,
+    RulespecGroupCheckParametersDiscovery,
+    RulespecGroupCheckParametersEnvironment,
+    RulespecGroupCheckParametersHardware,
+    RulespecGroupCheckParametersNetworking,
+    RulespecGroupCheckParametersOperatingSystem,
+    RulespecGroupCheckParametersPrinters,
+    RulespecGroupCheckParametersStorage,
+    RulespecGroupCheckParametersVirtualization,
 )
+# Has to be kept for compatibility with pre 1.6 register_rule() and register_check_parameters()
+# calls in the WATO plugin context
+subgroup_networking = RulespecGroupCheckParametersNetworking().sub_group_name
+subgroup_storage = RulespecGroupCheckParametersStorage().sub_group_name
+subgroup_os = RulespecGroupCheckParametersOperatingSystem().sub_group_name
+subgroup_printing = RulespecGroupCheckParametersPrinters().sub_group_name
+subgroup_environment = RulespecGroupCheckParametersEnvironment().sub_group_name
+subgroup_applications = RulespecGroupCheckParametersApplications().sub_group_name
+subgroup_virt = RulespecGroupCheckParametersVirtualization().sub_group_name
+subgroup_hardware = RulespecGroupCheckParametersHardware().sub_group_name
+subgroup_inventory = RulespecGroupCheckParametersDiscovery().sub_group_name
 
 # Make some functions of watolib available to WATO plugins without using the
 # watolib module name. This is mainly done for compatibility reasons to keep

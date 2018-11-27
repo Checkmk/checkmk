@@ -52,7 +52,8 @@ from cmk.gui.valuespec import (
 )
 
 from cmk.gui.plugins.wato import (
-    register_rulegroup,
+    rulespec_group_registry,
+    RulespecGroup,
     register_rule,
     monitoring_macro_help,
     IndividualOrStoredPassword,
@@ -60,13 +61,23 @@ from cmk.gui.plugins.wato import (
 
 import cmk.gui.bi as bi
 
-group = "datasource_programs"
 
-register_rulegroup(
-    group,
-    _("Datasource Programs"),
-    _("Specialized agents, e.g. check via SSH, ESX vSphere, SAP R/3"),
-)
+@rulespec_group_registry.register
+class RulespecGroupDatasourcePrograms(RulespecGroup):
+    @property
+    def name(self):
+        return "datasource_programs"
+
+    @property
+    def title(self):
+        return _("Datasource Programs")
+
+    @property
+    def help(self):
+        return _("Specialized agents, e.g. check via SSH, ESX vSphere, SAP R/3")
+
+
+group = RulespecGroupDatasourcePrograms().name
 
 register_rule(
     group, "datasource_programs",
@@ -634,11 +645,6 @@ register_rule(
     FACTORY_DEFAULT_UNUSED,  # No default, do not use setting if no rule matches
     match='first')
 
-register_rulegroup("datasource_programs", _("Datasource Programs"),
-                   _("Specialized agents, e.g. check via SSH, ESX vSphere, SAP R/3"))
-
-group = "datasource_programs"
-
 register_rule(
     group,
     "special_agents:innovaphone",
@@ -843,7 +849,6 @@ _siemens_plc_value = [
     ),
 ]
 
-group = "datasource_programs"
 register_rule(
     group,
     "special_agents:siemens_plc",
@@ -966,7 +971,6 @@ register_rule(
            "which collects the data through the Ruckus Spot web interface"),
     match='first')
 
-group = 'datasource_programs'
 register_rule(
     group,
     'special_agents:appdynamics',
@@ -1059,7 +1063,6 @@ mk_jolokia_elements = [
         ])),
 ]
 
-group = 'datasource_programs'
 register_rule(
     group,
     'special_agents:jolokia',

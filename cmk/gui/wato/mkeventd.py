@@ -122,7 +122,8 @@ from cmk.gui.plugins.wato.utils import (
     changelog_button,
     home_button,
     make_action_link,
-    register_rulegroup,
+    rulespec_group_registry,
+    RulespecGroup,
     register_rule,
     register_modules,
     wato_confirm,
@@ -3627,9 +3628,22 @@ class ConfigVariableEventConsoleNotifyFacility(ConfigVariable):
         return True
 
 
-register_rulegroup("eventconsole", _("Event Console"),
-                   _("Settings and Checks dealing with the Check_MK Event Console"))
-group = "eventconsole"
+@rulespec_group_registry.register
+class RulespecGroupEventConsole(RulespecGroup):
+    @property
+    def name(self):
+        return "eventconsole"
+
+    @property
+    def title(self):
+        return _("Event Console")
+
+    @property
+    def help(self):
+        return _("Settings and Checks dealing with the Check_MK Event Console")
+
+
+group = RulespecGroupEventConsole().name
 
 
 def convert_mkevents_hostspec(value):

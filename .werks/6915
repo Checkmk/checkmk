@@ -1,0 +1,14 @@
+Title: IPMI Management board: Fixed random "Session no longer connected" message
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0p9
+Date: 1543317790
+Class: fix
+
+The Check_MK service of hosts that have a IPMI based management board configured could
+randomly result in an UNKNOWN state with the error message "Session no longer connected".
+
+This was a result of unstable connections to the IPMI boards which should now be handled
+in a more stable way.

@@ -89,6 +89,7 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
         return ["mgmt_ipmi_sensors"]
 
     def _execute(self):
+        connection = None
         try:
             connection = self._create_ipmi_connection()
 
@@ -106,6 +107,9 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
                 raise MKAgentError("IPMI communication failed: %r" % e)
             else:
                 raise
+        finally:
+            if connection:
+                connection.ipmi_session.logout()
 
     def _create_ipmi_connection(self):
         # Do not use the (custom) ipaddress for the host. Use the management board

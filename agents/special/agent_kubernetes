@@ -613,6 +613,7 @@ class ApiData(object):
         g.join('k8s_resources', self.nodes.resources())
         g.join('k8s_resources', self.pods.resources_per_node())
         g.join('k8s_resources', self.pods.pods_per_node())
+        g.join('k8s_conditions', self.nodes.conditions())
         return '\n'.join(g.output())
 
 

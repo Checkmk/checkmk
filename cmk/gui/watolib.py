@@ -7543,6 +7543,32 @@ class RulespecGroup(object):
         raise NotImplementedError()
 
 
+class RulespecSubGroup(RulespecGroup):
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractproperty
+    def main_group(self):
+        """A reference to the main group class"""
+        raise NotImplementedError()
+
+    @abc.abstractproperty
+    def sub_group_name(self):
+        """The internal name of the sub group"""
+        raise NotImplementedError()
+
+    @property
+    def name(self):
+        return "/".join([self.main_group().name, self.sub_group_name])
+
+    @property
+    def choice_title(self):
+        return u"&nbsp;&nbsp;⌙ %s" % self.title
+
+    @property
+    def help(self):
+        return None  # Sub groups currently have no help text
+
+
 class RulespecGroupRegistry(cmk.plugin_registry.ClassRegistry):
     def plugin_base_class(self):
         return RulespecGroup
@@ -7561,18 +7587,52 @@ def register_rulegroup(group_name, title, help_text):
 
 
 def get_rulegroup(group_name):
-    group_class = rulespec_group_registry.get(
-        group_name, _get_legacy_rulespec_group_class(group_name, group_title=None, help_text=None))
+    try:
+        group_class = rulespec_group_registry[group_name]
+    except KeyError:
+        group_class = _get_legacy_rulespec_group_class(group_name, group_title=None, help_text=None)
+        rulespec_group_registry.register_plugin(group_class)
     return group_class()
 
 
 def _get_legacy_rulespec_group_class(group_name, group_title, help_text):
+    if "/" in group_name:
+        main_group_name, sub_group_name = group_name.split("/", 1)
+        sub_group_title = group_title or sub_group_name
+
+        # group_name could contain non alphanumeric characters
+        internal_sub_group_name = re.sub('[^a-zA-Z]', '', sub_group_name)
+
+        main_group_class = get_rulegroup(main_group_name).__class__
+        return type(
+            "LegacyRulespecSubGroup%s" % internal_sub_group_name.title(), (RulespecSubGroup,), {
+                "main_group": main_group_class,
+                "sub_group_name": internal_sub_group_name.lower(),
+                "title": sub_group_title,
+            })
+
     group_title = group_title or group_name
+
     return type("LegacyRulespecGroup%s" % group_name.title(), (RulespecGroup,), {
         "name": group_name,
         "title": group_title,
         "help": help_text,
     })
+
+
+@rulespec_group_registry.register
+class RulespecGroupStaticChecks(RulespecGroup):
+    @property
+    def name(self):
+        return "static"
+
+    @property
+    def title(self):
+        return _("Manual Checks")
+
+    @property
+    def help(self):
+        return _("Statically configured Check_MK checks that do not rely on the inventory")
 
 
 class Rulespecs(object):
@@ -7618,6 +7678,7 @@ class Rulespecs(object):
         return self._by_group[group_name]
 
     # Returns all available ruleset groups to be used in dropdown choices
+    # TODO: Move the group logic to RulespecGroup / RulespecSubGroup classes
     def get_group_choices(self, mode):
         choices = []
 
@@ -7633,21 +7694,21 @@ class Rulespecs(object):
 
             for group_name in self._by_group:
                 if group_name.startswith(main_group_name + "/"):
-                    # TODO: Move this subgroup title calculation to some generic place
-                    sub_group_title = group_name.split("/", 1)[1]
-                    choices.append((cmk.utils.make_utf8(group_name),
-                                    u"&nbsp;&nbsp;⌙ %s" % sub_group_title))
+                    sub_group = get_rulegroup(group_name)
+                    choices.append((group_name, sub_group.choice_title))
 
         return choices
 
     # Now we collect all rulesets that apply to hosts, except those specifying
     # new active or static checks
+    # TODO: Move the group logic to RulespecGroup / RulespecSubGroup classes
     def get_all_groups(self):
         seen = set()
         return [gn for gn in self._sorted_groups if not (gn in seen or seen.add(gn))]
 
     # Group names are separated with "/" into main group and optional subgroup.
     # Do not lose carefully manually crafted order of groups!
+    # TODO: Move the group logic to RulespecGroup / RulespecSubGroup classes
     def get_main_groups(self):
         seen = set()
         group_names = []
@@ -7662,6 +7723,7 @@ class Rulespecs(object):
 
     # Now we collect all rulesets that apply to hosts, except those specifying
     # new active or static checks
+    # TODO: Move the group logic to RulespecGroup / RulespecSubGroup classes
     def get_host_groups(self):
         seen = set()
         return [
@@ -7671,6 +7733,7 @@ class Rulespecs(object):
         ]
 
     # Get the exactly matching main groups and all matching sub group names
+    # TODO: Move the group logic to RulespecGroup / RulespecSubGroup classes
     def get_matching_groups(self, group_name):
         seen = set()
         return [
@@ -9138,8 +9201,9 @@ g_notification_parameters = {}
 
 
 def register_notification_parameters(scriptname, valuespec):
+    rulespec_group_name = rulespec_group_registry["monconf/notifications"]().name
     register_user_script_parameters(g_notification_parameters, "notification_parameters",
-                                    "monconf/" + _("Notifications"), scriptname, valuespec)
+                                    rulespec_group_name, scriptname, valuespec)
 
 
 def verify_password_policy(password):

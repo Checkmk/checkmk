@@ -61,15 +61,30 @@ from cmk.gui.valuespec import (
 )
 
 from cmk.gui.plugins.wato import (
-    register_rulegroup,
+    rulespec_group_registry,
+    RulespecGroup,
     register_rule,
     PluginCommandLine,
     IndividualOrStoredPassword,
 )
 
-register_rulegroup("activechecks", _("Active checks (HTTP, TCP, etc.)"),
-                   _("Configure active networking checks like HTTP and TCP"))
-group = "activechecks"
+
+@rulespec_group_registry.register
+class RulespecGroupActiveChecks(RulespecGroup):
+    @property
+    def name(self):
+        return "activechecks"
+
+    @property
+    def title(self):
+        return _("Active checks (HTTP, TCP, etc.)")
+
+    @property
+    def help(self):
+        return _("Configure active networking checks like HTTP and TCP")
+
+
+group = RulespecGroupActiveChecks().name
 
 # These elements are also used in check_parameters.py
 check_icmp_params = [

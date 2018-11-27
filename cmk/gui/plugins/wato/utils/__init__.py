@@ -100,7 +100,9 @@ from cmk.gui.watolib import (
     log_audit,
     site_neutral_path,
     register_hook,
-    register_rulegroup,
+    rulespec_group_registry,
+    RulespecGroup,
+    RulespecSubGroup,
     register_rule,
     declare_host_attribute,
     register_notification_parameters,
@@ -583,6 +585,11 @@ def register_check_parameters(subgroup,
             "Check parameter definition for %s has type Dictionary, but match_type %s" %
             (checkgroup, match_type))
 
+    # Added during 1.6 development for easier transition. Is not needed for
+    # pre 1.6 compatibility
+    if issubclass(subgroup, RulespecSubGroup):
+        subgroup = subgroup().sub_group_name
+
     # Enclose this valuespec with a TimeperiodValuespec
     # The given valuespec will be transformed to a list of valuespecs,
     # whereas each element can be set to a specific timeperiod
@@ -645,8 +652,18 @@ def register_check_parameters(subgroup,
 
         elements.append(valuespec)
 
+        # There is never a RulespecSubGroup declaration for the static checks.
+        # Create some based on the regular check groups which should have a definition
+        checkparams_sub_group_class = rulespec_group_registry["checkparams/" + subgroup]
+        main_group_static_class = rulespec_group_registry["static"]
+        checkparams_static_sub_group_class = type("%sStatic" % checkparams_sub_group_class.__name__,
+                                                  (checkparams_sub_group_class,), {
+                                                      "main_group": main_group_static_class,
+                                                  })
+        rulespec_group_registry.register_plugin(checkparams_static_sub_group_class)
+
         register_rule(
-            "static/" + subgroup,
+            checkparams_static_sub_group_class().name,
             "static_checks:%s" % checkgroup,
             title=title,
             valuespec=Tuple(
@@ -656,6 +673,162 @@ def register_check_parameters(subgroup,
             itemspec=itemspec,
             match="all",
             deprecated=deprecated)
+
+
+@rulespec_group_registry.register
+class RulespecGroupDiscoveryCheckParameters(RulespecGroup):
+    @property
+    def name(self):
+        return "checkparams"
+
+    @property
+    def title(self):
+        return _("Parameters for discovered services")
+
+    @property
+    def help(self):
+        return _("Levels and other parameters for checks found by the Check_MK service discovery.\n"
+                 "Use these rules in order to define parameters like filesystem levels, "
+                 "levels for CPU load and other things for services that have been found "
+                 "by the automatic service discovery of Check_MK.")
+
+
+group = RulespecGroupDiscoveryCheckParameters().name
+
+
+@rulespec_group_registry.register
+class RulespecGroupCheckParametersNetworking(RulespecSubGroup):
+    @property
+    def main_group(self):
+        return RulespecGroupDiscoveryCheckParameters
+
+    @property
+    def sub_group_name(self):
+        return "networking"
+
+    @property
+    def title(self):
+        return _("Networking")
+
+
+@rulespec_group_registry.register
+class RulespecGroupCheckParametersStorage(RulespecSubGroup):
+    @property
+    def main_group(self):
+        return RulespecGroupDiscoveryCheckParameters
+
+    @property
+    def sub_group_name(self):
+        return "storage"
+
+    @property
+    def title(self):
+        return _("Storage, Filesystems and Files")
+
+
+@rulespec_group_registry.register
+class RulespecGroupCheckParametersOperatingSystem(RulespecSubGroup):
+    @property
+    def main_group(self):
+        return RulespecGroupDiscoveryCheckParameters
+
+    @property
+    def sub_group_name(self):
+        return "os"
+
+    @property
+    def title(self):
+        return _("Operating System Resources")
+
+
+@rulespec_group_registry.register
+class RulespecGroupCheckParametersPrinters(RulespecSubGroup):
+    @property
+    def main_group(self):
+        return RulespecGroupDiscoveryCheckParameters
+
+    @property
+    def sub_group_name(self):
+        return "printers"
+
+    @property
+    def title(self):
+        return _("Printers")
+
+
+@rulespec_group_registry.register
+class RulespecGroupCheckParametersEnvironment(RulespecSubGroup):
+    @property
+    def main_group(self):
+        return RulespecGroupDiscoveryCheckParameters
+
+    @property
+    def sub_group_name(self):
+        return "environment"
+
+    @property
+    def title(self):
+        return _("Temperature, Humidity, Electrical Parameters, etc.")
+
+
+@rulespec_group_registry.register
+class RulespecGroupCheckParametersApplications(RulespecSubGroup):
+    @property
+    def main_group(self):
+        return RulespecGroupDiscoveryCheckParameters
+
+    @property
+    def sub_group_name(self):
+        return "applications"
+
+    @property
+    def title(self):
+        return _("Applications, Processes & Services")
+
+
+@rulespec_group_registry.register
+class RulespecGroupCheckParametersVirtualization(RulespecSubGroup):
+    @property
+    def main_group(self):
+        return RulespecGroupDiscoveryCheckParameters
+
+    @property
+    def sub_group_name(self):
+        return "virtualization"
+
+    @property
+    def title(self):
+        return _("Virtualization")
+
+
+@rulespec_group_registry.register
+class RulespecGroupCheckParametersHardware(RulespecSubGroup):
+    @property
+    def main_group(self):
+        return RulespecGroupDiscoveryCheckParameters
+
+    @property
+    def sub_group_name(self):
+        return "hardware"
+
+    @property
+    def title(self):
+        return _("Hardware, BIOS")
+
+
+@rulespec_group_registry.register
+class RulespecGroupCheckParametersDiscovery(RulespecSubGroup):
+    @property
+    def main_group(self):
+        return RulespecGroupDiscoveryCheckParameters
+
+    @property
+    def sub_group_name(self):
+        return "discovery"
+
+    @property
+    def title(self):
+        return _("Discovery - automatic service detection")
 
 
 class TimeperiodValuespec(ValueSpec):

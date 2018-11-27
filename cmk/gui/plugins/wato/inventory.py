@@ -38,11 +38,29 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.i18n import _
 
-from cmk.gui.plugins.wato import (register_rulegroup, register_rule)
+from cmk.gui.plugins.wato import (
+    rulespec_group_registry,
+    RulespecGroup,
+    register_rule,
+)
 
-register_rulegroup("inventory", _("Hardware/Software-Inventory"),
-                   _("Configuration of the Check_MK Hardware and Software Inventory System"))
-group = "inventory"
+
+@rulespec_group_registry.register
+class RulespecGroupInventory(RulespecGroup):
+    @property
+    def name(self):
+        return "inventory"
+
+    @property
+    def title(self):
+        return _("Hardware / Software Inventory")
+
+    @property
+    def help(self):
+        return _("Configuration of the Check_MK Hardware and Software Inventory System")
+
+
+group = RulespecGroupInventory().name
 
 register_rule(
     group,

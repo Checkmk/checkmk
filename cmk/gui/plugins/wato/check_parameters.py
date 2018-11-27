@@ -63,39 +63,21 @@ from cmk.gui.valuespec import (
     RegExpUnicode,
 )
 from cmk.gui.plugins.wato import (
-    register_rulegroup,
+    RulespecGroupCheckParametersApplications,
+    RulespecGroupCheckParametersDiscovery,
+    RulespecGroupCheckParametersEnvironment,
+    RulespecGroupCheckParametersHardware,
+    RulespecGroupCheckParametersNetworking,
+    RulespecGroupCheckParametersOperatingSystem,
+    RulespecGroupCheckParametersPrinters,
+    RulespecGroupCheckParametersStorage,
+    RulespecGroupCheckParametersVirtualization,
     register_rule,
     register_check_parameters,
     UserIconOrAction,
     Levels,
     PredictiveLevels,
 )
-
-# Rules for configuring parameters of checks (services)
-
-register_rulegroup(
-    "checkparams", _("Parameters for discovered services"),
-    _("Levels and other parameters for checks found by the Check_MK service discovery.\n"
-      "Use these rules in order to define parameters like filesystem levels, "
-      "levels for CPU load and other things for services that have been found "
-      "by the automatic service discovery of Check_MK."))
-group = "checkparams"
-
-subgroup_networking = _("Networking")
-subgroup_storage = _("Storage, Filesystems and Files")
-subgroup_os = _("Operating System Resources")
-subgroup_printing = _("Printers")
-subgroup_environment = _("Temperature, Humidity, Electrical Parameters, etc.")
-subgroup_applications = _("Applications, Processes & Services")
-subgroup_virt = _("Virtualization")
-subgroup_hardware = _("Hardware, BIOS")
-subgroup_inventory = _("Discovery - automatic service detection")
-
-# register_rule(group, varname, valuespec = None, title = None,
-#               help = None, itemspec = None, itemtype = None, itemname = None,
-#               itemhelp = None, itemenum = None,
-#               match = "first", optional = False, factory_default = NO_FACTORY_DEFAULT)
-# register_check_parameters(subgroup, checkgroup, title, valuespec, itemspec, match_type, has_inventory=True, register_static_check=True)
 
 # TODO: Sort all rules and check parameters into the figlet header sections.
 # Beware: there are dependencies, so sometimes the order matters.  All rules
@@ -113,7 +95,7 @@ subgroup_inventory = _("Discovery - automatic service detection")
 #   '----------------------------------------------------------------------'
 
 register_rule(
-    group + "/" + subgroup_networking,
+    RulespecGroupCheckParametersNetworking().name,
     "ping_levels",
     Dictionary(
         title=_("PING and host check parameters"),
@@ -125,7 +107,7 @@ register_rule(
     match="dict")
 
 register_check_parameters(
-    subgroup_networking, "palo_alto_sessions", "Palo Alto Active Sessions",
+    RulespecGroupCheckParametersNetworking, "palo_alto_sessions", "Palo Alto Active Sessions",
     Dictionary(elements=[
         ("levels_sessions_used",
          Tuple(
@@ -158,7 +140,7 @@ def _vs_fortinet_signatures(title):
 
 
 register_check_parameters(
-    subgroup_networking, "fortinet_signatures", "Fortigate Signatures",
+    RulespecGroupCheckParametersNetworking, "fortinet_signatures", "Fortigate Signatures",
     Dictionary(
         elements=[
             ('av_age', _vs_fortinet_signatures("Age of Anti-Virus signature")),
@@ -170,7 +152,7 @@ register_check_parameters(
         ],), None, "dict")
 
 register_check_parameters(
-    subgroup_networking,
+    RulespecGroupCheckParametersNetworking,
     "huawei_osn_laser",
     _("OSN Laser attenuation"),
     Dictionary(elements=[
@@ -192,7 +174,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_networking,
+    RulespecGroupCheckParametersNetworking,
     "brocade_optical",
     "Brocade Optical Signal",
     Dictionary(
@@ -213,7 +195,7 @@ register_check_parameters(
     match_type="dict")
 
 register_check_parameters(
-    subgroup_applications, "mtr", _("Traceroute with MTR"),
+    RulespecGroupCheckParametersApplications, "mtr", _("Traceroute with MTR"),
     Dictionary(
         help=_(
             "This ruleset can be used to change MTR's (Matt's traceroute) warning and crit levels for packet loss, average "
@@ -269,7 +251,7 @@ fortigate_sessions_element = Tuple(
     ])
 
 register_check_parameters(
-    subgroup_networking,
+    RulespecGroupCheckParametersNetworking,
     "fortigate_sessions",
     _(u"Fortigate Active Sessions"),
     fortigate_sessions_element,
@@ -278,7 +260,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_networking,
+    RulespecGroupCheckParametersNetworking,
     "fortigate_node_sessions",
     _(u"Fortigate Active Sessions"),
     fortigate_sessions_element,
@@ -287,7 +269,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_networking, "f5_bigip_cluster_v11",
+    RulespecGroupCheckParametersNetworking, "f5_bigip_cluster_v11",
     _(u"Configuration Sync Status for F5 BigIP devices"),
     Dictionary(
         title=_("Interpretation of Config Sync Status"),
@@ -305,7 +287,7 @@ register_check_parameters(
         ]), None, "dict")
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "f5_bigip_snat",
     _("F5 Loadbalancer Source NAT"),
     Dictionary(elements=[("if_in_octets",
@@ -397,7 +379,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications, "veritas_vcs", _("Veritas Cluster Server"),
+    RulespecGroupCheckParametersApplications, "veritas_vcs", _("Veritas Cluster Server"),
     Dictionary(elements=[
         ("map_states",
          Dictionary(
@@ -429,7 +411,7 @@ register_check_parameters(
     ]), None, 'dict')
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "f5_bigip_vserver",
     _("F5 Loadbalancer VServer"),
     Dictionary(elements=[
@@ -547,7 +529,7 @@ register_check_parameters(
     'dict')
 
 register_check_parameters(
-    subgroup_applications, "cluster_status", _("Cluster status"),
+    RulespecGroupCheckParametersApplications, "cluster_status", _("Cluster status"),
     Dictionary(
         elements=[
             ("type",
@@ -574,7 +556,7 @@ register_check_parameters(
         required_keys=["type"]), None, "dict")
 
 register_check_parameters(
-    subgroup_networking,
+    RulespecGroupCheckParametersNetworking,
     "cisco_asa_failover",
     _("Failover states"),
     Dictionary(elements=[
@@ -610,7 +592,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_networking,
+    RulespecGroupCheckParametersNetworking,
     "threepar_ports",
     _("3PAR Ports"),
     Dictionary(elements=[
@@ -641,7 +623,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_networking,
+    RulespecGroupCheckParametersNetworking,
     "ipsecvpn",
     _(u"Fortigate IPSec VPN Tunnels"),
     Transform(
@@ -663,7 +645,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_networking,
+    RulespecGroupCheckParametersNetworking,
     "hp_hh3c_ext_states",
     _("States of HP Switch modules"),
     Dictionary(elements=[
@@ -691,7 +673,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_networking,
+    RulespecGroupCheckParametersNetworking,
     "fortisandbox_queues",
     _("Fortinet FortiSandbox Queue Length"),
     Dictionary(
@@ -709,7 +691,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_networking,
+    RulespecGroupCheckParametersNetworking,
     "cisco_stack",
     _("Cisco Stack Switch Status"),
     Dictionary(
@@ -780,7 +762,7 @@ def transform_ipmi_inventory_rules(p):
 
 
 register_rule(
-    group + '/' + subgroup_inventory,
+    RulespecGroupCheckParametersDiscovery().name,
     varname="inventory_ipmi_rules",
     title=_("Discovery of IPMI sensors"),
     valuespec=Transform(
@@ -815,7 +797,7 @@ register_rule(
     match='first')
 
 register_rule(
-    group + '/' + subgroup_inventory,
+    RulespecGroupCheckParametersDiscovery().name,
     varname="ewon_discovery_rules",
     title=_("eWON Discovery"),
     help=_("The ewon vpn routers can rely data from a secondary device via snmp. "
@@ -833,7 +815,7 @@ register_rule(
     match='first')
 
 register_rule(
-    group + '/' + subgroup_inventory,
+    RulespecGroupCheckParametersDiscovery().name,
     varname="mssql_transactionlogs_discovery",
     title=_("MSSQL Datafile and Transactionlog Discovery"),
     valuespec=Dictionary(
@@ -853,7 +835,7 @@ register_rule(
     match="first")
 
 register_rule(
-    group + '/' + subgroup_inventory,
+    RulespecGroupCheckParametersDiscovery().name,
     varname="inventory_services_rules",
     title=_("Windows Service Discovery"),
     valuespec=Dictionary(
@@ -898,7 +880,7 @@ register_rule(
 )
 
 register_rule(
-    group + '/' + subgroup_inventory,
+    RulespecGroupCheckParametersDiscovery().name,
     varname="inventory_solaris_services_rules",
     title=_("Solaris Service Discovery"),
     valuespec=Dictionary(
@@ -941,7 +923,7 @@ register_rule(
 )
 
 register_rule(
-    group + '/' + subgroup_inventory,
+    RulespecGroupCheckParametersDiscovery().name,
     varname="discovery_systemd_units_services_rules",
     title=_("Systemd Service Discovery"),
     valuespec=Dictionary(
@@ -967,7 +949,7 @@ register_rule(
 )
 
 register_rule(
-    group + '/' + subgroup_inventory,
+    RulespecGroupCheckParametersDiscovery().name,
     varname="discovery_win_dhcp_pools",
     title=_("Discovery of Windows DHCP Pools"),
     valuespec=Dictionary(elements=[
@@ -983,7 +965,7 @@ register_rule(
 )
 
 register_rule(
-    group + '/' + subgroup_inventory,
+    RulespecGroupCheckParametersDiscovery().name,
     varname="inventory_if_rules",
     title=_("Network Interface and Switch Port Discovery"),
     valuespec=Dictionary(
@@ -1136,7 +1118,7 @@ _brocade_fcport_phy_choices = [
 ]
 
 register_rule(
-    group + '/' + subgroup_inventory,
+    RulespecGroupCheckParametersDiscovery().name,
     varname="brocade_fcport_inventory",
     title=_("Brocade Port Discovery"),
     valuespec=Dictionary(
@@ -1395,7 +1377,7 @@ def forbid_re_delimiters_inside_groups(pattern, varprefix):
 
 
 register_rule(
-    group + '/' + subgroup_inventory,
+    RulespecGroupCheckParametersDiscovery().name,
     varname="inventory_processes_rules",
     title=_('Process Discovery'),
     help=_(
@@ -1540,7 +1522,7 @@ register_rule(
 )
 
 register_rule(
-    group + '/' + subgroup_inventory,
+    RulespecGroupCheckParametersDiscovery().name,
     varname="inv_domino_tasks_rules",
     title=_('Lotus Domino Task Discovery'),
     help=_("This rule controls the discovery of tasks on Lotus Domino systems. "
@@ -1631,7 +1613,7 @@ register_rule(
 )
 
 register_rule(
-    group + '/' + subgroup_inventory,
+    RulespecGroupCheckParametersDiscovery().name,
     varname="inventory_sap_values",
     title=_('SAP R/3 Single Value Inventory'),
     valuespec=Dictionary(
@@ -1683,7 +1665,7 @@ register_rule(
 )
 
 register_rule(
-    group + '/' + subgroup_inventory,
+    RulespecGroupCheckParametersDiscovery().name,
     varname="sap_value_groups",
     title=_('SAP Value Grouping Patterns'),
     help=_('The check <tt>sap.value</tt> normally creates one service for each SAP value. '
@@ -1718,7 +1700,7 @@ register_rule(
 )
 
 register_rule(
-    group + '/' + subgroup_inventory,
+    RulespecGroupCheckParametersDiscovery().name,
     varname="inventory_heartbeat_crm_rules",
     title=_("Heartbeat CRM Discovery"),
     valuespec=Dictionary(
@@ -1747,7 +1729,7 @@ register_rule(
 )
 
 register_rule(
-    group + '/' + subgroup_inventory,
+    RulespecGroupCheckParametersDiscovery().name,
     varname="inventory_df_rules",
     title=_("Discovery parameters for filesystem checks"),
     valuespec=Dictionary(
@@ -1777,7 +1759,7 @@ register_rule(
 )
 
 register_rule(
-    group + '/' + subgroup_inventory,
+    RulespecGroupCheckParametersDiscovery().name,
     varname="inventory_mssql_counters_rules",
     title=_("Include MSSQL Counters services"),
     valuespec=Dictionary(
@@ -1789,7 +1771,7 @@ register_rule(
 )
 
 register_rule(
-    "%s/%s" % (group, subgroup_inventory),
+    RulespecGroupCheckParametersDiscovery().name,
     varname="inventory_fujitsu_ca_ports",
     title=_("Discovery of Fujtsu storage CA ports"),
     valuespec=Dictionary(
@@ -1812,7 +1794,7 @@ register_rule(
 )
 
 register_rule(
-    "%s/%s" % (group, subgroup_inventory),
+    RulespecGroupCheckParametersDiscovery().name,
     varname="discovery_mssql_backup",
     title=_("Discovery of MSSQL backup"),
     valuespec=Dictionary(
@@ -1839,7 +1821,7 @@ register_rule(
 #   '----------------------------------------------------------------------'
 
 register_rule(
-    group + '/' + subgroup_applications,
+    RulespecGroupCheckParametersApplications().name,
     varname="logwatch_rules",
     title=_('Logwatch Patterns'),
     valuespec=Transform(
@@ -1955,7 +1937,7 @@ register_rule(
 )
 
 register_check_parameters(
-    subgroup_applications, "local", _("Settings for local checks"),
+    RulespecGroupCheckParametersApplications, "local", _("Settings for local checks"),
     Dictionary(elements=[(
         "outcome_on_cluster",
         DropdownChoice(
@@ -1970,7 +1952,7 @@ register_check_parameters(
             default_value="worst"))]), TextAscii(title=_("Name of local item")), "dict")
 
 register_check_parameters(
-    subgroup_applications, "threepar_remotecopy", _("3PAR Remote Copy"),
+    RulespecGroupCheckParametersApplications, "threepar_remotecopy", _("3PAR Remote Copy"),
     Dictionary(elements=[
         ("1", MonitoringState(
             title=_("Status: NORMAL"),
@@ -2007,7 +1989,7 @@ register_check_parameters(
     ]), None, "dict")
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "livestatus_status",
     _("Performance and settings of a Check_MK site"),
     Dictionary(
@@ -2047,7 +2029,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "ad_replication",
     _("Active Directory Replication"),
     Tuple(
@@ -2064,7 +2046,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "mq_queues",
     _("Apache ActiveMQ Queue lengths"),
     Dictionary(elements=[
@@ -2104,7 +2086,7 @@ def transform_ssh_config(choice):
 
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "sshd_config",
     _("SSH daemon configuration"),
     Dictionary(elements=[
@@ -2241,7 +2223,7 @@ def transform_websphere_mq_queues(source):
 
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "websphere_mq",
     _("Websphere MQ"),
     Transform(
@@ -2276,7 +2258,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "websphere_mq_channels",
     _("Websphere MQ Channels"),
     Dictionary(
@@ -2313,7 +2295,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     'websphere_mq_manager',
     _("Websphere MQ Manager"),
     Dictionary(elements=[
@@ -2360,7 +2342,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     'websphere_mq_instance',
     _("Websphere MQ Instance"),
     Dictionary(elements=[
@@ -2383,7 +2365,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "plesk_backups",
     _("Plesk Backups"),
     Dictionary(
@@ -2424,7 +2406,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "firewall_if",
     _("Firewall Interfaces"),
     Dictionary(
@@ -2458,7 +2440,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "kaspersky_av_client",
     _("Kaspersky Anti-Virus Time Settings"),
     Dictionary(
@@ -2485,7 +2467,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "mcafee_av_client",
     _("McAfee Anti-Virus Time Settings"),
     Tuple(
@@ -2500,7 +2482,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "mcafee_web_gateway",
     _("McAfee web gateway statistics"),
     Dictionary(elements=[
@@ -2526,7 +2508,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "mcafee_web_gateway_misc",
     _("McAfee web gateway miscellaneous"),
     Dictionary(elements=[
@@ -2550,7 +2532,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "mcafee_emailgateway_bridge",
     _("McAfee email gateway bridge"),
     Dictionary(elements=[
@@ -2581,7 +2563,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "pfsense_counter",
     _("pfSense Firewall Packet Rates"),
     Dictionary(
@@ -2646,7 +2628,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "lnx_quota",
     _("Linux quota check"),
     Dictionary(
@@ -2670,7 +2652,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications, "ruckus_mac", _("Ruckus Spot Unique MAC addresses"),
+    RulespecGroupCheckParametersApplications, "ruckus_mac", _("Ruckus Spot Unique MAC addresses"),
     Dictionary(
         elements=[
             ("inside",
@@ -2718,7 +2700,7 @@ register_check_parameters(
         ],), None, "dict")
 
 register_check_parameters(
-    subgroup_applications, "ruckus_ap", _("Ruckus Spot Access Points"),
+    RulespecGroupCheckParametersApplications, "ruckus_ap", _("Ruckus Spot Access Points"),
     Tuple(
         elements=[
             Optional(
@@ -2776,7 +2758,8 @@ vs_license = Alternative(
     ])
 
 register_check_parameters(
-    subgroup_applications, "esx_licenses", _("Number of used VMware licenses"), vs_license,
+    RulespecGroupCheckParametersApplications, "esx_licenses", _("Number of used VMware licenses"),
+    vs_license,
     TextAscii(
         title=_("Name of the license"),
         help=_("For example <tt>VMware vSphere 5 Standard</tt>"),
@@ -2784,28 +2767,31 @@ register_check_parameters(
     ), "first")
 
 register_check_parameters(
-    subgroup_applications, "ibmsvc_licenses", _("Number of used IBM SVC licenses"), vs_license,
+    RulespecGroupCheckParametersApplications, "ibmsvc_licenses",
+    _("Number of used IBM SVC licenses"), vs_license,
     TextAscii(
         title=_("ID of the license, e.g. <tt>virtualization</tt>"),
         allow_empty=False,
     ), "first")
 
 register_check_parameters(
-    subgroup_applications, "citrix_licenses", _("Number of used Citrix licenses"), vs_license,
+    RulespecGroupCheckParametersApplications, "citrix_licenses",
+    _("Number of used Citrix licenses"), vs_license,
     TextAscii(
         title=_("ID of the license, e.g. <tt>PVSD_STD_CCS</tt>"),
         allow_empty=False,
     ), "first")
 
 register_check_parameters(
-    subgroup_applications, "rds_licenses", _("Number of used Remote Desktop Licenses"), vs_license,
+    RulespecGroupCheckParametersApplications, "rds_licenses",
+    _("Number of used Remote Desktop Licenses"), vs_license,
     TextAscii(
         title=_("ID of the license, e.g. <tt>Windows Server 2008 R2</tt>"),
         allow_empty=False,
     ), "first")
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "win_license",
     _("Windows License"),
     Dictionary(elements=[
@@ -2829,7 +2815,8 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications, "citrix_sessions", _("Citrix Terminal Server Sessions"),
+    RulespecGroupCheckParametersApplications, "citrix_sessions",
+    _("Citrix Terminal Server Sessions"),
     Dictionary(elements=[
         ("total",
          Tuple(
@@ -2855,7 +2842,7 @@ register_check_parameters(
     ]), None, "dict")
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "citrix_state",
     _("State of Citrix VMs"),
     Dictionary(elements=[(
@@ -2876,7 +2863,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "mssql_stats",
     _("MSSQL Statistics"),
     Dictionary(
@@ -2915,7 +2902,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "mssql_instance",
     _("MSSQL Instance"),
     Dictionary(
@@ -2926,7 +2913,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "mssql_databases",
     _("MSSQL Databases properties"),
     Dictionary(elements=[
@@ -2968,7 +2955,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "mssql_connections",
     _("MSSQL Connections"),
     Dictionary(elements=[(
@@ -2985,7 +2972,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications, "varnish_cache", _("Varnish Cache"),
+    RulespecGroupCheckParametersApplications, "varnish_cache", _("Varnish Cache"),
     Dictionary(
         elements=[
             ("miss",
@@ -2998,7 +2985,7 @@ register_check_parameters(
         ],), None, "dict")
 
 register_check_parameters(
-    subgroup_applications, "varnish_client", _("Varnish Client"),
+    RulespecGroupCheckParametersApplications, "varnish_client", _("Varnish Client"),
     Dictionary(
         elements=[
             ("drop",
@@ -3018,7 +3005,7 @@ register_check_parameters(
         ],), None, "dict")
 
 register_check_parameters(
-    subgroup_applications, "varnish_backend", _("Varnish Backend"),
+    RulespecGroupCheckParametersApplications, "varnish_backend", _("Varnish Backend"),
     Dictionary(
         elements=[
             ("busy",
@@ -3046,7 +3033,7 @@ register_check_parameters(
         ],), None, "dict")
 
 register_check_parameters(
-    subgroup_applications, "varnish_fetch", _("Varnish Fetch"),
+    RulespecGroupCheckParametersApplications, "varnish_fetch", _("Varnish Fetch"),
     Dictionary(
         elements=[
             ("1xx",
@@ -3101,7 +3088,7 @@ register_check_parameters(
         ],), None, "dict")
 
 register_check_parameters(
-    subgroup_applications, "varnish_esi", _("Varnish ESI"),
+    RulespecGroupCheckParametersApplications, "varnish_esi", _("Varnish ESI"),
     Dictionary(
         elements=[
             ("errors",
@@ -3121,7 +3108,7 @@ register_check_parameters(
         ],), None, "dict")
 
 register_check_parameters(
-    subgroup_applications, "varnish_objects", _("Varnish Objects"),
+    RulespecGroupCheckParametersApplications, "varnish_objects", _("Varnish Objects"),
     Dictionary(
         elements=[
             ("expired",
@@ -3141,7 +3128,7 @@ register_check_parameters(
         ],), None, "dict")
 
 register_check_parameters(
-    subgroup_applications, "varnish_worker", _("Varnish Worker"),
+    RulespecGroupCheckParametersApplications, "varnish_worker", _("Varnish Worker"),
     Dictionary(
         elements=[
             ("wrk_drop",
@@ -3168,7 +3155,8 @@ register_check_parameters(
         ],), None, "dict")
 
 register_check_parameters(
-    subgroup_applications, "varnish_cache_hit_ratio", _("Varnish Cache Hit Ratio"),
+    RulespecGroupCheckParametersApplications, "varnish_cache_hit_ratio",
+    _("Varnish Cache Hit Ratio"),
     Dictionary(
         elements=[
             ("levels_lower",
@@ -3182,7 +3170,8 @@ register_check_parameters(
         ],), None, "dict")
 
 register_check_parameters(
-    subgroup_applications, "varnish_backend_success_ratio", _("Varnish Backend Success Ratio"),
+    RulespecGroupCheckParametersApplications, "varnish_backend_success_ratio",
+    _("Varnish Backend Success Ratio"),
     Dictionary(
         elements=[
             ("levels_lower",
@@ -3196,7 +3185,8 @@ register_check_parameters(
         ],), None, "dict")
 
 register_check_parameters(
-    subgroup_applications, "varnish_worker_thread_ratio", _("Varnish Worker Thread Ratio"),
+    RulespecGroupCheckParametersApplications, "varnish_worker_thread_ratio",
+    _("Varnish Worker Thread Ratio"),
     Dictionary(
         elements=[
             ("levels_lower",
@@ -3210,7 +3200,8 @@ register_check_parameters(
         ],), None, "dict")
 
 register_check_parameters(
-    subgroup_applications, "clr_memory", _("DotNet (.Net) runtime memory levels"),
+    RulespecGroupCheckParametersApplications, "clr_memory",
+    _("DotNet (.Net) runtime memory levels"),
     Dictionary(
         help=_("This rule allows to set the warn and crit levels of the memory "
                "metrics of the DotNet (.Net) Runtime"),
@@ -3231,7 +3222,7 @@ register_check_parameters(
     ), "dict")
 
 register_check_parameters(
-    subgroup_applications, "skype_mobile", _("Skype for Business Mobile"),
+    RulespecGroupCheckParametersApplications, "skype_mobile", _("Skype for Business Mobile"),
     Dictionary(
         elements=[(
             'requests_processing',
@@ -3248,7 +3239,8 @@ register_check_parameters(
         optional_keys=[]), None, "dict")
 
 register_check_parameters(
-    subgroup_applications, "skype_conferencing", _("Skype for Business Conferencing"),
+    RulespecGroupCheckParametersApplications, "skype_conferencing",
+    _("Skype for Business Conferencing"),
     Dictionary(
         elements=[
             ('incomplete_calls',
@@ -3287,7 +3279,7 @@ register_check_parameters(
         ],), None, "dict")
 
 register_check_parameters(
-    subgroup_applications, "skype_sip", _("Skype for Business SIP Stack"),
+    RulespecGroupCheckParametersApplications, "skype_sip", _("Skype for Business SIP Stack"),
     Dictionary(
         elements=[
             ('message_processing_time',
@@ -3436,7 +3428,8 @@ register_check_parameters(
         ],), None, "dict")
 
 register_check_parameters(
-    subgroup_applications, "skype_mediation_server", _("Skype for Business Mediation Server"),
+    RulespecGroupCheckParametersApplications, "skype_mediation_server",
+    _("Skype for Business Mediation Server"),
     Dictionary(
         elements=[
             ('load_call_failure_index',
@@ -3486,7 +3479,7 @@ register_check_parameters(
         ],), None, "dict")
 
 register_check_parameters(
-    subgroup_applications, "skype_xmpp", _("Skype for Business XMPP"),
+    RulespecGroupCheckParametersApplications, "skype_xmpp", _("Skype for Business XMPP"),
     Dictionary(
         elements=[
             ('failed_outbound_streams',
@@ -3514,7 +3507,7 @@ register_check_parameters(
         ],), None, "dict")
 
 register_check_parameters(
-    subgroup_applications, "skype_edgeauth", _("Skype for Business Edge Auth"),
+    RulespecGroupCheckParametersApplications, "skype_edgeauth", _("Skype for Business Edge Auth"),
     Dictionary(
         elements=[
             ('bad_requests',
@@ -3532,7 +3525,7 @@ register_check_parameters(
         optional_keys=[]), None, "dict")
 
 register_check_parameters(
-    subgroup_applications, "acme_certificates", _("ACME certificates"),
+    RulespecGroupCheckParametersApplications, "acme_certificates", _("ACME certificates"),
     Dictionary(
         elements=[("expire_lower",
                    Tuple(
@@ -3546,7 +3539,7 @@ register_check_parameters(
                        ), "dict")
 
 register_check_parameters(
-    subgroup_applications, "skype", _("Skype for Business"),
+    RulespecGroupCheckParametersApplications, "skype", _("Skype for Business"),
     Dictionary(
         elements=[
             ('failed_search_requests',
@@ -3636,7 +3629,7 @@ register_check_parameters(
         ],), None, "dict")
 
 register_check_parameters(
-    subgroup_applications, "skype_proxy", _("Skype for Business Data Proxy"),
+    RulespecGroupCheckParametersApplications, "skype_proxy", _("Skype for Business Data Proxy"),
     Dictionary(
         help=_("Warn/Crit levels for various Skype for Business "
                "(formerly known as Lync) metrics"),
@@ -3661,7 +3654,7 @@ register_check_parameters(
     ), "dict")
 
 register_check_parameters(
-    subgroup_applications, "skype_edge", _("Skype for Business Edge"),
+    RulespecGroupCheckParametersApplications, "skype_edge", _("Skype for Business Edge"),
     Dictionary(elements=[
         ('authentication_failures',
          Dictionary(
@@ -3704,7 +3697,7 @@ register_check_parameters(
 
 # Rule for disovered process checks
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "ps",
     _("State and count of processes"),
     Transform(
@@ -3724,7 +3717,7 @@ register_check_parameters(
 
 # Rule for static process checks
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "ps",
     _("State and count of processes"),
     Transform(
@@ -3808,7 +3801,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications, "generic_number", _("Generic numeric value"),
+    RulespecGroupCheckParametersApplications, "generic_number", _("Generic numeric value"),
     Dictionary(elements=[
         ("levels",
          Tuple(
@@ -3827,7 +3820,7 @@ register_check_parameters(
     ]), TextAscii(title=_("Item"),), "dict")
 
 register_check_parameters(
-    subgroup_applications, "generic_rate", _("Generic rate"),
+    RulespecGroupCheckParametersApplications, "generic_rate", _("Generic rate"),
     Dictionary(elements=[
         ("levels",
          Tuple(
@@ -3846,7 +3839,7 @@ register_check_parameters(
     ]), TextAscii(title=_("Item"),), "dict")
 
 register_check_parameters(
-    subgroup_applications, "generic_string", _("Generic string"),
+    RulespecGroupCheckParametersApplications, "generic_string", _("Generic string"),
     Dictionary(elements=[
         ("default_status", MonitoringState(title=_("Default Status"))),
         ("match_strings",
@@ -3857,7 +3850,7 @@ register_check_parameters(
     ]), TextAscii(title=_("Item"),), "dict")
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "jvm_uptime",
     _("JVM uptime (since last reboot)"),
     Dictionary(
@@ -3888,7 +3881,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "netapp_systemtime",
     _("Netapp systemtime"),
     Dictionary(elements=[
@@ -3910,7 +3903,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications, "jvm_sessions", _("JVM session count"),
+    RulespecGroupCheckParametersApplications, "jvm_sessions", _("JVM session count"),
     Tuple(
         help=_("This rule sets the warn and crit levels for the number of current "
                "connections to a JVM application on the servlet level."),
@@ -3943,7 +3936,7 @@ register_check_parameters(
     ), "first")
 
 register_check_parameters(
-    subgroup_applications, "jvm_requests", _("JVM request count"),
+    RulespecGroupCheckParametersApplications, "jvm_requests", _("JVM request count"),
     Tuple(
         help=_("This rule sets the warn and crit levels for the number "
                "of incoming requests to a JVM application server."),
@@ -3976,7 +3969,7 @@ register_check_parameters(
     ), "first")
 
 register_check_parameters(
-    subgroup_applications, "jvm_queue", _("JVM Execute Queue Count"),
+    RulespecGroupCheckParametersApplications, "jvm_queue", _("JVM Execute Queue Count"),
     Tuple(
         help=_("The BEA application servers have 'Execute Queues' "
                "in which requests are processed. This rule allows to set "
@@ -4001,7 +3994,7 @@ register_check_parameters(
     ), "first")
 
 register_check_parameters(
-    subgroup_applications, "jvm_memory", _("JVM memory levels"),
+    RulespecGroupCheckParametersApplications, "jvm_memory", _("JVM memory levels"),
     Dictionary(
         help=_("This rule allows to set the warn and crit levels of the heap / "
                "non-heap and total memory area usage on web application servers. "
@@ -4073,7 +4066,8 @@ register_check_parameters(
     ), "dict")
 
 register_check_parameters(
-    subgroup_applications, "safenet_hsm_operstats", _("Safenet HSM Operation Stats"),
+    RulespecGroupCheckParametersApplications, "safenet_hsm_operstats",
+    _("Safenet HSM Operation Stats"),
     Dictionary(elements=[
         ("error_rate",
          Tuple(
@@ -4098,7 +4092,8 @@ register_check_parameters(
     ]), None, "dict")
 
 register_check_parameters(
-    subgroup_applications, "safenet_hsm_eventstats", _("Safenet HSM Event Stats"),
+    RulespecGroupCheckParametersApplications, "safenet_hsm_eventstats",
+    _("Safenet HSM Event Stats"),
     Dictionary(elements=[
         ("critical_events",
          Tuple(
@@ -4132,14 +4127,15 @@ register_check_parameters(
              ])),
     ]), None, "dict")
 
-register_check_parameters(subgroup_applications, "safenet_ntls_links", _(u"Safenet NTLS Links"),
+register_check_parameters(RulespecGroupCheckParametersApplications, "safenet_ntls_links",
+                          _(u"Safenet NTLS Links"),
                           Levels(
                               title=_(u"NTLS Links"),
                               default_value=None,
                           ), None, "dict")
 
 register_check_parameters(
-    subgroup_applications, "safenet_ntls_clients", _(u"Safenet NTLS Clients"),
+    RulespecGroupCheckParametersApplications, "safenet_ntls_clients", _(u"Safenet NTLS Clients"),
     Levels(
         title=_(u"NTLS Clients"),
         help=_(u"Number of connected clients"),
@@ -4147,7 +4143,7 @@ register_check_parameters(
     ), None, "dict")
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "fireeye_active_vms",
     _("Fireeye Active VMs"),
     Dictionary(elements=[(
@@ -4164,7 +4160,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "fireeye_lic",
     _("Fireeye Licenses"),
     Dictionary(elements=[(
@@ -4181,7 +4177,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "fireeye_quarantine",
     _("Fireeye Quarantine Usage"),
     Dictionary(elements=[(
@@ -4198,7 +4194,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "fireeye_mailq",
     _("Fireeye Mail Queues"),
     Dictionary(elements=[
@@ -4229,7 +4225,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "fireeye_mail",
     _("Fireeye Mail Rate Average"),
     Dictionary(elements=[
@@ -4253,7 +4249,7 @@ def transform_oracle_logswitches(params):
 
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "oracle_logswitches",
     _("Oracle Logswitches"),
     Transform(
@@ -4301,7 +4297,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "systemd_services",
     _("Systemd Services"),
     Dictionary(
@@ -4331,7 +4327,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "hacmp_resources",
     _("AIX HACMP Resource Groups"),
     Transform(
@@ -4355,7 +4351,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "webserver",
     _("Azure web servers (IIS)"),
     Dictionary(
@@ -4393,7 +4389,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "azure_agent_info",
     ("Azure Agent Info"),
     Dictionary(elements=[
@@ -4429,7 +4425,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     'azure_databases',
     _("Azure Databases"),
     Dictionary(
@@ -4466,7 +4462,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     'azure_vms',
     _("Azure Virtual Machines"),
     Dictionary(
@@ -4521,7 +4517,7 @@ def _azure_vms_summary_levels(title, lower=(None, None), upper=(None, None)):
 
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     'azure_vms_summary',
     _("Azure Virtual Machines Summary"),
     Dictionary(
@@ -4564,7 +4560,7 @@ register_check_parameters(
 #   '----------------------------------------------------------------------'
 
 register_check_parameters(
-    subgroup_environment,
+    RulespecGroupCheckParametersEnvironment,
     "voltage",
     _("Voltage Sensor"),
     Dictionary(
@@ -4591,7 +4587,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_environment,
+    RulespecGroupCheckParametersEnvironment,
     "fan_failures",
     _("Number of fan failures"),
     Tuple(
@@ -4605,7 +4601,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_environment,
+    RulespecGroupCheckParametersEnvironment,
     "pll_lock_voltage",
     _("Lock Voltage for PLLs"),
     Dictionary(
@@ -4649,7 +4645,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_environment,
+    RulespecGroupCheckParametersEnvironment,
     "ipmi",
     _("IPMI sensors"),
     Dictionary(
@@ -4704,7 +4700,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_environment,
+    RulespecGroupCheckParametersEnvironment,
     "ps_voltage",
     _("Output Voltage of Power Supplies"),
     Tuple(
@@ -4729,7 +4725,7 @@ bvip_link_states = [
 ]
 
 register_check_parameters(
-    subgroup_environment,
+    RulespecGroupCheckParametersEnvironment,
     "bvip_link",
     _("Allowed Network states on Bosch IP Cameras"),
     Dictionary(
@@ -4758,7 +4754,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_environment,
+    RulespecGroupCheckParametersEnvironment,
     "ocprot_current",
     _("Electrical Current of Overcurrent Protectors"),
     Tuple(
@@ -4771,7 +4767,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_environment,
+    RulespecGroupCheckParametersEnvironment,
     'brightness',
     _("Brightness Levels"),
     Levels(
@@ -4789,7 +4785,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_environment,
+    RulespecGroupCheckParametersEnvironment,
     'motion',
     _("Motion Detectors"),
     Dictionary(elements=[
@@ -4810,7 +4806,7 @@ register_check_parameters(
     match_type="dict")
 
 register_check_parameters(
-    subgroup_environment,
+    RulespecGroupCheckParametersEnvironment,
     'ewon',
     _("eWON SNMP Proxy"),
     Dictionary(
@@ -4836,7 +4832,7 @@ register_check_parameters(
     match_type="dict")
 
 register_check_parameters(
-    subgroup_environment,
+    RulespecGroupCheckParametersEnvironment,
     "lamp_operation_time",
     _("Beamer lamp operation time"),
     Tuple(elements=[
@@ -4864,7 +4860,7 @@ def transform_apc_symmetra(params):
 
 
 register_check_parameters(
-    subgroup_environment, "apc_symentra", _("APC Symmetra Checks"),
+    RulespecGroupCheckParametersEnvironment, "apc_symentra", _("APC Symmetra Checks"),
     Transform(
         Dictionary(
             elements=[
@@ -4943,7 +4939,7 @@ register_check_parameters(
     ), None, "first")
 
 register_check_parameters(
-    subgroup_environment,
+    RulespecGroupCheckParametersEnvironment,
     'hw_psu',
     _("Power Supply Unit"),
     Dictionary(
@@ -4971,7 +4967,7 @@ register_check_parameters(
 #   '----------------------------------------------------------------------'
 
 register_check_parameters(
-    subgroup_storage,
+    RulespecGroupCheckParametersStorage,
     "disk_failures",
     _("Number of disk failures"),
     Tuple(
@@ -4985,7 +4981,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_storage, "ddn_s2a_port_errors", _("Port errors of DDN S2A devices"),
+    RulespecGroupCheckParametersStorage, "ddn_s2a_port_errors", _("Port errors of DDN S2A devices"),
     Dictionary(
         elements=[
             ("link_failure_errs",
@@ -5054,7 +5050,7 @@ register_check_parameters(
         ],), TextAscii(title="Port index"), "dict")
 
 register_check_parameters(
-    subgroup_storage, "read_hits", _(u"Read prefetch hits for DDN S2A devices"),
+    RulespecGroupCheckParametersStorage, "read_hits", _(u"Read prefetch hits for DDN S2A devices"),
     Tuple(
         title=_(u"Prefetch hits"),
         elements=[
@@ -5063,7 +5059,7 @@ register_check_parameters(
         ]), TextAscii(title=_(u"Port index or 'Total'")), "first")
 
 register_check_parameters(
-    subgroup_storage, "storage_iops", _(u"I/O operations for DDN S2A devices"),
+    RulespecGroupCheckParametersStorage, "storage_iops", _(u"I/O operations for DDN S2A devices"),
     Dictionary(elements=[
         ("read",
          Tuple(
@@ -5089,7 +5085,7 @@ register_check_parameters(
     ]), TextAscii(title=_(u"Port index or 'Total'")), "dict")
 
 register_check_parameters(
-    subgroup_storage, "storage_throughput", _(u"Throughput for DDN S2A devices"),
+    RulespecGroupCheckParametersStorage, "storage_throughput", _(u"Throughput for DDN S2A devices"),
     Dictionary(elements=[
         ("read",
          Tuple(
@@ -5115,7 +5111,7 @@ register_check_parameters(
     ]), TextAscii(title=_(u"Port index or 'Total'")), "dict")
 
 register_check_parameters(
-    subgroup_storage, "ddn_s2a_wait", _(u"Read/write wait for DDN S2A devices"),
+    RulespecGroupCheckParametersStorage, "ddn_s2a_wait", _(u"Read/write wait for DDN S2A devices"),
     Dictionary(elements=[
         ("read_avg",
          Tuple(
@@ -5166,7 +5162,7 @@ register_check_parameters(
     ]), "dict")
 
 register_check_parameters(
-    subgroup_storage,
+    RulespecGroupCheckParametersStorage,
     "blank_tapes",
     _("Remaining blank tapes in DIVA CSM Devices"),
     Tuple(
@@ -5179,7 +5175,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_storage,
+    RulespecGroupCheckParametersStorage,
     "mongodb_flushing",
     _("MongoDB Flushes"),
     Dictionary(elements=[
@@ -5207,7 +5203,7 @@ register_check_parameters(
     match_type="dict")
 
 register_check_parameters(
-    subgroup_storage,
+    RulespecGroupCheckParametersStorage,
     "mongodb_asserts",
     _("MongoDB Assert Rates"),
     Dictionary(
@@ -5222,7 +5218,7 @@ register_check_parameters(
     match_type="dict")
 
 register_check_parameters(
-    subgroup_storage,
+    RulespecGroupCheckParametersStorage,
     "mongodb_mem",
     _("MongoDB Memory"),
     Dictionary(
@@ -5269,7 +5265,7 @@ register_check_parameters(
     match_type="dict")
 
 register_check_parameters(
-    subgroup_storage,
+    RulespecGroupCheckParametersStorage,
     "openhardwaremonitor_smart",
     _("OpenHardwareMonitor S.M.A.R.T."),
     Dictionary(elements=[
@@ -5290,7 +5286,7 @@ register_check_parameters(
     match_type="dict")
 
 register_check_parameters(
-    subgroup_storage,
+    RulespecGroupCheckParametersStorage,
     "mongodb_locks",
     _("MongoDB Locks"),
     Dictionary(
@@ -5308,7 +5304,7 @@ register_check_parameters(
     match_type="dict")
 
 register_check_parameters(
-    subgroup_storage,
+    RulespecGroupCheckParametersStorage,
     "prism_container",
     _("Nutanix Prism"),
     Dictionary(
@@ -5340,7 +5336,7 @@ register_check_parameters(
     match_type="dict")
 
 register_check_parameters(
-    subgroup_storage,
+    RulespecGroupCheckParametersStorage,
     "inotify",
     _("INotify Levels"),
     Dictionary(
@@ -5377,7 +5373,7 @@ register_check_parameters(
     match_type="dict")
 
 register_check_parameters(
-    subgroup_storage,
+    RulespecGroupCheckParametersStorage,
     "emcvnx_disks",
     _("EMC VNX Enclosures"),
     Dictionary(elements=[
@@ -5415,7 +5411,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_storage,
+    RulespecGroupCheckParametersStorage,
     "lvm_lvs_pools",
     _("Logical Volume Pools (LVM)"),
     Dictionary(elements=[
@@ -5447,7 +5443,7 @@ register_check_parameters(
     match_type="dict")
 
 register_check_parameters(
-    subgroup_storage,
+    RulespecGroupCheckParametersStorage,
     "emcvnx_storage_pools",
     _("EMC VNX storage pools"),
     Dictionary(elements=[
@@ -5464,7 +5460,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_storage,
+    RulespecGroupCheckParametersStorage,
     "emcvnx_storage_pools_tiering",
     _("EMC VNX storage pools tiering"),
     Dictionary(elements=[
@@ -5481,7 +5477,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_storage,
+    RulespecGroupCheckParametersStorage,
     "filehandler",
     _("Filehandler"),
     Dictionary(elements=[
@@ -5500,7 +5496,7 @@ register_check_parameters(
     match_type="dict")
 
 register_check_parameters(
-    subgroup_storage,
+    RulespecGroupCheckParametersStorage,
     "brocade_fcport",
     _("Brocade FibreChannel ports"),
     Dictionary(
@@ -5633,7 +5629,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_storage, "brocade_sfp", _("Brocade SFPs"),
+    RulespecGroupCheckParametersStorage, "brocade_sfp", _("Brocade SFPs"),
     Dictionary(elements=[
         ("rx_power",
          Tuple(
@@ -5656,7 +5652,7 @@ register_check_parameters(
     ]), TextAscii(title=_("Port index")), "dict")
 
 register_check_parameters(
-    subgroup_storage, "fcport_words", _("Atto Fibrebridge FC port"),
+    RulespecGroupCheckParametersStorage, "fcport_words", _("Atto Fibrebridge FC port"),
     Dictionary(
         title=_("Levels for transmitted and received words"),
         elements=[
@@ -5666,7 +5662,8 @@ register_check_parameters(
     ), TextAscii(title=_("Port index"),), "dict")
 
 register_check_parameters(
-    subgroup_storage, "fs_mount_options", _("Filesystem mount options (Linux/UNIX)"),
+    RulespecGroupCheckParametersStorage, "fs_mount_options",
+    _("Filesystem mount options (Linux/UNIX)"),
     ListOfStrings(
         title=_("Expected mount options"),
         help=_("Specify all expected mount options here. If the list of "
@@ -5677,7 +5674,7 @@ register_check_parameters(
     ), TextAscii(title=_("Mount point"), allow_empty=False), "first")
 
 register_check_parameters(
-    subgroup_storage, "storcli_vdrives", _("LSI RAID VDrives (StorCLI)"),
+    RulespecGroupCheckParametersStorage, "storcli_vdrives", _("LSI RAID VDrives (StorCLI)"),
     Dictionary(
         title=_("Evaluation of VDrive States"),
         elements=[
@@ -5708,7 +5705,7 @@ register_check_parameters(
         ), "dict")
 
 register_check_parameters(
-    subgroup_storage, "storcli_pdisks", _("LSI RAID physical disks (StorCLI)"),
+    RulespecGroupCheckParametersStorage, "storcli_pdisks", _("LSI RAID physical disks (StorCLI)"),
     Dictionary(
         title=_("Evaluation of PDisk States"),
         elements=[
@@ -5746,7 +5743,7 @@ register_check_parameters(
         ), "dict")
 
 register_check_parameters(
-    subgroup_storage,
+    RulespecGroupCheckParametersStorage,
     "veeam_tapejobs",
     _("VEEAM tape backup jobs"),
     Tuple(
@@ -5773,7 +5770,7 @@ def ceph_epoch_element(title):
 
 
 register_check_parameters(
-    subgroup_storage,
+    RulespecGroupCheckParametersStorage,
     "ceph_status",
     _("Ceph Status"),
     Dictionary(elements=ceph_epoch_element(_("Status epoch levels and average")),),
@@ -5782,7 +5779,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_storage,
+    RulespecGroupCheckParametersStorage,
     "ceph_osds",
     _("Ceph OSDs"),
     Dictionary(
@@ -5807,7 +5804,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_storage,
+    RulespecGroupCheckParametersStorage,
     "ceph_mgrs",
     _("Ceph MGRs"),
     Dictionary(elements=ceph_epoch_element(_("MGRs epoch levels and average")),),
@@ -5816,7 +5813,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_storage,
+    RulespecGroupCheckParametersStorage,
     "quantum_storage_status",
     _("Quantum Storage Status"),
     Dictionary(elements=[
@@ -5840,7 +5837,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_environment, "apc_system_events", _("APC Inrow System Events"),
+    RulespecGroupCheckParametersEnvironment, "apc_system_events", _("APC Inrow System Events"),
     Dictionary(
         title=_("System Events on APX Inrow Devices"),
         elements=[
@@ -6135,7 +6132,8 @@ def vs_filesystem(extra_elements=None):
 
 
 register_check_parameters(
-    subgroup_storage, "filesystem", _("Filesystems (used space and growth)"), vs_filesystem(),
+    RulespecGroupCheckParametersStorage, "filesystem", _("Filesystems (used space and growth)"),
+    vs_filesystem(),
     TextAscii(
         title=_("Mount point"),
         help=_("For Linux/UNIX systems, specify the mount point, for Windows systems "
@@ -6143,7 +6141,8 @@ register_check_parameters(
         allow_empty=False), "dict")
 
 register_check_parameters(
-    subgroup_storage, "threepar_capacity", _("3Par Capacity (used space and growth)"),
+    RulespecGroupCheckParametersStorage, "threepar_capacity",
+    _("3Par Capacity (used space and growth)"),
     vs_filesystem([
         (
             "failed_capacity_levels",
@@ -6157,12 +6156,12 @@ register_check_parameters(
         ),
     ]), TextAscii(title=_("Device type"), allow_empty=False), "dict")
 
-register_check_parameters(subgroup_storage, "threepar_cpgs", _("3Par CPG (used space and growth)"),
-                          vs_filesystem(), TextAscii(title=_("CPG member name"), allow_empty=False),
-                          "dict")
+register_check_parameters(RulespecGroupCheckParametersStorage, "threepar_cpgs",
+                          _("3Par CPG (used space and growth)"), vs_filesystem(),
+                          TextAscii(title=_("CPG member name"), allow_empty=False), "dict")
 
 register_check_parameters(
-    subgroup_storage,
+    RulespecGroupCheckParametersStorage,
     "nfsiostats",
     _("NFS IO Statistics"),
     Dictionary(
@@ -6292,7 +6291,7 @@ def transform_printer_supply(params):
 
 
 register_check_parameters(
-    subgroup_printing,
+    RulespecGroupCheckParametersPrinters,
     "printer_supply",
     _("Printer cartridge levels"),
     Transform(
@@ -6342,7 +6341,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_printing,
+    RulespecGroupCheckParametersPrinters,
     "printer_input",
     _("Printer Input Units"),
     Dictionary(
@@ -6363,7 +6362,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_printing,
+    RulespecGroupCheckParametersPrinters,
     "printer_output",
     _("Printer Output Units"),
     Dictionary(
@@ -6384,7 +6383,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_printing,
+    RulespecGroupCheckParametersPrinters,
     "cups_queues",
     _("CUPS Queue"),
     Dictionary(
@@ -6431,7 +6430,7 @@ register_check_parameters(
 #   '----------------------------------------------------------------------'
 
 register_check_parameters(
-    subgroup_os,
+    RulespecGroupCheckParametersOperatingSystem,
     "fortigate_node_memory",
     _("Fortigate node memory"),
     Dictionary(
@@ -6454,7 +6453,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_os,
+    RulespecGroupCheckParametersOperatingSystem,
     "uptime",
     _("Uptime since last reboot"),
     Dictionary(elements=[
@@ -6478,7 +6477,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_os, "systemtime", _("Windows system time offset"),
+    RulespecGroupCheckParametersOperatingSystem, "systemtime", _("Windows system time offset"),
     Tuple(
         title=_("Time offset"),
         elements=[
@@ -6501,7 +6500,7 @@ register_check_parameters(
 #   '----------------------------------------------------------------------'
 
 register_check_parameters(
-    subgroup_environment, "ups_test", _("Time since last UPS selftest"),
+    RulespecGroupCheckParametersEnvironment, "ups_test", _("Time since last UPS selftest"),
     Tuple(
         title=_("Time since last UPS selftest"),
         elements=[
@@ -6522,7 +6521,7 @@ register_check_parameters(
         ]), None, "first")
 
 register_check_parameters(
-    subgroup_environment,
+    RulespecGroupCheckParametersEnvironment,
     "apc_power",
     _("APC Power Consumption"),
     Tuple(
@@ -6546,7 +6545,7 @@ register_check_parameters(
     match_type="first")
 
 register_check_parameters(
-    subgroup_storage,
+    RulespecGroupCheckParametersStorage,
     "fileinfo",
     _("Size and age of single files"),
     Dictionary(elements=[
@@ -6590,7 +6589,7 @@ register_check_parameters(
 )
 
 register_rule(
-    group + '/' + subgroup_storage,
+    RulespecGroupCheckParametersStorage().name,
     varname="filesystem_groups",
     title=_('Filesystem grouping patterns'),
     help=_('Normally the filesystem checks (<tt>df</tt>, <tt>hr_fs</tt> and others) '
@@ -6620,7 +6619,7 @@ register_rule(
 )
 
 register_rule(
-    group + '/' + subgroup_storage,
+    RulespecGroupCheckParametersStorage().name,
     varname="fileinfo_groups",
     title=_('File Grouping Patterns'),
     help=_('The check <tt>fileinfo</tt> monitors the age and size of '
@@ -6676,7 +6675,7 @@ register_rule(
 )
 
 register_check_parameters(
-    subgroup_storage,
+    RulespecGroupCheckParametersStorage,
     "fileinfo-groups",
     _("Size, age and count of file groups"),
     Dictionary(
@@ -6814,7 +6813,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_storage,
+    RulespecGroupCheckParametersStorage,
     "netapp_fcportio",
     _("Netapp FC Port throughput"),
     Dictionary(elements=[("read",
@@ -6836,7 +6835,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_os,
+    RulespecGroupCheckParametersOperatingSystem,
     "memory_pagefile_win",
     _("Memory and pagefile levels for Windows"),
     Dictionary(elements=[
@@ -6909,7 +6908,7 @@ register_check_parameters(
     "dict")
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "apache_status",
     ("Apache Status"),
     Dictionary(elements=[
@@ -6937,7 +6936,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "saprouter_cert_age",
     _("SAP router certificate time settings"),
     Dictionary(elements=[
@@ -6954,7 +6953,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "sap_dialog",
     ("SAP Dialog"),
     Dictionary(elements=[
@@ -6988,7 +6987,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "nginx_status",
     ("Nginx Status"),
     Dictionary(elements=[("active_connections",
@@ -7007,7 +7006,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "sles_license",
     ("SLES License"),
     Dictionary(elements=[
@@ -7041,7 +7040,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_networking,
+    RulespecGroupCheckParametersNetworking,
     "viprinet_router",
     _("Viprinet router"),
     Dictionary(elements=[
@@ -7061,7 +7060,8 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_networking, 'docsis_channels_upstream', _("Docsis Upstream Channels"),
+    RulespecGroupCheckParametersNetworking, 'docsis_channels_upstream',
+    _("Docsis Upstream Channels"),
     Dictionary(elements=[
         ('signal_noise',
          Tuple(
@@ -7087,7 +7087,8 @@ register_check_parameters(
     ]), TextAscii(title=_("ID of the channel (usually ranging from 1)")), "dict")
 
 register_check_parameters(
-    subgroup_networking, "docsis_channels_downstream", _("Docsis Downstream Channels"),
+    RulespecGroupCheckParametersNetworking, "docsis_channels_downstream",
+    _("Docsis Downstream Channels"),
     Dictionary(elements=[
         ("power",
          Tuple(
@@ -7100,7 +7101,7 @@ register_check_parameters(
     ]), TextAscii(title=_("ID of the channel (usually ranging from 1)")), "dict")
 
 register_check_parameters(
-    subgroup_networking, "docsis_cm_status", _("Docsis Cable Modem Status"),
+    RulespecGroupCheckParametersNetworking, "docsis_cm_status", _("Docsis Cable Modem Status"),
     Dictionary(elements=[
         ("error_states",
          ListChoice(
@@ -7136,7 +7137,7 @@ register_check_parameters(
     ]), TextAscii(title=_("ID of the Entry")), "dict")
 
 register_check_parameters(
-    subgroup_networking,
+    RulespecGroupCheckParametersNetworking,
     "vpn_tunnel",
     _("VPN Tunnel"),
     Dictionary(
@@ -7180,7 +7181,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_networking, "lsnat", _("Enterasys LSNAT Bindings"),
+    RulespecGroupCheckParametersNetworking, "lsnat", _("Enterasys LSNAT Bindings"),
     Dictionary(
         elements=[
             ("current_bindings",
@@ -7195,7 +7196,8 @@ register_check_parameters(
     ), None, "dict")
 
 register_check_parameters(
-    subgroup_networking, "enterasys_powersupply", _("Enterasys Power Supply Settings"),
+    RulespecGroupCheckParametersNetworking, "enterasys_powersupply",
+    _("Enterasys Power Supply Settings"),
     Dictionary(
         elements=[
             ("redundancy_ok_states",
@@ -7219,7 +7221,7 @@ hivemanger_states = [
     ("Minor", "Minor"),
 ]
 register_check_parameters(
-    subgroup_networking,
+    RulespecGroupCheckParametersNetworking,
     "hivemanager_devices",
     _("Hivemanager Devices"),
     Dictionary(elements=[
@@ -7261,7 +7263,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_networking,
+    RulespecGroupCheckParametersNetworking,
     "hivemanager_ng_devices",
     _("HiveManager NG Devices"),
     Dictionary(elements=[
@@ -7279,7 +7281,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_networking,
+    RulespecGroupCheckParametersNetworking,
     "wlc_clients",
     _("WLC WiFi client connections"),
     Transform(
@@ -7312,7 +7314,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_networking,
+    RulespecGroupCheckParametersNetworking,
     "cisco_wlc",
     _("Cisco WLAN AP"),
     Dictionary(
@@ -7332,7 +7334,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_networking,
+    RulespecGroupCheckParametersNetworking,
     "tcp_conn_stats",
     _("TCP connection statistics"),
     Dictionary(elements=[
@@ -7455,7 +7457,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_networking,
+    RulespecGroupCheckParametersNetworking,
     "tcp_connections",
     _("Monitor specific TCP/UDP connections and listeners"),
     Dictionary(
@@ -7527,7 +7529,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     'msx_info_store',
     _("MS Exchange Information Store"),
     Dictionary(
@@ -7560,7 +7562,7 @@ register_check_parameters(
     match_type='dict')
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     'msx_rpcclientaccess',
     _("MS Exchange RPC Client Access"),
     Dictionary(
@@ -7584,7 +7586,7 @@ register_check_parameters(
     match_type='dict')
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     'msx_database',
     _("MS Exchange Database"),
     Dictionary(
@@ -7634,7 +7636,7 @@ def transform_msx_queues(params):
 
 
 register_check_parameters(
-    subgroup_applications, "msx_queues", _("MS Exchange Message Queues"),
+    RulespecGroupCheckParametersApplications, "msx_queues", _("MS Exchange Message Queues"),
     Transform(
         Dictionary(
             title=_("Set Levels"),
@@ -7664,7 +7666,7 @@ register_check_parameters(
     ), "first")
 
 register_check_parameters(
-    subgroup_applications, "msexch_copyqueue", _("MS Exchange DAG CopyQueue"),
+    RulespecGroupCheckParametersApplications, "msexch_copyqueue", _("MS Exchange DAG CopyQueue"),
     Tuple(
         title=_("Upper Levels for CopyQueue Length"),
         help=_("This rule sets upper levels to the number of transaction logs waiting to be copied "
@@ -7677,12 +7679,13 @@ register_check_parameters(
         help=_("The database name on the Mailbox Server."),
     ), "first")
 
-register_check_parameters(subgroup_storage, "mongodb_collections", _("MongoDB Collection Size"),
+register_check_parameters(RulespecGroupCheckParametersStorage, "mongodb_collections",
+                          _("MongoDB Collection Size"),
                           Dictionary(elements=fs_levels_elements + size_trend_elements),
                           TextAscii(title=_("Collection name"),), "dict")
 
 register_check_parameters(
-    subgroup_storage, "volume_groups", _("Volume Groups (LVM)"),
+    RulespecGroupCheckParametersStorage, "volume_groups", _("Volume Groups (LVM)"),
     Dictionary(
         elements=[
             ("levels",
@@ -7705,7 +7708,7 @@ register_check_parameters(
         optional_keys=False), TextAscii(title=_("Volume Group"), allow_empty=False), "dict")
 
 register_check_parameters(
-    subgroup_storage, "ibm_svc_mdiskgrp", _("IBM SVC Pool Capacity"),
+    RulespecGroupCheckParametersStorage, "ibm_svc_mdiskgrp", _("IBM SVC Pool Capacity"),
     Dictionary(
         elements=filesystem_elements + [
             ("provisioning_levels",
@@ -7727,7 +7730,7 @@ register_check_parameters(
     ), TextAscii(title=_("Name of the pool"), allow_empty=False), "dict")
 
 register_check_parameters(
-    subgroup_os,
+    RulespecGroupCheckParametersOperatingSystem,
     "sp_util",
     _("Storage Processor Utilization"),
     Tuple(
@@ -7741,7 +7744,8 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_storage, "esx_vsphere_datastores", _("ESX Datastores (used space and growth)"),
+    RulespecGroupCheckParametersStorage, "esx_vsphere_datastores",
+    _("ESX Datastores (used space and growth)"),
     Dictionary(
         elements=filesystem_elements + [
             ("provisioning_levels",
@@ -7769,7 +7773,8 @@ register_check_parameters(
     "dict")
 
 register_check_parameters(
-    subgroup_storage, "esx_hostystem_maintenance", _("ESX Hostsystem Maintenance Mode"),
+    RulespecGroupCheckParametersStorage, "esx_hostystem_maintenance",
+    _("ESX Hostsystem Maintenance Mode"),
     Dictionary(
         elements=[
             ("target_state",
@@ -7783,7 +7788,7 @@ register_check_parameters(
         ],), None, "dict")
 
 register_check_parameters(
-    subgroup_networking, "bonding", _("Status of Linux bonding interfaces"),
+    RulespecGroupCheckParametersNetworking, "bonding", _("Status of Linux bonding interfaces"),
     Dictionary(elements=[
         ("expect_active",
          DropdownChoice(
@@ -7857,7 +7862,7 @@ def transform_if(v):
 
 
 register_check_parameters(
-    subgroup_networking,
+    RulespecGroupCheckParametersNetworking,
     "if",
     _("Network interfaces and switch ports"),
     # Transform old traffic related levels which used "traffic" and "traffic_minimum"
@@ -8057,7 +8062,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_networking,
+    RulespecGroupCheckParametersNetworking,
     "fcp",
     _("Fibrechannel Interfaces"),
     Dictionary(elements=[
@@ -8114,7 +8119,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_networking,
+    RulespecGroupCheckParametersNetworking,
     "signal_quality",
     _("Signal quality of Wireless device"),
     Tuple(elements=[
@@ -8126,7 +8131,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_networking,
+    RulespecGroupCheckParametersNetworking,
     "cisco_ip_sla",
     _("Cisco IP SLA"),
     Dictionary(elements=[
@@ -8247,7 +8252,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_networking,
+    RulespecGroupCheckParametersNetworking,
     "cisco_qos",
     _("Cisco quality of service"),
     Dictionary(elements=[
@@ -8323,7 +8328,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_os, "innovaphone_mem", _("Innovaphone Memory Usage"),
+    RulespecGroupCheckParametersOperatingSystem, "innovaphone_mem", _("Innovaphone Memory Usage"),
     Tuple(
         title=_("Specify levels in percentage of total RAM"),
         elements=[
@@ -8332,7 +8337,7 @@ register_check_parameters(
         ]), None, "first")
 
 register_check_parameters(
-    subgroup_os, "mem_pages", _("Memory Pages Statistics"),
+    RulespecGroupCheckParametersOperatingSystem, "mem_pages", _("Memory Pages Statistics"),
     Dictionary(elements=[(
         "pages_per_second",
         Tuple(
@@ -8344,7 +8349,7 @@ register_check_parameters(
     )]), None, "dict")
 
 register_check_parameters(
-    subgroup_os,
+    RulespecGroupCheckParametersOperatingSystem,
     "statgrab_mem",
     _("Statgrab Memory Usage"),
     Alternative(elements=[
@@ -8367,7 +8372,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_os,
+    RulespecGroupCheckParametersOperatingSystem,
     "cisco_mem",
     _("Cisco Memory Usage"),
     Transform(
@@ -8403,7 +8408,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_os, "juniper_mem", _("Juniper Memory Usage"),
+    RulespecGroupCheckParametersOperatingSystem, "juniper_mem", _("Juniper Memory Usage"),
     Tuple(
         title=_("Specify levels in percentage of total memory usage"),
         elements=[
@@ -8421,7 +8426,7 @@ register_check_parameters(
 
 # TODO: Remove situations where a rule is used once with and once without items
 register_check_parameters(
-    subgroup_os,
+    RulespecGroupCheckParametersOperatingSystem,
     "juniper_mem_modules",
     _("Juniper Modules Memory Usage"),
     Tuple(
@@ -8446,7 +8451,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_os,
+    RulespecGroupCheckParametersOperatingSystem,
     "juniper_cpu_util",
     _("Juniper Processor Utilization of Routing Engine"),
     Transform(
@@ -8472,7 +8477,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_os, "netscaler_mem", _("Netscaler Memory Usage"),
+    RulespecGroupCheckParametersOperatingSystem, "netscaler_mem", _("Netscaler Memory Usage"),
     Tuple(
         title=_("Specify levels in percentage of total memory usage"),
         elements=[
@@ -8489,7 +8494,7 @@ register_check_parameters(
         ]), None, "first")
 
 register_check_parameters(
-    subgroup_os, "netscaler_vserver", _("Netscaler VServer States"),
+    RulespecGroupCheckParametersOperatingSystem, "netscaler_vserver", _("Netscaler VServer States"),
     Dictionary(elements=[
         ("health_levels",
          Tuple(
@@ -8501,7 +8506,7 @@ register_check_parameters(
     ]), TextAscii(title=_("Name of VServer")), "dict")
 
 register_check_parameters(
-    subgroup_os,
+    RulespecGroupCheckParametersOperatingSystem,
     "general_flash_usage",
     _("Flash Space Usage"),
     Alternative(elements=[
@@ -8523,7 +8528,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_os,
+    RulespecGroupCheckParametersOperatingSystem,
     "cisco_supervisor_mem",
     _("Cisco Nexus Supervisor Memory Usage"),
     Tuple(
@@ -8644,7 +8649,7 @@ def LowerMemoryLevels(what, default_percents=None, of_what=None, help_text=None)
 #     ))
 
 register_check_parameters(
-    subgroup_os,
+    RulespecGroupCheckParametersOperatingSystem,
     "memory_linux",
     _("Memory and Swap usage on Linux"),
     Dictionary(
@@ -8686,7 +8691,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_os,
+    RulespecGroupCheckParametersOperatingSystem,
     "memory",
     _("Main memory usage (UNIX / Other Devices)"),
     Transform(
@@ -8776,7 +8781,8 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_os, "memory_relative", _("Main memory usage for Brocade fibre channel switches"),
+    RulespecGroupCheckParametersOperatingSystem, "memory_relative",
+    _("Main memory usage for Brocade fibre channel switches"),
     OptionalDropdownChoice(
         title=_("Memory usage"),
         choices=[(None, _("Do not impose levels"))],
@@ -8787,7 +8793,7 @@ register_check_parameters(
         ])), None, "first")
 
 register_check_parameters(
-    subgroup_os,
+    RulespecGroupCheckParametersOperatingSystem,
     "memory_simple",
     _("Main memory usage of simple devices"),
     Transform(
@@ -8832,7 +8838,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_os,
+    RulespecGroupCheckParametersOperatingSystem,
     "memory_multiitem",
     _("Main memory usage of devices with modules"),
     Dictionary(
@@ -8870,7 +8876,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_os,
+    RulespecGroupCheckParametersOperatingSystem,
     "memory_arbor",
     _("Memory and Swap usage on Arbor devices"),
     Dictionary(
@@ -8883,7 +8889,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_networking, "mem_cluster", _("Memory Usage of Clusters"),
+    RulespecGroupCheckParametersNetworking, "mem_cluster", _("Memory Usage of Clusters"),
     ListOf(
         Tuple(elements=[
             Integer(title=_("Equal or more than"), unit=_("nodes")),
@@ -8899,7 +8905,8 @@ register_check_parameters(
         add_label=_("Add limits")), None, "first", False)
 
 register_check_parameters(
-    subgroup_networking, "cpu_utilization_cluster", _("CPU Utilization of Clusters"),
+    RulespecGroupCheckParametersNetworking, "cpu_utilization_cluster",
+    _("CPU Utilization of Clusters"),
     ListOf(
         Tuple(elements=[
             Integer(title=_("Equal or more than"), unit=_("nodes")),
@@ -8920,7 +8927,7 @@ register_check_parameters(
         add_label=_("Add limits")), None, "first", False)
 
 register_check_parameters(
-    subgroup_os,
+    RulespecGroupCheckParametersOperatingSystem,
     "esx_host_memory",
     _("Main memory usage of ESX host system"),
     Tuple(
@@ -8934,7 +8941,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_os,
+    RulespecGroupCheckParametersOperatingSystem,
     "vm_guest_tools",
     _("Virtual machine (for example ESX) guest tools status"),
     Dictionary(
@@ -8965,7 +8972,7 @@ register_check_parameters(
     "dict",
 )
 register_check_parameters(
-    subgroup_os,
+    RulespecGroupCheckParametersOperatingSystem,
     "vm_heartbeat",
     _("Virtual machine (for example ESX) heartbeat status"),
     Dictionary(
@@ -9001,7 +9008,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications, "services_summary", _("Windows Service Summary"),
+    RulespecGroupCheckParametersApplications, "services_summary", _("Windows Service Summary"),
     Dictionary(
         title=_('Autostart Services'),
         elements=[
@@ -9027,7 +9034,8 @@ register_check_parameters(
     ), None, "dict")
 
 register_check_parameters(
-    subgroup_applications, "solaris_services_summary", _("Solaris Services Summary"),
+    RulespecGroupCheckParametersApplications, "solaris_services_summary",
+    _("Solaris Services Summary"),
     Dictionary(
         elements=[
             ('maintenance_state',
@@ -9038,7 +9046,7 @@ register_check_parameters(
         ],), None, "dict")
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "esx_vsphere_objects",
     _("State of ESX hosts and virtual machines"),
     Dictionary(
@@ -9091,7 +9099,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "esx_vsphere_objects_count",
     _("Distribution of virtual machines over ESX hosts"),
     Dictionary(
@@ -9131,7 +9139,7 @@ def windows_printer_queues_forth(old):
 
 
 register_check_parameters(
-    subgroup_printing,
+    RulespecGroupCheckParametersPrinters,
     "windows_printer_queues",
     _("Number of open jobs of a printer on windows"),
     Transform(
@@ -9195,7 +9203,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_printing,
+    RulespecGroupCheckParametersPrinters,
     "printer_input",
     _("Printer Input Units"),
     Dictionary(
@@ -9216,7 +9224,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_printing,
+    RulespecGroupCheckParametersPrinters,
     "printer_output",
     _("Printer Output Units"),
     Dictionary(
@@ -9237,7 +9245,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_os,
+    RulespecGroupCheckParametersOperatingSystem,
     "cpu_load",
     _("CPU load (not utilization!)"),
     Levels(
@@ -9258,7 +9266,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_os,
+    RulespecGroupCheckParametersOperatingSystem,
     "cpu_utilization",
     _("CPU utilization for Appliances"),
     Optional(
@@ -9276,7 +9284,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_os,
+    RulespecGroupCheckParametersOperatingSystem,
     "cpu_utilization_multiitem",
     _("CPU utilization of Devices with Modules"),
     Dictionary(
@@ -9300,7 +9308,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_os,
+    RulespecGroupCheckParametersOperatingSystem,
     "fpga_utilization",
     _("FPGA utilization"),
     Dictionary(
@@ -9371,7 +9379,7 @@ cpu_util_common_elements = [
 ]
 
 register_check_parameters(
-    subgroup_os,
+    RulespecGroupCheckParametersOperatingSystem,
     "cpu_utilization_os",
     _("CPU utilization for simple devices"),
     Dictionary(
@@ -9413,7 +9421,7 @@ def transform_cpu_iowait(params):
 
 
 register_check_parameters(
-    subgroup_os,
+    RulespecGroupCheckParametersOperatingSystem,
     "cpu_iowait",
     _("CPU utilization on Linux/UNIX"),
     Transform(
@@ -9471,7 +9479,7 @@ def transform_humidity(p):
 
 
 register_check_parameters(
-    subgroup_environment,
+    RulespecGroupCheckParametersEnvironment,
     "humidity",
     _("Humidity Levels"),
     Transform(
@@ -9503,7 +9511,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_environment,
+    RulespecGroupCheckParametersEnvironment,
     "single_humidity",
     _("Humidity Levels for devices with a single sensor"),
     Tuple(
@@ -9592,7 +9600,7 @@ db_levels_common = [
 ]
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "oracle_tablespaces",
     _("Oracle Tablespaces"),
     Dictionary(
@@ -9648,7 +9656,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "oracle_processes",
     _("Oracle Processes"),
     Dictionary(
@@ -9671,7 +9679,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "oracle_recovery_area",
     _("Oracle Recovery Area"),
     Dictionary(elements=[("levels",
@@ -9686,7 +9694,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "oracle_dataguard_stats",
     _("Oracle Data-Guard Stats"),
     Dictionary(
@@ -9722,7 +9730,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "oracle_undostat",
     _("Oracle Undo Retention"),
     Dictionary(elements=[
@@ -9746,7 +9754,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "oracle_rman",
     _("Oracle RMAN Backups"),
     Dictionary(elements=[("levels",
@@ -9761,7 +9769,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "oracle_recovery_status",
     _("Oracle Recovery Status"),
     Dictionary(elements=[("levels",
@@ -9786,7 +9794,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "oracle_jobs",
     _("Oracle Scheduler Job"),
     Dictionary(
@@ -9830,7 +9838,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "oracle_instance",
     _("Oracle Instance"),
     Dictionary(
@@ -9898,7 +9906,8 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications, "asm_diskgroup", _("ASM Disk Group (used space and growth)"),
+    RulespecGroupCheckParametersApplications, "asm_diskgroup",
+    _("ASM Disk Group (used space and growth)"),
     Dictionary(
         elements=filesystem_elements + [
             ("req_mir_free",
@@ -9943,7 +9952,7 @@ def _vs_mssql_backup_age(title):
         ])
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "mssql_backup",
     _("MSSQL Backup summary"),
     Transform(
@@ -9975,7 +9984,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "mssql_backup_per_type",
     _("MSSQL Backup"),
     Dictionary(elements=[
@@ -9986,7 +9995,8 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications, "mssql_file_sizes", _("MSSQL Log and Data File Sizes"),
+    RulespecGroupCheckParametersApplications, "mssql_file_sizes",
+    _("MSSQL Log and Data File Sizes"),
     Dictionary(
         title=_("File Size Levels"),
         elements=[
@@ -10022,7 +10032,7 @@ register_check_parameters(
         ]), TextAscii(title=_("Service descriptions"), allow_empty=False), "dict")
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "mssql_tablespaces",
     _("MSSQL Size of Tablespace"),
     Dictionary(
@@ -10123,7 +10133,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "mssql_page_activity",
     _("MSSQL Page Activity"),
     Dictionary(
@@ -10201,7 +10211,8 @@ def levels_absolute_or_dynamic(name, value):
 
 
 register_check_parameters(
-    subgroup_applications, "mssql_transactionlogs", _("MSSQL Transactionlog Sizes"),
+    RulespecGroupCheckParametersApplications, "mssql_transactionlogs",
+    _("MSSQL Transactionlog Sizes"),
     Dictionary(
         title=_("File Size Levels"),
         help=_("Specify levels for transactionlogs of a database. Please note that relative "
@@ -10215,7 +10226,7 @@ register_check_parameters(
         ]), TextAscii(title=_("Database Name"), allow_empty=False), "dict")
 
 register_check_parameters(
-    subgroup_applications, "mssql_datafiles", _("MSSQL Datafile Sizes"),
+    RulespecGroupCheckParametersApplications, "mssql_datafiles", _("MSSQL Datafile Sizes"),
     Dictionary(
         title=_("File Size Levels"),
         help=_("Specify levels for datafiles of a database. Please note that relative "
@@ -10229,7 +10240,7 @@ register_check_parameters(
         ]), TextAscii(title=_("Database Name"), allow_empty=False), "dict")
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "vm_snapshots",
     _("Virtual Machine Snapshots"),
     Dictionary(elements=[
@@ -10253,7 +10264,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "veeam_backup",
     _("Veeam: Time since last Backup"),
     Dictionary(elements=[("age",
@@ -10268,7 +10279,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "backup_timemachine",
     _("Age of timemachine backup"),
     Dictionary(elements=[("age",
@@ -10283,7 +10294,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "job",
     _("Age of jobs controlled by mk-job"),
     Dictionary(elements=[
@@ -10311,7 +10322,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "mssql_counters_locks",
     _("MSSQL Locks"),
     Dictionary(
@@ -10780,7 +10791,7 @@ mssql_waittypes = [
 ]
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "mssql_blocked_sessions",
     _("MSSQL Blocked Sessions"),
     Dictionary(
@@ -10815,7 +10826,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "mssql_instance_blocked_sessions",
     _("MSSQL Blocked Sessions"),
     Dictionary(
@@ -10849,7 +10860,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "mysql_sessions",
     _("MySQL Sessions & Connections"),
     Dictionary(
@@ -10896,7 +10907,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "mysql_innodb_io",
     _("MySQL InnoDB Throughput"),
     Dictionary(
@@ -10932,7 +10943,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "mysql_connections",
     _("MySQL Connections"),
     Dictionary(elements=[
@@ -10957,7 +10968,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "mysql_slave",
     _("MySQL Slave"),
     Dictionary(
@@ -10983,7 +10994,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications, "db_bloat", _("Database Bloat (PostgreSQL)"),
+    RulespecGroupCheckParametersApplications, "db_bloat", _("Database Bloat (PostgreSQL)"),
     Dictionary(
         help=_("This rule allows you to configure bloat levels for a databases tablespace and "
                "indexspace."),
@@ -11025,7 +11036,8 @@ register_check_parameters(
         ]), TextAscii(title=_("Name of the database"),), "dict")
 
 register_check_parameters(
-    subgroup_applications, "db_connections", _("Database Connections (PostgreSQL/MongoDB)"),
+    RulespecGroupCheckParametersApplications, "db_connections",
+    _("Database Connections (PostgreSQL/MongoDB)"),
     Dictionary(
         help=_("This rule allows you to configure the number of maximum concurrent "
                "connections for a given database."),
@@ -11047,7 +11059,7 @@ register_check_parameters(
         ]), TextAscii(title=_("Name of the database"),), "dict")
 
 register_check_parameters(
-    subgroup_applications, "postgres_locks", _("PostgreSQL Locks"),
+    RulespecGroupCheckParametersApplications, "postgres_locks", _("PostgreSQL Locks"),
     Dictionary(
         help=_(
             "This rule allows you to configure the limits for the SharedAccess and Exclusive Locks "
@@ -11070,7 +11082,8 @@ register_check_parameters(
         ]), TextAscii(title=_("Name of the database"),), "dict")
 
 register_check_parameters(
-    subgroup_applications, "postgres_maintenance", _("PostgreSQL VACUUM and ANALYZE"),
+    RulespecGroupCheckParametersApplications, "postgres_maintenance",
+    _("PostgreSQL VACUUM and ANALYZE"),
     Dictionary(
         help=_("With this rule you can set limits for the VACUUM and ANALYZE operation of "
                "a PostgreSQL database. Keep in mind that each table within a database is checked "
@@ -11100,7 +11113,7 @@ register_check_parameters(
         ]), TextAscii(title=_("Name of the database"),), "dict")
 
 register_check_parameters(
-    subgroup_applications, "f5_connections", _("F5 Loadbalancer Connections"),
+    RulespecGroupCheckParametersApplications, "f5_connections", _("F5 Loadbalancer Connections"),
     Dictionary(elements=[
         ("conns",
          Levels(
@@ -11131,7 +11144,7 @@ register_check_parameters(
     ]), None, "dict")
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "cisco_fw_connections",
     _("Cisco ASA Firewall Connections"),
     Dictionary(elements=[
@@ -11151,7 +11164,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "checkpoint_connections",
     _("Checkpoint Firewall Connections"),
     Tuple(
@@ -11168,7 +11181,8 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications, "checkpoint_packets", _("Checkpoint Firewall Packet Rates"),
+    RulespecGroupCheckParametersApplications, "checkpoint_packets",
+    _("Checkpoint Firewall Packet Rates"),
     Dictionary(elements=[
         ("accepted",
          Levels(
@@ -11197,7 +11211,7 @@ register_check_parameters(
     ]), None, "dict")
 
 register_check_parameters(
-    subgroup_applications, "f5_pools", _("F5 Loadbalancer Pools"),
+    RulespecGroupCheckParametersApplications, "f5_pools", _("F5 Loadbalancer Pools"),
     Tuple(
         title=_("Minimum number of pool members"),
         elements=[
@@ -11207,7 +11221,7 @@ register_check_parameters(
     ), TextAscii(title=_("Name of pool")), "first")
 
 register_check_parameters(
-    subgroup_applications, "mysql_db_size", _("Size of MySQL databases"),
+    RulespecGroupCheckParametersApplications, "mysql_db_size", _("Size of MySQL databases"),
     Optional(
         Tuple(elements=[
             Filesize(title=_("warning at")),
@@ -11223,7 +11237,7 @@ register_check_parameters(
     ), "first")
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "postgres_sessions",
     _("PostgreSQL Sessions"),
     Dictionary(
@@ -11257,7 +11271,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "postgres_instance_sessions",
     _("PostgreSQL Sessions"),
     Dictionary(
@@ -11290,7 +11304,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "asa_svc_sessions",
     _("Cisco SSl VPN Client Sessions"),
     Tuple(
@@ -11315,7 +11329,7 @@ def convert_oracle_sessions(value):
 
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "oracle_sessions",
     _("Oracle Sessions"),
     Transform(
@@ -11361,7 +11375,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "oracle_locks",
     _("Oracle Locks"),
     Dictionary(elements=[("levels",
@@ -11376,7 +11390,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "oracle_longactivesessions",
     _("Oracle Long Active Sessions"),
     Dictionary(elements=[("levels",
@@ -11391,7 +11405,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "postgres_stat_database",
     _("PostgreSQL Database Statistics"),
     Dictionary(
@@ -11465,7 +11479,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "win_dhcp_pools",
     _("DHCP Pools for Windows and Linux"),
     Transform(
@@ -11525,7 +11539,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_os,
+    RulespecGroupCheckParametersOperatingSystem,
     "threads",
     _("Number of threads"),
     Tuple(
@@ -11541,7 +11555,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_os,
+    RulespecGroupCheckParametersOperatingSystem,
     "logins",
     _("Number of Logins on System"),
     Tuple(
@@ -11555,7 +11569,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "vms_procs",
     _("Number of processes on OpenVMS"),
     Optional(
@@ -11570,7 +11584,8 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_os, "vm_counter", _("Number of kernel events per second"),
+    RulespecGroupCheckParametersOperatingSystem, "vm_counter",
+    _("Number of kernel events per second"),
     Levels(
         help=_("This ruleset applies to several similar checks measing various kernel "
                "events like context switches, process creations and major page faults. "
@@ -11588,7 +11603,7 @@ register_check_parameters(
                  ("Major Page Faults", _("Major Page Faults"))]), "first")
 
 register_check_parameters(
-    subgroup_storage,
+    RulespecGroupCheckParametersStorage,
     "ibm_svc_total_latency",
     _("IBM SVC: Levels for total disk latency"),
     Dictionary(elements=[
@@ -11632,7 +11647,7 @@ def transform_ibm_svc_host(params):
 
 
 register_check_parameters(
-    subgroup_storage,
+    RulespecGroupCheckParametersStorage,
     "ibm_svc_host",
     _("IBM SVC: Options for SVC Hosts Check"),
     Transform(
@@ -11697,7 +11712,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_storage,
+    RulespecGroupCheckParametersStorage,
     "ibm_svc_mdisk",
     _("IBM SVC: Options for SVC Disk Check"),
     Dictionary(
@@ -11768,7 +11783,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_storage,
+    RulespecGroupCheckParametersStorage,
     "diskstat",
     _("Levels for disk IO"),
     Dictionary(
@@ -11825,7 +11840,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_storage, "disk_io", _("Levels on disk IO (old style checks)"),
+    RulespecGroupCheckParametersStorage, "disk_io", _("Levels on disk IO (old style checks)"),
     Dictionary(elements=[
         ("read",
          Levels(
@@ -11899,7 +11914,7 @@ register_check_parameters(
     "dict")
 
 register_rule(
-    group + '/' + subgroup_storage,
+    RulespecGroupCheckParametersStorage().name,
     "diskstat_inventory",
     ListChoice(
         title=_("Discovery mode for Disk IO check"),
@@ -11981,7 +11996,7 @@ vs_elements_if_groups_group = [
 ]
 
 register_rule(
-    group + '/' + subgroup_networking,
+    RulespecGroupCheckParametersNetworking().name,
     varname="if_groups",
     title=_('Network interface groups'),
     help=_(
@@ -12026,7 +12041,7 @@ register_rule(
 )
 
 register_rule(
-    group + '/' + subgroup_inventory,
+    RulespecGroupCheckParametersDiscovery().name,
     varname="winperf_msx_queues_inventory",
     title=_('MS Exchange Message Queues Discovery'),
     help=_(
@@ -12086,7 +12101,7 @@ mailqueue_params = Dictionary(
 )
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "mailqueue_length",
     _("Number of mails in outgoing mail queue"),
     Transform(
@@ -12099,7 +12114,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "mail_queue_length",
     _("Number of mails in outgoing mail queue"),
     Transform(
@@ -12111,7 +12126,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications, "mail_latency", _("Mail Latency"),
+    RulespecGroupCheckParametersApplications, "mail_latency", _("Mail Latency"),
     Tuple(
         title=_("Upper levels for Mail Latency"),
         elements=[
@@ -12120,7 +12135,7 @@ register_check_parameters(
         ]), None, "first")
 
 register_check_parameters(
-    subgroup_storage,
+    RulespecGroupCheckParametersStorage,
     "zpool_status",
     _("ZFS storage pool status"),
     None,
@@ -12129,7 +12144,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_virt,
+    RulespecGroupCheckParametersVirtualization,
     "vm_state",
     _("Overall state of a virtual machine (for example ESX VMs)"),
     None,
@@ -12138,7 +12153,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_hardware,
+    RulespecGroupCheckParametersHardware,
     "hw_errors",
     _("Simple checks for BIOS/Hardware errors"),
     None,
@@ -12147,13 +12162,14 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications, "omd_status", _("OMD site status"), None,
+    RulespecGroupCheckParametersApplications, "omd_status", _("OMD site status"), None,
     TextAscii(
         title=_("Name of the OMD site"),
         help=_("The name of the OMD site to check the status for")), "first")
 
 register_check_parameters(
-    subgroup_storage, "network_fs", _("Network filesystem - overall status (e.g. NFS)"),
+    RulespecGroupCheckParametersStorage, "network_fs",
+    _("Network filesystem - overall status (e.g. NFS)"),
     Dictionary(
         elements=[
             (
@@ -12172,7 +12188,7 @@ register_check_parameters(
     "dict")
 
 register_check_parameters(
-    subgroup_storage,
+    RulespecGroupCheckParametersStorage,
     "windows_multipath",
     _("Windows Multipath Count"),
     Alternative(
@@ -12193,7 +12209,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_storage, "multipath", _("Linux and Solaris Multipath Count"),
+    RulespecGroupCheckParametersStorage, "multipath", _("Linux and Solaris Multipath Count"),
     Alternative(
         help=_("This rules sets the expected number of active paths for a multipath LUN "
                "on Linux and Solaris hosts"),
@@ -12214,7 +12230,7 @@ register_check_parameters(
                "alias.")), "first")
 
 register_rule(
-    "checkparams/" + subgroup_storage,
+    RulespecGroupCheckParametersStorage().name,
     varname="inventory_multipath_rules",
     title=_("Linux Multipath Inventory"),
     valuespec=Dictionary(
@@ -12236,7 +12252,7 @@ register_rule(
 )
 
 register_check_parameters(
-    subgroup_storage, "multipath_count", _("ESX Multipath Count"),
+    RulespecGroupCheckParametersStorage, "multipath_count", _("ESX Multipath Count"),
     Alternative(
         help=_("This rules sets the expected number of active paths for a multipath LUN "
                "on ESX servers"),
@@ -12271,7 +12287,7 @@ register_check_parameters(
         ]), TextAscii(title=_("Path ID")), "first")
 
 register_check_parameters(
-    subgroup_storage, "hpux_multipath", _("HP-UX Multipath Count"),
+    RulespecGroupCheckParametersStorage, "hpux_multipath", _("HP-UX Multipath Count"),
     Tuple(
         title=_("Expected path situation"),
         help=_("This rules sets the expected number of various paths for a multipath LUN "
@@ -12284,7 +12300,7 @@ register_check_parameters(
         ]), TextAscii(title=_("WWID of the LUN")), "first")
 
 register_check_parameters(
-    subgroup_storage,
+    RulespecGroupCheckParametersStorage,
     "drbd",
     _("DR:BD roles and diskstates"),
     Dictionary(elements=[(
@@ -12372,7 +12388,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_storage,
+    RulespecGroupCheckParametersStorage,
     "snapvault",
     _("NetApp Snapvaults / Snapmirror Lag Time"),
     Dictionary(
@@ -12413,7 +12429,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_storage,
+    RulespecGroupCheckParametersStorage,
     "netapp_snapshots",
     _("NetApp Snapshot Reserve"),
     Dictionary(
@@ -12432,7 +12448,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_storage,
+    RulespecGroupCheckParametersStorage,
     "netapp_disks",
     _("Filer Disk Levels (NetApp, IBM SVC)"),
     Transform(
@@ -12473,7 +12489,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_storage,
+    RulespecGroupCheckParametersStorage,
     "netapp_volumes",
     _("NetApp Volumes"),
     Dictionary(elements=[
@@ -12635,7 +12651,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_storage,
+    RulespecGroupCheckParametersStorage,
     "netapp_luns",
     _("NetApp LUNs"),
     Dictionary(
@@ -12736,7 +12752,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "services",
     _("Windows Services"),
     Dictionary(elements=[
@@ -12804,7 +12820,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "solaris_services",
     _("Solaris Services"),
     Dictionary(
@@ -12855,7 +12871,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "winperf_ts_sessions",
     _("Windows Terminal Server Sessions"),
     Dictionary(
@@ -12889,7 +12905,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_storage, "raid", _("RAID: overall state"), None,
+    RulespecGroupCheckParametersStorage, "raid", _("RAID: overall state"), None,
     TextAscii(
         title=_("Name of the device"),
         help=_("For Linux MD specify the device name without the "
@@ -12897,7 +12913,7 @@ register_check_parameters(
                "please refer to the manual of the actual check being used.")), "first")
 
 register_check_parameters(
-    subgroup_storage, "raid_summary", _("RAID: summary state"),
+    RulespecGroupCheckParametersStorage, "raid_summary", _("RAID: summary state"),
     Dictionary(elements=[
         ("use_device_states",
          DropdownChoice(
@@ -12911,7 +12927,7 @@ register_check_parameters(
     ]), None, "dict")
 
 register_check_parameters(
-    subgroup_storage, "raid_disk", _("RAID: state of a single disk"),
+    RulespecGroupCheckParametersStorage, "raid_disk", _("RAID: state of a single disk"),
     Transform(
         Dictionary(elements=[
             (
@@ -12941,7 +12957,7 @@ register_check_parameters(
                "used. Please look at already discovered checks for examples.")), "first")
 
 register_check_parameters(
-    subgroup_storage, "pfm_health", _("PCIe flash module"),
+    RulespecGroupCheckParametersStorage, "pfm_health", _("PCIe flash module"),
     Dictionary(
         elements=[
             (
@@ -12961,7 +12977,7 @@ register_check_parameters(
                "used. Please look at already discovered checks for examples.")), "dict")
 
 register_check_parameters(
-    subgroup_environment,
+    RulespecGroupCheckParametersEnvironment,
     "switch_contact",
     _("Switch contact state"),
     DropdownChoice(
@@ -12978,7 +12994,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_environment,
+    RulespecGroupCheckParametersEnvironment,
     "plugs",
     _("State of PDU Plugs"),
     DropdownChoice(
@@ -13006,7 +13022,7 @@ register_check_parameters(
 # that do *not* use an item, need to be converted to use one single
 # item (other than None).
 register_check_parameters(
-    subgroup_environment,
+    RulespecGroupCheckParametersEnvironment,
     "temperature",
     _("Temperature"),
     Transform(
@@ -13125,7 +13141,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_environment,
+    RulespecGroupCheckParametersEnvironment,
     "room_temperature",
     _("Room temperature (external thermal sensors)"),
     Tuple(
@@ -13142,7 +13158,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_environment,
+    RulespecGroupCheckParametersEnvironment,
     "hw_single_temperature",
     _("Host/Device temperature"),
     Tuple(
@@ -13158,7 +13174,8 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_environment, "evolt", _("Voltage levels (UPS / PDU / Other Devices)"),
+    RulespecGroupCheckParametersEnvironment, "evolt",
+    _("Voltage levels (UPS / PDU / Other Devices)"),
     Tuple(
         help=_("Voltage Levels for devices like UPS or PDUs. "
                "Several phases may be addressed independently."),
@@ -13166,11 +13183,11 @@ register_check_parameters(
             Integer(title=_("warning if below"), unit="V", default_value=210),
             Integer(title=_("critical if below"), unit="V", default_value=180),
         ]),
-    TextAscii(title=_("Phase"), help=_("The identifier of the phase the power is related to.")),
-    "first")
+    TextAscii(title=_("Phase"),
+              help=_("The identifier of the phase the power is related to.")), "first")
 
 register_check_parameters(
-    subgroup_environment, "efreq", _("Nominal Frequencies"),
+    RulespecGroupCheckParametersEnvironment, "efreq", _("Nominal Frequencies"),
     Tuple(
         help=_("Levels for the nominal frequencies of AC devices "
                "like UPSs or PDUs. Several phases may be addressed independently."),
@@ -13182,7 +13199,7 @@ register_check_parameters(
     "first")
 
 register_check_parameters(
-    subgroup_environment, "epower", _("Electrical Power"),
+    RulespecGroupCheckParametersEnvironment, "epower", _("Electrical Power"),
     Tuple(
         help=_("Levels for the electrical power consumption of a device "
                "like a UPS or a PDU. Several phases may be addressed independently."),
@@ -13194,7 +13211,8 @@ register_check_parameters(
     "first")
 
 register_check_parameters(
-    subgroup_environment, "ups_out_load", _("Parameters for output loads of UPSs and PDUs"),
+    RulespecGroupCheckParametersEnvironment, "ups_out_load",
+    _("Parameters for output loads of UPSs and PDUs"),
     Tuple(elements=[
         Integer(title=_("warning at"), unit=u"%", default_value=85),
         Integer(title=_("critical at"), unit=u"%", default_value=90),
@@ -13202,7 +13220,8 @@ register_check_parameters(
     "first")
 
 register_check_parameters(
-    subgroup_environment, "epower_single", _("Electrical Power for Devices with only one phase"),
+    RulespecGroupCheckParametersEnvironment, "epower_single",
+    _("Electrical Power for Devices with only one phase"),
     Tuple(
         help=_("Levels for the electrical power consumption of a device "),
         elements=[
@@ -13211,7 +13230,7 @@ register_check_parameters(
         ]), None, "first")
 
 register_check_parameters(
-    subgroup_environment,
+    RulespecGroupCheckParametersEnvironment,
     "hw_temperature",
     _("Hardware temperature, multiple sensors"),
     Tuple(
@@ -13229,7 +13248,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_environment,
+    RulespecGroupCheckParametersEnvironment,
     "hw_temperature_single",
     _("Hardware temperature, single sensor"),
     Tuple(
@@ -13245,7 +13264,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_environment,
+    RulespecGroupCheckParametersEnvironment,
     "disk_temperature",
     _("Harddisk temperature (e.g. via SMART)"),
     Tuple(
@@ -13262,7 +13281,8 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_environment, "eaton_enviroment", _("Temperature and Humidity for Eaton UPS"),
+    RulespecGroupCheckParametersEnvironment, "eaton_enviroment",
+    _("Temperature and Humidity for Eaton UPS"),
     Dictionary(elements=[
         ("temp",
          Tuple(
@@ -13349,7 +13369,8 @@ phase_elements = [
 ]
 
 register_check_parameters(
-    subgroup_environment, "ups_outphase", _("Parameters for output phases of UPSs and PDUs"),
+    RulespecGroupCheckParametersEnvironment, "ups_outphase",
+    _("Parameters for output phases of UPSs and PDUs"),
     Dictionary(
         help=_("This rule allows you to specify levels for the voltage, current, load, power "
                "and apparent power of your device. The levels will only be applied if the device "
@@ -13375,7 +13396,8 @@ register_check_parameters(
         help=_("The name of the output, e.g. <tt>Phase 1</tt>/<tt>PDU 1</tt>")), "dict")
 
 register_check_parameters(
-    subgroup_environment, "el_inphase", _("Parameters for input phases of UPSs and PDUs"),
+    RulespecGroupCheckParametersEnvironment, "el_inphase",
+    _("Parameters for input phases of UPSs and PDUs"),
     Dictionary(
         help=_("This rule allows you to specify levels for the voltage, current, power "
                "and apparent power of your device. The levels will only be applied if the device "
@@ -13393,7 +13415,7 @@ register_check_parameters(
     "dict")
 
 register_check_parameters(
-    subgroup_environment,
+    RulespecGroupCheckParametersEnvironment,
     "hw_fans",
     _("FAN speed of Hardware devices"),
     Dictionary(
@@ -13428,7 +13450,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_environment,
+    RulespecGroupCheckParametersEnvironment,
     "hw_fans_perc",
     _("Fan speed of hardware devices (in percent)"),
     Dictionary(elements=[
@@ -13452,7 +13474,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_os,
+    RulespecGroupCheckParametersOperatingSystem,
     "pf_used_states",
     _("Number of used states of OpenBSD PF engine"),
     Dictionary(
@@ -13474,7 +13496,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_environment,
+    RulespecGroupCheckParametersEnvironment,
     "pdu_gude",
     _("Levels for Gude PDU Devices"),
     Dictionary(elements=[
@@ -13519,7 +13541,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_environment, "hostsystem_sensors", _("Hostsystem sensor alerts"),
+    RulespecGroupCheckParametersEnvironment, "hostsystem_sensors", _("Hostsystem sensor alerts"),
     ListOf(
         Dictionary(
             help=_("This rule allows to override alert levels for the given sensor names."),
@@ -13541,7 +13563,7 @@ register_check_parameters(
         add_label=_("Add sensor name")), None, "first")
 
 register_check_parameters(
-    subgroup_environment, "netapp_instance", _("Netapp Instance State"),
+    RulespecGroupCheckParametersEnvironment, "netapp_instance", _("Netapp Instance State"),
     ListOf(
         Dictionary(
             help=_("This rule allows you to override netapp warnings"),
@@ -13551,7 +13573,7 @@ register_check_parameters(
         add_label=_("Add warning")), None, "first")
 
 register_check_parameters(
-    subgroup_environment,
+    RulespecGroupCheckParametersEnvironment,
     "temperature_auto",
     _("Temperature sensors with builtin levels"),
     None,
@@ -13561,7 +13583,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_environment,
+    RulespecGroupCheckParametersEnvironment,
     "temperature_trends",
     _("Temperature trends for devices with builtin levels"),
     Dictionary(
@@ -13632,7 +13654,7 @@ ntp_params = Tuple(
     ])
 
 register_check_parameters(
-    subgroup_os, "ntp_time", _("State of NTP time synchronisation"),
+    RulespecGroupCheckParametersOperatingSystem, "ntp_time", _("State of NTP time synchronisation"),
     Transform(
         Dictionary(elements=[
             (
@@ -13658,11 +13680,12 @@ register_check_parameters(
         forth=lambda params: isinstance(params, tuple) and {"ntp_levels": params} or params), None,
     "dict")
 
-register_check_parameters(subgroup_os, "ntp_peer", _("State of NTP peer"), ntp_params,
+register_check_parameters(RulespecGroupCheckParametersOperatingSystem, "ntp_peer",
+                          _("State of NTP peer"), ntp_params,
                           TextAscii(title=_("Name of the peer")), "first")
 
 register_check_parameters(
-    subgroup_environment,
+    RulespecGroupCheckParametersEnvironment,
     "smoke",
     _("Smoke Detection"),
     Tuple(
@@ -13676,7 +13699,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_environment,
+    RulespecGroupCheckParametersEnvironment,
     "apc_ats_output",
     _("APC Automatic Transfer Switch Output"),
     Dictionary(
@@ -13718,7 +13741,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_environment,
+    RulespecGroupCheckParametersEnvironment,
     "airflow",
     _("Airflow levels"),
     Dictionary(
@@ -13754,7 +13777,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_environment,
+    RulespecGroupCheckParametersEnvironment,
     "ups_capacity",
     _("UPS Capacity"),
     Dictionary(
@@ -13814,7 +13837,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "mbg_lantime_state",
     _("Meinberg Lantime State"),
     Dictionary(
@@ -13854,7 +13877,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications, "sansymphony_pool", _("Sansymphony: pool allocation"),
+    RulespecGroupCheckParametersApplications, "sansymphony_pool", _("Sansymphony: pool allocation"),
     Tuple(
         help=_("This rule sets the warn and crit levels for the percentage of allocated pools"),
         elements=[
@@ -13871,7 +13894,8 @@ register_check_parameters(
         ]), TextAscii(title=_("Name of the pool"),), "first")
 
 register_check_parameters(
-    subgroup_applications, "sansymphony_alerts", _("Sansymphony: Number of unacknowlegded alerts"),
+    RulespecGroupCheckParametersApplications, "sansymphony_alerts",
+    _("Sansymphony: Number of unacknowlegded alerts"),
     Tuple(
         help=_("This rule sets the warn and crit levels for the number of unacknowlegded alerts"),
         elements=[
@@ -13888,7 +13912,7 @@ register_check_parameters(
         ]), None, "first")
 
 register_check_parameters(
-    subgroup_applications, "jvm_threads", _("JVM threads"),
+    RulespecGroupCheckParametersApplications, "jvm_threads", _("JVM threads"),
     Tuple(
         help=_("This rule sets the warn and crit levels for the number of threads "
                "running in a JVM."),
@@ -13911,7 +13935,7 @@ register_check_parameters(
     ), "first")
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "sym_brightmail_queues",
     "Symantec Brightmail Queues",
     Dictionary(
@@ -13967,7 +13991,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications, "db2_logsize", _("DB2 logfile usage"),
+    RulespecGroupCheckParametersApplications, "db2_logsize", _("DB2 logfile usage"),
     Dictionary(elements=[(
         "levels",
         Transform(
@@ -13981,7 +14005,7 @@ register_check_parameters(
     "dict")
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "db2_sortoverflow",
     _("DB2 Sort Overflow"),
     Dictionary(
@@ -14004,7 +14028,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications, "db2_tablespaces", _("DB2 Tablespaces"),
+    RulespecGroupCheckParametersApplications, "db2_tablespaces", _("DB2 Tablespaces"),
     Dictionary(
         help=_("A tablespace is a container for segments (tables, indexes, etc). A "
                "database consists of one or more tablespaces, each made up of one or "
@@ -14019,7 +14043,7 @@ register_check_parameters(
                "like this db2wps8:WPSCOMT8.USERSPACE1")), "dict")
 
 register_check_parameters(
-    subgroup_applications, "db2_connections", _("DB2 Connections"),
+    RulespecGroupCheckParametersApplications, "db2_connections", _("DB2 Connections"),
     Dictionary(
         help=_("This rule allows you to set limits for the maximum number of DB2 connections"),
         elements=[
@@ -14039,7 +14063,7 @@ register_check_parameters(
     "dict")
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "db2_counters",
     _("DB2 Counters"),
     Dictionary(
@@ -14073,7 +14097,8 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications, "db2_backup", _("DB2 Time since last database Backup"),
+    RulespecGroupCheckParametersApplications, "db2_backup",
+    _("DB2 Time since last database Backup"),
     Optional(
         Tuple(elements=[
             Age(title=_("Warning at"),
@@ -14086,11 +14111,11 @@ register_check_parameters(
         title=_("Specify time since last successful backup"),
     ),
     TextAscii(
-        title=_("Instance"), help=_("DB2 instance followed by database name, e.g db2taddm:CMDBS1")),
-    "first")
+        title=_("Instance"),
+        help=_("DB2 instance followed by database name, e.g db2taddm:CMDBS1")), "first")
 
 register_check_parameters(
-    subgroup_applications, "db2_mem", _("Memory levels for DB2 memory usage"),
+    RulespecGroupCheckParametersApplications, "db2_mem", _("Memory levels for DB2 memory usage"),
     Tuple(
         elements=[
             Percentage(title=_("Warning if less than"), unit=_("% memory left")),
@@ -14098,7 +14123,7 @@ register_check_parameters(
         ],), TextAscii(title=_("Instance name"), allow_empty=True), "first")
 
 register_check_parameters(
-    subgroup_applications, "windows_updates", _("WSUS (Windows Updates)"),
+    RulespecGroupCheckParametersApplications, "windows_updates", _("WSUS (Windows Updates)"),
     Tuple(
         title=_("Parameters for the Windows Update Check with WSUS"),
         help=_("Set the according numbers to 0 if you want to disable alerting."),
@@ -14122,7 +14147,7 @@ synology_update_states = [
 ]
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "synology_update",
     _("Synology Updates"),
     Dictionary(
@@ -14151,7 +14176,8 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications, "antivir_update_age", _("Age of last AntiVirus update"),
+    RulespecGroupCheckParametersApplications, "antivir_update_age",
+    _("Age of last AntiVirus update"),
     Tuple(
         title=_("Age of last AntiVirus update"),
         elements=[
@@ -14159,7 +14185,7 @@ register_check_parameters(
             Age(title=_("Critical level for time since last update")),
         ]), None, "first")
 
-register_check_parameters(subgroup_applications,
+register_check_parameters(RulespecGroupCheckParametersApplications,
     "logwatch_ec",
     _('Logwatch Event Console Forwarding'),
     Alternative(
@@ -14340,7 +14366,7 @@ register_check_parameters(subgroup_applications,
                          )
 
 register_rule(
-    group + '/' + subgroup_applications,
+    RulespecGroupCheckParametersApplications().name,
     varname="logwatch_groups",
     title=_('Logfile Grouping Patterns'),
     help=_('The check <tt>logwatch</tt> normally creates one service for each logfile. '
@@ -14374,7 +14400,7 @@ register_rule(
 )
 
 register_rule(
-    group + "/" + subgroup_networking,
+    RulespecGroupCheckParametersNetworking().name,
     "if_disable_if64_hosts",
     title=_("Hosts forced to use <tt>if</tt> instead of <tt>if64</tt>"),
     help=_("A couple of switches with broken firmware report that they "
@@ -14382,13 +14408,10 @@ register_rule(
            "in those counters. Listing those hosts in this rule forces "
            "them to use the interface check with 32 bit counters instead."))
 
-# Create Rules for static checks
-register_rulegroup("static", _("Manual Checks"),
-                   _("Statically configured Check_MK checks that do not rely on the inventory"))
-
 # wmic_process does not support inventory at the moment
 register_check_parameters(
-    subgroup_applications, "wmic_process", _("Memory and CPU of processes on Windows"),
+    RulespecGroupCheckParametersApplications, "wmic_process",
+    _("Memory and CPU of processes on Windows"),
     Tuple(
         elements=[
             TextAscii(
@@ -14428,7 +14451,7 @@ def ps_convert_from_tuple(params):
 
 
 register_check_parameters(
-    subgroup_os,
+    RulespecGroupCheckParametersOperatingSystem,
     "zypper",
     _("Zypper Updates"),
     None,
@@ -14437,7 +14460,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_os,
+    RulespecGroupCheckParametersOperatingSystem,
     "apt",
     _("APT Updates"),
     Dictionary(elements=[
@@ -14457,7 +14480,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_environment, "airflow_deviation", _("Airflow Deviation in Percent"),
+    RulespecGroupCheckParametersEnvironment, "airflow_deviation", _("Airflow Deviation in Percent"),
     Tuple(
         help=_("Levels for Airflow Deviation measured at airflow sensors "),
         elements=[
@@ -14468,7 +14491,7 @@ register_check_parameters(
         ]), TextAscii(title=_("Detector ID"), help=_("The identifier of the detector.")), "first")
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "citrix_load",
     _("Load of Citrix Server"),
     Transform(
@@ -14485,7 +14508,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_networking, "adva_ifs", _("Adva Optical Transport Laser Power"),
+    RulespecGroupCheckParametersNetworking, "adva_ifs", _("Adva Optical Transport Laser Power"),
     Dictionary(elements=[
         ("limits_output_power",
          Tuple(
@@ -14515,7 +14538,7 @@ bluecat_operstates = [
 ]
 
 register_check_parameters(
-    subgroup_networking,
+    RulespecGroupCheckParametersNetworking,
     "bluecat_ntp",
     _("Bluecat NTP Settings"),
     Dictionary(elements=[
@@ -14551,7 +14574,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_networking,
+    RulespecGroupCheckParametersNetworking,
     "bluecat_dhcp",
     _("Bluecat DHCP Settings"),
     Dictionary(
@@ -14583,7 +14606,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_networking,
+    RulespecGroupCheckParametersNetworking,
     "bluecat_command_server",
     _("Bluecat Command Server Settings"),
     Dictionary(
@@ -14615,7 +14638,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_networking,
+    RulespecGroupCheckParametersNetworking,
     "bluecat_dns",
     _("Bluecat DNS Settings"),
     Dictionary(
@@ -14658,7 +14681,7 @@ bluecat_ha_operstates = [
 ]
 
 register_check_parameters(
-    subgroup_networking,
+    RulespecGroupCheckParametersNetworking,
     "bluecat_ha",
     _("Bluecat HA Settings"),
     Dictionary(
@@ -14694,7 +14717,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_networking,
+    RulespecGroupCheckParametersNetworking,
     "steelhead_connections",
     _("Steelhead connections"),
     Dictionary(
@@ -14761,7 +14784,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_storage,
+    RulespecGroupCheckParametersStorage,
     "fc_port",
     _("FibreChannel Ports (FCMGMT MIB)"),
     Dictionary(elements=[
@@ -14893,7 +14916,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_environment, "plug_count", _("Number of active Plugs"),
+    RulespecGroupCheckParametersEnvironment, "plug_count", _("Number of active Plugs"),
     Tuple(
         help=_("Levels for the number of active plugs in a device."),
         elements=[
@@ -14905,7 +14928,7 @@ register_check_parameters(
 
 # Rules for configuring parameters of checks (services)
 register_check_parameters(
-    subgroup_environment, "ucs_bladecenter_chassis_voltage",
+    RulespecGroupCheckParametersEnvironment, "ucs_bladecenter_chassis_voltage",
     _("UCS Bladecenter Chassis Voltage Levels"),
     Dictionary(
         help=_("Here you can configure the 3.3V and 12V voltage levels for each chassis."),
@@ -14941,7 +14964,8 @@ register_check_parameters(
         ]), TextAscii(title=_("Chassis"), help=_("The identifier of the chassis.")), "dict")
 
 register_check_parameters(
-    subgroup_environment, "hp_msa_psu_voltage", _("HP MSA Power Supply Voltage Levels"),
+    RulespecGroupCheckParametersEnvironment, "hp_msa_psu_voltage",
+    _("HP MSA Power Supply Voltage Levels"),
     Dictionary(
         help=_("Here you can configure the 3.3V and 12V voltage levels for each power supply."),
         elements=[
@@ -14991,7 +15015,7 @@ register_check_parameters(
     "dict")
 
 register_check_parameters(
-    subgroup_applications, "jvm_gc", _("JVM garbage collection levels"),
+    RulespecGroupCheckParametersApplications, "jvm_gc", _("JVM garbage collection levels"),
     Dictionary(
         help=_("This ruleset also covers Tomcat, Jolokia and JMX. "),
         elements=[
@@ -15025,7 +15049,7 @@ register_check_parameters(
     ), "dict")
 
 register_check_parameters(
-    subgroup_applications, "jvm_tp", _("JVM tomcat threadpool levels"),
+    RulespecGroupCheckParametersApplications, "jvm_tp", _("JVM tomcat threadpool levels"),
     Dictionary(
         help=_("This ruleset also covers Tomcat, Jolokia and JMX. "),
         elements=[
@@ -15059,7 +15083,8 @@ register_check_parameters(
     ), "dict")
 
 register_check_parameters(
-    subgroup_applications, "docker_node_containers", _("Docker node container levels"),
+    RulespecGroupCheckParametersApplications, "docker_node_containers",
+    _("Docker node container levels"),
     Dictionary(
         help=_(
             "Allows to define absolute levels for all, running, paused, and stopped containers."),
@@ -15123,7 +15148,7 @@ register_check_parameters(
         ]), None, "dict")
 
 register_check_parameters(
-    subgroup_applications, "docker_node_disk_usage", _("Docker node disk usage"),
+    RulespecGroupCheckParametersApplications, "docker_node_disk_usage", _("Docker node disk usage"),
     Dictionary(
         help=
         _("Allows to define levels for the counts and size of Docker Containers, Images, Local Volumes, and the Build Cache."
@@ -15165,7 +15190,7 @@ register_check_parameters(
     ), "dict")
 
 register_check_parameters(
-    subgroup_storage,
+    RulespecGroupCheckParametersStorage,
     "heartbeat_crm",
     _("Heartbeat CRM general status"),
     Tuple(elements=[
@@ -15196,7 +15221,8 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_storage, "heartbeat_crm_resources", _("Heartbeat CRM resource status"),
+    RulespecGroupCheckParametersStorage, "heartbeat_crm_resources",
+    _("Heartbeat CRM resource status"),
     Optional(
         TextAscii(allow_empty=False),
         title=_("Expected node"),
@@ -15210,7 +15236,7 @@ register_check_parameters(
     ), "first")
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "domino_tasks",
     _("Lotus Domino Tasks"),
     Dictionary(
@@ -15278,7 +15304,7 @@ register_check_parameters(
     has_inventory=False)
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "domino_mailqueues",
     _("Lotus Domino Mail Queues"),
     Dictionary(
@@ -15307,7 +15333,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "domino_users",
     _("Lotus Domino Users"),
     Tuple(
@@ -15321,7 +15347,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "domino_transactions",
     _("Lotus Domino Transactions"),
     Tuple(
@@ -15335,7 +15361,8 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_applications, "netscaler_dnsrates", _("Citrix Netscaler DNS counter rates"),
+    RulespecGroupCheckParametersApplications, "netscaler_dnsrates",
+    _("Citrix Netscaler DNS counter rates"),
     Dictionary(
         help=_("Counter rates of DNS parameters for Citrix Netscaler Loadbalancer "
                "Appliances"),
@@ -15363,7 +15390,7 @@ register_check_parameters(
         ]), None, "dict")
 
 register_check_parameters(
-    subgroup_applications, "netscaler_tcp_conns",
+    RulespecGroupCheckParametersApplications, "netscaler_tcp_conns",
     _("Citrix Netscaler Loadbalancer TCP Connections"),
     Dictionary(elements=[
         (
@@ -15399,7 +15426,7 @@ register_check_parameters(
     ]), None, "dict")
 
 register_check_parameters(
-    subgroup_applications,
+    RulespecGroupCheckParametersApplications,
     "netscaler_sslcerts",
     _("Citrix Netscaler SSL certificates"),
     Dictionary(
@@ -15419,7 +15446,7 @@ register_check_parameters(
     match_type="dict")
 
 register_check_parameters(
-    subgroup_environment,
+    RulespecGroupCheckParametersEnvironment,
     "siemens_plc_flag",
     _("State of Siemens PLC Flags"),
     DropdownChoice(
@@ -15441,7 +15468,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_environment,
+    RulespecGroupCheckParametersEnvironment,
     "siemens_plc_duration",
     _("Siemens PLC Duration"),
     Dictionary(
@@ -15468,7 +15495,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_environment,
+    RulespecGroupCheckParametersEnvironment,
     "siemens_plc_counter",
     _("Siemens PLC Counter"),
     Dictionary(
@@ -15495,7 +15522,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-    subgroup_storage, "bossock_fibers", _("Number of Running Bossock Fibers"),
+    RulespecGroupCheckParametersStorage, "bossock_fibers", _("Number of Running Bossock Fibers"),
     Tuple(
         title=_("Number of fibers"),
         elements=[
@@ -15504,7 +15531,7 @@ register_check_parameters(
         ]), TextAscii(title=_("Node ID")), "first")
 
 register_check_parameters(
-    subgroup_environment, "carbon_monoxide", ("Carbon monoxide"),
+    RulespecGroupCheckParametersEnvironment, "carbon_monoxide", ("Carbon monoxide"),
     Dictionary(elements=[
         ("levels_ppm",
          Tuple(

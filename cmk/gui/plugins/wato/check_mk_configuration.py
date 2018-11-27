@@ -76,7 +76,9 @@ from cmk.gui.plugins.wato import (
     ConfigDomainCore,
     ConfigDomainCACertificates,
     site_neutral_path,
-    register_rulegroup,
+    rulespec_group_registry,
+    RulespecGroup,
+    RulespecSubGroup,
     register_rule,
     vs_bulk_discovery,
     PluginCommandLine,
@@ -2412,9 +2414,23 @@ class ConfigVariableInventoryCheckAutotrigger(ConfigVariable):
 #   | Rulesets for hosts and services except check parameter rules.        |
 #   '----------------------------------------------------------------------'
 
-register_rulegroup("grouping", _("Grouping"),
-                   _("Assignment of host & services to host, service and contacts groups. "))
-group = "grouping"
+
+@rulespec_group_registry.register
+class RulespecGroupGrouping(RulespecGroup):
+    @property
+    def name(self):
+        return "grouping"
+
+    @property
+    def title(self):
+        return _("Grouping")
+
+    @property
+    def help(self):
+        return _("Assignment of host & services to host, service and contacts groups.")
+
+
+group = RulespecGroupGrouping().name
 
 register_rule(
     group,
@@ -2447,11 +2463,39 @@ register_rule(
     match="all",
     itemtype="service")
 
-register_rulegroup(
-    "monconf", _("Monitoring Configuration"),
-    _("Intervals for checking, retries, clustering, configuration for inventory and similar"))
 
-group = "monconf/" + _("Service Checks")
+@rulespec_group_registry.register
+class RulespecGroupMonitoringConfiguration(RulespecGroup):
+    @property
+    def name(self):
+        return "monconf"
+
+    @property
+    def title(self):
+        return _("Monitoring Configuration")
+
+    @property
+    def help(self):
+        return _(
+            "Intervals for checking, retries, clustering, configuration for inventory and similar")
+
+
+@rulespec_group_registry.register
+class RulespecGroupMonitoringConfigurationServiceChecks(RulespecSubGroup):
+    @property
+    def main_group(self):
+        return RulespecGroupMonitoringConfiguration
+
+    @property
+    def sub_group_name(self):
+        return "service_checks"
+
+    @property
+    def title(self):
+        return _("Service Checks")
+
+
+group = RulespecGroupMonitoringConfigurationServiceChecks().name
 
 register_rule(
     group,
@@ -2551,7 +2595,23 @@ register_rule(
     ),
     itemtype="service")
 
-group = "monconf/" + _("Host Checks")
+
+@rulespec_group_registry.register
+class RulespecGroupMonitoringConfigurationHostChecks(RulespecSubGroup):
+    @property
+    def main_group(self):
+        return RulespecGroupMonitoringConfiguration
+
+    @property
+    def sub_group_name(self):
+        return "host_checks"
+
+    @property
+    def title(self):
+        return _("Host Checks")
+
+
+group = RulespecGroupMonitoringConfigurationHostChecks().name
 
 register_rule(
     group, "extra_host_conf:max_check_attempts",
@@ -2641,7 +2701,24 @@ register_rule(
     ),
     match='first')
 
-group = "monconf/" + _("Notifications")
+
+@rulespec_group_registry.register
+class RulespecGroupMonitoringConfigurationNotifications(RulespecSubGroup):
+    @property
+    def main_group(self):
+        return RulespecGroupMonitoringConfiguration
+
+    @property
+    def sub_group_name(self):
+        return "notifications"
+
+    @property
+    def title(self):
+        return _("Notifications")
+
+
+group = RulespecGroupMonitoringConfigurationNotifications().name
+
 register_rule(
     group, "extra_host_conf:notifications_enabled",
     DropdownChoice(
@@ -2892,7 +2969,23 @@ register_rule(
     ),
     itemtype="service")
 
-group = "monconf/" + _("Inventory and Check_MK settings")
+
+@rulespec_group_registry.register
+class RulespecGroupMonitoringConfigurationInventoryAndCMK(RulespecSubGroup):
+    @property
+    def main_group(self):
+        return RulespecGroupMonitoringConfiguration
+
+    @property
+    def sub_group_name(self):
+        return "inventory_and_check_mk_settings"
+
+    @property
+    def title(self):
+        return _("Inventory and Check_MK settings")
+
+
+group = RulespecGroupMonitoringConfigurationInventoryAndCMK().name
 
 register_rule(
     group,
@@ -3076,7 +3169,23 @@ register_rule(
             )
         ]))
 
-group = "monconf/" + _("Various")
+
+@rulespec_group_registry.register
+class RulespecGroupMonitoringConfigurationVarious(RulespecSubGroup):
+    @property
+    def main_group(self):
+        return RulespecGroupMonitoringConfiguration
+
+    @property
+    def sub_group_name(self):
+        return "various"
+
+    @property
+    def title(self):
+        return _("Various")
+
+
+group = RulespecGroupMonitoringConfigurationVarious().name
 
 register_rule(
     group,
@@ -3140,10 +3249,23 @@ register_rule(
 #   | User interface specific rule sets                                    |
 #   '----------------------------------------------------------------------'
 
-register_rulegroup("user_interface", _("User Interface"),
-                   _("Settings concerning the user interface of Check_MK"))
 
-group = "user_interface"
+@rulespec_group_registry.register
+class RulespecGroupUserInterface(RulespecGroup):
+    @property
+    def name(self):
+        return "user_interface"
+
+    @property
+    def title(self):
+        return _("User Interface")
+
+    @property
+    def help(self):
+        return _("Settings concerning the user interface of Check_MK")
+
+
+group = RulespecGroupUserInterface().name
 
 register_rule(
     group, "extra_host_conf:icon_image",
@@ -3230,10 +3352,38 @@ register_rule(
     itemtype="service",
 )
 
-register_rulegroup("agent", _("Access to Agents"),
-                   _("Settings concerning the connection to the Check_MK and SNMP agents"))
 
-group = "agent/" + _("General Settings")
+@rulespec_group_registry.register
+class RulespecGroupAgent(RulespecGroup):
+    @property
+    def name(self):
+        return "agent"
+
+    @property
+    def title(self):
+        return _("Access to Agents")
+
+    @property
+    def help(self):
+        return _("Settings concerning the connection to the Check_MK and SNMP agents")
+
+
+@rulespec_group_registry.register
+class RulespecGroupAgentGeneralSettings(RulespecSubGroup):
+    @property
+    def main_group(self):
+        return RulespecGroupAgent
+
+    @property
+    def sub_group_name(self):
+        return "general_settings"
+
+    @property
+    def title(self):
+        return _("General Settings")
+
+
+group = RulespecGroupAgentGeneralSettings().name
 
 register_rule(
     group,
@@ -3258,7 +3408,23 @@ register_rule(
                "host. The other family, IPv6, is just being pinged. You can use this rule "
                "to invert this behaviour to use IPv6 as primary address family.")))
 
-group = "agent/" + _("SNMP")
+
+@rulespec_group_registry.register
+class RulespecGroupAgentSNMP(RulespecSubGroup):
+    @property
+    def main_group(self):
+        return RulespecGroupAgent
+
+    @property
+    def sub_group_name(self):
+        return "snmp"
+
+    @property
+    def title(self):
+        return _("SNMP")
+
+
+group = RulespecGroupAgentSNMP().name
 
 register_rule(
     group, "snmp_communities",
@@ -3412,7 +3578,23 @@ register_rule(
            "be used to communicate via SNMP on a per-host-basis."),
 )
 
-group = "agent/" + _("Check_MK Agent")
+
+@rulespec_group_registry.register
+class RulespecGroupAgentCMKAgent(RulespecSubGroup):
+    @property
+    def main_group(self):
+        return RulespecGroupAgent
+
+    @property
+    def sub_group_name(self):
+        return "check_mk_agent"
+
+    @property
+    def title(self):
+        return _("Check_MK Agent")
+
+
+group = RulespecGroupAgentCMKAgent().name
 
 register_rule(
     group,
@@ -3633,8 +3815,39 @@ register_rule(
         forth=lambda x: isinstance(x, str) and x not in ["ignore", "site"] and ("specific", x) or x,
     ))
 
+
+@rulespec_group_registry.register
+class RulespecGroupMonitoringAgents(RulespecGroup):
+    @property
+    def name(self):
+        return "agents"
+
+    @property
+    def title(self):
+        return _("Monitoring Agents")
+
+    @property
+    def help(self):
+        return _("Configuration of monitoring agents for Linux, Windows and Unix")
+
+
+@rulespec_group_registry.register
+class RulespecGroupMonitoringAgentsGenericOptions(RulespecSubGroup):
+    @property
+    def main_group(self):
+        return RulespecGroupMonitoringAgents
+
+    @property
+    def sub_group_name(self):
+        return "generic_options"
+
+    @property
+    def title(self):
+        return _("Generic Options")
+
+
 register_rule(
-    "agents/" + _("Generic Options"),
+    RulespecGroupMonitoringAgentsGenericOptions().name,
     "agent_config:only_from",
     ListOfStrings(
         valuespec=IPNetwork(),

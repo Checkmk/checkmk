@@ -97,6 +97,7 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
 
 
     def _execute(self):
+        connection = None
         try:
             connection = self._create_ipmi_connection()
 
@@ -114,6 +115,9 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
                 raise MKAgentError("IPMI communication failed: %r" % e)
             else:
                 raise
+        finally:
+            if connection:
+                connection.ipmi_session.logout()
 
 
     def _create_ipmi_connection(self):

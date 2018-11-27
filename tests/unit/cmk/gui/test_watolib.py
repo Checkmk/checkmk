@@ -279,3 +279,66 @@ def test_legacy_configvar_order_access():
     with pytest.raises(NotImplementedError) as e:
         configvar_order()["x"] = 10
     assert "werk #6911" in "%s" % e
+
+
+def test_registered_rulespec_groups():
+    registered = sorted(watolib.rulespec_group_registry.keys())
+    assert registered == sorted([
+        'activechecks',
+        'agent',
+        'agents',
+        'checkparams',
+        'datasource_programs',
+        'eventconsole',
+        'grouping',
+        'inventory',
+        'monconf',
+        'static',
+        'user_interface',
+    ])
+
+
+def test_legacy_register_rulegroup(monkeypatch):
+    monkeypatch.setattr(watolib, "rulespec_group_registry", watolib.RulespecGroupRegistry())
+    watolib.register_rulegroup("abc", "A B C", "abc 123")
+
+    group = watolib.get_rulegroup("abc")
+    assert isinstance(group, watolib.RulespecGroup)
+    assert group.name == "abc"
+    assert group.title == "A B C"
+    assert group.help == "abc 123"
+
+
+def test_legacy_get_not_existing_rulegroup(monkeypatch):
+    monkeypatch.setattr(watolib, "rulespec_group_registry", watolib.RulespecGroupRegistry())
+
+    group = watolib.get_rulegroup("xyz")
+    assert isinstance(group, watolib.RulespecGroup)
+    assert group.name == "xyz"
+    assert group.title == "xyz"
+    assert group.help is None
+
+
+@pytest.mark.parametrize("mode,result", [
+    ("rulesets", [
+        ('activechecks', u'Active checks (HTTP, TCP, etc.)'),
+        ('agent', u'Access to Agents'),
+        ('agents', u'Monitoring Agents'),
+        ('checkparams', u'Parameters for discovered services'),
+        ('datasource_programs', u'Datasource Programs'),
+        ('eventconsole', u'Event Console'),
+        ('grouping', u'Grouping'),
+        ('inventory', u'Hardware/Software-Inventory'),
+        ('monconf', u'Monitoring Configuration'),
+        ('user_interface', u'User Interface'),
+    ]),
+    ("static_checks", [
+        ('static', 'Manual Checks'),
+    ]),
+])
+def test_rulespec_group_choices(mode, result, monkeypatch):
+    monkeypatch.setattr(watolib.Rulespecs, "get_main_groups",
+                        lambda self: watolib.rulespec_group_registry.keys())
+
+    rulespecs = watolib.Rulespecs()
+    assert sorted(rulespecs.get_group_choices(mode=mode)) == sorted(result)

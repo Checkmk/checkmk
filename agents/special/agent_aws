@@ -35,7 +35,7 @@ import botocore
 import datetime
 import json
 import logging
-import time
+from typing import NamedTuple, Any
 
 import cmk.password_store
 
@@ -69,137 +69,130 @@ class AWSSectionError(Exception):
     pass
 
 
-#   ---section interface----------------------------------------------------
+#   ---result distributor---------------------------------------------------
+
+
+class ResultDistributor(object):
+    """
+    Mediator which distributes results from sections
+    in order to reduce queries to AWS account.
+    """
+
+    def __init__(self):
+        self._colleagues = []
+
+    def add(self, colleague):
+        self._colleagues.append(colleague)
+
+    def distribute(self, sender, result):
+        for colleague in self._colleagues:
+            if colleague.name != sender.name:
+                colleague.receive(sender, result)
+
+
+#   ---sections/colleagues--------------------------------------------------
+
+AWSSectionResult = NamedTuple("Result", [
+    ("piggyback_hostname", str),
+    ("content", Any),
+])
 
 
 class AWSSection(object):
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, client):
+    def __init__(self, client, distributor=None):
         self._client = client
+        self._distributor = ResultDistributor() if distributor is None else distributor
+        self._received_results = {}
 
-    @abc.abstractmethod
+    @abc.abstractproperty
     def name(self):
         pass
 
-    def run(self, **kwargs):
+    def run(self):
         if self._client is None:
             msg = "%s: No client initialized" % self.__class__.__name__
             logging.info(msg)
             raise AWSSectionError(msg)
 
-        name = self.name()
-        if name is None:
+        if self.name is None:
             msg = "%s: No name set" % self.__class__.__name__
             logging.info(msg)
             raise AWSSectionError(msg)
 
         try:
-            raw_result = self._get_raw_result(**kwargs)
+            raw_result = self._get_raw_result()
         except botocore.exceptions.EndpointConnectionError as e:
             logging.info(e)
             raise
 
         content = self._extract_content_from(raw_result)
-        if content:
-            sys.stdout.write("<<<aws_%s>>>\n" % name)
-            sys.stdout.write("%s\n" % json.dumps(content, default=_datetime_converter))
-        return content
+        self.send(content)
+        return self._format_content(content)
 
     @abc.abstractmethod
-    def _get_raw_result(self, **kwargs):
+    def _get_raw_result(self):
+        """
+        Returns the raw result which we received from any API method, eg
+        response = ec2_client.describe_instances()
+        """
         pass
 
     @abc.abstractmethod
     def _extract_content_from(self, raw_result):
+        """
+        Raw results basically consist of two sub results:
+        - 'ResponseMetadata'
+        - '<KEY>'
+        """
         pass
 
+    @abc.abstractmethod
+    def _format_content(self, content):
+        """
+        Returns a list of named tuples. Each tuple contains
+        - piggyback hostname or "", and
+        - content
+        Use AWSSectionResult.
+        """
+        pass
 
-#   ---sections-------------------------------------------------------------
+    def send(self, content):
+        self._distributor.distribute(self, content)
+
+    def receive(self, sender, content):
+        self._received_results.setdefault(sender.name, content)
 
 
 class EC2InstancesSummary(AWSSection):
+    @property
     def name(self):
         return "ec2_instances_summary"
 
-    def _get_raw_result(self, **kwargs):
-        return self._client.describe_instances()
+    def _get_raw_result(self):
+        pass
 
     def _extract_content_from(self, raw_result):
-        try:
-            return raw_result['Reservations']
-        except KeyError, e:
-            logging.info(e)
-            return
+        pass
+
+    def _format_content(self, content):
+        pass
 
 
 class EC2Instance(AWSSection):
-    # Metrics for burstable performance instances:
-    # CPUCreditUsage
-    # CPUCreditBalance
-    # CPUSurplusCreditBalance
-    # CPUSurplusCreditsCharged
-
-    # Instance metrics:
-    # CPUUtilization
-    # DiskReadOps
-    # DiskWriteOps
-    # DiskReadBytes
-    # DiskWriteBytes
-    # NetworkIn
-    # NetworkOut
-    # NetworkPacketsIn
-    # NetworkPacketsOut
-
-    # StatusCheckFailed
-    # StatusCheckFailed_Instance
-    # StatusCheckFailed_System
+    @property
     def name(self):
         return "ec2_instance"
 
-    def _get_raw_result(self, **kwargs):
+    def _get_raw_result(self):
         pass
 
     def _extract_content_from(self, raw_result):
         pass
 
-
-class CostAndUsage(AWSSection):
-    def name(self):
-        return "cost_and_usage"
-
-    def _get_raw_result(self, **kwargs):
-        # Note:
-        # If you return the UsageQuantity metric, the service aggregates all usage
-        # numbers without taking into account the units. For example, if you aggregate
-        # usageQuantity across all of EC2, the results aren't meaningful because EC2
-        # compute hours and data transfer are measured in different units (for example,
-        # hours vs. GB). To get more meaningful UsageQuantity metrics, filter by
-        # UsageType or UsageTypeGroups.
-
-        #TODO
-
-        now = time.time()
-        start = time.strftime("%Y-%m-%d", time.localtime(now))
-        # End time is exclusive
-        end = time.strftime("%Y-%m-%d", time.localtime(now + 86400))
-        return self._client.get_cost_and_usage(
-            TimePeriod={
-                'Start': start,
-                'End': end,
-            },
-            Granularity='DAILY',
-            Metrics=[
-                'UsageQuantity',
-            ],
-        )
-
-    def _extract_content_from(self, raw_result):
-        try:
-            return raw_result['ResultsByTime']
-        except KeyError, e:
-            logging.info(e)
-            return
+    def _format_content(self, content):
+        pass
 
 
 #   ---sections handler-----------------------------------------------------
@@ -209,20 +202,27 @@ class AWSSections(object):
     def __init__(self, session):
         self._session = session
         self._sections = []
+        self._results = {}
         self._exceptions = []
 
         #---clients---------------------------------------------------------
-        client_cloudwatch = self._init_client('cloudwatch')
-        client_ec2 = self._init_client('ec2')
-        client_ce = self._init_client('ce')
-        #client_s3 = self._init_client('s3')
-        #client_elb = self._init_client('elb')
-        #client_ebs = self._init_client('ebs')
+        ec2_client = self._init_client('ec2')
+        cloudwatch_client = self._init_client('cloudwatch')
+
+        #---distributors----------------------------------------------------
+        ec2_instances_summary_distributor = ResultDistributor()
 
         #---sections--------------------------------------------------------
-        self._sections.append(EC2InstancesSummary(client_ec2))
-        self._sections.append(EC2Instance(client_cloudwatch))
-        self._sections.append(CostAndUsage(client_ce))
+        ec2_instances_summary_section = EC2InstancesSummary(ec2_client,
+                                                            ec2_instances_summary_distributor)
+        ec2_instance = EC2Instance(cloudwatch_client)
+
+        #---distributors registry-------------------------------------------
+        ec2_instances_summary_distributor.add(ec2_instance)
+
+        #---section registry------------------------------------------------
+        self._sections.append(ec2_instances_summary_section)
+        self._sections.append(ec2_instance)
 
     def _init_client(self, client_key):
         try:
@@ -242,17 +242,44 @@ class AWSSections(object):
     def run(self):
         for section in self._sections:
             try:
-                section.run()
+                result = section.run()
             except Exception as e:
                 logging.info(e)
                 self._exceptions.append(e)
+            else:
+                self._results.setdefault(section.name, result)
 
+        if not self._results:
+            logging.info("No results")
+            return
+
+        self._write_results()
+
+    def _write_results(self):
         sys.stdout.write("<<<aws_exceptions>>>\n")
         if self._exceptions:
             for e in self._exceptions:
                 sys.stdout.write("%s\n" % e.message)
         else:
             sys.stdout.write("No exceptions\n")
+
+        for section_name, result in self._results.iteritems():
+            if not result:
+                msg = "No results of %s" % section_name
+                logging.info(msg)
+                continue
+            if not isinstance(result, list):
+                msg = "Section result must be formatted as a list of 'AWSSectionResult's"
+                logging.info(msg)
+                raise AWSSectionError(msg)
+
+            for row in result:
+                if row.piggyback_hostname:
+                    sys.stdout.write("<<<<%s>>>>\n" % row.piggyback_hostname)
+                sys.stdout.write("<<<aws_%s>>>\n" % section_name)
+                sys.stdout.write("%s\n" % json.dumps(row.content, default=_datetime_converter))
+                if row.piggyback_hostname:
+                    sys.stdout.write("<<<<>>>>\n")
 
 
 #.

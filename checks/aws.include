@@ -28,6 +28,6 @@
 def parse_aws(info):
     import json
     try:
-        return json.loads("".join(info[0]))
+        return json.loads(" ".join(info[0]))
     except (TypeError, IndexError):
         return

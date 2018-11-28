@@ -1,0 +1,12 @@
+Title: Unbreak check_mkevents active check.
+Level: 2
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p9
+Date: 1543407796
+
+The check_mkevents active check was inadvertedly broken in 1.5.0p7 (it could
+not connect to the event console), this has been fixed.

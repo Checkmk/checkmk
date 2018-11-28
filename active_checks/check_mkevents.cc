@@ -207,7 +207,7 @@ int main(int argc, char **argv) {
         sockaddr.sun_path[sizeof(sockaddr.sun_path) - 1] = '\0';
 
         if (0 > connect(sock, reinterpret_cast<struct sockaddr *>(&sockaddr),
-                        sizeof(struct sockaddr))) {
+                        sizeof(sockaddr))) {
             ioError("Cannot connect to event daemon via UNIX socket " +
                     unixsocket_path);
         }

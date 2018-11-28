@@ -1,0 +1,10 @@
+Title: aws_ec2_instances_summary: New check which gives an overview of AWS/EC2 instances
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1543416042
+Class: feature
+
+

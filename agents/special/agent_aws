@@ -172,13 +172,17 @@ class EC2InstancesSummary(AWSSection):
         return "ec2_instances_summary"
 
     def _get_raw_result(self):
-        pass
+        return self._client.describe_instances()
 
     def _extract_content_from(self, raw_result):
-        pass
+        try:
+            return raw_result['Reservations']
+        except KeyError, e:
+            logging.info(e)
+            return
 
     def _format_content(self, content):
-        pass
+        return [AWSSectionResult("", content)]
 
 
 class EC2Instance(AWSSection):

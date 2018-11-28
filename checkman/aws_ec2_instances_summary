@@ -1,0 +1,14 @@
+title: AWS EC2 Instances Summary
+agents: aws
+catalog: applications
+license: GPL
+distribution: check_mk
+description:
+ This check monitors all AWS EC2 instances and reports
+ a summary of their states.
+
+ If at least one instance is not running the state is WARN
+ otherwise it is OK.
+
+inventory:
+ One summary service is created.

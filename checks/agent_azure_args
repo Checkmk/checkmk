@@ -31,12 +31,12 @@ def agent_azure_arguments(params, _no_hostname, _no_ipaddress):
     args = []
 
     opts = (i for i in params.iteritems() if i[0].startswith("--"))
-    for k, v in opts:
-        if isinstance(v, bool):
-            if v:
-                args.append(k)
+    for key, value in opts:
+        if isinstance(value, bool):
+            if value:
+                args.append(key)
         else:
-            args += [k, quote_shell_string(v)]
+            args += [key, quote_shell_string(value)]
 
     config = params['config']
     if "fetchall" in config:
@@ -45,24 +45,24 @@ def agent_azure_arguments(params, _no_hostname, _no_ipaddress):
     explicit = config.get('explicit-config', [])
     if explicit:
         args.append("--explicit-config")
-    for d in explicit:
-        g_name = d['group_name']
+    for group_dict in explicit:
+        g_name = group_dict['group_name']
         args.append(quote_shell_string("group=%s" % g_name))
 
-        g_conf = d['group_config']
-        if g_conf == 'fetchall':
+        group_cfg = group_dict['group_config']
+        if group_cfg == 'fetchall':
             continue
 
-        for r_cfg in g_conf:
+        for resource_cfg in group_cfg:
             for key in ('resource', 'metric', 'filters', 'time_grain'):
-                value = r_cfg.get(key)
+                value = resource_cfg.get(key)
                 if not value:
                     break
                 if isinstance(value, list):
                     value = ','.join(value)
                 args.append(quote_shell_string("%s=%s" % (key, value)))
 
-    return ' '.join(args)
+    return args
 
 
 special_agent_info['azure'] = agent_azure_arguments

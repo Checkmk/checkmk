@@ -145,6 +145,7 @@ class AWSSection(object):
         Raw results basically consist of two sub results:
         - 'ResponseMetadata'
         - '<KEY>'
+        Returns raw_result['<KEY>'].
         """
         pass
 

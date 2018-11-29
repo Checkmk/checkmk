@@ -7792,6 +7792,11 @@ def register_rule(
         **kwargs):
     factory_default = kwargs.get("factory_default", Rulespec.NO_FACTORY_DEFAULT)
 
+    # Added during 1.6 development for easier transition. Is not needed for
+    # pre 1.6 compatibility
+    if not isinstance(group, basestring) and issubclass(group, RulespecGroup):
+        group = group().name
+
     rulespec = Rulespec(
         name=varname,
         group_name=group,
@@ -9201,9 +9206,9 @@ g_notification_parameters = {}
 
 
 def register_notification_parameters(scriptname, valuespec):
-    rulespec_group_name = rulespec_group_registry["monconf/notifications"]().name
+    rulespec_group_class = rulespec_group_registry["monconf/notifications"]
     register_user_script_parameters(g_notification_parameters, "notification_parameters",
-                                    rulespec_group_name, scriptname, valuespec)
+                                    rulespec_group_class, scriptname, valuespec)
 
 
 def verify_password_policy(password):

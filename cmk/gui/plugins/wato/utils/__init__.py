@@ -103,6 +103,7 @@ from cmk.gui.watolib import (
     rulespec_group_registry,
     RulespecGroup,
     RulespecSubGroup,
+    get_rulegroup,
     register_rule,
     declare_host_attribute,
     register_notification_parameters,
@@ -585,10 +586,10 @@ def register_check_parameters(subgroup,
             "Check parameter definition for %s has type Dictionary, but match_type %s" %
             (checkgroup, match_type))
 
-    # Added during 1.6 development for easier transition. Is not needed for
-    # pre 1.6 compatibility
-    if issubclass(subgroup, RulespecSubGroup):
-        subgroup = subgroup().sub_group_name
+    # Added during 1.6 development for easier transition. Convert all legacy subgroup
+    # parameters (which are either str/unicode to group classes
+    if isinstance(subgroup, basestring):
+        subgroup = get_rulegroup("checkparams/" + subgroup).__class__
 
     # Enclose this valuespec with a TimeperiodValuespec
     # The given valuespec will be transformed to a list of valuespecs,
@@ -611,7 +612,7 @@ def register_check_parameters(subgroup,
             itemhelp = None
 
         register_rule(
-            "checkparams/" + subgroup,
+            subgroup,
             varname="checkgroup_parameters:%s" % checkgroup,
             title=title,
             valuespec=valuespec,
@@ -654,16 +655,14 @@ def register_check_parameters(subgroup,
 
         # There is never a RulespecSubGroup declaration for the static checks.
         # Create some based on the regular check groups which should have a definition
-        checkparams_sub_group_class = rulespec_group_registry["checkparams/" + subgroup]
         main_group_static_class = rulespec_group_registry["static"]
-        checkparams_static_sub_group_class = type("%sStatic" % checkparams_sub_group_class.__name__,
-                                                  (checkparams_sub_group_class,), {
-                                                      "main_group": main_group_static_class,
-                                                  })
+        checkparams_static_sub_group_class = type("%sStatic" % subgroup.__name__, (subgroup,), {
+            "main_group": main_group_static_class,
+        })
         rulespec_group_registry.register_plugin(checkparams_static_sub_group_class)
 
         register_rule(
-            checkparams_static_sub_group_class().name,
+            checkparams_static_sub_group_class,
             "static_checks:%s" % checkgroup,
             title=title,
             valuespec=Tuple(

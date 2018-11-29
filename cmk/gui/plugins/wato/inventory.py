@@ -60,10 +60,8 @@ class RulespecGroupInventory(RulespecGroup):
         return _("Configuration of the Check_MK Hardware and Software Inventory System")
 
 
-group = RulespecGroupInventory().name
-
 register_rule(
-    group,
+    RulespecGroupInventory,
     "active_checks:cmk_inv",
     Transform(
         Dictionary(elements=[
@@ -122,7 +120,7 @@ register_rule(
 )
 
 register_rule(
-    group,
+    RulespecGroupInventory,
     "inv_exports:software_csv",
     Dictionary(
         title=_("Export List of Software packages as CSV file"),
@@ -172,7 +170,7 @@ register_rule(
     match="first")
 
 register_rule(
-    group,
+    RulespecGroupInventory,
     "inv_parameters:inv_if",
     Dictionary(
         title=_("Parameters for switch port inventory"),

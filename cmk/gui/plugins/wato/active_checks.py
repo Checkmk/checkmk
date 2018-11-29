@@ -84,8 +84,6 @@ class RulespecGroupActiveChecks(RulespecGroup):
         return _("Configure active networking checks like HTTP and TCP")
 
 
-group = RulespecGroupActiveChecks().name
-
 # These elements are also used in check_parameters.py
 check_icmp_params = [
     ("rta",
@@ -225,7 +223,7 @@ mail_receiving_params = [('fetch',
                               ]))]
 
 register_rule(
-    group,
+    RulespecGroupActiveChecks,
     "active_checks:ssh",
     Dictionary(
         title=_("Check SSH service"),
@@ -257,7 +255,7 @@ register_rule(
     match="all")
 
 register_rule(
-    group,
+    RulespecGroupActiveChecks,
     "active_checks:icmp",
     Dictionary(
         title=_("Check hosts with PING (ICMP Echo Request)"),
@@ -306,7 +304,7 @@ def transform_cert_days(cert_days):
 
 
 register_rule(
-    group,
+    RulespecGroupActiveChecks,
     "active_checks:ftp",
     Transform(
         Dictionary(elements=[
@@ -365,7 +363,7 @@ register_rule(
     match="all")
 
 register_rule(
-    group,
+    RulespecGroupActiveChecks,
     "active_checks:sftp",
     Tuple(
         title=_("Check SFTP Service"),
@@ -438,7 +436,7 @@ register_rule(
     match="all")
 
 register_rule(
-    group,
+    RulespecGroupActiveChecks,
     "active_checks:dns",
     Tuple(
         title=_("Check DNS service"),
@@ -508,7 +506,7 @@ register_rule(
     match='all')
 
 register_rule(
-    group,
+    RulespecGroupActiveChecks,
     "active_checks:sql",
     Dictionary(
         title=_("Check SQL Database"),
@@ -638,7 +636,7 @@ register_rule(
     match='all')
 
 register_rule(
-    group,
+    RulespecGroupActiveChecks,
     "active_checks:tcp",
     Tuple(
         title=_("Check connecting to a TCP port"),
@@ -769,7 +767,7 @@ register_rule(
     match='all')
 
 register_rule(
-    group, "active_checks:uniserv",
+    RulespecGroupActiveChecks, "active_checks:uniserv",
     Dictionary(
         title=_("Check uniserv service"),
         optional_keys=False,
@@ -819,7 +817,7 @@ ip_address_family_element = (
 )
 
 register_rule(
-    group,
+    RulespecGroupActiveChecks,
     "active_checks:http",
     Tuple(
         title=_("Check HTTP service"),
@@ -1160,7 +1158,7 @@ register_rule(
     match='all')
 
 register_rule(
-    group,
+    RulespecGroupActiveChecks,
     "active_checks:ldap",
     Tuple(
         title=_("Check access to LDAP service"),
@@ -1273,7 +1271,7 @@ def transform_smtp_address_family(val):
 
 
 register_rule(
-    group,
+    RulespecGroupActiveChecks,
     "active_checks:smtp",
     Tuple(
         title=_("Check access to SMTP services"),
@@ -1400,7 +1398,7 @@ register_rule(
     match='all')
 
 register_rule(
-    group,
+    RulespecGroupActiveChecks,
     "active_checks:disk_smb",
     Dictionary(
         title=_("Check access to SMB share"),
@@ -1459,7 +1457,7 @@ register_rule(
     match='all')
 
 register_rule(
-    group,
+    RulespecGroupActiveChecks,
     "custom_checks",
     Dictionary(
         title=_("Classical active and passive Monitoring checks"),
@@ -1541,7 +1539,7 @@ register_rule(
     match='all')
 
 register_rule(
-    group,
+    RulespecGroupActiveChecks,
     "active_checks:bi_aggr",
     Tuple(
         title=_("Check State of BI Aggregation"),
@@ -1632,7 +1630,7 @@ register_rule(
     match='all')
 
 register_rule(
-    group,
+    RulespecGroupActiveChecks,
     "active_checks:form_submit",
     Tuple(
         title=_("Check HTML Form Submit"),
@@ -1726,7 +1724,7 @@ register_rule(
     match='all')
 
 register_rule(
-    group,
+    RulespecGroupActiveChecks,
     "active_checks:notify_count",
     Tuple(
         title=_("Check Number of Notifications per Contact"),
@@ -1764,7 +1762,7 @@ register_rule(
     match='all')
 
 register_rule(
-    group,
+    RulespecGroupActiveChecks,
     "active_checks:traceroute",
     Dictionary(
         title=_("Check current routing (uses <tt>traceroute</tt>)"),
@@ -1815,7 +1813,7 @@ register_rule(
     match='all')
 
 register_rule(
-    group,
+    RulespecGroupActiveChecks,
     'active_checks:mail_loop',
     Dictionary(
         title=_('Check Email Delivery'),
@@ -1903,7 +1901,7 @@ register_rule(
     match='all')
 
 register_rule(
-    group,
+    RulespecGroupActiveChecks,
     'active_checks:mail',
     Dictionary(
         title=_('Check Email'),
@@ -2077,7 +2075,7 @@ register_rule(
     match='all')
 
 register_rule(
-    group,
+    RulespecGroupActiveChecks,
     'active_checks:mailboxes',
     Dictionary(
         title=_('Check IMAP Mailboxes'),
@@ -2115,7 +2113,7 @@ register_rule(
     match='all')
 
 register_rule(
-    group,
+    RulespecGroupActiveChecks,
     "active_checks:by_ssh",
     Tuple(
         title=_("Check via SSH service"),

@@ -95,7 +95,7 @@ from cmk.gui.plugins.wato import (
 #   '----------------------------------------------------------------------'
 
 register_rule(
-    RulespecGroupCheckParametersNetworking().name,
+    RulespecGroupCheckParametersNetworking,
     "ping_levels",
     Dictionary(
         title=_("PING and host check parameters"),
@@ -762,7 +762,7 @@ def transform_ipmi_inventory_rules(p):
 
 
 register_rule(
-    RulespecGroupCheckParametersDiscovery().name,
+    RulespecGroupCheckParametersDiscovery,
     varname="inventory_ipmi_rules",
     title=_("Discovery of IPMI sensors"),
     valuespec=Transform(
@@ -797,7 +797,7 @@ register_rule(
     match='first')
 
 register_rule(
-    RulespecGroupCheckParametersDiscovery().name,
+    RulespecGroupCheckParametersDiscovery,
     varname="ewon_discovery_rules",
     title=_("eWON Discovery"),
     help=_("The ewon vpn routers can rely data from a secondary device via snmp. "
@@ -815,7 +815,7 @@ register_rule(
     match='first')
 
 register_rule(
-    RulespecGroupCheckParametersDiscovery().name,
+    RulespecGroupCheckParametersDiscovery,
     varname="mssql_transactionlogs_discovery",
     title=_("MSSQL Datafile and Transactionlog Discovery"),
     valuespec=Dictionary(
@@ -835,7 +835,7 @@ register_rule(
     match="first")
 
 register_rule(
-    RulespecGroupCheckParametersDiscovery().name,
+    RulespecGroupCheckParametersDiscovery,
     varname="inventory_services_rules",
     title=_("Windows Service Discovery"),
     valuespec=Dictionary(
@@ -880,7 +880,7 @@ register_rule(
 )
 
 register_rule(
-    RulespecGroupCheckParametersDiscovery().name,
+    RulespecGroupCheckParametersDiscovery,
     varname="inventory_solaris_services_rules",
     title=_("Solaris Service Discovery"),
     valuespec=Dictionary(
@@ -923,7 +923,7 @@ register_rule(
 )
 
 register_rule(
-    RulespecGroupCheckParametersDiscovery().name,
+    RulespecGroupCheckParametersDiscovery,
     varname="discovery_systemd_units_services_rules",
     title=_("Systemd Service Discovery"),
     valuespec=Dictionary(
@@ -949,7 +949,7 @@ register_rule(
 )
 
 register_rule(
-    RulespecGroupCheckParametersDiscovery().name,
+    RulespecGroupCheckParametersDiscovery,
     varname="discovery_win_dhcp_pools",
     title=_("Discovery of Windows DHCP Pools"),
     valuespec=Dictionary(elements=[
@@ -965,7 +965,7 @@ register_rule(
 )
 
 register_rule(
-    RulespecGroupCheckParametersDiscovery().name,
+    RulespecGroupCheckParametersDiscovery,
     varname="inventory_if_rules",
     title=_("Network Interface and Switch Port Discovery"),
     valuespec=Dictionary(
@@ -1118,7 +1118,7 @@ _brocade_fcport_phy_choices = [
 ]
 
 register_rule(
-    RulespecGroupCheckParametersDiscovery().name,
+    RulespecGroupCheckParametersDiscovery,
     varname="brocade_fcport_inventory",
     title=_("Brocade Port Discovery"),
     valuespec=Dictionary(
@@ -1377,7 +1377,7 @@ def forbid_re_delimiters_inside_groups(pattern, varprefix):
 
 
 register_rule(
-    RulespecGroupCheckParametersDiscovery().name,
+    RulespecGroupCheckParametersDiscovery,
     varname="inventory_processes_rules",
     title=_('Process Discovery'),
     help=_(
@@ -1522,7 +1522,7 @@ register_rule(
 )
 
 register_rule(
-    RulespecGroupCheckParametersDiscovery().name,
+    RulespecGroupCheckParametersDiscovery,
     varname="inv_domino_tasks_rules",
     title=_('Lotus Domino Task Discovery'),
     help=_("This rule controls the discovery of tasks on Lotus Domino systems. "
@@ -1613,7 +1613,7 @@ register_rule(
 )
 
 register_rule(
-    RulespecGroupCheckParametersDiscovery().name,
+    RulespecGroupCheckParametersDiscovery,
     varname="inventory_sap_values",
     title=_('SAP R/3 Single Value Inventory'),
     valuespec=Dictionary(
@@ -1665,7 +1665,7 @@ register_rule(
 )
 
 register_rule(
-    RulespecGroupCheckParametersDiscovery().name,
+    RulespecGroupCheckParametersDiscovery,
     varname="sap_value_groups",
     title=_('SAP Value Grouping Patterns'),
     help=_('The check <tt>sap.value</tt> normally creates one service for each SAP value. '
@@ -1700,7 +1700,7 @@ register_rule(
 )
 
 register_rule(
-    RulespecGroupCheckParametersDiscovery().name,
+    RulespecGroupCheckParametersDiscovery,
     varname="inventory_heartbeat_crm_rules",
     title=_("Heartbeat CRM Discovery"),
     valuespec=Dictionary(
@@ -1729,7 +1729,7 @@ register_rule(
 )
 
 register_rule(
-    RulespecGroupCheckParametersDiscovery().name,
+    RulespecGroupCheckParametersDiscovery,
     varname="inventory_df_rules",
     title=_("Discovery parameters for filesystem checks"),
     valuespec=Dictionary(
@@ -1759,7 +1759,7 @@ register_rule(
 )
 
 register_rule(
-    RulespecGroupCheckParametersDiscovery().name,
+    RulespecGroupCheckParametersDiscovery,
     varname="inventory_mssql_counters_rules",
     title=_("Include MSSQL Counters services"),
     valuespec=Dictionary(
@@ -1771,7 +1771,7 @@ register_rule(
 )
 
 register_rule(
-    RulespecGroupCheckParametersDiscovery().name,
+    RulespecGroupCheckParametersDiscovery,
     varname="inventory_fujitsu_ca_ports",
     title=_("Discovery of Fujtsu storage CA ports"),
     valuespec=Dictionary(
@@ -1794,7 +1794,7 @@ register_rule(
 )
 
 register_rule(
-    RulespecGroupCheckParametersDiscovery().name,
+    RulespecGroupCheckParametersDiscovery,
     varname="discovery_mssql_backup",
     title=_("Discovery of MSSQL backup"),
     valuespec=Dictionary(
@@ -1821,7 +1821,7 @@ register_rule(
 #   '----------------------------------------------------------------------'
 
 register_rule(
-    RulespecGroupCheckParametersApplications().name,
+    RulespecGroupCheckParametersApplications,
     varname="logwatch_rules",
     title=_('Logwatch Patterns'),
     valuespec=Transform(
@@ -6589,7 +6589,7 @@ register_check_parameters(
 )
 
 register_rule(
-    RulespecGroupCheckParametersStorage().name,
+    RulespecGroupCheckParametersStorage,
     varname="filesystem_groups",
     title=_('Filesystem grouping patterns'),
     help=_('Normally the filesystem checks (<tt>df</tt>, <tt>hr_fs</tt> and others) '
@@ -6619,7 +6619,7 @@ register_rule(
 )
 
 register_rule(
-    RulespecGroupCheckParametersStorage().name,
+    RulespecGroupCheckParametersStorage,
     varname="fileinfo_groups",
     title=_('File Grouping Patterns'),
     help=_('The check <tt>fileinfo</tt> monitors the age and size of '
@@ -11914,7 +11914,7 @@ register_check_parameters(
     "dict")
 
 register_rule(
-    RulespecGroupCheckParametersStorage().name,
+    RulespecGroupCheckParametersStorage,
     "diskstat_inventory",
     ListChoice(
         title=_("Discovery mode for Disk IO check"),
@@ -11996,7 +11996,7 @@ vs_elements_if_groups_group = [
 ]
 
 register_rule(
-    RulespecGroupCheckParametersNetworking().name,
+    RulespecGroupCheckParametersNetworking,
     varname="if_groups",
     title=_('Network interface groups'),
     help=_(
@@ -12041,7 +12041,7 @@ register_rule(
 )
 
 register_rule(
-    RulespecGroupCheckParametersDiscovery().name,
+    RulespecGroupCheckParametersDiscovery,
     varname="winperf_msx_queues_inventory",
     title=_('MS Exchange Message Queues Discovery'),
     help=_(
@@ -12230,7 +12230,7 @@ register_check_parameters(
                "alias.")), "first")
 
 register_rule(
-    RulespecGroupCheckParametersStorage().name,
+    RulespecGroupCheckParametersStorage,
     varname="inventory_multipath_rules",
     title=_("Linux Multipath Inventory"),
     valuespec=Dictionary(
@@ -14366,7 +14366,7 @@ register_check_parameters(RulespecGroupCheckParametersApplications,
                          )
 
 register_rule(
-    RulespecGroupCheckParametersApplications().name,
+    RulespecGroupCheckParametersApplications,
     varname="logwatch_groups",
     title=_('Logfile Grouping Patterns'),
     help=_('The check <tt>logwatch</tt> normally creates one service for each logfile. '
@@ -14400,7 +14400,7 @@ register_rule(
 )
 
 register_rule(
-    RulespecGroupCheckParametersNetworking().name,
+    RulespecGroupCheckParametersNetworking,
     "if_disable_if64_hosts",
     title=_("Hosts forced to use <tt>if</tt> instead of <tt>if64</tt>"),
     help=_("A couple of switches with broken firmware report that they "

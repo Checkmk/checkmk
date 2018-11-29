@@ -134,6 +134,7 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.plugins.wato.check_mk_configuration import (
     ConfigVariableGroupUserInterface,
     ConfigVariableGroupWATO,
+    RulespecGroupGrouping,
 )
 from cmk.gui.plugins.wato.globals_notification import ConfigVariableGroupNotifications
 
@@ -3156,18 +3157,6 @@ def vs_ec_host_limit(title):
     )
 
 
-register_rule(
-    "eventconsole",
-    "extra_host_conf:_ec_event_limit",
-    Transform(
-        vs_ec_host_limit(title=_("Host event limit")),
-        forth=lambda x: dict([("limit", int(x.split(":")[0])), ("action", x.split(":")[1])]),
-        back=lambda x: "%d:%s" % (x["limit"], x["action"]),
-    ),
-    match="first",
-)
-
-
 @config_variable_registry.register
 class ConfigVariableEventConsoleEventLimit(ConfigVariable):
     def group(self):
@@ -3643,9 +3632,6 @@ class RulespecGroupEventConsole(RulespecGroup):
         return _("Settings and Checks dealing with the Check_MK Event Console")
 
 
-group = RulespecGroupEventConsole().name
-
-
 def convert_mkevents_hostspec(value):
     if isinstance(value, list):
         return value
@@ -3660,7 +3646,18 @@ def convert_mkevents_hostspec(value):
 
 
 register_rule(
-    group,
+    RulespecGroupEventConsole,
+    "extra_host_conf:_ec_event_limit",
+    Transform(
+        vs_ec_host_limit(title=_("Host event limit")),
+        forth=lambda x: dict([("limit", int(x.split(":")[0])), ("action", x.split(":")[1])]),
+        back=lambda x: "%d:%s" % (x["limit"], x["action"]),
+    ),
+    match="first",
+)
+
+register_rule(
+    RulespecGroupEventConsole,
     "active_checks:mkevents",
     Dictionary(
         title=_("Check event state in Event Console"),
@@ -3783,7 +3780,7 @@ sl_help = _("A service level is a number that describes the business impact of a
             "wato.py?varname=mkeventd_service_levels&mode=edit_configvar"
 
 register_rule(
-    "grouping",
+    RulespecGroupGrouping,
     "extra_host_conf:_ec_sl",
     DropdownChoice(
         title=_("Service Level of hosts"),
@@ -3794,7 +3791,7 @@ register_rule(
 )
 
 register_rule(
-    "grouping",
+    RulespecGroupGrouping,
     "extra_service_conf:_ec_sl",
     DropdownChoice(
         title=_("Service Level of services"),
@@ -3815,7 +3812,7 @@ contact_regex_error = _(
 )
 
 register_rule(
-    group,
+    RulespecGroupEventConsole,
     "extra_host_conf:_ec_contact",
     TextUnicode(
         title=_("Host contact information"),
@@ -3829,7 +3826,7 @@ register_rule(
 )
 
 register_rule(
-    group,
+    RulespecGroupEventConsole,
     "extra_service_conf:_ec_contact",
     TextUnicode(
         title=_("Service contact information"),

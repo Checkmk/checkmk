@@ -2430,10 +2430,8 @@ class RulespecGroupGrouping(RulespecGroup):
         return _("Assignment of host & services to host, service and contacts groups.")
 
 
-group = RulespecGroupGrouping().name
-
 register_rule(
-    group,
+    RulespecGroupGrouping,
     "host_groups",
     GroupSelection(
         "host",
@@ -2444,20 +2442,20 @@ register_rule(
     match="all")
 
 register_rule(
-    group,
+    RulespecGroupGrouping,
     "service_groups",
     GroupSelection("service", title=_("Assignment of services to service groups")),
     match="all",
     itemtype="service")
 
 register_rule(
-    group,
+    RulespecGroupGrouping,
     "host_contactgroups",
     GroupSelection("contact", title=_("Assignment of hosts to contact groups")),
     match="all")
 
 register_rule(
-    group,
+    RulespecGroupGrouping,
     "service_contactgroups",
     GroupSelection("contact", title=_("Assignment of services to contact groups")),
     match="all",
@@ -2495,10 +2493,8 @@ class RulespecGroupMonitoringConfigurationServiceChecks(RulespecSubGroup):
         return _("Service Checks")
 
 
-group = RulespecGroupMonitoringConfigurationServiceChecks().name
-
 register_rule(
-    group,
+    RulespecGroupMonitoringConfigurationServiceChecks,
     "extra_service_conf:max_check_attempts",
     Integer(
         title=_("Maximum number of check attempts for service"),
@@ -2508,7 +2504,7 @@ register_rule(
     itemtype="service")
 
 register_rule(
-    group,
+    RulespecGroupMonitoringConfigurationServiceChecks,
     "extra_service_conf:check_interval",
     Transform(
         Age(minvalue=1, default_value=60),
@@ -2525,7 +2521,7 @@ register_rule(
     itemtype="service")
 
 register_rule(
-    group,
+    RulespecGroupMonitoringConfigurationServiceChecks,
     "extra_service_conf:retry_interval",
     Transform(
         Age(minvalue=1, default_value=60),
@@ -2541,7 +2537,7 @@ register_rule(
     itemtype="service")
 
 register_rule(
-    group,
+    RulespecGroupMonitoringConfigurationServiceChecks,
     "extra_service_conf:check_period",
     TimeperiodSelection(
         title=_("Check period for active services"),
@@ -2552,7 +2548,7 @@ register_rule(
     itemtype="service")
 
 register_rule(
-    group,
+    RulespecGroupMonitoringConfigurationServiceChecks,
     "check_periods",
     TimeperiodSelection(
         title=_("Check period for passive Check_MK services"),
@@ -2561,7 +2557,7 @@ register_rule(
     itemtype="service")
 
 register_rule(
-    group,
+    RulespecGroupMonitoringConfigurationServiceChecks,
     "extra_service_conf:process_perf_data",
     DropdownChoice(
         title=_("Enable/disable processing of perfdata for services"),
@@ -2573,7 +2569,7 @@ register_rule(
     itemtype="service")
 
 register_rule(
-    group,
+    RulespecGroupMonitoringConfigurationServiceChecks,
     "extra_service_conf:passive_checks_enabled",
     DropdownChoice(
         title=_("Enable/disable passive checks for services"),
@@ -2585,7 +2581,7 @@ register_rule(
     itemtype="service")
 
 register_rule(
-    group,
+    RulespecGroupMonitoringConfigurationServiceChecks,
     "extra_service_conf:active_checks_enabled",
     DropdownChoice(
         title=_("Enable/disable active checks for services"),
@@ -2611,10 +2607,8 @@ class RulespecGroupMonitoringConfigurationHostChecks(RulespecSubGroup):
         return _("Host Checks")
 
 
-group = RulespecGroupMonitoringConfigurationHostChecks().name
-
 register_rule(
-    group, "extra_host_conf:max_check_attempts",
+    RulespecGroupMonitoringConfigurationHostChecks, "extra_host_conf:max_check_attempts",
     Integer(
         title=_("Maximum number of check attempts for host"),
         help=_("The maximum number of failed host checks until the host will be considered "
@@ -2622,7 +2616,7 @@ register_rule(
         minvalue=1))
 
 register_rule(
-    group, "extra_host_conf:check_interval",
+    RulespecGroupMonitoringConfigurationHostChecks, "extra_host_conf:check_interval",
     Transform(
         Age(minvalue=1, default_value=60),
         forth=lambda v: int(v * 60),
@@ -2635,7 +2629,7 @@ register_rule(
             "wether or not the service problem is resulting from a host problem.")))
 
 register_rule(
-    group, "extra_host_conf:retry_interval",
+    RulespecGroupMonitoringConfigurationHostChecks, "extra_host_conf:retry_interval",
     Transform(
         Age(minvalue=1, default_value=60),
         forth=lambda v: int(v * 60),
@@ -2651,7 +2645,7 @@ register_rule(
     ))
 
 register_rule(
-    group,
+    RulespecGroupMonitoringConfigurationHostChecks,
     "extra_host_conf:check_period",
     TimeperiodSelection(
         title=_("Check period for hosts"),
@@ -2688,7 +2682,7 @@ def _host_check_command_choices():
 
 
 register_rule(
-    group,
+    RulespecGroupMonitoringConfigurationHostChecks,
     "host_check_commands",
     CascadingDropdown(
         title=_("Host Check Command"),
@@ -2717,10 +2711,8 @@ class RulespecGroupMonitoringConfigurationNotifications(RulespecSubGroup):
         return _("Notifications")
 
 
-group = RulespecGroupMonitoringConfigurationNotifications().name
-
 register_rule(
-    group, "extra_host_conf:notifications_enabled",
+    RulespecGroupMonitoringConfigurationNotifications, "extra_host_conf:notifications_enabled",
     DropdownChoice(
         title=_("Enable/disable notifications for hosts"),
         help=_("This setting allows you to disable notifications about problems of a "
@@ -2732,7 +2724,7 @@ register_rule(
     ))
 
 register_rule(
-    group,
+    RulespecGroupMonitoringConfigurationNotifications,
     "extra_service_conf:notifications_enabled",
     DropdownChoice(
         title=_("Enable/disable notifications for services"),
@@ -2744,7 +2736,7 @@ register_rule(
     itemtype="service")
 
 register_rule(
-    group,
+    RulespecGroupMonitoringConfigurationNotifications,
     "extra_host_conf:notification_options",
     Transform(
         ListChoice(
@@ -2774,7 +2766,7 @@ register_rule(
 )
 
 register_rule(
-    group,
+    RulespecGroupMonitoringConfigurationNotifications,
     "extra_service_conf:notification_options",
     Transform(
         ListChoice(
@@ -2799,7 +2791,7 @@ register_rule(
     itemtype="service")
 
 register_rule(
-    group,
+    RulespecGroupMonitoringConfigurationNotifications,
     "extra_host_conf:notification_period",
     TimeperiodSelection(
         title=_("Notification period for hosts"),
@@ -2812,7 +2804,7 @@ register_rule(
 )
 
 register_rule(
-    group,
+    RulespecGroupMonitoringConfigurationNotifications,
     "extra_service_conf:notification_period",
     TimeperiodSelection(
         title=_("Notification period for services"),
@@ -2834,7 +2826,7 @@ def transform_age_to_float_minutes(age):
 
 
 register_rule(
-    group,
+    RulespecGroupMonitoringConfigurationNotifications,
     "extra_host_conf:first_notification_delay",
     Transform(
         Age(
@@ -2853,7 +2845,7 @@ register_rule(
 )
 
 register_rule(
-    group,
+    RulespecGroupMonitoringConfigurationNotifications,
     "extra_service_conf:first_notification_delay",
     Transform(
         Age(
@@ -2873,7 +2865,7 @@ register_rule(
     itemtype="service")
 
 register_rule(
-    group, "extra_host_conf:notification_interval",
+    RulespecGroupMonitoringConfigurationNotifications, "extra_host_conf:notification_interval",
     Optional(
         Transform(
             Float(minvalue=0.05, default_value=120.0, label=_("Interval:"), unit=_("minutes")),
@@ -2889,7 +2881,7 @@ register_rule(
     ))
 
 register_rule(
-    group,
+    RulespecGroupMonitoringConfigurationNotifications,
     "extra_service_conf:notification_interval",
     Optional(
         Transform(
@@ -2907,7 +2899,7 @@ register_rule(
     itemtype="service")
 
 register_rule(
-    group, "extra_host_conf:flap_detection_enabled",
+    RulespecGroupMonitoringConfigurationNotifications, "extra_host_conf:flap_detection_enabled",
     DropdownChoice(
         title=_("Enable/disable flapping detection for hosts"),
         help=_("This setting allows you to disable the flapping detection for a "
@@ -2916,7 +2908,7 @@ register_rule(
     ))
 
 register_rule(
-    group,
+    RulespecGroupMonitoringConfigurationNotifications,
     "extra_service_conf:flap_detection_enabled",
     DropdownChoice(
         title=_("Enable/disable flapping detection for services"),
@@ -2927,7 +2919,7 @@ register_rule(
     itemtype="service")
 
 register_rule(
-    group,
+    RulespecGroupMonitoringConfigurationNotifications,
     "extra_service_conf:notes_url",
     TextAscii(
         label=_("URL:"),
@@ -2939,7 +2931,7 @@ register_rule(
     itemtype="service")
 
 register_rule(
-    group,
+    RulespecGroupMonitoringConfigurationNotifications,
     "extra_host_conf:notes_url",
     TextAscii(
         label=_("URL:"),
@@ -2951,7 +2943,7 @@ register_rule(
 )
 
 register_rule(
-    group,
+    RulespecGroupMonitoringConfigurationNotifications,
     "extra_service_conf:display_name",
     TextUnicode(
         title=_("Alternative display name for Services"),
@@ -2985,10 +2977,8 @@ class RulespecGroupMonitoringConfigurationInventoryAndCMK(RulespecSubGroup):
         return _("Inventory and Check_MK settings")
 
 
-group = RulespecGroupMonitoringConfigurationInventoryAndCMK().name
-
 register_rule(
-    group,
+    RulespecGroupMonitoringConfigurationInventoryAndCMK,
     "only_hosts",
     title=_("Hosts to be monitored"),
     help=_("By adding rules to this ruleset you can define a subset of your hosts "
@@ -2999,7 +2989,7 @@ register_rule(
 )
 
 register_rule(
-    group,
+    RulespecGroupMonitoringConfigurationInventoryAndCMK,
     "ignored_services",
     title=_("Disabled services"),
     help=_("Services that are declared as <u>disabled</u> by this rule set will not be added "
@@ -3009,7 +2999,7 @@ register_rule(
     itemtype="service")
 
 register_rule(
-    group, "ignored_checks",
+    RulespecGroupMonitoringConfigurationInventoryAndCMK, "ignored_checks",
     CheckTypeSelection(
         title=_("Disabled checks"),
         help=_("This ruleset is similar to 'Disabled services', but selects checks to be disabled "
@@ -3019,7 +3009,7 @@ register_rule(
     ))
 
 register_rule(
-    group,
+    RulespecGroupMonitoringConfigurationInventoryAndCMK,
     "clustered_services",
     title=_("Clustered services"),
     help=_("When you define HA clusters in WATO then you also have to specify "
@@ -3031,7 +3021,7 @@ register_rule(
     itemtype="service")
 
 register_rule(
-    group, "periodic_discovery",
+    RulespecGroupMonitoringConfigurationInventoryAndCMK, "periodic_discovery",
     Alternative(
         title=_("Periodic service discovery"),
         style="dropdown",
@@ -3185,10 +3175,8 @@ class RulespecGroupMonitoringConfigurationVarious(RulespecSubGroup):
         return _("Various")
 
 
-group = RulespecGroupMonitoringConfigurationVarious().name
-
 register_rule(
-    group,
+    RulespecGroupMonitoringConfigurationVarious,
     "clustered_services_mapping",
     TextAscii(
         title=_("Clustered services for overlapping clusters"),
@@ -3204,7 +3192,7 @@ register_rule(
 )
 
 register_rule(
-    group,
+    RulespecGroupMonitoringConfigurationVarious,
     "extra_host_conf:service_period",
     TimeperiodSelection(
         title=_("Service period for hosts"),
@@ -3221,7 +3209,7 @@ register_rule(
 )
 
 register_rule(
-    group,
+    RulespecGroupMonitoringConfigurationVarious,
     "extra_service_conf:service_period",
     TimeperiodSelection(
         title=_("Service period for services"),
@@ -3265,10 +3253,8 @@ class RulespecGroupUserInterface(RulespecGroup):
         return _("Settings concerning the user interface of Check_MK")
 
 
-group = RulespecGroupUserInterface().name
-
 register_rule(
-    group, "extra_host_conf:icon_image",
+    RulespecGroupUserInterface, "extra_host_conf:icon_image",
     Transform(
         IconSelector(
             title=_("Icon image for hosts in status GUI"),
@@ -3280,7 +3266,7 @@ register_rule(
     ))
 
 register_rule(
-    group,
+    RulespecGroupUserInterface,
     "extra_service_conf:icon_image",
     Transform(
         IconSelector(
@@ -3294,7 +3280,7 @@ register_rule(
     itemtype="service")
 
 register_rule(
-    group,
+    RulespecGroupUserInterface,
     "host_icons_and_actions",
     UserIconOrAction(
         title=_("Custom icons or actions for hosts in status GUI"),
@@ -3303,7 +3289,7 @@ register_rule(
 )
 
 register_rule(
-    group,
+    RulespecGroupUserInterface,
     "service_icons_and_actions",
     UserIconOrAction(
         title=_("Custom icons or actions for services in status GUI"),
@@ -3314,7 +3300,7 @@ register_rule(
 )
 
 register_rule(
-    group, "extra_host_conf:_ESCAPE_PLUGIN_OUTPUT",
+    RulespecGroupUserInterface, "extra_host_conf:_ESCAPE_PLUGIN_OUTPUT",
     DropdownChoice(
         title=_("Escape HTML codes in host output"),
         help=_("By default, for security reasons, the GUI does not interpret any HTML "
@@ -3332,7 +3318,7 @@ register_rule(
     ))
 
 register_rule(
-    group,
+    RulespecGroupUserInterface,
     "extra_service_conf:_ESCAPE_PLUGIN_OUTPUT",
     DropdownChoice(
         title=_("Escape HTML codes in service output"),
@@ -3383,10 +3369,8 @@ class RulespecGroupAgentGeneralSettings(RulespecSubGroup):
         return _("General Settings")
 
 
-group = RulespecGroupAgentGeneralSettings().name
-
 register_rule(
-    group,
+    RulespecGroupAgentGeneralSettings,
     "dyndns_hosts",
     title=_("Hosts with dynamic DNS lookup during monitoring"),
     help=_("This ruleset selects host for dynamic DNS lookup during monitoring. Normally "
@@ -3396,7 +3380,7 @@ register_rule(
            "and can change."))
 
 register_rule(
-    group, "primary_address_family",
+    RulespecGroupAgentGeneralSettings, "primary_address_family",
     DropdownChoice(
         choices=[
             ("ipv4", _("IPv4")),
@@ -3424,10 +3408,8 @@ class RulespecGroupAgentSNMP(RulespecSubGroup):
         return _("SNMP")
 
 
-group = RulespecGroupAgentSNMP().name
-
 register_rule(
-    group, "snmp_communities",
+    RulespecGroupAgentSNMP, "snmp_communities",
     SNMPCredentials(
         title=_("SNMP credentials of monitored hosts"),
         help=
@@ -3437,7 +3419,7 @@ register_rule(
     ))
 
 register_rule(
-    group,
+    RulespecGroupAgentSNMP,
     "management_board_config",
     CascadingDropdown(
         title=_("Management board config"),
@@ -3449,7 +3431,7 @@ register_rule(
 )
 
 register_rule(
-    group, "snmp_character_encodings",
+    RulespecGroupAgentSNMP, "snmp_character_encodings",
     DropdownChoice(
         title=_("Output text encoding settings for SNMP devices"),
         help=_("Some devices send texts in non-ASCII characters. Check_MK"
@@ -3462,7 +3444,7 @@ register_rule(
         ]))
 
 register_rule(
-    group,
+    RulespecGroupAgentSNMP,
     "bulkwalk_hosts",
     title=_("Bulk walk: Hosts using bulk walk (enforces SNMP v2c)"),
     help=_(
@@ -3476,7 +3458,7 @@ register_rule(
         "bulk walk, please use the rule set snmpv2c_hosts instead."))
 
 register_rule(
-    group,
+    RulespecGroupAgentSNMP,
     "snmp_bulk_size",
     Integer(
         title=_("Bulk walk: Number of OIDs per bulk"),
@@ -3495,7 +3477,7 @@ register_rule(
 )
 
 register_rule(
-    group,
+    RulespecGroupAgentSNMP,
     "snmp_without_sys_descr",
     title=_("Hosts without system description OID"),
     help=_("Devices which do not publish the system description OID "
@@ -3504,7 +3486,7 @@ register_rule(
            "be checked."))
 
 register_rule(
-    group,
+    RulespecGroupAgentSNMP,
     "snmpv2c_hosts",
     title=_("Legacy SNMP devices using SNMP v2c"),
     help=
@@ -3514,7 +3496,7 @@ register_rule(
       "Note: This rule won't apply if the device is already configured as SNMP v2c device."))
 
 register_rule(
-    group,
+    RulespecGroupAgentSNMP,
     "snmp_timing",
     Dictionary(
         title=_("Timing settings for SNMP access"),
@@ -3551,7 +3533,7 @@ register_rule(
     match="dict")
 
 register_rule(
-    group,
+    RulespecGroupAgentSNMP,
     "non_inline_snmp_hosts",
     title=_("Hosts not using Inline-SNMP"),
     help=_("Check_MK has an efficient SNMP implementation called Inline SNMP which reduces the "
@@ -3561,7 +3543,7 @@ register_rule(
            "implementation. You can use this rule to disable Inline SNMP for these hosts."))
 
 register_rule(
-    group,
+    RulespecGroupAgentSNMP,
     "usewalk_hosts",
     title=_("Simulating SNMP by using a stored SNMP walk"),
     help=_("This ruleset helps in test and development. You can create stored SNMP "
@@ -3570,7 +3552,7 @@ register_rule(
            "file instead of using real SNMP. "))
 
 register_rule(
-    group,
+    RulespecGroupAgentSNMP,
     "snmp_ports",
     Integer(minvalue=1, maxvalue=65535, default_value=161),
     title=_("UDP port used for SNMP"),
@@ -3594,10 +3576,8 @@ class RulespecGroupAgentCMKAgent(RulespecSubGroup):
         return _("Check_MK Agent")
 
 
-group = RulespecGroupAgentCMKAgent().name
-
 register_rule(
-    group,
+    RulespecGroupAgentCMKAgent,
     "agent_ports",
     Integer(minvalue=1, maxvalue=65535, default_value=6556),
     title=_("TCP port for connection to Check_MK agent"),
@@ -3606,7 +3586,7 @@ register_rule(
 )
 
 register_rule(
-    group,
+    RulespecGroupAgentCMKAgent,
     "tcp_connect_timeouts",
     Float(
         minvalue=1.0,
@@ -3623,7 +3603,7 @@ register_rule(
 )
 
 register_rule(
-    group,
+    RulespecGroupAgentCMKAgent,
     "agent_encryption",
     Dictionary(
         elements=[
@@ -3685,7 +3665,7 @@ def transform_exit_code_spec(p):
 
 
 register_rule(
-    group,
+    RulespecGroupAgentCMKAgent,
     "check_mk_exit_status",
     Transform(
         Dictionary(
@@ -3784,7 +3764,7 @@ register_rule(
 )
 
 register_rule(
-    group,
+    RulespecGroupAgentCMKAgent,
     "check_mk_agent_target_versions",
     Transform(
         CascadingDropdown(
@@ -3847,7 +3827,7 @@ class RulespecGroupMonitoringAgentsGenericOptions(RulespecSubGroup):
 
 
 register_rule(
-    RulespecGroupMonitoringAgentsGenericOptions().name,
+    RulespecGroupMonitoringAgentsGenericOptions,
     "agent_config:only_from",
     ListOfStrings(
         valuespec=IPNetwork(),
@@ -3864,7 +3844,7 @@ register_rule(
     match="first")
 
 register_rule(
-    group,
+    RulespecGroupAgentGeneralSettings,
     "piggyback_translation",
     HostnameTranslation(
         title=_("Hostname translation for piggybacked hosts"),
@@ -3880,7 +3860,7 @@ register_rule(
     match="dict")
 
 register_rule(
-    group,
+    RulespecGroupAgentGeneralSettings,
     "service_description_translation",
     ServiceDescriptionTranslation(
         title=_("Translation of service descriptions"),
@@ -3919,7 +3899,7 @@ def get_snmp_section_names():
 
 
 register_rule(
-    group,
+    RulespecGroupAgentSNMP,
     "snmp_check_interval",
     Tuple(
         title=_('Check intervals for SNMP checks'),
@@ -3951,7 +3931,7 @@ register_rule(
         ]))
 
 register_rule(
-    group, "snmpv3_contexts",
+    RulespecGroupAgentSNMP, "snmpv3_contexts",
     Tuple(
         title=_('SNMPv3 contexts to use in requests'),
         help=_('By default Check_MK does not use a specific context during SNMPv3 queries, '

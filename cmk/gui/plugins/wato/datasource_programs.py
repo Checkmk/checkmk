@@ -77,10 +77,8 @@ class RulespecGroupDatasourcePrograms(RulespecGroup):
         return _("Specialized agents, e.g. check via SSH, ESX vSphere, SAP R/3")
 
 
-group = RulespecGroupDatasourcePrograms().name
-
 register_rule(
-    group, "datasource_programs",
+    RulespecGroupDatasourcePrograms, "datasource_programs",
     TextAscii(
         title=_("Individual program call instead of agent access"),
         help=_("For agent based checks Check_MK allows you to specify an alternative "
@@ -94,7 +92,7 @@ register_rule(
         attrencode=True))
 
 register_rule(
-    group,
+    RulespecGroupDatasourcePrograms,
     "special_agents:ddn_s2a",
     Dictionary(
         elements=[
@@ -109,7 +107,7 @@ register_rule(
 )
 
 register_rule(
-    group,
+    RulespecGroupDatasourcePrograms,
     "special_agents:kubernetes",
     Dictionary(
         elements=[
@@ -133,7 +131,8 @@ register_rule(
     title=_(u"Kubernetes"),
 )
 
-register_rule(group,
+register_rule(
+    RulespecGroupDatasourcePrograms,
     "special_agents:vsphere",
     Transform(
         valuespec=Dictionary(
@@ -307,7 +306,7 @@ register_rule(group,
     match='first')
 
 register_rule(
-    group,
+    RulespecGroupDatasourcePrograms,
     "special_agents:hp_msa",
     Dictionary(
         elements=[
@@ -378,7 +377,7 @@ def transform_ipmi_sensors(params):
 
 
 register_rule(
-    group,
+    RulespecGroupDatasourcePrograms,
     "special_agents:ipmi_sensors",
     Transform(
         CascadingDropdown(
@@ -396,7 +395,7 @@ register_rule(
     match='first')
 
 register_rule(
-    group,
+    RulespecGroupDatasourcePrograms,
     "special_agents:netapp",
     Transform(
         Dictionary(
@@ -445,7 +444,7 @@ def transform_activemq(value):
 
 
 register_rule(
-    group,
+    RulespecGroupDatasourcePrograms,
     "special_agents:activemq",
     Transform(
         Dictionary(
@@ -465,7 +464,7 @@ register_rule(
     match="first")
 
 register_rule(
-    group,
+    RulespecGroupDatasourcePrograms,
     "special_agents:emcvnx",
     Dictionary(
         title=_("Check state of EMC VNX storage systems"),
@@ -524,7 +523,7 @@ register_rule(
     match='first')
 
 register_rule(
-    group,
+    RulespecGroupDatasourcePrograms,
     "special_agents:ibmsvc",
     Dictionary(
         title=_("Check state of IBM SVC / V7000 storage systems"),
@@ -592,7 +591,7 @@ register_rule(
     match='first')
 
 register_rule(
-    group,
+    RulespecGroupDatasourcePrograms,
     "special_agents:random",
     FixedValue(
         {},
@@ -606,7 +605,7 @@ register_rule(
     match='first')
 
 register_rule(
-    group,
+    RulespecGroupDatasourcePrograms,
     "special_agents:acme_sbc",
     FixedValue(
         {},
@@ -621,7 +620,7 @@ register_rule(
     match='first')
 
 register_rule(
-    group,
+    RulespecGroupDatasourcePrograms,
     "special_agents:fritzbox",
     Dictionary(
         title=_("Check state of Fritz!Box Devices"),
@@ -646,7 +645,7 @@ register_rule(
     match='first')
 
 register_rule(
-    group,
+    RulespecGroupDatasourcePrograms,
     "special_agents:innovaphone",
     Tuple(
         title=_("Innovaphone Gateways"),
@@ -659,7 +658,7 @@ register_rule(
     match="first")
 
 register_rule(
-    group,
+    RulespecGroupDatasourcePrograms,
     "special_agents:hivemanager",
     Tuple(
         title=_("Aerohive HiveManager"),
@@ -672,7 +671,7 @@ register_rule(
     match="first")
 
 register_rule(
-    group,
+    RulespecGroupDatasourcePrograms,
     "special_agents:hivemanager_ng",
     Dictionary(
         title=_("Aerohive HiveManager NG"),
@@ -712,7 +711,7 @@ register_rule(
 )
 
 register_rule(
-    group,
+    RulespecGroupDatasourcePrograms,
     "special_agents:allnet_ip_sensoric",
     Dictionary(
         title=_("Check state of ALLNET IP Sensoric Devices"),
@@ -737,7 +736,7 @@ register_rule(
     match='first')
 
 register_rule(
-    group,
+    RulespecGroupDatasourcePrograms,
     "special_agents:ucs_bladecenter",
     Dictionary(
         elements=[
@@ -850,7 +849,7 @@ _siemens_plc_value = [
 ]
 
 register_rule(
-    group,
+    RulespecGroupDatasourcePrograms,
     "special_agents:siemens_plc",
     Dictionary(
         elements=[
@@ -934,7 +933,7 @@ register_rule(
     match='first')
 
 register_rule(
-    group,
+    RulespecGroupDatasourcePrograms,
     "special_agents:ruckus_spot",
     Dictionary(
         elements=[
@@ -972,7 +971,7 @@ register_rule(
     match='first')
 
 register_rule(
-    group,
+    RulespecGroupDatasourcePrograms,
     'special_agents:appdynamics',
     Dictionary(
         elements=[
@@ -1064,7 +1063,7 @@ mk_jolokia_elements = [
 ]
 
 register_rule(
-    group,
+    RulespecGroupDatasourcePrograms,
     'special_agents:jolokia',
     Dictionary(elements=mk_jolokia_elements,),
     title=_('Jolokia'),
@@ -1074,7 +1073,7 @@ register_rule(
     match='first')
 
 register_rule(
-    group,
+    RulespecGroupDatasourcePrograms,
     "special_agents:tinkerforge",
     Dictionary(
         title=_("Settings for Tinkerforge agent"),
@@ -1101,7 +1100,7 @@ register_rule(
     match='first')
 
 register_rule(
-    group,
+    RulespecGroupDatasourcePrograms,
     'special_agents:prism',
     Dictionary(
         elements=[
@@ -1123,7 +1122,7 @@ def _transform_3par_add_verify_cert(v):
 
 
 register_rule(
-    "datasource_programs",
+    RulespecGroupDatasourcePrograms,
     "special_agents:3par",
     Transform(
         Dictionary(
@@ -1164,7 +1163,7 @@ register_rule(
 )
 
 register_rule(
-    group,
+    RulespecGroupDatasourcePrograms,
     "special_agents:storeonce",
     Dictionary(
         optional_keys=["cert"],
@@ -1187,7 +1186,7 @@ register_rule(
 )
 
 register_rule(
-    group,
+    RulespecGroupDatasourcePrograms,
     "special_agents:salesforce",
     Dictionary(
         elements=[
@@ -1271,7 +1270,7 @@ def _azure_group_config():
 
 
 register_rule(
-    'datasource_programs',
+    RulespecGroupDatasourcePrograms,
     "special_agents:azure",
     Dictionary(
         title=_("Agent Azure Configuration"),
@@ -1470,7 +1469,7 @@ class MultisiteBiDatasource(object):
 
 
 register_rule(
-    "datasource_programs",
+    RulespecGroupDatasourcePrograms,
     "special_agents:bi",
     ListOf(MultisiteBiDatasource().get_valuespec()),
     title=_("Check state of BI Aggregations"),
@@ -1479,7 +1478,7 @@ register_rule(
     match='first')
 
 register_rule(
-    'datasource_programs',
+    RulespecGroupDatasourcePrograms,
     'special_agents:aws',
     Dictionary(
         elements=[

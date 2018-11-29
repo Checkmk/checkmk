@@ -3071,7 +3071,7 @@ if mkeventd_enabled:
                           "which nicely indents everything. While this is a bit slower for large "
                           "rulesets it makes debugging and manual editing simpler."),
         ),
-        domain = ConfigDomainEventConsole,
+        domain = ConfigDomainGUI,
     )
 
 # Settings that should also be avaiable on distributed Sites that

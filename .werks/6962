@@ -1,0 +1,12 @@
+Title: Fixed pretty printing of event console rules.
+Level: 1
+Component: ec
+Compatible: compat
+Edition: cre
+Version: 1.5.0p9
+Date: 1543489633
+Class: fix
+
+The global setting for pretty printing EC rules had no effect, this has been
+fixed.  Note: If you have changed the setting before, the fix only works
+after you have toggled the setting at least once.

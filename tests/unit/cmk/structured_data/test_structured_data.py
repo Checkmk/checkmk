@@ -160,6 +160,72 @@ def test_structured_data_NodeAttribute_compare_with(na_old, na_new, result):
         assert not d.is_empty()
 
 
+@pytest.mark.parametrize("old_numeration_data,new_numeration_data,result", [
+    ([], [],
+     (0, 0, 0)),
+
+    ([{"id": "1", "val": 0}], [],
+     (0, 0, 1)),
+
+    ([], [{"id": "1", "val": 0}],
+     (1, 0, 0)),
+
+    ([{"id": "1", "val": 0}], [{"id": "1", "val": 0}],
+     (0, 0, 0)),
+
+    ([{"id": "1", "val": 0}, {"id": "2", "val": 1}],
+     [{"id": "1", "val": 0}],
+     (0, 0, 1)),
+
+    ([{"id": "1", "val": 0}],
+     [{"id": "1", "val": 0}, {"id": "2", "val": 1}],
+     (1, 0, 0)),
+
+    ([{"id": "1", "val1": 1}],
+     [{"id": "1", "val1": 1, "val2": 1}],
+     (1, 0, 0)),
+
+    ([{"id": "1", "val": 0}],
+     [{"id": "1", "val": 1}],
+     (0, 1, 0)),
+
+    ([{"id": "1", "val1": 1, "val2": -1}],
+     [{"id": "1", "val1": 1}],
+     (0, 0, 1)),
+
+    ([{"id": "1", "val1": 0}, {"id": "2", "val1": 0, "val2": 0}, {"id": "3", "val1": 0}],
+     [{"id": "1", "val1": 1}, {"id": "2", "val1": 0}, {"id": "3", "val1": 0, "val2": 1}],
+     (1, 1, 1)),
+
+    ([{"id": "1", "val1": 1}, {"id": "2", "val1": 1}],
+     [{"id": "1", "val1": 1, "val2": -1}, {"id": "2", "val1": 1, "val2": -1}],
+     (2, 0, 0)),
+
+    ([{"id": "1", "val": 1}, {"id": "2", "val": 3}],
+     [{"id": "1", "val": 2}, {"id": "2", "val": 4}],
+     (0, 2, 0)),
+
+    ([{"id": "1", "val1": 1, "val2": -1}, {"id": "2", "val1": 1, "val2": -1}],
+     [{"id": "1", "val1": 1}, {"id": "2", "val1": 1}],
+     (0, 0, 2)),
+
+    ([{"id": "2", "val": 1}, {"id": "3", "val": 3}, {"id": "1", "val": 0}],
+     [{"id": "2", "val": 2}, {"id": "1", "val": 0}, {"id": "3", "val": 4}],
+     (0, 2, 0)),
+
+    ([{"id": "1", "val": 1}, {"id": "2", "val": 3}, {"id": "3", "val": 0}],
+     [{"id": "0", "val": 2}, {"id": "1", "val": 0}, {"id": "2", "val": 4}, {"id": "3", "val": 1}],
+     (4, 0, 3)),
+])
+def test_structured_data_Numeration_compare_with(old_numeration_data, new_numeration_data, result):
+    old_numeration = Numeration()
+    old_numeration.set_child_data(old_numeration_data)
+    new_numeration = Numeration()
+    new_numeration.set_child_data(new_numeration_data)
+    n,c,r,d = new_numeration.compare_with(old_numeration)
+    assert (n,c,r) == result
+
+
 @pytest.mark.parametrize("node_attribute,edge", [
     (mk_root(), "0_cna"),
 ])

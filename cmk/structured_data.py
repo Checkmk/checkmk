@@ -302,7 +302,7 @@ class NodeAttribute(object):
     def count_entries(self):
         raise NotImplementedError()
 
-    def compare_with(self, old, keep_identical=False):
+    def compare_with(self, other, keep_identical=False):
         """Compares new tree with old one: new_tree.compare_with(old_tree)."""
         raise NotImplementedError()
 
@@ -368,8 +368,8 @@ class Container(NodeAttribute):
     def count_entries(self):
         return sum([child.count_entries() for _, __, child in self.get_children()])
 
-    def compare_with(self, old, keep_identical=False):
-        removed_keys, kept_keys, new_keys = _compare_dict_keys(old._edges, self._edges)
+    def compare_with(self, other, keep_identical=False):
+        removed_keys, kept_keys, new_keys = _compare_dict_keys(other._edges, self._edges)
 
         delta_node = Container()
         num_new, num_changed, num_removed = 0, 0, 0
@@ -381,28 +381,28 @@ class Container(NodeAttribute):
                                      my_child.encode_for_delta_tree(encode_as=_new_delta_tree_node),
                                      abs_path)
 
-        for edge, abs_path, my_child, old_child in \
-            self._get_comparable_children(old, edges=kept_keys):
-            if my_child.is_equal(old_child):
+        for edge, abs_path, my_child, other_child in \
+            self._get_comparable_children(other, edges=kept_keys):
+            if my_child.is_equal(other_child):
                 if keep_identical:
                     delta_node.add_child(
                         edge, my_child.encode_for_delta_tree(encode_as=_identical_delta_tree_node),
                         abs_path)
                 continue
             new_entries, changed_entries, removed_entries, delta_child = \
-                my_child.compare_with(old_child, keep_identical=keep_identical)
+                my_child.compare_with(other_child, keep_identical=keep_identical)
             if new_entries or changed_entries or removed_entries:
                 num_new += new_entries
                 num_changed += changed_entries
                 num_removed += removed_entries
                 delta_node.add_child(edge, delta_child, abs_path)
 
-        for edge, abs_path, old_child in old.get_children(edges=removed_keys):
-            removed_entries = old_child.count_entries()
+        for edge, abs_path, other_child in other.get_children(edges=removed_keys):
+            removed_entries = other_child.count_entries()
             if removed_entries:
                 num_removed += removed_entries
                 delta_node.add_child(
-                    edge, old_child.encode_for_delta_tree(encode_as=_removed_delta_tree_node),
+                    edge, other_child.encode_for_delta_tree(encode_as=_removed_delta_tree_node),
                     abs_path)
 
         return num_new, num_changed, num_removed, delta_node
@@ -647,26 +647,6 @@ class Leaf(NodeAttribute):
     def get_filtered_data(self, keys):
         raise NotImplementedError()
 
-    def _compare_dicts(self, old_dict, new_dict):
-        """
-        Format of compared entries:
-          new:          {k: (None, new_value), ...}
-          changed:      {k: (old_value, new_value), ...}
-          removed:      {k: (old_value, None), ...}
-          identical:    {k: (value, value), ...}
-        """
-        removed_keys, kept_keys, new_keys = _compare_dict_keys(old_dict, new_dict)
-        identical, changed = {}, {}
-        for k in kept_keys:
-            new_value = new_dict[k]
-            old_value = old_dict[k]
-            if new_value == old_value:
-                identical.setdefault(k, _identical_delta_tree_node(old_value))
-            else:
-                changed.setdefault(k, _changed_delta_tree_node(old_value, new_value))
-        return {k: _new_delta_tree_node(new_dict[k]) for k in new_keys}, changed,\
-               {k: _removed_delta_tree_node(old_dict[k]) for k in removed_keys}, identical
-
     def _get_filtered_entries(self, entries, keys):
         filtered = {}
         for k, v in entries.iteritems():
@@ -702,107 +682,87 @@ class Numeration(Leaf):
     def count_entries(self):
         return sum(map(len, self._numeration))
 
-    def compare_with(self, old, keep_identical=False):
-        if len(self._numeration) == len(old._numeration):
-            new, changed, removed, data = \
-                self._compare_with_fixed_length(old, keep_identical=keep_identical)
-        else:
-            new, changed, removed, data = \
-                self._compare_with_different_length(old, keep_identical=keep_identical)
-        if data:
-            delta = Numeration()
-            delta.set_child_data(data)
-        else:
-            delta = None
-        return new, changed, removed, delta
+    def compare_with(self, other, keep_identical=False):
+        remaining_own_rows, remaining_other_rows, identical_rows =\
+            self._get_categorized_rows(other)
 
-    def _compare_with_fixed_length(self, old, keep_identical=False):
-        # In this case we assume that each entry corresponds to the
-        # old one with the same index.
-        new, changed, removed = 0, 0, 0
-        data = []
-        for my_entries, old_entries in \
-            zip(self._numeration, old._numeration):
-            new_entries, changed_entries, removed_entries, identical_entries = \
-                self._compare_dicts(old_entries, my_entries)
-            new += len(new_entries)
-            changed += len(changed_entries)
-            removed += len(removed_entries)
-            entry = {}
-            for entries in [new_entries, changed_entries, removed_entries]:
-                entry.update(entries)
-            if keep_identical:
-                entry.update(identical_entries)
-            if entry:
-                data.append(entry)
-        return new, changed, removed, data
+        new_rows = []
+        removed_rows = []
+        compared_rows = []
+        num_new, num_changed, num_removed = 0, 0, 0
+        if not remaining_other_rows and remaining_own_rows:
+            new_rows.extend(remaining_own_rows)
 
-    def _compare_with_different_length(self, old, keep_identical=False):
-        my_converted = self._convert_numeration()
-        old_converted = old._convert_numeration()
+        elif remaining_other_rows and not remaining_own_rows:
+            removed_rows.extend(remaining_other_rows)
 
-        my_keys = set(my_converted.keys())
-        old_keys = set(old_converted.keys())
-        new_keys = my_keys - old_keys
-        removed_keys = old_keys - my_keys
-        intersect_keys = my_keys.intersection(old_keys)
-
-        new, changed, removed = 0, 0, 0
-        data = []
-        for new_key in new_keys:
-            for index in my_converted[new_key].keys():
-                my_entry = self._numeration[index]
-                new += len(my_entry)
-                data.append({k: (None, v) for k, v in my_entry.iteritems()})
-
-        for removed_key in removed_keys:
-            for index in old_converted[removed_key].keys():
-                old_entry = old._numeration[index]
-                removed += len(old_entry)
-                data.append({k: (v, None) for k, v in old_entry.iteritems()})
-
-        for intersect_key in intersect_keys:
-            my_entries = my_converted[intersect_key].values()
-            old_entries = old_converted[intersect_key].values()
-            if len(my_entries) == len(old_entries):
-                data_entry = {}
-                # In this case we assume that each entry corresponds to the
-                # old one with the same index.
-                for k, my_entry, old_entry in zip(intersect_key, my_entries, old_entries):
-                    if my_entry == old_entry:
-                        if keep_identical:
-                            data_entry.setdefault(k, (my_entry, my_entry))
-                    else:
-                        data_entry.setdefault(k, (old_entry, my_entry))
-                        changed += 1
-                data.append(data_entry)
-
+        elif remaining_other_rows and remaining_own_rows:
+            if len(remaining_other_rows) == len(remaining_own_rows):
+                num_new, num_changed, num_removed, compared_rows =\
+                    self._compare_remaining_rows_with_same_length(
+                        remaining_own_rows,
+                        remaining_other_rows,
+                        keep_identical=keep_identical)
             else:
-                my_entries = set(my_entries)
-                old_entries = set(old_entries)
-                new_entries = my_entries - old_entries
-                removed_entries = old_entries - my_entries
-                for new_entry in new_entries:
-                    data.append({k: (None, v) for k, v in zip(intersect_key, new_entry)})
-                for removed_entry in removed_entries:
-                    data.append({k: (v, None) for k, v in zip(intersect_key, removed_entry)})
-                new += len(new_entries)
-                removed += len(removed_entries)
-                if keep_identical:
-                    for _intersect_entry in my_entries.intersection(old_entries):
-                        data.append({k: (v, v) for k, v in zip(intersect_key, old_entry)})
-        return new, changed, removed, data
+                new_rows.extend(remaining_own_rows)
+                removed_rows.extend(remaining_other_rows)
 
-    def _convert_numeration(self):
-        converted = {}
-        for index, entry in enumerate(self._numeration):
-            key, values = [], []
-            for k, v in sorted(entry.iteritems()):
-                key.append(k)
-                values.append(v)
-            entries = converted.setdefault(tuple(key), {})
-            entries.setdefault(index, tuple(values))
-        return converted
+        delta_node_rows = compared_rows\
+                          + [{k: _new_delta_tree_node(v)
+                             for k,v in row.iteritems()}
+                             for row in new_rows]\
+                          + [{k: _removed_delta_tree_node(v)
+                             for k,v in row.iteritems()}
+                             for row in removed_rows]
+        if keep_identical:
+            delta_node_rows += [{k: _identical_delta_tree_node(v)
+                                 for k, v in row.iteritems()}
+                                for row in identical_rows]
+        if delta_node_rows:
+            delta_node = Numeration()
+            delta_node.set_child_data(delta_node_rows)
+        else:
+            delta_node = None
+        return len(new_rows) + num_new, num_changed,\
+               len(removed_rows) + num_removed, delta_node
+
+    def _get_categorized_rows(self, other):
+        identical_rows = []
+        remaining_other_rows = []
+        remaining_new_rows = []
+        for row in other._numeration:
+            if row in self._numeration:
+                if row not in identical_rows:
+                    identical_rows.append(row)
+            else:
+                remaining_other_rows.append(row)
+        for row in self._numeration:
+            if row in other._numeration:
+                if row not in identical_rows:
+                    identical_rows.append(row)
+            else:
+                remaining_new_rows.append(row)
+        return remaining_new_rows, remaining_other_rows, identical_rows
+
+    def _compare_remaining_rows_with_same_length(self, own_rows, other_rows, keep_identical=False):
+        # In this case we assume that each entry corresponds to the
+        # other one with the same index.
+        num_new, num_changed, num_removed = 0, 0, 0
+        data = []
+        for own_row, other_row in zip(own_rows, other_rows):
+            new_entries, changed_entries, removed_entries, identical_entries = \
+                _compare_dicts(other_row, own_row)
+            num_new += len(new_entries)
+            num_changed += len(changed_entries)
+            num_removed += len(removed_entries)
+            row = {}
+            for entries in [new_entries, changed_entries, removed_entries]:
+                row.update(entries)
+            if keep_identical:
+                row.update(identical_entries)
+            if row:
+                data.append(row)
+        return num_new, num_changed, num_removed, data
 
     def encode_for_delta_tree(self, encode_as):
         delta_node = Numeration()
@@ -907,9 +867,9 @@ class Attributes(Leaf):
     def count_entries(self):
         return len(self._attributes)
 
-    def compare_with(self, old, keep_identical=False):
+    def compare_with(self, other, keep_identical=False):
         new, changed, removed, identical = \
-            self._compare_dicts(old._attributes, self._attributes)
+            _compare_dicts(other._attributes, self._attributes)
         if new or changed or removed:
             delta_node = Attributes()
             delta_node.set_child_data(new)
@@ -1046,6 +1006,27 @@ class Node(object):
 #   |                 |_| |_|\___|_| .__/ \___|_|  |___/                   |
 #   |                              |_|                                     |
 #   '----------------------------------------------------------------------'
+
+
+def _compare_dicts(old_dict, new_dict):
+    """
+    Format of compared entries:
+      new:          {k: (None, new_value), ...}
+      changed:      {k: (old_value, new_value), ...}
+      removed:      {k: (old_value, None), ...}
+      identical:    {k: (value, value), ...}
+    """
+    removed_keys, kept_keys, new_keys = _compare_dict_keys(old_dict, new_dict)
+    identical, changed = {}, {}
+    for k in kept_keys:
+        new_value = new_dict[k]
+        old_value = old_dict[k]
+        if new_value == old_value:
+            identical.setdefault(k, _identical_delta_tree_node(old_value))
+        else:
+            changed.setdefault(k, _changed_delta_tree_node(old_value, new_value))
+    return {k: _new_delta_tree_node(new_dict[k]) for k in new_keys}, changed,\
+           {k: _removed_delta_tree_node(old_dict[k]) for k in removed_keys}, identical
 
 
 def _compare_dict_keys(old_dict, new_dict):

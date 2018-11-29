@@ -465,7 +465,7 @@ class DataSource(object):
         if not self._persisted_sections:
             return host_sections
 
-        for section_name, entry in self._persisted_sections.items():
+        for section_name, entry in self._persisted_sections.iteritems():
             if len(entry) == 2:
                 continue # Skip entries of "old" format
 
@@ -483,46 +483,34 @@ class DataSource(object):
 
     def _load_persisted_sections(self):
         file_path = self._persisted_sections_file_path()
-
         persisted_sections = store.load_data_from_file(file_path, {})
-        persisted_sections = self._filter_outdated_persisted_sections(persisted_sections)
+        filtered_persisted_sections = self._filter_outdated_persisted_sections(persisted_sections)
 
-        if not persisted_sections:
+        if not filtered_persisted_sections:
             self._logger.debug("No persisted sections loaded")
-        else:
-            self._logger.debug("Loaded persisted sections: %s" % (", ".join(persisted_sections.keys())))
+            try:
+                os.remove(self._persisted_sections_file_path())
+            except OSError:
+                pass
 
-        return persisted_sections
+        return filtered_persisted_sections
 
 
-    # TODO: This is not race condition free when modifying the data. Either remove
-    # the possible write here and simply ignore the outdated sections or lock when
-    # reading and unlock after writing
     def _filter_outdated_persisted_sections(self, persisted_sections):
+        filtered_persisted_sections = {}
         now = time.time()
-        modified = False
-        for section_name, entry in persisted_sections.items():
+        for section_name, entry in persisted_sections.iteritems():
             if len(entry) == 2:
                 persisted_until = entry[0]
             else:
                 persisted_until = entry[1]
 
             if not self._use_outdated_persisted_sections and now > persisted_until:
-                self._logger.debug("Persisted section %s is outdated by %d seconds. Deleting it." %
+                self._logger.debug("Persisted section %s is outdated by %d seconds. Skipping it." %
                                                        (section_name, now - persisted_until))
-                del persisted_sections[section_name]
-                modified = True
-
-        if not persisted_sections:
-            try:
-                os.remove(self._persisted_sections_file_path())
-            except OSError:
-                pass
-
-        elif modified:
-            self._store_persisted_sections(persisted_sections)
-
-        return persisted_sections
+                continue
+            filtered_persisted_sections[section_name] = entry
+        return filtered_persisted_sections
 
 
     @classmethod

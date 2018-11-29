@@ -68,6 +68,9 @@ $(PNP4NAGIOS_INSTALL): $(PNP4NAGIOS_BUILD)
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/pnp4nagios/htdocs/media/css/ui-facelift/images
 	install -m 644 $(PACKAGE_DIR)/$(PNP4NAGIOS)/ui-facelift/jquery-ui.css $(DESTDIR)$(OMD_ROOT)/share/pnp4nagios/htdocs/media/css/ui-facelift
 	install -m 644 $(PACKAGE_DIR)/$(PNP4NAGIOS)/ui-facelift/images/* $(DESTDIR)$(OMD_ROOT)/share/pnp4nagios/htdocs/media/css/ui-facelift/images
+
+	# Install Hooks
+	install -m 755 $(PACKAGE_DIR)/$(PNP4NAGIOS)/PNP4NAGIOS $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
 	$(TOUCH) $@
 
 $(PNP4NAGIOS)-skel:

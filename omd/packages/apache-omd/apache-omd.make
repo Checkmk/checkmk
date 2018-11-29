@@ -61,30 +61,30 @@ ifeq ($(DISTRO_NAME),REDHAT)
   endif
 endif
 
-APACHE_INSTALL := $(BUILD_HELPER_DIR)/$(APACHE_DIR)-install
-APACHE_SKEL := $(BUILD_HELPER_DIR)/$(APACHE_DIR)-skel
+APACHE_OMD_INSTALL := $(BUILD_HELPER_DIR)/$(APACHE_DIR)-install
+APACHE_OMD_SKEL := $(BUILD_HELPER_DIR)/$(APACHE_DIR)-skel
 
 
 .PHONY: $(APACHE) $(APACHE)-install $(APACHE)-skel $(APACHE)-clean
 
 $(APACHE):
 
-$(APACHE)-install: $(APACHE_INSTALL)
+$(APACHE)-install: $(APACHE_OMD_INSTALL)
 
-$(APACHE)-skel: $(APACHE_SKEL)
+$(APACHE)-skel: $(APACHE_OMD_SKEL)
 
-$(APACHE_INSTALL): $(APACHE_BUILD)
+$(APACHE_OMD_INSTALL): 
 	# Install software below $(DESTDIR)$(OMD_ROOT)/{bin,lib,share}
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/omd
 	install -m 644 $(PACKAGE_DIR)/$(APACHE)/apache.conf $(DESTDIR)$(OMD_ROOT)/share/omd/apache.conf
 	# Create distribution independent alias for htpasswd command
+	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/bin/
 	$(LN) -sf $(HTPASSWD_BIN) $(DESTDIR)$(OMD_ROOT)/bin/htpasswd
+	install -m 775 $(PACKAGE_DIR)/$(APACHE)/APACHE_TCP_ADDR $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
+	install -m 775 $(PACKAGE_DIR)/$(APACHE)/APACHE_TCP_PORT $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
 	$(TOUCH) $@
 
-	$(MKDIR) $(BUILD_HELPER_DIR)
-	$(TOUCH) $@
-	
-$(APACHE_SKEL):	$(APACHE_INSTALL)
+$(APACHE_OMD_SKEL): $(APACHE_OMD_INSTALL)
 	# This file is loaded by php-wrapper on RedHat/CentOS < 7
 	if [ $(CENTOS_WORKAROUND) -eq 1 ]; then \
 		$(MKDIR) $(SKEL)/etc/apache/; \

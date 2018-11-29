@@ -9,7 +9,6 @@ TESTDIR := ../t/packages/check_multi/t
 CHECK_MULTI_BUILD := $(BUILD_HELPER_DIR)/$(CHECK_MULTI_ARCH)-build
 CHECK_MULTI_INSTALL := $(BUILD_HELPER_DIR)/$(CHECK_MULTI_ARCH)-install
 CHECK_MULTI_UNPACK := $(BUILD_HELPER_DIR)/$(CHECK_MULTI_ARCH)-unpack
-CHECK_MULTI_SKEL := $(BUILD_HELPER_DIR)/$(CHECK_MULTI_ARCH)-skel
 
 .PHONY: $(CHECK_MULTI) $(CHECK_MULTI)-install $(CHECK_MULTI)-skel $(CHECK_MULTI)-clean
 
@@ -17,7 +16,7 @@ $(CHECK_MULTI): $(CHECK_MULTI_BUILD)
 
 $(CHECK_MULTI)-install: $(CHECK_MULTI_INSTALL)
 
-$(CHECK_MULTI)-skel: $(CHECK_MULTI_SKEL)
+$(CHECK_MULTI)-skel:
 
 # TODO
 #--with-nagios-name=<nagios|icinga>       set nagios name (there might be some clones ;)) (default:nagios)
@@ -103,9 +102,6 @@ $(CHECK_MULTI_INSTALL): $(CHECK_MULTI_BUILD)
 	#--- allow to find testdir in plugin directory
 	test -L check_multi || ln -s $(CHECK_MULTI_DIR) check_multi
 	$(TOUCH) $@
-
-$(CHECK_MULTI_SKEL):
-	# Optional target called to create additional files below skel
 
 $(CHECK_MULTI)-clean:
 	rm -rf $(CHECK_MULTI_DIR) $(BUILD_HELPER_DIR)/$(CHECK_MULTI)*

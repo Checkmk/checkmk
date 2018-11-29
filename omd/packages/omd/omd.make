@@ -37,6 +37,12 @@ $(OMD_INSTALL):
 	install -m 755 $(PACKAGE_DIR)/$(OMD)/port_is_used $(DESTDIR)$(OMD_ROOT)/lib/omd/
 	install -m 644 $(PACKAGE_DIR)/$(OMD)/bash_completion $(DESTDIR)$(OMD_ROOT)/lib/omd/
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/post-create
+	install -m 755 $(PACKAGE_DIR)/$(OMD)/ADMIN_MAIL $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
+	install -m 755 $(PACKAGE_DIR)/$(OMD)/APACHE_MODE $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
+	install -m 755 $(PACKAGE_DIR)/$(OMD)/AUTOSTART $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
+	install -m 755 $(PACKAGE_DIR)/$(OMD)/CORE $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
+	install -m 755 $(PACKAGE_DIR)/$(OMD)/TMPFS $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
+
 	$(TOUCH) $@
 
 $(OMD)-skel:

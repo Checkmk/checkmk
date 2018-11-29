@@ -30,6 +30,8 @@ $(NSCA_INSTALL): $(NSCA_BUILD)
 	install -m 644 $(NSCA_DIR)/README $(DESTDIR)$(OMD_ROOT)/share/doc/nsca
 	install -m 644 $(NSCA_DIR)/LEGAL $(DESTDIR)$(OMD_ROOT)/share/doc/nsca
 	install -m 644 $(NSCA_DIR)/SECURITY $(DESTDIR)$(OMD_ROOT)/share/doc/nsca
+	install -m 755 $(PACKAGE_DIR)/$(NSCA)/NSCA $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
+	install -m 755 $(PACKAGE_DIR)/$(NSCA)/NSCA_TCP_PORT $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
 	$(TOUCH) $@
 
 $(NSCA)-skel:

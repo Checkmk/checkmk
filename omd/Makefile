@@ -100,80 +100,92 @@ SKEL := $(DESTDIR)$(OMD_ROOT)/skel
 # '/' might occur in custom branches
 # filenames and sed arguments should not contain '/'
 NEW_VERSION_STRING := $(subst /,-,$(NEW_VERSION))
+CMA_PKG_VERSION_TXT := $(shell if [ "$(DISTRO_CODE)" = "stretch" ]; then echo "-2" ; fi )
+PKG_VERSION := $(basename $(OMD_VERSION))
+ARCH := $(shell uname -m)
+CMA_PACKAGE:= $(REPO_PATH)/check-mk-$(EDITION)-$(PKG_VERSION)$(CMA_PKG_VERSION_TXT)-$(ARCH).cma
 
 PRE_INSTALL := $(BUILD_HELPER_DIR)/pre-install
 PRE_SKEL := $(BUILD_HELPER_DIR)/pre-skel
-PRE_CMA := $(BUILD_HELPER_DIR)/pre-cma
+INSTALL := $(BUILD_HELPER_DIR)/install
+INSTALL_GLOBAL := $(BUILD_HELPER_DIR)/install-global
 
-.PHONY: install-global
+BUILD_TARGETS := $(shell echo $(PACKAGES)  | tr 'a-z' 'A-Z' | tr '-' '_' )
+INSTALL_TARGETS := $(foreach package,$(addsuffix _INSTALL,$(BUILD_TARGETS)),$($(package)))
+SKEL_TARGETS :=  $(foreach package,$(addsuffix _SKEL,$(BUILD_TARGETS)),$($(package)))
 
-build: $(PACKAGES)
+.PHONY: install-global build install pack skel
 
-pack: skel
+debug:
+	echo $(BUILD_TARGETS)
+	echo $(INSTALL_TARGETS)
+	echo $(SKEL_TARGETS)
 
-#TODO: Define dependecies here correctly...
+build: $(BUILD_TARGETS)
+
+install: $(INSTALL)
+
+install-global: $(INSTALL_GLOBAL)
+
+pack: $(BIN_TGZ) 
+
+skel: $(DESTDIR)$(OMD_ROOT)/share/omd/skel.permissions $(FIX_SKEL)
+
+cma: $(CMA_PACKAGE)
+
+#Prepare clean install environment
 $(PRE_INSTALL):
 	rm -rf $(DESTDIR)
 	rm -rf $(BUILD_HELPER_DIR)/*-install
 	mkdir -p $(DESTDIR)$(OMD_PHYSICAL_BASE)
 	A="$(OMD_PHYSICAL_BASE)" ; ln -s $${A:1} $(DESTDIR)/omd
+	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/bin
+	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/omd/versions/$(OMD_VERSION)/bin
+	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks
 	touch $@
 
-$(addsuffix -install,$(PACKAGES)): $(PRE_INSTALL)
 
-install:  $(addsuffix -install,$(PACKAGES))
-	# TODO: Add hook install target where needed
-	@set -e ; cd packages ; for p in $(PACKAGES) ; do \
-	    if [ -d $$p ]; then \
-                for hook in $$(cd $$p ; ls *.hook 2>/dev/null) ; do \
-                    mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks ; \
-                    install -m 755 $$p/$$hook $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/$${hook%.hook} ; \
-                done ; \
-	    fi ; \
-        done
+$(INSTALL_TARGETS): $(PRE_INSTALL)
 
+$(SKEL_TARGETS): $(PRE_SKEL)
+
+$(INSTALL): $(INSTALL_TARGETS)
 	# Repair packages that install with silly modes (such as Nagios)
 	chmod -R o+Xr $(DESTDIR)$(OMD_ROOT)
+	$(TOUCH) $@
 
-
-$(PRE_SKEL): install-global
+$(PRE_SKEL) : $(INSTALL_GLOBAL)
 	# Install skeleton files (subdirs skel/ in packages' directories)
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel
 	@set -e ; cd packages ; for p in $(PACKAGES) ; do \
-            if [ ! -d "$$p" ] ; then  \
-	       echo "Invalid package: $$p"; exit 1 ; \
-	    fi ; \
             if [ -d "$$p/skel" ] ; then  \
               tar cf - -C $$p/skel --exclude="*~" --exclude=".gitignore" . | tar xvf - -C $(DESTDIR)$(OMD_ROOT)/skel ; \
             fi ;\
         done
-	touch $@
+	$(TOUCH) $@
 
-$(addsuffix -skel,$(PACKAGES)): $(PRE_SKEL)
-
-skel: $(addsuffix -skel,$(PACKAGES))
-        # Create permissions file for skel
+$(DESTDIR)$(OMD_ROOT)/share/omd/skel.permissions: $(SKEL_TARGETS)
+	# Create permissions file for skel
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/omd
-	@set -e ; cd packages ; for p in $(PACKAGES) ; do \
+	set -e ; cd packages ; for p in $(PACKAGES) ; do \
 	    if [ -d $$p ] && [ -e $$p/skel.permissions ] ; then \
 	        echo "# $$p" ; \
 	        cat $$p/skel.permissions ; \
 	    fi ; \
 	done > $(DESTDIR)$(OMD_ROOT)/share/omd/skel.permissions
 
-        # Make sure, all permissions in skel are set to 0755, 0644
+$(FIX_SKEL): $(SKEL_TARGETS)
+	# Make sure, all permissions in skel are set to 0755, 0644
 	@failed=$$(find $(DESTDIR)$(OMD_ROOT)/skel -type d -not -perm 0755) ; \
 	if [ -n "$$failed" ] ; then \
-	    echo "Invalid permissions for skeleton dirs. Must be 0755:" ; \
-            echo "I'll fix this for you this time..." ; \
+	    echo "Fixing invalid permissions for skeleton dirs. Must be 0755:" ; \
             chmod -c 755 $$failed ; \
             echo "$$failed" ; \
         fi
 	@failed=$$(find $(DESTDIR)$(OMD_ROOT)/skel -type f -not -perm 0644) ; \
 	if [ -n "$$failed" ] ; then \
-	    echo "Invalid permissions for skeleton files. Must be 0644:" ; \
+	    echo "Fixing invalid permissions for skeleton files. Must be 0644:" ; \
             echo "$$failed" ; \
-            echo "I'll fix this for you this time..." ; \
             chmod -c 644 $$failed ; \
         fi
 
@@ -182,25 +194,11 @@ skel: $(addsuffix -skel,$(PACKAGES))
 
 	# Remove site-specific directories that went under /omd/version
 	rm -rf $(DESTDIR)/{var,tmp}
-
-	# Pack the whole stuff into a tarball
-	tar czf $(BIN_TGZ) --owner=root --group=root -C $(DESTDIR) .
-
-clean: $(addsuffix -clean,$(PACKAGES))
-	@if [ -d $(DESTDIR) ]; then \
-	    rm -rf $(DESTDIR) ; \
-	fi
-	env
-	@for p in packages/* ; do \
-	    if [ -d $$p ] && [ -f $$p/Makefile ]; then \
-		$(MAKE) -C $$p clean ; \
-	    fi ; \
-	done
-	$(RM) -r $(BUILD_HELPER_DIR)
+	$(TOUCH) $@
 
 # Create installations files that do not lie beyond /omd/versions/$(OMD_VERSION)
 # and files not owned by a specific package.
-install-global: install
+$(INSTALL_GLOBAL): $(INSTALL)
 	# Create link to default version
 	ln -s $(OMD_VERSION) $(DESTDIR)$(OMD_BASE)/versions/default
 
@@ -232,16 +230,17 @@ install-global: install
 	if [ -f COMMIT ]; then \
 	    install -m 644 COMMIT $(DESTDIR)$(OMD_ROOT)/share/doc ; \
 	fi
+	$(TOUCH) $@
 
+$(BIN_TGZ): $(DESTDIR)$(OMD_ROOT)/share/omd/skel.permissions $(FIX_SKEL)
+	# Pack the whole stuff into a tarball
+	tar czf $@ --owner=root --group=root -C $(DESTDIR) .
 
 rpm:
 	PKG_VERSION=$(OMD_VERSION) ; \
-	PKG_VERSION=$${PKG_VERSION/.cee/} ; \
-	PKG_VERSION=$${PKG_VERSION/.cre/} ; \
-	PKG_VERSION=$${PKG_VERSION/.cme/} ; \
 	sed -e 's/^Requires:.*/Requires:        $(OS_PACKAGES)/' \
 	    -e 's/%{version}/$(OMD_VERSION)/g' \
-	    -e "s/%{pkg_version}/$$PKG_VERSION/g" \
+	    -e "s/%{pkg_version}/$(PKG_VERSION)/g" \
 	    -e 's/%{edition}/$(EDITION)/g' \
 	    -e 's/^Version:.*/Version: $(DISTRO_CODE)/' \
 	    -e 's/^Release:.*/Release: $(OMD_SERIAL)/' \
@@ -266,7 +265,6 @@ rpm:
 	mv -v $(RPM_TOPDIR)/SRPMS/*.src.rpm $(REPO_PATH)
 	rm -rf $(RPM_TOPDIR) rpm.buildroot
 
-
 # create a debian/changelog to build the package
 debian/changelog:
 	# Build DEB from prebuild binary. This currently needs 'make dist' and thus only
@@ -286,12 +284,8 @@ debian/changelog:
 	dch --release "releasing ...."
 
 deb: debian/changelog
-	PKG_VERSION=$(OMD_VERSION) ; \
-	PKG_VERSION=$${PKG_VERSION/.cee/} ; \
-	PKG_VERSION=$${PKG_VERSION/.cre/} ; \
-	PKG_VERSION=$${PKG_VERSION/.cme/} ; \
 	sed -e 's/###OMD_VERSION###/$(OMD_VERSION)/' \
-	    -e "s/###PKG_VERSION###/$$PKG_VERSION/" \
+	    -e "s/###PKG_VERSION###/$(PKG_VERSION)/" \
 	    -e 's/###EDITION###/$(EDITION)/' \
 	    -e 's/###BUILD_PACKAGES###/$(BUILD_PACKAGES)/' \
 	    -e 's/###OS_PACKAGES###/$(OS_PACKAGES)/' \
@@ -313,13 +307,6 @@ deb: debian/changelog
 	# mv "../omd-$(OMD_VERSION)_$${build}_$${arch}.deb" \
 	#  "../omd-$(OMD_VERSION)_$${distro}_$${arch}.deb" ;
 
-# Only for development: install tarball below /
-xzf:
-	tar xzf $(BIN_TGZ) -C / # HACK: Add missing suid bits if compiled as non-root
-	chmod 4755 $(OMD_ROOT)/lib/nagios/plugins/check_{icmp,dhcp}
-	chmod 4775 $(OMD_ROOT)/bin/mkeventd_open514
-	$(APACHE_CTL) -k graceful
-
 # On debian based systems register the alternative switches
 alt:
 	@if which update-alternatives >/dev/null 2>&1; then \
@@ -340,17 +327,9 @@ setversion:
 test:
 	t/test_all.sh
 
-$(PRE_CMA):
-	# make the cmc the default core
-	sed -i 's/default)/default) echo "cmc"; exit;/g' packages/omd/CORE.hook
-	# enable the event console by default
-	sed -i 's/default)/default) echo "on"; exit;/g' packages/check_mk/MKEVENTD.hook
+$(CMA_INSTALL): $(INSTALL_TARGETS)
 
-cma-install: $(PACKAGES) $(CMA_PRE)
-	make -C packages/cma install
-
-cma: cma-install pack
-
+$(CMA_PACKAGE): $(CMA-INSTALL) $(DESTDIR)$(OMD_ROOT)/share/omd/skel.permissions $(FIX_SKEL)
 	# Create info file to mark minimal cma firmware version requirement
 	@if [ "$(DISTRO_CODE)" = "stretch" ]; then \
 	    MIN_VERSION=1.4.0 ; \
@@ -364,22 +343,30 @@ cma: cma-install pack
 	    echo -e "DEMO=1\n" >> $(DESTDIR)/opt/omd/versions/$(OMD_VERSION)/cma.info ; \
 	fi
 
-	rm check-mk-$(EDITION)-bin-$(OMD_VERSION).tar.gz
-
-	if [ "$(DISTRO_CODE)" = "stretch" ]; then \
-	    CMA_PKG_VERSION_TXT="-2" ; \
-	else \
-	    CMA_PKG_VERSION_TXT="" ; \
-	fi ; \
-	PKG_VERSION=$(OMD_VERSION) ; \
-	PKG_VERSION=$${PKG_VERSION/.cee/} ; \
-	PKG_VERSION=$${PKG_VERSION/.cre/} ; \
-	PKG_VERSION=$${PKG_VERSION/.cme/} ; \
-	tar czf $(REPO_PATH)/check-mk-$(EDITION)-$${PKG_VERSION}$${CMA_PKG_VERSION_TXT}-$$(uname -m).cma \
+	tar czf $@ \
 	    --owner=root \
 	    --group=root \
 	    -C $(DESTDIR)/opt/omd/versions/ \
 	    $(OMD_VERSION)
+
+clean: $(addsuffix -clean,$(PACKAGES))
+	@if [ -d $(DESTDIR) ]; then \
+	    rm -rf $(DESTDIR) ; \
+	fi
+	env
+	@for p in packages/* ; do \
+	    if [ -d $$p ] && [ -f $$p/Makefile ]; then \
+		$(MAKE) -C $$p clean ; \
+	    fi ; \
+	done
+	$(RM) -r $(BUILD_HELPER_DIR)
+
+# Only for development: install tarball below /
+xzf:
+	tar xzf $(BIN_TGZ) -C / # HACK: Add missing suid bits if compiled as non-root
+	chmod 4755 $(OMD_ROOT)/lib/nagios/plugins/check_{icmp,dhcp}
+	chmod 4775 $(OMD_ROOT)/bin/mkeventd_open514
+	$(APACHE_CTL) -k graceful
 
 setup:
 	@echo "Packages needed for compilation:"

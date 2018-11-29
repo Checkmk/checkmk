@@ -26,7 +26,6 @@ endif
 MOD_WSGI_BUILD := $(BUILD_HELPER_DIR)/$(MOD_WSGI_DIR)-build
 MOD_WSGI_INSTALL := $(BUILD_HELPER_DIR)/$(MOD_WSGI_DIR)-install
 MOD_WSGI_PATCHING := $(BUILD_HELPER_DIR)/$(MOD_WSGI_DIR)-patching
-MOD_WSGI_SKEL := $(BUILD_HELPER_DIR)/$(MOD_WSGI_DIR)-skel
 
 .PHONY: $(MOD_WSGI) $(MOD_WSGI)-install $(MOD_WSGI)-skel $(MOD_WSGI)-clean
 
@@ -34,7 +33,7 @@ $(MOD_WSGI): $(MOD_WSGI_BUILD)
 
 $(MOD_WSGI)-install: $(MOD_WSGI_INSTALL)
 
-$(MOD_WSGI)-skel: $(MOD_WSGI_SKEL)
+$(MOD_WSGI)-skel:
 
 $(MOD_WSGI_BUILD): $(MOD_WSGI_PATCHING) $(PYTHON_BUILD) 
 	set -e ; \
@@ -55,8 +54,6 @@ $(MOD_WSGI_INSTALL): $(MOD_WSGI_BUILD)
 	cp $(MOD_WSGI_DIR)/src/server/.libs/mod_wsgi.so $(DESTDIR)$(OMD_ROOT)/lib/apache/modules
 	chmod 644 $(DESTDIR)$(OMD_ROOT)/lib/apache/modules/mod_wsgi.so
 	$(TOUCH) $@
-
-$(MOD_WSGI_SKEL):
 
 $(MOD_WSGI)-clean:
 	$(RM) -r $(MOD_WSGI_DIR) $(BUILD_HELPER_DIR)/$(MOD_WSGI)*

@@ -48,6 +48,7 @@ $(NAGIOS_INSTALL): $(NAGIOS_BUILD)
 	# Install the diskspace cleanup plugin
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/diskspace
 	install -m 644 $(PACKAGE_DIR)/$(NAGIOS)/diskspace $(DESTDIR)$(OMD_ROOT)/share/diskspace/nagios
+	install -m 755 $(PACKAGE_DIR)/$(NAGIOS)/NAGIOS_THEME $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
 	$(TOUCH) $@
   
 $(NAGIOS)-skel:

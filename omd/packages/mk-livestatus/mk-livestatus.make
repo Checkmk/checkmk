@@ -30,6 +30,9 @@ $(MK_LIVESTATUS_INSTALL): $(MK_LIVESTATUS_BUILD)
 	install -m 755 $(PACKAGE_DIR)/$(MK_LIVESTATUS)/lq $(DESTDIR)$(OMD_ROOT)/bin
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/python
 	install -m 644 $(MK_LIVESTATUS_DIR)/api/python/livestatus.py $(DESTDIR)$(OMD_ROOT)/lib/python
+	install -m 755 $(PACKAGE_DIR)/$(MK_LIVESTATUS)/LIVESTATUS_TCP $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
+	install -m 755 $(PACKAGE_DIR)/$(MK_LIVESTATUS)/LIVESTATUS_TCP_ONLY_FROM $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
+	install -m 755 $(PACKAGE_DIR)/$(MK_LIVESTATUS)/LIVESTATUS_TCP_PORT $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
 	$(TOUCH) $@
 
 $(MK_LIVESTATUS)-skel:

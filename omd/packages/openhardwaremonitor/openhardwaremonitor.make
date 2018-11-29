@@ -50,6 +50,7 @@ $(OPENHARDWAREMONITOR_INSTALL):
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/check_mk/agents/windows/ohm
 	install -m 755 $(PACKAGE_DIR)/$(OPENHARDWAREMONITOR)/OpenHardwareMonitorCLI.exe $(DESTDIR)$(OMD_ROOT)/share/check_mk/agents/windows/ohm
 	install -m 755 $(PACKAGE_DIR)/$(OPENHARDWAREMONITOR)/OpenHardwareMonitorLib.dll $(DESTDIR)$(OMD_ROOT)/share/check_mk/agents/windows/ohm
+	$(TOUCH) $@
 
 $(OPENHARDWAREMONITOR)-skel:
 

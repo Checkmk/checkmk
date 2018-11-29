@@ -45,6 +45,7 @@ $(DOKUWIKI_INSTALL): $(DOKUWIKI_BUILD)
 	install -m 644 $(DOKUWIKI_DIR)/README $(DESTDIR)$(OMD_ROOT)/share/doc/dokuwiki
 	install -m 644 $(DOKUWIKI_DIR)/COPYING $(DESTDIR)$(OMD_ROOT)/share/doc/dokuwiki
 	install -m 644 $(DOKUWIKI_DIR)/VERSION $(DESTDIR)$(OMD_ROOT)/share/doc/dokuwiki
+	install -m 755 $(PACKAGE_DIR)/$(DOKUWIKI)/DOKUWIKI_AUTH $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
 	$(TOUCH) $@
 
 #install:

@@ -93,6 +93,14 @@ $(CHECK_MK_INSTALL): $(CHECK_MK_BUILD)
 	$(RM) $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins/Makefile
 	$(RM) $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins/*.cc
 	chmod 755 $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins/*
+	
+	# Install hooks
+	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/MKEVENTD $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
+	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/MKEVENTD_SNMPTRAP $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
+	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/MKEVENTD_SYSLOG $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
+	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/MKEVENTD_SYSLOG_TCP $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
+	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/MULTISITE_AUTHORISATION $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
+	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/MULTISITE_COOKIE_AUTH $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
 
 	# GUI-Test (in doc/helpers)
 	#$(MKDIR) $(DESTDIR)$(OMD_ROOT)/bin

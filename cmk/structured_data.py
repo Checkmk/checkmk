@@ -386,8 +386,8 @@ class Container(NodeAttribute):
             if my_child.is_equal(old_child):
                 if keep_identical:
                     delta_node.add_child(
-                        edge, abs_path,
-                        my_child.encode_for_delta_tree(encode_as=_identical_delta_tree_node))
+                        edge, my_child.encode_for_delta_tree(encode_as=_identical_delta_tree_node),
+                        abs_path)
                 continue
             new_entries, changed_entries, removed_entries, delta_child = \
                 my_child.compare_with(old_child, keep_identical=keep_identical)

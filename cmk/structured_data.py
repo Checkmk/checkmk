@@ -23,8 +23,10 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-"""This module handles tree structures for HW/SW inventory system and
-structured monitoring data of Check_MK."""
+"""
+This module handles tree structures for HW/SW inventory system and
+structured monitoring data of Check_MK.
+"""
 
 import gzip
 import re
@@ -235,16 +237,17 @@ class StructuredDataTree(object):
 
     #   ---structured tree methods----------------------------------------------
 
-    def compare_with(self, old_struct_tree):
-        delta = StructuredDataTree()
-        new, changed, removed, delta_tree = self._root.compare_with(old_struct_tree._root)
-        delta._root = delta_tree
-        return new, changed, removed, delta
+    def compare_with(self, old_tree):
+        delta_tree = StructuredDataTree()
+        num_new, num_changed, num_removed, delta_root_node =\
+            self._root.compare_with(old_tree._root)
+        delta_tree._root = delta_root_node
+        return num_new, num_changed, num_removed, delta_tree
 
     def copy(self):
-        new = StructuredDataTree()
-        new._root = self._root.copy()
-        return new
+        new_tree = StructuredDataTree()
+        new_tree._root = self._root.copy()
+        return new_tree
 
     def get_root_container(self):
         return self._root
@@ -252,13 +255,13 @@ class StructuredDataTree(object):
     def get_filtered_tree(self, allowed_paths):
         if allowed_paths is None:
             return self
-        filtered = StructuredDataTree()
+        filtered_tree = StructuredDataTree()
         for path, keys in allowed_paths:
             sub_tree = self._root.get_filtered_branch(path, keys, Container())
             if sub_tree is None:
                 continue
-            filtered._root.merge_with(sub_tree)
-        return filtered
+            filtered_tree._root.merge_with(sub_tree)
+        return filtered_tree
 
     #   ---testing--------------------------------------------------------------
 
@@ -303,7 +306,7 @@ class NodeAttribute(object):
         """Compares new tree with old one: new_tree.compare_with(old_tree)."""
         raise NotImplementedError()
 
-    def get_delta_tree(self, mode):
+    def encode_for_delta_tree(self, encode_as):
         raise NotImplementedError()
 
     def get_raw_tree(self):
@@ -366,47 +369,49 @@ class Container(NodeAttribute):
         return sum([child.count_entries() for _, __, child in self.get_children()])
 
     def compare_with(self, old, keep_identical=False):
-        my_edges = set(self._edges.keys())
-        old_edges = set(old._edges.keys())
-        new_edges = my_edges - old_edges
-        removed_edges = old_edges - my_edges
-        intersect_edges = my_edges.intersection(old_edges)
+        removed_keys, kept_keys, new_keys = _compare_dict_keys(old._edges, self._edges)
 
-        delta = Container()
-        new, changed, removed = 0, 0, 0
-        for edge, abs_path, my_child in self.get_children(edges=new_edges):
+        delta_node = Container()
+        num_new, num_changed, num_removed = 0, 0, 0
+        for edge, abs_path, my_child in self.get_children(edges=new_keys):
             new_entries = my_child.count_entries()
             if new_entries:
-                new += new_entries
-                delta.add_child(edge, my_child.get_delta_tree(mode="new"), abs_path)
+                num_new += new_entries
+                delta_node.add_child(edge,
+                                     my_child.encode_for_delta_tree(encode_as=_new_delta_tree_node),
+                                     abs_path)
 
         for edge, abs_path, my_child, old_child in \
-            self._get_comparable_children(old, edges=intersect_edges):
+            self._get_comparable_children(old, edges=kept_keys):
             if my_child.is_equal(old_child):
                 if keep_identical:
-                    delta.add_child(edge, abs_path, my_child.get_delta_tree())
+                    delta_node.add_child(
+                        edge, abs_path,
+                        my_child.encode_for_delta_tree(encode_as=_identical_delta_tree_node))
                 continue
             new_entries, changed_entries, removed_entries, delta_child = \
                 my_child.compare_with(old_child, keep_identical=keep_identical)
             if new_entries or changed_entries or removed_entries:
-                new += new_entries
-                changed += changed_entries
-                removed += removed_entries
-                delta.add_child(edge, delta_child, abs_path)
+                num_new += new_entries
+                num_changed += changed_entries
+                num_removed += removed_entries
+                delta_node.add_child(edge, delta_child, abs_path)
 
-        for edge, abs_path, old_child in old.get_children(edges=removed_edges):
+        for edge, abs_path, old_child in old.get_children(edges=removed_keys):
             removed_entries = old_child.count_entries()
             if removed_entries:
-                removed += removed_entries
-                delta.add_child(edge, old_child.get_delta_tree(mode="removed"), abs_path)
+                num_removed += removed_entries
+                delta_node.add_child(
+                    edge, old_child.encode_for_delta_tree(encode_as=_removed_delta_tree_node),
+                    abs_path)
 
-        return new, changed, removed, delta
+        return num_new, num_changed, num_removed, delta_node
 
-    def get_delta_tree(self, mode):
-        delta = Container()
+    def encode_for_delta_tree(self, encode_as):
+        delta_node = Container()
         for edge, abs_path, child in self.get_children():
-            delta.add_child(edge, child.get_delta_tree(mode), abs_path)
-        return delta
+            delta_node.add_child(edge, child.encode_for_delta_tree(encode_as), abs_path)
+        return delta_node
 
     def get_raw_tree(self):
         tree = {}
@@ -429,15 +434,15 @@ class Container(NodeAttribute):
 
     def normalize_nodes(self):
         """
-After the execution of plugins there may remain empty
-nodes which will be removed within this method.
-Moreover we have to deal with nested numerations, eg.
-at paths like "hardware.memory.arrays:*.devices:" where
-we obtain: 'memory': {'arrays': [{'devices': [...]}, {}, ... ]}.
-In this case we have to convert this
-'list-composed-of-dicts-containing-lists' structure into
-numerated nodes ('arrays') containing real numerations ('devices').
-"""
+        After the execution of plugins there may remain empty
+        nodes which will be removed within this method.
+        Moreover we have to deal with nested numerations, eg.
+        at paths like "hardware.memory.arrays:*.devices:" where
+        we obtain: 'memory': {'arrays': [{'devices': [...]}, {}, ... ]}.
+        In this case we have to convert this
+        'list-composed-of-dicts-containing-lists' structure into
+        numerated nodes ('arrays') containing real numerations ('devices').
+        """
         for edge, abs_path, child in self.get_children():
             if isinstance(child, Numeration) and \
                self._has_nested_numeration_node(child.get_child_data()):
@@ -477,10 +482,10 @@ numerated nodes ('arrays') containing real numerations ('devices').
             my_child.merge_with(foreign_child)
 
     def copy(self):
-        new = Container()
+        new_node = Container()
         for edge, abs_path, child in self.get_children():
-            new.add_child(edge, child.copy(), abs_path)
-        return new
+            new_node.add_child(edge, child.copy(), abs_path)
+        return new_node
 
     #   ---testing--------------------------------------------------------------
 
@@ -642,27 +647,25 @@ class Leaf(NodeAttribute):
     def get_filtered_data(self, keys):
         raise NotImplementedError()
 
-    def _compare_entries(self, new_entries, old_entries):
+    def _compare_dicts(self, old_dict, new_dict):
         """
-Format of compared entries:
-  new:          {k: (None, val), ...}
-  changed:      {k: (old, new), ...}
-  removed:      {k: (val, None), ...}
-  identical:    {k: (val, val), ...}
-"""
-        new_keys = set(new_entries.keys())
-        old_keys = set(old_entries.keys())
-        new = {k: (None, new_entries[k]) for k in new_keys - old_keys}
-        removed = {k: (old_entries[k], None) for k in old_keys - new_keys}
+        Format of compared entries:
+          new:          {k: (None, new_value), ...}
+          changed:      {k: (old_value, new_value), ...}
+          removed:      {k: (old_value, None), ...}
+          identical:    {k: (value, value), ...}
+        """
+        removed_keys, kept_keys, new_keys = _compare_dict_keys(old_dict, new_dict)
         identical, changed = {}, {}
-        for k in new_keys.intersection(old_keys):
-            old_v = old_entries[k]
-            new_v = new_entries[k]
-            if new_v == old_v:
-                identical.setdefault(k, (new_v, new_v))
+        for k in kept_keys:
+            new_value = new_dict[k]
+            old_value = old_dict[k]
+            if new_value == old_value:
+                identical.setdefault(k, _identical_delta_tree_node(old_value))
             else:
-                changed.setdefault(k, (old_v, new_v))
-        return new, changed, removed, identical
+                changed.setdefault(k, _changed_delta_tree_node(old_value, new_value))
+        return {k: _new_delta_tree_node(new_dict[k]) for k in new_keys}, changed,\
+               {k: _removed_delta_tree_node(old_dict[k]) for k in removed_keys}, identical
 
     def _get_filtered_entries(self, entries, keys):
         filtered = {}
@@ -721,7 +724,7 @@ class Numeration(Leaf):
         for my_entries, old_entries in \
             zip(self._numeration, old._numeration):
             new_entries, changed_entries, removed_entries, identical_entries = \
-                self._compare_entries(my_entries, old_entries)
+                self._compare_dicts(old_entries, my_entries)
             new += len(new_entries)
             changed += len(changed_entries)
             removed += len(removed_entries)
@@ -801,18 +804,13 @@ class Numeration(Leaf):
             entries.setdefault(index, tuple(values))
         return converted
 
-    def get_delta_tree(self, mode):
-        delta = Numeration()
+    def encode_for_delta_tree(self, encode_as):
+        delta_node = Numeration()
         data = []
         for entry in self._numeration:
-            if mode == "new":
-                data.append({k: (None, v) for k, v in entry.iteritems()})
-            elif mode == "removed":
-                data.append({k: (v, None) for k, v in entry.iteritems()})
-            else:
-                break
-        delta.set_child_data(data)
-        return delta
+            data.append({k: encode_as(v) for k, v in entry.iteritems()})
+        delta_node.set_child_data(data)
+        return delta_node
 
     def get_raw_tree(self):
         return self._numeration
@@ -852,9 +850,9 @@ class Numeration(Leaf):
         return tuple(entry[key] for key in sorted(keys) if key in entry)
 
     def copy(self):
-        new = Numeration()
-        new.set_child_data(self._numeration[:])
-        return new
+        new_node = Numeration()
+        new_node.set_child_data(self._numeration[:])
+        return new_node
 
     #   ---testing--------------------------------------------------------------
 
@@ -911,28 +909,23 @@ class Attributes(Leaf):
 
     def compare_with(self, old, keep_identical=False):
         new, changed, removed, identical = \
-            self._compare_entries(self._attributes, old._attributes)
+            self._compare_dicts(old._attributes, self._attributes)
         if new or changed or removed:
-            delta = Attributes()
-            delta.set_child_data(new)
-            delta.set_child_data(changed)
-            delta.set_child_data(removed)
+            delta_node = Attributes()
+            delta_node.set_child_data(new)
+            delta_node.set_child_data(changed)
+            delta_node.set_child_data(removed)
             if keep_identical:
-                delta.set_child_data(identical)
+                delta_node.set_child_data(identical)
         else:
-            delta = None
-        return len(new), len(changed), len(removed), delta
+            delta_node = None
+        return len(new), len(changed), len(removed), delta_node
 
-    def get_delta_tree(self, mode):
-        delta = Attributes()
-        if mode == "new":
-            data = {k: (None, v) for k, v in self._attributes.iteritems()}
-        elif mode == "removed":
-            data = {k: (v, None) for k, v in self._attributes.iteritems()}
-        else:
-            data = {}
-        delta.set_child_data(data)
-        return delta
+    def encode_for_delta_tree(self, encode_as):
+        delta_node = Attributes()
+        data = {k: encode_as(v) for k, v in self._attributes.iteritems()}
+        delta_node.set_child_data(data)
+        return delta_node
 
     def get_raw_tree(self):
         return self._attributes
@@ -941,9 +934,9 @@ class Attributes(Leaf):
         self._attributes.update(foreign._attributes)
 
     def copy(self):
-        new = Attributes()
-        new.set_child_data(self._attributes.copy())
-        return new
+        new_node = Attributes()
+        new_node.set_child_data(self._attributes.copy())
+        return new_node
 
     #   ---testing--------------------------------------------------------------
 
@@ -1038,10 +1031,46 @@ class Node(object):
         return comparable_children
 
     def copy(self):
-        new = Node(self.get_absolute_path())
+        new_node = Node(self.get_absolute_path())
         for child in self._children.values():
-            new.add_node_child(child.copy())
-        return new
+            new_node.add_node_child(child.copy())
+        return new_node
 
 
 #.
+#   .--helpers-------------------------------------------------------------.
+#   |                  _          _                                        |
+#   |                 | |__   ___| |_ __   ___ _ __ ___                    |
+#   |                 | '_ \ / _ \ | '_ \ / _ \ '__/ __|                   |
+#   |                 | | | |  __/ | |_) |  __/ |  \__ \                   |
+#   |                 |_| |_|\___|_| .__/ \___|_|  |___/                   |
+#   |                              |_|                                     |
+#   '----------------------------------------------------------------------'
+
+
+def _compare_dict_keys(old_dict, new_dict):
+    """
+    Returns the set relationships of the keys between two dictionaries:
+    - relative complement of new_dict in old_dict
+    - intersection of both
+    - relative complement of old_dict in new_dict
+    """
+    old_keys, new_keys = set(old_dict.keys()), set(new_dict.keys())
+    return old_keys - new_keys, old_keys.intersection(new_keys),\
+           new_keys - old_keys
+
+
+def _new_delta_tree_node(value):
+    return (None, value)
+
+
+def _removed_delta_tree_node(value):
+    return (value, None)
+
+
+def _changed_delta_tree_node(old_value, new_value):
+    return (old_value, new_value)
+
+
+def _identical_delta_tree_node(value):
+    return (value, value)

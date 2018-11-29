@@ -1,0 +1,45 @@
+Title: HW/SW Inventory history: Fixed delta tree computation
+Level: 1
+Component: inv
+Compatible: compat
+Edition: cre
+Version: 1.5.0p9
+Date: 1542799790
+Class: fix
+
+Previously the delta tree of two numerations was computed in two
+different ways:
+<ul>
+<li>If the numerations had the same length then we assumed
+that each row corresponds the other one with the same index.</li>
+<li>If the numerations had different length then we tried to find
+corresponding rows which were compared.</li>
+</ul>
+This might have led to wrong results regarding the <i>new</i>,
+<i>changed</i> and <i>removed</i> columns on the inventory history
+page. Either there might be wrong detected or not detected changes.
+Example:
+There are two numerations with same rows. If a new row is added ahead
+to the current numeration and the last row disappears of the current
+numeration then both numerations have still the same length.
+Above algorithm compared the rows with the same index and the result
+is that there are a lot of changed entries. But there is just one new
+row and one removed row.
+
+Now we act the following way:
+<ul>
+<li>First we extract all identical rows.</li>
+<li>Then the remaining rows from the old numeration are added to
+removed rows if there are no remaining rows from the current numeration resp.</li>
+<li>the remaining rows from the current numeration are added to
+removed rows if there are no remaining rows from the old numeration.</li>
+</ul>
+
+If there are remaining rows from both numerations then we do the following:
+<ul>
+<li>If the remaining numerations have the same length then we assume
+that each row corresponds the other one with the same index.</li>
+<li>If the remaining numerations have different length then we simply
+add the remaining rows from the old numeration to removed rows and the
+remaining rows from the current numeration to new rows.</li>
+</ul>

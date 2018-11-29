@@ -2628,7 +2628,7 @@ def _sychronize_profile_worker(site_configuration):
             site_id, error_text=_("Site %s is dead") % site_id, failed=True)
 
     try:
-        result = watolib.push_user_profile_to_site(site, user_id, profile)
+        watolib.push_user_profile_to_site(site, user_id, profile)
         return SynchronizationResult(site_id, succeeded=True)
     except RequestTimeout:
         # This function is currently only used by the background job

@@ -1,0 +1,13 @@
+Title: Liveproxy Daemon: Unreachable remote sites still caused a connection timeout
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cee
+Version: 1.5.0p9
+Date: 1543490589
+Class: fix
+
+One job of the liveproxyd is to decrease the response timeout for dead sites.
+This feature did not work as expected. A client trying to connect to a dead slave site
+always had at least a <tt>Timeout waiting for free channel</tt> timeout.
+

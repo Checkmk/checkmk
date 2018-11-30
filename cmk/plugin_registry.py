@@ -81,6 +81,9 @@ class ClassRegistry(object):
     def __getitem__(self, key):
         return self._entries[key]
 
+    def __len__(self):
+        return len(self._entries)
+
     def values(self):
         return self._entries.values()
 

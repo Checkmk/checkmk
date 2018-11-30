@@ -2587,8 +2587,6 @@ class ModeEventConsoleMIBs(EventConsoleMode):
 #   | Declaration of Event Console specific permissions for Multisite      |
 #   '----------------------------------------------------------------------'
 
-config.declare_permission_section("mkeventd", _("Event Console"))
-
 config.declare_permission(
     "mkeventd.config",
     _("Configuration of Event Console "),

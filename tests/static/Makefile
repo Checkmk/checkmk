@@ -3,7 +3,7 @@ FILES_TO_CHECK := $(realpath $(addprefix ../../cmk/ec/,defaults.py export.py mai
 		  $(realpath $(addprefix ../../cmk/cee/dcd/connectors,piggyback.py utils.py)) \
 		  $(realpath $(addprefix ../../cmk/,daemon.py i18n.py paths.py regex.py render.py structured_data.py)) \
 		  $(realpath $(addprefix ../../cmk/gui/,dashboard.py exceptions.py globals.py htmllib.py http_status.py \
-																						i18n.py sidebar.py sites.py table.py visuals.py)) \
+		                                        i18n.py sidebar.py sites.py table.py visuals.py permissions.py)) \
 		  $(realpath $(addprefix ../../cmk/gui/plugins/userdb/,htpasswd.py utils.py)) \
 		  $(realpath $(addprefix ../../cmk/gui/plugins/wato/utils/,base_modes.py)) \
 		  $(realpath $(addprefix ../../cmk/notification_plugins/,pagerduty.py slack.py utils.py victorops.py)) \

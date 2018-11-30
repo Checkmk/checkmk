@@ -8940,8 +8940,7 @@ def check_modify_group_permissions(group_type):
 
     # Check permissions
     for permission in required_permissions.get(group_type):
-        if not config.user.may(permission):
-            raise MKAuthException(config.permissions_by_name[permission]["title"])
+        config.user.need_permission(permission)
 
 
 def _set_group(all_groups, group_type, name, extra_info):

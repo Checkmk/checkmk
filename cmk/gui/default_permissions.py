@@ -27,6 +27,10 @@
 import cmk.gui.config as config
 import cmk.gui.i18n
 from cmk.gui.i18n import _
+from cmk.gui.permissions import (
+    permission_section_registry,
+    PermissionSection,
+)
 
 loaded_with_language = False
 
@@ -42,12 +46,25 @@ loaded_with_language = False
 #   '----------------------------------------------------------------------'
 
 
+@permission_section_registry.register
+class PermissionSectionGeneral(PermissionSection):
+    @property
+    def name(self):
+        return "general"
+
+    @property
+    def title(self):
+        return _('General Permissions')
+
+    @property
+    def sort_index(self):
+        return 10
+
+
 def load_plugins(force):
     global loaded_with_language
     if loaded_with_language == cmk.gui.i18n.get_current_language() and not force:
         return
-
-    config.declare_permission_section("general", _('General Permissions'), 10)
 
     config.declare_permission(
         "general.use",

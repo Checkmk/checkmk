@@ -110,8 +110,6 @@ def load_plugins(force):
         clear_alarm_sound_states()
         return
 
-    config.declare_permission_section("action", _("Commands on host and services"), do_sort=True)
-
     utils.load_web_plugins("views", globals())
     utils.load_web_plugins('icons', globals())
     load_host_tag_painters()

@@ -1,8 +1,6 @@
 MK_LIVESTATUS := mk-livestatus
 MK_LIVESTATUS_DIR := $(MK_LIVESTATUS)-$(CMK_VERSION)
 
-CXX_FLAGS := -g -O3 -Wall -Wextra
-BOOST_OPT := --with-boost=$(PACKAGE_BOOST_DESTDIR) 
 # Attention: copy-n-paste from check_mk/Makefile below...
 MK_LIVESTATUS_BUILD := $(BUILD_HELPER_DIR)/$(MK_LIVESTATUS)-build
 MK_LIVESTATUS_INSTALL := $(BUILD_HELPER_DIR)/$(MK_LIVESTATUS)-install
@@ -16,11 +14,10 @@ $(MK_LIVESTATUS)-install: $(MK_LIVESTATUS_INSTALL)
 $(REPO_PATH)/$(MK_LIVESTATUS_DIR).tar.gz:
 	$(MAKE) -C $(REPO_PATH) $(MK_LIVESTATUS_DIR).tar.gz
 
-$(MK_LIVESTATUS_BUILD): $(REPO_PATH)/$(MK_LIVESTATUS_DIR).tar.gz $(BOOST_BUILD)
+$(MK_LIVESTATUS_BUILD): $(REPO_PATH)/$(MK_LIVESTATUS_DIR).tar.gz $(BOOST_BUILD) $(RE2_BUILD)
 	$(TAR_GZ) $(REPO_PATH)/$(MK_LIVESTATUS_DIR).tar.gz
 	cd $(MK_LIVESTATUS_DIR) ; \
-	$(ECHO) ./configure CXXFLAGS="$(CXX_FLAGS)" $(BOOST_OPT) --prefix=$(OMD_ROOT) ; \
-	./configure CXXFLAGS="$(CXX_FLAGS)" $(BOOST_OPT) --prefix=$(OMD_ROOT)
+	./configure CXXFLAGS="-g -O3 -Wall -Wextra" --with-boost=$(PACKAGE_BOOST_DESTDIR) --with-re2=$(PACKAGE_RE2_DESTDIR) --prefix=$(OMD_ROOT)
 	$(MAKE) -C $(MK_LIVESTATUS_DIR) all
 	$(TOUCH) $@
 

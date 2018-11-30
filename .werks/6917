@@ -1,0 +1,17 @@
+Title: Availability: Not using all relevant annotations
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1543574937
+Class: fix
+
+The availability timeline was not respecting all relevant annotations
+in the case where the annotations were not starting an ending in the
+current availability time range.
+
+For example annotations that ended after the current availability range were
+not used.
+
+CMK-1353

@@ -11,10 +11,11 @@ sudo cp -v logout.php $ROOT/share/omd/htdocs/logout.php
 sudo rm -vf $ROOT/share/man/man8/omd.8.gz
 sudo cp -v omd.8 $ROOT/share/man/man8/omd.8
 sudo gzip $ROOT/share/man/man8/omd.8
-for hook in *.hook; do
-    sudo cp -v $hook $ROOT/lib/omd/hooks/${hook%*.hook}
-    sudo chmod +x $ROOT/lib/omd/hooks/${hook%*.hook}
-done
+( cd hooks; \
+  for hook in *; do \
+      sudo cp -v $hook $ROOT/lib/omd/hooks/$hook ; \
+      sudo chmod +x $ROOT/lib/omd/hooks/$hook ; \
+  done )
 sudo mkdir -p $ROOT/lib/omd/scripts/post-create
 sudo cp -v omd.service $ROOT/share/omd
 sudo cp -v omd.bin $ROOT/bin/omd

@@ -24,7 +24,6 @@
 
 #include "DowntimeColumn.h"
 #include <cstdint>
-#include <type_traits>
 #include "MonitoringCore.h"
 #include "Renderer.h"
 #include "Row.h"

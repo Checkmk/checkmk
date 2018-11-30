@@ -1,0 +1,10 @@
+Title: dell_idrac_info: Fix inventory for certain aberrant date formats
+Level: 1
+Component: inv
+Compatible: compat
+Edition: cre
+Version: 1.5.0p9
+Date: 1543584742
+Class: fix
+
+

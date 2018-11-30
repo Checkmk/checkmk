@@ -42,7 +42,22 @@ def inv_dell_idrac_info(info):
     node = inv_tree("hardware.bios.")
     node['version'] = bios_version
     node['vendor'] = bios_vendor
-    node['date'] = time.mktime(time.strptime(bios_date, "%m/%d/%Y"))
+
+    # Beware: Dell's actual definition of the format supposed
+    # to be here is yyyymmddHHMMSS.uuuuuu+ooo. This has *never*
+    # been observed in the wild. More accurate appears to be
+    # mm/dd/yyyy or 0mm/dd/yyyy or mm/0dd/yyyy. The 0 represents a
+    # random 0 thrown in for good measure :/
+    if bios_date[2] == "/" and bios_date[5] == "/": # mm/dd/yyyy
+        node['date'] = time.mktime(time.strptime(bios_date, "%m/%d/%Y"))
+    elif bios_date[3] == "/" and bios_date[6] == "/": # 0mm/dd/yyyy
+        node['date'] = time.mktime(time.strptime(bios_date, "0%m/%d/%Y"))
+    elif bios_date[2] == "/" and bios_date[6] == "/": # mm/0dd/yyyy
+        node['date'] = time.mktime(time.strptime(bios_date, "%m/0%d/%Y"))
+    elif "/" not in bios_date[:8]: # In case of Dell devices following the MIB
+        node['date'] = time.mktime(time.strptime(bios_date[:8], "%Y%m%d"))
+    else: # We deliberately ignore any other broken formats that might exist.
+        pass
 
     node = inv_tree("hardware.storage.controller.")
     node['version'] = raid_version

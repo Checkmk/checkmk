@@ -31,7 +31,6 @@
 #include <ratio>
 #include <sstream>
 #include <stdexcept>
-#include <type_traits>
 #include <utility>
 #include "Aggregator.h"
 #include "AndingFilter.h"

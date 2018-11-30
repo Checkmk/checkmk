@@ -65,6 +65,7 @@ def test_registered_automation_commands():
     registered = sorted(watolib.automation_command_registry.keys())
     assert registered == sorted([
         'activate-changes',
+        'push-profiles',
         'check-analyze-config',
         'execute-dcd-command',
         'network-scan',

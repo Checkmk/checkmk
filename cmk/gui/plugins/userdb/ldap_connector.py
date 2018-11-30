@@ -1168,6 +1168,7 @@ class LDAPUserConnector(UserConnector):
                 del users[user_id]  # remove the user
                 changes.append(_("LDAP [%s]: Removed user %s") % (connection_id, user_id))
 
+        profiles_to_synchronize = {}
         for user_id, ldap_user in ldap_users.items():
             mode_create, user = load_user(user_id)
             user_connection_id = userdb.cleanup_connection_id(user.get('connector'))
@@ -1238,7 +1239,7 @@ class LDAPUserConnector(UserConnector):
 
                 # Synchronize new user profile to remote sites if needed
                 if pw_changed and not changed and config.has_wato_slave_sites():
-                    synchronize_profile_to_sites(self._logger, user_id, user)
+                    profiles_to_synchronize[user_id] = user
 
                 if changed:
                     for key, (old_value, new_value) in sorted(changed.items()):
@@ -1248,6 +1249,8 @@ class LDAPUserConnector(UserConnector):
                     changes.append(
                         _("LDAP [%s]: Modified user %s (%s)") % (connection_id, user_id,
                                                                  ', '.join(details)))
+
+        synchronize_profiles_to_sites(self._logger, profiles_to_synchronize)
 
         duration = time.time() - start_time
         self._logger.info(
@@ -2576,18 +2579,21 @@ class SynchronizationResult(object):
         self.succeeded = succeeded
 
 
-def synchronize_profile_to_sites(logger, user_id, profile):
-    import cmk.gui.watolib as watolib
-    remote_sites = [(site_id, config.site(site_id)) for site_id in config.get_login_sites()]
+def synchronize_profiles_to_sites(logger, profiles_to_synchronize):
+    if not profiles_to_synchronize:
+        return
 
-    logger.info(
-        'Credentials changed: %s. Trying to sync to %d sites' % (user_id, len(remote_sites)))
+    import cmk.gui.watolib as watolib
+    remote_sites = [(site_id, config.site(site_id)) for site_id in config.get_login_slave_sites()]
+
+    logger.info('Credentials changed for %s. Trying to sync to %d sites' % (", ".join(
+        profiles_to_synchronize.keys()), len(remote_sites)))
 
     synchronization_jobs = []
     states = sites.states()
 
     for site_id, site in remote_sites:
-        synchronization_jobs.append((states, site_id, site, user_id, profile))
+        synchronization_jobs.append((states, site_id, site, profiles_to_synchronize))
 
     pool = ThreadPool()
     results = pool.map(_sychronize_profile_worker, synchronization_jobs)
@@ -2614,7 +2620,7 @@ def synchronize_profile_to_sites(logger, user_id, profile):
 
 def _sychronize_profile_worker(site_configuration):
     import cmk.gui.watolib as watolib
-    states, site_id, site, user_id, profile = site_configuration
+    states, site_id, site, profiles_to_synchronize = site_configuration
 
     if not site.get("replication"):
         return SynchronizationResult(site_id, disabled=True)
@@ -2628,7 +2634,10 @@ def _sychronize_profile_worker(site_configuration):
             site_id, error_text=_("Site %s is dead") % site_id, failed=True)
 
     try:
-        watolib.push_user_profile_to_site(site, user_id, profile)
+        result = watolib.push_user_profiles_to_site_transitional_wrapper(
+            site, profiles_to_synchronize)
+        if result != True:
+            return SynchronizationResult(site_id, error_text=result, failed=True)
         return SynchronizationResult(site_id, succeeded=True)
     except RequestTimeout:
         # This function is currently only used by the background job

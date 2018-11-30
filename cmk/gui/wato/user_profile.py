@@ -372,7 +372,9 @@ class ModeAjaxProfileReplication(WatoWebApiMode):
             raise MKUserError(None, _('The requested user does not exist'))
 
         start = time.time()
-        result = watolib.push_user_profile_to_site(site, user_id, users[user_id])
+        result = watolib.push_user_profiles_to_site_transitional_wrapper(
+            site, {user_id: users[user_id]})
+
         duration = time.time() - start
         watolib.ActivateChanges().update_activation_time(
             site_id, watolib.ACTIVATION_TIME_PROFILE_SYNC, duration)

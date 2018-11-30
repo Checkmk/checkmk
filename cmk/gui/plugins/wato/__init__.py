@@ -86,6 +86,9 @@ from cmk.gui.plugins.wato.utils import (
     ConfigVariable,
     register_configvar,
     register_check_parameters,
+    main_module_registry,
+    MainModule,
+    WatoModule,
     register_modules,
     register_notification_parameters,
     register_rule,
@@ -122,7 +125,6 @@ from cmk.gui.plugins.wato.utils import (
     SimpleModeType,
     SimpleListMode,
     SimpleEditMode,
-    WatoModule,
     wato_root_dir,
     wato_styles,
 )

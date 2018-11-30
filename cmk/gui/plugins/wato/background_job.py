@@ -31,23 +31,40 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.log import logger
 
-from . import (
+from cmk.gui.plugins.wato import (
     wato_styles,
-    register_modules,
-    WatoModule,
+    main_module_registry,
+    MainModule,
     WatoMode,
     mode_registry,
 )
 
-register_modules(
-    WatoModule(
-        mode_or_url="background_jobs_overview",
-        title=_("Background jobs"),
-        icon="background_jobs",
-        permission="background_jobs.manage_jobs",
-        description=_("Manage longer running tasks in the Check_MK GUI"),
-        sort_index=90,
-    ))
+
+@main_module_registry.register
+class MainModuleBackgroundJobs(MainModule):
+    @property
+    def mode_or_url(self):
+        return "background_jobs_overview"
+
+    @property
+    def title(self):
+        return _("Background jobs")
+
+    @property
+    def icon(self):
+        return "background_jobs"
+
+    @property
+    def permission(self):
+        return "background_jobs.manage_jobs"
+
+    @property
+    def description(self):
+        return _("Manage longer running tasks in the Check_MK GUI")
+
+    @property
+    def sort_index(self):
+        return 90
 
 
 @mode_registry.register

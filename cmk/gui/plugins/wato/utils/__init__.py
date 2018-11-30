@@ -83,6 +83,8 @@ from cmk.gui.plugins.wato.utils.html_elements import (
 from cmk.gui.plugins.wato.utils.main_menu import (
     MainMenu,
     MenuItem,
+    main_module_registry,
+    MainModule,
     WatoModule,
     register_modules,
 )

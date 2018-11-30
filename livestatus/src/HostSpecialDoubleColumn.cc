@@ -27,7 +27,6 @@
 
 #ifdef CMC
 #include <chrono>
-#include <type_traits>
 #include "Object.h"
 #include "State.h"
 #include "Timeperiod.h"

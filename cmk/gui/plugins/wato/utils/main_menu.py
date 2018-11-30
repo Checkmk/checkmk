@@ -24,8 +24,12 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import abc
+import re
+
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
+import cmk.plugin_registry
 from cmk.gui.globals import html
 
 
@@ -54,12 +58,36 @@ class MainMenu(object):
 
 class MenuItem(object):
     def __init__(self, mode_or_url, title, icon, permission, description, sort_index=20):
-        self.mode_or_url = mode_or_url
-        self.title = title
-        self.icon = icon
-        self.permission = permission
-        self.description = description
-        self.sort_index = sort_index
+        self._mode_or_url = mode_or_url
+        self._title = title
+        self._icon = icon
+        self._permission = permission
+        self._description = description
+        self._sort_index = sort_index
+
+    @property
+    def mode_or_url(self):
+        return self._mode_or_url
+
+    @property
+    def title(self):
+        return self._title
+
+    @property
+    def icon(self):
+        return self._icon
+
+    @property
+    def permission(self):
+        return self._permission
+
+    @property
+    def description(self):
+        return self._description
+
+    @property
+    def sort_index(self):
+        return self._sort_index
 
     def may_see(self):
         """Whether or not the currently logged in user is allowed to see this module"""
@@ -84,21 +112,86 @@ class MenuItem(object):
             (self.__class__.__name__, self.mode_or_url, self.title, self.icon, self.permission, self.description, self.sort_index)
 
 
-# TODO: Clean this up to a plugin_registry.Registry
-_modules = []
+class MainModule(MenuItem):
+    __metaclass__ = abc.ABCMeta
+
+    def __init__(self):
+        # TODO: Cleanup hierarchy
+        super(MainModule, self).__init__(
+            mode_or_url=None,
+            title=None,
+            icon=None,
+            permission=None,
+            description=None,
+            sort_index=None)
+
+    @abc.abstractproperty
+    def mode_or_url(self):
+        # type: () -> str
+        raise NotImplementedError()
+
+    @abc.abstractproperty
+    def title(self):
+        # type: () -> Text
+        raise NotImplementedError()
+
+    @abc.abstractproperty
+    def icon(self):
+        # type: () -> str
+        raise NotImplementedError()
+
+    @abc.abstractproperty
+    def permission(self):
+        # type: () -> str
+        raise NotImplementedError()
+
+    @abc.abstractproperty
+    def description(self):
+        # type: () -> Text
+        raise NotImplementedError()
+
+    @abc.abstractproperty
+    def sort_index(self):
+        # type: () -> int
+        raise NotImplementedError()
+
+
+class ModuleRegistry(cmk.plugin_registry.ClassRegistry):
+    def plugin_base_class(self):
+        return MainModule
+
+    def _register(self, plugin_class):
+        self._entries[plugin_class().mode_or_url] = plugin_class
+
+
+main_module_registry = ModuleRegistry()
 
 
 class WatoModule(MenuItem):
+    """Used with register_modules() in pre 1.6 versions to register main modules"""
     pass
 
 
 def register_modules(*args):
     """Register one or more top level modules to Check_MK WATO.
     The registered modules are displayed in the navigation of WATO."""
-    for arg in args:
-        assert isinstance(arg, WatoModule)
-    _modules.extend(args)
+    for wato_module in args:
+        assert isinstance(wato_module, WatoModule)
+
+        internal_name = re.sub("[^a-zA-Z]", "", wato_module.mode_or_url)
+
+        cls = type(
+            "LegacyMainModule%s" % internal_name.title(), (MainModule,), {
+                "mode_or_url": wato_module.mode_or_url,
+                "title": wato_module.title,
+                "icon": wato_module.icon,
+                "permission": wato_module.permission,
+                "description": wato_module.description,
+                "sort_index": wato_module.sort_index,
+            })
+        main_module_registry.register_plugin(cls)
 
 
 def get_modules():
-    return sorted(_modules, key=lambda m: (m.sort_index, m.title))
+    return sorted([m() for m in main_module_registry.values()],
+                  key=lambda m: (m.sort_index, m.title))

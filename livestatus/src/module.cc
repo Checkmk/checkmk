@@ -57,6 +57,7 @@
 #include "MonitoringCore.h"
 #include "OutputBuffer.h"
 #include "Poller.h"
+#include "RegExp.h"
 #include "Store.h"
 #include "StringUtils.h"
 #include "TimeperiodsCache.h"
@@ -1102,8 +1103,12 @@ void livestatus_parse_arguments(const char *args_orig) {
 
 void omd_advertize() {
     Notice(fl_logger_nagios)
-        << "Livestatus " << VERSION << " by Mathias Kettner. Socket: '"
-        << fl_socket_path << "'";
+        << "Livestatus by Mathias Kettner started with PID " << getpid();
+    Notice(fl_logger_nagios) << "version " << VERSION << " compiled "
+                             << BUILD_DATE << " on " << BUILD_HOSTNAME;
+    Notice(fl_logger_nagios) << "built with " << BUILD_CXX << ", using "
+                             << RegExp::engine() << " regex engine";
+    Notice(fl_logger_nagios) << "Using socket at '" << fl_socket_path << "'";
     Notice(fl_logger_nagios) << "Please visit us at http://mathias-kettner.de/";
     if (char *omd_site = getenv("OMD_SITE")) {
         Informational(fl_logger_nagios)

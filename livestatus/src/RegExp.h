@@ -49,6 +49,8 @@ public:
     bool match(const std::string &str) const;
     bool search(const std::string &str) const;
 
+    static std::string engine();
+
 private:
     class Impl;
     std::unique_ptr<Impl> _impl;

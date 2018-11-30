@@ -53,6 +53,8 @@ public:
         return RE2::PartialMatch(str, _regex);
     }
 
+    static std::string engine() { return "RE2"; }
+
 private:
     RE2 _regex;
 
@@ -98,6 +100,8 @@ public:
         return regex_search(str, _regex);
     }
 
+    static std::string engine() { return "C++11"; }
+
 private:
     std::regex _regex;
 };
@@ -124,3 +128,6 @@ std::string RegExp::replace(const std::string &str,
 bool RegExp::match(const std::string &str) const { return _impl->match(str); }
 
 bool RegExp::search(const std::string &str) const { return _impl->search(str); }
+
+// static
+std::string RegExp::engine() { return Impl::engine(); }

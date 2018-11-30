@@ -63,8 +63,7 @@ def walk(access_data, oid, hex_plain=False, context_name=None):
     command = _snmp_walk_command(access_data, context_name)
     command += ["-OQ", "-OU", "-On", "-Ot", "%s%s%s" % (protospec, ipaddress, portspec), oid]
 
-    debug_cmd = ["''" if a == "" else a for a in command]
-    console.vverbose("Running '%s'\n" % " ".join(debug_cmd))
+    console.vverbose("Running '%s'\n" % subprocess.list2cmdline(command))
 
     snmp_process = None
     exitstatus = None
@@ -158,8 +157,7 @@ def get(access_data, oid, context_name=None):
                  "%s%s%s" % (protospec, ipaddress, portspec),
                  oid_prefix ]
 
-    debug_cmd = ["''" if a == "" else a for a in command]
-    console.vverbose("Running '%s'\n" % " ".join(debug_cmd))
+    console.vverbose("Running '%s'\n" % subprocess.list2cmdline(command))
 
     snmp_process = subprocess.Popen(
         command, close_fds=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)

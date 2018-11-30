@@ -1,0 +1,14 @@
+Title: Fixed display of incorrectly quoted commands in classic SNMP verbose output
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1543496404
+
+The executed commands, e.g. when doing SNMP walks or get commands were quoted correctly.
+Only the output on the console was writing out incorrectly quoted arguments.
+
+CMK-1351

@@ -109,7 +109,6 @@ from cmk.gui.plugins.wato.utils import (
     ConfigVariable,
     ConfigDomainGUI,
     WatoMode,
-    WatoModule,
     mode_registry,
     SNMPCredentials,
     HostnameTranslation,
@@ -125,7 +124,8 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_group_registry,
     RulespecGroup,
     register_rule,
-    register_modules,
+    main_module_registry,
+    MainModule,
     wato_confirm,
     search_form,
     site_neutral_path,
@@ -2627,16 +2627,33 @@ config.declare_permission(
     ["admin"],
 )
 
-register_modules(
-    WatoModule(
-        "mkeventd_rule_packs",
-        _("Event Console"),
-        "mkeventd",
-        "mkeventd.edit",
-        _("Manage event classification and correlation rules for the "
-          "Event Console"),
-        68,
-    ))
+
+@main_module_registry.register
+class MainModuleEventConsole(MainModule):
+    @property
+    def mode_or_url(self):
+        return "mkeventd_rule_packs"
+
+    @property
+    def title(self):
+        return _("Event Console")
+
+    @property
+    def icon(self):
+        return "mkeventd"
+
+    @property
+    def permission(self):
+        return "mkeventd.edit"
+
+    @property
+    def description(self):
+        return _("Manage event classification and correlation rules for the Event Console")
+
+    @property
+    def sort_index(self):
+        return 68
+
 
 #.
 #   .--Settings & Rules----------------------------------------------------.

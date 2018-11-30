@@ -142,7 +142,7 @@ def test_registered_modules():
         'icon': 'aggr'
     }),
     ('sites', {
-        'description': u'Distributed monitoring via Multsite, distributed configuration via WATO',
+        'description': u"Distributed monitoring using multiple Check_MK sites",
         'permission': 'sites',
         'title': u'Distributed Monitoring',
         'sort_index': 75,

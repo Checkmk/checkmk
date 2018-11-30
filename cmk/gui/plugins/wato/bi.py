@@ -69,12 +69,12 @@ from cmk.gui.htmllib import HTML
 
 from cmk.gui.plugins.wato import (
     WatoMode,
-    WatoModule,
     mode_registry,
     GroupSelection,
     MainMenu,
     MenuItem,
-    register_modules,
+    main_module_registry,
+    MainModule,
     global_buttons,
     add_change,
     wato_confirm,
@@ -2307,9 +2307,33 @@ config.declare_permission(
     _("Edit all rules and aggregations for Business Intelligence, create, modify and delete rule packs."
      ), ["admin"])
 
-register_modules(
-    WatoModule("bi_packs", _("Business Intelligence"), "aggr", "bi_rules",
-               _("Configuration of Check_MK's Business Intelligence component."), 70))
+
+@main_module_registry.register
+class MainModuleBI(MainModule):
+    @property
+    def mode_or_url(self):
+        return "bi_packs"
+
+    @property
+    def title(self):
+        return _("Business Intelligence")
+
+    @property
+    def icon(self):
+        return "aggr"
+
+    @property
+    def permission(self):
+        return "bi_rules"
+
+    @property
+    def description(self):
+        return _("Configuration of Check_MK's Business Intelligence component.")
+
+    @property
+    def sort_index(self):
+        return 70
+
 
 #.
 #   .--Rename Hosts--------------------------------------------------------.

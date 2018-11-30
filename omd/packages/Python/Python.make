@@ -73,7 +73,7 @@ bin/gcc:
 	    echo "no"; IFS=$$SAVED_IFS ; \
 	done ; \
 	$(TEST) -z "$$CC" && { echo "error: no C compiler found" >&2 ; exit 1; } ; \
-	$(TEST) -d bin || mkdir bin ; \
+	$(MKDIR) bin ; \
 	$(RM) bin/gcc ; \
 	$(LN) -s "$$CC" bin/gcc ; \
 
@@ -91,7 +91,7 @@ bin/g++:
 	    echo "no"; IFS=$$SAVED_IFS ; \
 	done ; \
 	$(TEST) -z "$$CXX" && { echo "error: no C++ compiler found" >&2 ; exit 1; } ; \
-	$(TEST) -d bin || mkdir bin ; \
+	$(MKDIR) bin ; \
 	$(RM) bin/g++ ; \
 	$(LN) -s "$$CXX" bin/g++
 

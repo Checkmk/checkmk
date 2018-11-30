@@ -78,16 +78,13 @@ $(CHECK_MK_INSTALL): $(CHECK_MK_BUILD)
 	$(RM) $(DESTDIR)$(OMD_ROOT)/skel/etc/check_mk/*-*.mk
 
 	# Binaries
-	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/bin
 	install -m 755 $(DISTNAME)/bin/* $(DESTDIR)$(OMD_ROOT)/bin
 	$(RM) $(DESTDIR)$(OMD_ROOT)/bin/Makefile $(DESTDIR)$(OMD_ROOT)/bin/*.cc
 
 	# Install the diskspace cleanup plugin
-	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/diskspace
 	install -m 644 $(PACKAGE_DIR)/$(CHECK_MK)/diskspace $(DESTDIR)$(OMD_ROOT)/share/diskspace/check_mk
 
 	# Install active checks
-	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
 	install -m 755 $(DISTNAME)/active_checks/* \
 	    $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
 	$(RM) $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins/Makefile
@@ -103,7 +100,6 @@ $(CHECK_MK_INSTALL): $(CHECK_MK_BUILD)
 	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/MULTISITE_COOKIE_AUTH $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
 
 	# GUI-Test (in doc/helpers)
-	#$(MKDIR) $(DESTDIR)$(OMD_ROOT)/bin
 	#$(TAR_GZ) $(DISTNAME)/doc.tar.gz -C $(DESTDIR)$(OMD_ROOT)/bin \
 	#    --strip-components 1 helpers/guitest
 	#chmod +x $(DESTDIR)$(OMD_ROOT)/bin/*

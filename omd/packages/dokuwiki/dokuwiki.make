@@ -51,7 +51,6 @@ $(DOKUWIKI_INSTALL): $(DOKUWIKI_BUILD)
 #install:
 #	$(MAKE) DESTDIR=$(DESTDIR) -C $(DOKUWIKI_DIR) -j 1 install
 #	# fix path for plugin
-#	[ -d $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins ] || $(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
 #	mv $(DESTDIR)$(OMD_ROOT)/bin/check_gearman $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins/
 #	rm -rf $(DESTDIR)$(OMD_ROOT)/share/mod_gearman/*.conf
 #	rm -f $(DESTDIR)$(OMD_ROOT)/lib/mod_gearman/mod_gearman.so

@@ -90,13 +90,10 @@ $(CHECK_MULTI_BUILD): $(CHECK_MULTI_UNPACK)
 
 $(CHECK_MULTI_INSTALL): $(CHECK_MULTI_BUILD)
 	#--- plugin
-	test -d $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins || \
-		mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
 	install -m 755 $(CHECK_MULTI_DIR)/plugins/check_multi $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
 
 	#--- readme
-	test -d $(DESTDIR)$(OMD_ROOT)/share/doc/check_multi || \
-		mkdir -p $(DESTDIR)$(OMD_ROOT)/share/doc/check_multi
+	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/doc/check_multi
 	install -m 644 $(CHECK_MULTI_DIR)/README $(DESTDIR)$(OMD_ROOT)/share/doc/check_multi
 
 	#--- allow to find testdir in plugin directory

@@ -40,32 +40,31 @@ $(PNP4NAGIOS_BUILD): $(PNP4NAGIOS_PATCHING)
 	$(TOUCH) $@
 
 $(PNP4NAGIOS_INSTALL): $(PNP4NAGIOS_BUILD)
-	mkdir -p $(DESTDIR)$(APACHE_CONF_DIR)
+	$(MKDIR) $(DESTDIR)$(APACHE_CONF_DIR)
 	$(MAKE) DESTDIR=$(DESTDIR) -C $(PNP4NAGIOS_DIR) install
 	# Remove installer 
 	rm $(DESTDIR)$(OMD_ROOT)/share/pnp4nagios/htdocs/install.php
 	rm -rf $(DESTDIR)$(OMD_ROOT)/etc/pnp4nagios
 	rm -rf $(DESTDIR)$(OMD_ROOT)/var/pnp4nagios
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/doc/pnp4nagios
+	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/doc/pnp4nagios
 	install -m 644 $(PNP4NAGIOS_DIR)/README $(DESTDIR)$(OMD_ROOT)/share/doc/pnp4nagios
 	install -m 644 $(PNP4NAGIOS_DIR)/COPYING $(DESTDIR)$(OMD_ROOT)/share/doc/pnp4nagios
 	install -m 644 $(PNP4NAGIOS_DIR)/AUTHORS $(DESTDIR)$(OMD_ROOT)/share/doc/pnp4nagios
 	install -m 644 $(PNP4NAGIOS_DIR)/THANKS $(DESTDIR)$(OMD_ROOT)/share/doc/pnp4nagios
 	
 	# Install the diskspace cleanup plugin
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/diskspace
 	install -m 644 $(PACKAGE_DIR)/$(PNP4NAGIOS)/diskspace $(DESTDIR)$(OMD_ROOT)/share/diskspace/pnp4nagios
 	
 	# Move default config files to skel
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel/etc/pnp4nagios
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel/var/pnp4nagios/stats
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel/var/pnp4nagios/perfdata
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel/var/pnp4nagios/log
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel/var/pnp4nagios/spool
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/skel/tmp/pnp4nagios/run
+	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/skel/etc/pnp4nagios
+	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/skel/var/pnp4nagios/stats
+	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/skel/var/pnp4nagios/perfdata
+	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/skel/var/pnp4nagios/log
+	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/skel/var/pnp4nagios/spool
+	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/skel/tmp/pnp4nagios/run
 	
 	# Install the facelift theme for pnp4nagios
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/pnp4nagios/htdocs/media/css/ui-facelift/images
+	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/pnp4nagios/htdocs/media/css/ui-facelift/images
 	install -m 644 $(PACKAGE_DIR)/$(PNP4NAGIOS)/ui-facelift/jquery-ui.css $(DESTDIR)$(OMD_ROOT)/share/pnp4nagios/htdocs/media/css/ui-facelift
 	install -m 644 $(PACKAGE_DIR)/$(PNP4NAGIOS)/ui-facelift/images/* $(DESTDIR)$(OMD_ROOT)/share/pnp4nagios/htdocs/media/css/ui-facelift/images
 

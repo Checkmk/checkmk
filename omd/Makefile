@@ -133,11 +133,15 @@ cma: $(CMA_PACKAGE)
 $(PRE_INSTALL):
 	rm -rf $(DESTDIR)
 	rm -rf $(BUILD_HELPER_DIR)/*-install
-	mkdir -p $(DESTDIR)$(OMD_PHYSICAL_BASE)
+	$(MKDIR) $(DESTDIR)$(OMD_PHYSICAL_BASE)
 	A="$(OMD_PHYSICAL_BASE)" ; ln -s $${A:1} $(DESTDIR)/omd
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/bin
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/omd/versions/$(OMD_VERSION)/bin
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks
+	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
+	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/omd
+	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/diskspace
+	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/man/man1
 	touch $@
 
 

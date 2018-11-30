@@ -24,7 +24,6 @@ $(SNAP7_BUILD): $(SNAP7_UNPACK) $(PYTHON_BUILD)
 	$(TOUCH) $@
 
 $(SNAP7_INSTALL): $(SNAP7_BUILD)
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib
 	install -m 644 $(SNAP7_DIR)/build/bin/$(ARCH)-linux/libsnap7.so $(DESTDIR)$(OMD_ROOT)/lib
 	$(TOUCH) $@
 

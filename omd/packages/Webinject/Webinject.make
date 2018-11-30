@@ -20,7 +20,6 @@ $(WEBINJECT_BUILD): $(WEBINJECT_PATCHING) $(PERL_MODULES_BUILD)
 	$(TOUCH) $@
 
 $(WEBINJECT_INSTALL): $(WEBINJECT_BUILD)
-	[ -d $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins ] || mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
 	install -m 755 $(WEBINJECT_DIR)/check_webinject $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins/
 	$(TOUCH) $@
 

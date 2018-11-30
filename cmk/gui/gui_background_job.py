@@ -389,8 +389,7 @@ class JobRenderer(object):
             html.close_tr()
 
         # Dynamic data
-        progress_info = job_status.get(
-            "progress_info", background_job.BackgroundProcessInterface.parse_progress_info(""))
+        loginfo = job_status.get("loginfo")
         runtime_info = cmk.render.timespan(job_status.get("duration", 0))
         if job_status[
                 "state"] == background_job.JobStatus.state_running and "estimated_duration" in job_status:
@@ -399,7 +398,7 @@ class JobRenderer(object):
         for left, right in [
             (_("Runtime"), runtime_info),
             (_("PID"), job_status.get("pid", "")),
-            (_("Result"), "<br>".join(progress_info["JobResult"])),
+            (_("Result"), "<br>".join(loginfo["JobResult"])),
         ]:
             if right is None:
                 continue
@@ -409,7 +408,7 @@ class JobRenderer(object):
             html.close_tr()
 
         # Exceptions
-        exceptions = progress_info["JobException"]
+        exceptions = loginfo["JobException"]
         if exceptions:
             html.open_tr()
             html.th(_("Exceptions"))
@@ -428,7 +427,7 @@ class JobRenderer(object):
         html.th(_("Progress Info"))
         html.open_td()
         html.open_div(class_="log_output", style="height: 400px;", id_="progress_log")
-        html.pre("\n".join(progress_info["JobProgressUpdate"]))
+        html.pre("\n".join(loginfo["JobProgressUpdate"]))
         html.close_div()
         html.close_td()
         html.close_tr()
@@ -533,17 +532,17 @@ class JobRenderer(object):
         html.td(cmk.render.timespan(job_status.get("duration", 0)), css="job_runtime")
 
         # Progress info
-        progress_info = job_status.get("progress_info")
-        if progress_info:
+        loginfo = job_status.get("loginfo")
+        if loginfo:
             if job_status.get("state") == background_job.JobStatus.state_exception:
-                html.td(HTML("<br>".join(progress_info["JobException"])), css="job_last_progress")
+                html.td(HTML("<br>".join(loginfo["JobException"])), css="job_last_progress")
             else:
                 progress_text = ""
-                if progress_info["JobProgressUpdate"]:
-                    progress_text += "%s" % progress_info["JobProgressUpdate"][-1]
+                if loginfo["JobProgressUpdate"]:
+                    progress_text += "%s" % loginfo["JobProgressUpdate"][-1]
                 html.td(HTML(progress_text), css="job_last_progress")
 
-            html.td(HTML("<br>".join(progress_info["JobResult"])), css="job_result")
+            html.td(HTML("<br>".join(loginfo["JobResult"])), css="job_result")
         else:
             html.td("", css="job_last_progress")
             html.td("", css="job_result")

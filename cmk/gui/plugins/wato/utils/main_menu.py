@@ -142,7 +142,7 @@ class MainModule(MenuItem):
 
     @abc.abstractproperty
     def permission(self):
-        # type: () -> str
+        # type: () -> Optional[str]
         raise NotImplementedError()
 
     @abc.abstractproperty

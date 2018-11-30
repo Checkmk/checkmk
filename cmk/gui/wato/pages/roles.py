@@ -52,6 +52,10 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib import HTML
+from cmk.gui.permissions import (
+    permission_section_registry,
+    permission_registry,
+)
 
 from cmk.gui.plugins.wato.utils.html_elements import (
     search_form,)
@@ -289,19 +293,18 @@ class ModeEditRole(RoleManagement, WatoMode):
         permissions = self._role["permissions"]
         for var_name in html.all_varnames_with_prefix("perm_"):
             try:
-                perm = config.permissions_by_name[var_name[5:]]
+                perm = permission_registry[var_name[5:]]()
             except KeyError:
                 continue
 
-            perm_name = perm["name"]
             value = html.var(var_name)
             if value == "yes":
-                permissions[perm_name] = True
+                permissions[perm.name] = True
             elif value == "no":
-                permissions[perm_name] = False
+                permissions[perm.name] = False
             elif value == "default":
                 try:
-                    del permissions[perm_name]
+                    del permissions[perm.name]
                 except KeyError:
                     pass  # Already at defaults
 
@@ -362,23 +365,12 @@ class ModeEditRole(RoleManagement, WatoMode):
               "may change due to software updates. When choosing another base role, all "
               "permissions that are on default will reflect the new base role."))
 
-        # Loop all permission sections, but sorted plz
-        for section, (_prio, section_title, do_sort) in sorted(
-                config.permission_sections.iteritems(), key=lambda x: x[1][0], reverse=True):
-            # Loop all permissions
-            permlist = config.permissions_by_order[:]
-            if do_sort:
-                permlist.sort(cmp=lambda a, b: cmp(a["title"], b["title"]))
-
-            # Now filter by permission section and the optional search term
+        for section in permission_section_registry.get_sorted_sections():
+            # Now filter by the optional search term
             filtered_perms = []
-            for perm in permlist:
-                pname = perm["name"]
-                this_section = pname.split(".")[0]
-                if section != this_section:
-                    continue  # Skip permissions of other sections
-
-                if search and (search not in perm["title"].lower() and search not in pname.lower()):
+            for perm in permission_registry.get_sorted_permissions(section):
+                if search and (search not in perm.title.lower() and
+                               search not in perm.name.lower()):
                     continue
 
                 filtered_perms.append(perm)
@@ -386,21 +378,19 @@ class ModeEditRole(RoleManagement, WatoMode):
             if not filtered_perms:
                 continue
 
-            forms.header(section_title, isopen=search is not None)
+            forms.header(section.title, isopen=search is not None)
             for perm in filtered_perms:
-                pname = perm["name"]
+                forms.section(perm.title)
 
-                forms.section(perm["title"])
-
-                pvalue = self._role["permissions"].get(pname)
-                def_value = base_role_id in perm["defaults"]
+                pvalue = self._role["permissions"].get(perm.name)
+                def_value = base_role_id in perm.defaults
 
                 choices = [("yes", _("yes")), ("no", _("no")),
                            ("default", _("default (%s)") % (def_value and _("yes") or _("no")))]
                 deflt = {True: "yes", False: "no"}.get(pvalue, "default")
 
-                html.dropdown("perm_" + pname, choices, deflt=deflt, style="width: 130px;")
-                html.help(perm["description"])
+                html.dropdown("perm_" + perm.name, choices, deflt=deflt, style="width: 130px;")
+                html.help(perm.description)
 
         forms.end()
         html.button("save", _("Save"))
@@ -428,34 +418,21 @@ class ModeRoleMatrix(WatoMode):
     def page(self):
         role_list = sorted(userdb.load_roles().items(), key=lambda a: (a[1]["alias"], a[0]))
 
-        # Loop all permission sections, but sorted plz
-        for section, (_prio, section_title, do_sort) in sorted(
-                config.permission_sections.iteritems(), key=lambda x: x[1][0], reverse=True):
-
+        for section in permission_section_registry.get_sorted_sections():
             html.begin_foldable_container(
-                "perm_matrix", section, section == "general", section_title, indent=True)
+                "perm_matrix", section.name, section.name == "general", section.title, indent=True)
 
-            table.begin(section)
+            table.begin(section.name)
 
-            # Loop all permissions
-            permlist = config.permissions_by_order[:]
-            if do_sort:
-                permlist.sort(cmp=lambda a, b: cmp(a["title"], b["title"]))
-
-            for perm in permlist:
-                pname = perm["name"]
-                this_section = pname.split(".")[0]
-                if section != this_section:
-                    continue  # Skip permissions of other sections
-
+            for perm in permission_registry.get_sorted_permissions(section):
                 table.row()
-                table.cell(_("Permission"), perm["title"], css="wide")
-                html.help(perm["description"])
+                table.cell(_("Permission"), perm.title, css="wide")
+                html.help(perm.description)
                 for role_id, role in role_list:
                     base_on_id = role.get('basedon', role_id)
-                    pvalue = role["permissions"].get(pname)
+                    pvalue = role["permissions"].get(perm.name)
                     if pvalue is None:
-                        if base_on_id in perm["defaults"]:
+                        if base_on_id in perm.defaults:
                             icon_name = "perm_yes_default"
                         else:
                             icon_name = None

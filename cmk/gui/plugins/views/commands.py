@@ -61,6 +61,8 @@ register_command_group(
     sort_index=20,
 )
 
+config.declare_permission_section("action", _("Commands on host and services"), do_sort=True)
+
 #   .--Reschedule----------------------------------------------------------.
 #   |          ____                _              _       _                |
 #   |         |  _ \ ___  ___  ___| |__   ___  __| |_   _| | ___           |

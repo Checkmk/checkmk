@@ -35,8 +35,8 @@ from cmk.gui.i18n import _
 import cmk.gui.log as log
 import cmk.paths
 import cmk.store as store
-
 from cmk.gui.exceptions import MKConfigError, MKAuthException
+import cmk.gui.permissions as permissions
 
 import cmk.gui.plugins.config
 
@@ -77,9 +77,6 @@ default_config = {}
 
 # Global table of available permissions. Plugins may add their own
 # permissions by calling declare_permission()
-permissions_by_name = {}
-permissions_by_order = []
-permission_sections = {}
 permission_declaration_functions = []
 
 # Constants for BI
@@ -323,35 +320,36 @@ def tag_group_title(tag):
 #   '----------------------------------------------------------------------'
 
 
+# Kept for compatibility with pre 1.6 GUI plugins
 def declare_permission(name, title, description, defaults):
-    perm = {
+    if isinstance(name, unicode):
+        name = name.encode("utf-8")
+
+    section_name, permission_name = name.split(".", 1)
+
+    cls = type(
+        "LegacyPermission%s%s" % (section_name.title(), permission_name.title()),
+        (permissions.Permission,), {
+            "_section_name": section_name,
+            "section": property(lambda s: permissions.permission_section_registry[s._section_name]),
+            "permission_name": permission_name,
+            "name": name,
+            "title": title,
+            "description": description,
+            "defaults": defaults,
+        })
+    permissions.permission_registry.register(cls)
+
+
+# Kept for compatibility with pre 1.6 GUI plugins
+def declare_permission_section(name, title, prio=50, do_sort=False):
+    cls = type("LegacyPermissionSection%s" % name.title(), (permissions.PermissionSection,), {
         "name": name,
         "title": title,
-        "description": description,
-        "defaults": defaults,
-    }
-
-    # Detect if this permission has already been declared before
-    # The dict value is replaced automatically but the list value
-    # to be replaced -> INPLACE!
-    # FIXME: permissions_by_order is bad. Remove this and add a "sort"
-    # attribute to the permissions_by_name dict. This would be much cleaner.
-    replaced = False
-    for index, test_perm in enumerate(permissions_by_order):
-        if test_perm['name'] == perm['name']:
-            permissions_by_order[index] = perm
-            replaced = True
-
-    if not replaced:
-        permissions_by_order.append(perm)
-
-    permissions_by_name[name] = perm
-
-
-def declare_permission_section(name, title, prio=0, do_sort=False):
-    # Prio can be a number which is used for sorting. Higher numbers will
-    # be listed first, e.g. in the edit dialogs
-    permission_sections[name] = (prio, title, do_sort)
+        "sort_index": prio,
+        "do_sort": do_sort,
+    })
+    permissions.permission_section_registry.register(cls)
 
 
 # Some module have a non-fixed list of permissions. For example for
@@ -372,23 +370,21 @@ def load_dynamic_permissions():
 
 
 def permission_exists(pname):
-    return pname in permissions_by_name
+    return pname in permissions.permission_registry
 
 
 def get_role_permissions():
+    """Returns the set of permissions for all roles"""
     role_permissions = {}
-    # Loop all permissions
-    # and for each permission loop all roles
-    # and check whether it has the permission or not
-
     roleids = roles.keys()
-    for perm in permissions_by_order:
+    for perm_class in permissions.permission_registry.values():
+        perm = perm_class()
         for role_id in roleids:
             if not role_id in role_permissions:
                 role_permissions[role_id] = []
 
-            if _may_with_roles([role_id], perm['name']):
-                role_permissions[role_id].append(perm['name'])
+            if _may_with_roles([role_id], perm.name):
+                role_permissions[role_id].append(perm.name)
     return role_permissions
 
 
@@ -408,10 +404,10 @@ def _may_with_roles(some_role_ids, pname):
                 base_role_id = role["basedon"]
             else:
                 base_role_id = role_id
-            if pname not in permissions_by_name:
+            if pname not in permissions.permission_registry:
                 return False  # Permission unknown. Assume False. Functionality might be missing
-            perm = permissions_by_name[pname]
-            he_may = base_role_id in perm["defaults"]
+            perm = permissions.permission_registry[pname]()
+            he_may = base_role_id in perm.defaults
         if he_may:
             return True
     return False
@@ -575,12 +571,12 @@ class LoggedInUser(object):
 
     def need_permission(self, pname):
         if not self.may(pname):
-            perm = permissions_by_name[pname]
+            perm = permissions.permission_registry[pname]()
             raise MKAuthException(
                 _("We are sorry, but you lack the permission "
                   "for this operation. If you do not like this "
                   "then please ask you administrator to provide you with "
-                  "the following permission: '<b>%s</b>'.") % perm["title"])
+                  "the following permission: '<b>%s</b>'.") % perm.title)
 
     def load_file(self, name, deflt, lock=False):
         # In some early error during login phase there are cases where it might

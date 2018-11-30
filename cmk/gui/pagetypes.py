@@ -574,6 +574,8 @@ class Overridable(Base):
 
     @classmethod
     def declare_overriding_permissions(cls):
+        config.declare_permission_section(cls.type_name(), cls.phrase("title_plural"), do_sort=True)
+
         config.declare_permission(
             "general.edit_" + cls.type_name(),
             _("Customize %s and use them") % cls.phrase("title_plural"),
@@ -755,9 +757,6 @@ class Overridable(Base):
 
     @classmethod
     def _declare_instance_permissions(cls):
-        # Declare permissions - one for each of the pages, if it is public
-        config.declare_permission_section(cls.type_name(), cls.phrase("title_plural"), do_sort=True)
-
         for instance in cls.instances():
             if instance.is_public():
                 cls.declare_permission(instance)

@@ -124,6 +124,8 @@ action_whats = {
     "CHANGESTATE": _("State of event changed by user"),
 }
 
+config.declare_permission_section("mkeventd", _("Event Console"))
+
 
 def service_levels():
     try:

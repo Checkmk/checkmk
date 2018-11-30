@@ -1,0 +1,8 @@
+Title: Background Jobs no longer slow down when there is a large amount of log output
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1543559769
+Class: fix

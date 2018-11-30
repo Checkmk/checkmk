@@ -27,16 +27,15 @@
 import os
 import sys
 import time
-import tempfile
 import pprint
 import threading
 import multiprocessing
-import io
 import psutil
 import shutil
 import signal
 import traceback
 import logging
+from pathlib2 import Path
 
 from cmk.gui.i18n import _
 import cmk
@@ -70,10 +69,6 @@ class BackgroundJobAlreadyRunning(MKGeneralException):
 
 
 class BackgroundProcessInterface(object):
-    progress_update_message = "JobProgressUpdate"
-    result_message = "JobResult"
-    exception_message = "JobException"
-
     def __init__(self, job_parameters):
         super(BackgroundProcessInterface, self).__init__()
         self._job_parameters = job_parameters
@@ -87,47 +82,29 @@ class BackgroundProcessInterface(object):
     def get_logger(self):
         return self._job_parameters["logger"]
 
-    @classmethod
-    def send_progress_update(cls, info):
-        print "%s:%s" % (cls.progress_update_message, info.encode("utf-8"))
+    def send_progress_update(self, info):
+        """ The progress update is written to stdout and will be catched by the threads counterpart """
+        sys.stdout.write(info.encode("utf-8") + "\n")
 
-    @classmethod
-    def send_result_message(cls, info):
-        print "%s:%s" % (cls.result_message, info.encode("utf-8"))
+    def send_result_message(self, info):
+        """ The result message is written to stdout because of log output clarity
+        as well as into a distinct file, to separate this info from the rest of the context information"""
+        encoded_info = "%s\n" % info.encode("utf-8")
+        sys.stdout.write(encoded_info)
 
-    @classmethod
-    def send_exception(cls, info):
-        # Exceptions get an extra newline
-        # Some error messages tend not output a \n at the end..
-        print "\n%s:%s" % (cls.exception_message, info.encode("utf-8"))
+        result_message_path = Path(
+            self.get_work_dir()) / BackgroundJobDefines.result_message_filename
+        with result_message_path.open("ab") as f:  # pylint: disable=no-member
+            f.write(encoded_info)
 
-    @classmethod
-    def parse_progress_info(cls, progress_info_rawdata):
-        response = {
-            cls.progress_update_message: [],
-            cls.result_message: [],
-            cls.exception_message: [],
-        }
-
-        def finalize_last_block():
-            if not message_block:
-                return
-            response[current_message_type].append(message_block)
-
-        lines = progress_info_rawdata.splitlines()
-        current_message_type = cls.progress_update_message
-        message_block = ""
-        for line in lines:
-            for message_type in response:
-                if line.startswith(message_type):
-                    finalize_last_block()
-                    current_message_type = message_type
-                    message_block = line[len(message_type) + 1:]
-                    break
-            else:
-                message_block += "\n%s" % line
-        finalize_last_block()
-        return response
+    def send_exception(self, info):
+        """ Exceptions are written to stdout because of log output clarity
+        as well as into a distinct file, to separate this info from the rest of the context information"""
+        # Exceptions also get an extra newline, since some error messages tend not output a \n at the end..
+        encoded_info = "%s\n" % info.encode("utf-8")
+        sys.stdout.write(encoded_info)
+        with (Path(self.get_work_dir()) / BackgroundJobDefines.exceptions_filename).open("ab") as f:  # pylint: disable=no-member
+            f.write(encoded_info)
 
 
 #.
@@ -149,10 +126,9 @@ class BackgroundProcessInterface(object):
 #   '----------------------------------------------------------------------'
 
 
-class BackgroundProcess(multiprocessing.Process):
+class BackgroundProcess(BackgroundProcessInterface, multiprocessing.Process):
     def __init__(self, job_parameters):
-        super(BackgroundProcess, self).__init__()
-        self._job_parameters = job_parameters
+        super(BackgroundProcess, self).__init__(job_parameters)
         self._jobstatus = self._job_parameters["jobstatus"]
         self._logger = None  # the logger is initialized in the run function
 
@@ -184,22 +160,15 @@ class BackgroundProcess(multiprocessing.Process):
         try:
             self.initialize_environment()
             self._jobstatus.update_status({
-                "progress_info": BackgroundProcessInterface.parse_progress_info(""),
                 "state": JobStatus.state_running,
             })
 
             # The actual function call
             self._execute_function()
         except Exception:
-            exception_message = "%s:Exception while preparing background function environment: %s" % (
-                BackgroundProcessInterface.exception_message,
-                traceback.format_exc(),
-            )
-            progress_info = BackgroundProcessInterface.parse_progress_info(exception_message)
-            self._jobstatus.update_status({
-                "progress_info": progress_info,
-                "state": JobStatus.state_exception,
-            })
+            sys.stderr.write("Exception while preparing background function environment: %s\n" %
+                             traceback.format_exc())
+            self._jobstatus.update_status({"state": JobStatus.state_exception})
 
     def initialize_environment(self):
         if not self._logger:
@@ -218,28 +187,15 @@ class BackgroundProcess(multiprocessing.Process):
             target=self._call_function_with_exception_handling, args=[self._job_parameters])
         t.start()
 
-        last_progress_info = ""
-        while t.isAlive():
-            time.sleep(0.2)
-            progress_info = self._read_output()
-            if progress_info != last_progress_info:
-                self._jobstatus.update_status({
-                    "progress_info": BackgroundProcessInterface.parse_progress_info(progress_info),
-                })
-                last_progress_info = progress_info
+        # Wait for thread to finish
         t.join()
 
         # Final progress info update
         job_status_update = {}
-        progress_info = self._read_output()
-        if progress_info != last_progress_info:
-            job_status_update.update({
-                "progress_info": BackgroundProcessInterface.parse_progress_info(progress_info),
-            })
 
         # Final status message update
         job_status = self._jobstatus.get_status()
-        if job_status.get("progress_info", {}).get("JobException"):
+        if job_status.get("loginfo", {}).get("JobException"):
             final_state = JobStatus.state_exception
         else:
             final_state = JobStatus.state_finished
@@ -270,14 +226,11 @@ class BackgroundProcess(multiprocessing.Process):
         """Create a temporary file and use it as stdout / stderr buffer"""
         # We can not use io.BytesIO() or similar because we need real file descriptors
         # to be able to catch the (debug) output of libraries like libldap or subproccesses
-        sys.stdout = sys.stderr = tempfile.TemporaryFile(mode='w+b')
+        sys.stdout = sys.stderr = (
+            Path(self.get_work_dir()) / BackgroundJobDefines.progress_update_filename).open("wb")  # pylint: disable=no-member
+
         os.dup2(sys.stdout.fileno(), 1)
         os.dup2(sys.stderr.fileno(), 2)
-
-    def _read_output(self):
-        sys.stderr.flush()
-        sys.stderr.seek(0, io.SEEK_SET)
-        return sys.stderr.read()
 
     def _enable_logging_to_stdout(self):
         """In addition to the web.log we also want to see the job specific logs
@@ -290,6 +243,11 @@ class BackgroundProcess(multiprocessing.Process):
 class BackgroundJobDefines(object):
     base_dir = os.path.join(cmk.paths.var_dir, "background_jobs")
     process_name = "cmk-job"  # NOTE: keep this name short! psutil.Process tends to truncate long names
+
+    jobstatus_filename = "jobstatus.mk"
+    progress_update_filename = "progress_update"
+    exceptions_filename = "exceptions"
+    result_message_filename = "result_message"
 
 
 #.
@@ -330,7 +288,7 @@ class BackgroundJob(object):
 
         self._kwargs = kwargs
         self._work_dir = os.path.join(self._job_base_dir, self._job_id)
-        self._jobstatus = JobStatus(os.path.join(self._work_dir, "jobstatus.mk"))
+        self._jobstatus = JobStatus(self._work_dir)
 
         # The function ptr and its args/kwargs
         self._queued_function = None
@@ -496,7 +454,7 @@ class BackgroundJob(object):
         # Start processes
         initial_status = {
             "state": JobStatus.state_initialized,
-            "statusfile": os.path.join(self._job_id, "jobstatus.mk"),
+            "statusfile": str(Path(self._job_id) / BackgroundJobDefines.jobstatus_filename),
             "started": time.time(),
         }
         initial_status.update(self._kwargs)
@@ -508,6 +466,7 @@ class BackgroundJob(object):
         job_parameters["jobstatus"] = self._jobstatus
         job_parameters["function_parameters"] = self._queued_function
         p = multiprocessing.Process(target=self._start_background_subprocess, args=[job_parameters])
+
         p.start()
         p.join()
 
@@ -535,25 +494,42 @@ class JobStatus(object):
     state_stopped = "stopped"
     state_exception = "exception"
 
-    def __init__(self, job_statusfilepath):
+    def __init__(self, work_dir):
         super(JobStatus, self).__init__()
-        self._job_statusfilepath = job_statusfilepath
+        self._work_dir = work_dir
+        self._jobstatus_path = Path(work_dir) / BackgroundJobDefines.jobstatus_filename
+
+        self._progress_update_path = Path(work_dir) / BackgroundJobDefines.progress_update_filename
+        self._result_message_path = Path(work_dir) / BackgroundJobDefines.result_message_filename
+        self._exceptions_path = Path(work_dir) / BackgroundJobDefines.exceptions_filename
 
     def get_status(self):
-        return store.load_data_from_file(self._job_statusfilepath, default={})
+        data = store.load_data_from_file(str(self._jobstatus_path), default={})
+        data["loginfo"] = {}
+        for field_id, field_path in [("JobProgressUpdate", self._progress_update_path),
+                                     ("JobResult", self._result_message_path),
+                                     ("JobException", self._exceptions_path)]:
+            if field_path.exists():  # pylint: disable=no-member
+                data["loginfo"][field_id] = file(str(field_path)).read().splitlines()
+            else:
+                data["loginfo"][field_id] = []
+
+        return data
 
     def statusfile_exists(self):
-        return os.path.exists(self._job_statusfilepath)
+        return self._jobstatus_path.exists()  # pylint: disable=no-member
 
     def update_status(self, params):
-        if not os.path.exists(os.path.dirname(self._job_statusfilepath)):
+        if not self._jobstatus_path.parent.exists():  # pylint: disable=no-member
             return
 
-        store.aquire_lock(self._job_statusfilepath)
-        status = store.load_data_from_file(self._job_statusfilepath, {})
-        status.update(params)
-        store.save_mk_file(self._job_statusfilepath, self._format_value(status))
-        store.release_lock(self._job_statusfilepath)
+        if params:
+            try:
+                status = store.load_data_from_file(str(self._jobstatus_path), {}, lock=True)
+                status.update(params)
+                store.save_mk_file(str(self._jobstatus_path), self._format_value(status))
+            finally:
+                store.release_lock(str(self._jobstatus_path))
 
     def _format_value(self, value):
         return pprint.pformat(value)

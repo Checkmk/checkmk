@@ -53,7 +53,6 @@ $(BOOST_BUILD): $(PYTHON_BUILD) $(RE2_BUILD) $(BOOST_UNPACK)
 	$(TOUCH) $@
 
 $(BOOST_INSTALL): $(BOOST_BUILD)
-	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib
 	$(FIND) $(PACKAGE_BOOST_DESTDIR)/lib -name "*.so*" -exec cp -v {} $(DESTDIR)$(OMD_ROOT)/lib \;
 	$(TOUCH) $@
 

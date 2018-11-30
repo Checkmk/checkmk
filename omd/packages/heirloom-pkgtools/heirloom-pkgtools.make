@@ -19,8 +19,6 @@ $(HEIRLOOM_PKGTOOLS_BUILD): $(HEIRLOOM_PKGTOOLS_PATCHING)
 	$(TOUCH) $@
 
 $(HEIRLOOM_PKGTOOLS_INSTALL): $(HEIRLOOM_PKGTOOLS_BUILD)
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/man/man1
 	for F in pkgmk pkgtrans; do \
 	    install -m 755 $(HEIRLOOM_PKGTOOLS_DIR)/pkgcmds/$$F/$$F $(DESTDIR)$(OMD_ROOT)/bin/ ; \
 	    install -m 644 $(HEIRLOOM_PKGTOOLS_DIR)/man/$$F.1 $(DESTDIR)$(OMD_ROOT)/share/man/man1/; \

@@ -10,13 +10,9 @@ $(MAINTENANCE)-install: $(MAINTENANCE_INSTALL)
 $(MAINTENANCE):
 
 $(MAINTENANCE_INSTALL):
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
 	install -v -m 755 $(PACKAGE_DIR)/$(MAINTENANCE)/merge-crontabs $(DESTDIR)$(OMD_ROOT)/bin
 	install -v -m 755 $(PACKAGE_DIR)/$(MAINTENANCE)/diskspace $(DESTDIR)$(OMD_ROOT)/bin
 	install -v -m 755 $(PACKAGE_DIR)/$(MAINTENANCE)/logrotate $(DESTDIR)$(OMD_ROOT)/bin
-	
-	# Create directory for the diskspace plugin
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/diskspace
 	$(TOUCH) $@
 
 maintenance-skel:

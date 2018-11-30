@@ -33,20 +33,17 @@ $(NAGIOS_BUILD): $(NAGIOS_PATCHING)
 $(NAGIOS_INSTALL): $(NAGIOS_BUILD)
 	$(MAKE) DESTDIR=$(DESTDIR) -C $(NAGIOS_DIR) install-base
 	
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/nagios
 	install -m 664 $(NAGIOS_DIR)/p1.pl $(DESTDIR)$(OMD_ROOT)/lib/nagios
 	
 	# Copy package documentations to have these information in the binary packages
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAGIOS)
+	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAGIOS)
 	for file in README THANKS LEGAL LICENSE ; do \
 	   install -m 644 $(NAGIOS_DIR)/$$file $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAGIOS); \
 	done
 	
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
 	install -m 755 $(PACKAGE_DIR)/$(NAGIOS)/merge-nagios-config $(DESTDIR)$(OMD_ROOT)/bin
 	
 	# Install the diskspace cleanup plugin
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/diskspace
 	install -m 644 $(PACKAGE_DIR)/$(NAGIOS)/diskspace $(DESTDIR)$(OMD_ROOT)/share/diskspace/nagios
 	install -m 755 $(PACKAGE_DIR)/$(NAGIOS)/NAGIOS_THEME $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
 	$(TOUCH) $@

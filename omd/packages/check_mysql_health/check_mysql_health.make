@@ -26,7 +26,6 @@ $(CHECK_MYSQL_HEALTH_BUILD): $(CHECK_MYSQL_HEALTH_UNPACK)
 	$(TOUCH) $@
 
 $(CHECK_MYSQL_HEALTH_INSTALL): $(CHECK_MYSQL_HEALTH_BUILD)
-	[ -d $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins ] || mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
 	install -m 755 $(CHECK_MYSQL_HEALTH_DIR)/plugins-scripts/check_mysql_health $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
 	$(TOUCH) $@
 

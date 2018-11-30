@@ -26,7 +26,6 @@ $(CHECK_ORACLE_HEALTH_BUILD): $(CHECK_ORACLE_HEALTH_UNPACK)
 	$(TOUCH) $@
 
 $(CHECK_ORACLE_HEALTH_INSTALL): $(CHECK_ORACLE_HEALTH_BUILD)
-	[ -d $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins ] || mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
 	install -m 755 $(CHECK_ORACLE_HEALTH_DIR)/plugins-scripts/check_oracle_health $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
 	$(TOUCH) $@
 

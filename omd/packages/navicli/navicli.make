@@ -18,16 +18,15 @@ navicli-install: $(NAVICLI_INSTALL)
 # consequence, we install the libraries to a subdirectory which is not searched
 # and call the command via a wrapper which sets LD_LIBRARY_PATH.
 $(NAVICLI_INSTALL):
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
 	install -m 755 $(PACKAGE_DIR)/$(NAVICLI)/$(NAVICLI_DIR)/bin/admsnap $(DESTDIR)$(OMD_ROOT)/bin
 	install -m 755 $(PACKAGE_DIR)/$(NAVICLI)/$(NAVICLI_DIR)/bin/setlevel_cli.sh $(DESTDIR)$(OMD_ROOT)/bin
 	( echo '#! /bin/sh' ; \
 	  echo 'LD_LIBRARY_PATH="$$LD_LIBRARY_PATH:$(OMD_ROOT)/lib/seccli" exec $(OMD_ROOT)/lib/seccli/naviseccli "$$@"' ) > $(DESTDIR)$(OMD_ROOT)/bin/naviseccli
 	chmod 0755 $(DESTDIR)$(OMD_ROOT)/bin/naviseccli
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/seccli
+	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/seccli
 	install -m 755 $(PACKAGE_DIR)/$(NAVICLI)/$(NAVICLI_DIR)/bin/naviseccli $(DESTDIR)$(OMD_ROOT)/lib/seccli
 	install -m 755 $(PACKAGE_DIR)/$(NAVICLI)/$(NAVICLI_DIR)/lib/seccli/* $(DESTDIR)$(OMD_ROOT)/lib/seccli
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/navicli
+	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/navicli
 	cp -pr $(PACKAGE_DIR)/$(NAVICLI)/$(NAVICLI_DIR)/seccli/CST $(DESTDIR)$(OMD_ROOT)/share/navicli
 	$(TOUCH) $@
 

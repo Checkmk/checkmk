@@ -34,11 +34,9 @@ $(MSITOOLS_BUILD): $(MSITOOLS_PATCHING) $(BUILD_HELPER_DIR)/$(LCAB_DIR)-unpack
 $(MSITOOLS_INSTALL): $(MSITOOLS_BUILD)
 	echo $(DESTDIR)
 	if [ -f $(MSITOOLS_DIR)/.libs/msiinfo ] ; then \
-	    $(MKDIR) $(DESTDIR)$(OMD_ROOT)/bin ; \
 	    install -m 755 $(MSITOOLS_DIR)/.libs/msiinfo $(DESTDIR)$(OMD_ROOT)/bin ; \
 	    install -m 755 $(MSITOOLS_DIR)/.libs/msibuild $(DESTDIR)$(OMD_ROOT)/bin ; \
 	    install -m 755 $(LCAB_DIR)/lcab $(DESTDIR)$(OMD_ROOT)/bin ; \
-	    $(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib ; \
 	    install -m 755 $(MSITOOLS_DIR)/libmsi/.libs/libmsi.so* $(DESTDIR)$(OMD_ROOT)/lib ; \
 	    $(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/check_mk/agents/windows ; \
 	    install -m 644 $(PACKAGE_DIR)/$(MSITOOLS)/*.msi $(DESTDIR)$(OMD_ROOT)/share/check_mk/agents/windows ; \

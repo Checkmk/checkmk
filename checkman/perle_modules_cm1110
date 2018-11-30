@@ -1,11 +1,11 @@
-title: Perle Mediaconverter: CM 1000 modules states
+title: Perle Mediaconverter: CM 1110 modules states
 agents: snmp
 catalog: hw/app/perle
 license: GPL
 distribution: check_mk
 description:
  This check monitors the power state and fiber and copper LPRF and
- link status of CM 1000 modules of Perle Meadiconverter devices
+ link status of CM 1110 modules of Perle Meadiconverter devices
  which support the PERLE-MCR-MGT MIB.
 
  The check reports CRIT if no power to module. Otherwise it is OK.

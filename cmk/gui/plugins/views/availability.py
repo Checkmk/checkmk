@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import time
+import itertools
 
 import cmk
 import cmk.gui.config as config
@@ -782,16 +783,18 @@ def get_relevant_annotations(annotations, by_host, what, avoptions):
                             annos_rendered.add(id(annotation))
 
     annos_to_render.sort(cmp=lambda a, b: cmp(a[1]["from"], b[1]["from"]) or cmp(a[0], b[0]))
+    return annos_to_render
 
-    # Prepare rendering of time stamps
-    ts_format = "%H:%M:%S"
-    if time.localtime(from_time)[:3] != time.localtime(until_time - 1)[:3]:
-        ts_format = "%Y-%m-%d " + ts_format
 
-    def render_date(ts):
-        return time.strftime(ts_format, time.localtime(ts))
+def get_annotation_date_render_function(annotations, avoptions):
+    timestamps = list(
+        itertools.chain.from_iterable([(a[1]["from"], a[1]["until"]) for a in annotations] +
+                                      [avoptions["range"][0]]))
 
-    return annos_to_render, render_date
+    multi_day = len(set([time.localtime(t)[:3] for t in timestamps])) > 1
+    if multi_day:
+        return cmk.render.date_and_time
+    return cmk.render.time_of_day
 
 
 def _annotation_affects_time_range(annotation_from, annotation_until, from_time, until_time):
@@ -799,8 +802,9 @@ def _annotation_affects_time_range(annotation_from, annotation_until, from_time,
 
 
 def show_annotations(annotations, av_rawdata, what, avoptions, omit_service):
-    annos_to_render, render_date = get_relevant_annotations(annotations, av_rawdata, what,
-                                                            avoptions)
+    annos_to_render = get_relevant_annotations(annotations, av_rawdata, what, avoptions)
+    render_date = get_annotation_date_render_function(annos_to_render, avoptions)
+
     table.begin(title=_("Annotations"), omit_if_empty=True)
     for (site_id, host, service), annotation in annos_to_render:
         table.row()

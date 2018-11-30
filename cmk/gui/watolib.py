@@ -4830,8 +4830,25 @@ class AutomationPushSnapshot(AutomationCommand):
             shutil.rmtree(tmp_dir)
 
 
-# TODO: Recode to new sync?
-def push_user_profile_to_site(site, user_id, profile):
+def push_user_profiles_to_site_transitional_wrapper(site, user_profiles):
+    try:
+        return push_user_profiles_to_site(site, user_profiles)
+    except MKAutomationException as e:
+        if "Invalid automation command: push-profiles" in "%s" % e:
+            failed_info = []
+            for user_id, user in user_profiles.iteritems():
+                result = legacy_push_user_profile_to_site(site, user_id, user)
+                if result != True:
+                    failed_info.append(result)
+
+            if failed_info:
+                return "\n".join(failed_info)
+            return True
+        else:
+            raise
+
+
+def legacy_push_user_profile_to_site(site, user_id, profile):
     url = site["multisiteurl"] + "automation.py?" + html.urlencode_vars([
         ("command", "push-profile"),
         ("secret", site["secret"]),
@@ -4854,6 +4871,34 @@ def push_user_profile_to_site(site, user_id, profile):
         # The remote site will send non-Python data in case of an error.
         raise MKAutomationException("%s: <pre>%s</pre>" % (_("Got invalid data"), response))
     return response
+
+
+def push_user_profiles_to_site(site, user_profiles):
+    return do_remote_automation(site, "push-profiles", [("profiles", repr(user_profiles))])
+
+
+PushUserProfilesRequest = typing.NamedTuple("PushUserProfilesRequest", [("user_profiles", dict)])
+
+
+@automation_command_registry.register
+class PushUserProfilesToSite(AutomationCommand):
+    def command_name(self):
+        return "push-profiles"
+
+    def get_request(self):
+        return PushUserProfilesRequest(ast.literal_eval(html.var("profiles")))
+
+    def execute(self, request):
+        user_profiles = request.user_profiles
+
+        if not user_profiles:
+            raise MKGeneralException(_('Invalid call: No profiles set.'))
+
+        users = userdb.load_users(lock=True)
+        for user_id, profile in user_profiles.iteritems():
+            users[user_id] = profile
+        userdb.save_users(users)
+        return True
 
 
 # Add pending entry to make sync possible later for admins

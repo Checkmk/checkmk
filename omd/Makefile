@@ -110,16 +110,12 @@ PRE_SKEL := $(BUILD_HELPER_DIR)/pre-skel
 INSTALL := $(BUILD_HELPER_DIR)/install
 INSTALL_GLOBAL := $(BUILD_HELPER_DIR)/install-global
 
-BUILD_TARGETS := $(shell echo $(PACKAGES)  | tr 'a-z' 'A-Z' | tr '-' '_' )
-INSTALL_TARGETS := $(foreach package,$(addsuffix _INSTALL,$(BUILD_TARGETS)),$($(package)))
-SKEL_TARGETS :=  $(foreach package,$(addsuffix _SKEL,$(BUILD_TARGETS)),$($(package)))
+BUILD_TARGET_VARS := $(shell echo $(PACKAGES)  | tr 'a-z' 'A-Z' | tr '-' '_' )
+BUILD_TARGETS := $(foreach package,$(addsuffix _BUILD,$(BUILD_TARGET_VARS)),$($(package)))
+INSTALL_TARGETS := $(foreach package,$(addsuffix _INSTALL,$(BUILD_TARGET_VARS)),$($(package)))
+SKEL_TARGETS :=  $(foreach package,$(addsuffix _SKEL,$(BUILD_TARGET_VARS)),$($(package)))
 
 .PHONY: install-global build install pack skel
-
-debug:
-	echo $(BUILD_TARGETS)
-	echo $(INSTALL_TARGETS)
-	echo $(SKEL_TARGETS)
 
 build: $(BUILD_TARGETS)
 
@@ -127,7 +123,7 @@ install: $(INSTALL)
 
 install-global: $(INSTALL_GLOBAL)
 
-pack: $(BIN_TGZ) 
+pack: $(BIN_TGZ)
 
 skel: $(DESTDIR)$(OMD_ROOT)/share/omd/skel.permissions $(FIX_SKEL)
 

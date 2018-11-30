@@ -1,0 +1,22 @@
+Title: Raw Edition: Fixed broken livestatus filtering (1.5.0p8 regression)
+Level: 2
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.5.0p9
+Date: 1543611948
+Class: fix
+
+This werk fixes a regression introduced with 1.5.0p8 which
+broke Livestatus filtering when using the Nagios core. The
+CEE / Microcore is not affected by this issue.
+
+The issue broke all livestatus queries that were using the
+Filter header together with the equal operator and a value
+containing regex special characters like the dot. The result
+set of such a query was always empty.
+
+A symptom reported by multiple users was that the context menu
+of logwatch services (with a dot in it's name) was not shown
+anymore.
+

@@ -1,7 +1,7 @@
 import pytest
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.plugins.wato.check_parameters import (forbid_re_delimiters_inside_groups,
-                                                   transform_cpu_iowait)
+from cmk.gui.plugins.wato.check_parameters.unsorted import (forbid_re_delimiters_inside_groups,
+                                                            transform_cpu_iowait)
 
 
 @pytest.mark.parametrize('pattern', ["(test)$", 'foo\\b', '^bar', '\\bfoo\\b', '(a)\\b'])

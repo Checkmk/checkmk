@@ -140,3 +140,5 @@ from cmk.gui.plugins.wato.utils import (
 #   '----------------------------------------------------------------------'
 
 load_plugins(__file__, __package__)
+
+import cmk.gui.plugins.wato.check_parameters

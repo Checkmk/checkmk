@@ -150,3 +150,34 @@ class PermissionRegistry(cmk.plugin_registry.ClassRegistry):
 
 
 permission_registry = PermissionRegistry()
+
+
+# Kept for compatibility with pre 1.6 GUI plugins
+def declare_permission_section(name, title, prio=50, do_sort=False):
+    cls = type("LegacyPermissionSection%s" % name.title(), (PermissionSection,), {
+        "name": name,
+        "title": title,
+        "sort_index": prio,
+        "do_sort": do_sort,
+    })
+    permission_section_registry.register(cls)
+
+
+# Kept for compatibility with pre 1.6 GUI plugins
+def declare_permission(name, title, description, defaults):
+    if isinstance(name, unicode):
+        name = name.encode("utf-8")
+
+    section_name, permission_name = name.split(".", 1)
+
+    cls = type(
+        "LegacyPermission%s%s" % (section_name.title(), permission_name.title()), (Permission,), {
+            "_section_name": section_name,
+            "section": property(lambda s: permission_section_registry[s._section_name]),
+            "permission_name": permission_name,
+            "name": name,
+            "title": title,
+            "description": description,
+            "defaults": defaults,
+        })
+    permission_registry.register(cls)

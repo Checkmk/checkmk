@@ -370,6 +370,7 @@ def test_legacy_get_not_existing_rule_sub_group(monkeypatch):
 def test_grouped_rulespecs():
     by_group = {
         'static/networking': [
+            'static_checks:mtr',
             'static_checks:palo_alto_sessions',
             'static_checks:fortinet_signatures',
             'static_checks:huawei_osn_laser',
@@ -475,6 +476,7 @@ def test_grouped_rulespecs():
         ],
         'checkparams/networking': [
             'ping_levels',
+            'checkgroup_parameters:mtr',
             'checkgroup_parameters:palo_alto_sessions',
             'checkgroup_parameters:fortinet_signatures',
             'checkgroup_parameters:huawei_osn_laser',
@@ -524,7 +526,6 @@ def test_grouped_rulespecs():
             'static_checks:printer_output',
         ],
         'static/applications': [
-            'static_checks:mtr',
             'static_checks:f5_bigip_snat',
             'static_checks:veritas_vcs',
             'static_checks:f5_bigip_vserver',
@@ -1024,7 +1025,6 @@ def test_grouped_rulespecs():
             'checkgroup_parameters:bossock_fibers',
         ],
         'checkparams/applications': [
-            'checkgroup_parameters:mtr',
             'checkgroup_parameters:f5_bigip_snat',
             'checkgroup_parameters:veritas_vcs',
             'checkgroup_parameters:f5_bigip_vserver',
@@ -1524,7 +1524,7 @@ def test_rulespec_group_choices(mode, result):
 
 
 def test_rulespec_get_main_groups():
-    assert watolib.g_rulespecs.get_main_groups() == [
+    assert sorted(watolib.g_rulespecs.get_main_groups()) == sorted([
         'activechecks',
         'grouping',
         'monconf',
@@ -1536,11 +1536,11 @@ def test_rulespec_get_main_groups():
         'datasource_programs',
         'inventory',
         'eventconsole',
-    ]
+    ])
 
 
 def test_rulespec_get_all_groups():
-    assert watolib.g_rulespecs.get_all_groups() == [
+    assert sorted(watolib.g_rulespecs.get_all_groups()) == sorted([
         'activechecks',
         'grouping',
         'monconf/service_checks',
@@ -1575,11 +1575,11 @@ def test_rulespec_get_all_groups():
         'agents/windows_agent',
         'agents/agent_plugins',
         'eventconsole',
-    ]
+    ])
 
 
 def test_rulespec_get_host_groups():
-    assert watolib.g_rulespecs.get_host_groups() == [
+    assert sorted(watolib.g_rulespecs.get_host_groups()) == sorted([
         'grouping',
         'monconf/service_checks',
         'monconf/host_checks',
@@ -1598,7 +1598,7 @@ def test_rulespec_get_host_groups():
         'agents/windows_agent',
         'agents/agent_plugins',
         'eventconsole',
-    ]
+    ])
 
 
 def test_register_rule(monkeypatch):

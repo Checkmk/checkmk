@@ -66,6 +66,7 @@ monitoring_host = None  # deprecated
 max_num_processes = 50
 fallback_agent_output_encoding = 'latin1'
 stored_passwords = {}
+http_proxies = {}  # Global setting for managing HTTP proxy configs
 
 # SNMP communities and encoding
 use_inline_snmp = True

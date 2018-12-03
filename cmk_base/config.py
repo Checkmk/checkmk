@@ -34,7 +34,7 @@ import os
 import py_compile
 import struct
 import sys
-from typing import Any, Callable, Dict, List, Tuple, Union  # pylint: disable=unused-import
+from typing import Any, Callable, Dict, List, Tuple, Union, Optional  # pylint: disable=unused-import
 
 import six
 
@@ -1584,6 +1584,34 @@ def prepare_check_command(command_spec, hostname, service_description):
         formated = ["--pwstore=%s" % ",".join(["@".join(p) for p in passwords])] + formated
 
     return " ".join(formated)
+
+
+def get_http_proxy(http_proxy):
+    # type: (Tuple) -> Optional[str]
+    """Returns proxy URL to be used for HTTP requests
+
+    Pass a value configured by the user using the HTTPProxyReference valuespec to this function
+    and you will get back ether a proxy URL, an empty string to enforce no proxy usage or None
+    to use the proxy configuration from the process environment.
+    """
+    if not isinstance(http_proxy, tuple):
+        return None
+
+    proxy_type, value = http_proxy
+
+    if proxy_type == "environment":
+        return None
+
+    if proxy_type == "global":
+        return http_proxies.get(value, {}).get("proxy_url", None)
+
+    if proxy_type == "url":
+        return value
+
+    if proxy_type == "no_proxy":
+        return ""
+
+    return None
 
 
 #.

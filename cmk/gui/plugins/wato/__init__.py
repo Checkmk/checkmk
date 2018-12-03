@@ -66,6 +66,8 @@ from cmk.gui.plugins.wato.utils import (
     HostnameTranslation,
     IndividualOrStoredPassword,
     passwordstore_choices,
+    HTTPProxyReference,
+    HTTPProxyInput,
     IPMIParameters,
     is_wato_slave_site,
     Levels,

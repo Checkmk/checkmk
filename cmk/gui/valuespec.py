@@ -916,32 +916,39 @@ class AbsoluteDirname(TextAscii):
         self._regex_error = _("Please enter a valid absolut pathname with / as a path separator.")
 
 
-# Valuespec for a HTTP or HTTPS Url, that
-# automatically adds http:// to the value if no protocol has
-# been specified
-class HTTPUrl(TextAscii):
-    def __init__(self, **kwargs):
+class Url(TextAscii):
+    def __init__(self, default_scheme, allowed_schemes, **kwargs):
         kwargs.setdefault("size", 64)
-        TextAscii.__init__(self, **kwargs)
-        self._target = kwargs.get("target")
+        self._default_scheme = default_scheme
+        self._allowed_schemes = allowed_schemes
+        self._show_as_link = kwargs.get("show_as_link", False)
+        self._link_target = kwargs.get("target")
+        super(Url, self).__init__(**kwargs)
 
     def validate_value(self, value, varprefix):
-        TextAscii.validate_value(self, value, varprefix)
-        if value:
-            if not value.startswith("http://") and not value.startswith("https://"):
-                raise MKUserError(varprefix, _("The URL must begin with http:// or https://"))
+        super(Url, self).validate_value(value, varprefix)
+
+        parts = urlparse.urlparse(value)
+        if not parts.scheme or not parts.netloc:
+            raise MKUserError(varprefix, _("Invalid URL given"))
+
+        if parts.scheme not in self._allowed_schemes:
+            raise MKUserError(
+                varprefix,
+                _("Invalid URL scheme. Must be one of: %s") % ", ".join(self._allowed_schemes))
+
         ValueSpec.custom_validate(self, value, varprefix)
 
     def from_html_vars(self, varprefix):
-        value = TextAscii.from_html_vars(self, varprefix)
-        if value:
-            if not "://" in value:
-                value = "http://" + value
+        value = super(Url, self).from_html_vars(varprefix)
+        if value and "://" not in value:
+            value = self._default_scheme + "://" + value
         return value
 
     def value_to_text(self, value):
-        if not value.startswith("http://") and not value.startswith("https://"):
-            value = "http://" + value
+        if not any(value.startswith(scheme + "://") for scheme in self._allowed_schemes):
+            value = self._default_scheme + "://" + value
+
         try:
             parts = urlparse.urlparse(value)
             if parts.path in ['', '/']:
@@ -951,9 +958,21 @@ class HTTPUrl(TextAscii):
         except:
             text = value[7:]
 
-        # Remove trailing / if the url does not contain
-        # any path component
-        return html.render_a(text, href=value, target=self._target if self._target else None)
+        # Remove trailing / if the url does not contain any path component
+        if self._show_as_link:
+            return html.render_a(
+                text, href=value, target=self._link_target if self._link_target else None)
+
+        return value
+
+
+class HTTPUrl(Url):
+    """Valuespec for a HTTP or HTTPS Url, that automatically adds http:// to the value if no scheme has been specified"""
+
+    def __init__(self, **kwargs):
+        kwargs.setdefault("show_as_link", True)
+        super(HTTPUrl, self).__init__(
+            allowed_schemes=["http", "https"], default_scheme="http", **kwargs)
 
 
 def CheckMKVersion(**args):

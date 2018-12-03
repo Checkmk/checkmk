@@ -1,0 +1,42 @@
+Title: HTTP proxies can now be configured globally
+Level: 2
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1543906370
+Class: feature
+
+To enable components to connect to external resources in proxied networks
+more easily it is now possible to configure several HTTP proxies using the
+global setting "HTTP proxies".
+
+Imagine a scenario where your monitoring server is located in your company
+internal network and you need to make a connection to a external HTTP server
+in the internet while you can only connect to this server using a proxy server.
+In the past the most spread option is to set the HTTP(S)_PROXY environment
+variables for such a call and hope that the program you use for the connection
+supports these envrionment variables.
+
+Now it is possible to configure the proxies using the GUI in a central place
+and refer to these settings from different parts of your configuration.
+
+These proxies will be usable by e.g. special agents, notification scripts and
+active checks, which need to use a proxy for their work.
+
+As example the pushover notification script has been migrated to support the
+global proxy settings.
+
+Note to notification script developers: You have to name the
+notification proxy element of the Dictionary parameters valuespec
+"proxy_url" to make it work as expected with globally configured
+proxies.
+
+Note to special agent and active check developers: There is a new
+function available get_http_proxy(http_proxy). Pass the
+"http_proxy" value a user configured using the HTTPProxyReference
+valuespec to this function an you will get back the proxy URL as string
+or None in case no proxy should be set via command line (see "pydoc
+cmk_base.check_api.get_http_proxy_for_cmdline" for further information).
+
+CMK-1407

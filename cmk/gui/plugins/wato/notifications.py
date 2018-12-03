@@ -50,7 +50,11 @@ from cmk.gui.valuespec import (
     Tuple,
 )
 
-from cmk.gui.plugins.wato import (register_notification_parameters, passwordstore_choices)
+from cmk.gui.plugins.wato import (
+    register_notification_parameters,
+    passwordstore_choices,
+    HTTPProxyReference,
+)
 
 
 # We have to transform because 'add_to_event_context'
@@ -559,13 +563,13 @@ register_notification_parameters(
                  default_value="http://" + socket.gethostname() + "/" +
                  (config.omd_site() and config.omd_site() + "/" or "") + "check_mk/",
              )),
-            ("proxy_url",
-             TextAscii(
-                 title=_("Proxy-URL"),
-                 size=64,
-                 regex="^(http|https)://.*",
-                 regex_error=_("The URL must begin with <tt>http</tt> or <tt>https</tt>."),
-             )),
+            (
+                "proxy_url",
+                Transform(
+                    HTTPProxyReference(),
+                    # Transform legacy explicit TextAscii() proxy URL
+                    forth=lambda v: ("url", v) if isinstance(v, str) else v,
+                )),
             ("priority",
              Transform(
                  CascadingDropdown(

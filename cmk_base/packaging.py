@@ -39,10 +39,9 @@ import cmk.paths
 import cmk.ec.export
 
 import cmk.log
-logger = cmk.log.get_logger(__name__)
-
 import cmk_base.utils
 
+logger = cmk.log.get_logger(__name__)
 pac_ext = ".mkp"
 
 

@@ -59,15 +59,15 @@
 
 import os
 
+from optparse import OptionParser
+import time
+
 DEFAULT_SETTINGS = {
     'host': "localhost",
     'port': 4223,
     'segment_display_uid': None,
     'segment_display_brightness': 2
 }
-
-from optparse import OptionParser
-import time
 
 # globals
 segment_display_value = None

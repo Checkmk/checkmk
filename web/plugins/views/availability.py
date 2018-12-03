@@ -24,9 +24,9 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import itertools
 import availability, table
 from valuespec import *
-
 
 # Variable name conventions
 # av_rawdata: a two tier dict: (site, host) -> service -> list(spans)
@@ -45,6 +45,7 @@ from valuespec import *
 #   |  Handling of all options for tuning availability computation and     |
 #   |  display.                                                            |
 #   '----------------------------------------------------------------------'
+
 
 # Get availability options without rendering the valuespecs
 def get_availability_options_from_url(what):
@@ -101,11 +102,12 @@ def render_availability_options(what):
     html.begin_floating_options("avoptions", is_open)
     for name, height, show_in_reporting, vs in avoption_entries:
         html.render_floating_option(name, height, "avo_", vs, avoptions.get(name))
-    html.end_floating_options(reset_url = html.makeuri([("_reset", "1")], remove_prefix="avo_", delvars=["apply", "filled_in"]))
+    html.end_floating_options(
+        reset_url=html.makeuri(
+            [("_reset", "1")], remove_prefix="avo_", delvars=["apply", "filled_in"]))
 
     html.hidden_fields()
     html.end_form()
-
 
     if html.form_submitted():
         config.user.save_file("avoptions", avoptions)
@@ -134,6 +136,7 @@ def render_availability_options(what):
 # b. BI aggregates (identified by aggr_groups and aggr_name)
 # The code flow for these four combinations is different
 #
+
 
 # Render the page showing availability table or timelines. It
 # is (currently) called by views.py, when showing a view but
@@ -204,7 +207,7 @@ def render_availability_page(view, datasource, context, filterheaders, only_site
     title += " - " + range_title
 
     if display_options.enabled(display_options.H):
-        html.body_start(title, stylesheets=["pages","views","status"], force=True)
+        html.body_start(title, stylesheets=["pages", "views", "status"], force=True)
 
     if display_options.enabled(display_options.T):
         html.top_heading(title)
@@ -269,7 +272,7 @@ def do_render_availability(what, av_rawdata, av_data, av_mode, av_object, avopti
         render_availability_tables(availability_tables, what, avoptions)
 
     annotations = availability.load_annotations()
-    show_annotations(annotations, av_rawdata, what, avoptions, omit_service = av_object != None)
+    show_annotations(annotations, av_rawdata, what, avoptions, omit_service=av_object != None)
 
 
 def render_availability_tables(availability_tables, what, avoptions):
@@ -316,7 +319,8 @@ def render_availability_timeline(what, av_entry, avoptions):
         html.div(_("No information available"), class_="info")
         return
 
-    timeline_layout = availability.layout_timeline(what, timeline_rows, av_entry["considered_duration"], avoptions, "standalone")
+    timeline_layout = availability.layout_timeline(
+        what, timeline_rows, av_entry["considered_duration"], avoptions, "standalone")
     render_timeline_bar(timeline_layout, "standalone")
     render_date = timeline_layout["render_date"]
 
@@ -331,8 +335,7 @@ def render_availability_timeline(what, av_entry, avoptions):
         table.row(
             id_="timetable_%d" % row_nr,
             onmouseover="timetable_hover(%d, 1);" % row_nr,
-            onmouseout="timetable_hover(%d, 0);" % row_nr
-        )
+            onmouseout="timetable_hover(%d, 0);" % row_nr)
         table.cell(_("Links"), css="buttons")
         if what == "bi":
             url = html.makeuri([("timewarp", str(int(row["from"])))])
@@ -341,11 +344,9 @@ def render_availability_timeline(what, av_entry, avoptions):
             else:
                 html.icon_button(url, _("Time warp - show BI aggregate during this time period"), "timewarp")
         else:
-            url = html.makeuri([("anno_site", av_entry["site"]),
-                                ("anno_host", av_entry["host"]),
+            url = html.makeuri([("anno_site", av_entry["site"]), ("anno_host", av_entry["host"]),
                                 ("anno_service", av_entry["service"]),
-                                ("anno_from", str(row["from"])),
-                                ("anno_until", str(row["until"]))])
+                                ("anno_from", str(row["from"])), ("anno_until", str(row["until"]))])
             html.icon_button(url, _("Create an annotation for this period"), "annotation")
 
         table.cell(_("From"),     row["from_text"],     css="nobr narrow")
@@ -359,7 +360,6 @@ def render_availability_timeline(what, av_entry, avoptions):
     # Legend for timeline
     if "display_timeline_legend" in avoptions["labelling"]:
         render_timeline_legend(what)
-
 
 
 def render_timeline_legend(what):
@@ -387,14 +387,19 @@ def render_timeline_legend(what):
 
 
 def render_availability_table(group_title, availability_table, what, avoptions):
-    av_table = availability.layout_availability_table(what, group_title, availability_table, avoptions)
+    av_table = availability.layout_availability_table(what, group_title, availability_table,
+                                                      avoptions)
 
     # TODO: If summary line is activated, then sorting should now move that line to the
     # top. It should also stay at the bottom. This would require an extension to the
     # table.py module.
-    table.begin("av_items", av_table["title"], css="availability",
-        searchable = False, limit = None,
-        omit_headers = "omit_headers" in avoptions["labelling"])
+    table.begin(
+        "av_items",
+        av_table["title"],
+        css="availability",
+        searchable=False,
+        limit=None,
+        omit_headers="omit_headers" in avoptions["labelling"])
 
     show_urls, show_timeline = False, False
     for row in av_table["rows"]:
@@ -428,17 +433,17 @@ def render_availability_table(group_title, availability_table, what, avoptions):
     if "summary" in av_table:
         table.row(css="summary", fixed=True)
         if show_urls:
-            table.cell("", "") # Empty cell in URLs column
+            table.cell("", "")  # Empty cell in URLs column
         table.cell("", _("Summary"), css="heading")
         for x in range(1, len(av_table["object_titles"])):
-            table.cell("", "") # empty cells, of more object titles than one
+            table.cell("", "")  # empty cells, of more object titles than one
         if show_timeline:
             table.cell("", "")
 
         for (title, help), (text, css) in zip(av_table["cell_titles"], av_table["summary"]):
             table.cell(title, text, css="heading " + css, help=help)
 
-    return table.end() # returns Table data if fetch == True
+    return table.end()  # returns Table data if fetch == True
 
 
 def render_timeline_bar(timeline_layout, style):
@@ -451,7 +456,7 @@ def render_timeline_bar(timeline_layout, style):
         html.div(render_date(until_time), class_="until")
 
     if "time_choords" in timeline_layout:
-        timebar_width = 500 # CSS width of inline timebar
+        timebar_width = 500  # CSS width of inline timebar
         for position, title in timeline_layout["time_choords"]:
             pixel = timebar_width * position
             html.div('', title=title, class_="timelinechoord", style="left: %dpx" % pixel)
@@ -470,8 +475,10 @@ def render_timeline_bar(timeline_layout, style):
             td_attrs.update({"id_": "timeline_%d" % row_nr})
 
             if style == "standalone":
-                td_attrs.update({"onmouseover": "timeline_hover(%d, 1);" % row_nr,
-                                 "onmouseout" : "timeline_hover(%d, 0);" % row_nr, })
+                td_attrs.update({
+                    "onmouseover": "timeline_hover(%d, 1);" % row_nr,
+                    "onmouseout": "timeline_hover(%d, 0);" % row_nr,
+                })
 
         html.td('', **td_attrs)
 
@@ -494,6 +501,7 @@ def render_timeline_bar(timeline_layout, style):
 #   |  Special code for Business Intelligence availability                 |
 #   '----------------------------------------------------------------------'
 
+
 # Render availability of a BI aggregate. This is currently
 # no view and does not support display options
 # TODO: Why should we handle this in a special way? Probably because we cannot
@@ -514,7 +522,7 @@ def render_bi_availability(title, aggr_rows):
         title = _("Availability of") + " " + title
 
     if html.output_format != "csv_export":
-        html.body_start(title, stylesheets=["pages","views","status", "bi"], javascripts=['bi'])
+        html.body_start(title, stylesheets=["pages", "views", "status", "bi"], javascripts=['bi'])
         html.top_heading(title)
         html.begin_context_buttons()
         html.toggle_button("avoptions", False, "painteroptions", _("Configure details of the report"))
@@ -530,7 +538,8 @@ def render_bi_availability(title, aggr_rows):
         elif len(aggr_rows) == 1:
             aggr_name = aggr_rows[0]["aggr_name"]
             aggr_group = aggr_rows[0]["aggr_group"]
-            timeline_url = html.makeuri([("av_mode", "timeline"), ("av_aggr_name", aggr_name), ("av_aggr_group", aggr_group)])
+            timeline_url = html.makeuri([("av_mode", "timeline"), ("av_aggr_name", aggr_name),
+                                         ("av_aggr_group", aggr_group)])
             html.context_button(_("Timeline"), timeline_url, "timeline")
         html.end_context_buttons()
 
@@ -556,15 +565,13 @@ def render_bi_availability(title, aggr_rows):
         has_reached_logrow_limit = False
         timeline_containers, fetched_rows = availability.get_timeline_containers(
             aggr_rows, avoptions, timewarp,
-            livestatus_limit + 1 if livestatus_limit != None else None
-        )
+            livestatus_limit + 1 if livestatus_limit != None else None)
         if livestatus_limit and fetched_rows > livestatus_limit:
             has_reached_logrow_limit = True
 
-
         for timeline_container in timeline_containers:
-            tree                = timeline_container.aggr_tree
-            these_spans         = timeline_container.timeline
+            tree = timeline_container.aggr_tree
+            these_spans = timeline_container.timeline
             timewarp_tree_state = timeline_container.timewarp_state
 
             spans += these_spans
@@ -576,20 +583,25 @@ def render_bi_availability(title, aggr_rows):
                 if assumed_state != None:
                     eff_state = assumed_state
                 row = {
-                        "aggr_tree"            : tree,
-                        "aggr_treestate"       : timewarp_tree_state,
-                        "aggr_state"           : state,          # state disregarding assumptions
-                        "aggr_assumed_state"   : assumed_state,  # is None, if there are no assumptions
-                        "aggr_effective_state" : eff_state,      # is assumed_state, if there are assumptions, else real state
-                        "aggr_name"            : node["title"],
-                        "aggr_output"          : eff_state["output"],
-                        "aggr_hosts"           : node["reqhosts"],
-                        "aggr_function"        : node["func"],
-                        "aggr_group"           : html.var("aggr_group"),
+                    "aggr_tree": tree,
+                    "aggr_treestate": timewarp_tree_state,
+                    "aggr_state": state,  # state disregarding assumptions
+                    "aggr_assumed_state": assumed_state,  # is None, if there are no assumptions
+                    "aggr_effective_state":
+                        eff_state,  # is assumed_state, if there are assumptions, else real state
+                    "aggr_name": node["title"],
+                    "aggr_output": eff_state["output"],
+                    "aggr_hosts": node["reqhosts"],
+                    "aggr_function": node["func"],
+                    "aggr_group": html.var("aggr_group"),
                 }
 
-                renderer = bi.FoldableTreeRendererTree(row, omit_root=False,
-                                                   expansion_level=bi.load_ex_level(), only_problems=False, lazy=False)
+                renderer = bi.FoldableTreeRendererTree(
+                    row,
+                    omit_root=False,
+                    expansion_level=bi.load_ex_level(),
+                    only_problems=False,
+                    lazy=False)
                 tdclass, htmlcode = renderer.css_class(), renderer.render()
 
                 with html.plugged():
@@ -598,7 +610,7 @@ def render_bi_availability(title, aggr_rows):
 
                     html.open_h3()
                     # render icons for back and forth
-                    button_back_shown  = False
+                    button_back_shown = False
                     button_forth_shown = False
                     if int(these_spans[0]["from"]) == timewarp:
                         html.disabled_icon_button("back_off")
@@ -606,12 +618,15 @@ def render_bi_availability(title, aggr_rows):
 
                     previous_span = None
                     for span in these_spans:
-                        if not button_back_shown and int(span["from"]) == timewarp and previous_span != None:
+                        if not button_back_shown and int(
+                                span["from"]) == timewarp and previous_span != None:
                             html.icon_button(html.makeuri([("timewarp", str(int(previous_span["from"])))]), _("Jump one phase back"), "back")
                             button_back_shown = True
                         # Multiple followup spans can have the same "from" time
                         # We only show one forth-arrow with an actual time difference
-                        elif not button_forth_shown and previous_span and int(previous_span["from"]) == timewarp and int(span["from"]) != timewarp:
+                        elif not button_forth_shown and previous_span and int(
+                                previous_span["from"]) == timewarp and int(
+                                    span["from"]) != timewarp:
                             html.icon_button(html.makeuri([("timewarp", str(int(span["from"])))]), _("Jump one phase forth"), "forth")
                             button_forth_shown = True
                         previous_span = span
@@ -673,6 +688,7 @@ def render_bi_availability(title, aggr_rows):
 #   |  for loading, saving and using them is in the availability module.   |
 #   '----------------------------------------------------------------------'
 
+
 def get_relevant_annotations(annotations, by_host, what, avoptions):
     (from_time, until_time), range_title = avoptions["range"]
     annos_to_render = []
@@ -680,46 +696,50 @@ def get_relevant_annotations(annotations, by_host, what, avoptions):
 
     for site_host, avail_entries in by_host.iteritems():
         for service in avail_entries.keys():
-            for search_what in [ "host", "service" ]:
+            for search_what in ["host", "service"]:
                 if what == "host" and search_what == "service":
-                    continue # Service notifications are not relevant for host
+                    continue  # Service notifications are not relevant for host
 
                 if search_what == "host":
                     site_host_svc = site_host[0], site_host[1], None
                 else:
-                    site_host_svc = site_host[0], site_host[1], service # service can be None
+                    site_host_svc = site_host[0], site_host[1], service  # service can be None
 
                 for annotation in annotations.get(site_host_svc, []):
                     if (annotation["from"] >= from_time and annotation["from"] <= until_time) or \
                        (annotation["until"] >= from_time and annotation["until"] <= until_time):
-                       if id(annotation) not in annos_rendered:
-                           annos_to_render.append((site_host_svc, annotation))
-                           annos_rendered.add(id(annotation))
+                        if id(annotation) not in annos_rendered:
+                            annos_to_render.append((site_host_svc, annotation))
+                            annos_rendered.add(id(annotation))
 
-    annos_to_render.sort(cmp=lambda a,b: cmp(a[1]["from"], b[1]["from"]) or cmp(a[0], b[0]))
+    annos_to_render.sort(cmp=lambda a, b: cmp(a[1]["from"], b[1]["from"]) or cmp(a[0], b[0]))
+    return annos_to_render
 
-    # Prepare rendering of time stamps
-    ts_format = "%H:%M:%S"
-    if time.localtime(from_time)[:3] != time.localtime(until_time-1)[:3]:
-        ts_format = "%Y-%m-%d " + ts_format
-    def render_date(ts):
-        return time.strftime(ts_format, time.localtime(ts))
 
-    return annos_to_render, render_date
+def get_annotation_date_render_function(annotations, avoptions):
+    timestamps = list(
+        itertools.chain.from_iterable([(a[1]["from"], a[1]["until"]) for a in annotations] +
+                                      [avoptions["range"][0]]))
+    multi_day = len(set([time.localtime(t)[:3] for t in timestamps])) > 1
+    if multi_day:
+        return cmk.render.date_and_time
+    return cmk.render.time_of_day
 
 
 def show_annotations(annotations, av_rawdata, what, avoptions, omit_service):
-    annos_to_render, render_date = get_relevant_annotations(annotations, av_rawdata, what, avoptions)
+    annos_to_render = get_relevant_annotations(annotations, av_rawdata, what, avoptions)
+    render_date = get_annotation_date_render_function(annos_to_render, avoptions)
+
     table.begin(title = _("Annotations"), omit_if_empty = True)
     for (site_id, host, service), annotation in annos_to_render:
         table.row()
         table.cell("", css="buttons")
         anno_vars = [
-          ( "anno_site", site_id ),
-          ( "anno_host", host ),
-          ( "anno_service", service or "" ),
-          ( "anno_from", int(annotation["from"]) ),
-          ( "anno_until", int(annotation["until"]) ),
+            ("anno_site", site_id),
+            ("anno_host", host),
+            ("anno_service", service or ""),
+            ("anno_from", int(annotation["from"])),
+            ("anno_until", int(annotation["until"])),
         ]
         edit_url = html.makeuri(anno_vars)
         html.icon_button(edit_url, _("Edit this annotation"), "edit")
@@ -728,12 +748,16 @@ def show_annotations(annotations, av_rawdata, what, avoptions, omit_service):
 
         if not omit_service:
             if not "omit_host" in avoptions["labelling"]:
-                host_url = "view.py?" + html.urlencode_vars([("view_name", "hoststatus"), ("site", site_id), ("host", host)])
+                host_url = "view.py?" + html.urlencode_vars([("view_name", "hoststatus"),
+                                                             ("site", site_id), ("host", host)])
                 table.cell(_("Host"), html.render_a(host, host_url))
 
             if what == "service":
                 if service:
-                    service_url = "view.py?" + html.urlencode_vars([("view_name", "service"), ("site", site_id), ("host", host), ("service", service)])
+                    service_url = "view.py?" + html.urlencode_vars([("view_name", "service"),
+                                                                    ("site", site_id),
+                                                                    ("host", host),
+                                                                    ("service", service)])
                     # TODO: honor use_display_name. But we have no display names here...
                     service_name = service
                     table.cell(_("Service"), html.render_a(service_name, service_url))
@@ -755,11 +779,11 @@ def show_annotations(annotations, av_rawdata, what, avoptions, omit_service):
 
 
 def edit_annotation():
-    site_id       = html.var("anno_site") or ""
-    hostname      = html.var("anno_host")
-    service       = html.var("anno_service") or None
-    fromtime      = float(html.var("anno_from"))
-    untiltime     = float(html.var("anno_until"))
+    site_id = html.var("anno_site") or ""
+    hostname = html.var("anno_host")
+    service = html.var("anno_service") or None
+    fromtime = float(html.var("anno_from"))
+    untiltime = float(html.var("anno_until"))
     site_host_svc = (site_id, hostname, service)
 
     # Find existing annotation with this specification
@@ -768,9 +792,9 @@ def edit_annotation():
 
     if not annotation:
         value = {
-            "from"    : fromtime,
-            "until"   : untiltime,
-            "text"    : "",
+            "from": fromtime,
+            "until": untiltime,
+            "text": "",
         }
     else:
         value = annotation.copy()
@@ -800,7 +824,7 @@ def edit_annotation():
     if service:
         title += "/" + service
 
-    html.body_start(title, stylesheets=["pages","views","status"])
+    html.body_start(title, stylesheets=["pages", "views", "status"])
     html.top_heading(title)
 
     html.begin_context_buttons()
@@ -890,8 +914,10 @@ def handle_edit_annotations():
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
 def output_availability_csv(what, av_data, avoptions):
-    def cells_from_row(group_titles, group_cells, object_titles, cell_titles, row_object, row_cells):
+    def cells_from_row(group_titles, group_cells, object_titles, cell_titles, row_object,
+                       row_cells):
         for column_title, group_title in zip(group_titles, group_cells):
             table.cell(column_title, group_title)
 
@@ -903,9 +929,10 @@ def output_availability_csv(what, av_data, avoptions):
 
     av_output_set_content_disposition(_("Check_MK-Availability"))
     availability_tables = availability.compute_availability_groups(what, av_data, avoptions)
-    table.begin("av_items", output_format = "csv")
+    table.begin("av_items", output_format="csv")
     for group_title, availability_table in availability_tables:
-        av_table = availability.layout_availability_table(what, group_title, availability_table, avoptions)
+        av_table = availability.layout_availability_table(what, group_title, availability_table,
+                                                          avoptions)
         pad = 0
 
         if group_title:
@@ -915,21 +942,22 @@ def output_availability_csv(what, av_data, avoptions):
 
         for row in av_table["rows"]:
             table.row()
-            cells_from_row(group_titles, group_cells,
-                           av_table["object_titles"], av_table["cell_titles"],
-                           row["object"], row["cells"])
+            cells_from_row(group_titles, group_cells, av_table["object_titles"],
+                           av_table["cell_titles"], row["object"], row["cells"])
             # presumably all rows have the same width
             pad = len(row["object"]) - 1
         table.row()
 
         if "summary" in av_table:
-           cells_from_row(group_titles, group_cells,
-                       av_table["object_titles"], av_table["cell_titles"],
-                       [(_("Summary"), "")] + [("", "")] * pad, av_table["summary"])
+            cells_from_row(group_titles, group_cells,
+                        av_table["object_titles"], av_table["cell_titles"],
+                        [(_("Summary"), "")] + [("", "")] * pad, av_table["summary"])
     table.end()
 
+
 def av_output_set_content_disposition(title):
-    filename = '%s-%s.csv' % (title, time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(time.time())))
+    filename = '%s-%s.csv' % (title, time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(
+        time.time())))
     if type(filename) == unicode:
         filename = filename.encode("utf-8")
     html.req.headers_out['Content-Disposition'] = 'Attachment; filename="%s"' % filename

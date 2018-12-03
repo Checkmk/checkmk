@@ -372,6 +372,8 @@ def test_registered_permissions():
         'view.invstack_search',
         'view.invswpac_of_host',
         'view.invswpac_search',
+        'view.invtunnels_of_host',
+        'view.invtunnels_search',
         'view.invunknown_of_host',
         'view.invunknown_search',
         'view.logfile',

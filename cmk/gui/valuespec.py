@@ -51,14 +51,8 @@ import types
 import urlparse
 from UserDict import DictMixin
 
-try:
-    # does not exist in Py3, but is super class of str & unicode in py2
-    basestring
-except NameError:
-    basestring = str  # pylint: disable=redefined-builtin
-    unicode = str  # pylint: disable=redefined-builtin
-
 from Cryptodome.PublicKey import RSA
+import six
 
 import cmk.log
 import cmk.paths
@@ -532,7 +526,7 @@ class TextUnicode(TextAscii):
         return html.get_unicode_input(varprefix, "").strip()
 
     def validate_datatype(self, value, varprefix):
-        if not isinstance(value, basestring):
+        if not isinstance(value, six.string_types):
             raise MKUserError(
                 varprefix,
                 _("The value must be of type str or unicode, but it has type %s") %

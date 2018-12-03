@@ -66,8 +66,9 @@ import signal
 import json
 import abc
 import pprint
-
 from contextlib import contextmanager
+
+import six
 
 try:
     # First try python3
@@ -76,14 +77,6 @@ try:
 except ImportError:
     # Default to python2
     from cgi import escape as html_escape
-
-try:
-    # does not exist in Py3, but is super class of str & unicode in py2
-    # suppress mypys "Cannot determine type of 'basestring'" error
-    basestring  # type: ignore
-except NameError:
-    basestring = str  # pylint: disable=redefined-builtin
-    unicode = str  # pylint: disable=redefined-builtin
 
 
 # Monkey patch in order to make the HTML class below json-serializable without changing the default json calls.
@@ -390,7 +383,7 @@ class OutputFunnel(object):
         if isinstance(text, HTML):
             text = "%s" % text
 
-        if not isinstance(text, basestring):  # also possible: type Exception!
+        if not isinstance(text, six.string_types):  # also possible: type Exception!
             raise MKGeneralException(
                 _('Type Error: html.write accepts str and unicode input objects only!'))
 
@@ -1345,7 +1338,7 @@ class html(HTMLGenerator):
         if isinstance(ht, HTML):
             ht = "%s" % ht
 
-        if not isinstance(ht, basestring):
+        if not isinstance(ht, six.string_types):
             return ht
 
         while True:

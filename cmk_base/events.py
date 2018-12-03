@@ -35,12 +35,7 @@ import time
 import traceback
 import urllib
 
-try:
-    # does not exist in Py3, but is super class of str & unicode in py2
-    basestring
-except NameError:
-    basestring = str  # pylint: disable=redefined-builtin
-    unicode = str  # pylint: disable=redefined-builtin
+import six
 
 import livestatus
 import cmk
@@ -757,7 +752,7 @@ def add_to_event_context(plugin_context, prefix, param):
 
 
 def plugin_param_to_string(value):
-    if isinstance(value, basestring):
+    if isinstance(value, six.string_types):
         return value
     elif isinstance(value, (int, float)):
         return str(value)

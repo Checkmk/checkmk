@@ -38,6 +38,7 @@ def check_dns_arguments(params):
     if "expected_address" in settings:
         # Convert from old (str) to new (list of strings)
         exp = settings["expected_address"]
+        # TODO: Use six.string_types when this is a module.
         if isinstance(exp, basestring):
             exp = [exp]
         for entry in exp:

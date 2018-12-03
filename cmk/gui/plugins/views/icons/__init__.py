@@ -26,12 +26,7 @@
 
 import traceback
 
-try:
-    # does not exist in Py3, but is super class of str & unicode in py2
-    basestring
-except NameError:
-    basestring = str  # pylint: disable=redefined-builtin
-    unicode = str  # pylint: disable=redefined-builtin
+import six
 
 import cmk.regex
 
@@ -152,7 +147,7 @@ def _process_multisite_icons(what, row, tags, custom_vars, toplevel):
                 if result is None:
                     continue
 
-                elif isinstance(result, (basestring, HTML)):
+                elif isinstance(result, six.string_types + (HTML,)):
 
                     # TODO: This is handling the deprecated API with 1.2.7. Remove this one day.
                     if result[0] == '<':

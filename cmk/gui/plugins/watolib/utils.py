@@ -28,6 +28,8 @@ import os
 import pprint
 from typing import Text  # pylint: disable=unused-import
 
+import six
+
 import cmk.store as store
 
 import cmk.plugin_registry
@@ -267,11 +269,11 @@ def register_configvar(group,
 
     # New API is to hand over the class via domain argument. But not all calls have been
     # migrated. Perform the translation here.
-    if isinstance(domain, basestring):
+    if isinstance(domain, six.string_types):
         domain = ConfigDomain.get_class(domain)
 
     # New API is to hand over the class via group argument
-    if isinstance(group, basestring):
+    if isinstance(group, six.string_types):
         group = config_variable_group_registry[group]
 
     cls = type(

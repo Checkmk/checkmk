@@ -27,12 +27,7 @@
 import ast
 import time
 
-try:
-    # does not exist in Py3, but is super class of str & unicode in py2
-    basestring
-except NameError:
-    basestring = str  # pylint: disable=redefined-builtin
-    unicode = str  # pylint: disable=redefined-builtin
+import six
 
 from cmk.exceptions import MKGeneralException
 
@@ -94,7 +89,7 @@ class SNMPDataSource(DataSource):
         else:
             inline = "no"
 
-        if isinstance(self._credentials, basestring):
+        if isinstance(self._credentials, six.string_types):
             credentials_text = "Community: %r" % self._credentials
         else:
             credentials_text = "Credentials: '%s'" % ", ".join(self._credentials)

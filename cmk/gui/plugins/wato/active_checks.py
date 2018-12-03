@@ -24,12 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-try:
-    # does not exist in Py3, but is super class of str & unicode in py2
-    basestring
-except NameError:
-    basestring = str  # pylint: disable=redefined-builtin
-    unicode = str  # pylint: disable=redefined-builtin
+import six
 
 import cmk.gui.mkeventd as mkeventd
 from cmk.gui.i18n import _
@@ -479,7 +474,7 @@ register_rule(
                                        "IP address then the answer will be host names, that end "
                                        "with a dot."),
                             ),
-                            forth=lambda old: isinstance(old, basestring) and [old] or old,
+                            forth=lambda old: isinstance(old, six.string_types) and [old] or old,
                         ),
                     ),
                     ("expected_authority",

@@ -55,17 +55,11 @@ import shutil
 import sys
 import time
 
-try:
-    # does not exist in Py3, but is super class of str & unicode in py2
-    basestring
-except NameError:
-    basestring = str  # pylint: disable=redefined-builtin
-    unicode = str  # pylint: disable=redefined-builtin
-
 # docs: http://www.python-ldap.org/doc/html/index.html
 import ldap
 import ldap.filter
 from ldap.controls import SimplePagedResultsControl
+import six
 
 import cmk
 import cmk.paths
@@ -2416,7 +2410,7 @@ def ldap_sync_groups_to_roles(connection, plugin, params, user_id, ldap_user, us
             group_specs = [group_specs]  # be compatible to old single group configs
 
         for group_spec in group_specs:
-            if isinstance(group_spec, basestring):
+            if isinstance(group_spec, six.string_types):
                 dn = group_spec  # be compatible to old config without connection spec
             elif not isinstance(group_spec, tuple):
                 continue  # skip non configured ones (old valuespecs allowed None)
@@ -2468,7 +2462,7 @@ def _get_groups_to_fetch(connection, params):
                     groups_to_fetch.setdefault(this_conn_id, [])
                     groups_to_fetch[this_conn_id].append(group_spec.lower())
 
-        elif isinstance(group_specs, basestring):
+        elif isinstance(group_specs, six.string_types):
             # Need to be compatible to old config formats
             this_conn_id = connection.id()
             groups_to_fetch.setdefault(this_conn_id, [])

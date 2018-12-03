@@ -48,14 +48,7 @@ import traceback
 from typing import Any, Dict, List, Optional, Tuple, Union  # pylint: disable=unused-import
 
 import pathlib2 as pathlib
-
-try:
-    # does not exist in Py3, but is super class of str & unicode in py2
-    # suppress mypys "Cannot determine type of 'basestring'" error
-    basestring  # type: ignore
-except NameError:
-    basestring = str  # pylint: disable=redefined-builtin
-    unicode = str  # pylint: disable=redefined-builtin
+import six
 
 import cmk
 import cmk.daemon
@@ -299,7 +292,7 @@ def match(pattern, text, complete=True):
     if pattern is None:
         return ()
 
-    elif isinstance(pattern, basestring):
+    elif isinstance(pattern, six.string_types):
         if complete:
             return () if pattern == text.lower() else False
         return () if pattern in text.lower() else False

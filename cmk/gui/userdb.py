@@ -30,14 +30,9 @@ import time
 import os
 import traceback
 import copy
-import pathlib2 as pathlib
 
-try:
-    # does not exist in Py3, but is super class of str & unicode in py2
-    basestring
-except NameError:
-    basestring = str  # pylint: disable=redefined-builtin
-    unicode = str  # pylint: disable=redefined-builtin
+import pathlib2 as pathlib
+import six
 
 import cmk.utils
 import cmk.paths
@@ -1224,7 +1219,7 @@ def hook_login(username, password):
         # False       -> failed
         if result not in [False, None]:
             username = result
-            if not isinstance(username, basestring):
+            if not isinstance(username, six.string_types):
                 raise MKInternalError(
                     _("The username returned by the %s "
                       "connector is not of type string (%r).") % (connection_id, username))

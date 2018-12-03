@@ -67,13 +67,7 @@ import typing
 
 import requests
 from pathlib2 import Path
-
-try:
-    # does not exist in Py3, but is super class of str & unicode in py2
-    basestring
-except NameError:
-    basestring = str  # pylint: disable=redefined-builtin
-    unicode = str  # pylint: disable=redefined-builtin
+import six
 
 import cmk.daemon as daemon
 import cmk.paths
@@ -5935,7 +5929,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
 
             # In case of an exception it returns a str/unicode message. Wrap the
             # message in a list to be compatible to regular response
-            if isinstance(cmk_configuration_warnings, basestring):
+            if isinstance(cmk_configuration_warnings, six.string_types):
                 cmk_configuration_warnings = [cmk_configuration_warnings]
 
             return {"check_mk": cmk_configuration_warnings}
@@ -7840,7 +7834,7 @@ def register_rule(
 
     # Added during 1.6 development for easier transition. Is not needed for
     # pre 1.6 compatibility
-    if not isinstance(group, basestring) and issubclass(group, RulespecGroup):
+    if not isinstance(group, six.string_types) and issubclass(group, RulespecGroup):
         group = group().name
 
     rulespec = Rulespec(

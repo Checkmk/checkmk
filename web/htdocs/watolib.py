@@ -4243,12 +4243,13 @@ def do_site_login(site_id, name, password):
             raise MKAutomationException(response)
 
 
-def get_url(url, insecure, auth=None, data=None, files=None):
+def get_url(url, insecure, auth=None, data=None, files=None, timeout=None):
     response = requests.post(url,
         data=data,
         verify=not insecure,
         auth=auth,
         files=files,
+        timeout=timeout
     )
 
     response.encoding = "utf-8" # Always decode with utf-8
@@ -4531,7 +4532,7 @@ def push_user_profile_to_site(site, user_id, profile):
     response = get_url(url, site.get('insecure', False), data={
         'user_id': user_id,
         'profile': mk_repr(profile),
-    })
+    }, timeout=60)
 
     if not response:
         raise MKAutomationException(_("Empty output from remote site."))

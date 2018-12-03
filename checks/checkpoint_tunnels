@@ -1,0 +1,73 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2018             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+tunnel_states = {
+    "3": "Active",
+    "4": "Destroy",
+    "129": "Idle",
+    "130": "Phase1",
+    "131": "Down",
+    "132": "Init",
+}
+
+factory_settings["checkpoint_tunnels_default_levels"] = {
+    "Active": 0,
+    "Destroy": 1,
+    "Idle": 0,
+    "Phase1": 2,
+    "Down": 2,
+    "Init": 1,
+}
+
+
+def inventory_checkpoint_tunnels(info):
+    for peer, _ in info:
+        yield peer, {}
+
+
+def check_checkpoint_tunnels(item, params, info):
+    print params
+    for peer, status in info:
+        if peer == item:
+            state = params[tunnel_states[status]]
+            return state, tunnel_states[status]
+
+
+check_info['checkpoint_tunnels'] = {
+    'check_function': check_checkpoint_tunnels,
+    'inventory_function': inventory_checkpoint_tunnels,
+    'group': "checkpoint_tunnels",
+    'default_levels_variable': "checkpoint_tunnels_default_levels",
+    'service_description': "Tunnel %s",
+    'snmp_scan_function': scan_checkpoint,
+    'snmp_info': (
+        '.1.3.6.1.4.1.2620.500.9002.1',
+        [
+            2,  # TunnelPeerObjName
+            3,  # tunnelState
+        ]),
+    'includes': ['checkpoint.include'],
+}

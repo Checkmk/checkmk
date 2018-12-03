@@ -1335,7 +1335,19 @@ inventory_displayhints.update({
     ".networking.wlan.controller.accesspoints:*.model": {"title": _("Model")},
     ".networking.wlan.controller.accesspoints:*.serial": {"title": _("Serial Number")},
     ".networking.wlan.controller.accesspoints:*.sys_location": {"title": _("System Location")},
-})
+
+    ".networking.tunnels:": {
+        "title" : _("Networking Tunnels"),
+    },
+    ".networking.tunnels:*.index": { "title" : _("Index") },
+    ".networking.tunnels:*.link_priority": { "title" : _("Link Priority") },
+    ".networking.tunnels:*.peerip": { "title" : _("Peer IP Address") },
+    ".networking.tunnels:*.peername": { "title" : _("Peer Name")  },
+    ".networking.tunnels:*.sourceip": { "title" : _("Source IP Address") },
+    ".networking.tunnels:*.tunnel_interface": { "title" : _("Tunnel Interface") },
+
+}
+)
 
 # yapf: enable
 
@@ -1794,6 +1806,8 @@ declare_invtable_view(
     _("Oracle performance"),
     _("Oracle performance"),
 )
+declare_invtable_view("invtunnels", ".networking.tunnels:", _("Networking Tunnels"),
+                      _("Networking Tunnels"))
 
 # This would also be possible. But we muss a couple of display and filter hints.
 # declare_invtable_view("invdisks",       ".hardware.storage.disks:",  _("Hard Disk"),          _("Hard Disks"))

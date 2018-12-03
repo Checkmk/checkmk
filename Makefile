@@ -369,6 +369,7 @@ setup:
 	    python-pip \
 	    chrpath \
 	    enchant \
+	    ksh \
 	    p7zip-full
 	sudo -H pip install -U pipenv
 	$(MAKE) -C omd setup

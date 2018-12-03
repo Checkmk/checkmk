@@ -30,6 +30,8 @@
 import abc
 import json
 
+import six
+
 import cmk.plugin_registry
 
 import cmk.gui.config as config
@@ -275,7 +277,7 @@ class SNMPCredentials(Alternative):
                 if len(x) == 6:
                     return 2  # authPriv
             else:
-                if x is None or isinstance(x, basestring):
+                if x is None or isinstance(x, six.string_types):
                     return 0  # community only
                 if len(x) == 1 or len(x) == 2:
                     return 1  # noAuthNoPriv
@@ -590,7 +592,7 @@ def register_check_parameters(subgroup,
 
     # Added during 1.6 development for easier transition. Convert all legacy subgroup
     # parameters (which are either str/unicode to group classes
-    if isinstance(subgroup, basestring):
+    if isinstance(subgroup, six.string_types):
         subgroup = get_rulegroup("checkparams/" + subgroup).__class__
 
     # Enclose this valuespec with a TimeperiodValuespec

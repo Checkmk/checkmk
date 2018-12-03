@@ -28,14 +28,8 @@
 import re
 import cgi
 
+import six
 import werkzeug.http
-
-try:
-    # does not exist in Py3, but is super class of str & unicode in py2
-    basestring
-except NameError:
-    basestring = str  # pylint: disable=redefined-builtin
-    unicode = str  # pylint: disable=redefined-builtin
 
 import cmk.gui.log as log
 from cmk.gui.i18n import _
@@ -229,7 +223,7 @@ class Request(object):
         if value is None:
             self.del_var(varname)
 
-        elif isinstance(value, basestring):
+        elif isinstance(value, six.string_types):
             self.vars[varname] = value
 
         else:

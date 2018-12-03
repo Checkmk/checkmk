@@ -27,12 +27,7 @@
 import os
 import sys
 
-try:
-    # does not exist in Py3, but is super class of str & unicode in py2
-    basestring
-except NameError:
-    basestring = str  # pylint: disable=redefined-builtin
-    unicode = str  # pylint: disable=redefined-builtin
+import six
 
 import cmk.debug
 import cmk.exceptions
@@ -88,7 +83,7 @@ def read_autochecks_of(hostname, world="config"):
         if isinstance(item, str):
             item = cmk_base.config.decode_incoming_string(item)
 
-        if not isinstance(check_plugin_name, basestring):
+        if not isinstance(check_plugin_name, six.string_types):
             raise cmk.exceptions.MKGeneralException(
                 "Invalid entry '%r' in check table of host '%s': "
                 "The check type must be a string." % (entry, hostname))

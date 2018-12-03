@@ -24,12 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-try:
-    # does not exist in Py3, but is super class of str & unicode in py2
-    basestring
-except NameError:
-    basestring = str  # pylint: disable=redefined-builtin
-    unicode = str  # pylint: disable=redefined-builtin
+import six
 
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
@@ -315,7 +310,7 @@ def section(title=None, checkbox=None, section_id=None, simple=False, hide=False
             html.close_div()
         if checkbox:
             html.open_div(class_="checkbox")
-            if isinstance(checkbox, (basestring, HTML)):
+            if isinstance(checkbox, six.string_types + (HTML,)):
                 html.write(checkbox)
             else:
                 name, active, attrname = checkbox

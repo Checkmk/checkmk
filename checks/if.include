@@ -61,6 +61,7 @@ def if64_disabled(hostname):
 
 def fix_if_64_highspeed(info):
     for line in info:
+        # TODO: Use six.string_types when this is a module.
         if isinstance(line[3], basestring):  # not yet converted
             line[3] = saveint(line[3]) * 1000000
 

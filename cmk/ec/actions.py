@@ -27,12 +27,8 @@
 import os
 import subprocess
 import time
-try:
-    # does not exist in Py3, but is super class of str & unicode in py2
-    basestring
-except NameError:
-    basestring = str  # pylint: disable=redefined-builtin
-    unicode = str  # pylint: disable=redefined-builtin
+
+import six
 
 import cmk
 import cmk.defines
@@ -236,7 +232,7 @@ def _get_event_tags(event_columns, event):
         substs.append((varname, event.get(varname, defaultvalue)))
 
     def to_string(v):
-        if isinstance(v, basestring):
+        if isinstance(v, six.string_types):
             return v
         return "%s" % v
 

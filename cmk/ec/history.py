@@ -30,6 +30,8 @@ import subprocess
 import threading
 import time
 
+import six
+
 import cmk.ec.actions
 import cmk.render
 
@@ -552,7 +554,7 @@ def _convert_history_line(history, values):
 
 
 def _unsplit(s):
-    if not isinstance(s, basestring):
+    if not isinstance(s, six.string_types):
         return s
 
     elif s.startswith('\2'):

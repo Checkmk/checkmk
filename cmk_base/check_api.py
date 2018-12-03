@@ -109,13 +109,7 @@ import pprint  # pylint: disable=unused-import
 
 from typing import Callable, Dict, Iterable, List, Optional, Tuple, Union  # pylint: disable=unused-import
 
-try:
-    # does not exist in Py3, but is super class of str & unicode in py2
-    # suppress mypy error "Cannot determine type of 'basestring'"
-    basestring  # type: ignore
-except NameError:
-    basestring = str  # pylint: disable=redefined-builtin
-    unicode = str  # pylint: disable=redefined-builtin
+import six
 
 import cmk.debug as _debug
 import cmk.defines as _defines
@@ -635,7 +629,8 @@ def discover(selector=None, default_params=None):
         def discoverer(parsed):
             # type (Union[dict,list]) -> Iterable[Tuple]
 
-            params = default_params if isinstance(default_params, (basestring, dict)) else {}
+            params = default_params if isinstance(default_params,
+                                                  six.string_types + (dict,)) else {}
             filterer = validate_filter(filter_function)
             from_dict = isinstance(parsed, dict)
 
@@ -646,7 +641,7 @@ def discover(selector=None, default_params=None):
                 else:
                     name = filterer(entry)
 
-                if isinstance(name, basestring):
+                if isinstance(name, six.string_types):
                     yield (name, params)
                 elif name is True and from_dict:
                     yield (key, params)

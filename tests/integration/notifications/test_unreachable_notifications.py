@@ -5,7 +5,7 @@ import pytest
 import time
 import os
 import sys
-from testlib import web
+from testlib import web, WatchLog
 
 STATE_UP          = 0
 STATE_DOWN        = 1
@@ -108,56 +108,18 @@ def initial_state(site, scenario):
     time.sleep(1) # TODO: Add check for rotation
 
 
-# TODO: Use testlib.WatchLog()
-class HistoryLog(object):
+class HistoryLog(WatchLog):
     def __init__(self, site, core):
-        self._site = site
-        self._core = core
-        self._log = self._open_log()
-        self._buf = []
+        super(HistoryLog, self).__init__(site, self._history_log_path(core), default_timeout=10)
 
-
-    def _log_path(self):
-        if self._core == "cmc":
+    def _history_log_path(self, core):
+        if core == "cmc":
             return "var/check_mk/core/history"
-        elif self._core == "nagios":
+        elif core == "nagios":
             return "var/nagios/nagios.log"
         else:
             raise NotImplementedError()
 
-
-    def _open_log(self):
-        if not self._site.file_exists(self._log_path()):
-            self._site.write_file(self._log_path(), "")
-
-        fobj = open(self._site.path(self._log_path()), "r")
-        fobj.seek(0, 2) # go to end of file
-        return fobj
-
-
-    def check_logged(self, match_for, timeout=10):
-        if not self._check_for_line(match_for, timeout):
-            raise Exception("Did not find %r in %s after %d seconds" %
-                                (match_for, self._log_path(), timeout))
-
-
-    def check_not_logged(self, match_for, timeout=10):
-        if self._check_for_line(match_for, timeout):
-            raise Exception("Found %r in %s after %d seconds" %
-                                (match_for, self._log_path(), timeout))
-
-
-    def _check_for_line(self, match_for, timeout):
-        timeout_at = time.time() + timeout
-        while time.time() < timeout_at:
-            #print "read till timeout %0.2f sec left" % (timeout_at - time.time())
-            line = self._log.readline()
-            sys.stdout.write(line)
-            if match_for in line:
-                return True
-            time.sleep(0.1)
-
-        return False
 
 
 def _send_child_down(scenario, site, log):

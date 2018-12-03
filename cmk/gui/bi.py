@@ -45,16 +45,31 @@ import cmk.gui.sites as sites
 import cmk.gui.pages
 import cmk.gui.i18n
 import cmk.gui.utils
+import cmk.gui.view_utils
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 from cmk.gui.log import logger
 from cmk.gui.exceptions import MKConfigError, MKGeneralException
-import cmk.gui.view_utils
+from cmk.gui.permissions import (
+    permission_section_registry,
+    PermissionSection,
+)
 
 # Datastructures and functions needed before plugins can be loaded
 loaded_with_language = False
 compile_logger = logger.getChild("bi.compilation")
+
+
+@permission_section_registry.register
+class PermissionSectionBI(PermissionSection):
+    @property
+    def name(self):
+        return "bi"
+
+    @property
+    def title(self):
+        return _("BI - Check_MK Business Intelligence")
 
 
 # Load all view plugins
@@ -63,7 +78,6 @@ def load_plugins(force):
     if loaded_with_language == cmk.gui.i18n.get_current_language() and not force:
         return
 
-    config.declare_permission_section("bi", _("BI - Check_MK Business Intelligence"))
     config.declare_permission(
         "bi.see_all", _("See all hosts and services"),
         _("With this permission set, the BI aggregation rules are applied to all "

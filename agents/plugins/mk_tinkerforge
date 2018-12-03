@@ -63,6 +63,9 @@
 import sys
 import os
 
+from optparse import OptionParser
+import time
+
 
 def install():
     dest = os.path.dirname(os.path.realpath(__file__))
@@ -95,9 +98,6 @@ DEFAULT_SETTINGS = {
     'segment_display_uid': None,
     'segment_display_brightness': 2
 }
-
-from optparse import OptionParser
-import time
 
 # globals
 segment_display_value = None

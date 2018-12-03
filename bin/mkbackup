@@ -24,8 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-VERSION = "1.4.0i1"
-
 import ast
 import errno
 import fcntl
@@ -60,6 +58,8 @@ import cmk.render as render
 import cmk.schedule as schedule
 import cmk.store as store
 from cmk.exceptions import MKTerminate, MKGeneralException
+
+VERSION = "1.4.0i1"
 
 
 # Is used to duplicate output from stdout/stderr to a the job log. This

@@ -51,6 +51,7 @@ from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import MKGeneralException
+from cmk.gui.display_options import display_options
 
 
 # TODO: Better name it PainterOptions or DisplayOptions? There are options which only affect
@@ -292,8 +293,6 @@ view_is_enabled = {}
 def view_title(view):
     return visuals.visual_title('view', view)
 
-
-from cmk.gui.display_options import display_options
 
 # TODO: Move this to view processing code. This must not be module global as
 # it contains request specific information

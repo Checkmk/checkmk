@@ -30,8 +30,10 @@ import time
 
 # This is needed for at least CentOS 5.5
 # TODO: Drop this until all supported platforms have newer versions available.
+# It it not 100% sure if we need this before the OpenSSL import, but we play
+# safe here and tell pylint about that.
+# pylint: disable=wrong-import-position
 os.environ["CRYPTOGRAPHY_ALLOW_OPENSSL_098"] = "1"
-
 from OpenSSL import crypto
 
 import cmk.render

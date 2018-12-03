@@ -24,12 +24,13 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import sys
 import ast
+from multiprocessing.pool import ThreadPool
+import sys
+
+from pathlib2 import Path
 import requests
 import urllib3
-from pathlib2 import Path
-from multiprocessing.pool import ThreadPool
 
 import cmk
 import cmk.site

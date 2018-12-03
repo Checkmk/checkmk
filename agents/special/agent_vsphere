@@ -30,16 +30,17 @@
 # Instead a simple string process approach is used which drastically
 # reduces the CPU load for this agent
 
+import datetime
+import getopt
+import httplib
 import os
 import re
+import socket
 import sys
 import time
-import getopt
-import socket
-import httplib
-import datetime
-from dateutil import tz
 from xml.dom import minidom
+
+from dateutil import tz
 
 # Great article how to get additional information
 # http://www.veeam.com/kb1007

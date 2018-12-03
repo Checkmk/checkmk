@@ -35,18 +35,21 @@
 #   -> rename to Boolean
 #   -> Add alternative rendering "dropdown"
 
-import math
-import os
-import time
-import re
-import sre_constants
-import urlparse
-import types
 import base64
+from enum import Enum
 import hashlib
-import socket
-import numbers
 import ipaddress
+import json
+import math
+import numbers
+import os
+import re
+import socket
+import sre_constants
+import time
+import types
+import urlparse
+from UserDict import DictMixin
 
 try:
     # does not exist in Py3, but is super class of str & unicode in py2
@@ -56,9 +59,6 @@ except NameError:
     unicode = str  # pylint: disable=redefined-builtin
 
 from Cryptodome.PublicKey import RSA
-from UserDict import DictMixin
-from enum import Enum
-import json
 
 import cmk.log
 import cmk.paths

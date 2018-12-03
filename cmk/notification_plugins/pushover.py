@@ -22,8 +22,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import requests
 import sys
+import requests
 from cmk.notification_plugins import utils
 api_url = "https://api.pushover.net/1/messages.json"
 

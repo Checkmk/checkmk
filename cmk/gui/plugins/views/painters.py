@@ -83,6 +83,11 @@ from cmk.gui.valuespec import (
     ListChoice,
 )
 
+from cmk.gui.plugins.views.icons import (
+    get_icons,
+    iconpainter_columns,
+)
+
 from . import (
     multisite_painter_options,
     multisite_painters,
@@ -101,11 +106,6 @@ from . import (
     paint_nagiosflag,
     replace_action_url_macros,
     render_cache_info,
-)
-
-from cmk.gui.plugins.views.icons import (
-    get_icons,
-    iconpainter_columns,
 )
 
 #   .--Painter Options-----------------------------------------------------.

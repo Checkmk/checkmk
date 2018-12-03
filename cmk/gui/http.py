@@ -26,8 +26,9 @@
 """Wrapper layer between WSGI and the GUI application code"""
 
 import re
-import werkzeug.http
 import cgi
+
+import werkzeug.http
 
 try:
     # does not exist in Py3, but is super class of str & unicode in py2

@@ -32,8 +32,8 @@ from cmk.gui.globals import html
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib import HTML
 
-from . import SidebarSnapin, snapin_registry
 from cmk.gui.plugins.wato.check_mk_configuration import transform_virtual_host_trees
+from . import SidebarSnapin, snapin_registry
 
 
 @snapin_registry.register

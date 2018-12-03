@@ -56,6 +56,8 @@
 # one service, etc.
 # =================================================================== #
 
+import time
+
 import cmk.gui.config as config
 import cmk.gui.utils as utils
 from cmk.gui.i18n import _
@@ -409,8 +411,6 @@ def log_what(t):
 
 
 declare_1to1_sorter("log_what", cmp_log_what)
-
-import time
 
 
 def get_day_start_timestamp(t):

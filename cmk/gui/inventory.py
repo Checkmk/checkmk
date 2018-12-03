@@ -24,16 +24,17 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import os
-import json
 import ast
+import json
+import os
+import shutil
 import time
-import livestatus
-import dicttoxml
 import xml.dom.minidom
 
-import shutil
+import dicttoxml
 from pathlib2 import Path
+
+import livestatus
 
 import cmk.paths
 import cmk.profile

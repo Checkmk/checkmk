@@ -42,29 +42,30 @@
 #   |  Doing this that must be done when the module WATO is loaded.        |
 #   '----------------------------------------------------------------------'
 
-import typing
 import abc
-import re
-import os
-import shutil
-import subprocess
-import base64
-import pickle
-import pwd
-import pprint
-import glob
-import traceback
 import ast
-import multiprocessing
-import tarfile
+import base64
 import cStringIO
-import requests
 import copy
-import socket
-import time
-import threading
-import signal
+import glob
 from hashlib import sha256
+import multiprocessing
+import os
+import pickle
+import pprint
+import pwd
+import re
+import shutil
+import signal
+import socket
+import subprocess
+import tarfile
+import threading
+import time
+import traceback
+import typing
+
+import requests
 from pathlib2 import Path
 
 try:

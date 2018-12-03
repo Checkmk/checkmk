@@ -30,9 +30,10 @@ from pwd import getpwnam
 from grp import getgrnam
 import ctypes
 import ctypes.util
-from pathlib2 import Path  # pylint: disable=unused-import
 from contextlib import contextmanager
 from typing import Generator  # pylint: disable=unused-import
+
+from pathlib2 import Path  # pylint: disable=unused-import
 
 import cmk.store
 from cmk.exceptions import MKGeneralException

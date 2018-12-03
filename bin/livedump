@@ -24,11 +24,12 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import getopt
 import os
 import sys
-import getopt
-import livestatus
 import time
+
+import livestatus
 
 # These variable will be substituted at 'make dist' time
 __version__ = "1.6.0i1"

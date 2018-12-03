@@ -25,8 +25,9 @@
 # Boston, MA 02110-1301 USA.
 
 import re
-import livestatus
 import json
+
+import livestatus
 
 import cmk
 
@@ -624,6 +625,7 @@ class FilterQueryDropdown(Filter):
         if current:
             return self.filterline % livestatus.lqencode(current)
         return ""
+
 
 declare_filter(110, FilterQueryDropdown("host_check_command", _("Host check command"), "host", \
         "GET commands\nCache: reload\nColumns: name\n", "Filter: host_check_command ~ ^%s(!.*)?\n"))

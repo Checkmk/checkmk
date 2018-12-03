@@ -87,8 +87,6 @@ def load_plugins(force):
     global search_plugins
     search_plugins = []
 
-    config.declare_permission_section("sidesnap", _("Sidebar snapins"), do_sort=True)
-
     utils.load_web_plugins("sidebar", globals())
 
     transform_old_dict_based_snapins()

@@ -39,7 +39,12 @@ from cmk.gui.globals import html
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.valuespec import Age
 
-from . import (
+from cmk.gui.permissions import (
+    permission_section_registry,
+    PermissionSection,
+)
+
+from cmk.gui.plugins.views import (
     register_command_group,
     multisite_commands,
 )
@@ -61,7 +66,21 @@ register_command_group(
     sort_index=20,
 )
 
-config.declare_permission_section("action", _("Commands on host and services"), do_sort=True)
+
+@permission_section_registry.register
+class PermissionSectionAction(PermissionSection):
+    @property
+    def name(self):
+        return "action"
+
+    @property
+    def title(self):
+        return _("Commands on host and services")
+
+    @property
+    def do_sort(self):
+        return True
+
 
 #   .--Reschedule----------------------------------------------------------.
 #   |          ____                _              _       _                |

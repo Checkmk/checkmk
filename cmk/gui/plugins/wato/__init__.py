@@ -37,6 +37,7 @@ from cmk.plugin_loader import load_plugins
 #   '----------------------------------------------------------------------'
 
 from cmk.gui.plugins.wato.utils import (
+    PermissionSectionWATO,
     ACResultCRIT,
     ACResultOK,
     ACResultWARN,

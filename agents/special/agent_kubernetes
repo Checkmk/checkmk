@@ -91,27 +91,15 @@ def setup_logging(verbosity):
     logging.basicConfig(level=lvl, format=fmt)
 
 
-def parse_int(value):
-    # type: (Optional[str]) -> Optional[int]
-    if value is None:
-        return None
-    return int(value)
-
-
 def parse_cpu(value):
-    # type: (Optional[str]) -> Optional[float]
-    if value is None:
-        return None
+    # type: (str) -> float
     if value.endswith('m'):
         return 0.001 * float(value[:-1])
     return float(value)
 
 
 def parse_memory(value):
-    # type: (Optional[str]) -> Optional[float]
-    if value is None:
-        return None
-
+    # type: (str) -> float
     if value.endswith('Ki'):
         return 1024**1 * float(value[:-2])
     if value.endswith('Mi'):
@@ -173,21 +161,21 @@ class Node(Metadata):
 
     @property
     def resources(self):
-        # type: () -> Dict[str, Dict[str, Optional[float]]]
+        # type: () -> Dict[str, Dict[str, float]]
         if not self._status:
             return {}
         view, capacity, allocatable = {}, self._status.capacity, self._status.allocatable
         if capacity:
             view['capacity'] = {
-                'cpu': parse_cpu(capacity.get('cpu')),
-                'memory': parse_memory(capacity.get('memory')),
-                'pods': parse_int(capacity.get('pods')),
+                'cpu': parse_cpu(capacity.get('cpu', '0.0')),
+                'memory': parse_memory(capacity.get('memory', '0.0')),
+                'pods': int(capacity.get('pods', '0')),
             }
         if allocatable:
             view['allocatable'] = {
-                'cpu': parse_cpu(allocatable.get('cpu')),
-                'memory': parse_memory(allocatable.get('memory')),
-                'pods': parse_int(allocatable.get('pods')),
+                'cpu': parse_cpu(allocatable.get('cpu', '0.0')),
+                'memory': parse_memory(allocatable.get('memory', '0.0')),
+                'pods': int(allocatable.get('pods', '0')),
             }
         return view
 
@@ -277,8 +265,11 @@ class PersistentVolume(Metadata):
     @property
     def capacity(self):
         # type: () -> Optional[float]
-        if self._spec and self._spec.capacity:
-            return parse_memory(self._spec.capacity.get('storage'))
+        if not self._spec or not self._spec.capacity:
+            return None
+        storage = self._spec.capacity.get('storage')
+        if storage:
+            return parse_memory(storage)
         return None
 
     @property

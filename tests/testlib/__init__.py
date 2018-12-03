@@ -1756,6 +1756,7 @@ class WatchLog(object):
             self._site.write_file(self._log_path(), "")
 
         fobj = open(self._site.path(self._log_path()), "r")
+        sys.stdout.write("%r\n" % os.stat(self._site.path(self._log_path())))
         fobj.seek(0, 2) # go to end of file
         return fobj
 
@@ -1777,13 +1778,19 @@ class WatchLog(object):
             timeout = self._default_timeout
 
         timeout_at = time.time() + timeout
+        sys.stdout.write("Start checking for matching line at %d until %d\n" % (time.time(), timeout_at))
+        sys.stdout.write("%r\n" % os.stat(self._site.path(self._log_path())))
         while time.time() < timeout_at:
             #print "read till timeout %0.2f sec left" % (timeout_at - time.time())
             line = self._log.readline()
-            sys.stdout.write(line)
+            sys.stdout.write("PROCESS LINE: %r\n" % line)
             if match_for in line:
                 return True
             time.sleep(0.1)
+
+        sys.stdout.write("Timed out at %d\n" % (time.time()))
+        sys.stdout.write("%r\n" % os.stat(self._site.path(self._log_path())))
+        return False
 
 
 

@@ -26,16 +26,7 @@
 
 
 def juniper_bgp_state_create_item(oid_end):
-    # supports IPv4 (e.g. 255.255.255.255) and
-    # IPv6 (e.g. 1762:0:0:0:0:B03:1:AF18)
-    ipv4_regex = r"[0-9]+\.1\.[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+\.1\."
-    ipv6_regex = r"^(?:[A-F0-9]{1,4}:){7}[A-F0-9]{1,4}$"
-    ipv4_match = re.match(ipv4_regex, oid_end)
-    if ipv4_match:
-        return ipv4_match.group()
-    ipv6_match = re.match(ipv6_regex, oid_end)
-    if ipv6_match:
-        return ipv6_match.group()
+    return re.sub(r"[0-9]+\.1\.[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+\.1\.", "", oid_end)
 
 
 def inventory_juniper_bgp_state(info):

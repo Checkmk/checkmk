@@ -26,9 +26,10 @@
 
 import getopt
 import sys
+import xml.etree.ElementTree as ET
+
 import requests
 from requests.auth import HTTPBasicAuth
-import xml.etree.ElementTree as ET
 
 
 def usage():

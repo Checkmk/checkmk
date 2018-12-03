@@ -33,8 +33,9 @@ import re
 import inspect
 import hashlib
 import traceback
-import livestatus
 import types
+
+import livestatus
 
 import cmk.render
 import cmk.regex

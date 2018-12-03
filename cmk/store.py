@@ -30,10 +30,11 @@ manager."""
 import ast
 import fcntl
 import os
-import pathlib2 as pathlib
 import pprint
 import tempfile
 import time
+
+import pathlib2 as pathlib
 
 from cmk.exceptions import MKGeneralException, MKTimeout
 from cmk.i18n import _

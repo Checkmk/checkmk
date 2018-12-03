@@ -27,15 +27,16 @@
 Special agent for monitoring Amazon web services (AWS) with Check_MK.
 """
 
-import sys
-import argparse
-import boto3
 import abc
-import botocore
+import argparse
 import datetime
 import json
 import logging
+import sys
 from typing import NamedTuple, Any
+
+import boto3
+import botocore
 
 import cmk.password_store
 

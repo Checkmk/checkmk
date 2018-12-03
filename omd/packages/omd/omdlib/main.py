@@ -35,7 +35,6 @@ import time
 import errno
 import fcntl
 import shlex
-import psutil
 import random
 import shutil
 import socket
@@ -47,6 +46,7 @@ import traceback
 import subprocess
 import signal
 from passlib.hash import sha256_crypt
+import psutil
 
 import omdlib
 

@@ -29,13 +29,14 @@ of Check_MK. The GUI is e.g. accessing this module for gathering the default
 configuration.
 """
 
-import os
 import copy
-import pprint
-import UserDict
 from enum import Enum
-from pathlib2 import Path
+import os
+import pprint
 from typing import Any, Dict, Iterable, List, Optional, Tuple  # pylint: disable=unused-import
+import UserDict
+
+from pathlib2 import Path
 
 import cmk.log
 import cmk.paths

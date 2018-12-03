@@ -23,12 +23,13 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-from typing import AnyStr, Dict, Optional, Tuple  # pylint: disable=unused-import
 import os
 import re
-import requests
 import subprocess
 import sys
+from typing import AnyStr, Dict, Optional, Tuple  # pylint: disable=unused-import
+
+import requests
 
 try:
     # First try python3

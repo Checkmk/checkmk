@@ -25,8 +25,9 @@
 # Boston, MA 02110-1301 USA.
 
 import abc
-import requests
 import subprocess
+
+import requests
 
 import cmk.gui.userdb as userdb
 import cmk.gui.sites as sites

@@ -24,6 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import traceback
+
 # Needed for receiving traps
 import pysnmp.debug
 import pysnmp.entity.config
@@ -38,8 +40,6 @@ import pysnmp.smi.view
 import pysnmp.smi.rfc1902
 import pysnmp.smi.error
 import pyasn1.error
-
-import traceback
 
 import cmk.render
 

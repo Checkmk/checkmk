@@ -24,8 +24,9 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import livestatus
 from collections import namedtuple
+
+import livestatus
 
 import cmk.gui.config as config
 import cmk.gui.sites as sites

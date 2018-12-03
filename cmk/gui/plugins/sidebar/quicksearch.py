@@ -24,10 +24,11 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import re
 import abc
-import livestatus
+import re
 import traceback
+
+import livestatus
 
 import cmk.plugin_registry
 

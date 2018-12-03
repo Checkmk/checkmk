@@ -75,7 +75,6 @@ disable=
     # Enable these would improve readability, but currently there are quite a
     # few places to fix.
     wrong-import-position,
-    wrong-import-order,
     #---------------------------------------------------------------------------
     # Enabling this would be nice, but not crucial. At the moment, we have quite
     # a few violations, so we postpone fixing this.

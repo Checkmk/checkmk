@@ -36,7 +36,6 @@ import ast
 import errno
 import json
 import os
-import pathlib2 as pathlib
 import pprint
 import re
 import select
@@ -47,6 +46,9 @@ import threading
 import time
 import traceback
 from typing import Any, Dict, List, Optional, Tuple, Union  # pylint: disable=unused-import
+
+import pathlib2 as pathlib
+
 try:
     # does not exist in Py3, but is super class of str & unicode in py2
     # suppress mypys "Cannot determine type of 'basestring'" error

@@ -47,12 +47,13 @@
 #   | Some basic declarations and module loading etc.                      |
 #   '----------------------------------------------------------------------'
 
+import copy
+from multiprocessing.pool import ThreadPool
 import os
 import re
-import time
-import copy
-import sys
 import shutil
+import sys
+import time
 
 try:
     # does not exist in Py3, but is super class of str & unicode in py2
@@ -65,8 +66,6 @@ except NameError:
 import ldap
 import ldap.filter
 from ldap.controls import SimplePagedResultsControl
-
-from multiprocessing.pool import ThreadPool
 
 import cmk
 import cmk.paths

@@ -93,6 +93,20 @@ Global variables:
 # We import several modules here for the checks
 # pylint: disable=unused-import
 
+# TODO: Move imports directly to checks?
+import collections
+import enum
+import fnmatch
+import functools
+import math
+import os
+import re
+import socket
+import sys
+import time
+# NOTE: We do not use pprint in this module, but it is part of the check API.
+import pprint  # pylint: disable=unused-import
+
 from typing import Callable, Dict, Iterable, List, Optional, Tuple, Union  # pylint: disable=unused-import
 
 try:
@@ -138,20 +152,6 @@ def get_check_api_context():
 #   +----------------------------------------------------------------------+
 #   |  Helper API for being used in checks                                 |
 #   '----------------------------------------------------------------------'
-
-# TODO: Move imports directly to checks?
-import collections
-import enum
-import fnmatch
-import functools
-import math
-import os
-import re
-import socket
-import sys
-import time
-# NOTE: We do not use pprint in this module, but it is part of the check API.
-import pprint  # pylint: disable=unused-import
 
 # Names of texts usually output by checks
 core_state_names = _defines.short_service_state_names()

@@ -28,8 +28,9 @@ import time
 import os
 import pprint
 import traceback
-import livestatus
 import types
+
+import livestatus
 
 import cmk.paths
 

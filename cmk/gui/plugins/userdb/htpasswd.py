@@ -25,8 +25,9 @@
 # Boston, MA 02110-1301 USA.
 
 import os
-import pathlib2 as pathlib
 from typing import Dict, Text  # pylint: disable=unused-import
+
+import pathlib2 as pathlib
 
 # TODO: Import errors from passlib are suppressed right now since now
 # stub files for mypy are not available.

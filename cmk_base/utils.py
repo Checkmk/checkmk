@@ -26,8 +26,10 @@
 """This is an unsorted collection of functions which are needed in
 Check_MK modules and/or cmk_base modules code."""
 
+import itertools
 import os
 import signal
+import sys
 import time
 
 from cmk.exceptions import MKGeneralException, MKTerminate
@@ -38,9 +40,6 @@ from cmk.utils import (  # pylint: disable=unused-import
 )
 
 # TODO: Try to find a better place for them.
-
-import sys
-import itertools
 
 
 # Aggegates several monitoring states to the worst state

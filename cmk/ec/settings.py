@@ -37,8 +37,9 @@ from __future__ import print_function
 # https://github.com/PyCQA/pylint/issues/1290 for invalid-name.
 
 from argparse import ArgumentParser, ArgumentTypeError, RawDescriptionHelpFormatter
-from pathlib2 import Path
 from typing import List, NamedTuple, Optional, Union  # pylint: disable=unused-import
+
+from pathlib2 import Path
 
 # a filesystem path with a user-presentable description
 AnnotatedPath = NamedTuple('AnnotatedPath', [('description', str), ('value', Path)])

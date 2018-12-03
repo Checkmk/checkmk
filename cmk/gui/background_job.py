@@ -24,17 +24,18 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import os
-import sys
-import time
-import pprint
-import threading
+import logging
 import multiprocessing
-import psutil
+import os
+import pprint
 import shutil
 import signal
+import sys
+import threading
+import time
 import traceback
-import logging
+
+import psutil
 from pathlib2 import Path
 
 from cmk.gui.i18n import _

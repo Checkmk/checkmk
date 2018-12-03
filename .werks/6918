@@ -1,0 +1,19 @@
+Title: Availability: Time format is not only affected by time range
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p10
+Date: 1543577667
+
+In case a availability is displaying a single day time range, the times
+of the single entries are formatted without date information.
+
+In case there are annotations or downtimes that affect multiple days the
+from and until columns also only showed the start or end time instead of
+the date. This was some kind of misleading when trying to understand why
+such a downtime matched a given period.
+
+CMK-1353

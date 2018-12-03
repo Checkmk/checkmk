@@ -1739,10 +1739,11 @@ class CMKEventConsoleStatus(object):
 
 class WatchLog(object):
     """Small helper for integration tests: Watch a sites log file"""
-    def __init__(self, site, rel_path):
+    def __init__(self, site, rel_path, default_timeout=5):
         self._site = site
         self._rel_path = rel_path
         self._log = self._open_log()
+        self._default_timeout = default_timeout
         self._buf = []
 
 
@@ -1759,19 +1760,22 @@ class WatchLog(object):
         return fobj
 
 
-    def check_logged(self, match_for, timeout=5):
+    def check_logged(self, match_for, timeout=None):
         if not self._check_for_line(match_for, timeout):
             raise Exception("Did not find %r in %s after %d seconds" %
                                 (match_for, self._log_path(), timeout))
 
 
-    def check_not_logged(self, match_for, timeout=5):
+    def check_not_logged(self, match_for, timeout=None):
         if self._check_for_line(match_for, timeout):
             raise Exception("Found %r in %s after %d seconds" %
                                 (match_for, self._log_path(), timeout))
 
 
     def _check_for_line(self, match_for, timeout):
+        if timeout is None:
+            timeout = self._default_timeout
+
         timeout_at = time.time() + timeout
         while time.time() < timeout_at:
             #print "read till timeout %0.2f sec left" % (timeout_at - time.time())

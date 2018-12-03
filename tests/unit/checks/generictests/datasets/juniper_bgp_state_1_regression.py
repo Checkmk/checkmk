@@ -6,15 +6,17 @@ info = [
 ]
 
 discovery = {
-    '': [(u'80.81.192.24', None), (u'80.81.192.3', None),
+    '': [(u'80.81.192.24', {}), (u'80.81.192.3', {}),
         ]
 }
 
 checks = {
     '': [
         (u'80.81.192.24', 'default',
-         [(2, u'Status with peer 80.81.192.24 is active(!!), operational status: running', [])]),
+         [(2, u'Status with peer 80.81.192.24 is active', []),
+          (0, 'operational status: running', [])]),
         (u'80.81.192.3', 'default',
-         [(0, u'Status with peer 80.81.192.3 is established, operational status: running', [])]),
+         [(0, u'Status with peer 80.81.192.3 is established', []),
+          (0, 'operational status: running', [])]),
     ]
 }

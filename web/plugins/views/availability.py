@@ -706,8 +706,8 @@ def get_relevant_annotations(annotations, by_host, what, avoptions):
                     site_host_svc = site_host[0], site_host[1], service  # service can be None
 
                 for annotation in annotations.get(site_host_svc, []):
-                    if (annotation["from"] >= from_time and annotation["from"] <= until_time) or \
-                       (annotation["until"] >= from_time and annotation["until"] <= until_time):
+                    if _annotation_affects_time_range(annotation["from"], annotation["until"],
+                                                      from_time, until_time):
                         if id(annotation) not in annos_rendered:
                             annos_to_render.append((site_host_svc, annotation))
                             annos_rendered.add(id(annotation))
@@ -724,6 +724,10 @@ def get_annotation_date_render_function(annotations, avoptions):
     if multi_day:
         return cmk.render.date_and_time
     return cmk.render.time_of_day
+
+
+def _annotation_affects_time_range(annotation_from, annotation_until, from_time, until_time):
+    return not (annotation_until < from_time or annotation_from > until_time)
 
 
 def show_annotations(annotations, av_rawdata, what, avoptions, omit_service):

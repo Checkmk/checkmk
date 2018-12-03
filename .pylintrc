@@ -119,7 +119,6 @@ disable=
     #---------------------------------------------------------------------------
     # The warnigns below will probably fixed by YAPF.
     bad-continuation,
-    bad-indentation,
     bad-whitespace,
     line-too-long,
     #---------------------------------------------------------------------------

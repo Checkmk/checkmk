@@ -147,6 +147,21 @@ from cmk.gui.plugins.watolib.utils import (
     register_configvar,
 )
 import cmk.gui.forms as forms
+from cmk.gui.permissions import (
+    permission_section_registry,
+    PermissionSection,
+)
+
+
+@permission_section_registry.register
+class PermissionSectionWATO(PermissionSection):
+    @property
+    def name(self):
+        return "wato"
+
+    @property
+    def title(self):
+        return _("WATO - Check_MK's Web Administration Tool")
 
 
 def PluginCommandLine():

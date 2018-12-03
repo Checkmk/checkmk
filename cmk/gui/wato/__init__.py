@@ -917,9 +917,6 @@ def load_plugins(force):
     # This also loads the watolib plugins.
     watolib.load_watolib_plugins()
 
-    # Declare WATO-specific permissions
-    config.declare_permission_section("wato", _("WATO - Check_MK's Web Administration Tool"))
-
     config.declare_permission(
         "wato.use",
         _("Use WATO"),

@@ -36,19 +36,35 @@ import cmk.gui.i18n
 import cmk.gui.pages
 from cmk.gui.i18n import _u, _
 from cmk.gui.globals import html
+from cmk.gui.permissions import (
+    permission_section_registry,
+    PermissionSection,
+)
 
 g_acknowledgement_time = {}
 g_modified_time = 0
 g_columns = ["time", "contact_name", "type", "host_name", "service_description", "comment"]
 
 
+@permission_section_registry.register
+class PermissionSectionNotificationPlugins(PermissionSection):
+    @property
+    def name(self):
+        return "notification_plugin"
+
+    @property
+    def title(self):
+        return _("Notification plugins")
+
+    @property
+    def do_sort(self):
+        return True
+
+
 # The permissions need to be loaded dynamically on each page load instead of
 # only when the plugins need to be loaded because the user may have placed
 # new notification plugins in the local hierarchy.
 def load_plugins(force):
-    config.declare_permission_section(
-        "notification_plugin", _("Notification plugins"), do_sort=True)
-
     for name, attrs in watolib.load_notification_scripts().items():
         config.declare_permission("notification_plugin.%s" % name, _u(attrs["title"]), u"",
                                   ["admin", "user"])

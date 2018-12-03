@@ -51,7 +51,15 @@ from cmk.gui.i18n import _u, _
 from cmk.gui.log import logger
 from cmk.gui.globals import html
 
-from cmk.gui.exceptions import MKGeneralException, MKAuthException, MKUserError
+from cmk.gui.exceptions import (
+    MKGeneralException,
+    MKAuthException,
+    MKUserError,
+)
+from cmk.gui.permissions import (
+    permission_section_registry,
+    PermissionSection,
+)
 
 import cmk.gui.plugins.dashboard
 
@@ -83,6 +91,21 @@ corner_overlap = 22
 raster = 10  # Raster the dashlet coords are measured in (px)
 
 
+@permission_section_registry.register
+class PermissionSectionDashboard(PermissionSection):
+    @property
+    def name(self):
+        return "dashboard"
+
+    @property
+    def title(self):
+        return _("Dashboards")
+
+    @property
+    def do_sort(self):
+        return True
+
+
 # Load plugins in web/plugins/dashboard and declare permissions,
 # note: these operations produce language-specific results and
 # thus must be reinitialized everytime a language-change has
@@ -109,7 +132,6 @@ def load_plugins(force):
     dashboards = {}
 
     # Declare permissions for all dashboards
-    config.declare_permission_section("dashboard", _("Dashboards"), do_sort=True)
     for name, board in builtin_dashboards.items():
         config.declare_permission(
             "dashboard.%s" % name,

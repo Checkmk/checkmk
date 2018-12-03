@@ -43,6 +43,10 @@ import cmk.gui.sites as sites
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import MKGeneralException
+from cmk.gui.permissions import (
+    permission_section_registry,
+    PermissionSection,
+)
 
 # ASN1 MIB source directory candidates. Non existing dirs are ok.
 # Please sync these paths with htdocs/mkeventd.py
@@ -124,7 +128,16 @@ action_whats = {
     "CHANGESTATE": _("State of event changed by user"),
 }
 
-config.declare_permission_section("mkeventd", _("Event Console"))
+
+@permission_section_registry.register
+class PermissionSectionEventConsole(PermissionSection):
+    @property
+    def name(self):
+        return "mkeventd"
+
+    @property
+    def title(self):
+        return _("Event Console")
 
 
 def service_levels():

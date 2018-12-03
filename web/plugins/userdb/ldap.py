@@ -54,6 +54,7 @@ import ldap.filter
 from ldap.controls import SimplePagedResultsControl
 
 from multiprocessing.pool import ThreadPool
+from multiprocessing.pool import TimeoutError
 
 import cmk.paths
 
@@ -1993,16 +1994,31 @@ def synchronize_profile_to_sites(connection, user_id, profile):
     connection._logger.info('Credentials changed: %s. Trying to sync to %d sites' %
                                                     (user_id, len(remote_sites)))
 
-    synchronization_jobs = []
     states = sites.states()
 
-    for site_id, site in remote_sites:
-        synchronization_jobs.append((states, site_id, site, user_id, profile))
-
     pool = ThreadPool()
-    results = pool.map(_sychronize_profile_worker, synchronization_jobs)
-    pool.close()
-    pool.join()
+    jobs = []
+    for site_id, site in remote_sites:
+        jobs.append(pool.apply_async(_sychronize_profile_worker, ((states, site_id, site, user_id, profile),)))
+
+
+    results = []
+    start_time = time.time()
+    while time.time() - start_time < 10:
+        for job in jobs[:]:
+            try:
+                results.append(job.get(timeout=0.5))
+                jobs.remove(job)
+            except TimeoutError:
+                pass
+        if not jobs:
+            break
+
+
+    contacted_sites = set([x[0] for x in remote_sites])
+    working_sites = set([result.site_id for result in results])
+    for site_id in contacted_sites - working_sites:
+        results.append(SynchronizationResult(site_id, error_text=_("No response from update thread"), failed=True))
 
     for result in results:
         if result.error_text:
@@ -2010,6 +2026,9 @@ def synchronize_profile_to_sites(connection, user_id, profile):
             if config.wato_enabled:
                 watolib.add_change("edit-users", _('Password changed (sync failed: %s)') % result.error_text,
                                     add_user=False, sites=[result.site_id], need_restart=False)
+
+    pool.terminate()
+    pool.join()
 
     num_failed = sum([1 for result in results if result.failed])
     num_disabled = sum([1 for result in results if result.disabled])

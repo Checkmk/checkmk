@@ -1269,7 +1269,7 @@ def notify_via_email(plugin_context):
 def create_plugin_context(raw_context, params):
     plugin_context = {}
     plugin_context.update(raw_context)  # Make a real copy
-    events.add_to_event_context(plugin_context, "PARAMETER", params)
+    events.add_to_event_context(plugin_context, "PARAMETER", params, log_function=notify_log)
     return plugin_context
 
 

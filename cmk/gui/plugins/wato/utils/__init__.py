@@ -65,6 +65,7 @@ from cmk.gui.valuespec import (
     ListOfStrings,
     DualListChoice,
     ValueSpec,
+    Url,
 )
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode
 from cmk.gui.plugins.wato.utils.simple_modes import (
@@ -587,6 +588,54 @@ def IndividualOrStoredPassword(*args, **kwargs):
     return Transform(
         PasswordFromStore(*args, **kwargs),
         forth=lambda v: ("password", v) if not isinstance(v, tuple) else v,
+    )
+
+
+def HTTPProxyReference():
+    """Use this valuespec in case you want the user to configure a HTTP proxy
+    The configured value is is used for preparing requests to work in a proxied environment."""
+
+    def _global_proxy_choices(self):
+        settings = watolib.ConfigDomainCore().load()
+        return [(p["ident"], p["title"]) for p in settings.get("http_proxies", {}).values()]
+
+    return CascadingDropdown(
+        title=_("HTTP proxy"),
+        default_value=("environment", "environment"),
+        choices=[
+            ("environment", _("Use from environment"),
+             FixedValue(
+                 "environment",
+                 help=
+                 _("Use the proxy settings from the environment variables. The variables <tt>NO_PROXY</tt>, "
+                   "<tt>HTTP_PROXY</tt> and <tt>HTTPS_PROXY</tt> are taken into account during execution. "
+                   "Have a look at the python requests module documentation for further information."
+                  ),
+                 totext=_("Use proxy settings from the process environment"),
+             )),
+            ("no_proxy", _("Connect without proxy"),
+             FixedValue(
+                 None,
+                 totext=_("Connect directly to the destination instead of using a proxy. "
+                          "This is the default."),
+             )),
+            ("global", _("Use globally configured proxy"),
+             DropdownChoice(
+                 choices=_global_proxy_choices,
+                 sorted=True,
+             )),
+            ("url", _("Use explicit proxy settings"), HTTPProxyInput()),
+        ],
+        sorted=False,
+    )
+
+
+def HTTPProxyInput():
+    """Use this valuespec in case you want the user to input a HTTP proxy setting"""
+    return Url(
+        title=_("Proxy URL"),
+        default_scheme="http",
+        allowed_schemes=["http", "https", "socks4", "socks4a", "socks5", "socks5h"],
     )
 
 

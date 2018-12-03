@@ -740,14 +740,25 @@ def remove_context_from_environment(plugin_context, prefix):
 # would be added as:
 #   PARAMETER_LVL1_1_VALUE = 42
 #   PARAMETER_LVL1_2_VALUE = 13
-def add_to_event_context(plugin_context, prefix, param):
+def add_to_event_context(plugin_context, prefix, param, log_function):
     if isinstance(param, list):
         plugin_context[prefix + "S"] = " ".join(param)
         for nr, value in enumerate(param):
-            add_to_event_context(plugin_context, "%s_%d" % (prefix, nr + 1), value)
+            add_to_event_context(plugin_context, "%s_%d" % (prefix, nr + 1), value, log_function)
     elif isinstance(param, dict):
         for key, value in param.items():
-            add_to_event_context(plugin_context, "%s_%s" % (prefix, key.upper()), value)
+            varname = "%s_%s" % (prefix, key.upper())
+
+            if varname == "PARAMETER_PROXY_URL":
+                # Compatibility for 1.5 pushover explicitly configured proxy URL format
+                if isinstance(value, str):
+                    value = ("url", value)
+
+                value = config.get_http_proxy(value)
+                if value is None:
+                    continue
+
+            add_to_event_context(plugin_context, varname, value, log_function)
     else:
         plugin_context[prefix] = plugin_param_to_string(param)
 

@@ -142,6 +142,7 @@ def test_registered_configvars():
         'history_rotation',
         'hostname_translation',
         'housekeeping_interval',
+        'http_proxies',
         'inventory_check_autotrigger',
         'inventory_check_do_scan',
         'inventory_check_interval',

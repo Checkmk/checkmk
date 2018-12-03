@@ -123,6 +123,7 @@ import cmk.render as render
 # check context.
 import cmk_base.utils as _utils
 import cmk_base.config as _config
+import cmk_base.console as _console
 import cmk_base.snmp_utils as _snmp_utils
 import cmk_base.item_state as _item_state
 import cmk_base.prediction as _prediction
@@ -477,6 +478,16 @@ def passwordstore_get_cmdline(fmt, pw):
         return fmt % pw[1]
 
     return ("store", pw[1], fmt)
+
+
+def get_http_proxy(http_proxy):
+    """Returns proxy URL to be used for HTTP requests
+
+    Pass a value configured by the user using the HTTPProxyReference valuespec to this function
+    and you will get back ether a proxy URL, an empty string to enforce no proxy usage or None
+    to use the proxy configuration from the process environment.
+    """
+    return _config.get_http_proxy(http_proxy)
 
 
 def get_agent_data_time():

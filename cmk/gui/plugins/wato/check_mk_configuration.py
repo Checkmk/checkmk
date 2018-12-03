@@ -90,6 +90,7 @@ from cmk.gui.plugins.wato import (
     GroupSelection,
     CheckTypeSelection,
     TimeperiodSelection,
+    HTTPProxyInput,
 )
 
 from cmk.gui.plugins.wato.omd_configuration import ConfigVariableGroupSiteManagement
@@ -2295,6 +2296,71 @@ class ConfigVariableRecordInlineSNMPStats(ConfigVariable):
                 "<i>Please note:</i> Only enable this for a short period, because it will "
                 "decrease the performance of your monitoring."),
         )
+
+
+@config_variable_registry.register
+class ConfigVariableHTTPProxies(ConfigVariable):
+    def group(self):
+        return ConfigVariableGroupCheckExecution
+
+    def domain(self):
+        return ConfigDomainCore
+
+    def ident(self):
+        return "http_proxies"
+
+    def valuespec(self):
+        return Transform(
+            ListOf(
+                Dictionary(
+                    title=_("HTTP proxy"),
+                    elements=[
+                        ("ident",
+                         ID(
+                             title=_("Unique ID"),
+                             help=_(
+                                 "The ID must be a unique text. It will be used as an internal key "
+                                 "when objects refer to this object."),
+                             allow_empty=False,
+                         )),
+                        ("title",
+                         TextUnicode(
+                             title=_("Title"),
+                             help=_("The title of the %s. It will be used as display name.") %
+                             _("HTTP proxy"),
+                             allow_empty=False,
+                             size=80,
+                         )),
+                        ("proxy_url", HTTPProxyInput()),
+                    ],
+                    optional_keys=None,
+                ),
+                title=_("HTTP proxies"),
+                movable=False,
+                totext=_("%d HTTP proxy servers configured"),
+                help=_("Use this option to configure one or several proxy servers that can then be "
+                       "used in different places to establish connections to services using these "
+                       "HTTP proxies."),
+                validate=self._validate_proxies,
+            ),
+            forth=lambda v: v.values(),
+            back=lambda v: {p["ident"]: p for p in v},
+        )
+
+    def _validate_proxies(self, value, varprefix):
+        seen_idents, seen_titles = [], []
+        for http_proxy in value:
+            if http_proxy["ident"] in seen_idents:
+                raise MKUserError(
+                    varprefix,
+                    _("Found multiple proxies using the ID '%s'") % http_proxy["ident"])
+            seen_idents.append(http_proxy["ident"])
+
+            if http_proxy["title"] in seen_titles:
+                raise MKUserError(
+                    varprefix,
+                    _("Found multiple proxies using the title '%s'") % http_proxy["title"])
+            seen_titles.append(http_proxy["title"])
 
 
 @config_variable_group_registry.register

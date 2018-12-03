@@ -8,6 +8,7 @@ import math
 import pytest
 
 import cmk_base.check_api as check_api
+import cmk_base.config as config
 
 
 @check_api.get_parsed_item_data
@@ -221,3 +222,9 @@ def test_boundaries(value, levels, representation, result):
 ])
 def test_check_levels(value, dsname, params, kwargs, result):
     assert check_api.check_levels(value, dsname, params, **kwargs) == result
+
+
+def test_http_proxy(mocker):
+    proxy_patch = mocker.patch.object(config, "get_http_proxy")
+    check_api.get_http_proxy(("url", "http://xy:123"))
+    assert proxy_patch.called_once()

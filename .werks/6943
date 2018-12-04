@@ -1,0 +1,12 @@
+Title: juniper_bgp_state: Fix item generation for IPv6 addresses
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.6.0i1
+Date: 1543929566
+Class: fix
+
+The check now extracts the proper remote IP address in case of
+IPv6 addresses as item, instead of a part of the OID end.
+This change requires a rediscovery.

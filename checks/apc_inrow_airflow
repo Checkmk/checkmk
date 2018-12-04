@@ -25,8 +25,8 @@
 # Boston, MA 02110-1301 USA.
 
 apc_inrow_airflow_default_levels = {
-    "level_low": (5.0, 2.0),
-    "level_high": (10.0, 11.0),
+    "level_low": (500.0, 200.0),
+    "level_high": (1000.0, 1100.0),
 }
 
 
@@ -36,7 +36,14 @@ def inventory_apc_inrow_airflow(info):
 
 
 def check_apc_inrow_airflow(_no_item, params, info):
-    flow = saveint(info[0][0]) / 100.0
+    # The MIB states that this value is given in hundredths of liters per second.
+    # However, it appears that the device actually returns l/s, as the oom should
+    # be closer to 1000 l/s. (cf. https://www.apc.com/salestools/DRON-AAAR53/DRON-AAAR53_R1_EN.pdf)
+    try:
+        flow = float(info[0][0])
+    except:
+        return
+
     state = 0
     message = ""
 
@@ -57,7 +64,7 @@ def check_apc_inrow_airflow(_no_item, params, info):
         message = "too high"
 
     perf = [("flow", flow, warn, crit)]
-    return state, "Current: %.2fl/s %s" % (flow, message), perf
+    return state, "Current: %.0f l/s %s" % (flow, message), perf
 
 
 check_info["apc_inrow_airflow"] = {

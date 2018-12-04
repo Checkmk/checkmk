@@ -2935,6 +2935,14 @@ def _get_categorized_check_plugins(check_plugin_names, for_inventory=False):
     host_only_tcp = set()
 
     for check_plugin_name in check_plugin_names:
+        if check_plugin_name not in plugins_info:
+            msg = "Unknown plugin file %s" % check_plugin_name
+            if cmk.debug.enabled():
+                raise MKGeneralException(msg)
+            else:
+                console.verbose("%s\n" % msg)
+                continue
+
         is_snmp_check_ = is_snmp_check_f(check_plugin_name)
         mgmt_board = _get_management_board_precedence(check_plugin_name, plugins_info)
         if mgmt_board == check_api_utils.HOST_PRECEDENCE:

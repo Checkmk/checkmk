@@ -1,0 +1,10 @@
+Title: apc_inrow_airflow: Fix scaling of airflow value
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0p10
+Date: 1543913545
+Class: fix
+
+

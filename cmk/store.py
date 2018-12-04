@@ -36,8 +36,11 @@ import time
 
 import pathlib2 as pathlib
 
+import cmk.log
 from cmk.exceptions import MKGeneralException, MKTimeout
 from cmk.i18n import _
+
+logger = cmk.log.get_logger("store")
 
 # TODO: Make all methods handle paths the same way. e.g. mkdir() and makedirs()
 # care about encoding a path to UTF-8. The others don't to that.
@@ -274,6 +277,8 @@ def aquire_lock(path, blocking=True):
     if path in g_locked_paths:
         return True  # No recursive locking
 
+    logger.debug("Try aquire lock on %s", path)
+
     # Create file (and base dir) for locking if not existant yet
     if not os.path.exists(os.path.dirname(path)):
         os.makedirs(os.path.dirname(path), mode=0770)
@@ -295,6 +300,8 @@ def aquire_lock(path, blocking=True):
             os.close(fd)
             fd = fd_new
 
+    logger.debug("Got lock on %s", path)
+
     g_aquired_locks.append((path, fd))
     g_locked_paths.append(path)
 
@@ -314,6 +321,8 @@ def release_lock(path):
     if path not in g_locked_paths:
         return  # no unlocking needed
 
+    logger.debug("Releasing lock on %s", path)
+
     for lock_path, fd in g_aquired_locks:
         if lock_path != path:
             continue
@@ -330,6 +339,7 @@ def release_lock(path):
         break
 
     g_locked_paths.remove(path)
+    logger.debug("Released lock on %s", path)
 
 
 def have_lock(path):
@@ -338,6 +348,9 @@ def have_lock(path):
 
 def release_all_locks():
     global g_aquired_locks, g_locked_paths
+    logger.debug("Releasing all locks")
+    logger.debug("g_aquired_locks: %r", g_aquired_locks)
+    logger.debug("g_locked_paths: %r", g_locked_paths)
 
     for path, _unused_fd in g_aquired_locks:
         release_lock(path)

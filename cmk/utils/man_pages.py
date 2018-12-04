@@ -82,6 +82,7 @@ catalog_titles = {
         "other"       : "Other devices",
         "time"        : "Clock Devices",
             "meinberg"   : "Meinberg",
+            "hopf"       : "Hopf",
         "network"     : "Networking (Switches, Routers, etc.)",
             "aerohive"    : "Aerohive Networking",
             "adva"        : "ADVA Optical Networking",

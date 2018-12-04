@@ -1,0 +1,16 @@
+title: Hepta 8030
+agents: snmp
+catalog: hw/time/hopf
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the Stratum for time synchronization of the device.
+
+ The check will raise {CRITICAL} if the reported state is "Invalid Stratum", {WARNING} if
+ the reported state is "Stratum is using secondary reference (via NTP).
+
+inventory:
+ One service for ntpSysStratum
+
+item:
+ "ntpSysStratum"

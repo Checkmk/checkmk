@@ -1,6 +1,6 @@
-title: Azure Agent Info
+title: Microsoft Azure Agent Info
 agents: linux
-catalog: app/Azure
+catalog: cloud/azure
 license: GPL
 distribution: check_mk
 description:
@@ -13,5 +13,5 @@ item:
 
 inventory:
  One service is created per monitored resource group and one for the
- host that runs the agent.
+ host that the agent is assigned to.
 

@@ -1,6 +1,6 @@
-title: Azure Monitoring: Database throughput units
+title: Microsoft Azure SQL Databases: throughput units
 agents: linux
-catalog: app/databases
+catalog: cloud/azure
 license: GPL
 distribution: check_mk
 description:

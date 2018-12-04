@@ -203,8 +203,10 @@ catalog_titles = {
         "networking"  : "Networking",
         "misc"        : "Miscellaneous",
         "storage"     : "Filesystems, Disks and RAID",
-
-    "agentless" : "Networking checks without agent",
+    "cloud"    : "Cloud Based Environments",
+        "azure"       : "Microsoft Azure",
+        "aws"         : "Amazon Web Services",
+    "agentless": "Networking checks without agent",
     "generic"  : "Generic check plugins",
     "unsorted" : "Uncategorized",
 }  # yapf: disable

@@ -40,7 +40,7 @@ def inventory_k8s_pod_resources(parsed):
         return [(None, {})]
 
 
-def check_k8s_pod_resources(_no_item, _no_params, parsed):
+def check_k8s_pod_resources(_no_item, params, parsed):
     pods = parsed.get('allocations', {}).get('pods', 0)
     yield 0, 'Pods: %d' % pods, [('k8s_pods', pods)]
 
@@ -50,12 +50,22 @@ def check_k8s_pod_resources(_no_item, _no_params, parsed):
     capacity = parsed.get('capacity', {}).get('pods', 0)
     yield 0, 'Capacity: %d' % capacity, [('k8s_pods_capacity', capacity)]
 
+    if allocatable:
+        usage = 100.0 * pods / allocatable
+        yield check_levels(
+            usage,
+            'k8s_pods_usage',
+            params.get('pods'),
+            infoname='Usage',
+            human_readable_func=get_percent_human_readable)
+
 
 check_info['k8s_resources.pods'] = {
     'inventory_function': inventory_k8s_pod_resources,
     'check_function': check_k8s_pod_resources,
     'service_description': 'Pod resources',
     'has_perfdata': True,
+    'group': 'k8s_resources',
 }
 
 
@@ -64,7 +74,7 @@ def inventory_k8s_cpu_resources(parsed):
         return [(None, {})]
 
 
-def check_k8s_cpu_resources(_no_item, _no_params, parsed):
+def check_k8s_cpu_resources(_no_item, params, parsed):
     request = parsed.get('requests', {}).get('cpu', 0.0)
     yield 0, 'Request: %.3f' % request, [('k8s_cpu_request', request)]
 
@@ -80,12 +90,22 @@ def check_k8s_cpu_resources(_no_item, _no_params, parsed):
     capacity = parsed.get('capacity', {}).get('cpu', 0.0)
     yield 0, 'Capacity: %.3f' % capacity, [('k8s_cpu_capacity', capacity)]
 
+    if allocatable:
+        usage = 100.0 * request / allocatable
+        yield check_levels(
+            usage,
+            'k8s_cpu_usage',
+            params.get('cpu'),
+            infoname='Usage',
+            human_readable_func=get_percent_human_readable)
+
 
 check_info['k8s_resources.cpu'] = {
     'inventory_function': inventory_k8s_cpu_resources,
     'check_function': check_k8s_cpu_resources,
     'service_description': 'CPU resources',
     'has_perfdata': True,
+    'group': 'k8s_resources',
 }
 
 
@@ -94,7 +114,7 @@ def inventory_k8s_mem_resources(parsed):
         return [(None, {})]
 
 
-def check_k8s_mem_resources(_no_item, _no_params, parsed):
+def check_k8s_mem_resources(_no_item, params, parsed):
     request = parsed.get('requests', {}).get('memory', 0.0)
     yield 0, 'Request: %s' % get_bytes_human_readable(request), [('k8s_memory_request', request)]
 
@@ -112,10 +132,20 @@ def check_k8s_mem_resources(_no_item, _no_params, parsed):
     yield 0, 'Capacity: %s' % get_bytes_human_readable(capacity), [('k8s_memory_capacity',
                                                                     capacity)]
 
+    if allocatable:
+        usage = 100.0 * request / allocatable
+        yield check_levels(
+            usage,
+            'k8s_memory_usage',
+            params.get('memory'),
+            infoname='Usage',
+            human_readable_func=get_percent_human_readable)
+
 
 check_info['k8s_resources.memory'] = {
     'inventory_function': inventory_k8s_mem_resources,
     'check_function': check_k8s_mem_resources,
     'service_description': 'Memory resources',
-    'has_perfdata': True
+    'has_perfdata': True,
+    'group': 'k8s_resources',
 }

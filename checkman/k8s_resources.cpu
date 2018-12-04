@@ -8,7 +8,8 @@ description:
  a Kubernetes entity. If at least one container running on a node does not specify
  limits, the node has no applicable limits.
 
- The check always returns {OK}.
+ By default the check always returns {OK}. Optionally levels can be defined
+ for the CPU usage, i.e. the ratio between requested and allocatable CPU.
 
 inventory:
  One service is created.

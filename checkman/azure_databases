@@ -1,6 +1,6 @@
-title: Azure Monitoring: Databases
+title: Microsoft Azure SQL Databases
 agents: linux
-catalog: app/databases
+catalog: cloud/azure
 license: GPL
 distribution: check_mk
 description:

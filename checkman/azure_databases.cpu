@@ -1,6 +1,6 @@
-title: Azure Monitoring: Database CPU utilization
+title: Microsoft Azure SQL Databases: CPU utilization
 agents: linux
-catalog: app/databases
+catalog: cloud/azure
 license: GPL
 distribution: check_mk
 description:

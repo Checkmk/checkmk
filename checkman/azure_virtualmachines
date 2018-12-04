@@ -1,6 +1,6 @@
-title: Virtual Machine under Azure
+title: Microsoft Azure Virtual Machines
 agents: azure
-catalog: os/misc
+catalog: cloud/azure
 license: GPL
 distribution: check_mk
 description:

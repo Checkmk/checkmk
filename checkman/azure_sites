@@ -1,6 +1,6 @@
-title: Azure Monitoring: Webserver
+title: Microsoft Azure Webserver
 agents: linux
-catalog: app/webserver
+catalog: cloud/azure
 license: GPL
 distribution: check_mk
 description:

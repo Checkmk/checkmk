@@ -1,0 +1,12 @@
+Title: Windows Agent crash during access to Event Log
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1543932376
+Class: fix
+
+Sometimes  Windows Agent may crash when accessing Windows Event Log
+because the size of the Log is too big or the Log itself is broken. 
+Now Windows Agent should skip such logs.

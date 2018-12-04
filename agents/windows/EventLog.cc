@@ -175,8 +175,9 @@ wstring MessageResolver::resolve(DWORD eventID, LPCWSTR source,
             result += parameters[i];
         }
     }
-    std::replace_if(result.begin(), result.end(),
-                    [](wchar_t ch) { return ch == '\n' || ch == '\r'; }, ' ');
+    std::replace_if(
+        result.begin(), result.end(),
+        [](wchar_t ch) { return ch == '\n' || ch == '\r'; }, ' ');
     return result;
 }
 
@@ -307,8 +308,22 @@ std::unique_ptr<EventLogRecordBase> EventLog::read() {
         if (result == nullptr) {
             // no fitting record in our buffer, get the next couple of
             // records
-            if (!fillBuffer()) {
-                // no more events to read, break out of the loop
+            try {
+                if (!fillBuffer()) {
+                    // no more events to read, break out of the loop
+                    break;
+                }
+            } catch (const std::exception &e) {
+                // win_exception is coming here
+                // generated exception in fillBuffer must be processed in any
+                // case usually we have something like FILE_TOO_LARGE(223)
+                // during reading Event Log and fpor some reason we thorw
+                // exception. Bad? Bad. In Fact, we have SERIOUS problem with
+                // monitored host. Our Log was informed. Probably we need some
+                // additional checks pointing that logs are either bad or
+                // overflown
+                Debug(_logger)
+                    << "Error reading event log. Exception is " << e.what();
                 break;
             }
         }

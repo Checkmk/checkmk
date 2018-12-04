@@ -352,7 +352,7 @@ def release_all_locks():
     logger.debug("g_aquired_locks: %r", g_aquired_locks)
     logger.debug("g_locked_paths: %r", g_locked_paths)
 
-    for path, _unused_fd in g_aquired_locks:
+    for path, _unused_fd in g_aquired_locks[:]:
         release_lock(path)
 
     g_aquired_locks = []

@@ -4436,6 +4436,24 @@ metric_info["k8s_memory_capacity"] = {
     "color": "#c0c0c0",
 }
 
+metric_info["k8s_pods_usage"] = {
+    "title": _("Pod usage"),
+    "unit": "%",
+    "color": "31/a",
+}
+
+metric_info["k8s_memory_usage"] = {
+    "title": _("Memory usage"),
+    "unit": "%",
+    "color": "31/a",
+}
+
+metric_info["k8s_cpu_usage"] = {
+    "title": _("CPU usage"),
+    "unit": "%",
+    "color": "31/a",
+}
+
 metric_info["active_vms"] = {
     "title": _("Active VMs"),
     "unit": "count",

@@ -60,15 +60,7 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.i18n import _u, _
 from cmk.gui.globals import html
-from cmk.gui.exceptions import (
-    MKGeneralException,
-    MKUserError,
-    MKInternalError,
-)
-from cmk.gui.permissions import (
-    permission_section_registry,
-    PermissionSection,
-)
+from cmk.gui.exceptions import MKGeneralException, MKUserError, MKInternalError
 
 # Needed for legacy (pre 1.6) plugins
 from cmk.gui.htmllib import HTML  # pylint: disable=unused-import
@@ -107,21 +99,6 @@ if cmk.is_managed_edition():
 loaded_with_language = False
 
 
-@permission_section_registry.register
-class PermissionSectionViews(PermissionSection):
-    @property
-    def name(self):
-        return "view"
-
-    @property
-    def title(self):
-        return _("Views")
-
-    @property
-    def do_sort(self):
-        return True
-
-
 # Load all view plugins
 def load_plugins(force):
     global loaded_with_language
@@ -144,6 +121,7 @@ def load_plugins(force):
     loaded_with_language = cmk.gui.i18n.get_current_language()
 
     # Declare permissions for builtin views
+    config.declare_permission_section("view", _("Multisite Views"), do_sort=True)
     for name, view in multisite_builtin_views.items():
         config.declare_permission("view.%s" % name, format_view_title(
             name, view), "%s - %s" % (name, _u(view["description"])), config.builtin_role_ids)

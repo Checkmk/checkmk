@@ -27,22 +27,11 @@
 
 import cmk.gui.config as config
 from cmk.gui.i18n import _
-from cmk.gui.permissions import (
-    permission_section_registry,
-    PermissionSection,
+
+config.declare_permission_section(
+    'nagvis',
+    _('NagVis'),
 )
-
-
-@permission_section_registry.register
-class PermissionSectionNagVis(PermissionSection):
-    @property
-    def name(self):
-        return "nagvis"
-
-    @property
-    def title(self):
-        return _('NagVis')
-
 
 config.declare_permission(
     'nagvis.*_*_*',

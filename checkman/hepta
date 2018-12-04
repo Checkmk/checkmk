@@ -1,0 +1,20 @@
+title: Hepta 8030
+agents: snmp
+catalog: hw/time/hopf
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the Device Type, Serial Number, Firmware Version and Data and the device version.
+
+ One general service is created for showing the following information:
+ Device Type ;
+ Serial Number ;
+ Firmware Version ;
+ Firmware Date ;
+ Device Version ;
+
+inventory:
+ One service for HPF8038 Info
+
+item:
+ "HPF8030 Info"

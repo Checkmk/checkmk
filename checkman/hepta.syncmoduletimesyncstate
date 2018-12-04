@@ -1,0 +1,16 @@
+title: Hepta 8030
+agents: snmp
+catalog: hw/time/hopf
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the status of the synchronization.
+ If the device is synchronized via Radio with high precision, the state will be OK.
+ If the device is synchronized via Radio with low precision, the state will be WARN.
+ If the device synchronization is invalid or it is in mode Crystal, the state will be CRIT.
+
+inventory:
+ One service for synchronization state.
+
+item:
+ "SyncModuleTimeSyncState"

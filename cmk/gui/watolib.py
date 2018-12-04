@@ -7189,7 +7189,7 @@ def check_mk_local_automation(command, args=None, indata="", stdin_data=None, ti
     if args is None:
         args = []
 
-    auto_logger = logger.getChild("config.automations")
+    auto_logger = logger.getChild("automations")
 
     if timeout:
         args = ["--timeout", "%d" % timeout] + args

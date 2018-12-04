@@ -182,6 +182,9 @@ class ConfigVariableLogLevels(ConfigVariable):
              _("If this option is enabled, Check_MK BI will create a log with details "
                "about compiling BI aggregations. This includes statistics and "
                "details for each executed compilation.")),
+            ("cmk.web.automations", _("Automation calls"),
+             _("Communication between different components of Check_MK (e.g. GUI and check engine) "
+               "will be logged in this log level."))
         ]:
             elements.append((level_id,
                              LogLevelChoice(

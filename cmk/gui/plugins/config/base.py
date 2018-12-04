@@ -53,6 +53,7 @@ log_levels = {
     "cmk.web.ldap": 30,
     "cmk.web.auth": 30,
     "cmk.web.bi.compilation": 30,
+    "cmk.web.automations": 30,
 }
 
 # New style, used by WATO

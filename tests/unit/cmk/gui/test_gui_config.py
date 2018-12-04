@@ -2480,9 +2480,9 @@ def test_declare_permission(monkeypatch):
     assert "bla" in permissions.permission_section_registry
 
     monkeypatch.setattr(permissions, "permission_registry", permissions.PermissionRegistry())
-    assert "bla.blub" not in permissions.permission_registry
+    assert not config.permission_exists("bla.blub")
     config.declare_permission("bla.blub", u"bla perm", u"descrrrrr", ["admin"])
-    assert "bla.blub" in permissions.permission_registry
+    assert config.permission_exists("bla.blub")
 
     permission = permissions.permission_registry["bla.blub"]()
     assert permission.section == permissions.permission_section_registry["bla"]

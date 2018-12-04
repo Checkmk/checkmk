@@ -57,12 +57,7 @@ from cmk.gui.valuespec import (
 from cmk.gui.i18n import _u, _
 from cmk.gui.globals import html
 
-from cmk.gui.exceptions import (
-    MKUserError,
-    MKGeneralException,
-    MKAuthException,
-)
-from cmk.gui.permissions import permission_registry
+from cmk.gui.exceptions import MKUserError, MKGeneralException, MKAuthException
 
 #   .--Base----------------------------------------------------------------.
 #   |                        ____                                          |
@@ -504,7 +499,7 @@ class Overridable(Base):
     # TODO: Wie is die Semantik hier genau? Umsetzung vervollständigen!
     def may_see(self):
         perm_name = "%s.%s" % (self.type_name(), self.name())
-        if perm_name in permission_registry and not config.user.may(perm_name):
+        if config.permission_exists(perm_name) and not config.user.may(perm_name):
             return False
 
         # if self.owner() == "" and not config.user.may(perm_name):
@@ -793,7 +788,7 @@ class Overridable(Base):
     @classmethod
     def declare_permission(cls, page):
         permname = "%s.%s" % (cls.type_name(), page.name())
-        if page.is_public() and permname not in permission_registry:
+        if page.is_public() and not config.permission_exists(permname):
             config.declare_permission(permname, page.title(), page.description(),
                                       ['admin', 'user', 'guest'])
 

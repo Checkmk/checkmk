@@ -66,7 +66,6 @@ from cmk.gui.plugins.visuals.utils import (  # pylint: disable=unused-import
     FilterTristate, FilterUnicodeFilter, FilterSite,
 )
 from cmk.gui.plugins.visuals.utils import _infos as infos
-from cmk.gui.permissions import permission_registry
 
 if not cmk.is_raw_edition():
     import cmk.gui.cee.plugins.visuals
@@ -266,7 +265,7 @@ def load_visuals_of_a_user(what, builtin_visuals, skip_func, lock, path, user):
 
 def declare_visual_permission(what, name, visual):
     permname = "%s.%s" % (what[:-1], name)
-    if visual["public"] and permname not in permission_registry:
+    if visual["public"] and not config.permission_exists(permname):
         config.declare_permission(permname, visual["title"], visual["description"],
                                   ['admin', 'user', 'guest'])
 
@@ -319,7 +318,7 @@ def available(what, all_visuals):
                 u, "general.force_" + what):
             # Honor original permissions for the current user
             permname = "%s.%s" % (permprefix, n)
-            if permname in permission_registry \
+            if config.permission_exists(permname) \
                 and not config.user.may(permname):
                 continue
             visuals[n] = visual
@@ -338,7 +337,7 @@ def available(what, all_visuals):
                     u, "general.publish_" + what):
                 # Is there a builtin visual with the same name? If yes, honor permissions.
                 permname = "%s.%s" % (permprefix, n)
-                if permname in permission_registry \
+                if config.permission_exists(permname) \
                     and not config.user.may(permname):
                     continue
                 visuals[n] = visual

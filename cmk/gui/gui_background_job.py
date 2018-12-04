@@ -30,36 +30,27 @@ import cmk.plugin_registry
 from cmk.exceptions import MKGeneralException
 
 import cmk.gui.i18n
+from cmk.gui.i18n import _
+from cmk.gui.globals import html
+from cmk.gui.htmllib import HTML
 import cmk.gui.sites as sites
 import cmk.gui.config as config
 import cmk.gui.log as log
 import cmk.gui.background_job as background_job
-from cmk.gui.i18n import _
-from cmk.gui.globals import html
-from cmk.gui.htmllib import HTML
-from cmk.gui.permissions import (
-    permission_section_registry,
-    PermissionSection,
-)
 
 loaded_with_language = False
-
-
-@permission_section_registry.register
-class PermissionSectionBackgroundJobs(PermissionSection):
-    @property
-    def name(self):
-        return "background_jobs"
-
-    @property
-    def title(self):
-        return _("Background jobs")
 
 
 def load_plugins(force):
     global loaded_with_language
     if loaded_with_language == cmk.gui.i18n.get_current_language() and not force:
         return
+
+    config.declare_permission_section(
+        "background_jobs",
+        _("Background jobs"),
+        do_sort=False,
+    )
 
     config.declare_permission(
         "background_jobs.manage_jobs",

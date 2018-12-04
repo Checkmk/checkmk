@@ -35,31 +35,12 @@ import cmk.gui.pages
 import cmk.gui.config as config
 from cmk.gui.i18n import _, _u
 from cmk.gui.globals import html
-from cmk.gui.permissions import (
-    permission_section_registry,
-    PermissionSection,
-)
 
 # Constants to be used in snapins
 snapin_width = 230
 
 sidebar_snapins = {}
 search_plugins = []
-
-
-@permission_section_registry.register
-class PermissionSectionSidebarSnapins(PermissionSection):
-    @property
-    def name(self):
-        return "sidesnap"
-
-    @property
-    def title(self):
-        return _("Sidebar snapins")
-
-    @property
-    def do_sort(self):
-        return True
 
 
 # TODO: Transform methods to class methods

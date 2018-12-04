@@ -35,7 +35,7 @@ def test_registered_permission_sections():
         ('dashboard', (50, u'Dashboards', True)),
         ('report', (50, u'Reports', True)),
         ('nagvis', (50, u'NagVis', False)),
-        ('view', (50, u'Views', True)),
+        ('view', (50, u'Multisite Views', True)),
     ]
 
     section_names = permission_section_registry.keys()

@@ -113,12 +113,8 @@ def send_push_notification(api_key, recipient_key, subject, text, context):
         params.append(("sound", context["PARAMETER_SOUND"]))
 
     s = requests.Session()
-    if context.get("PARAMETER_PROXY"):
-        if context["PARAMETER_PROXY"].startswith('https'):
-            protocol = 'https'
-        else:
-            protocol = 'http'
-        r = s.post(api_url, params=dict(params), proxies={protocol: context["PARAMETER_PROXY"]})
+    if context.get("PARAMETER_PROXY_URL"):
+        r = s.post(api_url, params=dict(params), proxies={"https": context["PARAMETER_PROXY_URL"]})
 
     else:
         r = s.post(api_url, params=dict(params))

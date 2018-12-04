@@ -64,14 +64,22 @@ def init_logging():
 
 
 def _setup_web_log_logging():
-    del logger.handlers[:]  # First remove all handlers
+    del logger.root.handlers[:]  # First remove all handlers
 
     handler = _logging.FileHandler("%s/web.log" % cmk.paths.log_dir, encoding="UTF-8")
 
     handler.setFormatter(cmk.log.get_formatter())
-    logger.addHandler(handler)
+
+    # Setup logging for the root logger to be able to get library log entries in the
+    # log of the web application
+    logger.root.addHandler(handler)
 
 
 def set_log_levels(log_levels):
+    # Setup logging for the root logger to be able to get library log entries in the
+    # log of the web application
+    logger.root.setLevel(log_levels["cmk.web"])
+    cmk.log.logger.setLevel(log_levels["cmk.web"])
+
     for logger_name, level in log_levels.items():
         _logging.getLogger(logger_name).setLevel(level)

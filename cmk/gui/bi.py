@@ -1683,13 +1683,13 @@ def render_tree(node, indent=""):
             node["host"][0],
             node["host"][1],
             node.get("service"),
-            node.get("hidden") == True and " (hidden)" or "",
+            node.get("hidden") is True and " (hidden)" or "",
         )
     else:
         h += indent + "Aggregation:\n"
         indent += "    "
         h += indent + "Description:  %s\n" % node["title"]
-        h += indent + "Hidden:       %s\n" % (node.get("hidden") == True and "yes" or "no")
+        h += indent + "Hidden:       %s\n" % (node.get("hidden") is True and "yes" or "no")
         h += indent + "Needed Hosts: %s\n" % " ".join([("%s/%s" % h_s) for h_s in node["reqhosts"]])
         h += indent + "Aggregation:  %s\n" % node["func"]
         h += indent + "Nodes:\n"

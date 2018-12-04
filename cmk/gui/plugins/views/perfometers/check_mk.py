@@ -491,7 +491,7 @@ def perfometer_check_oracle_dataguard_stats(row, check_command, perf_data):
             minutes, _seconds = divmod(rest, 60)
             perfdata1 = data[1]
 
-    if perfdata_found == False:
+    if not perfdata_found:
         days = 0
         hours = 0
         minutes = 0

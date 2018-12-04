@@ -842,9 +842,9 @@ def show_annotations(annotations, av_rawdata, what, avoptions, omit_service):
         table.cell(_("From"), render_date(annotation["from"]), css="nobr narrow")
         table.cell(_("Until"), render_date(annotation["until"]), css="nobr narrow")
         table.cell("", css="buttons")
-        if annotation.get("downtime") == True:
+        if annotation.get("downtime") is True:
             html.icon(_("This period has been reclassified as a scheduled downtime"), "downtime")
-        elif annotation.get("downtime") == False:
+        elif annotation.get("downtime") is False:
             html.icon(
                 _("This period has been reclassified as a not being a scheduled downtime"),
                 "nodowntime")

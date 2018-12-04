@@ -260,7 +260,7 @@ class Application(object):
         return html.has_var("_plain_error") or html.myfile == "webapi"
 
     def _profiling_enabled(self):
-        if config.profile == False:
+        if config.profile is False:
             return False  # Not enabled
 
         if config.profile == "enable_by_var" and not html.has_var("_profile"):

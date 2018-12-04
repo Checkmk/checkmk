@@ -151,7 +151,7 @@ class ModeBulkCleanup(WatoMode):
         to_clean = []
         for attr, _topic in watolib.all_host_attributes():
             attrname = attr.name()
-            if html.get_checkbox("_clean_" + attrname) == True:
+            if html.get_checkbox("_clean_" + attrname) is True:
                 to_clean.append(attrname)
         return to_clean
 

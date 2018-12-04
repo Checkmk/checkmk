@@ -117,7 +117,7 @@ class ModeUsers(WatoMode):
                 _("Do you really want to delete the user %s?") % delid)
             if c:
                 watolib.delete_users([delid])
-            elif c == False:
+            elif c is False:
                 return ""
 
         elif html.var('_sync') and html.check_transaction():
@@ -162,7 +162,7 @@ class ModeUsers(WatoMode):
                 _("Do you really want to delete %d users?") % len(selected_users))
             if c:
                 watolib.delete_users(selected_users)
-            elif c == False:
+            elif c is False:
                 return ""
 
     def page(self):

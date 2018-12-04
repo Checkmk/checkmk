@@ -423,7 +423,7 @@ def page_list(what,
                 del visuals[(user_id, delname)]
                 save(what, visuals, user_id)
                 html.reload_sidebar()
-            elif c == False:
+            elif c is False:
                 html.footer()
                 return
         except MKUserError as e:

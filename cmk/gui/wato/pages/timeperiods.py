@@ -113,7 +113,7 @@ class ModeTimeperiods(WatoMode):
                 del self._timeperiods[delname]
                 watolib.save_timeperiods(self._timeperiods)
                 watolib.add_change("edit-timeperiods", _("Deleted timeperiod %s") % delname)
-            elif c == False:
+            elif c is False:
                 return ""
 
     # Check if a timeperiod is currently in use and cannot be deleted

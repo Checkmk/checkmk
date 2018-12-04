@@ -183,7 +183,7 @@ class SNMPTrapTranslator(object):
         super(SNMPTrapTranslator, self).__init__()
         self._logger = logger
         translation_config = config["translate_snmptraps"]
-        if translation_config == False:
+        if translation_config is False:
             self.translate = self._translate_simple
         elif translation_config == (True, {}):
             self._mib_resolver = self._construct_resolver(

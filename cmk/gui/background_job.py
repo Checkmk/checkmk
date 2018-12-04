@@ -310,7 +310,7 @@ class BackgroundJob(object):
         return self.exists()
 
     def is_stoppable(self):
-        return self._jobstatus.get_status().get("stoppable", True) == True
+        return self._jobstatus.get_status().get("stoppable", True)
 
     def is_running(self):
         if not self.exists():

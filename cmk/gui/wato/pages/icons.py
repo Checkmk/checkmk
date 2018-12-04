@@ -112,7 +112,7 @@ class ModeIcons(WatoMode):
                 if c:
                     os.remove("%s/local/share/check_mk/web/htdocs/images/icons/%s.png" %
                               (cmk.paths.omd_root, icon_name))
-                elif c == False:
+                elif c is False:
                     return ""
                 else:
                     return

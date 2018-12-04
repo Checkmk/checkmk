@@ -86,7 +86,7 @@ class Wiki(SidebarSnapin):
             for line in file(filename).readlines():
                 line = line.strip()
                 if line == "":
-                    if ul_started == True:
+                    if ul_started:
                         html.end_foldable_container()
                         start_ul = True
                         ul_started = False
@@ -97,7 +97,7 @@ class Wiki(SidebarSnapin):
                     # html.br()
 
                 elif line.startswith("*"):
-                    if start_ul == True:
+                    if start_ul:
                         if title:
                             html.begin_foldable_container(
                                 "wikisnapin", title, True, title, indent=True)
@@ -130,7 +130,7 @@ class Wiki(SidebarSnapin):
                 else:
                     html.write_text(line)
 
-            if ul_started == True:
+            if ul_started:
                 html.close_ul()
         except IOError:
             sidebar = html.render_a(

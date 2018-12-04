@@ -1457,7 +1457,7 @@ class EventsMode(WatoMode):
                 self._add_change(what + "-delete-rule", _("Deleted %s %d") % (what_title, nr))
                 del rules[nr]
                 save_rules(rules)
-            elif c == False:
+            elif c is False:
                 return ""
             else:
                 return

@@ -1064,7 +1064,7 @@ class LDAPUserConnector(UserConnector):
         #   False: Another connection is enforced
         #   None:  No connection is enforced
         enforce_this_connection = self._user_enforces_this_connection(user_id)
-        if enforce_this_connection == False:
+        if enforce_this_connection is False:
             return None  # Skip this connection, another one is enforced
         else:
             user_id = self._strip_suffix(user_id)

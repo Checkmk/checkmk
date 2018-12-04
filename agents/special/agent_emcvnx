@@ -245,7 +245,7 @@ if fetch_agent_info:
 # all other sections of agent output
 #
 for module, module_options in naviseccli_options.items():
-    if module_options["active"] == True:
+    if module_options["active"] is True:
         separator = module_options["sep"]
         if separator:
             print "<<<emcvnx_%s:sep(%s)>>>" % (module, separator)

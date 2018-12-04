@@ -365,7 +365,7 @@ class ModeAnalyzeConfig(WatoMode):
         return (result.test_id, result.site_id, result.status) in self._acks
 
     def _is_test_disabled(self, test_id):
-        return self._acks.get(test_id, True) == False
+        return not self._acks.get(test_id, True)
 
     def _unacknowledge_test(self, test_id, site_id, status_id):
         self._acks = self._load_acknowledgements(lock=True)

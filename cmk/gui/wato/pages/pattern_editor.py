@@ -186,7 +186,7 @@ class ModePatternEditor(WatoMode):
                                          + html.render_span(self._match_txt[match_start:match_end], class_="match")\
                                          + html.render_text(self._match_txt[match_end:])
 
-                        if already_matched == False:
+                        if not already_matched:
                             # First match
                             match_class = 'match first'
                             match_img = 'match'

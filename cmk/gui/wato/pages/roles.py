@@ -143,7 +143,7 @@ class ModeRoles(RoleManagement, WatoMode):
                 self._save_roles()
                 watolib.add_change(
                     "edit-roles", _("Deleted role '%s'") % delid, sites=config.get_login_sites())
-            elif c == False:
+            elif c is False:
                 return ""
 
         elif html.var("_clone"):

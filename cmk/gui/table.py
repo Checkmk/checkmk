@@ -174,11 +174,11 @@ class Table(object):
             self.next_header = None
         self.rows.append(([], css, state, fixed, attrs))
         if collect_headers:
-            if self.options["collect_headers"] == False:
+            if self.options["collect_headers"] is False:
                 self.options["collect_headers"] = True
-            elif self.options["collect_headers"] == True:
+            elif self.options["collect_headers"] is True:
                 self.options["collect_headers"] = "finished"
-        elif not collect_headers and self.options["collect_headers"] == True:
+        elif not collect_headers and self.options["collect_headers"] is True:
             self.options["collect_headers"] = False
 
     def add_cell(self,
@@ -199,7 +199,7 @@ class Table(object):
 
         htmlcode = text + html.drain()
 
-        if self.options["collect_headers"] == True:
+        if self.options["collect_headers"] is True:
             # small helper to make sorting introducion easier. Cells which contain
             # buttons are never sortable
             if css and 'buttons' in css and sortable:
@@ -521,7 +521,7 @@ def _sort_rows(rows, sort_col, sort_reverse):
     # remove and remind fixed rows, add to separate list
     fixed_rows = []
     for index, row in enumerate(rows[:]):
-        if row[3] == True:
+        if row[3] is True:
             rows.remove(row)
             fixed_rows.append((index, row))
 

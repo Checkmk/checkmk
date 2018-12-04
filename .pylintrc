@@ -78,10 +78,6 @@ disable=
     #---------------------------------------------------------------------------
     # Enabling this would be nice, but not crucial. At the moment, we have quite
     # a few violations, so we postpone fixing this.
-    singleton-comparison,
-    #---------------------------------------------------------------------------
-    # Enabling this would be nice, but not crucial. At the moment, we have quite
-    # a few violations, so we postpone fixing this.
     unused-argument,
     #---------------------------------------------------------------------------
     # Alas, these maintenance/security nightmares are still part of our base

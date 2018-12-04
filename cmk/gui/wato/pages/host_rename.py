@@ -160,7 +160,7 @@ class ModeBulkRenameHost(WatoMode):
                 raise MKGeneralException(_("Another host renaming job is already running: %s") % e)
 
             html.response.http_redirect(host_renaming_job.detail_url())
-        elif c == False:  # not yet confirmed
+        elif c is False:  # not yet confirmed
             return ""
         else:
             return None  # browser reload
@@ -406,7 +406,7 @@ class ModeRenameHost(WatoMode):
 
             html.response.http_redirect(host_renaming_job.detail_url())
 
-        elif c == False:  # not yet confirmed
+        elif c is False:  # not yet confirmed
             return ""
 
     def _check_new_host_name(self, varname, host_name):

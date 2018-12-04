@@ -598,9 +598,9 @@ class RegExp(TextAscii):
                   "in front or at the end of your pattern to make it either a prefix "
                   "or infix search."))
 
-        if self._case_sensitive == True:
+        if self._case_sensitive is True:
             help_text.append(_("The match is performed case sensitive."))
-        elif self._case_sensitive == False:
+        elif self._case_sensitive is False:
             help_text.append(_("The match is performed case insensitive."))
 
         help_text.append(
@@ -613,9 +613,9 @@ class RegExp(TextAscii):
     def _css_classes(self):
         classes = ["text", "regexp"]
 
-        if self._case_sensitive == True:
+        if self._case_sensitive is True:
             classes.append("case_sensitive")
-        elif self._case_sensitive == False:
+        elif self._case_sensitive is False:
             classes.append("case_insensitive")
 
         if self._mode is not None:
@@ -3124,7 +3124,7 @@ class Optional(ValueSpec):
         return self._valuespec.value_to_text(value)
 
     def from_html_vars(self, varprefix):
-        checkbox_checked = html.get_checkbox(varprefix + "_use") == True  # not None or False
+        checkbox_checked = html.get_checkbox(varprefix + "_use") is True  # not None or False
         if checkbox_checked != self._negate:
             return self._valuespec.from_html_vars(varprefix + "_value")
         return self._none_value
@@ -4002,7 +4002,7 @@ class Password(TextAscii):
             "size": self._size,
         }
 
-        if self._autocomplete == False:
+        if self._autocomplete is False:
             kwargs["autocomplete"] = "new-password"
 
         html.password_input(varprefix, str(value), **kwargs)

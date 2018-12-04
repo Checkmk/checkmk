@@ -119,7 +119,7 @@ class HostMode(WatoMode):
 
         lock_message = ""
         if watolib.Folder.current().locked_hosts():
-            if watolib.Folder.current().locked_hosts() == True:
+            if watolib.Folder.current().locked_hosts() is True:
                 lock_message = _("Host attributes locked (You cannot edit this host)")
             else:
                 lock_message = watolib.Folder.current().locked_hosts()

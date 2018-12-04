@@ -327,13 +327,13 @@ def event_rule_matches(rule_pack, rule, event):
 
 
 def event_rule_matches_non_inverted(rule_pack, rule, event):
-    if match_ipv4_network(rule.get("match_ipaddress", "0.0.0.0/0"), event["ipaddress"]) == False:
+    if not match_ipv4_network(rule.get("match_ipaddress", "0.0.0.0/0"), event["ipaddress"]):
         return _("The source IP address does not match.")
 
-    if match(rule.get("match_host"), event["host"], complete=True) == False:
+    if match(rule.get("match_host"), event["host"], complete=True) is False:
         return _("The host name does not match.")
 
-    if match(rule.get("match_application"), event["application"], complete=False) == False:
+    if match(rule.get("match_application"), event["application"], complete=False) is False:
         return _("The application (syslog tag) does not match")
 
     if "match_facility" in rule and event["facility"] != rule["match_facility"]:
@@ -349,7 +349,7 @@ def event_rule_matches_non_inverted(rule_pack, rule, event):
 
         match_groups = match(rule.get("match_ok", ""), event["text"], complete=False)
         if match_groups != False and cp:
-            if match_groups == True:
+            if match_groups is True:
                 match_groups = ()
             return True, match_groups
 
@@ -357,7 +357,7 @@ def event_rule_matches_non_inverted(rule_pack, rule, event):
         match_groups = match(rule.get("match"), event["text"], complete=False)
     except Exception as e:
         return _("Invalid regular expression: %s") % e
-    if match_groups == False:
+    if match_groups is False:
         return _("The message text does not match the required pattern.")
 
     if "match_priority" in rule:
@@ -396,7 +396,7 @@ def event_rule_matches_non_inverted(rule_pack, rule, event):
         if rule_customer_id != managed.SCOPE_GLOBAL and site_customer_id != rule_customer_id:
             return _("Wrong customer")
 
-    if match_groups == True:
+    if match_groups is True:
         match_groups = ()  # no matching groups
     return False, match_groups
 

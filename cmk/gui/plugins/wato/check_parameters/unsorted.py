@@ -11502,7 +11502,7 @@ def transform_ibm_svc_host(params):
         params = {'always_ok': False}
 
     if 'always_ok' in params:
-        if params['always_ok'] == False:
+        if params['always_ok'] is False:
             params = {'degraded_hosts': (1, 1), 'offline_hosts': (1, 1), 'other_hosts': (1, 1)}
         else:
             params = {}

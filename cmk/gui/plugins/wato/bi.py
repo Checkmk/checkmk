@@ -1002,7 +1002,7 @@ class ModeBIPacks(ModeBI):
                 self._add_change("delete-bi-pack", _("Deleted BI pack %s") % pack_id)
                 del self._packs[pack_id]
                 self.save_config()
-            elif c == False:
+            elif c is False:
                 return ""
 
     def page(self):
@@ -1196,7 +1196,7 @@ class ModeBIAggregations(ModeBI):
             self._add_change("bi-delete-aggregation",
                              _("Deleted BI aggregation number %d") % (aggregation_id + 1))
             self.save_config()
-        elif c == False:  # not yet confirmed
+        elif c is False:  # not yet confirmed
             return ""
 
     def _bulk_delete_after_confirm(self):
@@ -1213,7 +1213,7 @@ class ModeBIAggregations(ModeBI):
                                      _("Deleted BI aggregation with ID %s") % (aggregation_id + 1))
                 self.save_config()
 
-            elif c == False:
+            elif c is False:
                 return ""
 
     def _bulk_move_after_confirm(self):
@@ -1242,7 +1242,7 @@ class ModeBIAggregations(ModeBI):
                                    _("Moved BI aggregation with ID %s to BI pack %s") % \
                                     (aggregation_id+1, target))
                 self.save_config()
-            elif c == False:
+            elif c is False:
                 return ""
 
     def page(self):
@@ -1401,7 +1401,7 @@ class ModeBIRules(ModeBI):
             del self._pack["rules"][rule_id]
             self._add_change("bi-delete-rule", _("Deleted BI rule with ID %s") % rule_id)
             self.save_config()
-        elif c == False:  # not yet confirmed
+        elif c is False:  # not yet confirmed
             return ""
 
     def _bulk_delete_after_confirm(self):
@@ -1419,7 +1419,7 @@ class ModeBIRules(ModeBI):
                     del self._pack["rules"][rule_id]
                     self._add_change("bi-delete-rule", _("Deleted BI rule with ID %s") % rule_id)
                 self.save_config()
-            elif c == False:
+            elif c is False:
                 return ""
 
     def _check_delete_rule_id_permission(self, rule_id):
@@ -1457,7 +1457,7 @@ class ModeBIRules(ModeBI):
                         "bi-move-rule",
                         _("Moved BI rule with ID %s to BI pack %s") % (rule_id, target))
                 self.save_config()
-            elif c == False:
+            elif c is False:
                 return ""
 
     def page(self):

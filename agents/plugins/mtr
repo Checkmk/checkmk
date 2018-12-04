@@ -358,18 +358,18 @@ def start_mtr(host):
         options.append("--tcp")
     if pingtype == 'udp':
         options.append("--udp")
-    if not port is None:
+    if port is not None:
         options.append("--port")
         options.append(str(port))
-    if ipv4 == True:
+    if ipv4:
         options.append("-4")
-    if ipv6 == True:
+    if ipv6:
         options.append("-6")
     options.append("-s")
     options.append(str(size))
     options.append("-c")
     options.append(str(count))
-    if dns == False:
+    if not dns:
         options.append("--no-dns")
     if not address is None:
         options.append("--address")

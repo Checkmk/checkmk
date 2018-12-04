@@ -143,7 +143,7 @@ class PageKeyManagement(object):
                 self.delete(key_id)
                 self.save(self.keys)
 
-            elif c == False:
+            elif c is False:
                 return ""
 
     def delete(self, key_id):

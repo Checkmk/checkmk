@@ -1198,7 +1198,7 @@ class ModeEventConsoleRulePacks(EventConsoleMode):
                 self._add_change("delete-rule-pack", _("Deleted rule pack %s") % rule_pack["id"])
                 del self._rule_packs[nr]
                 save_mkeventd_rules(self._rule_packs)
-            elif c == False:
+            elif c is False:
                 return ""
 
         # Reset all rule hit counteres
@@ -1210,7 +1210,7 @@ class ModeEventConsoleRulePacks(EventConsoleMode):
             if c:
                 cmk.gui.mkeventd.execute_command("RESETCOUNTERS", site=config.omd_site())
                 self._add_change("counter-reset", _("Resetted all rule hit counters to zero"))
-            elif c == False:
+            elif c is False:
                 return ""
 
         # Copy rules from master
@@ -1226,7 +1226,7 @@ class ModeEventConsoleRulePacks(EventConsoleMode):
                     _("Copied the event rules from the master "
                       "into the local configuration"))
                 return None, _("Copied rules from master")
-            elif c == False:
+            elif c is False:
                 return ""
 
         # Move rule packages
@@ -1567,7 +1567,7 @@ class ModeEventConsoleRules(EventConsoleMode):
                 if type_ == ec.RulePackType.exported:
                     export_mkp_rule_pack(self._rule_pack)
                 save_mkeventd_rules(self._rule_packs)
-            elif c == False:
+            elif c is False:
                 return ""
             else:
                 return
@@ -2062,7 +2062,7 @@ class ModeEventConsoleStatus(EventConsoleMode):
             watolib.log_audit(None, "mkeventd-switchmode",
                               _("Switched replication slave mode to %s") % new_mode)
             return None, _("Switched to %s mode") % new_mode
-        elif c == False:
+        elif c is False:
             return ""
         return
 
@@ -2188,7 +2188,7 @@ class ModeEventConsoleSettings(EventConsoleMode, GlobalSettingsMode):
             if action == "_reset":
                 return "mkeventd_config", msg
             return "mkeventd_config"
-        elif c == False:
+        elif c is False:
             return ""
 
     def _edit_mode(self):
@@ -2287,7 +2287,7 @@ class ModeEventConsoleMIBs(EventConsoleMode):
                     _("Do you really want to delete the MIB file <b>%s</b>?") % filename)
                 if c:
                     self._delete_mib(filename, mibs[filename]["name"])
-                elif c == False:
+                elif c is False:
                     return ""
                 else:
                     return
@@ -2446,7 +2446,7 @@ class ModeEventConsoleMIBs(EventConsoleMode):
                 for filename in selected_custom_mibs:
                     self._delete_mib(filename, custom_mibs[filename]["name"])
                 return
-            elif c == False:
+            elif c is False:
                 return ""  # not yet confirmed
             return  # browser reload
 
@@ -3339,7 +3339,7 @@ class ConfigVariableEventConsoleTranslateSNMPTraps(ConfigVariable):
                    "to translate the incoming SNMP traps. Information which can not be "
                    "translated, e.g. because a MIB is missing, are written untouched to "
                    "the event message."),
-            forth=lambda v: v == True and (v, {}) or v,
+            forth=lambda v: v is True and (v, {}) or v,
         )
 
 

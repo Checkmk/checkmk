@@ -517,7 +517,7 @@ class ModeDistributedMonitoring(ModeSites):
             self._site_mgmt.delete_site(delete_id)
             return None
 
-        elif c == False:
+        elif c is False:
             return ""
 
         return None
@@ -539,7 +539,7 @@ class ModeDistributedMonitoring(ModeSites):
                 sites=[watolib.default_site()])
             return None, _("Logged out.")
 
-        elif c == False:
+        elif c is False:
             return ""
 
         else:
@@ -683,7 +683,7 @@ class ModeDistributedMonitoring(ModeSites):
             table.text_cell(_("Status host"))
 
         # Disabled
-        if site.get("disabled", False) == True:
+        if site.get("disabled", False) is True:
             table.text_cell(_("Disabled"), "<b>%s</b>" % _("yes"))
         else:
             table.text_cell(_("Disabled"), _("no"))
@@ -811,7 +811,7 @@ class ModeEditSiteGlobals(ModeSites, GlobalSettingsMode):
                 return "edit_site_globals", msg
             return "edit_site_globals"
 
-        elif c == False:
+        elif c is False:
             return ""
 
         else:

@@ -92,7 +92,7 @@ class ModeLDAPConfig(LDAPMode):
                                  _("Deleted LDAP connection %s") % (connection["id"]))
                 del connections[index]
                 userdb.save_connection_config(connections)
-            elif c == False:
+            elif c is False:
                 return ""
             else:
                 return

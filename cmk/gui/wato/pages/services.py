@@ -363,7 +363,7 @@ class ModeDiscovery(WatoMode):
         # that are fine without an additional change.
         for service in services[:]:
             value_without_host_rule = ruleset.analyse_ruleset(self._host.name(), service)[0]
-            if (value == False and value_without_host_rule in [None, False]) \
+            if (not value and value_without_host_rule in [None, False]) \
                or value == value_without_host_rule:
                 services.remove(service)
 

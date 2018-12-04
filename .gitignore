@@ -11,6 +11,7 @@
 .coverage
 .directory
 .metadata
+.mypy_cache
 .ropeproject
 GPATH
 GRTAGS

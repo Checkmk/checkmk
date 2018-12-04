@@ -35,6 +35,8 @@ BUILD_PACKAGES += libncurses5-dev # compiling mod-gearman
 BUILD_PACKAGES += libpcap-dev # needed for CMC
 BUILD_PACKAGES += gettext # needed for german l10n
 BUILD_PACKAGES += libfreeradius-dev
+BUILD_PACKAGES += autoconf # needed for building googletest
+BUILD_PACKAGES += libtool # needed for building googletest
 #
 # Check_MK build specific packages below
 #

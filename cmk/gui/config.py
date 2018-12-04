@@ -75,7 +75,8 @@ config_dir = cmk.paths.var_dir + "/web"
 # Stores the initial configuration values
 default_config = {}
 
-# TODO: Clean this up
+# Global table of available permissions. Plugins may add their own
+# permissions by calling declare_permission()
 permission_declaration_functions = []
 
 # Constants for BI
@@ -318,9 +319,37 @@ def tag_group_title(tag):
 #   | Declarations of permissions and roles                                |
 #   '----------------------------------------------------------------------'
 
+
 # Kept for compatibility with pre 1.6 GUI plugins
-declare_permission = permissions.declare_permission
-declare_permission_section = permissions.declare_permission_section
+def declare_permission(name, title, description, defaults):
+    if isinstance(name, unicode):
+        name = name.encode("utf-8")
+
+    section_name, permission_name = name.split(".", 1)
+
+    cls = type(
+        "LegacyPermission%s%s" % (section_name.title(), permission_name.title()),
+        (permissions.Permission,), {
+            "_section_name": section_name,
+            "section": property(lambda s: permissions.permission_section_registry[s._section_name]),
+            "permission_name": permission_name,
+            "name": name,
+            "title": title,
+            "description": description,
+            "defaults": defaults,
+        })
+    permissions.permission_registry.register(cls)
+
+
+# Kept for compatibility with pre 1.6 GUI plugins
+def declare_permission_section(name, title, prio=50, do_sort=False):
+    cls = type("LegacyPermissionSection%s" % name.title(), (permissions.PermissionSection,), {
+        "name": name,
+        "title": title,
+        "sort_index": prio,
+        "do_sort": do_sort,
+    })
+    permissions.permission_section_registry.register(cls)
 
 
 # Some module have a non-fixed list of permissions. For example for
@@ -329,17 +358,19 @@ declare_permission_section = permissions.declare_permission_section
 # that purpose module can register functions. These functions should
 # just call declare_permission(). They are being called in the correct
 # situations.
-# TODO: Clean this up
 def declare_dynamic_permissions(func):
     permission_declaration_functions.append(func)
 
 
 # This function needs to be called by all code that needs access
 # to possible dynamic permissions
-# TODO: Clean this up
 def load_dynamic_permissions():
     for func in permission_declaration_functions:
         func()
+
+
+def permission_exists(pname):
+    return pname in permissions.permission_registry
 
 
 def get_role_permissions():

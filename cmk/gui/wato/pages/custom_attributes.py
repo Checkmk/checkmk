@@ -416,7 +416,7 @@ class ModeCustomAttrs(WatoMode):
                 save_custom_attrs_to_mk_file(self._all_attrs)
                 self._update_config()
                 add_change("edit-%sattrs" % self._type, _("Deleted attribute %s") % (delname))
-            elif c == False:
+            elif c is False:
                 return ""
 
     def page(self):

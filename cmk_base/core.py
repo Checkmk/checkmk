@@ -203,7 +203,7 @@ def check_timeperiod(timeperiod):
 
     # Note: This also returns True when the timeperiod is unknown
     #       The following function timeperiod_active handles this differently
-    return config_cache.get_dict("timeperiods_cache").get(timeperiod, True) == True
+    return config_cache.get_dict("timeperiods_cache").get(timeperiod, True)
 
 
 # Returns

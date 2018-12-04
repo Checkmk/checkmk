@@ -1126,8 +1126,7 @@ def do_system_backup(opts):
     do_system_data_backup(opts)
 
     def exclude_sites(opts):
-        return "without-sites" in opts \
-               or g_job_config.get("without_sites", False) == True
+        return "without-sites" in opts or g_job_config.get("without_sites", False)
 
     # Now run the site backup for all sites
     if not exclude_sites(opts):
@@ -1561,8 +1560,7 @@ def do_system_restore(opts, info):
     log("Finished system data restore")
 
     def exclude_sites(opts):
-        return "without-sites" in opts \
-               or g_job_config.get("without_sites", False) == True
+        return "without-sites" in opts or g_job_config.get("without_sites", False)
 
     if exclude_sites(opts):
         log("Skipping site restore (disabled)")

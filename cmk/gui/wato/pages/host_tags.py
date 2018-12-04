@@ -97,13 +97,13 @@ class ModeHostTags(WatoMode, watolib.HosttagsConfiguration):
                     operations = [x[0] for x in e[2]]
 
             message = rename_host_tags_after_confirmation(del_id, operations)
-            if message == True:  # no confirmation yet
+            if message is True:  # no confirmation yet
                 c = wato_confirm(
                     _("Confirm deletion of the host "
                       "tag group '%s'") % del_id,
                     _("Do you really want to delete the "
                       "host tag group '%s'?") % del_id)
-                if c == False:
+                if c is False:
                     return ""
                 elif c is None:
                     return None
@@ -135,13 +135,13 @@ class ModeHostTags(WatoMode, watolib.HosttagsConfiguration):
 
             operations = {del_id: False}
             message = rename_host_tags_after_confirmation(None, operations)
-            if message == True:  # no confirmation yet
+            if message is True:  # no confirmation yet
                 c = wato_confirm(
                     _("Confirm deletion of the auxiliary "
                       "tag '%s'") % del_id,
                     _("Do you really want to delete the "
                       "auxiliary tag '%s'?") % del_id)
-                if c == False:
+                if c is False:
                     return ""
                 elif c is None:
                     return None
@@ -762,7 +762,7 @@ def _change_host_tags_in_folders(tag_id, operations, mode, folder):
                     affected_folders.append(folder)
                     if mode != "check":
                         new_tag = operations[current]
-                        if new_tag == False:  # tag choice has been removed -> fall back to default
+                        if new_tag is False:  # tag choice has been removed -> fall back to default
                             del attributes[attrname]
                         else:
                             attributes[attrname] = new_tag
@@ -805,7 +805,7 @@ def _change_host_tags_in_hosts(folder, tag_id, operations, mode, hostlist):
                     affected_hosts.append(host)
                     if mode != "check":
                         new_tag = operations[attributes[attrname]]
-                        if new_tag == False:  # tag choice has been removed -> fall back to default
+                        if new_tag is False:  # tag choice has been removed -> fall back to default
                             del attributes[attrname]
                         else:
                             attributes[attrname] = new_tag

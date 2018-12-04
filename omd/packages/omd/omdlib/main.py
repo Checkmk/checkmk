@@ -172,7 +172,7 @@ def stop_logging():
 
 
 def show_success(exit_code):
-    if exit_code == True or exit_code == 0:
+    if exit_code is True or exit_code == 0:
         ok()
     else:
         sys.stdout.write(tty_error + "\n")

@@ -353,7 +353,7 @@ def _manpage_browser_folder(cat, subtrees):
         x = _dialog_menu(
             _("Man Page Browser"), _manpage_display_header(cat), choices, "0", _("Enter"),
             cat and _("Back") or _("Quit"))
-        if x[0] == True:
+        if x[0]:
             index = int(x[1])
             subcat = titles[index - 1][1]
             print_man_page_browser(cat + (subcat,))
@@ -373,7 +373,7 @@ def _manpage_browse_entries(cat, entries):
         x = _dialog_menu(
             _("Man Page Browser"), _manpage_display_header(cat), choices, "0", _("Show Manpage"),
             _("Back"))
-        if x[0] == True:
+        if x[0]:
             index = int(x[1]) - 1
             name = checks[index][1]
             print_man_page(name)

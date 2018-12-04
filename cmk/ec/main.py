@@ -2378,8 +2378,7 @@ class RuleMatcher(object):
         return True
 
     def event_rule_matches_ip(self, rule, event):
-        if match_ipv4_network(rule.get("match_ipaddress", "0.0.0.0/0"),
-                              event["ipaddress"]) is False:
+        if not match_ipv4_network(rule.get("match_ipaddress", "0.0.0.0/0"), event["ipaddress"]):
             if self._debug_rules:
                 self._logger.info(
                     "  did not match because of wrong source IP address '%s' (need '%s')" %

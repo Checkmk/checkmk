@@ -501,7 +501,7 @@ def extract_domains(tar, domains):
 
     def cleanup_domain(domain):
         # Some domains, e.g. authorization, do not get a cleanup
-        if domain.get("cleanup") == False:
+        if domain.get("cleanup") is False:
             return []
 
         def path_valid(prefix, path):
@@ -579,7 +579,7 @@ def extract_domains(tar, domains):
                                                                              traceback.format_exc())
                     errors.append(err_info)
                     logger.critical(err_info)
-                    if abort_on_error == False:
+                    if not abort_on_error:
                         # At this state, the restored data is broken.
                         # We still try to apply the rest of the snapshot
                         # Hopefully the log entry helps in identifying the problem..

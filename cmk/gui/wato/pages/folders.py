@@ -209,7 +209,7 @@ class ModeFolder(WatoMode):
         if c:
             self._folder.delete_subfolder(subfolder_name)  # pylint: disable=no-member
             return "folder"
-        elif c == False:  # not yet confirmed
+        elif c is False:  # not yet confirmed
             return ""
         return None  # browser reload
 
@@ -652,7 +652,7 @@ class ModeFolder(WatoMode):
         if c:
             self._folder.delete_hosts(host_names)
             return "folder", _("Successfully deleted %d hosts") % len(host_names)
-        elif c == False:  # not yet confirmed
+        elif c is False:  # not yet confirmed
             return ""
         return None  # browser reload
 
@@ -682,7 +682,7 @@ class ModeFolder(WatoMode):
               'representing their original folder location in the system '
               'you did the import from. Please make sure that you have '
               'done an <b>inventory</b> before moving the hosts.'))
-        if c == False:  # not yet confirmed
+        if c is False:  # not yet confirmed
             return ""
         elif not c:
             return None  # browser reload
@@ -741,7 +741,7 @@ def delete_host_after_confirm(delname):
         watolib.Folder.current().delete_hosts([delname])
         # Delete host files
         return "folder"
-    elif c == False:  # not yet confirmed
+    elif c is False:  # not yet confirmed
         return ""
     return None  # browser reload
 

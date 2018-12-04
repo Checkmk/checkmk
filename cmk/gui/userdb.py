@@ -1244,7 +1244,7 @@ def hook_login(username, password):
 
             return result
 
-        elif result == False:
+        elif result is False:
             return result
 
 

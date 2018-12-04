@@ -483,7 +483,7 @@ def page_handler():
             # This is e.g. the case, if the page outputted non-HTML
             # data, such as a tarball (in the export function). We must
             # be sure not to output *any* further data in that case.
-            if newmode == False:
+            if newmode is False:
                 return
 
             # if newmode is not None, then the mode has been changed

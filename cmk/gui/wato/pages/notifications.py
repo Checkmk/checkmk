@@ -774,7 +774,7 @@ class UserNotificationsMode(NotificationsMode):
                 self._add_change(
                     "notification-delete-user-rule",
                     _("Deleted notification rule %d of user %s") % (nr, self._user_id()))
-            elif c == False:
+            elif c is False:
                 return ""
             else:
                 return

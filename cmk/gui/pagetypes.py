@@ -870,7 +870,7 @@ class Overridable(Base):
                     cls.remove_instance((owner, delname))
                     cls.save_user_instances(owner)
                     html.reload_sidebar()
-                elif c == False:
+                elif c is False:
                     html.footer()
                     return
             except MKUserError as e:
@@ -878,12 +878,12 @@ class Overridable(Base):
 
         # Bulk delete
         if html.var("_bulk_delete_my") and html.transaction_valid():
-            if cls._bulk_delete_after_confirm("my") == False:
+            if cls._bulk_delete_after_confirm("my") is False:
                 html.footer()
                 return
 
         elif html.var("_bulk_delete_foreign") and html.transaction_valid():
-            if cls._bulk_delete_after_confirm("foreign") == False:
+            if cls._bulk_delete_after_confirm("foreign") is False:
                 html.footer()
                 return
 
@@ -1013,7 +1013,7 @@ class Overridable(Base):
                 cls.save_user_instances(owner)
 
             html.reload_sidebar()
-        elif c == False:
+        elif c is False:
             return False
 
     # Override this in order to display additional columns of an instance

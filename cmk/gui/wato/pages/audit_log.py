@@ -312,7 +312,7 @@ class ModeAuditLog(WatoMode):
         if c:
             self._clear_audit_log()
             return None, _("Cleared audit log.")
-        elif c == False:  # not yet confirmed
+        elif c is False:  # not yet confirmed
             return ""
         return None  # browser reload
 

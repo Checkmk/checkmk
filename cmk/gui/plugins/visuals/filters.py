@@ -669,7 +669,7 @@ class FilterServiceState(Filter):
             if self._filter_used() and check_result is None:
                 check_result = False
 
-            if check_result == False:
+            if check_result is False:
                 if self.prefix == "hd":
                     column = "service_last_hard_state"
                 else:
@@ -678,7 +678,7 @@ class FilterServiceState(Filter):
                                "Filter: service_has_been_checked = 1\n"
                                "And: 2\nNegate:\n" % (column, i))
 
-        if html.get_checkbox(self.prefix + "stp") == False:
+        if html.get_checkbox(self.prefix + "stp") is False:
             headers.append("Filter: service_has_been_checked = 1\n")
 
         if len(headers) == 5:  # none allowed = all allowed (makes URL building easier)
@@ -728,12 +728,12 @@ class FilterHostState(Filter):
             if self._filter_used() and check_result is None:
                 check_result = False
 
-            if check_result == False:
+            if check_result is False:
                 headers.append("Filter: host_state = %d\n"
                                "Filter: host_has_been_checked = 1\n"
                                "And: 2\nNegate:\n" % i)
 
-        if html.get_checkbox("hstp") == False:
+        if html.get_checkbox("hstp") is False:
             headers.append("Filter: host_has_been_checked = 1\n")
 
         if len(headers) == 4:  # none allowed = all allowed (makes URL building easier)
@@ -768,7 +768,7 @@ class FilterHostsHavingServiceProblems(Filter):
     def filter(self, infoname):
         headers = []
         for var in ["warn", "crit", "pending", "unknown"]:
-            if html.get_checkbox("hosts_having_services_%s" % var) == True:
+            if html.get_checkbox("hosts_having_services_%s" % var) is True:
                 headers.append("Filter: host_num_services_%s > 0\n" % var)
 
         len_headers = len(headers)

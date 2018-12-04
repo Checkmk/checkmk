@@ -1098,7 +1098,7 @@ class BaseFolder(WithPermissionsAndAttributes):
         return folders[::-1]
 
     def show_breadcrump(self, link_to_folder=False, keepvarnames=None):
-        if keepvarnames == True:
+        if keepvarnames is True:
             uri_func = html.makeuri
             keepvars = []
         else:
@@ -1161,7 +1161,7 @@ class BaseFolder(WithPermissionsAndAttributes):
                 "folder", [("", "")] + self.subfolder_choices(),
                 class_="folderpath",
                 onchange="folderpath.submit();")
-            if keepvarnames == True:
+            if keepvarnames is True:
                 html.hidden_fields()
             else:
                 for var in keepvarnames:
@@ -2503,7 +2503,7 @@ class CREFolder(BaseFolder):
         lock_messages = []
 
         # Locked hosts
-        if self._locked_hosts == True:
+        if self._locked_hosts is True:
             lock_messages.append(
                 _("Host attributes are locked "
                   "(You cannot create, edit or delete hosts in this folder)"))
@@ -2511,7 +2511,7 @@ class CREFolder(BaseFolder):
             lock_messages.append(self._locked_hosts)
 
         # Locked folder attributes
-        if self._locked == True:
+        if self._locked is True:
             lock_messages.append(
                 _("Folder attributes are locked "
                   "(You cannot edit the attributes of this folder)"))
@@ -8796,7 +8796,7 @@ class RuleComment(TextAreaUnicode):
 def read_only_message():
     text = _("The configuration is currently in read only mode. ")
 
-    if config.wato_read_only["enabled"] == True:
+    if config.wato_read_only["enabled"] is True:
         text += _("The read only mode is enabled until it is turned of manually. ")
 
     elif isinstance(config.wato_read_only['enabled'], tuple):
@@ -8816,7 +8816,7 @@ def is_read_only_mode_enabled():
         return False
 
     enabled = False
-    if config.wato_read_only["enabled"] == True:
+    if config.wato_read_only["enabled"] is True:
         enabled = True
     elif isinstance(config.wato_read_only['enabled'], tuple):
         start_time, end_time = config.wato_read_only['enabled']

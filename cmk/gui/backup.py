@@ -1056,7 +1056,7 @@ class PageBackupTargets(object):
             confirm = html.confirm(
                 _("Do you really want to delete this target?"), add_header=self.title())
 
-            if confirm == False:
+            if confirm is False:
                 return False
 
             elif confirm:
@@ -1594,7 +1594,7 @@ class PageBackupRestore(object):
         confirm = html.confirm(
             _("Do you really want to delete this backup?"), add_header=self.title(), method="GET")
 
-        if confirm == False:
+        if confirm is False:
             return False
 
         elif confirm:
@@ -1687,7 +1687,7 @@ class PageBackupRestore(object):
             _("Do you really want to start the restore of this backup?"),
             add_header=self.title(),
             method="GET")
-        if confirm == False:
+        if confirm is False:
             return False
 
         elif confirm:
@@ -1702,7 +1702,7 @@ class PageBackupRestore(object):
             add_header=self.title(),
             method="GET")
 
-        if confirm == False:
+        if confirm is False:
             return False
 
         elif confirm:

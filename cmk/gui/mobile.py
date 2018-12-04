@@ -135,7 +135,7 @@ def jqm_page_navfooter(items, current, page_id):
 
     for href, title, icon, custom_css in items:
         href = html.makeuri([("page", href), ("search", "Search")])
-        if custom_css == False:
+        if custom_css is False:
             custom_css = ""
         if current == href:
             custom_css += ' ui-state-persist ui-btn-active'

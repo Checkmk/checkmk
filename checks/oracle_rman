@@ -51,7 +51,7 @@ def parse_oracle_rman(info):
 
         # Check for query errors
         err = oracle_handle_ora_errors(line)
-        if err == False:
+        if err is False:
             continue  # ignore ancient agent outputs
         elif isinstance(err, tuple):
             sid = line[0]

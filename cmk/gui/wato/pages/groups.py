@@ -95,7 +95,7 @@ class ModeGroups(WatoMode):
             if c:
                 watolib.delete_group(delname, self.type_name)
                 self._load_groups()
-            elif c == False:
+            elif c is False:
                 return ""
 
         return None

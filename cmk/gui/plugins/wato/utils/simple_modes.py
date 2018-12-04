@@ -175,7 +175,7 @@ class SimpleListMode(SimpleWatoModeBase):
             return
 
         confirm = wato_confirm(_("Confirm deletion"), self._delete_confirm_message())
-        if confirm == False:
+        if confirm is False:
             return False
 
         elif not confirm:

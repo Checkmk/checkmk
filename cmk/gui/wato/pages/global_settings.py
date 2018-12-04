@@ -233,7 +233,7 @@ class EditGlobalSettingMode(WatoMode):
                     _("Resetting configuration variable"),
                     _("Do you really want to reset this configuration variable "
                       "back to its default value?"))
-                if c == False:
+                if c is False:
                     return ""
                 elif c is None:
                     return None
@@ -399,7 +399,7 @@ class ModeEditGlobals(GlobalSettingsMode):
             if action == "_reset":
                 return "globalvars", msg
             return "globalvars"
-        elif c == False:
+        elif c is False:
             return ""
 
     def page(self):

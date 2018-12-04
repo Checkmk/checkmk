@@ -2583,7 +2583,7 @@ class html(HTMLGenerator):
                 self.close_b()
                 self.br()
 
-            indent_style = "padding-left: %dpx; " % (indent == True and 15 or 0)
+            indent_style = "padding-left: %dpx; " % (indent is True and 15 or 0)
             if indent == "form":
                 self.close_td()
                 self.close_tr()

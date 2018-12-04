@@ -1367,10 +1367,10 @@ def page_delete_dashlet():
 
     result = html.confirm(
         _('Do you really want to delete this dashlet?'), method='GET', add_transid=True)
-    if result == False:
+    if result is False:
         html.footer()
         return  # confirm dialog shown
-    elif result == True:  # do it!
+    elif result is True:  # do it!
         try:
             dashboard['dashlets'].pop(ident)
             dashboard['mtime'] = int(time.time())

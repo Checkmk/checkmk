@@ -681,7 +681,7 @@ define servicegroup {
 
 
 def _create_nagios_config_contactgroups(outfile):
-    if config.define_contactgroups == False:
+    if config.define_contactgroups is False:
         return
 
     cgs = list(contactgroups_to_define)

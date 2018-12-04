@@ -556,7 +556,7 @@ class ModeEditRuleset(WatoMode):
                 ruleset.delete_rule(rule)
                 rulesets.save()
                 return
-            elif c == False:  # not yet confirmed
+            elif c is False:  # not yet confirmed
                 return ""
             return None  # browser reload
 

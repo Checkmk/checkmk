@@ -884,7 +884,7 @@ register_rule(
                                      ],
                                      default_value="auto",
                                  ),
-                                 forth=lambda x: x == True and "auto" or x,
+                                 forth=lambda x: x is True and "auto" or x,
                              )),
                             ("sni",
                              FixedValue(

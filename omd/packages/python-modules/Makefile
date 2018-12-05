@@ -192,9 +192,14 @@ unpack:
 	    patch -p1 -b -d dest < $$p ; \
 	done
 
+# NOTE: Setting SODIUM_INSTALL variable below is an extremely cruel hack to
+# avoid installing libsodium headers and libraries. The need for this hack
+# arises because of our "interesting" flag use for "setup.py install" and our
+# double installation. We should really switch to e.g. pipenv here.
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/python
 	set -e ; cd dest && \
+	    export SODIUM_INSTALL="system" ; \
 	    export PYTHONPATH=$$PYTHONPATH:"$(PACKAGE_PYTHON_MODULES_PYTHONPATH)" ; \
 	    export PYTHONPATH=$$PYTHONPATH:"$(PACKAGE_PYTHON_PYTHONPATH)" ; \
 	    export CPATH="$(PACKAGE_FREETDS_DESTDIR)/include" ; \

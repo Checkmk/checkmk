@@ -30,14 +30,17 @@ def parse_k8s_resources(info):
     return json.loads(info[0][0])
 
 
+def get_k8s_resources_inventory_function(name):
+    def inventory_function(parsed):
+        if parsed.get('capacity', {}).get(name):
+            return [(None, {})]
+
+    return inventory_function
+
+
 check_info['k8s_resources'] = {
     'parse_function': parse_k8s_resources,
 }
-
-
-def inventory_k8s_pod_resources(parsed):
-    if parsed.get('capacity', {}).get('pods'):
-        return [(None, {})]
 
 
 def check_k8s_pod_resources(_no_item, params, parsed):
@@ -61,17 +64,12 @@ def check_k8s_pod_resources(_no_item, params, parsed):
 
 
 check_info['k8s_resources.pods'] = {
-    'inventory_function': inventory_k8s_pod_resources,
+    'inventory_function': get_k8s_resources_inventory_function('pods'),
     'check_function': check_k8s_pod_resources,
     'service_description': 'Pod resources',
     'has_perfdata': True,
     'group': 'k8s_resources',
 }
-
-
-def inventory_k8s_cpu_resources(parsed):
-    if parsed.get('capacity', {}).get('cpu'):
-        return [(None, {})]
 
 
 def check_k8s_cpu_resources(_no_item, params, parsed):
@@ -101,17 +99,12 @@ def check_k8s_cpu_resources(_no_item, params, parsed):
 
 
 check_info['k8s_resources.cpu'] = {
-    'inventory_function': inventory_k8s_cpu_resources,
+    'inventory_function': get_k8s_resources_inventory_function('cpu'),
     'check_function': check_k8s_cpu_resources,
     'service_description': 'CPU resources',
     'has_perfdata': True,
     'group': 'k8s_resources',
 }
-
-
-def inventory_k8s_mem_resources(parsed):
-    if parsed.get('capacity', {}).get('memory'):
-        return [(None, {})]
 
 
 def check_k8s_mem_resources(_no_item, params, parsed):
@@ -143,7 +136,7 @@ def check_k8s_mem_resources(_no_item, params, parsed):
 
 
 check_info['k8s_resources.memory'] = {
-    'inventory_function': inventory_k8s_mem_resources,
+    'inventory_function': get_k8s_resources_inventory_function('memory'),
     'check_function': check_k8s_mem_resources,
     'service_description': 'Memory resources',
     'has_perfdata': True,

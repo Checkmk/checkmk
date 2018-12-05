@@ -65,7 +65,7 @@ register_rule(group,
     ),
     match="first",
     title=_(u"DDN S2A"),
-)
+             )
 
 register_rule(group,
     "special_agents:vsphere",
@@ -354,14 +354,15 @@ register_rule(group,
               "<tt>~/share/check_mk/agents/special</tt>."),
     match = 'first')
 
+
 def transform_activemq(value):
     if not isinstance(value, tuple):
         return value
 
     new_value = {}
-    new_value["servername"]    = value[0]
-    new_value["port"]          = value[1]
-    new_value["use_piggyback"] = "piggybag" in value[2] # piggybag...
+    new_value["servername"] = value[0]
+    new_value["port"] = value[1]
+    new_value["use_piggyback"] = "piggybag" in value[2]  # piggybag...
     return new_value
 
 
@@ -646,7 +647,7 @@ register_rule(group,
     ),
     factory_default = watolib.Rulespec.FACTORY_DEFAULT_UNUSED,
     match = "first",
-)
+             )
 
 register_rule(group,
     "special_agents:allnet_ip_sensoric",
@@ -840,7 +841,7 @@ register_rule(group,
                             ),
                             title = _("Values to fetch from this device"),
                             validate = validate_siemens_plc_values,
-                            magic = '@?@',
+                            magic = '@;@',
                         )),
                     ],
                     optional_keys = ["timeout"],
@@ -922,7 +923,6 @@ register_rule(group,
     help = _("This rule selects the Agent Ruckus Spot agent instead of the normal Check_MK Agent "
              "which collects the data through the Ruckus Spot web interface"),
     match = 'first')
-
 
 group = 'datasource_programs'
 register_rule(group,
@@ -1105,7 +1105,7 @@ register_rule(group,
     ),
     title = _("Nutanix Prism"),
     match = 'first'
-)
+             )
 
 
 def _transform_3par_add_verify_cert(v):
@@ -1147,7 +1147,7 @@ register_rule("datasource_programs",
     ),
     title = _("Agent 3PAR Configuration"),
     match = 'first',
-)
+             )
 
 register_rule(
     group,

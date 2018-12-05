@@ -296,12 +296,13 @@ def format_process_list(processes, html_output):
 def parse_ps_time(text):
     if "-" in text:
         tokens = text.split("-")
-        days = int(tokens[0])
+        days = int(tokens[0] or 0)
         text = tokens[1]
     else:
         days = 0
 
-    day_secs = sum([factor * int(v) for factor, v in zip([1, 60, 3600], reversed(text.split(":")))])
+    day_secs = sum(
+        [factor * int(v or 0) for factor, v in zip([1, 60, 3600], reversed(text.split(":")))])
 
     return 86400 * days + day_secs
 
@@ -636,6 +637,8 @@ class ProcessAggregator(object):
             process.append(("pid", (pid, "")))
 
         else:  # Solaris, BSD, aix cpu times
+            if pcpu_text == '-':  # Solaris defunct
+                pcpu_text = 0.0
             pcpu = float(pcpu_text) * self.core_weight(is_win=False)
 
         self.percent_cpu += pcpu

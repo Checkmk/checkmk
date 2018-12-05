@@ -1,0 +1,18 @@
+Title: cmk-update-agent: Apply urllib3 bugfix
+Level: 1
+Component: agents
+Compatible: compat
+Edition: cee
+Version: 1.6.0i1
+Date: 1544009907
+Class: fix
+
+It has been observed recently that the agent updater might crash
+with an error message  like
+<pre>IDNAError: The label ... is not a valid A-label</pre>
+
+The cause for this behavior is a bug in the underlying urllib3
+python module. However, this has been fixed in a newer urrllib-version
+and hence we updated the underlying python modules to newer versions
+in order to apply the bugfix to cmk-update-agent.
+

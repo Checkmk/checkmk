@@ -3899,6 +3899,10 @@ class PasswordSpec(Password):
         self.password_plaintext_warning()
 
 
+def passwordstore_choices():
+    import wato
+    return [(ident, pw["title"]) for ident, pw
+            in wato.PasswordStore().usable_passwords().items()]
 
 
 class PasswordFromStore(CascadingDropdown):
@@ -4786,5 +4790,3 @@ class TimeperiodValuespec(ValueSpec):
             return value.get(self.tp_default_value_key)
         else:
             return value
-
-

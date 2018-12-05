@@ -25,20 +25,222 @@
 # Boston, MA 02110-1301 USA.
 """Mode for automatic scan of parents (similar to cmk --scan-parents)"""
 
-import json
-import traceback
+import collections
 
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
 import cmk.gui.utils as utils
-
-from cmk.gui.plugins.wato.utils import mode_registry
-from cmk.gui.plugins.wato.utils.base_modes import WatoMode
-
+import cmk.gui.gui_background_job as gui_background_job
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
-from cmk.gui.wato.pages.progress import interactive_progress
+from cmk.gui.log import logger
+from cmk.gui.exceptions import MKUserError
+from cmk.gui.plugins.wato import (
+    mode_registry,
+    WatoMode,
+    WatoBackgroundJob,
+)
+
+ParentScanTask = collections.namedtuple("ParentScanTask", ["site_id", "folder_path", "host_name"])
+ParentScanResult = collections.namedtuple("ParentScanResult",
+                                          ["existing_gw_host_name", "ip", "dns_name"])
+
+
+# TODO: This job should be executable multiple times at once
+@gui_background_job.job_registry.register
+class ParentScanBackgroundJob(WatoBackgroundJob):
+    job_prefix = "parent_scan"
+    gui_title = _("Parent scan")
+
+    def __init__(self):
+        kwargs = {}
+        kwargs["title"] = _("Parent scan")
+        kwargs["lock_wato"] = False
+        kwargs["deletable"] = False
+        kwargs["stoppable"] = False
+
+        super(ParentScanBackgroundJob, self).__init__(self.job_prefix, **kwargs)
+
+    def _back_url(self):
+        return watolib.Folder.current().url()
+
+    def do_execute(self, settings, tasks, job_interface=None):
+        self._initialize_statistics()
+        self._logger.info(_("Parent scan started..."))
+
+        for task in tasks:
+            self._process_task(task, settings)
+
+        self._logger.info(_("Summary:"))
+        for title, value in [(_("Total hosts"), self._num_hosts_total),
+                             (_("Gateways found"), self._num_gateways_found),
+                             (_("Directly reachable hosts"), self._num_directly_reachable_hosts),
+                             (_("Unreachable gateways"), self._num_unreachable_gateways),
+                             (_("No gateway found"), self._num_no_gateway_found),
+                             (_("New parents configured"), self._num_new_parents_configured),
+                             (_("Gateway hosts created"), self._num_gateway_hosts_created),
+                             (_("Errors"), self._num_errors)]:
+            self._logger.info("  %s: %d" % (title, value))
+
+        job_interface.send_result_message(_("Parent scan finished"))
+
+    def _initialize_statistics(self):
+        self._num_hosts_total = 0
+        self._num_gateways_found = 0
+        self._num_directly_reachable_hosts = 0
+        self._num_unreachable_gateways = 0
+        self._num_no_gateway_found = 0
+        self._num_new_parents_configured = 0
+        self._num_gateway_hosts_created = 0
+        self._num_errors = 0
+
+    def _process_task(self, task, settings):
+        self._num_hosts_total += 1
+
+        try:
+            self._process_parent_scan_results(task, settings,
+                                              self._execute_parent_scan(task, settings))
+        except Exception as e:
+            self._num_errors += 1
+            if task.site_id:
+                msg = _("ERROR %s on site %s: %s") % (task.host_name, task.site_id, e)
+            else:
+                msg = _("ERROR %s: %s") % (task.host_name, e)
+
+            if isinstance(e, MKUserError):
+                self._logger.error(msg)
+            else:
+                self._logger.exception(msg)
+
+    def _execute_parent_scan(self, task, settings):
+        params = map(str, [
+            settings["timeout"],
+            settings["probes"],
+            settings["max_ttl"],
+            settings["ping_probes"],
+        ])
+        return watolib.check_mk_automation(task.site_id, "scan-parents", params + [task.host_name])
+
+    def _process_parent_scan_results(self, task, settings, gateways):
+        gateway = ParentScanResult(*gateways[0][0])
+        state, skipped_gateways, error = gateways[0][1:]
+
+        if state in ["direct", "root", "gateway"]:
+            try:
+                # The following code updates the host config. The progress from loading the WATO folder
+                # until it has been saved needs to be locked.
+                watolib.lock_exclusive()
+                self._configure_host_and_gateway(task, settings, state, gateway)
+            finally:
+                watolib.unlock_exclusive()
+        else:
+            self._logger.error(error)
+
+        if gateway:
+            self._num_gateways_found += 1
+
+        if state in ["direct", "root"]:
+            self._num_directly_reachable_hosts += 1
+
+        self._num_unreachable_gateways += skipped_gateways
+
+        if state == "notfound":
+            self._num_no_gateway_found += 1
+
+        if state in ["failed", "dnserror", "garbled"]:
+            self._num_errors += 1
+
+    def _configure_host_and_gateway(self, task, settings, state, gateway):
+        watolib.Folder.invalidate_caches()
+        folder = watolib.Folder.folder(task.folder_path)
+
+        parents = self._configure_gateway(task, settings, gateway, folder)
+
+        host = folder.host(task.host_name)
+        if host.effective_attribute("parents") == parents:
+            self._logger.info(
+                _("Parents unchanged at %s"), (",".join(parents) if parents else _("none")))
+            return
+
+        if settings["force_explicit"] or host.folder().effective_attribute("parents") != parents:
+            host.update_attributes({"parents": parents})
+        else:
+            # Check which parents the host would have inherited
+            if host.has_explicit_attribute("parents"):
+                host.clean_attributes(["parents"])
+
+        if parents:
+            self._logger.info(_("Set parents to %s"), ",".join(parents))
+        else:
+            self._logger.info(_("Removed parents"))
+
+        self._num_new_parents_configured += 1
+
+    def _configure_gateway(self, task, settings, gateway, folder):
+        """Ensure there is a gateway host in the Check_MK configuration (or raise an exception)
+
+        If we have found a gateway, we need to know a matching host name from our configuration.
+        If there is none, we can create one, if the users wants this. The automation for the parent
+        scan already tries to find such a host within the site."""
+        if not gateway:
+            return []
+
+        if gateway.existing_gw_host_name:
+            return [gateway.existing_gw_host_name]  # Nothing needs to be created
+
+        if settings["where"] == "nowhere":
+            raise MKUserError(None, _("Need parent %s, but not allowed to create one") % gateway.ip)
+
+        gw_folder = self._determine_gateway_folder(settings["where"], folder)
+        gw_host_name = self._determine_gateway_host_name(task, gateway)
+        gw_host_attributes = self._determine_gateway_attributes(task, settings, gateway, gw_folder)
+
+        gw_folder.create_hosts([(gw_host_name, gw_host_attributes, None)])
+        self._num_gateway_hosts_created += 1
+
+        return [gw_host_name]
+
+    def _determine_gateway_folder(self, where, folder):
+        if where == "here":  # directly in current folder
+            return watolib.Folder.current_disk_folder()
+
+        if where == "subfolder":
+            current = watolib.Folder.current_disk_folder()
+
+            # Put new gateways in subfolder "Parents" of current
+            # folder. Does this folder already exist?
+            if current.has_subfolder("parents"):
+                return current.subfolder("parents")
+            # Create new gateway folder
+            return current.create_subfolder("parents", _("Parents"), {})
+
+        if where == "there":  # In same folder as host
+            return folder
+
+        raise NotImplementedError()
+
+    def _determine_gateway_host_name(self, task, gateway):
+        if gateway.dns_name:
+            return gateway.dns_name
+
+        if task.site_id:
+            return "gw-%s-%s" % (task.site_id, gateway.ip.replace(".", "-"))
+
+        return "gw-%s" % (gateway.ip.replace(".", "-"))
+
+    def _determine_gateway_attributes(self, task, settings, gateway, gw_folder):
+        new_host_attributes = {
+            "ipaddress": gateway.ip,
+        }
+
+        if settings["alias"]:
+            new_host_attributes["alias"] = settings["alias"]
+
+        if gw_folder.site_id() != task.site_id:
+            new_host_attributes["site"] = task.site_id
+
+        return new_host_attributes
 
 
 @mode_registry.register
@@ -58,6 +260,12 @@ class ModeParentScan(WatoMode):
         html.context_button(_("Folder"), watolib.Folder.current().url(), "back")
 
     def _from_vars(self):
+        self._start = bool(html.var("_start"))
+        # 'all' not set -> only scan checked hosts in current folder, no recursion
+        # otherwise: all host in this folder, maybe recursively
+        self._all = bool(html.var("all"))
+        self._complete_folder = self._all
+
         # Ignored during initial form display
         # TODO: Make dedicated class or class members
         self._settings = {
@@ -71,191 +279,88 @@ class ModeParentScan(WatoMode):
             "force_explicit": html.get_checkbox("force_explicit"),
             "ping_probes": utils.saveint(html.var("ping_probes")) or 0,
         }
-
-        if not html.var("all"):
-            # 'all' not set -> only scan checked hosts in current folder, no recursion
-            self._complete_folder = False
-            self._items = []
-            for host in watolib.get_hosts_from_checkboxes():
-                if self._include_host(host, self._settings["select"]):
-                    self._items.append("%s|%s" % (host.folder().path(), host.name()))
-
-        else:
-            # all host in this folder, maybe recursively
-            self._complete_folder = True
-            self._items = []
-            for host in self._recurse_hosts(watolib.Folder.current(), self._settings["recurse"],
-                                            self._settings["select"]):
-                self._items.append("%s|%s" % (host.folder().path(), host.name()))
+        self._job = ParentScanBackgroundJob()
 
     def action(self):
-        if not html.var("_item"):
-            return
-
         try:
-            folderpath, host_name = html.var("_item").split("|")
-            folder = watolib.Folder.folder(folderpath)
-            host = folder.host(host_name)
-            site_id = host.site_id()
-            params = map(str, [
-                self._settings["timeout"], self._settings["probes"], self._settings["max_ttl"],
-                self._settings["ping_probes"]
-            ])
-            gateways = watolib.check_mk_automation(site_id, "scan-parents", params + [host_name])
-            gateway, state, skipped_gateways, error = gateways[0]
+            html.check_transaction()
+            config.user.save_file("parentscan", self._settings)
 
-            if state in ["direct", "root", "gateway"]:
-                message, pconf, gwcreat = \
-                    self._configure_gateway(state, site_id, host, gateway)
-            else:
-                message = error
-                pconf = False
-                gwcreat = False
-
-            # Possible values for state are:
-            # failed, dnserror, garbled, root, direct, notfound, gateway
-            counts = [
-                'continue',
-                1,  # Total hosts
-                1 if gateway else 0,  # Gateways found
-                1 if state in ["direct", "root"] else 0,  # Directly reachable hosts
-                skipped_gateways,  # number of failed PING probes
-                1 if state == "notfound" else 0,  # No gateway found
-                1 if pconf else 0,  # New parents configured
-                1 if gwcreat else 0,  # Gateway hosts created
-                1 if state in ["failed", "dnserror", "garbled"] else 0,  # Errors
-            ]
-            result = "%s\n%s: %s<br>\n" % (json.dumps(counts), host_name, message)
-
+            self._job.set_function(self._job.do_execute, self._settings, self._get_tasks())
+            self._job.start()
         except Exception as e:
-            result = json.dumps(['failed', 1, 0, 0, 0, 0, 0, 1]) + "\n"
-            if site_id:
-                msg = _("Error during parent scan of %s on site %s: %s") % (host_name, site_id, e)
-            else:
-                msg = _("Error during parent scan of %s: %s") % (host_name, e)
             if config.debug:
-                msg += html.render_br()
-                msg += html.render_pre(traceback.format_exc().replace("\n", "<br>"))
-                msg += html.render_br()
-            result += msg
-        html.write(result)
-        return ""
+                raise
+            logger.exception("Failed to start parent scan")
+            raise MKUserError(
+                None,
+                _("Failed to start parent scan: %s") % ("%s" % e).replace("\n", "\n<br>"))
 
-    def _configure_gateway(self, state, site_id, host, gateway):
-        # Settings for configuration and gateway creation
-        force_explicit = html.get_checkbox("force_explicit")
-        where = html.var("where")
-        alias = html.var("alias")
+        html.response.http_redirect(self._job.detail_url())
 
-        # If we have found a gateway, we need to know a matching
-        # host name from our configuration. If there is none,
-        # we can create one, if the users wants this. The automation
-        # for the parent scan already tries to find such a host
-        # within the site.
-        gwcreat = False
+    def _get_tasks(self):
+        if not html.var("all"):
+            return self._get_current_folder_host_tasks()
+        return self._get_folder_tasks()
 
-        if gateway:
-            gw_host_name, gw_ip, dns_name = gateway
-            if not gw_host_name:
-                if where == "nowhere":
-                    return _("No host %s configured, parents not set") % gw_ip, \
-                        False, False
+    def _get_current_folder_host_tasks(self):
+        """only scan checked hosts in current folder, no recursion"""
+        tasks = []
+        for host in watolib.get_hosts_from_checkboxes():
+            if self._include_host(host, self._settings["select"]):
+                tasks.append(ParentScanTask(host.site_id(), host.folder().path(), host.name()))
+        return tasks
 
-                # Determine folder where to create the host.
-                elif where == "here":  # directly in current folder
-                    gw_folder = watolib.Folder.current_disk_folder()
+    def _get_folder_tasks(self):
+        """all host in this folder, probably recursively"""
+        tasks = []
+        for host in self._recurse_hosts(watolib.Folder.current(), self._settings["recurse"],
+                                        self._settings["select"]):
+            tasks.append(ParentScanTask(host.site_id(), host.folder().path(), host.name()))
+        return tasks
 
-                elif where == "subfolder":
-                    current = watolib.Folder.current_disk_folder()
-                    # Put new gateways in subfolder "Parents" of current
-                    # folder. Does this folder already exist?
-                    if current.has_subfolder("parents"):
-                        gw_folder = current.subfolder("parents")
-                    else:
-                        # Create new gateway folder
-                        gw_folder = current.create_subfolder("parents", _("Parents"), {})
+    # select: 'noexplicit' -> no explicit parents
+    #         'no'         -> no implicit parents
+    #         'ignore'     -> not important
+    def _include_host(self, host, select):
+        if select == 'noexplicit' and host.has_explicit_attribute("parents"):
+            return False
+        elif select == 'no':
+            if host.effective_attribute("parents"):
+                return False
+        return True
 
-                elif where == "there":  # In same folder as host
-                    gw_folder = host.folder()
+    def _recurse_hosts(self, folder, recurse, select):
+        entries = []
+        for host in folder.hosts().values():
+            if self._include_host(host, select):
+                entries.append(host)
 
-                # Create gateway host
-                if dns_name:
-                    gw_host_name = dns_name
-                elif site_id:
-                    gw_host_name = "gw-%s-%s" % (site_id, gw_ip.replace(".", "-"))
-                else:
-                    gw_host_name = "gw-%s" % (gw_ip.replace(".", "-"))
-
-                new_host_attributes = {"ipaddress": gw_ip}
-                if alias:
-                    new_host_attributes["alias"] = alias
-                if gw_folder.site_id() != site_id:
-                    new_host_attributes["site"] = site_id
-
-                gw_folder.create_hosts([(gw_host_name, new_host_attributes, None)])
-                gwcreat = True
-
-            parents = [gw_host_name]
-
-        else:
-            parents = []
-
-        if host.effective_attribute("parents") == parents:
-            return _("Parents unchanged at %s") %  \
-                    (",".join(parents) if parents else _("none")), False, gwcreat
-
-        if force_explicit or host.folder().effective_attribute("parents") != parents:
-            host.update_attributes({"parents": parents})
-        else:
-            # Check which parents the host would have inherited
-            if host.has_explicit_attribute("parents"):
-                host.clean_attributes(["parents"])
-
-        if parents:
-            message = _("Set parents to %s") % ",".join(parents)
-        else:
-            message = _("Removed parents")
-
-        return message, True, gwcreat
+        if recurse:
+            for subfolder in folder.all_subfolders().values():
+                entries += self._recurse_hosts(subfolder, recurse, select)
+        return entries
 
     def page(self):
-        if html.var("_start"):
-            self._show_progress_dialog()
-        else:
-            self._show_parameter_form()
+        job_status_snapshot = self._job.get_status_snapshot()
+        if job_status_snapshot.is_running():
+            html.message(
+                _("Parent scan currently running in <a href=\"%s\">background</a>.") %
+                self._job.detail_url())
+            return
 
-    def _show_progress_dialog(self):
-        # Persist settings
-        config.user.save_file("parentscan", self._settings)
+        self._show_start_form()
 
-        # Start interactive progress
-        interactive_progress(
-            self._items,
-            _("Parent scan"),  # title
-            [
-                (_("Total hosts"), 0),
-                (_("Gateways found"), 0),
-                (_("Directly reachable hosts"), 0),
-                (_("Unreachable gateways"), 0),
-                (_("No gateway found"), 0),
-                (_("New parents configured"), 0),
-                (_("Gateway hosts created"), 0),
-                (_("Errors"), 0),
-            ],
-            [("mode", "folder")],  # URL for "Stop/Finish" button
-            50,  # ms to sleep between two steps
-            fail_stats=[1],
-        )
-
-    def _show_parameter_form(self):
+    # TODO: Refactor to be valuespec based
+    def _show_start_form(self):
         html.begin_form("parentscan", method="POST")
         html.hidden_fields()
 
         # Mode of action
         html.open_p()
         if not self._complete_folder:
-            html.write_text(
-                _("You have selected <b>%d</b> hosts for parent scan. ") % len(self._items))
+            num_selected = len(watolib.get_hosts_from_checkboxes())
+            html.write_text(_("You have selected <b>%d</b> hosts for parent scan. ") % num_selected)
         html.p(
             _("The parent scan will try to detect the last gateway "
               "on layer 3 (IP) before a host. This will be done by "
@@ -370,28 +475,9 @@ class ModeParentScan(WatoMode):
         html.write_text(_("Alias for created gateway hosts") + ": ")
         html.text_input("alias", self._settings["alias"])
 
-        # Start button
         forms.end()
+
+        # Start button
         html.button("_start", _("Start"))
-
-    # select: 'noexplicit' -> no explicit parents
-    #         'no'         -> no implicit parents
-    #         'ignore'     -> not important
-    def _include_host(self, host, select):
-        if select == 'noexplicit' and host.has_explicit_attribute("parents"):
-            return False
-        elif select == 'no':
-            if host.effective_attribute("parents"):
-                return False
-        return True
-
-    def _recurse_hosts(self, folder, recurse, select):
-        entries = []
-        for host in folder.hosts().values():
-            if self._include_host(host, select):
-                entries.append(host)
-
-        if recurse:
-            for subfolder in folder.all_subfolders().values():
-                entries += self._recurse_hosts(subfolder, recurse, select)
-        return entries
+        html.hidden_fields()
+        html.end_form()

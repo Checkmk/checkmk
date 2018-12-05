@@ -1,11 +1,10 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-import pytest
 import time
 import os
-import sys
-from testlib import web, WatchLog
+import pytest
+from testlib import web, WatchLog, wait_until # pylint: disable=unused-import
 
 STATE_UP          = 0
 STATE_DOWN        = 1
@@ -101,7 +100,14 @@ def initial_state(site, scenario):
 
     # Before each test: Clear logs
     if scenario.core == "cmc":
+        # The command is processed asynchronously -> Wait for completion
+        inode_before = os.stat(site.path("var/check_mk/core/history")).st_ino
         site.live.command("[%d] ROTATE_LOGFILE" % time.time())
+
+        def rotated_log():
+            return inode_before != os.stat(site.path("var/check_mk/core/history")).st_ino
+
+        wait_until(rotated_log, timeout=10)
     else:
         site.delete_file("var/nagios/nagios.log")
 
@@ -404,7 +410,7 @@ def test_down_child_becomes_unreachable_and_down_again(scenario, site, initial_s
 
     # - Next child check DOWN
     #   cmc: expect no notification (till next parent check confirms UP)
-    #   nagios: expect notification without 
+    #   nagios: expect notification without
     site.send_host_check_result("notify-test-child", STATE_DOWN, "DOWN")
     log.check_logged("HOST ALERT: notify-test-child;DOWN;HARD;1;")
 

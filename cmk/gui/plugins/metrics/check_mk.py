@@ -4370,7 +4370,7 @@ metric_info["k8s_nodes"] = {
     "color": "11/a",
 }
 
-metric_info["k8s_pods"] = {
+metric_info["k8s_pods_request"] = {
     "title": _("Pods"),
     "unit": "count",
     "color": "16/b",
@@ -8152,7 +8152,7 @@ graph_info["k8s_resources.pods"] = {
     "metrics": [
         ("k8s_pods_capacity", "area"),
         ("k8s_pods_allocatable", "area"),
-        ("k8s_pods", "area"),
+        ("k8s_pods_request", "area"),
     ],
 }
 

@@ -26,7 +26,7 @@ checks = {
         (0, 'Usage: 0.0%', [('k8s_memory_usage', 0.0)]),
     ])],
     'pods': [(None, 'default', [
-        (0, 'Pods: 0', [('k8s_pods', 0)]),
+        (0, 'Request: 0', [('k8s_pods_request', 0)]),
         (0, 'Allocatable: 110', [('k8s_pods_allocatable', 110)]),
         (0, 'Capacity: 110', [('k8s_pods_capacity', 110)]),
         (0, 'Usage: 0.0%', [('k8s_pods_usage', 0.0)]),

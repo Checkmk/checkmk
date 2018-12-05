@@ -10,6 +10,7 @@ pytest.register_assert_rewrite(
     "unit.cmk.gui.tools")
 
 import _pytest.monkeypatch
+import re
 import collections
 import errno
 import os
@@ -250,10 +251,15 @@ def _get_site_object():
 
 def _site_id():
     site_id = os.environ.get("OMD_SITE")
-    if site_id is None:
-        site_id = file(testlib.repo_path() + "/.site").read().strip()
-        os.putenv("OMD_SITE", site_id)
+    if site_id is not None:
+        return site_id
 
+    branch_name = os.environ.get("BRANCH", testlib.current_branch_name())
+    # Split by / and get last element, remove unwanted chars
+    branch_part = re.sub("[^a-zA-Z0-9_]", "", branch_name.split("/")[-1])
+    site_id = "int_%s" % branch_part
+
+    os.putenv("OMD_SITE", site_id)
     return site_id
 
 

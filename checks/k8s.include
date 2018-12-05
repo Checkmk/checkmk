@@ -25,20 +25,6 @@
 # Boston, MA 02110-1301 USA.
 
 
-def inventory_k8s_nodes(parsed):
-    return [(None, {})]
-
-
-def check_k8s_nodes(_no_item, _no_params, parsed):
-    nodes = parsed.get('nodes', [])
-    return 0, ', '.join(nodes), [('k8s_nodes', len(nodes))]
-
-
-check_info['k8s_nodes'] = {
-    'parse_function': parse_k8s,
-    'inventory_function': inventory_k8s_nodes,
-    'check_function': check_k8s_nodes,
-    'service_description': 'Nodes',
-    'has_perfdata': True,
-    'includes': ['k8s.include'],
-}
+def parse_k8s(info):
+    import json
+    return json.loads(info[0][0])

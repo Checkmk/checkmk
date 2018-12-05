@@ -25,11 +25,6 @@
 # Boston, MA 02110-1301 USA.
 
 
-def parse_k8s_resources(info):
-    import json
-    return json.loads(info[0][0])
-
-
 def get_k8s_resources_inventory_function(name):
     def inventory_function(parsed):
         if parsed.get('capacity', {}).get(name):
@@ -39,7 +34,8 @@ def get_k8s_resources_inventory_function(name):
 
 
 check_info['k8s_resources'] = {
-    'parse_function': parse_k8s_resources,
+    'parse_function': parse_k8s,
+    'includes': ['k8s.include'],
 }
 
 

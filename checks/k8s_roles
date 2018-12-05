@@ -25,11 +25,6 @@
 # Boston, MA 02110-1301 USA.
 
 
-def parse_k8s_roles(info):
-    import json
-    return json.loads(info[0][0])
-
-
 @get_parsed_item_data
 def check_k8s_roles(item, _no_params, role):
     age = time.time() - role['creation_timestamp']
@@ -43,8 +38,9 @@ def check_k8s_roles(item, _no_params, role):
 
 
 check_info['k8s_roles'] = {
-    'parse_function': parse_k8s_roles,
+    'parse_function': parse_k8s,
     'inventory_function': discover(),
     'check_function': check_k8s_roles,
     'service_description': 'Role %s',
+    'includes': ['k8s.include'],
 }

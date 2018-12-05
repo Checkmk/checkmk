@@ -25,11 +25,6 @@
 # Boston, MA 02110-1301 USA.
 
 
-def parse_k8s_conditions(info):
-    import json
-    return json.loads(info[0][0])
-
-
 @discover
 def inventory_k8s_conditions(condition, _value):
     return condition in {
@@ -57,8 +52,9 @@ def check_k8s_conditions(item, _no_params, value):
 
 
 check_info['k8s_conditions'] = {
-    'parse_function': parse_k8s_conditions,
+    'parse_function': parse_k8s,
     'inventory_function': inventory_k8s_conditions,
     'check_function': check_k8s_conditions,
     'service_description': 'Condition %s',
+    'includes': ['k8s.include'],
 }

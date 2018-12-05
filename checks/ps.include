@@ -288,8 +288,8 @@ def format_process_list(processes, html_output):
 def parse_ps_time(text):
     if "-" in text:
         tokens = text.split("-")
-        days   = int(tokens[0])
-        text   = tokens[1]
+        days = int(tokens[0] or 0)
+        text = tokens[1]
     else:
         days = 0
     parts = map(int, text.split(":"))
@@ -298,7 +298,9 @@ def parse_ps_time(text):
     else:
         hours, minutes, seconds = 0, parts[0], parts[1]
 
-    return 86400 * days + 3600 * hours + 60 * minutes + seconds
+    day_secs = sum([factor * int(v or 0) for factor, v in zip([1, 60, 3600], reversed(text.split(":")))])
+
+    return 86400 * days + day_secs
 
 
 def ps_cleanup_params(params):
@@ -445,6 +447,8 @@ def check_ps_common(item, params, parsed, cpu_cores = 1, info_name = "processes"
                             pcpu = cputime * 100
                             process.append(("pid", (pid, "")))
                         else:
+                            if pcpu_text == '-':  # Solaris defunct
+                                pcpu_text = 0.0
                             pcpu = float(pcpu_text)
 
                         percent_cpu += pcpu

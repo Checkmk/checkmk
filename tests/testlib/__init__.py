@@ -341,7 +341,7 @@ class Site(object):
             schedule_ts = time.time()
             time.sleep(0.1)
 
-        print "last_check_before", last_check_before, "schedule_ts", schedule_ts
+        #print "last_check_before", last_check_before, "schedule_ts", schedule_ts
 
         self.live.command("[%d] PROCESS_HOST_CHECK_RESULT;%s;%d;%s" % (schedule_ts, hostname, state, output))
         self._wait_for_next_check(hostname, last_check_before, schedule_ts, wait_timeout, expected_state)
@@ -356,7 +356,7 @@ class Site(object):
             schedule_ts = time.time()
             time.sleep(0.1)
 
-        print "last_check_before", last_check_before, "schedule_ts", schedule_ts
+        #print "last_check_before", last_check_before, "schedule_ts", schedule_ts
         self.live.command("[%d] SCHEDULE_FORCED_SVC_CHECK;%s;%s;%d" %
                 (schedule_ts, hostname, service_description.encode("utf-8"), schedule_ts))
 
@@ -1756,40 +1756,42 @@ class WatchLog(object):
             self._site.write_file(self._log_path(), "")
 
         fobj = open(self._site.path(self._log_path()), "r")
-        sys.stdout.write("%r\n" % os.stat(self._site.path(self._log_path())))
-        fobj.seek(0, 2) # go to end of file
+        fobj.seek(0, 2)  # go to end of file
         return fobj
 
 
     def check_logged(self, match_for, timeout=None):
+        if timeout is None:
+            timeout = self._default_timeout
+
         if not self._check_for_line(match_for, timeout):
             raise Exception("Did not find %r in %s after %d seconds" %
                                 (match_for, self._log_path(), timeout))
 
 
     def check_not_logged(self, match_for, timeout=None):
+        if timeout is None:
+            timeout = self._default_timeout
+
         if self._check_for_line(match_for, timeout):
             raise Exception("Found %r in %s after %d seconds" %
                                 (match_for, self._log_path(), timeout))
 
 
     def _check_for_line(self, match_for, timeout):
-        if timeout is None:
-            timeout = self._default_timeout
-
         timeout_at = time.time() + timeout
-        sys.stdout.write("Start checking for matching line at %d until %d\n" % (time.time(), timeout_at))
-        sys.stdout.write("%r\n" % os.stat(self._site.path(self._log_path())))
+        sys.stdout.write(
+            "Start checking for matching line at %d until %d\n" % (time.time(), timeout_at))
         while time.time() < timeout_at:
             #print "read till timeout %0.2f sec left" % (timeout_at - time.time())
             line = self._log.readline()
-            sys.stdout.write("PROCESS LINE: %r\n" % line)
+            if line:
+                sys.stdout.write("PROCESS LINE: %r\n" % line)
             if match_for in line:
                 return True
             time.sleep(0.1)
 
         sys.stdout.write("Timed out at %d\n" % (time.time()))
-        sys.stdout.write("%r\n" % os.stat(self._site.path(self._log_path())))
         return False
 
 

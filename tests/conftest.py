@@ -10,6 +10,7 @@ pytest.register_assert_rewrite(
     "unit.web.tools")
 
 import _pytest.monkeypatch
+import re
 import collections
 import errno
 import glob
@@ -34,25 +35,29 @@ import testlib
 EXECUTE_IN_SITE, EXECUTE_IN_VENV = True, False
 
 test_types = collections.OrderedDict([
-    ("unit",        EXECUTE_IN_VENV),
-    ("pylint",      EXECUTE_IN_VENV),
-    ("docker",      EXECUTE_IN_VENV),
+    ("unit", EXECUTE_IN_VENV),
+    ("pylint", EXECUTE_IN_VENV),
+    ("docker", EXECUTE_IN_VENV),
     ("integration", EXECUTE_IN_SITE),
-    ("gui_crawl",   EXECUTE_IN_SITE),
-    ("packaging",   EXECUTE_IN_VENV),
+    ("gui_crawl", EXECUTE_IN_SITE),
+    ("packaging", EXECUTE_IN_VENV),
 ])
+
 
 def pytest_addoption(parser):
     """Register the -T option to pytest"""
-    parser.addoption("-T", action="store", metavar="TYPE", default=None,
-        help="Run tests of the given TYPE. Available types are: %s" %
-                                           ", ".join(test_types.keys()))
+    parser.addoption(
+        "-T",
+        action="store",
+        metavar="TYPE",
+        default=None,
+        help="Run tests of the given TYPE. Available types are: %s" % ", ".join(test_types.keys()))
+
 
 def pytest_configure(config):
     """Register the type marker to pytest"""
-    config.addinivalue_line("markers",
-        "type(TYPE): Mark TYPE of test. Available: %s" %
-                                    ", ".join(test_types.keys()))
+    config.addinivalue_line(
+        "markers", "type(TYPE): Mark TYPE of test. Available: %s" % ", ".join(test_types.keys()))
 
 
 def pytest_collection_modifyitems(items):
@@ -60,7 +65,7 @@ def pytest_collection_modifyitems(items):
     for item in items:
         type_marker = item.get_closest_marker("type")
         if type_marker and type_marker.args:
-            continue # Do not modify manually set marks
+            continue  # Do not modify manually set marks
 
         file_path = "%s" % item.reportinfo()[0]
         if "tests/unit" in file_path:
@@ -109,13 +114,15 @@ def fake_version_and_paths():
     import cmk
     monkeypatch.setattr(cmk, "omd_version", lambda: "%s.cee" % cmk.__version__)
 
-    monkeypatch.setattr("cmk.paths.checks_dir",         "%s/checks" % cmk_path())
-    monkeypatch.setattr("cmk.paths.notifications_dir",  "%s/notifications" % cmk_path())
-    monkeypatch.setattr("cmk.paths.inventory_dir",      "%s/inventory" % cmk_path())
+    monkeypatch.setattr("cmk.paths.checks_dir", "%s/checks" % cmk_path())
+    monkeypatch.setattr("cmk.paths.notifications_dir", "%s/notifications" % cmk_path())
+    monkeypatch.setattr("cmk.paths.inventory_dir", "%s/inventory" % cmk_path())
     monkeypatch.setattr("cmk.paths.check_manpages_dir", "%s/checkman" % cmk_path())
-    monkeypatch.setattr("cmk.paths.tmp_dir",            tmp_dir)
-    monkeypatch.setattr("cmk.paths.precompiled_checks_dir", os.path.join(tmp_dir, "var/check_mk/precompiled_checks"))
-    monkeypatch.setattr("cmk.paths.include_cache_dir",      os.path.join(tmp_dir, "check_mk/check_includes"))
+    monkeypatch.setattr("cmk.paths.tmp_dir", tmp_dir)
+    monkeypatch.setattr("cmk.paths.precompiled_checks_dir",
+                        os.path.join(tmp_dir, "var/check_mk/precompiled_checks"))
+    monkeypatch.setattr("cmk.paths.include_cache_dir",
+                        os.path.join(tmp_dir, "check_mk/check_includes"))
 
 
 # Cleanup temporary directory created above
@@ -170,7 +177,7 @@ def pytest_cmdline_main(config):
     Depending on the selected "type" marker the environment is ensured
     or switched here."""
     if not config.getoption("-T"):
-        return # missing option is handled later
+        return  # missing option is handled later
 
     context = test_types[config.getoption("-T")]
     if context == EXECUTE_IN_SITE:
@@ -182,15 +189,16 @@ def pytest_cmdline_main(config):
 def verify_virtualenv():
     if not testlib.virtualenv_path():
         raise SystemExit("ERROR: Please load virtual environment first "
-                        "(Use \"pipenv shell\" or configure direnv)")
+                         "(Use \"pipenv shell\" or configure direnv)")
 
 
 def is_running_as_site_user():
     return pwd.getpwuid(os.getuid()).pw_name == _site_id()
 
+
 def setup_site_and_switch_user():
     if is_running_as_site_user():
-        return # This is executed as site user. Nothing to be done.
+        return  # This is executed as site user. Nothing to be done.
 
     sys.stdout.write("===============================================\n")
     sys.stdout.write("Setting up site '%s'\n" % _site_id())
@@ -236,16 +244,25 @@ def _get_site_object():
     def reuse_site():
         return os.environ.get("REUSE", "1") == "1"
 
-    return testlib.Site(site_id=_site_id(), version=site_version(),
-                        edition=site_edition(), reuse=reuse_site(), branch=site_branch())
+    return testlib.Site(
+        site_id=_site_id(),
+        version=site_version(),
+        edition=site_edition(),
+        reuse=reuse_site(),
+        branch=site_branch())
 
 
 def _site_id():
     site_id = os.environ.get("OMD_SITE")
-    if site_id == None:
-        site_id = file(testlib.repo_path() + "/.site").read().strip()
-        os.putenv("OMD_SITE", site_id)
+    if site_id is not None:
+        return site_id
 
+    branch_name = os.environ.get("BRANCH", testlib.current_branch_name())
+    # Split by / and get last element, remove unwanted chars
+    branch_part = re.sub("[^a-zA-Z0-9_]", "", branch_name.split("/")[-1])
+    site_id = "int_%s" % branch_part
+
+    os.putenv("OMD_SITE", site_id)
     return site_id
 
 
@@ -255,6 +272,7 @@ def _site_id():
 
 add_python_paths()
 fake_version_and_paths()
+
 
 # Session fixtures must be in conftest.py to work properly
 @pytest.fixture(scope="session", autouse=True)

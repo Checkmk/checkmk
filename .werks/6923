@@ -1,0 +1,12 @@
+Title: Parent scan is now based on the background job logic
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1544021669
+Class: feature
+
+The parent scan is no longer affected by GUI timeouts because it is executed in a
+background job. The progress dialog is now based on the generic background job
+handling. The execution logic of the parent scan hasn't changed.

@@ -28,7 +28,7 @@ permissions = [
     ('enterprise/bin/*',              is_executable, []),
     ('enterprise/active_checks/*',    is_executable, []),
     ('enterprise/agents/bakery/*',    is_not_executable, []),
-    ('enterprise/agents/plugins/*',   is_executable, ["chroot_version", "Makefile", "pyinstaller-deps.make", "chroot", "src", "cmk_update_agent.pyc"]),
+    ('enterprise/agents/plugins/*',   is_executable, ["chroot_version", "Makefile", "pip-deps.make", "pip-deps-32.make", "chroot", "src", "cmk_update_agent.pyc"]),
     ('enterprise/alert_handlers/*',   is_executable, []),
     ('enterprise/alert_handlers/*',   is_executable, []),
 ]

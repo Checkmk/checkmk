@@ -402,10 +402,10 @@ class PodList(ListLike[Pod]):
         # type: () -> Dict[str, Dict[str, Dict[str, int]]]
         pods_sorted = sorted(self, key=lambda pod: pod.node)
         by_node = itertools.groupby(pods_sorted, lambda pod: pod.node)
-        return {node: {'allocations': {'pods': len(list(pods))}} for node, pods in by_node}
+        return {node: {'requests': {'pods': len(list(pods))}} for node, pods in by_node}
 
     def pods_in_cluster(self):
-        return {'allocations': {'pods': len(self)}}
+        return {'requests': {'pods': len(self)}}
 
     def resources_per_node(self):
         # type: () -> Dict[str, Dict[str, Dict[str, float]]]
@@ -561,7 +561,14 @@ class Section(object):
 
     def insert(self, data):
         # type: (Dict[str, Any]) -> None
-        self.content.update(data)
+        for key, value in data.iteritems():
+            if key not in self.content:
+                self.content[key] = value
+            else:
+                if isinstance(value, dict):
+                    self.content[key].update(value)
+                else:
+                    raise ValueError('Key %s is already present and cannot be merged' % key)
 
     def output(self):
         # type: () -> str

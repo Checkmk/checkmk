@@ -25,11 +25,6 @@
 # Boston, MA 02110-1301 USA.
 
 
-def parse_k8s_namespaces(info):
-    import json
-    return json.loads(info[0][0])
-
-
 @discover
 def inventory_k8s_namespaces(_namespace, status):
     return status.get('status', {}).get('phase', '') == 'Active'
@@ -45,8 +40,9 @@ def check_k8s_namespaces(item, _no_params, status):
 
 
 check_info['k8s_namespaces'] = {
-    'parse_function': parse_k8s_namespaces,
+    'parse_function': parse_k8s,
     'inventory_function': inventory_k8s_namespaces,
     'check_function': check_k8s_namespaces,
     'service_description': 'Namespace %s',
+    'includes': ['k8s.include'],
 }

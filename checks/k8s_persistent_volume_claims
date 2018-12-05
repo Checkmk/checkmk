@@ -25,11 +25,6 @@
 # Boston, MA 02110-1301 USA.
 
 
-def parse_k8s_persistent_volume_claims(info):
-    import json
-    return json.loads(info[0][0])
-
-
 @discover
 def inventory_k8s_persistent_volume_claims(_claim, data):
     return data.get('phase', '') == 'Bound'
@@ -55,8 +50,9 @@ def check_k8s_persistent_volume_claims(_no_item, _no_params, claim):
 
 
 check_info['k8s_persistent_volume_claims'] = {
-    'parse_function': parse_k8s_persistent_volume_claims,
+    'parse_function': parse_k8s,
     'inventory_function': inventory_k8s_persistent_volume_claims,
     'check_function': check_k8s_persistent_volume_claims,
     'service_description': 'PVC %s',
+    'includes': ['k8s.include'],
 }

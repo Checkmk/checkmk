@@ -905,7 +905,7 @@ register_rule(
                               ),
                               title=_("Values to fetch from this device"),
                               validate=validate_siemens_plc_values,
-                              magic='@?@',
+                              magic='@;@',
                           )),
                      ],
                      optional_keys=["timeout"],

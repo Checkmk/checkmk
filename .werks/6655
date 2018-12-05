@@ -1,0 +1,13 @@
+Title: PS: Crash when zombie processes are found on Solaris
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1544025714
+Class: fix
+
+Solaris agent returns "-" as cputime on zombie processes. This produced a
+crash since it cannot be converted to a time. This Werk put such input into
+consideration and transforms it to zero cputime, letting the PS check work
+normally.

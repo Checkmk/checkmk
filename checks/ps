@@ -230,7 +230,8 @@ def ps_parse_process_entries(parsed):
 
     # Filter out any lines where no process command line is available, e.g.
     # [None, u'(<defunct>,,,)']
-    parsed = [x for x in parsed if len(x) > 2]
+    # [None, u'(<defunct>,,,)', u'']
+    parsed = [x for x in parsed if len(x) > 2 and x[2]]
     return parsed
 
 

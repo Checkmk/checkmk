@@ -1,3 +1,4 @@
+from itertools import izip_longest
 from collections import namedtuple
 import pytest
 from cmk_base.check_api import MKGeneralException
@@ -21,7 +22,12 @@ def generate_inputs():
 (on,1050360,303252,00:14:59/1-03:59:39,9902) emacs
 (on,2924232,472252,00:12:05/07:24:15,7912) /usr/lib/firefox/firefox"""),
         # solaris (5 entry cmk>=1.5)
-        splitter("(root,4056,1512,0.0/52-04:56:05,5689) /usr/lib/ssh/sshd", node="solaris"),
+        splitter(
+            """(root,4056,1512,0.0/52-04:56:05,5689) /usr/lib/ssh/sshd
+(zombie,0,0,-/-,1952) <defunct>
+(zombie,0,0,-/-,3952)
+(zombie,0,0,-/-,4952) """,
+            node="solaris"),
         # windows agent
         splitter(
             """(SYSTEM,0,0,0,0,0,0,0,0,1,0)	System Idle Process
@@ -80,7 +86,8 @@ result_parse = [
        "emacs"],
       [None, ("on", "2924232", "472252", "00:12:05/07:24:15", "7912"),
        "/usr/lib/firefox/firefox"]]),
-    (1, [["solaris", ("root", "4056", "1512", "0.0/52-04:56:05", "5689"), "/usr/lib/ssh/sshd"]]),
+    (1, [["solaris", ("root", "4056", "1512", "0.0/52-04:56:05", "5689"), "/usr/lib/ssh/sshd"],
+         ["solaris", ("zombie", "0", "0", "-/-", "1952"), "<defunct>"]]),
     (1,
      [[None, ("SYSTEM", "0", "0", "0", "0", "0", "0", "0", "0", "1", "0"), "System Idle Process"],
       [
@@ -168,7 +175,7 @@ def test_parse_ps(check_manager, capture, result):
 
     parsed = check.run_parse(capture)
     assert parsed[0] == result[0]  # cpu_cores
-    for out, ref in zip(parsed[1], result[1]):
+    for out, ref in izip_longest(parsed[1], result[1]):
         assert out[0] == ref[0]
         assert out[1] == check.context["ps_info"](*ref[1])
         assert out[2:] == ref[2:]
@@ -252,6 +259,11 @@ PS_DISCOVERY_WATO_RULES = [
         "disabled": True,
         "description": u"sshd"
     }),
+    ({
+        'default_params': {},
+        'descr': 'PS counter',
+        'user': 'zombie',
+    }, [], ["@all"], {}),
 ]
 
 PS_DISCOVERY_SPECS = [
@@ -289,6 +301,9 @@ PS_DISCOVERY_SPECS = [
         "resident_levels": (104857600, 209715200)
     }),
     ("sshd", "~.*sshd", None, None, {
+        'cpu_rescale_max': None
+    }),
+    ('PS counter', None, 'zombie', None, {
         'cpu_rescale_max': None
     }),
 ]
@@ -379,6 +394,11 @@ PS_DISCOVERED_ITEMS = [
         "user": None,
         'cpu_rescale_max': None,
     }),
+    ("PS counter", {
+        'cpu_rescale_max': None,
+        'process': None,
+        'user': 'zombie'
+    }),
     ("svchost", {
         "cpulevels": (90.0, 98.0),
         "handle_count": (1000, 2000),
@@ -457,6 +477,9 @@ check_results = [
         (0, "0.0% CPU", [("pcpu", 0.0, None, None, None, None)]),
         (0, "running for 52 d", []),
     ]),
+    CheckResult([(0, '1 process [running on solaris]', [('count', 1, 100000, 100000, 0, None)]),
+                 (0, '0.0% CPU', [('pcpu', 0.0, None, None, None, None)]),
+                 (0, 'running for 0.00 s', [])]),
     CheckResult([
         (0, "3 processes", [("count", 3, 100000, 100000, 0, None)]),
         (0, "136.26 MB virtual", [("vsz", 139532, 1073741824000, 2147483648000, None, None)]),

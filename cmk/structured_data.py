@@ -801,7 +801,7 @@ class Numeration(Leaf):
         # In this case we assume that each entry corresponds to the
         # other one with the same index.
         num_new, num_changed, num_removed = 0, 0, 0
-        data = []
+        compared_rows = []
         for own_row, other_row in zip(own_rows, other_rows):
             new_entries, changed_entries, removed_entries, identical_entries = \
                 _compare_dicts(other_row, own_row)
@@ -811,11 +811,11 @@ class Numeration(Leaf):
             row = {}
             for entries in [new_entries, changed_entries, removed_entries]:
                 row.update(entries)
-            if keep_identical:
+            if keep_identical or new_entries or changed_entries or removed_entries:
                 row.update(identical_entries)
             if row:
-                data.append(row)
-        return num_new, num_changed, num_removed, data
+                compared_rows.append(row)
+        return num_new, num_changed, num_removed, compared_rows
 
 
     def encode_for_delta_tree(self, encode_as):

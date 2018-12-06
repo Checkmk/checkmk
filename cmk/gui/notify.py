@@ -165,7 +165,9 @@ def _vs_notify():
         ('broadcast', _('Everybody (Broadcast)')),
         ('list', _('A list of specific users'),
          DualListChoice(
-             choices=[(uid, u.get('alias', uid)) for uid, u in config.multisite_users.items()],
+             choices=sorted(
+                 [(uid, u.get('alias', uid)) for uid, u in config.multisite_users.items()],
+                 key=lambda x: x[1].lower()),
              allow_empty=False,
          )),
         #('contactgroup', _('All members of a contact group')),

@@ -618,7 +618,7 @@ if config.mkeventd_enabled:
     multisite_commands.append({
         "tables": ["event"],
         "permission": "mkeventd.update",
-        "title": _("Update &amp; Acknowledge"),
+        "title": _("Update & Acknowledge"),
         "render": render_mkeventd_update,
         "action": command_mkeventd_update,
         "executor": command_executor_mkeventd,

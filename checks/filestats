@@ -1,0 +1,264 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2018             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+import ast
+
+# params = {
+#     "mincount": (tuple, integer),
+#     "maxcount": -"-,
+#     "minage_oldest": (tuple, seconds),
+#     "maxage_oldest":  -"-,
+#     "minage_newest": -"-,
+#     "maxage_newest": -"-,
+#     "minsize_smallest": (tuple, bytes),
+#     "maxsize_...
+#     "minsize_largest": -"-,
+#     "maxsize_...
+# }
+
+#.
+#   .--Parsing-------------------------------------------------------------.
+#   |                  ____                _                               |
+#   |                 |  _ \ __ _ _ __ ___(_)_ __   __ _                   |
+#   |                 | |_) / _` | '__/ __| | '_ \ / _` |                  |
+#   |                 |  __/ (_| | |  \__ \ | | | | (_| |                  |
+#   |                 |_|   \__,_|_|  |___/_|_| |_|\__, |                  |
+#   |                                              |___/                   |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
+def parse_filestats(info):
+    subsections_by_variety = {}
+    current = []  # should never be used, but better safe than sorry
+    for line in info:
+        if not line:
+            continue
+        if line[0].startswith('[[['):
+            output_variety, subsection_name = line[0][3:-3].split(None, 1)
+            sections = subsections_by_variety.setdefault(output_variety, {})
+            current = sections.setdefault(subsection_name, [])
+        else:
+            current.append(line[0])
+
+    parsed = {}
+    for variety, sections in subsections_by_variety.items():
+        try:
+            subparser = {
+                "count_only": _parse_filestats_load_single_line,
+                "file_stats": _parse_filestats_load_lines,
+                "extremes_only": _parse_filestats_load_lines,
+            }[variety]
+        except KeyError:
+            continue
+        parsed[variety] = {k: subparser(v) for k, v in sections.items() if v}
+
+    return parsed
+
+
+def _parse_filestats_load_lines(info):
+    list_of_dicts = []
+    for line in info:
+        try:
+            list_of_dicts.append(ast.literal_eval(line))
+        except SyntaxError:
+            pass
+    return list_of_dicts
+
+
+def _parse_filestats_load_single_line(info):
+    lines = _parse_filestats_load_lines(info)
+    return lines[0] if lines else None
+
+
+#.
+#   .--Discovery-----------------------------------------------------------.
+#   |              ____  _                                                 |
+#   |             |  _ \(_)___  ___ _____   _____ _ __ _   _               |
+#   |             | | | | / __|/ __/ _ \ \ / / _ \ '__| | | |              |
+#   |             | |_| | \__ \ (_| (_) \ V /  __/ |  | |_| |              |
+#   |             |____/|_|___/\___\___/ \_/ \___|_|   \__, |              |
+#   |                                                  |___/               |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
+def discover_filestats_variety(variety):
+    def discover_function(parsed):
+        for key in parsed.get(variety, {}).keys():
+            yield key, {}
+
+    return discover_function
+
+
+#.
+#   .--Helpers-------------------------------------------------------------.
+#   |                  _   _      _                                        |
+#   |                 | | | | ___| |_ __   ___ _ __ ___                    |
+#   |                 | |_| |/ _ \ | '_ \ / _ \ '__/ __|                   |
+#   |                 |  _  |  __/ | |_) |  __/ |  \__ \                   |
+#   |                 |_| |_|\___|_| .__/ \___|_|  |___/                   |
+#   |                              |_|                                     |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
+def get_filestats_item_data(variety):
+    def decorator(check_function):
+        def wrapped_check_function(item, params, parsed):
+            subsections = parsed.get(variety, {})
+            item_data = subsections.get(item)
+            if item_data is None:
+                return None
+            return check_function(item, params, item_data)
+
+        return wrapped_check_function
+
+    return decorator
+
+
+def filestats_check_int_levels(value,
+                               lower_levels_pair,
+                               upper_levels_pair,
+                               hr_function=lambda i: "%d" % i):
+    state, msg = 0, ""
+    if lower_levels_pair not in (None, (None, None)):
+        warn, crit = lower_levels_pair
+        if value <= warn:
+            state = 1
+            msg = " (warn/crit below %s/%s)" % (hr_function(warn), hr_function(crit))
+        if value <= crit:
+            return 2, msg
+
+    if upper_levels_pair not in (None, (None, None)):
+        warn, crit = upper_levels_pair
+        if value >= warn:
+            state = 1
+            msg = " (warn/crit at %s/%s)" % (hr_function(warn), hr_function(crit))
+        if value >= crit:
+            return 2, msg
+
+    return state, msg
+
+
+def check_filestats_count(count, params):
+    '''common check result - used by main and count_only check'''
+    state, text = filestats_check_int_levels(count, params.get("mincount"), params.get("maxcount"))
+    warn, crit = params.get("maxcount", (None, None))
+    return state, "Files in total: %d%s" % (count, text), \
+           [('filestats_count', count, warn, crit, None, None)]
+
+
+def check_filestats_extremes(files, params):
+    '''common check result - used by main and extremes_only check'''
+    for key, hr_function, minlabel, maxlabel in (
+        ('size', get_bytes_human_readable, 'smallest', 'largest'),
+        ('age', get_age_human_readable, 'newest', 'oldest'),
+    ):
+        files.sort(key=lambda f: f.get(key))  # pylint: disable=cell-var-from-loop
+        for efile, label in ((files[0], minlabel), (files[-1], maxlabel)):
+            state, text = filestats_check_int_levels(
+                efile.get(key),
+                params.get("min%s_%s" % (key, label)),
+                params.get("max%s_%s" % (key, label)),
+                hr_function,
+            )
+            if state:
+                text = "%s: %s" % (text, efile.get('path', "<path info missing>"))
+            value_hr = hr_function(efile.get(key))
+            yield state, "%s: %s%s" % (label.title(), value_hr, text)
+
+
+#.
+#   .--Checks--------------------------------------------------------------.
+#   |                    ____ _               _                            |
+#   |                   / ___| |__   ___  ___| | _____                     |
+#   |                  | |   | '_ \ / _ \/ __| |/ / __|                    |
+#   |                  | |___| | | |  __/ (__|   <\__ \                    |
+#   |                   \____|_| |_|\___|\___|_|\_\___/                    |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
+@get_filestats_item_data('count_only')
+def check_filestats_count_only(_item, params, data):
+    try:
+        count = data['count']
+    except (KeyError, AttributeError):
+        return None
+    return check_filestats_count(count, params)
+
+
+# pylint: disable=undefined-variable
+check_info['filestats.count_only'] = {
+    "inventory_function": discover_filestats_variety('count_only'),
+    "check_function": check_filestats_count_only,
+    "service_description": "File %s count",
+    "has_perfdata": True,
+    # "group": "filestats-groups",
+}
+
+
+@get_filestats_item_data('extremes_only')
+def check_filestats_extremes_only(_item, params, data):
+    files = [i for i in data if i.get("type") == "file"]
+
+    return check_filestats_extremes(files, params)
+
+
+# pylint: disable=undefined-variable
+check_info['filestats.extremes_only'] = {
+    "inventory_function": discover_filestats_variety('extremes_only'),
+    "check_function": check_filestats_extremes_only,
+    "service_description": "File %s extremes",
+    "has_perfdata": True,
+    # "group": "filestats-groups",
+}
+
+
+@get_filestats_item_data('file_stats')
+def check_filestats(_item, params, data):
+    files = [i for i in data if i.get("type") == "file"]
+
+    yield check_filestats_count(len(files), params)
+
+    for subresult in check_filestats_extremes(files, params):
+        yield subresult
+
+
+# pylint: disable=undefined-variable
+check_info['filestats'] = {
+    "parse_function": parse_filestats,
+    "inventory_function": discover_filestats_variety('file_stats'),
+    "check_function": check_filestats,
+    "service_description": "File %s stats",
+    "has_perfdata": True,
+    #"group": "filestats-groups",
+}

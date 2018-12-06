@@ -1,0 +1,18 @@
+Title: mk_filestats: Plugin to monitor files (Count, Age, Size)
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1544539302
+Class: feature
+
+A new plugin is introduced with a functionality similar to fileinfo.
+It reports count, size and age of sets of files specified using a
+globbing pattern.
+However, this plugin is designed with large filesets in mind.
+It therefore provides different options to reduce the data reported to
+the Check_MK server and/or to avoid unnecessary stat calls on the client.
+For more information, please refer to the "--help" option of the plugin
+and the example configration file in agents/cfg_examples.
+

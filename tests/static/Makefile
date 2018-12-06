@@ -15,7 +15,7 @@ PIPENV         := PIPENV_NO_INHERIT=true PIPENV_VENV_IN_PROJECT=true pipenv
 .PHONY: test-mypy
 
 test-mypy: .venv
-	MYPYPATH="$(MYPYPATH)" $(PIPENV) run mypy --config-file=$(realpath ../../mypy.ini) $(FILES_TO_CHECK)
+	./run_mypy --config-file=$(realpath ../../mypy.ini) $(FILES_TO_CHECK)
 
 Pipfile.lock: Pipfile
 	$(PIPENV) lock

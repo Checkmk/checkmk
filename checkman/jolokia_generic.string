@@ -11,5 +11,13 @@ description:
  To use this plugin, Jolokia and the agent plugin need to be installed
  on the monitored server.
 
+ Please note that this check was designed with single values in mind.
+ It is best utilized using explicit configuration of specific MBeans
+ and their titles.
+ While bulk requests of MBeans may appear to work, it will probably
+ have undesired side effects (such as ugly formatting or discovery
+ of services always in UNKNOWN state), and is therefore strongly
+ discouraged.
+
 inventory:
  One check is created for each MBean string value sent by the agent.

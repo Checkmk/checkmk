@@ -33,7 +33,7 @@ b) A edit mode which can be used to create and edit an object.
 """
 
 import abc
-from typing import Optional, List, Type  # pylint: disable=unused-import
+from typing import Optional, List, Type, Union, Text, Tuple  # pylint: disable=unused-import
 
 import cmk.gui.table as table
 import cmk.gui.watolib as watolib
@@ -164,6 +164,19 @@ class SimpleListMode(SimpleWatoModeBase):
         """Shows the HTML code for the cells of an object row"""
         raise NotImplementedError()
 
+    def _handle_custom_action(self, action):
+        # type: (str) -> Optional[Union[bool, Tuple[Optional[str], Text]]]
+        """Gives the mode the option to implement custom actions
+
+        This function is called when the action phase is triggered. The action name is given
+        with the _action HTTP variable. It is handed over as first argument to this function.
+
+        NOTE: The implementation needs to invalidate the transaction ID on it's own.
+
+        The "delete" action is automatically handled by the SimpleListMode implementation.
+        """
+        raise MKUserError("_action", _("The action '%s' is not implemented") % action)
+
     def buttons(self):
         global_buttons()
         html.context_button(
@@ -174,8 +187,11 @@ class SimpleListMode(SimpleWatoModeBase):
         if not html.transaction_valid():
             return
 
-        if not html.has_var("_delete"):
+        if not html.has_var("_action"):
             return
+
+        if html.var("_action") != "delete":
+            return self._handle_custom_action(html.var("_action"))
 
         confirm = wato_confirm(_("Confirm deletion"), self._delete_confirm_message())
         if confirm is False:
@@ -223,12 +239,17 @@ class SimpleListMode(SimpleWatoModeBase):
     def _show_action_cell(self, ident):
         table.cell(_("Actions"), css="buttons")
 
-        edit_url = html.makeuri_contextless([("mode", self._mode_type.edit_mode_name()),
-                                             ("ident", ident)])
+        edit_url = html.makeuri_contextless([
+            ("mode", self._mode_type.edit_mode_name()),
+            ("ident", ident),
+        ])
         html.icon_button(edit_url, _("Edit this %s") % self._mode_type.name_singular(), "edit")
 
-        delete_url = watolib.make_action_link([("mode", self._mode_type.list_mode_name()),
-                                               ("_delete", ident)])
+        delete_url = watolib.make_action_link([
+            ("mode", self._mode_type.list_mode_name()),
+            ("_action", "delete"),
+            ("_delete", ident),
+        ])
         html.icon_button(delete_url,
                          _("Delete this %s") % self._mode_type.name_singular(), "delete")
 

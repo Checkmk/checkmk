@@ -1,0 +1,12 @@
+Title: Reporting: Fixed exception when joining with not existing services
+Level: 1
+Component: reporting
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.6.0i1
+Date: 1544083646
+
+Fixed an exception that could occur when adding a host view element to a report
+that contains a joined service column which refers to a not existing service.

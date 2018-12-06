@@ -1,0 +1,11 @@
+Title: docker_node_info: FIX missing keys for docker versions on CentOS 6
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p10
+Date: 1544108040
+
+

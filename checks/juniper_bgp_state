@@ -26,14 +26,14 @@
 
 
 def _clean_v4_address(chunks):
-    return "%d.%d.%d.%d" % tuple(int(c, 16) for c in chunks)
+    return "%d.%d.%d.%d" % tuple(chunks)
 
 
 def _clean_v6_address(chunks):
-    ichunks = iter(chunks)
+    ichunks = iter('%02x' % i for i in chunks)
     blocks = ("%s%s" % pair for pair in zip(ichunks, ichunks))
     stripped_blocks = ('0' if b == '0000' else b.lstrip('0') for b in blocks)
-    v6_string = ':'.join(b.lower() for b in stripped_blocks)
+    v6_string = ':'.join(b for b in stripped_blocks)
 
     # replace longest series of zeros
     for length in range(8, 0, -1):
@@ -49,15 +49,14 @@ def _clean_v6_address(chunks):
 
 
 def juniper_bgp_state_create_item(peering_entry):
-    chunks = peering_entry.split()
     try:
-        if len(chunks) == 4:
-            return _clean_v4_address(chunks)
-        elif len(chunks) == 16:
-            return _clean_v6_address(chunks)
+        if len(peering_entry) == 4:
+            return _clean_v4_address(peering_entry)
+        elif len(peering_entry) == 16:
+            return _clean_v6_address(peering_entry)
     except (ValueError, IndexError):
         pass
-    return "'%s'" % peering_entry.strip()
+    return ' '.join('%02X' % i for i in peering_entry)  # that's what has been in the data
 
 
 def parse_juniper_bgp_state(info):
@@ -118,7 +117,7 @@ check_info["juniper_bgp_state"] = {
         [
             2,  # jnxBgpM2PeerState
             3,  # jnxBgpM2PeerStatus (like operational status)
-            11,  # jnxBgpM2PeerRemoteAddr
+            BINARY(11),  # jnxBgpM2PeerRemoteAddr
         ]),
     "snmp_scan_function":
         lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.2636.1.1.1"),

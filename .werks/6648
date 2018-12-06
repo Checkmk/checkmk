@@ -1,0 +1,20 @@
+Title: VictorOPS: Notification plugin for VictorOPS
+Level: 1
+Component: notifications
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p12
+Date: 1541169998
+
+It is now possible to configure Check_MK notifications to be sent to
+VictorOPS by using their REST API integration.
+
+In VictorOPS the REST integration for alerts needs to be enabled and the
+routing keys defined. Then in Check_MK for every routing key a notification
+can be set up under WATO->Notifications. Copy your VictorOPS REST API URL
+with the corresponding routing key in the URL. Optionaly to include the URL
+of Check_MK's enable the URL prefix field. (VictorOPS does not support
+links in their timeline at the time of this writing, thus the full URL is
+displayed in the message)

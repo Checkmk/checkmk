@@ -1,0 +1,24 @@
+Title: PagerDuty: Notification plugin
+Level: 1
+Component: notifications
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p12
+Date: 1542116423
+
+Check_MK now support native integration with Pager Duty and can send
+notifications about state changes of hosts and services into a configured
+Pager Duty service.
+
+In Pager Duty a new integration service has to be set up. Select as
+"Integration Type" Check_MK and configure your service as better suited for
+your use case. Save the returned "Integration Key".
+
+In Check_MK, under "WATO - Notifications", create an new notification rule
+and select PagerDuty. Copy the "Integration Key" from Pager Duty as
+parameter. Optionally you can save the integration key in Check_MK's
+password manager and retrieve it here.  If you want incidents in Pager Duty
+to include hyperlinks back to Check_MK, enable the field URL prefix for
+links to Check_MK.

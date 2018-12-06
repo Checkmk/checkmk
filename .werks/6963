@@ -1,0 +1,14 @@
+Title: Removed /bauen directory from .deb packages
+Level: 2
+Component: deb
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p10
+Date: 1544098646
+
+Caused by a recent change, the .deb packages inadvertendly contained some
+build artifacts, resulting in some files being installed below /bauen.  The
+1.5.0 releases p8 and p9 were affected, but not p7 and earlier.  This has
+been fixed.

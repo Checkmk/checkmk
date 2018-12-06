@@ -227,9 +227,9 @@ $(PYTHON_MODULES_PATCHING): $(PYTHON_MODULES_UNPACK)
 	done
 	$(TOUCH) $@
 
-$(PYTHON_MODULES_UNPACK): $(addprefix $(PACKAGE_DIR)/$(PYTHON_MODULES)/src/,$(PYTHON_MODULES_LIST)) $(PYTHON_MODULES_PATCHES) $(PACKAGE_DIR)/$(PYTHON_MODULES)/patches 
+$(PYTHON_MODULES_UNPACK): $(addprefix $(PACKAGE_DIR)/$(PYTHON_MODULES)/src/,$(PYTHON_MODULES_LIST)) $(PYTHON_MODULES_PATCHES) $(PACKAGE_DIR)/$(PYTHON_MODULES)/patches
 	$(RM) -r $(PYTHON_MODULES_DIR)
-	$(MKDIR) $(PYTHON_MODULES_DIR) 
+	$(MKDIR) $(PYTHON_MODULES_DIR)
 	cd $(PYTHON_MODULES_DIR) && \
 	    for M in $(PYTHON_MODULES_LIST); do \
 		echo "Unpacking $$M..." ; \
@@ -242,9 +242,14 @@ $(PYTHON_MODULES_UNPACK): $(addprefix $(PACKAGE_DIR)/$(PYTHON_MODULES)/src/,$(PY
 	$(MKDIR) $(BUILD_HELPER_DIR)
 	$(TOUCH) $@
 
+# NOTE: Setting SODIUM_INSTALL variable below is an extremely cruel hack to
+# avoid installing libsodium headers and libraries. The need for this hack
+# arises because of our "interesting" flag use for "setup.py install" and our
+# double installation. We should really switch to e.g. pipenv here.
 $(PYTHON_MODULES_INSTALL): $(PYTHON_MODULES_BUILD)
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/python
 	set -e ; cd $(PYTHON_MODULES_DIR) ; \
+	    export SODIUM_INSTALL="system" ; \
 	    export PYTHONPATH=$$PYTHONPATH:"$(PACKAGE_PYTHON_MODULES_PYTHONPATH)" ; \
 	    export PYTHONPATH=$$PYTHONPATH:"$(PACKAGE_PYTHON_PYTHONPATH)" ; \
 	    export CPATH="$(PACKAGE_FREETDS_DESTDIR)/include" ; \

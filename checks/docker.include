@@ -124,14 +124,18 @@ def parse_docker_node_info(info):
         if k.startswith("Labels") and k != "Labels":
             parsed["Labels"].append(k[6:] + parsed.pop(k))
     # reconstruct swarm info:
-    swarm = {"LocalNodeState": parsed["Swarm"]}
-    if "SwarmNodeID" in parsed:
-        swarm["NodeID"] = parsed["SwarmNodeID"]
-    if "SwarmManagers" in parsed:
-        swarm["RemoteManagers"] = parsed["SwarmManagers"]
-    parsed["Swarm"] = swarm
-    parsed["ServerVersion"] = parsed["Server Version"]
-    parsed["IndexServerAddress"] = parsed["Registry"]
+    if "Swarm" in parsed:
+        swarm = {"LocalNodeState": parsed["Swarm"]}
+        if "SwarmNodeID" in parsed:
+            swarm["NodeID"] = parsed.pop("SwarmNodeID")
+        if "SwarmManagers" in parsed:
+            swarm["RemoteManagers"] = parsed.pop("SwarmManagers")
+        parsed["Swarm"] = swarm
+
+    if "Server Version" in parsed:
+        parsed["ServerVersion"] = parsed.pop("Server Version")
+    if "Registry" in parsed:
+        parsed["IndexServerAddress"] = parsed.pop("Registry")
 
     return parsed
 

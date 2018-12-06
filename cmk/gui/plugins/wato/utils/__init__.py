@@ -1660,8 +1660,9 @@ def configure_attributes(new,
                 if not host:
                     continue
 
-                locked = host.attribute("locked")
-                if locked and attrname in locked["attributes"]:
+                locked_by = host.attribute("locked_by")
+                locked_attributes = host.attribute("locked_attributes")
+                if locked_by and locked_attributes and attrname in locked_attributes:
                     num_have_locked_it += 1
 
                 if host.has_explicit_attribute(attrname):
@@ -1759,6 +1760,8 @@ def configure_attributes(new,
                 active = False
 
             is_editable = attr.editable() and attr.may_edit() and num_have_locked_it == 0
+            if for_what == "host_search":
+                is_editable = True
 
             if not new and not is_editable:
                 # Bug in pylint 1.9.2 https://github.com/PyCQA/pylint/issues/1984, already fixed in master.

@@ -401,6 +401,62 @@ register_notification_parameters(
                  back=transform_back_html_mail_url_prefix)),
         ]))
 
+
+register_notification_parameters(
+    "victorops",
+    Dictionary(
+        optional_keys=["url_prefix"],
+        elements=[
+            ("webhook_url",
+                CascadingDropdown(
+                    title=_("VictorOPS REST Endpoint"),
+                    help=_("Learn how to setup a REST endpoint "
+                           "<a href=\"https://help.victorops.com/knowledge-base/victorops-restendpoint-integration/\" target=\"_blank\">here</a>"
+                           "<br />This URL can also be collected from the Password Store from Check_MK."),
+                    choices=[
+                        ("webhook_url", _("REST Endpoint URL"), HTTPUrl(
+                            size=80,
+                            allow_empty=False,
+                            regex=r"^https://alert\.victorops\.com/integrations/.+",
+                            regex_error=_("The Webhook-URL must begin with "
+                                          "<tt>https://alert.victorops.com/integrations</tt>")),),
+                        ("store", _("URL from password store"), DropdownChoice(
+                            sorted = True,
+                            choices=passwordstore_choices,
+                        ))
+                    ]
+            )),
+            ("url_prefix",
+                Transform(CascadingDropdown(
+                    style="dropdown",
+                    title=_("URL prefix for links to Check_MK"),
+                    help=_("If you use <b>Automatic HTTP/s</b> the URL prefix for "
+                           "host and service links within the notification mail "
+                           "is filled automatically. "
+                           "If you specify an URL prefix here, then several parts of the "
+                           "VictorOPS message are armed with hyperlinks to your Check_MK GUI. In both cases "
+                           "the recipient of the message can directly visit the host or "
+                           "service in question in Check_MK. Specify an absolute URL including "
+                           "the <tt>.../check_mk/</tt>"),
+                    choices=[
+                        ("automatic_http", _("Automatic HTTP")),
+                        ("automatic_https", _("Automatic HTTPs")),
+                        ("manual", _("Specify URL prefix"), TextAscii(
+                            regex="^(http|https)://.*/check_mk/$",
+                            regex_error=_("The URL must begin with <tt>http</tt> or "
+                                          "<tt>https</tt> and end with <tt>/check_mk/</tt>."),
+                            size=64,
+                            default_value="http://" + socket.gethostname() + "/" + (
+                                config.omd_site() and config.omd_site() + "/" or "") + "check_mk/",
+                        )),
+                    ],
+                ), forth=transform_forth_html_mail_url_prefix,
+                   back=transform_back_html_mail_url_prefix)
+            ),
+        ]
+    )
+)
+
 # We have to transform because 'add_to_event_context'
 # in modules/events.py can't handle complex data structures
 def transform_back_pushover_priority(params):

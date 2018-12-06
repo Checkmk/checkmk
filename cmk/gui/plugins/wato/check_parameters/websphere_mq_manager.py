@@ -1,0 +1,86 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+from cmk.gui.i18n import _
+from cmk.gui.valuespec import (
+    Dictionary,
+    DropdownChoice,
+    ListOf,
+    MonitoringState,
+    TextAscii,
+    Tuple,
+)
+from cmk.gui.plugins.wato import (
+    RulespecGroupCheckParametersApplications,
+    register_check_parameters,
+)
+
+register_check_parameters(
+    RulespecGroupCheckParametersApplications,
+    'websphere_mq_manager',
+    _("Websphere MQ Manager"),
+    Dictionary(elements=[
+        ("map_manager_states",
+         ListOf(
+             Tuple(
+                 orientation="horizontal",
+                 elements=[
+                     DropdownChoice(choices=[
+                         ('starting', _('Starting')),
+                         ('running', _('Running')),
+                         ('running_as_stanby', _('Running as standby')),
+                         ('running_elsewhere', _('Running elsewhere')),
+                         ('quiescing', _('Quiescing')),
+                         ('ending_immediately', _('Ending immedtiately')),
+                         ('ending_pre_emptively', _('Ending pre-emptivley')),
+                         ('ended_normally', _('Ended normally')),
+                         ('ended_immediately', _('Ended immediately')),
+                         ('ended_unexpectedly', _('Ended unexpectedly')),
+                         ('ended_pre_emptively', _('Ended pre-emptively')),
+                         ('status_not_available', _('Status not available')),
+                     ]),
+                     MonitoringState(),
+                 ]),
+             title=_('Map manager state'),
+         )),
+        ("map_standby_states",
+         ListOf(
+             Tuple(
+                 orientation="horizontal",
+                 elements=[
+                     DropdownChoice(choices=[
+                         ('permitted', _('Permitted')),
+                         ('not_permitted', _('Not permitted')),
+                         ('not_applicable', _('Not applicable')),
+                     ]),
+                     MonitoringState(),
+                 ]),
+             title=_('Map standby state'),
+         )),
+    ]),
+    TextAscii(title=_("Name of manager")),
+    "dict",
+)

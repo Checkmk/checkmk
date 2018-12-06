@@ -1,0 +1,21 @@
+Title: HW/SW Inventory history: Display the whole row if there are any changes
+Level: 1
+Component: inv
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1544087188
+
+The HW/SW Inventory history shows new, changed or removed entries. If there are
+changed entries in one row in a list Check_MK version 1.5.0p9 only shows these
+changes. This is a regression because the previous stable version 1.4.0
+displayed not only the changed entries, but also the unchanged entries in order
+to refer to the right row.
+
+Example:
+Check_MK 1.4.0 displays all entries of a changed row in the package list:
+{{libtiff5, 4.0.8, x86_64, deb, 2+deb9u2 -> 2+deb9u4}}
+
+but Check_MK 1.5.0p9 only shows {{2+deb9u2 -> 2+deb9u4}}.

@@ -134,6 +134,10 @@ input[type="checkbox"] {
     display: none;
 }
 
+input[type="checkbox"][disabled] + label:before {
+    display: none;
+}
+
 input[type="checkbox"] + label:before {
     box-shadow: 0.1px 1.0px 1.2px 0 #888 inset;
     border: 1px #73767A solid;

@@ -51,6 +51,7 @@ from cmk.gui.valuespec import (
     TextUnicode,
     SiteChoice,
     ID,
+    Transform,
 )
 from cmk.gui.exceptions import MKUserError
 
@@ -581,28 +582,40 @@ declare_host_attribute(
 
 declare_host_attribute(
     ValueSpecAttribute(
-        "locked",
-        Dictionary(
-            title=_("Locked"),
-            help=_("The host is (partially) managed by an automatic data source like the "
-                   "Dynamic Configuration."),
-            elements=[
-                ("locked_by",
-                 Tuple(
-                     orientation="horizontal",
-                     title_br=False,
-                     elements=[
-                         SiteChoice(),
-                         ID(title=_("Program"),),
-                         ID(title=_("Connection ID"),),
-                     ],
-                     title=_("Locked by"),
-                 )),
-                ("attributes", ListOf(
-                    ID(),
-                    title=_("Locked attributes"),
-                )),
-            ],
+        "locked_by",
+        Transform(
+            Tuple(
+                orientation="horizontal",
+                title_br=False,
+                elements=[
+                    SiteChoice(),
+                    ID(title=_("Program"),),
+                    ID(title=_("Connection ID"),),
+                ],
+                title=_("Locked by"),
+                help=_("The host is (partially) managed by an automatic data source like the "
+                       "Dynamic Configuration."),
+            ),
+            forth=tuple,
+            back=list,
+        )),
+    show_in_table=False,
+    show_in_form=True,
+    show_in_folder=True,
+    show_in_host_search=True,
+    show_inherited_value=False,
+    editable=False,
+)
+
+declare_host_attribute(
+    ValueSpecAttribute(
+        "locked_attributes",
+        ListOf(
+            DropdownChoice(
+                choices=lambda: [(a.name(), a.title()) for a in watolib.g_host_attribute.values()],
+                sorted=True,
+            ),
+            title=_("Locked attributes"),
         )),
     show_in_table=False,
     show_in_form=True,

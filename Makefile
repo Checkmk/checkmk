@@ -373,7 +373,7 @@ setup:
 	    p7zip-full
 	sudo -H pip install -U pipenv
 	$(MAKE) -C omd setup
-	$(MAKE) -C omd/packages/openhardwaremonitor setup
+	$(MAKE) -C omd openhardwaremonitor-setup
 	$(MAKE) -C docker setup
 ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/locale setup

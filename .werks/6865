@@ -1,0 +1,13 @@
+Title: Windows Agent's fileinfo section produces correct output
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1544186240
+Class: fix
+
+Previously, fileinfo section may contain invalid data, usually nulls.
+With the fix this section works as intended and sends to the output correct 
+file information. 
+

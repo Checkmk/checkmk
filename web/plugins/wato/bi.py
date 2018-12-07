@@ -853,10 +853,10 @@ class ModeBI(WatoMode):
         for pack_id, pack in self._packs.items():
             for aggr_id, aggregation in enumerate(pack["aggregations"]):
                 rule_id, description = self.rule_called_by_node(aggregation["node"])
-                aggregations_that_use_rule.setdefault(rule_id, []).append((aggr_id, aggregation))
+                aggregations_that_use_rule.setdefault(rule_id, []).append((pack_id, aggr_id, aggregation))
                 sub_rule_ids = self._aggregation_recursive_sub_rule_ids(rule_id)
                 for sub_rule_id in sub_rule_ids:
-                    aggregations_that_use_rule.setdefault(sub_rule_id, []).append((aggr_id, aggregation))
+                    aggregations_that_use_rule.setdefault(sub_rule_id, []).append((pack_id, aggr_id, aggregation))
         return aggregations_that_use_rule
 
 
@@ -1141,7 +1141,7 @@ class ModeBIAggregations(ModeBI):
 
 
     def _bulk_delete_after_confirm(self):
-        selection = map(int, self._get_selection("aggregation"))
+        selection = sorted(map(int, self._get_selection("aggregation")))
         if selection:
             c = wato_confirm(_("Confirm deletion of %d aggregations") % \
                                len(selection),
@@ -1475,10 +1475,9 @@ class ModeBIRules(ModeBI):
                 table.text_cell(_("Nodes"), len(rule["nodes"]), css="number")
                 table.cell(_("Used by"))
                 have_this = set([])
-                for (aggr_id, aggregation) in aggregations_that_use_rule.get(rule_id, []):
+                for (pack_id, aggr_id, aggregation) in aggregations_that_use_rule.get(rule_id, []):
                     if aggr_id not in have_this:
-                        pack = self.pack_containing_rule(rule_id)
-                        aggr_url = html.makeuri_contextless([("mode", "bi_edit_aggregation"), ("id", aggr_id), ("pack", pack["id"])])
+                        aggr_url = html.makeuri_contextless([("mode", "bi_edit_aggregation"), ("id", aggr_id), ("pack", pack_id)])
                         html.a(self.aggregation_title(aggregation), href=aggr_url)
                         html.br()
                         have_this.add(aggr_id)

@@ -1,0 +1,10 @@
+Title: BI configuration: Fixed invalid "Used by" link, fixed exception during bulk delete
+Level: 1
+Component: bi
+Compatible: compat
+Edition: cre
+Version: 1.5.0p10
+Date: 1544169193
+Class: fix
+
+

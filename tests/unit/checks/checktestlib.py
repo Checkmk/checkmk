@@ -173,11 +173,13 @@ class CheckResult(object):
         If the result is already a plain check result in its tuple representation,
         we initialize a list of length 1.
         """
+        self.subresults = []
+        if result is None:
+            return
         if isinstance(result, CheckResult):
             self.__dict__ = result.__dict__
             return
 
-        self.subresults = []
         if isinstance(result, types.GeneratorType):
             for subresult in result:
                 self.subresults.append(BasicCheckResult(*subresult))

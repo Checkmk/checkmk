@@ -1,0 +1,21 @@
+Title: fsc_if64: Remove this check plugin in order to improve performance
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.5.0p10
+Date: 1544193574
+Class: fix
+
+Some FSC devices report the operational status and type of the interfaces as a
+human readable string. As defined in the IF-MIB Check_MK expects the values
+ifOperStatus and ifType in SNMP syntax.
+The check plugin {{fsc_if64}} was create just for converting these values. One
+side effect was that all needed OIDs were fetched two times:
+<ul>
+<li>for the fsc_if64 check plugin and</li>
+<li>for the if64 check plugin as well.</li>
+</ul>
+
+Thus fsc_if64 is deprecated now and human readable strings for operational
+status and type are handled by if64 for ALL devices.

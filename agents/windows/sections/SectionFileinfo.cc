@@ -97,21 +97,42 @@ struct IteratorTraits<false> {
  * @param[in/out]  files             The container for storing found files
  * @param[in/out]  dirs              The container for storing found dirs
  */
+// The function works not so good as we are expecting:
+// dir traverse doesn't work, symlinks are not processed too,
+// unit tests are absent(refactoring is forbidden)
+// i.e. pure disaster. Do not reuse without careful testing.
+// Or just do not reuse.
 template <bool recursive>
 void addFilesAndDirs(const fs::path &searchPath, const fs::path &filePattern,
                      const fs::path &dirPattern, PathsT &files, PathsT &dirs) {
     using IteratorT = typename IteratorTraits<recursive>::iterator_type;
     for (const auto &p : IteratorT(searchPath)) {
         // Found files must match the entire path pattern.
-        if (auto status = p.symlink_status();
-            fs::is_regular_file(status) &&
+
+        // *******************************************
+        // we have to check status, not symlink_status
+        // if you are not sure, test behavior before
+        // putting the code into production
+        auto status = p.status();  // CMK-1417, to be confirmed in ticket
+
+        // Logic below is a bit crazy and ineffective(we check status twice)
+        // correct is "double if", not logical AND.
+
+        // normal file
+        if (fs::is_regular_file(status) &&
             globmatch(filePattern.wstring(), p.path().wstring())) {
             files.push_back(p.path());
             // Only consider dirs if not iterating recursively.
-            // Found dirs must match the pattern only on the next subdir level.
-        } else if (!recursive && fs::is_directory(status) &&
-                   globmatch(dirPattern.wstring(), p.path().wstring())) {
+            // Found dirs must match the pattern only on the next subdir
+            // level.
+            continue;
+        }
+
+        // directory
+        if (!recursive && fs::is_directory(status) &&
+            globmatch(dirPattern.wstring(), p.path().wstring())) {
             dirs.push_back(p.path());
+            continue;
         }
     }
 }

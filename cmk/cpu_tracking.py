@@ -26,6 +26,7 @@
 
 import os
 import time
+from typing import Dict, List  # pylint: disable=unused-import
 
 import cmk_base.console as console
 
@@ -33,12 +34,13 @@ import cmk_base.console as console
 # TODO: This should be rewritten to a context manager object. See cmk.profile for
 #       an example how it could look like.
 
-times = {}
-last_time_snapshot = []
-phase_stack = []
+times = {}  # type: Dict[str, List[float]]
+last_time_snapshot = []  # type: List[float]
+phase_stack = []  # type: List[str]
 
 
 def start(initial_phase):
+    # type: (str) -> None
     global times, last_time_snapshot
     console.vverbose("[cpu_tracking] Start with phase '%s'\n" % initial_phase)
     times = {}
@@ -49,12 +51,14 @@ def start(initial_phase):
 
 
 def end():
+    # type: () -> None
     console.vverbose("[cpu_tracking] End\n")
     _add_times_to_phase()
     del phase_stack[:]
 
 
 def push_phase(phase):
+    # type: (str) -> None
     if _is_not_tracking():
         return
 
@@ -64,6 +68,7 @@ def push_phase(phase):
 
 
 def pop_phase():
+    # type: () -> None
     if _is_not_tracking():
         return
 
@@ -73,14 +78,17 @@ def pop_phase():
 
 
 def get_times():
+    # type: () -> Dict[str, List[float]]
     return times
 
 
 def _is_not_tracking():
+    # type: () -> bool
     return not bool(phase_stack)
 
 
 def _add_times_to_phase():
+    # type: () -> None
     global last_time_snapshot
     new_time_snapshot = _time_snapshot()
     for phase in phase_stack[-1], "TOTAL":
@@ -93,5 +101,6 @@ def _add_times_to_phase():
 
 
 def _time_snapshot():
+    # type: () -> List[float]
     # TODO: Create a better structure for this data
     return list(os.times()[:4]) + [time.time()]

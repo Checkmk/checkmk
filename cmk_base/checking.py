@@ -56,7 +56,7 @@ import cmk_base.check_api_utils as check_api_utils
 try:
     import cmk_base.cee.keepalive as keepalive
 except Exception:
-    keepalive = None
+    keepalive = None  # type: ignore
 
 # global variables used to cache temporary values that do not need
 # to be reset after a configuration change.

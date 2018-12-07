@@ -34,6 +34,7 @@ import os
 import py_compile
 import struct
 import sys
+from typing import Any, Callable, Dict, List, Tuple, Union  # pylint: disable=unused-import
 
 import six
 
@@ -2109,29 +2110,40 @@ NEGATE = '@negate'  # negation in boolean lists
 #           _initialize_data_structures()
 # TODO: Refactor this.
 
-_check_contexts = {}  # The checks are loaded into this dictionary. Each check
+# The checks are loaded into this dictionary. Each check
+_check_contexts = {}  # type: Dict[str, Any]
 # has a separate sub-dictionary, named by the check name.
 # It is populated with the includes and the check itself.
 
 # The following data structures will be filled by the checks
-check_info = {}  # all known checks
-check_includes = {}  # library files needed by checks
-precompile_params = {}  # optional functions for parameter precompilation
-check_default_levels = {}  # dictionary-configured checks declare their default level variables here
-factory_settings = {}  # factory settings for dictionary-configured checks
-check_config_variables = []  # variables (names) in checks/* needed for check itself
-snmp_info = {}  # whichs OIDs to fetch for which check (for tabular information)
-snmp_scan_functions = {}  # SNMP autodetection
-active_check_info = {}  # definitions of active "legacy" checks
-special_agent_info = {}
+# all known checks
+check_info = {}  # type: Dict[str, Union[Tuple[Any], Dict[str, Any]]]
+# library files needed by checks
+check_includes = {}  # type: Dict[str, List[Any]]
+# optional functions for parameter precompilation
+precompile_params = {}  # type: Dict[str, Callable[[str, str, Dict[str, Any]], Any]]
+# dictionary-configured checks declare their default level variables here
+check_default_levels = {}  # type: Dict[str, Any]
+# factory settings for dictionary-configured checks
+factory_settings = {}  # type: Dict[str, Dict[str, Any]]
+# variables (names) in checks/* needed for check itself
+check_config_variables = []  # type:  List[Any]
+# whichs OIDs to fetch for which check (for tabular information)
+snmp_info = {}  # type: Dict[str, Union[Tuple[Any], List[Tuple[Any]]]]
+# SNMP autodetection
+snmp_scan_functions = {}  # type: Dict[str, Callable[[Callable[[str], str]], bool]]
+# definitions of active "legacy" checks
+active_check_info = {}  # type: Dict[str, Dict[str, Any]]
+special_agent_info = {
+}  # type: Dict[str, Callable[[Dict[str, Any], str, str], Union[str, List[str]]]]
 
 # Names of variables registered in the check files. This is used to
 # keep track of the variables needed by each file. Those variables are then
 # (if available) read from the config and applied to the checks module after
 # reading in the configuration of the user.
-_check_variables = {}
+_check_variables = {}  # type: Dict[str, List[Any]]
 # keeps the default values of all the check variables
-_check_variable_defaults = {}
+_check_variable_defaults = {}  # type: Dict[str, Any]
 _all_checks_loaded = False
 
 # workaround: set of check-groups that are to be treated as service-checks even if

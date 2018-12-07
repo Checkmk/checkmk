@@ -30,6 +30,7 @@ import sys
 import py_compile
 import tempfile
 import errno
+from typing import Dict  # pylint: disable=unused-import
 
 import cmk.paths
 import cmk.tty as tty
@@ -959,7 +960,7 @@ def precompile_hostchecks():
 
 
 # read python file and strip comments
-g_stripped_file_cache = {}
+g_stripped_file_cache = {}  # type: Dict[str, str]
 
 
 def stripped_python_file(filename):

@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import os
+from typing import Any, Dict  # pylint: disable=unused-import
 
 import cmk.paths
 
@@ -38,11 +39,15 @@ import cmk_base.check_utils
 # TODO: Clean this up!
 #from cmk_base.config import *
 
-inv_info = {}  # Inventory plugins
-inv_export = {}  # Inventory export hooks
-_plugin_contexts = {}  # The checks are loaded into this dictionary. Each check
+# Inventory plugins
+inv_info = {}  # type: Dict[str, Dict[str, Any]]
+# Inventory export hooks
+inv_export = {}  # type: Dict[str, Dict[str, Any]]
+# The checks are loaded into this dictionary. Each check
+_plugin_contexts = {}  # type: Dict[str, Dict[str, Any]]
 # becomes a separat sub-dictionary, named by the check name
-_include_contexts = {}  # These are the contexts of the check include files
+# These are the contexts of the check include files
+_include_contexts = {}  # type: Dict[str, Any]
 
 
 def load_plugins(get_check_api_context, get_inventory_context):

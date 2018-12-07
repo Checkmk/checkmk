@@ -26,7 +26,7 @@
 
 from typing import List, Tuple  # pylint: disable=unused-import
 
-# suppress "Cannot fine module" error from mypy
+# suppress "Cannot find module" error from mypy
 import livestatus  # type: ignore
 
 import cmk

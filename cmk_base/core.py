@@ -42,7 +42,8 @@ import cmk_base.nagios_utils
 from cmk_base import config_cache
 import cmk_base.cleanup
 
-import livestatus
+# suppress "Cannot find module" error from mypy
+import livestatus  # type: ignore
 
 _restart_lock_fd = None
 

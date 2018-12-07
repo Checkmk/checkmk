@@ -36,7 +36,7 @@ from cmk_base.exceptions import MKAgentError, MKSNMPError, MKIPAddressLookupErro
 try:
     import cmk_base.cee.keepalive as keepalive
 except Exception:
-    keepalive = None
+    keepalive = None  # type: ignore
 
 
 def handle_check_mk_check_result(check_plugin_name, description):

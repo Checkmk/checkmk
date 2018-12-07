@@ -37,7 +37,8 @@ import urllib
 
 import six
 
-import livestatus
+# suppress "Cannot find module" error from mypy
+import livestatus  # type: ignore
 import cmk
 from cmk.regex import regex
 import cmk.daemon

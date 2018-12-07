@@ -26,6 +26,7 @@
 
 import os
 import subprocess
+from typing import Any, Dict, List  # pylint: disable=unused-import
 
 import cmk.debug
 import cmk.tty as tty
@@ -45,7 +46,7 @@ import cmk_base.snmp_utils
 try:
     import cmk_base.cee.inline_snmp as inline_snmp
 except ImportError:
-    inline_snmp = None
+    inline_snmp = None  # type: ignore
 
 _enforce_stored_walks = False
 
@@ -53,7 +54,7 @@ _enforce_stored_walks = False
 _g_single_oid_hostname = None
 _g_single_oid_ipaddress = None
 _g_single_oid_cache = None
-_g_walk_cache = {}
+_g_walk_cache = {}  # type: Dict[str, List[str]]
 
 #.
 #   .--caching-------------------------------------------------------------.

@@ -44,7 +44,8 @@ import subprocess
 import sys
 import time
 
-import livestatus
+# suppress "Cannot find module" error from mypy
+import livestatus  # type: ignore
 from cmk.regex import regex
 import cmk.paths
 from cmk.exceptions import MKGeneralException
@@ -58,7 +59,7 @@ import cmk_base.events as events
 try:
     import cmk_base.cee.keepalive as keepalive
 except ImportError:
-    keepalive = None
+    keepalive = None  # type: ignore
 
 _log_to_stdout = False
 

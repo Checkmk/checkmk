@@ -79,8 +79,8 @@ public:
     Impl(const std::string &str, Case c, Syntax s)
         : _regex(s == Syntax::literal
                      ? std::regex_replace(
-                           str, std::regex(R"([.^$|()\[\]{}*+?\\])"),
-                           R"(\&)", std::regex_constants::format_sed)
+                           str, std::regex(R"([.^$|()\[\]{}*+?\\])"), R"(\\&)",
+                           std::regex_constants::format_sed)
                      : str,
                  c == Case::respect
                      ? std::regex::extended

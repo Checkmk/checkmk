@@ -1,6 +1,6 @@
 FILES_TO_CHECK := $(realpath $(addprefix ../../cmk/ec/,defaults.py export.py main.py settings.py)) \
-		  $(realpath $(addprefix ../../cmk/cee/dcd/,main.py Config.py Manager.py CommandManager.py)) \
-		  $(realpath $(addprefix ../../cmk/cee/dcd/connectors,piggyback.py utils.py)) \
+		  $(realpath $(wildcard ../../cmk/cee/dcd/*.py)) \
+		  $(realpath $(wildcard ../../cmk/cee/dcd/connectors/*.py)) \
 		  $(realpath $(wildcard ../../cmk/*.py)) \
 		  $(realpath $(wildcard ../../cmk/notification_plugins/*.py)) \
 		  $(realpath $(wildcard ../../cmk_base/*.py)) \

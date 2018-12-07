@@ -1,4 +1,4 @@
 #! /bin/sh
 # mypy_path in mypy.ini doesn't support relative paths, so we need this wrapper... :-/
-cd `dirname $0`
-MYPYPATH=`realpath typeshed` exec ./.venv/bin/mypy "$@"
+cd $(dirname $0)
+MYPYPATH=$(realpath ../..):$(realpath typeshed) exec ./.venv/bin/mypy "$@"

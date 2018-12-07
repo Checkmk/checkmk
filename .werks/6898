@@ -1,0 +1,14 @@
+Title: alcatel_cpu_aos7: Add support for new switches
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1544198052
+Class: feature
+
+This werk adds cpu usage monitoring (alcatel_cpu) support for the new
+switch devices running at least AOS7. The check alcatel_cpu_aos7 reuses
+the default values of check alcatel_cpu for consistent check behaviour.
+
+CMK-1188

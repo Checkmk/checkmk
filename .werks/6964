@@ -1,0 +1,15 @@
+Title: Fixed matching of literal strings when C++11 regex engine is used.
+Level: 2
+Component: livestatus
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p10
+Date: 1544189517
+
+Livestatus and CMC can use one of two regex engines: Either then one from
+the C++11 standard library or the one from the RE2 library.  Normal builds
+ship the latter, only a manually built Livestatus should ever use the
+former.  Nevertheless, both should work, but the C++11 variant had a quoting
+bug, resulting in incorrect matching. This has been fixed.

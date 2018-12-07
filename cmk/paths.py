@@ -40,8 +40,8 @@ final_config_file = None
 local_config_file = None
 check_mk_config_dir = None
 modules_dir = None
-var_dir = None
-log_dir = None
+var_dir = ''
+log_dir = ''
 precompiled_checks_dir = None
 autochecks_dir = None
 precompiled_hostchecks_dir = None
@@ -67,7 +67,7 @@ livestatus_unix_socket = None
 pnp_rraconf_dir = None
 livebackendsdir = None
 
-share_dir = None
+share_dir = ''
 checks_dir = None
 notifications_dir = None
 inventory_dir = None
@@ -83,7 +83,7 @@ lib_dir = None
 mib_dir = None
 
 # TODO: Add active_checks_dir and make it used in code
-local_share_dir = None
+local_share_dir = ''
 local_checks_dir = None
 local_notifications_dir = None
 local_inventory_dir = None
@@ -95,7 +95,7 @@ local_pnp_templates_dir = None
 local_doc_dir = None
 local_locale_dir = ''  # type: str
 local_bin_dir = None
-local_lib_dir = None
+local_lib_dir = ''
 local_mib_dir = None
 inventory_output_dir = None
 inventory_archive_dir = None

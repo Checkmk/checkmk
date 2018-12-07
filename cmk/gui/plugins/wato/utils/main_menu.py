@@ -26,6 +26,7 @@
 
 import abc
 import re
+from typing import Optional, Text  # pylint: disable=unused-import
 
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib

@@ -27,7 +27,8 @@ import os
 import json
 import time
 
-import livestatus
+# suppress "Cannot find module" error from mypy
+import livestatus  # type: ignore
 from livestatus import MKLivestatusNotFoundError
 
 from cmk.exceptions import MKGeneralException

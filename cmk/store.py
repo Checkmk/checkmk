@@ -33,6 +33,7 @@ import os
 import pprint
 import tempfile
 import time
+from typing import List  # pylint: disable=unused-import
 
 import pathlib2 as pathlib
 
@@ -270,7 +271,7 @@ def save_to_mk_file(path, key, value, pprint_value=False):
 #   '----------------------------------------------------------------------'
 
 g_aquired_locks = []
-g_locked_paths = []
+g_locked_paths = []  # type: List[str]
 
 
 def aquire_lock(path, blocking=True):

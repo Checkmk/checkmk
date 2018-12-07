@@ -26,6 +26,7 @@
 
 import sys
 import logging as _logging
+from typing import Any  # pylint: disable=unused-import
 
 # Just for reference, the predefined logging levels:
 #
@@ -70,8 +71,10 @@ DEBUG = _logging.DEBUG
 
 VERBOSE = 15
 
+_logger_class = _logging.getLoggerClass()  # type: Any
 
-class CMKLogger(_logging.getLoggerClass()):
+
+class CMKLogger(_logger_class):
     def __init__(self, name, level=_logging.NOTSET):
         super(CMKLogger, self).__init__(name, level)
 

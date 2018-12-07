@@ -28,6 +28,7 @@ import abc
 import numbers
 import os
 import sys
+from typing import Any, List  # pylint: disable=unused-import
 
 import cmk.paths
 import cmk.tty as tty
@@ -66,7 +67,7 @@ _failed_ip_lookups = []
 #   | Managing of warning messages occuring during configuration building  |
 #   '----------------------------------------------------------------------'
 
-g_configuration_warnings = []
+g_configuration_warnings = []  # type: List[Any]
 
 
 def initialize_warnings():

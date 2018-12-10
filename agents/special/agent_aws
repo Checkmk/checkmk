@@ -33,6 +33,7 @@ import datetime
 import json
 import logging
 import sys
+import time
 from typing import NamedTuple, Any
 
 import boto3
@@ -111,6 +112,15 @@ class AWSSection(object):
     def name(self):
         pass
 
+    @abc.abstractproperty
+    def interval(self):
+        """
+        In general the default resolution of AWS metrics is 5 min (300 sec)
+        The default resolution of AWS S3 metrics is 1 day (86400 sec)
+        We use interval property for cached section.
+        """
+        pass
+
     def run(self):
         if self._client is None:
             msg = "%s: No client initialized" % self.__class__.__name__
@@ -167,10 +177,14 @@ class AWSSection(object):
         self._received_results.setdefault(sender.name, content)
 
 
-class EC2InstancesSummary(AWSSection):
+class EC2Summary(AWSSection):
     @property
     def name(self):
-        return "ec2_instances_summary"
+        return "ec2_summary"
+
+    @property
+    def interval(self):
+        return 300
 
     def _get_raw_result(self):
         return self._client.describe_instances()
@@ -186,10 +200,14 @@ class EC2InstancesSummary(AWSSection):
         return [AWSSectionResult("", content)]
 
 
-class EC2Instance(AWSSection):
+class EC2(AWSSection):
     @property
     def name(self):
-        return "ec2_instance"
+        return "ec2"
+
+    @property
+    def interval(self):
+        return 300
 
     def _get_raw_result(self):
         pass
@@ -216,19 +234,18 @@ class AWSSections(object):
         cloudwatch_client = self._init_client('cloudwatch')
 
         #---distributors----------------------------------------------------
-        ec2_instances_summary_distributor = ResultDistributor()
+        ec2_summary_distributor = ResultDistributor()
 
         #---sections--------------------------------------------------------
-        ec2_instances_summary_section = EC2InstancesSummary(ec2_client,
-                                                            ec2_instances_summary_distributor)
-        ec2_instance = EC2Instance(cloudwatch_client)
+        ec2_summary = EC2Summary(ec2_client, ec2_summary_distributor)
+        ec2 = EC2(cloudwatch_client)
 
         #---distributors registry-------------------------------------------
-        ec2_instances_summary_distributor.add(ec2_instance)
+        ec2_summary_distributor.add(ec2)
 
         #---section registry------------------------------------------------
-        self._sections.append(ec2_instances_summary_section)
-        self._sections.append(ec2_instance)
+        self._sections.append(ec2_summary)
+        self._sections.append(ec2)
 
     def _init_client(self, client_key):
         try:
@@ -253,7 +270,7 @@ class AWSSections(object):
                 logging.info(e)
                 self._exceptions.append(e)
             else:
-                self._results.setdefault(section.name, result)
+                self._results.setdefault((section.name, section.interval), result)
 
         if not self._results:
             logging.info("No results")
@@ -269,7 +286,8 @@ class AWSSections(object):
         else:
             sys.stdout.write("No exceptions\n")
 
-        for section_name, result in self._results.iteritems():
+        now = int(time.time())
+        for (section_name, section_interval), result in self._results.iteritems():
             if not result:
                 msg = "No results of %s" % section_name
                 logging.info(msg)
@@ -279,9 +297,10 @@ class AWSSections(object):
                 logging.info(msg)
                 raise AWSSectionError(msg)
 
+            section_header = "<<<aws_%s:cached(%s,%s)>>>\n" % (section_name, now, section_interval)
             for row in result:
                 if row.piggyback_hostname:
-                    sys.stdout.write("<<<<%s>>>>\n" % row.piggyback_hostname)
+                    sys.stdout.write(section_header)
                 sys.stdout.write("<<<aws_%s>>>\n" % section_name)
                 sys.stdout.write("%s\n" % json.dumps(row.content, default=_datetime_converter))
                 if row.piggyback_hostname:

@@ -378,12 +378,12 @@ class AzureMetric(object):
             LOG.warning(msg + " for resource %s" % rid)
 
         for measurement in reversed(metric.timeseries):
-            LOG.debug("measurement: %s", measurement)
             if not measurement.data:
                 continue
 
             for aggr in AzureMetric.AGGREGATIONS:
                 for data in reversed(measurement.data):
+                    LOG.debug("data: %s", data)
                     if hasattr(data, aggr):
                         value = getattr(data, aggr)
                         # the field *may* be present, even if we did not ask for it.
@@ -527,18 +527,20 @@ class AzureClient(object):
         for m_def in self.discover_metrics(rid):  # sort into categories
             cat = self._categorize_metric(m_def)
             categorized_metrics.setdefault(cat, []).append(m_def)
-        LOG.debug("categorized_metrics = %r", categorized_metrics)
 
         for time_grain in ('PT1M', 'PT1H'):
-            metrics_no_dim = categorized_metrics.get('%s_no_dim' % time_grain)
+            metric_type = '%s_no_dim' % time_grain
+            metrics_no_dim = categorized_metrics.get(metric_type)
             if metrics_no_dim:
                 _names = ','.join(m.name.value for m in metrics_no_dim)
+                LOG.debug("metrics of type %r: %r", metric_type, _names)
                 metrics += self._fetch_specific_metrics(rid, _names, time_grain, None, None, err)
 
-            metrics_opt_dim = categorized_metrics.get('%s_opt_dim' % time_grain)
+            metric_type = '%s_opt_dim' % time_grain
+            metrics_opt_dim = categorized_metrics.get(metric_type)
             if metrics_opt_dim:
                 _names = ','.join(m.name.value for m in metrics_opt_dim)
-                LOG.info("These metrics have dimensions: %s", _names)
+                LOG.debug("metrics of type %r: %r", metric_type, _names)
                 metrics += self._fetch_specific_metrics(rid, _names, time_grain, None, None, err)
 
             # TODO: dimension required. How does this work?
@@ -586,7 +588,6 @@ class AzureClient(object):
             metrics += [
                 AzureMetric(metric, rid, time_grain, filters, err) for metric in raw.output.value
             ]
-            LOG.debug("fetched metrics: %s", metricnames)
         except ErrorResponseException as exc:
             if self.args.debug:
                 raise exc

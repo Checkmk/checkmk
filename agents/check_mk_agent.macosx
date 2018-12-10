@@ -58,8 +58,12 @@ echo "LocalDirectory: $LOCALDIR"
 
 osver="$(uname -r)"
 
-echo '<<<df>>>';
-df -kPt hfs | sed -e 's/^\([^ ][^ ]*\) \(.*\)$/\1 hfs \2/' | sed 1d
+echo '<<<df>>>'
+df -kPT hfs,apfs | sed 1d | \
+while read DEV REST; do
+    TYPE=$(diskutil info "$DEV" | grep '^\s*Type' | cut -d: -f2 | tr -d '[:space:]')
+    echo "$DEV $TYPE $REST"
+done
 
 echo '<<<cpu>>>';
 echo `sysctl -n vm.loadavg | tr -d '{}'` `top -l 1 -n 1 | egrep ^Processes: |
@@ -90,8 +94,10 @@ echo '<<<ps>>>'
 ps ax -o user,vsz,rss,pcpu,command | sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4) /'
 
 # NTP seems to be enabled as a default
-echo '<<<ntp>>>'
-ntpq -np | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/'
+if which ntpq >/dev/null; then
+    echo '<<<ntp>>>'
+    ntpq -np | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/'
+fi
 
 # TCP Conn stats
 echo '<<<tcp_conn_stats>>>'

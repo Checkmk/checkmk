@@ -53,17 +53,6 @@ def test_output_funnel_drain(html):
     assert html.written == "B"
 
 
-def test_output_funnel_flush(html):
-    html.plug()
-    html.write("A")
-    assert html.plug_text == [["A"]]
-    html.flush()
-    assert html.written == "A"
-    assert html.plug_text == [[]]
-    html.unplug()
-    assert html.written == "A"
-
-
 def test_output_funnel_context_nesting(html):
     html.write("A")
     assert html.written == "A"

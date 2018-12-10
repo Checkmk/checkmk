@@ -420,17 +420,6 @@ class OutputFunnel(object):
     def _is_plugged(self):
         return self.plug_level > -1
 
-    # Pull the plug for a moment to allow the sink content to pass through.
-    def flush(self):
-        if not self._is_plugged():
-            return None
-
-        text = "".join(self.plug_text[self.plug_level])
-        self.plug_text[self.plug_level] = []
-        self.plug_level -= 1
-        self.write(text)
-        self.plug_level += 1
-
     # Get the sink content in order to do something with it.
     def drain(self):
         if not self._is_plugged():
@@ -444,9 +433,9 @@ class OutputFunnel(object):
         if not self._is_plugged():
             return
 
-        self.flush()
-        self.plug_text.pop()
+        text = "".join(self.plug_text.pop())
         self.plug_level -= 1
+        self.write(text)
 
     def unplug_all(self):
         while self._is_plugged():

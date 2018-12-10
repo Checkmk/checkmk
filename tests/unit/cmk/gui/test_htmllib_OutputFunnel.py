@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import pytest
+import pytest  # type: ignore
 
 from cmk.gui.htmllib import OutputFunnel
 
@@ -62,7 +62,7 @@ def test_output_funnel_drain(html):
 def test_output_funnel_flush(html):
     html.plug()
     html.write("A")
-    html.plug_text == ["A"]
+    assert html.plug_text == [["A"]]
     html.flush()
     assert html.written == "A"
     assert html.plug_text == [[]]

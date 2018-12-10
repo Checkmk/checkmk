@@ -236,6 +236,18 @@ table.validationerror img {
     text-align: left;
 }
 
+a.service_button.disabled {
+    pointer-events: none;
+    cursor: default;
+    filter: grayscale(100%);
+    -webkit-filter: grayscale(100%);
+    -moz-filter: grayscale(100%);
+    -ms-filter: grayscale(100%);
+    -o-filter: grayscale(100%);
+    filter: gray;
+    -webkit-filter: grayscale(1);
+}
+
 .wato table.data tr.data td.bulksearch {
     padding-right: 0px;
     white-space: nowrap;

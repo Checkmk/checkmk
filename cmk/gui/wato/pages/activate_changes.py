@@ -198,7 +198,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
         self._change_table()
 
     def _activation_msg(self):
-        html.open_div(id_="activation_msg", style="display:none")
+        html.open_div(id_="async_progress_msg", style="display:none")
         html.show_info("")
         html.close_div()
 

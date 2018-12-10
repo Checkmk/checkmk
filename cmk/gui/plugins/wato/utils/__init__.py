@@ -67,7 +67,10 @@ from cmk.gui.valuespec import (
     ValueSpec,
     Url,
 )
-from cmk.gui.plugins.wato.utils.base_modes import WatoMode
+from cmk.gui.plugins.wato.utils.base_modes import (
+    WatoMode,
+    WatoWebApiMode,
+)
 from cmk.gui.plugins.wato.utils.simple_modes import (
     SimpleModeType,
     SimpleListMode,
@@ -77,6 +80,7 @@ from cmk.gui.plugins.wato.utils.context_buttons import (
     global_buttons,
     changelog_button,
     home_button,
+    host_status_button,
 )
 from cmk.gui.plugins.wato.utils.html_elements import (
     wato_styles,

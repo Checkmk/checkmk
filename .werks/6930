@@ -1,0 +1,23 @@
+Title: Service discovery page can now handle long running tasks
+Level: 2
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1544597792
+Class: feature
+
+The service discovery page of the configuration GUI could end up
+in timeouts when working with devices that need a long time to
+process the discovery process. This mostly affected either large
+or slow responding SNMP devices.
+
+The discovery page is now initially loading almost immediately
+and then starts fetching the content in the background. The
+potential long running tasks (full scan or autmatic refresh) are
+performed in the background. While these actions are performed,
+the GUI shows the already known check table in a read only mode.
+
+Discovering services of hosts monitored by remote sites using a
+pre 1.6 version is possible but can still end up in timeouts. The
+new logic is only used by sites using version 1.6 or newer.

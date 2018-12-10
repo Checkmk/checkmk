@@ -70,6 +70,7 @@ def test_registered_automation_commands():
         'execute-dcd-command',
         'network-scan',
         'push-snapshot',
+        'service-discovery-job',
     ])
 
 

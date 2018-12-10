@@ -2118,7 +2118,7 @@ class NodeRenderer(object):
         return keys
 
     def _show_numeration_table(self, titles, invpath, data):
-        # We cannot use table here, since html.plug() does not work recursively
+        # TODO: Use table.open_table() below.
         html.open_table(class_="data")
         html.open_tr()
         for title, key in titles:

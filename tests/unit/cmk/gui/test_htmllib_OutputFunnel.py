@@ -102,7 +102,7 @@ def test_output_funnel_context_raise(html):
     except Exception as e:
         assert "%s" % e == "Test exception"
     finally:
-        assert not html.is_plugged()
+        assert html.plug_text == []
 
 
 def test_output_funnel_try_finally(html):

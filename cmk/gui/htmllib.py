@@ -387,7 +387,7 @@ class OutputFunnel(object):
             raise MKGeneralException(
                 _('Type Error: html.write accepts str and unicode input objects only!'))
 
-        if self.is_plugged():
+        if self._is_plugged():
             self.plug_text[self.plug_level].append(text)
         else:
             # encode when really writing out the data. Not when writing plugged,
@@ -417,12 +417,12 @@ class OutputFunnel(object):
         self.plug_text.append([])
         self.plug_level += 1
 
-    def is_plugged(self):
+    def _is_plugged(self):
         return self.plug_level > -1
 
     # Pull the plug for a moment to allow the sink content to pass through.
     def flush(self):
-        if not self.is_plugged():
+        if not self._is_plugged():
             return None
 
         text = "".join(self.plug_text[self.plug_level])
@@ -433,7 +433,7 @@ class OutputFunnel(object):
 
     # Get the sink content in order to do something with it.
     def drain(self):
-        if not self.is_plugged():
+        if not self._is_plugged():
             return ''
 
         text = "".join(self.plug_text[self.plug_level])
@@ -441,7 +441,7 @@ class OutputFunnel(object):
         return text
 
     def unplug(self):
-        if not self.is_plugged():
+        if not self._is_plugged():
             return
 
         self.flush()
@@ -449,7 +449,7 @@ class OutputFunnel(object):
         self.plug_level -= 1
 
     def unplug_all(self):
-        while self.is_plugged():
+        while self._is_plugged():
             self.unplug()
 
 

@@ -9,45 +9,45 @@ import tools
 
 
 def test_HTMLGenerator(register_builtin_html):
-    html.plug()
-
     with html.plugged():
-        html.open_div()
-        text = html.drain()
-        assert text.rstrip('\n').rstrip(' ') == "<div>"
 
-    with html.plugged():
-        #html.open_div().write("test").close_div()
-        html.open_div()
-        html.write("test")
-        html.close_div()
-        assert tools.compare_html(html.drain(), "<div>test</div>")
+        with html.plugged():
+            html.open_div()
+            text = html.drain()
+            assert text.rstrip('\n').rstrip(' ') == "<div>"
 
-    with html.plugged():
-        #html.open_table().open_tr().td("1").td("2").close_tr().close_table()
-        html.open_table()
-        html.open_tr()
-        html.td("1")
-        html.td("2")
-        html.close_tr()
-        html.close_table()
-        assert tools.compare_html(html.drain(), "<table><tr><td>1</td><td>2</td></tr></table>")
+        with html.plugged():
+            #html.open_div().write("test").close_div()
+            html.open_div()
+            html.write("test")
+            html.close_div()
+            assert tools.compare_html(html.drain(), "<div>test</div>")
 
-    with html.plugged():
-        html.div("test", **{"</div>malicious_code<div>": "trends"})
-        assert tools.compare_html(html.drain(), "<div &lt;/div&gt;malicious_code&lt;div&gt;=trends>test</div>")
+        with html.plugged():
+            #html.open_table().open_tr().td("1").td("2").close_tr().close_table()
+            html.open_table()
+            html.open_tr()
+            html.td("1")
+            html.td("2")
+            html.close_tr()
+            html.close_table()
+            assert tools.compare_html(html.drain(), "<table><tr><td>1</td><td>2</td></tr></table>")
 
-    a = u"\u2665"
-    with html.plugged():
-        assert html.render_a("test", href="www.test.case")
-        html.render_a(u"test", href="www.test.case")
-        html.render_a("test", href=u"www.test.case")
-        html.render_a(u"test", href=u"www.test.case")
-        try:
-            assert html.render_a(u"test", href=unicode("www.test.case"), id_=unicode("something"), class_=unicode("test_%s") % a)
-        except Exception as e:
-            print traceback.print_exc()
-            print e
+        with html.plugged():
+            html.div("test", **{"</div>malicious_code<div>": "trends"})
+            assert tools.compare_html(html.drain(), "<div &lt;/div&gt;malicious_code&lt;div&gt;=trends>test</div>")
+
+        a = u"\u2665"
+        with html.plugged():
+            assert html.render_a("test", href="www.test.case")
+            html.render_a(u"test", href="www.test.case")
+            html.render_a("test", href=u"www.test.case")
+            html.render_a(u"test", href=u"www.test.case")
+            try:
+                assert html.render_a(u"test", href=unicode("www.test.case"), id_=unicode("something"), class_=unicode("test_%s") % a)
+            except Exception as e:
+                print traceback.print_exc()
+                print e
 
 
 def test_multiclass_call(register_builtin_html):

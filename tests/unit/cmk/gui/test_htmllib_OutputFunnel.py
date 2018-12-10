@@ -26,36 +26,30 @@ def test_output_funnel_not_plugged(html):
 
 
 def test_output_funnel_plugged(html):
-    html.plug()
-    html.write("B")
-    assert html.plug_text == [["B"]]
+    with html.plugged():
+        html.write("B")
+        assert html.plug_text == [["B"]]
 
 
 def test_output_funnel_2nd_plug(html):
-    html.plug()
-    html.write("B")
-    assert html.plug_text == [["B"]]
-
-    html.plug()
-    html.write("C")
-    assert html.plug_text == [["B"], ["C"]]
-
-    html.unplug()
-    assert html.plug_text == [["B", "C"]]
-
-    html.unplug()
+    with html.plugged():
+        html.write("B")
+        assert html.plug_text == [["B"]]
+        with html.plugged():
+            html.write("C")
+            assert html.plug_text == [["B"], ["C"]]
+        assert html.plug_text == [["B", "C"]]
     assert html.written == "BC"
 
 
 def test_output_funnel_drain(html):
-    html.plug()
-    html.write("A")
-    text = html.drain()
-    assert text == "A"
+    with html.plugged():
+        html.write("A")
+        text = html.drain()
+        assert text == "A"
 
-    html.write("B")
-    assert html.plug_text == [["B"]]
-    html.unplug()
+        html.write("B")
+        assert html.plug_text == [["B"]]
     assert html.written == "B"
 
 

@@ -187,35 +187,26 @@ def compare_and_empty(old, new):
 
 
 def _html_generator_test(old, new, fun, reinit=True):
+    with old.plugged():
+        with new.plugged():
+            vars_before = get_attributes(old)
 
-#     try:
+            fun(old)
+            fun(new)
 
-        old.plug()
-        new.plug()
+            vars_after = get_attributes(old)
 
+            # compare html code
+            old_html = old.drain()
+            new_html = new.drain()
+            compare_html(old_html, new_html)
 
-        vars_before = get_attributes(old)
+            # compare attribute values
+            compare_attributes_of(old, new)
 
-        fun(old)
-        fun(new)
-
-        vars_after = get_attributes(old)
-
-        # compare html code
-        old_html = old.drain()
-        new_html = new.drain()
-        compare_html(old_html, new_html)
-
-        # compare attribute values
-        compare_attributes_of(old, new)
-
-        if reinit:
-            old.__init__()
-            new.__init__()
-
-        old.plug()
-        new.plug()
-
+            if reinit:
+                old.__init__()
+                new.__init__()
 
 
 # Try to render and write the html using the function fun. (e.g. old.open_head())

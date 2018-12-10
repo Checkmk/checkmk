@@ -1,0 +1,11 @@
+Title: aws_ec2, aws_ec2.cpu_util, aws_ec2.credits, aws_ec2.disk_io, aws_ec2.network_io: New checks which monitors AWS/EC2 instances
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1544450766
+Class: feature
+
+To make this check work you have to configure the related
+special agent {{Amazon Web Services (AWS)}}.

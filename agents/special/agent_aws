@@ -200,7 +200,7 @@ class EC2Summary(AWSSection):
         try:
             return raw_result['Reservations']
         except KeyError, e:
-            logging.info(e)
+            logging.info("%s: KeyError %s ", self.name, e)
             return
 
     def _format_content(self, content):
@@ -217,13 +217,73 @@ class EC2(AWSSection):
         return 300
 
     def _get_raw_result(self):
-        pass
+        end_time = time.time()
+        start_time = end_time - self.period
+        metrics = self._get_metrics()
+        if not metrics:
+            return {}
+        return self._client.get_metric_data(
+            MetricDataQueries=metrics,
+            StartTime=start_time,
+            EndTime=end_time,
+        )
+
+    def _get_metrics(self):
+        instance_ids = []
+        for entry in self._received_results.get('ec2_summary', []):
+            for instance in entry.get('Instances', []):
+                instance_ids.append(instance['InstanceId'])
+        metrics = []
+        idx = 0
+        for instance_id in instance_ids:
+            for metric_name, unit in [
+                ("CPUCreditUsage", "Count"),
+                ("CPUCreditBalance", "Count"),
+                ("CPUUtilization", "Percent"),
+                ("DiskReadOps", "Count"),
+                ("DiskWriteOps", "Count"),
+                ("DiskReadBytes", "Bytes"),
+                ("DiskWriteBytes", "Bytes"),
+                ("NetworkIn", "Bytes"),
+                ("NetworkOut", "Bytes"),
+                ("StatusCheckFailed_Instance", "Count"),
+                ("StatusCheckFailed_System", "Count"),
+            ]:
+                metrics.append({
+                    'Id': "%s_%s" % (metric_name.lower(), idx),
+                    'Label': instance_id,
+                    'MetricStat': {
+                        'Metric': {
+                            'Namespace': 'AWS/EC2',
+                            'MetricName': metric_name,
+                            'Dimensions': [{
+                                'Name': "InstanceId",
+                                'Value': instance_id,
+                            }]
+                        },
+                        'Period': self.period,
+                        'Stat': 'Average',
+                        'Unit': unit,
+                    },
+                })
+                idx += 1
+        return metrics
 
     def _extract_content_from(self, raw_result):
-        pass
+        try:
+            return raw_result['MetricDataResults']
+        except KeyError, e:
+            logging.info("%s: KeyError %s ", self.name, e)
+            return []
 
     def _format_content(self, content):
-        pass
+        content_by_piggyback_hosts = {}
+        for row in content:
+            content_by_piggyback_hosts.setdefault(row['Label'], []).append(row)
+        return [
+            AWSSectionResult(piggyback_hostname, rows)
+            for piggyback_hostname, rows in content_by_piggyback_hosts.iteritems()
+        ]
 
 
 #   ---sections handler-----------------------------------------------------

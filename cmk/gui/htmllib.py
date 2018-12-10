@@ -2110,18 +2110,39 @@ class html(HTMLGenerator):
         self.write(self.render_icon(icon, cssclass="iconbutton"))
 
     # TODO: Cleanup to use standard attributes etc.
-    def jsbutton(self, varname, text, onclick, style='', cssclass=""):
+    def jsbutton(self,
+                 varname,
+                 text,
+                 onclick,
+                 style='',
+                 cssclass="",
+                 title="",
+                 disabled=False,
+                 class_=None):
+        # Same API as other elements: class_ can be a list or string/None
+        classes = []
+        if class_:
+            classes = class_ if isinstance(class_, list) else [class_]
+
+        if disabled:
+            classes.append("disabled")
+            disabled = ""
+        else:
+            disabled = None
+
         # autocomplete="off": Is needed for firefox not to set "disabled="disabled" during page reload
         # when it has been set on a page via javascript before. Needed for WATO activate changes page.
         self.input(
             name=varname,
             type_="button",
             id_=varname,
-            class_=["button", cssclass],
+            class_=["button", cssclass] + classes,
             autocomplete="off",
             onclick=onclick,
             style=style,
-            value=text)
+            disabled=disabled,
+            value=text,
+            title=title)
 
     #
     # Other input elements
@@ -2801,7 +2822,14 @@ hy
                            onclick=None,
                            style=None,
                            target=None,
-                           cssclass=None):
+                           cssclass=None,
+                           class_=None):
+        # Same API as other elements: class_ can be a list or string/None
+        classes = []
+        if cssclass:
+            classes.append(cssclass)
+        if class_:
+            classes = class_ if isinstance(class_, list) else [class_]
 
         icon = HTML(self.render_icon(icon, cssclass="iconbutton"))
 
@@ -2809,7 +2837,7 @@ hy
             icon, **{
                 'title': title,
                 'id': id_,
-                'class': cssclass,
+                'class': classes,
                 'style': style,
                 'target': target if target else '',
                 'href': url if not onclick else "javascript:void(0)",

@@ -137,6 +137,9 @@ class AutomationTryDiscovery(Automation):
             args = args[1:]
             do_snmp_scan = False
             use_caches = True
+            data_sources.abstract.DataSource.set_use_outdated_cache_file()
+            data_sources.tcp.TCPDataSource.use_only_cache()
+
         elif args[0] == '@scan':
             args = args[1:]
             do_snmp_scan = True

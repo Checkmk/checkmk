@@ -269,6 +269,103 @@ function update_bulk_moveto(val) {
 }
 
 //#.
+//#   .-AsyncProg.---------------------------------------------------------.
+//#   |           _                         ____                           |
+//#   |          / \   ___ _   _ _ __   ___|  _ \ _ __ ___   __ _          |
+//#   |         / _ \ / __| | | | '_ \ / __| |_) | '__/ _ \ / _` |         |
+//#   |        / ___ \\__ \ |_| | | | | (__|  __/| | | (_) | (_| |_        |
+//#   |       /_/   \_\___/\__, |_| |_|\___|_|   |_|  \___/ \__, (_)       |
+//#   |                    |___/                            |___/          |
+//#   +--------------------------------------------------------------------+
+//#   | Generic asynchronous process handling used by activate changes and |
+//#   | the service discovery dialogs                                      |
+//#   '--------------------------------------------------------------------'
+
+// Is called after the activation has been started (got the activation_id) and
+// then in interval of 500 ms for updating the dialog state
+function monitor_async_progress(handler_data)
+{
+    call_ajax(handler_data.update_url, {
+        response_handler : handle_async_progress_update,
+        error_handler    : handle_async_progress_error,
+        handler_data     : handler_data,
+        method           : "POST",
+        post_data        : handler_data.post_data,
+        add_ajax_id      : false
+    });
+}
+
+function handle_async_progress_update(handler_data, response_json)
+{
+    var response = JSON.parse(response_json);
+    if (response.result_code == 1) {
+        show_async_progress_error(response.result);
+        return; // Abort on error!
+    } else {
+        handler_data.update_function(handler_data, response.result);
+
+	if (!handler_data.is_finished_function(response.result)) {
+            setTimeout(function() {
+		return monitor_async_progress(handler_data);
+	    }, 500);
+	}
+	else {
+            handler_data.finish_function(response.result);
+	}
+    }
+}
+
+function handle_async_progress_error(handler_data, status_code, error_msg)
+{
+    if (time() - handler_data.start_time <= 10 && status_code == 503) {
+        show_async_progress_info("Failed to fetch state. This may be normal for a period of some seconds.");
+    } else if (status_code == 0) {
+        return; // not really an error. Reached when navigating away from the page
+    } else {
+        show_async_progress_error("Failed to fetch state ["+status_code+"]: " + error_msg + ". " +
+                              "Retrying in 1 second." +
+                              "<br><br>" +
+                              "In case this error persists for more than some seconds, please verify that all " +
+                              "processes of the site are running.");
+    }
+
+    setTimeout(function() {
+        return monitor_async_progress(handler_data);
+    }, 1000);
+}
+
+function show_async_progress_error(text)
+{
+    var container = document.getElementById("async_progress_msg");
+    container.style.display = "block";
+    var msg = container.childNodes[0];
+
+    add_class(msg, "error");
+    remove_class(msg, "success");
+
+    msg.innerHTML = text;
+}
+
+function show_async_progress_info(text)
+{
+    var container = document.getElementById("async_progress_msg");
+    container.style.display = "block";
+    var msg = container.childNodes[0];
+
+    add_class(msg, "success");
+    remove_class(msg, "error");
+
+    msg.innerHTML = text;
+}
+
+function hide_async_progress_msg()
+{
+    var msg = document.getElementById("async_progress_msg");
+    if (msg)
+        msg.style.display = "none";
+}
+
+//#.
 //#   .-Activation---------------------------------------------------------.
 //#   |              _        _   _            _   _                       |
 //#   |             / \   ___| |_(_)_   ____ _| |_(_) ___  _ __            |
@@ -302,7 +399,7 @@ function activate_changes(mode, site_id)
         }
 
         if (sites.length == 0) {
-            show_activation_error("You have to select a site.");
+            show_async_progress_error("You have to select a site.");
             return;
         }
 
@@ -329,7 +426,7 @@ function activate_changes(mode, site_id)
 
 function start_activation(sites, activate_until, comment, activate_foreign)
 {
-    show_activation_info("Initializing activation...");
+    show_async_progress_info("Initializing activation...");
 
     var post_data = "activate_until=" + encodeURIComponent(activate_until)
                   + "&sites=" + encodeURIComponent(sites.join(","))
@@ -354,48 +451,25 @@ function handle_start_activation(_unused, response_json)
     var response = JSON.parse(response_json);
 
     if (response.result_code == 1) {
-        show_activation_error(response.result);
+        show_async_progress_error(response.result);
         lock_activation_controls(false);
     } else {
-        monitor_activation_progress(time(), response.result.activation_id);
+        show_async_progress_info("Activating...");
+        monitor_async_progress({
+            "update_url" : "ajax_activation_state.py?activation_id=" + encodeURIComponent(response.result.activation_id),
+            "start_time" : time(),
+            "update_function": update_activation_state,
+            "is_finished_function": is_activation_progress_finished,
+            "finish_function": finish_activation,
+            "post_data": ""
+        });
     }
 }
 
 function handle_start_activation_error(_unused, status_code, error_msg)
 {
-    show_activation_error("Failed to start activation ["+status_code+"]: " + error_msg);
-    finish_activation();
-}
-
-function show_activation_error(text)
-{
-    var container = document.getElementById("activation_msg");
-    container.style.display = "block";
-    var msg = container.childNodes[0];
-
-    add_class(msg, "error");
-    remove_class(msg, "success");
-
-    msg.innerHTML = text;
-}
-
-function show_activation_info(text)
-{
-    var container = document.getElementById("activation_msg");
-    container.style.display = "block";
-    var msg = container.childNodes[0];
-
-    add_class(msg, "success");
-    remove_class(msg, "error");
-
-    msg.innerHTML = text;
-}
-
-function hide_activation_message()
-{
-    var msg = document.getElementById("activation_msg");
-    if (msg)
-        msg.style.display = "none";
+    show_async_progress_error("Failed to start activation ["+status_code+"]: " + error_msg);
+    finish_activation(null);
 }
 
 function lock_activation_controls(lock)
@@ -457,45 +531,7 @@ function show_progress(show)
     }
 }
 
-// Is called after the activation has been started (got the activation_id) and
-// then in interval of 500 ms for updating the dialog state
-function monitor_activation_progress(start_time, activation_id)
-{
-    show_activation_info("Activating...");
-
-    call_ajax("ajax_activation_state.py?activation_id=" + encodeURIComponent(activation_id), {
-        response_handler : handle_activation_progress,
-        error_handler    : handle_activation_progress_error,
-        handler_data     : {
-            "activation_id" : activation_id,
-            "start_time"    : start_time
-        },
-        method           : "GET",
-        add_ajax_id      : false
-    });
-}
-
-function handle_activation_progress(handler_data, response_json)
-{
-    var response = JSON.parse(response_json);
-    if (response.result_code == 1) {
-        show_activation_error(response.result);
-        return; // Abort on error!
-    } else {
-        update_activation_state(response.result);
-
-	if (!activation_progress_finished(response.result)) {
-            setTimeout(function() {
-		return monitor_activation_progress(handler_data.start_time, handler_data.activation_id);
-	    }, 500);
-	}
-	else {
-	    finish_activation();
-	}
-    }
-}
-
-function activation_progress_finished(response)
+function is_activation_progress_finished(response)
 {
     for (var site_id in response["sites"]) {
         // skip loop if the property is from prototype
@@ -510,7 +546,7 @@ function activation_progress_finished(response)
     return true;
 }
 
-function update_activation_state(response)
+function update_activation_state(_unused_handler_data, response)
 {
     for (var site_id in response["sites"]) {
         // skip loop if the property is from prototype
@@ -582,10 +618,10 @@ function update_site_progress(site_state)
 function handle_activation_progress_error(handler_data, status_code, error_msg)
 {
     if (time() - handler_data.start_time <= 10 && status_code == 503) {
-        show_activation_info("Failed to fetch activation state. In case you changed site management related " +
+        show_async_progress_info("Failed to fetch activation state. In case you changed site management related " +
                              "global settings this is normal for a period of some seconds.");
     } else {
-        show_activation_error("Failed to fetch activation state ["+status_code+"]: " + error_msg + ". " +
+        show_async_progress_error("Failed to fetch activation state ["+status_code+"]: " + error_msg + ". " +
                               "Retrying in 1 second." +
                               "<br><br>" +
                               "In case this error persists for more than some seconds, please verify that all " +
@@ -597,9 +633,9 @@ function handle_activation_progress_error(handler_data, status_code, error_msg)
     }, 1000);
 }
 
-function finish_activation()
+function finish_activation(response)
 {
-    show_activation_info("Activation has finished. Reloading in 1 second.");
+    show_async_progress_info("Activation has finished. Reloading in 1 second.");
     lock_activation_controls(false);
 
     // Maybe change this not to make a reload and only update the relevant
@@ -846,6 +882,149 @@ function start_host_diag_test(ident, hostname, transid) {
             + "&_test=" + encodeURIComponent(ident) + vars,
               handle_host_diag_result, { "hostname": hostname, "ident": ident });
 }
+
+//#.
+//#   .-Discovery----------------------------------------------------------.
+//#   |              ____  _                                               |
+//#   |             |  _ \(_)___  ___ _____   _____ _ __ _   _             |
+//#   |             | | | | / __|/ __/ _ \ \ / / _ \ '__| | | |            |
+//#   |             | |_| | \__ \ (_| (_) \ V /  __/ |  | |_| |            |
+//#   |             |____/|_|___/\___\___/ \_/ \___|_|   \__, |            |
+//#   |                                                  |___/             |
+//#   +--------------------------------------------------------------------+
+//#   | Handling of the asynchronous service discovery dialog              |
+//#   '--------------------------------------------------------------------'
+
+// Stores the latest discovery_result object which was used by the python
+// code to render the current page. It will be sent back to the python
+// code for further actions. It contains the check_table which actions of
+// the user are based on.
+var g_service_discovery_result = null;
+var g_show_updating_timer = null;
+
+function start_service_discovery(host_name, discovery_options, transid, request_vars)
+{
+    // When we receive no response for 2 seconds, then show the updating message
+    g_show_updating_timer = setTimeout(function() {
+        show_async_progress_info("Updating...");
+    }, 2000);
+
+    lock_service_discovery_controls(true);
+    monitor_async_progress({
+        "update_url" : "ajax_service_discovery.py",
+        "host_name": host_name,
+        "transid": transid,
+        "start_time" : time(),
+        "is_finished_function": is_service_discovery_finished,
+        "update_function": update_service_discovery,
+        "finish_function": finish_service_discovery,
+        "post_data": get_service_discovery_post_data(host_name, discovery_options, transid, request_vars)
+    });
+}
+
+function get_service_discovery_post_data(host_name, discovery_options, transid, request_vars)
+{
+    var request = {
+        "host_name": host_name,
+        "discovery_options": discovery_options,
+        "discovery_result": g_service_discovery_result
+    };
+
+    if (request_vars !== undefined && request_vars !== null) {
+        request = Object.assign(request, request_vars);
+    }
+
+    if (discovery_options.action == "bulk_update") {
+        var checked_checkboxes = [];
+        var checkboxes = document.getElementsByClassName("service_checkbox");
+        for (var i = 0; i < checkboxes.length; i++) {
+            if (checkboxes[i].checked) {
+                checked_checkboxes.push(checkboxes[i].name);
+            }
+        }
+        request["update_services"] = checked_checkboxes;
+    }
+
+    var post_data = "request=" + encodeURIComponent(JSON.stringify(request));
+
+    // Can currently not be put into "request" because the generic transaction
+    // manager relies on the HTTP var _transid.
+    if (transid !== undefined)
+        post_data += "&_transid=" + encodeURIComponent(transid);
+
+    return post_data;
+}
+
+function is_service_discovery_finished(response) {
+    return response.is_finished;
+}
+
+function finish_service_discovery(response)
+{
+    if (response.job_state == "exception"
+        || response.job_state == "stopped") {
+        show_async_progress_error(response.message);
+    } else {
+        //hide_async_progress_msg();
+    }
+    lock_service_discovery_controls(false);
+}
+
+function update_service_discovery(handler_data, response) {
+    if (g_show_updating_timer) {
+        clearTimeout(g_show_updating_timer);
+    }
+
+    if (response.message) {
+        show_async_progress_info(response.message);
+    } else {
+        hide_async_progress_msg();
+    }
+
+    g_service_discovery_result = response.discovery_result;
+    handler_data.post_data = get_service_discovery_post_data(handler_data.host_name, response.discovery_options, handler_data.transid);
+
+    var container = document.getElementById("service_container");
+    container.style.display = "block";
+    container.innerHTML = response.body;
+
+    update_service_discovery_activate_changes_button(response);
+}
+
+function update_service_discovery_activate_changes_button(response)
+{
+    var tmp_container = document.createElement("div");
+    tmp_container.innerHTML = response.changes_button;
+    var context_buttons_container = document.getElementsByClassName("contextlinks")[0];
+    var cur_changes_button = context_buttons_container.childNodes[0];
+    context_buttons_container.replaceChild(tmp_container.childNodes[0].childNodes[0], cur_changes_button);
+}
+
+function lock_service_discovery_controls(lock)
+{
+    var elements = [];
+    //elements.push(document.getElementById("activate_affected"));
+    //elements.push(document.getElementById("activate_selected"));
+    //// TODO: Remove once new changes mechanism has been implemented
+    //elements.push(document.getElementById("discard_changes_button"));
+
+    elements = elements.concat(Array.prototype.slice.call(document.getElementsByClassName("service_checkbox"), 0));
+    elements = elements.concat(Array.prototype.slice.call(document.getElementsByClassName("button"), 0));
+    elements = elements.concat(Array.prototype.slice.call(document.getElementsByClassName("service_button"), 0));
+
+    for (var i = 0; i < elements.length; i++) {
+        if (!elements[i])
+            continue;
+
+        if (lock)
+            add_class(elements[i], "disabled");
+        else
+            remove_class(elements[i], "disabled");
+
+        elements[i].disabled = lock;
+    }
+}
+
 
 // .-Active Checks---------------------------------------------------------.
 // |       _        _   _              ____ _               _              |

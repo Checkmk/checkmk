@@ -300,8 +300,8 @@ class AWSSections(object):
             section_header = "<<<aws_%s:cached(%s,%s)>>>\n" % (section_name, now, section_interval)
             for row in result:
                 if row.piggyback_hostname:
-                    sys.stdout.write(section_header)
-                sys.stdout.write("<<<aws_%s>>>\n" % section_name)
+                    sys.stdout.write("<<<<%s>>>>\n" % row.piggyback_hostname)
+                sys.stdout.write(section_header)
                 sys.stdout.write("%s\n" % json.dumps(row.content, default=_datetime_converter))
                 if row.piggyback_hostname:
                     sys.stdout.write("<<<<>>>>\n")

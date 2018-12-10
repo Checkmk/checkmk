@@ -1,0 +1,12 @@
+Title: alcatel_fans_aos7: Add support for new switches
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1544439136
+Class: feature
+
+This werk adds fan monitoring (alcatel_fans) support for the new switch
+devices running at least AOS7. The check alcatel_fans_aos7 reuses the
+default values of check alcatel_fans for consistent check behaviour.

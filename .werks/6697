@@ -1,0 +1,11 @@
+Title: BI aggregations: Fix incorrect warning message when checking for unique title
+Level: 1
+Component: bi
+Compatible: compat
+Edition: cre
+Version: 1.5.0p10
+Date: 1544431938
+Class: fix
+
+It was not possible to configure two identical BI aggregations with different aggregation groups.
+You had to configure one aggregation, which includes both groups.

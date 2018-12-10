@@ -1,0 +1,13 @@
+title: Alcatel switches (>=AOS7): Fan Status
+agents: snmp
+catalog: hw/network/alcatel
+license: GPL
+distribution: check_mk
+description:
+
+  This Check Monitors all Fans on new Alcatel switches running at least AOS7 supporting
+  the ALCATEL-IND1-CHASSIS-MIB (version for >=AOS7). The status is automaticly reported
+  by the device, so no configuration is needed.
+
+inventory:
+ One check is created

@@ -1578,7 +1578,6 @@ class ModeBIRules(ModeBI):
                 have_this = set([])
                 for (pack_id, aggr_id, aggregation) in aggregations_that_use_rule.get(rule_id, []):
                     if aggr_id not in have_this:
-                        pack = self.pack_containing_rule(rule_id)
                         aggr_url = html.makeuri_contextless([("mode", "bi_edit_aggregation"),
                                                              ("id", aggr_id), ("pack", pack_id)])
                         html.a(self.aggregation_title(aggregation), href=aggr_url)

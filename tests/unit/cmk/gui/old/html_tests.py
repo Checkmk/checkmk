@@ -177,12 +177,11 @@ def set_html_state(html, state):
 
 # run the memeber function for an html object with a number of arguments
 def eval_func(html, function_name, arguments):
-    html.plug()
-    func = getattr(html, function_name)
-    return_value = func(**arguments)
-    html_code = html.drain()
-    html.unplug()
-    return return_value, html_code
+    with html.plugged():
+        func = getattr(html, function_name)
+        return_value = func(**arguments)
+        html_code = html.drain()
+        return return_value, html_code
 
 
 # take a html object, set the state, add variables, run the function and create a test

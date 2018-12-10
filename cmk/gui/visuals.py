@@ -994,12 +994,10 @@ def show_filter(f):
     html.div(f.title, class_="legend")
     html.open_div(class_="content")
     try:
-        #TODO: Plug context html.plug()
-        f.display()
-        # TODO: html.unplug()
+        with html.plugged():
+            f.display()
+            html.write(html.drain())
     except Exception as e:
-        #TODO: html.plugged_text = ''
-        #TODO: html.unplug()
         logger.exception()
         tb = sys.exc_info()[2]
         tbs = ['Traceback (most recent call last):\n']

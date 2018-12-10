@@ -293,7 +293,7 @@ class GUIBackgroundJobManager(background_job.BackgroundJobManager):
             all_job_ids = self.get_all_job_ids(job_class)
             jobs_info = self._get_job_infos(all_job_ids)
             job_class_infos[job_class] = jobs_info
-        html.write(JobRenderer.render_job_class_infos(job_class_infos, **kwargs))
+        JobRenderer.show_job_class_infos(job_class_infos, **kwargs)
 
     def get_status_all_jobs(self, job_class):
         all_job_ids = self.get_all_job_ids(job_class)
@@ -305,13 +305,13 @@ class GUIBackgroundJobManager(background_job.BackgroundJobManager):
             raise MKGeneralException("Background job with id <i>%s</i> not found" % job_id)
 
         job_id, job_status = job_info.items()[0]
-        html.write(JobRenderer.render_job_details(job_id, job_status))
+        JobRenderer.show_job_details(job_id, job_status)
 
     def show_job_details_from_snapshot(self, job_snapshot):
         if job_snapshot.exists():
             job_info = job_snapshot.get_status_as_dict()
             job_id, job_status = job_info.items()[0]
-            html.write(JobRenderer.render_job_details(job_id, job_status))
+            JobRenderer.show_job_details(job_id, job_status)
         else:
             raise MKGeneralException(
                 "Background job with id <i>%s</i> not found" % job_snapshot.get_job_id())
@@ -349,9 +349,8 @@ class GUIBackgroundJobManager(background_job.BackgroundJobManager):
 
 class JobRenderer(object):
     @classmethod
-    def render_job_details(cls, job_id, job_status):
+    def show_job_details(cls, job_id, job_status):
         """Renders the complete job details in a single table with left headers"""
-        html.plug()
         html.open_table(class_=["data", "headerleft", "job_details"])
 
         # Static info
@@ -444,13 +443,10 @@ class JobRenderer(object):
         html.close_table()
         html.javascript(
             "var log = document.getElementById('progress_log'); log.scrollTop = log.scrollHeight;")
-        html.unplug()
-        return html.drain()
 
     @classmethod
-    def render_job_class_infos(cls, job_class_infos, **kwargs):
+    def show_job_class_infos(cls, job_class_infos, **kwargs):
         """Renders all jobs from the job_class_infos in a single multi-table"""
-        html.plug()
         html.open_table(css="job_table data")
         for job_class, jobs_info in sorted(job_class_infos.items(), key=lambda x: x[0].gui_title):
             html.open_tr()
@@ -467,17 +463,14 @@ class JobRenderer(object):
                 html.close_tr()
                 continue
 
-            cls.render_job_row_headers()
+            cls.show_job_row_headers()
             odd = "even"
             for job_id, job_status in sorted(jobs_info.items(), reverse=True):
                 cls.render_job_row(job_id, job_status, odd, **kwargs)
                 odd = "even" if odd == "odd" else "odd"
 
-        html.unplug()
-        return html.drain()
-
     @classmethod
-    def render_job_row_headers(cls):
+    def show_job_row_headers(cls):
         html.open_tr()
         for header in cls.get_headers():
             html.th(header)

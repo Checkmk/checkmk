@@ -8,7 +8,6 @@ import six
 
 from cmk.gui.i18n import _
 import cmk.gui.table as table
-from cmk.gui.table import Table
 from cmk.gui.globals import html
 from tools import compare_html
 
@@ -43,14 +42,13 @@ def test_basic(register_builtin_html):
     table_id = 0
     title = " TEST "
 
-    table = Table(table_id, title, searchable=False, sortable=False)
-    table.row()
-    table.cell("A", "1")
-    table.cell("B", "2")
-    table.row()
-    table.cell("A", "1")
-    table.cell("C", "4")
-    table.end()
+    with table.open_table(table_id, title, searchable=False, sortable=False):
+        table.row()
+        table.cell("A", "1")
+        table.cell("B", "2")
+        table.row()
+        table.cell("A", "1")
+        table.cell("C", "4")
 
     written_text = "".join(html.response.flush_output())
     assert read_out_simple_table(written_text) == [[u'A', u'B'], [u'1', u'2'], [u'1', u'4']]
@@ -60,18 +58,17 @@ def test_plug(register_builtin_html):
     table_id = 0
     title = " TEST "
 
-    table = Table(table_id, title, searchable=False, sortable=False)
-    table.row()
-    table.cell("A", "1")
-    html.write("a")
-    table.cell("B", "2")
-    html.write("b")
-    table.row()
-    table.cell("A", "1")
-    html.write("a")
-    table.cell("C", "4")
-    html.write("c")
-    table.end()
+    with table.open_table(table_id, title, searchable=False, sortable=False):
+        table.row()
+        table.cell("A", "1")
+        html.write("a")
+        table.cell("B", "2")
+        html.write("b")
+        table.row()
+        table.cell("A", "1")
+        html.write("a")
+        table.cell("C", "4")
+        html.write("c")
 
     written_text = "".join(html.response.flush_output())
     assert read_out_simple_table(written_text) == [[u'A', u'B'], [u'1a', u'2b'], [u'1a', u'4c']]
@@ -99,18 +96,15 @@ def test_nesting(register_builtin_html):
     table_id = 0
     title = " TEST "
 
-    table = Table(table_id, title, searchable=False, sortable=False)
-    table.row()
-    table.cell("A", "1")
-    table.cell("B", "")
+    with table.open_table(table_id, title, searchable=False, sortable=False):
+        table.row()
+        table.cell("A", "1")
+        table.cell("B", "")
+        with table.open_table(table_id+1, title+"2", searchable=False, sortable=False):
+            table.row()
+            table.cell("_", "+")
+            table.cell("|", "-")
 
-    t2 = Table(table_id+1, title+"2", searchable=False, sortable=False)
-    t2.row()
-    t2.cell("_", "+")
-    t2.cell("|", "-")
-    t2.end()
-
-    table.end()
     written_text = "".join(html.response.flush_output())
     assert compare_html(written_text, '''<h3>  TEST </h3>
                             <script type="text/javascript">\nupdate_headinfo(\'1 row\');\n</script>

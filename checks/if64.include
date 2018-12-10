@@ -79,18 +79,18 @@ def if64_scan_function(oid, use_if64adm=False):
 
     sys_descr = oid(".1.3.6.1.2.1.1.1.0")
     for ignored_sys_descr in [
-        "LANCOM",
-        "ELSA",
-        "T-Systems",
-        "Brocade VDX Switch",
+            "LANCOM",
+            "ELSA",
+            "T-Systems",
+            "Brocade VDX Switch",
     ]:
         if ignored_sys_descr in sys_descr:
             return False
 
     sys_obj_id = oid(".1.3.6.1.2.1.1.2.0")
     for ignored_sys_obj_id in [
-        ".4.1.11863.",
-        ".1.3.6.1.4.1.12356",
+            ".4.1.11863.",
+            ".1.3.6.1.4.1.12356",
     ]:
         if ignored_sys_obj_id in sys_obj_id:
             return False

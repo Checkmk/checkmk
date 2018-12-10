@@ -400,6 +400,7 @@ class OutputFunnel(object):
     def _lowlevel_write(self, text):
         raise NotImplementedError()
 
+    # TODO: Only use this and make plug()/unplug() private methods.
     @contextmanager
     def plugged(self):
         self.plug()
@@ -420,7 +421,7 @@ class OutputFunnel(object):
 
     # Get the sink content in order to do something with it.
     def drain(self):
-        if not self._is_plugged():
+        if not self._is_plugged():  # TODO: Raise exception or even remove "if"?
             return ''
 
         text = "".join(self.plug_text.pop())
@@ -428,12 +429,14 @@ class OutputFunnel(object):
         return text
 
     def unplug(self):
-        if not self._is_plugged():
+        if not self._is_plugged():  # TODO: Raise exception or even remove "if"?
             return
 
-        text = "".join(self.plug_text.pop())
+        text = self.drain()
+        self.plug_text.pop()
         self.write(text)
 
+    # TODO: Nuke this when we use plugged() exclusively.
     def unplug_all(self):
         while self._is_plugged():
             self.unplug()

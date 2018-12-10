@@ -1,0 +1,13 @@
+title: AWS EC2 Instance CPU utilization
+agents: aws
+catalog: applications
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the percentage of allocated EC2 compute units that are
+ currently in use on the AWS EC2 instance.
+ To make this check work you have to configure the related
+ special agent {{Amazon Web Services (AWS)}}.
+
+inventory:
+ One service will be created.

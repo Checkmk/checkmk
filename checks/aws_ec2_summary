@@ -25,12 +25,12 @@
 # Boston, MA 02110-1301 USA.
 
 
-def inventory_aws_ec2_instances_summary(parsed):
+def inventory_aws_ec2_summary(parsed):
     if parsed:
         return [(None, {})]
 
 
-def check_aws_ec2_instances_summary(item, params, parsed):
+def check_aws_ec2_summary(item, params, parsed):
     instances_by_state = {}
     for reservation in parsed:
         for instance in reservation['Instances']:
@@ -52,10 +52,10 @@ def check_aws_ec2_instances_summary(item, params, parsed):
         yield 0, "\n%s" % "\n".join(long_output)
 
 
-check_info['aws_ec2_instances_summary'] = {
+check_info['aws_ec2_summary'] = {
     'parse_function': parse_aws,
-    'inventory_function': inventory_aws_ec2_instances_summary,
-    'check_function': check_aws_ec2_instances_summary,
-    'service_description': 'AWS EC2 Instances',
+    'inventory_function': inventory_aws_ec2_summary,
+    'check_function': check_aws_ec2_summary,
+    'service_description': 'AWS/EC2 Summary',
     'includes': ['aws.include'],
 }

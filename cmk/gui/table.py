@@ -40,8 +40,10 @@ tables = []
 @contextmanager
 def open_table(table_id=None, title=None, **kwargs):
     begin(table_id, title, **kwargs)
-    yield
-    end()
+    try:
+        yield
+    finally:
+        end()
 
 
 def begin(table_id=None, title=None, **kwargs):

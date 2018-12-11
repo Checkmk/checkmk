@@ -160,6 +160,8 @@ class BackgroundProcess(BackgroundProcessInterface, multiprocessing.Process):
         # Setup environment (Logging, Livestatus handles, etc.)
         try:
             self.initialize_environment()
+            self._logger.verbose(
+                "Initialized background job (Job ID: %s)" % self._job_parameters["job_id"])
             self._jobstatus.update_status({
                 "state": JobStatus.state_running,
             })
@@ -167,8 +169,8 @@ class BackgroundProcess(BackgroundProcessInterface, multiprocessing.Process):
             # The actual function call
             self._execute_function()
         except Exception:
-            sys.stderr.write("Exception while preparing background function environment: %s\n" %
-                             traceback.format_exc())
+            self._logger.error(
+                "Exception while preparing background function environment", exc_info=True)
             self._jobstatus.update_status({"state": JobStatus.state_exception})
 
     def initialize_environment(self):
@@ -318,7 +320,11 @@ class BackgroundJob(object):
 
         job_status = self.get_status()
 
-        if job_status["state"] == JobStatus.state_finished:
+        if job_status["state"] in [
+                JobStatus.state_finished,
+                JobStatus.state_exception,
+                JobStatus.state_stopped,
+        ]:
             return False
 
         if "pid" in job_status:
@@ -457,6 +463,7 @@ class BackgroundJob(object):
             "state": JobStatus.state_initialized,
             "statusfile": str(Path(self._job_id) / BackgroundJobDefines.jobstatus_filename),
             "started": time.time(),
+            "duration": 0.0,
         }
         initial_status.update(self._kwargs)
         self._jobstatus.update_status(initial_status)
@@ -506,6 +513,10 @@ class JobStatus(object):
 
     def get_status(self):
         data = store.load_data_from_file(str(self._jobstatus_path), default={})
+
+        data.setdefault("state", JobStatus.state_initialized)
+        data.setdefault("duration", 0.0)
+
         data["loginfo"] = {}
         for field_id, field_path in [("JobProgressUpdate", self._progress_update_path),
                                      ("JobResult", self._result_message_path),

@@ -8,9 +8,9 @@ import difflib
 import warnings
 import traceback  # for tracebacks
 try:
-    import dill.source # for displaying lambda functional code
+    import dill.source  # for displaying lambda functional code
 except:
-    print "Cannot import dill.source" in tests/web/tools.py
+    print "Cannot import dill.source" in tests / web / tools.py
 
 import time
 from bs4 import BeautifulSoup as bs
@@ -39,21 +39,21 @@ def timeit(method):
         print '%r %2.2f sec' % \
               (method.__name__, te-ts)
         return result
+
     return timed
 
 
 def prettify(html_text):
-    txt = bs("%s" % html_text, 'html5lib').prettify()
+    txt = bs("%s" % html_text, 'lxml').prettify()
     return re.sub('\n{2,}', '\n', re.sub('>', '>\n', txt))
 
 
 class HTMLCode(object):
-
     def __init__(self, value):
         self.value = value
 
     def prettify(self):
-        return bs(self.value, 'html5lib').prettify()
+        return bs(self.value, 'lxml').prettify()
 
 
 def encode_attribute(value):
@@ -87,9 +87,10 @@ def subber(value):
            re.sub('"', '&quot;',\
            re.sub('\n', '', value))))))
 
+
 def compare_soup(html1, html2):
-    s1 = bs(prettify(html1), 'html5lib')
-    s2 = bs(prettify(html2), 'html5lib')
+    s1 = bs(prettify(html1), 'lxml')
+    s2 = bs(prettify(html2), 'lxml')
 
     children_1 = list(s1.recursiveChildGenerator())
     children_2 = list(s2.recursiveChildGenerator())
@@ -107,14 +108,24 @@ def compare_soup(html1, html2):
 
         else:
             assert len(list(d1.children)) == len(list(d2.children)), '%s\n%s' % (html1, html2)
-            attrs1 = {k: filter(lambda x: x != '', (v)) for k, v in d1.attrs.iteritems() if len(v) > 0}
-            attrs2 = {k: filter(lambda x: x != '', (v)) for k, v in d2.attrs.iteritems() if len(v) > 0}
+            attrs1 = {
+                k: filter(lambda x: x != '', (v)) for k, v in d1.attrs.iteritems() if len(v) > 0
+            }
+            attrs2 = {
+                k: filter(lambda x: x != '', (v)) for k, v in d2.attrs.iteritems() if len(v) > 0
+            }
 
             for key in attrs1.keys():
                 assert key in attrs2, '%s\n%s\n\n%s' % (key, d1, d2)
                 if key.startswith("on") or key == "style":
-                    val1 = filter(lambda x: x, map(lambda x: unify_attrs(x).strip(' '), attrs1.pop(key, '').split(';')))
-                    val2 = filter(lambda x: x, map(lambda x: unify_attrs(x).strip(' '), attrs2.pop(key, '').split(';')))
+                    val1 = filter(
+                        lambda x: x,
+                        map(lambda x: unify_attrs(x).strip(' '),
+                            attrs1.pop(key, '').split(';')))
+                    val2 = filter(
+                        lambda x: x,
+                        map(lambda x: unify_attrs(x).strip(' '),
+                            attrs2.pop(key, '').split(';')))
                     assert val1 == val2, '\n%s\n%s' % (val1, val2)
 
             assert attrs1 == attrs2, '\n%s\n%s' % (html1, html2)
@@ -148,9 +159,13 @@ def test_compare_soup():
 def get_attributes(html_object):
     attrs = {var: getattr(html_object, var) for var in dir(html_object)\
                 if not callable(getattr(html_object,var)) and not var.startswith("__")}
-    attrs = {key: val for key, val in attrs.iteritems() if key not in ['start_time', 'last_measurement', 'plugged_text', 'indent_level', 'escaper', 'encoder']
-                                                        and not key.startswith("_unescaper")}
+    attrs = {
+        key: val for key, val in attrs.iteritems() if key not in
+        ['start_time', 'last_measurement', 'plugged_text', 'indent_level', 'escaper', 'encoder'] and
+        not key.startswith("_unescaper")
+    }
     return attrs
+
 
 def compare_attributes(attrs1, attrs2):
     # compare variables
@@ -214,15 +229,13 @@ def _html_generator_test(old, new, fun, reinit=True):
 def html_generator_test(old, new, fun, attributes=None, reinit=True):
 
     if attributes and not isinstance(attributes, list):
-        attributes=[attributes]
-
+        attributes = [attributes]
 
     if reinit:
         try:
             print bcolors.HEADER + "TESTING" + bcolors.ENDC + dill.source.getsource(fun)
         except:
-            print "Cannot import dill.source" in tests/web/tools.py
-
+            print "Cannot import dill.source" in tests / web / tools.py
 
     if attributes:
         attr = attributes.pop(0)
@@ -244,6 +257,8 @@ def gentest(old, new, fun, **attrs):
 
 
 import inspect
+
+
 def _get_fun_call(fun):
     funcall = re.sub(".*lambda x: x.", "html.", inspect.getsource(fun))
     funcall = re.sub('\n', ' ', funcall)
@@ -268,5 +283,3 @@ def write_unittest_file(old, fun, result, vars_before, vars_after):
         ufile.write("%s" % funcall)
         ufile.write("\n------------------------------\n")
         ufile.write("%s\n\n" % result)
-
-

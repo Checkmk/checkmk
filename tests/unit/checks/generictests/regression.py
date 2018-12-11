@@ -36,16 +36,16 @@ Make sure the file(s name) is a valid python module:
  ~/git/check_mk/tests/unit/checks/generictests/datasets/nfsmounts_1.py
 
 """
-import pytest
 import os
 import sys
 import pprint
 from importlib import import_module
+
 import generictests.run
 
 
 class WritableDataset(object):
-    def __init__(self, filename, init_dict={}):
+    def __init__(self, filename, init_dict):
         self.comments = ['']
         self.filename = filename
         self.writelist = (

@@ -295,7 +295,6 @@ python-modules-dump-Pipfile:
 	@echo '"beautifulsoup4" = "*"'
 	@echo 'pytest-stepwise = "*"'
 	@echo 'dill = "*"'
-	@echo '"html5lib" = "*"'
 	@echo 'bandit = "*"'
 	@echo 'lockfile = "*"'
 	@echo 'lxml = "*"'

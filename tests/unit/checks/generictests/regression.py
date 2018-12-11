@@ -48,15 +48,23 @@ class WritableDataset(object):
     def __init__(self, filename, init_dict={}):
         self.comments = ['']
         self.filename = filename
-        self.writelist = ('checkname', 'info', 'parsed', 'discovery',
-            'checks', 'extra_sections', 'mock_host_conf', 'mock_item_state')
-        self.checkname       = init_dict.get('checkname', None)
-        self.info            = init_dict.get('info', None)
-        self.parsed          = init_dict.get('parsed', None)
-        self.discovery       = init_dict.get('discovery', {})
-        self.checks          = {}
-        self.extra_sections  = init_dict.get('extra_sections', {})
-        self.mock_host_conf  = init_dict.get('mock_host_conf', {})
+        self.writelist = (
+            'checkname',
+            'info',
+            'parsed',
+            'discovery',
+            'checks',
+            'extra_sections',
+            'mock_host_conf',
+            'mock_item_state',
+        )
+        self.checkname = init_dict.get('checkname', None)
+        self.info = init_dict.get('info', None)
+        self.parsed = init_dict.get('parsed', None)
+        self.discovery = init_dict.get('discovery', {})
+        self.checks = {}
+        self.extra_sections = init_dict.get('extra_sections', {})
+        self.mock_host_conf = init_dict.get('mock_host_conf', {})
         self.mock_item_state = init_dict.get('mock_item_state', {})
 
     def write(self):
@@ -88,11 +96,9 @@ def test_main(check_manager, datasetfile):
     input_data = import_module(os.path.splitext(modn)[0])
     sys.path.pop(0)
 
-    regression = WritableDataset(datasetfile.replace('.py', '_regression.py'),
-                                 vars(input_data))
+    regression = WritableDataset(datasetfile.replace('.py', '_regression.py'), vars(input_data))
 
     generictests.run(check_manager, regression, write=True)
 
     regression.write()
     return
-

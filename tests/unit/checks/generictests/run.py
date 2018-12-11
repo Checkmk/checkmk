@@ -11,7 +11,7 @@ class DiscoveryParameterTypeError(AssertionError):
     pass
 
 
-def get_info_argument(dataset, subcheck, fallback_parsed=None):#   .
+def get_info_argument(dataset, subcheck, fallback_parsed=None):
     """Get the argument to the discovery/check function
 
     This may be the info variable, the parsed variable,
@@ -29,8 +29,7 @@ def get_info_argument(dataset, subcheck, fallback_parsed=None):#   .
         try:
             arg = [dataset.info]
         except AttributeError:
-            raise AttributeError("dataset has neither of the attributes "
-                                 "'info' or 'parsed'")
+            raise AttributeError("dataset has neither of the attributes " "'info' or 'parsed'")
 
     es_dict = getattr(dataset, 'extra_sections', {})
     for es in es_dict.get(subcheck, []):
@@ -39,10 +38,9 @@ def get_info_argument(dataset, subcheck, fallback_parsed=None):#   .
     if len(arg) == 1:
         return arg[0]
     return arg
-#.
 
 
-def get_merged_parameters(default_p, provided_p):#   .
+def get_merged_parameters(default_p, provided_p):
     """return (merged_params, description_string)
 
     I think this is a mess.
@@ -60,17 +58,15 @@ def get_merged_parameters(default_p, provided_p):#   .
 
     raise DiscoveryParameterTypeError("unhandled: %r/%r" \
                                       % (default_p, provided_p))
-#.
 
 
-def get_mock_values(dataset, subcheck):#   .
+def get_mock_values(dataset, subcheck):
     mock_is_d = getattr(dataset, 'mock_item_state', {})
     mock_hc_d = getattr(dataset, 'mock_host_conf', {})
     return mock_is_d.get(subcheck, {}), mock_hc_d.get(subcheck, {})
-#.
 
 
-def parse(check_manager, dataset):#   .
+def parse(check_manager, dataset):
     """Test parse function
 
     If dataset has .info attribute and the check has parse function defined,
@@ -96,17 +92,16 @@ def parse(check_manager, dataset):#   .
         # we *must* have a parse function in this case!
         assert parse_function, "%s has no parse function!" \
                                % dataset.checkname
-    elif not parse_function: # we may not have one:
+    elif not parse_function:  # we may not have one:
         return None
 
     parsed = main_check.run_parse(info)
     if parsed_expected is not None:
         assertEqual(parsed, parsed_expected, ' parsed result ')
     return parsed
-#.
 
 
-def discovery(check, subcheck, dataset, info_arg, immu):#   .
+def discovery(check, subcheck, dataset, info_arg, immu):
     """Test discovery funciton, return discovery result"""
     print("discovery: %r" % check.name)
 
@@ -129,10 +124,9 @@ def discovery(check, subcheck, dataset, info_arg, immu):#   .
         assertDiscoveryResultsEqual(d_result, d_result_expected)
 
     return d_result
-#.
 
 
-def check_discovered_result(check, discovery_result, info_arg, immu):#   .
+def check_discovered_result(check, discovery_result, info_arg, immu):
     """Run the check on all discovered items
 
     with the default parameters. We cannot validate the results,
@@ -154,10 +148,9 @@ def check_discovered_result(check, discovery_result, info_arg, immu):#   .
     cr = CheckResult(raw_checkresult)
 
     return (item, par_str, cr.raw_repr())
-#.
 
 
-def check_listed_result(check, list_entry, info_arg, immu):#   .
+def check_listed_result(check, list_entry, info_arg, immu):
     """Run check for all results listed in dataset"""
     item, params, results_expected_raw = list_entry
     print("Dataset item %r in check %r" % (item, check.name))
@@ -173,7 +166,6 @@ def check_listed_result(check, list_entry, info_arg, immu):#   .
     result = CheckResult(result_raw)
     result_expected = CheckResult(results_expected_raw)
     assertCheckResultsEqual(result, result_expected)
-#.
 
 
 def run(check_manager, dataset, write=False):
@@ -189,7 +181,6 @@ def run(check_manager, dataset, write=False):
 
     # get the expected check results, if present
     checks_expected = getattr(dataset, 'checks', {})
-
 
     # LOOP OVER ALL (SUB)CHECKS
     for sname in checklist:

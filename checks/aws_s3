@@ -25,25 +25,25 @@
 # Boston, MA 02110-1301 USA.
 
 
-def parse_aws(info):
-    import json
-    loaded = []
-    for row in info:
-        try:
-            loaded.extend(json.loads(" ".join(row)))
-        except (TypeError, IndexError):
-            pass
-    return loaded
+def inventory_aws_s3(parsed):
+    if parsed:
+        return [(None, {})]
 
 
-def _extract_metric_titles_and_values(expected_metric_names, parsed):
-    extracted_rows = {}
-    for row in parsed:
-        for title, expected_metric_name in expected_metric_names:
-            if row['Id'].startswith(expected_metric_name.lower()):
-                try:
-                    extracted_rows.setdefault(title, row['Values'][0])
-                except IndexError:
-                    pass
-                break
-    return extracted_rows
+def check_aws_s3(item, params, parsed):
+    metrics = _extract_metric_titles_and_values([
+        ('num_objects', 'NumberOfObjects'),
+        ('size', 'BucketSizeBytes'),
+    ], parsed)
+
+    yield 0, 'Number of objects: %s' % int(metrics['num_objects'])
+    yield 0, 'Size: %s' % get_bytes_human_readable(metrics['size'])
+
+
+check_info['aws_s3'] = {
+    'parse_function': parse_aws,
+    'inventory_function': inventory_aws_s3,
+    'check_function': check_aws_s3,
+    'service_description': 'AWS/S3',
+    'includes': ['aws.include'],
+}

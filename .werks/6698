@@ -1,0 +1,12 @@
+Title: The "Activates button" no longer cause performance issues when there are hundreds of open changes
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0p10
+Date: 1544530074
+Class: fix
+
+If there are more than 10 changes in the WATO configuration the button simply states <tt>10+ changes</tt>,
+instead of digging through the whole configuration till it gets the exact number.
+

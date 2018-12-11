@@ -409,7 +409,7 @@ set_ora_env () {
     if [ ! -d "${ORACLE_HOME:-'not_found'}" ]; then
         logging -c "[${sid}] [set_ora_env]" "ORA-99999 ORACLE_HOME for ORACLE_SID=${ORACLE_SID} not found or not existing!"
         echo "ORA-99999 ORACLE_HOME for ORACLE_SID=${ORACLE_SID} not found or not existing!" >&2
-        exit 1
+        return 2
     fi
 
     TNS_ADMIN=${TNS_ADMIN:-$MK_CONFDIR}
@@ -2138,6 +2138,10 @@ for sid in $SIDS; do
     fi
 
     set_ora_env "$sid"
+    if [ $? -eq 2 ] ; then
+        # we have to skip this SID due to missing/unknown ORACLE_HOME
+        continue
+    fi
     set_ora_version "$("${ORACLE_HOME}"/bin/sqlplus -V | "${GREP}" ^SQL | cut -d" " -f3 | cut -d"." -f-2)"
     logging "[${sid}] [local]" "ORACLE_HOME: ${ORACLE_HOME}" "TNS_ADMIN: ${TNS_ADMIN}"\
             "ORACLE_SID: ${ORACLE_SID}" "LD_LIBRARY_PATH: ${LD_LIBRARY_PATH}"\

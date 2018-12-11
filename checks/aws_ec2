@@ -24,17 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
-def _extract_metric_titles_and_values(expected_metric_names, parsed):
-    extracted_rows = {}
-    for row in parsed:
-        for title, expected_metric_name in expected_metric_names:
-            if row['Id'].startswith(expected_metric_name.lower()):
-                extracted_rows.setdefault(title, row['Values'][0])
-                break
-    return extracted_rows
-
-
 EC2DefaultItemName = "DEFAULT"
 
 
@@ -114,6 +103,7 @@ check_info['aws_ec2.cpu_credits'] = {
     'check_function': check_aws_ec2_cpu_credits,
     'service_description': 'AWS/EC2 CPU Credits',
     'group': 'aws_ec2_cpu_credits',
+    'includes': ['aws.include'],
 }
 
 #.
@@ -145,7 +135,7 @@ check_info['aws_ec2.cpu_util'] = {
     'group': 'cpu_utilization',
     'default_levels_variable': 'aws_ec2_cpu_util_default_levels',
     'has_perfdata': True,
-    'includes': ['cpu_util.include'],
+    'includes': ['cpu_util.include', 'aws.include'],
 }
 
 #.
@@ -184,7 +174,7 @@ check_info['aws_ec2.disk_io'] = {
     'inventory_function': inventory_aws_ec2_default,
     'check_function': check_aws_ec2_disk_io,
     'service_description': 'AWS/EC2 Disk IO %s',
-    'includes': ['diskstat.include'],
+    'includes': ['diskstat.include', 'aws.include'],
     'group': 'diskstat',
     'has_perfdata': True,
 }
@@ -234,7 +224,7 @@ check_info['aws_ec2.network_io'] = {
     'inventory_function': inventory_aws_ec2_default,
     'check_function': check_aws_ec2_network_io,
     'service_description': 'AWS/EC2 Interface %s',
-    'includes': ["if.include"],
+    'includes': ["if.include", 'aws.include'],
     'default_levels_variable': "if_default_levels",
     'group': 'if',
     'has_perfdata': True,

@@ -207,10 +207,10 @@ class DataSource(object):
             return
 
         may_use_outdated = config.simulation_mode or self._use_outdated_cache_file
-        if not may_use_outdated and cmk_base.utils.cachefile_age(
-                cachefile) > self._max_cachefile_age:
+        cachefile_age = cmk_base.utils.cachefile_age(cachefile)
+        if not may_use_outdated and cachefile_age > self._max_cachefile_age:
             self._logger.debug("Not using cache (Too old. Age is %d sec, allowed is %s sec)" %
-                               (cmk_base.utils.cachefile_age(cachefile), self._max_cachefile_age))
+                               (cachefile_age, self._max_cachefile_age))
             return
 
         # TODO: Use some generic store file read function to generalize error handling,

@@ -34,11 +34,12 @@ import json
 import logging
 import sys
 import time
+import os
 from typing import NamedTuple, Any
-
-import boto3
-import botocore
-
+from pathlib2 import Path
+import boto3  # type: ignore
+import botocore  # type: ignore
+from cmk.paths import tmp_dir
 import cmk.password_store
 
 #   .--helpers-------------------------------------------------------------.
@@ -99,6 +100,8 @@ AWSSectionResult = NamedTuple("Result", [
     ("content", Any),
 ])
 
+AWSStateFilesPath = Path(os.environ['OMD_ROOT']) / tmp_dir / "agents/agent_aws"
+
 
 class AWSSection(object):
     __metaclass__ = abc.ABCMeta
@@ -120,6 +123,10 @@ class AWSSection(object):
         We use interval property for cached section.
         """
         pass
+
+    @property
+    def period(self):
+        return 2 * self.interval
 
     def run(self):
         if self._client is None:
@@ -223,7 +230,8 @@ class EC2(AWSSection):
 
 
 class AWSSections(object):
-    def __init__(self, session):
+    def __init__(self, session, hostname):
+        self._hostname = hostname
         self._session = session
         self._sections = []
         self._results = {}
@@ -262,8 +270,12 @@ class AWSSections(object):
             logging.info(e)
             self._exceptions.append(e)
 
-    def run(self):
+    def run(self, use_cache=True):
+        now = time.time()
         for section in self._sections:
+            if use_cache and self._section_cache_is_recent_enough(now, section):
+                continue
+
             try:
                 result = section.run()
             except Exception as e:
@@ -273,38 +285,70 @@ class AWSSections(object):
                 self._results.setdefault((section.name, section.interval), result)
 
         if not self._results:
-            logging.info("No results")
+            logging.info("No results or cached data")
             return
 
-        self._write_results()
+        self._write_exceptions()
+        self._write_section_results(now)
 
-    def _write_results(self):
+    def _section_cache_is_recent_enough(self, now, section):
+        state_dir = AWSStateFilesPath / self._hostname
+        state_dir.mkdir(parents=True, exist_ok=True)
+        state_file = state_dir / Path("%s-%s" % (self._session.region_name, section.name))
+        if not state_file.exists():
+            logging.info("New state file of section '%s'", section.name)
+            state_file.touch()
+            return False
+
+        try:
+            age = now - state_file.stat().st_mtime
+        except OSError as e:
+            if e.errno == 2:  # No such file or directory
+                logging.info("Cannot calculate age; new state file of section '%s'", section.name)
+                state_file.touch()
+                return False
+            else:
+                raise
+
+        if age >= section.interval:
+            logging.info("State file of section '%s' is outdated: %s >= %s", section.name, age,
+                         section.interval)
+            state_file.touch()
+            return False
+        return True
+
+    def _write_exceptions(self):
         sys.stdout.write("<<<aws_exceptions>>>\n")
         if self._exceptions:
-            for e in self._exceptions:
-                sys.stdout.write("%s\n" % e.message)
+            out = "\n".join([e.message for e in self._exceptions])
         else:
-            sys.stdout.write("No exceptions\n")
+            out = "No exceptions"
+        sys.stdout.write("%s\n" % out)
 
-        now = int(time.time())
+    def _write_section_results(self, now):
         for (section_name, section_interval), result in self._results.iteritems():
             if not result:
-                msg = "No results of %s" % section_name
-                logging.info(msg)
+                logging.info("No results of %s", section_name)
                 continue
+
             if not isinstance(result, list):
                 msg = "Section result must be formatted as a list of 'AWSSectionResult's"
                 logging.info(msg)
                 raise AWSSectionError(msg)
 
-            section_header = "<<<aws_%s:cached(%s,%s)>>>\n" % (section_name, now, section_interval)
-            for row in result:
-                if row.piggyback_hostname:
-                    sys.stdout.write("<<<<%s>>>>\n" % row.piggyback_hostname)
-                sys.stdout.write(section_header)
-                sys.stdout.write("%s\n" % json.dumps(row.content, default=_datetime_converter))
-                if row.piggyback_hostname:
-                    sys.stdout.write("<<<<>>>>\n")
+            self._write_section_result(section_name, int(now + section_interval + 60), result)
+
+    def _write_section_result(self, section_name, until, result):
+        section_header = "<<<aws_%s:persist(%s)>>>\n" % (section_name, until)
+        for row in result:
+            write_piggyback_header = row.piggyback_hostname\
+                                     and row.piggyback_hostname != self._hostname
+            if write_piggyback_header:
+                sys.stdout.write("<<<<%s>>>>\n" % row.piggyback_hostname)
+            sys.stdout.write(section_header)
+            sys.stdout.write("%s\n" % json.dumps(row.content, default=_datetime_converter))
+            if write_piggyback_header:
+                sys.stdout.write("<<<<>>>>\n")
 
 
 #.
@@ -326,6 +370,9 @@ def parse_arguments(argv):
     parser.add_argument(
         "--aws-secret-access-key", required=True, help="The secret key for your AWS account.")
     parser.add_argument("--region", required=True, help="The region to use.")
+    parser.add_argument(
+        "--no-cache", action="store_true", help="Execute all sections, do not rely on cached data.")
+    parser.add_argument("hostname")
     return parser.parse_args(argv)
 
 
@@ -353,8 +400,8 @@ def main(args=None):
         region_name=args.region)
 
     try:
-        aws_sections = AWSSections(s)
-        aws_sections.run()
+        aws_sections = AWSSections(s, args.hostname)
+        aws_sections.run(use_cache=not args.no_cache)
     except Exception as e:
         if args.debug:
             raise

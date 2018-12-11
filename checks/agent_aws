@@ -33,6 +33,7 @@ def agent_aws_arguments(params, hostname, ipaddress):
         passwordstore_get_cmdline("%s", params["--aws-secret-access-key"]),
         "--region",
         params["--region"],
+        hostname,
     ]
 
 

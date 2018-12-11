@@ -612,25 +612,23 @@ class ModeDistributedMonitoring(ModeSites):
         return False
 
     def page(self):
-        table.begin(
-            "sites",
-            _("Connections to local and remote sites"),
-            empty_text=_(
-                "You have not configured any local or remotes sites. Multisite will "
-                "implicitely add the data of the local monitoring site. If you add remotes "
-                "sites, please do not forget to add your local monitoring site also, if "
-                "you want to display its data."))
+        with table.open_table(
+                "sites",
+                _("Connections to local and remote sites"),
+                empty_text=_(
+                    "You have not configured any local or remotes sites. Multisite will "
+                    "implicitely add the data of the local monitoring site. If you add remotes "
+                    "sites, please do not forget to add your local monitoring site also, if "
+                    "you want to display its data.")):
 
-        sites = sort_sites(self._site_mgmt.load_sites().items())
-        for site_id, site in sites:
-            table.row()
+            sites = sort_sites(self._site_mgmt.load_sites().items())
+            for site_id, site in sites:
+                table.row()
 
-            self._page_buttons(site_id, site)
-            self._page_basic_settings(site_id, site)
-            self._page_livestatus_settings(site_id, site)
-            self._page_replication_configuration(site_id, site)
-
-        table.end()
+                self._page_buttons(site_id, site)
+                self._page_basic_settings(site_id, site)
+                self._page_livestatus_settings(site_id, site)
+                self._page_replication_configuration(site_id, site)
 
     def _page_buttons(self, site_id, site):
         table.cell(_("Actions"), css="buttons")

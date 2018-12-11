@@ -147,38 +147,36 @@ def show_host_log_list(site, host_name):
 
 # Displays a table of logfiles
 def list_logs(site, host_name, logfile_names):
-    table.begin(empty_text=_("No logs found for this host."))
+    with table.open_table(empty_text=_("No logs found for this host.")):
 
-    for file_name in logfile_names:
-        table.row()
-        file_display = form_file_to_ext(file_name)
-        uri = html.makeuri([('site', site), ('host', host_name), ('file', file_display)])
-        logfile_link = html.render_a(file_display, href=uri)
+        for file_name in logfile_names:
+            table.row()
+            file_display = form_file_to_ext(file_name)
+            uri = html.makeuri([('site', site), ('host', host_name), ('file', file_display)])
+            logfile_link = html.render_a(file_display, href=uri)
 
-        try:
-            log_chunks = parse_file(site, host_name, file_name)
-            if not log_chunks:
-                continue  # Logfile vanished
+            try:
+                log_chunks = parse_file(site, host_name, file_name)
+                if not log_chunks:
+                    continue  # Logfile vanished
 
-            worst_log = get_worst_chunk(log_chunks)
-            last_log = get_last_chunk(log_chunks)
-            state = worst_log['level']
-            state_name = form_level(state)
+                worst_log = get_worst_chunk(log_chunks)
+                last_log = get_last_chunk(log_chunks)
+                state = worst_log['level']
+                state_name = form_level(state)
 
-            table.cell(_("Level"), state_name, css="state%d" % state)
-            table.cell(_("Logfile"), logfile_link)
-            table.cell(_("Last Entry"), form_datetime(last_log['datetime']))
-            table.cell(_("Entries"), len(log_chunks), css="number")
+                table.cell(_("Level"), state_name, css="state%d" % state)
+                table.cell(_("Logfile"), logfile_link)
+                table.cell(_("Last Entry"), form_datetime(last_log['datetime']))
+                table.cell(_("Entries"), len(log_chunks), css="number")
 
-        except Exception:
-            if config.debug:
-                raise
-            table.cell(_("Level"), "")
-            table.cell(_("Logfile"), logfile_link)
-            table.cell(_("Last Entry"), "")
-            table.cell(_("Entries"), _("Corrupted"))
-
-    table.end()
+            except Exception:
+                if config.debug:
+                    raise
+                table.cell(_("Level"), "")
+                table.cell(_("Logfile"), logfile_link)
+                table.cell(_("Last Entry"), "")
+                table.cell(_("Entries"), _("Corrupted"))
 
 
 def show_file(site, host_name, file_name):

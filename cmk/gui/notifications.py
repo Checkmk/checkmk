@@ -158,20 +158,17 @@ def load_failed_notifications(before=None, after=None, stat_only=False, extra_he
 
 
 def render_notification_table(failed_notifications):
-    table.begin()
+    with table.open_table():
+        header = dict([(name, idx) for idx, name in enumerate(g_columns)])
 
-    header = dict([(name, idx) for idx, name in enumerate(g_columns)])
-
-    for row in failed_notifications:
-        table.row()
-        table.cell(_("Time"), cmk.render.approx_age(time.time() - row[header['time']]))
-        table.cell(_("Contact"), row[header['contact_name']])
-        table.cell(_("Plugin"), row[header['type']])
-        table.cell(_("Host"), row[header['host_name']])
-        table.cell(_("Service"), row[header['service_description']])
-        table.cell(_("Output"), row[header['comment']])
-
-    table.end()
+        for row in failed_notifications:
+            table.row()
+            table.cell(_("Time"), cmk.render.approx_age(time.time() - row[header['time']]))
+            table.cell(_("Contact"), row[header['contact_name']])
+            table.cell(_("Plugin"), row[header['type']])
+            table.cell(_("Host"), row[header['host_name']])
+            table.cell(_("Service"), row[header['service_description']])
+            table.cell(_("Output"), row[header['comment']])
 
 
 # TODO: We should really recode this to use the view and a normal view command / action

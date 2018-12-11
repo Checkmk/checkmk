@@ -1007,31 +1007,31 @@ class ModeBIPacks(ModeBI):
                 return ""
 
     def page(self):
-        table.begin(title=_("BI Configuration Packs"))
-        for pack_id, pack in sorted(self._packs.items()):
-            if not self.may_use_rules_in_pack(pack):
-                continue
+        with table.open_table(title=_("BI Configuration Packs")):
+            for pack_id, pack in sorted(self._packs.items()):
+                if not self.may_use_rules_in_pack(pack):
+                    continue
 
-            table.row()
-            table.cell(_("Actions"), css="buttons")
-            if config.user.may("wato.bi_admin"):
-                edit_url = html.makeuri_contextless([("mode", "bi_edit_pack"), ("pack", pack_id)])
-                html.icon_button(edit_url, _("Edit properties of this BI pack"), "edit")
-                delete_url = html.makeactionuri([("_delete", pack_id)])
-                html.icon_button(delete_url, _("Delete this BI pack"), "delete")
-            rules_url = html.makeuri_contextless([("mode", "bi_rules"), ("pack", pack_id)])
-            html.icon_button(rules_url,
-                             _("View and edit the rules and aggregations in this BI pack"),
-                             "bi_rules")
-            table.text_cell(_("ID"), pack_id)
-            table.text_cell(_("Title"), pack["title"])
-            table.text_cell(_("Public"), pack["public"] and _("Yes") or _("No"))
-            table.text_cell(_("Aggregations"), len(pack["aggregations"]), css="number")
-            table.text_cell(_("Rules"), len(pack["rules"]), css="number")
-            table.text_cell(
-                _("Contact groups"),
-                HTML(", ").join(map(self._render_contact_group, pack["contact_groups"])))
-        table.end()
+                table.row()
+                table.cell(_("Actions"), css="buttons")
+                if config.user.may("wato.bi_admin"):
+                    edit_url = html.makeuri_contextless([("mode", "bi_edit_pack"), ("pack",
+                                                                                    pack_id)])
+                    html.icon_button(edit_url, _("Edit properties of this BI pack"), "edit")
+                    delete_url = html.makeactionuri([("_delete", pack_id)])
+                    html.icon_button(delete_url, _("Delete this BI pack"), "delete")
+                rules_url = html.makeuri_contextless([("mode", "bi_rules"), ("pack", pack_id)])
+                html.icon_button(rules_url,
+                                 _("View and edit the rules and aggregations in this BI pack"),
+                                 "bi_rules")
+                table.text_cell(_("ID"), pack_id)
+                table.text_cell(_("Title"), pack["title"])
+                table.text_cell(_("Public"), pack["public"] and _("Yes") or _("No"))
+                table.text_cell(_("Aggregations"), len(pack["aggregations"]), css="number")
+                table.text_cell(_("Rules"), len(pack["rules"]), css="number")
+                table.text_cell(
+                    _("Contact groups"),
+                    HTML(", ").join(map(self._render_contact_group, pack["contact_groups"])))
 
     def _render_contact_group(self, c):
         display_name = self._contact_group_names.get(c, {'alias': c})['alias']
@@ -1278,52 +1278,52 @@ class ModeBIAggregations(ModeBI):
         html.end_form()
 
     def _render_aggregations(self):
-        table.begin("bi_aggr", _("Aggregations"))
-        for aggregation_id, aggregation in enumerate(self._pack["aggregations"]):
-            table.row()
-            table.cell(
-                html.render_input(
-                    "_toggle_group",
-                    type_="button",
-                    class_="checkgroup",
-                    onclick="toggle_all_rows();",
-                    value='X'),
-                sortable=False,
-                css="checkbox")
-            html.checkbox("_c_aggregation_%s" % aggregation_id)
+        with table.open_table("bi_aggr", _("Aggregations")):
+            for aggregation_id, aggregation in enumerate(self._pack["aggregations"]):
+                table.row()
+                table.cell(
+                    html.render_input(
+                        "_toggle_group",
+                        type_="button",
+                        class_="checkgroup",
+                        onclick="toggle_all_rows();",
+                        value='X'),
+                    sortable=False,
+                    css="checkbox")
+                html.checkbox("_c_aggregation_%s" % aggregation_id)
 
-            table.cell(_("Actions"), css="buttons")
-            edit_url = html.makeuri_contextless([("mode", "bi_edit_aggregation"),
-                                                 ("id", aggregation_id), ("pack", self._pack_id)])
-            html.icon_button(edit_url, _("Edit this aggregation"), "edit")
+                table.cell(_("Actions"), css="buttons")
+                edit_url = html.makeuri_contextless([("mode", "bi_edit_aggregation"),
+                                                     ("id", aggregation_id), ("pack",
+                                                                              self._pack_id)])
+                html.icon_button(edit_url, _("Edit this aggregation"), "edit")
 
-            if self.is_contact_for_pack():
-                delete_url = html.makeactionuri([("_del_aggr", aggregation_id)])
-                html.icon_button(delete_url, _("Delete this aggregation"), "delete")
+                if self.is_contact_for_pack():
+                    delete_url = html.makeactionuri([("_del_aggr", aggregation_id)])
+                    html.icon_button(delete_url, _("Delete this aggregation"), "delete")
 
-            table.text_cell(_("Nr."), aggregation_id + 1, css="number")
+                table.text_cell(_("Nr."), aggregation_id + 1, css="number")
 
-            if cmk.is_managed_edition():
-                table.text_cell(_("Customer"))
-                if "customer" in aggregation:
-                    html.write_text(managed.get_customer_name(aggregation))
+                if cmk.is_managed_edition():
+                    table.text_cell(_("Customer"))
+                    if "customer" in aggregation:
+                        html.write_text(managed.get_customer_name(aggregation))
 
-            table.text_cell("", css="buttons")
+                table.text_cell("", css="buttons")
 
-            if aggregation["disabled"]:
-                html.icon(_("This aggregation is currently disabled."), "disabled")
-            if aggregation["single_host"]:
-                html.icon(_("This aggregation covers only data from a single host."), "host")
+                if aggregation["disabled"]:
+                    html.icon(_("This aggregation is currently disabled."), "disabled")
+                if aggregation["single_host"]:
+                    html.icon(_("This aggregation covers only data from a single host."), "host")
 
-            table.text_cell(_("Groups"), ", ".join(aggregation["groups"]))
+                table.text_cell(_("Groups"), ", ".join(aggregation["groups"]))
 
-            ruleid, description = self.rule_called_by_node(aggregation["node"])
-            edit_url = html.makeuri([("mode", "bi_edit_rule"), ("pack", self._pack_id),
-                                     ("id", ruleid)])
-            table.cell(_("Rule Tree"), css="bi_rule_tree")
-            self.render_aggregation_rule_tree(aggregation_id, aggregation)
-            table.text_cell(_("Note"), description)
-        table.end()
+                ruleid, description = self.rule_called_by_node(aggregation["node"])
+                edit_url = html.makeuri([("mode", "bi_edit_rule"), ("pack", self._pack_id),
+                                         ("id", ruleid)])
+                table.cell(_("Rule Tree"), css="bi_rule_tree")
+                self.render_aggregation_rule_tree(aggregation_id, aggregation)
+                table.text_cell(_("Note"), description)
 
     def render_aggregation_rule_tree(self, aggregation_id, aggregation):
         toplevel_rule = self.aggregation_toplevel_rule(aggregation)
@@ -1519,74 +1519,76 @@ class ModeBIRules(ModeBI):
         ]
         rules_refs.sort(cmp=lambda a, b: cmp(a[2][2], b[2][2]) or cmp(a[1]["title"], b[1]["title"]))
 
-        table.begin("bi_rules", title)
-        for rule_id, rule, (aggr_refs, rule_refs, level) in rules_refs:
-            refs = aggr_refs + rule_refs
-            if not only_unused or refs == 0:
-                table.row()
-                table.cell(
-                    html.render_input(
-                        "_toggle_group",
-                        type_="button",
-                        class_="checkgroup",
-                        onclick="toggle_all_rows();",
-                        value='X'),
-                    sortable=False,
-                    css="checkbox")
-                html.checkbox("_c_rule_%s" % rule_id)
+        with table.open_table("bi_rules", title):
+            for rule_id, rule, (aggr_refs, rule_refs, level) in rules_refs:
+                refs = aggr_refs + rule_refs
+                if not only_unused or refs == 0:
+                    table.row()
+                    table.cell(
+                        html.render_input(
+                            "_toggle_group",
+                            type_="button",
+                            class_="checkgroup",
+                            onclick="toggle_all_rows();",
+                            value='X'),
+                        sortable=False,
+                        css="checkbox")
+                    html.checkbox("_c_rule_%s" % rule_id)
 
-                table.cell(_("Actions"), css="buttons")
-                edit_url = self.url_to_pack([("mode", "bi_edit_rule"), ("id", rule_id)])
-                html.icon_button(edit_url, _("Edit this rule"), "edit")
+                    table.cell(_("Actions"), css="buttons")
+                    edit_url = self.url_to_pack([("mode", "bi_edit_rule"), ("id", rule_id)])
+                    html.icon_button(edit_url, _("Edit this rule"), "edit")
 
-                clone_url = self.url_to_pack([("mode", "bi_edit_rule"), ("clone", rule_id)])
-                html.icon_button(clone_url, _("Create a copy of this rule"), "clone")
+                    clone_url = self.url_to_pack([("mode", "bi_edit_rule"), ("clone", rule_id)])
+                    html.icon_button(clone_url, _("Create a copy of this rule"), "clone")
 
-                if rule_refs == 0:
-                    tree_url = html.makeuri([("mode", "bi_rule_tree"), ("id", rule_id)])
-                    html.icon_button(tree_url, _("This is a top-level rule. Show rule tree"),
-                                     "bitree")
+                    if rule_refs == 0:
+                        tree_url = html.makeuri([("mode", "bi_rule_tree"), ("id", rule_id)])
+                        html.icon_button(tree_url, _("This is a top-level rule. Show rule tree"),
+                                         "bitree")
 
-                if refs == 0:
-                    delete_url = html.makeactionuri_contextless([("mode", "bi_rules"),
-                                                                 ("_del_rule", rule_id),
-                                                                 ("pack", self._pack_id)])
-                    html.icon_button(delete_url, _("Delete this rule"), "delete")
+                    if refs == 0:
+                        delete_url = html.makeactionuri_contextless([("mode", "bi_rules"),
+                                                                     ("_del_rule", rule_id),
+                                                                     ("pack", self._pack_id)])
+                        html.icon_button(delete_url, _("Delete this rule"), "delete")
 
-                table.cell("", css="narrow")
-                if rule.get("disabled"):
-                    html.icon(
-                        _("This rule is currently disabled and will not be applied"), "disabled")
-                else:
-                    html.empty_icon_button()
+                    table.cell("", css="narrow")
+                    if rule.get("disabled"):
+                        html.icon(
+                            _("This rule is currently disabled and will not be applied"),
+                            "disabled")
+                    else:
+                        html.empty_icon_button()
 
-                table.text_cell(_("Level"), level or "", css="number")
-                table.text_cell(_("ID"), html.render_a(rule_id, edit_url))
-                table.text_cell(_("Parameters"), " ".join(rule["params"]))
+                    table.text_cell(_("Level"), level or "", css="number")
+                    table.text_cell(_("ID"), html.render_a(rule_id, edit_url))
+                    table.text_cell(_("Parameters"), " ".join(rule["params"]))
 
-                if rule.get('icon'):
-                    title = html.render_icon(rule["icon"]) + "&nbsp;" + rule["title"]
-                else:
-                    title = rule["title"]
-                table.text_cell(_("Title"), title)
+                    if rule.get('icon'):
+                        title = html.render_icon(rule["icon"]) + "&nbsp;" + rule["title"]
+                    else:
+                        title = rule["title"]
+                    table.text_cell(_("Title"), title)
 
-                table.text_cell(
-                    _("Aggregation"),
-                    "/".join([rule["aggregation"][0]] + map(str, rule["aggregation"][1])))
-                table.text_cell(_("Nodes"), len(rule["nodes"]), css="number")
-                table.cell(_("Used by"))
-                have_this = set([])
-                for (pack_id, aggr_id, aggregation) in aggregations_that_use_rule.get(rule_id, []):
-                    if aggr_id not in have_this:
-                        aggr_url = html.makeuri_contextless([("mode", "bi_edit_aggregation"),
-                                                             ("id", aggr_id), ("pack", pack_id)])
-                        html.a(self.aggregation_title(aggregation), href=aggr_url)
-                        html.br()
-                        have_this.add(aggr_id)
+                    table.text_cell(
+                        _("Aggregation"),
+                        "/".join([rule["aggregation"][0]] + map(str, rule["aggregation"][1])))
+                    table.text_cell(_("Nodes"), len(rule["nodes"]), css="number")
+                    table.cell(_("Used by"))
+                    have_this = set([])
+                    for (pack_id, aggr_id, aggregation) in aggregations_that_use_rule.get(
+                            rule_id, []):
+                        if aggr_id not in have_this:
+                            aggr_url = html.makeuri_contextless([("mode", "bi_edit_aggregation"),
+                                                                 ("id", aggr_id), ("pack",
+                                                                                   pack_id)])
+                            html.a(self.aggregation_title(aggregation), href=aggr_url)
+                            html.br()
+                            have_this.add(aggr_id)
 
-                table.text_cell(_("Comment"), rule.get("comment", ""))
-                table.text_cell(_("Documentation URL"), rule.get("docu_url", ""))
-        table.end()
+                    table.text_cell(_("Comment"), rule.get("comment", ""))
+                    table.text_cell(_("Documentation URL"), rule.get("docu_url", ""))
 
 
 #.
@@ -1626,11 +1628,10 @@ class ModeBIRuleTree(ModeBI):
     def page(self):
         _aggr_refs, rule_refs, _level = self.count_rule_references(self._ruleid)
         if rule_refs == 0:
-            table.begin(sortable=False, searchable=False)
-            table.row()
-            table.cell(_("Rule Tree"), css="bi_rule_tree")
-            self.render_rule_tree(self._ruleid, self._ruleid)
-            table.end()
+            with table.open_table(sortable=False, searchable=False):
+                table.row()
+                table.cell(_("Rule Tree"), css="bi_rule_tree")
+                self.render_rule_tree(self._ruleid, self._ruleid)
 
 
 #.

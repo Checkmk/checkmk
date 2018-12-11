@@ -274,19 +274,18 @@ class ModeTimeperiods(WatoMode):
         return used_in
 
     def page(self):
-        table.begin("timeperiods", empty_text=_("There are no timeperiods defined yet."))
-        for name, timeperiod in sorted(self._timeperiods.items()):
-            table.row()
+        with table.open_table("timeperiods", empty_text=_("There are no timeperiods defined yet.")):
+            for name, timeperiod in sorted(self._timeperiods.items()):
+                table.row()
 
-            table.cell(_("Actions"), css="buttons")
-            if name in watolib.builtin_timeperiods():
-                html.write_text(html.i(_("(builtin)")))
-            else:
-                self._action_buttons(name)
+                table.cell(_("Actions"), css="buttons")
+                if name in watolib.builtin_timeperiods():
+                    html.write_text(html.i(_("(builtin)")))
+                else:
+                    self._action_buttons(name)
 
-            table.text_cell(_("Name"), name)
-            table.text_cell(_("Alias"), timeperiod.get("alias", ""))
-        table.end()
+                table.text_cell(_("Name"), name)
+                table.text_cell(_("Alias"), timeperiod.get("alias", ""))
 
     def _action_buttons(self, name):
         edit_url = watolib.folder_preserving_link([

@@ -159,79 +159,78 @@ class ModePatternEditor(WatoMode):
                 True,
                 HTML("<b>Rule #%d</b>" % (abs_rulenr + 1)),
                 indent=False)
-            table.begin("pattern_editor_rule_%d" % abs_rulenr, sortable=False)
-            abs_rulenr += 1
+            with table.open_table("pattern_editor_rule_%d" % abs_rulenr, sortable=False):
+                abs_rulenr += 1
 
-            # TODO: What's this?
-            pattern_list = rule.value
-            if isinstance(pattern_list, dict):
-                pattern_list = pattern_list["reclassify_patterns"]
+                # TODO: What's this?
+                pattern_list = rule.value
+                if isinstance(pattern_list, dict):
+                    pattern_list = pattern_list["reclassify_patterns"]
 
-            # Each rule can hold no, one or several patterns. Loop them all here
-            for state, pattern, comment in pattern_list:
-                match_class = ''
-                disp_match_txt = ''
-                match_img = ''
-                if rule_matches:
-                    # Applies to the given host/service
-                    reason_class = 'reason'
+                # Each rule can hold no, one or several patterns. Loop them all here
+                for state, pattern, comment in pattern_list:
+                    match_class = ''
+                    disp_match_txt = ''
+                    match_img = ''
+                    if rule_matches:
+                        # Applies to the given host/service
+                        reason_class = 'reason'
 
-                    matched = re.search(pattern, self._match_txt)
-                    if matched:
+                        matched = re.search(pattern, self._match_txt)
+                        if matched:
 
-                        # Prepare highlighted search txt
-                        match_start = matched.start()
-                        match_end = matched.end()
-                        disp_match_txt = html.render_text(self._match_txt[:match_start]) \
-                                         + html.render_span(self._match_txt[match_start:match_end], class_="match")\
-                                         + html.render_text(self._match_txt[match_end:])
+                            # Prepare highlighted search txt
+                            match_start = matched.start()
+                            match_end = matched.end()
+                            disp_match_txt = html.render_text(self._match_txt[:match_start]) \
+                                             + html.render_span(self._match_txt[match_start:match_end], class_="match")\
+                                             + html.render_text(self._match_txt[match_end:])
 
-                        if not already_matched:
-                            # First match
-                            match_class = 'match first'
-                            match_img = 'match'
-                            match_title = _(
-                                'This logfile pattern matches first and will be used for '
-                                'defining the state of the given line.')
-                            already_matched = True
+                            if not already_matched:
+                                # First match
+                                match_class = 'match first'
+                                match_img = 'match'
+                                match_title = _(
+                                    'This logfile pattern matches first and will be used for '
+                                    'defining the state of the given line.')
+                                already_matched = True
+                            else:
+                                # subsequent match
+                                match_class = 'match'
+                                match_img = 'imatch'
+                                match_title = _(
+                                    'This logfile pattern matches but another matched first.')
                         else:
-                            # subsequent match
-                            match_class = 'match'
-                            match_img = 'imatch'
-                            match_title = _(
-                                'This logfile pattern matches but another matched first.')
+                            match_img = 'nmatch'
+                            match_title = _('This logfile pattern does not match the given string.')
                     else:
+                        # rule does not match
+                        reason_class = 'noreason'
                         match_img = 'nmatch'
-                        match_title = _('This logfile pattern does not match the given string.')
-                else:
-                    # rule does not match
-                    reason_class = 'noreason'
-                    match_img = 'nmatch'
-                    match_title = _('The rule conditions do not match.')
+                        match_title = _('The rule conditions do not match.')
 
-                table.row(css=reason_class)
-                table.cell(_('Match'))
-                html.icon(match_title, "rule%s" % match_img)
+                    table.row(css=reason_class)
+                    table.cell(_('Match'))
+                    html.icon(match_title, "rule%s" % match_img)
 
-                cls = ''
-                if match_class == 'match first':
-                    cls = 'svcstate state%d' % logwatch.level_state(state)
-                table.cell(_('State'), logwatch.level_name(state), css=cls)
-                table.cell(_('Pattern'), html.render_tt(pattern))
-                table.cell(_('Comment'), html.render_text(comment))
-                table.cell(_('Matched line'), disp_match_txt)
+                    cls = ''
+                    if match_class == 'match first':
+                        cls = 'svcstate state%d' % logwatch.level_state(state)
+                    table.cell(_('State'), logwatch.level_name(state), css=cls)
+                    table.cell(_('Pattern'), html.render_tt(pattern))
+                    table.cell(_('Comment'), html.render_text(comment))
+                    table.cell(_('Matched line'), disp_match_txt)
 
-            table.row(fixed=True)
-            table.cell(colspan=5)
-            edit_url = watolib.folder_preserving_link([
-                ("mode", "edit_rule"),
-                ("varname", "logwatch_rules"),
-                ("rulenr", rulenr),
-                ("host", self._hostname),
-                ("item", watolib.mk_repr(self._item)),
-                ("rule_folder", folder.path()),
-            ])
-            html.icon_button(edit_url, _("Edit this rule"), "edit")
+                table.row(fixed=True)
+                table.cell(colspan=5)
+                edit_url = watolib.folder_preserving_link([
+                    ("mode", "edit_rule"),
+                    ("varname", "logwatch_rules"),
+                    ("rulenr", rulenr),
+                    ("host", self._hostname),
+                    ("item", watolib.mk_repr(self._item)),
+                    ("rule_folder", folder.path()),
+                ])
+                html.icon_button(edit_url, _("Edit this rule"), "edit")
 
-            table.end()
             html.end_foldable_container()

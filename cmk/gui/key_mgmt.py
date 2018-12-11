@@ -159,23 +159,23 @@ class PageKeyManagement(object):
         raise NotImplementedError()
 
     def page(self):
-        table.begin(title=self._table_title(), searchable=False, sortable=False)
+        with table.open_table(title=self._table_title(), searchable=False, sortable=False):
 
-        for key_id, key in sorted(self.keys.items()):
-            cert = crypto.load_certificate(crypto.FILETYPE_PEM, key["certificate"])
+            for key_id, key in sorted(self.keys.items()):
+                cert = crypto.load_certificate(crypto.FILETYPE_PEM, key["certificate"])
 
-            table.row()
-            table.cell(_("Actions"), css="buttons")
-            if self._may_edit_config():
-                delete_url = html.makeactionuri([("_delete", key_id)])
-                html.icon_button(delete_url, _("Delete this key"), "delete")
-            download_url = html.makeuri_contextless([("mode", self.download_mode), ("key", key_id)])
-            html.icon_button(download_url, _("Download this key"), "download")
-            table.cell(_("Description"), html.render_text(key["alias"]))
-            table.cell(_("Created"), cmk.render.date(key["date"]))
-            table.cell(_("By"), html.render_text(key["owner"]))
-            table.cell(_("Digest (MD5)"), html.render_text(cert.digest("md5")))
-        table.end()
+                table.row()
+                table.cell(_("Actions"), css="buttons")
+                if self._may_edit_config():
+                    delete_url = html.makeactionuri([("_delete", key_id)])
+                    html.icon_button(delete_url, _("Delete this key"), "delete")
+                download_url = html.makeuri_contextless([("mode", self.download_mode),
+                                                         ("key", key_id)])
+                html.icon_button(download_url, _("Download this key"), "download")
+                table.cell(_("Description"), html.render_text(key["alias"]))
+                table.cell(_("Created"), cmk.render.date(key["date"]))
+                table.cell(_("By"), html.render_text(key["owner"]))
+                table.cell(_("Digest (MD5)"), html.render_text(cert.digest("md5")))
 
 
 class PageEditKey(object):

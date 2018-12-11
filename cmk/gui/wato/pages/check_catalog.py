@@ -291,19 +291,18 @@ class ModeCheckPlugins(WatoMode):
             return self._titles.get(t, t)
 
         html.h2(heading)
-        table.begin(searchable=False, sortable=False, css="check_catalog")
-        for entry in sorted(manpage_list, cmp=lambda a, b: cmp(a["title"], b["title"])):
-            if not isinstance(entry, dict):
-                continue
-            table.row()
-            url = html.makeuri([("mode", "check_manpage"), ("check_type", entry["name"]),
-                                ("back", html.makeuri([]))])
-            table.cell(
-                _("Type of Check"), "<a href='%s'>%s</a>" % (url, entry["title"]), css="title")
-            table.cell(_("Plugin Name"), "<tt>%s</tt>" % entry["name"], css="name")
-            table.cell(
-                _("Agents"), ", ".join(map(translate, sorted(entry["agents"]))), css="agents")
-        table.end()
+        with table.open_table(searchable=False, sortable=False, css="check_catalog"):
+            for entry in sorted(manpage_list, cmp=lambda a, b: cmp(a["title"], b["title"])):
+                if not isinstance(entry, dict):
+                    continue
+                table.row()
+                url = html.makeuri([("mode", "check_manpage"), ("check_type", entry["name"]),
+                                    ("back", html.makeuri([]))])
+                table.cell(
+                    _("Type of Check"), "<a href='%s'>%s</a>" % (url, entry["title"]), css="title")
+                table.cell(_("Plugin Name"), "<tt>%s</tt>" % entry["name"], css="name")
+                table.cell(
+                    _("Agents"), ", ".join(map(translate, sorted(entry["agents"]))), css="agents")
 
     def _man_page_catalog_topics(self):
         # topic, has_second_level, title, description

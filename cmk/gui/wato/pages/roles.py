@@ -179,52 +179,52 @@ class ModeRoles(RoleManagement, WatoMode):
                     sites=config.get_login_sites())
 
     def page(self):
-        table.begin("roles")
+        with table.open_table("roles"):
 
-        users = userdb.load_users()
-        for rid, role in sorted(self._roles.items(), key=lambda a: (a[1]["alias"], a[0])):
-            table.row()
+            users = userdb.load_users()
+            for rid, role in sorted(self._roles.items(), key=lambda a: (a[1]["alias"], a[0])):
+                table.row()
 
-            # Actions
-            table.cell(_("Actions"), css="buttons")
-            edit_url = watolib.folder_preserving_link([("mode", "edit_role"), ("edit", rid)])
-            clone_url = make_action_link([("mode", "roles"), ("_clone", rid)])
-            delete_url = make_action_link([("mode", "roles"), ("_delete", rid)])
-            html.icon_button(edit_url, _("Properties"), "edit")
-            html.icon_button(clone_url, _("Clone"), "clone")
-            if not role.get("builtin"):
-                html.icon_button(delete_url, _("Delete this role"), "delete")
+                # Actions
+                table.cell(_("Actions"), css="buttons")
+                edit_url = watolib.folder_preserving_link([("mode", "edit_role"), ("edit", rid)])
+                clone_url = make_action_link([("mode", "roles"), ("_clone", rid)])
+                delete_url = make_action_link([("mode", "roles"), ("_delete", rid)])
+                html.icon_button(edit_url, _("Properties"), "edit")
+                html.icon_button(clone_url, _("Clone"), "clone")
+                if not role.get("builtin"):
+                    html.icon_button(delete_url, _("Delete this role"), "delete")
 
-            # ID
-            table.text_cell(_("Name"), rid)
+                # ID
+                table.text_cell(_("Name"), rid)
 
-            # Alias
-            table.text_cell(_("Alias"), role["alias"])
+                # Alias
+                table.text_cell(_("Alias"), role["alias"])
 
-            # Type
-            table.cell(_("Type"), _("builtin") if role.get("builtin") else _("custom"))
+                # Type
+                table.cell(_("Type"), _("builtin") if role.get("builtin") else _("custom"))
 
-            # Modifications
-            table.cell(
-                _("Modifications"), "<span title='%s'>%s</span>" %
-                (_("That many permissions do not use the factory defaults."),
-                 len(role["permissions"])))
+                # Modifications
+                table.cell(
+                    _("Modifications"), "<span title='%s'>%s</span>" %
+                    (_("That many permissions do not use the factory defaults."),
+                     len(role["permissions"])))
 
-            # Users
-            table.cell(
-                _("Users"),
-                HTML(", ").join([
-                    html.render_a(
-                        user.get("alias", user_id),
-                        watolib.folder_preserving_link([("mode", "edit_user"), ("edit", user_id)]))
-                    for (user_id, user) in users.items()
-                    if rid in user["roles"]
-                ]))
+                # Users
+                table.cell(
+                    _("Users"),
+                    HTML(", ").join([
+                        html.render_a(
+                            user.get("alias", user_id),
+                            watolib.folder_preserving_link([("mode", "edit_user"), ("edit",
+                                                                                    user_id)]))
+                        for (user_id, user) in users.items()
+                        if rid in user["roles"]
+                    ]))
 
         # Possibly we could also display the following information
         # - number of set permissions (needs loading users)
         # - number of users with this role
-        table.end()
 
 
 @mode_registry.register
@@ -422,28 +422,27 @@ class ModeRoleMatrix(WatoMode):
             html.begin_foldable_container(
                 "perm_matrix", section.name, section.name == "general", section.title, indent=True)
 
-            table.begin(section.name)
+            with table.open_table(section.name):
 
-            for perm in permission_registry.get_sorted_permissions(section):
-                table.row()
-                table.cell(_("Permission"), perm.title, css="wide")
-                html.help(perm.description)
-                for role_id, role in role_list:
-                    base_on_id = role.get('basedon', role_id)
-                    pvalue = role["permissions"].get(perm.name)
-                    if pvalue is None:
-                        if base_on_id in perm.defaults:
-                            icon_name = "perm_yes_default"
+                for perm in permission_registry.get_sorted_permissions(section):
+                    table.row()
+                    table.cell(_("Permission"), perm.title, css="wide")
+                    html.help(perm.description)
+                    for role_id, role in role_list:
+                        base_on_id = role.get('basedon', role_id)
+                        pvalue = role["permissions"].get(perm.name)
+                        if pvalue is None:
+                            if base_on_id in perm.defaults:
+                                icon_name = "perm_yes_default"
+                            else:
+                                icon_name = None
                         else:
-                            icon_name = None
-                    else:
-                        icon_name = "perm_%s" % (pvalue and "yes" or "no")
+                            icon_name = "perm_%s" % (pvalue and "yes" or "no")
 
-                    table.cell(role_id, css="center")
-                    if icon_name:
-                        html.icon(None, icon_name)
+                        table.cell(role_id, css="center")
+                        if icon_name:
+                            html.icon(None, icon_name)
 
-            table.end()
             html.end_foldable_container()
 
         html.close_table()

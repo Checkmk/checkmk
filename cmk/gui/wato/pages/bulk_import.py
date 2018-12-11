@@ -327,31 +327,34 @@ class ModeBulkImport(WatoMode):
         # Determine how many columns should be rendered by using the longest column
         num_columns = max([len(r) for r in [headers] + rows])
 
-        table.begin(
-            sortable=False, searchable=False, omit_headers=not self._params.get("has_title_line"))
+        with table.open_table(
+                sortable=False, searchable=False,
+                omit_headers=not self._params.get("has_title_line")):
 
-        # Render attribute selection fields
-        table.row()
-        for col_num in range(num_columns):
-            header = headers[col_num] if len(headers) > col_num else None
-            table.cell(html.render_text(header))
-            attribute_varname = "attribute_%d" % col_num
-            if html.var(attribute_varname):
-                attribute_method = html.var("attribute_varname")
-            else:
-                attribute_method = self._try_detect_default_attribute(attributes, header)
-                html.del_var(attribute_varname)
-
-            html.dropdown(
-                "attribute_%d" % col_num, attributes, deflt=attribute_method, autocomplete="off")
-
-        # Render sample rows
-        for row in rows:
+            # Render attribute selection fields
             table.row()
-            for cell in row:
-                table.cell(None, html.render_text(cell))
+            for col_num in range(num_columns):
+                header = headers[col_num] if len(headers) > col_num else None
+                table.cell(html.render_text(header))
+                attribute_varname = "attribute_%d" % col_num
+                if html.var(attribute_varname):
+                    attribute_method = html.var("attribute_varname")
+                else:
+                    attribute_method = self._try_detect_default_attribute(attributes, header)
+                    html.del_var(attribute_varname)
 
-        table.end()
+                html.dropdown(
+                    "attribute_%d" % col_num,
+                    attributes,
+                    deflt=attribute_method,
+                    autocomplete="off")
+
+            # Render sample rows
+            for row in rows:
+                table.row()
+                for cell in row:
+                    table.cell(None, html.render_text(cell))
+
         html.end_form()
 
     def _preview_form(self):

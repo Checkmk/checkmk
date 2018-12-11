@@ -403,96 +403,97 @@ class Jobs(BackupEntityCollection):
 
     def show_list(self, editable=True):
         html.h2(_("Jobs"))
-        table.begin(sortable=False, searchable=False)
+        with table.open_table(sortable=False, searchable=False):
 
-        for job_ident, job in sorted(self.objects.items()):
-            table.row()
-            table.cell(_("Actions"), css="buttons")
-            delete_url = html.makeactionuri_contextless([("mode", "backup"), ("_action", "delete"),
-                                                         ("_job", job_ident)])
-            edit_url = html.makeuri_contextless([("mode", "edit_backup_job"), ("job", job_ident)])
-            state_url = html.makeuri_contextless([("mode", "backup_job_state"), ("job", job_ident)])
+            for job_ident, job in sorted(self.objects.items()):
+                table.row()
+                table.cell(_("Actions"), css="buttons")
+                delete_url = html.makeactionuri_contextless([("mode", "backup"),
+                                                             ("_action", "delete"),
+                                                             ("_job", job_ident)])
+                edit_url = html.makeuri_contextless([("mode", "edit_backup_job"), ("job",
+                                                                                   job_ident)])
+                state_url = html.makeuri_contextless([("mode", "backup_job_state"),
+                                                      ("job", job_ident)])
 
-            state = job.state()
+                state = job.state()
 
-            if editable and not job.is_running():
-                html.icon_button(edit_url, _("Edit this backup job"), "edit")
-                html.icon_button(delete_url, _("Delete this backup job"), "delete")
+                if editable and not job.is_running():
+                    html.icon_button(edit_url, _("Edit this backup job"), "edit")
+                    html.icon_button(delete_url, _("Delete this backup job"), "delete")
 
-            if state["state"] is not None:
-                html.icon_button(state_url, _("Show current / last state of this backup job"),
-                                 "backup_state")
+                if state["state"] is not None:
+                    html.icon_button(state_url, _("Show current / last state of this backup job"),
+                                     "backup_state")
 
-            if not job.is_running():
-                start_url = html.makeactionuri_contextless([
-                    ("mode", "backup"),
-                    ("_action", "start"),
-                    ("_job", job_ident),
-                ])
+                if not job.is_running():
+                    start_url = html.makeactionuri_contextless([
+                        ("mode", "backup"),
+                        ("_action", "start"),
+                        ("_job", job_ident),
+                    ])
 
-                html.icon_button(start_url, _("Manually start this backup"), "backup_start")
-            else:
-                stop_url = html.makeactionuri_contextless([
-                    ("mode", "backup"),
-                    ("_action", "stop"),
-                    ("_job", job_ident),
-                ])
-
-                html.icon_button(stop_url, _("Stop this backup job"), "backup_stop")
-
-            table.cell(_("Name"), html.render_text(job.title()))
-
-            css = "state0"
-            state_txt = job.state_name(state["state"])
-            if state["state"] == "finished":
-                if not state["success"]:
-                    css = "state2"
-                    state_txt = _("Failed")
+                    html.icon_button(start_url, _("Manually start this backup"), "backup_start")
                 else:
-                    state_txt = _("Finished")
-            elif state["state"] is None:
-                css = ""
+                    stop_url = html.makeactionuri_contextless([
+                        ("mode", "backup"),
+                        ("_action", "stop"),
+                        ("_job", job_ident),
+                    ])
 
-            table.cell(_("State"), css=css)
-            html.write(html.render_text(state_txt))
+                    html.icon_button(stop_url, _("Stop this backup job"), "backup_stop")
 
-            table.cell(_("Runtime"))
-            if state["started"]:
-                html.write(_("Started at %s") % render.date_and_time(state["started"]))
-                duration = time.time() - state["started"]
+                table.cell(_("Name"), html.render_text(job.title()))
+
+                css = "state0"
+                state_txt = job.state_name(state["state"])
                 if state["state"] == "finished":
-                    html.write(", Finished at %s" % render.date_and_time(state["finished"]))
-                    duration = state["finished"] - state["started"]
+                    if not state["success"]:
+                        css = "state2"
+                        state_txt = _("Failed")
+                    else:
+                        state_txt = _("Finished")
+                elif state["state"] is None:
+                    css = ""
 
-                if "size" in state:
-                    size_txt = "Size: %s, " % render.fmt_bytes(state["size"])
+                table.cell(_("State"), css=css)
+                html.write(html.render_text(state_txt))
+
+                table.cell(_("Runtime"))
+                if state["started"]:
+                    html.write(_("Started at %s") % render.date_and_time(state["started"]))
+                    duration = time.time() - state["started"]
+                    if state["state"] == "finished":
+                        html.write(", Finished at %s" % render.date_and_time(state["finished"]))
+                        duration = state["finished"] - state["started"]
+
+                    if "size" in state:
+                        size_txt = "Size: %s, " % render.fmt_bytes(state["size"])
+                    else:
+                        size_txt = ""
+
+                    html.write(
+                        _(" (Duration: %s, %sIO: %s/s)") % (
+                            render.timespan(duration),
+                            size_txt,
+                            render.fmt_bytes(state["bytes_per_second"]),
+                        ))
+
+                table.cell(_("Next run"))
+                schedule = job.schedule()
+                if not schedule:
+                    html.write(_("Only execute manually"))
+
+                elif schedule["disabled"]:
+                    html.write(_("Disabled"))
+
                 else:
-                    size_txt = ""
+                    # find the next time of all configured times
+                    times = []
+                    for timespec in schedule["timeofday"]:
+                        times.append(next_scheduled_time(schedule["period"], timespec))
 
-                html.write(
-                    _(" (Duration: %s, %sIO: %s/s)") % (
-                        render.timespan(duration),
-                        size_txt,
-                        render.fmt_bytes(state["bytes_per_second"]),
-                    ))
-
-            table.cell(_("Next run"))
-            schedule = job.schedule()
-            if not schedule:
-                html.write(_("Only execute manually"))
-
-            elif schedule["disabled"]:
-                html.write(_("Disabled"))
-
-            else:
-                # find the next time of all configured times
-                times = []
-                for timespec in schedule["timeofday"]:
-                    times.append(next_scheduled_time(schedule["period"], timespec))
-
-                html.write(time.strftime("%Y-%m-%d %H:%M", time.localtime(min(times))))
-
-        table.end()
+                    html.write(time.strftime("%Y-%m-%d %H:%M", time.localtime(min(times))))
 
     def jobs_using_target(self, target):
         jobs = []
@@ -925,50 +926,50 @@ class Target(BackupEntity):
         return self.type_class()(self.type_params())
 
     def show_backup_list(self, only_type):
-        table.begin(sortable=False, searchable=False)
+        with table.open_table(sortable=False, searchable=False):
 
-        for backup_ident, info in sorted(self.backups().items()):
-            if info["type"] != only_type:
-                continue
+            for backup_ident, info in sorted(self.backups().items()):
+                if info["type"] != only_type:
+                    continue
 
-            table.row()
-            table.cell(_("Actions"), css="buttons")
+                table.row()
+                table.cell(_("Actions"), css="buttons")
 
-            delete_url = html.makeactionuri([("_action", "delete"), ("_backup", backup_ident)])
-            html.icon_button(delete_url, _("Delete this backup"), "delete")
+                delete_url = html.makeactionuri([("_action", "delete"), ("_backup", backup_ident)])
+                html.icon_button(delete_url, _("Delete this backup"), "delete")
 
-            start_url = html.makeactionuri([("_action", "start"), ("_backup", backup_ident)])
+                start_url = html.makeactionuri([("_action", "start"), ("_backup", backup_ident)])
 
-            html.icon_button(start_url, _("Start restore of this backup"), "backup_restore_start")
+                html.icon_button(start_url, _("Start restore of this backup"),
+                                 "backup_restore_start")
 
-            from_info = info["hostname"]
-            if "site_id" in info:
-                from_info += " (Site: %s, Version: %s)" % (info["site_id"], info["site_version"])
-            else:
-                from_info += " (Version: %s)" % info["cma_version"]
-
-            table.cell(_("Backup-ID"), html.render_text(backup_ident))
-            table.cell(_("From"), html.render_text(from_info))
-            table.cell(_("Finished"), render.date_and_time(info["finished"]))
-            table.cell(_("Size"), render.fmt_bytes(info["size"]))
-            table.cell(_("Encrypted"))
-            if info["config"]["encrypt"] is not None:
-                html.write(info["config"]["encrypt"])
-            else:
-                html.write_text(_("No"))
-
-            if info["type"] == "Appliance":
-                table.cell(_("Clustered"))
-                if "cma_cluster" not in info:
-                    html.write(_("Standalone"))
+                from_info = info["hostname"]
+                if "site_id" in info:
+                    from_info += " (Site: %s, Version: %s)" % (info["site_id"],
+                                                               info["site_version"])
                 else:
-                    html.write(_("Clustered"))
-                    if not info["cma_cluster"]["is_inactive"]:
-                        html.write(" (%s)" % _("Active node"))
-                    else:
-                        html.write(" (%s)" % _("Standby node"))
+                    from_info += " (Version: %s)" % info["cma_version"]
 
-        table.end()
+                table.cell(_("Backup-ID"), html.render_text(backup_ident))
+                table.cell(_("From"), html.render_text(from_info))
+                table.cell(_("Finished"), render.date_and_time(info["finished"]))
+                table.cell(_("Size"), render.fmt_bytes(info["size"]))
+                table.cell(_("Encrypted"))
+                if info["config"]["encrypt"] is not None:
+                    html.write(info["config"]["encrypt"])
+                else:
+                    html.write_text(_("No"))
+
+                if info["type"] == "Appliance":
+                    table.cell(_("Clustered"))
+                    if "cma_cluster" not in info:
+                        html.write(_("Standalone"))
+                    else:
+                        html.write(_("Clustered"))
+                        if not info["cma_cluster"]["is_inactive"]:
+                            html.write(" (%s)" % _("Active node"))
+                        else:
+                            html.write(" (%s)" % _("Standby node"))
 
     def backups(self):
         return self.type().backups()
@@ -993,31 +994,30 @@ class Targets(BackupEntityCollection):
             html.write("<p>%s</p>" % _("These backup targets can not be edited here. You need to "
                                        "open the device backup management."))
 
-        table.begin(sortable=False, searchable=False)
+        with table.open_table(sortable=False, searchable=False):
 
-        for target_ident, target in sorted(self.objects.items()):
-            table.row()
-            table.cell(_("Actions"), css="buttons")
-            restore_url = html.makeuri_contextless([("mode", "backup_restore"),
-                                                    ("target", target_ident)])
-            html.icon_button(restore_url, _("Restore from this backup target"), "backup_restore")
+            for target_ident, target in sorted(self.objects.items()):
+                table.row()
+                table.cell(_("Actions"), css="buttons")
+                restore_url = html.makeuri_contextless([("mode", "backup_restore"),
+                                                        ("target", target_ident)])
+                html.icon_button(restore_url, _("Restore from this backup target"),
+                                 "backup_restore")
 
-            if editable:
-                delete_url = html.makeactionuri_contextless([("mode", "backup_targets"),
-                                                             ("target", target_ident)])
-                edit_url = html.makeuri_contextless([("mode", "edit_backup_target"),
-                                                     ("target", target_ident)])
+                if editable:
+                    delete_url = html.makeactionuri_contextless([("mode", "backup_targets"),
+                                                                 ("target", target_ident)])
+                    edit_url = html.makeuri_contextless([("mode", "edit_backup_target"),
+                                                         ("target", target_ident)])
 
-                html.icon_button(edit_url, _("Edit this backup target"), "edit")
-                html.icon_button(delete_url, _("Delete this backup target"), "delete")
+                    html.icon_button(edit_url, _("Edit this backup target"), "edit")
+                    html.icon_button(delete_url, _("Delete this backup target"), "delete")
 
-            table.cell(_("Title"), html.render_text(target.title()))
+                table.cell(_("Title"), html.render_text(target.title()))
 
-            target_class = target.type_class()
-            vs_target = target_class(target.type_params()).valuespec()
-            table.cell(_("Destination"), vs_target.value_to_text(target.type_params()))
-
-        table.end()
+                target_class = target.type_class()
+                vs_target = target_class(target.type_params()).valuespec()
+                table.cell(_("Destination"), vs_target.value_to_text(target.type_params()))
 
     def validate_target(self, value, varprefix):
         target = self.get(value)

@@ -903,68 +903,66 @@ class Overridable(Base):
             if what != "builtin":
                 html.begin_form("bulk_delete_%s" % what, method="POST")
 
-            table.begin(limit=None)
-            for instance in instances:
-                table.row()
+            with table.open_table(limit=None):
+                for instance in instances:
+                    table.row()
 
-                if what != "builtin" and instance.may_delete():
-                    table.cell(
-                        html.render_input(
-                            "_toggle_group",
-                            type_="button",
-                            class_="checkgroup",
-                            onclick="toggle_all_rows(this.form);",
-                            value='X'),
-                        sortable=False,
-                        css="checkbox")
-                    html.checkbox("_c_%s+%s+%s" % (what, instance.owner(), instance.name()))
+                    if what != "builtin" and instance.may_delete():
+                        table.cell(
+                            html.render_input(
+                                "_toggle_group",
+                                type_="button",
+                                class_="checkgroup",
+                                onclick="toggle_all_rows(this.form);",
+                                value='X'),
+                            sortable=False,
+                            css="checkbox")
+                        html.checkbox("_c_%s+%s+%s" % (what, instance.owner(), instance.name()))
 
-                # Actions
-                table.cell(_('Actions'), css='buttons visuals')
+                    # Actions
+                    table.cell(_('Actions'), css='buttons visuals')
 
-                # Clone / Customize
-                buttontext = _("Create a customized copy of this")
-                html.icon_button(instance.clone_url(), buttontext, "new_" + cls.type_name())
+                    # Clone / Customize
+                    buttontext = _("Create a customized copy of this")
+                    html.icon_button(instance.clone_url(), buttontext, "new_" + cls.type_name())
 
-                # Delete
-                if instance.may_delete():
-                    html.icon_button(instance.delete_url(), _("Delete!"), "delete")
+                    # Delete
+                    if instance.may_delete():
+                        html.icon_button(instance.delete_url(), _("Delete!"), "delete")
 
-                # Edit
-                if instance.may_edit():
-                    html.icon_button(instance.edit_url(), _("Edit"), "edit")
+                    # Edit
+                    if instance.may_edit():
+                        html.icon_button(instance.edit_url(), _("Edit"), "edit")
 
-                cls.custom_list_buttons(instance)
+                    cls.custom_list_buttons(instance)
 
-                # Internal ID of instance (we call that 'name')
-                table.cell(_('ID'), instance.name(), css="narrow")
+                    # Internal ID of instance (we call that 'name')
+                    table.cell(_('ID'), instance.name(), css="narrow")
 
-                # Title
-                table.cell(_('Title'))
-                html.write_text(instance.render_title())
-                html.help(_u(instance.description()))
+                    # Title
+                    table.cell(_('Title'))
+                    html.write_text(instance.render_title())
+                    html.help(_u(instance.description()))
 
-                # Custom columns specific to that page type
-                instance.render_extra_columns()
+                    # Custom columns specific to that page type
+                    instance.render_extra_columns()
 
-                ### for title, renderer in custom_columns:
-                ###     table.cell(title, renderer(visual))
+                    ### for title, renderer in custom_columns:
+                    ###     table.cell(title, renderer(visual))
 
-                # Owner
-                if instance.is_builtin():
-                    ownertxt = html.i(_("builtin"))
-                else:
-                    ownertxt = instance.owner()
-                table.cell(_('Owner'), ownertxt)
-                table.cell(_('Public'), _("yes") if instance.is_public() else _("no"))
-                table.cell(_('Hidden'), _("yes") if instance.is_hidden() else _("no"))
+                    # Owner
+                    if instance.is_builtin():
+                        ownertxt = html.i(_("builtin"))
+                    else:
+                        ownertxt = instance.owner()
+                    table.cell(_('Owner'), ownertxt)
+                    table.cell(_('Public'), _("yes") if instance.is_public() else _("no"))
+                    table.cell(_('Hidden'), _("yes") if instance.is_hidden() else _("no"))
 
-                # FIXME: WTF?!?
-                # TODO: Haeeh? Another custom columns
-                ### if render_custom_columns:
-                ###     render_custom_columns(visual_name, visual)
-
-            table.end()
+                    # FIXME: WTF?!?
+                    # TODO: Haeeh? Another custom columns
+                    ### if render_custom_columns:
+                    ###     render_custom_columns(visual_name, visual)
 
             if what != "builtin":
                 html.button(

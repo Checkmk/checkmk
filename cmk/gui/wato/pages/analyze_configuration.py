@@ -123,17 +123,15 @@ class ModeAnalyzeConfig(WatoMode):
 
         for category_name, results_by_test in sorted(
                 results_by_category.items(), key=lambda x: watolib.ACTestCategories.title(x[0])):
-            table.begin(
-                title=watolib.ACTestCategories.title(category_name),
-                css="data analyze_config",
-                sortable=False,
-                searchable=False)
+            with table.open_table(
+                    title=watolib.ACTestCategories.title(category_name),
+                    css="data analyze_config",
+                    sortable=False,
+                    searchable=False):
 
-            for test_id, test_results_by_site in sorted(
-                    results_by_test.items(), key=lambda x: x[1]["test"]["title"]):
-                self._show_test_row(test_id, test_results_by_site, site_ids)
-
-            table.end()
+                for test_id, test_results_by_site in sorted(
+                        results_by_test.items(), key=lambda x: x[1]["test"]["title"]):
+                    self._show_test_row(test_id, test_results_by_site, site_ids)
 
     def _show_test_row(self, test_id, test_results_by_site, site_ids):
         table.row()

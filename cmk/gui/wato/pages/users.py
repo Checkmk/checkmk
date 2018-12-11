@@ -228,174 +228,177 @@ class ModeUsers(WatoMode):
         timeperiods = watolib.load_timeperiods()
         contact_groups = userdb.load_group_information().get("contact", {})
 
-        table.begin("users", None, empty_text=_("No users are defined yet."))
-        online_threshold = time.time() - config.user_online_maxage
-        for uid, user in entries:
-            table.row()
+        with table.open_table("users", None, empty_text=_("No users are defined yet.")):
+            online_threshold = time.time() - config.user_online_maxage
+            for uid, user in entries:
+                table.row()
 
-            # Checkboxes
-            table.cell(
-                html.render_input(
-                    "_toggle_group",
-                    type_="button",
-                    class_="checkgroup",
-                    onclick="toggle_all_rows();",
-                    value='X'),
-                sortable=False,
-                css="checkbox")
-
-            if uid != config.user.id:
-                html.checkbox("_c_user_%s" % base64.b64encode(uid.encode("utf-8")))
-
-            user_connection_id = userdb.cleanup_connection_id(user.get('connector'))
-            connection = userdb.get_connection(user_connection_id)
-
-            # Buttons
-            table.cell(_("Actions"), css="buttons")
-            if connection:  # only show edit buttons when the connector is available and enabled
-                edit_url = watolib.folder_preserving_link([("mode", "edit_user"), ("edit", uid)])
-                html.icon_button(edit_url, _("Properties"), "edit")
-
-                clone_url = watolib.folder_preserving_link([("mode", "edit_user"), ("clone", uid)])
-                html.icon_button(clone_url, _("Create a copy of this user"), "clone")
-
-            delete_url = make_action_link([("mode", "users"), ("_delete", uid)])
-            html.icon_button(delete_url, _("Delete"), "delete")
-
-            notifications_url = watolib.folder_preserving_link([("mode", "user_notifications"),
-                                                                ("user", uid)])
-            if watolib.load_configuration_settings().get("enable_rulebased_notifications"):
-                html.icon_button(notifications_url, _("Custom notification table of this user"),
-                                 "notifications")
-
-            # ID
-            table.cell(_("ID"), uid)
-
-            # Online/Offline
-            if config.save_user_access_times:
-                last_seen = user.get('last_seen', 0)
-                if last_seen >= online_threshold:
-                    title = _('Online')
-                    img_txt = 'online'
-                elif last_seen != 0:
-                    title = _('Offline')
-                    img_txt = 'offline'
-                elif last_seen == 0:
-                    title = _('Never logged in')
-                    img_txt = 'inactive'
-
-                title += ' (%s %s)' % (render.date(last_seen), render.time_of_day(last_seen))
-                table.cell(_("Act."))
-                html.icon(title, img_txt)
-
-                table.cell(_("Last seen"))
-                if last_seen != 0:
-                    html.write_text(
-                        "%s %s" % (render.date(last_seen), render.time_of_day(last_seen)))
-                else:
-                    html.write_text(_("Never logged in"))
-
-            if cmk.is_managed_edition():
-                table.cell(_("Customer"), managed.get_customer_name(user))
-
-            # Connection
-            if connection:
+                # Checkboxes
                 table.cell(
-                    _("Connection"), '%s (%s)' % (connection.short_title(), user_connection_id))
-                locked_attributes = userdb.locked_attributes(user_connection_id)
-            else:
-                table.cell(
-                    _("Connection"),
-                    "%s (%s) (%s)" % (_("UNKNOWN"), user_connection_id, _("disabled")),
-                    css="error")
-                locked_attributes = []
+                    html.render_input(
+                        "_toggle_group",
+                        type_="button",
+                        class_="checkgroup",
+                        onclick="toggle_all_rows();",
+                        value='X'),
+                    sortable=False,
+                    css="checkbox")
 
-            # Authentication
-            if "automation_secret" in user:
-                auth_method = _("Automation")
-            elif user.get("password") or 'password' in locked_attributes:
-                auth_method = _("Password")
-            else:
-                auth_method = "<i>%s</i>" % _("none")
-            table.cell(_("Authentication"), auth_method)
+                if uid != config.user.id:
+                    html.checkbox("_c_user_%s" % base64.b64encode(uid.encode("utf-8")))
 
-            table.cell(_("State"))
-            if user.get("locked", False):
-                html.icon(_('The login is currently locked'), 'user_locked')
+                user_connection_id = userdb.cleanup_connection_id(user.get('connector'))
+                connection = userdb.get_connection(user_connection_id)
 
-            if "disable_notifications" in user and isinstance(user["disable_notifications"], bool):
-                disable_notifications_opts = {"disable": user["disable_notifications"]}
-            else:
-                disable_notifications_opts = user.get("disable_notifications", {})
+                # Buttons
+                table.cell(_("Actions"), css="buttons")
+                if connection:  # only show edit buttons when the connector is available and enabled
+                    edit_url = watolib.folder_preserving_link([("mode", "edit_user"), ("edit",
+                                                                                       uid)])
+                    html.icon_button(edit_url, _("Properties"), "edit")
 
-            if disable_notifications_opts.get("disable", False):
-                html.icon(_('Notifications are disabled'), 'notif_disabled')
+                    clone_url = watolib.folder_preserving_link([("mode", "edit_user"), ("clone",
+                                                                                        uid)])
+                    html.icon_button(clone_url, _("Create a copy of this user"), "clone")
 
-            # Full name / Alias
-            table.text_cell(_("Alias"), user.get("alias", ""))
+                delete_url = make_action_link([("mode", "users"), ("_delete", uid)])
+                html.icon_button(delete_url, _("Delete"), "delete")
 
-            # Email
-            table.text_cell(_("Email"), user.get("email", ""))
+                notifications_url = watolib.folder_preserving_link([("mode", "user_notifications"),
+                                                                    ("user", uid)])
+                if watolib.load_configuration_settings().get("enable_rulebased_notifications"):
+                    html.icon_button(notifications_url, _("Custom notification table of this user"),
+                                     "notifications")
 
-            # Roles
-            table.cell(_("Roles"))
-            if user.get("roles", []):
-                role_links = [(watolib.folder_preserving_link(
-                    [("mode", "edit_role"), ("edit", role)]), roles[role].get("alias"))
-                              for role in user["roles"]]
-                html.write_html(
-                    HTML(", ").join(
-                        html.render_a(alias, href=link) for (link, alias) in role_links))
+                # ID
+                table.cell(_("ID"), uid)
 
-            # contact groups
-            table.cell(_("Contact groups"))
-            cgs = user.get("contactgroups", [])
-            if cgs:
-                cg_aliases = [contact_groups[c]['alias'] if c in contact_groups else c for c in cgs]
-                cg_urls = [
-                    watolib.folder_preserving_link([("mode", "edit_contact_group"), ("edit", c)])
-                    for c in cgs
-                ]
-                html.write_html(
-                    HTML(", ").join(
-                        html.render_a(content, href=url)
-                        for (content, url) in zip(cg_aliases, cg_urls)))
-            else:
-                html.i(_("none"))
+                # Online/Offline
+                if config.save_user_access_times:
+                    last_seen = user.get('last_seen', 0)
+                    if last_seen >= online_threshold:
+                        title = _('Online')
+                        img_txt = 'online'
+                    elif last_seen != 0:
+                        title = _('Offline')
+                        img_txt = 'offline'
+                    elif last_seen == 0:
+                        title = _('Never logged in')
+                        img_txt = 'inactive'
 
-            #table.cell(_("Sites"))
-            #html.write(vs_authorized_sites().value_to_text(user.get("authorized_sites",
-            #                                                vs_authorized_sites().default_value())))
+                    title += ' (%s %s)' % (render.date(last_seen), render.time_of_day(last_seen))
+                    table.cell(_("Act."))
+                    html.icon(title, img_txt)
 
-            # notifications
-            if not watolib.load_configuration_settings().get("enable_rulebased_notifications"):
-                table.cell(_("Notifications"))
-                if not cgs:
-                    html.i(_("not a contact"))
-                elif not user.get("notifications_enabled", True):
-                    html.write_text(_("disabled"))
-                elif user.get("host_notification_options", "") == "" and \
-                     user.get("service_notification_options", "") == "":
-                    html.write_text(_("all events disabled"))
-                else:
-                    tp = user.get("notification_period", "24X7")
-                    if tp not in timeperiods:
-                        tp = tp + _(" (invalid)")
-                    elif tp not in watolib.builtin_timeperiods():
-                        url = watolib.folder_preserving_link([("mode", "edit_timeperiod"),
-                                                              ("edit", tp)])
-                        tp = html.render_a(timeperiods[tp].get("alias", tp), href=url)
+                    table.cell(_("Last seen"))
+                    if last_seen != 0:
+                        html.write_text(
+                            "%s %s" % (render.date(last_seen), render.time_of_day(last_seen)))
                     else:
-                        tp = timeperiods[tp].get("alias", tp)
-                    html.write(tp)
+                        html.write_text(_("Never logged in"))
 
-            # the visible custom attributes
-            for name, attr in visible_custom_attrs:
-                vs = attr.valuespec()
-                table.cell(html.attrencode(_u(vs.title())))
-                html.write(vs.value_to_text(user.get(name, vs.default_value())))
+                if cmk.is_managed_edition():
+                    table.cell(_("Customer"), managed.get_customer_name(user))
 
-        table.end()
+                # Connection
+                if connection:
+                    table.cell(
+                        _("Connection"), '%s (%s)' % (connection.short_title(), user_connection_id))
+                    locked_attributes = userdb.locked_attributes(user_connection_id)
+                else:
+                    table.cell(
+                        _("Connection"),
+                        "%s (%s) (%s)" % (_("UNKNOWN"), user_connection_id, _("disabled")),
+                        css="error")
+                    locked_attributes = []
+
+                # Authentication
+                if "automation_secret" in user:
+                    auth_method = _("Automation")
+                elif user.get("password") or 'password' in locked_attributes:
+                    auth_method = _("Password")
+                else:
+                    auth_method = "<i>%s</i>" % _("none")
+                table.cell(_("Authentication"), auth_method)
+
+                table.cell(_("State"))
+                if user.get("locked", False):
+                    html.icon(_('The login is currently locked'), 'user_locked')
+
+                if "disable_notifications" in user and isinstance(user["disable_notifications"],
+                                                                  bool):
+                    disable_notifications_opts = {"disable": user["disable_notifications"]}
+                else:
+                    disable_notifications_opts = user.get("disable_notifications", {})
+
+                if disable_notifications_opts.get("disable", False):
+                    html.icon(_('Notifications are disabled'), 'notif_disabled')
+
+                # Full name / Alias
+                table.text_cell(_("Alias"), user.get("alias", ""))
+
+                # Email
+                table.text_cell(_("Email"), user.get("email", ""))
+
+                # Roles
+                table.cell(_("Roles"))
+                if user.get("roles", []):
+                    role_links = [(watolib.folder_preserving_link([("mode", "edit_role"),
+                                                                   ("edit", role)]),
+                                   roles[role].get("alias")) for role in user["roles"]]
+                    html.write_html(
+                        HTML(", ").join(
+                            html.render_a(alias, href=link) for (link, alias) in role_links))
+
+                # contact groups
+                table.cell(_("Contact groups"))
+                cgs = user.get("contactgroups", [])
+                if cgs:
+                    cg_aliases = [
+                        contact_groups[c]['alias'] if c in contact_groups else c for c in cgs
+                    ]
+                    cg_urls = [
+                        watolib.folder_preserving_link([("mode", "edit_contact_group"),
+                                                        ("edit", c)]) for c in cgs
+                    ]
+                    html.write_html(
+                        HTML(", ").join(
+                            html.render_a(content, href=url)
+                            for (content, url) in zip(cg_aliases, cg_urls)))
+                else:
+                    html.i(_("none"))
+
+                #table.cell(_("Sites"))
+                #html.write(vs_authorized_sites().value_to_text(user.get("authorized_sites",
+                #                                                vs_authorized_sites().default_value())))
+
+                # notifications
+                if not watolib.load_configuration_settings().get("enable_rulebased_notifications"):
+                    table.cell(_("Notifications"))
+                    if not cgs:
+                        html.i(_("not a contact"))
+                    elif not user.get("notifications_enabled", True):
+                        html.write_text(_("disabled"))
+                    elif user.get("host_notification_options", "") == "" and \
+                         user.get("service_notification_options", "") == "":
+                        html.write_text(_("all events disabled"))
+                    else:
+                        tp = user.get("notification_period", "24X7")
+                        if tp not in timeperiods:
+                            tp = tp + _(" (invalid)")
+                        elif tp not in watolib.builtin_timeperiods():
+                            url = watolib.folder_preserving_link([("mode", "edit_timeperiod"),
+                                                                  ("edit", tp)])
+                            tp = html.render_a(timeperiods[tp].get("alias", tp), href=url)
+                        else:
+                            tp = timeperiods[tp].get("alias", tp)
+                        html.write(tp)
+
+                # the visible custom attributes
+                for name, attr in visible_custom_attrs:
+                    vs = attr.valuespec()
+                    table.cell(html.attrencode(_u(vs.title())))
+                    html.write(vs.value_to_text(user.get(name, vs.default_value())))
 
         html.button("_bulk_delete_users", _("Bulk Delete"), "submit", style="margin-top:10px")
         html.hidden_fields()

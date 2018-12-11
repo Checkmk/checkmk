@@ -156,15 +156,14 @@ class ModeIcons(WatoMode):
         html.end_form()
 
         icons = sorted(self._load_custom_icons().items())
-        table.begin("icons", _("Custom Icons"))
-        for icon_name, category_name in icons:
-            table.row()
+        with table.open_table("icons", _("Custom Icons")):
+            for icon_name, category_name in icons:
+                table.row()
 
-            table.cell(_("Actions"), css="buttons")
-            delete_url = make_action_link([("mode", "icons"), ("_delete", icon_name)])
-            html.icon_button(delete_url, _("Delete this Icon"), "delete")
+                table.cell(_("Actions"), css="buttons")
+                delete_url = make_action_link([("mode", "icons"), ("_delete", icon_name)])
+                html.icon_button(delete_url, _("Delete this Icon"), "delete")
 
-            table.cell(_("Icon"), html.render_icon(icon_name), css="buttons")
-            table.text_cell(_("Name"), icon_name)
-            table.text_cell(_("Category"), IconSelector.category_alias(category_name))
-        table.end()
+                table.cell(_("Icon"), html.render_icon(icon_name), css="buttons")
+                table.text_cell(_("Name"), icon_name)
+                table.text_cell(_("Category"), IconSelector.category_alias(category_name))

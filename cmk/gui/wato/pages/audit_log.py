@@ -138,17 +138,17 @@ class ModeAuditLog(WatoMode):
         self._display_log(log)
 
     def _display_log(self, log):
-        table.begin(css="data wato auditlog audit", limit=None, sortable=False, searchable=False)
-        for t, linkinfo, user, _action, text in log:
-            table.row()
-            table.cell(_("Object"), self._render_logfile_linkinfo(linkinfo))
-            table.cell(_("Time"), html.render_nobr(render.date_and_time(float(t))))
-            user = ('<i>%s</i>' % _('internal')) if user == '-' else user
-            table.cell(_("User"), html.render_text(user), css="nobreak")
+        with table.open_table(
+                css="data wato auditlog audit", limit=None, sortable=False, searchable=False):
+            for t, linkinfo, user, _action, text in log:
+                table.row()
+                table.cell(_("Object"), self._render_logfile_linkinfo(linkinfo))
+                table.cell(_("Time"), html.render_nobr(render.date_and_time(float(t))))
+                user = ('<i>%s</i>' % _('internal')) if user == '-' else user
+                table.cell(_("User"), html.render_text(user), css="nobreak")
 
-            # This must not be attrencoded: The entries are encoded when writing to the log.
-            table.cell(_("Change"), text.replace("\\n", "<br>\n"), css="fill")
-        table.end()
+                # This must not be attrencoded: The entries are encoded when writing to the log.
+                table.cell(_("Change"), text.replace("\\n", "<br>\n"), css="fill")
 
     def _get_next_daily_paged_log(self, log):
         start = self._get_start_date()

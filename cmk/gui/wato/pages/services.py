@@ -294,24 +294,23 @@ class ModeDiscovery(WatoMode):
                 continue
 
             html.begin_form("checks_%s" % table_group, method="POST")
-            table.begin(css="data", searchable=False, limit=None, sortable=False)
-            if table_group in map_icons:
-                group_header = "%s %s" % (html.render_icon("%s_service" % map_icons[table_group]),
-                                          header)
-            else:
-                group_header = header
-            table.groupheader(group_header + html.render_help(help_text))
+            with table.open_table(css="data", searchable=False, limit=None, sortable=False):
+                if table_group in map_icons:
+                    group_header = "%s %s" % (html.render_icon(
+                        "%s_service" % map_icons[table_group]), header)
+                else:
+                    group_header = header
+                table.groupheader(group_header + html.render_help(help_text))
 
-            if show_bulk_actions and len(checks) > 10:
-                self._bulk_actions(table_group, collect_headers=False)
+                if show_bulk_actions and len(checks) > 10:
+                    self._bulk_actions(table_group, collect_headers=False)
 
-            for check in sorted(checks, key=lambda c: c[6].lower()):
-                self._check_row(check, show_bulk_actions)
+                for check in sorted(checks, key=lambda c: c[6].lower()):
+                    self._check_row(check, show_bulk_actions)
 
-            if show_bulk_actions:
-                self._bulk_actions(table_group, collect_headers="finished")
+                if show_bulk_actions:
+                    self._bulk_actions(table_group, collect_headers="finished")
 
-            table.end()
             html.hidden_fields()
             html.end_form()
 

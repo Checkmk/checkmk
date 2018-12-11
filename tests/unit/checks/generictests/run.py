@@ -17,7 +17,7 @@ def get_info_argument(dataset, subcheck, fallback_parsed=None):
     This may be the info variable, the parsed variable,
     and/or including extra sections.
     """
-    # see i fwe have a parsed result defined
+    # see if we have a parsed result defined
     tmp = getattr(dataset, 'parsed', None)
     if tmp is not None:
         arg = [tmp]
@@ -40,24 +40,24 @@ def get_info_argument(dataset, subcheck, fallback_parsed=None):
     return arg
 
 
-def get_merged_parameters(default_p, provided_p):
+def get_merged_parameters(check, provided_p):
     """return (merged_params, description_string)
 
     I think this is a mess.
     I'm trying to do the right thing, any ideas wellcome.
     """
+    default_p = check.default_parameters()
+
     if not provided_p:
         return default_p, "default"
-    elif isinstance(provided_p, str):
+    if isinstance(provided_p, str):
         return default_p, "default"
-    elif type(default_p) == type(provided_p) == dict:
+    if isinstance(default_p, dict) and isinstance(provided_p, dict):
         default_p.update(provided_p)
         return default_p, repr(default_p)
-    elif not default_p:
+    if not default_p:
         return provided_p, repr(provided_p)
-
-    raise DiscoveryParameterTypeError("unhandled: %r/%r" \
-                                      % (default_p, provided_p))
+    raise DiscoveryParameterTypeError("unhandled: %r/%r" % (default_p, provided_p))
 
 
 def get_mock_values(dataset, subcheck):
@@ -108,7 +108,7 @@ def discovery(check, subcheck, dataset, info_arg, immu):
     discov_expected = getattr(dataset, 'discovery', {})
 
     disco_func = check.info.get("inventory_function")
-    if subcheck in discov_expected:
+    if discov_expected.get(subcheck):
         # we *must* have a discovery function in this case!
         assert disco_func, "%r has no discovery function!" \
                            % check.name
@@ -127,18 +127,14 @@ def discovery(check, subcheck, dataset, info_arg, immu):
 
 
 def check_discovered_result(check, discovery_result, info_arg, immu):
-    """Run the check on all discovered items
-
-    with the default parameters. We cannot validate the results,
-    but at least make sure we don't crash.
+    """Run the check on all discovered items with the default parameters.
+    We cannot validate the results, but at least make sure we don't crash.
     """
     print("Check %r in check %r" % (discovery_result, check.name))
 
     item = discovery_result.item
 
-    disco_params = discovery_result.default_params
-    def_params = check.default_parameters()
-    params, par_str = get_merged_parameters(def_params, disco_params)
+    params, par_str = get_merged_parameters(check, discovery_result.default_params)
     immu.register(params, 'params')
 
     raw_checkresult = check.run_check(item, params, info_arg)
@@ -155,8 +151,7 @@ def check_listed_result(check, list_entry, info_arg, immu):
     item, params, results_expected_raw = list_entry
     print("Dataset item %r in check %r" % (item, check.name))
 
-    default_params = check.default_parameters()
-    params, __ = get_merged_parameters(default_params, params)
+    params, __ = get_merged_parameters(check, params)
     immu.register(params, 'params')
 
     result_raw = check.run_check(item, params, info_arg)

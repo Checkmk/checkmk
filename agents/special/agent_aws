@@ -426,6 +426,144 @@ class S3Objects(AWSSection):
         ]
 
 
+class ELBSummary(AWSSection):
+    @property
+    def name(self):
+        return "elb_summary"
+
+    @property
+    def interval(self):
+        return 300
+
+    def _get_raw_result(self):
+        return self._client.describe_load_balancers()
+
+    def _extract_content_from(self, raw_result):
+        try:
+            return raw_result['LoadBalancerDescriptions']
+        except KeyError, e:
+            logging.info("%s: KeyError %s ", self.name, e)
+            return []
+
+    def _format_content(self, content):
+        return [AWSSectionResult("", content)]
+
+
+class ELBHealth(AWSSection):
+    @property
+    def name(self):
+        return "elb_health"
+
+    @property
+    def interval(self):
+        return 300
+
+    def _get_raw_result(self):
+        load_balancers = {}
+        for entry in self._received_results.get('elb_summary', []):
+            name = entry['LoadBalancerName']
+            load_balancers.setdefault(name,
+                                      self._client.describe_instance_health(LoadBalancerName=name))
+        return load_balancers
+
+    def _extract_content_from(self, raw_result):
+        content = {}
+        for name, attrs in raw_result.iteritems():
+            try:
+                content.setdefault(name, attrs['InstanceStates'])
+            except KeyError, e:
+                logging.info("%s: KeyError %s ", self.name, e)
+        return content
+
+    def _format_content(self, content):
+        return [
+            AWSSectionResult(piggyback_hostname, rows)
+            for piggyback_hostname, rows in content.iteritems()
+        ]
+
+
+class ELB(AWSSection):
+    @property
+    def name(self):
+        return "elb"
+
+    @property
+    def interval(self):
+        return 300
+
+    def _get_raw_result(self):
+        end_time = time.time()
+        start_time = end_time - self.period
+        metrics = self._get_metrics()
+        if not metrics:
+            return {}
+        return self._client.get_metric_data(
+            MetricDataQueries=metrics,
+            StartTime=start_time,
+            EndTime=end_time,
+        )
+
+    def _get_metrics(self):
+        load_balancers = []
+        for entry in self._received_results.get('elb_summary', []):
+            load_balancers.append(entry['LoadBalancerName'])
+        metrics = []
+        idx = 0
+        for load_balancer in load_balancers:
+            for metric_name, unit in [
+                    # Load balancer metrics
+                ("RequestCount", ""),
+                ("SurgeQueueLength", ""),
+                ("SpilloverCount", ""),
+                ("HTTPCode_ELB_4XX", ""),
+                ("HTTPCode_ELB_5XX", ""),
+                    # Backend metrics
+                ("HealthyHostCount", ""),
+                ("UnHealthyHostCount", ""),
+                ("Latency", ""),
+                ("HTTPCode_Backend_2XX", ""),
+                ("HTTPCode_Backend_3XX", ""),
+                ("HTTPCode_Backend_4XX", ""),
+                ("HTTPCode_Backend_5XX", ""),
+                ("BackendConnectionErrors", ""),
+            ]:
+                metrics.append({
+                    'Id': "%s_%s" % (metric_name.lower(), idx),
+                    'Label': load_balancer,
+                    'MetricStat': {
+                        'Metric': {
+                            'Namespace': 'AWS/ELB',
+                            'MetricName': metric_name,
+                            'Dimensions': [{
+                                'Name': "LoadBalancerName",
+                                'Value': load_balancer,
+                            }]
+                        },
+                        'Period': self.period,
+                        'Stat': 'Average',
+                        'Unit': unit,
+                    },
+                })
+                idx += 1
+        return metrics
+
+    def _extract_content_from(self, raw_result):
+        try:
+            return raw_result['MetricDataResults']
+        except KeyError, e:
+            logging.info("%s: KeyError %s ", self.name, e)
+            return []
+
+    def _format_content(self, content):
+        content_by_piggyback_hosts = {}
+        for row in content:
+            content_by_piggyback_hosts.setdefault(row['Label'], []).append(row)
+        return [
+            AWSSectionResult(piggyback_hostname, rows)
+            for piggyback_hostname, rows in content_by_piggyback_hosts.iteritems()
+        ]
+
+
 #   ---sections handler-----------------------------------------------------
 
 
@@ -440,30 +578,43 @@ class AWSSections(object):
         #---clients---------------------------------------------------------
         ec2_client = self._init_client('ec2')
         s3_client = self._init_client('s3')
+        elb_client = self._init_client('elb')
         cloudwatch_client = self._init_client('cloudwatch')
 
         #---distributors----------------------------------------------------
         ec2_summary_distributor = ResultDistributor()
         s3_buckets_distributor = ResultDistributor()
+        elb_summary_distributor = ResultDistributor()
 
         #---sections--------------------------------------------------------
         ec2_summary = EC2Summary(ec2_client, ec2_summary_distributor)
         ec2 = EC2(cloudwatch_client)
+
         s3_buckets = S3Buckets(s3_client, s3_buckets_distributor)
         s3_objects = S3Objects(s3_client)
         s3 = S3(cloudwatch_client)
+
+        elb_summary = ELBSummary(elb_client, elb_summary_distributor)
+        elb_health = ELBHealth(elb_client)
+        elb = ELB(cloudwatch_client)
 
         #---distributors registry-------------------------------------------
         ec2_summary_distributor.add(ec2)
         s3_buckets_distributor.add(s3)
         s3_buckets_distributor.add(s3_objects)
+        elb_summary_distributor.add(elb_health)
+        elb_summary_distributor.add(elb)
 
         #---section registry------------------------------------------------
         self._sections.append(ec2_summary)
         self._sections.append(s3_buckets)
+        self._sections.append(elb_summary)
+
         self._sections.append(ec2)
-        self._sections.append(s3)
         self._sections.append(s3_objects)
+        self._sections.append(s3)
+        self._sections.append(elb_health)
+        self._sections.append(elb)
 
     def _init_client(self, client_key):
         try:

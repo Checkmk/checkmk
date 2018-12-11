@@ -1,0 +1,19 @@
+Title: Always include xinetd configuration file to .tgz packages
+Level: 1
+Component: agents
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.4.0p38
+Date: 1544456159
+
+Due to a bug in the packaging routine within the agent bakery, the Check_MK-Agent
+xinetd configuration file wouldn't be included into .tgz packages.
+
+This error occured when using the plugin "Installation paths for agent files"
+while having no configured path starting with <code>/etc</code>.
+
+The xinetd configuration file under <code>/etc/xinetd.d/</code> will now be included as intended,
+regardless of the paths configured at the "Installation paths for agent files" ruleset.
+

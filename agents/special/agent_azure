@@ -64,6 +64,21 @@ cmk.password_store.replace_passwords()
 LOG = logging.getLogger(__name__)
 
 
+METRICS_SELECTED = {  # name(s), grain, aggregation, filter
+    'Microsoft.Sql/servers/databases': [
+        ('storage_percent,deadlock,cpu_percent,dtu_consumption_percent,'
+         'connection_successful,connection_failed', 'PT1M', 'average', None),
+    ],
+    'Microsoft.Storage/storageAccounts': [
+        ('UsedCapacity,Ingress,Egress,Transactions,'
+         'SuccessServerLatency,SuccessE2ELatency,Availability', 'PT1H', 'total', None),
+    ],
+    'Microsoft.Web/sites': [
+        ('CpuTime,AverageResponseTime,Http5xx', 'PT1M', 'total', None),
+    ],
+}
+
+
 class AsyncMapper(object):  # pylint: disable=too-few-public-methods
     '''Create an async drop-in replacement for builtin 'map'
 
@@ -166,16 +181,17 @@ def parse_arguments(argv):
         help='''list of arguments providing the configuration in <key>=<value> format.
              If omitted, all groups and resources are fetched.
              If specified, every 'group=<name>' argument starts a new group configuration,
-             and every 'resource=<name>' arguments starts a new resource configuration.
-             Other keys are time_grain, aggregations and filters''')
+             and every 'resource=<name>' arguments specifies a resource.''')
     args = parser.parse_args(argv)
 
     # LOGGING
     if args.verbose >= 3:
+        # this will show third party log messages as well
         fmt = "%(levelname)s: %(name)s: %(filename)s: %(lineno)s: %(message)s"
         lvl = logging.DEBUG
     elif args.verbose == 2:
-        fmt = "%(levelname)s: %(filename)s: %(lineno)s: %(message)s"
+        # be verbose, but silence msrest, urllib3 and requests_oauthlib
+        fmt = "%(levelname)s: %(funcName)s: %(lineno)s: %(message)s"
         lvl = logging.DEBUG
         logging.getLogger('msrest').setLevel(logging.WARNING)
         logging.getLogger('urllib3').setLevel(logging.WARNING)
@@ -214,28 +230,13 @@ class ResourceConfig(object):
     def __init__(self, name):
         super(ResourceConfig, self).__init__()
         self.name = name
-        self.metrics = {}
-        self.current_metric = None
-
-    @property
-    def fetchall(self):
-        return not self.metrics
+        self.fetchall = True
 
     def add_key(self, key, value):
-        if key not in ('metric', 'time_grain', 'aggregation', 'filters'):
-            raise ValueError("unknown key: %r" % key)
-        if key == 'metric':
-            self.current_metric = self.metrics.setdefault(value, {})
-            return
-        if self.current_metric is None:
-            raise RuntimeError("missing arg: metric=<name>")
-        self.current_metric[key] = value
+        raise ValueError("unknown key: %r" % key)
 
     def __str__(self):
-        if self.fetchall:
-            return "  %s <fetchall>" % self.name
-        lines = ['  %s %s %r' % (self.name, k, v) for k, v in self.metrics.iteritems()]
-        return "\n".join(lines)
+        return "  %s <fetchall>" % self.name
 
 
 class GroupConfig(object):
@@ -364,7 +365,7 @@ class AzureMetric(object):
     HEADER = ("name", "aggregation", "value", "unit", "timestamp", "timegrain", "filters")
     AGGREGATIONS = ("total", "average", "maximum", "minimum", "last", "count")
 
-    def __init__(self, metric, rid, time_grain, filters, err):
+    def __init__(self, metric, aggregations, time_grain, filter_, rid, err):
         super(AzureMetric, self).__init__()
 
         self.rows = []
@@ -381,20 +382,20 @@ class AzureMetric(object):
             if not measurement.data:
                 continue
 
-            for aggr in AzureMetric.AGGREGATIONS:
+            for aggr in aggregations.split(','):
                 for data in reversed(measurement.data):
-                    LOG.debug("data: %s", data)
+                    if aggregations.startswith(aggr):
+                        LOG.debug("data: %s", data)
                     if hasattr(data, aggr):
                         value = getattr(data, aggr)
                         # the field *may* be present, even if we did not ask for it.
                         if value is not None:
                             timestamp = calendar.timegm(data.time_stamp.utctimetuple())
                             self.rows.append((self.name, aggr, value, metric.unit.name, timestamp,
-                                              time_grain, filters))
+                                              time_grain, filter_))
                             break
                 else:  # no break ocurred, we did not find anything
-                    logging.debug("not found: %s %s %s %s %s", self.name, aggr, metric.unit.name,
-                                  time_grain, filters)
+                    logging.debug("not found: %s %s", self.name, aggr)
         if not self.rows:
             LOG.info("Found no aggregation for metric %r", self.name)
         return
@@ -495,98 +496,38 @@ class AzureClient(object):
             self.resources_cache = map(AzureResource, raw_resources)
         return self.resources_cache
 
-    def discover_metrics(self, rid):
-        if rid not in self.metrics_cache:
-            try:
-                # azure-api-call
-                md_list = list(self._monitor_client.metric_definitions.list(rid))
-            except ErrorResponseException as exc:
-                if "is not a supported platform metric namespace" in exc.message:
-                    md_list = []
-                else:
-                    raise exc
-            self.metrics_cache[rid] = md_list
-            LOG.debug("%d discovered metrics: %r", len(md_list), [md.name.value for md in md_list])
-        return self.metrics_cache[rid]
-
-    @staticmethod
-    def _categorize_metric(definition):
-
-        has_minute_grain = 60 in [i.time_grain.seconds for i in definition.metric_availabilities]
-        grain = 'PT1M' if has_minute_grain else 'PT1H'
-        if definition.dimensions is None:
-            dim = 'no_dim'
-        else:
-            dim = 'req_dim' if definition.is_dimension_required else 'opt_dim'
-        return '%s_%s' % (grain, dim)
-
-    def _fetch_all_metrics(self, rid, err):
-        metrics = []
-        categorized_metrics = {}
-
-        for m_def in self.discover_metrics(rid):  # sort into categories
-            cat = self._categorize_metric(m_def)
-            categorized_metrics.setdefault(cat, []).append(m_def)
-
-        for time_grain in ('PT1M', 'PT1H'):
-            metric_type = '%s_no_dim' % time_grain
-            metrics_no_dim = categorized_metrics.get(metric_type)
-            if metrics_no_dim:
-                _names = ','.join(m.name.value for m in metrics_no_dim)
-                LOG.debug("metrics of type %r: %r", metric_type, _names)
-                metrics += self._fetch_specific_metrics(rid, _names, time_grain, None, None, err)
-
-            metric_type = '%s_opt_dim' % time_grain
-            metrics_opt_dim = categorized_metrics.get(metric_type)
-            if metrics_opt_dim:
-                _names = ','.join(m.name.value for m in metrics_opt_dim)
-                LOG.debug("metrics of type %r: %r", metric_type, _names)
-                metrics += self._fetch_specific_metrics(rid, _names, time_grain, None, None, err)
-
-            # TODO: dimension required. How does this work?
-            metrics_req_dim = categorized_metrics.get('%s_req_dim' % time_grain)
-            if metrics_req_dim:
-                for metr in metrics_req_dim:
-                    dim_names = ','.join(d.value for d in metr.dimensions)
-                    err.add("warning", rid,
-                            "metric %r requires dimension (%s)" % (metr.name.value, dim_names))
-
-        return metrics
-
-    def _fetch_specific_metrics(self, rid, metricnames, time_grain, aggregations, filters, err):
+    def _fetch_specific_metrics(self, resource, metricnames, time_grain, aggregations, filter_,
+                                err):
+        if metricnames.count(',') >= 20:
+            raise ValueError("Azure API won't have requests with more than 20 metrics!")
 
         metrics = []
 
-        # azure API won't have requests with more than 20 metrics.
-        lim = 20
-        if metricnames.count(',') >= lim:
-            tmp = metricnames.split(',')
-            metricnames, r_metricnames = ','.join(tmp[:lim]), ','.join(tmp[lim:])
-            r_args = (rid, r_metricnames, time_grain, aggregations, filters, err)
-            metrics += self._fetch_specific_metrics(*r_args)
+        rid = resource.info["id"]
+        timespan = {"PT1M": self.timespan_min, "PT1H": self.timespan_hrs}[time_grain]
 
+        LOG.debug(
+            "metrics.list(%r, timespan=%r, interval=%r, metricnames=%r, aggregation=%r,"
+            " filter=%r, raw=True)", rid, timespan, time_grain, metricnames, aggregations, filter_)
         try:
-            timespan = {"PT1M": self.timespan_min, "PT1H": self.timespan_hrs}[time_grain]
-            LOG.debug(
-                "metrics.list(%r, timespan=%r, interval=%r, metric=%r, "
-                "aggregation=%r, filter=%r, raw=True)", rid, timespan, time_grain, metricnames,
-                aggregations, filters)
             # azure-api-call
             raw = self._monitor_client.metrics.list(
                 rid,
                 timespan=timespan,
                 interval=time_grain,
-                metricnames=metricnames,
+                metric=metricnames,
                 aggregation=aggregations,
-                filter=filters,
+                filter=filter_,
                 raw=True,
             )
-            LOG.debug("raw = %r", raw)
+            LOG.debug("raw.response: %s", raw.response)
             self.remaining_reads = raw.response.headers[
                 'x-ms-ratelimit-remaining-subscription-reads']
             # raw.output is what we'd gotten had we set raw=False
+            LOG.debug("raw.ouput: %s", raw.output)
             metrics += [
-                AzureMetric(metric, rid, time_grain, filters, err) for metric in raw.output.value
+                AzureMetric(metric, aggregations, time_grain, filter_, rid, err)
+                for metric in raw.output.value
             ]
         except ErrorResponseException as exc:
             if self.args.debug:
@@ -597,18 +538,15 @@ class AzureClient(object):
         return metrics
 
     def get_metrics(self, resource, r_config, err):
-        rid = resource.info['id']
-        metrics = []
+        if not r_config.fetchall:
+            raise NotImplementedError("selective configuration on resource level")
 
-        if r_config.fetchall:
-            metrics += self._fetch_all_metrics(rid, err)
-        else:
-            for metricnames, additional_config in r_config.metrics.iteritems():
-                time_grain = additional_config.get('time_grain', 'PT1M')
-                aggregations = additional_config.get('aggregations')
-                filters = additional_config.get('filters')
-                metrics += self._fetch_specific_metrics(rid, metricnames, time_grain, aggregations,
-                                                        filters, err)
+        metric_params = METRICS_SELECTED.get(resource.info["type"], [])
+
+        metrics = []
+        for metricnames, time_grain, aggregations, filter_ in metric_params:
+            metrics += self._fetch_specific_metrics(resource, metricnames, time_grain, aggregations,
+                                                    filter_, err)
 
         return metrics
 

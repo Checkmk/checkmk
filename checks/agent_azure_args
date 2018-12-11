@@ -54,13 +54,12 @@ def agent_azure_arguments(params, _no_hostname, _no_ipaddress):
             continue
 
         for resource_cfg in group_cfg:
-            for key in ('resource', 'metric', 'filters', 'time_grain'):
-                value = resource_cfg.get(key)
-                if not value:
-                    break
-                if isinstance(value, list):
-                    value = ','.join(value)
-                args.append(quote_shell_string("%s=%s" % (key, value)))
+            value = resource_cfg.get('resource')
+            if not value:
+                break
+            if isinstance(value, list):
+                value = ','.join(value)
+            args.append(quote_shell_string("resource=%s" % value))
 
     return args
 

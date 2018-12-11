@@ -1207,33 +1207,6 @@ def _azure_resource_config():
                 title=_('Resource names'),
                 allow_empty=False,
             )),
-            ('metric',
-             ListOfStrings(
-                 title=_('Metric names'),
-                 help=_("Specify a comma separated list of metric "
-                        "names. If ommited, all metrics are fetched."),
-                 allow_empty=True,
-             )),
-            #               TextAscii(
-            #                    title = _('Metric aggregations'),
-            #                    help = _("Specify a comma separated list of metric "
-            #                             "aggregations. If ommited, all available "
-            #                             "aggregations are fetched."),
-            #                    allow_empty = True,
-            #               ),
-            ('filters',
-             TextAscii(
-                 title=_('Metric filters'),
-                 help=_("Specify a filter that is applied to metric. "
-                        "Required for some metrics with dimensions."
-                        "If ommited, no filter is applied."),
-                 allow_empty=True,
-             )),
-            ('time_grain',
-             DropdownChoice(
-                 title=_('Metric time grain'),
-                 choices=[('PT1M', _('one minute')), ('PT1H', _('one hour'))],
-             )),
         ],
         optional_keys=False,
     )

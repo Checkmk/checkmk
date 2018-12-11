@@ -103,6 +103,10 @@ input, input[type=text], input[type=password], select, textarea, div.snapin sele
     letter-spacing: 1px; }
     input.button:hover, select.button:hover, textarea.button:hover, .button#mk_side_search_field:hover {
       background-color: #ffe350; }
+input.button:disabled:hover, input.button:disabled, input.button:disabled:active {
+    background-color: #ffd703;
+    filter: grayscale(100%);
+}
   input[type=radio], select[type=radio], textarea[type=radio], div.snapin select[type=radio], div.snapin textarea[type=radio], [type=radio]#mk_side_search_field {
     width: auto;
     margin-bottom: 0px; }

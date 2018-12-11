@@ -1,0 +1,12 @@
+Title: oracle_tablespaces: ignore warn/crit for read only Tablespaces
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1545139087
+Class: fix
+
+The check is ignoring warn/crit for a read only Tablespace, because
+no change in size or dropping of objects is possible. This has been
+ignored in the past and accidently enabled with a refactoring.

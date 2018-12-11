@@ -80,13 +80,13 @@ class Automations(object):
             console.error("%s\n" % cmk_base.utils.make_utf8("%s" % e))
             if cmk.debug.enabled():
                 raise
-            sys.exit(1)
+            return 1
 
         except Exception as e:
             if cmk.debug.enabled():
                 raise
             console.error("%s\n" % cmk_base.utils.make_utf8("%s" % e))
-            sys.exit(2)
+            return 2
 
         finally:
             profiling.output_profile()
@@ -96,7 +96,7 @@ class Automations(object):
         else:
             console.output("%r\n" % (result,))
 
-        sys.exit(0)
+        return 0
 
     # Handle generic arguments (currently only the optional timeout argument)
     def _handle_generic_arguments(self, args):

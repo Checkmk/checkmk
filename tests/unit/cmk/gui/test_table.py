@@ -173,17 +173,16 @@ def test_table_cubical(register_builtin_html, monkeypatch, sortable, searchable,
     html.add_var('_%s_actions' % table_id, '1')
 
     # Table construction
-    table.begin(table_id      = table_id,
-                title         = title,
-                sortable      = sortable,
-                searchable    = searchable,
-                limit         = limit,
-                output_format = output_format)
-    for row in rows:
-        table.row()
-        for h, r in zip(header, row):
-            table.cell(_(h), r)
-    table.end()
+    with table.open_table(table_id      = table_id,
+                          title         = title,
+                          sortable      = sortable,
+                          searchable    = searchable,
+                          limit         = limit,
+                          output_format = output_format):
+        for row in rows:
+            table.row()
+            for h, r in zip(header, row):
+                table.cell(_(h), r)
 
     # Get generated html
     written_text = "".join(html.response.flush_output())

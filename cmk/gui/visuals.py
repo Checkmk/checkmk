@@ -452,73 +452,72 @@ def page_list(what,
         html.write(title1)
         html.close_h3()
 
-        table.begin(css='data', limit=None)
+        with table.open_table(css='data', limit=None):
 
-        for owner, visual_name, visual in items:
-            table.row(css='data')
+            for owner, visual_name, visual in items:
+                table.row(css='data')
 
-            # Actions
-            table.cell(_('Actions'), css='buttons visuals')
+                # Actions
+                table.cell(_('Actions'), css='buttons visuals')
 
-            # Clone / Customize
-            buttontext = _("Create a customized copy of this")
-            backurl = html.urlencode(html.makeuri([]))
-            clone_url = "edit_%s.py?load_user=%s&load_name=%s&back=%s" \
-                        % (what_s, owner, visual_name, backurl)
-            html.icon_button(clone_url, buttontext, "clone")
+                # Clone / Customize
+                buttontext = _("Create a customized copy of this")
+                backurl = html.urlencode(html.makeuri([]))
+                clone_url = "edit_%s.py?load_user=%s&load_name=%s&back=%s" \
+                            % (what_s, owner, visual_name, backurl)
+                html.icon_button(clone_url, buttontext, "clone")
 
-            # Delete
-            if owner and (owner == config.user.id or
-                          config.user.may('general.delete_foreign_%s' % what)):
-                add_vars = [('_delete', visual_name)]
-                if owner != config.user.id:
-                    add_vars.append(('_user_id', owner))
-                html.icon_button(html.makeactionuri(add_vars), _("Delete!"), "delete")
+                # Delete
+                if owner and (owner == config.user.id or
+                              config.user.may('general.delete_foreign_%s' % what)):
+                    add_vars = [('_delete', visual_name)]
+                    if owner != config.user.id:
+                        add_vars.append(('_user_id', owner))
+                    html.icon_button(html.makeactionuri(add_vars), _("Delete!"), "delete")
 
-            # Edit
-            if owner == config.user.id or (owner != "" and
-                                           config.user.may("general.edit_foreign_%s" % what)):
-                edit_vars = [("load_name", visual_name)]
-                if owner != config.user.id:
-                    edit_vars.append(("owner", owner))
-                edit_url = html.makeuri_contextless(edit_vars, filename="edit_%s.py" % what_s)
-                html.icon_button(edit_url, _("Edit"), "edit")
+                # Edit
+                if owner == config.user.id or (owner != "" and
+                                               config.user.may("general.edit_foreign_%s" % what)):
+                    edit_vars = [("load_name", visual_name)]
+                    if owner != config.user.id:
+                        edit_vars.append(("owner", owner))
+                    edit_url = html.makeuri_contextless(edit_vars, filename="edit_%s.py" % what_s)
+                    html.icon_button(edit_url, _("Edit"), "edit")
 
-            # Custom buttons - visual specific
-            if render_custom_buttons:
-                render_custom_buttons(visual_name, visual)
+                # Custom buttons - visual specific
+                if render_custom_buttons:
+                    render_custom_buttons(visual_name, visual)
 
-            # visual Name
-            table.cell(_('ID'), visual_name)
+                # visual Name
+                table.cell(_('ID'), visual_name)
 
-            # Title
-            table.cell(_('Title'))
-            title2 = _u(visual['title'])
-            if _visual_can_be_linked(what, visual_name, visuals, visual, owner):
-                html.a(
-                    title2,
-                    href="%s.py?%s=%s" % (what_s, visual_types[what]['ident_attr'], visual_name))
-            else:
-                html.write_text(title2)
-            html.help(_u(visual['description']))
+                # Title
+                table.cell(_('Title'))
+                title2 = _u(visual['title'])
+                if _visual_can_be_linked(what, visual_name, visuals, visual, owner):
+                    html.a(
+                        title2,
+                        href="%s.py?%s=%s" % (what_s, visual_types[what]['ident_attr'],
+                                              visual_name))
+                else:
+                    html.write_text(title2)
+                html.help(_u(visual['description']))
 
-            # Custom cols
-            for title3, renderer in custom_columns:
-                table.cell(title3, renderer(visual))
+                # Custom cols
+                for title3, renderer in custom_columns:
+                    table.cell(title3, renderer(visual))
 
-            # Owner
-            if owner == "":
-                ownertxt = "<i>" + _("builtin") + "</i>"
-            else:
-                ownertxt = owner
-            table.cell(_('Owner'), ownertxt)
-            table.cell(_('Public'), visual["public"] and _("yes") or _("no"))
-            table.cell(_('Hidden'), visual["hidden"] and _("yes") or _("no"))
+                # Owner
+                if owner == "":
+                    ownertxt = "<i>" + _("builtin") + "</i>"
+                else:
+                    ownertxt = owner
+                table.cell(_('Owner'), ownertxt)
+                table.cell(_('Public'), visual["public"] and _("yes") or _("no"))
+                table.cell(_('Hidden'), visual["hidden"] and _("yes") or _("no"))
 
-            if render_custom_columns:
-                render_custom_columns(visual_name, visual)
-
-        table.end()
+                if render_custom_columns:
+                    render_custom_columns(visual_name, visual)
 
     html.footer()
 

@@ -443,161 +443,162 @@ class ModeFolder(WatoMode):
 
         # Show table of hosts in this folder
         html.begin_form("hosts", method="POST")
-        table.begin("hosts", title=_("Hosts"), searchable=False)
+        with table.open_table("hosts", title=_("Hosts"), searchable=False):
 
-        # Remember if that host has a target folder (i.e. was imported with
-        # a folder information but not yet moved to that folder). If at least
-        # one host has a target folder, then we show an additional bulk action.
-        at_least_one_imported = False
-        more_than_ten_items = False
-        for num, hostname in enumerate(hostnames):
-            if search_text and (search_text.lower() not in hostname.lower()):
-                continue
+            # Remember if that host has a target folder (i.e. was imported with
+            # a folder information but not yet moved to that folder). If at least
+            # one host has a target folder, then we show an additional bulk action.
+            at_least_one_imported = False
+            more_than_ten_items = False
+            for num, hostname in enumerate(hostnames):
+                if search_text and (search_text.lower() not in hostname.lower()):
+                    continue
 
-            host = self._folder.host(hostname)
-            effective = host.effective_attributes()
+                host = self._folder.host(hostname)
+                effective = host.effective_attributes()
 
-            if effective.get("imported_folder"):
-                at_least_one_imported = True
+                if effective.get("imported_folder"):
+                    at_least_one_imported = True
 
-            if num == 11:
-                more_than_ten_items = True
+                if num == 11:
+                    more_than_ten_items = True
 
-        # Compute colspan for bulk actions
-        colspan = 6
-        for attr, _topic in watolib.all_host_attributes():
-            if attr.show_in_table():
-                colspan += 1
-        if not self._folder.locked_hosts() and config.user.may(
-                "wato.edit_hosts") and config.user.may("wato.move_hosts"):
-            colspan += 1
-        if show_checkboxes:
-            colspan += 1
-        if self._folder.is_search_folder():
-            colspan += 1
-
-        # Add the bulk action buttons also to the top of the table when this
-        # list shows more than 10 rows
-        if more_than_ten_items and \
-            (config.user.may("wato.edit_hosts") or config.user.may("wato.manage_hosts")):
-            bulk_actions(at_least_one_imported, True, True, colspan, show_checkboxes)
-            search_shown = True
-
-        contact_group_names = userdb.load_group_information().get("contact", {})
-
-        def render_contact_group(c):
-            display_name = contact_group_names.get(c, {'alias': c})['alias']
-            return html.render_a(display_name, "wato.py?mode=edit_contact_group&edit=%s" % c)
-
-        host_errors = self._folder.host_validation_errors()
-        rendered_hosts = []
-
-        # Now loop again over all hosts and display them
-        for hostname in hostnames:
-            if search_text and (search_text.lower() not in hostname.lower()):
-                continue
-
-            host = self._folder.host(hostname)
-            rendered_hosts.append(hostname)
-            effective = host.effective_attributes()
-
-            table.row()
-
-            # Column with actions (buttons)
-
-            if show_checkboxes:
-                table.cell(
-                    html.render_input(
-                        "_toggle_group",
-                        type_="button",
-                        class_="checkgroup",
-                        onclick="toggle_all_rows();",
-                        value='X'),
-                    sortable=False,
-                    css="checkbox")
-                # Use CSS class "failed" in order to provide information about
-                # selective toggling inventory-failed hosts for Javascript
-                html.input(
-                    name="_c_%s" % hostname,
-                    type_="checkbox",
-                    value=colspan,
-                    class_="failed" if host.discovery_failed() else None)
-                html.label("", "_c_%s" % hostname)
-
-            table.cell(_("Actions"), css="buttons", sortable=False)
-            self._show_host_actions(host)
-
-            # Hostname with link to details page (edit host)
-            table.cell(_("Hostname"))
-            errors = host_errors.get(hostname, []) + host.validation_errors()
-            if errors:
-                msg = _("Warning: This host has an invalid configuration: ")
-                msg += ", ".join(errors)
-                html.icon(msg, "validation_error")
-                html.nbsp()
-
-            if host.is_offline():
-                html.icon(_("This host is disabled"), "disabled")
-                html.nbsp()
-
-            if host.is_cluster():
-                html.icon(
-                    _("This host is a cluster of %s") % ", ".join(host.cluster_nodes()), "cluster")
-                html.nbsp()
-
-            html.a(hostname, href=host.edit_url())
-
-            # Show attributes
+            # Compute colspan for bulk actions
+            colspan = 6
             for attr, _topic in watolib.all_host_attributes():
                 if attr.show_in_table():
-                    attrname = attr.name()
-                    if attrname in host.attributes():
-                        tdclass, tdcontent = attr.paint(host.attributes()[attrname], hostname)
-                    else:
-                        tdclass, tdcontent = attr.paint(effective.get(attrname), hostname)
-                        tdclass += " inherited"
-                    table.cell(attr.title(), html.attrencode(tdcontent), css=tdclass)
-
-            # Am I authorized?
-            reason = host.reason_why_may_not("read")
-            if not reason:
-                icon = "authok"
-                title = _("You have permission to this host.")
-            else:
-                icon = "autherr"
-                title = html.strip_tags(reason)
-
-            table.cell(_('Auth'), html.render_icon(icon, title), sortable=False)
-
-            # Permissions and Contact groups - through complete recursion and inhertance
-            permitted_groups, host_contact_groups, _use_for_services = host.groups()
-            table.cell(
-                _("Permissions"),
-                HTML(", ").join(map(render_contact_group, permitted_groups)))
-            table.cell(
-                _("Contact Groups"),
-                HTML(", ").join(map(render_contact_group, host_contact_groups)))
-
-            if not config.wato_hide_hosttags:
-                # Raw tags
-                #
-                # Optimize wraps:
-                # 1. add <nobr> round the single tags to prevent wrap within tags
-                # 2. add "zero width space" (&#8203;)
-                tag_title = "|".join(['%s' % t for t in host.tags()])
-                table.cell(_("Tags"), help_txt=tag_title, css="tag-ellipsis")
-                html.write("<b style='color: #888;'>|</b>&#8203;".join(
-                    ['<nobr>%s</nobr>' % t for t in host.tags()]))
-
-            # Located in folder
+                    colspan += 1
+            if not self._folder.locked_hosts() and config.user.may(
+                    "wato.edit_hosts") and config.user.may("wato.move_hosts"):
+                colspan += 1
+            if show_checkboxes:
+                colspan += 1
             if self._folder.is_search_folder():
-                table.cell(_("Folder"))
-                html.a(host.folder().alias_path(), href=host.folder().url())
+                colspan += 1
 
-        if config.user.may("wato.edit_hosts") or config.user.may("wato.manage_hosts"):
-            bulk_actions(at_least_one_imported, False, not search_shown, colspan, show_checkboxes)
+            # Add the bulk action buttons also to the top of the table when this
+            # list shows more than 10 rows
+            if more_than_ten_items and \
+                (config.user.may("wato.edit_hosts") or config.user.may("wato.manage_hosts")):
+                bulk_actions(at_least_one_imported, True, True, colspan, show_checkboxes)
+                search_shown = True
 
-        table.end()
+            contact_group_names = userdb.load_group_information().get("contact", {})
+
+            def render_contact_group(c):
+                display_name = contact_group_names.get(c, {'alias': c})['alias']
+                return html.render_a(display_name, "wato.py?mode=edit_contact_group&edit=%s" % c)
+
+            host_errors = self._folder.host_validation_errors()
+            rendered_hosts = []
+
+            # Now loop again over all hosts and display them
+            for hostname in hostnames:
+                if search_text and (search_text.lower() not in hostname.lower()):
+                    continue
+
+                host = self._folder.host(hostname)
+                rendered_hosts.append(hostname)
+                effective = host.effective_attributes()
+
+                table.row()
+
+                # Column with actions (buttons)
+
+                if show_checkboxes:
+                    table.cell(
+                        html.render_input(
+                            "_toggle_group",
+                            type_="button",
+                            class_="checkgroup",
+                            onclick="toggle_all_rows();",
+                            value='X'),
+                        sortable=False,
+                        css="checkbox")
+                    # Use CSS class "failed" in order to provide information about
+                    # selective toggling inventory-failed hosts for Javascript
+                    html.input(
+                        name="_c_%s" % hostname,
+                        type_="checkbox",
+                        value=colspan,
+                        class_="failed" if host.discovery_failed() else None)
+                    html.label("", "_c_%s" % hostname)
+
+                table.cell(_("Actions"), css="buttons", sortable=False)
+                self._show_host_actions(host)
+
+                # Hostname with link to details page (edit host)
+                table.cell(_("Hostname"))
+                errors = host_errors.get(hostname, []) + host.validation_errors()
+                if errors:
+                    msg = _("Warning: This host has an invalid configuration: ")
+                    msg += ", ".join(errors)
+                    html.icon(msg, "validation_error")
+                    html.nbsp()
+
+                if host.is_offline():
+                    html.icon(_("This host is disabled"), "disabled")
+                    html.nbsp()
+
+                if host.is_cluster():
+                    html.icon(
+                        _("This host is a cluster of %s") % ", ".join(host.cluster_nodes()),
+                        "cluster")
+                    html.nbsp()
+
+                html.a(hostname, href=host.edit_url())
+
+                # Show attributes
+                for attr, _topic in watolib.all_host_attributes():
+                    if attr.show_in_table():
+                        attrname = attr.name()
+                        if attrname in host.attributes():
+                            tdclass, tdcontent = attr.paint(host.attributes()[attrname], hostname)
+                        else:
+                            tdclass, tdcontent = attr.paint(effective.get(attrname), hostname)
+                            tdclass += " inherited"
+                        table.cell(attr.title(), html.attrencode(tdcontent), css=tdclass)
+
+                # Am I authorized?
+                reason = host.reason_why_may_not("read")
+                if not reason:
+                    icon = "authok"
+                    title = _("You have permission to this host.")
+                else:
+                    icon = "autherr"
+                    title = html.strip_tags(reason)
+
+                table.cell(_('Auth'), html.render_icon(icon, title), sortable=False)
+
+                # Permissions and Contact groups - through complete recursion and inhertance
+                permitted_groups, host_contact_groups, _use_for_services = host.groups()
+                table.cell(
+                    _("Permissions"),
+                    HTML(", ").join(map(render_contact_group, permitted_groups)))
+                table.cell(
+                    _("Contact Groups"),
+                    HTML(", ").join(map(render_contact_group, host_contact_groups)))
+
+                if not config.wato_hide_hosttags:
+                    # Raw tags
+                    #
+                    # Optimize wraps:
+                    # 1. add <nobr> round the single tags to prevent wrap within tags
+                    # 2. add "zero width space" (&#8203;)
+                    tag_title = "|".join(['%s' % t for t in host.tags()])
+                    table.cell(_("Tags"), help_txt=tag_title, css="tag-ellipsis")
+                    html.write("<b style='color: #888;'>|</b>&#8203;".join(
+                        ['<nobr>%s</nobr>' % t for t in host.tags()]))
+
+                # Located in folder
+                if self._folder.is_search_folder():
+                    table.cell(_("Folder"))
+                    html.a(host.folder().alias_path(), href=host.folder().url())
+
+            if config.user.may("wato.edit_hosts") or config.user.may("wato.manage_hosts"):
+                bulk_actions(at_least_one_imported, False, not search_shown, colspan,
+                             show_checkboxes)
+
         html.hidden_fields()
         html.end_form()
 

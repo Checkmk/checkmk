@@ -92,13 +92,6 @@ def update_headinfo(num_rows):
 #   +----------------------------------------------------------------------+
 #   |                                                                      |
 #   | Usage:                                                               |
-#   |        table.begin()                                                 |
-#   |        table.row()                                                   |
-#   |        table.cell("header", "content")                               |
-#   |        table.end()                                                   |
-#   |            table.cell("header", "content")                           |
-#   |                                                                      |
-#   | Alternatively using a context:                                       |
 #   |                                                                      |
 #   |        with table.open():                                            |
 #   |            table.row()                                               |

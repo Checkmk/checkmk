@@ -236,143 +236,142 @@ class NotificationsMode(EventsMode):
                 title = code + _("Notification rules of user %s") % userid
             else:
                 title = _("Global notification rules")
-            table.begin(title=title, limit=None, sortable=False)
+            with table.open_table(title=title, limit=None, sortable=False):
 
-            if analyse:
-                analyse_rules, _analyse_plugins = analyse
-
-            # have_match = False
-            for nr, rule in enumerate(rules):
-                table.row()
-
-                # Analyse
                 if analyse:
-                    table.cell(css="buttons")
-                    what, _anarule, reason = analyse_rules[nr + start_nr]
-                    if what == "match":
-                        html.icon(_("This rule matches"), "rulematch")
-                    elif what == "miss":
-                        html.icon(_("This rule does not match: %s") % reason, "rulenmatch")
+                    analyse_rules, _analyse_plugins = analyse
 
-                if profilemode:
-                    listmode = "user_notifications_p"
-                elif userid:
-                    listmode = "user_notifications"
-                else:
-                    listmode = "notifications"
+                # have_match = False
+                for nr, rule in enumerate(rules):
+                    table.row()
 
-                actions_allowed = config.user.may(
-                    "notification_plugin.%s" % rule['notify_plugin'][0])
+                    # Analyse
+                    if analyse:
+                        table.cell(css="buttons")
+                        what, _anarule, reason = analyse_rules[nr + start_nr]
+                        if what == "match":
+                            html.icon(_("This rule matches"), "rulematch")
+                        elif what == "miss":
+                            html.icon(_("This rule does not match: %s") % reason, "rulenmatch")
 
-                if show_buttons and actions_allowed:
-                    anavar = html.var("analyse", "")
-                    delete_url = make_action_link([
-                        ("mode", listmode),
-                        ("user", userid),
-                        ("_delete", nr),
-                    ])
-                    drag_url = make_action_link([
-                        ("mode", listmode),
-                        ("analyse", anavar),
-                        ("user", userid),
-                        ("_move", nr),
-                    ])
-                    suffix = "_p" if profilemode else ""
-                    edit_url = watolib.folder_preserving_link([
-                        ("mode", "notification_rule" + suffix),
-                        ("edit", nr),
-                        ("user", userid),
-                    ])
-                    clone_url = watolib.folder_preserving_link([
-                        ("mode", "notification_rule" + suffix),
-                        ("clone", nr),
-                        ("user", userid),
-                    ])
+                    if profilemode:
+                        listmode = "user_notifications_p"
+                    elif userid:
+                        listmode = "user_notifications"
+                    else:
+                        listmode = "notifications"
 
-                    table.cell(_("Actions"), css="buttons")
-                    html.icon_button(edit_url, _("Edit this notification rule"), "edit")
-                    html.icon_button(clone_url, _("Create a copy of this notification rule"),
-                                     "clone")
-                    html.element_dragger_url("tr", base_url=drag_url)
-                    html.icon_button(delete_url, _("Delete this notification rule"), "delete")
-                else:
-                    table.cell("", css="buttons")
-                    for _x in xrange(4):
+                    actions_allowed = config.user.may(
+                        "notification_plugin.%s" % rule['notify_plugin'][0])
+
+                    if show_buttons and actions_allowed:
+                        anavar = html.var("analyse", "")
+                        delete_url = make_action_link([
+                            ("mode", listmode),
+                            ("user", userid),
+                            ("_delete", nr),
+                        ])
+                        drag_url = make_action_link([
+                            ("mode", listmode),
+                            ("analyse", anavar),
+                            ("user", userid),
+                            ("_move", nr),
+                        ])
+                        suffix = "_p" if profilemode else ""
+                        edit_url = watolib.folder_preserving_link([
+                            ("mode", "notification_rule" + suffix),
+                            ("edit", nr),
+                            ("user", userid),
+                        ])
+                        clone_url = watolib.folder_preserving_link([
+                            ("mode", "notification_rule" + suffix),
+                            ("clone", nr),
+                            ("user", userid),
+                        ])
+
+                        table.cell(_("Actions"), css="buttons")
+                        html.icon_button(edit_url, _("Edit this notification rule"), "edit")
+                        html.icon_button(clone_url, _("Create a copy of this notification rule"),
+                                         "clone")
+                        html.element_dragger_url("tr", base_url=drag_url)
+                        html.icon_button(delete_url, _("Delete this notification rule"), "delete")
+                    else:
+                        table.cell("", css="buttons")
+                        for _x in xrange(4):
+                            html.empty_icon_button()
+
+                    table.cell("", css="narrow")
+                    if rule.get("disabled"):
+                        html.icon(
+                            _("This rule is currently disabled and will not be applied"),
+                            "disabled")
+                    else:
                         html.empty_icon_button()
 
-                table.cell("", css="narrow")
-                if rule.get("disabled"):
-                    html.icon(
-                        _("This rule is currently disabled and will not be applied"), "disabled")
-                else:
-                    html.empty_icon_button()
+                    notify_method = rule["notify_plugin"]
+                    # Catch rules with empty notify_plugin key
+                    # Maybe this should be avoided somewhere else (e.g. rule editor)
+                    if not notify_method:
+                        notify_method = (None, [])
+                    notify_plugin = notify_method[0]
 
-                notify_method = rule["notify_plugin"]
-                # Catch rules with empty notify_plugin key
-                # Maybe this should be avoided somewhere else (e.g. rule editor)
-                if not notify_method:
-                    notify_method = (None, [])
-                notify_plugin = notify_method[0]
+                    table.cell(_("Type"), css="narrow")
+                    if notify_method[1] is None:
+                        html.icon(_("Cancel notifications for this plugin type"), "notify_cancel")
+                    else:
+                        html.icon(_("Create a notification"), "notify_create")
 
-                table.cell(_("Type"), css="narrow")
-                if notify_method[1] is None:
-                    html.icon(_("Cancel notifications for this plugin type"), "notify_cancel")
-                else:
-                    html.icon(_("Create a notification"), "notify_create")
+                    table.cell(_("Plugin"), notify_plugin or _("Plain Email"), css="narrow nowrap")
 
-                table.cell(_("Plugin"), notify_plugin or _("Plain Email"), css="narrow nowrap")
+                    table.cell(_("Bulk"), css="narrow")
+                    if "bulk" in rule or "bulk_period" in rule:
+                        html.icon(_("This rule configures bulk notifications."), "bulk")
 
-                table.cell(_("Bulk"), css="narrow")
-                if "bulk" in rule or "bulk_period" in rule:
-                    html.icon(_("This rule configures bulk notifications."), "bulk")
+                    table.cell(_("Description"))
+                    url = rule.get("docu_url")
+                    if url:
+                        html.icon_button(
+                            url, _("Context information about this rule"), "url", target="_blank")
+                        html.write("&nbsp;")
+                    html.write_text(rule["description"])
+                    table.cell(_("Contacts"))
+                    infos = []
+                    if rule.get("contact_object"):
+                        infos.append(_("all contacts of the notified object"))
+                    if rule.get("contact_all"):
+                        infos.append(_("all users"))
+                    if rule.get("contact_all_with_email"):
+                        infos.append(_("all users with and email address"))
+                    if rule.get("contact_users"):
+                        infos.append(_("users: ") + (", ".join(rule["contact_users"])))
+                    if rule.get("contact_groups"):
+                        infos.append(_("contact groups: ") + (", ".join(rule["contact_groups"])))
+                    if rule.get("contact_emails"):
+                        infos.append(_("email addresses: ") + (", ".join(rule["contact_emails"])))
+                    if not infos:
+                        html.i(_("(no one)"))
 
-                table.cell(_("Description"))
-                url = rule.get("docu_url")
-                if url:
-                    html.icon_button(
-                        url, _("Context information about this rule"), "url", target="_blank")
-                    html.write("&nbsp;")
-                html.write_text(rule["description"])
-                table.cell(_("Contacts"))
-                infos = []
-                if rule.get("contact_object"):
-                    infos.append(_("all contacts of the notified object"))
-                if rule.get("contact_all"):
-                    infos.append(_("all users"))
-                if rule.get("contact_all_with_email"):
-                    infos.append(_("all users with and email address"))
-                if rule.get("contact_users"):
-                    infos.append(_("users: ") + (", ".join(rule["contact_users"])))
-                if rule.get("contact_groups"):
-                    infos.append(_("contact groups: ") + (", ".join(rule["contact_groups"])))
-                if rule.get("contact_emails"):
-                    infos.append(_("email addresses: ") + (", ".join(rule["contact_emails"])))
-                if not infos:
-                    html.i(_("(no one)"))
+                    else:
+                        for line in infos:
+                            html.write("&bullet; %s" % line)
+                            html.br()
 
-                else:
-                    for line in infos:
-                        html.write("&bullet; %s" % line)
-                        html.br()
-
-                table.cell(_("Conditions"), css="rule_conditions")
-                num_conditions = len([key for key in rule if key.startswith("match_")])
-                if num_conditions:
-                    title = _("%d conditions") % num_conditions
-                    html.begin_foldable_container(
-                        treename="rule_%s_%d" % (userid, nr),
-                        id_="%s" % nr,
-                        isopen=False,
-                        title=title,
-                        indent=False,
-                        tree_img="tree_black",
-                    )
-                    html.write(vs_match_conditions.value_to_text(rule))
-                    html.end_foldable_container()
-                else:
-                    html.i(_("(no conditions)"))
-
-            table.end()
+                    table.cell(_("Conditions"), css="rule_conditions")
+                    num_conditions = len([key for key in rule if key.startswith("match_")])
+                    if num_conditions:
+                        title = _("%d conditions") % num_conditions
+                        html.begin_foldable_container(
+                            treename="rule_%s_%d" % (userid, nr),
+                            id_="%s" % nr,
+                            isopen=False,
+                            title=title,
+                            indent=False,
+                            tree_img="tree_black",
+                        )
+                        html.write(vs_match_conditions.value_to_text(rule))
+                        html.end_foldable_container()
+                    else:
+                        html.i(_("(no conditions)"))
 
     def _add_change(self, log_what, log_text):
         add_change(log_what, log_text, need_restart=False)
@@ -534,30 +533,27 @@ class ModeNotifications(NotificationsMode):
         if not bulks:
             return False
 
-        if only_ripe:
-            table.begin(title=_("Overdue bulk notifications!"))
-        else:
-            table.begin(title=_("Open bulk notifications"))
-
-        for directory, age, interval, timeperiod, maxcount, uuids in bulks:
-            dirparts = directory.split("/")
-            contact = dirparts[-3]
-            method = dirparts[-2]
-            bulk_id = dirparts[-1].split(",", 2)[-1]
-            table.row()
-            table.cell(_("Contact"), contact)
-            table.cell(_("Method"), method)
-            table.cell(_("Bulk ID"), bulk_id)
-            table.cell(_("Max. Age (sec)"), "%s" % interval, css="number")
-            table.cell(_("Age (sec)"), "%d" % age, css="number")
-            if interval and age >= interval:
-                html.icon(_("Age of oldest notification is over maximum age"), "warning")
-            table.cell(_("Timeperiod"), "%s" % timeperiod)
-            table.cell(_("Max. Count"), str(maxcount), css="number")
-            table.cell(_("Count"), str(len(uuids)), css="number")
-            if len(uuids) >= maxcount:
-                html.icon(_("Number of notifications exceeds maximum allowed number"), "warning")
-        table.end()
+        title = _("Overdue bulk notifications!") if only_ripe else _("Open bulk notifications")
+        with table.open_table(title=title):
+            for directory, age, interval, timeperiod, maxcount, uuids in bulks:
+                dirparts = directory.split("/")
+                contact = dirparts[-3]
+                method = dirparts[-2]
+                bulk_id = dirparts[-1].split(",", 2)[-1]
+                table.row()
+                table.cell(_("Contact"), contact)
+                table.cell(_("Method"), method)
+                table.cell(_("Bulk ID"), bulk_id)
+                table.cell(_("Max. Age (sec)"), "%s" % interval, css="number")
+                table.cell(_("Age (sec)"), "%d" % age, css="number")
+                if interval and age >= interval:
+                    html.icon(_("Age of oldest notification is over maximum age"), "warning")
+                table.cell(_("Timeperiod"), "%s" % timeperiod)
+                table.cell(_("Max. Count"), str(maxcount), css="number")
+                table.cell(_("Count"), str(len(uuids)), css="number")
+                if len(uuids) >= maxcount:
+                    html.icon(
+                        _("Number of notifications exceeds maximum allowed number"), "warning")
         return True
 
     def _show_notification_backlog(self):
@@ -569,91 +565,91 @@ class ModeNotifications(NotificationsMode):
         if not backlog:
             return
 
-        table.begin(
-            table_id="backlog", title=_("Recent notifications (for analysis)"), sortable=False)
-        for nr, context in enumerate(backlog):
-            self._convert_context_to_unicode(context)
-            table.row()
-            table.cell("&nbsp;", css="buttons")
+        with table.open_table(
+                table_id="backlog", title=_("Recent notifications (for analysis)"), sortable=False):
+            for nr, context in enumerate(backlog):
+                self._convert_context_to_unicode(context)
+                table.row()
+                table.cell("&nbsp;", css="buttons")
 
-            analyse_url = html.makeuri([("analyse", str(nr))])
-            html.icon_button(analyse_url, _("Analyze ruleset with this notification"), "analyze")
+                analyse_url = html.makeuri([("analyse", str(nr))])
+                html.icon_button(analyse_url, _("Analyze ruleset with this notification"),
+                                 "analyze")
 
-            html.icon_button(
-                None,
-                _("Show / hide notification context"),
-                "toggle_context",
-                onclick="toggle_container('notification_context_%d')" % nr)
+                html.icon_button(
+                    None,
+                    _("Show / hide notification context"),
+                    "toggle_context",
+                    onclick="toggle_container('notification_context_%d')" % nr)
 
-            replay_url = html.makeactionuri([("_replay", str(nr))])
-            html.icon_button(replay_url, _("Replay this notification, send it again!"), "replay")
+                replay_url = html.makeactionuri([("_replay", str(nr))])
+                html.icon_button(replay_url, _("Replay this notification, send it again!"),
+                                 "replay")
 
-            if html.var("analyse") and nr == int(html.var("analyse")):
-                html.icon(_("You are analysing this notification"), "rulematch")
+                if html.var("analyse") and nr == int(html.var("analyse")):
+                    html.icon(_("You are analysing this notification"), "rulematch")
 
-            table.cell(_("Nr."), nr + 1, css="number")
-            if "MICROTIME" in context:
-                date = time.strftime("%Y-%m-%d %H:%M:%S",
-                                     time.localtime(int(context["MICROTIME"]) / 1000000.0))
-            else:
-                date = context.get("SHORTDATETIME") or \
-                       context.get("LONGDATETIME") or \
-                       context.get("DATE") or \
-                       _("Unknown date")
-
-            table.cell(_("Date/Time"), date, css="nobr")
-            nottype = context.get("NOTIFICATIONTYPE", "")
-            table.cell(_("Type"), nottype)
-
-            if nottype in ["PROBLEM", "RECOVERY"]:
-                if context.get("SERVICESTATE"):
-                    statename = context["SERVICESTATE"][:4]
-                    state = context["SERVICESTATEID"]
-                    css = "state svcstate state%s" % state
+                table.cell(_("Nr."), nr + 1, css="number")
+                if "MICROTIME" in context:
+                    date = time.strftime("%Y-%m-%d %H:%M:%S",
+                                         time.localtime(int(context["MICROTIME"]) / 1000000.0))
                 else:
-                    statename = context.get("HOSTSTATE")[:4]
-                    state = context["HOSTSTATEID"]
-                    css = "state hstate hstate%s" % state
-                table.cell(_("State"), statename, css=css)
-            elif nottype.startswith("DOWNTIME"):
-                table.cell(_("State"))
-                html.icon(_("Downtime"), "downtime")
-            elif nottype.startswith("ACK"):
-                table.cell(_("State"))
-                html.icon(_("Acknowledgement"), "ack")
-            elif nottype.startswith("FLAP"):
-                table.cell(_("State"))
-                html.icon(_("Flapping"), "flapping")
-            else:
-                table.cell(_("State"), "")
+                    date = context.get("SHORTDATETIME") or \
+                           context.get("LONGDATETIME") or \
+                           context.get("DATE") or \
+                           _("Unknown date")
 
-            table.cell(_("Host"), context.get("HOSTNAME", ""))
-            table.cell(_("Service"), context.get("SERVICEDESC", ""))
-            output = context.get("SERVICEOUTPUT", context.get("HOSTOUTPUT"))
+                table.cell(_("Date/Time"), date, css="nobr")
+                nottype = context.get("NOTIFICATIONTYPE", "")
+                table.cell(_("Type"), nottype)
 
-            table.cell(
-                _("Plugin output"),
-                cmk.gui.view_utils.format_plugin_output(
-                    output, shall_escape=config.escape_plugin_output))
+                if nottype in ["PROBLEM", "RECOVERY"]:
+                    if context.get("SERVICESTATE"):
+                        statename = context["SERVICESTATE"][:4]
+                        state = context["SERVICESTATEID"]
+                        css = "state svcstate state%s" % state
+                    else:
+                        statename = context.get("HOSTSTATE")[:4]
+                        state = context["HOSTSTATEID"]
+                        css = "state hstate hstate%s" % state
+                    table.cell(_("State"), statename, css=css)
+                elif nottype.startswith("DOWNTIME"):
+                    table.cell(_("State"))
+                    html.icon(_("Downtime"), "downtime")
+                elif nottype.startswith("ACK"):
+                    table.cell(_("State"))
+                    html.icon(_("Acknowledgement"), "ack")
+                elif nottype.startswith("FLAP"):
+                    table.cell(_("State"))
+                    html.icon(_("Flapping"), "flapping")
+                else:
+                    table.cell(_("State"), "")
 
-            # Add toggleable notitication context
-            table.row(class_="notification_context hidden", id_="notification_context_%d" % nr)
-            table.cell(colspan=8)
+                table.cell(_("Host"), context.get("HOSTNAME", ""))
+                table.cell(_("Service"), context.get("SERVICEDESC", ""))
+                output = context.get("SERVICEOUTPUT", context.get("HOSTOUTPUT"))
 
-            html.open_table()
-            for nr, (key, val) in enumerate(sorted(context.items())):
-                if nr % 2 == 0:
-                    if nr != 0:
-                        html.close_tr()
-                    html.open_tr()
-                html.th(key)
-                html.td(val)
-            html.close_table()
+                table.cell(
+                    _("Plugin output"),
+                    cmk.gui.view_utils.format_plugin_output(
+                        output, shall_escape=config.escape_plugin_output))
 
-            # This dummy row is needed for not destroying the odd/even row highlighting
-            table.row(class_="notification_context hidden")
+                # Add toggleable notitication context
+                table.row(class_="notification_context hidden", id_="notification_context_%d" % nr)
+                table.cell(colspan=8)
 
-        table.end()
+                html.open_table()
+                for nr, (key, val) in enumerate(sorted(context.items())):
+                    if nr % 2 == 0:
+                        if nr != 0:
+                            html.close_tr()
+                        html.open_tr()
+                    html.th(key)
+                    html.td(val)
+                html.close_table()
+
+                # This dummy row is needed for not destroying the odd/even row highlighting
+                table.row(class_="notification_context hidden")
 
     def _convert_context_to_unicode(self, context):
         # Convert all values to unicode
@@ -700,23 +696,21 @@ class ModeNotifications(NotificationsMode):
                     start_nr += len(user_rules)
 
         if analyse:
-            table.begin(table_id="plugins", title=_("Resulting notifications"))
-            for contact, plugin, parameters, bulk in analyse[1]:
-                table.row()
-                if contact.startswith('mailto:'):
-                    contact = contact[7:]  # strip of fake-contact mailto:-prefix
-                table.cell(_("Recipient"), contact)
-                table.cell(_("Plugin"), self._vs_notification_scripts().value_to_text(plugin))
-                table.cell(_("Plugin parameters"), ", ".join(parameters))
-                table.cell(_("Bulking"))
-                if bulk:
-                    html.write(_("Time horizon") + ": " + Age().value_to_text(bulk["interval"]))
-                    html.write_text(", %s: %d" % (_("Maximum count"), bulk["count"]))
-                    html.write(
-                        ", %s %s" % (_("group by"), self._vs_notification_bulkby().value_to_text(
-                            bulk["groupby"])))
-
-            table.end()
+            with table.open_table(table_id="plugins", title=_("Resulting notifications")):
+                for contact, plugin, parameters, bulk in analyse[1]:
+                    table.row()
+                    if contact.startswith('mailto:'):
+                        contact = contact[7:]  # strip of fake-contact mailto:-prefix
+                    table.cell(_("Recipient"), contact)
+                    table.cell(_("Plugin"), self._vs_notification_scripts().value_to_text(plugin))
+                    table.cell(_("Plugin parameters"), ", ".join(parameters))
+                    table.cell(_("Bulking"))
+                    if bulk:
+                        html.write(_("Time horizon") + ": " + Age().value_to_text(bulk["interval"]))
+                        html.write_text(", %s: %d" % (_("Maximum count"), bulk["count"]))
+                        html.write(", %s %s" % (_("group by"),
+                                                self._vs_notification_bulkby().value_to_text(
+                                                    bulk["groupby"])))
 
     def _vs_notification_scripts(self):
         return DropdownChoice(

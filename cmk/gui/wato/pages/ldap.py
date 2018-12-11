@@ -112,45 +112,43 @@ class ModeLDAPConfig(LDAPMode):
             userdb.save_connection_config(connections)
 
     def page(self):
-        table.begin()
-        for index, connection in enumerate(userdb.load_connection_config()):
-            table.row()
+        with table.open_table():
+            for index, connection in enumerate(userdb.load_connection_config()):
+                table.row()
 
-            table.cell(_("Actions"), css="buttons")
-            edit_url = watolib.folder_preserving_link([("mode", "edit_ldap_connection"),
-                                                       ("id", connection["id"])])
-            delete_url = make_action_link([("mode", "ldap_config"), ("_delete", index)])
-            drag_url = make_action_link([("mode", "ldap_config"), ("_move", index)])
-            clone_url = watolib.folder_preserving_link([("mode", "edit_ldap_connection"),
-                                                        ("clone", connection["id"])])
+                table.cell(_("Actions"), css="buttons")
+                edit_url = watolib.folder_preserving_link([("mode", "edit_ldap_connection"),
+                                                           ("id", connection["id"])])
+                delete_url = make_action_link([("mode", "ldap_config"), ("_delete", index)])
+                drag_url = make_action_link([("mode", "ldap_config"), ("_move", index)])
+                clone_url = watolib.folder_preserving_link([("mode", "edit_ldap_connection"),
+                                                            ("clone", connection["id"])])
 
-            html.icon_button(edit_url, _("Edit this LDAP connection"), "edit")
-            html.icon_button(clone_url, _("Create a copy of this LDAP connection"), "clone")
-            html.element_dragger_url("tr", base_url=drag_url)
-            html.icon_button(delete_url, _("Delete this LDAP connection"), "delete")
+                html.icon_button(edit_url, _("Edit this LDAP connection"), "edit")
+                html.icon_button(clone_url, _("Create a copy of this LDAP connection"), "clone")
+                html.element_dragger_url("tr", base_url=drag_url)
+                html.icon_button(delete_url, _("Delete this LDAP connection"), "delete")
 
-            table.cell("", css="narrow")
-            if connection.get("disabled"):
-                html.icon(
-                    _("This connection is currently not being used for synchronization."),
-                    "disabled")
-            else:
-                html.empty_icon_button()
+                table.cell("", css="narrow")
+                if connection.get("disabled"):
+                    html.icon(
+                        _("This connection is currently not being used for synchronization."),
+                        "disabled")
+                else:
+                    html.empty_icon_button()
 
-            table.cell(_("ID"), connection["id"])
+                table.cell(_("ID"), connection["id"])
 
-            if cmk.is_managed_edition():
-                table.cell(_("Customer"), managed.get_customer_name(connection))
+                if cmk.is_managed_edition():
+                    table.cell(_("Customer"), managed.get_customer_name(connection))
 
-            table.cell(_("Description"))
-            url = connection.get("docu_url")
-            if url:
-                html.icon_button(
-                    url, _("Context information about this connection"), "url", target="_blank")
-                html.write("&nbsp;")
-            html.write_text(connection["description"])
-
-        table.end()
+                table.cell(_("Description"))
+                url = connection.get("docu_url")
+                if url:
+                    html.icon_button(
+                        url, _("Context information about this connection"), "url", target="_blank")
+                    html.write("&nbsp;")
+                html.write_text(connection["description"])
 
 
 @mode_registry.register
@@ -264,27 +262,24 @@ class ModeEditLDAPConnection(LDAPMode):
             connection = userdb.get_connection(self._connection_id)
             for address in connection.servers():
                 html.h3("%s: %s" % (_('Server'), address))
-                table.begin('test', searchable=False)
+                with table.open_table('test', searchable=False):
+                    for title, test_func in self._tests():
+                        table.row()
+                        try:
+                            state, msg = test_func(connection, address)
+                        except Exception as e:
+                            state = False
+                            msg = _('Exception: %s') % html.render_text(e)
+                            logger.exception()
 
-                for title, test_func in self._tests():
-                    table.row()
-                    try:
-                        state, msg = test_func(connection, address)
-                    except Exception as e:
-                        state = False
-                        msg = _('Exception: %s') % html.render_text(e)
-                        logger.exception()
+                        if state:
+                            img = html.render_icon("success", _('Success'))
+                        else:
+                            img = html.render_icon("failed", _("Failed"))
 
-                    if state:
-                        img = html.render_icon("success", _('Success'))
-                    else:
-                        img = html.render_icon("failed", _("Failed"))
-
-                    table.cell(_("Test"), title)
-                    table.cell(_("State"), img)
-                    table.cell(_("Details"), msg)
-
-                table.end()
+                        table.cell(_("Test"), title)
+                        table.cell(_("State"), img)
+                        table.cell(_("Details"), msg)
 
             connection.disconnect()
 

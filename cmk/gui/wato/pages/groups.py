@@ -130,11 +130,10 @@ class ModeGroups(WatoMode):
 
         self._collect_additional_data()
 
-        table.begin(self.type_name + "groups")
-        for name, group in sorted_groups:
-            table.row()
-            self._show_row_cells(name, group)
-        table.end()
+        with table.open_table(self.type_name + "groups"):
+            for name, group in sorted_groups:
+                table.row()
+                self._show_row_cells(name, group)
 
 
 # TODO: abc.ABCMeta

@@ -424,22 +424,20 @@ class ModeCustomAttrs(WatoMode):
             html.div(_("No custom attributes are defined yet."), class_="info")
             return
 
-        table.begin(self._type + "attrs")
-        for custom_attr in sorted(self._attrs, key=lambda x: x['title']):
-            table.row()
+        with table.open_table(self._type + "attrs"):
+            for custom_attr in sorted(self._attrs, key=lambda x: x['title']):
+                table.row()
 
-            table.cell(_("Actions"), css="buttons")
-            edit_url = watolib.folder_preserving_link([("mode", "edit_%s_attr" % self._type),
-                                                       ("edit", custom_attr['name'])])
-            delete_url = html.makeactionuri([("_delete", custom_attr['name'])])
-            html.icon_button(edit_url, _("Properties"), "edit")
-            html.icon_button(delete_url, _("Delete"), "delete")
+                table.cell(_("Actions"), css="buttons")
+                edit_url = watolib.folder_preserving_link([("mode", "edit_%s_attr" % self._type),
+                                                           ("edit", custom_attr['name'])])
+                delete_url = html.makeactionuri([("_delete", custom_attr['name'])])
+                html.icon_button(edit_url, _("Properties"), "edit")
+                html.icon_button(delete_url, _("Delete"), "delete")
 
-            table.text_cell(_("Name"), custom_attr['name'])
-            table.text_cell(_("Title"), custom_attr['title'])
-            table.cell(_("Type"), dict(custom_attr_types())[custom_attr['type']])
-
-        table.end()
+                table.text_cell(_("Name"), custom_attr['name'])
+                table.text_cell(_("Title"), custom_attr['title'])
+                table.cell(_("Type"), dict(custom_attr_types())[custom_attr['type']])
 
 
 @mode_registry.register

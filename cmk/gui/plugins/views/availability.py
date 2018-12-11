@@ -391,33 +391,34 @@ def render_availability_timeline(what, av_entry, avoptions):
     # soso..
 
     # Table with detailed events
-    table.begin("av_timeline", "", css="timelineevents", sortable=False, searchable=False)
-    for row_nr, row in enumerate(timeline_layout["table"]):
-        table.row(
-            id_="timetable_%d" % row_nr,
-            onmouseover="timetable_hover(%d, 1);" % row_nr,
-            onmouseout="timetable_hover(%d, 0);" % row_nr)
-        table.cell(_("Links"), css="buttons")
-        if what == "bi":
-            url = html.makeuri([("timewarp", str(int(row["from"])))])
-            if html.var("timewarp") and int(html.var("timewarp")) == int(row["from"]):
-                html.disabled_icon_button("timewarp_off")
+    with table.open_table(
+            "av_timeline", "", css="timelineevents", sortable=False, searchable=False):
+        for row_nr, row in enumerate(timeline_layout["table"]):
+            table.row(
+                id_="timetable_%d" % row_nr,
+                onmouseover="timetable_hover(%d, 1);" % row_nr,
+                onmouseout="timetable_hover(%d, 0);" % row_nr)
+            table.cell(_("Links"), css="buttons")
+            if what == "bi":
+                url = html.makeuri([("timewarp", str(int(row["from"])))])
+                if html.var("timewarp") and int(html.var("timewarp")) == int(row["from"]):
+                    html.disabled_icon_button("timewarp_off")
+                else:
+                    html.icon_button(
+                        url, _("Time warp - show BI aggregate during this time period"), "timewarp")
             else:
-                html.icon_button(url, _("Time warp - show BI aggregate during this time period"),
-                                 "timewarp")
-        else:
-            url = html.makeuri([("anno_site", av_entry["site"]), ("anno_host", av_entry["host"]),
-                                ("anno_service", av_entry["service"]),
-                                ("anno_from", str(row["from"])), ("anno_until", str(row["until"]))])
-            html.icon_button(url, _("Create an annotation for this period"), "annotation")
+                url = html.makeuri([("anno_site", av_entry["site"]), ("anno_host",
+                                                                      av_entry["host"]),
+                                    ("anno_service", av_entry["service"]),
+                                    ("anno_from", str(row["from"])),
+                                    ("anno_until", str(row["until"]))])
+                html.icon_button(url, _("Create an annotation for this period"), "annotation")
 
-        table.cell(_("From"), row["from_text"], css="nobr narrow")
-        table.cell(_("Until"), row["until_text"], css="nobr narrow")
-        table.cell(_("Duration"), row["duration_text"], css="narrow number")
-        table.cell(_("State"), row["state_name"], css=row["css"] + " state narrow")
-        table.cell(_("Last Known Plugin Output"), row.get("log_output", ""))
-
-    table.end()
+            table.cell(_("From"), row["from_text"], css="nobr narrow")
+            table.cell(_("Until"), row["until_text"], css="nobr narrow")
+            table.cell(_("Duration"), row["duration_text"], css="narrow number")
+            table.cell(_("State"), row["state_name"], css=row["css"] + " state narrow")
+            table.cell(_("Last Known Plugin Output"), row.get("log_output", ""))
 
     # Legend for timeline
     if "display_timeline_legend" in avoptions["labelling"]:
@@ -805,57 +806,57 @@ def show_annotations(annotations, av_rawdata, what, avoptions, omit_service):
     annos_to_render = get_relevant_annotations(annotations, av_rawdata, what, avoptions)
     render_date = get_annotation_date_render_function(annos_to_render, avoptions)
 
-    table.begin(title=_("Annotations"), omit_if_empty=True)
-    for (site_id, host, service), annotation in annos_to_render:
-        table.row()
-        table.cell("", css="buttons")
-        anno_vars = [
-            ("anno_site", site_id),
-            ("anno_host", host),
-            ("anno_service", service or ""),
-            ("anno_from", int(annotation["from"])),
-            ("anno_until", int(annotation["until"])),
-        ]
-        edit_url = html.makeuri(anno_vars)
-        html.icon_button(edit_url, _("Edit this annotation"), "edit")
-        delete_url = html.makeactionuri([("_delete_annotation", "1")] + anno_vars)
-        html.icon_button(delete_url, _("Delete this annotation"), "delete")
+    with table.open_table(title=_("Annotations"), omit_if_empty=True):
+        for (site_id, host, service), annotation in annos_to_render:
+            table.row()
+            table.cell("", css="buttons")
+            anno_vars = [
+                ("anno_site", site_id),
+                ("anno_host", host),
+                ("anno_service", service or ""),
+                ("anno_from", int(annotation["from"])),
+                ("anno_until", int(annotation["until"])),
+            ]
+            edit_url = html.makeuri(anno_vars)
+            html.icon_button(edit_url, _("Edit this annotation"), "edit")
+            delete_url = html.makeactionuri([("_delete_annotation", "1")] + anno_vars)
+            html.icon_button(delete_url, _("Delete this annotation"), "delete")
 
-        if not omit_service:
-            if not "omit_host" in avoptions["labelling"]:
-                host_url = "view.py?" + html.urlencode_vars([("view_name", "hoststatus"),
-                                                             ("site", site_id), ("host", host)])
-                table.cell(_("Host"), html.render_a(host, host_url))
+            if not omit_service:
+                if not "omit_host" in avoptions["labelling"]:
+                    host_url = "view.py?" + html.urlencode_vars([("view_name", "hoststatus"),
+                                                                 ("site", site_id), ("host", host)])
+                    table.cell(_("Host"), html.render_a(host, host_url))
 
-            if what == "service":
-                if service:
-                    service_url = "view.py?" + html.urlencode_vars([("view_name", "service"),
-                                                                    ("site", site_id),
-                                                                    ("host", host),
-                                                                    ("service", service)])
-                    # TODO: honor use_display_name. But we have no display names here...
-                    service_name = service
-                    table.cell(_("Service"), html.render_a(service_name, service_url))
-                else:
-                    table.cell(_("Service"), "")  # Host annotation in service table
+                if what == "service":
+                    if service:
+                        service_url = "view.py?" + html.urlencode_vars([("view_name", "service"),
+                                                                        ("site", site_id),
+                                                                        ("host", host),
+                                                                        ("service", service)])
+                        # TODO: honor use_display_name. But we have no display names here...
+                        service_name = service
+                        table.cell(_("Service"), html.render_a(service_name, service_url))
+                    else:
+                        table.cell(_("Service"), "")  # Host annotation in service table
 
-        table.cell(_("From"), render_date(annotation["from"]), css="nobr narrow")
-        table.cell(_("Until"), render_date(annotation["until"]), css="nobr narrow")
-        table.cell("", css="buttons")
-        if annotation.get("downtime") is True:
-            html.icon(_("This period has been reclassified as a scheduled downtime"), "downtime")
-        elif annotation.get("downtime") is False:
-            html.icon(
-                _("This period has been reclassified as a not being a scheduled downtime"),
-                "nodowntime")
-        table.cell(_("Annotation"), html.render_text(annotation["text"]))
-        table.cell(_("Author"), annotation["author"])
-        table.cell(_("Entry"), render_date(annotation["date"]), css="nobr narrow")
-        if not cmk.is_raw_edition():
-            table.cell(
-                _("Hide in report"),
-                _("Yes") if annotation.get("hide_from_report") else _("No"))
-    table.end()
+            table.cell(_("From"), render_date(annotation["from"]), css="nobr narrow")
+            table.cell(_("Until"), render_date(annotation["until"]), css="nobr narrow")
+            table.cell("", css="buttons")
+            if annotation.get("downtime") is True:
+                html.icon(
+                    _("This period has been reclassified as a scheduled downtime"), "downtime")
+            elif annotation.get("downtime") is False:
+                html.icon(
+                    _("This period has been reclassified as a not being a scheduled downtime"),
+                    "nodowntime")
+            table.cell(_("Annotation"), html.render_text(annotation["text"]))
+            table.cell(_("Author"), annotation["author"])
+            table.cell(_("Entry"), render_date(annotation["date"]), css="nobr narrow")
+            if not cmk.is_raw_edition():
+                table.cell(
+                    _("Hide in report"),
+                    _("Yes") if annotation.get("hide_from_report") else _("No"))
 
 
 def edit_annotation():
@@ -1017,41 +1018,40 @@ def output_availability_csv(what, av_data, avoptions):
 
     av_output_set_content_disposition(_("Check_MK-Availability"))
     availability_tables = availability.compute_availability_groups(what, av_data, avoptions)
-    table.begin("av_items", output_format="csv")
-    for group_title, availability_table in availability_tables:
-        av_table = availability.layout_availability_table(what, group_title, availability_table,
-                                                          avoptions)
-        pad = 0
+    with table.open_table("av_items", output_format="csv"):
+        for group_title, availability_table in availability_tables:
+            av_table = availability.layout_availability_table(what, group_title, availability_table,
+                                                              avoptions)
+            pad = 0
 
-        if group_title:
-            group_titles, group_cells = [_("Group")], [group_title]
-        else:
-            group_titles, group_cells = [], []
+            if group_title:
+                group_titles, group_cells = [_("Group")], [group_title]
+            else:
+                group_titles, group_cells = [], []
 
-        for row in av_table["rows"]:
+            for row in av_table["rows"]:
+                table.row()
+                cells_from_row(
+                    group_titles,
+                    group_cells,
+                    av_table["object_titles"],
+                    av_table["cell_titles"],
+                    row["object"],
+                    row["cells"],
+                )
+                # presumably all rows have the same width
+                pad = len(row["object"]) - 1
             table.row()
-            cells_from_row(
-                group_titles,
-                group_cells,
-                av_table["object_titles"],
-                av_table["cell_titles"],
-                row["object"],
-                row["cells"],
-            )
-            # presumably all rows have the same width
-            pad = len(row["object"]) - 1
-        table.row()
 
-        if "summary" in av_table:
-            cells_from_row(
-                group_titles,
-                group_cells,
-                av_table["object_titles"],
-                av_table["cell_titles"],
-                [(_("Summary"), "")] + [("", "")] * pad,
-                av_table["summary"],
-            )
-    table.end()
+            if "summary" in av_table:
+                cells_from_row(
+                    group_titles,
+                    group_cells,
+                    av_table["object_titles"],
+                    av_table["cell_titles"],
+                    [(_("Summary"), "")] + [("", "")] * pad,
+                    av_table["summary"],
+                )
 
 
 def av_output_set_content_disposition(title):

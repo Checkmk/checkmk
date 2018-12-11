@@ -211,12 +211,10 @@ class SimpleListMode(SimpleWatoModeBase):
         self._show_table(self._store.filter_editable_entries(self._store.load_for_reading()))
 
     def _show_table(self, entries):
-        table.begin(self._mode_type.type_name(), self._table_title())
-        for ident, entry in sorted(entries.items(), key=lambda e: e[1]["title"]):
-            table.row()
-            self._show_row(ident, entry)
-
-        table.end()
+        with table.open_table(self._mode_type.type_name(), self._table_title()):
+            for ident, entry in sorted(entries.items(), key=lambda e: e[1]["title"]):
+                table.row()
+                self._show_row(ident, entry)
 
     def _show_row(self, ident, entry):
         self._show_action_cell(ident)

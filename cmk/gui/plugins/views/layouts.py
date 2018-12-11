@@ -852,40 +852,38 @@ def csv_export_matrix(rows, view, group_cells, cells):
         create_matrices(rows, group_cells, cells, num_columns=None))[0]
     value_counts, _row_majorities = matrix_find_majorities(rows, cells)
 
-    table.begin(output_format="csv")
-    for cell_nr, cell in enumerate(group_cells):
-        table.row()
-        table.cell("", cell.title(use_short=False))
-        for _group, group_row in groups:
-            _tdclass, content = cell.render(group_row)
+    with table.open_table(output_format="csv"):
+        for cell_nr, cell in enumerate(group_cells):
+            table.row()
+            table.cell("", cell.title(use_short=False))
+            for _group, group_row in groups:
+                _tdclass, content = cell.render(group_row)
+                table.cell("", content)
+
+        for row_id in unique_row_ids:
+            # Omit rows where all cells have the same values
+            if painter_options.get("matrix_omit_uniform"):
+                at_least_one_different = False
+                for counts in value_counts[row_id].values():
+                    if len(counts) > 1:
+                        at_least_one_different = True
+                        break
+                if not at_least_one_different:
+                    continue
+
+            table.row()
+            _tdclass, content = cells[0].render(matrix_cells[row_id].values()[0])
             table.cell("", content)
 
-    for row_id in unique_row_ids:
-        # Omit rows where all cells have the same values
-        if painter_options.get("matrix_omit_uniform"):
-            at_least_one_different = False
-            for counts in value_counts[row_id].values():
-                if len(counts) > 1:
-                    at_least_one_different = True
-                    break
-            if not at_least_one_different:
-                continue
-
-        table.row()
-        _tdclass, content = cells[0].render(matrix_cells[row_id].values()[0])
-        table.cell("", content)
-
-        for group_id, group_row in groups:
-            table.cell("")
-            cell_row = matrix_cells[row_id].get(group_id)
-            if cell_row is not None:
-                for cell_nr, cell in enumerate(cells[1:]):
-                    _tdclass, content = cell.render(cell_row)
-                    if cell_nr:
-                        html.write_text(",")
-                    html.write(content)
-
-    table.end()
+            for group_id, group_row in groups:
+                table.cell("")
+                cell_row = matrix_cells[row_id].get(group_id)
+                if cell_row is not None:
+                    for cell_nr, cell in enumerate(cells[1:]):
+                        _tdclass, content = cell.render(cell_row)
+                        if cell_nr:
+                            html.write_text(",")
+                        html.write(content)
 
 
 def matrix_find_majorities_for_header(rows, group_cells):

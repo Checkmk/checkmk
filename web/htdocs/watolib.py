@@ -255,6 +255,9 @@ def add_change(action_name, text, obj=None, add_user=True, need_sync=None,
 def add_service_change(host, action_name, text, need_sync=False):
     add_change(action_name, text, obj=host, sites=[host.site_id()], need_sync=need_sync)
 
+def get_pending_changes_info():
+    changes = ActivateChanges()
+    return changes.get_changes_estimate()
 
 def get_number_of_pending_changes():
     changes = ActivateChanges()
@@ -4733,6 +4736,17 @@ class ActivateChanges(object):
 
         self._changes = sorted(changes.items(), key=lambda k_v: k_v[1]["time"])
 
+
+    def get_changes_estimate(self):
+        changes_counter = 0
+        for site_id in self.activation_site_ids():
+            changes_counter += len(self._load_site_changes(site_id))
+            if changes_counter > 10:
+                return _("10+ changes")
+        if changes_counter == 1:
+            return _("1 change")
+        elif changes_counter > 1:
+            return _("%d changes") % changes_counter
 
 
     def grouped_changes(self):

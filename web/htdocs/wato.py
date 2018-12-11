@@ -1889,7 +1889,7 @@ def mode_rename_host(phase):
         return
 
     elif phase == "action":
-        if watolib.get_number_of_pending_changes():
+        if watolib.get_pending_changes_info():
             raise MKUserError("newname", _("You cannot rename a host while you have pending changes."))
 
         newname = html.var("newname")
@@ -18062,20 +18062,15 @@ def home_button():
 
 
 def changelog_button():
-    num_pending = watolib.get_number_of_pending_changes()
-    if num_pending >= 1:
+    pending_info = watolib.get_pending_changes_info()
+    if pending_info:
         hot = True
         icon = "wato_changes"
-
-        if num_pending == 1:
-            buttontext = _("1 change")
-        else:
-            buttontext = _("%d changes") % num_pending
-
+        buttontext = pending_info
     else:
-        buttontext = _("No changes")
         hot = False
         icon = "wato_nochanges"
+        buttontext = _("No changes")
     html.context_button(buttontext, watolib.folder_preserving_link([("mode", "changelog")]), icon, hot)
 
 

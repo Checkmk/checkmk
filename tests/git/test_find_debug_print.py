@@ -23,6 +23,13 @@ check_paths = [
     "agents/plugins",
 ]
 
+
+exclude_folders = [
+    "plugins/build",
+    "plugins/build_32",
+    "chroot"
+]
+
 def test_find_debug_code():
     scanned = 0
     for base_path in [ cmk_path(), cmc_path(), cme_path() ]:
@@ -35,6 +42,8 @@ def test_find_debug_code():
                 scanned += 1
                 for filename in filenames:
                     file_path = "%s/%s" % (dirpath, filename)
+                    if [folder in file_path for folder in exclude_folders]:
+                        continue
 
                     for nr, line in enumerate(open(file_path)):
                         if nr == 0 and ("bash" in line or "php" in line):

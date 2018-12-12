@@ -1,0 +1,21 @@
+Title: Distributed WATO login: Protect against some config failures
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0p10
+Date: 1544597077
+Class: fix
+
+When building up a distributed Check_MK with distributed WATO, there
+are two situations which could end up in problematic situations which
+are handled now in a better way:
+
+<ul>
+<li>Connecting a central Check_MK Managed Services based site to a CEE
+or CRE based site resulted in a broken slave site. When trying to login
+a CME site into a CEE site, an error message now prevents the login.</li>
+<li>We have added a checkbox to the login dialog to confirm that one
+really wants to overwrite the configuration of the remote site with the
+central sites configuration.</li>
+</ul>

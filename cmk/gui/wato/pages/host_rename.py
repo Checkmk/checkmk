@@ -381,7 +381,7 @@ class ModeRenameHost(WatoMode):
                 _("Last result"), host_renaming_job.detail_url(), "background_job_details")
 
     def action(self):
-        if watolib.get_number_of_pending_changes():
+        if watolib.get_pending_changes_info():
             raise MKUserError("newname",
                               _("You cannot rename a host while you have pending changes."))
 

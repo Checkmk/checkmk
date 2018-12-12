@@ -80,7 +80,7 @@ def load_plugins(force):
                               config.builtin_role_ids)
 
 
-FORMATTERS = {
+_FORMATTERS = {
     "json": (
         json.dumps,
         lambda response: json.dumps(response, sort_keys=True, indent=4, separators=(',', ': '))),
@@ -95,11 +95,13 @@ FORMATTERS = {
 def page_api():
     try:
         pretty_print = False
-        if html.output_format not in FORMATTERS:
+        if not html.request.has_var("output_format"):
+            html.set_output_format("json")
+        if html.output_format not in _FORMATTERS:
             html.set_output_format("python")
             raise MKUserError(
                 None, "Only %s are supported as output formats" % " and ".join(
-                    '"%s"' % f for f in FORMATTERS))
+                    '"%s"' % f for f in _FORMATTERS))
 
         # TODO: Add some kind of helper for boolean-valued variables?
         pretty_print_var = html.request.var("pretty_print", "no").lower()
@@ -182,4 +184,4 @@ def page_api():
             "result": _("Unhandled exception: %s") % traceback.format_exc(),
         }
 
-    html.write(FORMATTERS[html.output_format][1 if pretty_print else 0](response))
+    html.write(_FORMATTERS[html.output_format][1 if pretty_print else 0](response))

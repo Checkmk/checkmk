@@ -28,6 +28,7 @@ automation functions on slaves,"""
 
 import traceback
 
+import cmk
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.userdb as userdb
@@ -53,7 +54,18 @@ class ModeAutomationLogin(WatoWebApiMode):
             raise MKAuthException(_("This account has no permission for automation."))
 
         html.set_output_format("python")
-        html.write_html(repr(watolib.get_login_secret(True)))
+
+        if not html.has_var("_version"):
+            # Be compatible to calls from sites using versions before 1.5.0p10.
+            # Deprecate with 1.7 by throwing an exception in this situation.
+            response = watolib.get_login_secret(create_on_demand=True)
+        else:
+            response = {
+                "version": cmk.__version__,
+                "edition_short": cmk.edition_short(),
+                "login_secret": watolib.get_login_secret(create_on_demand=True),
+            }
+        html.write_html(repr(response))
 
 
 register_page_handler("automation_login", lambda: ModeAutomationLogin().page())

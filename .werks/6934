@@ -1,0 +1,17 @@
+Title: cmk-update-agent: Remove unnecessary check for python interpreter
+Level: 1
+Component: agents
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.5.0p10
+Date: 1544600004
+
+Since Check_MK 1.5, the Agent Updater gets deployed as a binary file to
+linux systems by default.
+
+Hence it is no longer necessary to check for an available python2 interpreter
+on agent installation unless the Agent Updater gets deployed as a script.
+
+This werk adapts the agent's preinstall scripts so that no unnecessary checks are induced anymore.

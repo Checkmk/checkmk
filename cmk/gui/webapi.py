@@ -27,6 +27,8 @@
 import traceback
 import json
 
+import dicttoxml  # type: ignore
+
 import cmk
 
 import cmk.gui.pages
@@ -76,15 +78,21 @@ def load_plugins(force):
                               config.builtin_role_ids)
 
 
+FORMATTERS = {
+    "json": json.dumps,
+    "python": repr,
+    "xml": dicttoxml.dicttoxml,
+}
+
+
 @cmk.gui.pages.register("webapi")
 def page_api():
     try:
-        # The API uses JSON format by default and python as optional alternative
-        output_format = html.var("output_format", "json")
-        if output_format not in ["json", "python"]:
-            raise MKUserError(None, "Only \"json\" and \"python\" are supported as output formats")
-        else:
-            html.set_output_format(output_format)
+        if html.output_format not in FORMATTERS:
+            html.set_output_format("python")
+            raise MKUserError(
+                None, "Only %s are supported as output formats" % " and ".join(
+                    '"%s"' % f for f in FORMATTERS))
 
         if not config.user.get_attribute("automation_secret"):
             raise MKAuthException("The WATO API is only available for automation users")
@@ -161,7 +169,4 @@ def page_api():
             "result": _("Unhandled exception: %s") % traceback.format_exc(),
         }
 
-    if html.output_format == "json":
-        html.write(json.dumps(response))
-    else:
-        html.write(repr(response))
+    html.write(FORMATTERS[html.output_format](response))

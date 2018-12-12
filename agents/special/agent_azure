@@ -52,10 +52,11 @@ from Queue import Empty as QueueEmpty
 #   all the user sees.
 logging.getLogger().addHandler(logging.NullHandler())
 # pylint: disable=wrong-import-position
-from azure.mgmt.monitor import MonitorManagementClient
 from azure.mgmt.resource import ResourceManagementClient
-from azure.common.credentials import ServicePrincipalCredentials
+from azure.mgmt.monitor import MonitorManagementClient
 from azure.mgmt.monitor.models.error_response import ErrorResponseException
+from azure.mgmt.compute import ComputeManagementClient
+from azure.common.credentials import ServicePrincipalCredentials
 logging.getLogger().handlers.pop()
 
 import cmk.password_store
@@ -427,7 +428,6 @@ class AzureResource(object):
 
 class AzureComputeClient(object):
     def __init__(self, creds, subs):
-        from azure.mgmt.compute import ComputeManagementClient
         super(AzureComputeClient, self).__init__()
         self._client = ComputeManagementClient(creds, subs)
 

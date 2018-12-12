@@ -573,6 +573,51 @@ metric_info["corrupted_files"] = {
     "unit": "count",
     "color": "34/a",
 }
+
+# cloud storage
+
+metric_info["used_space"] = {
+    "title": _("Used storage space"),
+    "unit": "bytes",
+    "color": "34/a",
+}
+
+metric_info["ingress"] = {
+    "title": _("Data ingress"),
+    "unit": "bytes",
+    "color": "15/a",
+}
+
+metric_info["egress"] = {
+    "title": _("Data engress"),
+    "unit": "bytes",
+    "color": "43/a",
+}
+
+metric_info["transactions"] = {
+    "title": _("Transaction count"),
+    "unit": "count",
+    "color": "36/a",
+}
+
+metric_info["server_latency"] = {
+    "title": _("Server latency"),
+    "unit": "s",
+    "color": "21/a",
+}
+
+metric_info["e2e_latency"] = {
+    "title": _("Ent-to-end latency"),
+    "unit": "s",
+    "color": "21/b",
+}
+
+metric_info["availability"] = {
+    "title": _("Availability"),
+    "unit": "%",
+    "color": "31",
+}
+
 # database, tablespace
 
 metric_info["data_files"] = {
@@ -7948,6 +7993,13 @@ perfometer_info.append({
     "type": "linear",
     "segments": ["connections_perc_used"],
     "total": 100,
+})
+
+perfometer_info.append({
+    "type": "logarithmic",
+    "metric": "used_space",
+    "half_value": GB,
+    "exponent": 2,
 })
 
 #.

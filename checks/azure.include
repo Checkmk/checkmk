@@ -26,15 +26,17 @@
 import json
 
 
-def azure_iter_informative_attrs(resource):
+def azure_iter_informative_attrs(resource, include_keys=('location',)):
+    def cap(s):  # not quite what str.title() does
+        return s[0].upper() + s[1:]
 
-    loc = resource.get('location')
-    if loc is not None:
-        yield 'Location', loc
+    for key in include_keys:
+        if key in resource:
+            yield cap(key), resource[key]
 
     for key, value in resource.get('tags', {}).iteritems():
         if not key.startswith("hidden-"):
-            yield key[0].upper() + key[1:], value
+            yield cap(key), value
 
 
 def check_azure_metric(resource,
@@ -61,6 +63,7 @@ def check_azure_metric(resource,
     formatter = {
         "percent": get_percent_human_readable,
         "bytes": get_bytes_human_readable,
+        "milli_seconds": lambda ms: "%d ms" % ms
     }.get(metric.unit, str)
     text = "%s: %s" % (display_name, formatter(value))
 
@@ -71,7 +74,7 @@ def check_azure_metric(resource,
     elif warn_lower is not None and value <= warn_lower:
         l_state = 1
     if l_state != 0:
-        text += " (warn/crit below %s/%s)" % (warn_lower, crit_lower)
+        text += " (warn/crit below %s/%s)" % (formatter(warn_lower), formatter(crit_lower))
 
     warn, crit = levels or (None, None)
     if crit is not None and value >= crit:
@@ -79,7 +82,7 @@ def check_azure_metric(resource,
     elif warn is not None and value >= warn:
         u_state = 1
     if u_state != 0:
-        text += " (warn/crit at %s/%s)" % (warn, crit)
+        text += " (warn/crit at %s/%s)" % (formatter(warn), formatter(crit))
 
     return max(l_state, u_state), text, [(cmk_key, value, warn, crit, minv, maxv)]
 

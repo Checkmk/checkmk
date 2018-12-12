@@ -1,0 +1,118 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2015             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+factory_settings['levels_azure_storageaccounts'] = {}
+# metrics description:
+# https://docs.microsoft.com/en-US/azure/monitoring-and-diagnostics/monitoring-supported-metrics#microsoftstoragestorageaccounts
+# 'ingress_levels': tuple [B]
+# 'egress_levels': tuple [B]
+# 'used_capacity_levels': tuple [B]
+# 'server_latency_levels': tuple [ms]
+# 'e2e_latency_levels': tuple [ms]
+# 'transactions_levels': tuple int
+# 'availablility_levels': tuple float
+#     The percentage of availability for the storage service or the specified API operation.
+#     Availability is calculated by taking the TotalBillableRequests value and dividing it
+#     by the number of applicable requests, including those that produced unexpected errors.
+#     All unexpected errors result in reduced availability for the storage service or the
+#     specified API operation.
+
+
+@get_parsed_item_data
+def check_azure_storageaccounts(_item, params, resource):
+    iter_attrs = azure_iter_informative_attrs(resource, include_keys=('kind', 'location'))
+    # kind first
+    yield 0, "%s: %s" % next(iter_attrs)
+
+    levels = params.get("used_capacity_levels", (None, None))
+    mcheck = check_azure_metric(
+        resource, 'total_UsedCapacity', 'used_space', 'Used capacity', levels=levels, minv=0)
+    if mcheck:
+        yield mcheck
+
+    for kv_pair in iter_attrs:
+        yield 0, "%s: %s" % kv_pair
+
+
+check_info['azure_storageaccounts'] = {
+    'parse_function': parse_azure,
+    'inventory_function': discover(),
+    'check_function': check_azure_storageaccounts,
+    'service_description': "Storage %s account",
+    'includes': ['azure.include'],
+    'has_perfdata': True,
+    'default_levels_variable': 'levels_azure_storageaccount',
+    'group': 'azure_storageaccount',
+}
+
+
+@get_parsed_item_data
+def check_azure_storageaccounts_flow(_item, params, resource):
+    for metric_key in ('total_Ingress', 'total_Egress', 'total_Transactions'):
+        cmk_key = metric_key[6:].lower()
+        displ = cmk_key.title()
+        levels = params.get("%s_levels" % cmk_key, (None, None))
+        mcheck = check_azure_metric(resource, metric_key, cmk_key, displ, levels=levels, minv=0)
+        if mcheck:
+            yield mcheck
+
+
+check_info['azure_storageaccounts.flow'] = {
+    'inventory_function': discover_azure_by_metrics('total_Ingress', 'total_Egress',
+                                                    'total_Transactions'),
+    'check_function': check_azure_storageaccounts_flow,
+    'service_description': "Storage %s flow",
+    'has_perfdata': True,
+    'includes': ['azure.include'],
+    'default_levels_variable': 'levels_azure_storageaccount',
+    'group': 'azure_storageaccount',
+}
+
+
+@get_parsed_item_data
+def check_azure_storageaccounts_performance(_item, params, resource):
+
+    for key, cmk_key, displ in (
+        ('total_SuccessServerLatency', 'server_latency', 'Success server latency'),
+        ('total_SuccessE2ELatency', 'e2e_latency', 'End-to-end server latency'),
+        ('total_Availability', 'availability', 'Availability'),
+    ):
+        levels = params.get("%s_levels" % cmk_key, (None, None))
+        mcheck = check_azure_metric(resource, key, cmk_key, displ, levels=levels, minv=0)
+        if mcheck:
+            yield mcheck
+
+
+check_info['azure_storageaccounts.performance'] = {
+    'inventory_function': discover_azure_by_metrics(
+        'total_SuccessServerLatency', 'total_SuccessE2ELatency', 'total_Availability'),
+    'check_function': check_azure_storageaccounts_performance,
+    'service_description': "Storage %s performance",
+    'has_perfdata': True,
+    'includes': ['azure.include'],
+    'default_levels_variable': 'levels_azure_storageaccount',
+    'group': 'azure_storageaccount',
+}

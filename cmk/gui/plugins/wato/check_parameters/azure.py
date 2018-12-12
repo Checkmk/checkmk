@@ -36,6 +36,7 @@ from cmk.gui.valuespec import (
 from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersApplications,
     register_check_parameters,
+    Levels,
 )
 
 register_check_parameters(
@@ -110,6 +111,48 @@ register_check_parameters(
         ],),
     TextAscii(title=_("Name of the service")),
     match_type="dict",
+)
+
+register_check_parameters(
+    RulespecGroupCheckParametersApplications,
+    'azure_storageaccounts',
+    _("Azure Storage"),
+    Dictionary(elements=[
+        ('ingress_levels', Levels(
+            title=_("Levels on ingress data in bytes"),
+            unit="B",
+        )),
+        ('egress_levels', Levels(
+            title=_("Levels on ingress data in bytes"),
+            unit="B",
+        )),
+        ('used_capacity_levels', Levels(
+            title=_("Levels on used capacity in bytes"),
+            unit="B",
+        )),
+        ('server_latency_levels',
+         Levels(
+             title=_("Levels on server latency in seconds"),
+             help=_("Average latency used by Azure Storage to process a successful request"),
+             unit='s',
+         )),
+        ('e2e_latency_levels',
+         Levels(
+             title=_("Levels on end-to-end latency in seconds"),
+             help=_("Average end-to-end latency of successful requests made to a storage service"),
+             unit='s',
+         )),
+        ('transactions_levels', Levels(title=_("Levels on transaction count"))),
+        ('availability_levels', Levels(
+            title=_("Levels on availability in percent"),
+            unit='%',
+        )),
+    ]),
+    TextAscii(
+        title=_("Storage account name"),
+        help=_("Specify storage account names that the rule should apply to"),
+    ),
+    match_type='dict',
 )
 
 register_check_parameters(

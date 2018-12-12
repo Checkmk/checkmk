@@ -26,6 +26,8 @@
 
 import traceback
 import json
+import pprint
+import xml.dom.minidom  # type: ignore
 
 import dicttoxml  # type: ignore
 
@@ -79,20 +81,31 @@ def load_plugins(force):
 
 
 FORMATTERS = {
-    "json": json.dumps,
-    "python": repr,
-    "xml": dicttoxml.dicttoxml,
+    "json": (
+        json.dumps,
+        lambda response: json.dumps(response, sort_keys=True, indent=4, separators=(',', ': '))),
+    "python": (repr, pprint.pformat),
+    "xml": (
+        dicttoxml.dicttoxml,
+        lambda response: xml.dom.minidom.parseString(dicttoxml.dicttoxml(response)).toprettyxml()),
 }
 
 
 @cmk.gui.pages.register("webapi")
 def page_api():
     try:
+        pretty_print = False
         if html.output_format not in FORMATTERS:
             html.set_output_format("python")
             raise MKUserError(
                 None, "Only %s are supported as output formats" % " and ".join(
                     '"%s"' % f for f in FORMATTERS))
+
+        # TODO: Add some kind of helper for boolean-valued variables?
+        pretty_print_var = html.request.var("pretty_print", "no").lower()
+        if pretty_print_var not in ("yes", "no"):
+            raise MKUserError(None, 'pretty_print must be "yes" or "no"')
+        pretty_print = pretty_print_var == "yes"
 
         if not config.user.get_attribute("automation_secret"):
             raise MKAuthException("The WATO API is only available for automation users")
@@ -121,7 +134,7 @@ def page_api():
             if html.var("request"):
                 request_object = html.var("request")
         else:
-            request_object = html.get_request(exclude_vars=["action"])
+            request_object = html.get_request(exclude_vars=["action", "pretty_print"])
 
         # Check if the data was sent with the correct data format
         # Some API calls only allow python code
@@ -169,4 +182,4 @@ def page_api():
             "result": _("Unhandled exception: %s") % traceback.format_exc(),
         }
 
-    html.write(FORMATTERS[html.output_format](response))
+    html.write(FORMATTERS[html.output_format][1 if pretty_print else 0](response))

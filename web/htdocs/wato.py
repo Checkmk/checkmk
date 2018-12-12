@@ -117,6 +117,7 @@ import backup
 import modules as multisite_modules
 import watolib
 
+import cmk
 import cmk.paths
 import cmk.translations
 import cmk.store as store
@@ -10238,7 +10239,20 @@ class ModeDistributedMonitoring(ModeSites):
             name   = html.var("_name", "").strip()
             passwd = html.var("_passwd", "").strip()
             try:
-                secret = watolib.do_site_login(login_id, name, passwd)
+                if not html.get_checkbox("_confirm"):
+                    raise MKUserError("_confirm", _("You need to confirm that you want to "
+                                                    "overwrite the remote site configuration."))
+
+                response = watolib.do_site_login(login_id, name, passwd)
+
+                if isinstance(response, dict):
+                    if cmk.is_managed_edition() and response["edition_short"] != "cme":
+                        raise MKUserError(None, _("The Check_MK Managed Services Edition can only "
+                                                  "be connected with other sites using the CME."))
+                    secret = response["login_secret"]
+                else:
+                    secret = response
+
                 site["secret"] = secret
                 self._site_mgmt.save_sites(configured_sites)
                 message = _("Successfully logged into remote site %s.") % html.render_tt(site["alias"])
@@ -10272,11 +10286,13 @@ class ModeDistributedMonitoring(ModeSites):
 
         html.begin_form("login", method="POST")
         forms.header(_('Login credentials'))
-        forms.section(_('Adminstrator name:'))
+        forms.section(_('Adminstrator name'))
         html.text_input("_name")
         html.set_focus("_name")
-        forms.section(_('Adminstrator password:'))
+        forms.section(_('Adminstrator password'))
         html.password_input("_passwd")
+        forms.section(_('Confirm overwrite'))
+        html.checkbox("_confirm", False, label=_("Confirm overwrite of the remote site configuration"))
         forms.end()
         html.button("_do_login", _("Login"))
         html.button("_abort", _("Abort"))
@@ -10903,7 +10919,18 @@ def page_automation_login():
     # a login secret. If such a secret is not yet present it is created on
     # the fly.
     html.set_output_format("python")
-    html.write_html(repr(watolib.get_login_secret(True)))
+
+    if not html.has_var("_version"):
+        # Be compatible to calls from sites using versions before 1.5.0p10.
+        # Deprecate with 1.7 by throwing an exception in this situation.
+        response = watolib.get_login_secret(True)
+    else:
+        response = {
+            "version": cmk.__version__,
+            "edition_short": cmk.edition_short(),
+            "login_secret": watolib.get_login_secret(True),
+        }
+    html.write_html(repr(response))
 
 
 def page_automation():

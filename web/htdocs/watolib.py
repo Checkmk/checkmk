@@ -61,6 +61,7 @@ import sites
 import mkeventd
 import backup
 
+import cmk
 import cmk.paths
 import cmk.defines
 import cmk.store as store
@@ -4220,7 +4221,7 @@ def do_site_login(site_id, name, password):
         '_login'       : '1',
         '_username'    : name,
         '_password'    : password,
-        '_origtarget'  : 'automation_login.py',
+        '_origtarget'  : 'automation_login.py?_version=%s&_edition_short=%s' % (cmk.__version__, cmk.edition_short()),
         '_plain_error' : '1',
     }
     response = get_url(url, site.get('insecure', False), auth=(name, password), data=post_data).strip()

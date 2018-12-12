@@ -140,7 +140,15 @@ echo "LocalDirectory: $LOCALDIR"
 echo '<<<df>>>'
 if [ -x /usr/opt/freeware/bin/df ] ; then
     excludefs="-x smbfs -x cifs -x iso9660 -x udf -x nfsv4 -x nfs -x mvfs -x zfs -x cdrfs"
+    # shellcheck disable=SC2086
     /usr/opt/freeware/bin/df -PTlk $excludefs | sed 1d
+
+    # df inodes information
+    echo '<<<df>>>'
+    echo '[df_inodes_start]'
+    # shellcheck disable=SC2086
+    /usr/opt/freeware/bin/df -PTli $excludefs | sed 1d
+    echo '[df_inodes_end]'
 else
     df -kP | sed 's/ / - /' | grep -v ^/proc | grep -v ^Filesystem | grep -v :
 fi

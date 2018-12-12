@@ -13,7 +13,7 @@ import traceback
 from urlparse import urlsplit, parse_qsl, urlunsplit, urljoin
 from urllib import urlencode
 from bs4 import BeautifulSoup
-from testlib import web, var_dir
+from testlib import web
 
 from testlib import CMKWebSession
 
@@ -303,17 +303,20 @@ class TestCrawler(object):
 
         self.report()
 
+    def var_dir(self):
+        return self.site.path("var/log")
+
     def stats_file(self):
-        return var_dir() + "/crawl.stats"
+        return self.var_dir() + "/crawl.stats"
 
     def report_file(self):
-        return var_dir() + "/crawl.report"
+        return self.var_dir() + "/crawl.report"
 
     def web_log_file(self):
-        return var_dir() + "/crawl-web.log"
+        return self.var_dir() + "/crawl-web.log"
 
     def apache_error_log_file(self):
-        return var_dir() + "/crawl-apache_error_log.log"
+        return self.var_dir() + "/crawl-apache_error_log.log"
 
     def load_stats(self):
         try:
@@ -325,8 +328,6 @@ class TestCrawler(object):
                 raise
 
     def save_stats(self):
-        if not os.path.exists(var_dir()):
-            os.makedirs(var_dir())
         file(self.stats_file() + ".tmp", "w").write(pprint.pformat(self.stats) + "\n")
         os.rename(self.stats_file() + ".tmp", self.stats_file())
 

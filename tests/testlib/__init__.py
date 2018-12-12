@@ -57,16 +57,6 @@ def cme_path():
     return repo_path() + "/managed"
 
 
-# Directory for persisting variable data produced by tests
-def var_dir():
-    if "WORKSPACE" in os.environ:
-        base_dir = os.environ["WORKSPACE"] + "/results"
-    else:
-        base_dir = repo_path() + "/tests/var"
-
-    return base_dir
-
-
 def virtualenv_path():
     try:
         venv = subprocess.check_output(["pipenv", "--bare", "--venv"])

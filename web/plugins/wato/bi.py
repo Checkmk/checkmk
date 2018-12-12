@@ -417,8 +417,8 @@ class ModeBI(WatoMode):
         choices = []
         for pack_id, pack in sorted(self._packs.iteritems()):
             if self.may_use_rules_in_pack(pack):
-                pack_choices = [(rule_id, rule["title"]) for rule_id, rule in pack["rules"].iteritems()]
-                choices.append((pack_id, pack["title"], DropdownChoice(choices=sorted(pack_choices))))
+                pack_choices = [(rule_id, "%s (%s)" % (rule["title"], rule["id"])) for rule_id, rule in pack["rules"].iteritems()]
+                choices.append((pack_id, "%s (%s)" % (pack["title"], pack["id"]), DropdownChoice(choices=sorted(pack_choices))))
         return choices
 
 

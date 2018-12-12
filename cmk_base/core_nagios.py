@@ -352,7 +352,7 @@ define servicedependency {
 }
 
 """ % (template, hostname, description.encode("utf-8"), check_interval,
-        _extra_service_conf_of(hostname, description), action_cfg, checkname))
+        _extra_service_conf_of(hostname, description), action_cfg, checkname.encode("utf-8")))
 
         checknames_to_define.add(checkname)
         have_at_least_one_service = True

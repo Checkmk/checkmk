@@ -2,6 +2,7 @@
 
 import sys
 import os
+from pathlib2 import Path
 import cmk.werks
 
 
@@ -33,4 +34,4 @@ if len(sys.argv) < 3:
     sys.exit(1)
 
 dest_file, precompiled_werk_files = sys.argv[1], sys.argv[2:]
-create_changelog(dest_file, precompiled_werk_files)
+create_changelog(dest_file, [Path(p) for p in precompiled_werk_files])

@@ -1,3 +1,5 @@
+# pylint: disable=invalid-name
+
 checkname = 'filestats'
 
 info = [
@@ -13,11 +15,10 @@ info = [
     ["{'stat_status': 'ok', 'age': 9398016, 'mtime': 1535028577, 'path':"
      " '/home/mo/git/check_mk/agents/plugins/mk_inventory.aix', 'type': 'file', 'size': 2637}"],
     ["{'stat_status': 'ok', 'age': 18751603, 'mtime': 1525674990, 'path':"
-     " '/home/mo/git/check_mk/agents/plugins/mk_db2.aix', 'type': 'file', 'size': 10138}" ],
-    ['<<<mk_filestats:sep(0)>>>'],
+     " '/home/mo/git/check_mk/agents/plugins/mk_db2.aix', 'type': 'file', 'size': 10138}"],
+    ["{'type': 'summary', 'count': 6}"],
     ['[[[count_only $ection with funny characters %s &! (count files in ~)]]]'],
-    ["{'count': 35819}"],
-    ['<<<mk_filestats:sep(0)>>>'],
+    ["{'type': 'summary', 'count': 35819}"],
     ['[[[extremes_only log files]]]'],
     ["{'stat_status': 'ok', 'age': 89217820, 'mtime': 1455208773, 'path':"
      " '/var/log/installer/casper.log', 'type': 'file', 'size': 1216}"],
@@ -27,42 +28,44 @@ info = [
      " 'type': 'file', 'size': 7288}"],
     ["{'stat_status': 'ok', 'age': 15965608, 'mtime': 1528460985, 'path': '/var/log/tacwho.log',"
      " 'type': 'file', 'size': 0}"],
+    ["{'type': 'summary', 'count': 17}"],
 ]
 
 discovery = {
-    '': [('aix agent files', {})],
-    'count_only': [('$ection with funny characters %s &! (count files in ~)', {})],
-    'extremes_only': [('log files', {})]
+    '': [
+        ('aix agent files', {}),
+        ('$ection with funny characters %s &! (count files in ~)', {}),
+        ('log files', {}),
+    ]
 }
 
 checks = {
     '': [
         ('aix agent files', 'default', [
-            (0, 'Files in total: 6', [('filestats_count', 6, None, None, None, None)]),
+            (0, 'Files in total: 6', [('file_count', 6, None, None, None, None)]),
             (0, 'Smallest: 1.12 kB', []), (0, 'Largest: 12.58 kB', []),
             (0, 'Newest: 2.6 d', []), (0, 'Oldest: 217 d', [])
         ]),
         ('aix agent files', {"maxsize_largest": (12*1024, 13*1024),
-                             "minage_newest": (3600*72, 3600*96)}, [
-            (0, 'Files in total: 6', [('filestats_count', 6, None, None, None, None)]),
-            (0, 'Smallest: 1.12 kB', []),
-            (1, 'Largest: 12.58 kB (warn/crit at 12.00 kB/13.00 kB):'
-                ' /home/mo/git/check_mk/agents/check_mk_agent.aix', []),
-            (2, 'Newest: 2.6 d (warn/crit below 3 d/4 d):'
-                ' /home/mo/git/check_mk/agents/plugins/mk_logwatch.aix', []),
-            (0, 'Oldest: 217 d', [])
-        ]),
-    ],
-    'count_only': [
-        ('$ection with funny characters %s &! (count files in ~)', 'default', [
-            (0, 'Files in total: 35819', [('filestats_count', 35819, None, None, None, None)]),
-         ]),
-        ('$ection with funny characters %s &! (count files in ~)', {"maxcount": (5, 10)}, [
-            (2, 'Files in total: 35819 (warn/crit at 5/10)', [('filestats_count', 35819, 5, 10, None, None)]),
-         ]),
-    ],
-    'extremes_only': [
+                             "minage_newest": (3600*72, 3600*96)},
+         [
+             (0, 'Files in total: 6', [('file_count', 6, None, None, None, None)]),
+             (0, 'Smallest: 1.12 kB', []),
+             (1, 'Largest: 12.58 kB (warn/crit at 12.00 kB/13.00 kB):'
+                 ' /home/mo/git/check_mk/agents/check_mk_agent.aix', []),
+             (2, 'Newest: 2.6 d (warn/crit below 3 d/4 d):'
+                 ' /home/mo/git/check_mk/agents/plugins/mk_logwatch.aix', []),
+             (0, 'Oldest: 217 d', [])
+         ]
+        ),
+        ('$ection with funny characters %s &! (count files in ~)', {"maxcount": (5, 10)},
+         [
+             (2, 'Files in total: 35819 (warn/crit at 5/10)',
+              [('file_count', 35819, 5, 10, None, None)]),
+         ]
+        ),
         ('log files', 'default', [
+            (0, 'Files in total: 17', [('file_count', 17, None, None, None, None)]),
             (0, 'Smallest: 0.00 B', []),
             (0, 'Largest: 2.40 MB', []),
             (0, 'Newest: 4 m', []),

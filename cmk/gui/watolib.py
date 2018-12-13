@@ -1710,7 +1710,7 @@ class CREFolder(BaseFolder):
         # we drop this one day?
         attributes = {}
         for attr, _topic in all_host_attributes():
-            if isinstance(attr, HostTagAttribute):
+            if attr.is_tag_attribute:
                 tagvalue = attr.get_tag_value(host_tags)
                 attributes[attr.name()] = tagvalue
         return attributes
@@ -3342,7 +3342,12 @@ class Attribute(object):
     def get_tag_list(self, value):
         return []
 
+    @property
     def is_checkbox_tag(self):
+        return False
+
+    @property
+    def is_tag_attribute(self):
         return False
 
 
@@ -3470,7 +3475,17 @@ class EnumAttribute(Attribute):
 
 
 class HostTagAttribute(Attribute):
-    """A selection dropdown for a host tag"""
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractproperty
+    def is_checkbox_tag(self):
+        # type: () -> bool
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def _default_tag_value(self):
+        # type: () -> typing.Optional[str]
+        raise NotImplementedError()
 
     def __init__(self, tag_id, title, tag_list):
         self._taglist = tag_list
@@ -3481,34 +3496,11 @@ class HostTagAttribute(Attribute):
             default_value=self._default_tag_value(),
         )
 
-    def _default_tag_value(self):
-        if not self.is_checkbox_tag():
-            return self._taglist[0][0]
-        return None
+    @property
+    def is_tag_attribute(self):
+        return True
 
-    def is_checkbox_tag(self):
-        return len(self._taglist) == 1
-
-    def paint(self, value, hostname):
-        # Localize the titles. To make the strings available in the scanned localization
-        # files the _() function must also be placed in the configuration files
-        # But don't localize empty strings - This empty string is connected to the header
-        # of the .mo file
-        if self.is_checkbox_tag():
-            title = self._taglist[0][1]
-            if title:
-                title = _u(title)
-            if value:
-                return "", title
-            return "", "%s %s" % (_("Not"), title)
-        for entry in self._taglist:
-            if value == entry[0]:
-                return "", entry[1] and _u(entry[1]) or ''
-        return "", ""  # Should never happen, at least one entry should match
-        # But case could occur if tags definitions have been changed.
-
-    def render_input(self, varprefix, value):
-        varname = varprefix + "attr_" + self.name()
+    def _get_tag_value_and_choices(self, varname, value):
         if value is None:
             value = html.var(varname, "")  # "" is important for tag groups with an empty tag entry
 
@@ -3527,28 +3519,7 @@ class HostTagAttribute(Attribute):
             if value != "" and value == tagvalue and secondary_tags:
                 value = value + "|" + "|".join(secondary_tags)
 
-        if self.is_checkbox_tag():
-            html.checkbox(
-                varname,
-                value != "",
-                label=choices[0][1],
-                onclick='wato_fix_visibility();',
-                tags=choices[0][0])
-        else:
-            html.dropdown(varname, choices, value, onchange="wato_fix_visibility();")
-
-    def from_html_vars(self, varprefix):
-        varname = varprefix + "attr_" + self.name()
-        if self.is_checkbox_tag():
-            if html.get_checkbox(varname):
-                return self._taglist[0][0]
-            return None
-
-        # strip of secondary tags
-        value = html.var(varname).split("|")[0]
-        if not value:
-            value = None
-        return value
+        return value, choices
 
     def get_tag_value(self, tags):
         """Special function for computing the setting of a specific
@@ -3570,6 +3541,79 @@ class HostTagAttribute(Attribute):
                     taglist = taglist[1:]
                 return taglist
         return []  # No matching tag
+
+
+class HostTagListAttribute(HostTagAttribute):
+    """A selection dropdown for a host tag"""
+
+    def _default_tag_value(self):
+        return self._taglist[0][0]
+
+    @property
+    def is_checkbox_tag(self):
+        return False
+
+    @property
+    def is_tag_attribute(self):
+        return True
+
+    def paint(self, value, hostname):
+        for entry in self._taglist:
+            if value == entry[0]:
+                return "", entry[1] and _u(entry[1]) or ''
+        return "", ""
+
+    def render_input(self, varprefix, value):
+        varname = varprefix + "attr_" + self.name()
+        value, choices = self._get_tag_value_and_choices(varname, value)
+        html.dropdown(varname, choices, value, onchange="wato_fix_visibility();")
+
+    def from_html_vars(self, varprefix):
+        varname = varprefix + "attr_" + self.name()
+
+        # strip of secondary tags
+        value = html.var(varname).split("|")[0]
+        if not value:
+            value = None
+        return value
+
+
+class HostTagCheckboxAttribute(HostTagAttribute):
+    """A checkbox for a host tag group"""
+
+    def _default_tag_value(self):
+        return None
+
+    @property
+    def is_checkbox_tag(self):
+        return True
+
+    def paint(self, value, hostname):
+        title = self._taglist[0][1]
+        if title:
+            title = _u(title)
+        if value:
+            return "", title
+        return "", "%s %s" % (_("Not"), title)
+
+    def render_input(self, varprefix, value):
+        varname = varprefix + "attr_" + self.name()
+
+        value, choices = self._get_tag_value_and_choices(varname, value)
+
+        html.checkbox(
+            varname,
+            value != "",
+            label=choices[0][1],
+            onclick='wato_fix_visibility();',
+            tags=choices[0][0])
+
+    def from_html_vars(self, varprefix):
+        varname = varprefix + "attr_" + self.name()
+        if self.is_checkbox_tag:
+            if html.get_checkbox(varname):
+                return self._taglist[0][0]
+            return None
 
 
 # An attribute using the generic ValueSpec mechanism
@@ -3853,8 +3897,13 @@ def declare_host_tag_attributes():
             if not topic:
                 topic = _('Host tags')
 
+            if len(entry[2]) == 1:
+                vs = HostTagCheckboxAttribute(*entry[:3])
+            else:
+                vs = HostTagListAttribute(*entry[:3])
+
             declare_host_attribute(
-                HostTagAttribute(*entry[:3]),
+                vs,
                 show_in_table=False,
                 show_in_folder=True,
                 editable=attr_editable,

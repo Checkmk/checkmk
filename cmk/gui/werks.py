@@ -314,18 +314,6 @@ def render_werks_table():
         werk_table_options["compatibility"] = ["incomp_unack"]
 
     current_group, number_of_groups, number_of_werks = False, 0, 0
-
-    def begin_group(title):
-        table.begin(
-            title=title,
-            limit=None,
-            searchable=False,
-            sortable=False,
-            css="werks",
-            update_page_head=False)
-
-    werklist = []
-
     if werk_table_options["grouping"] == "version":
         werklist = cmk.werks.sort_by_version_and_component(g_werks.values())
     else:
@@ -341,7 +329,13 @@ def render_werks_table():
 
                 if current_group != False:
                     table.end()
-                begin_group(group)
+                table.begin(
+                    title=group,
+                    limit=None,
+                    searchable=False,
+                    sortable=False,
+                    css="werks",
+                    update_page_head=False)
                 current_group = group
 
             number_of_werks += 1

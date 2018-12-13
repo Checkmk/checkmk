@@ -564,6 +564,147 @@ class ELB(AWSSection):
         ]
 
 
+class EBSSummary(AWSSection):
+    @property
+    def name(self):
+        return "ebs_summary"
+
+    @property
+    def interval(self):
+        return 300
+
+    def _get_raw_result(self):
+        return self._client.describe_volumes()
+
+    def _extract_content_from(self, raw_result):
+        try:
+            return raw_result['Volumes']
+        except KeyError, e:
+            logging.info("%s: KeyError %s ", self.name, e)
+            return []
+
+    def _format_content(self, content):
+        return [AWSSectionResult("", content)]
+
+
+class EBSHealth(AWSSection):
+    @property
+    def name(self):
+        return "ebs_health"
+
+    @property
+    def interval(self):
+        return 300
+
+    def _get_raw_result(self):
+        volumes = []
+        for entry in self._received_results.get('ebs_summary', []):
+            volumes.append(entry['VolumeId'])
+        return self._client.describe_volume_status(VolumeIds=volumes)
+
+    def _extract_content_from(self, raw_result):
+        content = {}
+        for row in raw_result.get('VolumeStatuses', []):
+            try:
+                content.setdefault(row['VolumeId'], row['VolumeStatus'])
+            except KeyError, e:
+                logging.info("%s: KeyError %s ", self.name, e)
+        return content
+
+    def _format_content(self, content):
+        # parse function of aws.include extends a list, thus
+        # we put details as an element in this list
+        return [
+            AWSSectionResult(piggyback_hostname, [details])
+            for piggyback_hostname, details in content.iteritems()
+        ]
+
+
+class EBS(AWSSection):
+    @property
+    def name(self):
+        return "ebs"
+
+    @property
+    def interval(self):
+        return 300
+
+    def _get_raw_result(self):
+        end_time = time.time()
+        start_time = end_time - self.period
+        metrics = self._get_metrics()
+        if not metrics:
+            return {}
+        return self._client.get_metric_data(
+            MetricDataQueries=metrics,
+            StartTime=start_time,
+            EndTime=end_time,
+        )
+
+    def _get_metrics(self):
+        volumes = []
+        for entry in self._received_results.get('ebs_summary', []):
+            volumes.append((entry['VolumeId'], entry['VolumeType']))
+        metrics = []
+        idx = 0
+        for volume_name, volume_type in volumes:
+            for metric_name, volume_types in [
+                    # Disk IO
+                ("VolumeReadOps", []),
+                ("VolumeWriteOps", []),
+                ("VolumeReadBytes", []),
+                ("VolumeWriteBytes", []),
+                ("VolumeThroughputPercentage", ["io1"]),
+                ("VolumeConsumedReadWriteOps", ["io1"]),
+                    # Latency
+                ("VolumeTotalReadTime", []),
+                ("VolumeTotalWriteTime", []),
+                    # Disk activity
+                ("VolumeQueueLength", []),
+                ("VolumeIdleTime", []),
+                ("BurstBalance", ["gp2", "st1", "sc1"]),
+                    # Status checks
+                ("VolumeStatus", []),
+                ("IOPerformance", ["io1"]),
+            ]:
+                if volume_types and volume_type not in volume_types:
+                    continue
+                metrics.append({
+                    'Id': "%s_%s" % (metric_name.lower(), idx),
+                    'Label': volume_name,
+                    'MetricStat': {
+                        'Metric': {
+                            'Namespace': 'AWS/EBS',
+                            'MetricName': metric_name,
+                            'Dimensions': [{
+                                'Name': "VolumeID",
+                                'Value': volume_name,
+                            }]
+                        },
+                        'Period': self.period,
+                        'Stat': 'Average',
+                    },
+                })
+                idx += 1
+        return metrics
+
+    def _extract_content_from(self, raw_result):
+        try:
+            return raw_result['MetricDataResults']
+        except KeyError, e:
+            logging.info("%s: KeyError %s ", self.name, e)
+            return []
+
+    def _format_content(self, content):
+        content_by_piggyback_hosts = {}
+        for row in content:
+            content_by_piggyback_hosts.setdefault(row['Label'], []).append(row)
+        return [
+            AWSSectionResult(piggyback_hostname, rows)
+            for piggyback_hostname, rows in content_by_piggyback_hosts.iteritems()
+        ]
+
+
 #   ---sections handler-----------------------------------------------------
 
 
@@ -585,6 +726,7 @@ class AWSSections(object):
         ec2_summary_distributor = ResultDistributor()
         s3_buckets_distributor = ResultDistributor()
         elb_summary_distributor = ResultDistributor()
+        ebs_summary_distributor = ResultDistributor()
 
         #---sections--------------------------------------------------------
         ec2_summary = EC2Summary(ec2_client, ec2_summary_distributor)
@@ -598,23 +740,32 @@ class AWSSections(object):
         elb_health = ELBHealth(elb_client)
         elb = ELB(cloudwatch_client)
 
+        ebs_summary = EBSSummary(ec2_client, ebs_summary_distributor)
+        ebs_health = EBSHealth(ec2_client)
+        ebs = EBS(cloudwatch_client)
+
         #---distributors registry-------------------------------------------
         ec2_summary_distributor.add(ec2)
         s3_buckets_distributor.add(s3)
         s3_buckets_distributor.add(s3_objects)
         elb_summary_distributor.add(elb_health)
         elb_summary_distributor.add(elb)
+        ebs_summary_distributor.add(ebs_health)
+        ebs_summary_distributor.add(ebs)
 
         #---section registry------------------------------------------------
         self._sections.append(ec2_summary)
         self._sections.append(s3_buckets)
         self._sections.append(elb_summary)
+        self._sections.append(ebs_summary)
 
         self._sections.append(ec2)
         self._sections.append(s3_objects)
         self._sections.append(s3)
         self._sections.append(elb_health)
         self._sections.append(elb)
+        self._sections.append(ebs_health)
+        self._sections.append(ebs)
 
     def _init_client(self, client_key):
         try:

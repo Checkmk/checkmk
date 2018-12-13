@@ -55,7 +55,7 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.exceptions import MKUserError
 
-from . import (
+from cmk.gui.plugins.wato import (
     declare_host_attribute,
     SNMPCredentials,
     IPMIParameters,

@@ -117,6 +117,7 @@ from cmk.gui.watolib import (
     folder_preserving_link,
     ContactGroupsAttribute,
     NagiosTextAttribute,
+    NagiosValueSpecAttribute,
     ValueSpecAttribute,
     ACTestCategories,
     ACTest,

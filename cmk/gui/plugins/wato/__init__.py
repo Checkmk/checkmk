@@ -81,6 +81,7 @@ from cmk.gui.plugins.wato.utils import (
     multifolder_host_rule_match_conditions,
     multisite_dir,
     NagiosTextAttribute,
+    NagiosValueSpecAttribute,
     PluginCommandLine,
     PredictiveLevels,
     config_variable_group_registry,

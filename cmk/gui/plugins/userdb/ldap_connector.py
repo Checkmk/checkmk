@@ -1162,6 +1162,7 @@ class LDAPUserConnector(UserConnector):
                 del users[user_id]  # remove the user
                 changes.append(_("LDAP [%s]: Removed user %s") % (connection_id, user_id))
 
+        has_changed_passwords = False
         profiles_to_synchronize = {}
         for user_id, ldap_user in ldap_users.items():
             mode_create, user = load_user(user_id)
@@ -1231,6 +1232,9 @@ class LDAPUserConnector(UserConnector):
                     del changed['serial']
                     pw_changed = True
 
+                if pw_changed:
+                    has_changed_passwords = True
+
                 # Synchronize new user profile to remote sites if needed
                 if pw_changed and not changed and config.has_wato_slave_sites():
                     profiles_to_synchronize[user_id] = user
@@ -1254,7 +1258,7 @@ class LDAPUserConnector(UserConnector):
         if changes and config.wato_enabled and not config.is_wato_slave_site():
             watolib.add_change("edit-users", "<br>\n".join(changes), add_user=False)
 
-        if changes:
+        if changes or has_changed_passwords:
             userdb.save_users(users)
         else:
             userdb.release_users_lock()

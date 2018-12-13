@@ -7512,7 +7512,7 @@ def load_user_scripts_from(adir):
                 try:
                     lines = file(path)
                     lines.next()
-                    line = lines.next().strip().decode("utf-8")
+                    line = lines.next().decode("utf-8").strip()
                     if line.startswith("#") and "encoding:" in line:
                         line = lines.next().strip()
                     if line.startswith("#"):

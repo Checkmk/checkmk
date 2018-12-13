@@ -58,7 +58,7 @@ class Perfometer(object):
         self._parse_perf_data()
 
     def _parse_perf_data(self):
-        perf_data_string = self._row["service_perf_data"].strip().decode("utf-8")
+        perf_data_string = self._row["service_perf_data"].decode("utf-8").strip()
         if not perf_data_string:
             return
 

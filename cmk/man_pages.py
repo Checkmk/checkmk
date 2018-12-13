@@ -30,6 +30,7 @@ used as base for the list of supported checks and catalogs of checks.
 These man pages are in a Check_MK specific format an not real
 Linux/Unix man pages"""
 
+import codecs
 import os
 import re
 import sys
@@ -267,9 +268,10 @@ def print_man_page_table():
 
 
 def _get_title_from_man_page(path):
-    for line in file(path):
-        if line.startswith("title:"):
-            return line.split(":", 1)[1].strip().decode("utf-8")
+    with codecs.open(path, encoding="utf-8") as fp:
+        for line in fp:
+            if line.startswith("title:"):
+                return line.split(":", 1)[1].strip()
     raise MKGeneralException(_("Invalid man page: Failed to get the title"))
 
 
@@ -407,16 +409,17 @@ def _run_dialog(args):
 
 
 def _create_fallback_man_page(name, path, error_message):
-    return {
-        "name": name,
-        "path": path,
-        "description": file(path).read().strip().decode("utf-8"),
-        "title": _("%s: Cannot parse man page: %s") % (name, error_message),
-        "agents": "",
-        "license": "unknown",
-        "distribution": "unknown",
-        "catalog": ["generic"],
-    }
+    with codecs.open(path, encoding="utf-8") as fp:
+        return {
+            "name": name,
+            "path": path,
+            "description": fp.read().strip(),
+            "title": _("%s: Cannot parse man page: %s") % (name, error_message),
+            "agents": "",
+            "license": "unknown",
+            "distribution": "unknown",
+            "catalog": ["generic"],
+        }
 
 
 def _parse_man_page_header(name, path):
@@ -426,24 +429,25 @@ def _parse_man_page_header(name, path):
     }
     key = None
     lineno = 0
-    for line in file(path):
-        line = line.rstrip().decode("utf-8")
-        lineno += 1
-        try:
-            if not line:
-                parsed[key] += "\n\n"
-            elif line[0] == ' ':
-                parsed[key] += "\n" + line.lstrip()
-            elif line[0] == '[':
-                break  # End of header
-            else:
-                key, rest = line.split(":", 1)
-                parsed[key] = rest.lstrip()
-        except Exception:
-            if cmk.debug.enabled():
-                raise
-            sys.stderr.write("ERROR: Invalid line %d in man page %s\n%s" % (lineno, path, line))
-            break
+    with codecs.open(path, encoding="utf-8") as fp:
+        for line in fp:
+            line = line.rstrip()
+            lineno += 1
+            try:
+                if not line:
+                    parsed[key] += "\n\n"
+                elif line[0] == ' ':
+                    parsed[key] += "\n" + line.lstrip()
+                elif line[0] == '[':
+                    break  # End of header
+                else:
+                    key, rest = line.split(":", 1)
+                    parsed[key] = rest.lstrip()
+            except Exception:
+                if cmk.debug.enabled():
+                    raise
+                sys.stderr.write("ERROR: Invalid line %d in man page %s\n%s" % (lineno, path, line))
+                break
 
     # verify mandatory keys. FIXME: This list may be incomplete
     for key in [
@@ -475,40 +479,41 @@ def load_man_page(name):
     man_page['header'] = current_section
     empty_line_count = 0
 
-    for lineno, line in enumerate(file(path)):
-        try:
-            line = line.decode("utf-8")
-            if line.startswith(' ') and line.strip() != "":  # continuation line
-                empty_line_count = 0
-                if current_variable:
-                    name, curval = current_section[-1]
-                    if curval.strip() == "":
-                        current_section[-1] = (name, line.rstrip()[1:])
+    with codecs.open(path, encoding="utf-8") as fp:
+        for lineno, line in enumerate(fp):
+            try:
+                if line.startswith(' ') and line.strip() != "":  # continuation line
+                    empty_line_count = 0
+                    if current_variable:
+                        name, curval = current_section[-1]
+                        if curval.strip() == "":
+                            current_section[-1] = (name, line.rstrip()[1:])
+                        else:
+                            current_section[-1] = (name, curval + "\n" + line.rstrip()[1:])
                     else:
-                        current_section[-1] = (name, curval + "\n" + line.rstrip()[1:])
+                        raise Exception
+                    continue
+
+                line = line.strip()
+                if line == "":
+                    empty_line_count += 1
+                    if empty_line_count == 1 and current_variable:
+                        name, curval = current_section[-1]
+                        current_section[-1] = (name, curval + "\n<br>\n")
+                    continue
+                empty_line_count = 0
+
+                if line[0] == '[' and line[-1] == ']':
+                    section_header = line[1:-1]
+                    current_section, current_variable = [], None
+                    man_page[section_header] = current_section
                 else:
-                    raise Exception
-                continue
+                    current_variable, restofline = line.split(':', 1)
+                    current_section.append((current_variable, restofline.lstrip()))
 
-            line = line.strip()
-            if line == "":
-                empty_line_count += 1
-                if empty_line_count == 1 and current_variable:
-                    name, curval = current_section[-1]
-                    current_section[-1] = (name, curval + "\n<br>\n")
-                continue
-            empty_line_count = 0
-
-            if line[0] == '[' and line[-1] == ']':
-                section_header = line[1:-1]
-                current_section, current_variable = [], None
-                man_page[section_header] = current_section
-            else:
-                current_variable, restofline = line.split(':', 1)
-                current_section.append((current_variable, restofline.lstrip()))
-
-        except Exception as e:
-            raise MKGeneralException("Syntax error in %s line %d (%s).\n" % (path, lineno + 1, e))
+            except Exception as e:
+                raise MKGeneralException(
+                    "Syntax error in %s line %d (%s).\n" % (path, lineno + 1, e))
 
     header = {}
     for key, value in man_page['header']:

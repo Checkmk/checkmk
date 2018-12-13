@@ -1568,65 +1568,33 @@ def configure_attributes(new,
     if without_attributes is None:
         without_attributes = []
 
-    # show attributes grouped by topics, in order of their
-    # appearance. If only one topic exists, do not show topics
-    # Make sure, that the topics "Basic settings" and host tags
-    # are always show first.
-    # TODO: Clean this up! Implement some explicit sorting
-    topics = [None]
-    if config.host_tag_groups():
-        topics.append(_("Address"))
-        topics.append(_("Data sources"))
-        topics.append(_("Host tags"))
-
-    # The remaining topics are shown in the order of the
-    # appearance of the attribute declarations:
-    for attr, topic in watolib.all_host_attributes():
-        if topic not in topics and attr.is_visible(for_what):
-            topics.append(topic)
-
     # Collect dependency mapping for attributes (attributes that are only
     # visible, if certain host tags are set).
     dependency_mapping_tags = {}
     dependency_mapping_roles = {}
     inherited_tags = {}
 
-    # Hack to sort the address family host tag attribute above the IPv4/v6 addresses
-    # TODO: Clean this up by implementing some sort of explicit sorting
-    def sort_host_attributes(a, b):
-        if a[0].name() == "tag_address_family":
-            return -1
-        return 0
-
     volatile_topics = []
     hide_attributes = []
-    for topic in topics:
+    for topic, title in watolib.get_sorted_host_attribute_topics(for_what):
         topic_is_volatile = True  # assume topic is sometimes hidden due to dependencies
-        if len(topics) > 1:
-            if topic is None:
-                title = _("Basic settings")
-            else:
-                title = _u(topic)
 
-            if topic == _("Host tags"):
-                topic_id = "wato_host_tags"
-            elif topic == _("Address"):
-                topic_id = "address"
-            elif topic == _("Data sources"):
-                topic_id = "data_sources"
-            else:
-                topic_id = None
+        if topic == _("Host tags"):
+            topic_id = "wato_host_tags"
+        elif topic == _("Address"):
+            topic_id = "address"
+        elif topic == _("Data sources"):
+            topic_id = "data_sources"
+        else:
+            topic_id = None
 
-            forms.header(
-                title,
-                isopen=topic in [None, _("Address"), _("Data sources")],
-                table_id=topic_id,
-            )
+        forms.header(
+            title,
+            isopen=topic in [None, _("Address"), _("Data sources")],
+            table_id=topic_id,
+        )
 
-        for attr, atopic in sorted(watolib.all_host_attributes(), cmp=sort_host_attributes):
-            if atopic != topic:
-                continue
-
+        for attr in watolib.get_sorted_host_attributes_by_topic(topic):
             attrname = attr.name()
             if attrname in without_attributes:
                 continue  # e.g. needed to skip ipaddress in CSV-Import
@@ -1854,9 +1822,8 @@ def configure_attributes(new,
             html.write_text(explanation)
             html.close_div()
 
-        if len(topics) > 1:
-            if topic_is_volatile:
-                volatile_topics.append((topic or _("Basic settings")).encode('utf-8'))
+        if topic_is_volatile:
+            volatile_topics.append((topic or _("Basic settings")).encode('utf-8'))
 
     forms.end()
     # Provide Javascript world with the tag dependency information

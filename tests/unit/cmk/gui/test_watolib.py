@@ -1664,3 +1664,74 @@ def test_register_check_parameters(monkeypatch):
     rulespec_names = [r.name for r in watolib.g_rulespecs.get_by_group("static/netblabla")]
     assert "static_checks:check_group_name" in rulespec_names
     assert len(rulespec_names) == 1
+
+
+@pytest.mark.parametrize("for_what", [
+    "host",
+    "cluster",
+    "folder",
+    "host_search",
+    "bulk",
+])
+def test_host_attribute_topics(for_what):
+    expected = [
+        (None, u"Basic settings"),
+        (u'Address', u'Address'),
+        (u'Data sources', u'Data sources'),
+        (u'Host tags', u'Host tags'),
+        (u'Management Board', u'Management Board'),
+    ]
+
+    if for_what == "folder":
+        expected = [
+            (None, u"Basic settings"),
+            (u'Address', u'Address'),
+            (u'Data sources', u'Data sources'),
+            (u'Host tags', u'Host tags'),
+            (u'Network Scan', u'Network Scan'),
+            (u'Management Board', u'Management Board'),
+        ]
+
+    assert watolib.get_sorted_host_attribute_topics(for_what=for_what) == expected
+
+
+@pytest.mark.parametrize("for_what", [
+    "host",
+    "cluster",
+    "folder",
+    "host_search",
+    "bulk",
+])
+def test_host_attributes(for_what):
+    topics = {
+        None: [
+            'contactgroups',
+            'alias',
+            'snmp_community',
+            'parents',
+            'site',
+            'locked_by',
+            'locked_attributes',
+        ],
+        "Address": [
+            'ipaddress',
+            'ipv6address',
+            'additional_ipv4addresses',
+            'additional_ipv6addresses',
+        ],
+        "Data sources": [],
+        "Management Board": [
+            'management_address',
+            'management_protocol',
+            'management_snmp_community',
+            'management_ipmi_credentials',
+        ],
+        "Network Scan": [
+            'network_scan',
+            'network_scan_result',
+        ],
+    }
+    for topic, _title in watolib.get_sorted_host_attribute_topics(for_what):
+        names = [a.name() for a in watolib.get_sorted_host_attributes_by_topic(topic)]
+        assert names == topics.get(topic,
+                                   []), "Expected attributes not specified for topic %r" % topic

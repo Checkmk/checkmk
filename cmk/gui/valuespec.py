@@ -1707,6 +1707,7 @@ class DropdownChoice(ValueSpec):
         self._no_preselect_error = kwargs.get("no_preselect_error", _("Please make a selection"))
         self._on_change = kwargs.get("on_change")
         self._read_only = kwargs.get("read_only", False)
+        self._encode_value = kwargs.get("encode_value", True)
 
     def choices(self):
         result = []
@@ -1758,12 +1759,12 @@ class DropdownChoice(ValueSpec):
             html.write(self._empty_text)
         elif len(options[0]) == 3:
             html.icon_dropdown(
-                varprefix, self._options_for_html(options), deflt=self.option_id(defval))
+                varprefix, self._options_for_html(options), deflt=self._option_for_html(defval))
         else:
             html.dropdown(
                 varprefix,
                 self._options_for_html(options),
-                deflt=self.option_id(defval),
+                deflt=self._option_for_html(defval),
                 onchange=self._on_change,
                 ordered=self._sorted,
                 read_only=self._read_only)
@@ -1799,12 +1800,17 @@ class DropdownChoice(ValueSpec):
 
     def _is_selected_option_from_html(self, varprefix, val):
         selected_value = html.var(varprefix)
-        return selected_value == self.option_id(val)
+        return selected_value == self._option_for_html(val)
+
+    def _option_for_html(self, value):
+        if self._encode_value:
+            return self.option_id(value)
+        return value
 
     def _options_for_html(self, orig_options):
         options = []
         for val, title in orig_options:
-            options.append((self.option_id(val), title))
+            options.append((self._option_for_html(val), title))
         return options
 
     @staticmethod

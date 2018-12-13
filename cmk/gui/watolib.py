@@ -3402,6 +3402,35 @@ class TextAttribute(Attribute):
         return host_attribute_matches(crit, value)
 
 
+# An attribute using the generic ValueSpec mechanism
+class ValueSpecAttribute(Attribute):
+    def __init__(self, name, vs):
+        Attribute.__init__(self, name)
+        self._valuespec = vs
+
+    def title(self):
+        return self._valuespec.title()
+
+    def help(self):
+        return self._valuespec.help()
+
+    def default_value(self):
+        return self._valuespec.default_value()
+
+    def paint(self, value, hostname):
+        return "", \
+            self._valuespec.value_to_text(value)
+
+    def render_input(self, varprefix, value):
+        self._valuespec.render_input(varprefix + self._name, value)
+
+    def from_html_vars(self, varprefix):
+        return self._valuespec.from_html_vars(varprefix + self._name)
+
+    def validate_input(self, value, varprefix):
+        self._valuespec.validate_value(value, varprefix + self._name)
+
+
 def host_attribute_matches(crit, value):
     if crit and crit[0] == "~":
         # insensitive infix regex match
@@ -3474,7 +3503,7 @@ class EnumAttribute(Attribute):
         return html.var(varprefix + "attr_" + self.name(), self.default_value())
 
 
-class HostTagAttribute(Attribute):
+class HostTagAttribute(ValueSpecAttribute):
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractproperty
@@ -3482,45 +3511,18 @@ class HostTagAttribute(Attribute):
         # type: () -> bool
         raise NotImplementedError()
 
-    @abc.abstractmethod
-    def _default_tag_value(self):
-        # type: () -> typing.Optional[str]
-        raise NotImplementedError()
-
-    def __init__(self, tag_id, title, tag_list):
+    def __init__(self, valuespec, tag_id, tag_list):
         self._taglist = tag_list
-        super(HostTagAttribute, self).__init__(
-            name="tag_" + tag_id,
-            title=title,
-            help_txt="",
-            default_value=self._default_tag_value(),
-        )
+        super(HostTagAttribute, self).__init__(name="tag_" + tag_id, vs=valuespec)
 
     @property
     def is_tag_attribute(self):
         return True
 
-    def _get_tag_value_and_choices(self, varname, value):
-        if value is None:
-            value = html.var(varname, "")  # "" is important for tag groups with an empty tag entry
+    def _get_tag_choices(self, tag_list):
+        return [(e[0], _u(e[1])) for e in tag_list]
 
-        # Tag groups with just one entry are being displayed
-        # as checkboxes
-        choices = []
-        for e in self._taglist:
-            tagvalue = e[0]
-            if not tagvalue:  # convert "None" to ""
-                tagvalue = ""
-            if len(e) >= 3:  # have secondary tags
-                secondary_tags = e[2]
-            else:
-                secondary_tags = []
-            choices.append(("|".join([tagvalue] + secondary_tags), e[1] and _u(e[1]) or ''))
-            if value != "" and value == tagvalue and secondary_tags:
-                value = value + "|" + "|".join(secondary_tags)
-
-        return value, choices
-
+    # TODO: Can we move this to some other place?
     def get_tag_value(self, tags):
         """Special function for computing the setting of a specific
         tag group from the total list of tags of a host"""
@@ -3529,6 +3531,7 @@ class HostTagAttribute(Attribute):
                 return entry[0]
         return None
 
+    # TODO: Can we move this to some other place?
     def get_tag_list(self, value):
         """Return list of host tags to set (handles secondary tags)"""
         for entry in self._taglist:
@@ -3546,8 +3549,15 @@ class HostTagAttribute(Attribute):
 class HostTagListAttribute(HostTagAttribute):
     """A selection dropdown for a host tag"""
 
-    def _default_tag_value(self):
-        return self._taglist[0][0]
+    def __init__(self, tag_id, title, tag_list):
+        vs = DropdownChoice(
+            title=title,
+            choices=self._get_tag_choices(tag_list),
+            default_value=tag_list[0][0],
+            on_change="wato_fix_visibility();",
+            encode_value=False,
+        )
+        super(HostTagListAttribute, self).__init__(vs, tag_id, tag_list)
 
     @property
     def is_checkbox_tag(self):
@@ -3557,92 +3567,31 @@ class HostTagListAttribute(HostTagAttribute):
     def is_tag_attribute(self):
         return True
 
-    def paint(self, value, hostname):
-        for entry in self._taglist:
-            if value == entry[0]:
-                return "", entry[1] and _u(entry[1]) or ''
-        return "", ""
-
-    def render_input(self, varprefix, value):
-        varname = varprefix + "attr_" + self.name()
-        value, choices = self._get_tag_value_and_choices(varname, value)
-        html.dropdown(varname, choices, value, onchange="wato_fix_visibility();")
-
-    def from_html_vars(self, varprefix):
-        varname = varprefix + "attr_" + self.name()
-
-        # strip of secondary tags
-        value = html.var(varname).split("|")[0]
-        if not value:
-            value = None
-        return value
-
 
 class HostTagCheckboxAttribute(HostTagAttribute):
     """A checkbox for a host tag group"""
 
-    def _default_tag_value(self):
-        return None
+    def __init__(self, tag_id, title, tag_list):
+        vs = Checkbox(
+            title=title,
+            label=_u(tag_list[0][1]),
+            true_label=title,
+            false_label="%s %s" % (_("Not"), title),
+            onclick="wato_fix_visibility();",
+        )
+        super(HostTagCheckboxAttribute, self).__init__(vs, tag_id, tag_list)
 
     @property
     def is_checkbox_tag(self):
         return True
 
-    def paint(self, value, hostname):
-        title = self._taglist[0][1]
-        if title:
-            title = _u(title)
-        if value:
-            return "", title
-        return "", "%s %s" % (_("Not"), title)
-
     def render_input(self, varprefix, value):
-        varname = varprefix + "attr_" + self.name()
-
-        value, choices = self._get_tag_value_and_choices(varname, value)
-
-        html.checkbox(
-            varname,
-            value != "",
-            label=choices[0][1],
-            onclick='wato_fix_visibility();',
-            tags=choices[0][0])
+        super(HostTagCheckboxAttribute, self).render_input(varprefix, bool(value))
 
     def from_html_vars(self, varprefix):
-        varname = varprefix + "attr_" + self.name()
-        if self.is_checkbox_tag:
-            if html.get_checkbox(varname):
-                return self._taglist[0][0]
-            return None
-
-
-# An attribute using the generic ValueSpec mechanism
-class ValueSpecAttribute(Attribute):
-    def __init__(self, name, vs):
-        Attribute.__init__(self, name)
-        self._valuespec = vs
-
-    def title(self):
-        return self._valuespec.title()
-
-    def help(self):
-        return self._valuespec.help()
-
-    def default_value(self):
-        return self._valuespec.default_value()
-
-    def paint(self, value, hostname):
-        return "", \
-            self._valuespec.value_to_text(value)
-
-    def render_input(self, varprefix, value):
-        self._valuespec.render_input(varprefix + self._name, value)
-
-    def from_html_vars(self, varprefix):
-        return self._valuespec.from_html_vars(varprefix + self._name)
-
-    def validate_input(self, value, varprefix):
-        self._valuespec.validate_value(value, varprefix + self._name)
+        if super(HostTagCheckboxAttribute, self).from_html_vars(varprefix):
+            return self._taglist[0][0]
+        return None
 
 
 class NagiosValueSpecAttribute(ValueSpecAttribute):

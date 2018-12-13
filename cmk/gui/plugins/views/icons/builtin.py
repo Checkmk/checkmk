@@ -326,7 +326,7 @@ def pnp_graph_icon_link(row, what):
     if not metrics.cmk_graphs_possible(row["site"]):
         return pnp_url(row, what)
 
-    import cmk.gui.cee.plugins.views.graphs
+    import cmk.gui.cee.plugins.views.graphs  # pylint: disable=redefined-outer-name
     return cmk.gui.cee.plugins.views.graphs.cmk_graph_url(row, what)
 
 

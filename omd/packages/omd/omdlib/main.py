@@ -715,10 +715,10 @@ def set_admin_password(site, pw):
     file("%s/etc/htpasswd" % site.dir, "w").write("cmkadmin:%s\n" % hash_password(pw))
 
 
-def file_owner_verify(path, user_id, group_id):
+def file_owner_verify(path, uid, gid):
     try:
         s = os.stat(path)
-        if s.st_uid != user_id or s.st_gid != group_id:
+        if s.st_uid != uid or s.st_gid != gid:
             return False
     except:
         return False
@@ -1745,7 +1745,7 @@ def call_init_scripts(site, command, daemon=None, exclude_daemons=None):
     os.chdir(site.dir)
 
     if daemon:
-        ok = call_init_script("%s/etc/init.d/%s" % (site.dir, daemon), command)
+        success = call_init_script("%s/etc/init.d/%s" % (site.dir, daemon), command)
 
     else:
         # Call stop scripts in reverse order. If daemon is set,
@@ -1753,16 +1753,16 @@ def call_init_scripts(site, command, daemon=None, exclude_daemons=None):
         rc_dir, scripts = init_scripts(site.name)
         if command == "stop":
             scripts.reverse()
-        ok = True
+        success = True
 
         for script in scripts:
             if exclude_daemons and script in exclude_daemons:
                 continue
 
             if not call_init_script("%s/%s" % (rc_dir, script), command):
-                ok = False
+                success = False
 
-    if ok:
+    if success:
         return 0
     return 2
 
@@ -2496,10 +2496,10 @@ def main_setversion(site, args, options=None):
         if use_update_alternatives():
             versions = [('auto', 'Auto (Update-Alternatives)')] + versions
 
-        ok, version = dialog_menu("Choose new default",
-                                  "Please choose the version to make the new default", versions,
-                                  None, "Make default", "Cancel")
-        if not ok:
+        success, version = dialog_menu("Choose new default",
+                                       "Please choose the version to make the new default",
+                                       versions, None, "Make default", "Cancel")
+        if not success:
             bail_out("Aborted.")
     else:
         version = args[0]
@@ -3178,11 +3178,11 @@ def main_update(site, args, options=None):
         elif len(possible_versions) == 1:
             to_version = possible_versions[0]
         else:
-            ok, to_version = dialog_menu(
+            success, to_version = dialog_menu(
                 "Choose target version", "Please choose the version this site should be updated to",
                 [(v, "Version %s" % v) for v in possible_versions], possible_versions[0],
                 "Update now", "Cancel")
-            if not ok:
+            if not success:
                 bail_out("Aborted.")
         exec_other_omd(site, to_version, "update")
 

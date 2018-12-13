@@ -205,7 +205,8 @@ def page_clear():
         html.reload_sidebar()
 
         if config.user.authorized_login_sites():
-            import cmk.gui.wato.user_profile
+            # This local import is needed for the moment
+            import cmk.gui.wato.user_profile  # pylint: disable=redefined-outer-name
             cmk.gui.wato.user_profile.user_profile_async_replication_page()
             return
 

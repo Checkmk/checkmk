@@ -825,7 +825,7 @@ class Overridable(Base):
         def has_reporting():
             try:
                 # The suppression below is OK, we just want to check if the module is there.
-                import cmk.gui.cee.reporting  # pylint: disable=unused-variable
+                import cmk.gui.cee.reporting  # pylint: disable=unused-variable,redefined-outer-name
                 return True
             except ImportError:
                 return False
@@ -1229,8 +1229,8 @@ class OverridableContainer(Overridable, Container):
         element_type = html.var("element_type")
         create_info = json.loads(html.var("create_info"))
 
-        page_type = page_types[page_type_name]
-        target_page, need_sidebar_reload = page_type.add_element_via_popup(
+        page_ty = page_types[page_type_name]
+        target_page, need_sidebar_reload = page_ty.add_element_via_popup(
             page_name, element_type, create_info)
         # Redirect user to tha page this displays the thing we just added to
         if target_page:
@@ -1275,11 +1275,11 @@ class OverridableContainer(Overridable, Container):
 page_types = {}
 
 
-def declare(page_type):
-    page_type.declare_overriding_permissions()
-    page_types[page_type.type_name()] = page_type
+def declare(page_ty):
+    page_ty.declare_overriding_permissions()
+    page_types[page_ty.type_name()] = page_ty
 
-    for path, page_func in page_type.page_handlers().items():
+    for path, page_func in page_ty.page_handlers().items():
         cmk.gui.pages.register_page_handler(path, page_func)
 
 
@@ -1299,6 +1299,6 @@ def all_page_types():
 
 
 def render_addto_popup(added_type):
-    for page_type in page_types.values():
-        if issubclass(page_type, Container):
-            page_type.render_addto_popup(added_type)
+    for page_ty in page_types.values():
+        if issubclass(page_ty, Container):
+            page_ty.render_addto_popup(added_type)

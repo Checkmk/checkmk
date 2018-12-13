@@ -166,7 +166,7 @@ def save(what, visuals, user_id=None):
     for (owner_id, name), visual in visuals.items():
         if user_id == owner_id:
             uservisuals[name] = visual
-    config.save_user_file('user_' + what, uservisuals, user=user_id)
+    config.save_user_file('user_' + what, uservisuals, user_id=user_id)
 
 
 # FIXME: Currently all user visual files of this type are locked. We could optimize
@@ -1023,11 +1023,11 @@ def filters_allowed_for_info(info):
     return allowed
 
 
-def filters_allowed_for_infos(infos):
+def filters_allowed_for_infos(info_list):
     # type: (List[str]) -> Dict[str, Type[Filter]]
     """Same as filters_allowed_for_info() but for multiple infos"""
     filters = {}
-    for info in infos:
+    for info in info_list:
         filters.update(filters_allowed_for_info(info))
     return filters
 
@@ -1195,8 +1195,8 @@ def get_filter_headers(datasource, context):
 # filter is selected. The user may select a filter to be activated, then the
 # filter is rendered and the user can provide a default value.
 class VisualFilterList(ListOfMultiple):
-    def __init__(self, infos, **kwargs):
-        self._infos = infos
+    def __init__(self, info_list, **kwargs):
+        self._infos = info_list
 
         ignore = kwargs.get("ignore", set())
 
@@ -1444,10 +1444,10 @@ def collect_context_links_of(visual_type_name, this_visual, active_filter_vars, 
     if load_func_name not in thing_module.__dict__:
         return context_links  # in case of exception in "reporting", the load function might be missing
     thing_module.__dict__['load_%s' % visual_type_name]()
-    available = thing_module.__dict__['permitted_%s' % visual_type_name]()
+    available_visuals = thing_module.__dict__['permitted_%s' % visual_type_name]()
 
     # sort buttons somehow
-    visuals = available.values()
+    visuals = available_visuals.values()
     visuals.sort(cmp=lambda b, a: cmp(a.get('icon'), b.get('icon')))
 
     for visual in visuals:

@@ -35,7 +35,7 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import MKGeneralException
 
-from . import (
+from cmk.gui.plugins.views import (
     painter_options,
     is_stale,
     row_id,
@@ -345,7 +345,7 @@ def calculate_view_grouping_of_services(rows, row_group_cells):
     current_group = None
     group_id = None
     last_row_group = None
-    for index, (row_id, row) in enumerate(rows[:]):
+    for index, (rid, row) in enumerate(rows[:]):
         group_spec = try_to_match_group(row)
         if not group_spec:
             current_group = None
@@ -356,14 +356,14 @@ def calculate_view_grouping_of_services(rows, row_group_cells):
         if row_group_cells:
             this_row_group = group_value(row, row_group_cells)
             if this_row_group != last_row_group:
-                group_id = row_id
+                group_id = rid
                 last_row_group = this_row_group
 
         if current_group is None:
-            group_id = row_id
+            group_id = rid
 
         elif current_group != group_spec:
-            group_id = row_id
+            group_id = rid
 
         groups.setdefault(group_id, (group_spec, []))
 
@@ -379,7 +379,7 @@ def calculate_view_grouping_of_services(rows, row_group_cells):
                 continue
 
         current_group = group_spec
-        groups[group_id][1].append(row_id)
+        groups[group_id][1].append(rid)
 
     # Now create the final structure as described above
     groupings = {}
@@ -792,11 +792,11 @@ def render_matrix(rows, view, group_cells, cells, num_columns, _ignore_show_chec
             html.close_tr()
 
         # Now for each unique service^H^H^H^H^H^H ID column paint one row
-        for row_id in unique_row_ids:
+        for rid in unique_row_ids:
             # Omit rows where all cells have the same values
             if painter_options.get("matrix_omit_uniform"):
                 at_least_one_different = False
-                for counts in value_counts[row_id].values():
+                for counts in value_counts[rid].values():
                     if len(counts) > 1:
                         at_least_one_different = True
                         break
@@ -805,7 +805,7 @@ def render_matrix(rows, view, group_cells, cells, num_columns, _ignore_show_chec
 
             odd = "even" if odd == "odd" else "odd"
             html.open_tr(class_="data %s0" % odd)
-            tdclass, content = cells[0].render(matrix_cells[row_id].values()[0])
+            tdclass, content = cells[0].render(matrix_cells[rid].values()[0])
             html.open_td(class_=["left", tdclass])
             html.write(content)
             html.close_td()
@@ -813,7 +813,7 @@ def render_matrix(rows, view, group_cells, cells, num_columns, _ignore_show_chec
             # Now go through the groups and paint the rest of the
             # columns
             for group_id, group_row in groups:
-                cell_row = matrix_cells[row_id].get(group_id)
+                cell_row = matrix_cells[rid].get(group_id)
                 if cell_row is None:
                     html.td('')
                 else:
@@ -825,7 +825,7 @@ def render_matrix(rows, view, group_cells, cells, num_columns, _ignore_show_chec
                         tdclass, content = cell.render(cell_row)
 
                         gv = group_value(cell_row, [cell])
-                        majority_value = row_majorities[row_id].get(cell_nr, None)
+                        majority_value = row_majorities[rid].get(cell_nr, None)
                         if majority_value is not None and majority_value != gv:
                             tdclass += " minority"
 
@@ -860,11 +860,11 @@ def csv_export_matrix(rows, view, group_cells, cells):
                 _tdclass, content = cell.render(group_row)
                 table.cell("", content)
 
-        for row_id in unique_row_ids:
+        for rid in unique_row_ids:
             # Omit rows where all cells have the same values
             if painter_options.get("matrix_omit_uniform"):
                 at_least_one_different = False
-                for counts in value_counts[row_id].values():
+                for counts in value_counts[rid].values():
                     if len(counts) > 1:
                         at_least_one_different = True
                         break
@@ -872,12 +872,12 @@ def csv_export_matrix(rows, view, group_cells, cells):
                     continue
 
             table.row()
-            _tdclass, content = cells[0].render(matrix_cells[row_id].values()[0])
+            _tdclass, content = cells[0].render(matrix_cells[rid].values()[0])
             table.cell("", content)
 
             for group_id, group_row in groups:
                 table.cell("")
-                cell_row = matrix_cells[row_id].get(group_id)
+                cell_row = matrix_cells[rid].get(group_id)
                 if cell_row is not None:
                     for cell_nr, cell in enumerate(cells[1:]):
                         _tdclass, content = cell.render(cell_row)
@@ -896,21 +896,21 @@ def matrix_find_majorities(rows, cells, for_header=False):
 
     for row in rows:
         if for_header:
-            row_id = None
+            rid = None
         else:
-            row_id = tuple(group_value(row, [cells[0]]))
+            rid = tuple(group_value(row, [cells[0]]))
 
         for cell_nr, cell in enumerate(cells[1:]):
             value = group_value(row, [cell])
-            row_entry = counts.setdefault(row_id, {})
+            row_entry = counts.setdefault(rid, {})
             cell_entry = row_entry.setdefault(cell_nr, {})
             cell_entry.setdefault(value, 0)
             cell_entry[value] += 1
 
     # Now find majorities for each row
     majorities = {}  # row_id -> cell_nr -> majority value
-    for row_id, row_entry in counts.items():
-        maj_entry = majorities.setdefault(row_id, {})
+    for rid, row_entry in counts.items():
+        maj_entry = majorities.setdefault(rid, {})
         for cell_nr, cell_entry in row_entry.items():
             maj_value = None
             max_non_unique = 0  # maximum count, but maybe non unique
@@ -962,11 +962,11 @@ def create_matrices(rows, group_cells, cells, num_columns):
         # Now the rule is that the *first* cell (usually the service
         # description) will define the left legend of the matrix. It defines
         # the set of possible rows.
-        row_id = group_value(row, [cells[0]])
-        if row_id not in matrix_cells:
-            unique_row_ids.append(row_id)
-            matrix_cells[row_id] = {}
-        matrix_cells[row_id][group_id] = row
+        rid = group_value(row, [cells[0]])
+        if rid not in matrix_cells:
+            unique_row_ids.append(rid)
+            matrix_cells[rid] = {}
+        matrix_cells[rid][group_id] = row
 
     if col_num:
         yield (groups, unique_row_ids, matrix_cells)

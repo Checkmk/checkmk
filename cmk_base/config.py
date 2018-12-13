@@ -101,9 +101,9 @@ def _add_check_variables_to_default_config():
     default_config.__dict__.update(get_check_variable_defaults())
 
 
-def _clear_check_variables_from_default_config(check_variable_names):
+def _clear_check_variables_from_default_config(variable_names):
     """Remove previously registered check variables from the config module"""
-    for varname in check_variable_names:
+    for varname in variable_names:
         try:
             delattr(default_config, varname)
         except AttributeError:
@@ -463,17 +463,17 @@ class PackedConfig(object):
         active_hosts = all_active_hosts()
         active_clusters = all_active_clusters()
 
-        def filter_all_hosts(all_hosts):
+        def filter_all_hosts(all_hosts_orig):
             all_hosts_red = []
-            for host_entry in all_hosts:
+            for host_entry in all_hosts_orig:
                 hostname = host_entry.split("|", 1)[0]
                 if hostname in active_hosts:
                     all_hosts_red.append(host_entry)
             return all_hosts_red
 
-        def filter_clusters(clusters):
+        def filter_clusters(clusters_orig):
             clusters_red = {}
-            for cluster_entry, cluster_nodes in clusters.items():
+            for cluster_entry, cluster_nodes in clusters_orig.items():
                 clustername = cluster_entry.split("|", 1)[0]
                 if clustername in active_clusters:
                     clusters_red[cluster_entry] = cluster_nodes
@@ -1014,9 +1014,9 @@ def agent_target_version(hostname):
 #
 # Explicit custom variables
 #
-def get_explicit_service_custom_variables(hostname, service_description):
+def get_explicit_service_custom_variables(hostname, description):
     try:
-        return explicit_service_custom_variables[(hostname, service_description)]
+        return explicit_service_custom_variables[(hostname, description)]
     except KeyError:
         return {}
 
@@ -1446,11 +1446,11 @@ def get_final_service_description(hostname, description):
     return new_description
 
 
-def service_ignored(hostname, check_plugin_name, service_description):
+def service_ignored(hostname, check_plugin_name, description):
     if check_plugin_name and check_plugin_name in ignored_checktypes:
         return True
-    if service_description is not None \
-       and in_boolean_serviceconf_list(hostname, service_description, ignored_services):
+    if description is not None \
+       and in_boolean_serviceconf_list(hostname, description, ignored_services):
         return True
     if check_plugin_name and _checktype_ignored_for_host(hostname, check_plugin_name):
         return True
@@ -1533,7 +1533,7 @@ def get_service_translations(hostname):
     return translations
 
 
-def prepare_check_command(command_spec, hostname, service_description):
+def prepare_check_command(command_spec, hostname, description):
     """Prepares a check command for execution by Check_MK.
 
     This function either accepts a string or a list of arguments as
@@ -1563,9 +1563,8 @@ def prepare_check_command(command_spec, hostname, service_description):
             try:
                 password = stored_passwords[pw_ident]["password"]
             except KeyError:
-                if hostname and service_description:
-                    descr = " used by service \"%s\" on host \"%s\"" % (service_description,
-                                                                        hostname)
+                if hostname and description:
+                    descr = " used by service \"%s\" on host \"%s\"" % (description, hostname)
                 elif hostname:
                     descr = " used by host host \"%s\"" % (hostname)
                 else:
@@ -1687,7 +1686,7 @@ def _convert_service_ruleset(ruleset, with_foreign_hosts):
 
 
 # Compute outcome of a service rule set that just say yes/no
-def in_boolean_serviceconf_list(hostname, service_description, ruleset):
+def in_boolean_serviceconf_list(hostname, descr, ruleset):
     # When the requested host is part of the local sites configuration,
     # then use only the sites hosts for processing the rules
     with_foreign_hosts = hostname not in all_active_hosts()
@@ -1702,11 +1701,11 @@ def in_boolean_serviceconf_list(hostname, service_description, ruleset):
     cache = cmk_base.config_cache.get_dict("extraconf_servicelist")
     for negate, hosts, service_matchers in ruleset:
         if hostname in hosts:
-            cache_id = service_matchers, service_description
+            cache_id = service_matchers, descr
             try:
                 match = cache[cache_id]
             except KeyError:
-                match = _in_servicematcher_list(service_matchers, service_description)
+                match = _in_servicematcher_list(service_matchers, descr)
                 cache[cache_id] = match
 
             if match:
@@ -2598,7 +2597,7 @@ def convert_check_info():
 
         if not isinstance(info, dict):
             # Convert check declaration from old style to new API
-            check_function, service_description, has_perfdata, inventory_function = info
+            check_function, descr, has_perfdata, inventory_function = info
             if inventory_function == check_api_utils.no_discovery_possible:
                 inventory_function = None
 
@@ -2607,7 +2606,7 @@ def convert_check_info():
 
             check_info[check_plugin_name] = {
                 "check_function": check_function,
-                "service_description": service_description,
+                "service_description": descr,
                 "has_perfdata": bool(has_perfdata),
                 "inventory_function": inventory_function,
                 # Insert check name as group if no group is being defined
@@ -2676,15 +2675,15 @@ def convert_check_info():
 def verify_checkgroup_members():
     groups = checks_by_checkgroup()
 
-    for group_name, checks in groups.items():
+    for group_name, check_entries in groups.items():
         with_item, without_item = [], []
-        for check_plugin_name, check in checks:
+        for check_plugin_name, check_info_entry in check_entries:
             # Trying to detect whether or not the check has an item. But this mechanism is not
             # 100% reliable since Check_MK appends an item to the service_description when "%s"
             # is not in the checks service_description template.
             # Maybe we need to define a new rule which enforces the developer to use the %s in
             # the service_description. At least for grouped checks.
-            if "%s" in check["service_description"]:
+            if "%s" in check_info_entry["service_description"]:
                 with_item.append(check_plugin_name)
             else:
                 without_item.append(check_plugin_name)

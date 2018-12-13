@@ -58,7 +58,7 @@ class HostMatrixSnapin(CustomizableSidebarSnapin):
         return [
             ("context", visuals.VisualFilterList(
                 title=_("Filters"),
-                infos=["host"],
+                info_list=["host"],
             )),
         ]
 

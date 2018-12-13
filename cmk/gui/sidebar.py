@@ -271,10 +271,10 @@ class UserSidebarConfig(object):
         if self._user.may("general.configure_sidebar"):
             self._user.save_file("sidebar", self._to_config())
 
-    def _from_config(self, config):
+    def _from_config(self, cfg):
         return {
-            "fold": config["fold"],
-            "snapins": [UserSidebarSnapin.from_config(e) for e in config["snapins"]]
+            "fold": cfg["fold"],
+            "snapins": [UserSidebarSnapin.from_config(e) for e in cfg["snapins"]]
         }
 
     def _to_config(self):
@@ -294,11 +294,11 @@ class UserSidebarSnapin(object):
     """An instance of a snapin that is configured in the users sidebar"""
 
     @staticmethod
-    def from_config(config):
+    def from_config(cfg):
         # type: (Dict[str, Type[cmk.gui.plugins.sidebar.SidebarSnapin]]) -> UserSidebarSnapin
         """ Construct a UserSidebarSnapin object from the persisted data structure"""
-        snapin_class = snapin_registry[config["snapin_type_id"]]
-        return UserSidebarSnapin(snapin_class, SnapinVisibility(config["visibility"]))
+        snapin_class = snapin_registry[cfg["snapin_type_id"]]
+        return UserSidebarSnapin(snapin_class, SnapinVisibility(cfg["visibility"]))
 
     @staticmethod
     def from_snapin_type_id(snapin_type_id):
@@ -859,6 +859,6 @@ def ajax_set_snapin_site():
     if site not in site_choices:
         raise MKUserError(None, _("Invalid site"))
 
-    sites = config.user.load_file("sidebar_sites", {}, lock=True)
-    sites[ident] = site
-    config.user.save_file("sidebar_sites", sites, unlock=True)
+    snapin_sites = config.user.load_file("sidebar_sites", {}, lock=True)
+    snapin_sites[ident] = site
+    config.user.save_file("sidebar_sites", snapin_sites, unlock=True)

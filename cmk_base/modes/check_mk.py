@@ -26,16 +26,42 @@
 
 import os
 import sys
+from typing import List  # pylint: disable=unused-import
 
 import cmk
 import cmk.tty as tty
 import cmk.paths
+import cmk.log
+import cmk.debug
 from cmk.exceptions import MKBailOut
 
+import cmk_base.data_sources as data_sources
 import cmk_base.console as console
 import cmk_base.config as config
+import cmk_base.discovery as discovery
+import cmk_base.inventory as inventory
+import cmk_base.inventory_plugins as inventory_plugins
+import cmk_base.check_api as check_api
+import cmk_base.piggyback as piggyback
+import cmk_base.snmp as snmp
+import cmk_base.ip_lookup as ip_lookup
+import cmk_base.profiling as profiling
+import cmk_base.core
+import cmk_base.data_sources.abstract
+import cmk_base.core_nagios
+import cmk_base.parent_scan
+import cmk_base.dump_host
+import cmk_base.donate
+import cmk_base.backup
+import cmk_base.packaging
+import cmk_base.localize
 
-from cmk_base.modes import modes, Mode, Option, keepalive_option
+from cmk_base.modes import (
+    modes,
+    Mode,
+    Option,
+    keepalive_option,
+)
 import cmk_base.check_utils
 from cmk_base.core_factory import create_core
 
@@ -63,8 +89,6 @@ _verbosity = 0
 def option_verbosity():
     global _verbosity
     _verbosity += 1
-
-    import cmk.log
     cmk.log.set_verbosity(verbosity=_verbosity)
 
 
@@ -80,7 +104,6 @@ _verbosity = 0
 
 
 def option_cache():
-    import cmk_base.data_sources as data_sources
     data_sources.abstract.DataSource.set_may_use_cache_file()
     data_sources.abstract.DataSource.set_use_outdated_cache_file()
 
@@ -96,7 +119,6 @@ modes.register_general_option(
 
 
 def option_no_cache():
-    import cmk_base.data_sources.abstract
     cmk_base.data_sources.abstract.DataSource.disable_data_source_cache()
 
 
@@ -109,7 +131,6 @@ modes.register_general_option(
 
 
 def option_no_tcp():
-    import cmk_base.data_sources as data_sources
     data_sources.tcp.TCPDataSource.use_only_cache()
 
 
@@ -124,8 +145,6 @@ modes.register_general_option(
 
 
 def option_usewalk():
-    import cmk_base.snmp as snmp
-    import cmk_base.ip_lookup as ip_lookup
     snmp.enforce_use_stored_walks()
     ip_lookup.enforce_localhost()
 
@@ -139,7 +158,6 @@ modes.register_general_option(
 
 
 def option_debug():
-    import cmk.debug
     cmk.debug.enable()
 
 
@@ -152,7 +170,6 @@ modes.register_general_option(
 
 
 def option_profile():
-    import cmk_base.profiling as profiling
     profiling.enable()
 
 
@@ -165,7 +182,6 @@ modes.register_general_option(
 
 
 def option_fake_dns(a):
-    import cmk_base.ip_lookup as ip_lookup
     ip_lookup.enforce_fake_dns(a)
 
 
@@ -357,8 +373,6 @@ modes.register(
 
 
 def mode_dump_agent(hostname):
-    import cmk_base.data_sources as data_sources
-    import cmk_base.ip_lookup as ip_lookup
     try:
         if config.is_cluster(hostname):
             raise MKBailOut("Can not be used with cluster hosts")
@@ -417,7 +431,6 @@ modes.register(
 
 
 def mode_dump_hosts(hostlist):
-    import cmk_base.dump_host
     if not hostlist:
         hostlist = config.all_active_hosts()
 
@@ -552,7 +565,6 @@ modes.register(
 
 
 def mode_donate():
-    import cmk_base.donate
     cmk_base.donate.do_donation()
 
 
@@ -587,7 +599,6 @@ modes.register(
 
 
 def mode_backup(*args):
-    import cmk_base.backup
     cmk_base.backup.do_backup(*args)
 
 
@@ -606,7 +617,6 @@ modes.register(
 
 
 def mode_restore(*args):
-    import cmk_base.backup
     cmk_base.backup.do_restore(*args)
 
 
@@ -635,7 +645,6 @@ modes.register(
 
 
 def mode_packaging(*args):
-    import cmk_base.packaging
     cmk_base.packaging.do_packaging(*args)
 
 
@@ -668,7 +677,6 @@ modes.register(
 
 
 def mode_localize(*args):
-    import cmk_base.localize
     cmk_base.localize.do_localize(*args)
 
 
@@ -719,8 +727,7 @@ modes.register(
 
 
 def mode_update_dns_cache():
-    import cmk_base.ip_lookup
-    cmk_base.ip_lookup.update_dns_cache()
+    ip_lookup.update_dns_cache()
 
 
 modes.register(
@@ -765,7 +772,6 @@ modes.register(
 
 
 def mode_scan_parents(options, args):
-    import cmk_base.parent_scan
     config.load(exclude_parents_mk=True)
 
     if "procs" in options:
@@ -813,7 +819,6 @@ modes.register(
 
 
 def mode_snmptranslate(*args):
-    import cmk_base.snmp as snmp
     snmp.do_snmptranslate(*args)
 
 modes.register(Mode(
@@ -840,7 +845,8 @@ modes.register(Mode(
 #   |                               |_|                                    |
 #   '----------------------------------------------------------------------'
 
-_oids, _extra_oids = [], []
+_oids = []  # type: List[str]
+_extra_oids = []  # type: List[str]
 
 
 def mode_snmpwalk(options, args):
@@ -849,7 +855,6 @@ def mode_snmpwalk(options, args):
     if _extra_oids:
         options["extraoids"] = _extra_oids
 
-    import cmk_base.snmp as snmp
     snmp.do_snmpwalk(options, args)
 
 
@@ -902,7 +907,6 @@ modes.register(
 
 
 def mode_snmpget(*args):
-    import cmk_base.snmp as snmp
     snmp.do_snmpget(*args)
 
 
@@ -932,8 +936,6 @@ modes.register(
 
 
 def mode_flush(hosts):
-    import cmk_base.piggyback as piggyback
-    import cmk_base.discovery as discovery
 
     if not hosts:
         hosts = config.all_active_hosts()
@@ -1094,7 +1096,6 @@ modes.register(
 
 
 def mode_compile():
-    import cmk_base.core_nagios
     cmk_base.core_nagios.precompile_hostchecks()
 
 
@@ -1158,7 +1159,6 @@ modes.register(
 
 
 def mode_restart():
-    import cmk_base.core
     cmk_base.core.do_restart(create_core())
 
 
@@ -1182,7 +1182,6 @@ modes.register(
 
 
 def mode_reload():
-    import cmk_base.core
     cmk_base.core.do_reload(create_core())
 
 
@@ -1267,10 +1266,6 @@ modes.register(
 
 
 def mode_inventory(options, args):
-    import cmk_base.inventory as inventory
-    import cmk_base.data_sources as data_sources
-    import cmk_base.inventory_plugins as inventory_plugins
-    import cmk_base.check_api as check_api
     inventory_plugins.load_plugins(check_api.get_check_api_context, inventory.get_inventory_context)
 
     if args:
@@ -1323,9 +1318,6 @@ modes.register(
 
 
 def mode_inventory_as_check(options, hostname):
-    import cmk_base.inventory as inventory
-    import cmk_base.inventory_plugins as inventory_plugins
-    import cmk_base.check_api as check_api
     inventory_plugins.load_plugins(check_api.get_check_api_context, inventory.get_inventory_context)
 
     return inventory.do_inv_check(hostname, options)
@@ -1454,7 +1446,6 @@ modes.register(
 
 
 def mode_discover_marked_hosts():
-    import cmk_base.discovery as discovery
     discovery.discover_marked_hosts(create_core())
 
 
@@ -1483,7 +1474,6 @@ modes.register(
 
 
 def mode_check_discovery(hostname):
-    import cmk_base.discovery as discovery
     return discovery.check_discovery(hostname, ipaddress=None)
 
 
@@ -1514,9 +1504,6 @@ modes.register(
 
 
 def mode_discover(options, args):
-    import cmk_base.discovery as discovery
-    import cmk_base.data_sources as data_sources
-
     hostnames = modes.parse_hostname_list(args)
     if not hostnames:
         # In case of discovery without host restriction, use the cache file
@@ -1705,39 +1692,3 @@ modes.register(
     ))
 
 #.
-#   .--help----------------------------------------------------------------.
-#   |                         _          _                                 |
-#   |                        | |__   ___| |_ __                            |
-#   |                        | '_ \ / _ \ | '_ \                           |
-#   |                        | | | |  __/ | |_) |                          |
-#   |                        |_| |_|\___|_| .__/                           |
-#   |                                     |_|                              |
-#   '----------------------------------------------------------------------'
-
-
-def mode_help():
-    console.output("""WAYS TO CALL:
-%s
-
-OPTIONS:
-%s
-
-NOTES:
-%s
-
-""" % (
-        modes.short_help(),
-        modes.general_option_help(),
-        modes.long_help(),
-    ))
-
-
-modes.register(
-    Mode(
-        long_option="help",
-        short_option="h",
-        handler_function=mode_help,
-        short_help="Print this help",
-        needs_config=False,
-        needs_checks=False,
-    ))

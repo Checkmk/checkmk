@@ -172,21 +172,22 @@ def jqm_page_index(title, items):
 
 
 def jqm_page_index_topic_renderer(topic, items):
+    has_items_for_topic = any(i for i in items if i[0] == topic)
+    if not has_items_for_topic:
+        return
+
+    html.open_p()
+    html.write(topic)
+    html.close_p()
+    html.open_ul(**{"data-role": "listview", "data-inset": "true"})
     for top, href, title in items:
         if top == topic:
-            html.open_p()
-            html.write(topic)
-            html.close_p()
-            html.open_ul(**{"data-role": "listview", "data-inset": "true"})
-            for top, href, title in items:
-                if top == topic:
-                    html.open_li()
-                    html.open_a(href=href, **{"data-ajax": "false", "data-transition": "flip"})
-                    html.write(title)
-                    html.close_a()
-                    html.close_li()
-            html.close_ul()
-            return
+            html.open_li()
+            html.open_a(href=href, **{"data-ajax": "false", "data-transition": "flip"})
+            html.write(title)
+            html.close_a()
+            html.close_li()
+    html.close_ul()
 
 
 def jqm_page(title, content, foot, id_=None):

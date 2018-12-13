@@ -57,9 +57,9 @@ import sys
 import time
 
 # docs: http://www.python-ldap.org/doc/html/index.html
-import ldap
-import ldap.filter
-from ldap.controls import SimplePagedResultsControl
+import ldap  # type: ignore
+import ldap.filter  # type: ignore
+from ldap.controls import SimplePagedResultsControl  # type: ignore
 import six
 
 import cmk
@@ -96,7 +96,7 @@ import cmk.gui.sites as sites
 if cmk.is_managed_edition():
     import cmk.gui.cme.managed as managed
 else:
-    managed = None
+    managed = None  # type: ignore
 
 # LDAP attributes are case insensitive, we only use lower case!
 # Please note: This are only default values. The user might override this
@@ -163,42 +163,42 @@ class LDAPUserConnector(UserConnector):
     connection_suffixes = {}
 
     @classmethod
-    def transform_config(cls, config):
-        if not config:
-            return config
+    def transform_config(cls, cfg):
+        if not cfg:
+            return cfg
 
         # For a short time in git master the directory_type could be:
         # ('ad', {'discover_nearest_dc': True/False})
-        if isinstance(config["directory_type"], tuple) and config["directory_type"][0] == "ad" \
-           and "discover_nearest_dc" in config["directory_type"][1]:
-            auto_discover = config["directory_type"][1]["discover_nearest_dc"]
+        if isinstance(cfg["directory_type"], tuple) and cfg["directory_type"][0] == "ad" \
+           and "discover_nearest_dc" in cfg["directory_type"][1]:
+            auto_discover = cfg["directory_type"][1]["discover_nearest_dc"]
 
             if not auto_discover:
-                config["directory_type"] = "ad"
+                cfg["directory_type"] = "ad"
             else:
-                config["directory_type"] = (config["directory_type"][0], {
+                cfg["directory_type"] = (cfg["directory_type"][0], {
                     "connect_to": ("discover", {
-                        "domain": config["server"],
+                        "domain": cfg["server"],
                     }),
                 })
 
-        if not isinstance(config["directory_type"], tuple) and "server" in config:
+        if not isinstance(cfg["directory_type"], tuple) and "server" in cfg:
             # Old separate configuration of directory_type and server
             servers = {
-                "server": config["server"],
+                "server": cfg["server"],
             }
 
-            if "failover_servers" in config:
-                servers["failover_servers"] = config["failover_servers"]
+            if "failover_servers" in cfg:
+                servers["failover_servers"] = cfg["failover_servers"]
 
-            config["directory_type"] = (config["directory_type"], {
+            cfg["directory_type"] = (cfg["directory_type"], {
                 "connect_to": ("fixed_list", servers),
             })
 
-        return config
+        return cfg
 
-    def __init__(self, config):
-        super(LDAPUserConnector, self).__init__(self.transform_config(config))
+    def __init__(self, cfg):
+        super(LDAPUserConnector, self).__init__(self.transform_config(cfg))
 
         self._ldap_obj = None
         self._ldap_obj_config = None

@@ -981,7 +981,7 @@ def save_cached_profile(user_id, user, multisite_keys, non_contact_keys):
         if key in multisite_keys or key not in non_contact_keys:
             cache[key] = user[key]
 
-    config.save_user_file("cached_profile", cache, user=user_id)
+    config.save_user_file("cached_profile", cache, user_id=user_id)
 
 
 def load_cached_profile():

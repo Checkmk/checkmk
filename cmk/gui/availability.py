@@ -572,9 +572,9 @@ def get_outage_statistic_options(avoptions):
     # to the list of selected states.
     aggrs, states = avoptions.get("outage_statistics", ([], []))
     fixed_states = states[:]
-    for os, oh in [("ok", "up"), ("crit", "down"), ("unknown", "unreach")]:
-        if os in fixed_states:
-            fixed_states.append(oh)
+    for service_state, host_state in [("ok", "up"), ("crit", "down"), ("unknown", "unreach")]:
+        if service_state in fixed_states:
+            fixed_states.append(host_state)
     return aggrs, fixed_states
 
 
@@ -996,8 +996,8 @@ def pass_availability_filter(row, avoptions):
             ref_value = row["states"].get("crit", row["states"].get("down", 0))
         elif key == "non-ok":
             ref_value = 0.0
-            for key, value in row["states"].items():
-                if key not in ["ok", "up", "unmonitored"]:
+            for state_key, value in row["states"].items():
+                if state_key not in ["ok", "up", "unmonitored"]:
                     ref_value += value
         else:
             continue  # undefined key. Should never happen
@@ -1999,7 +1999,8 @@ def get_av_groups(availability_table, avoptions):
 # Sort according to host and service. First after site, then
 # host (natural sort), then service
 def cmp_av_entry(a, b):
-    import cmk.gui.plugins.views
+    # This local import currently needed
+    import cmk.gui.plugins.views  # pylint: disable=redefined-outer-name
     return utils.cmp_num_split(a["site"], b["site"]) or \
            utils.cmp_num_split(a["host"], b["host"]) or \
            cmp(cmk.gui.plugins.views.cmp_service_name_equiv(a["service"]),

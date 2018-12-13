@@ -251,7 +251,7 @@ class Table(object):
             # only use rows up to the limit plus the fixed rows
             rows = [rows[i] for i in range(num_rows_unlimited) if i < limit or rows[i][3]]
             # Display corrected number of rows
-            num_rows_unlimited -= len([row for row in rows if row[3]])
+            num_rows_unlimited -= len([r for r in rows if r[3]])
 
         # Render header
         self._write_table(rows, actions_enabled, actions_visible, search_term)
@@ -359,7 +359,7 @@ class Table(object):
             html.end_form()
             html.close_tr()
 
-        for nr, (row, css, state, _fixed, attrs) in enumerate(rows):
+        for nr, (row_spec, css, state, _fixed, attrs) in enumerate(rows):
 
             if not css and "class_" in attrs:
                 css = attrs.pop("class_")
@@ -373,7 +373,7 @@ class Table(object):
                     html.open_tr(class_="groupheader")
                     html.open_td(colspan=num_cols)
                     html.open_h3()
-                    html.write(row)
+                    html.write(row_spec)
                     html.close_h3()
                     html.close_td()
                     html.close_tr()
@@ -385,7 +385,7 @@ class Table(object):
 
             html.open_tr(
                 class_=["data", "%s%d" % (oddeven_name, state), css if css else None], **attrs)
-            for cell_content, css_classes, colspan in row:
+            for cell_content, css_classes, colspan in row_spec:
                 html.open_td(
                     class_=css_classes if css_classes else None,
                     colspan=colspan if colspan else None)
@@ -418,10 +418,11 @@ class Table(object):
                     [html.strip_tags(header) or ""
                      for (header, _css, _help, _sortable) in headers]) + "\n")
 
-        for row, _css, _state, _fixed, _attrs in rows:
+        for row_spec, _css, _state, _fixed, _attrs in rows:
             html.write(
                 csv_separator.join([
-                    html.strip_tags(cell_content) for cell_content, _css_classes, _colspan in row
+                    html.strip_tags(cell_content)
+                    for cell_content, _css_classes, _colspan in row_spec
                 ]))
             html.write("\n")
 
@@ -494,14 +495,14 @@ def _filter_rows(rows, search_term):
     filtered_rows = []
     match_regex = re.compile(search_term, re.IGNORECASE)
 
-    for row, css, state, fixed, attrs in rows:
+    for row_spec, css, state, fixed, attrs in rows:
         if state == "header" or fixed:
-            filtered_rows.append((row, css, state, fixed, attrs))
+            filtered_rows.append((row_spec, css, state, fixed, attrs))
             continue  # skip filtering of headers or fixed rows
 
-        for cell_content, _css_classes, _colspan in row:
+        for cell_content, _css_classes, _colspan in row_spec:
             if match_regex.search(cell_content):
-                filtered_rows.append((row, css, state, fixed, attrs))
+                filtered_rows.append((row_spec, css, state, fixed, attrs))
                 break  # skip other cells when matched
     return filtered_rows
 
@@ -510,10 +511,10 @@ def _sort_rows(rows, sort_col, sort_reverse):
 
     # remove and remind fixed rows, add to separate list
     fixed_rows = []
-    for index, row in enumerate(rows[:]):
-        if row[3] is True:
-            rows.remove(row)
-            fixed_rows.append((index, row))
+    for index, row_spec in enumerate(rows[:]):
+        if row_spec[3] is True:
+            rows.remove(row_spec)
+            fixed_rows.append((index, row_spec))
 
     # Then use natural sorting to sort the list. Note: due to a
     # change in the number of columns of a table in different software
@@ -530,7 +531,7 @@ def _sort_rows(rows, sort_col, sort_reverse):
 
     # Now re-add the removed "fixed" rows to the list again
     if fixed_rows:
-        for index, row in fixed_rows:
-            rows.insert(index, row)
+        for index, row_spec in fixed_rows:
+            rows.insert(index, row_spec)
 
     return rows

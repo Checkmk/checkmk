@@ -3896,6 +3896,42 @@ def collect_attributes(for_what, do_validate=True, varprefix=""):
     return host
 
 
+def get_sorted_host_attribute_topics(for_what):
+    # show attributes grouped by topics, in order of their
+    # appearance. If only one topic exists, do not show topics
+    # Make sure, that the topics "Basic settings" and host tags
+    # are always show first.
+    # TODO: Clean this up! Implement some explicit sorting
+    topics = [None]
+    if config.host_tag_groups():
+        topics.append(_("Address"))
+        topics.append(_("Data sources"))
+        topics.append(_("Host tags"))
+
+    # The remaining topics are shown in the order of the
+    # appearance of the attribute declarations:
+    for attr, topic in all_host_attributes():
+        if topic not in topics and attr.is_visible(for_what):
+            topics.append(topic)
+
+    return [(t, _("Basic settings") if t is None else _u(t)) for t in topics]
+
+
+def get_sorted_host_attributes_by_topic(topic):
+    # Hack to sort the address family host tag attribute above the IPv4/v6 addresses
+    # TODO: Clean this up by implementing some sort of explicit sorting
+    def sort_host_attributes(a, b):
+        if a[0].name() == "tag_address_family":
+            return -1
+        return 0
+
+    attributes = []
+    for attr, atopic in sorted(all_host_attributes(), cmp=sort_host_attributes):
+        if atopic == topic:
+            attributes.append(attr)
+    return attributes
+
+
 #.
 # Persistenz: Speicherung der Werte
 # - WATO speichert seine Variablen für main.mk in conf.d/wato/global.mk

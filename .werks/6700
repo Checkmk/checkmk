@@ -1,0 +1,11 @@
+Title: LDAP synchronization no longer syncs user profiles repeatedly to remote sites on password changes
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.5.0p10
+Date: 1544696760
+Class: fix
+
+LDAP password changes were not correctly applied to the master site.
+This could also trigger needless updates to the slave sites.

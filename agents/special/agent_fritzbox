@@ -195,7 +195,7 @@ def get_upnp_info(control, namespace, action):
 
 try:
     status = {}
-    for control, namespace, action in [
+    for _control, _namespace, _action in [
         ('WANIPConn1', 'urn:schemas-upnp-org:service:WANIPConnection:1', 'GetStatusInfo'),
         ('WANIPConn1', 'urn:schemas-upnp-org:service:WANIPConnection:1', 'GetExternalIPAddress'),
         ('WANCommonIFC1', 'urn:schemas-upnp-org:service:WANCommonInterfaceConfig:1',
@@ -205,7 +205,7 @@ try:
         ('WANDSLLinkC1', 'urn:schemas-upnp-org:service:WANDSLLinkConfig:1', 'GetDSLLinkInfo'),
     ]:
         try:
-            status.update(get_upnp_info(control, namespace, action))
+            status.update(get_upnp_info(_control, _namespace, _action))
         except:
             if opt_debug:
                 raise
@@ -213,8 +213,8 @@ try:
     sys.stdout.write('<<<fritz>>>\n')
     sys.stdout.write('VersionOS %s\n' % g_version)
     sys.stdout.write('VersionDevice %s\n' % g_device)
-    for key, value in status.items():
-        sys.stdout.write('%s %s\n' % (key, value))
+    for pair in status.items():
+        sys.stdout.write('%s %s\n' % pair)
 
 except:
     if opt_debug:

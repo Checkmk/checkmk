@@ -711,8 +711,8 @@ class ModeEditTimeperiod(WatoMode):
         if value in ["name", "alias", "timeperiod_name", "register", "use", "exclude"]:
             raise MKUserError(varprefix, _("<tt>%s</tt> is a reserved keyword."))
 
-        config = watolib.ConfigDomainOMD().default_globals()
-        if config["site_core"] == "cmc":
+        cfg = watolib.ConfigDomainOMD().default_globals()
+        if cfg["site_core"] == "cmc":
             try:
                 time.strptime(value, "%Y-%m-%d")
             except ValueError:

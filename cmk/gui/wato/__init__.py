@@ -854,7 +854,7 @@ def add_scanned_hosts_to_folder(folder, found):
     translation = network_scan_properties.get("translate_names", {})
 
     entries = []
-    for host_name, ipaddress in found:
+    for host_name, ipaddr in found:
         host_name = cmk.translations.translate_hostname(translation, host_name)
 
         attrs = {}
@@ -862,7 +862,7 @@ def add_scanned_hosts_to_folder(folder, found):
             attrs["tag_criticality"] = network_scan_properties.get("tag_criticality", "offline")
 
         if network_scan_properties.get("set_ipaddress", True):
-            attrs["ipaddress"] = ipaddress
+            attrs["ipaddress"] = ipaddr
 
         if not watolib.Host.host_exists(host_name):
             entries.append((host_name, attrs, None))

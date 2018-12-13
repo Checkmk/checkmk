@@ -74,10 +74,10 @@ def host_name():
     return _hostname
 
 
-def set_service(check_type, service_description):
+def set_service(type_name, descr):
     global _check_type, _service_description
-    _check_type = check_type
-    _service_description = service_description
+    _check_type = type_name
+    _service_description = descr
 
 
 def check_type():

@@ -35,8 +35,8 @@ sys.stdout.write('[pools]\n')
 
 
 def parse_config(filename):
-    for line in file(filename):
-        line = line.strip()
+    for l in file(filename):
+        line = l.strip()
         if line.startswith("include"):
             included_file = re.search(r'include\s+"(.*)"', line).group(1)
             parse_config(included_file)
@@ -63,8 +63,8 @@ now = time.time()
 ip_address = None
 binding_state = None
 seen_addresses = set()
-for line in file(leases_file):
-    parts = line.strip().rstrip(";").split()
+for lease_line in file(leases_file):
+    parts = lease_line.strip().rstrip(";").split()
     if not parts:
         continue
 

@@ -55,8 +55,10 @@ import cmk_base.check_api_utils as check_api_utils
 
 try:
     import cmk_base.cee.keepalive as keepalive
+    import cmk_base.cee.inline_snmp as inline_snmp
 except Exception:
     keepalive = None  # type: ignore
+    inline_snmp = None  # type: ignore
 
 # global variables used to cache temporary values that do not need
 # to be reset after a configuration change.
@@ -151,8 +153,7 @@ def do_check(hostname, ipaddress, only_check_plugin_names=None):
             _close_checkresult_file()
 
         if config.record_inline_snmp_stats and config.is_inline_snmp_host(hostname):
-            import cmk_base.cee.inline_snmp
-            cmk_base.cee.inline_snmp.save_snmp_stats()
+            inline_snmp.save_snmp_stats()
 
 
 def _check_missing_sections(missing_sections, exit_spec):

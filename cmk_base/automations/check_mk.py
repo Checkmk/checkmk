@@ -30,8 +30,10 @@ import os
 import subprocess
 import sys
 import time
+import shutil
 
 import cmk.paths
+import cmk.man_pages as man_pages
 from cmk.exceptions import MKGeneralException
 
 import cmk_base.utils
@@ -48,6 +50,10 @@ import cmk_base.nagios_utils
 from cmk_base.core_factory import create_core
 import cmk_base.check_api_utils as check_api_utils
 import cmk_base.check_api as check_api
+import cmk_base.parent_scan
+import cmk_base.notify as notify
+import cmk_base.ip_lookup as ip_lookup
+import cmk_base.data_sources as data_sources
 
 
 class DiscoveryAutomation(Automation):
@@ -124,8 +130,6 @@ class AutomationTryDiscovery(Automation):
     needs_checks = True  # TODO: Can we change this?
 
     def execute(self, args):
-        import cmk_base.data_sources as data_sources
-
         use_caches = False
         do_snmp_scan = False
         if args[0] == '@noscan':
@@ -350,7 +354,6 @@ class AutomationRenameHosts(Automation):
         return actions
 
     def _rename_host_dir(self, basedir, oldname, newname):
-        import shutil
         if os.path.exists(basedir + "/" + oldname):
             if os.path.exists(basedir + "/" + newname):
                 shutil.rmtree(basedir + "/" + newname)
@@ -731,7 +734,6 @@ class AutomationDeleteHosts(Automation):
                     os.unlink("%s/%s" % (folder, hostname))
 
         # logwatch and piggyback folders
-        import shutil
         for what_dir in [
                 "%s/%s" % (cmk.paths.logwatch_dir, hostname),
                 "%s/piggyback/%s" % (cmk.paths.tmp_dir, hostname),
@@ -927,7 +929,6 @@ class AutomationGetCheckInformation(Automation):
     needs_checks = True
 
     def execute(self, args):
-        import cmk.man_pages as man_pages
         manuals = man_pages.all_man_pages()
 
         check_infos = {}
@@ -963,7 +964,6 @@ class AutomationGetRealTimeChecks(Automation):
     needs_checks = True
 
     def execute(self, args):
-        import cmk.man_pages as man_pages
         manuals = man_pages.all_man_pages()
 
         rt_checks = []
@@ -994,7 +994,6 @@ class AutomationGetCheckManPage(Automation):
     needs_checks = True
 
     def execute(self, args):
-        import cmk.man_pages as man_pages
         if len(args) != 1:
             raise MKAutomationError("Need exactly one argument.")
 
@@ -1037,8 +1036,6 @@ class AutomationScanParents(Automation):
     needs_checks = True
 
     def execute(self, args):
-        import cmk_base.parent_scan
-
         settings = {
             "timeout": int(args[0]),
             "probes": int(args[1]),
@@ -1066,9 +1063,6 @@ class AutomationDiagHost(Automation):
     needs_checks = True
 
     def execute(self, args):
-        import cmk_base.ip_lookup as ip_lookup
-        import cmk_base.data_sources as data_sources
-
         hostname, test, ipaddress, snmp_community = args[:4]
         agent_port, snmp_timeout, snmp_retries = map(int, args[4:7])
 
@@ -1323,7 +1317,6 @@ class AutomationUpdateDNSCache(Automation):
     needs_checks = True  # TODO: Can we change this?
 
     def execute(self, args):
-        import cmk_base.ip_lookup as ip_lookup
         return ip_lookup.update_dns_cache()
 
 
@@ -1336,9 +1329,6 @@ class AutomationGetAgentOutput(Automation):
     needs_checks = True  # TODO: Can we change this?
 
     def execute(self, args):
-        import cmk_base.ip_lookup as ip_lookup
-        import cmk_base.data_sources as data_sources
-
         hostname, ty = args
 
         success = True
@@ -1374,9 +1364,9 @@ class AutomationGetAgentOutput(Automation):
                 }
 
                 lines = []
-                for oid in snmp.oids_to_walk():
+                for walk_oid in snmp.oids_to_walk():
                     try:
-                        for oid, value in snmp.walk_for_export(access_data, oid):
+                        for oid, value in snmp.walk_for_export(access_data, walk_oid):
                             lines.append("%s %s\n" % (oid, value))
                     except Exception as e:
                         if cmk.debug.enabled():
@@ -1403,7 +1393,6 @@ class AutomationNotificationReplay(Automation):
     needs_checks = True  # TODO: Can we change this?
 
     def execute(self, args):
-        import cmk_base.notify as notify
         nr = args[0]
         return notify.notification_replay_backlog(int(nr))
 
@@ -1417,7 +1406,6 @@ class AutomationNotificationAnalyse(Automation):
     needs_checks = True  # TODO: Can we change this?
 
     def execute(self, args):
-        import cmk_base.notify as notify
         nr = args[0]
         return notify.notification_analyse_backlog(int(nr))
 
@@ -1431,7 +1419,6 @@ class AutomationGetBulks(Automation):
     needs_checks = False
 
     def execute(self, args):
-        import cmk_base.notify as notify
         only_ripe = args[0] == "1"
         return notify.find_bulks(only_ripe)
 

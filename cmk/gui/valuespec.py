@@ -50,6 +50,8 @@ import time
 import types
 import urlparse
 from UserDict import DictMixin
+from StringIO import StringIO
+from PIL import Image
 
 from Cryptodome.PublicKey import RSA
 import six
@@ -69,7 +71,7 @@ from cmk.gui.exceptions import MKUserError, MKGeneralException
 import livestatus
 
 
-def type_name(v):
+def _type_name(v):
     try:
         return type(v).__name__
     except:
@@ -281,7 +283,7 @@ class Age(ValueSpec):
         if not isinstance(value, int):
             raise MKUserError(
                 varprefix,
-                _("The value %r has type %s, but must be of type int") % (value, type_name(value)))
+                _("The value %r has type %s, but must be of type int") % (value, _type_name(value)))
 
     def validate_value(self, value, varprefix):
         if self._minvalue is not None and value < self._minvalue:
@@ -362,7 +364,7 @@ class Integer(ValueSpec):
             raise MKUserError(
                 varprefix,
                 _("The value %r has the wrong type %s, but must be of type int") %
-                (value, type_name(value)))
+                (value, _type_name(value)))
 
     def validate_value(self, value, varprefix):
         if self._minvalue is not None and value < self._minvalue:
@@ -491,7 +493,7 @@ class TextAscii(ValueSpec):
         if not isinstance(value, str):
             raise MKUserError(
                 varprefix,
-                _("The value must be of type str, but it has type %s") % type_name(value))
+                _("The value must be of type str, but it has type %s") % _type_name(value))
 
     def validate_value(self, value, varprefix):
         try:
@@ -530,7 +532,7 @@ class TextUnicode(TextAscii):
             raise MKUserError(
                 varprefix,
                 _("The value must be of type str or unicode, but it has type %s") %
-                type_name(value))
+                _type_name(value))
 
 
 # Internal ID as used in many places (for contact names, group name,
@@ -1182,7 +1184,7 @@ class ListOfStrings(ValueSpec):
         if not isinstance(value, list):
             raise MKUserError(
                 varprefix,
-                _("Expected data type is list, but your type is %s.") % type_name(value))
+                _("Expected data type is list, but your type is %s.") % _type_name(value))
         for nr, s in enumerate(value):
             self._valuespec.validate_datatype(s, varprefix + "_%d" % nr)
 
@@ -1449,7 +1451,7 @@ class ListOf(ValueSpec):
 
     def validate_datatype(self, value, varprefix):
         if not isinstance(value, list):
-            raise MKUserError(varprefix, _("The type must be list, but is %s") % type_name(value))
+            raise MKUserError(varprefix, _("The type must be list, but is %s") % _type_name(value))
         for n, v in enumerate(value):
             self._valuespec.validate_datatype(v, varprefix + "_%d" % (n + 1))
 
@@ -1564,7 +1566,7 @@ class ListOfMultiple(ValueSpec):
 
     def validate_datatype(self, value, varprefix):
         if not isinstance(value, dict):
-            raise MKUserError(varprefix, _("The type must be dict, but is %s") % type_name(value))
+            raise MKUserError(varprefix, _("The type must be dict, but is %s") % _type_name(value))
         for ident, val in value.items():
             self._choice_dict[ident].validate_datatype(val, varprefix + '_' + ident)
 
@@ -1614,7 +1616,7 @@ class Float(Integer):
         raise MKUserError(
             varprefix,
             _("The value %r has type %s, but must be of type float%s") %
-            (value, type_name(value), _(" or int") if self._allow_int else ''))
+            (value, _type_name(value), _(" or int") if self._allow_int else ''))
 
 
 class Percentage(Float):
@@ -1640,7 +1642,7 @@ class Percentage(Float):
                 raise MKUserError(
                     varprefix,
                     _("The value %r has type %s, but must be either float or int") %
-                    (value, type_name(value)))
+                    (value, _type_name(value)))
         else:
             Float.validate_datatype(self, value, varprefix)
 
@@ -1670,7 +1672,8 @@ class Checkbox(ValueSpec):
         if not isinstance(value, bool):
             raise MKUserError(
                 varprefix,
-                _("The value %r has type %s, but must be of type bool") % (value, type_name(value)))
+                _("The value %r has type %s, but must be of type bool") % (value,
+                                                                           _type_name(value)))
 
 
 # A type-save dropdown choice. Parameters:
@@ -2115,9 +2118,9 @@ class RadioChoice(DropdownChoice):
 # A list of checkboxes representing a list of values
 class ListChoice(ValueSpec):
     @staticmethod
-    def dict_choices(types):
+    def dict_choices(choices):
         return [("%s" % type_id, "%d - %s" % (type_id, type_name))
-                for (type_id, type_name) in sorted(types.items())]
+                for (type_id, type_name) in sorted(choices.items())]
 
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)
@@ -2213,7 +2216,7 @@ class ListChoice(ValueSpec):
 
         if not isinstance(value, list):
             raise MKUserError(varprefix,
-                              _("The datatype must be list, but is %s") % type_name(value))
+                              _("The datatype must be list, but is %s") % _type_name(value))
 
         for v in value:
             if self._value_is_invalid(v):
@@ -2696,7 +2699,7 @@ class AbsoluteDate(ValueSpec):
         if not isinstance(value, (int, float)):
             raise MKUserError(
                 varprefix,
-                _("The type of the timestamp must be int or float, but is %s") % type_name(value))
+                _("The type of the timestamp must be int or float, but is %s") % _type_name(value))
 
     def validate_value(self, value, varprefix):
         if (not self._allow_empty and value is None) or value < 0 or int(value) > (2**31 - 1):
@@ -2754,7 +2757,7 @@ class Timeofday(ValueSpec):
 
         if not isinstance(value, tuple):
             raise MKUserError(varprefix,
-                              _("The datatype must be tuple, but ist %s") % type_name(value))
+                              _("The datatype must be tuple, but ist %s") % _type_name(value))
 
         if len(value) != 2:
             raise MKUserError(
@@ -2765,7 +2768,7 @@ class Timeofday(ValueSpec):
             if not isinstance(x, int):
                 raise MKUserError(
                     varprefix,
-                    _("All elements of the tuple must be of type int, you have %s") % type_name(x))
+                    _("All elements of the tuple must be of type int, you have %s") % _type_name(x))
 
     def validate_value(self, value, varprefix):
         if not self._allow_empty and value is None:
@@ -2831,7 +2834,7 @@ class TimeofdayRange(ValueSpec):
 
         if not isinstance(value, tuple):
             raise MKUserError(varprefix,
-                              _("The datatype must be tuple, but ist %s") % type_name(value))
+                              _("The datatype must be tuple, but ist %s") % _type_name(value))
 
         if len(value) != 2:
             raise MKUserError(
@@ -3470,7 +3473,7 @@ class Tuple(ValueSpec):
     def validate_datatype(self, value, varprefix):
         if not isinstance(value, tuple):
             raise MKUserError(varprefix,
-                              _("The datatype must be a tuple, but is %s") % type_name(value))
+                              _("The datatype must be a tuple, but is %s") % _type_name(value))
         if len(value) != len(self._elements):
             raise MKUserError(
                 varprefix,
@@ -3735,8 +3738,9 @@ class Dictionary(ValueSpec):
         value = self.migrate(value)
 
         if not isinstance(value, dict):
-            raise MKUserError(varprefix,
-                              _("The type must be a dictionary, but it is a %s") % type_name(value))
+            raise MKUserError(
+                varprefix,
+                _("The type must be a dictionary, but it is a %s") % _type_name(value))
 
         for param, vs in self._get_elements():
             if param in value:
@@ -3835,7 +3839,7 @@ class ElementSelection(ValueSpec):
 
         if not isinstance(value, str):
             raise MKUserError(varprefix,
-                              _("The datatype must be str (string), but is %s") % type_name(value))
+                              _("The datatype must be str (string), but is %s") % _type_name(value))
 
 
 class AutoTimestamp(FixedValue):
@@ -4126,9 +4130,6 @@ class ImageUpload(FileUpload):
             super(ImageUpload, self).render_input(varprefix, value)
 
     def validate_value(self, value, varprefix):
-        from PIL import Image
-        from StringIO import StringIO
-
         file_name, mime_type, content = value
 
         if file_name[-4:] != '.png' \
@@ -4254,8 +4255,6 @@ class IconSelector(ValueSpec):
             dirs.append(os.path.join(cmk.paths.omd_root, "share/check_mk/web/htdocs/images/icons"))
 
         valid_categories = dict(self.categories()).keys()
-
-        from PIL import Image
 
         #
         # Read all icons from the icon directories

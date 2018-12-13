@@ -88,15 +88,16 @@ def parse_tree_path(tree_path):
             parts = part.split(":")
         else:
             parts = [part]
-        for part in parts:
-            if not part:
+
+        for part_ in parts:
+            if not part_:
                 continue
             try:
-                part = int(part)
+                part_ = int(part_)
             except ValueError:
                 pass
             finally:
-                parsed_path.append(part)
+                parsed_path.append(part_)
     return parsed_path, attributes_key
 
 

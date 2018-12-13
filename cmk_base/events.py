@@ -274,7 +274,7 @@ def add_rulebased_macros(raw_context):
     raw_context["CONTACTNAME"] = "check-mk-notify"
 
 
-def complete_raw_context(raw_context, with_dump, event_log):
+def complete_raw_context(raw_context, with_dump, log_func):
     """Extend the raw notification context
 
     This ensures that all raw contexts processed in the notification code has specific variables
@@ -354,7 +354,7 @@ def complete_raw_context(raw_context, with_dump, event_log):
                 # would not have been any notification)
                 if raw_context["HOSTSTATE"] != "UP":
                     prev_state = "?"
-                event_log("Previous host hard state not known. Allowing all states.")
+                log_func("Previous host hard state not known. Allowing all states.")
             raw_context["PREVIOUSHOSTHARDSTATE"] = prev_state
 
         # Same for services
@@ -366,7 +366,7 @@ def complete_raw_context(raw_context, with_dump, event_log):
                 ("SERVICEATTEMPT" in raw_context and raw_context["SERVICEATTEMPT"] != "1"):
                 if raw_context["SERVICESTATE"] != "OK":
                     prev_state = "?"
-                event_log("Previous service hard state not known. Allowing all states.")
+                log_func("Previous service hard state not known. Allowing all states.")
             raw_context["PREVIOUSSERVICEHARDSTATE"] = prev_state
 
         # Add short variants for state names (at most 4 characters)
@@ -389,10 +389,10 @@ def complete_raw_context(raw_context, with_dump, event_log):
         convert_context_to_unicode(raw_context)
 
     except Exception as e:
-        event_log("Error on completing raw context: %s" % e)
+        log_func("Error on completing raw context: %s" % e)
 
     if with_dump:
-        event_log("Computed variables:\n" + "\n".join(
+        log_func("Computed variables:\n" + "\n".join(
             sorted([
                 "                    %s=%s" % (k, raw_context[k])
                 for k in raw_context

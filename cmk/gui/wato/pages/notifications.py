@@ -639,9 +639,9 @@ class ModeNotifications(NotificationsMode):
                 table.cell(colspan=8)
 
                 html.open_table()
-                for nr, (key, val) in enumerate(sorted(context.items())):
-                    if nr % 2 == 0:
-                        if nr != 0:
+                for index, (key, val) in enumerate(sorted(context.items())):
+                    if index % 2 == 0:
+                        if index != 0:
                             html.close_tr()
                         html.open_tr()
                     html.th(key)

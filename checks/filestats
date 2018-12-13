@@ -52,31 +52,18 @@ import ast
 
 
 def parse_filestats(info):
-    subsections_by_variety = {}
+    sections_info = {}
     current = []  # should never be used, but better safe than sorry
     for line in info:
         if not line:
             continue
         if line[0].startswith('[[['):
-            output_variety, subsection_name = line[0][3:-3].split(None, 1)
-            sections = subsections_by_variety.setdefault(output_variety, {})
-            current = sections.setdefault(subsection_name, [])
+            _output_variety, subsection_name = line[0][3:-3].split(None, 1)
+            current = sections_info.setdefault(subsection_name, [])
         else:
             current.append(line[0])
 
-    parsed = {}
-    for variety, sections in subsections_by_variety.items():
-        try:
-            subparser = {
-                "count_only": _parse_filestats_load_single_line,
-                "file_stats": _parse_filestats_load_lines,
-                "extremes_only": _parse_filestats_load_lines,
-            }[variety]
-        except KeyError:
-            continue
-        parsed[variety] = {k: subparser(v) for k, v in sections.items() if v}
-
-    return parsed
+    return {k: _parse_filestats_load_lines(v) for k, v in sections_info.items() if v}
 
 
 def _parse_filestats_load_lines(info):
@@ -87,32 +74,6 @@ def _parse_filestats_load_lines(info):
         except SyntaxError:
             pass
     return list_of_dicts
-
-
-def _parse_filestats_load_single_line(info):
-    lines = _parse_filestats_load_lines(info)
-    return lines[0] if lines else None
-
-
-#.
-#   .--Discovery-----------------------------------------------------------.
-#   |              ____  _                                                 |
-#   |             |  _ \(_)___  ___ _____   _____ _ __ _   _               |
-#   |             | | | | / __|/ __/ _ \ \ / / _ \ '__| | | |              |
-#   |             | |_| | \__ \ (_| (_) \ V /  __/ |  | |_| |              |
-#   |             |____/|_|___/\___\___/ \_/ \___|_|   \__, |              |
-#   |                                                  |___/               |
-#   +----------------------------------------------------------------------+
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-
-def discover_filestats_variety(variety):
-    def discover_function(parsed):
-        for key in parsed.get(variety, {}).keys():
-            yield key, {}
-
-    return discover_function
 
 
 #.
@@ -126,20 +87,6 @@ def discover_filestats_variety(variety):
 #   +----------------------------------------------------------------------+
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-
-
-def get_filestats_item_data(variety):
-    def decorator(check_function):
-        def wrapped_check_function(item, params, parsed):
-            subsections = parsed.get(variety, {})
-            item_data = subsections.get(item)
-            if item_data is None:
-                return None
-            return check_function(item, params, item_data)
-
-        return wrapped_check_function
-
-    return decorator
 
 
 def filestats_check_int_levels(value,
@@ -171,7 +118,7 @@ def check_filestats_count(count, params):
     state, text = filestats_check_int_levels(count, params.get("mincount"), params.get("maxcount"))
     warn, crit = params.get("maxcount", (None, None))
     return state, "Files in total: %d%s" % (count, text), \
-           [('filestats_count', count, warn, crit, None, None)]
+           [('file_count', count, warn, crit, None, None)]
 
 
 def check_filestats_extremes(files, params):
@@ -207,58 +154,26 @@ def check_filestats_extremes(files, params):
 #   '----------------------------------------------------------------------'
 
 
-@get_filestats_item_data('count_only')
-def check_filestats_count_only(_item, params, data):
-    try:
-        count = data['count']
-    except (KeyError, AttributeError):
-        return None
-    return check_filestats_count(count, params)
-
-
-# pylint: disable=undefined-variable
-check_info['filestats.count_only'] = {
-    "inventory_function": discover_filestats_variety('count_only'),
-    "check_function": check_filestats_count_only,
-    "service_description": "File %s count",
-    "has_perfdata": True,
-    # "group": "filestats-groups",
-}
-
-
-@get_filestats_item_data('extremes_only')
-def check_filestats_extremes_only(_item, params, data):
-    files = [i for i in data if i.get("type") == "file"]
-
-    return check_filestats_extremes(files, params)
-
-
-# pylint: disable=undefined-variable
-check_info['filestats.extremes_only'] = {
-    "inventory_function": discover_filestats_variety('extremes_only'),
-    "check_function": check_filestats_extremes_only,
-    "service_description": "File %s extremes",
-    "has_perfdata": True,
-    # "group": "filestats-groups",
-}
-
-
-@get_filestats_item_data('file_stats')
+@get_parsed_item_data
 def check_filestats(_item, params, data):
+
+    sumry = [s for s in data if s.get("type") == "summary"]
+    count = sumry[0].get("count", None) if sumry else None
+    if count is not None:
+        yield check_filestats_count(count, params)
+
     files = [i for i in data if i.get("type") == "file"]
-
-    yield check_filestats_count(len(files), params)
-
-    for subresult in check_filestats_extremes(files, params):
-        yield subresult
+    if files:
+        for subresult in check_filestats_extremes(files, params):
+            yield subresult
 
 
 # pylint: disable=undefined-variable
 check_info['filestats'] = {
     "parse_function": parse_filestats,
-    "inventory_function": discover_filestats_variety('file_stats'),
+    "inventory_function": discover(),
     "check_function": check_filestats,
-    "service_description": "File %s stats",
+    "service_description": "File group %s",
     "has_perfdata": True,
-    #"group": "filestats-groups",
+    "group": "filestats",
 }

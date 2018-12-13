@@ -19,6 +19,9 @@ description:
   To add file groups to the check, add one
   configuration section to the file.
 
+  Note that the informational depth of the received data
+  depends on the choosen output option.
+
   For an extensive documentation of the available options,
   please refer to "mk_filestats.py --help".
 
@@ -28,5 +31,5 @@ item:
 
 inventory:
   For each section that the agent sends one service will
-  be created: "File <item> stats".
+  be created: "File group <item>".
 

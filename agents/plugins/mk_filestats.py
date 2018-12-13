@@ -418,24 +418,25 @@ def grouping_single_group(section_name, files_iter):
 
 def output_aggregator_count_only(group_name, files_iter):
     yield '[[[count_only %s]]]' % group_name
-    data = {"count": sum(1 for __ in files_iter)}
-    yield repr(data)
+    count = sum(1 for __ in files_iter)
+    yield repr({"type": "summary", "count": count})
 
 
 def output_aggregator_file_stats(group_name, files_iter):
     yield "[[[file_stats %s]]]" % group_name
-    for lazy_file in files_iter:
+    count = 0
+    for count, lazy_file in enumerate(files_iter, 1):
         yield lazy_file.dumps()
+    yield repr({"type": "summary", "count": count})
 
 
 def output_aggregator_extremes_only(group_name, files_iter):
     yield "[[[extremes_only %s]]]" % group_name
-    try:
-        min_age = max_age = min_size = max_size = next(files_iter)
-    except StopIteration:
-        return
 
-    for lazy_file in files_iter:
+    count = 0
+    for count, lazy_file in enumerate(files_iter, 1):
+        if count == 1:  # init
+            min_age = max_age = min_size = max_size = lazy_file
         if lazy_file.age < min_age.age:
             min_age = lazy_file
         elif lazy_file.age > max_age.age:
@@ -445,8 +446,10 @@ def output_aggregator_extremes_only(group_name, files_iter):
         elif lazy_file.size > max_size.size:
             max_size = lazy_file
 
-    for extreme_file in set((min_age, max_age, min_size, max_size)):
+    extremes = set((min_age, max_age, min_size, max_size)) if count else ()
+    for extreme_file in extremes:
         yield extreme_file.dumps()
+    yield repr({"type": "summary", "count": count})
 
 
 def get_output_aggregator(config):

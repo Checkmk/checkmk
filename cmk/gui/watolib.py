@@ -3408,6 +3408,9 @@ class ValueSpecAttribute(Attribute):
         Attribute.__init__(self, name)
         self._valuespec = vs
 
+    def valuespec(self):
+        return self._valuespec
+
     def title(self):
         return self._valuespec.title()
 

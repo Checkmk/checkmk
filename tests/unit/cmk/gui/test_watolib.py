@@ -1,4 +1,4 @@
-import pytest
+import pytest  # type: ignore
 
 # Triggers plugin loading of plugins.wato which registers all the plugins
 import cmk.gui.wato  # pylint: disable=unused-import

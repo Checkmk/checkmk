@@ -53,6 +53,26 @@ kemp_loadmaster_service_default_levels = (1500, 2000)
 
 
 def parse_kemp_loadmaster_services(info):
+    parsed = {}
+    for name, status, conns in info:
+        if name == "" or len(status) > 1:
+            continue
+
+        inst = parsed.setdefault(name, {"device_state": status})
+        try:
+            inst.update({"conns": int(conns)})
+        except ValueError:
+            pass
+    return parsed
+
+
+def inventory_kemp_loadmaster_services(parsed):
+    for item, iteminfo in parsed.items():
+        if iteminfo["device_state"] not in ["4", ""]:
+            yield item, kemp_loadmaster_service_default_levels
+
+
+def check_kemp_loadmaster_services(item, _no_params, parsed):
     map_states = {
         "1": (0, 'in service'),
         "2": (2, 'out of service'),
@@ -63,34 +83,13 @@ def parse_kemp_loadmaster_services(info):
         "7": (2, 'error message'),
     }
 
-    parsed = {}
-    for name, status, conns in info:
-        if not (name == "" or len(status) > 1):
-            parsed.setdefault(name, {"state": map_states[status]})
-            if conns.isdigit():
-                parsed[name].update({"conns": int(conns)})
-
-    return parsed
-
-
-def inventory_kemp_loadmaster_services(parsed):
-    for item, iteminfo in parsed.items():
-        if iteminfo["state"] not in ["4", ""]:
-            yield item, kemp_loadmaster_service_default_levels
-
-
-def check_kemp_loadmaster_services(item, _no_params, parsed):
     if item in parsed:
         data = parsed[item]
-        state, state_readable = data["state"]
-        infotext = "State: %s" % state_readable
-
-        perfdata = []
-        if data.get("conns"):
-            infotext += ", Active connections: %s" % data["conns"]
-            perfdata.append(('conns', data["conns"]))
-
-        return state, infotext, perfdata
+        state, state_readable = map_states[data["device_state"]]
+        yield state, "Status: %s" % state_readable
+        conns = data.get("conns")
+        if conns is not None:
+            yield 0, "Active connections: %s" % conns, [('conns', conns)]
 
 
 check_info["kemp_loadmaster_services"] = {

@@ -1,0 +1,11 @@
+Title: Poseidon devices: Input and temperature sensors
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1544783204
+Class: feature
+
+This werk adds checks for Poseidon temperature and
+digital input sensors.

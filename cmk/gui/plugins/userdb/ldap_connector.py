@@ -2594,7 +2594,7 @@ def synchronize_profiles_to_sites(logger, profiles_to_synchronize):
     for site_id, site in remote_sites:
         jobs.append(
             pool.apply_async(_sychronize_profile_worker,
-                             ((states, site_id, site, user_id, profile),)))
+                             ((states, site_id, site, profiles_to_synchronize))))
 
     results = []
     start_time = time.time()

@@ -75,63 +75,8 @@ function wato_toggle_attribute(oCheckbox, attrname) {
 function wato_fix_visibility() {
     /* First collect the current selection of all host attributes.
        They are in the same table as we are */
-    var currentTags = [];
-
-    var container_ids = [ "wato_host_tags", "data_sources", "address" ];
-
-    for (var a = 0; a < container_ids.length; a++) {
-        var container_id = container_ids[a];
-
-        var oHostTags = document.getElementById(container_id);
-
-        if (!oHostTags)
-            continue;
-
-        var oTable = oHostTags.childNodes[0]; /* tbody */
-
-        for (var i = 0; i < oTable.childNodes.length; i++) {
-            var oTr = oTable.childNodes[i];
-            var add_tag_id = null;
-            if (oTr.tagName == 'TR') {
-                var oTdLegend = oTr.childNodes[0];
-                if (oTdLegend.className != "legend") {
-                    continue;
-                }
-                var oTdContent = oTr.childNodes[1];
-                /* If the Checkbox is unchecked try to get a value from the inherited_tags */
-                var oCheckbox = oTdLegend.getElementsByTagName("input")[0];
-                if (oCheckbox.checked == false ){
-                    var attrname = 'attr_' + oCheckbox.name.replace(/.*_change_/, '');
-                    if (attrname in inherited_tags && inherited_tags[attrname] !== null){
-                        add_tag_id = inherited_tags[attrname];
-                    }
-                } else {
-                    /* Find the <select>/<checkbox> object in this tr */
-                    var elements = oTdContent.getElementsByTagName("input");
-                    if (elements.length == 0)
-                        elements = oTdContent.getElementsByTagName("select");
-
-                    if (elements.length == 0)
-                        continue;
-
-                    var oElement = elements[0];
-                    if (oElement.type == 'checkbox' && oElement.checked) {
-                        add_tag_id = oElement.name.substr(4);
-                    } else if (oElement.tagName == 'SELECT') {
-                        add_tag_id = oElement.value;
-                    }
-                }
-            }
-
-            currentTags.push(add_tag_id);
-            if (wato_aux_tags_by_tag[add_tag_id]) {
-                currentTags = currentTags.concat(wato_aux_tags_by_tag[add_tag_id]);
-            }
-        }
-    }
-
-    // Skip this function when no tags defined
-    if (!currentTags)
+    var current_tags = _get_effective_tags();
+    if (!current_tags)
         return;
 
     var hide_topics = volatile_topics.slice(0);
@@ -170,7 +115,7 @@ function wato_fix_visibility() {
                 var tag = wato_depends_on_tags[attrname][index];
                 var negate = tag[0] == '!';
                 var tagname = negate ? tag.substr(1) : tag;
-                var have_tag = currentTags.indexOf(tagname) != -1;
+                var have_tag = current_tags.indexOf(tagname) != -1;
                 if (have_tag == negate) {
                     display = "none";
                     break;
@@ -234,6 +179,66 @@ function wato_fix_visibility() {
         }
     }
 }
+
+function _get_effective_tags()
+{
+    var current_tags = [];
+
+    var container_ids = [ "wato_host_tags", "data_sources", "address" ];
+
+    for (var a = 0; a < container_ids.length; a++) {
+        var container_id = container_ids[a];
+
+        var oHostTags = document.getElementById(container_id);
+
+        if (!oHostTags)
+            continue;
+
+        var oTable = oHostTags.childNodes[0]; /* tbody */
+
+        for (var i = 0; i < oTable.childNodes.length; i++) {
+            var oTr = oTable.childNodes[i];
+            var add_tag_id = null;
+            if (oTr.tagName == 'TR') {
+                var oTdLegend = oTr.childNodes[0];
+                if (oTdLegend.className != "legend") {
+                    continue;
+                }
+                var oTdContent = oTr.childNodes[1];
+                /* If the Checkbox is unchecked try to get a value from the inherited_tags */
+                var oCheckbox = oTdLegend.getElementsByTagName("input")[0];
+                if (oCheckbox.checked == false ){
+                    var attrname = 'attr_' + oCheckbox.name.replace(/.*_change_/, '');
+                    if (attrname in inherited_tags && inherited_tags[attrname] !== null){
+                        add_tag_id = inherited_tags[attrname];
+                    }
+                } else {
+                    /* Find the <select>/<checkbox> object in this tr */
+                    var elements = oTdContent.getElementsByTagName("input");
+                    if (elements.length == 0)
+                        elements = oTdContent.getElementsByTagName("select");
+
+                    if (elements.length == 0)
+                        continue;
+
+                    var oElement = elements[0];
+                    if (oElement.type == 'checkbox' && oElement.checked) {
+                        add_tag_id = oElement.name.substr(4);
+                    } else if (oElement.tagName == 'SELECT') {
+                        add_tag_id = oElement.value;
+                    }
+                }
+            }
+
+            current_tags.push(add_tag_id);
+            if (wato_aux_tags_by_tag[add_tag_id]) {
+                current_tags = current_tags.concat(wato_aux_tags_by_tag[add_tag_id]);
+            }
+        }
+    }
+    return current_tags;
+}
+
 
 function wato_randomize_secret(id, len)
 {

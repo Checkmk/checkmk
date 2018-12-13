@@ -251,6 +251,8 @@
 def parse_varnish(info):
     parsed = {}
     for line in info:
+        if line[1] == ".":
+            continue
         if "." in line[0]:
             what, what_item = line[0].split(".", 1)
         elif "_" in line[0]:
@@ -309,7 +311,7 @@ def inventory_varnish(parsed, what, needed_keys):
         for needed_key in needed_keys:
             if needed_key not in parsed[what]:
                 needed_keys_avail = False
-        if needed_keys_avail == True:
+        if needed_keys_avail:
             return [ (None, {}) ]
 
 

@@ -1,0 +1,10 @@
+Title: varnish: Fixed parsing function in order to ignore invalid lines
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0p10
+Date: 1544712971
+Class: fix
+
+

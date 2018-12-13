@@ -63,7 +63,7 @@ import tarfile
 import threading
 import time
 import traceback
-import typing
+from typing import NamedTuple, List  # pylint: disable=unused-import
 
 import requests
 from pathlib2 import Path
@@ -4772,8 +4772,7 @@ def update_replication_status(site_id, vars_):
         save_site_replication_status(site_id, repl_status)
 
 
-PushSnapshotRequest = typing.NamedTuple("PushSnapshotRequest", [("site_id", str),
-                                                                ("tar_content", str)])
+PushSnapshotRequest = NamedTuple("PushSnapshotRequest", [("site_id", str), ("tar_content", str)])
 
 
 @automation_command_registry.register
@@ -4877,7 +4876,7 @@ def push_user_profiles_to_site(site, user_profiles):
     return do_remote_automation(site, "push-profiles", [("profiles", repr(user_profiles))])
 
 
-PushUserProfilesRequest = typing.NamedTuple("PushUserProfilesRequest", [("user_profiles", dict)])
+PushUserProfilesRequest = NamedTuple("PushUserProfilesRequest", [("user_profiles", dict)])
 
 
 @automation_command_registry.register
@@ -9701,7 +9700,7 @@ def edit_users(changed_users):
 #   | The WATO folders network scan for new hosts.                         |
 #   '----------------------------------------------------------------------'
 
-NetworkScanRequest = typing.NamedTuple("NetworkScanRequest", [("folder_path", str)])
+NetworkScanRequest = NamedTuple("NetworkScanRequest", [("folder_path", str)])
 
 
 @automation_command_registry.register
@@ -10497,6 +10496,10 @@ def git_command(args):
         raise MKGeneralException(
             _("Error executing GIT command <tt>%s</tt>:<br><br>%s") %
             (subprocess.list2cmdline(command), p.stdout.read().replace("\n", "<br>\n")))
+
+
+# TODO: Clean this up
+g_git_messages = []  # type: List[str]
 
 
 def prepare_git_commit():

@@ -88,6 +88,9 @@ def encode_row(row):
 #   | The actual livedump                                                  |
 #   '----------------------------------------------------------------------'
 
+g_connection = None
+opt_socket = None
+
 
 def connect():
     global g_connection, opt_socket

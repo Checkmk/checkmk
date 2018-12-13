@@ -31,6 +31,10 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import MKUserError
 
+g_header_open = False
+g_section_open = False
+g_section_isopen = False
+
 
 # A input function with the same call syntax as htmllib.textinput()
 def textinput(valuespec, varprefix, defvalue):
@@ -251,15 +255,9 @@ def strip_bad_chars(x):
 
 
 def header(title, isopen=True, table_id="", narrow=False, css=None):
-    #html.guitest_record_output("forms", ("header", title))
-    global g_header_open
-    global g_section_open
-    global g_section_isopen
-    try:
-        if g_header_open:  # pylint: disable=used-before-assignment
-            end()
-    except:
-        pass
+    global g_header_open, g_section_open, g_section_isopen
+    if g_header_open:
+        end()
 
     html.open_table(
         id_=table_id if table_id else None,
@@ -288,8 +286,6 @@ def space():
 
 
 def section(title=None, checkbox=None, section_id=None, simple=False, hide=False, legend=True):
-
-    #html.guitest_record_output("forms", ("section", title))
     global g_section_open
     if g_section_open:
         html.close_td()

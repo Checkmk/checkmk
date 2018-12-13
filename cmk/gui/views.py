@@ -29,6 +29,7 @@ import os
 import pprint
 import traceback
 import types
+from typing import Dict  # pylint: disable=unused-import
 
 import livestatus
 
@@ -152,6 +153,10 @@ def load_plugins(force):
     config.declare_dynamic_permissions(lambda: visuals.declare_custom_permissions('views'))
 
     cmk.gui.plugins.views.inventory.declare_inventory_columns()
+
+
+multisite_views = {}  # type: Dict
+available_views = {}  # type: Dict
 
 
 # Load all views - users or builtins

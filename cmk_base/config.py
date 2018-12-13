@@ -61,6 +61,9 @@ import cmk_base.cleanup
 # are loaded later with load_default_config() again.
 from cmk_base.default_config import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
+service_service_levels = []  # type: ignore
+host_service_levels = []  # type: ignore
+
 
 class TimespecificParamList(list):
     pass

@@ -108,6 +108,8 @@ opt_debug = False
 timeout = 10  # seconds
 num_warn = None
 num_crit = None
+g_cookies = None
+g_opener = None
 
 for o, a in opts:
     if o in ['-h', '--help']:
@@ -150,6 +152,12 @@ if len(hosts) > 1:
 if not ssl and port == 443:
     ssl = True
 
+proto = 'https' if ssl else 'http'
+if (proto == 'http' and port == 80) or (proto == 'https' and port == 443):
+    portspec = ''
+else:
+    portspec = ':%d' % port
+
 
 def debug(s):
     if opt_debug:
@@ -173,13 +181,6 @@ def bail_out(rc, s):
     stxt = ['OK', 'WARN', 'CRIT', 'UNKN'][rc]
     sys.stdout.write('%s - %s\n' % (stxt, s))
     sys.exit(rc)
-
-
-proto = 'https' if ssl else 'http'
-if (proto == 'http' and port == 80) or (proto == 'https' and port == 443):
-    portspec = ''
-else:
-    portspec = ':%d' % port
 
 
 def get_full_uri(host, uri):

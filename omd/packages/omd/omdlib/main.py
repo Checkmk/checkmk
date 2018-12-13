@@ -45,8 +45,9 @@ import termios
 import traceback
 import subprocess
 import signal
-from passlib.hash import sha256_crypt
-import psutil
+from typing import Dict  # pylint: disable=unused-import
+from passlib.hash import sha256_crypt  # type: ignore
+import psutil  # type: ignore
 
 import omdlib
 
@@ -649,9 +650,10 @@ def stop_site(site):
 #   |  Deal with file owners, permissions and the the skel hierarchy       |
 #   '----------------------------------------------------------------------'
 
+g_skel_permissions = {}  # type: Dict[str, int]
+
 
 def read_skel_permissions():
-    global g_skel_permissions
     g_skel_permissions = load_skel_permissions(omdlib.__version__)
     if not g_skel_permissions:
         bail_out("%s is missing or currupted." % skel_permissions_file_path(omdlib.__version__))
@@ -2881,7 +2883,6 @@ def main_enable(site, args, options):
 
 
 def set_conflict_option(options):
-    global opt_conflict
     opt_conflict = options.get("conflict", "ask")
 
     if opt_conflict not in ["ask", "install", "keepold", "abort"]:
@@ -3034,14 +3035,11 @@ def main_diff(site, args, options=None):
         global opt_verbose
         opt_verbose = True
 
-    global bare
-    bare = "bare" in options  # sorry for the global variable here
-
     for arg in args:
-        diff_list(site, from_skelroot, from_version, arg)
+        diff_list(options, site, from_skelroot, from_version, arg)
 
 
-def diff_list(site, from_skelroot, from_version, orig_path):
+def diff_list(options, site, from_skelroot, from_version, orig_path):
     # Compare a list of files/directories with the original state
     # and output differences. If opt_verbose then we output the complete
     # diff, otherwise just the state. Only files present in skel/ are
@@ -3081,18 +3079,18 @@ def diff_list(site, from_skelroot, from_version, orig_path):
         bail_out("Sorry, 'omd diff' only works for files in the site's directory.")
 
     if not os.path.isdir(abs_path):
-        print_diff(rel_path, site, from_skelroot, site.dir, from_version, old_perms)
+        print_diff(rel_path, options, site, from_skelroot, site.dir, from_version, old_perms)
     else:
         if not rel_path:
             rel_path = "."
         walk_skel(
             from_skelroot,
-            print_diff, (site, from_skelroot, site.dir, from_version, old_perms),
+            print_diff, (options, site, from_skelroot, site.dir, from_version, old_perms),
             depth_first=False,
             relbase=rel_path)
 
 
-def print_diff(rel_path, site, source_path, target_path, source_version, source_perms):
+def print_diff(rel_path, options, site, source_path, target_path, source_version, source_perms):
     source_file = source_path + '/' + rel_path
     target_file = target_path + '/' + rel_path
 
@@ -3111,7 +3109,7 @@ def print_diff(rel_path, site, source_path, target_path, source_version, source_
     fn = tty_bold + rel_path + tty_normal
 
     def print_status(color, f, status, long_out):
-        if bare:
+        if "bare" in options:
             sys.stdout.write("%s %s\n" % (status, f))
         elif not opt_verbose:
             sys.stdout.write(color + " %s %s\n" % (long_out, f))
@@ -4589,6 +4587,7 @@ def hash_password(password):
 opt_verbose = False
 opt_interactive = False
 opt_force = False
+opt_conflict = "ask"
 
 g_info = VersionInfo(omdlib.__version__)
 g_orig_wd = "/"

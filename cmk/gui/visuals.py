@@ -30,7 +30,7 @@ import sys
 import traceback
 import json
 import importlib
-from typing import Dict, List, Type  # pylint: disable=unused-import
+from typing import Dict, List, Type, Callable  # pylint: disable=unused-import
 
 import cmk.gui.pages
 import cmk.gui.utils as utils
@@ -86,10 +86,11 @@ if cmk.is_managed_edition():
 #   '----------------------------------------------------------------------'
 
 loaded_with_language = False
+title_functions = []  # type: List[Callable]
 
 
 def load_plugins(force):
-    global loaded_with_language
+    global loaded_with_language, title_functions
     if loaded_with_language == cmk.gui.i18n.get_current_language() and not force:
         return
 
@@ -114,7 +115,6 @@ def load_plugins(force):
         },
     })
 
-    global title_functions
     title_functions = []
 
     utils.load_web_plugins('visuals', globals())

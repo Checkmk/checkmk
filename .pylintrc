@@ -34,10 +34,6 @@ disable=
     # duplication (introduce new classes, combine methods, etc.)
     attribute-defined-outside-init,
     #---------------------------------------------------------------------------
-    # This should really be fixed: Global variables are already a bad idea, but
-    # depending on an implicit protocol to create them is an even worse one.
-    global-variable-undefined,
-    #---------------------------------------------------------------------------
     # Enabling these warnings would be nice, they are mostly a sign of sloppy
     # programming practice. In some cases, they can even hide bugs.
     bare-except,

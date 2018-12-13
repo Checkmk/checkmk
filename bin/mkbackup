@@ -152,6 +152,9 @@ def site_config_path():
     return "%s/etc/check_mk/backup.mk" % os.environ["OMD_ROOT"]
 
 
+g_backup_lock_f = None
+
+
 # Es gibt ein globales Backup-Lock, das bei modifizierenden Aktionen
 # geholt wird. D.h. es kann Systemweit immer nur ein Backup oder Restore
 # zur Zeit ausgeführt werden.

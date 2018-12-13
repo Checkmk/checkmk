@@ -26,6 +26,7 @@
 """Code for processing Check_MK werks. This is needed by several components,
 so it's best place is in the central library."""
 
+import codecs
 import os
 import json
 
@@ -110,12 +111,8 @@ def load():
 
 
 def load_precompiled_werks_file(path):
-    werks = {}
-
-    for werk_id, werk in json.load(open(path)).items():
-        werks[int(werk_id)] = werk
-
-    return werks
+    with open(path) as fp:
+        return {int(werk_id): werk for werk_id, werk in json.load(fp).iteritems()}
 
 
 def load_raw_files(werks_dir):
@@ -148,19 +145,20 @@ def _load_werk(path):
         "body": [],
     }
     in_header = True
-    for line in file(path):
-        line = line.strip().decode("utf-8")
-        if in_header and not line:
-            in_header = False
-        elif in_header:
-            key, text = line.split(":", 1)
-            try:
-                value = int(text.strip())
-            except ValueError:
-                value = text.strip()
-            werk[key.lower()] = value
-        else:
-            werk["body"].append(line)
+    with codecs.open(path, encoding="utf-8") as fp:
+        for line in fp:
+            line = line.strip()
+            if in_header and not line:
+                in_header = False
+            elif in_header:
+                key, text = line.split(":", 1)
+                try:
+                    value = int(text.strip())
+                except ValueError:
+                    value = text.strip()
+                werk[key.lower()] = value
+            else:
+                werk["body"].append(line)
 
     werk.setdefault("compatible", "compat")
     werk.setdefault("edition", "cre")

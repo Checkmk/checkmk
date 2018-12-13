@@ -456,57 +456,55 @@ def render_availability_table(group_title, availability_table, what, avoptions):
     # TODO: If summary line is activated, then sorting should now move that line to the
     # top. It should also stay at the bottom. This would require an extension to the
     # table.py module.
-    table.begin(
-        "av_items",
-        av_table["title"],
-        css="availability",
-        searchable=False,
-        limit=None,
-        omit_headers="omit_headers" in avoptions["labelling"])
+    with table.open_table(
+            "av_items",
+            av_table["title"],
+            css="availability",
+            searchable=False,
+            limit=None,
+            omit_headers="omit_headers" in avoptions["labelling"]):
 
-    show_urls, show_timeline = False, False
-    for row in av_table["rows"]:
-        table.row()
+        show_urls, show_timeline = False, False
+        for row in av_table["rows"]:
+            table.row()
 
-        # Column with icons
-        timeline_url = None
-        if row["urls"]:
-            show_urls = True
-            table.cell("", css="buttons")
-            for image, tooltip, url in row["urls"]:
-                html.icon_button(url, tooltip, image)
-                if image == "timeline":
-                    timeline_url = url
+            # Column with icons
+            timeline_url = None
+            if row["urls"]:
+                show_urls = True
+                table.cell("", css="buttons")
+                for image, tooltip, url in row["urls"]:
+                    html.icon_button(url, tooltip, image)
+                    if image == "timeline":
+                        timeline_url = url
 
-        # Column with host/service or aggregate name
-        for title, (name, url) in zip(av_table["object_titles"], row["object"]):
-            table.cell(title, html.render_a(name, url))
+            # Column with host/service or aggregate name
+            for title, (name, url) in zip(av_table["object_titles"], row["object"]):
+                table.cell(title, html.render_a(name, url))
 
-        if "timeline" in row:
-            show_timeline = True
-            table.cell(_("Timeline"), css="timeline")
-            html.open_a(href=timeline_url)
-            render_timeline_bar(row["timeline"], "inline")
-            html.close_a()
+            if "timeline" in row:
+                show_timeline = True
+                table.cell(_("Timeline"), css="timeline")
+                html.open_a(href=timeline_url)
+                render_timeline_bar(row["timeline"], "inline")
+                html.close_a()
 
-        # Columns with the actual availability data
-        for (title, help_txt), (text, css) in zip(av_table["cell_titles"], row["cells"]):
-            table.cell(title, text, css=css, help_txt=help_txt)
+            # Columns with the actual availability data
+            for (title, help_txt), (text, css) in zip(av_table["cell_titles"], row["cells"]):
+                table.cell(title, text, css=css, help_txt=help_txt)
 
-    if "summary" in av_table:
-        table.row(css="summary", fixed=True)
-        if show_urls:
-            table.cell("", "")  # Empty cell in URLs column
-        table.cell("", _("Summary"), css="heading")
-        for _x in xrange(1, len(av_table["object_titles"])):
-            table.cell("", "")  # empty cells, of more object titles than one
-        if show_timeline:
-            table.cell("", "")
+        if "summary" in av_table:
+            table.row(css="summary", fixed=True)
+            if show_urls:
+                table.cell("", "")  # Empty cell in URLs column
+            table.cell("", _("Summary"), css="heading")
+            for _x in xrange(1, len(av_table["object_titles"])):
+                table.cell("", "")  # empty cells, of more object titles than one
+            if show_timeline:
+                table.cell("", "")
 
-        for (title, help_txt), (text, css) in zip(av_table["cell_titles"], av_table["summary"]):
-            table.cell(title, text, css="heading " + css, help_txt=help_txt)
-
-    return table.end()  # returns Table data if fetch == True
+            for (title, help_txt), (text, css) in zip(av_table["cell_titles"], av_table["summary"]):
+                table.cell(title, text, css="heading " + css, help_txt=help_txt)
 
 
 def render_timeline_bar(timeline_layout, style):

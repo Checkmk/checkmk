@@ -75,7 +75,7 @@ def groupheader(title):
 def end():
     assert tables
     table = tables.pop()
-    return table.end()
+    table.end()
 
 
 def update_headinfo(num_rows):
@@ -213,11 +213,6 @@ class Table(object):
 
         self.finish_previous()
         html.unplug()
-
-        # Output-Format "fetch" simply means that all data is being
-        # returned as Python-values to be rendered somewhere else.
-        if self.options["output_format"] == "fetch":
-            return self.headers, self.rows
 
         if not self.rows and self.options["omit_if_empty"]:
             return

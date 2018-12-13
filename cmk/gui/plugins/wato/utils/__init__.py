@@ -1671,7 +1671,7 @@ def configure_attributes(new,
 
                         inherited_value = container.attributes()[attrname]
                         has_inherited = True
-                        if isinstance(attr, watolib.HostTagAttribute):
+                        if attr.is_tag_attribute:
                             inherited_tags["attr_%s" % attrname] = '|'.join(
                                 attr.get_tag_list(inherited_value))
                         break
@@ -1682,7 +1682,7 @@ def configure_attributes(new,
                 inherited_from = _("Default value")
                 inherited_value = attr.default_value()
                 # Also add the default values to the inherited values dict
-                if isinstance(attr, watolib.HostTagAttribute):
+                if attr.is_tag_attribute:
                     inherited_tags["attr_%s" % attrname] = '|'.join(
                         attr.get_tag_list(inherited_value))
 
@@ -1757,7 +1757,7 @@ def configure_attributes(new,
 
             if len(values) == 1:
                 defvalue = values[0]
-            elif attr.is_checkbox_tag():
+            elif attr.is_checkbox_tag:
                 defvalue = True
             else:
                 defvalue = attr.default_value()

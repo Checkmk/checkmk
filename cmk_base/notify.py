@@ -1346,7 +1346,7 @@ def call_notification_script(plugin, plugin_context):
             # one - potentially huge - memory buffer
             line = p.stdout.readline()
             if line != '':
-                plugin_log("Output: %s" % line.rstrip().decode('utf-8'))
+                plugin_log("Output: %s" % line.decode('utf-8').rstrip())
                 if _log_to_stdout:
                     console.output(line)
             else:

@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 """Handling of the audit logfiles"""
 
+import codecs
 import os
 import re
 import time
@@ -393,18 +394,18 @@ class ModeAuditLog(WatoMode):
             return []
 
         entries = []
-        for line in file(self.log_path):
-            line = line.rstrip().decode("utf-8")
-            splitted = line.split(None, 4)
+        with codecs.open(self.log_path, encoding="utf-8") as fp:
+            for line in fp:
+                splitted = line.rstrip().split(None, 4)
 
-            if len(splitted) == 5 and splitted[0].isdigit():
-                splitted[0] = int(splitted[0])
+                if len(splitted) == 5 and splitted[0].isdigit():
+                    splitted[0] = int(splitted[0])
 
-                user, action, text = splitted[2:]
-                if self._filter_entry(user, action, text):
-                    continue
+                    user, action, text = splitted[2:]
+                    if self._filter_entry(user, action, text):
+                        continue
 
-                entries.append(splitted)
+                    entries.append(splitted)
 
         entries.reverse()
 

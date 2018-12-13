@@ -84,22 +84,22 @@ mib_dir = None
 
 # TODO: Add active_checks_dir and make it used in code
 local_share_dir = ''
-local_checks_dir = None
-local_notifications_dir = None
-local_inventory_dir = None
-local_check_manpages_dir = None
-local_agents_dir = None
-local_mibs_dir = None
-local_web_dir = None
-local_pnp_templates_dir = None
-local_doc_dir = None
-local_locale_dir = ''  # type: str
-local_bin_dir = None
+local_checks_dir = ''
+local_notifications_dir = ''
+local_inventory_dir = ''
+local_check_manpages_dir = ''
+local_agents_dir = ''
+local_mibs_dir = ''
+local_web_dir = ''
+local_pnp_templates_dir = ''
+local_doc_dir = ''
+local_locale_dir = ''
+local_bin_dir = ''
 local_lib_dir = ''
-local_mib_dir = None
-inventory_output_dir = None
-inventory_archive_dir = None
-status_data_dir = None
+local_mib_dir = ''
+inventory_output_dir = ''
+inventory_archive_dir = ''
+status_data_dir = ''
 
 
 def _set_paths():

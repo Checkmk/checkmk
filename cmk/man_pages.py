@@ -223,6 +223,8 @@ check_mk_agents = {
     "vsphere": "vSphere"
 }
 
+_manpage_catalog = {}  # type: ignore
+
 
 def man_page_exists(name):
     return man_page_path(name) is not None
@@ -301,11 +303,11 @@ def load_man_page_catalog():
 
 
 def print_man_page_browser(cat=()):
-    global g_manpage_catalog
-    g_manpage_catalog = load_man_page_catalog()
+    global _manpage_catalog
+    _manpage_catalog = load_man_page_catalog()
 
-    entries = _manpage_catalog_entries(g_manpage_catalog, cat)
-    subtree_names = _manpage_catalog_subtree_names(g_manpage_catalog, cat)
+    entries = _manpage_catalog_entries(_manpage_catalog, cat)
+    subtree_names = _manpage_catalog_subtree_names(_manpage_catalog, cat)
 
     if entries and subtree_names:
         sys.stderr.write(
@@ -333,7 +335,7 @@ def _manpage_catalog_subtree_names(catalog, category):
 
 def _manpage_num_entries(cat):
     num = 0
-    for c, e in g_manpage_catalog.items():
+    for c, e in _manpage_catalog.items():
         if c[:len(cat)] == cat:
             num += len(e)
     return num

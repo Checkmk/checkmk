@@ -97,22 +97,22 @@ class NagiosCore(core_config.MonitoringCore):
 #   '----------------------------------------------------------------------'
 
 
-def create_config(outfile, hostnames):
-    global hostgroups_to_define
-    hostgroups_to_define = set([])
-    global servicegroups_to_define
-    servicegroups_to_define = set([])
-    global contactgroups_to_define
-    contactgroups_to_define = set([])
-    global checknames_to_define
-    checknames_to_define = set([])
-    global active_checks_to_define
-    active_checks_to_define = set([])
-    global custom_commands_to_define
-    custom_commands_to_define = set([])
-    global hostcheck_commands_to_define
-    hostcheck_commands_to_define = []
+class NagiosConfig(object):
+    def __init__(self, outfile, hostnames):
+        super(NagiosConfig, self).__init__()
+        self.outfile = outfile
+        self.hostnames = hostnames
 
+        self.hostgroups_to_define = set([])
+        self.servicegroups_to_define = set([])
+        self.contactgroups_to_define = set([])
+        self.checknames_to_define = set([])
+        self.active_checks_to_define = set([])
+        self.custom_commands_to_define = set([])
+        self.hostcheck_commands_to_define = []
+
+
+def create_config(outfile, hostnames):
     if config.host_notification_periods != []:
         core_config.warning(
             "host_notification_periods is not longer supported. Please use extra_host_conf['notification_period'] instead."
@@ -132,44 +132,48 @@ def create_config(outfile, hostnames):
         config.extra_service_conf["_SERVICE_PERIOD"] = config.extra_service_conf["service_period"]
         del config.extra_service_conf["service_period"]
 
-    _output_conf_header(outfile)
     if hostnames is None:
         hostnames = config.all_active_hosts()
 
-    for hostname in hostnames:
-        _create_nagios_config_host(outfile, hostname)
+    cfg = NagiosConfig(outfile, hostnames)
 
-    _create_nagios_config_contacts(outfile, hostnames)
-    _create_nagios_config_hostgroups(outfile)
-    _create_nagios_config_servicegroups(outfile)
-    _create_nagios_config_contactgroups(outfile)
-    _create_nagios_config_commands(outfile)
-    _create_nagios_config_timeperiods(outfile)
+    _output_conf_header(cfg)
+
+    for hostname in hostnames:
+        _create_nagios_config_host(cfg, hostname)
+
+    _create_nagios_config_contacts(cfg, hostnames)
+    _create_nagios_config_hostgroups(cfg)
+    _create_nagios_config_servicegroups(cfg)
+    _create_nagios_config_contactgroups(cfg)
+    _create_nagios_config_commands(cfg)
+    _create_nagios_config_timeperiods(cfg)
 
     if config.extra_nagios_conf:
         outfile.write("\n# extra_nagios_conf\n\n")
         outfile.write(config.extra_nagios_conf)
 
 
-def _output_conf_header(outfile):
-    outfile.write("""#
+def _output_conf_header(cfg):
+    cfg.outfile.write("""#
 # Created by Check_MK. Do not edit.
 #
 
 """)
 
 
-def _create_nagios_config_host(outfile, hostname):
-    outfile.write("\n# ----------------------------------------------------\n")
-    outfile.write("# %s\n" % hostname)
-    outfile.write("# ----------------------------------------------------\n")
+def _create_nagios_config_host(cfg, hostname):
+    cfg.outfile.write("\n# ----------------------------------------------------\n")
+    cfg.outfile.write("# %s\n" % hostname)
+    cfg.outfile.write("# ----------------------------------------------------\n")
     host_attrs = core_config.get_host_attributes(hostname, config.tags_of_host(hostname))
     if config.generate_hostconf:
-        _create_nagios_hostdefs(outfile, hostname, host_attrs)
-    _create_nagios_servicedefs(outfile, hostname, host_attrs)
+        _create_nagios_hostdefs(cfg, hostname, host_attrs)
+    _create_nagios_servicedefs(cfg, hostname, host_attrs)
 
 
-def _create_nagios_hostdefs(outfile, hostname, attrs):
+def _create_nagios_hostdefs(cfg, hostname, attrs):
+    outfile = cfg.outfile
     is_clust = config.is_cluster(hostname)
 
     ip = attrs["address"]
@@ -199,8 +203,8 @@ def _create_nagios_hostdefs(outfile, hostname, attrs):
             outfile.write("  %s%s%s\n" % (key, tabs, value))
 
     # Host check command might differ from default
-    command = core_config.host_check_command(hostname, ip, is_clust, hostcheck_commands_to_define,
-                                             custom_commands_to_define)
+    command = core_config.host_check_command(
+        hostname, ip, is_clust, cfg.hostcheck_commands_to_define, cfg.custom_commands_to_define)
     if command:
         outfile.write("  check_command\t\t\t%s\n" % command)
 
@@ -211,16 +215,16 @@ def _create_nagios_hostdefs(outfile, hostname, attrs):
     hostgroups = ",".join(hgs)
     if len(hgs) == 0:
         hostgroups = config.default_host_group
-        hostgroups_to_define.add(config.default_host_group)
+        cfg.hostgroups_to_define.add(config.default_host_group)
     elif config.define_hostgroups:
-        hostgroups_to_define.update(hgs)
+        cfg.hostgroups_to_define.update(hgs)
     outfile.write("  hostgroups\t\t\t%s\n" % cmk_base.utils.make_utf8(hostgroups))
 
     # Contact groups
     cgrs = config.contactgroups_of(hostname)
     if len(cgrs) > 0:
         outfile.write("  contact_groups\t\t%s\n" % cmk_base.utils.make_utf8(",".join(cgrs)))
-        contactgroups_to_define.update(cgrs)
+        cfg.contactgroups_to_define.update(cgrs)
 
     if not is_clust:
         # Parents for non-clusters
@@ -256,7 +260,8 @@ def _create_nagios_hostdefs(outfile, hostname, attrs):
     outfile.write("\n")
 
 
-def _create_nagios_servicedefs(outfile, hostname, host_attrs):
+def _create_nagios_servicedefs(cfg, hostname, host_attrs):
+    outfile = cfg.outfile
     import cmk_base.check_table as check_table
 
     #   _____
@@ -352,9 +357,9 @@ define servicedependency {
 }
 
 """ % (template, hostname, description.encode("utf-8"), check_interval,
-        _extra_service_conf_of(hostname, description), action_cfg, checkname.encode("utf-8")))
+        _extra_service_conf_of(cfg, hostname, description), action_cfg, checkname.encode("utf-8")))
 
-        checknames_to_define.add(checkname)
+        cfg.checknames_to_define.add(checkname)
         have_at_least_one_service = True
 
     # Active check for check_mk
@@ -367,7 +372,7 @@ define service {
   host_name\t\t\t%s
 %s  service_description\t\tCheck_MK
 }
-""" % (config.active_service_template, hostname, _extra_service_conf_of(hostname, "Check_MK")))
+""" % (config.active_service_template, hostname, _extra_service_conf_of(cfg, hostname, "Check_MK")))
 
     # legacy checks via legacy_checks
     legchecks = config.host_extra_conf(hostname, config.legacy_checks)
@@ -390,7 +395,7 @@ define service {
         else:
             used_descriptions[description] = ("legacy(" + command + ")", description)
 
-        extraconf = _extra_service_conf_of(hostname, description)
+        extraconf = _extra_service_conf_of(cfg, hostname, description)
         if has_perfdata:
             template = "check_mk_perf,"
         else:
@@ -403,7 +408,7 @@ define service {
   check_command\t\t\t%s
   active_checks_enabled\t\t1
 %s}
-""" % (template, hostname, cmk_base.utils.make_utf8(description), _simulate_command(command),
+""" % (template, hostname, cmk_base.utils.make_utf8(description), _simulate_command(cfg, command),
         extraconf))
 
         # write service dependencies for legacy checks
@@ -419,7 +424,7 @@ define service {
             if acttype == "cmk_inv" and config.is_ping_host(hostname):
                 continue
 
-            active_checks_to_define.add(acttype)
+            cfg.active_checks_to_define.add(acttype)
             act_info = config.active_check_info[acttype]
             for params in entries:
                 actchecks.append((acttype, act_info, params))
@@ -460,12 +465,12 @@ define service {
                 used_descriptions[description] = ("active(" + acttype + ")", description)
 
             template = "check_mk_perf," if has_perfdata else ""
-            extraconf = _extra_service_conf_of(hostname, description)
+            extraconf = _extra_service_conf_of(cfg, hostname, description)
 
             if host_attrs["address"] in ["0.0.0.0", "::"]:
                 command_name = "check-mk-custom"
                 command = command_name + "!echo \"CRIT - Failed to lookup IP address and no explicit IP address configured\" && exit 2"
-                custom_commands_to_define.add(command_name)
+                cfg.custom_commands_to_define.add(command_name)
             else:
                 command = "check_mk_active-%s!%s" % (acttype, args)
 
@@ -478,7 +483,7 @@ define service {
   active_checks_enabled\t\t1
 %s}
 """ % (template, hostname, cmk_base.utils.make_utf8(description),
-            cmk_base.utils.make_utf8(_simulate_command(command)), extraconf))
+            cmk_base.utils.make_utf8(_simulate_command(cfg, command)), extraconf))
 
             # write service dependencies for active checks
             outfile.write(get_dependencies(hostname, description))
@@ -517,7 +522,7 @@ define service {
             else:
                 freshness = ""
 
-            custom_commands_to_define.add(command_name)
+            cfg.custom_commands_to_define.add(command_name)
 
             if description in used_descriptions:
                 cn, it = used_descriptions[description]
@@ -536,7 +541,7 @@ define service {
                 used_descriptions[description] = ("custom(%s)" % command_name, description)
 
             template = "check_mk_perf," if has_perfdata else ""
-            extraconf = _extra_service_conf_of(hostname, description)
+            extraconf = _extra_service_conf_of(cfg, hostname, description)
             command = "%s!%s" % (command_name, command_line)
             outfile.write("""
 define service {
@@ -546,7 +551,7 @@ define service {
   check_command\t\t\t%s
   active_checks_enabled\t\t%d
 %s%s}
-""" % (template, hostname, cmk_base.utils.make_utf8(description), _simulate_command(command),
+""" % (template, hostname, cmk_base.utils.make_utf8(description), _simulate_command(cfg, command),
             (command_line and not freshness) and 1 or 0, extraconf, freshness))
 
             # write service dependencies for custom checks
@@ -575,7 +580,7 @@ define service {
 }
 """ % (config.inventory_check_template, hostname,
         params["check_interval"], params["check_interval"],
-        _extra_service_conf_of(hostname, service_discovery_name), service_discovery_name))
+        _extra_service_conf_of(cfg, hostname, service_discovery_name), service_discovery_name))
 
         if have_at_least_one_service:
             outfile.write("""
@@ -590,20 +595,20 @@ define servicedependency {
 
     # No check_mk service, no legacy service -> create PING service
     if not have_at_least_one_service and not legchecks and not actchecks and not custchecks:
-        _add_ping_service(outfile, hostname, host_attrs["address"],
+        _add_ping_service(cfg, hostname, host_attrs["address"],
                           config.is_ipv6_primary(hostname) and 6 or 4, "PING",
                           host_attrs.get("_NODEIPS"))
 
     if config.is_ipv4v6_host(hostname):
         if config.is_ipv6_primary(hostname):
-            _add_ping_service(outfile, hostname, host_attrs["_ADDRESS_4"], 4, "PING IPv4",
+            _add_ping_service(cfg, hostname, host_attrs["_ADDRESS_4"], 4, "PING IPv4",
                               host_attrs.get("_NODEIPS_4"))
         else:
-            _add_ping_service(outfile, hostname, host_attrs["_ADDRESS_6"], 6, "PING IPv6",
+            _add_ping_service(cfg, hostname, host_attrs["_ADDRESS_6"], 6, "PING IPv6",
                               host_attrs.get("_NODEIPS_6"))
 
 
-def _add_ping_service(outfile, hostname, ipaddress, family, descr, node_ips):
+def _add_ping_service(cfg, hostname, ipaddress, family, descr, node_ips):
     arguments = core_config.check_icmp_arguments_of(hostname, family=family)
 
     ping_command = 'check-mk-ping'
@@ -612,7 +617,7 @@ def _add_ping_service(outfile, hostname, ipaddress, family, descr, node_ips):
     else:
         arguments += ' ' + ipaddress
 
-    outfile.write("""
+    cfg.outfile.write("""
 define service {
   use\t\t\t\t%s
   service_description\t\t%s
@@ -621,22 +626,23 @@ define service {
 }
 
 """ % (config.pingonly_template, descr, ping_command, arguments,
-       _extra_service_conf_of(hostname, descr), hostname))
+       _extra_service_conf_of(cfg, hostname, descr), hostname))
 
 
-def _simulate_command(command):
+def _simulate_command(cfg, command):
     if config.simulation_mode:
-        custom_commands_to_define.add("check-mk-simulation")
+        cfg.custom_commands_to_define.add("check-mk-simulation")
         return "check-mk-simulation!echo 'Simulation mode - cannot execute real check'"
     return command
 
 
-def _create_nagios_config_hostgroups(outfile):
+def _create_nagios_config_hostgroups(cfg):
+    outfile = cfg.outfile
     if config.define_hostgroups:
         outfile.write("\n# ------------------------------------------------------------\n")
         outfile.write("# Host groups (controlled by define_hostgroups)\n")
         outfile.write("# ------------------------------------------------------------\n")
-        hgs = list(hostgroups_to_define)
+        hgs = list(cfg.hostgroups_to_define)
         hgs.sort()
         for hg in hgs:
             try:
@@ -652,7 +658,7 @@ define hostgroup {
 
     # No creation of host groups but we need to define
     # default host group
-    elif config.default_host_group in hostgroups_to_define:
+    elif config.default_host_group in cfg.hostgroups_to_define:
         outfile.write("""
 define hostgroup {
   hostgroup_name\t\t%s
@@ -661,12 +667,13 @@ define hostgroup {
 """ % config.default_host_group)
 
 
-def _create_nagios_config_servicegroups(outfile):
+def _create_nagios_config_servicegroups(cfg):
+    outfile = cfg.outfile
     if config.define_servicegroups:
         outfile.write("\n# ------------------------------------------------------------\n")
         outfile.write("# Service groups (controlled by define_servicegroups)\n")
         outfile.write("# ------------------------------------------------------------\n")
-        sgs = list(servicegroups_to_define)
+        sgs = list(cfg.servicegroups_to_define)
         sgs.sort()
         for sg in sgs:
             try:
@@ -681,11 +688,12 @@ define servicegroup {
 """ % (cmk_base.utils.make_utf8(sg), cmk_base.utils.make_utf8(alias)))
 
 
-def _create_nagios_config_contactgroups(outfile):
+def _create_nagios_config_contactgroups(cfg):
+    outfile = cfg.outfile
     if config.define_contactgroups is False:
         return
 
-    cgs = list(contactgroups_to_define)
+    cgs = list(cfg.contactgroups_to_define)
     if not cgs:
         return
 
@@ -710,12 +718,13 @@ def _create_nagios_config_contactgroups(outfile):
         outfile.write("}\n")
 
 
-def _create_nagios_config_commands(outfile):
+def _create_nagios_config_commands(cfg):
+    outfile = cfg.outfile
     if config.generate_dummy_commands:
         outfile.write("\n# ------------------------------------------------------------\n")
         outfile.write("# Dummy check commands and active check commands\n")
         outfile.write("# ------------------------------------------------------------\n\n")
-        for checkname in checknames_to_define:
+        for checkname in cfg.checknames_to_define:
             outfile.write("""define command {
   command_name\t\t\tcheck_mk-%s
   command_line\t\t\t%s
@@ -724,7 +733,7 @@ def _create_nagios_config_commands(outfile):
 """ % (checkname, config.dummy_check_commandline))
 
     # active_checks
-    for acttype in active_checks_to_define:
+    for acttype in cfg.active_checks_to_define:
         act_info = config.active_check_info[acttype]
         outfile.write("""define command {
   command_name\t\t\tcheck_mk_active-%s
@@ -734,7 +743,7 @@ def _create_nagios_config_commands(outfile):
 """ % (acttype, act_info["command_line"]))
 
     # custom_checks
-    for command_name in custom_commands_to_define:
+    for command_name in cfg.custom_commands_to_define:
         outfile.write("""define command {
   command_name\t\t\t%s
   command_line\t\t\t$ARG1$
@@ -743,7 +752,7 @@ def _create_nagios_config_commands(outfile):
 """ % command_name)
 
     # custom host checks
-    for command_name, command_line in hostcheck_commands_to_define:
+    for command_name, command_line in cfg.hostcheck_commands_to_define:
         outfile.write("""define command {
   command_name\t\t\t%s
   command_line\t\t\t%s
@@ -752,7 +761,8 @@ def _create_nagios_config_commands(outfile):
 """ % (command_name, command_line))
 
 
-def _create_nagios_config_timeperiods(outfile):
+def _create_nagios_config_timeperiods(cfg):
+    outfile = cfg.outfile
     if len(config.timeperiods) > 0:
         outfile.write("\n# ------------------------------------------------------------\n")
         outfile.write("# Timeperiod definitions (controlled by variable 'timeperiods')\n")
@@ -774,7 +784,8 @@ def _create_nagios_config_timeperiods(outfile):
             outfile.write("}\n\n")
 
 
-def _create_nagios_config_contacts(outfile, hostnames):
+def _create_nagios_config_contacts(cfg, hostnames):
+    outfile = cfg.outfile
     if len(config.contacts) > 0:
         outfile.write("\n# ------------------------------------------------------------\n")
         outfile.write("# Contact definitions (controlled by variable 'contacts')\n")
@@ -786,14 +797,15 @@ def _create_nagios_config_contacts(outfile, hostnames):
             # Create contact groups in nagios, even when they are empty. This is needed
             # for RBN to work correctly when using contactgroups as recipients which are
             # not assigned to any host
-            contactgroups_to_define.update(contact.get("contactgroups", []))
+            cfg.contactgroups_to_define.update(contact.get("contactgroups", []))
             # If the contact is in no contact group or all of the contact groups
             # of the contact have neither hosts nor services assigned - in other
             # words if the contact is not assigned to any host or service, then
             # we do not create this contact in Nagios. It's useless and will produce
             # warnings.
             cgrs = [
-                cgr for cgr in contact.get("contactgroups", []) if cgr in contactgroups_to_define
+                cgr for cgr in contact.get("contactgroups", [])
+                if cgr in cfg.contactgroups_to_define
             ]
             if not cgrs:
                 continue
@@ -830,7 +842,7 @@ def _create_nagios_config_contacts(outfile, hostnames):
             outfile.write("}\n\n")
 
     if config.enable_rulebased_notifications and hostnames:
-        contactgroups_to_define.add("check-mk-notify")
+        cfg.contactgroups_to_define.add("check-mk-notify")
         outfile.write("# Needed for rule based notifications\n"
                       "define contact {\n"
                       "  contact_name\t\t\tcheck-mk-notify\n"
@@ -859,12 +871,12 @@ def _extra_host_conf_of(hostname, exclude=None):
 
 
 # Collect all extra configuration data for a service
-def _extra_service_conf_of(hostname, description):
+def _extra_service_conf_of(cfg, hostname, description):
     conf = ""
 
     # Contact groups
     sercgr = config.service_extra_conf(hostname, description, config.service_contactgroups)
-    contactgroups_to_define.update(sercgr)
+    cfg.contactgroups_to_define.update(sercgr)
     if len(sercgr) > 0:
         if config.enable_rulebased_notifications:
             sercgr.append("check-mk-notify")  # not nessary if not explicit groups defined
@@ -874,7 +886,7 @@ def _extra_service_conf_of(hostname, description):
     if len(sergr) > 0:
         conf += "  service_groups\t\t" + ",".join(sergr) + "\n"
         if config.define_servicegroups:
-            servicegroups_to_define.update(sergr)
+            cfg.servicegroups_to_define.update(sergr)
     conf += _extra_conf_of(config.extra_service_conf, hostname, description)
     return conf.encode("utf-8")
 

@@ -27,6 +27,7 @@
 import os
 import time
 import subprocess
+from typing import Dict, Any  # pylint: disable=unused-import
 
 import cmk.store as store
 
@@ -88,15 +89,15 @@ def save_gui_messages(messages, user_id=None):
 
 
 loaded_with_language = False
+_notify_methods = {}  # type: Dict[str, Dict[str, Any]]
 
 
 def load_plugins(force):
-    global loaded_with_language
+    global loaded_with_language, _notify_methods
     if loaded_with_language == cmk.gui.i18n.get_current_language() and not force:
         return
 
-    global notify_methods
-    notify_methods = {
+    _notify_methods = {
         'gui_popup': {
             'title': _('Popup Message in the GUI (shows up alert window)'),
             'handler': notify_gui_msg,
@@ -194,7 +195,7 @@ def _vs_notify():
             ('methods',
              ListChoice(
                  title=_('How to notify'),
-                 choices=[(k, v['title']) for k, v in notify_methods.items()],
+                 choices=[(k, v['title']) for k, v in _notify_methods.items()],
                  default_value=['popup'],
              )),
             ('valid_till',
@@ -220,7 +221,7 @@ def _validate_msg(msg, varprefix):
     if not msg.get('methods'):
         raise MKUserError('methods', _('Please select at least one notification method.'))
 
-    valid_methods = notify_methods.keys()
+    valid_methods = _notify_methods.keys()
     for method in msg['methods']:
         if method not in valid_methods:
             raise MKUserError('methods', _('Invalid notitification method selected.'))
@@ -265,7 +266,7 @@ def _process_notify_message(msg):
     for user_id in recipients:
         for method in msg['methods']:
             try:
-                handler = notify_methods[method]['handler']
+                handler = _notify_methods[method]['handler']
                 handler(user_id, msg)
                 num_success[method] = num_success[method] + 1
             except MKInternalError as e:
@@ -275,7 +276,7 @@ def _process_notify_message(msg):
     message += "<table>"
     for method in msg['methods']:
         message += "<tr><td>%s</td><td>to %d of %d recipients</td></tr>" %\
-                        (notify_methods[method]["title"], num_success[method], num_recipients)
+                        (_notify_methods[method]["title"], num_success[method], num_recipients)
     message += "</table>"
 
     message += _('<p>Sent notification to: %s</p>') % ', '.join(recipients)

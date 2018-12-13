@@ -160,15 +160,26 @@ NT_REMAINING = 3
 NT_PLACEHOLDER = 4  # temporary dummy entry needed for REMAINING
 
 # Global variables
-g_cache = {}  # per-user cache
+g_cache = {}
 g_bi_cache_manager = None
 g_bi_sitedata_manager = None
 g_bi_job_manager = None
 g_services_items = None
+g_services = {}
+g_services_by_hostname = {}
+g_assumptions = {}
+g_remaining_refs = []
+# dictionary with hosts and its compiled services
+g_compiled_services_leafes = {}
 
 g_tree_cache = {}
 g_config_information = None  # for invalidating cache after config change
 did_compilation = False  # Is set to true if anything has been compiled
+
+regex_host_hit_cache = set()
+regex_host_miss_cache = set()
+regex_svc_hit_cache = set()
+regex_svc_miss_cache = set()
 
 
 # Load the static configuration of all services and hosts (including tags)
@@ -1419,10 +1430,8 @@ def compile_forest(only_hosts=None, only_groups=None):
     setup_bi_instances()
 
     # TODO: can be removed soon
-    global used_cache  # Boolean
     global did_compilation  # Boolean
     did_compilation = False
-    used_cache = True
 
     try:
         if not get_aggr_ids([AGGR_HOST, AGGR_MULTI]):
@@ -2001,16 +2010,6 @@ def match_host(hostname, hostalias, host_spec, tags, required_tags, site, honor_
         if honor_site:
             return do_match(anchored, "%s%s%s" % (site, SITE_SEP, to_match))
         return do_match(anchored, to_match)
-
-
-# dictionary with hosts and its compiled services
-g_compiled_services_leafes = {}
-
-regex_host_hit_cache = set()
-regex_host_miss_cache = set()
-
-regex_svc_hit_cache = set()
-regex_svc_miss_cache = set()
 
 
 def compile_leaf_node(host_re, service_re=config.HOST_STATE):

@@ -295,6 +295,10 @@ def _transform_old_dict_based_dashlets():
         _it_is_really_used = LegacyDashletType  # help pylint
 
 
+dashboards = {}  # type: Dict
+available_dashboards = {}  # type: Dict
+
+
 def load_dashboards(lock=False):
     global dashboards, available_dashboards
     transform_builtin_dashboards()
@@ -983,13 +987,15 @@ def page_create_dashboard():
 #   | Configures the global settings of a dashboard.                       |
 #   '----------------------------------------------------------------------'
 
+vs_dashboard = None
+
 
 @cmk.gui.pages.register("edit_dashboard")
 def page_edit_dashboard():
+    global vs_dashboard
     load_dashboards(lock=html.is_transaction())
 
     # This is not defined here in the function in order to be l10n'able
-    global vs_dashboard
     vs_dashboard = Dictionary(
         title=_('Dashboard Properties'),
         render='form',

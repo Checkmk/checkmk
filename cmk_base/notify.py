@@ -62,6 +62,7 @@ except ImportError:
     keepalive = None  # type: ignore
 
 _log_to_stdout = False
+notify_mode = "notify"
 
 #   .--Configuration-------------------------------------------------------.
 #   |    ____             __ _                       _   _                 |
@@ -163,15 +164,13 @@ Available commands:
 # keepalive mode (used by CMC), sends out one notifications from
 # several possible sources or sends out all ripe bulk notifications.
 def do_notify(options, args):
-    global _log_to_stdout
+    global _log_to_stdout, notify_mode
     _log_to_stdout = options.get("log-to-stdout", _log_to_stdout)
 
     if keepalive and "keepalive" in options:
         keepalive.enable()
 
     convert_legacy_configuration()
-
-    global notify_mode
 
     try:
         if not os.path.exists(notification_logdir):

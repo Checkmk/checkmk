@@ -74,17 +74,17 @@ quicksearch_match_plugins = []  # type: List[QuicksearchMatchPlugin]
 
 # Datastructures and functions needed before plugins can be loaded
 loaded_with_language = False
+search_plugins = []  # type: List
 
 
 def load_plugins(force):
+    global loaded_with_language, search_plugins
     _register_custom_snapins()
 
-    global loaded_with_language
     if loaded_with_language == cmk.gui.i18n.get_current_language() and not force:
         return
 
     # Load all snapins
-    global search_plugins
     search_plugins = []
 
     utils.load_web_plugins("sidebar", globals())

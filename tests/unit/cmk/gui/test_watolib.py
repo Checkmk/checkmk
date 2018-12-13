@@ -1369,6 +1369,7 @@ def test_grouped_rulespecs():
             'agent_config:mk_saprouter',
             'agent_config:mk_sap',
             'agent_config:mk_logwatch',
+            'agent_config:mk_filestats',
             'agent_config:nginx_status',
             'agent_config:apache_status',
             'agent_config:mk_oracle',

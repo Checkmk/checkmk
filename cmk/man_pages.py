@@ -30,12 +30,13 @@ used as base for the list of supported checks and catalogs of checks.
 These man pages are in a Check_MK specific format an not real
 Linux/Unix man pages"""
 
-import codecs
 import os
 import re
 import sys
 import StringIO
 import subprocess
+
+from pathlib2 import Path
 
 import cmk.debug
 import cmk.paths
@@ -232,12 +233,15 @@ def man_page_exists(name):
 
 
 def man_page_path(name):
-    for basedir in [cmk.paths.local_check_manpages_dir, cmk.paths.check_manpages_dir]:
-        if name[0] == "." or name[-1] == "~":
-            continue
-
-        if os.path.exists(basedir + "/" + name):
-            return basedir + "/" + name
+    if name[0] != "." and name[-1] != "~":
+        for basedir in [
+                Path(cmk.paths.local_check_manpages_dir),
+                Path(cmk.paths.check_manpages_dir)
+        ]:
+            p = basedir / name
+            if p.exists():
+                return p
+    return None
 
 
 def all_man_pages():
@@ -260,7 +264,7 @@ def print_man_page_table():
     table = []
     for name, path in sorted(all_man_pages().items()):
         try:
-            table.append((name, _get_title_from_man_page(path)))
+            table.append((name, _get_title_from_man_page(Path(path))))
         except MKGeneralException as e:
             sys.stderr.write("ERROR: %s" % e)
 
@@ -268,7 +272,7 @@ def print_man_page_table():
 
 
 def _get_title_from_man_page(path):
-    with codecs.open(path, encoding="utf-8") as fp:
+    with path.open(encoding="utf-8") as fp:
         for line in fp:
             if line.startswith("title:"):
                 return line.split(":", 1)[1].strip()
@@ -283,11 +287,11 @@ def load_man_page_catalog():
     catalog = {}
     for name, path in all_man_pages().items():
         try:
-            parsed = _parse_man_page_header(name, path)
+            parsed = _parse_man_page_header(name, Path(path))
         except Exception as e:
             if cmk.debug.enabled():
                 raise
-            parsed = _create_fallback_man_page(name, path, e)
+            parsed = _create_fallback_man_page(name, Path(path), e)
 
         if parsed.get("catalog"):
             cat = parsed["catalog"]
@@ -409,10 +413,10 @@ def _run_dialog(args):
 
 
 def _create_fallback_man_page(name, path, error_message):
-    with codecs.open(path, encoding="utf-8") as fp:
+    with path.open(encoding="utf-8") as fp:
         return {
             "name": name,
-            "path": path,
+            "path": str(path),
             "description": fp.read().strip(),
             "title": _("%s: Cannot parse man page: %s") % (name, error_message),
             "agents": "",
@@ -425,11 +429,11 @@ def _create_fallback_man_page(name, path, error_message):
 def _parse_man_page_header(name, path):
     parsed = {
         "name": name,
-        "path": path,
+        "path": str(path),
     }
     key = None
     lineno = 0
-    with codecs.open(path, encoding="utf-8") as fp:
+    with path.open(encoding="utf-8") as fp:
         for line in fp:
             line = line.rstrip()
             lineno += 1
@@ -479,7 +483,7 @@ def load_man_page(name):
     man_page['header'] = current_section
     empty_line_count = 0
 
-    with codecs.open(path, encoding="utf-8") as fp:
+    with path.open(encoding="utf-8") as fp:
         for lineno, line in enumerate(fp):
             try:
                 if line.startswith(' ') and line.strip() != "":  # continuation line

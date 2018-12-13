@@ -45,8 +45,9 @@ def paint_wiki_notes(row):
                                                                                             svc)
 
     try:
-        import codecs
-        text += codecs.open(filename, "r", "utf-8").read()
+        from pathlib2 import Path
+        with Path(filename).open(encoding="utf-8") as fp:
+            text += fp.read()
     except IOError:
         text += "No instructions found in " + filename
 

@@ -1,5 +1,5 @@
+from pathlib2 import Path
 import pytest
-import os
 
 from testlib import cmk_path
 
@@ -8,9 +8,11 @@ import cmk_base.config as config
 
 # TODO: Add tests for module internal functions
 
+
 @pytest.fixture(autouse=True)
 def patch_cmk_paths(monkeypatch, tmpdir):
     monkeypatch.setattr("cmk.paths.local_check_manpages_dir", "%s" % tmpdir)
+
 
 def test_man_page_exists_only_shipped():
     assert man_pages.man_page_exists("if64") == True
@@ -31,7 +33,7 @@ def test_man_page_exists_both_dirs(tmpdir):
 
 
 def test_man_page_path_only_shipped():
-    assert man_pages.man_page_path("if64") == "%s/checkman/if64" % cmk_path()
+    assert man_pages.man_page_path("if64") == Path(cmk_path()) / "checkman" / "if64"
     assert man_pages.man_page_path("not_existant") is None
 
 
@@ -39,19 +41,19 @@ def test_man_page_path_both_dirs(tmpdir):
     f1 = tmpdir.join("file1")
     f1.write("x")
 
-    assert man_pages.man_page_path("file1") == "%s/file1" % tmpdir
+    assert man_pages.man_page_path("file1") == Path(tmpdir) / "file1"
     assert man_pages.man_page_path("file2") is None
 
     f2 = tmpdir.join("if")
     f2.write("x")
 
-    assert man_pages.man_page_path("if") == "%s/if" % tmpdir
+    assert man_pages.man_page_path("if") == Path(tmpdir) / "if"
 
 
 def test_all_man_pages(tmpdir):
-    f1 = tmpdir.join(".asd").write("")
-    f2 = tmpdir.join("asd~").write("")
-    f3 = tmpdir.join("if").write("")
+    tmpdir.join(".asd").write("")
+    tmpdir.join("asd~").write("")
+    tmpdir.join("if").write("")
 
     pages = man_pages.all_man_pages()
 
@@ -100,7 +102,7 @@ def test_load_man_page_catalog():
         # TODO: Test for unknown paths?
 
         for entry in entries:
-            type(entry) == dict
+            assert type(entry) == dict
 
             # Test for non fallback man pages
             assert "Cannot parse man page" not in entry["title"]
@@ -108,7 +110,7 @@ def test_load_man_page_catalog():
 
 def test_no_unsorted_man_pages():
     catalog = man_pages.load_man_page_catalog()
-    unsorted_page_names = [ m["name"] for m in catalog.get(("unsorted", ), []) ]
+    unsorted_page_names = [m["name"] for m in catalog.get(("unsorted",), [])]
 
     assert not unsorted_page_names, "Found unsorted man pages: %s" % ", ".join(unsorted_page_names)
 
@@ -116,11 +118,11 @@ def test_no_unsorted_man_pages():
 def test_manpage_catalog_headers():
     for name, path in man_pages.all_man_pages().items():
         try:
-            parsed = man_pages._parse_man_page_header(name, path)
+            parsed = man_pages._parse_man_page_header(name, Path(path))
         except Exception as e:
             if cmk.debug.enabled():
                 raise
-            parsed = man_pages._create_fallback_man_page(name, path, e)
+            parsed = man_pages._create_fallback_man_page(name, Path(path), e)
 
         assert parsed.get("catalog"), "Did not find \"catalog:\" header in man page \"%s\"" % name
 
@@ -132,8 +134,7 @@ def test_manpage_files():
 
 def _is_pure_section_declaration(check):
     '''return true if and only if the check never generates a service'''
-    return (check.get('inventory_function') is None and
-            check.get('check_function') is None)
+    return (check.get('inventory_function') is None and check.get('check_function') is None)
 
 
 def test_find_missing_manpages():
@@ -154,7 +155,7 @@ def test_find_missing_manpages():
 def test_no_subtree_and_entries_on_same_level():
     catalog = man_pages.load_man_page_catalog()
     for category, entries in catalog.items():
-        has_entries    = entries != []
+        has_entries = entries != []
         has_categories = man_pages._manpage_catalog_subtree_names(catalog, category) != []
         assert has_entries != has_categories, "A category must only have entries or categories, not both"
 
@@ -167,16 +168,14 @@ def test_load_man_page_not_existing():
 
 
 def _check_man_page_structure(page):
-    for key in [ "header" ]:
+    for key in ["header"]:
         assert key in page
 
-    for key in [ 'description', 'license', 'title',
-                 'catalog', 'agents',
-                 'distribution']:
+    for key in ['description', 'license', 'title', 'catalog', 'agents', 'distribution']:
         assert key in page["header"]
 
     if "configuration" in page:
-       assert type(page["configuration"]) == list
+        assert type(page["configuration"]) == list
 
     if "parameters" in page:
         assert type(page["parameters"]) == list
@@ -194,7 +193,7 @@ def test_load_man_page_format():
     _check_man_page_structure(page)
 
     # Check optional keys
-    for key in [ 'item', 'inventory']:
+    for key in ['item', 'inventory']:
         assert key in page["header"]
 
 
@@ -207,7 +206,6 @@ def test_print_man_page_nowiki_index(capsys):
 
     assert "<tr>" in index_entry
     assert "[check_if64|" in index_entry
-
 
 
 def test_print_man_page_nowiki_content(capsys):

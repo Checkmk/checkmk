@@ -26,9 +26,10 @@
 """Code for processing Check_MK werks. This is needed by several components,
 so it's best place is in the central library."""
 
-import codecs
-import os
+import itertools
 import json
+
+from pathlib2 import Path
 
 import cmk.paths
 
@@ -95,48 +96,36 @@ def werk_compatibilities():
 
 
 def _compiled_werks_dir():
-    return cmk.paths.share_dir + "/werks"
+    return Path(cmk.paths.share_dir) / "werks"
 
 
 def load():
     werks = {}
-
-    for file_name in os.listdir(_compiled_werks_dir()):
-        if file_name != "werks" and not file_name.startswith("werks-"):
-            continue
-
-        werks.update(load_precompiled_werks_file(os.path.join(_compiled_werks_dir(), file_name)))
-
+    # The suppressions are needed because of https://github.com/PyCQA/pylint/issues/1660
+    for file_name in itertools.chain(
+            _compiled_werks_dir().glob("werks"),  # pylint: disable=no-member
+            _compiled_werks_dir().glob("werks-*")):  # pylint: disable=no-member
+        werks.update(load_precompiled_werks_file(file_name))
     return werks
 
 
 def load_precompiled_werks_file(path):
-    with open(path) as fp:
+    with path.open() as fp:
         return {int(werk_id): werk for werk_id, werk in json.load(fp).iteritems()}
 
 
 def load_raw_files(werks_dir):
-    werks = {}
-
     if werks_dir is None:
-        werks_dir = cmk.paths.share_dir + "/werks"
-
-    try:
-        for file_name in os.listdir(werks_dir):
-            if file_name[0].isdigit():
-                werk_id = int(file_name)
-                try:
-                    werk = _load_werk(os.path.join(werks_dir, file_name))
-                    werk["id"] = werk_id
-                    werks[werk_id] = werk
-                except Exception as e:
-                    raise MKGeneralException(_("Failed to load werk \"%s\": %s") % (werk_id, e))
-    except OSError as e:
-        if e.errno == 2:
-            pass  # werk directory not existing
-        else:
-            raise
-
+        werks_dir = Path(cmk.paths.share_dir) / "werks"
+    werks = {}
+    for file_name in werks_dir.glob("[0-9]*"):
+        werk_id = int(file_name.name)
+        try:
+            werk = _load_werk(file_name)
+            werk["id"] = werk_id
+            werks[werk_id] = werk
+        except Exception as e:
+            raise MKGeneralException(_("Failed to load werk \"%s\": %s") % (werk_id, e))
     return werks
 
 
@@ -145,7 +134,7 @@ def _load_werk(path):
         "body": [],
     }
     in_header = True
-    with codecs.open(path, encoding="utf-8") as fp:
+    with path.open(encoding="utf-8") as fp:
         for line in fp:
             line = line.strip()
             if in_header and not line:
@@ -167,9 +156,8 @@ def _load_werk(path):
 
 
 def write_precompiled_werks(path, werks):
-    with open(path, "w") as f:
-        json.dump(werks, f, check_circular=False)
-    #store.save_data_to_file(path, werks, pretty=False)
+    with path.open("wb") as fp:
+        json.dump(werks, fp, check_circular=False)
 
 
 # Writhe the given werks to a file object. This is used for creating a textual

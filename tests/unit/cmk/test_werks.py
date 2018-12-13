@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import os
+from pathlib2 import Path
 import pytest
 
 import testlib
@@ -8,9 +8,9 @@ import cmk.werks
 
 @pytest.fixture(scope="function")
 def precompiled_werks(tmpdir, monkeypatch):
-    all_werks = cmk.werks.load_raw_files(os.path.join(testlib.cmk_path(), ".werks"))
-    cmk.werks.write_precompiled_werks(os.path.join("%s" % tmpdir, "werks"), all_werks)
-    monkeypatch.setattr(cmk.werks, "_compiled_werks_dir", lambda: "%s" % tmpdir)
+    all_werks = cmk.werks.load_raw_files(Path(testlib.cmk_path()) / ".werks")
+    cmk.werks.write_precompiled_werks(Path(tmpdir) / "werks", all_werks)
+    monkeypatch.setattr(cmk.werks, "_compiled_werks_dir", lambda: Path(tmpdir))
 
 
 @pytest.mark.parametrize("edition", [
@@ -21,22 +21,22 @@ def precompiled_werks(tmpdir, monkeypatch):
 def test_write_precompiled_werks(edition, tmpdir, monkeypatch):
     tmp_dir = "%s" % tmpdir
 
-    all_werks = cmk.werks.load_raw_files(os.path.join(testlib.cmk_path(), ".werks"))
+    all_werks = cmk.werks.load_raw_files(Path(testlib.cmk_path()) / ".werks")
     cre_werks = dict([ (w["id"], w) for w in all_werks.values() if w["edition"] == "cre" ])
     cee_werks = dict([ (w["id"], w) for w in all_werks.values() if w["edition"] == "cee" ])
     cme_werks = dict([ (w["id"], w) for w in all_werks.values() if w["edition"] == "cme" ])
 
     assert len(cre_werks) > 1000
     assert [ w for w in cre_werks.keys() if w >= 9000 ] == []
-    cmk.werks.write_precompiled_werks(os.path.join(tmp_dir, "werks"), cre_werks)
+    cmk.werks.write_precompiled_werks(Path(tmp_dir) / "werks", cre_werks)
 
     assert len(cee_werks) > 700
-    cmk.werks.write_precompiled_werks(os.path.join(tmp_dir, "werks-enterprise"), cee_werks)
+    cmk.werks.write_precompiled_werks(Path(tmp_dir) / "werks-enterprise", cee_werks)
 
     assert len(cme_werks) > 5
-    cmk.werks.write_precompiled_werks(os.path.join(tmp_dir, "werks-managed"), cme_werks)
+    cmk.werks.write_precompiled_werks(Path(tmp_dir) / "werks-managed", cme_werks)
 
-    monkeypatch.setattr(cmk.werks, "_compiled_werks_dir", lambda: tmp_dir)
+    monkeypatch.setattr(cmk.werks, "_compiled_werks_dir", lambda: Path(tmp_dir))
     werks_loaded = cmk.werks.load()
 
     merged_werks = cre_werks

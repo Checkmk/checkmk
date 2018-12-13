@@ -25,10 +25,10 @@
 # Boston, MA 02110-1301 USA.
 """Handling of the audit logfiles"""
 
-import codecs
-import os
 import re
 import time
+
+from pathlib2 import Path
 
 import cmk.render as render
 
@@ -54,7 +54,7 @@ from cmk.gui.plugins.wato import WatoMode, mode_registry, wato_confirm
 
 @mode_registry.register
 class ModeAuditLog(WatoMode):
-    log_path = watolib.audit_log_path
+    log_path = Path(watolib.audit_log_path)
 
     @classmethod
     def name(cls):
@@ -82,7 +82,7 @@ class ModeAuditLog(WatoMode):
                     _("Clear Log"), html.makeactionuri([("_action", "clear")]), "trash")
 
     def _log_exists(self):
-        return os.path.exists(self.log_path)
+        return self.log_path.exists()
 
     def action(self):
         if html.var("_action") == "clear":
@@ -318,20 +318,21 @@ class ModeAuditLog(WatoMode):
         return None  # browser reload
 
     def _clear_audit_log(self):
-        if not os.path.exists(self.log_path):
+        if not self.log_path.exists():
             return
 
-        newpath = self.log_path + time.strftime(".%Y-%m-%d")
-        if os.path.exists(newpath):
+        newpath = self.log_path.with_name(self.log_path.name + time.strftime(".%Y-%m-%d"))
+        # The suppressions are needed because of https://github.com/PyCQA/pylint/issues/1660
+        if newpath.exists():  # pylint: disable=no-member
             n = 1
             while True:
                 n += 1
-                with_num = newpath + "-%d" % n
-                if not os.path.exists(with_num):
+                with_num = newpath.with_name(newpath.name + "-%d" % n)
+                if not with_num.exists():  # pylint: disable=no-member
                     newpath = with_num
                     break
 
-        os.rename(self.log_path, newpath)
+        self.log_path.rename(newpath)
 
     def _render_logfile_linkinfo(self, linkinfo):
         if ':' in linkinfo:  # folder:host
@@ -390,11 +391,11 @@ class ModeAuditLog(WatoMode):
         return False
 
     def _parse_audit_log(self):
-        if not os.path.exists(self.log_path):
+        if not self.log_path.exists():
             return []
 
         entries = []
-        with codecs.open(self.log_path, encoding="utf-8") as fp:
+        with self.log_path.open(encoding="utf-8") as fp:
             for line in fp:
                 splitted = line.rstrip().split(None, 4)
 

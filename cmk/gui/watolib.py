@@ -3469,18 +3469,22 @@ class EnumAttribute(Attribute):
         return html.var(varprefix + "attr_" + self.name(), self.default_value())
 
 
-# A selection dropdown for a host tag
 class HostTagAttribute(Attribute):
-    def __init__(self, tag_definition):
-        # Definition is either triple or 4-tuple (with
-        # dependency definition)
-        tag_id, title, self._taglist = tag_definition
-        name = "tag_" + tag_id
-        if len(self._taglist) == 1:
-            def_value = None
-        else:
-            def_value = self._taglist[0][0]
-        Attribute.__init__(self, name, title, "", def_value)
+    """A selection dropdown for a host tag"""
+
+    def __init__(self, tag_id, title, tag_list):
+        self._taglist = tag_list
+        super(HostTagAttribute, self).__init__(
+            name="tag_" + tag_id,
+            title=title,
+            help_txt="",
+            default_value=self._default_tag_value(),
+        )
+
+    def _default_tag_value(self):
+        if not self.is_checkbox_tag():
+            return self._taglist[0][0]
+        return None
 
     def is_checkbox_tag(self):
         return len(self._taglist) == 1
@@ -3490,7 +3494,7 @@ class HostTagAttribute(Attribute):
         # files the _() function must also be placed in the configuration files
         # But don't localize empty strings - This empty string is connected to the header
         # of the .mo file
-        if len(self._taglist) == 1:
+        if self.is_checkbox_tag():
             title = self._taglist[0][1]
             if title:
                 title = _u(title)
@@ -3523,7 +3527,7 @@ class HostTagAttribute(Attribute):
             if value != "" and value == tagvalue and secondary_tags:
                 value = value + "|" + "|".join(secondary_tags)
 
-        if len(choices) == 1:
+        if self.is_checkbox_tag():
             html.checkbox(
                 varname,
                 value != "",
@@ -3535,28 +3539,27 @@ class HostTagAttribute(Attribute):
 
     def from_html_vars(self, varprefix):
         varname = varprefix + "attr_" + self.name()
-        if len(self._taglist) == 1:
+        if self.is_checkbox_tag():
             if html.get_checkbox(varname):
                 return self._taglist[0][0]
             return None
-        else:
-            # strip of secondary tags
-            value = html.var(varname).split("|")[0]
-            if not value:
-                value = None
-            return value
 
-    # Special function for computing the setting of a specific
-    # tag group from the total list of tags of a host
+        # strip of secondary tags
+        value = html.var(varname).split("|")[0]
+        if not value:
+            value = None
+        return value
+
     def get_tag_value(self, tags):
+        """Special function for computing the setting of a specific
+        tag group from the total list of tags of a host"""
         for entry in self._taglist:
             if entry[0] in tags:
                 return entry[0]
         return None
 
-    # Return list of host tags to set (handles
-    # secondary tags)
     def get_tag_list(self, value):
+        """Return list of host tags to set (handles secondary tags)"""
         for entry in self._taglist:
             if entry[0] == value:
                 if len(entry) >= 3:
@@ -3851,7 +3854,7 @@ def declare_host_tag_attributes():
                 topic = _('Host tags')
 
             declare_host_attribute(
-                HostTagAttribute(entry[:3]),
+                HostTagAttribute(*entry[:3]),
                 show_in_table=False,
                 show_in_folder=True,
                 editable=attr_editable,

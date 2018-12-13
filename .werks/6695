@@ -1,0 +1,11 @@
+Title: User synchronization: Fixed scenario where an update thread could get stuck indefinitely
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1543835110
+
+In this scenario the background job never finished, preventing any new updates.

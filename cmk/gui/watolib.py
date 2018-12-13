@@ -4570,13 +4570,14 @@ def do_site_login(site_id, name, password):
             raise MKAutomationException(response)
 
 
-def get_url(url, insecure, auth=None, data=None, files=None):
+def get_url(url, insecure, auth=None, data=None, files=None, timeout=None):
     response = requests.post(
         url,
         data=data,
         verify=not insecure,
         auth=auth,
         files=files,
+        timeout=timeout,
     )
 
     response.encoding = "utf-8"  # Always decode with utf-8
@@ -4653,7 +4654,7 @@ def sync_changes_before_remote_automation(site_id):
             state.get("_status_details"))
 
 
-def do_remote_automation(site, command, vars_):
+def do_remote_automation(site, command, vars_, timeout=None):
     base_url = site["multisiteurl"]
     secret = site.get("secret")
     if not secret:
@@ -4666,7 +4667,7 @@ def do_remote_automation(site, command, vars_):
                ("debug",   config.debug and '1' or '')
         ])
 
-    response = get_url(url, site.get('insecure', False), data=dict(vars_))
+    response = get_url(url, site.get('insecure', False), data=dict(vars_), timeout=timeout)
 
     if not response:
         raise MKAutomationException(_("Empty output from remote site."))
@@ -4856,10 +4857,13 @@ def legacy_push_user_profile_to_site(site, user_id, profile):
     ])
 
     response = get_url(
-        url, site.get('insecure', False), data={
+        url,
+        site.get('insecure', False),
+        data={
             'user_id': user_id,
             'profile': mk_repr(profile),
-        })
+        },
+        timeout=60)
 
     if not response:
         raise MKAutomationException(_("Empty output from remote site."))
@@ -4873,7 +4877,8 @@ def legacy_push_user_profile_to_site(site, user_id, profile):
 
 
 def push_user_profiles_to_site(site, user_profiles):
-    return do_remote_automation(site, "push-profiles", [("profiles", repr(user_profiles))])
+    return do_remote_automation(
+        site, "push-profiles", [("profiles", repr(user_profiles))], timeout=60)
 
 
 PushUserProfilesRequest = NamedTuple("PushUserProfilesRequest", [("user_profiles", dict)])

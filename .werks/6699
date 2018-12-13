@@ -1,0 +1,11 @@
+Title: BI configuration: Rule and pack choices now always show the id in addition to the title
+Level: 1
+Component: bi
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1544603575
+
+

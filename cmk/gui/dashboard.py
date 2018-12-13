@@ -315,8 +315,8 @@ def load_dashboards(lock=False):
 # This code transforms views from user_dashboards.mk which have been
 # migrated/created with daily snapshots from 2014-08 till beginning 2014-10.
 # FIXME: Can be removed one day. Mark as incompatible change or similar.
-def transform_dashboards(dashboards):
-    for dashboard in dashboards.itervalues():
+def transform_dashboards(boards):
+    for dashboard in boards.itervalues():
         visuals.transform_old_visual(dashboard)
 
         # Also transform dashlets

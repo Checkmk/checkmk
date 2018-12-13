@@ -787,7 +787,7 @@ multisite_painters["svc_group_memberlist"] = {
 
 def paint_time_graph(row, cell):
     if metrics.cmk_graphs_possible(row["site"]):
-        import cmk.gui.cee.plugins.views.graphs
+        import cmk.gui.cee.plugins.views.graphs  # pylint: disable=redefined-outer-name
         return cmk.gui.cee.plugins.views.graphs.paint_time_graph_cmk(row, cell)
     return paint_time_graph_pnp(row)
 
@@ -829,7 +829,7 @@ def time_graph_params():
     if not metrics.cmk_graphs_possible():
         return  # The method is only available in CEE
 
-    import cmk.gui.cee.plugins.views.graphs
+    import cmk.gui.cee.plugins.views.graphs  # pylint: disable=redefined-outer-name
     return cmk.gui.cee.plugins.views.graphs.cmk_time_graph_params()
 
 

@@ -197,7 +197,7 @@ class SpecialAgentDataSource(ProgramDataSource):
             command_stdin = None
 
         final_arguments = config.prepare_check_command(
-            cmd_arguments, self._hostname, service_description=None)
+            cmd_arguments, self._hostname, description=None)
 
         special_agents_dir = cmk.paths.agents_dir + "/special"
         local_special_agents_dir = cmk.paths.local_agents_dir + "/special"

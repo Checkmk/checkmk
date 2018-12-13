@@ -243,14 +243,14 @@ job_registry = GUIBackgroundJobRegistry()
 # TODO: BackgroundJob should provide an explicit status object, which we can use
 # here without any metaprogramming Kung Fu and arcane inheritance hierarchies.
 class GUIBackgroundStatusSnapshot(object):
-    def __init__(self, background_job):
+    def __init__(self, job):
         super(GUIBackgroundStatusSnapshot, self).__init__()
-        self._job_status = background_job.get_status()
-        self._logger = background_job._logger.getChild("snapshot")
+        self._job_status = job.get_status()
+        self._logger = job._logger.getChild("snapshot")
 
         for name, value in GUIBackgroundJobSnapshottedFunctions.__dict__.iteritems():
             if hasattr(value, "__call__"):
-                self._job_status[name] = getattr(background_job, name)()
+                self._job_status[name] = getattr(job, name)()
 
     def get_status_as_dict(self):
         return {self.get_job_id(): self._job_status}

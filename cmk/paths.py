@@ -103,10 +103,10 @@ status_data_dir = ''
 
 
 def _set_paths():
+    global omd_root
     omd_root = _omd_root()
 
     globals().update({
-        "omd_root": omd_root,
         "default_config_dir": os.path.join(omd_root, "etc/check_mk"),
         "main_config_file": os.path.join(omd_root, "etc/check_mk/main.mk"),
         "final_config_file": os.path.join(omd_root, "etc/check_mk/final.mk"),
@@ -153,7 +153,6 @@ def _omd_root():
 
 
 def _set_core_specific_paths():
-    omd_root = _omd_root()
     core = _get_core_name()
 
     if core == "icinga":

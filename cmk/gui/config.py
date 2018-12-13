@@ -521,13 +521,12 @@ class LoggedInUser(object):
         if authorized_sites is None:
             return unfiltered_sites
 
-        return [(site_id, site) for site_id, site in unfiltered_sites if site_id in authorized_sites
-               ]
+        return [(site_id, s) for site_id, s in unfiltered_sites if site_id in authorized_sites]
 
     def authorized_login_sites(self):
         login_site_ids = get_login_slave_sites()
         login_sites = [
-            (site_id, site) for site_id, site in allsites().items() if site_id in login_site_ids
+            (site_id, s) for site_id, s in allsites().items() if site_id in login_site_ids
         ]
         return self.authorized_sites(login_sites)
 
@@ -682,8 +681,8 @@ def user_may(user_id, pname):
 
 
 # TODO: Check all calls for arguments (changed optional user to 3rd positional)
-def save_user_file(name, data, user, unlock=False):
-    path = config_dir + "/" + user.encode("utf-8") + "/" + name + ".mk"
+def save_user_file(name, data, user_id, unlock=False):
+    path = config_dir + "/" + user_id.encode("utf-8") + "/" + name + ".mk"
     store.mkdir(os.path.dirname(path))
     store.save_data_to_file(path, data)
 
@@ -747,14 +746,14 @@ class BuiltinTags(object):
         return tag_groups
 
     def get_effective_aux_tags(self, aux_tag_list):
-        aux_tags = aux_tag_list[:]
+        aux_tags_ = aux_tag_list[:]
         aux_tag_ids = set([at[0] for at in aux_tag_list])
 
         for aux_tag in self.aux_tags():
             if aux_tag[0] not in aux_tag_ids:
-                aux_tags.append(aux_tag)
+                aux_tags_.append(aux_tag)
 
-        return aux_tags
+        return aux_tags_
 
 
 # Previous to 1.5 the "Agent type" tag group was created as sample config and was not
@@ -765,12 +764,12 @@ class BuiltinTags(object):
 # a) Check whether or not the tag group has been modified. If not, simply remove it from the user
 #    config and use the builtin tag group in the future.
 # b) Extend the tag group in the user configuration with the tag configuration we need for 1.5.
-def migrate_old_sample_config_tag_groups(host_tags, aux_tags):
-    remove_old_sample_config_tag_groups(host_tags, aux_tags)
+def migrate_old_sample_config_tag_groups(host_tags, aux_tags_):
+    remove_old_sample_config_tag_groups(host_tags, aux_tags_)
     extend_user_modified_tag_groups(host_tags)
 
 
-def remove_old_sample_config_tag_groups(host_tags, aux_tags):
+def remove_old_sample_config_tag_groups(host_tags, aux_tags_):
     legacy_tag_group_default = (
         'agent',
         u'Agent type',
@@ -788,9 +787,9 @@ def remove_old_sample_config_tag_groups(host_tags, aux_tags):
 
         # Former tag choices (see above) are added as aux tags to allow the user to migrate
         # these tags and the objects that use them
-        aux_tags.insert(0,
-                        ("snmp-only", "Data sources/Legacy: SNMP (Networking device, Appliance)"))
-        aux_tags.insert(0, ("snmp-tcp", "Data sources/Legacy: Dual: Check_MK Agent + SNMP"))
+        aux_tags_.insert(0,
+                         ("snmp-only", "Data sources/Legacy: SNMP (Networking device, Appliance)"))
+        aux_tags_.insert(0, ("snmp-tcp", "Data sources/Legacy: Dual: Check_MK Agent + SNMP"))
     except ValueError:
         pass  # Not there or modified
 
@@ -799,9 +798,9 @@ def remove_old_sample_config_tag_groups(host_tags, aux_tags):
         'tcp',
     ]
 
-    for aux_tag in aux_tags[:]:
+    for aux_tag in aux_tags_[:]:
         if aux_tag[0] in legacy_aux_tag_ids:
-            aux_tags.remove(aux_tag)
+            aux_tags_.remove(aux_tag)
 
 
 def extend_user_modified_tag_groups(host_tags):
@@ -970,24 +969,22 @@ def get_login_sites():
 #       pairs (site_id, site)
 def get_login_slave_sites():
     """Returns a list of site ids which are WATO slave sites and users can login"""
-    sites = []
-    for site_id, site in wato_slave_sites():
-        if site.get('user_login', True) and not site_is_local(site_id):
-            sites.append(site_id)
-    return sites
+    login_sites = []
+    for site_id, site_spec in wato_slave_sites():
+        if site_spec.get('user_login', True) and not site_is_local(site_id):
+            login_sites.append(site_id)
+    return login_sites
 
 
 def wato_slave_sites():
-    return [(site_id, site) for site_id, site in sites.items() if site.get("replication")]
+    return [(site_id, s) for site_id, s in sites.items() if s.get("replication")]
 
 
 def sorted_sites():
-    sitenames = []
-    for site_id, site in user.authorized_sites():
-        sitenames.append((site_id, site['alias']))
-    sitenames = sorted(sitenames, key=lambda k: k[1], cmp=lambda a, b: cmp(a.lower(), b.lower()))
-
-    return sitenames
+    sorted_choices = []
+    for site_id, s in user.authorized_sites():
+        sorted_choices.append((site_id, s['alias']))
+    return sorted(sorted_choices, key=lambda k: k[1], cmp=lambda a, b: cmp(a.lower(), b.lower()))
 
 
 def site(site_id):
@@ -1052,13 +1049,13 @@ def site_attribute_choices():
 
 def site_choices(filter_func=None):
     choices = []
-    for site_id, site in sites.items():
-        if filter_func and not filter_func(site_id, site):
+    for site_id, site_spec in sites.items():
+        if filter_func and not filter_func(site_id, site_spec):
             continue
 
         title = site_id
-        if site.get("alias"):
-            title += " - " + site["alias"]
+        if site_spec.get("alias"):
+            title += " - " + site_spec["alias"]
 
         choices.append((site_id, title))
 

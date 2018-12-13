@@ -91,11 +91,12 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
                               title=_("Query"),
                               label=_("Table") + ": ",
                               choices=[
-                                  ("hosts", _("Hosts"), visuals.VisualFilterList(infos=["host"],)),
+                                  ("hosts", _("Hosts"), visuals.VisualFilterList(
+                                      info_list=["host"],)),
                                   ("services", _("Services"),
-                                   visuals.VisualFilterList(infos=["host", "service"],)),
+                                   visuals.VisualFilterList(info_list=["host", "service"],)),
                                   ("events", _("Events"),
-                                   visuals.VisualFilterList(infos=["host", "event"],)),
+                                   visuals.VisualFilterList(info_list=["host", "event"],)),
                               ])),
                      ],
                      optional_keys=[],

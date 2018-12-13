@@ -34,7 +34,7 @@ Options:
     -h,  --help           Show this help message and exit
     -v,  -vv              Increase verbosity
     -c,  --config-file    Read config file
-                          (default: $MK_CONFDIR/mk_filestats.cfg)
+                          (default: $MK_CONFDIR/filestats.cfg)
 
 Details:
 
@@ -111,7 +111,7 @@ try:
 except NameError:  # Python3
     import configparser
 
-DEFAULT_CFG_FILE = os.path.join(os.getenv('MK_CONFDIR', ''), "mk_filestats.cfg")
+DEFAULT_CFG_FILE = os.path.join(os.getenv('MK_CONFDIR', ''), "filestats.cfg")
 
 DEFAULT_CFG_SECTION = {"output": "file_stats"}
 
@@ -465,7 +465,6 @@ def get_output_aggregator(config):
 
 
 def write_output(groups, output_aggregator):
-    sys.stdout.write('<<<mk_filestats:sep(0)>>>\n')
     for group_name, group_files_iter in groups:
         for line in output_aggregator(group_name, group_files_iter):
             sys.stdout.write("%s\n" % line)
@@ -488,6 +487,7 @@ def iter_config_section_dicts(cfg_file=None):
     if cfg_file is None:
         cfg_file = DEFAULT_CFG_FILE
     config = configparser.ConfigParser(DEFAULT_CFG_SECTION)
+    LOGGER.debug("trying to read %r", cfg_file)
     files_read = config.read(cfg_file)
     LOGGER.info("read configration file(s): %r", files_read)
 
@@ -500,6 +500,7 @@ def main():
 
     args = parse_arguments()
 
+    sys.stdout.write('<<<filestats:sep(0)>>>\n')
     for section_name, config in iter_config_section_dicts(args['cfg_file']):
 
         #1 input

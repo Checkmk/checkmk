@@ -54,12 +54,12 @@ class Schedule(object):
     def delta(self):
         pass
 
-    def next(self, time):
-        return self.rule.replace(dtstart=time).after(time)
+    def next(self, t):
+        return self.rule.replace(dtstart=t).after(t)
 
-    def last(self, time):
-        from_ = time + relativedelta(**self.delta)
-        return self.rule.replace(dtstart=from_, until=time).before(time)
+    def last(self, t):
+        from_ = t + relativedelta(**self.delta)
+        return self.rule.replace(dtstart=from_, until=t).before(t)
 
 
 class DaySchedule(Schedule):

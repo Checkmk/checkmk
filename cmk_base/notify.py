@@ -272,7 +272,7 @@ def notify_notify(raw_context, analyse=False):
 
     _complete_raw_context_with_notification_vars(raw_context)
     events.complete_raw_context(
-        raw_context, with_dump=config.notification_logging >= 2, event_log=notify_log)
+        raw_context, with_dump=config.notification_logging >= 2, log_func=notify_log)
 
     # Spool notification to remote host, if this is enabled
     if config.notification_spooling in ("remote", "both"):
@@ -763,8 +763,8 @@ def rbn_match_host_event(rule, context):
         allowed_events = rule["match_host_event"]
         state = context["HOSTSTATE"]
         last_state = context["PREVIOUSHOSTHARDSTATE"]
-        events = {"UP": 'r', "DOWN": 'd', "UNREACHABLE": 'u'}
-        return rbn_match_event(context, state, last_state, events, allowed_events)
+        event_map = {"UP": 'r', "DOWN": 'd', "UNREACHABLE": 'u'}
+        return rbn_match_event(context, state, last_state, event_map, allowed_events)
 
 
 def rbn_match_service_event(rule, context):
@@ -777,15 +777,15 @@ def rbn_match_service_event(rule, context):
         allowed_events = rule["match_service_event"]
         state = context["SERVICESTATE"]
         last_state = context["PREVIOUSSERVICEHARDSTATE"]
-        events = {"OK": 'r', "WARNING": 'w', "CRITICAL": 'c', "UNKNOWN": 'u'}
-        return rbn_match_event(context, state, last_state, events, allowed_events)
+        event_map = {"OK": 'r', "WARNING": 'w', "CRITICAL": 'c', "UNKNOWN": 'u'}
+        return rbn_match_event(context, state, last_state, event_map, allowed_events)
 
 
-def rbn_match_event(context, state, last_state, events, allowed_events):
+def rbn_match_event(context, state, last_state, event_map, allowed_events):
     notification_type = context["NOTIFICATIONTYPE"]
 
     if notification_type == "RECOVERY":
-        event = events.get(last_state, '?') + 'r'
+        event = event_map.get(last_state, '?') + 'r'
     elif notification_type in ["FLAPPINGSTART", "FLAPPINGSTOP", "FLAPPINGDISABLED"]:
         event = 'f'
     elif notification_type in ["DOWNTIMESTART", "DOWNTIMEEND", "DOWNTIMECANCELLED"]:
@@ -799,7 +799,7 @@ def rbn_match_event(context, state, last_state, events, allowed_events):
         else:
             event = 'af'
     else:
-        event = events.get(last_state, '?') + events.get(state, '?')
+        event = event_map.get(last_state, '?') + event_map.get(state, '?')
 
     notify_log("Event type is %s" % event)
 
@@ -1036,21 +1036,21 @@ def should_notify(context, entry):
         hostname = context.get("HOSTNAME")
 
         skip = True
-        regex = False
+        regex_match = False
         negate = False
         for h in entry["only_hosts"]:
             if h.startswith("!"):  # negate
                 negate = True
                 h = h[1:]
             elif h.startswith('~'):
-                regex = True
+                regex_match = True
                 h = h[1:]
 
-            if not regex and hostname == h:
+            if not regex_match and hostname == h:
                 skip = negate
                 break
 
-            elif regex and re.match(h, hostname):
+            elif regex_match and re.match(h, hostname):
                 skip = negate
                 break
         if skip:
@@ -1140,11 +1140,11 @@ def check_notification_type(context, host_events, service_events):
     if context["WHAT"] == "HOST":
         allowed_events = host_events
         state = context["HOSTSTATE"]
-        events = {"UP": 'r', "DOWN": 'd', "UNREACHABLE": 'u'}
+        event_map = {"UP": 'r', "DOWN": 'd', "UNREACHABLE": 'u'}
     else:
         allowed_events = service_events
         state = context["SERVICESTATE"]
-        events = {"OK": 'r', "WARNING": 'w', "CRITICAL": 'c', "UNKNOWN": 'u'}
+        event_map = {"OK": 'r', "WARNING": 'w', "CRITICAL": 'c', "UNKNOWN": 'u'}
 
     if notification_type == "RECOVERY":
         event = 'r'
@@ -1155,7 +1155,7 @@ def check_notification_type(context, host_events, service_events):
     elif notification_type == "ACKNOWLEDGEMENT":
         event = 'x'
     else:
-        event = events.get(state, '?')
+        event = event_map.get(state, '?')
 
     return event, allowed_events
 

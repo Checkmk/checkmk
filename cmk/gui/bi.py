@@ -563,7 +563,7 @@ class BILock(object):
 
         return self
 
-    def __exit__(self, exception_type, exception_value, traceback):
+    def __exit__(self, exception_type, exception_value, tb):
         if self._fd:
             log('BI: BILock %-2s %30s <<<%s>>>' % (
                 self._fd,
@@ -2536,11 +2536,11 @@ def aggr_countok(nodes, needed_for_ok=2, needed_for_warn=1):
 config.aggregation_functions["count_ok"] = aggr_countok
 
 
-def aggr_running_on(nodes, regex):
+def aggr_running_on(nodes, regex_pattern):
     first_check = nodes[0]
 
     # extract hostname we run on
-    mo = re.match(regex, first_check[0]["output"])
+    mo = re.match(regex_pattern, first_check[0]["output"])
 
     # if not found, then do normal aggregation with 'worst'
     if not mo or len(mo.groups()) == 0:

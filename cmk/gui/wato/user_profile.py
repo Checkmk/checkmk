@@ -28,7 +28,7 @@
 import time
 
 import cmk.gui.i18n
-import cmk.gui.sites as sites
+import cmk.gui.sites
 import cmk.gui.userdb as userdb
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
@@ -353,7 +353,7 @@ class ModeAjaxProfileReplication(WatoWebApiMode):
         if site_id not in config.sitenames():
             raise MKUserError(None, _("The requested site does not exist"))
 
-        status = sites.state(site_id, {}).get("state", "unknown")
+        status = cmk.gui.sites.state(site_id, {}).get("state", "unknown")
         if status == "dead":
             raise MKGeneralException(_('The site is marked as dead. Not trying to replicate.'))
 

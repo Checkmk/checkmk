@@ -96,11 +96,11 @@ def cores_by_site():
     for site_id, site_state in states().items():
         # Offline sites don't provide core info. Assume CMC is this case
         if site_state["state"] == "dead":
-            state = "cmc"
+            core = "cmc"
         else:
-            state = site_state.get("core")
+            core = site_state.get("core")
 
-        cores[site_id] = state
+        cores[site_id] = core
 
     return cores
 

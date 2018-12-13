@@ -27,6 +27,7 @@
 import sys
 import json
 import getopt
+import socket
 
 import requests
 
@@ -76,10 +77,8 @@ if len(args) > 0 or not api_key or not venueid or not address:
 
 
 # TODO: put into special_agent lib
-def get_agent_info_tcp(hostname):
-    import socket
-    response = ""
-    ipaddress = socket.gethostbyname(hostname)
+def get_agent_info_tcp(host):
+    ipaddress = socket.gethostbyname(host)
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.settimeout(10)
     s.connect((ipaddress, 6556))
@@ -89,16 +88,16 @@ def get_agent_info_tcp(hostname):
     except:
         pass
 
-    response = ""
+    resp = ""
     while True:
         out = s.recv(4096, socket.MSG_WAITALL)
         if out and len(out) > 0:
-            response += out
+            resp += out
         else:
             break
     s.close()
 
-    return response
+    return resp
 
 
 try:

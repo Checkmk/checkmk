@@ -168,9 +168,9 @@ def eventd_configuration():
 
     settings = cmk.ec.settings.settings('', Path(cmk.paths.omd_root),
                                         Path(cmk.paths.default_config_dir), [''])
-    config = cmk.ec.export.load_config(settings)
-    cached_config = (html, config)
-    return config
+    cfg = cmk.ec.export.load_config(settings)
+    cached_config = (html, cfg)
+    return cfg
 
 
 def daemon_running():

@@ -47,7 +47,6 @@ from cmk.gui.valuespec import (
     TextUnicode,
     TextAscii,
     TextAreaUnicode,
-    type_name,
 )
 import cmk.gui.forms as forms
 import cmk.gui.config as config
@@ -1262,9 +1261,8 @@ class VisualFilter(ValueSpec):
 
     def validate_datatype(self, value, varprefix):
         if not isinstance(value, dict):
-            raise MKUserError(
-                varprefix,
-                _("The value must be of type dict, but it has type %s") % type_name(value))
+            raise MKUserError(varprefix,
+                              _("The value must be of type dict, but it has type %s") % type(value))
 
     def validate_value(self, value, varprefix):
         ValueSpec.custom_validate(self, value, varprefix)

@@ -323,7 +323,7 @@ class SnapshotCreator(SnapshotCreationBase):
         self._prepare_generic_tar_files()
         return self
 
-    def __exit__(self, exception_type, exception_value, traceback):
+    def __exit__(self, exception_type, exception_value, tb):
         for worker in self._worker_subprocesses:
             worker.join()
         self.output_statistics()

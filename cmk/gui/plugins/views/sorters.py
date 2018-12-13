@@ -464,16 +464,16 @@ def cmp_host_tag(r1, r2, tgid):
     return cmp(val1, val2)
 
 
-for entry in config.host_tag_groups():
-    tgid = entry[0]
-    tit = entry[1]
+for _entry in config.host_tag_groups():
+    _tgid = _entry[0]
+    _tit = _entry[1]
 
-    declare_simple_sorter("host_tag_" + tgid,
-                          _("Host tag:") + ' ' + tit, "host_tag_" + tgid, cmp_simple_string)
+    declare_simple_sorter("host_tag_" + _tgid,
+                          _("Host tag:") + ' ' + _tit, "host_tag_" + _tgid, cmp_simple_string)
 
-    multisite_sorters["host_tag_" + tgid] = {
-        "title": _("Host tag:") + ' ' + tit,
+    multisite_sorters["host_tag_" + _tgid] = {
+        "title": _("Host tag:") + ' ' + _tit,
         "columns": ["host_custom_variable_names", "host_custom_variable_values"],
         "cmp": cmp_host_tag,
-        "args": [tgid],
+        "args": [_tgid],
     }

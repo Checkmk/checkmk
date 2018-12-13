@@ -93,8 +93,8 @@ count = 0
 output_lines = []
 
 
-def add_output(line):
-    output_lines.append(line)
+def add_output(l):
+    output_lines.append(l)
 
 
 try:

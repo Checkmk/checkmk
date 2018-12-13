@@ -789,8 +789,8 @@ def do_snmpwalk_on(options, access_data, filename):
     console.verbose("Wrote fetched data to %s%s%s.\n" % (tty.bold, filename, tty.normal))
 
 
-def _execute_walks_for_dump(hostname, access_data, oids_to_walk):
-    for oid in oids_to_walk:
+def _execute_walks_for_dump(hostname, access_data, oids):
+    for oid in oids:
         try:
             console.verbose("Walk on \"%s\"..." % oid)
             yield walk_for_export(access_data, oid)
@@ -804,18 +804,18 @@ def oids_to_walk(options=None):
     if options is None:
         options = {}
 
-    oids_to_walk = [
+    oids = [
         ".1.3.6.1.2.1",  # SNMPv2-SMI::mib-2
         ".1.3.6.1.4.1"  # SNMPv2-SMI::enterprises
     ]
 
     if "oids" in options:
-        oids_to_walk = options["oids"]
+        oids = options["oids"]
 
     elif "extraoids" in options:
-        oids_to_walk += options["extraoids"]
+        oids += options["extraoids"]
 
-    return sorted(oids_to_walk, key=lambda x: map(int, x.strip(".").split(".")))
+    return sorted(oids, key=lambda x: map(int, x.strip(".").split(".")))
 
 
 def do_snmpget(*args):

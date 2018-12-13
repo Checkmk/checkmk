@@ -425,8 +425,8 @@ class ACApacheTest(ACTest):
         raise MKGeneralException("Failed to parse the score board")
 
     def _get_apache_status(self):
-        config = ConfigDomainOMD().default_globals()
-        url = "http://127.0.0.1:%s/server-status?auto" % config["site_apache_tcp_port"]
+        cfg = ConfigDomainOMD().default_globals()
+        url = "http://127.0.0.1:%s/server-status?auto" % cfg["site_apache_tcp_port"]
 
         response = requests.get(url, headers={"Accept": "text/plain"})
         return response.text

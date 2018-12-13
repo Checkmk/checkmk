@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-from typing import Optional  # pylint: disable=unused-import
+from typing import Optional, Text  # pylint: disable=unused-import
 
 import cmk.gui.http_status
 from cmk.gui.i18n import _
@@ -105,21 +105,20 @@ class MKConfigError(MKException):
 
 class MKUserError(MKException):
     def __init__(self, varname, message):
-        # type: (str, str) -> None
+        # type: (str, Text) -> None
         self.varname = varname  # type: str
-        self.message = message  # type: str
+        self.message = message  # type: Text
         super(MKUserError, self).__init__(varname, message)
 
     def __str__(self):
-        # type: () -> str
         return self.message
 
     def title(self):
-        # type: () -> unicode
+        # type: () -> Text
         return _("Invalid User Input")
 
     def plain_title(self):
-        # type: () -> unicode
+        # type: () -> Text
         return _("User error")
 
 

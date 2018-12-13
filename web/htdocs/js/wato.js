@@ -91,6 +91,7 @@ function wato_fix_visibility() {
 
         for (var i = 0; i < oTable.childNodes.length; i++) {
             var oTr = oTable.childNodes[i];
+            var add_tag_id = null;
             if (oTr.tagName == 'TR') {
                 var oTdLegend = oTr.childNodes[0];
                 if (oTdLegend.className != "legend") {
@@ -102,7 +103,7 @@ function wato_fix_visibility() {
                 if (oCheckbox.checked == false ){
                     var attrname = 'attr_' + oCheckbox.name.replace(/.*_change_/, '');
                     if (attrname in inherited_tags && inherited_tags[attrname] !== null){
-                        currentTags = currentTags.concat(inherited_tags[attrname].split("|"));
+                        add_tag_id = inherited_tags[attrname];
                     }
                 } else {
                     /* Find the <select>/<checkbox> object in this tr */
@@ -110,16 +111,21 @@ function wato_fix_visibility() {
                     if (elements.length == 0)
                         elements = oTdContent.getElementsByTagName("select");
 
-                    if (elements.lenght == 0)
+                    if (elements.length == 0)
                         continue;
 
                     var oElement = elements[0];
                     if (oElement.type == 'checkbox' && oElement.checked) {
-                        currentTags = currentTags.concat(oElement.getAttribute('tags').split("|"));
+                        add_tag_id = oElement.name.substr(4);
                     } else if (oElement.tagName == 'SELECT') {
-                        currentTags = currentTags.concat(oElement.value.split("|"));
+                        add_tag_id = oElement.value;
                     }
                 }
+            }
+
+            currentTags.push(add_tag_id);
+            if (wato_aux_tags_by_tag[add_tag_id]) {
+                currentTags = currentTags.concat(wato_aux_tags_by_tag[add_tag_id]);
             }
         }
     }

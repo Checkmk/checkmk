@@ -1672,8 +1672,7 @@ def configure_attributes(new,
                         inherited_value = container.attributes()[attrname]
                         has_inherited = True
                         if attr.is_tag_attribute:
-                            inherited_tags["attr_%s" % attrname] = '|'.join(
-                                attr.get_tag_list(inherited_value))
+                            inherited_tags["attr_%s" % attrname] = inherited_value
                         break
 
                     container = container.parent()
@@ -1683,8 +1682,7 @@ def configure_attributes(new,
                 inherited_value = attr.default_value()
                 # Also add the default values to the inherited values dict
                 if attr.is_tag_attribute:
-                    inherited_tags["attr_%s" % attrname] = '|'.join(
-                        attr.get_tag_list(inherited_value))
+                    inherited_tags["attr_%s" % attrname] = inherited_value
 
             # Checkbox for activating this attribute
 
@@ -1831,6 +1829,7 @@ def configure_attributes(new,
     # of all attributes.
     html.javascript("var inherited_tags = %s;\n"\
                     "var wato_check_attributes = %s;\n"\
+                    "var wato_aux_tags_by_tag = %s;\n"\
                     "var wato_depends_on_tags = %s;\n"\
                     "var wato_depends_on_roles = %s;\n"\
                     "var volatile_topics = %s;\n"\
@@ -1839,11 +1838,20 @@ def configure_attributes(new,
                     "wato_fix_visibility();\n" % (
                        json.dumps(inherited_tags),
                        json.dumps(list(set(dependency_mapping_tags.keys()+dependency_mapping_roles.keys()+hide_attributes))),
+                       json.dumps(_get_auxtags_by_tag()),
                        json.dumps(dependency_mapping_tags),
                        json.dumps(dependency_mapping_roles),
                        json.dumps(volatile_topics),
                        json.dumps(config.user.role_ids),
                        json.dumps(hide_attributes)))
+
+
+def _get_auxtags_by_tag():
+    aux_tag_map = {}
+    for entry in config.host_tag_groups():
+        for tag_id, _tag_title, aux_tags in entry[2]:
+            aux_tag_map[tag_id] = aux_tags
+    return aux_tag_map
 
 
 # Check if at least one host in a folder (or its subfolders)

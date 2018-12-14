@@ -40,23 +40,28 @@ def get_info_argument(dataset, subcheck, fallback_parsed=None):
     return arg
 
 
-def get_merged_parameters(check, provided_p):
-    """return (merged_params, description_string)
-
-    I think this is a mess.
-    I'm trying to do the right thing, any ideas wellcome.
-    """
+def get_discovered_merged_parameters(check, provided_p):
     default_p = check.default_parameters()
 
     if not provided_p:
         return default_p, "default"
     if isinstance(provided_p, str):
+        # TODO: this is not correct since it may be the name of a variable defined in
+        #       the check or the repr of a dict as e.g. in winperf_if
         return default_p, "default"
+    raise DiscoveryParameterTypeError("unhandled: %r/%r" % (default_p, provided_p))
+
+
+def get_check_merged_parameters(check, provided_p):
+    default_p = check.default_parameters()
+
+    if provided_p == 'default':
+        return default_p
     if isinstance(default_p, dict) and isinstance(provided_p, dict):
         default_p.update(provided_p)
-        return default_p, repr(default_p)
-    if not default_p:
-        return provided_p, repr(provided_p)
+        return default_p
+    if isinstance(provided_p, tuple):
+        return provided_p
     raise DiscoveryParameterTypeError("unhandled: %r/%r" % (default_p, provided_p))
 
 
@@ -134,7 +139,7 @@ def check_discovered_result(check, discovery_result, info_arg, immu):
 
     item = discovery_result.item
 
-    params, par_str = get_merged_parameters(check, discovery_result.default_params)
+    params, par_str = get_discovered_merged_parameters(check, discovery_result.default_params)
     immu.register(params, 'params')
 
     raw_checkresult = check.run_check(item, params, info_arg)
@@ -151,7 +156,7 @@ def check_listed_result(check, list_entry, info_arg, immu):
     item, params, results_expected_raw = list_entry
     print("Dataset item %r in check %r" % (item, check.name))
 
-    params, __ = get_merged_parameters(check, params)
+    params = get_check_merged_parameters(check, params)
     immu.register(params, 'params')
 
     result_raw = check.run_check(item, params, info_arg)

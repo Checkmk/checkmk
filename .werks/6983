@@ -1,0 +1,13 @@
+Title: lnx_thermal: Fix GUI warning about wrong parameter data type
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0p10
+Date: 1544779738
+Class: fix
+
+This was a purely cosmetical error and did not affect the check logic
+in any way.
+
+CMK-1428

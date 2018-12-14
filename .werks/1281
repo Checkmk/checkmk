@@ -5,6 +5,7 @@ Compatible: compat
 Version: 1.2.7i3
 Date: 1439992949
 Class: feature
+
 To use the Azure Monitoring in OMD based installation:
 
  - Copy the azuremonitor folder to ~/local/lib/python

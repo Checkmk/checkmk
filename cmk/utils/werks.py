@@ -129,9 +129,31 @@ def load_raw_files(werks_dir):
     return werks
 
 
+_REQUIRED_WERK_FIELDS = {
+    "class",
+    "component",
+    "date",
+    "level",
+    "title",
+    "version",
+}
+
+_OPTIONAL_WERK_FIELDS = {
+    "compatible",
+    "edition",
+    # TODO: What's this? Can we simply nuke the fields below from all werks?
+    "state",
+    "targetversion",
+}
+
+_ALLOWED_WERK_FIELDS = _REQUIRED_WERK_FIELDS | _OPTIONAL_WERK_FIELDS
+
+
 def _load_werk(path):
     werk = {
         "body": [],
+        "compatible": "compat",
+        "edition": "cre",
     }
     in_header = True
     with path.open(encoding="utf-8") as fp:
@@ -145,13 +167,17 @@ def _load_werk(path):
                     value = int(text.strip())
                 except ValueError:
                     value = text.strip()
-                werk[key.lower()] = value
+                field = key.lower()
+                if field not in _ALLOWED_WERK_FIELDS:
+                    raise MKGeneralException("unknown werk field %s" % key)
+                werk[field] = value
             else:
                 werk["body"].append(line)
 
-    werk.setdefault("compatible", "compat")
-    werk.setdefault("edition", "cre")
-
+    missing_fields = _REQUIRED_WERK_FIELDS - set(werk.keys())
+    if missing_fields:
+        raise MKGeneralException("missing fields: %s" % ",".join(missing_fields))
+    # TODO: Check if all fields have an allowed value, see .werks/config.
     return werk
 
 

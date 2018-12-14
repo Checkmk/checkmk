@@ -4,7 +4,8 @@ Edition: cee
 Component: config
 Version: 1.2.5i5
 Date: 1403877191
-Class: incomp
+Class: feature
+Compatible: incomp
 
 Up to now the CMC adopted the behaviour of Nagios when it came to the
 authorization of seeing host and service groups. Nagios lets a user see a

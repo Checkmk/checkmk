@@ -26,6 +26,7 @@
 import json
 
 _AZURE_METRIC_FMT = {
+    "count": lambda n: "%d" % n,
     "percent": get_percent_human_readable,
     "bytes": get_bytes_human_readable,
     "bytes_per_second": lambda b: "%s/s" % get_bytes_human_readable(b),
@@ -182,6 +183,7 @@ def parse_azure(info):
             raw_resources[-1].append(row)
 
     parsed_resources = (_parse_resource(r) for r in raw_resources)
+
     return {r['name']: r for r in parsed_resources if r}
 
 

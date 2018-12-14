@@ -279,3 +279,66 @@ register_check_parameters(
     None,
     match_type='dict',
 )
+
+register_check_parameters(
+    RulespecGroupCheckParametersApplications,
+    'azure_virtualnetworkgateways',
+    _("Azure VNet Gateway"),
+    Dictionary(elements=[
+        (
+            'connections_levels_upper',
+            Tuple(
+                title=_("Upper levels on number of Point-to-site connections"),
+                elements=[Float(title=_("Warning at")),
+                          Float(title=_("Critical at"))]),
+        ),
+        (
+            'connections_levels_lower',
+            Tuple(
+                title=_("Lower levels on number of Point-to-site connections"),
+                elements=[Float(title=_("Warning below")),
+                          Float(title=_("Critical below"))]),
+        ),
+        (
+            'p2s_bandwidth_levels_upper',
+            Tuple(
+                title=_("Upper levels on Point-to-site bandwidth in bytes per second"),
+                elements=[
+                    Float(title=_("Warning at"), unit="B/s"),
+                    Float(title=_("Critical at"), unit="B/s")
+                ]),
+        ),
+        (
+            'p2s_bandwidth_levels_lower',
+            Tuple(
+                title=_("Lower levels on Point-to-site bandwidth in bytes per second"),
+                elements=[
+                    Float(title=_("Warning below"), unit="B/s"),
+                    Float(title=_("Critical below"), unit="B/s")
+                ]),
+        ),
+        (
+            's2s_bandwidth_levels_upper',
+            Tuple(
+                title=_("Upper levels on Site-to-site bandwidth in bytes per second"),
+                elements=[
+                    Float(title=_("Warning at"), unit="B/s"),
+                    Float(title=_("Critical at"), unit="B/s")
+                ]),
+        ),
+        (
+            's2s_bandwidth_levels_lower',
+            Tuple(
+                title=_("Lower levels on Site-to-site bandwidth in bytes per second"),
+                elements=[
+                    Float(title=_("Warning below"), unit="B/s"),
+                    Float(title=_("Critical below"), unit="B/s")
+                ]),
+        ),
+    ]),
+    TextAscii(
+        title=_("Virtual network gateway name"),
+        help=_("Specify virtual network gateway names that the rule should apply to"),
+    ),
+    match_type='dict',
+)

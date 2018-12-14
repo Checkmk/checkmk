@@ -46,8 +46,9 @@ def get_discovered_merged_parameters(check, provided_p):
     if not provided_p:
         return default_p, "default"
     if isinstance(provided_p, str):
-        # TODO: this is not correct since it may be the name of a variable defined in
-        #       the check or the repr of a dict as e.g. in winperf_if
+        if provided_p in check.context:
+            return check.context[provided_p], check.context[provided_p]
+        # TODO: the repr case used e.g. in winperf_if is still not correct
         return default_p, "default"
     raise DiscoveryParameterTypeError("unhandled: %r/%r" % (default_p, provided_p))
 
@@ -57,7 +58,9 @@ def get_check_merged_parameters(check, provided_p):
 
     if provided_p == 'default':
         return default_p
-    if isinstance(default_p, dict) and isinstance(provided_p, dict):
+    if provided_p is None:
+        return provided_p
+    if isinstance(provided_p, dict):
         default_p.update(provided_p)
         return default_p
     if isinstance(provided_p, tuple):

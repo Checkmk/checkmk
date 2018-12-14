@@ -8,14 +8,14 @@ discovery = {
 }
 
 checks = {
-    '': [(None, 'default',
+    '': [(None, None,
           [(0, 'Physc: 0.02, Entc: 9.3%, Lbusy: 0.1, App: 519, Vcsw: 0, Phint: 101, Nsp: 0.00%',
             [('physc', 0.02, None, None, None, None), ('entc', 9.3, None, None, None, None),
              ('lbusy', 0.1, None, None, None, None), ('app', 519.0, None, None, None, None),
              ('vcsw', 0.0, None, None, None, None), ('phint', 101.0, None, None, None, None),
              ('nsp', 0.0, None, None, None, None)])])],
     'cpu_util': [
-        (None, 'default', [(0, 'user: 0.2%, system: 1.2%, wait: 0.2%',
+        (None, None, [(0, 'user: 0.2%, system: 1.2%, wait: 0.2%',
                             [('user', 0.2, None, None, None, None),
                              ('system', 1.2, None, None, None, None),
                              ('wait', 0.2, None, None, None, None)])]),

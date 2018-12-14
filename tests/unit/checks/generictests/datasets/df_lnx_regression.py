@@ -1,19 +1,11 @@
-
-
 checkname = 'df'
 
-
-info = [[u'/dev/sda4',
-         u'ext4',
-         u'143786696',
-         u'101645524',
-         u'34814148',
-         u'75%',
-         u'/'],
-        [u'[df_inodes_start]'],
-        [u'/dev/sda4', u'ext4', u'9142272', u'1654272', u'7488000', u'19%', u'/'],
-        [u'[df_inodes_end]']]
-
+info = [
+    [u'/dev/sda4', u'ext4', u'143786696', u'101645524', u'34814148', u'75%', u'/'],
+    [u'[df_inodes_start]'],
+    [u'/dev/sda4', u'ext4', u'9142272', u'1654272', u'7488000', u'19%', u'/'],
+    [u'[df_inodes_end]'],
+]
 
 discovery = {'': [(u'/', {})]}
 
@@ -42,7 +34,7 @@ checks = {
               ),
              ]
          ),
-         (u'/dev/sda4 /', {"subtract_reserved": True, "show_reserved": True},
+         (u'/dev/sda4 /', {'trend_range': 24, 'show_levels': 'onmagic', 'inodes_levels': (10.0, 5.0), 'magic_normsize': 20, 'show_inodes': 'onlow', 'levels': (80.0, 90.0), 'show_reserved': True, 'subtract_reserved': True, 'levels_low': (50.0, 60.0), 'trend_perfdata': True,},
              [(0, '74.5% used (96.94 of 130.14 GB), additionally reserved for root: 6.99 GB,' \
                   ' trend: 0.00 B / 24 hours',
                  [(u'/', 99263.20703125, 112333.35625, 126375.02578125, 0, 140416.6953125),
@@ -56,7 +48,7 @@ checks = {
               ),
              ]
          ),
-         (u'/', {"show_reserved": True},
+         (u'/', {'trend_range': 24, 'show_levels': 'onmagic', 'inodes_levels': (10.0, 5.0), 'magic_normsize': 20, 'show_inodes': 'onlow', 'levels': (80.0, 90.0), 'show_reserved': True, 'levels_low': (50.0, 60.0), 'trend_perfdata': True},
              [(0, '75.8% used (103.92 of 137.13 GB), therein reserved for root: 5.1% (6.99 GB),' \
                   ' trend: 0.00 B / 24 hours',
                  [(u'/', 106418.50390625, 112333.35625, 126375.02578125, 0, 140416.6953125),
@@ -69,7 +61,7 @@ checks = {
               ),
              ]
          ),
-         (u'/dev/sda4 /', {"show_reserved": True},
+         (u'/dev/sda4 /', {'trend_range': 24, 'show_levels': 'onmagic', 'inodes_levels': (10.0, 5.0), 'magic_normsize': 20, 'show_inodes': 'onlow', 'levels': (80.0, 90.0), 'show_reserved': True, 'levels_low': (50.0, 60.0), 'trend_perfdata': True},
              [(0, '75.8% used (103.92 of 137.13 GB), therein reserved for root: 5.1% (6.99 GB),' \
                   ' trend: 0.00 B / 24 hours',
                  [(u'/', 106418.50390625, 112333.35625, 126375.02578125, 0, 140416.6953125),

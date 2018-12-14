@@ -654,6 +654,7 @@ g_skel_permissions = {}  # type: Dict[str, int]
 
 
 def read_skel_permissions():
+    global g_skel_permissions
     g_skel_permissions = load_skel_permissions(omdlib.__version__)
     if not g_skel_permissions:
         bail_out("%s is missing or currupted." % skel_permissions_file_path(omdlib.__version__))
@@ -2883,6 +2884,7 @@ def main_enable(site, args, options):
 
 
 def set_conflict_option(options):
+    global opt_conflict
     opt_conflict = options.get("conflict", "ask")
 
     if opt_conflict not in ["ask", "install", "keepold", "abort"]:

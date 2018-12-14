@@ -1,7 +1,4 @@
-
-
 checkname = 'docker_node_info'
-
 
 info = [
     [u'|Containers', u' 42'],
@@ -30,20 +27,18 @@ info = [
     [u'|CPUs', u' 1024'],
     [u'|Total Memory', u' -23 GiB'],
     [u'|Name', u' voms01'],
-    [u'|ID', u' XXXX', u'XXXX', u'XXXX', u'XXXX', u'XXXX', u'XXXX',
-              u'BLOB', u'BOBO', u'0COV', u'FEFE', u'WHOO', u'0TEH'],
+    [
+        u'|ID', u' XXXX', u'XXXX', u'XXXX', u'XXXX', u'XXXX', u'XXXX', u'BLOB', u'BOBO', u'0COV',
+        u'FEFE', u'WHOO', u'0TEH'
+    ],
 ]
-
 
 discovery = {'': [(None, {})], 'containers': [(None, {})]}
 
-
-checks = {'': [(None, 'default', [(0, u'Daemon running on host voms01', [])])],
-          'containers': [(None,
-                          'default',
-                          [(0,
-                            'containers: 42',
-                            [('containers', 42, None, None, None, None)]),
-                           (3, 'running: count not present in agent output', []),
-                           (3, 'paused: count not present in agent output', []),
-                           (3, 'stopped: count not present in agent output', [])])]}
+checks = {
+    '': [(None, {}, [(0, u'Daemon running on host voms01', [])])],
+    'containers': [(None, {}, [(0, 'containers: 42', [('containers', 42, None, None, None, None)]),
+                               (3, 'running: count not present in agent output', []),
+                               (3, 'paused: count not present in agent output', []),
+                               (3, 'stopped: count not present in agent output', [])])]
+}

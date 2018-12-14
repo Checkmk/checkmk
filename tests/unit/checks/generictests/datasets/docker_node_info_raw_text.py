@@ -54,9 +54,9 @@ info = [['|Containers', ' 0'],
 discovery = {'': [(None, {})], 'containers': [(None, {})]}
 
 
-checks = {'': [(None, 'default', [(0, u'Daemon running on host klappson', [])])],
+checks = {'': [(None, {}, [(0, u'Daemon running on host klappson', [])])],
           'containers': [(None,
-                          'default',
+                          {},
                           [(0,
                             'containers: 0',
                             [('containers', 0, None, None, None, None)]),

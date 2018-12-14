@@ -14,5 +14,5 @@ discovery = {'': [('/path/to/share', {})]}
 
 
 checks = {'': [('/path/to/share',
-                'default',
+                {},
                 [(0, '55.8% used (27.43 GB of 49.18 GB)', [])])]}

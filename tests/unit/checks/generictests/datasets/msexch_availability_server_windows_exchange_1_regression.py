@@ -119,7 +119,7 @@ discovery = {'': [(None, None)]}
 
 
 checks = {'': [(None,
-                'default',
+                {},
                 [(0,
                   '0.00 requests/sec',
                   [('requests_per_sec', 0.0, None, None, None, None)])])]}

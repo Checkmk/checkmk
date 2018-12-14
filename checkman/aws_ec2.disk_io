@@ -1,6 +1,6 @@
 title: AWS EC2 Instance Disk IO
 agents: aws
-catalog: applications
+catalog: cloud/aws
 license: GPL
 distribution: check_mk
 description:

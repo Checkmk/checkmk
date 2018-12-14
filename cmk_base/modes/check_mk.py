@@ -1692,3 +1692,39 @@ modes.register(
     ))
 
 #.
+#   .--help----------------------------------------------------------------.
+#   |                         _          _                                 |
+#   |                        | |__   ___| |_ __                            |
+#   |                        | '_ \ / _ \ | '_ \                           |
+#   |                        | | | |  __/ | |_) |                          |
+#   |                        |_| |_|\___|_| .__/                           |
+#   |                                     |_|                              |
+#   '----------------------------------------------------------------------'
+
+
+def mode_help():
+    console.output("""WAYS TO CALL:
+%s
+
+OPTIONS:
+%s
+
+NOTES:
+%s
+
+""" % (
+        modes.short_help(),
+        modes.general_option_help(),
+        modes.long_help(),
+    ))
+
+
+modes.register(
+    Mode(
+        long_option="help",
+        short_option="h",
+        handler_function=mode_help,
+        short_help="Print this help",
+        needs_config=False,
+        needs_checks=False,
+    ))

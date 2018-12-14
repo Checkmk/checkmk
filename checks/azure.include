@@ -27,8 +27,8 @@ import json
 
 
 def azure_iter_informative_attrs(resource, include_keys=('location',)):
-    def cap(s):  # not quite what str.title() does
-        return s[0].upper() + s[1:]
+    def cap(string):  # not quite what str.title() does
+        return string[0].upper() + string[1:]
 
     for key in include_keys:
         if key in resource:
@@ -39,15 +39,16 @@ def azure_iter_informative_attrs(resource, include_keys=('location',)):
             yield cap(key), value
 
 
-def check_azure_metric(resource,
-                       metric_key,
-                       cmk_key,
-                       display_name,
-                       levels=None,
-                       levels_lower=None,
-                       minv=None,
-                       maxv=None,
-                       use_rate=False):
+def check_azure_metric(
+        resource,  # pylint: disable=too-many-locals
+        metric_key,
+        cmk_key,
+        display_name,
+        levels=None,
+        levels_lower=None,
+        minv=None,
+        maxv=None,
+        use_rate=False):
     metric = resource.get('metrics', {}).get(metric_key)
     if metric is None:
         return None
@@ -55,16 +56,30 @@ def check_azure_metric(resource,
     if use_rate:
         countername = "%s.%s" % (resource['id'], metric_key)
         value = get_rate(countername, time.time(), metric.value)
+        unit = "%s_rate" % metric.unit
     else:
         value = metric.value
+        unit = metric.unit
+
     if value is None:
         return 3, "Metric %s is 'None'" % display_name, []
+
+    # convert to SI-unit
+    if unit == "milli_seconds":
+        value /= 1000.
+    elif unit == "seconds_rate":
+        # we got seconds, but we computed the rate -> seconds per second:
+        # how long happend something / time period = percent of the time
+        # e.g. CPU time: how much percent of of the time was the CPU busy.
+        value *= 100.
+        unit = "percent"
 
     formatter = {
         "percent": get_percent_human_readable,
         "bytes": get_bytes_human_readable,
-        "milli_seconds": lambda ms: "%d ms" % ms
-    }.get(metric.unit, str)
+        "seconds": lambda s: "%.2f s" % s,
+        "milli_seconds": lambda ms: "%d ms" % (ms * 1000),
+    }.get(unit, str)
     text = "%s: %s" % (display_name, formatter(value))
 
     l_state, u_state = 0, 0
@@ -112,7 +127,7 @@ def _read(row, types, defaults=None):
         try:
             raw = row[i]
             yield tfunc(raw)
-        except:  # or do we trust it's an Index-/ValueError?
+        except (IndexError, ValueError):
             yield default
 
 

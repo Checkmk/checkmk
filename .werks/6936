@@ -1,0 +1,16 @@
+Title: cmk-update-agent: Handle Windows encoding
+Level: 1
+Component: agents
+Compatible: compat
+Edition: cee
+Version: 1.5.0p10
+Date: 1544782378
+Class: fix
+
+When running the agent updater on windows command line, special (non-ASCII) input characters
+were not handled properly. This is now mitigated by applying proper codepages to input
+from command line arguments and the user's stdin-input.
+
+Please note that there might still occur some issues with special characters within the
+windows command line, caused by limitations of the underlying shell,
+depending on your system's configuration.

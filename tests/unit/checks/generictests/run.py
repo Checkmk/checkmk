@@ -42,32 +42,18 @@ def get_info_argument(dataset, subcheck, fallback_parsed=None):
     return arg
 
 
-def get_discovered_merged_parameters(check, provided_p):
+def get_merged_parameters(check, provided_p):
     default_p = check.default_parameters()
 
     if not provided_p:
-        return default_p, "default"
+        return default_p
     if isinstance(provided_p, str):
         if provided_p in check.context:
-            return check.context[provided_p], check.context[provided_p]
+            return check.context[provided_p]
 
         evaluated_params = literal_eval(provided_p)
         default_p.update(evaluated_params)
-        return default_p, default_p
-    raise DiscoveryParameterTypeError("unhandled: %r/%r" % (default_p, provided_p))
-
-
-def get_check_merged_parameters(check, provided_p):
-    default_p = check.default_parameters()
-
-    if provided_p == 'default':
         return default_p
-    if provided_p is None:
-        return provided_p
-    if isinstance(provided_p, dict):
-        return provided_p
-    if isinstance(provided_p, tuple):
-        return provided_p
     raise DiscoveryParameterTypeError("unhandled: %r/%r" % (default_p, provided_p))
 
 
@@ -145,7 +131,7 @@ def check_discovered_result(check, discovery_result, info_arg, immu):
 
     item = discovery_result.item
 
-    params, par_str = get_discovered_merged_parameters(check, discovery_result.default_params)
+    params = get_merged_parameters(check, discovery_result.default_params)
     immu.register(params, 'params')
 
     raw_checkresult = check.run_check(item, params, info_arg)
@@ -154,7 +140,7 @@ def check_discovered_result(check, discovery_result, info_arg, immu):
 
     cr = CheckResult(raw_checkresult)
 
-    return (item, par_str, cr.raw_repr())
+    return (item, params, cr.raw_repr())
 
 
 def check_listed_result(check, list_entry, info_arg, immu):
@@ -162,9 +148,7 @@ def check_listed_result(check, list_entry, info_arg, immu):
     item, params, results_expected_raw = list_entry
     print("Dataset item %r in check %r" % (item, check.name))
 
-    params = get_check_merged_parameters(check, params)
     immu.register(params, 'params')
-
     result_raw = check.run_check(item, params, info_arg)
     check_func = check.info.get("check_function")
     immu.test(' after check (%s): ' % check_func.__name__)

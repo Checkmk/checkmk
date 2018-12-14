@@ -2846,6 +2846,12 @@ def render_tree_json(row):
             "in_service_period" : tree[0]["in_service_period"],
         }
 
+        if is_leaf:
+            site, hostname = tree[2]["host"]
+            json_node["site"] = site
+            json_node["hostname"] = hostname
+
+
         # Check if we have an assumed state: comparing assumed state (tree[1]) with state (tree[0])
         if tree[1] and tree[0] != tree[1]:
             json_node["assumed"] = True

@@ -305,8 +305,28 @@ def render_unacknowleged_werks():
         html.close_div()
 
 
-def render_werks_table():
+# NOTE: The sorter and the grouping function should better agree, otherwise chaos will ensue...
+_SORT_AND_GROUP = {
+    "version": (
+        cmk.utils.werks.sort_by_version_and_component,
+        lambda werk: werk["version"]  #
+    ),
+    "day": (
+        cmk.utils.werks.sort_by_date,
+        lambda werk: time.strftime("%Y-%m-%d", time.localtime(werk["date"]))  #
+    ),
+    "week": (
+        cmk.utils.werks.sort_by_date,
+        lambda werk: time.strftime("%s %%U - %%Y" % _("Week"), time.localtime(werk["date"]))  #
+    ),
+    None: (
+        cmk.utils.werks.sort_by_date,
+        lambda _werk: None  #
+    ),
+}
 
+
+def render_werks_table():
     werk_table_options = render_werk_table_options()
 
     if html.var("show_unack") and not html.has_var("wo_set"):
@@ -314,14 +334,12 @@ def render_werks_table():
         werk_table_options["compatibility"] = ["incomp_unack"]
 
     current_group, number_of_groups, number_of_werks = False, 0, 0
-    if werk_table_options["grouping"] == "version":
-        werklist = cmk.utils.werks.sort_by_version_and_component(g_werks.values())
-    else:
-        werklist = cmk.utils.werks.sort_by_date(g_werks.values())
+    sorter, grouper = _SORT_AND_GROUP[werk_table_options["grouping"]]
+    werklist = sorter(g_werks.values())
 
     for werk in werklist:
         if werk_matches_options(werk, werk_table_options):
-            group = werk_group_value(werk, werk_table_options["grouping"])
+            group = grouper(werk)
             if group != current_group:
                 if number_of_groups >= werk_table_options["group_limit"]:
                     break
@@ -360,18 +378,6 @@ def render_werks_table():
         table.update_headinfo(number_of_werks)
     else:
         html.h3(_("No matching Werks found."))
-
-
-def werk_group_value(werk, grouping):
-    if grouping is None:
-        return None
-    elif grouping == "version":
-        return werk["version"]
-
-    broken_time = time.localtime(werk["date"])
-    if grouping == "day":
-        return time.strftime("%Y-%m-%d", broken_time)
-    return time.strftime("%s %%U - %%Y" % _("Week"), broken_time)
 
 
 def werk_matches_options(werk, werk_table_options):

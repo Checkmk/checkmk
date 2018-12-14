@@ -1,7 +1,7 @@
 Title: cisco_asa_failover: Now roles of cluster and state of failover is configurable
 Level: 1
 Component: checks
-Compatible: incompat
+Compatible: incomp
 Edition: cre
 Version: 1.5.0i1
 Date: 1495464590

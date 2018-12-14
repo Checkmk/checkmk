@@ -54,6 +54,9 @@ def get_merged_parameters(check, provided_p):
         evaluated_params = literal_eval(provided_p)
         default_p.update(evaluated_params)
         return default_p
+    if isinstance(provided_p, dict):
+        default_p.update(provided_p)
+        return default_p
     raise DiscoveryParameterTypeError("unhandled: %r/%r" % (default_p, provided_p))
 
 

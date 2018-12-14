@@ -230,15 +230,28 @@ def write_werk_as_text(f, werk):
         f.write("            NOTE: Please refer to the migration notes!\n")
 
 
+_CLASS_SORTING_VALUE = {
+    "feature": 1,
+    "security": 2,
+    "fix": 3,
+}
+
+_COMPATIBLE_SORTING_VALUE = {
+    "incomp_unack": 1,
+    "incomp_ack": 2,
+    "compat": 3,
+}
+
+
 # sort by version and within one version by component
 def sort_by_version_and_component(werks):
     return sorted(werks,
-                  key=lambda w: (parse_check_mk_version(w["version"]),
+                  key=lambda w: (-parse_check_mk_version(w["version"]),
                                  werk_components().get(w["component"], w["component"]),
-                                 w["class"] != "fix",
-                                 w["class"] != "sec",
-                                 w["title"]),
-                  reverse=True)
+                                 _CLASS_SORTING_VALUE.get(w["class"], 99),
+                                 -w["level"],
+                                 _COMPATIBLE_SORTING_VALUE.get(w["compatible"], 99),
+                                 w["title"]))
 
 
 def sort_by_date(werks):

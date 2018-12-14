@@ -36,7 +36,7 @@
 # thermal_zone1 pkg-temp-0  44000 0 passive 0 passive
 
 factory_settings["lnx_thermal_default_levels"] = {
-    "levels": (70, 80),
+    "levels": (70.0, 80.0),
     "device_levels_handling": "devdefault",
 }
 

@@ -65,8 +65,7 @@ def get_check_merged_parameters(check, provided_p):
     if provided_p is None:
         return provided_p
     if isinstance(provided_p, dict):
-        default_p.update(provided_p)
-        return default_p
+        return provided_p
     if isinstance(provided_p, tuple):
         return provided_p
     raise DiscoveryParameterTypeError("unhandled: %r/%r" % (default_p, provided_p))

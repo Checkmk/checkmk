@@ -1,0 +1,10 @@
+Title: aws_ebs_health, aws_ebs_summary: New checks for AWS/EBS
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1544788776
+Class: feature
+
+

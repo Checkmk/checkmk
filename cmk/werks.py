@@ -206,10 +206,17 @@ def write_werk_as_text(f, werk):
 
 # sort by version and within one version by component
 def sort_by_version_and_component(werks):
-    return sorted(werks, key=lambda x: \
-            (parse_check_mk_version(x["version"]), werk_components().get(x["component"], x["component"]),
-             x["class"] != "fix", x["class"] != "sec", x["title"]),
-           reverse=True)
+    return sorted(werks,
+                  key=lambda w: (parse_check_mk_version(w["version"]),
+                                 werk_components().get(w["component"], w["component"]),
+                                 w["class"] != "fix",
+                                 w["class"] != "sec",
+                                 w["title"]),
+                  reverse=True)
+
+
+def sort_by_date(werks):
+    return sorted(werks, key=lambda w: w["date"], reverse=True)
 
 
 # Parses versions of Check_MK and converts them into comparable integers.

@@ -196,8 +196,9 @@ def load_acknowledgements():
 
 
 def unacknowledged_incompatible_werks():
-    return werks_sorted_by_date(
-        [werk for werk in g_werks.values() if werk["compatible"] == "incomp_unack"])
+    return cmk.werks.sort_by_date(werk  #
+                                  for werk in g_werks.values()
+                                  if werk["compatible"] == "incomp_unack")
 
 
 def num_unacknowledged_incompatible_werks():
@@ -328,7 +329,7 @@ def render_werks_table():
     if werk_table_options["grouping"] == "version":
         werklist = cmk.werks.sort_by_version_and_component(g_werks.values())
     else:
-        werklist = werks_sorted_by_date(g_werks.values())
+        werklist = cmk.werks.sort_by_date(g_werks.values())
 
     for werk in werklist:
         if werk_matches_options(werk, werk_table_options):
@@ -546,7 +547,3 @@ def insert_manpage_links(text):
             part = '<a href="wato.py?mode=check_manpage&check_type=%s">%s</a>' % (part, part)
         new_parts.append(part)
     return " ".join(new_parts)
-
-
-def werks_sorted_by_date(werks):
-    return sorted(werks, cmp=lambda a, b: -cmp(a["date"], b["date"]))

@@ -233,7 +233,8 @@ class ResourceConfig(object):
         self.name = name
         self.fetchall = True
 
-    def add_key(self, key, value):
+    @staticmethod
+    def add_key(key, _value):
         raise ValueError("unknown key: %r" % key)
 
     def __str__(self):
@@ -361,7 +362,7 @@ class IssueCollecter(object):
         return len(self._list)
 
 
-class AzureMetric(object):
+class AzureMetric(object):  # pylint: disable=too-few-public-methods
 
     HEADER = ("name", "aggregation", "value", "unit", "timestamp", "timegrain", "filters")
     AGGREGATIONS = ("total", "average", "maximum", "minimum", "last", "count")
@@ -431,20 +432,20 @@ class AzureComputeClient(object):
         super(AzureComputeClient, self).__init__()
         self._client = ComputeManagementClient(creds, subs)
 
-    def process(self, vm, args):
+    def process(self, vmach, args):
         use_keys = ('statuses',)
         inst_view = self._client.virtual_machines.get(
-            vm.info["group"], vm.info["name"], expand='instanceView').instance_view.as_dict()
+            vmach.info["group"], vmach.info["name"], expand='instanceView').instance_view.as_dict()
         items = ((k, inst_view.get(k)) for k in use_keys)
-        vm.info["specific_info"] = {k: v for k, v in items if v is not None}
+        vmach.info["specific_info"] = {k: v for k, v in items if v is not None}
 
         if args.piggyback_vms in ("agenthost", "all"):
-            vm.piggytargets.append('')
+            vmach.piggytargets.append('')
         if args.piggyback_vms in ("self", "all"):
-            vm.piggytargets.append(vm.info["name"])
+            vmach.piggytargets.append(vmach.info["name"])
 
 
-class AzureClient(object):
+class AzureClient(object):  # pylint: disable=too-many-instance-attributes
 
     SPECIFIC_CLIENTS = {
         'Microsoft.Compute/virtualMachines': AzureComputeClient,

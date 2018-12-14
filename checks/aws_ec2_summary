@@ -32,20 +32,20 @@ def inventory_aws_ec2_summary(parsed):
 
 def check_aws_ec2_summary(item, params, parsed):
     instances_by_state = {}
+    long_output = []
     for reservation in parsed:
         for instance in reservation['Instances']:
-            instances_by_state.setdefault(instance['State']['Name'], [])\
-                              .append(instance['InstanceId'])
+            instance_id = instance['InstanceId']
+            instance_state = instance['State']['Name']
+            instances_by_state.setdefault(instance_state, []).append(instance_id)
+            long_output.append("Instance: %s, Status: %s" % (instance_id, instance_state))
 
     yield 0, "Instances: %s" % sum([len(v) for v in instances_by_state.itervalues()])
-
-    long_output = []
     for instance_state, instances in instances_by_state.iteritems():
         if instance_state == 'running':
             state = 0
         else:
             state = 1
-        long_output.append("%s: %s" % (instance_state, ", ".join(instances)))
         yield state, "%s: %s" % (instance_state, len(instances))
 
     if long_output:

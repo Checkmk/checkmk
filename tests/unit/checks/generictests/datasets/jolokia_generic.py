@@ -25,13 +25,13 @@ discovery = {
 
 checks = {
     '': [
-        ('Instance1 MBean Mitglieder_Anzahl', 'default',
+        ('Instance1 MBean Mitglieder_Anzahl', {},
          [(0, '-23.0', [('generic_number', -23.0, None, None, None, None)])]),
-        ('Instance2 MBean Mitglieder Anzahl', 'default',
+        ('Instance2 MBean Mitglieder Anzahl', {},
          [(0, '-23.0', [('generic_number', -23.0, None, None, None, None)])]),
-        ('JIRA,com.atlassian.jira:type=web.requests,invocation.count MBean jira.name', 'default',
+        ('JIRA,com.atlassian.jira:type=web.requests,invocation.count MBean jira.name', {},
          [(3, "Non-numeric MBean value", [])]),
-        ('JIRA,com.atlassian.jira:type=web.requests,invocation.count MBean jira.value', 'default',
+        ('JIRA,com.atlassian.jira:type=web.requests,invocation.count MBean jira.value', {},
          [(0, "2624460.0", [('generic_number', 2624460.0, None, None, None, None)])]),
     ]
 }

@@ -30,44 +30,51 @@ info = [
 ]
 
 discovery = {
-    ''           : [(u'hugo-server/Testdatabase', {})],
+    '': [(u'hugo-server/Testdatabase', {})],
     'connections': [(u'hugo-server/Testdatabase', {})],
-    'deadlock'   : [(u'hugo-server/Testdatabase', {})],
-    'cpu'        : [(u'hugo-server/Testdatabase', {})],
-    'dtu'        : [(u'hugo-server/Testdatabase', {})],
-    'storage'    : [(u'hugo-server/Testdatabase', {})],
+    'deadlock': [(u'hugo-server/Testdatabase', {})],
+    'cpu': [(u'hugo-server/Testdatabase', {})],
+    'dtu': [(u'hugo-server/Testdatabase', {})],
+    'storage': [(u'hugo-server/Testdatabase', {})],
 }
 
 checks = {
-    ''           : [(u'hugo-server/Testdatabase', 'default',
-                       [(0, u'Location: westeurope', [])],
-                    ),
-                   ],
-    'connections': [(u'hugo-server/Testdatabase', 'default',
-                       [(0, 'Successful connections: 0', [('connections', 0, None, None, 0, None)]),
-                        (0, 'Rate of failed connections: 0.0',
-                            [('connections_failed_rate', 0.0, None, None, 0, None)]),
-                       ]
-                    ),
-                   ],
-    'deadlock'   : [(u'hugo-server/Testdatabase', 'default',
-                       [(0, 'Deadlocks: 0', [('deadlocks', 0, None, None, 0, None)])],
-                    ),
-                   ],
-    'dtu'        : [(u'hugo-server/Testdatabase', 'default',
-                       [(0, 'Database throughput units: 0.0%', [('dtu_percent', 0.0, 85., 95., 0, None)]),
-                       ],
-                    )
-                   ],
-    'cpu'        : [(u'hugo-server/Testdatabase', 'default',
-                       [(0, 'total cpu: 0.0%', [('util', 0.0, 85., 95., 0, 100)]),
-                       ],
-                    )
-                   ],
-    'storage'    : [(u'hugo-server/Testdatabase', 'default',
-                       [(0, 'Storage: 10.0% (10.88 MB)',
-                            [('storage_percent', 10.0, 85., 95., 0, None)]),
-                       ]
-                    ),
-                   ],
+    '': [(
+        u'hugo-server/Testdatabase',
+        {},
+        [(0, u'Location: westeurope', [])],
+    ),],
+    'connections': [(u'hugo-server/Testdatabase', {}, [
+        (0, 'Successful connections: 0', [('connections', 0, None, None, 0, None)]),
+        (0, 'Rate of failed connections: 0.0', [('connections_failed_rate', 0.0, None, None, 0,
+                                                 None)]),
+    ]),],
+    'deadlock': [(
+        u'hugo-server/Testdatabase',
+        {},
+        [(0, 'Deadlocks: 0', [('deadlocks', 0, None, None, 0, None)])],
+    ),],
+    'dtu': [(
+        u'hugo-server/Testdatabase',
+        {
+            'dtu_percent_levels': (85.0, 95.0)
+        },
+        [
+            (0, 'Database throughput units: 0.0%', [('dtu_percent', 0.0, 85., 95., 0, None)]),
+        ],
+    )],
+    'cpu': [(
+        u'hugo-server/Testdatabase',
+        {
+            'cpu_percent_levels': (85.0, 95.0)
+        },
+        [
+            (0, 'total cpu: 0.0%', [('util', 0.0, 85., 95., 0, 100)]),
+        ],
+    )],
+    'storage': [(u'hugo-server/Testdatabase', {
+        'storage_percent_levels': (85.0, 95.0),
+    }, [
+        (0, 'Storage: 10.0% (10.88 MB)', [('storage_percent', 10.0, 85., 95., 0, None)]),
+    ]),],
 }

@@ -14,9 +14,9 @@ discovery = {'': [(u'DiskPressure', {}),
                   (u'Ready', {})]}
 
 
-checks = {'': [(u'DiskPressure', 'default', [(0, u'False', [])]),
-               (u'KernelDeadlock', 'default', [(2, u'True', [])]),
-               (u'MemoryPressure', 'default', [(0, u'False', [])]),
-               (u'NetworkUnavailable', 'default', [(0, u'False', [])]),
-               (u'OutOfDisk', 'default', [(0, u'False', [])]),
-               (u'Ready', 'default', [(2, u'False', [])])]}
+checks = {'': [(u'DiskPressure', {}, [(0, u'False', [])]),
+               (u'KernelDeadlock', {}, [(2, u'True', [])]),
+               (u'MemoryPressure', {}, [(0, u'False', [])]),
+               (u'NetworkUnavailable', {}, [(0, u'False', [])]),
+               (u'OutOfDisk', {}, [(0, u'False', [])]),
+               (u'Ready', {}, [(2, u'False', [])])]}

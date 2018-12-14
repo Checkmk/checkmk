@@ -18,22 +18,32 @@ info = [
 ]
 
 discovery = {
-    '': [
-        ("non-existent-testhost", {}),
-    ],
+    '': [("non-existent-testhost", {}),],
 }
 
 checks = {
-    '': [
-        ("non-existent-testhost", "default", [
-            (2,
-             "Provisioning failed (This VM has been stopped as a warning to non-paying subscription.)",
-             []),
-            (1, "VM stopped", []),
-            (0, "Resource group: Glastonbury", []),
-            (0, u'Location: westeurope', []),
-            (0, u'Monitoring-vm: true', []),
-            (0, u'Monitoring-all: true', []),
-        ]),
-    ],
+    '': [("non-existent-testhost", {
+        'map_provisioning_states': {
+            'failed': 2,
+            'succeeded': 0
+        },
+        'map_power_states': {
+            'deallocating': 0,
+            'unknown': 3,
+            'running': 0,
+            'stopped': 1,
+            'stopping': 1,
+            'starting': 0,
+            'deallocated': 0
+        }
+    }, [
+        (2,
+         "Provisioning failed (This VM has been stopped as a warning to non-paying subscription.)",
+         []),
+        (1, "VM stopped", []),
+        (0, "Resource group: Glastonbury", []),
+        (0, u'Location: westeurope', []),
+        (0, u'Monitoring-vm: true', []),
+        (0, u'Monitoring-all: true', []),
+    ]),],
 }

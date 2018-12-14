@@ -74,7 +74,7 @@ discovery = {'': [(u'spo-solutions-fa1', {}), (u'zcldazwamonseas-as', {})]}
 
 
 checks = {'': [(u'spo-solutions-fa1',
-                'default',
+                {'cpu_time_percent_levels': (85.0, 95.0), 'avg_response_time_levels': (1.0, 10.0), 'error_rate_levels': (0.01, 0.04)},
                 [(0,
                   'Rate of server errors: 0.0', [('error_rate', 0.0, 0.01, 0.04, 0, None)]),
                  (0, u'Location: westeurope', []),
@@ -83,7 +83,7 @@ checks = {'': [(u'spo-solutions-fa1',
                  (0, u'CostCenter: 0000252980', []),
                  (0, u'ITProduct: C89 Collaboration Platform', [])]),
                (u'zcldazwamonseas-as',
-                'default',
+                {'cpu_time_percent_levels': (85.0, 95.0), 'avg_response_time_levels': (1.0, 10.0), 'error_rate_levels': (0.01, 0.04)},
                 [(0,
                   'CPU time: 0.0%', [('cpu_time_percent', 0.0, 85.0, 95.0, 0, None)]),
                  (0, 'Average response time: 0.00 s', [('avg_response_time', 0.0, 1.0, 10.0, 0, None)]),

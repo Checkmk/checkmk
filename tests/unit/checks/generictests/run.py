@@ -1,4 +1,6 @@
 """Submodule providing the `run` function of generictests package"""
+from ast import literal_eval
+
 from checktestlib import DiscoveryResult, assertDiscoveryResultsEqual, \
                          CheckResult, assertCheckResultsEqual, \
                          MockHostExtraConf, MockItemState, \
@@ -48,8 +50,10 @@ def get_discovered_merged_parameters(check, provided_p):
     if isinstance(provided_p, str):
         if provided_p in check.context:
             return check.context[provided_p], check.context[provided_p]
-        # TODO: the repr case used e.g. in winperf_if is still not correct
-        return default_p, "default"
+
+        evaluated_params = literal_eval(provided_p)
+        default_p.update(evaluated_params)
+        return default_p, default_p
     raise DiscoveryParameterTypeError("unhandled: %r/%r" % (default_p, provided_p))
 
 

@@ -183,7 +183,7 @@ discovery = {'': [('1', "{'state': ['1'], 'speed': 10000000000}"),
                   ('4', "{'state': ['1'], 'speed': 1000000000}")]}
 
 
-checks = {'': [('1', 'default', [(0, u'[A B-C] (Connected) 10.00 Gbit/s', [])]),
-               ('2', 'default', [(0, u'[FOO B-A-R 53] (Connected) 1 Gbit/s', [])]),
-               ('3', 'default', [(0, u'[A B-C 3] (Connected) 10.00 Gbit/s', [])]),
-               ('4', 'default', [(0, u'[FOO B-A-R 52] (Connected) 1 Gbit/s', [])])]}
+checks = {'': [('1', {'errors': (0.01, 0.1), 'state': ['1'], 'speed': 10000000000}, [(0, u'[A B-C] (Connected) 10.00 Gbit/s', [])]),
+               ('2', {'errors': (0.01, 0.1), 'state': ['1'], 'speed': 1000000000}, [(0, u'[FOO B-A-R 53] (Connected) 1 Gbit/s', [])]),
+               ('3', {'errors': (0.01, 0.1), 'state': ['1'], 'speed': 10000000000}, [(0, u'[A B-C 3] (Connected) 10.00 Gbit/s', [])]),
+               ('4', {'errors': (0.01, 0.1), 'state': ['1'], 'speed': 1000000000}, [(0, u'[FOO B-A-R 52] (Connected) 1 Gbit/s', [])])]}

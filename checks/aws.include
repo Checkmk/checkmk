@@ -36,14 +36,27 @@ def parse_aws(info):
     return loaded
 
 
-def _extract_metric_titles_and_values(expected_metric_names, parsed):
-    extracted_rows = {}
+def _extract_aws_metrics(expected_metric_names, parsed):
+    values = {}
     for row in parsed:
-        for title, expected_metric_name in expected_metric_names:
+        for expected_metric_name in expected_metric_names:
             if row['Id'].startswith(expected_metric_name.lower()):
                 try:
-                    extracted_rows.setdefault(title, row['Values'][0])
+                    values.setdefault(expected_metric_name, row['Values'][0])
                 except IndexError:
                     pass
                 break
-    return extracted_rows
+    return values
+
+
+def _extract_aws_metrics_by_labels(expected_metric_names, parsed):
+    values_by_labels = {}
+    for row in parsed:
+        for expected_metric_name in expected_metric_names:
+            if row['Id'].startswith(expected_metric_name.lower()):
+                try:
+                    values_by_labels.setdefault(row['Label'], {})\
+                                    .setdefault(expected_metric_name, row['Values'][0])
+                except IndexError:
+                    pass
+    return values_by_labels

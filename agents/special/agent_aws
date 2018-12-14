@@ -607,6 +607,9 @@ class ELB(AWSSection):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+# EBS are attached to EC2 instances. Thus we put the content to related EC2
+# instance as piggyback host.
+
 
 class EBSSummary(AWSSection):
     @property
@@ -628,7 +631,15 @@ class EBSSummary(AWSSection):
             return []
 
     def _format_content(self, content):
-        return [AWSSectionResult("", content)]
+        content_by_piggyback_hosts = {}
+        for row in content:
+            for attachment in row['Attachments']:
+                content_by_piggyback_hosts.setdefault(attachment['InstanceId'], [])\
+                                          .append(row)
+        return [
+            AWSSectionResult(piggyback_hostname, rows)
+            for piggyback_hostname, rows in content_by_piggyback_hosts.iteritems()
+        ]
 
 
 class EBSHealth(AWSSection):
@@ -656,11 +667,15 @@ class EBSHealth(AWSSection):
         return content
 
     def _format_content(self, content):
-        # parse function of aws.include extends a list, thus
-        # we put details as an element in this list
+        content_by_piggyback_hosts = {}
+        for row in self._received_results.get('ebs_summary', []):
+            vol_id = row['VolumeId']
+            for attachement in row['Attachments']:
+                content_by_piggyback_hosts.setdefault(attachement['InstanceId'], [])\
+                                          .append({vol_id: content[vol_id]})
         return [
-            AWSSectionResult(piggyback_hostname, [details])
-            for piggyback_hostname, details in content.iteritems()
+            AWSSectionResult(piggyback_hostname, rows)
+            for piggyback_hostname, rows in content_by_piggyback_hosts.iteritems()
         ]
 
 
@@ -740,13 +755,8 @@ class EBS(AWSSection):
             return []
 
     def _format_content(self, content):
-        content_by_piggyback_hosts = {}
-        for row in content:
-            content_by_piggyback_hosts.setdefault(row['Label'], []).append(row)
-        return [
-            AWSSectionResult(piggyback_hostname, rows)
-            for piggyback_hostname, rows in content_by_piggyback_hosts.iteritems()
-        ]
+        #TODO instance ID as piggyback hostname
+        return
 
 
 #.

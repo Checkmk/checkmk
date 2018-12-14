@@ -28,6 +28,7 @@ import socket
 
 import cmk.debug
 from cmk.exceptions import MKTerminate, MKGeneralException
+import cmk.werks
 
 import cmk_base.utils as utils
 import cmk_base.config as config
@@ -274,8 +275,8 @@ class TCPDataSource(CheckMKAgentDataSource):
                     if utils.is_daily_build_version(agent_version):
                         return False
 
-                    if utils.parse_check_mk_version(agent_version) \
-                        < utils.parse_check_mk_version(spec['release']):
+                    if cmk.werks.parse_check_mk_version(agent_version) \
+                        < cmk.werks.parse_check_mk_version(spec['release']):
                         return False
 
             return True

@@ -1,0 +1,13 @@
+Title: Azure: Monitor virtual network gateways
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1545054069
+Class: feature
+
+Add a new check to monitor Microsoft Azures virtual network gateways.
+Monitored metrics are the number of Point-to-site connections as well
+as the Point-to-site and Site-to-site bandwidths.
+You can configure levels for these metrics useíng the rule "Azure VNet Gateway".

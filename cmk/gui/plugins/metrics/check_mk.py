@@ -2221,6 +2221,18 @@ metric_info["if_out_non_unicast_octets"] = {
     "color": "#0080c0",
 }
 
+metric_info["p2s_bandwidth"] = {
+    "title": _("Point-to-site bandwidth"),
+    "unit": "bytes/s",
+    "color": "#00c0ff",
+}
+
+metric_info["s2s_bandwidth"] = {
+    "title": _("Site-to-site bandwidth"),
+    "unit": "bytes/s",
+    "color": "#00c080",
+}
+
 # “Output Queue Length is the length of the output packet queue (in
 # packets). If this is longer than two, there are delays and the bottleneck
 # should be found and eliminated, if possible.

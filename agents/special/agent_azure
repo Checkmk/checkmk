@@ -64,19 +64,22 @@ cmk.password_store.replace_passwords()
 
 LOG = logging.getLogger(__name__)
 
-
-METRICS_SELECTED = {  # name(s), grain, aggregation, filter
+METRICS_SELECTED = {
+    # to add a new metric, just add a made up name, run the
+    # agent, and you'll get a error listing available metrics!
+    # key: list of (name(s), grain, aggregation, filter)
+    'Microsoft.Network/virtualNetworkGateways': [
+        ('AverageBandwidth,P2SBandwidth', 'PT1M', 'average', None),
+        ('P2SConnectionCount', 'PT1M', 'maximum', None),
+    ],
     'Microsoft.Sql/servers/databases': [
         ('storage_percent,deadlock,cpu_percent,dtu_consumption_percent,'
          'connection_successful,connection_failed', 'PT1M', 'average', None),
     ],
-    'Microsoft.Storage/storageAccounts': [
-        ('UsedCapacity,Ingress,Egress,Transactions,'
-         'SuccessServerLatency,SuccessE2ELatency,Availability', 'PT1H', 'total', None),
-    ],
-    'Microsoft.Web/sites': [
-        ('CpuTime,AverageResponseTime,Http5xx', 'PT1M', 'total', None),
-    ],
+    'Microsoft.Storage/storageAccounts': [('UsedCapacity,Ingress,Egress,Transactions,'
+                                           'SuccessServerLatency,SuccessE2ELatency,Availability',
+                                           'PT1H', 'total', None),],
+    'Microsoft.Web/sites': [('CpuTime,AverageResponseTime,Http5xx', 'PT1M', 'total', None),],
 }
 
 

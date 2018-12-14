@@ -37,62 +37,82 @@ from cmk.exceptions import MKGeneralException
 from cmk.i18n import _
 
 
-def werk_classes():
-    return {
-        "feature": _("New feature"),
-        "fix": _("Bug fix"),
-        "security": _("Security fix"),
-    }
+# This class is used to avoid repeated construction of dictionaries, including
+# *all* translation values.
+class WerkTranslator(object):
+    def __init__(self):
+        super(WerkTranslator, self).__init__()
+        self._classes = {
+            "feature": _("New feature"),
+            "fix": _("Bug fix"),
+            "security": _("Security fix"),
+        }
+        self._components = {
+            # CRE
+            "core": _("Core & setup"),
+            "checks": _("Checks & agents"),
+            "multisite": _("User interface"),
+            "wato": _("WATO"),
+            "notifications": _("Notifications"),
+            "bi": _("BI"),
+            "reporting": _("Reporting & availability"),
+            "ec": _("Event console"),
+            "livestatus": _("Livestatus"),
+            "liveproxy": _("Livestatus proxy"),
+            "inv": _("HW/SW inventory"),
 
+            # CEE
+            "cmc": _("The Check_MK Micro Core"),
+            "setup": _("Setup, site management"),
+            "config": _("Configuration generation"),
+            "inline-snmp": _("Inline SNMP"),
+            "agents": _("Agent bakery"),
+            "metrics": _("Metrics system"),
+            "alerts": _("Alert handlers"),
 
-def werk_components():
-    return {
-        # CRE
-        "core": _("Core & setup"),
-        "checks": _("Checks & agents"),
-        "multisite": _("User interface"),
-        "wato": _("WATO"),
-        "notifications": _("Notifications"),
-        "bi": _("BI"),
-        "reporting": _("Reporting & availability"),
-        "ec": _("Event console"),
-        "livestatus": _("Livestatus"),
-        "liveproxy": _("Livestatus proxy"),
-        "inv": _("HW/SW inventory"),
+            # CMK-OMD
+            "omd": _("Site management"),
+            "rpm": _("RPM packaging"),
+            "deb": _("DEB packaging"),
+            "nagvis": _("NagVis"),
+            "packages": _("Other components"),
+            "distros": _("Linux distributions"),
+        }
+        self._levels = {
+            1: _("Trivial change"),
+            2: _("Prominent change"),
+            3: _("Major change"),
+        }
+        self._compatibilities = {
+            "compat": _("Compatible"),
+            "incomp_ack": _("Incompatible"),
+            "incomp_unack": _("Incompatible - TODO"),
+        }
 
-        # CEE
-        "cmc": _("The Check_MK Micro Core"),
-        "setup": _("Setup, site management"),
-        "config": _("Configuration generation"),
-        "inline-snmp": _("Inline SNMP"),
-        "agents": _("Agent bakery"),
-        "metrics": _("Metrics system"),
-        "alerts": _("Alert handlers"),
+    def classes(self):
+        return self._classes.iteritems()
 
-        # CMK-OMD
-        "omd": _("Site management"),
-        "rpm": _("RPM packaging"),
-        "deb": _("DEB packaging"),
-        "nagvis": _("NagVis"),
-        "packages": _("Other components"),
-        "distros": _("Linux distributions"),
-    }
+    def class_of(self, werk):
+        return self._classes[werk["class"]]
 
+    def components(self):
+        return self._components.iteritems()
 
-def werk_levels():
-    return {
-        1: _("Trivial change"),
-        2: _("Prominent change"),
-        3: _("Major change"),
-    }
+    def component_of(self, werk):
+        c = werk["component"]
+        return self._components.get(c, c)
 
+    def levels(self):
+        return self._levels.iteritems()
 
-def werk_compatibilities():
-    return {
-        "compat": _("Compatible"),
-        "incomp_ack": _("Incompatible"),
-        "incomp_unack": _("Incompatible - TODO"),
-    }
+    def level_of(self, werk):
+        return self._levels[werk["level"]]
+
+    def compatibilities(self):
+        return self._compatibilities.iteritems()
+
+    def compatibility_of(self, werk):
+        return self._compatibilities[werk["compatible"]]
 
 
 def _compiled_werks_dir():
@@ -189,6 +209,7 @@ def write_precompiled_werks(path, werks):
 # Writhe the given werks to a file object. This is used for creating a textual
 # change log for the released versions and the announcement mails
 def write_as_text(werks, f, write_version=True):
+    translator = WerkTranslator()
     version, component = None, None
     for werk in sort_by_version_and_component(werks.values()):
         if version != werk["version"]:
@@ -203,11 +224,8 @@ def write_as_text(werks, f, write_version=True):
         if component != werk["component"]:
             if component is not None:
                 f.write("\n")
-
             component = werk["component"]
-
-            f.write("    %s:\n" % \
-                werk_components().get(component, component).encode("utf-8"))
+            f.write("    %s:\n" % translator.component_of(werk).encode("utf-8"))
 
         write_werk_as_text(f, werk)
 
@@ -245,9 +263,10 @@ _COMPATIBLE_SORTING_VALUE = {
 
 # sort by version and within one version by component
 def sort_by_version_and_component(werks):
+    translator = WerkTranslator()
     return sorted(werks,
                   key=lambda w: (-parse_check_mk_version(w["version"]),
-                                 werk_components().get(w["component"], w["component"]),
+                                 translator.component_of(w),
                                  _CLASS_SORTING_VALUE.get(w["class"], 99),
                                  -w["level"],
                                  _COMPATIBLE_SORTING_VALUE.get(w["compatible"], 99),

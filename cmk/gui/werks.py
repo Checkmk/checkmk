@@ -126,16 +126,19 @@ def page_werk():
         html.close_td()
         html.close_tr()
 
+    translator = cmk.utils.werks.WerkTranslator()
     werk_table_row(_("ID"), render_werk_id(werk, with_link=False))
     werk_table_row(_("Title"), html.render_b(render_werk_title(werk)))
-    werk_table_row(_("Component"), render_werk_component(werk))
+    werk_table_row(_("Component"), translator.component_of(werk))
     werk_table_row(_("Date"), render_werk_date(werk))
     werk_table_row(_("Check_MK Version"), werk["version"])
-    werk_table_row(_("Level"), render_werk_level(werk), css="werklevel werklevel%d" % werk["level"])
-    werk_table_row(_("Class"), render_werk_class(werk), css="werkclass werkclass%s" % werk["class"])
+    werk_table_row(
+        _("Level"), translator.level_of(werk), css="werklevel werklevel%d" % werk["level"])
+    werk_table_row(
+        _("Class"), translator.class_of(werk), css="werkclass werkclass%s" % werk["class"])
     werk_table_row(
         _("Compatibility"),
-        render_werk_compatibility(werk),
+        translator.compatibility_of(werk),
         css="werkcomp werkcomp%s" % werk["compatible"])
     werk_table_row(_("Description"), render_werk_description(werk), css="nowiki")
 
@@ -206,18 +209,17 @@ def num_unacknowledged_incompatible_werks():
     return len(unacknowledged_incompatible_werks())
 
 
-def werk_table_option_entries():
+def _werk_table_option_entries():
+    translator = cmk.utils.werks.WerkTranslator()
     return [
-        ("classes", "double",
-         ListChoice(
-             title=_("Classes"),
-             choices=sorted(cmk.utils.werks.werk_classes().items()),
-         ), ["feature", "fix", "security"]),
-        ("levels", "double",
-         ListChoice(
-             title=_("Levels"),
-             choices=sorted(cmk.utils.werks.werk_levels().items()),
-         ), [1, 2, 3]),
+        ("classes", "double", ListChoice(
+            title=_("Classes"),
+            choices=sorted(translator.classes()),
+        ), ["feature", "fix", "security"]),
+        ("levels", "double", ListChoice(
+            title=_("Levels"),
+            choices=sorted(translator.levels()),
+        ), [1, 2, 3]),
         ("date", "double", Timerange(title=_("Date")), ('date', (1383149313, int(time.time())))),
         ("id", "single",
          TextAscii(
@@ -242,7 +244,7 @@ def werk_table_option_entries():
              title=_("Component"),
              choices=[
                  (None, _("All components")),
-             ] + sorted(cmk.utils.werks.werk_components().items()),
+             ] + sorted(translator.components()),
          ), None),
         ("edition", "single",
          DropdownChoice(
@@ -327,16 +329,16 @@ _SORT_AND_GROUP = {
 
 
 def render_werks_table():
-    werk_table_options = render_werk_table_options()
-
     if html.var("show_unack") and not html.has_var("wo_set"):
-        werk_table_options = default_werk_table_options()
-        werk_table_options["compatibility"] = ["incomp_unack"]
+        werk_table_options = _default_werk_table_options()
+    else:
+        werk_table_options = _render_werk_table_options()
 
     current_group, number_of_groups, number_of_werks = False, 0, 0
     sorter, grouper = _SORT_AND_GROUP[werk_table_options["grouping"]]
     werklist = sorter(g_werks.values())
 
+    translator = cmk.utils.werks.WerkTranslator()
     for werk in werklist:
         if werk_matches_options(werk, werk_table_options):
             group = grouper(werk)
@@ -363,14 +365,14 @@ def render_werks_table():
             table.cell(_("Version"), werk["version"], css="number narrow")
             table.cell(_("Date"), render_werk_date(werk), css="number narrow")
             table.cell(
-                _("Class"), render_werk_class(werk), css="werkclass werkclass%s" % werk["class"])
+                _("Class"), translator.class_of(werk), css="werkclass werkclass%s" % werk["class"])
             table.cell(
-                _("Level"), render_werk_level(werk), css="werklevel werklevel%d" % werk["level"])
+                _("Level"), translator.level_of(werk), css="werklevel werklevel%d" % werk["level"])
             table.cell(
                 _("Compatibility"),
-                render_werk_compatibility(werk),
+                translator.compatibility_of(werk),
                 css="werkcomp werkcomp%s" % werk["compatible"])
-            table.cell(_("Component"), render_werk_component(werk), css="nowrap")
+            table.cell(_("Component"), translator.component_of(werk), css="nowrap")
             table.cell(_("Title"), render_werk_title(werk))
 
     if current_group != False:
@@ -413,18 +415,19 @@ def werk_matches_options(werk, werk_table_options):
     return True
 
 
-def default_werk_table_options():
+def _default_werk_table_options():
     werk_table_options = {
-        name: default_value for name, _height, _vs, default_value in werk_table_option_entries()
+        name: default_value for name, _height, _vs, default_value in _werk_table_option_entries()
     }
     werk_table_options["date_range"] = (1, time.time())
+    werk_table_options["compatibility"] = ["incomp_unack"]
     return werk_table_options
 
 
-def render_werk_table_options():
+def _render_werk_table_options():
     werk_table_options = {}
 
-    for name, height, vs, default_value in werk_table_option_entries():
+    for name, height, vs, default_value in _werk_table_option_entries():
         value = default_value
         try:
             if html.has_var("wo_set"):
@@ -440,7 +443,7 @@ def render_werk_table_options():
     html.begin_form("werks")
     html.hidden_field("wo_set", "set")
     html.begin_floating_options("werks", is_open=True)
-    for name, height, vs, default_value in werk_table_option_entries():
+    for name, height, vs, default_value in _werk_table_option_entries():
         html.render_floating_option(name, height, "wo_", vs, werk_table_options[name])
     html.end_floating_options(reset_url=html.makeuri([], remove_prefix=""))
     html.hidden_fields()
@@ -462,22 +465,6 @@ def render_werk_id(werk, with_link):
 
 def render_werk_date(werk):
     return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(werk["date"]))
-
-
-def render_werk_level(werk):
-    return cmk.utils.werks.werk_levels()[werk["level"]]
-
-
-def render_werk_class(werk):
-    return cmk.utils.werks.werk_classes()[werk["class"]]
-
-
-def render_werk_compatibility(werk):
-    return cmk.utils.werks.werk_compatibilities()[werk["compatible"]]
-
-
-def render_werk_component(werk):
-    return cmk.utils.werks.werk_components().get(werk["component"], werk["component"])
 
 
 def render_werk_title(werk):

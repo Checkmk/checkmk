@@ -1,0 +1,10 @@
+Title: aws_s3_summary: New check which gives an overview over all AWS/S3 buckets
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1544781208
+Class: feature
+
+

@@ -135,13 +135,15 @@ class BackgroundProcess(BackgroundProcessInterface, multiprocessing.Process):
         self._job_parameters["logger"] = self._logger
 
     def _register_signal_handlers(self):
+        self._logger.debug("Register signal handler %d", os.getpid())
         signal.signal(signal.SIGTERM, self._handle_sigterm)
 
     def _handle_sigterm(self, signum, frame):
+        self._logger.debug("Received SIGTERM")
         status = self._jobstatus.get_status()
         if not status.get("stoppable", True):
             self._logger.warning("Skip termination of background job (Job ID: %s, PID: %d)",
-                                 self._job_parameters["job_id"], status["pid"])
+                                 self._job_parameters["job_id"], os.getpid())
             return
 
         raise MKTerminate()
@@ -366,6 +368,8 @@ class BackgroundJob(object):
             return
 
         # Send SIGTERM
+        self._logger.debug("Stopping job using SIGTERM \"%s\" (PID: %d)", self._job_id,
+                           job_status["pid"])
         try:
             process = psutil.Process(job_status["pid"])
             if not self._is_correct_process(job_status, process):
@@ -374,7 +378,7 @@ class BackgroundJob(object):
         except (psutil.NoSuchProcess, psutil.AccessDenied):
             return
 
-        # Give the jobs some time to terminate
+        self._logger.debug("Waiting for job")
         start_time = time.time()
         while time.time() - start_time < 10:  # 10 seconds SIGTERM grace period
             job_still_running = False
@@ -390,11 +394,11 @@ class BackgroundJob(object):
                 break
             time.sleep(0.1)
 
-        # Kill unresponsive jobs
-        # Send SIGKILL
         try:
             p = psutil.Process(job_status["pid"])
             if self._is_correct_process(job_status, process):
+                # Kill unresponsive jobs
+                self._logger.debug("Killing job")
                 p.send_signal(signal.SIGKILL)
         except (psutil.NoSuchProcess, psutil.AccessDenied):
             return
@@ -457,8 +461,9 @@ class BackgroundJob(object):
         p.start()
         p.join()
 
-        job_status = self.get_status()
-        self._logger.debug("Started job \"%s\" (PID: %d)" % (self._job_id, job_status["pid"]))
+        if p.exitcode == 0:
+            job_status = self.get_status()
+            self._logger.debug("Started job \"%s\" (PID: %s)", self._job_id, job_status.get("pid"))
 
     def _prepare_work_dir(self):
         self._delete_work_dir()
@@ -470,7 +475,7 @@ class BackgroundJob(object):
             p.start()
             self._jobstatus.update_status({"pid": p.pid})
         except Exception as e:
-            self._logger.error("Error while starting subprocess: %s" % e)
+            self._logger.error("Error while starting subprocess: %s", e, exc_info=True)
             os._exit(1)
         os._exit(0)
 

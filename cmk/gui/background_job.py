@@ -35,7 +35,7 @@ import threading
 import time
 import traceback
 
-import psutil
+import psutil  # type: ignore
 from pathlib2 import Path
 
 from cmk.gui.i18n import _
@@ -43,7 +43,7 @@ import cmk
 import cmk.log
 import cmk.daemon as daemon
 import cmk.store as store
-from cmk.exceptions import MKGeneralException
+from cmk.exceptions import MKGeneralException, MKTerminate
 
 import cmk.gui.log
 
@@ -131,9 +131,8 @@ class BackgroundProcess(BackgroundProcessInterface, multiprocessing.Process):
     def __init__(self, job_parameters):
         super(BackgroundProcess, self).__init__(job_parameters)
         self._jobstatus = self._job_parameters["jobstatus"]
-        self._logger = None  # the logger is initialized in the run function
-
-        self._register_signal_handlers()
+        # TODO: Hand over the logger via arguments
+        self._logger = cmk.gui.log.logger.getChild("background_process")
 
     def _register_signal_handlers(self):
         signal.signal(signal.SIGTERM, self._handle_sigterm)
@@ -145,8 +144,7 @@ class BackgroundProcess(BackgroundProcessInterface, multiprocessing.Process):
                                  self._job_parameters["job_id"], status["pid"])
             return
 
-        self._jobstatus.update_status({"state": JobStatus.state_stopped})
-        os._exit(0)
+        raise MKTerminate()
 
     def run(self):
         # Detach from parent (apache) -> Remain running when apache is restarted
@@ -168,17 +166,18 @@ class BackgroundProcess(BackgroundProcessInterface, multiprocessing.Process):
 
             # The actual function call
             self._execute_function()
+        except MKTerminate:
+            self._logger.warning("Job was stopped")
+            self._jobstatus.update_status({"state": JobStatus.state_stopped})
         except Exception:
             self._logger.error(
                 "Exception while preparing background function environment", exc_info=True)
             self._jobstatus.update_status({"state": JobStatus.state_exception})
 
     def initialize_environment(self):
-        if not self._logger:
-            self._logger = cmk.gui.log.logger
-
         self._open_stdout_and_stderr()
         self._enable_logging_to_stdout()
+        self._register_signal_handlers()
 
         self._job_parameters["logger"] = self._logger
 
@@ -190,8 +189,9 @@ class BackgroundProcess(BackgroundProcessInterface, multiprocessing.Process):
             target=self._call_function_with_exception_handling, args=[self._job_parameters])
         t.start()
 
-        # Wait for thread to finish
-        t.join()
+        # Wait for thread to finish. Do the join with timeout to be able to handle signals
+        while t.is_alive():
+            t.join(0.5)
 
         # Final progress info update
         job_status_update = {}
@@ -202,7 +202,6 @@ class BackgroundProcess(BackgroundProcessInterface, multiprocessing.Process):
             final_state = JobStatus.state_exception
         else:
             final_state = JobStatus.state_finished
-
         job_status_update.update({
             "state": final_state,
             "duration": time.time() - job_status["started"],
@@ -220,9 +219,11 @@ class BackgroundProcess(BackgroundProcessInterface, multiprocessing.Process):
 
         try:
             func_ptr(*args, **kwargs)
+        except MKTerminate:
+            raise
         except Exception as e:
             logger = job_interface.get_logger()
-            logger.error("Exception in background function:\n%s" % (traceback.format_exc()))
+            logger.error("Exception in background function", exc_info=True)
             job_interface.send_exception(_("Exception: %s") % (e))
 
     def _open_stdout_and_stderr(self):
@@ -492,6 +493,7 @@ class BackgroundJob(object):
             self._jobstatus.update_status({"pid": p.pid})
         except Exception as e:
             self._logger.error("Error while starting subprocess: %s" % e)
+            os._exit(1)
         os._exit(0)
 
 

@@ -1,0 +1,108 @@
+import time
+import signal
+import sys
+import pytest  # type: ignore
+from pathlib2 import Path
+import testlib  # type: ignore
+
+import cmk.paths
+import cmk.gui.background_job as background_job
+import cmk.gui.gui_background_job as gui_background_job
+
+import cmk.gui.log
+
+
+@pytest.fixture(autouse=True)
+def debug_logging():
+    cmk.gui.log.set_log_levels({"cmk.web": cmk.gui.log._logging.DEBUG})
+    yield
+    cmk.gui.log.set_log_levels({"cmk.web": cmk.gui.log._logging.WARNING})
+
+
+@pytest.fixture(autouse=True)
+def job_base_dir(tmpdir, monkeypatch):
+    var_dir = Path("%s" % tmpdir)
+
+    log_dir = var_dir / "log"
+    log_dir.mkdir()  # pylint: disable=no-member
+
+    job_dir = var_dir / "background_jobs"
+    job_dir.mkdir()  # pylint: disable=no-member
+
+    # Patch for web.log. Sholdn't we do this for all web tests?
+    monkeypatch.setattr(cmk.paths, "log_dir", str(log_dir))
+
+    monkeypatch.setattr(background_job.BackgroundJobDefines, "base_dir", str(job_dir))
+    return job_dir
+
+
+@gui_background_job.job_registry.register
+class DummyBackgroundJob(gui_background_job.GUIBackgroundJob):
+    job_prefix = "dummy_job"
+    gui_title = u"Dummy Job"
+
+    def __init__(self):
+        kwargs = {}
+        kwargs["title"] = self.gui_title
+        kwargs["deletable"] = False
+        kwargs["stoppable"] = True
+
+        super(DummyBackgroundJob, self).__init__(self.job_prefix, **kwargs)
+
+    def execute_hello(self, job_interface):
+        sys.stdout.write("Hallo :-)\n")
+        sys.stdout.flush()
+
+    def execute_endless(self):
+        sys.stdout.write("Hanging loop\n")
+        sys.stdout.flush()
+        time.sleep(100)
+
+
+def test_start_job():
+    job = DummyBackgroundJob()
+    job.set_function(job.execute_hello)
+
+    status = job.get_status()
+    assert status["state"] == background_job.JobStatus.state_initialized
+
+    job.start()
+    assert job.is_running()
+
+    with pytest.raises(background_job.BackgroundJobAlreadyRunning):
+        job.start()
+    assert job.is_running()
+
+    testlib.wait_until(
+        lambda: job.get_status()["state"] not in [ background_job.JobStatus.state_initialized, background_job.JobStatus.state_running ],
+        timeout=5,
+        interval=0.1)
+
+    status = job.get_status()
+    assert status["state"] == background_job.JobStatus.state_finished
+
+    output = "\n".join(status["loginfo"]["JobProgressUpdate"])
+    assert "Initialized background job" in output
+    assert "Hallo :-)" in output
+
+
+def test_stop_job():
+    job = DummyBackgroundJob()
+    job.set_function(job.execute_endless)
+    job.start()
+
+    testlib.wait_until(
+        lambda: "Hanging loop" in job.get_status()["loginfo"]["JobProgressUpdate"],
+        timeout=5,
+        interval=0.1)
+
+    status = job.get_status()
+    assert status["state"] == background_job.JobStatus.state_running
+
+    job.stop()
+
+    status = job.get_status()
+    assert status["state"] == background_job.JobStatus.state_stopped
+
+    output = "\n".join(status["loginfo"]["JobProgressUpdate"])
+    assert "Job was stopped" in output

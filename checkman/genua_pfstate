@@ -1,4 +1,4 @@
-title: Genuscreen: State of Packetfilter Engine
+title: Genua: State of Packetfilter Engine
 agents: snmp
 catalog: hw/network/genua
 license: GPL
@@ -17,7 +17,7 @@ description:
 
 inventory:
  The inventory process checks if the device has a system description OID
- of .1.3.6.1.2.1.1.2.0 and if the name of this OID contains "genuscreen"
- (case insensitive). If it also contains valid pf state output, the device is
- inventorized.
+ of .1.3.6.1.2.1.1.2.0 and if the name of this OID contains "genuscreen",
+ "genuscript" or "genubox" (case insensitive). If it also contains valid
+ pf state output, the device is inventorized.
 

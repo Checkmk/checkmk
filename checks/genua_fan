@@ -83,7 +83,7 @@ check_info['genua_fan'] = {
                                        "3", # "fanRPM"
                                        "4"  # "fanState"
                                   ])],
-    "snmp_scan_function"        : lambda oid: "genuscreen" in oid(".1.3.6.1.2.1.1.1.0").lower(),
+    "snmp_scan_function" : scan_genua,
+    "includes": ["genua.include", "fan.include"],
     "default_levels_variable"   : "genua_fan_default_levels",
-    "includes"                  : [ "fan.include" ],
 }

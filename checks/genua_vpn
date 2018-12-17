@@ -81,5 +81,6 @@ check_info['genua_vpn'] = {
                                         "5",    # vpn remote
                                         "6",    # vpn status (2:OK, 1:FAULT)
                                   ]),
-    'snmp_scan_function'        : lambda oid: "genuscreen" in oid(".1.3.6.1.2.1.1.1.0").lower(),
+    "snmp_scan_function" : scan_genua,
+    "includes": ["genua.include", "fan.include"],
 }

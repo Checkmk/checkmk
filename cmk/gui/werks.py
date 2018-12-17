@@ -336,44 +336,45 @@ def render_werks_table():
 
     current_group, number_of_groups, number_of_werks = False, 0, 0
     sorter, grouper = _SORT_AND_GROUP[werk_table_options["grouping"]]
-    werklist = sorter(g_werks.values())
+    werklist = sorter(werk  #
+                      for werk in g_werks.values()
+                      if werk_matches_options(werk, werk_table_options))
 
     translator = cmk.utils.werks.WerkTranslator()
     for werk in werklist:
-        if werk_matches_options(werk, werk_table_options):
-            group = grouper(werk)
-            if group != current_group:
-                if number_of_groups >= werk_table_options["group_limit"]:
-                    break
-                number_of_groups += 1
+        group = grouper(werk)
+        if group != current_group:
+            if number_of_groups >= werk_table_options["group_limit"]:
+                break
+            number_of_groups += 1
 
-                if current_group != False:
-                    table.end()
-                table.begin(
-                    title=group,
-                    limit=None,
-                    searchable=False,
-                    sortable=False,
-                    css="werks",
-                    update_page_head=False)
-                current_group = group
+            if current_group != False:
+                table.end()
+            table.begin(
+                title=group,
+                limit=None,
+                searchable=False,
+                sortable=False,
+                css="werks",
+                update_page_head=False)
+            current_group = group
 
-            number_of_werks += 1
+        number_of_werks += 1
 
-            table.row()
-            table.cell(_("ID"), render_werk_id(werk, with_link=True), css="number narrow")
-            table.cell(_("Version"), werk["version"], css="number narrow")
-            table.cell(_("Date"), render_werk_date(werk), css="number narrow")
-            table.cell(
-                _("Class"), translator.class_of(werk), css="werkclass werkclass%s" % werk["class"])
-            table.cell(
-                _("Level"), translator.level_of(werk), css="werklevel werklevel%d" % werk["level"])
-            table.cell(
-                _("Compatibility"),
-                translator.compatibility_of(werk),
-                css="werkcomp werkcomp%s" % werk["compatible"])
-            table.cell(_("Component"), translator.component_of(werk), css="nowrap")
-            table.cell(_("Title"), render_werk_title(werk))
+        table.row()
+        table.cell(_("ID"), render_werk_id(werk, with_link=True), css="number narrow")
+        table.cell(_("Version"), werk["version"], css="number narrow")
+        table.cell(_("Date"), render_werk_date(werk), css="number narrow")
+        table.cell(
+            _("Class"), translator.class_of(werk), css="werkclass werkclass%s" % werk["class"])
+        table.cell(
+            _("Level"), translator.level_of(werk), css="werklevel werklevel%d" % werk["level"])
+        table.cell(
+            _("Compatibility"),
+            translator.compatibility_of(werk),
+            css="werkcomp werkcomp%s" % werk["compatible"])
+        table.cell(_("Component"), translator.component_of(werk), css="nowrap")
+        table.cell(_("Title"), render_werk_title(werk))
 
     if current_group != False:
         table.end()

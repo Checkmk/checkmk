@@ -1,4 +1,4 @@
-title: Genuscreen: State of Carp Interfaces on Carp Clusters and Nodes
+title: Genua: State of Carp Interfaces on Carp Clusters and Nodes
 agents: snmp
 catalog: hw/network/genua
 license: GPL
@@ -20,7 +20,7 @@ description:
 
 inventory:
  The inventory process checks if the device has a system description OIDs (.1.3.6.1.2.1.1.2.0)
- and if the name of this OID contains "genuscreen" (case insensitive).
+ and if the name of this OID contains "genuscreen", "genuscript" or "genubox" (case insensitive).
  If this is true the system is inventorized.
 
 item:

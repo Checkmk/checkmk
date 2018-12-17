@@ -41,7 +41,7 @@ import json
 
 import cmk.render as render
 import cmk.store as store
-from cmk.schedule import next_scheduled_time
+from cmk.utils.schedule import next_scheduled_time
 
 import cmk.gui.forms as forms
 import cmk.gui.table as table

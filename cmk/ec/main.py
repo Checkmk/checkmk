@@ -60,7 +60,7 @@ import cmk.ec.settings
 import cmk.ec.snmp
 import cmk.log
 import cmk.paths
-import cmk.profile
+import cmk.utils.profile
 import cmk.render
 import cmk.regex
 
@@ -226,7 +226,7 @@ class ECServerThread(threading.Thread):
 
         while not self._shal_terminate():
             try:
-                with cmk.profile.Profile(
+                with cmk.utils.profile.Profile(
                         enabled=self._profiling_enabled, profile_file=str(self._profile_file)):
                     self.serve()
             except Exception:

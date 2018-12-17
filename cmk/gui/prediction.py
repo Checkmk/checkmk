@@ -27,10 +27,11 @@
 import os
 import time
 import json
+
 import livestatus
-from cmk import prediction
 import cmk.paths
 import cmk.utils
+import cmk.utils.prediction as prediction
 
 import cmk.gui.pages
 import cmk.gui.sites as sites
@@ -55,7 +56,7 @@ def page_graph():
     # Get current value from perf_data via Livestatus
     current_value = get_current_perfdata(host, service, dsname)
 
-    pred_dir = cmk.prediction.predictions_dir(host, service, dsname, create=False)
+    pred_dir = prediction.predictions_dir(host, service, dsname, create=False)
     if pred_dir is None:
         raise MKGeneralException(
             _("There is currently no prediction information "
@@ -70,7 +71,7 @@ def page_graph():
         if not f.endswith(".info"):
             continue
 
-        tg_info = cmk.prediction.retrieve_data_for_prediction(pred_dir + "/" + f, timegroup)
+        tg_info = prediction.retrieve_data_for_prediction(pred_dir + "/" + f, timegroup)
         if tg_info is None:
             continue
 
@@ -100,7 +101,7 @@ def page_graph():
 
     # Get prediction data
     path = pred_dir + "/" + timegroup["name"]
-    tg_data = cmk.prediction.retrieve_data_for_prediction(path, tg_name)
+    tg_data = prediction.retrieve_data_for_prediction(path, tg_name)
     if tg_data is None:
         raise MKGeneralException(_("Missing prediction data."))
 
@@ -231,8 +232,7 @@ def swap_and_compute_levels(tg_data, tg_info):
         for k, v in row.items():
             swapped[k].append(v)
         if row["average"] is not None and row["stdev"] is not None:
-            _, (upper_0, upper_1, lower_0, lower_1) = cmk.prediction.estimate_levels(
-                row, tg_info, 1.0)
+            _, (upper_0, upper_1, lower_0, lower_1) = prediction.estimate_levels(row, tg_info, 1.0)
             swapped.setdefault("upper_warn", []).append(upper_0 or 0)
             swapped.setdefault("upper_crit", []).append(upper_1 or 0)
             swapped.setdefault("lower_warn", []).append(lower_0 or 0)

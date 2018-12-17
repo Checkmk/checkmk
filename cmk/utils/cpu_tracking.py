@@ -31,7 +31,7 @@ from typing import Dict, List  # pylint: disable=unused-import
 import cmk_base.console as console
 
 # TODO: Move state out of module scope
-# TODO: This should be rewritten to a context manager object. See cmk.profile for
+# TODO: This should be rewritten to a context manager object. See cmk.utils.profile for
 #       an example how it could look like.
 
 times = {}  # type: Dict[str, List[float]]

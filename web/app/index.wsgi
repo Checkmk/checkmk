@@ -31,6 +31,7 @@ import livestatus
 
 import cmk.paths
 import cmk.store as store
+import cmk.utils.profile
 
 import cmk.gui.i18n
 import cmk.gui.sites as sites
@@ -86,7 +87,7 @@ class Application(object):
         try:
             config.initialize()
 
-            with cmk.profile.Profile(
+            with cmk.utils.profile.Profile(
                     enabled=self._profiling_enabled(),
                     profile_file=os.path.join(cmk.paths.var_dir, "multisite.profile")):
                 self._handle_request()

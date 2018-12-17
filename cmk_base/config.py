@@ -41,7 +41,7 @@ import six
 import cmk.debug
 import cmk.paths
 from cmk.regex import regex, is_regex
-import cmk.translations
+import cmk.utils.translations
 import cmk.store as store
 import cmk.utils
 from cmk.exceptions import MKGeneralException, MKTerminate
@@ -1431,7 +1431,8 @@ def get_final_service_description(hostname, description):
     translations = get_service_translations(hostname)
     if translations:
         # Translate
-        description = cmk.translations.translate_service_description(translations, description)
+        description = cmk.utils.translations.translate_service_description(
+            translations, description)
 
     # Sanitize; Remove illegal characters from a service description
     description = description.strip()
@@ -1500,7 +1501,7 @@ def translate_piggyback_host(sourcehost, backedhost):
     # We assume the incoming name is correctly encoded in UTF-8
     backedhost = decode_incoming_string(backedhost)
 
-    translated = cmk.translations.translate_hostname(translation, backedhost)
+    translated = cmk.utils.translations.translate_hostname(translation, backedhost)
 
     return translated.encode('utf-8')  # change back to UTF-8 encoded string
 

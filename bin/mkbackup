@@ -55,7 +55,7 @@ from Cryptodome.PublicKey import RSA
 
 import cmk.daemon as daemon
 import cmk.render as render
-import cmk.schedule as schedule
+import cmk.utils.schedule as schedule
 import cmk.store as store
 from cmk.exceptions import MKTerminate, MKGeneralException
 

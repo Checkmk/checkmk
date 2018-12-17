@@ -34,9 +34,9 @@ import os
 import cmk
 import cmk.paths
 import cmk.store
-import cmk.tty as tty
+import cmk.utils.tty as tty
 from cmk.exceptions import MKGeneralException
-from cmk.structured_data import StructuredDataTree
+from cmk.utils.structured_data import StructuredDataTree
 
 import cmk_base.utils
 import cmk_base.console as console

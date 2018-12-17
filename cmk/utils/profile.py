@@ -76,9 +76,9 @@ Enabling/disabling as second argument is optional. By default it's enabled.
 The name of the output file is composed of the function name itself,
 the timestamp when the function was called and the suffix '.profile'.
 Examples:
-  @cmk.profile.profile_call(base_dir="/PATH/TO/DIR")
-  @cmk.profile.profile_call(base_dir="/PATH/TO/DIR", enabled=True)
-  @cmk.profile.profile_call(base_dir="/PATH/TO/DIR", enabled=False)
+  @cmk.utils.profile.profile_call(base_dir="/PATH/TO/DIR")
+  @cmk.utils.profile.profile_call(base_dir="/PATH/TO/DIR", enabled=True)
+  @cmk.utils.profile.profile_call(base_dir="/PATH/TO/DIR", enabled=False)
 """
 
     def decorate(f):

@@ -31,7 +31,7 @@ import inspect
 import signal
 
 from cmk.regex import regex
-import cmk.tty as tty
+import cmk.utils.tty as tty
 import cmk.paths
 from cmk.exceptions import MKGeneralException, MKTimeout
 

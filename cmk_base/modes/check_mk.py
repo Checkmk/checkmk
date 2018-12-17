@@ -29,7 +29,7 @@ import sys
 from typing import List  # pylint: disable=unused-import
 
 import cmk
-import cmk.tty as tty
+import cmk.utils.tty as tty
 import cmk.paths
 import cmk.log
 import cmk.debug
@@ -320,7 +320,7 @@ modes.register(
 
 
 def mode_list_checks():
-    import cmk.man_pages as man_pages
+    import cmk.utils.man_pages as man_pages
     all_check_manuals = man_pages.all_man_pages()
 
     checks_sorted = config.check_info.items() + \
@@ -1205,7 +1205,7 @@ modes.register(
 
 
 def mode_man(*args):
-    import cmk.man_pages as man_pages
+    import cmk.utils.man_pages as man_pages
     if args[0]:
         man_pages.print_man_page(args[0][0])
     else:
@@ -1241,7 +1241,7 @@ modes.register(
 
 
 def mode_browse_man():
-    import cmk.man_pages as man_pages
+    import cmk.utils.man_pages as man_pages
     man_pages.print_man_page_browser()
 
 

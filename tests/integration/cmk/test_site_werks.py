@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 
-import cmk.werks
+import cmk.utils.werks
 
 def test_load(site):
-    werks = cmk.werks.load()
+    werks = cmk.utils.werks.load()
     assert len(werks) > 1000
 
 
 def test_regular_werks(site):
-    werks = cmk.werks.load()
+    werks = cmk.utils.werks.load()
 
     regular_werks = [ werk for werk in werks.values()
                          if werk["edition"] == "cre" ]
@@ -17,7 +17,7 @@ def test_regular_werks(site):
 
 
 def test_enterprise_werks(site):
-    werks = cmk.werks.load()
+    werks = cmk.utils.werks.load()
 
     enterprise_werks = [ werk for werk in werks.values()
                          if werk["edition"] == "cee" ]
@@ -29,7 +29,7 @@ def test_enterprise_werks(site):
 
 
 def test_managed_werks(site):
-    werks = cmk.werks.load()
+    werks = cmk.utils.werks.load()
 
     managed_werks = [ werk for werk in werks.values()
                          if werk["edition"] == "cme" ]

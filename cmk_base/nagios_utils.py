@@ -28,7 +28,7 @@ import subprocess
 import sys
 
 import cmk.paths
-import cmk.tty
+import cmk.utils.tty as tty
 
 import cmk_base.console
 
@@ -41,7 +41,7 @@ def do_check_nagiosconfig():
     p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=True)
     exit_status = p.wait()
     if not exit_status:
-        cmk_base.console.output(cmk.tty.ok + "\n")
+        cmk_base.console.output(tty.ok + "\n")
         return True
 
     cmk_base.console.output("ERROR:\n")

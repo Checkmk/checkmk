@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 from cmk.exceptions import MKGeneralException
-import cmk.tty as tty
+import cmk.utils.tty as tty
 
 import cmk_base.check_utils
 import cmk_base.config as config

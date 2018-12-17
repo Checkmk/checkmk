@@ -67,7 +67,7 @@ import time
 
 import cmk.paths
 import cmk.render
-import cmk.man_pages as man_pages
+import cmk.utils.man_pages as man_pages
 from cmk.defines import short_service_state_name, short_host_state_name
 
 import cmk.gui.config as config

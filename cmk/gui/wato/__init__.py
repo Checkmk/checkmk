@@ -99,7 +99,7 @@ from hashlib import sha256
 
 import cmk
 import cmk.paths
-import cmk.translations
+import cmk.utils.translations
 import cmk.store as store
 from cmk.regex import regex
 from cmk.defines import short_service_state_name
@@ -855,7 +855,7 @@ def add_scanned_hosts_to_folder(folder, found):
 
     entries = []
     for host_name, ipaddr in found:
-        host_name = cmk.translations.translate_hostname(translation, host_name)
+        host_name = cmk.utils.translations.translate_hostname(translation, host_name)
 
         attrs = {}
         if "tag_criticality" in network_scan_properties:

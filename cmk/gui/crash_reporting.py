@@ -51,7 +51,7 @@ from cmk.gui.valuespec import (
 )
 import cmk.gui.config as config
 import cmk.gui.forms as forms
-import cmk.crash_reporting
+import cmk.utils.crash_reporting
 
 
 @cmk.gui.pages.register("crashed_check")
@@ -470,7 +470,7 @@ def show_agent_output(tardata):
 
 
 def create_crash_dump_info_file(tar, what):
-    crash_info = cmk.crash_reporting.create_crash_info(
+    crash_info = cmk.utils.crash_reporting.create_crash_info(
         what,
         details={
             "page": html.myfile + ".py",
@@ -489,7 +489,7 @@ def create_crash_dump_info_file(tar, what):
         version=get_version(what))
 
     content = cStringIO.StringIO()
-    content.write(cmk.crash_reporting.crash_info_to_string(crash_info))
+    content.write(cmk.utils.crash_reporting.crash_info_to_string(crash_info))
     content.seek(0)
 
     tarinfo = tarfile.TarInfo(name="crash.info")

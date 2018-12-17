@@ -37,8 +37,7 @@ from pathlib2 import Path
 import livestatus
 
 import cmk.paths
-import cmk.profile
-from cmk.structured_data import StructuredDataTree, Container, Numeration, Attributes
+from cmk.utils.structured_data import StructuredDataTree, Container, Numeration, Attributes
 
 import cmk.gui.pages
 import cmk.gui.config as config

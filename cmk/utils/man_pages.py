@@ -40,7 +40,7 @@ from pathlib2 import Path
 
 import cmk.debug
 import cmk.paths
-import cmk.tty as tty
+import cmk.utils.tty as tty
 
 from cmk.exceptions import MKGeneralException
 from cmk.i18n import _

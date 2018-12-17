@@ -3,7 +3,7 @@ import os
 import time
 
 import pytest
-import cmk.prediction
+import cmk.utils.prediction
 from cmk_base import prediction
 from cmk.exceptions import MKGeneralException
 
@@ -49,8 +49,8 @@ def test_get_rrd_data(cfg_setup, date, period, result):
     _, from_time, until_time, _ = prediction.get_prediction_timegroup(
         timestamp, prediction.prediction_periods[period])
 
-    step, data = cmk.prediction.get_rrd_data('test-prediction', 'CPU load', 'load15', 'MAX',
-                                             from_time, until_time)
+    step, data = cmk.utils.prediction.get_rrd_data('test-prediction', 'CPU load', 'load15', 'MAX',
+                                                   from_time, until_time)
     assert (step, len(data)) == result
 
 
@@ -70,7 +70,8 @@ def test_get_rrd_data(cfg_setup, date, period, result):
 ])
 def test_aggregate_data_for_prediction_and_save(cfg_setup, now, params):
     hostname, service_description, dsname = 'test-prediction', "CPU load", 'load15'
-    pred_dir = cmk.prediction.predictions_dir(hostname, service_description, dsname, create=True)
+    pred_dir = cmk.utils.prediction.predictions_dir(
+        hostname, service_description, dsname, create=True)
 
     period_info = prediction.prediction_periods[params['period']]
     timegroup = period_info["groupby"](now)[0]
@@ -79,7 +80,7 @@ def test_aggregate_data_for_prediction_and_save(cfg_setup, now, params):
     data_for_pred = prediction.aggregate_data_for_prediction_and_save(
         hostname, service_description, pred_file, params, period_info, dsname, 'MAX', now)
 
-    reference = cmk.prediction.retrieve_data_for_prediction(
+    reference = cmk.utils.prediction.retrieve_data_for_prediction(
         "%s/tests/integration/cmk_base/test-files/%s" % (repo_path(), timegroup), timegroup)
     assert data_for_pred == reference
 
@@ -93,8 +94,8 @@ def test_aggregate_data_for_prediction_and_save(cfg_setup, now, params):
 ])
 def test_get_rrd_data_incomplete(cfg_setup, timerange, result):
     from_time, until_time = timerange
-    data_response = cmk.prediction.get_rrd_data('test-prediction', 'CPU load', 'load15', 'MAX',
-                                                from_time, until_time)
+    data_response = cmk.utils.prediction.get_rrd_data('test-prediction', 'CPU load', 'load15',
+                                                      'MAX', from_time, until_time)
     assert data_response == result
 
 
@@ -105,12 +106,12 @@ def test_get_rrd_data_fails(cfg_setup):
 
     # Fail to get data, because non-existent check
     with pytest.raises(MKGeneralException, match="Cannot get historic metrics via Livestatus:"):
-        cmk.prediction.get_rrd_data('test-prediction', 'Nonexistent check', 'util', 'MAX',
-                                    from_time, until_time)
+        cmk.utils.prediction.get_rrd_data('test-prediction', 'Nonexistent check', 'util', 'MAX',
+                                          from_time, until_time)
 
     # Empty response, because non-existent perf_data variable
-    step, data = cmk.prediction.get_rrd_data('test-prediction', 'CPU utilization',
-                                             'untracked_prefdata', 'MAX', from_time, until_time)
+    step, data = cmk.utils.prediction.get_rrd_data(
+        'test-prediction', 'CPU utilization', 'untracked_prefdata', 'MAX', from_time, until_time)
 
     # The worst resolution in an rrd file is 6 hours, because query always
     # replies. step is a huge number which meaning I don't understand but

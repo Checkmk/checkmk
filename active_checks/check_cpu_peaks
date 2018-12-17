@@ -29,7 +29,7 @@ import time
 import getopt
 
 import cmk.utils.prediction as prediction
-from cmk.exceptions import MKGeneralException
+from cmk.utils.exceptions import MKGeneralException
 
 
 def usage():

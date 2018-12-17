@@ -26,9 +26,9 @@
 """Defaults for rule pack and configuration"""
 
 from typing import Any, AnyStr, Dict, List  # pylint: disable=unused-import
-import cmk.log
+import cmk.utils.log
 
-from cmk.i18n import _
+from cmk.utils.i18n import _
 
 
 def default_rule_pack(rules):
@@ -57,12 +57,12 @@ def default_config():
         "debug_rules": False,
         "rule_optimizer": True,
         "log_level": {
-            "cmk.mkeventd": cmk.log.INFO,
-            "cmk.mkeventd.EventServer": cmk.log.INFO,
-            "cmk.mkeventd.EventServer.snmp": cmk.log.INFO,
-            "cmk.mkeventd.EventStatus": cmk.log.INFO,
-            "cmk.mkeventd.StatusServer": cmk.log.INFO,
-            "cmk.mkeventd.lock": cmk.log.INFO,
+            "cmk.mkeventd": cmk.utils.log.INFO,
+            "cmk.mkeventd.EventServer": cmk.utils.log.INFO,
+            "cmk.mkeventd.EventServer.snmp": cmk.utils.log.INFO,
+            "cmk.mkeventd.EventStatus": cmk.utils.log.INFO,
+            "cmk.mkeventd.StatusServer": cmk.utils.log.INFO,
+            "cmk.mkeventd.lock": cmk.utils.log.INFO,
         },
         "log_rulehits": False,
         "log_messages": False,

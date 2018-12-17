@@ -26,7 +26,7 @@
 
 import urlparse
 
-import cmk.store as store
+import cmk.utils.store as store
 
 import cmk.gui.config as config
 import cmk.gui.pagetypes as pagetypes

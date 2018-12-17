@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-from cmk.defines import short_service_state_name
+from cmk.utils.defines import short_service_state_name
 
 import cmk.gui.config as config
 import cmk.gui.sites as sites

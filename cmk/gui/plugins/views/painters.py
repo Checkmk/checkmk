@@ -65,10 +65,10 @@
 import os
 import time
 
-import cmk.paths
-import cmk.render
+import cmk.utils.paths
+import cmk.utils.render
 import cmk.utils.man_pages as man_pages
-from cmk.defines import short_service_state_name, short_host_state_name
+from cmk.utils.defines import short_service_state_name, short_host_state_name
 
 import cmk.gui.config as config
 import cmk.gui.metrics as metrics
@@ -673,14 +673,14 @@ multisite_painters["svc_check_latency"] = {
     "title": _("Service check latency"),
     "short": _("Latency"),
     "columns": ["service_latency"],
-    "paint": lambda row: ("", cmk.render.approx_age(row["service_latency"])),
+    "paint": lambda row: ("", cmk.utils.render.approx_age(row["service_latency"])),
 }
 
 multisite_painters["svc_check_duration"] = {
     "title": _("Service check duration"),
     "short": _("Duration"),
     "columns": ["service_execution_time"],
-    "paint": lambda row: ("", cmk.render.approx_age(row["service_execution_time"])),
+    "paint": lambda row: ("", cmk.utils.render.approx_age(row["service_execution_time"])),
 }
 
 multisite_painters["svc_attempt"] = {
@@ -695,21 +695,23 @@ multisite_painters["svc_normal_interval"] = {
     "title": _("Service normal check interval"),
     "short": _("Check int."),
     "columns": ["service_check_interval"],
-    "paint": lambda row: ("number", cmk.render.approx_age(row["service_check_interval"] * 60.0)),
+    "paint":
+        lambda row: ("number", cmk.utils.render.approx_age(row["service_check_interval"] * 60.0)),
 }
 multisite_painters["svc_retry_interval"] = {
     "title": _("Service retry check interval"),
     "short": _("Retry"),
     "columns": ["service_retry_interval"],
-    "paint": lambda row: ("number", cmk.render.approx_age(row["service_retry_interval"] * 60.0)),
+    "paint":
+        lambda row: ("number", cmk.utils.render.approx_age(row["service_retry_interval"] * 60.0)),
 }
 multisite_painters["svc_check_interval"] = {
     "title"   : _("Service normal/retry check interval"),
     "short"   : _("Interval"),
     "columns" : [ "service_check_interval", "service_retry_interval" ],
     "paint"   : lambda row: (None, "%s / %s" % (
-            cmk.render.approx_age(row["service_check_interval"] * 60.0),
-            cmk.render.approx_age(row["service_retry_interval"] * 60.0))),
+            cmk.utils.render.approx_age(row["service_check_interval"] * 60.0),
+            cmk.utils.render.approx_age(row["service_retry_interval"] * 60.0))),
 }
 
 multisite_painters["svc_check_type"] = {
@@ -916,11 +918,11 @@ def paint_custom_notes(what, row):
     host = row["host_name"]
     svc = row.get("service_description")
     if what == "service":
-        notes_dir = cmk.paths.default_config_dir + "/notes/services"
+        notes_dir = cmk.utils.paths.default_config_dir + "/notes/services"
         dirs = notes_matching_pattern_entries([notes_dir], host)
         item = svc
     else:
-        dirs = [cmk.paths.default_config_dir + "/notes/hosts"]
+        dirs = [cmk.utils.paths.default_config_dir + "/notes/hosts"]
         item = host
 
     files = notes_matching_pattern_entries(dirs, item)
@@ -1112,14 +1114,14 @@ multisite_painters["host_check_latency"] = {
     "title": _("Host check latency"),
     "short": _("Latency"),
     "columns": ["host_latency"],
-    "paint": lambda row: ("", cmk.render.approx_age(row["host_latency"])),
+    "paint": lambda row: ("", cmk.utils.render.approx_age(row["host_latency"])),
 }
 
 multisite_painters["host_check_duration"] = {
     "title": _("Host check duration"),
     "short": _("Duration"),
     "columns": ["host_execution_time"],
-    "paint": lambda row: ("", cmk.render.approx_age(row["host_execution_time"])),
+    "paint": lambda row: ("", cmk.utils.render.approx_age(row["host_execution_time"])),
 }
 
 multisite_painters["host_attempt"] = {
@@ -1134,21 +1136,21 @@ multisite_painters["host_normal_interval"] = {
     "title": _("Normal check interval"),
     "short": _("Check int."),
     "columns": ["host_check_interval"],
-    "paint": lambda row: (None, cmk.render.approx_age(row["host_check_interval"] * 60.0)),
+    "paint": lambda row: (None, cmk.utils.render.approx_age(row["host_check_interval"] * 60.0)),
 }
 multisite_painters["host_retry_interval"] = {
     "title": _("Retry check interval"),
     "short": _("Retry"),
     "columns": ["host_retry_interval"],
-    "paint": lambda row: (None, cmk.render.approx_age(row["host_retry_interval"] * 60.0)),
+    "paint": lambda row: (None, cmk.utils.render.approx_age(row["host_retry_interval"] * 60.0)),
 }
 multisite_painters["host_check_interval"] = {
     "title"   : _("Normal/retry check interval"),
     "short"   : _("Interval"),
     "columns" : [ "host_check_interval", "host_retry_interval" ],
     "paint"   : lambda row: (None, "%s / %s" % (
-            cmk.render.approx_age(row["host_check_interval"] * 60.0),
-            cmk.render.approx_age(row["host_retry_interval"] * 60.0))),
+            cmk.utils.render.approx_age(row["host_check_interval"] * 60.0),
+            cmk.utils.render.approx_age(row["host_retry_interval"] * 60.0))),
 }
 
 multisite_painters["host_check_type"] = {

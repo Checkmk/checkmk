@@ -56,9 +56,9 @@ from PIL import Image
 from Cryptodome.PublicKey import RSA
 import six
 
-import cmk.log
-import cmk.paths
-import cmk.defines as defines
+import cmk.utils.log
+import cmk.utils.paths
+import cmk.utils.defines as defines
 
 import cmk.gui.pages
 import cmk.gui.forms as forms
@@ -4255,10 +4255,11 @@ class IconSelector(ValueSpec):
     # During upload of user specific icons, the meta data is added to the images.
     def available_icons(self, only_local=False):
         dirs = [
-            os.path.join(cmk.paths.omd_root, "local/share/check_mk/web/htdocs/images/icons"),
+            os.path.join(cmk.utils.paths.omd_root, "local/share/check_mk/web/htdocs/images/icons"),
         ]
         if not only_local:
-            dirs.append(os.path.join(cmk.paths.omd_root, "share/check_mk/web/htdocs/images/icons"))
+            dirs.append(
+                os.path.join(cmk.utils.paths.omd_root, "share/check_mk/web/htdocs/images/icons"))
 
         valid_categories = dict(self.categories()).keys()
 
@@ -4704,15 +4705,15 @@ class SiteChoice(DropdownChoice):
 
 class LogLevelChoice(DropdownChoice):
     def __init__(self, **kwargs):
-        kwargs.setdefault("default_value", cmk.log.INFO)
+        kwargs.setdefault("default_value", cmk.utils.log.INFO)
         kwargs.update({
             "choices": [
-                (cmk.log.CRITICAL, _("Critical")),
-                (cmk.log.ERROR, _("Error")),
-                (cmk.log.WARNING, _("Warning")),
-                (cmk.log.INFO, _("Informational")),
-                (cmk.log.VERBOSE, _("Verbose")),
-                (cmk.log.DEBUG, _("Debug")),
+                (cmk.utils.log.CRITICAL, _("Critical")),
+                (cmk.utils.log.ERROR, _("Error")),
+                (cmk.utils.log.WARNING, _("Warning")),
+                (cmk.utils.log.INFO, _("Informational")),
+                (cmk.utils.log.VERBOSE, _("Verbose")),
+                (cmk.utils.log.DEBUG, _("Debug")),
             ],
         })
         super(LogLevelChoice, self).__init__(**kwargs)

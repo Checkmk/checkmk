@@ -29,7 +29,7 @@ import time
 import json
 
 import livestatus
-import cmk.paths
+import cmk.utils.paths
 import cmk.utils
 import cmk.utils.prediction as prediction
 

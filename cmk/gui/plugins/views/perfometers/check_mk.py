@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import cmk.render
+import cmk.utils.render
 import cmk.gui.utils as utils
 
 from . import (
@@ -47,7 +47,7 @@ from . import (
 #    (varname, value, unit, warn, crit, min, max)
 
 
-# TODO: Migrate to cmk.render.*
+# TODO: Migrate to cmk.utils.render.*
 def number_human_readable(n, precision=1, unit="B"):
     base = 1024.0
     if unit == "Bit":
@@ -744,7 +744,7 @@ def perfometer_fileinfo(row, check_command, perf_data):
     texts = []
     for i, color, base, scale, verbfunc in [
         (0, "#ffcc50", 1000000, 10, lambda v: number_human_readable(v, precision=0)),  # size
-        (1, "#ccff50", 3600, 10, cmk.render.approx_age)
+        (1, "#ccff50", 3600, 10, cmk.utils.render.approx_age)
     ]:  # age
         val = float(perf_data[i][1])
         h += perfometer_logarithmic(val, base, scale, color)
@@ -758,7 +758,7 @@ def perfometer_fileinfo_groups(row, check_command, perf_data):
     texts = []
     for i, color, base, scale, verbfunc in [
         (2, "#aabb50", 10000, 10, lambda v: ("%d Tot") % v),  # count
-        (1, "#ccff50", 3600, 10, cmk.render.approx_age)
+        (1, "#ccff50", 3600, 10, cmk.utils.render.approx_age)
     ]:  #age_newest
         val = float(perf_data[i][1])
         h += perfometer_logarithmic(val, base, scale, color)
@@ -1214,8 +1214,8 @@ def perfometer_veeam_client(row, check_command, perf_data):
     h = perfometer_logarithmic_dual_independent(avgspeed_bytes, '#54b948', 10000000, 2,
                                                 duration_secs, '#2098cb', 500, 2)
 
-    avgspeed = cmk.render.fmt_bytes(avgspeed_bytes)
-    duration = cmk.render.approx_age(duration_secs)
+    avgspeed = cmk.utils.render.fmt_bytes(avgspeed_bytes)
+    duration = cmk.utils.render.approx_age(duration_secs)
 
     return "%s/s&nbsp;&nbsp;&nbsp;%s" % (avgspeed, duration), h
 

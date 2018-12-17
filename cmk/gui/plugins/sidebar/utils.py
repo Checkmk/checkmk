@@ -29,7 +29,7 @@ import abc
 import traceback
 import json
 
-import cmk.plugin_registry
+import cmk.utils.plugin_registry
 
 import cmk.gui.pages
 import cmk.gui.config as config
@@ -144,7 +144,7 @@ class CustomizableSidebarSnapin(SidebarSnapin):
         raise NotImplementedError()
 
 
-class SnapinRegistry(cmk.plugin_registry.ClassRegistry):
+class SnapinRegistry(cmk.utils.plugin_registry.ClassRegistry):
     """The management object for all available plugins."""
 
     def plugin_base_class(self):

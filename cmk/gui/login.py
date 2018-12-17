@@ -40,7 +40,7 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 
-import cmk.paths
+import cmk.utils.paths
 
 from cmk.gui.exceptions import MKInternalError, MKAuthException, MKUserError, FinalizeRequest
 
@@ -93,7 +93,7 @@ def site_cookie_suffix():
 # not exist. Having access to the secret means that one can issue valid
 # cookies for the cookie auth.
 def load_secret():
-    secret_path = '%s/auth.secret' % os.path.dirname(cmk.paths.htpasswd_file)
+    secret_path = '%s/auth.secret' % os.path.dirname(cmk.utils.paths.htpasswd_file)
     secret = ''
     if os.path.exists(secret_path):
         secret = file(secret_path).read().strip()
@@ -307,7 +307,7 @@ def check_auth_automation():
     html.del_var('_username')
     html.del_var('_secret')
     if secret and user_id and "/" not in user_id:
-        path = cmk.paths.var_dir + "/web/" + user_id.encode("utf-8") + "/automation.secret"
+        path = cmk.utils.paths.var_dir + "/web/" + user_id.encode("utf-8") + "/automation.secret"
         if os.path.isfile(path) and file(path).read().strip() == secret:
             # Auth with automation secret succeeded - mark transid as unneeded in this case
             html.transaction_manager.ignore()

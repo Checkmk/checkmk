@@ -76,7 +76,7 @@ import npyscreen
 
 import livestatus
 
-from cmk.render import fmt_bytes
+from cmk.utils.render import fmt_bytes
 
 #.
 #   .--Helpers-------------------------------------------------------------.

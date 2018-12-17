@@ -328,7 +328,8 @@ class ModeObjectParameters(WatoMode):
         if isinstance(known_settings, dict) and "tp_computed_params" in known_settings:
             computed_at = known_settings["tp_computed_params"]["computed_at"]
             html.write_text(
-                _("Timespecific parameters computed at %s") % cmk.render.date_and_time(computed_at))
+                _("Timespecific parameters computed at %s") %
+                cmk.utils.render.date_and_time(computed_at))
             html.br()
             known_settings = known_settings["tp_computed_params"]["params"]
 

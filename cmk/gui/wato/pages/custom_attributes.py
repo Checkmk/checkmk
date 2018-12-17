@@ -34,7 +34,7 @@ import cmk.gui.forms as forms
 import cmk.gui.table as table
 import cmk.gui.userdb as userdb
 import cmk.gui.watolib as watolib
-import cmk.store as store
+import cmk.utils.store as store
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import html
 from cmk.gui.i18n import _

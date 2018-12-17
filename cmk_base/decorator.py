@@ -25,8 +25,9 @@
 # Boston, MA 02110-1301 USA.
 
 import cmk
-import cmk.defines as defines
-from cmk.exceptions import MKGeneralException, MKTimeout
+import cmk.utils.debug
+import cmk.utils.defines as defines
+from cmk.utils.exceptions import MKGeneralException, MKTimeout
 
 import cmk_base.config as config
 import cmk_base.console as console
@@ -71,7 +72,7 @@ def handle_check_mk_check_result(check_plugin_name, description):
                 status = max(status, exit_spec.get("exception", 3))
 
             except Exception:
-                if cmk.debug.enabled():
+                if cmk.utils.debug.enabled():
                     raise
                 crash_output = cmk_base.crash_reporting.create_crash_dump(
                     hostname, check_plugin_name, None, False, None, description, [])

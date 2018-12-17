@@ -41,7 +41,7 @@ import pysnmp.smi.rfc1902
 import pysnmp.smi.error
 import pyasn1.error
 
-import cmk.render
+import cmk.utils.render
 
 
 class SNMPTrapEngine(object):
@@ -231,7 +231,7 @@ class SNMPTrapTranslator(object):
             if value.__class__.__name__ in ['ObjectIdentifier', 'IpAddress']:
                 val = value.prettyPrint()
             elif value.__class__.__name__ == 'TimeTicks':
-                val = str(cmk.render.Age(float(value._value) / 100))
+                val = str(cmk.utils.render.Age(float(value._value) / 100))
             else:
                 val = value._value
 

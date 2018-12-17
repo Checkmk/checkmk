@@ -36,13 +36,14 @@ from cStringIO import StringIO
 from typing import NamedTuple
 
 import cmk.ec.export
-import cmk.log
-import cmk.paths
+import cmk.utils.log
+import cmk.utils.paths
 import cmk.utils.tty as tty
 import cmk.utils.werks
+import cmk.utils.debug
 import cmk_base.utils
 
-logger = cmk.log.get_logger(__name__)
+logger = cmk.utils.log.get_logger(__name__)
 pac_ext = ".mkp"
 
 
@@ -56,7 +57,7 @@ class PackageException(Exception):
         return self.reason
 
 
-pac_dir = cmk.paths.omd_root + "/var/check_mk/packages/"
+pac_dir = cmk.utils.paths.omd_root + "/var/check_mk/packages/"
 
 # TODO: OMD: Pack this path and remote this makedirs call
 try:
@@ -66,30 +67,30 @@ except:
 
 # order matters! See function _get_permissions
 PERM_MAP = (
-    (cmk.paths.checks_dir, 0644),
-    (cmk.paths.local_checks_dir, 0644),
-    (cmk.paths.notifications_dir, 0755),
-    (cmk.paths.local_notifications_dir, 0755),
-    (cmk.paths.inventory_dir, 0644),
-    (cmk.paths.local_inventory_dir, 0644),
-    (cmk.paths.check_manpages_dir, 0644),
-    (cmk.paths.local_check_manpages_dir, 0644),
-    (cmk.paths.agents_dir, 0755),
-    (cmk.paths.local_agents_dir, 0755),
-    (cmk.paths.web_dir, 0644),
-    (cmk.paths.local_web_dir, 0644),
-    (cmk.paths.pnp_templates_dir, 0644),
-    (cmk.paths.local_pnp_templates_dir, 0644),
-    (cmk.paths.doc_dir, 0644),
-    (cmk.paths.local_doc_dir, 0644),
-    (cmk.paths.locale_dir, 0644),
-    (cmk.paths.local_locale_dir, 0644),
-    (cmk.paths.local_bin_dir, 0755),
-    (os.path.join(cmk.paths.local_lib_dir, "nagios", "plugins"), 0755),
-    (cmk.paths.local_lib_dir, 0644),
-    (cmk.paths.local_mib_dir, 0644),
-    (os.path.join(cmk.paths.share_dir, "alert_handlers"), 0755),
-    (os.path.join(cmk.paths.local_share_dir, "alert_handlers"), 0755),
+    (cmk.utils.paths.checks_dir, 0644),
+    (cmk.utils.paths.local_checks_dir, 0644),
+    (cmk.utils.paths.notifications_dir, 0755),
+    (cmk.utils.paths.local_notifications_dir, 0755),
+    (cmk.utils.paths.inventory_dir, 0644),
+    (cmk.utils.paths.local_inventory_dir, 0644),
+    (cmk.utils.paths.check_manpages_dir, 0644),
+    (cmk.utils.paths.local_check_manpages_dir, 0644),
+    (cmk.utils.paths.agents_dir, 0755),
+    (cmk.utils.paths.local_agents_dir, 0755),
+    (cmk.utils.paths.web_dir, 0644),
+    (cmk.utils.paths.local_web_dir, 0644),
+    (cmk.utils.paths.pnp_templates_dir, 0644),
+    (cmk.utils.paths.local_pnp_templates_dir, 0644),
+    (cmk.utils.paths.doc_dir, 0644),
+    (cmk.utils.paths.local_doc_dir, 0644),
+    (cmk.utils.paths.locale_dir, 0644),
+    (cmk.utils.paths.local_locale_dir, 0644),
+    (cmk.utils.paths.local_bin_dir, 0755),
+    (os.path.join(cmk.utils.paths.local_lib_dir, "nagios", "plugins"), 0755),
+    (cmk.utils.paths.local_lib_dir, 0644),
+    (cmk.utils.paths.local_mib_dir, 0644),
+    (os.path.join(cmk.utils.paths.share_dir, "alert_handlers"), 0755),
+    (os.path.join(cmk.utils.paths.local_share_dir, "alert_handlers"), 0755),
     (str(cmk.ec.export.mkp_rule_pack_dir()), 0644),
 )
 
@@ -109,19 +110,20 @@ PackagePart = NamedTuple("PackagePart", [
 ])
 
 _package_parts = [
-    PackagePart("checks", "Checks", cmk.paths.local_checks_dir),
-    PackagePart("notifications", "Notification scripts", cmk.paths.local_notifications_dir),
-    PackagePart("inventory", "Inventory plugins", cmk.paths.local_inventory_dir),
-    PackagePart("checkman", "Checks' man pages", cmk.paths.local_check_manpages_dir),
-    PackagePart("agents", "Agents", cmk.paths.local_agents_dir),
-    PackagePart("web", "Multisite extensions", cmk.paths.local_web_dir),
-    PackagePart("pnp-templates", "PNP4Nagios templates", cmk.paths.local_pnp_templates_dir),
-    PackagePart("doc", "Documentation files", cmk.paths.local_doc_dir),
-    PackagePart("locales", "Localizations", cmk.paths.local_locale_dir),
-    PackagePart("bin", "Binaries", cmk.paths.local_bin_dir),
-    PackagePart("lib", "Libraries", cmk.paths.local_lib_dir),
-    PackagePart("mibs", "SNMP MIBs", cmk.paths.local_mib_dir),
-    PackagePart("alert_handlers", "Alert handlers", cmk.paths.local_share_dir + "/alert_handlers"),
+    PackagePart("checks", "Checks", cmk.utils.paths.local_checks_dir),
+    PackagePart("notifications", "Notification scripts", cmk.utils.paths.local_notifications_dir),
+    PackagePart("inventory", "Inventory plugins", cmk.utils.paths.local_inventory_dir),
+    PackagePart("checkman", "Checks' man pages", cmk.utils.paths.local_check_manpages_dir),
+    PackagePart("agents", "Agents", cmk.utils.paths.local_agents_dir),
+    PackagePart("web", "Multisite extensions", cmk.utils.paths.local_web_dir),
+    PackagePart("pnp-templates", "PNP4Nagios templates", cmk.utils.paths.local_pnp_templates_dir),
+    PackagePart("doc", "Documentation files", cmk.utils.paths.local_doc_dir),
+    PackagePart("locales", "Localizations", cmk.utils.paths.local_locale_dir),
+    PackagePart("bin", "Binaries", cmk.utils.paths.local_bin_dir),
+    PackagePart("lib", "Libraries", cmk.utils.paths.local_lib_dir),
+    PackagePart("mibs", "SNMP MIBs", cmk.utils.paths.local_mib_dir),
+    PackagePart("alert_handlers", "Alert handlers",
+                cmk.utils.paths.local_share_dir + "/alert_handlers"),
 ]
 
 config_parts = [
@@ -363,7 +365,8 @@ def package_pack(args):
 
     # Make sure, user is not in data directories of Check_MK
     abs_curdir = os.path.abspath(os.curdir)
-    for directory in [cmk.paths.var_dir] + [p.path for p in get_package_parts() + config_parts]:
+    for directory in [cmk.utils.paths.var_dir
+                     ] + [p.path for p in get_package_parts() + config_parts]:
         if abs_curdir == directory or abs_curdir.startswith(directory + "/"):
             raise PackageException(
                 "You are in %s!\n"
@@ -448,7 +451,7 @@ def remove_package(package):
                     else:
                         os.remove(path)
                 except Exception as e:
-                    if cmk.debug.enabled():
+                    if cmk.utils.debug.enabled():
                         raise
                     raise Exception("Cannot remove %s: %s\n" % (path, e))
 
@@ -641,7 +644,7 @@ def verify_check_mk_version(package):
                         <= cmk.utils.werks.parse_check_mk_version(cmk_version)
     except:
         # Be compatible: When a version can not be parsed, then skip this check
-        if cmk.debug.enabled():
+        if cmk.utils.debug.enabled():
             raise
         return
 

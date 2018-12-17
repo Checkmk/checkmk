@@ -30,10 +30,11 @@ import time
 import inspect
 import signal
 
-from cmk.regex import regex
+from cmk.utils.regex import regex
 import cmk.utils.tty as tty
-import cmk.paths
-from cmk.exceptions import MKGeneralException, MKTimeout
+import cmk.utils.debug
+import cmk.utils.paths
+from cmk.utils.exceptions import MKGeneralException, MKTimeout
 
 import cmk_base.crash_reporting
 import cmk_base.config as config
@@ -99,7 +100,7 @@ def do_discovery(hostnames, check_plugin_names, only_new):
         console.section_begin(hostname)
 
         try:
-            if cmk.debug.enabled():
+            if cmk.utils.debug.enabled():
                 on_error = "raise"
             else:
                 on_error = "warn"
@@ -119,7 +120,7 @@ def do_discovery(hostnames, check_plugin_names, only_new):
                               only_new, on_error)
 
         except Exception as e:
-            if cmk.debug.enabled():
+            if cmk.utils.debug.enabled():
                 raise
             console.section_error("%s" % e)
         finally:
@@ -288,7 +289,7 @@ def discover_on_host(mode,
         raise  # let general timeout through
 
     except Exception as e:
-        if cmk.debug.enabled():
+        if cmk.utils.debug.enabled():
             raise
         err = str(e)
     return [counts["added"], counts["removed"], counts["kept"],
@@ -441,7 +442,7 @@ def _set_rediscovery_flag(hostname, need_rediscovery):
             f = open(filename, "w")
             f.close()
 
-    autodiscovery_dir = cmk.paths.var_dir + '/autodiscovery'
+    autodiscovery_dir = cmk.utils.paths.var_dir + '/autodiscovery'
     discovery_filename = os.path.join(autodiscovery_dir, hostname)
     if need_rediscovery:
         if not os.path.exists(autodiscovery_dir):
@@ -474,7 +475,7 @@ def _clear_discovery_timeout():
 
 
 def _get_autodiscovery_dir():
-    return cmk.paths.var_dir + '/autodiscovery'
+    return cmk.utils.paths.var_dir + '/autodiscovery'
 
 
 def discover_marked_hosts(core):
@@ -643,7 +644,7 @@ def _discovery_filter_by_lists(hostname, check_plugin_name, item, whitelist, bla
 def schedule_discovery_check(hostname):
     try:
         s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        s.connect(cmk.paths.livestatus_unix_socket)
+        s.connect(cmk.utils.paths.livestatus_unix_socket)
         now = int(time.time())
         if 'cmk-inventory' in config.use_new_descriptions_for:
             command = "SCHEDULE_FORCED_SVC_CHECK;%s;Check_MK Discovery;%d" % (hostname, now)
@@ -657,7 +658,7 @@ def schedule_discovery_check(hostname):
 
         s.send("COMMAND [%d] %s\n" % (now, command))
     except Exception:
-        if cmk.debug.enabled():
+        if cmk.utils.debug.enabled():
             raise
 
 
@@ -760,7 +761,7 @@ def _execute_discovery(multi_host_sections, hostname, ipaddress, check_plugin_na
             section_content = multi_host_sections.get_section_content(
                 hostname, ipaddress, check_plugin_name, for_discovery=True)
         except MKParseFunctionError as e:
-            if cmk.debug.enabled() or on_error == "raise":
+            if cmk.utils.debug.enabled() or on_error == "raise":
                 x = e.exc_info()
                 if x[0] == item_state.MKCounterWrapped:
                     return []
@@ -1083,7 +1084,7 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
                     section_content = multi_host_sections.get_section_content(
                         hostname, ipaddress, section_name, for_discovery=True)
                 except MKParseFunctionError as e:
-                    if cmk.debug.enabled() or on_error == "raise":
+                    if cmk.utils.debug.enabled() or on_error == "raise":
                         x = e.exc_info()
                         # re-raise the original exception to not destory the trace. This may raise a MKCounterWrapped
                         # exception which need to lead to a skipped check instead of a crash
@@ -1091,7 +1092,7 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
                     else:
                         raise
             except Exception as e:
-                if cmk.debug.enabled():
+                if cmk.utils.debug.enabled():
                     raise
                 exitcode = 3
                 output = "Error: %s" % e
@@ -1129,7 +1130,7 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
                 except item_state.MKCounterWrapped as e:
                     result = (None, "WAITING - Counter based check, cannot be done offline")
                 except Exception as e:
-                    if cmk.debug.enabled():
+                    if cmk.utils.debug.enabled():
                         raise
                     result = (
                         3, "UNKNOWN - invalid output from agent or error in check implementation")
@@ -1208,7 +1209,7 @@ def parse_autochecks_file(hostname):
 
         return line.strip(), None
 
-    path = "%s/%s.mk" % (cmk.paths.autochecks_dir, hostname)
+    path = "%s/%s.mk" % (cmk.utils.paths.autochecks_dir, hostname)
     if not os.path.exists(path):
         return []
 
@@ -1255,18 +1256,18 @@ def parse_autochecks_file(hostname):
 
             table.append((eval(checktypestring), item, paramstring))
         except:
-            if cmk.debug.enabled():
+            if cmk.utils.debug.enabled():
                 raise
             raise Exception("Invalid line %d in autochecks file %s" % (lineno, path))
     return table
 
 
 def _has_autochecks(hostname):
-    return os.path.exists(cmk.paths.autochecks_dir + "/" + hostname + ".mk")
+    return os.path.exists(cmk.utils.paths.autochecks_dir + "/" + hostname + ".mk")
 
 
 def _remove_autochecks_file(hostname):
-    filepath = cmk.paths.autochecks_dir + "/" + hostname + ".mk"
+    filepath = cmk.utils.paths.autochecks_dir + "/" + hostname + ".mk"
     try:
         os.remove(filepath)
     except OSError:
@@ -1275,9 +1276,9 @@ def _remove_autochecks_file(hostname):
 
 # FIXME TODO: Consolidate with automation.py automation_write_autochecks_file()
 def _save_autochecks_file(hostname, items):
-    if not os.path.exists(cmk.paths.autochecks_dir):
-        os.makedirs(cmk.paths.autochecks_dir)
-    filepath = "%s/%s.mk" % (cmk.paths.autochecks_dir, hostname)
+    if not os.path.exists(cmk.utils.paths.autochecks_dir):
+        os.makedirs(cmk.utils.paths.autochecks_dir)
+    filepath = "%s/%s.mk" % (cmk.utils.paths.autochecks_dir, hostname)
     out = file(filepath, "w")
     out.write("[\n")
     for check_plugin_name, item, paramstring in items:

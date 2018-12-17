@@ -33,8 +33,8 @@ import re
 # Just for tests
 import pprint
 
-import cmk.store as store
-from cmk.exceptions import MKGeneralException
+import cmk.utils.store as store
+from cmk.utils.exceptions import MKGeneralException
 
 #     ____            ____
 #    /    \          /    \     max. 1 per type

@@ -31,9 +31,9 @@ import sys
 import requests
 import urllib3
 
-import cmk.password_store
+import cmk.utils.password_store
 
-cmk.password_store.replace_passwords()
+cmk.utils.password_store.replace_passwords()
 
 
 #   .--Arguments-----------------------------------------------------------.

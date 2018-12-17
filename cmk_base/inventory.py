@@ -32,11 +32,12 @@ import inspect
 import os
 
 import cmk
-import cmk.paths
-import cmk.store
+import cmk.utils.paths
+import cmk.utils.store
 import cmk.utils.tty as tty
-from cmk.exceptions import MKGeneralException
+from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.structured_data import StructuredDataTree
+import cmk.utils.debug
 
 import cmk_base.utils
 import cmk_base.console as console
@@ -63,8 +64,8 @@ import cmk_base.check_api as check_api
 
 
 def do_inv(hostnames):
-    cmk.store.makedirs(cmk.paths.inventory_output_dir)
-    cmk.store.makedirs(cmk.paths.inventory_archive_dir)
+    cmk.utils.store.makedirs(cmk.utils.paths.inventory_output_dir)
+    cmk.utils.store.makedirs(cmk.utils.paths.inventory_archive_dir)
 
     for hostname in hostnames:
         console.section_begin(hostname)
@@ -82,7 +83,7 @@ def do_inv(hostnames):
                 ipaddress=ipaddress,
                 do_status_data_inv=config.do_status_data_inventory_for(hostname))
         except Exception as e:
-            if cmk.debug.enabled():
+            if cmk.utils.debug.enabled():
                 raise
 
             console.section_error("%s" % e)
@@ -124,7 +125,7 @@ def do_inv_check(hostname, options):
             status = max(status, _inv_sw_missing)
 
         if old_timestamp:
-            path = "%s/%s/%d" % (cmk.paths.inventory_archive_dir, hostname, old_timestamp)
+            path = "%s/%s/%d" % (cmk.utils.paths.inventory_archive_dir, hostname, old_timestamp)
             old_tree = StructuredDataTree().load_from(path)
 
             if not old_tree.is_equal(inventory_tree, edges=["software"]):
@@ -321,10 +322,10 @@ def inv_tree_list(path):  # TODO Remove one day. Deprecated with version 1.5.0i3
 
 
 def _save_inventory_tree(hostname, inventory_tree):
-    cmk.store.makedirs(cmk.paths.inventory_output_dir)
+    cmk.utils.store.makedirs(cmk.utils.paths.inventory_output_dir)
 
     old_time = None
-    filepath = cmk.paths.inventory_output_dir + "/" + hostname
+    filepath = cmk.utils.paths.inventory_output_dir + "/" + hostname
     if inventory_tree:
         old_tree = StructuredDataTree().load_from(filepath)
         old_tree.normalize_nodes()
@@ -336,10 +337,10 @@ def _save_inventory_tree(hostname, inventory_tree):
             else:
                 console.verbose("Inventory tree has changed\n")
                 old_time = os.stat(filepath).st_mtime
-                arcdir = "%s/%s" % (cmk.paths.inventory_archive_dir, hostname)
-                cmk.store.makedirs(arcdir)
+                arcdir = "%s/%s" % (cmk.utils.paths.inventory_archive_dir, hostname)
+                cmk.utils.store.makedirs(arcdir)
                 os.rename(filepath, arcdir + ("/%d" % old_time))
-            inventory_tree.save_to(cmk.paths.inventory_output_dir, hostname)
+            inventory_tree.save_to(cmk.utils.paths.inventory_output_dir, hostname)
 
     else:
         if os.path.exists(
@@ -353,8 +354,8 @@ def _save_inventory_tree(hostname, inventory_tree):
 
 def _save_status_data_tree(hostname, status_data_tree):
     if status_data_tree and not status_data_tree.is_empty():
-        cmk.store.makedirs(cmk.paths.status_data_dir)
-        status_data_tree.save_to(cmk.paths.status_data_dir, hostname)
+        cmk.utils.store.makedirs(cmk.utils.paths.status_data_dir)
+        status_data_tree.save_to(cmk.utils.paths.status_data_dir, hostname)
 
 
 def _run_inventory_export_hooks(hostname, inventory_tree):
@@ -376,7 +377,7 @@ def _run_inventory_export_hooks(hostname, inventory_tree):
             func = inventory_plugins.inv_export[hookname]["export_function"]
             func(hostname, params, inventory_tree.get_raw_tree())
         except Exception as e:
-            if cmk.debug.enabled():
+            if cmk.utils.debug.enabled():
                 raise
             raise MKGeneralException("Failed to execute export hook %s: %s" % (hookname, e))
 

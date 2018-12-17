@@ -26,8 +26,8 @@
 
 import os
 
-import cmk.paths
-import cmk.store
+import cmk.utils.paths
+import cmk.utils.store
 
 import cmk.gui.config as config
 import cmk.gui.table as table
@@ -95,8 +95,8 @@ class ModeIcons(WatoMode):
 
     def _validate_icon(self, value, varprefix):
         file_name = value[0]
-        if os.path.exists("%s/share/check_mk/web/htdocs/images/icon_%s" % (cmk.paths.omd_root, file_name)) \
-           or os.path.exists("%s/share/check_mk/web/htdocs/images/icons/%s" % (cmk.paths.omd_root, file_name)):
+        if os.path.exists("%s/share/check_mk/web/htdocs/images/icon_%s" % (cmk.utils.paths.omd_root, file_name)) \
+           or os.path.exists("%s/share/check_mk/web/htdocs/images/icons/%s" % (cmk.utils.paths.omd_root, file_name)):
             raise MKUserError(
                 varprefix,
                 _('Your icon conflicts with a Check_MK builtin icon. Please '
@@ -111,7 +111,7 @@ class ModeIcons(WatoMode):
                     _("Do you really want to delete the icon <b>%s</b>?") % icon_name)
                 if c:
                     os.remove("%s/local/share/check_mk/web/htdocs/images/icons/%s.png" %
-                              (cmk.paths.omd_root, icon_name))
+                              (cmk.utils.paths.omd_root, icon_name))
                 elif c is False:
                     return ""
                 else:
@@ -135,8 +135,8 @@ class ModeIcons(WatoMode):
                 meta.add_text(k, v, 0)
 
         # and finally save the image
-        dest_dir = "%s/local/share/check_mk/web/htdocs/images/icons" % cmk.paths.omd_root
-        cmk.store.makedirs(dest_dir)
+        dest_dir = "%s/local/share/check_mk/web/htdocs/images/icons" % cmk.utils.paths.omd_root
+        cmk.utils.store.makedirs(dest_dir)
         try:
             file_name = os.path.basename(icon_info['icon'][0])
             im.save(dest_dir + '/' + file_name, 'PNG', pnginfo=meta)

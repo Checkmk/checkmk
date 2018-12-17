@@ -29,8 +29,8 @@ import signal
 import subprocess
 import collections
 
-import cmk.paths
-from cmk.exceptions import MKTimeout
+import cmk.utils.paths
+from cmk.utils.exceptions import MKTimeout
 
 import cmk_base.config as config
 import cmk_base.core_config as core_config
@@ -199,8 +199,8 @@ class SpecialAgentDataSource(ProgramDataSource):
         final_arguments = config.prepare_check_command(
             cmd_arguments, self._hostname, description=None)
 
-        special_agents_dir = cmk.paths.agents_dir + "/special"
-        local_special_agents_dir = cmk.paths.local_agents_dir + "/special"
+        special_agents_dir = cmk.utils.paths.agents_dir + "/special"
+        local_special_agents_dir = cmk.utils.paths.local_agents_dir + "/special"
 
         if os.path.exists(local_special_agents_dir + "/agent_" + self._special_agent_id):
             path = local_special_agents_dir + "/agent_" + self._special_agent_id

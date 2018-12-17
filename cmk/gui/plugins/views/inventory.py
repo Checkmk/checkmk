@@ -26,9 +26,9 @@
 
 import time
 
-from cmk.regex import regex
-import cmk.defines as defines
-import cmk.render
+from cmk.utils.regex import regex
+import cmk.utils.defines as defines
+import cmk.utils.render
 
 import cmk.gui.pages
 import cmk.gui.config as config
@@ -284,7 +284,7 @@ def inv_paint_bytes(b):
 
 @decorate_inv_paint
 def inv_paint_size(b):
-    return "number", cmk.render.fmt_bytes(b)
+    return "number", cmk.utils.render.fmt_bytes(b)
 
 
 @decorate_inv_paint
@@ -431,7 +431,7 @@ def inv_paint_date_and_time(timestamp):
 @decorate_inv_paint
 def inv_paint_age(age):
     if age:
-        return "number", cmk.render.approx_age(age)
+        return "number", cmk.utils.render.approx_age(age)
     return "", ""
 
 

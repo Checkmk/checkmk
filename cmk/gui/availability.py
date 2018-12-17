@@ -27,9 +27,9 @@
 import time
 import os
 
-import cmk.defines as defines
-import cmk.paths
-import cmk.store as store
+import cmk.utils.defines as defines
+import cmk.utils.paths
+import cmk.utils.store as store
 
 import cmk.gui.utils as utils
 import cmk.gui.bi as bi
@@ -1123,15 +1123,15 @@ def melt_short_intervals(entries, duration, dont_merge):
 
 
 def save_annotations(annotations):
-    path = cmk.paths.var_dir + "/availability_annotations.mk"
+    path = cmk.utils.paths.var_dir + "/availability_annotations.mk"
     store.save_data_to_file(path, annotations)
 
 
 def load_annotations(lock=False):
-    path = cmk.paths.var_dir + "/availability_annotations.mk"
+    path = cmk.utils.paths.var_dir + "/availability_annotations.mk"
     if not os.path.exists(path):
         # Support legacy old wrong name-clashing path
-        path = cmk.paths.var_dir + "/web/statehist_annotations.mk"
+        path = cmk.utils.paths.var_dir + "/web/statehist_annotations.mk"
 
     return store.load_data_from_file(path, {}, lock)
 

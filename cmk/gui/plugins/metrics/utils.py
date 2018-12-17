@@ -30,7 +30,7 @@ import colorsys
 import random
 import shlex
 
-import cmk.regex
+import cmk.utils.regex
 
 import cmk.gui.config as config
 from cmk.gui.log import logger
@@ -214,7 +214,7 @@ def perfvar_translation(perfvar_nr, perfvar_name, check_command):
         translation_entry = cm[perfvar_name]
     else:
         for orig_varname, te in cm.items():
-            if orig_varname[0] == "~" and cmk.regex.regex(
+            if orig_varname[0] == "~" and cmk.utils.regex.regex(
                     orig_varname[1:]).match(perfvar_name):  # Regex entry
                 translation_entry = te
                 break
@@ -513,7 +513,7 @@ def replace_expressions(text, translated_metrics):
             return unit["render"](value)
         return _("n/a")
 
-    r = cmk.regex.regex(r"%\([^)]*\)")
+    r = cmk.utils.regex.regex(r"%\([^)]*\)")
     return r.sub(eval_to_string, text)
 
 

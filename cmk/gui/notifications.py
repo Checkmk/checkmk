@@ -26,7 +26,7 @@
 
 import time
 
-import cmk.render
+import cmk.utils.render
 
 import cmk.gui.config as config
 import cmk.gui.sites as sites
@@ -163,7 +163,7 @@ def render_notification_table(failed_notifications):
 
         for row in failed_notifications:
             table.row()
-            table.cell(_("Time"), cmk.render.approx_age(time.time() - row[header['time']]))
+            table.cell(_("Time"), cmk.utils.render.approx_age(time.time() - row[header['time']]))
             table.cell(_("Contact"), row[header['contact_name']])
             table.cell(_("Plugin"), row[header['type']])
             table.cell(_("Host"), row[header['host_name']])
@@ -179,7 +179,7 @@ def render_page_confirm(acktime, prev_url, failed_notifications):
     if failed_notifications:
         html.open_div(class_="really")
         html.write_text(_("Do you really want to acknowledge all failed notifications up to %s?") %\
-                   cmk.render.date_and_time(acktime))
+                   cmk.utils.render.date_and_time(acktime))
         html.begin_form("confirm", method="GET", action=prev_url)
         html.hidden_field('acktime', acktime)
         html.button('_confirm', _("Yes"))

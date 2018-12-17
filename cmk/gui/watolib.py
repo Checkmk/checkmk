@@ -69,16 +69,16 @@ import requests
 from pathlib2 import Path
 import six
 
-import cmk.daemon as daemon
-import cmk.paths
-import cmk.defines
+import cmk.utils.daemon as daemon
+import cmk.utils.paths
+import cmk.utils.defines
 import cmk.utils
-import cmk.store as store
-import cmk.render as render
+import cmk.utils.store as store
+import cmk.utils.render as render
 import cmk.ec.defaults
 import cmk.ec.export
-import cmk.regex
-import cmk.plugin_registry
+import cmk.utils.regex
+import cmk.utils.plugin_registry
 
 import cmk.gui.utils as utils
 import cmk.gui.config as config
@@ -157,29 +157,29 @@ NO_ITEM = {}  # Just an arbitrary unique thing
 ENTRY_NEGATE_CHAR = "!"
 
 # Some paths and directories
-wato_root_dir = cmk.paths.check_mk_config_dir + "/wato/"
-multisite_dir = cmk.paths.default_config_dir + "/multisite.d/wato/"
-sites_mk = cmk.paths.default_config_dir + "/multisite.d/sites.mk"
-var_dir = cmk.paths.var_dir + "/wato/"
+wato_root_dir = cmk.utils.paths.check_mk_config_dir + "/wato/"
+multisite_dir = cmk.utils.paths.default_config_dir + "/multisite.d/wato/"
+sites_mk = cmk.utils.paths.default_config_dir + "/multisite.d/sites.mk"
+var_dir = cmk.utils.paths.var_dir + "/wato/"
 audit_log_path = var_dir + "log/audit.log"
 snapshot_dir = var_dir + "snapshots/"
 php_api_dir = var_dir + "php-api/"
 # TODO: Move this to CEE specific code again
-liveproxyd_config_dir = cmk.paths.default_config_dir + "/liveproxyd.d/wato/"
+liveproxyd_config_dir = cmk.utils.paths.default_config_dir + "/liveproxyd.d/wato/"
 
 # Directories and files to synchronize during replication
 replication_paths = [
     ("dir", "check_mk", wato_root_dir, ["sitespecific.mk"]),
     ("dir", "multisite", multisite_dir, ["sitespecific.mk"]),
-    ("file", "htpasswd", cmk.paths.htpasswd_file),
-    ("file", "auth.secret", '%s/auth.secret' % os.path.dirname(cmk.paths.htpasswd_file)),
-    ("file", "auth.serials", '%s/auth.serials' % os.path.dirname(cmk.paths.htpasswd_file)),
+    ("file", "htpasswd", cmk.utils.paths.htpasswd_file),
+    ("file", "auth.secret", '%s/auth.secret' % os.path.dirname(cmk.utils.paths.htpasswd_file)),
+    ("file", "auth.serials", '%s/auth.serials' % os.path.dirname(cmk.utils.paths.htpasswd_file)),
     # Also replicate the user-settings of Multisite? While the replication
     # as such works pretty well, the count of pending changes will not
     # know.
-    ("dir", "usersettings", cmk.paths.var_dir + "/web"),
-    ("dir", "mkps", cmk.paths.var_dir + "/packages"),
-    ("dir", "local", cmk.paths.omd_root + "/local"),
+    ("dir", "usersettings", cmk.utils.paths.var_dir + "/web"),
+    ("dir", "mkps", cmk.utils.paths.var_dir + "/packages"),
+    ("dir", "local", cmk.utils.paths.omd_root + "/local"),
 ]
 
 # TODO: Move this to CEE specific code again
@@ -634,7 +634,7 @@ class ConfigDomainCACertificates(ConfigDomain):
     always_activate = True  # Execute this on all sites on all activations
     ident = "ca-certificates"
 
-    trusted_cas_file = "%s/var/ssl/ca-certificates.crt" % cmk.paths.omd_root
+    trusted_cas_file = "%s/var/ssl/ca-certificates.crt" % cmk.utils.paths.omd_root
 
     # This is a list of directories that may contain .pem files of trusted CAs.
     # The contents of all .pem files will be contantenated together and written
@@ -752,7 +752,7 @@ class ConfigDomainOMD(ConfigDomain):
     needs_sync = True
     needs_activation = True
     ident = "omd"
-    omd_config_dir = "%s/etc/omd" % (cmk.paths.omd_root)
+    omd_config_dir = "%s/etc/omd" % (cmk.utils.paths.omd_root)
 
     def __init__(self):
         super(ConfigDomainOMD, self).__init__()
@@ -3159,7 +3159,7 @@ class AutomationCommand(object):
             raise MKGeneralException(message)
 
 
-class AutomationCommandRegistry(cmk.plugin_registry.ClassRegistry):
+class AutomationCommandRegistry(cmk.utils.plugin_registry.ClassRegistry):
     def plugin_base_class(self):
         return AutomationCommand
 
@@ -4243,7 +4243,7 @@ class ConfigDomainLiveproxy(ConfigDomain):
                   _("Activating changes of Livestatus Proxy configuration"))
 
         try:
-            pidfile = cmk.paths.livestatus_unix_socket + "proxyd.pid"
+            pidfile = cmk.utils.paths.livestatus_unix_socket + "proxyd.pid"
             try:
                 pid = int(file(pidfile).read().strip())
                 os.kill(pid, signal.SIGUSR1)
@@ -4263,7 +4263,7 @@ class ConfigDomainLiveproxy(ConfigDomain):
     def default_globals(self):
         return {
             "liveproxyd_log_levels": {
-                "cmk.liveproxyd": cmk.log.INFO,
+                "cmk.liveproxyd": cmk.utils.log.INFO,
             },
             "liveproxyd_default_connection_params":
                 ConfigDomainLiveproxy.connection_params_defaults(),
@@ -4434,7 +4434,7 @@ class CEESiteManagement(SiteManagement):
 
     @classmethod
     def _save_liveproxyd_config(cls, sites):
-        path = cmk.paths.default_config_dir + "/liveproxyd.mk"
+        path = cmk.utils.paths.default_config_dir + "/liveproxyd.mk"
 
         conf = {}
         for siteid, siteconf in sites.items():
@@ -4512,7 +4512,7 @@ def create_nagvis_backends(sites):
             if isinstance(site['socket'][1]['socket'], tuple):
                 socket = 'tcp:%s:%d' % site['socket'][1]['socket']
             elif site['socket'][1]['socket'] is None:
-                socket = 'unix:%s' % cmk.paths.livestatus_unix_socket
+                socket = 'unix:%s' % cmk.utils.paths.livestatus_unix_socket
             else:
                 raise NotImplementedError()
 
@@ -4529,7 +4529,7 @@ def create_nagvis_backends(sites):
         if site.get("status_host"):
             cfg.append('statushost="%s"' % ':'.join(site['status_host']))
 
-    store.save_file('%s/etc/nagvis/conf.d/cmk_backends.ini.php' % cmk.paths.omd_root,
+    store.save_file('%s/etc/nagvis/conf.d/cmk_backends.ini.php' % cmk.utils.paths.omd_root,
                     '\n'.join(cfg))
 
 
@@ -4541,11 +4541,11 @@ def create_distributed_wato_file(siteid, is_slave):
     output += "distributed_wato_site = '%s'\n" % siteid
     output += "is_wato_slave_site = %r\n" % is_slave
 
-    store.save_file(cmk.paths.check_mk_config_dir + "/distributed_wato.mk", output)
+    store.save_file(cmk.utils.paths.check_mk_config_dir + "/distributed_wato.mk", output)
 
 
 def delete_distributed_wato_file():
-    p = cmk.paths.check_mk_config_dir + "/distributed_wato.mk"
+    p = cmk.utils.paths.check_mk_config_dir + "/distributed_wato.mk"
     # We do not delete the file but empty it. That way
     # we do not need write permissions to the conf.d
     # directory!
@@ -4857,7 +4857,7 @@ class AutomationPushSnapshot(AutomationCommand):
         return True
 
     def _save_site_globals_on_slave_site(self, tarcontent):
-        tmp_dir = cmk.paths.tmp_dir + "/sitespecific-%s" % id(html)
+        tmp_dir = cmk.utils.paths.tmp_dir + "/sitespecific-%s" % id(html)
         try:
             if not os.path.exists(tmp_dir):
                 store.mkdir(tmp_dir)
@@ -5264,9 +5264,9 @@ class ActivateChangesWriter(ActivateChanges):
 
 class ActivateChangesManager(ActivateChanges):
     # Temporary data
-    activation_tmp_base_dir = cmk.paths.tmp_dir + "/wato/activation"
+    activation_tmp_base_dir = cmk.utils.paths.tmp_dir + "/wato/activation"
     # Persisted data
-    activation_persisted_dir = cmk.paths.var_dir + "/wato/activation"
+    activation_persisted_dir = cmk.utils.paths.var_dir + "/wato/activation"
 
     def __init__(self):
         self._sites = []
@@ -5481,7 +5481,8 @@ class ActivateChangesManager(ActivateChanges):
             # These paths are then packed into the sync snapshot
             replication_components = []
             for entry in map(list, self._get_replication_components(site_id)):
-                entry[2] = entry[2].replace(cmk.paths.omd_root, site_configuration["work_dir"])
+                entry[2] = entry[2].replace(cmk.utils.paths.omd_root,
+                                            site_configuration["work_dir"])
                 replication_components.append(tuple(entry))
 
             # Add site-specific global settings
@@ -6144,7 +6145,7 @@ def create_snapshot(comment):
 # TODO: Remove once new changes mechanism has been implemented
 def do_create_snapshot(data):
     snapshot_name = data["snapshot_name"]
-    snapshot_dir = cmk.paths.var_dir + "/wato/snapshots"
+    snapshot_dir = cmk.utils.paths.var_dir + "/wato/snapshots"
     work_dir = snapshot_dir + "/workdir/%s" % snapshot_name
 
     try:
@@ -6327,7 +6328,7 @@ def get_snapshot_status(snapshot, validate_checksums=False, check_correct_core=T
         cmk_tar = cStringIO.StringIO(
             access_snapshot(lambda x: multitar.get_file_content(x, 'check_mk.tar.gz')))
         files = multitar.list_tar_content(cmk_tar)
-        using_cmc = os.path.exists(cmk.paths.omd_root + '/etc/check_mk/conf.d/microcore.mk')
+        using_cmc = os.path.exists(cmk.utils.paths.omd_root + '/etc/check_mk/conf.d/microcore.mk')
         snapshot_cmc = 'conf.d/microcore.mk' in files
         if using_cmc and not snapshot_cmc:
             raise MKGeneralException(
@@ -6454,7 +6455,7 @@ def get_default_backup_domains():
 
 
 def snapshot_secret():
-    path = cmk.paths.default_config_dir + '/snapshot.secret'
+    path = cmk.utils.paths.default_config_dir + '/snapshot.secret'
     try:
         return file(path).read()
     except IOError:
@@ -7051,7 +7052,7 @@ class HosttagsConfiguration(object):
             "wato_aux_tags": [],
         }
 
-        tag_config = cmk.store.load_mk_file(multisite_dir + "hosttags.mk", default_config)
+        tag_config = cmk.utils.store.load_mk_file(multisite_dir + "hosttags.mk", default_config)
 
         self._convert_manual_host_tags(tag_config["wato_host_tags"])
         config.migrate_old_sample_config_tag_groups(tag_config["wato_host_tags"],
@@ -7574,17 +7575,17 @@ def load_user_scripts_from(adir):
 
 def load_user_scripts(what):
     scripts = {}
-    not_dir = cmk.paths.share_dir + "/" + what
+    not_dir = cmk.utils.paths.share_dir + "/" + what
     try:
         if what == "notifications":
             # Support for setup.sh
-            not_dir = cmk.paths.notifications_dir
+            not_dir = cmk.utils.paths.notifications_dir
     except:
         pass
 
     scripts = load_user_scripts_from(not_dir)
     try:
-        local_dir = cmk.paths.omd_root + "/local/share/check_mk/" + what
+        local_dir = cmk.utils.paths.omd_root + "/local/share/check_mk/" + what
         scripts.update(load_user_scripts_from(local_dir))
     except:
         pass
@@ -7669,7 +7670,7 @@ class RulespecSubGroup(RulespecGroup):
         return None  # Sub groups currently have no help text
 
 
-class RulespecGroupRegistry(cmk.plugin_registry.ClassRegistry):
+class RulespecGroupRegistry(cmk.utils.plugin_registry.ClassRegistry):
     def plugin_base_class(self):
         return RulespecGroup
 
@@ -8694,7 +8695,7 @@ class Rule(object):
             if not regex_match and hostname == check_host:
                 return not negate
 
-            elif regex_match and cmk.regex.regex(check_host).match(hostname):
+            elif regex_match and cmk.utils.regex.regex(check_host).match(hostname):
                 return not negate
 
         return negate
@@ -9117,8 +9118,8 @@ def save_group_information(all_groups, custom_default_config_dir=None):
         check_mk_config_dir = "%s/conf.d/wato" % custom_default_config_dir
         multisite_config_dir = "%s/multisite.d/wato" % custom_default_config_dir
     else:
-        check_mk_config_dir = "%s/conf.d/wato" % cmk.paths.default_config_dir
-        multisite_config_dir = "%s/multisite.d/wato" % cmk.paths.default_config_dir
+        check_mk_config_dir = "%s/conf.d/wato" % cmk.utils.paths.default_config_dir
+        multisite_config_dir = "%s/multisite.d/wato" % cmk.utils.paths.default_config_dir
 
     for what, groups in all_groups.items():
         check_mk_groups[what] = {}
@@ -9139,7 +9140,7 @@ def save_group_information(all_groups, custom_default_config_dir=None):
             output += "if type(define_%sgroups) != dict:\n    define_%sgroups = {}\n" % (what, what)
             output += "define_%sgroups.update(%s)\n\n" % (
                 what, format_config_value(check_mk_groups[what]))
-    cmk.store.save_file("%s/groups.mk" % check_mk_config_dir, output)
+    cmk.utils.store.save_file("%s/groups.mk" % check_mk_config_dir, output)
 
     # Users with passwords for Multisite
     store.mkdir(multisite_config_dir)
@@ -9148,7 +9149,7 @@ def save_group_information(all_groups, custom_default_config_dir=None):
         if multisite_groups.get(what):
             output += "multisite_%sgroups = \\\n%s\n\n" % (
                 what, format_config_value(multisite_groups[what]))
-    cmk.store.save_file("%s/groups.mk" % multisite_config_dir, output)
+    cmk.utils.store.save_file("%s/groups.mk" % multisite_config_dir, output)
 
 
 def find_usages_of_group(name, group_type):
@@ -10009,7 +10010,7 @@ class ACResult(object):
         return worst_cls(", ".join(texts))
 
     def status_name(self):
-        return cmk.defines.short_service_state_name(self.status)
+        return cmk.utils.defines.short_service_state_name(self.status)
 
     @classmethod
     def from_repr(cls, repr_data):
@@ -10130,7 +10131,7 @@ class ACTest(object):
         return max([0] + [r.status for r in self.results])
 
     def status_name(self):
-        return cmk.defines.short_service_state_name(self.status())
+        return cmk.utils.defines.short_service_state_name(self.status())
 
     @property
     def results(self):
@@ -10164,7 +10165,7 @@ class ACTest(object):
         return value
 
 
-class ACTestRegistry(cmk.plugin_registry.ClassRegistry):
+class ACTestRegistry(cmk.utils.plugin_registry.ClassRegistry):
     def plugin_base_class(self):
         return ACTest
 
@@ -10224,8 +10225,8 @@ def site_is_using_livestatus_proxy(site_id):
 class WatoSimpleConfigFile(object):
     """Manage simple .mk config file containing a single dict variable
 
-    The file handling logic is inherited from cmk.store.load_from_mk_file()
-    and cmk.store.save_to_mk_file().
+    The file handling logic is inherited from cmk.utils.store.load_from_mk_file()
+    and cmk.utils.store.save_to_mk_file().
     """
     __metaclass__ = abc.ABCMeta
 
@@ -10241,13 +10242,13 @@ class WatoSimpleConfigFile(object):
         return self._load_file(lock=True)
 
     def _load_file(self, lock=False):
-        return cmk.store.load_from_mk_file(
+        return cmk.utils.store.load_from_mk_file(
             "%s" % self._config_file_path, key=self._config_variable, default={}, lock=lock)
 
     def save(self, cfg):
         # Should be fixed when using pylint 2.0 (https://github.com/PyCQA/pylint/issues/1660)
         self._config_file_path.parent.mkdir(mode=0770, exist_ok=True)  # pylint: disable=no-member
-        cmk.store.save_to_mk_file("%s" % self._config_file_path, self._config_variable, cfg)
+        cmk.utils.store.save_to_mk_file("%s" % self._config_file_path, self._config_variable, cfg)
 
     def filter_usable_entries(self, entries):
         return entries
@@ -10413,7 +10414,7 @@ class WatoBackgroundProcess(gui_background_job.GUIBackgroundProcess):
         super(WatoBackgroundProcess, self).initialize_environment()
 
         if self._jobstatus.get_status().get("lock_wato"):
-            cmk.store.release_all_locks()
+            cmk.utils.store.release_all_locks()
             lock_exclusive()
 
 
@@ -10511,21 +10512,21 @@ def make_action_link(vars_):
 
 
 def lock_exclusive():
-    store.aquire_lock(cmk.paths.default_config_dir + "/multisite.mk")
+    store.aquire_lock(cmk.utils.paths.default_config_dir + "/multisite.mk")
 
 
 def unlock_exclusive():
-    store.release_lock(cmk.paths.default_config_dir + "/multisite.mk")
+    store.release_lock(cmk.utils.paths.default_config_dir + "/multisite.mk")
 
 
 def git_command(args):
     command = ["git"] + [a.encode("utf-8") for a in args]
-    logger.debug(
-        "GIT: Execute in %s: %s" % (cmk.paths.default_config_dir, subprocess.list2cmdline(command)))
+    logger.debug("GIT: Execute in %s: %s" % (cmk.utils.paths.default_config_dir,
+                                             subprocess.list2cmdline(command)))
     try:
         p = subprocess.Popen(
             command,
-            cwd=cmk.paths.default_config_dir,
+            cwd=cmk.utils.paths.default_config_dir,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT)
     except OSError as e:
@@ -10554,7 +10555,7 @@ def prepare_git_commit():
 
 def do_git_commit():
     author = "%s <%s>" % (config.user.id, config.user.email)
-    git_dir = cmk.paths.default_config_dir + "/.git"
+    git_dir = cmk.utils.paths.default_config_dir + "/.git"
     if not os.path.exists(git_dir):
         logger.debug("GIT: Initializing")
         git_command(["init"])
@@ -10589,15 +10590,17 @@ def do_git_commit():
 
 
 def git_add_files():
-    path_pattern = os.path.join(cmk.paths.default_config_dir, "*.d/wato")
-    rel_paths = [os.path.relpath(p, cmk.paths.default_config_dir) for p in glob.glob(path_pattern)]
+    path_pattern = os.path.join(cmk.utils.paths.default_config_dir, "*.d/wato")
+    rel_paths = [
+        os.path.relpath(p, cmk.utils.paths.default_config_dir) for p in glob.glob(path_pattern)
+    ]
     git_command(["add", "--all", ".gitignore"] + rel_paths)
 
 
 def git_has_pending_changes():
     try:
         return subprocess.Popen(["git", "status", "--porcelain"],
-                                cwd=cmk.paths.default_config_dir,
+                                cwd=cmk.utils.paths.default_config_dir,
                                 stdout=subprocess.PIPE).stdout.read() != ""
     except OSError as e:
         if e.errno == 2:
@@ -10609,7 +10612,7 @@ def git_has_pending_changes():
 # Make sure that .gitignore-files are present and uptodate. Only files below the "wato" directories
 # should be under git control. The files in etc/check_mk/*.mk should not be put under control.
 def write_gitignore_files():
-    file(cmk.paths.default_config_dir + "/.gitignore",
+    file(cmk.utils.paths.default_config_dir + "/.gitignore",
          "w").write("# This file is under control of Check_MK. Please don't modify it.\n"
                     "# Your changes will be overwritten.\n"
                     "\n"
@@ -10619,13 +10622,14 @@ def write_gitignore_files():
                     "*swp\n"
                     "*.mk.new\n")
 
-    for subdir in os.listdir(cmk.paths.default_config_dir):
+    for subdir in os.listdir(cmk.utils.paths.default_config_dir):
         if subdir.endswith(".d"):
-            file(cmk.paths.default_config_dir + "/" + subdir + "/.gitignore", "w").write("*\n"
-                                                                                         "!wato\n")
+            file(cmk.utils.paths.default_config_dir + "/" + subdir + "/.gitignore",
+                 "w").write("*\n"
+                            "!wato\n")
 
-            if os.path.exists(cmk.paths.default_config_dir + "/" + subdir + "/wato"):
-                file(cmk.paths.default_config_dir + "/" + subdir + "/wato/.gitignore",
+            if os.path.exists(cmk.utils.paths.default_config_dir + "/" + subdir + "/wato"):
+                file(cmk.utils.paths.default_config_dir + "/" + subdir + "/wato/.gitignore",
                      "w").write("!*\n")
 
 

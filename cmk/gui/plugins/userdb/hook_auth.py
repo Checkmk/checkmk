@@ -58,13 +58,13 @@
 import os
 import copy
 
-import cmk.store as store
-import cmk.paths
+import cmk.utils.store as store
+import cmk.utils.paths
 
 import cmk.gui.config as config
 import cmk.gui.hooks as hooks
 
-g_auth_base_dir = cmk.paths.var_dir + '/wato/auth'
+g_auth_base_dir = cmk.utils.paths.var_dir + '/wato/auth'
 
 
 def format_php(data, lvl=1):

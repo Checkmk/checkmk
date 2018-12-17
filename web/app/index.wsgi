@@ -29,8 +29,8 @@ import traceback
 
 import livestatus
 
-import cmk.paths
-import cmk.store as store
+import cmk.utils.paths
+import cmk.utils.store as store
 import cmk.utils.profile
 
 import cmk.gui.i18n
@@ -89,7 +89,7 @@ class Application(object):
 
             with cmk.utils.profile.Profile(
                     enabled=self._profiling_enabled(),
-                    profile_file=os.path.join(cmk.paths.var_dir, "multisite.profile")):
+                    profile_file=os.path.join(cmk.utils.paths.var_dir, "multisite.profile")):
                 self._handle_request()
 
         except HTTPRedirect, e:

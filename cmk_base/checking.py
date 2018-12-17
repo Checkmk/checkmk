@@ -34,11 +34,12 @@ import copy
 import six
 
 import cmk
-import cmk.defines as defines
+import cmk.utils.defines as defines
 import cmk.utils.tty as tty
 import cmk.utils.cpu_tracking as cpu_tracking
-from cmk.exceptions import MKGeneralException, MKTimeout
-from cmk.regex import regex
+from cmk.utils.exceptions import MKGeneralException, MKTimeout
+from cmk.utils.regex import regex
+import cmk.utils.debug
 
 import cmk_base.utils
 import cmk_base.crash_reporting
@@ -257,7 +258,7 @@ def _do_all_checks_on_host(sources, hostname, ipaddress, only_check_plugin_names
 
 
 def _cleanup_status_data(hostname):
-    filepath = "%s/%s" % (cmk.paths.status_data_dir, hostname)
+    filepath = "%s/%s" % (cmk.utils.paths.status_data_dir, hostname)
     if os.path.exists(filepath):  # Remove empty status data files.
         os.remove(filepath)
     if os.path.exists(filepath + ".gz"):
@@ -330,7 +331,7 @@ def execute_check(multi_host_sections, hostname, ipaddress, check_plugin_name, i
         raise
 
     except Exception as e:
-        if cmk.debug.enabled():
+        if cmk.utils.debug.enabled():
             raise
         result = 3, cmk_base.crash_reporting.create_crash_dump(
             hostname, check_plugin_name, item, is_manual_check(hostname, check_plugin_name, item),
@@ -402,7 +403,7 @@ def _evaluate_timespecific_entry(entry):
             tp_active = cmk_base.core.timeperiod_active(timeperiod_name)
         except:
             # Connection error
-            if cmk.debug.enabled():
+            if cmk.utils.debug.enabled():
                 raise
             break
 
@@ -646,10 +647,10 @@ def _open_checkresult_file():
     if _checkresult_file_fd is None:
         try:
             _checkresult_file_fd, _checkresult_file_path = \
-                tempfile.mkstemp('', 'c', cmk.paths.check_result_path)
+                tempfile.mkstemp('', 'c', cmk.utils.paths.check_result_path)
         except Exception as e:
-            raise MKGeneralException(
-                "Cannot create check result file in %s: %s" % (cmk.paths.check_result_path, e))
+            raise MKGeneralException("Cannot create check result file in %s: %s" %
+                                     (cmk.utils.paths.check_result_path, e))
 
 
 def _close_checkresult_file():
@@ -676,15 +677,15 @@ def _submit_via_command_pipe(host, service, state, output):
 def _open_command_pipe():
     global _nagios_command_pipe
     if _nagios_command_pipe is None:
-        if not os.path.exists(cmk.paths.nagios_command_pipe_path):
+        if not os.path.exists(cmk.utils.paths.nagios_command_pipe_path):
             _nagios_command_pipe = False  # False means: tried but failed to open
             raise MKGeneralException(
-                "Missing core command pipe '%s'" % cmk.paths.nagios_command_pipe_path)
+                "Missing core command pipe '%s'" % cmk.utils.paths.nagios_command_pipe_path)
         else:
             try:
                 signal.signal(signal.SIGALRM, _core_pipe_open_timeout)
                 signal.alarm(3)  # three seconds to open pipe
-                _nagios_command_pipe = file(cmk.paths.nagios_command_pipe_path, 'w')
+                _nagios_command_pipe = file(cmk.utils.paths.nagios_command_pipe_path, 'w')
                 signal.alarm(0)  # cancel alarm
             except Exception as e:
                 _nagios_command_pipe = False

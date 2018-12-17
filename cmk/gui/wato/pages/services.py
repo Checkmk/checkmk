@@ -44,7 +44,7 @@ from cmk.gui.globals import html
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.log import logger
-from cmk.defines import short_service_state_name
+from cmk.utils.defines import short_service_state_name
 
 
 @mode_registry.register
@@ -730,8 +730,8 @@ class ModeDiscovery(WatoMode):
             try:
                 if isinstance(params, dict) and "tp_computed_params" in params:
                     html.write_text(
-                        _("Timespecific parameters computed at %s") % cmk.render.date_and_time(
-                            params["tp_computed_params"]["computed_at"]))
+                        _("Timespecific parameters computed at %s") %
+                        cmk.utils.render.date_and_time(params["tp_computed_params"]["computed_at"]))
                     html.br()
                     params = params["tp_computed_params"]["params"]
                 rulespec.valuespec.validate_datatype(params, "")

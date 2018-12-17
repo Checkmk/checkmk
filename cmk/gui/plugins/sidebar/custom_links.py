@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import cmk.paths
+import cmk.utils.paths
 import cmk.gui.config as config
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
@@ -57,7 +57,7 @@ class CustomLinks(SidebarSnapin):
         if not links:
             html.write_text((_(
                 "Please edit <tt>%s</tt> in order to configure which links are shown in this snapin."
-            ) % (cmk.paths.default_config_dir + "/multisite.mk")) + "\n")
+            ) % (cmk.utils.paths.default_config_dir + "/multisite.mk")) + "\n")
             return
 
         def render_list(ids, links):

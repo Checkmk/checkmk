@@ -30,7 +30,7 @@ from typing import (  # pylint: disable=unused-import
     Dict, NamedTuple, Optional, List, Tuple, Text,
 )
 
-import cmk.paths
+import cmk.utils.paths
 
 #.
 #   .--Gettext i18n--------------------------------------------------------.
@@ -70,7 +70,7 @@ def get_current_language():
 
 def _get_language_dirs():
     # type: () -> List[str]
-    return [cmk.paths.locale_dir, cmk.paths.local_locale_dir]
+    return [cmk.utils.paths.locale_dir, cmk.utils.paths.local_locale_dir]
 
 
 def get_language_alias(lang):
@@ -143,9 +143,9 @@ def _init_language(lang):
 def _get_cmk_locale_path(lang):
     # type: (str) -> str
     po_path = '/%s/LC_MESSAGES/multisite.mo' % lang
-    if os.path.exists(cmk.paths.local_locale_dir + po_path):
-        return cmk.paths.local_locale_dir
-    return cmk.paths.locale_dir
+    if os.path.exists(cmk.utils.paths.local_locale_dir + po_path):
+        return cmk.utils.paths.local_locale_dir
+    return cmk.utils.paths.locale_dir
 
 
 def initialize():

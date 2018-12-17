@@ -40,7 +40,7 @@
 import os
 import json
 
-import cmk.store as store
+import cmk.utils.store as store
 
 import cmk.gui.pages
 import cmk.gui.config as config

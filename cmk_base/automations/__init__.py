@@ -28,9 +28,9 @@ import signal
 import sys
 import pprint
 
-import cmk.debug
-from cmk.exceptions import MKTimeout
-from cmk.plugin_loader import load_plugins
+import cmk.utils.debug
+from cmk.utils.exceptions import MKTimeout
+from cmk.utils.plugin_loader import load_plugins
 
 import cmk_base.utils
 import cmk_base.config as config
@@ -78,12 +78,12 @@ class Automations(object):
 
         except (MKAutomationError, MKTimeout) as e:
             console.error("%s\n" % cmk_base.utils.make_utf8("%s" % e))
-            if cmk.debug.enabled():
+            if cmk.utils.debug.enabled():
                 raise
             return 1
 
         except Exception as e:
-            if cmk.debug.enabled():
+            if cmk.utils.debug.enabled():
                 raise
             console.error("%s\n" % cmk_base.utils.make_utf8("%s" % e))
             return 2
@@ -91,7 +91,7 @@ class Automations(object):
         finally:
             profiling.output_profile()
 
-        if cmk.debug.enabled():
+        if cmk.utils.debug.enabled():
             console.output(pprint.pformat(result) + "\n")
         else:
             console.output("%r\n" % (result,))

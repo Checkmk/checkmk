@@ -40,7 +40,7 @@ from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 from cmk.gui.exceptions import MKGeneralException
 
-from cmk.plugin_loader import load_plugins
+from cmk.utils.plugin_loader import load_plugins
 
 #.
 #   .--Plugin API----------------------------------------------------------.

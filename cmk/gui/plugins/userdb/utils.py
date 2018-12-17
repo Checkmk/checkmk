@@ -27,7 +27,7 @@
 import abc
 from typing import Optional  # pylint: disable=unused-import
 
-import cmk.plugin_registry
+import cmk.utils.plugin_registry
 
 #.
 #   .--ConnectorAPI--------------------------------------------------------.
@@ -189,7 +189,7 @@ class UserAttribute(object):
 #   '----------------------------------------------------------------------'
 
 
-class UserConnectorRegistry(cmk.plugin_registry.ClassRegistry):
+class UserConnectorRegistry(cmk.utils.plugin_registry.ClassRegistry):
     """The management object for all available user connector classes.
 
     Have a look at the base class for details."""
@@ -205,7 +205,7 @@ class UserConnectorRegistry(cmk.plugin_registry.ClassRegistry):
 user_connector_registry = UserConnectorRegistry()
 
 
-class UserAttributeRegistry(cmk.plugin_registry.ClassRegistry):
+class UserAttributeRegistry(cmk.utils.plugin_registry.ClassRegistry):
     """The management object for all available user attributes.
     Have a look at the base class for details."""
 

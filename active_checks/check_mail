@@ -35,9 +35,9 @@ import poplib
 import socket
 import imaplib
 
-import cmk.password_store
+import cmk.utils.password_store
 
-cmk.password_store.replace_passwords()
+cmk.utils.password_store.replace_passwords()
 
 
 def parse_exception(e):

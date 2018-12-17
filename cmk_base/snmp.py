@@ -28,10 +28,10 @@ import os
 import subprocess
 from typing import Any, Dict, List  # pylint: disable=unused-import
 
-import cmk.debug
+import cmk.utils.debug
 import cmk.utils.tty as tty
-from cmk.exceptions import MKGeneralException, MKBailOut
-import cmk.store as store
+from cmk.utils.exceptions import MKGeneralException, MKBailOut
+import cmk.utils.store as store
 
 import cmk_base.utils
 import cmk_base.config as config
@@ -89,7 +89,7 @@ def write_single_oid_cache(access_data):
     if not _g_single_oid_cache:
         return
 
-    cache_dir = cmk.paths.snmp_scan_cache_dir
+    cache_dir = cmk.utils.paths.snmp_scan_cache_dir
     if not os.path.exists(cache_dir):
         os.makedirs(cache_dir)
     cache_path = "%s/%s.%s" % (cache_dir, access_data["hostname"], access_data["ipaddress"])
@@ -109,7 +109,7 @@ def _get_oid_from_single_oid_cache(hostname, oid):
 
 
 def _load_single_oid_cache(access_data):
-    cache_path = "%s/%s.%s" % (cmk.paths.snmp_scan_cache_dir, access_data["hostname"],
+    cache_path = "%s/%s.%s" % (cmk.utils.paths.snmp_scan_cache_dir, access_data["hostname"],
                                access_data["ipaddress"])
     return store.load_data_from_file(cache_path, {})
 
@@ -255,7 +255,7 @@ def get_single_oid(access_data, oid, check_plugin_name=None, do_snmp_scan=True):
     # in question. The *cache* is working including the X, however.
     hostname = access_data["hostname"]
     if oid[0] != '.':
-        if cmk.debug.enabled():
+        if cmk.utils.debug.enabled():
             raise MKGeneralException("OID definition '%s' does not begin with a '.'" % oid)
         else:
             oid = '.' + oid
@@ -302,7 +302,7 @@ def get_single_oid(access_data, oid, check_plugin_name=None, do_snmp_scan=True):
                 if value is not None:
                     break  # Use first received answer in case of multiple contextes
             except:
-                if cmk.debug.enabled():
+                if cmk.utils.debug.enabled():
                     raise
                 value = None
 
@@ -563,7 +563,7 @@ def _get_cached_snmpwalk(hostname, fetchoid):
         console.vverbose("  Loading %s from walk cache %s\n" % (fetchoid, path))
         return store.load_data_from_file(path)
     except:
-        if cmk.debug.enabled():
+        if cmk.utils.debug.enabled():
             raise
         console.verbose("  Failed loading walk cache. Continue without it.\n" % path)
         return None
@@ -580,7 +580,7 @@ def _save_snmpwalk_cache(hostname, fetchoid, rowinfo):
 
 
 def _snmpwalk_cache_path(hostname, fetchoid):
-    return os.path.join(cmk.paths.var_dir, "snmp_cache", hostname, fetchoid)
+    return os.path.join(cmk.utils.paths.var_dir, "snmp_cache", hostname, fetchoid)
 
 
 def _get_stored_snmpwalk(hostname, oid):
@@ -594,7 +594,7 @@ def _get_stored_snmpwalk(hostname, oid):
         oid_prefix = oid
         dot_star = False
 
-    path = cmk.paths.snmpwalks_dir + "/" + hostname
+    path = cmk.utils.paths.snmpwalks_dir + "/" + hostname
 
     console.vverbose("  Loading %s from %s\n" % (oid, path))
 
@@ -701,7 +701,7 @@ def do_snmptranslate(walk_filename):
     if not walk_filename:
         raise MKGeneralException("Please provide the name of a SNMP walk file")
 
-    walk_path = "%s/%s" % (cmk.paths.snmpwalks_dir, walk_filename)
+    walk_path = "%s/%s" % (cmk.utils.paths.snmpwalks_dir, walk_filename)
     if not os.path.exists(walk_path):
         raise MKGeneralException("The walk '%s' does not exist" % walk_path)
 
@@ -713,7 +713,7 @@ def do_snmptranslate(walk_filename):
                 oids_for_command.append(line.split(" ")[0])
 
             command = ["snmptranslate", "-m", "ALL",
-                       "-M+%s" % cmk.paths.local_mibs_dir] + oids_for_command
+                       "-M+%s" % cmk.utils.paths.local_mibs_dir] + oids_for_command
             p = subprocess.Popen(
                 command, stdout=subprocess.PIPE, stderr=open(os.devnull, "w"), close_fds=True)
             p.wait()
@@ -755,8 +755,8 @@ def do_snmpwalk(options, hostnames):
     if not hostnames:
         raise MKBailOut("Please specify host names to walk on.")
 
-    if not os.path.exists(cmk.paths.snmpwalks_dir):
-        os.makedirs(cmk.paths.snmpwalks_dir)
+    if not os.path.exists(cmk.utils.paths.snmpwalks_dir):
+        os.makedirs(cmk.utils.paths.snmpwalks_dir)
 
     for hostname in hostnames:
         #TODO: What about SNMP management boards?
@@ -766,10 +766,10 @@ def do_snmpwalk(options, hostnames):
             "credentials": config.snmp_credentials_of(hostname),
         }
         try:
-            do_snmpwalk_on(options, access_data, cmk.paths.snmpwalks_dir + "/" + hostname)
+            do_snmpwalk_on(options, access_data, cmk.utils.paths.snmpwalks_dir + "/" + hostname)
         except Exception as e:
             console.error("Error walking %s: %s\n" % (hostname, e))
-            if cmk.debug.enabled():
+            if cmk.utils.debug.enabled():
                 raise
         cmk_base.cleanup.cleanup_globals()
 
@@ -796,7 +796,7 @@ def _execute_walks_for_dump(hostname, access_data, oids):
             yield walk_for_export(access_data, oid)
         except Exception as e:
             console.error("Error: %s\n" % e)
-            if cmk.debug.enabled():
+            if cmk.utils.debug.enabled():
                 raise
 
 

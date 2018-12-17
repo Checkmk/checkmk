@@ -25,10 +25,11 @@
 # Boston, MA 02110-1301 USA.
 
 import os
-import cmk.paths
+import cmk.utils.paths
+import cmk.utils.debug
 
 # Configuration variables in main.mk needed during the actual check
-logwatch_dir = cmk.paths.var_dir + '/logwatch'
+logwatch_dir = cmk.utils.paths.var_dir + '/logwatch'
 logwatch_patterns = {}
 logwatch_rules = []
 logwatch_max_filesize = 500000  # do not save more than 500k of message (configurable)
@@ -38,7 +39,7 @@ logwatch_groups = []
 # Variables embedded in precompiled checks
 check_config_variables += ["logwatch_dir", "logwatch_max_filesize", "logwatch_service_output"]
 
-logwatch_spool_dir = cmk.paths.var_dir + '/logwatch_spool'
+logwatch_spool_dir = cmk.utils.paths.var_dir + '/logwatch_spool'
 
 #   .--General-------------------------------------------------------------.
 #   |                   ____                           _                   |
@@ -290,7 +291,7 @@ def inventory_logwatch(info):
 # ignored.
 def check_logwatch(item, params, info):
     def cachefile_path(node):
-        return "%s/%s" % (cmk.paths.tcp_cache_dir, node)
+        return "%s/%s" % (cmk.utils.paths.tcp_cache_dir, node)
 
     now = time.time()
     last_run = get_item_state("logwatch_last_run_%s" % item, 0)
@@ -914,7 +915,7 @@ def check_logwatch_ec(item, params, info):
             yield 2, "Dropped %d messages%s" % (result.num_dropped, exc_txt)
 
     except Exception, e:
-        if cmk.debug.enabled():
+        if cmk.utils.debug.enabled():
             raise
         yield (2, 'Failed to forward messages (%s). Lost %d messages.' % (e, len(messages)))
 
@@ -1087,7 +1088,7 @@ def logwatch_spool_messages(message_chunks, result):
 
             result.num_spooled += len(message_chunk)
         except:
-            if cmk.debug.enabled():
+            if cmk.utils.debug.enabled():
                 raise
 
             if num_already_spooled == 0:

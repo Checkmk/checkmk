@@ -2,9 +2,9 @@ import pytest
 from pathlib2 import Path
 import os
 
-import cmk.store as store
-import cmk.daemon as daemon
-from cmk.exceptions import MKGeneralException
+import cmk.utils.store as store
+import cmk.utils.daemon as daemon
+from cmk.utils.exceptions import MKGeneralException
 
 @pytest.fixture(autouse=True)
 def cleanup_locks():

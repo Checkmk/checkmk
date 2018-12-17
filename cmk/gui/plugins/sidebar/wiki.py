@@ -36,7 +36,7 @@
 #   * [[link4]]
 
 import re
-import cmk.paths
+import cmk.utils.paths
 import cmk.gui.config as config
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
@@ -63,7 +63,7 @@ class Wiki(SidebarSnapin):
         return _("Shows the Wiki Navigation of the OMD Site")
 
     def show(self):
-        filename = cmk.paths.omd_root + '/var/dokuwiki/data/pages/sidebar.txt'
+        filename = cmk.utils.paths.omd_root + '/var/dokuwiki/data/pages/sidebar.txt'
         html.javascript("""
         function wiki_search()
         {

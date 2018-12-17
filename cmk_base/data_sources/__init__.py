@@ -42,10 +42,10 @@ import subprocess
 import sys
 import time
 
-import cmk.paths
-import cmk.debug
-from cmk.exceptions import MKGeneralException
-import cmk.store as store
+import cmk.utils.paths
+import cmk.utils.debug
+from cmk.utils.exceptions import MKGeneralException
+import cmk.utils.store as store
 
 import cmk_base
 import cmk_base.config as config

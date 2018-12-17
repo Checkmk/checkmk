@@ -1,9 +1,9 @@
 import pytest
 
-import cmk.log
+import cmk.utils.log
 from cmk.ec.main import Perfcounters
 
-logger = cmk.log.get_logger("mkeventd")
+logger = cmk.utils.log.get_logger("mkeventd")
 
 def test_perfcounters_count():
     c = Perfcounters(logger)

@@ -27,7 +27,7 @@
 import abc
 from typing import Text, Type, List  # pylint: disable=unused-import
 
-import cmk.plugin_registry
+import cmk.utils.plugin_registry
 
 
 class PermissionSection(object):
@@ -60,7 +60,7 @@ class PermissionSection(object):
         return False
 
 
-class PermissionSectionRegistry(cmk.plugin_registry.ClassRegistry):
+class PermissionSectionRegistry(cmk.utils.plugin_registry.ClassRegistry):
     def plugin_base_class(self):
         return PermissionSection
 
@@ -121,7 +121,7 @@ class Permission(object):
         return self._sort_index
 
 
-class PermissionRegistry(cmk.plugin_registry.ClassRegistry):
+class PermissionRegistry(cmk.utils.plugin_registry.ClassRegistry):
     def __init__(self):
         super(PermissionRegistry, self).__init__()
         # TODO: Better make the sorting explicit in the future

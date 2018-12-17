@@ -29,9 +29,9 @@ import sys
 
 import six
 
-import cmk.debug
-import cmk.exceptions
-import cmk.paths
+import cmk.utils.debug
+import cmk.utils.exceptions
+import cmk.utils.paths
 
 import cmk_base.config
 import cmk_base.console
@@ -48,9 +48,9 @@ import cmk_base.console
 # TODO: Common code with parse_autochecks_file? Cleanup.
 def read_autochecks_of(hostname, world="config"):
     if world == "config":
-        basedir = cmk.paths.autochecks_dir
+        basedir = cmk.utils.paths.autochecks_dir
     else:
-        basedir = cmk.paths.var_dir + "/core/autochecks"
+        basedir = cmk.utils.paths.var_dir + "/core/autochecks"
     filepath = basedir + '/' + hostname + '.mk'
 
     if not os.path.exists(filepath):
@@ -61,12 +61,12 @@ def read_autochecks_of(hostname, world="config"):
         autochecks_raw = eval(file(filepath).read(), check_config, check_config)
     except SyntaxError as e:
         cmk_base.console.verbose("Syntax error in file %s: %s\n", filepath, e, stream=sys.stderr)
-        if cmk.debug.enabled():
+        if cmk.utils.debug.enabled():
             raise
         return []
     except Exception as e:
         cmk_base.console.verbose("Error in file %s:\n%s\n", filepath, e, stream=sys.stderr)
-        if cmk.debug.enabled():
+        if cmk.utils.debug.enabled():
             raise
         return []
 
@@ -84,7 +84,7 @@ def read_autochecks_of(hostname, world="config"):
             item = cmk_base.config.decode_incoming_string(item)
 
         if not isinstance(check_plugin_name, six.string_types):
-            raise cmk.exceptions.MKGeneralException(
+            raise cmk.utils.exceptions.MKGeneralException(
                 "Invalid entry '%r' in check table of host '%s': "
                 "The check type must be a string." % (entry, hostname))
 

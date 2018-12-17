@@ -30,7 +30,7 @@ import time
 
 from pathlib2 import Path
 
-import cmk.render as render
+import cmk.utils.render as render
 
 import cmk.gui.config as config
 import cmk.gui.table as table

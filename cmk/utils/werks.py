@@ -31,10 +31,10 @@ import json
 
 from pathlib2 import Path
 
-import cmk.paths
+import cmk.utils.paths
 
-from cmk.exceptions import MKGeneralException
-from cmk.i18n import _
+from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.i18n import _
 
 
 # This class is used to avoid repeated construction of dictionaries, including
@@ -116,7 +116,7 @@ class WerkTranslator(object):
 
 
 def _compiled_werks_dir():
-    return Path(cmk.paths.share_dir) / "werks"
+    return Path(cmk.utils.paths.share_dir) / "werks"
 
 
 def load():
@@ -136,7 +136,7 @@ def load_precompiled_werks_file(path):
 
 def load_raw_files(werks_dir):
     if werks_dir is None:
-        werks_dir = Path(cmk.paths.share_dir) / "werks"
+        werks_dir = Path(cmk.utils.paths.share_dir) / "werks"
     werks = {}
     for file_name in werks_dir.glob("[0-9]*"):
         werk_id = int(file_name.name)

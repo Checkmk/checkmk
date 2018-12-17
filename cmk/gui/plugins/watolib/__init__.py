@@ -49,6 +49,6 @@ from cmk.gui.plugins.watolib.utils import (
 #   |                                 |___/                                |
 #   '----------------------------------------------------------------------'
 
-from cmk.plugin_loader import load_plugins
+from cmk.utils.plugin_loader import load_plugins
 
 load_plugins(__file__, __package__)

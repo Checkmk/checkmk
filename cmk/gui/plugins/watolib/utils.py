@@ -30,9 +30,9 @@ from typing import Text  # pylint: disable=unused-import
 
 import six
 
-import cmk.store as store
+import cmk.utils.store as store
 
-import cmk.plugin_registry
+import cmk.utils.plugin_registry
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException
 
@@ -131,7 +131,7 @@ class ConfigDomain(object):
         ]
 
 
-class ConfigDomainRegistry(cmk.plugin_registry.ClassRegistry):
+class ConfigDomainRegistry(cmk.utils.plugin_registry.ClassRegistry):
     def plugin_base_class(self):
         return ConfigDomain
 
@@ -184,7 +184,7 @@ class ConfigVariableGroup(object):
         return [v for v in config_variable_registry.values() if v().group() == self.__class__]
 
 
-class ConfigVariableGroupRegistry(cmk.plugin_registry.ClassRegistry):
+class ConfigVariableGroupRegistry(cmk.utils.plugin_registry.ClassRegistry):
     def plugin_base_class(self):
         return ConfigVariableGroup
 
@@ -238,7 +238,7 @@ class ConfigVariable(object):
         return True
 
 
-class ConfigVariableRegistry(cmk.plugin_registry.ClassRegistry):
+class ConfigVariableRegistry(cmk.utils.plugin_registry.ClassRegistry):
     def plugin_base_class(self):
         return ConfigVariable
 

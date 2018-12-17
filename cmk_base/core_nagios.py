@@ -32,9 +32,9 @@ import tempfile
 import errno
 from typing import Dict  # pylint: disable=unused-import
 
-import cmk.paths
+import cmk.utils.paths
 import cmk.utils.tty as tty
-from cmk.exceptions import MKGeneralException
+from cmk.utils.exceptions import MKGeneralException
 
 import cmk_base.utils
 import cmk_base.console as console
@@ -60,13 +60,13 @@ class NagiosCore(core_config.MonitoringCore):
         try:
             with tempfile.NamedTemporaryFile(
                     "w",
-                    dir=os.path.dirname(cmk.paths.nagios_objects_file),
-                    prefix=".%s.new" % os.path.basename(cmk.paths.nagios_objects_file),
+                    dir=os.path.dirname(cmk.utils.paths.nagios_objects_file),
+                    prefix=".%s.new" % os.path.basename(cmk.utils.paths.nagios_objects_file),
                     delete=False) as tmp:
                 tmp_path = tmp.name
                 os.chmod(tmp.name, 0660)
                 create_config(tmp, hostnames=None)
-                os.rename(tmp.name, cmk.paths.nagios_objects_file)
+                os.rename(tmp.name, cmk.utils.paths.nagios_objects_file)
 
         except Exception as e:
             # In case an exception happens cleanup the tempfile created for writing
@@ -941,12 +941,12 @@ def _find_check_plugins(checktype):
 
     paths = []
     for candidate in candidates:
-        filename = cmk.paths.local_checks_dir + "/" + candidate
+        filename = cmk.utils.paths.local_checks_dir + "/" + candidate
         if os.path.exists(filename):
             paths.append(filename)
             continue
 
-        filename = cmk.paths.checks_dir + "/" + candidate
+        filename = cmk.utils.paths.checks_dir + "/" + candidate
         if os.path.exists(filename):
             paths.append(filename)
 
@@ -957,15 +957,15 @@ def precompile_hostchecks():
     console.verbose("Creating precompiled host check config...\n")
     config.PackedConfig().save()
 
-    if not os.path.exists(cmk.paths.precompiled_hostchecks_dir):
-        os.makedirs(cmk.paths.precompiled_hostchecks_dir)
+    if not os.path.exists(cmk.utils.paths.precompiled_hostchecks_dir):
+        os.makedirs(cmk.utils.paths.precompiled_hostchecks_dir)
 
     console.verbose("Precompiling host checks...\n")
     for host in config.all_active_hosts():
         try:
             _precompile_hostcheck(host)
         except Exception as e:
-            if cmk.debug.enabled():
+            if cmk.utils.debug.enabled():
                 raise
             console.error("Error precompiling checks for host %s: %s\n" % (host, e))
             sys.exit(5)
@@ -992,7 +992,7 @@ def _precompile_hostcheck(hostname):
 
     console.verbose("%s%s%-16s%s:", tty.bold, tty.blue, hostname, tty.normal, stream=sys.stderr)
 
-    compiled_filename = cmk.paths.precompiled_hostchecks_dir + "/" + hostname
+    compiled_filename = cmk.utils.paths.precompiled_hostchecks_dir + "/" + hostname
     source_filename = compiled_filename + ".py"
     for fname in [compiled_filename, source_filename]:
         try:
@@ -1022,9 +1022,9 @@ def _precompile_hostcheck(hostname):
     # to python module names like "random"
     output.write("sys.path.pop(0)\n")
 
-    output.write("import cmk.log\n")
-    output.write("import cmk.debug\n")
-    output.write("from cmk.exceptions import MKTerminate\n")
+    output.write("import cmk.utils.log\n")
+    output.write("import cmk.utils.debug\n")
+    output.write("from cmk.utils.exceptions import MKTerminate\n")
     output.write("\n")
     output.write("import cmk_base.utils\n")
     output.write("import cmk_base.config as config\n")
@@ -1056,15 +1056,15 @@ if os.path.islink(%(dst)r):
     output.write("""
 # very simple commandline parsing: only -v (once or twice) and -d are supported
 
-cmk.log.setup_console_logging()
-logger = cmk.log.get_logger("base")
+cmk.utils.log.setup_console_logging()
+logger = cmk.utils.log.get_logger("base")
 
 # TODO: This is not really good parsing, because it not cares about syntax like e.g. "-nv".
 #       The later regular argument parsing is handling this correctly. Try to clean this up.
-cmk.log.set_verbosity(verbosity=len([ a for a in sys.argv if a in [ "-v", "--verbose"] ]))
+cmk.utils.log.set_verbosity(verbosity=len([ a for a in sys.argv if a in [ "-v", "--verbose"] ]))
 
 if '-d' in sys.argv:
-    cmk.debug.enable()
+    cmk.utils.debug.enable()
 
 """)
 
@@ -1234,10 +1234,10 @@ def _get_needed_check_file_names(needed_check_plugin_names):
         section_name = cmk_base.check_utils.section_name_of(check_plugin_name)
         # Add library files needed by check (also look in local)
         for lib in set(config.check_includes.get(section_name, [])):
-            if os.path.exists(cmk.paths.local_checks_dir + "/" + lib):
-                to_add = cmk.paths.local_checks_dir + "/" + lib
+            if os.path.exists(cmk.utils.paths.local_checks_dir + "/" + lib):
+                to_add = cmk.utils.paths.local_checks_dir + "/" + lib
             else:
-                to_add = cmk.paths.checks_dir + "/" + lib
+                to_add = cmk.utils.paths.checks_dir + "/" + lib
 
             if to_add not in filenames:
                 filenames.append(to_add)

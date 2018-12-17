@@ -29,10 +29,10 @@ import subprocess
 import sys
 
 import cmk.utils.tty as tty
-import cmk.paths
+import cmk.utils.paths
 
-import cmk.log
-logger = cmk.log.get_logger(__name__)
+import cmk.utils.log
+logger = cmk.utils.log.get_logger(__name__)
 
 
 # TODO: Inherit from MKGeneralException?
@@ -51,10 +51,10 @@ pot_file = None
 po_file = None
 mo_file = None
 alias_file = None
-locale_base = cmk.paths.local_locale_dir
+locale_base = cmk.utils.paths.local_locale_dir
 
-if os.path.exists(cmk.paths.local_locale_dir + '/multisite.pot'):
-    pot_file = cmk.paths.local_locale_dir + '/multisite.pot'
+if os.path.exists(cmk.utils.paths.local_locale_dir + '/multisite.pot'):
+    pot_file = cmk.utils.paths.local_locale_dir + '/multisite.pot'
 else:
     pot_file = locale_base + '/multisite.pot'
 
@@ -172,9 +172,9 @@ def localize_init_po(lang):
 def localize_sniff():
     logger.info('Sniffing source code...')
 
-    paths = [cmk.paths.default_config_dir, cmk.paths.web_dir]
-    if os.path.exists(cmk.paths.local_web_dir):
-        paths.append(cmk.paths.local_web_dir)
+    paths = [cmk.utils.paths.default_config_dir, cmk.utils.paths.web_dir]
+    if os.path.exists(cmk.utils.paths.local_web_dir):
+        paths.append(cmk.utils.paths.local_web_dir)
 
     sniff_files = []
     for path in paths:
@@ -262,9 +262,9 @@ def localize_update(lang):
     # Maybe initialize the file in the local hierarchy with the file in
     # the default hierarchy
     if not os.path.exists(po_file) \
-       and os.path.exists(cmk.paths.locale_dir + '/%s/LC_MESSAGES/%s.po' % (lang, domain)):
+       and os.path.exists(cmk.utils.paths.locale_dir + '/%s/LC_MESSAGES/%s.po' % (lang, domain)):
         file(po_file, 'w').write(
-            file(cmk.paths.locale_dir + '/%s/LC_MESSAGES/%s.po' % (lang, domain)).read())
+            file(cmk.utils.paths.locale_dir + '/%s/LC_MESSAGES/%s.po' % (lang, domain)).read())
         logger.info('Initialize %s with the file in the default hierarchy', po_file)
 
     localize_sniff()
@@ -289,9 +289,9 @@ def localize_compile(lang):
     # Maybe initialize the file in the local hierarchy with the file in
     # the default hierarchy
     if not os.path.exists(po_file) \
-       and os.path.exists(cmk.paths.locale_dir + '/%s/LC_MESSAGES/%s.po' % (lang, domain)):
+       and os.path.exists(cmk.utils.paths.locale_dir + '/%s/LC_MESSAGES/%s.po' % (lang, domain)):
         file(po_file, 'w').write(
-            file(cmk.paths.locale_dir + '/%s/LC_MESSAGES/%s.po' % (lang, domain)).read())
+            file(cmk.utils.paths.locale_dir + '/%s/LC_MESSAGES/%s.po' % (lang, domain)).read())
         logger.info('Initialize %s with the file in the default hierarchy', po_file)
 
     if not os.path.exists(po_file):

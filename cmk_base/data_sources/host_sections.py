@@ -26,7 +26,7 @@
 
 import sys
 
-import cmk.debug
+import cmk.utils.debug
 
 import cmk_base.config as config
 import cmk_base.caching as caching
@@ -255,7 +255,7 @@ class MultiHostSections(object):
             item_state.set_item_state_prefix(section_name, None)
             return parse_function(section_content)
         except Exception:
-            if cmk.debug.enabled():
+            if cmk.utils.debug.enabled():
                 raise
             raise MKParseFunctionError(*sys.exc_info())
         finally:

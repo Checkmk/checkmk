@@ -38,13 +38,13 @@ from typing import Any, Callable, Dict, List, Tuple, Union, Optional  # pylint: 
 
 import six
 
-import cmk.debug
-import cmk.paths
-from cmk.regex import regex, is_regex
+import cmk.utils.debug
+import cmk.utils.paths
+from cmk.utils.regex import regex, is_regex
 import cmk.utils.translations
-import cmk.store as store
+import cmk.utils.store as store
 import cmk.utils
-from cmk.exceptions import MKGeneralException, MKTerminate
+from cmk.utils.exceptions import MKGeneralException, MKTerminate
 
 import cmk_base
 import cmk_base.console as console
@@ -217,8 +217,8 @@ def _load_config(with_conf_d, exclude_parents_mk):
 
             # Make the config path available as a global variable to
             # be used within the configuration file
-            if _f.startswith(cmk.paths.check_mk_config_dir + "/"):
-                _file_path = _f[len(cmk.paths.check_mk_config_dir) + 1:]
+            if _f.startswith(cmk.utils.paths.check_mk_config_dir + "/"):
+                _file_path = _f[len(cmk.utils.paths.check_mk_config_dir) + 1:]
                 global_dict.update({
                     "FILE_PATH": _file_path,
                     "FOLDER_PATH": os.path.dirname(_file_path),
@@ -236,7 +236,7 @@ def _load_config(with_conf_d, exclude_parents_mk):
 
             set_folder_paths(_new_hosts.union(_new_clusters), _f)
         except Exception as e:
-            if cmk.debug.enabled():
+            if cmk.utils.debug.enabled():
                 raise
             elif sys.stderr.isatty():
                 console.error("Cannot read in configuration file %s: %s\n", _f, e)
@@ -270,13 +270,13 @@ def _get_config_file_paths(with_conf_d):
                    [["%s/%s" % (d, f)
                      for f in fs
                      if f.endswith(".mk")]
-                    for d, _unused_sb, fs in os.walk(cmk.paths.check_mk_config_dir)], []),
+                    for d, _unused_sb, fs in os.walk(cmk.utils.paths.check_mk_config_dir)], []),
             cmp=cmk.utils.cmp_config_paths)
-        list_of_files = [cmk.paths.main_config_file] + list_of_files
+        list_of_files = [cmk.utils.paths.main_config_file] + list_of_files
     else:
-        list_of_files = [cmk.paths.main_config_file]
+        list_of_files = [cmk.utils.paths.main_config_file]
 
-    for path in [cmk.paths.final_config_file, cmk.paths.local_config_file]:
+    for path in [cmk.utils.paths.final_config_file, cmk.utils.paths.local_config_file]:
         if os.path.exists(path):
             list_of_files.append(path)
 
@@ -377,10 +377,10 @@ def initialize_check_caches():
 
 
 def set_folder_paths(new_hosts, filename):
-    if not filename.startswith(cmk.paths.check_mk_config_dir):
+    if not filename.startswith(cmk.utils.paths.check_mk_config_dir):
         return
 
-    path = filename[len(cmk.paths.check_mk_config_dir):]
+    path = filename[len(cmk.utils.paths.check_mk_config_dir):]
 
     for hostname in strip_tags(new_hosts):
         host_paths[hostname] = path
@@ -449,7 +449,7 @@ class PackedConfig(object):
 
     def __init__(self):
         super(PackedConfig, self).__init__()
-        self._path = os.path.join(cmk.paths.var_dir, "base", "precompiled_check_config.mk")
+        self._path = os.path.join(cmk.utils.paths.var_dir, "base", "precompiled_check_config.mk")
 
     def save(self):
         self._write(self._pack())
@@ -1928,7 +1928,7 @@ def in_extraconf_hostlist(hostlist, hostname):
                 if regex(hostentry).match(hostname) is not None:
                     return not negate
         except MKGeneralException:
-            if cmk.debug.enabled():
+            if cmk.utils.debug.enabled():
                 raise
 
     return False
@@ -2199,7 +2199,7 @@ def load_all_checks(get_check_api_context):
     global _all_checks_loaded
 
     _initialize_data_structures()
-    filelist = get_plugin_paths(cmk.paths.local_checks_dir, cmk.paths.checks_dir)
+    filelist = get_plugin_paths(cmk.utils.paths.local_checks_dir, cmk.utils.paths.checks_dir)
     load_checks(get_check_api_context, filelist)
 
     _all_checks_loaded = True
@@ -2268,7 +2268,7 @@ def load_checks(get_check_api_context, filelist):
 
         except Exception as e:
             console.error("Error in plugin file %s: %s\n", f, e)
-            if cmk.debug.enabled():
+            if cmk.utils.debug.enabled():
                 raise
             else:
                 continue
@@ -2377,17 +2377,17 @@ def load_check_includes(check_file_path, check_context):
 
         except Exception as e:
             console.error("Error in check include file %s: %s\n", include_file_path, e)
-            if cmk.debug.enabled():
+            if cmk.utils.debug.enabled():
                 raise
             else:
                 continue
 
 
 def check_include_file_path(include_file_name):
-    local_path = os.path.join(cmk.paths.local_checks_dir, include_file_name)
+    local_path = os.path.join(cmk.utils.paths.local_checks_dir, include_file_name)
     if os.path.exists(local_path):
         return local_path
-    return os.path.join(cmk.paths.checks_dir, include_file_name)
+    return os.path.join(cmk.utils.paths.checks_dir, include_file_name)
 
 
 def cached_includes_of_plugin(check_file_path):
@@ -2434,8 +2434,8 @@ def _write_check_include_cache(cache_file_path, includes):
 
 
 def _include_cache_file_path(path):
-    is_local = path.startswith(cmk.paths.local_checks_dir)
-    return os.path.join(cmk.paths.include_cache_dir, "local" if is_local else "builtin",
+    is_local = path.startswith(cmk.utils.paths.local_checks_dir)
+    return os.path.join(cmk.utils.paths.include_cache_dir, "local" if is_local else "builtin",
                         os.path.basename(path))
 
 
@@ -2533,8 +2533,8 @@ def _is_plugin_precompiled(path, precompiled_path):
 
 
 def _precompiled_plugin_path(path):
-    is_local = path.startswith(cmk.paths.local_checks_dir)
-    return os.path.join(cmk.paths.precompiled_checks_dir, "local" if is_local else "builtin",
+    is_local = path.startswith(cmk.utils.paths.local_checks_dir)
+    return os.path.join(cmk.utils.paths.precompiled_checks_dir, "local" if is_local else "builtin",
                         os.path.basename(path))
 
 
@@ -2968,7 +2968,7 @@ def _get_categorized_check_plugins(check_plugin_names, for_inventory=False):
     for check_plugin_name in check_plugin_names:
         if check_plugin_name not in plugins_info:
             msg = "Unknown plugin file %s" % check_plugin_name
-            if cmk.debug.enabled():
+            if cmk.utils.debug.enabled():
                 raise MKGeneralException(msg)
             else:
                 console.verbose("%s\n" % msg)

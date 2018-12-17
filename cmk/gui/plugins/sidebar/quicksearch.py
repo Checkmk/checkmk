@@ -30,7 +30,7 @@ import traceback
 
 import livestatus
 
-import cmk.plugin_registry
+import cmk.utils.plugin_registry
 
 import cmk.gui.config as config
 import cmk.gui.sites as sites
@@ -690,7 +690,7 @@ class QuicksearchMatchPlugin(object):
         return patterns[0]
 
 
-class MatchPluginRegistry(cmk.plugin_registry.ClassRegistry):
+class MatchPluginRegistry(cmk.utils.plugin_registry.ClassRegistry):
     def plugin_base_class(self):
         return QuicksearchMatchPlugin
 

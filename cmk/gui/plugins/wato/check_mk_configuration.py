@@ -28,7 +28,7 @@ import re
 import logging
 
 import cmk
-import cmk.paths
+import cmk.utils.paths
 
 import cmk.gui.sites as sites
 import cmk.gui.config as config
@@ -165,7 +165,8 @@ class ConfigVariableLogLevels(ConfigVariable):
         return Dictionary(
             title=_("Logging"),
             help=_("This setting decides which types of messages to log into "
-                   "the web log <tt>%s</tt>.") % site_neutral_path(cmk.paths.log_dir + "/web.log"),
+                   "the web log <tt>%s</tt>.") %
+            site_neutral_path(cmk.utils.paths.log_dir + "/web.log"),
             elements=self._web_log_level_elements(),
             optional_keys=[],
         )
@@ -238,8 +239,8 @@ class ConfigVariableGUIProfile(ConfigVariable):
                    "file you can get runtime statistics about the last processed page. When "
                    "enabled by request the profiling mode is enabled by providing the HTTP "
                    "variable <tt>_profile</tt>.") %
-            (site_neutral_path(cmk.paths.var_dir + "/multisite.profile"),
-             site_neutral_path(cmk.paths.var_dir + "/multisite.profile.py")),
+            (site_neutral_path(cmk.utils.paths.var_dir + "/multisite.profile"),
+             site_neutral_path(cmk.utils.paths.var_dir + "/multisite.profile.py")),
             choices=[
                 (False, _("Disable profiling")),
                 ("enable_by_var", _("Enable profiling by request")),
@@ -3329,7 +3330,7 @@ register_rule(
             title=_("Icon image for hosts in status GUI"),
             help=_("You can assign icons to hosts for the status GUI. "
                    "Put your images into <tt>%s</tt>. ") %
-            (cmk.paths.omd_root + "/local/share/check_mk/web/htdocs/images/icons"),
+            (cmk.utils.paths.omd_root + "/local/share/check_mk/web/htdocs/images/icons"),
         ),
         forth=lambda v: v and (v.endswith('.png') and v[:-4]) or v,
     ))
@@ -3342,7 +3343,7 @@ register_rule(
             title=_("Icon image for services in status GUI"),
             help=_("You can assign icons to services for the status GUI. "
                    "Put your images into <tt>%s</tt>. ") %
-            (cmk.paths.omd_root + "/local/share/check_mk/web/htdocs/images/icons"),
+            (cmk.utils.paths.omd_root + "/local/share/check_mk/web/htdocs/images/icons"),
         ),
         forth=lambda v: v and (v.endswith('.png') and v[:-4]) or v,
     ),

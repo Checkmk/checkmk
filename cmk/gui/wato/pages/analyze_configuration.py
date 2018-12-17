@@ -34,8 +34,8 @@ import Queue
 import traceback
 import ast
 
-import cmk.paths
-import cmk.store as store
+import cmk.utils.paths
+import cmk.utils.store as store
 
 import cmk.gui.watolib as watolib
 import cmk.gui.config as config
@@ -54,7 +54,7 @@ from cmk.gui.plugins.wato import (
 
 @mode_registry.register
 class ModeAnalyzeConfig(WatoMode):
-    _ack_path = cmk.paths.var_dir + "/acknowledged_bp_tests.mk"
+    _ack_path = cmk.utils.paths.var_dir + "/acknowledged_bp_tests.mk"
 
     @classmethod
     def name(cls):

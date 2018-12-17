@@ -30,7 +30,7 @@ import traceback
 import time
 
 import cmk
-import cmk.render as render
+import cmk.utils.render as render
 
 import cmk.gui.userdb as userdb
 import cmk.gui.config as config

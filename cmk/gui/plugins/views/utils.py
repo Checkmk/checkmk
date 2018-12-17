@@ -37,8 +37,8 @@ import types
 
 import livestatus
 
-import cmk.render
-import cmk.regex
+import cmk.utils.render
+import cmk.utils.regex
 
 import cmk.gui.config as config
 import cmk.gui.sites as sites
@@ -452,7 +452,7 @@ def paint_age(timestamp, has_been_checked, bold_if_younger_than, mode=None, what
     else:
         age_class = "age"
 
-    return age_class, prefix + (output_format % cmk.render.approx_age(age)) + warn_txt
+    return age_class, prefix + (output_format % cmk.utils.render.approx_age(age)) + warn_txt
 
 
 def paint_nagiosflag(row, field, bold_if_nonzero):
@@ -781,11 +781,11 @@ def render_cache_info(what, row):
     cache_age = time.time() - cached_at
 
     text = _("Cache generated %s ago, cache interval: %s") % \
-            (cmk.render.approx_age(cache_age), cmk.render.approx_age(cache_interval))
+            (cmk.utils.render.approx_age(cache_age), cmk.utils.render.approx_age(cache_interval))
 
     if cache_interval:
         percentage = 100.0 * cache_age / cache_interval
-        text += _(", elapsed cache lifespan: %s") % cmk.render.percent(percentage)
+        text += _(", elapsed cache lifespan: %s") % cmk.utils.render.percent(percentage)
 
     return text
 
@@ -1242,8 +1242,8 @@ class Cell(object):
         # TODO: Move this somewhere else!
         def find_htdocs_image_path(filename):
             dirs = [
-                cmk.paths.local_web_dir + "/htdocs/",
-                cmk.paths.web_dir + "/htdocs/",
+                cmk.utils.paths.local_web_dir + "/htdocs/",
+                cmk.utils.paths.web_dir + "/htdocs/",
             ]
             for d in dirs:
                 if os.path.exists(d + filename):

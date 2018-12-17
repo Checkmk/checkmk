@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-from cmk.i18n import _
+from cmk.utils.i18n import _
 
 
 # never used directly in the code. Just some wrapper to make all of our

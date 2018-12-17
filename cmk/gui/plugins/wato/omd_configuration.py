@@ -29,8 +29,8 @@ import glob
 import subprocess
 import traceback
 
-import cmk.paths
-import cmk.store as store
+import cmk.utils.paths
+import cmk.utils.store as store
 
 from cmk.gui.log import logger
 from cmk.gui.i18n import _
@@ -241,7 +241,7 @@ class ConfigDomainDiskspace(ConfigDomain):
     needs_sync = True
     needs_activation = False
     ident = "diskspace"
-    diskspace_config = cmk.paths.omd_root + '/etc/diskspace.conf'
+    diskspace_config = cmk.utils.paths.omd_root + '/etc/diskspace.conf'
 
     def activate(self):
         pass
@@ -287,14 +287,14 @@ class ConfigDomainDiskspace(ConfigDomain):
         for k, v in sorted(config.items()):
             output += '%s = %r\n' % (k, v)
 
-        cmk.store.save_file(self.diskspace_config, output)
+        cmk.utils.store.save_file(self.diskspace_config, output)
 
     def save_site_globals(self, settings):
         pass
 
     def default_globals(self):
         diskspace_context = {}
-        execfile("%s/bin/diskspace" % cmk.paths.omd_root, {}, diskspace_context)
+        execfile("%s/bin/diskspace" % cmk.utils.paths.omd_root, {}, diskspace_context)
         return {
             "diskspace_cleanup": diskspace_context["default_config"],
         }
@@ -409,7 +409,7 @@ class ConfigDomainApache(ConfigDomain):
     ident = "apache"
 
     def config_dir(self):
-        return cmk.paths.default_config_dir + "/apache.d/wato/"
+        return cmk.utils.paths.default_config_dir + "/apache.d/wato/"
 
     def activate(self):
         try:
@@ -440,7 +440,7 @@ class ConfigDomainApache(ConfigDomain):
             output += "ServerLimit %d\n" % config["apache_process_tuning"]["number_of_processes"]
             output += "MaxClients %d\n" % config["apache_process_tuning"]["number_of_processes"]
 
-        config_file_path = os.path.join(cmk.paths.omd_root, "etc/apache/conf.d",
+        config_file_path = os.path.join(cmk.utils.paths.omd_root, "etc/apache/conf.d",
                                         "zzz_check_mk.conf")
         store.save_file(config_file_path, output)
 
@@ -457,9 +457,9 @@ class ConfigDomainApache(ConfigDomain):
         }
 
     def _get_value_from_config(self, varname, conv_func, default_value):
-        config_files = [os.path.join(cmk.paths.omd_root, "etc/apache/apache.conf")]
+        config_files = [os.path.join(cmk.utils.paths.omd_root, "etc/apache/apache.conf")]
         config_files += sorted(
-            glob.glob(os.path.join(cmk.paths.omd_root, "etc/apache/conf.d", "*.conf")))
+            glob.glob(os.path.join(cmk.utils.paths.omd_root, "etc/apache/conf.d", "*.conf")))
 
         value = default_value
 
@@ -526,7 +526,7 @@ class ConfigDomainRRDCached(ConfigDomain):
     ident = "rrdcached"
 
     def config_dir(self):
-        return cmk.paths.default_config_dir + "/rrdcached.d/wato/"
+        return cmk.utils.paths.default_config_dir + "/rrdcached.d/wato/"
 
     def activate(self):
         try:
@@ -555,7 +555,8 @@ class ConfigDomainRRDCached(ConfigDomain):
         for key, val in sorted(config.get("rrdcached_tuning", {}).items()):
             output += "%s=%d\n" % (key, val)
 
-        config_file_path = os.path.join(cmk.paths.omd_root, "etc/rrdcached.d", "zzz_check_mk.conf")
+        config_file_path = os.path.join(cmk.utils.paths.omd_root, "etc/rrdcached.d",
+                                        "zzz_check_mk.conf")
         store.save_file(config_file_path, output)
 
     def _get_effective_config(self):
@@ -574,9 +575,9 @@ class ConfigDomainRRDCached(ConfigDomain):
         }
 
     def _get_value_from_config(self, varname, conv_func, default_value):
-        config_files = [os.path.join(cmk.paths.omd_root, "etc/rrdcached.conf")]
+        config_files = [os.path.join(cmk.utils.paths.omd_root, "etc/rrdcached.conf")]
         config_files += sorted(
-            glob.glob(os.path.join(cmk.paths.omd_root, "etc/rrdcached.d", "*.conf")))
+            glob.glob(os.path.join(cmk.utils.paths.omd_root, "etc/rrdcached.d", "*.conf")))
 
         value = default_value
 

@@ -49,8 +49,8 @@ def test_cfg(web, site):
 
     web.activate_changes()
 
-    import cmk.debug
-    cmk.debug.enable()
+    import cmk.utils.debug
+    cmk.utils.debug.enable()
 
     # Needs to be done together, even when the checks are not directly needed
     import cmk_base.check_api as check_api
@@ -64,7 +64,7 @@ def test_cfg(web, site):
     #
     print "Cleaning up test config"
 
-    cmk.debug.disable()
+    cmk.utils.debug.disable()
 
     site.delete_dir("var/check_mk/agent_output")
     site.delete_file("etc/check_mk/conf.d/ds-test-host.mk")

@@ -25,8 +25,8 @@
 # Boston, MA 02110-1301 USA.
 """Code for computing the table of checks of hosts."""
 
-from cmk.regex import regex
-from cmk.exceptions import MKGeneralException
+from cmk.utils.regex import regex
+from cmk.utils.exceptions import MKGeneralException
 
 import cmk_base
 import cmk_base.config as config

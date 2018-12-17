@@ -38,12 +38,12 @@ import subprocess
 
 from pathlib2 import Path
 
-import cmk.debug
-import cmk.paths
+import cmk.utils.debug
+import cmk.utils.paths
 import cmk.utils.tty as tty
 
-from cmk.exceptions import MKGeneralException
-from cmk.i18n import _
+from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.i18n import _
 
 catalog_titles = {
     "hw"       : "Appliances, other dedicated Hardware",
@@ -238,8 +238,8 @@ def man_page_exists(name):
 def man_page_path(name):
     if name[0] != "." and name[-1] != "~":
         for basedir in [
-                Path(cmk.paths.local_check_manpages_dir),
-                Path(cmk.paths.check_manpages_dir)
+                Path(cmk.utils.paths.local_check_manpages_dir),
+                Path(cmk.utils.paths.check_manpages_dir)
         ]:
             p = basedir / name
             if p.exists():
@@ -250,7 +250,7 @@ def man_page_path(name):
 def all_man_pages():
     manuals = {}
 
-    for basedir in [cmk.paths.check_manpages_dir, cmk.paths.local_check_manpages_dir]:
+    for basedir in [cmk.utils.paths.check_manpages_dir, cmk.utils.paths.local_check_manpages_dir]:
         if not os.path.exists(basedir):
             continue
 
@@ -292,7 +292,7 @@ def load_man_page_catalog():
         try:
             parsed = _parse_man_page_header(name, Path(path))
         except Exception as e:
-            if cmk.debug.enabled():
+            if cmk.utils.debug.enabled():
                 raise
             parsed = _create_fallback_man_page(name, Path(path), e)
 
@@ -451,7 +451,7 @@ def _parse_man_page_header(name, path):
                     key, rest = line.split(":", 1)
                     parsed[key] = rest.lstrip()
             except Exception:
-                if cmk.debug.enabled():
+                if cmk.utils.debug.enabled():
                     raise
                 sys.stderr.write("ERROR: Invalid line %d in man page %s\n%s" % (lineno, path, line))
                 break

@@ -43,9 +43,9 @@ import traceback
 import six
 
 import cmk.utils
-import cmk.render
-import cmk.plugin_registry
-from cmk.regex import regex
+import cmk.utils.render
+import cmk.utils.plugin_registry
+from cmk.utils.regex import regex
 
 import cmk.gui.utils as utils
 import cmk.gui.config as config
@@ -240,8 +240,8 @@ def metric_to_text(metric, value=None):
 
 
 # aliases to be compatible to old plugins
-physical_precision = cmk.render.physical_precision
-age_human_readable = cmk.render.approx_age
+physical_precision = cmk.utils.render.physical_precision
+age_human_readable = cmk.utils.render.approx_age
 
 #.
 #   .--Evaluation----------------------------------------------------------.
@@ -373,7 +373,7 @@ class MetricometerRenderer(object):
         raise NotImplementedError()
 
 
-class MetricometerRendererRegistry(cmk.plugin_registry.ClassRegistry):
+class MetricometerRendererRegistry(cmk.utils.plugin_registry.ClassRegistry):
     def plugin_base_class(self):
         return MetricometerRenderer
 

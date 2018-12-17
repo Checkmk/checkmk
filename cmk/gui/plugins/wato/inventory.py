@@ -24,8 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import cmk.paths
-import cmk.defines as defines
+import cmk.utils.paths
+import cmk.utils.defines as defines
 
 from cmk.gui.valuespec import (
     DualListChoice,
@@ -133,7 +133,7 @@ register_rule(
                      "Please specify the path to the export file. The text <tt>&lt;HOST&gt;</tt> "
                      "will be replaced with the host name the inventory has been done for. "
                      "If you use a relative path then that will be relative to Check_MK's directory "
-                     "for variable data, which is <tt>%s</tt>.") % cmk.paths.var_dir,
+                     "for variable data, which is <tt>%s</tt>.") % cmk.utils.paths.var_dir,
                  allow_empty=False,
                  size=64,
                  default_value="csv-export/<HOST>.csv",

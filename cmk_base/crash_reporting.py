@@ -30,8 +30,8 @@ import base64
 import tarfile
 import cStringIO as StringIO
 
-import cmk.debug
-import cmk.paths
+import cmk.utils.debug
+import cmk.utils.paths
 import cmk.utils.crash_reporting as crash_reporting
 
 import cmk_base.config as config
@@ -47,7 +47,7 @@ def create_crash_dump(hostname, check_plugin_name, item, is_manual_check, params
                       info):
     text = "check failed - please submit a crash report!"
     try:
-        crash_dir = cmk.paths.var_dir + "/crashed_checks/" + hostname + "/" + description.replace(
+        crash_dir = cmk.utils.paths.var_dir + "/crashed_checks/" + hostname + "/" + description.replace(
             "/", "\\")
         _prepare_crash_dump_directory(crash_dir)
 
@@ -62,7 +62,7 @@ def create_crash_dump(hostname, check_plugin_name, item, is_manual_check, params
 
         text += "\n" + "Crash dump:\n" + _pack_crash_dump(crash_dir) + "\n"
     except:
-        if cmk.debug.enabled():
+        if cmk.utils.debug.enabled():
             raise
 
     return text
@@ -100,7 +100,7 @@ def _create_crash_dump_info_file(crash_dir, hostname, check_plugin_name, item, i
 
 
 def _write_crash_dump_snmp_info(crash_dir, hostname, check_plugin_name):
-    cachefile = "%s/snmp/%s" % (cmk.paths.data_source_cache_dir, hostname)
+    cachefile = "%s/snmp/%s" % (cmk.utils.paths.data_source_cache_dir, hostname)
     if os.path.exists(cachefile):
         file(crash_dir + "/snmp_info", "w").write(file(cachefile).read())
 
@@ -114,7 +114,7 @@ def _write_crash_dump_agent_output(crash_dir, hostname):
     if real_time_checks and real_time_checks.is_real_time_check_helper():
         file(crash_dir + "/agent_output", "w").write(real_time_checks.get_rtc_package())
     else:
-        cachefile = "%s/%s" % (cmk.paths.tcp_cache_dir, hostname)
+        cachefile = "%s/%s" % (cmk.utils.paths.tcp_cache_dir, hostname)
         if os.path.exists(cachefile):
             file(crash_dir + "/agent_output", "w").write(file(cachefile).read())
 

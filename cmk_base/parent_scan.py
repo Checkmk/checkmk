@@ -34,8 +34,9 @@ import pprint
 import six
 
 import cmk.utils.tty as tty
-import cmk.paths
-from cmk.exceptions import MKGeneralException
+import cmk.utils.paths
+import cmk.utils.debug
+from cmk.utils.exceptions import MKGeneralException
 
 import cmk_base.utils
 import cmk_base.console as console
@@ -58,7 +59,7 @@ def do_scan_parents(hosts):
     if config.max_num_processes < 1:
         config.max_num_processes = 1
 
-    outfilename = cmk.paths.check_mk_config_dir + "/parents.mk"
+    outfilename = cmk.utils.paths.check_mk_config_dir + "/parents.mk"
 
     if not traceroute_available():
         raise MKGeneralException('The program "traceroute" was not found.\n'
@@ -164,7 +165,7 @@ def scan_parents_of(hosts, silent=False, settings=None):
                               stderr=subprocess.STDOUT,
                               close_fds=True)))
         except Exception as e:
-            if cmk.debug.enabled():
+            if cmk.utils.debug.enabled():
                 raise
             procs.append((host, None, "ERROR: %s" % e))
 
@@ -198,7 +199,7 @@ def scan_parents_of(hosts, silent=False, settings=None):
             continue
 
         elif len(lines) == 0:
-            if cmk.debug.enabled():
+            if cmk.utils.debug.enabled():
                 raise MKGeneralException(
                     "Cannot execute %s. Is traceroute installed? Are you root?" % command)
             else:

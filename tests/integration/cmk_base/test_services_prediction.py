@@ -5,7 +5,7 @@ import time
 import pytest
 import cmk.utils.prediction
 from cmk_base import prediction
-from cmk.exceptions import MKGeneralException
+from cmk.utils.exceptions import MKGeneralException
 
 from testlib import web, repo_path
 

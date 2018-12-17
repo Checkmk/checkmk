@@ -31,8 +31,8 @@ import os
 import re
 import time
 
-import cmk.store as store
-import cmk.paths
+import cmk.utils.store as store
+import cmk.utils.paths
 import cmk.utils.werks
 
 import cmk.gui.pages
@@ -52,7 +52,7 @@ from cmk.gui.valuespec import (
     TextUnicode,
 )
 
-acknowledgement_path = cmk.paths.var_dir + "/acknowledged_werks.mk"
+acknowledgement_path = cmk.utils.paths.var_dir + "/acknowledged_werks.mk"
 
 # Keep global variable for caching werks between requests. The never change.
 g_werks = None
@@ -531,7 +531,8 @@ def insert_manpage_links(text):
     new_parts = []
     check_regex = re.compile(r"[-_\.a-z0-9]")
     for part in parts:
-        if check_regex.match(part) and os.path.exists(cmk.paths.check_manpages_dir + "/" + part):
+        if check_regex.match(part) and os.path.exists(cmk.utils.paths.check_manpages_dir + "/" +
+                                                      part):
             part = '<a href="wato.py?mode=check_manpage&check_type=%s">%s</a>' % (part, part)
         new_parts.append(part)
     return " ".join(new_parts)

@@ -29,11 +29,11 @@ of console input / output"""
 import sys
 
 import cmk.utils.tty as tty
-import cmk.log
+import cmk.utils.log
 
 # NOTE: This is a hack! We abuse the global logger just to pass around the
 # verbosity setting.
-logger = cmk.log.get_logger("base")
+logger = cmk.utils.log.get_logger("base")
 
 #
 # Generic / low level functions

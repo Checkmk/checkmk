@@ -29,7 +29,7 @@ import abc
 import pprint
 import re
 
-from cmk.regex import escape_regex_chars
+from cmk.utils.regex import escape_regex_chars
 
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib

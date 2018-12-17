@@ -33,7 +33,7 @@ from typing import Dict  # pylint: disable=unused-import
 
 import livestatus
 
-import cmk.paths
+import cmk.utils.paths
 
 import cmk.gui.utils as utils
 import cmk.gui.config as config

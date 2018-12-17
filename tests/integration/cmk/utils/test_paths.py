@@ -1,13 +1,13 @@
 import pytest
 import os
 
-from cmk.exceptions import MKGeneralException
-import cmk.paths
+from cmk.utils.exceptions import MKGeneralException
+import cmk.utils.paths
 
 def _all_path_names():
-    import cmk.paths
+    import cmk.utils.paths
     names = []
-    for name in dir(cmk.paths):
+    for name in dir(cmk.utils.paths):
         if name in [ "MKGeneralException", "os" ] or name[0] == "_":
             continue
         names.append(name)
@@ -16,7 +16,7 @@ def _all_path_names():
 
 def test_paths_in_site(site):
     for var_name in _all_path_names():
-        value = cmk.paths.__dict__[var_name]
+        value = cmk.utils.paths.__dict__[var_name]
         assert value is not None
         assert type(value) == str
         assert value.startswith(site.root)
@@ -24,13 +24,13 @@ def test_paths_in_site(site):
 
 def test_no_path_variable_none(monkeypatch):
     monkeypatch.setitem(os.environ, 'OMD_ROOT', '/omd/sites/dingeling')
-    reload(cmk.paths)
+    reload(cmk.utils.paths)
 
     for var_name in _all_path_names():
-        value = cmk.paths.__dict__[var_name]
+        value = cmk.utils.paths.__dict__[var_name]
         assert value is not None
         assert type(value) == str
         assert value.startswith("/omd/sites/dingeling")
 
     monkeypatch.undo()
-    reload(cmk.paths)
+    reload(cmk.utils.paths)

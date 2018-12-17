@@ -42,9 +42,9 @@ structures like log files or stuff.
 import os
 import traceback
 
-import cmk.paths
-import cmk.store
-from cmk.exceptions import MKGeneralException
+import cmk.utils.paths
+import cmk.utils.store
+from cmk.utils.exceptions import MKGeneralException
 import cmk_base.cleanup
 
 # Constants for counters
@@ -86,13 +86,13 @@ class CachedItemStates(object):
         self._updated_item_states = {}
 
     def load(self, hostname):
-        filename = cmk.paths.counters_dir + "/" + hostname
+        filename = cmk.utils.paths.counters_dir + "/" + hostname
         try:
             # TODO: refactoring. put these two values into a named tuple
-            self._item_states = cmk.store.load_data_from_file(filename, default={}, lock=True)
+            self._item_states = cmk.utils.store.load_data_from_file(filename, default={}, lock=True)
             self._last_mtime = os.stat(filename).st_mtime
         finally:
-            cmk.store.release_lock(filename)
+            cmk.utils.store.release_lock(filename)
 
     # TODO: self._last_mtime needs be updated accordingly after the save_data_to_file operation
     #       right now, the current mechanism is sufficient enough, since the save() function is only
@@ -104,18 +104,18 @@ class CachedItemStates(object):
         Afterwards only the actual modifications (update/remove) are applied to the updated cached
         data before it is written back to disk.
         """
-        filename = cmk.paths.counters_dir + "/" + hostname
+        filename = cmk.utils.paths.counters_dir + "/" + hostname
         if not self._removed_item_state_keys and not self._updated_item_states:
             return
 
         try:
-            if not os.path.exists(cmk.paths.counters_dir):
-                os.makedirs(cmk.paths.counters_dir)
+            if not os.path.exists(cmk.utils.paths.counters_dir):
+                os.makedirs(cmk.utils.paths.counters_dir)
 
-            cmk.store.aquire_lock(filename)
+            cmk.utils.store.aquire_lock(filename)
             last_mtime = os.stat(filename).st_mtime
             if last_mtime != self._last_mtime:
-                self._item_states = cmk.store.load_data_from_file(filename, default={})
+                self._item_states = cmk.utils.store.load_data_from_file(filename, default={})
 
                 # Remove obsolete keys
                 for key in self._removed_item_state_keys:
@@ -127,11 +127,11 @@ class CachedItemStates(object):
                 # Add updated keys
                 self._item_states.update(self._updated_item_states)
 
-            cmk.store.save_data_to_file(filename, self._item_states, pretty=False)
+            cmk.utils.store.save_data_to_file(filename, self._item_states, pretty=False)
         except Exception:
             raise MKGeneralException("Cannot write to %s: %s" % (filename, traceback.format_exc()))
         finally:
-            cmk.store.release_lock(filename)
+            cmk.utils.store.release_lock(filename)
 
     def clear_item_state(self, user_key):
         key = self.get_unique_item_state_key(user_key)

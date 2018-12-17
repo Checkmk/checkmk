@@ -470,12 +470,12 @@ class ACTestApacheNumberOfProcesses(ACApacheTest):
             _("The apache may start up to %d processes while the current "
               "average process size is %s. With this numbers the apache may "
               "use up to %s RAM. Please ensure that your system is able to "
-              "handle this.") % (process_limit, cmk.render.fmt_bytes(average_process_size),
-                                 cmk.render.fmt_bytes(estimated_memory_size)))
+              "handle this.") % (process_limit, cmk.utils.render.fmt_bytes(average_process_size),
+                                 cmk.utils.render.fmt_bytes(estimated_memory_size)))
 
     def _get_average_process_size(self):
         try:
-            ppid = int(open("%s/tmp/apache/run/apache.pid" % cmk.paths.omd_root).read())
+            ppid = int(open("%s/tmp/apache/run/apache.pid" % cmk.utils.paths.omd_root).read())
         except (IOError, ValueError):
             raise MKGeneralException(_("Failed to read the apache process ID"))
 
@@ -723,11 +723,12 @@ class ACTestSizeOfExtensions(ACTest):
         else:
             cls = ACResultOK
 
-        yield cls(_("Your extensions have a size of %s.") % cmk.render.fmt_bytes(size))
+        yield cls(_("Your extensions have a size of %s.") % cmk.utils.render.fmt_bytes(size))
 
     def _size_of_extensions(self):
         return int(
-            subprocess.check_output(["du", "-sb", "%s/local" % cmk.paths.omd_root]).split()[0])
+            subprocess.check_output(["du", "-sb",
+                                     "%s/local" % cmk.utils.paths.omd_root]).split()[0])
 
 
 @ac_test_registry.register

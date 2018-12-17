@@ -29,14 +29,14 @@ import socket
 import time
 import abc
 
-import cmk.log
+import cmk.utils.log
 
-import cmk.debug
-import cmk.paths
-import cmk.store as store
+import cmk.utils.debug
+import cmk.utils.paths
+import cmk.utils.store as store
 import cmk.utils.tty as tty
 import cmk.utils.cpu_tracking as cpu_tracking
-from cmk.exceptions import MKGeneralException, MKTerminate, MKTimeout
+from cmk.utils.exceptions import MKGeneralException, MKTerminate, MKTimeout
 
 import cmk_base.utils
 import cmk_base.console as console
@@ -141,7 +141,7 @@ class DataSource(object):
 
         except Exception as e:
             self._logger.verbose("ERROR: %s" % e)
-            if cmk.debug.enabled():
+            if cmk.utils.debug.enabled():
                 raise
             self._exception = e
         finally:
@@ -263,13 +263,13 @@ class DataSource(object):
         return os.path.join(self._cache_dir(), self._hostname)
 
     def _cache_dir(self):
-        return os.path.join(cmk.paths.data_source_cache_dir, self.id())
+        return os.path.join(cmk.utils.paths.data_source_cache_dir, self.id())
 
     def _persisted_sections_file_path(self):
         return os.path.join(self._persisted_sections_dir(), self._hostname)
 
     def _persisted_sections_dir(self):
-        return os.path.join(cmk.paths.var_dir, "persisted_sections", self.id())
+        return os.path.join(cmk.utils.paths.var_dir, "persisted_sections", self.id())
 
     def get_check_plugin_names(self):
         if self._enforced_check_plugin_names is not None:
@@ -523,14 +523,14 @@ class CheckMKAgentDataSource(DataSource):
     def _cache_dir(self):
         # The main agent has another cache directory to be compatible with older Check_MK
         if self._is_main_agent_data_source:
-            return cmk.paths.tcp_cache_dir
+            return cmk.utils.paths.tcp_cache_dir
 
         return super(CheckMKAgentDataSource, self)._cache_dir()
 
     def _persisted_sections_dir(self):
         # The main agent has another cache directory to be compatible with older Check_MK
         if self._is_main_agent_data_source:
-            return os.path.join(cmk.paths.var_dir, "persisted")
+            return os.path.join(cmk.utils.paths.var_dir, "persisted")
 
         return super(CheckMKAgentDataSource, self)._persisted_sections_dir()
 

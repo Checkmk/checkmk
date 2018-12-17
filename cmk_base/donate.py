@@ -28,7 +28,7 @@ import base64
 import os
 import sys
 
-import cmk.paths
+import cmk.utils.paths
 
 import cmk_base.config as config
 import cmk_base.console as console
@@ -36,7 +36,7 @@ import cmk_base.console as console
 
 def do_donation():
     donate = []
-    cache_files = os.listdir(cmk.paths.tcp_cache_dir)
+    cache_files = os.listdir(cmk.utils.paths.tcp_cache_dir)
     for host in config.all_active_realhosts():
         if config.in_binary_hostlist(host, config.donation_hosts):
             for f in cache_files:
@@ -50,7 +50,7 @@ def do_donation():
     console.verbose("Donating files %s\n" % " ".join(cache_files))
     indata = base64.b64encode(
         os.popen(  # nosec
-            "tar czf - -C %s %s" % (cmk.paths.tcp_cache_dir, " ".join(donate))).read())
+            "tar czf - -C %s %s" % (cmk.utils.paths.tcp_cache_dir, " ".join(donate))).read())
 
     output = os.popen(config.donation_command, "w")  # nosec
     output.write("\n\n@STARTDATA\n")

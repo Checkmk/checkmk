@@ -28,8 +28,8 @@
 import os
 import glob
 
-import cmk.paths
-import cmk.render
+import cmk.utils.paths
+import cmk.utils.render
 
 import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
@@ -66,9 +66,9 @@ class ModeDownloadAgents(WatoMode):
 
     def page(self):
         html.open_div(class_="rulesets")
-        packed = glob.glob(cmk.paths.agents_dir + "/*.deb") \
-                + glob.glob(cmk.paths.agents_dir + "/*.rpm") \
-                + glob.glob(cmk.paths.agents_dir + "/windows/c*.msi")
+        packed = glob.glob(cmk.utils.paths.agents_dir + "/*.deb") \
+                + glob.glob(cmk.utils.paths.agents_dir + "/*.rpm") \
+                + glob.glob(cmk.utils.paths.agents_dir + "/windows/c*.msi")
 
         self._download_table(_("Packaged Agents"), {}, packed)
 
@@ -96,7 +96,7 @@ class ModeDownloadAgents(WatoMode):
 
         file_titles = {}
         other_sections = []
-        for root, _dirs, files in os.walk(cmk.paths.agents_dir):
+        for root, _dirs, files in os.walk(cmk.utils.paths.agents_dir):
             file_paths = []
             relpath = root.split('agents')[1]
             if relpath not in banned_paths:
@@ -129,7 +129,7 @@ class ModeDownloadAgents(WatoMode):
         forms.container()
         for path in paths:
             os_path = path
-            relpath = path.replace(cmk.paths.agents_dir + '/', '')
+            relpath = path.replace(cmk.utils.paths.agents_dir + '/', '')
             filename = path.split('/')[-1]
             title = file_titles.get(os_path, filename)
 
@@ -141,7 +141,7 @@ class ModeDownloadAgents(WatoMode):
             html.a(title, href="agents/%s" % relpath)
             html.span("." * 100, class_="dots")
             html.close_div()
-            html.div(cmk.render.fmt_bytes(file_size), style="width:60px;", class_="rulecount")
+            html.div(cmk.utils.render.fmt_bytes(file_size), style="width:60px;", class_="rulecount")
             html.close_div()
             html.close_div()
         forms.end()

@@ -1,7 +1,7 @@
 # encoding: utf-8
 
-import cmk.store as store
-from cmk.exceptions import MKGeneralException
+import cmk.utils.store as store
+from cmk.utils.exceptions import MKGeneralException
 import imp
 import sys
 import threading
@@ -234,10 +234,10 @@ class LockTestThread(threading.Thread):
 
 
 def test_locking(tmpdir):
-    store1 = sys.modules["cmk.store"]
-    del sys.modules["cmk.store"]
-    import cmk.store as store
-    store2 = sys.modules["cmk.store"]
+    store1 = sys.modules["cmk.utils.store"]
+    del sys.modules["cmk.utils.store"]
+    import cmk.utils.store as store
+    store2 = sys.modules["cmk.utils.store"]
 
     assert store1 != store2
 

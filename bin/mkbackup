@@ -53,11 +53,11 @@ from OpenSSL import crypto
 from Cryptodome.Cipher import AES, PKCS1_OAEP
 from Cryptodome.PublicKey import RSA
 
-import cmk.daemon as daemon
-import cmk.render as render
+import cmk.utils.daemon as daemon
+import cmk.utils.render as render
 import cmk.utils.schedule as schedule
-import cmk.store as store
-from cmk.exceptions import MKTerminate, MKGeneralException
+import cmk.utils.store as store
+from cmk.utils.exceptions import MKTerminate, MKGeneralException
 
 VERSION = "1.4.0i1"
 

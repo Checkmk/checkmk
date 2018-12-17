@@ -59,8 +59,8 @@ from azure.mgmt.compute import ComputeManagementClient
 from azure.common.credentials import ServicePrincipalCredentials
 logging.getLogger().handlers.pop()
 
-import cmk.password_store
-cmk.password_store.replace_passwords()
+import cmk.utils.password_store
+cmk.utils.password_store.replace_passwords()
 
 LOG = logging.getLogger(__name__)
 

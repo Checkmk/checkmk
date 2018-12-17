@@ -30,10 +30,10 @@ import os
 import sys
 from typing import Any, List  # pylint: disable=unused-import
 
-import cmk.paths
+import cmk.utils.paths
 import cmk.utils.tty as tty
-import cmk.password_store
-from cmk.exceptions import MKGeneralException
+import cmk.utils.password_store
+from cmk.utils.exceptions import MKGeneralException
 
 import cmk_base.console as console
 import cmk_base.config as config
@@ -162,7 +162,7 @@ def autodetect_plugin(command_line):
     if command_line[0] not in ['$', '/']:
         try:
             for directory in ["/local", ""]:
-                path = cmk.paths.omd_root + directory + "/lib/nagios/plugins/"
+                path = cmk.utils.paths.omd_root + directory + "/lib/nagios/plugins/"
                 if os.path.exists(path + plugin_name):
                     command_line = path + command_line
                     break
@@ -254,7 +254,7 @@ def create_core_config(core):
     _verify_non_duplicate_hosts()
     _verify_non_deprecated_checkgroups()
     core.create_config()
-    cmk.password_store.save(config.stored_passwords)
+    cmk.utils.password_store.save(config.stored_passwords)
 
     return get_configuration_warnings()
 
@@ -290,7 +290,7 @@ def do_update(core, with_precompile):
 
     except Exception as e:
         console.error("Configuration Error: %s\n" % e)
-        if cmk.debug.enabled():
+        if cmk.utils.debug.enabled():
             raise
         sys.exit(1)
 
@@ -536,7 +536,7 @@ def replace_macros(s, macros):
                 s = s.replace(key, value.decode("utf-8"))
             except:
                 # If this does not help, do not replace
-                if cmk.debug.enabled():
+                if cmk.utils.debug.enabled():
                     raise
 
     return s

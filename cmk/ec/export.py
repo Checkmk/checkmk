@@ -38,9 +38,9 @@ import UserDict
 
 from pathlib2 import Path
 
-import cmk.log
-import cmk.paths
-import cmk.store
+import cmk.utils.log
+import cmk.utils.paths
+import cmk.utils.store
 import cmk.ec.defaults
 import cmk.ec.settings
 
@@ -151,8 +151,8 @@ class RulePackType(Enum):  # pylint: disable=too-few-public-methods
 def _default_settings():
     # type: () -> cmk.ec.settings.Settings
     """Returns default EC settings. This function should vanish in the long run!"""
-    return cmk.ec.settings.settings('', Path(cmk.paths.omd_root),
-                                    Path(cmk.paths.default_config_dir), [''])
+    return cmk.ec.settings.settings('', Path(cmk.utils.paths.omd_root),
+                                    Path(cmk.utils.paths.default_config_dir), [''])
 
 
 def rule_pack_dir():
@@ -238,7 +238,7 @@ def load_config(settings):
     # Convert old logging configurations
     levels = config["log_level"]
     if isinstance(levels, int):
-        level = cmk.log.INFO if levels == 0 else cmk.log.VERBOSE
+        level = cmk.utils.log.INFO if levels == 0 else cmk.utils.log.VERBOSE
         levels = {
             "cmk.mkeventd": level,
             "cmk.mkeventd.EventServer": level,
@@ -277,7 +277,7 @@ def save_rule_packs(rule_packs, pretty_print=False, dir_=None):
     if not dir_:
         dir_ = rule_pack_dir()
     dir_.mkdir(parents=True, exist_ok=True)
-    cmk.store.save_file(str(dir_ / "rules.mk"), output)
+    cmk.utils.store.save_file(str(dir_ / "rules.mk"), output)
 
 
 # NOTE: It is essential that export_rule_pack() is called *before*
@@ -309,7 +309,7 @@ def export_rule_pack(rule_pack, pretty_print=False, dir_=None):
     if not dir_:
         dir_ = mkp_rule_pack_dir()
     dir_.mkdir(parents=True, exist_ok=True)
-    cmk.store.save_file(str(dir_ / ("%s.mk" % rule_pack['id'])), output)
+    cmk.utils.store.save_file(str(dir_ / ("%s.mk" % rule_pack['id'])), output)
 
 
 def add_rule_pack_proxies(file_names):

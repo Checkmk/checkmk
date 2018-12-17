@@ -37,7 +37,7 @@ import traceback
 
 import six
 
-from cmk.regex import regex
+from cmk.utils.regex import regex
 import cmk
 
 import cmk.gui.config as config
@@ -225,7 +225,7 @@ def get_current_sitestats():
     sitestats_timestamps = []
 
     # Read all relevant multisite.d/*.mk files
-    conf_dir = cmk.paths.default_config_dir + "/multisite.d"
+    conf_dir = cmk.utils.paths.default_config_dir + "/multisite.d"
     filelist = []
     if os.path.isdir(conf_dir):
         for root, _dirs, files in os.walk(conf_dir):
@@ -305,7 +305,7 @@ def log(*args):
 
 
 def get_cache_dir():
-    bi_cache_dir = cmk.paths.tmp_dir + "/bi_cache"
+    bi_cache_dir = cmk.utils.paths.tmp_dir + "/bi_cache"
     try:
         os.makedirs(bi_cache_dir)
     except OSError:

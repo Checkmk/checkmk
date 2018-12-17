@@ -29,7 +29,7 @@ from typing import Optional, Text  # pylint: disable=unused-import
 import cmk.gui.http_status
 from cmk.gui.i18n import _
 
-from cmk.exceptions import MKGeneralException, MKException, MKTimeout
+from cmk.utils.exceptions import MKGeneralException, MKException, MKTimeout
 
 
 class RequestTimeout(MKTimeout):

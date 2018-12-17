@@ -32,7 +32,7 @@ from enum import Enum
 from typing import Any, Dict, List, Optional, Type, Union  # pylint: disable=unused-import
 
 import cmk
-import cmk.paths
+import cmk.utils.paths
 
 import cmk.gui.i18n
 from cmk.gui.i18n import _

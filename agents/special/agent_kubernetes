@@ -50,7 +50,7 @@ from typing import (  # pylint: disable=unused-import
 from kubernetes import client
 
 import cmk.utils.profile
-import cmk.password_store
+import cmk.utils.password_store
 
 
 def parse(args):
@@ -664,7 +664,7 @@ def get_api_client(arguments):
 def main(args=None):
     # type: (Optional[List[str]]) -> int
     if args is None:
-        cmk.password_store.replace_passwords()
+        cmk.utils.password_store.replace_passwords()
         args = sys.argv[1:]
     arguments = parse(args)
 

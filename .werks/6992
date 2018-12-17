@@ -1,0 +1,12 @@
+Title: check_bi_aggr: Fixed usage of the password store
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0p10
+Date: 1545054871
+Class: fix
+
+If a password from the password store was used in the active check plugin
+{{check_bi_aggr}} the following syntax error was shown in the output of the
+check plugin: {{sh: 1: Syntax error: "(" unexpected}} and the state was CRIT.

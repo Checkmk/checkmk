@@ -1,6 +1,6 @@
 title: Kubernetes CPU resources
 agents: linux
-catalog: app/kubernetes
+catalog: containerization/kubernetes
 license: GPL
 distribution: check_mk
 description:

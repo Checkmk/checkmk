@@ -1,0 +1,39 @@
+version: '3'
+services:
+  jenkins:
+    build: ./jenkins/ 
+    ports:
+     - "8080:8080"
+     - "50000:50000"
+    volumes:
+     - '~/docker-pv/jenkins-data:/var/jenkins_home'
+     - '/var/run/docker.sock:/var/run/docker.sock'
+    networks:
+     - 'local-infra'
+
+  gerrit:
+    image: 'gerritcodereview/gerrit'
+    ports:
+     - "8082:8080"
+     - "29418:29418"
+    volumes:
+     - '~/docker-pv/gerrit-data/git:/var/gerrit/git'
+     - '~/docker-pv/gerrit-data/db:/var/gerrit/db'
+     - '~/docker-pv/gerrit-data/index:/var/gerrit/index'
+     - '~/docker-pv/gerrit-data/cache:/var/gerrit/cache'
+    networks:
+     - 'local-infra'
+# entrypoint: java -jar /var/gerrit/bin/gerrit.war init -d /var/gerrit
+
+  nexus:
+    image: 'sonatype/nexus3'
+    ports: 
+      - '8081:8081'
+      - '5000:5000'
+    volumes:
+      - '~/docker-pv/nexus-data:/sonatype-work'
+    networks:
+     - 'local-infra'
+
+networks:
+  local-infra:

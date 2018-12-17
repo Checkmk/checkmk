@@ -418,7 +418,7 @@ class IPMIParameters(Dictionary):
         super(IPMIParameters, self).__init__(**kwargs)
 
 
-# NOTE: When changing this keep it in sync with cmk.translations.translate_hostname()
+# NOTE: When changing this keep it in sync with cmk.utils.translations.translate_hostname()
 def HostnameTranslation(**kwargs):
     help_txt = kwargs.get("help")
     title = kwargs.get("title")

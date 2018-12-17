@@ -28,7 +28,7 @@ import os
 import subprocess
 import sys
 
-import cmk.tty as tty
+import cmk.utils.tty as tty
 import cmk.paths
 
 import cmk.log

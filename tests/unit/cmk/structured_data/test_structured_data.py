@@ -4,8 +4,7 @@ import pytest
 from testlib import repo_path, cmk_path, cmc_path, cme_path, CMKWebSession
 
 from cmk.exceptions import MKGeneralException
-from cmk.structured_data import StructuredDataTree, Container, Attributes, Numeration, Node
-import cmk.cpu_tracking as cpu_tracking
+from cmk.utils.structured_data import StructuredDataTree, Container, Attributes, Numeration, Node
 
 # Convention: test functions are named like
 #   test_structured_data_INFIX_METHODNAME where
@@ -22,6 +21,7 @@ import cmk.cpu_tracking as cpu_tracking
 #   | |_| \_|\___/ \__,_|\___/_/   \_\__|\__|_|  |_|_.__/ \__,_|\__\___|   |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
+
 
 def mk_root():
     # This tree contains all possibilities:
@@ -95,14 +95,14 @@ def mk_filled_root():
     container_0.add_child("1_ca", container_2, ("0_cna", "1_ca"))
 
     numeration_2 = Numeration()
-    numeration_2.set_child_data([{"n20": "N-2-0"},{"n21": "N-2-1"}])
+    numeration_2.set_child_data([{"n20": "N-2-0"}, {"n21": "N-2-1"}])
     attributes_2 = Attributes()
     attributes_2.set_child_data({"a20": "A-2-0", "a21": "A-1-1"})
     container_0.add_child("1_na", numeration_2, ("0_cna", "1_na"))
     container_0.add_child("1_na", attributes_2, ("0_cna", "1_na"))
 
     numeration_3 = Numeration()
-    numeration_3.set_child_data([{"n30": "N-3-0"},{"n31": "N-3-1"},{"n32": "N-3-2"}])
+    numeration_3.set_child_data([{"n30": "N-3-0"}, {"n31": "N-3-1"}, {"n32": "N-3-2"}])
     attributes_3 = Attributes()
     attributes_3.set_child_data({"a30": "A-3-0", "a31": "A-3-1", "a32": "A-3-2"})
     container_1.add_child("2_n", numeration_3, ("0_cna", "1_ca", "2_n"))
@@ -140,90 +140,194 @@ def test_structured_data_NodeAttribute_is_equal(na_x, na_y):
         assert not na_x.is_equal(na_y)
 
 
-@pytest.mark.parametrize("node_attribute,result", zip(
-    node_attributes,
-    [0, 12]
-))
+@pytest.mark.parametrize("node_attribute,result", zip(node_attributes, [0, 12]))
 def test_structured_data_NodeAttribute_count_entries(node_attribute, result):
     assert node_attribute.count_entries() == result
 
 
-@pytest.mark.parametrize("na_old,na_new,result", [
-    (mk_root(), mk_filled_root(), (12,0,0))
-])
+@pytest.mark.parametrize("na_old,na_new,result", [(mk_root(), mk_filled_root(), (12, 0, 0))])
 def test_structured_data_NodeAttribute_compare_with(na_old, na_new, result):
-    n,c,r,d = na_new.compare_with(na_old)
-    assert (n,c,r) == result
-    if result == (0,0,0):
+    n, c, r, d = na_new.compare_with(na_old)
+    assert (n, c, r) == result
+    if result == (0, 0, 0):
         assert d.is_empty()
     else:
         assert not d.is_empty()
 
 
 @pytest.mark.parametrize("old_numeration_data,new_numeration_data,result", [
-    ([], [],
-     (0, 0, 0)),
-
-    ([{"id": "1", "val": 0}], [],
-     (0, 0, 1)),
-
-    ([], [{"id": "1", "val": 0}],
-     (1, 0, 0)),
-
-    ([{"id": "1", "val": 0}], [{"id": "1", "val": 0}],
-     (0, 0, 0)),
-
-    ([{"id": "1", "val": 0}, {"id": "2", "val": 1}],
-     [{"id": "1", "val": 0}],
-     (0, 0, 1)),
-
-    ([{"id": "1", "val": 0}],
-     [{"id": "1", "val": 0}, {"id": "2", "val": 1}],
-     (1, 0, 0)),
-
-    ([{"id": "1", "val1": 1}],
-     [{"id": "1", "val1": 1, "val2": 1}],
-     (1, 0, 0)),
-
-    ([{"id": "1", "val": 0}],
-     [{"id": "1", "val": 1}],
-     (0, 1, 0)),
-
-    ([{"id": "1", "val1": 1, "val2": -1}],
-     [{"id": "1", "val1": 1}],
-     (0, 0, 1)),
-
-    ([{"id": "1", "val1": 0}, {"id": "2", "val1": 0, "val2": 0}, {"id": "3", "val1": 0}],
-     [{"id": "1", "val1": 1}, {"id": "2", "val1": 0}, {"id": "3", "val1": 0, "val2": 1}],
-     (1, 1, 1)),
-
-    ([{"id": "1", "val1": 1}, {"id": "2", "val1": 1}],
-     [{"id": "1", "val1": 1, "val2": -1}, {"id": "2", "val1": 1, "val2": -1}],
-     (2, 0, 0)),
-
-    ([{"id": "1", "val": 1}, {"id": "2", "val": 3}],
-     [{"id": "1", "val": 2}, {"id": "2", "val": 4}],
-     (0, 2, 0)),
-
-    ([{"id": "1", "val1": 1, "val2": -1}, {"id": "2", "val1": 1, "val2": -1}],
-     [{"id": "1", "val1": 1}, {"id": "2", "val1": 1}],
-     (0, 0, 2)),
-
-    ([{"id": "2", "val": 1}, {"id": "3", "val": 3}, {"id": "1", "val": 0}],
-     [{"id": "2", "val": 2}, {"id": "1", "val": 0}, {"id": "3", "val": 4}],
-     (0, 2, 0)),
-
-    ([{"id": "1", "val": 1}, {"id": "2", "val": 3}, {"id": "3", "val": 0}],
-     [{"id": "0", "val": 2}, {"id": "1", "val": 0}, {"id": "2", "val": 4}, {"id": "3", "val": 1}],
-     (4, 0, 3)),
+    ([], [], (0, 0, 0)),
+    ([{
+        "id": "1",
+        "val": 0
+    }], [], (0, 0, 1)),
+    ([], [{
+        "id": "1",
+        "val": 0
+    }], (1, 0, 0)),
+    ([{
+        "id": "1",
+        "val": 0
+    }], [{
+        "id": "1",
+        "val": 0
+    }], (0, 0, 0)),
+    ([{
+        "id": "1",
+        "val": 0
+    }, {
+        "id": "2",
+        "val": 1
+    }], [{
+        "id": "1",
+        "val": 0
+    }], (0, 0, 1)),
+    ([{
+        "id": "1",
+        "val": 0
+    }], [{
+        "id": "1",
+        "val": 0
+    }, {
+        "id": "2",
+        "val": 1
+    }], (1, 0, 0)),
+    ([{
+        "id": "1",
+        "val1": 1
+    }], [{
+        "id": "1",
+        "val1": 1,
+        "val2": 1
+    }], (1, 0, 0)),
+    ([{
+        "id": "1",
+        "val": 0
+    }], [{
+        "id": "1",
+        "val": 1
+    }], (0, 1, 0)),
+    ([{
+        "id": "1",
+        "val1": 1,
+        "val2": -1
+    }], [{
+        "id": "1",
+        "val1": 1
+    }], (0, 0, 1)),
+    ([{
+        "id": "1",
+        "val1": 0
+    }, {
+        "id": "2",
+        "val1": 0,
+        "val2": 0
+    }, {
+        "id": "3",
+        "val1": 0
+    }], [{
+        "id": "1",
+        "val1": 1
+    }, {
+        "id": "2",
+        "val1": 0
+    }, {
+        "id": "3",
+        "val1": 0,
+        "val2": 1
+    }], (1, 1, 1)),
+    ([{
+        "id": "1",
+        "val1": 1
+    }, {
+        "id": "2",
+        "val1": 1
+    }], [{
+        "id": "1",
+        "val1": 1,
+        "val2": -1
+    }, {
+        "id": "2",
+        "val1": 1,
+        "val2": -1
+    }], (2, 0, 0)),
+    ([{
+        "id": "1",
+        "val": 1
+    }, {
+        "id": "2",
+        "val": 3
+    }], [{
+        "id": "1",
+        "val": 2
+    }, {
+        "id": "2",
+        "val": 4
+    }], (0, 2, 0)),
+    ([{
+        "id": "1",
+        "val1": 1,
+        "val2": -1
+    }, {
+        "id": "2",
+        "val1": 1,
+        "val2": -1
+    }], [{
+        "id": "1",
+        "val1": 1
+    }, {
+        "id": "2",
+        "val1": 1
+    }], (0, 0, 2)),
+    ([{
+        "id": "2",
+        "val": 1
+    }, {
+        "id": "3",
+        "val": 3
+    }, {
+        "id": "1",
+        "val": 0
+    }], [{
+        "id": "2",
+        "val": 2
+    }, {
+        "id": "1",
+        "val": 0
+    }, {
+        "id": "3",
+        "val": 4
+    }], (0, 2, 0)),
+    ([{
+        "id": "1",
+        "val": 1
+    }, {
+        "id": "2",
+        "val": 3
+    }, {
+        "id": "3",
+        "val": 0
+    }], [{
+        "id": "0",
+        "val": 2
+    }, {
+        "id": "1",
+        "val": 0
+    }, {
+        "id": "2",
+        "val": 4
+    }, {
+        "id": "3",
+        "val": 1
+    }], (4, 0, 3)),
 ])
 def test_structured_data_Numeration_compare_with(old_numeration_data, new_numeration_data, result):
     old_numeration = Numeration()
     old_numeration.set_child_data(old_numeration_data)
     new_numeration = Numeration()
     new_numeration.set_child_data(new_numeration_data)
-    n,c,r,d = new_numeration.compare_with(old_numeration)
-    assert (n,c,r) == result
+    n, c, r, d = new_numeration.compare_with(old_numeration)
+    assert (n, c, r) == result
 
 
 @pytest.mark.parametrize("node_attribute,edge", [
@@ -232,6 +336,7 @@ def test_structured_data_Numeration_compare_with(old_numeration_data, new_numera
 def test_structured_data_NodeAttribute_has_edge(node_attribute, edge):
     assert node_attribute.has_edge(edge)
     assert not node_attribute.has_edge("REALLY NO EDGE")
+
 
 #.
 #   .--Structured DataTree-------------------------------------------------.
@@ -352,14 +457,16 @@ def test_structured_data_StructuredDataTree_load_from(tree_name):
     StructuredDataTree().load_from(tree_name)
 
 
-tree_old_addresses_arrays_memory = StructuredDataTree().load_from(tree_name_old_addresses_arrays_memory)
+tree_old_addresses_arrays_memory = StructuredDataTree().load_from(
+    tree_name_old_addresses_arrays_memory)
 tree_old_addresses = StructuredDataTree().load_from(tree_name_old_addresses)
 tree_old_arrays = StructuredDataTree().load_from(tree_name_old_arrays)
 tree_old_interfaces = StructuredDataTree().load_from(tree_name_old_interfaces)
 tree_old_memory = StructuredDataTree().load_from(tree_name_old_memory)
 tree_old_heute = StructuredDataTree().load_from(tree_name_old_heute)
 
-tree_new_addresses_arrays_memory = StructuredDataTree().load_from(tree_name_new_addresses_arrays_memory)
+tree_new_addresses_arrays_memory = StructuredDataTree().load_from(
+    tree_name_new_addresses_arrays_memory)
 tree_new_addresses = StructuredDataTree().load_from(tree_name_new_addresses)
 tree_new_arrays = StructuredDataTree().load_from(tree_name_new_arrays)
 tree_new_interfaces = StructuredDataTree().load_from(tree_name_new_interfaces)
@@ -417,11 +524,21 @@ def test_structured_data_StructuredDataTree_is_equal_save_and_load(tree, tmpdir)
         tmpdir.remove()
 
 
-@pytest.mark.parametrize("tree,result", zip(
-    trees,
-    [21, 9, 10, 6284, 2, 16654,
-     23, 8, 10, 6185, 2, 16653,]
-))
+@pytest.mark.parametrize("tree,result",
+                         zip(trees, [
+                             21,
+                             9,
+                             10,
+                             6284,
+                             2,
+                             16654,
+                             23,
+                             8,
+                             10,
+                             6185,
+                             2,
+                             16653,
+                         ]))
 def test_structured_data_StructuredDataTree_count_entries(tree, result):
     assert tree.count_entries() == result
 
@@ -432,33 +549,42 @@ def test_structured_data_StructuredDataTree_compare_with_self(tree):
     assert (new, changed, removed) == (0, 0, 0)
 
 
-@pytest.mark.parametrize("tree_old,tree_new,result", zip(
-    trees_old,
-    trees_new,
-    [(2,2,1), (0,2,1), (1,0,1), (2,3,16), (1,1,1), (1,1,2),]
-))
+@pytest.mark.parametrize("tree_old,tree_new,result",
+                         zip(trees_old, trees_new, [
+                             (2, 2, 1),
+                             (0, 2, 1),
+                             (1, 0, 1),
+                             (2, 3, 16),
+                             (1, 1, 1),
+                             (1, 1, 2),
+                         ]))
 def test_structured_data_StructuredDataTree_compare_with(tree_old, tree_new, result):
     new, changed, removed, delta = tree_new.compare_with(tree_old)
     assert (new, changed, removed) == result
 
 
-@pytest.mark.parametrize("tree,edges_t,edges_f", zip(
-    trees_old,
-    [["hardware", "networking"],
-     ["networking"],
-     ["hardware"],
-     ["hardware", "software", "networking"],
-     ["hardware"],
-     ["hardware", "software", "networking"],
-    ],
-    [["", "foobar", "software"],
-     ["", "foobar", "hardware", "software"],
-     ["", "foobar", "software", "networking"],
-     ["", "foobar",],
-     ["", "foobar", "software", "networking"],
-     ["", "foobar",],
-    ]
-))
+@pytest.mark.parametrize("tree,edges_t,edges_f",
+                         zip(trees_old, [
+                             ["hardware", "networking"],
+                             ["networking"],
+                             ["hardware"],
+                             ["hardware", "software", "networking"],
+                             ["hardware"],
+                             ["hardware", "software", "networking"],
+                         ], [
+                             ["", "foobar", "software"],
+                             ["", "foobar", "hardware", "software"],
+                             ["", "foobar", "software", "networking"],
+                             [
+                                 "",
+                                 "foobar",
+                             ],
+                             ["", "foobar", "software", "networking"],
+                             [
+                                 "",
+                                 "foobar",
+                             ],
+                         ]))
 def test_structured_data_StructuredDataTree_has_edge(tree, edges_t, edges_f):
     for edge_t in edges_t:
         assert tree.has_edge(edge_t)
@@ -470,7 +596,7 @@ def test_structured_data_StructuredDataTree_has_edge(tree, edges_t, edges_f):
     trees_old,
     [2, 1, 1, 4, 1, 4],
 ))
-def test_structured_data_StructuredDataTree_get_children(tree,len_children):
+def test_structured_data_StructuredDataTree_get_children(tree, len_children):
     tree_children = tree.get_children()
     for entry in tree_children:
         assert len(entry) == 3
@@ -485,29 +611,28 @@ def test_structured_data_StructuredDataTree_copy(tree):
 
 
 @pytest.mark.parametrize("tree_start,tree_edges", [
-    (tree_old_addresses, [
-        (tree_old_arrays, ["hardware", "networking"], [
-            ("get_sub_attributes", ["hardware", "memory", "arrays", 0]),
-            ("get_sub_numeration", ["hardware", "memory", "arrays", 0, "devices"]),
-            ("get_sub_numeration", ["hardware", "memory", "arrays", 1, "others"]),
-        ]),
-        (tree_new_memory, ["hardware", "networking"], [
-            ("get_sub_attributes", ["hardware", "memory"]),
-        ]),
-        (tree_new_interfaces, ["hardware", "networking", "software"], [
-            ("get_sub_numeration", ["hardware", "components", "backplanes"]),
-            ("get_sub_numeration", ["hardware", "components", "chassis"]),
-            ("get_sub_numeration", ["hardware", "components", "containers"]),
-            ("get_sub_numeration", ["hardware", "components", "fans"]),
-            ("get_sub_numeration", ["hardware", "components", "modules"]),
-            ("get_sub_numeration", ["hardware", "components", "others"]),
-            ("get_sub_numeration", ["hardware", "components", "psus"]),
-            ("get_sub_numeration", ["hardware", "components", "sensors"]),
-            ("get_sub_attributes", ["hardware", "system"]),
-            ("get_sub_attributes", ["software", "applications", "check_mk", "cluster"]),
-            ("get_sub_attributes", ["software", "os"]),
-        ])
+    (tree_old_addresses, [(tree_old_arrays, ["hardware", "networking"], [
+        ("get_sub_attributes", ["hardware", "memory", "arrays", 0]),
+        ("get_sub_numeration", ["hardware", "memory", "arrays", 0, "devices"]),
+        ("get_sub_numeration", ["hardware", "memory", "arrays", 1, "others"]),
     ]),
+                          (tree_new_memory, ["hardware", "networking"], [
+                              ("get_sub_attributes", ["hardware", "memory"]),
+                          ]),
+                          (tree_new_interfaces, ["hardware", "networking", "software"], [
+                              ("get_sub_numeration", ["hardware", "components", "backplanes"]),
+                              ("get_sub_numeration", ["hardware", "components", "chassis"]),
+                              ("get_sub_numeration", ["hardware", "components", "containers"]),
+                              ("get_sub_numeration", ["hardware", "components", "fans"]),
+                              ("get_sub_numeration", ["hardware", "components", "modules"]),
+                              ("get_sub_numeration", ["hardware", "components", "others"]),
+                              ("get_sub_numeration", ["hardware", "components", "psus"]),
+                              ("get_sub_numeration", ["hardware", "components", "sensors"]),
+                              ("get_sub_attributes", ["hardware", "system"]),
+                              ("get_sub_attributes",
+                               ["software", "applications", "check_mk", "cluster"]),
+                              ("get_sub_attributes", ["software", "os"]),
+                          ])]),
 ])
 def test_structured_data_StructuredDataTree_merge_with_get_sub_children(tree_start, tree_edges):
     tree_start = tree_start.copy()
@@ -525,6 +650,8 @@ def test_structured_data_StructuredDataTree_merge_with_get_sub_children(tree_sta
 
 tree_inv = StructuredDataTree().load_from("%s/tree_inv" % TEST_DIR)
 tree_status = StructuredDataTree().load_from("%s/tree_status" % TEST_DIR)
+
+
 @pytest.mark.parametrize("tree_inv,tree_status", [
     (tree_inv, tree_status),
 ])
@@ -535,19 +662,21 @@ def test_structured_data_StructuredDataTree_merge_with_numeration(tree_inv, tree
     assert len(num.get_child_data()) == 5
 
 
-
-
 @pytest.mark.parametrize("tree", trees)
 def test_structured_data_StructuredDataTree_get_root_container(tree):
     assert id(tree.get_root_container()) == id(tree._root)
 
 
-@pytest.mark.parametrize("tree,paths,unavail", [
-    (tree_new_interfaces,
-     # container                   numeration                    attributes
-     [(["hardware", "components"], None), (["networking", "interfaces"], None), (["software", "os"], None)],
-     [["hardware", "system"], ["software", "applications"]]),
-])
+@pytest.mark.parametrize(
+    "tree,paths,unavail",
+    [
+        (
+            tree_new_interfaces,
+            # container                   numeration                    attributes
+            [(["hardware", "components"], None), (["networking", "interfaces"], None),
+             (["software", "os"], None)],
+            [["hardware", "system"], ["software", "applications"]]),
+    ])
 def test_structured_data_StructuredDataTree_filtered_tree(tree, paths, unavail):
     filtered = tree.get_filtered_tree(paths)
     assert id(tree) != id(filtered)
@@ -559,19 +688,19 @@ def test_structured_data_StructuredDataTree_filtered_tree(tree, paths, unavail):
 def test_structured_data_StructuredDataTree_building_tree():
     def plugin_dict():
         node = struct_tree.get_dict("level0_0.level1_dict.")
-        for a,b in [("d1", "D1"), ("d2", "D2")]:
-            node.setdefault(a,b)
+        for a, b in [("d1", "D1"), ("d2", "D2")]:
+            node.setdefault(a, b)
 
     def plugin_list():
         node = struct_tree.get_list("level0_1.level1_list:")
-        for a,b in [("l1", "L1"), ("l2", "L2")]:
-            node.append({a:b})
+        for a, b in [("l1", "L1"), ("l2", "L2")]:
+            node.append({a: b})
 
     def plugin_nested_list():
         node = struct_tree.get_list("level0_2.level1_nested_list:")
         for index in xrange(10):
             array = {"foo": []}
-            for a,b in [("nl1", "NL1"), ("nl2", "NL2")]:
+            for a, b in [("nl1", "NL1"), ("nl2", "NL2")]:
                 array["foo"].append({a: "%s-%s" % (b, index)})
             node.append(array)
 
@@ -600,7 +729,9 @@ def test_structured_data_StructuredDataTree_building_tree():
     assert level1_nested_list_att is None
     assert level1_nested_list_con._edges.keys() == [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 
-@pytest.mark.parametrize("two_tree_filenames", zip(tree_names[:len(tree_names)/2], tree_names[len(tree_names)/2:]))
+
+@pytest.mark.parametrize("two_tree_filenames",
+                         zip(tree_names[:len(tree_names) / 2], tree_names[len(tree_names) / 2:]))
 def test_delta_structured_data_tree_serialization(two_tree_filenames):
     old_tree = StructuredDataTree()
     new_tree = StructuredDataTree()

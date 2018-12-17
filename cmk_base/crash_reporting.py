@@ -32,7 +32,7 @@ import cStringIO as StringIO
 
 import cmk.debug
 import cmk.paths
-import cmk.crash_reporting as crash_reporting
+import cmk.utils.crash_reporting as crash_reporting
 
 import cmk_base.config as config
 import cmk_base.utils

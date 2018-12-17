@@ -1,6 +1,6 @@
 import pytest
 
-from cmk import prediction
+import cmk.utils.prediction as prediction
 
 
 @pytest.mark.parametrize("ref_value, stdev, sig, params, levels_factor, result", [

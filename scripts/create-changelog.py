@@ -3,14 +3,14 @@
 import sys
 import os
 from pathlib2 import Path
-import cmk.werks
+import cmk.utils.werks
 
 
 def create_changelog(dest_file, precompiled_werk_files):
     werks = load_werks(precompiled_werk_files)
 
     with open(dest_file, "w") as f:
-        cmk.werks.write_as_text(werks, f)
+        cmk.utils.werks.write_as_text(werks, f)
 
         # Append previous werk changes
         if os.path.exists(dest_file + ".in"):
@@ -21,7 +21,7 @@ def create_changelog(dest_file, precompiled_werk_files):
 def load_werks(precompiled_werk_files):
     werks = {}
     for path in precompiled_werk_files:
-        werks.update(cmk.werks.load_precompiled_werks_file(path))
+        werks.update(cmk.utils.werks.load_precompiled_werks_file(path))
     return werks
 
 

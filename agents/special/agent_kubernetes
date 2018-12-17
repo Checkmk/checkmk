@@ -49,7 +49,7 @@ from typing import (  # pylint: disable=unused-import
 
 from kubernetes import client
 
-import cmk.profile
+import cmk.utils.profile
 import cmk.password_store
 
 
@@ -672,7 +672,8 @@ def main(args=None):
         setup_logging(arguments.verbose)
         logging.debug('parsed arguments: %s\n', arguments)
 
-        with cmk.profile.Profile(enabled=bool(arguments.profile), profile_file=arguments.profile):
+        with cmk.utils.profile.Profile(
+                enabled=bool(arguments.profile), profile_file=arguments.profile):
             api_client = get_api_client(arguments)
             api_data = ApiData(api_client)
             print(api_data.cluster_sections())

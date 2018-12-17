@@ -35,8 +35,8 @@ import six
 
 import cmk
 import cmk.defines as defines
-import cmk.tty as tty
-import cmk.cpu_tracking as cpu_tracking
+import cmk.utils.tty as tty
+import cmk.utils.cpu_tracking as cpu_tracking
 from cmk.exceptions import MKGeneralException, MKTimeout
 from cmk.regex import regex
 

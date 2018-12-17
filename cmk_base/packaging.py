@@ -38,8 +38,8 @@ from typing import NamedTuple
 import cmk.ec.export
 import cmk.log
 import cmk.paths
-import cmk.tty as tty
-import cmk.werks
+import cmk.utils.tty as tty
+import cmk.utils.werks
 import cmk_base.utils
 
 logger = cmk.log.get_logger(__name__)
@@ -637,8 +637,8 @@ def verify_check_mk_version(package):
 
     compatible = True
     try:
-        compatible = cmk.werks.parse_check_mk_version(min_version) \
-                        <= cmk.werks.parse_check_mk_version(cmk_version)
+        compatible = cmk.utils.werks.parse_check_mk_version(min_version) \
+                        <= cmk.utils.werks.parse_check_mk_version(cmk_version)
     except:
         # Be compatible: When a version can not be parsed, then skip this check
         if cmk.debug.enabled():

@@ -33,7 +33,7 @@ import requests
 import urllib3
 
 import cmk
-import cmk.site
+import cmk.utils.site
 from cmk.regex import regex
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -143,7 +143,8 @@ class AggregationRawdataGenerator(object):
         site_config = config["site"]
 
         if site_config == "local":
-            self._site_url = "http://localhost:%d/%s" % (cmk.site.get_apache_port(), cmk.omd_site())
+            self._site_url = "http://localhost:%d/%s" % (cmk.utils.site.get_apache_port(),
+                                                         cmk.omd_site())
         else:
             self._site_url = site_config[1]
 

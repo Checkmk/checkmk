@@ -28,7 +28,7 @@ of console input / output"""
 
 import sys
 
-import cmk.tty as tty
+import cmk.utils.tty as tty
 import cmk.log
 
 # NOTE: This is a hack! We abuse the global logger just to pass around the

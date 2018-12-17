@@ -33,7 +33,7 @@ import time
 
 import cmk.store as store
 import cmk.paths
-import cmk.werks
+import cmk.utils.werks
 
 import cmk.gui.pages
 import cmk.gui.utils as utils
@@ -147,7 +147,7 @@ def page_werk():
 def load_werks():
     global g_werks
     if g_werks is None:
-        g_werks = cmk.werks.load()
+        g_werks = cmk.utils.werks.load()
 
     ack_ids = load_acknowledgements()
     for werk in g_werks.values():
@@ -196,9 +196,9 @@ def load_acknowledgements():
 
 
 def unacknowledged_incompatible_werks():
-    return cmk.werks.sort_by_date(werk  #
-                                  for werk in g_werks.values()
-                                  if werk["compatible"] == "incomp_unack")
+    return cmk.utils.werks.sort_by_date(werk  #
+                                        for werk in g_werks.values()
+                                        if werk["compatible"] == "incomp_unack")
 
 
 def num_unacknowledged_incompatible_werks():
@@ -211,12 +211,12 @@ def werk_table_option_entries():
         ("classes", "double",
          ListChoice(
              title=_("Classes"),
-             choices=sorted(cmk.werks.werk_classes().items()),
+             choices=sorted(cmk.utils.werks.werk_classes().items()),
          ), ["feature", "fix", "security"]),
         ("levels", "double",
          ListChoice(
              title=_("Levels"),
-             choices=sorted(cmk.werks.werk_levels().items()),
+             choices=sorted(cmk.utils.werks.werk_levels().items()),
          ), [1, 2, 3]),
         ("date", "double", Timerange(title=_("Date")), ('date', (1383149313, int(time.time())))),
         ("id", "single",
@@ -242,7 +242,7 @@ def werk_table_option_entries():
              title=_("Component"),
              choices=[
                  (None, _("All components")),
-             ] + sorted(cmk.werks.werk_components().items()),
+             ] + sorted(cmk.utils.werks.werk_components().items()),
          ), None),
         ("edition", "single",
          DropdownChoice(
@@ -315,9 +315,9 @@ def render_werks_table():
 
     current_group, number_of_groups, number_of_werks = False, 0, 0
     if werk_table_options["grouping"] == "version":
-        werklist = cmk.werks.sort_by_version_and_component(g_werks.values())
+        werklist = cmk.utils.werks.sort_by_version_and_component(g_werks.values())
     else:
-        werklist = cmk.werks.sort_by_date(g_werks.values())
+        werklist = cmk.utils.werks.sort_by_date(g_werks.values())
 
     for werk in werklist:
         if werk_matches_options(werk, werk_table_options):
@@ -459,19 +459,19 @@ def render_werk_date(werk):
 
 
 def render_werk_level(werk):
-    return cmk.werks.werk_levels()[werk["level"]]
+    return cmk.utils.werks.werk_levels()[werk["level"]]
 
 
 def render_werk_class(werk):
-    return cmk.werks.werk_classes()[werk["class"]]
+    return cmk.utils.werks.werk_classes()[werk["class"]]
 
 
 def render_werk_compatibility(werk):
-    return cmk.werks.werk_compatibilities()[werk["compatible"]]
+    return cmk.utils.werks.werk_compatibilities()[werk["compatible"]]
 
 
 def render_werk_component(werk):
-    return cmk.werks.werk_components().get(werk["component"], werk["component"])
+    return cmk.utils.werks.werk_components().get(werk["component"], werk["component"])
 
 
 def render_werk_title(werk):

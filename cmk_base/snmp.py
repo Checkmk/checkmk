@@ -29,7 +29,7 @@ import subprocess
 from typing import Any, Dict, List  # pylint: disable=unused-import
 
 import cmk.debug
-import cmk.tty as tty
+import cmk.utils.tty as tty
 from cmk.exceptions import MKGeneralException, MKBailOut
 import cmk.store as store
 

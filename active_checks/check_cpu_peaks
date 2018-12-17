@@ -28,7 +28,7 @@ import sys
 import time
 import getopt
 
-import cmk.prediction as prediction
+import cmk.utils.prediction as prediction
 from cmk.exceptions import MKGeneralException
 
 

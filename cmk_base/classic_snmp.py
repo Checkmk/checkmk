@@ -30,7 +30,7 @@ import signal
 
 import six
 
-import cmk.tty as tty
+import cmk.utils.tty as tty
 from cmk.exceptions import MKGeneralException, MKTimeout
 
 import cmk_base.console as console

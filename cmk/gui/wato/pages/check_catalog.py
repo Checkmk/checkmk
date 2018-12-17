@@ -26,7 +26,7 @@
 
 import re
 
-import cmk.man_pages as man_pages
+import cmk.utils.man_pages as man_pages
 
 import cmk.gui.watolib as watolib
 import cmk.gui.table as table

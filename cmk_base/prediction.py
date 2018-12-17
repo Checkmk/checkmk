@@ -34,18 +34,18 @@ import cmk.debug
 import cmk.utils
 import cmk.log
 import cmk.defines as defines
-import cmk.prediction
+import cmk.utils.prediction
 from cmk.exceptions import MKGeneralException
 
 logger = cmk.log.get_logger(__name__)
 
 
 def day_start(timestamp):
-    return (timestamp - cmk.prediction.timezone_at(timestamp)) % 86400
+    return (timestamp - cmk.utils.prediction.timezone_at(timestamp)) % 86400
 
 
 def hour_start(timestamp):
-    return (timestamp - cmk.prediction.timezone_at(timestamp)) % 3600
+    return (timestamp - cmk.utils.prediction.timezone_at(timestamp)) % 3600
 
 
 def group_by_wday(t):
@@ -126,8 +126,8 @@ def retrieve_grouped_data_from_rrd(hostname, service_description, timegroup, par
     while begin >= absolute_begin:
         tg, fr, un = get_prediction_timegroup(begin, period_info)[:3]
         if tg == timegroup:
-            step, data = cmk.prediction.get_rrd_data(hostname, service_description, dsname, cf, fr,
-                                                     un - 1)
+            step, data = cmk.utils.prediction.get_rrd_data(hostname, service_description, dsname,
+                                                           cf, fr, un - 1)
             if smallest_step is None:
                 smallest_step = step
             slices.append((fr, step / float(smallest_step), data))
@@ -219,7 +219,7 @@ def is_prediction_up2date(pred_file, timegroup, params):
     # - the prediction from the last time is outdated
     # - the prediction from the last time was done with other parameters
 
-    last_info = cmk.prediction.retrieve_data_for_prediction(pred_file + ".info", timegroup)
+    last_info = cmk.utils.prediction.retrieve_data_for_prediction(pred_file + ".info", timegroup)
     if last_info is None:
         return False
 
@@ -244,9 +244,9 @@ def _clean_predictions_dir(pred_dir, params):
     for f in os.listdir(pred_dir):
         if f.endswith(".info"):
             info_file = os.path.join(pred_dir, f)
-            info = cmk.prediction.retrieve_data_for_prediction(info_file, '')
+            info = cmk.utils.prediction.retrieve_data_for_prediction(info_file, '')
             if info["params"]["period"] != params["period"]:
-                cmk.prediction.clean_prediction_files(info_file[:-5], force=True)
+                cmk.utils.prediction.clean_prediction_files(info_file[:-5], force=True)
 
 
 # cf: consilidation function (MAX, MIN, AVERAGE)
@@ -260,13 +260,14 @@ def get_levels(hostname, service_description, dsname, params, cf, levels_factor=
 
     timegroup, rel_time = period_info["groupby"](now)
 
-    pred_dir = cmk.prediction.predictions_dir(hostname, service_description, dsname, create=True)
+    pred_dir = cmk.utils.prediction.predictions_dir(
+        hostname, service_description, dsname, create=True)
 
     pred_file = os.path.join(pred_dir, timegroup)
-    cmk.prediction.clean_prediction_files(pred_file)
+    cmk.utils.prediction.clean_prediction_files(pred_file)
 
     if is_prediction_up2date(pred_file, timegroup, params):
-        data_for_pred = cmk.prediction.retrieve_data_for_prediction(pred_file, timegroup)
+        data_for_pred = cmk.utils.prediction.retrieve_data_for_prediction(pred_file, timegroup)
     else:
         data_for_pred = aggregate_data_for_prediction_and_save(
             hostname, service_description, pred_file, params, period_info, dsname, cf, now)
@@ -274,4 +275,4 @@ def get_levels(hostname, service_description, dsname, params, cf, levels_factor=
     # Find reference value in data_for_pred
     index = int(rel_time / data_for_pred["step"])
     reference = dict(zip(data_for_pred["columns"], data_for_pred["points"][index]))
-    return cmk.prediction.estimate_levels(reference, params, levels_factor)
+    return cmk.utils.prediction.estimate_levels(reference, params, levels_factor)

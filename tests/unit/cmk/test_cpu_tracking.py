@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 
-import time
+import cmk.utils.cpu_tracking as cpu_tracking
 
-import cmk.cpu_tracking as cpu_tracking
 
 def test_cpu_tracking_initial_times():
     assert cpu_tracking.get_times() == {}

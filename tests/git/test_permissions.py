@@ -20,7 +20,7 @@ permissions = [
     ('agents/special/agent_*', is_executable, []),
     ('agents/special/lib/*', is_not_executable, []),
     ('agents/check_mk_agent.*', is_executable, ['check_mk_agent.spec']),
-    ('agents/plugins/*', is_executable, ['README']),
+    ('agents/plugins/*', is_executable, ['README', 'mk_filestats.pyc']),
     ('checks/*', is_not_executable, []),
     ('checkman/*', is_not_executable, []),
     ('inventory/*', is_not_executable, []),
@@ -33,7 +33,8 @@ permissions = [
     ('enterprise/agents/bakery/*', is_not_executable, []),
     ('enterprise/agents/plugins/*', is_executable, [
         "chroot_version", "Makefile", "pyinstaller-deps.make", "chroot", "src",
-        "cmk_update_agent.pyc", "pip-deps-32.make", "pip-deps.make", "dist", "cmk-update-agent.spec", "cmk-update-agent-32.spec", "build"
+        "cmk_update_agent.pyc", "pip-deps-32.make", "pip-deps.make", "dist",
+        "cmk-update-agent.spec", "cmk-update-agent-32.spec", "build"
     ]),
     ('enterprise/alert_handlers/*', is_executable, []),
     ('enterprise/alert_handlers/*', is_executable, []),

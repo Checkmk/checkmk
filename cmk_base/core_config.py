@@ -31,7 +31,7 @@ import sys
 from typing import Any, List  # pylint: disable=unused-import
 
 import cmk.paths
-import cmk.tty as tty
+import cmk.utils.tty as tty
 import cmk.password_store
 from cmk.exceptions import MKGeneralException
 

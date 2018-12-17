@@ -34,8 +34,8 @@ import cmk.log
 import cmk.debug
 import cmk.paths
 import cmk.store as store
-import cmk.tty as tty
-import cmk.cpu_tracking as cpu_tracking
+import cmk.utils.tty as tty
+import cmk.utils.cpu_tracking as cpu_tracking
 from cmk.exceptions import MKGeneralException, MKTerminate, MKTimeout
 
 import cmk_base.utils

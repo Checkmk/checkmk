@@ -3,7 +3,7 @@ import pytest
 
 from testlib import cmk_path
 
-import cmk.man_pages as man_pages
+import cmk.utils.man_pages as man_pages
 import cmk_base.config as config
 
 # TODO: Add tests for module internal functions

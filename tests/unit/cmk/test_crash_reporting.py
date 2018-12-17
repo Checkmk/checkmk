@@ -1,14 +1,13 @@
 import copy
-import cmk.crash_reporting as crash_reporting
+import cmk.utils.crash_reporting as crash_reporting
+
 
 def test_format_var_for_export_strip_nested_dict():
     orig_var = {
         "a": {
             "b": {
                 "c": {
-                    "d": {
-
-                    },
+                    "d": {},
                 },
             },
         },
@@ -45,9 +44,7 @@ def test_format_var_for_export_strip_nested_dict_with_list():
     orig_var = {
         "a": {
             "b": {
-                "c": [
-                    {}
-                ],
+                "c": [{}],
             },
         },
     }

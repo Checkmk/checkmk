@@ -28,7 +28,7 @@ import os
 import tempfile
 
 import cmk.paths
-import cmk.translations
+import cmk.utils.translations
 import cmk.store as store
 from cmk.exceptions import MKGeneralException
 

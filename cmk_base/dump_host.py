@@ -26,7 +26,7 @@
 
 import time
 
-import cmk.tty as tty
+import cmk.utils.tty as tty
 import cmk.render
 
 import cmk_base.utils

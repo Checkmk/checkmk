@@ -32,7 +32,7 @@ import sys
 
 import cmk.paths
 import cmk.debug
-import cmk.tty as tty
+import cmk.utils.tty as tty
 from cmk.exceptions import MKGeneralException, MKTimeout
 
 import cmk_base.console as console

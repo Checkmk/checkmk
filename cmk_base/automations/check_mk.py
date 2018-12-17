@@ -33,7 +33,7 @@ import time
 import shutil
 
 import cmk.paths
-import cmk.man_pages as man_pages
+import cmk.utils.man_pages as man_pages
 from cmk.exceptions import MKGeneralException
 
 import cmk_base.utils
@@ -935,7 +935,7 @@ class AutomationGetCheckInformation(Automation):
         for check_plugin_name, check in config.check_info.items():
             try:
                 manfile = manuals.get(check_plugin_name)
-                # TODO: Use cmk.man_pages module standard functions to read the title
+                # TODO: Use cmk.utils.man_pages module standard functions to read the title
                 if manfile:
                     title = file(manfile).readline().strip().split(":", 1)[1].strip()
                 else:
@@ -969,7 +969,7 @@ class AutomationGetRealTimeChecks(Automation):
         rt_checks = []
         for check_plugin_name, check in config.check_info.items():
             if check["handle_real_time_checks"]:
-                # TODO: Use cmk.man_pages module standard functions to read the title
+                # TODO: Use cmk.utils.man_pages module standard functions to read the title
                 title = check_plugin_name
                 try:
                     manfile = manuals.get(check_plugin_name)

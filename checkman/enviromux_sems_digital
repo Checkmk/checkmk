@@ -1,6 +1,6 @@
 title: enviromux_digital_sems
 agents: snmp
-catalog: hardware/environment/nti
+catalog: hw/environment/nti
 license: GPL
 distribution: check_mk
 description:

@@ -11,4 +11,4 @@ description:
  Details of the single status checks are also reported.
 
 inventory:
- One service will be created.
+ One service per volume will be created.

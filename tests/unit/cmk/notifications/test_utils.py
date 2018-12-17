@@ -86,5 +86,5 @@ def test_get_bulk_notification_subject(context, hosts, result):
     ("store\tpwservice", "http://secret.host"),
 ])
 def test_api_endpoint_url(monkeypatch, value, result):
-    monkeypatch.setattr('cmk.password_store.extract', lambda x: 'http://secret.host')
+    monkeypatch.setattr('cmk.utils.password_store.extract', lambda x: 'http://secret.host')
     assert utils.retrieve_from_passwordstore(value) == result

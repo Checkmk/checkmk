@@ -29,7 +29,7 @@ import pyghmi.ipmi.sdr as ipmi_sdr
 import pyghmi.constants as ipmi_const
 from pyghmi.exceptions import IpmiException
 
-import cmk.debug
+import cmk.utils.debug
 
 from cmk_base.exceptions import MKAgentError
 
@@ -99,7 +99,7 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
 
             return output
         except Exception as e:
-            if cmk.debug.enabled():
+            if cmk.utils.debug.enabled():
                 raise
 
             # Improve bad exceptions thrown by pyghmi e.g. in case of connection issues

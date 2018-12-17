@@ -27,7 +27,8 @@
 import os
 from typing import Any, Dict  # pylint: disable=unused-import
 
-import cmk.paths
+import cmk.utils.paths
+import cmk.utils.debug
 
 import cmk_base.config as config
 import cmk_base.console as console
@@ -52,7 +53,8 @@ _include_contexts = {}  # type: Dict[str, Any]
 
 def load_plugins(get_check_api_context, get_inventory_context):
     loaded_files = set()
-    filelist = config.get_plugin_paths(cmk.paths.local_inventory_dir, cmk.paths.inventory_dir)
+    filelist = config.get_plugin_paths(cmk.utils.paths.local_inventory_dir,
+                                       cmk.utils.paths.inventory_dir)
 
     for f in filelist:
         if f[0] == "." or f[-1] == "~":
@@ -72,7 +74,7 @@ def load_plugins(get_check_api_context, get_inventory_context):
             loaded_files.add(file_name)
         except Exception as e:
             console.error("Error in inventory plugin file %s: %s\n", f, e)
-            if cmk.debug.enabled():
+            if cmk.utils.debug.enabled():
                 raise
             else:
                 continue
@@ -107,15 +109,15 @@ def _load_plugin_includes(check_file_path, plugin_context):
             execfile(path, plugin_context)
         except Exception as e:
             console.error("Error in include file %s: %s\n", path, e)
-            if cmk.debug.enabled():
+            if cmk.utils.debug.enabled():
                 raise
 
 
 def _include_file_path(name):
-    local_path = os.path.join(cmk.paths.local_inventory_dir, name)
+    local_path = os.path.join(cmk.utils.paths.local_inventory_dir, name)
     if os.path.exists(local_path):
         return local_path
-    shared_path = os.path.join(cmk.paths.inventory_dir, name)
+    shared_path = os.path.join(cmk.utils.paths.inventory_dir, name)
     if os.path.exists(shared_path):
         return shared_path
     return config.check_include_file_path(name)

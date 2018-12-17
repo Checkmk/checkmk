@@ -27,7 +27,7 @@
 import time
 
 import cmk.utils.tty as tty
-import cmk.render
+import cmk.utils.render
 
 import cmk_base.utils
 import cmk_base.config as config
@@ -131,7 +131,7 @@ def _evaluate_params(params):
         return params
 
     current_params = checking.determine_check_params(params)
-    return "Timespecific parameters at %s: %r" % (cmk.render.date_and_time(time.time()),
+    return "Timespecific parameters at %s: %r" % (cmk.utils.render.date_and_time(time.time()),
                                                   current_params)
 
 

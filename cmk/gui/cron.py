@@ -27,8 +27,8 @@
 import os
 import time
 
-import cmk.paths
-import cmk.store as store
+import cmk.utils.paths
+import cmk.utils.store as store
 
 import cmk.gui.utils as utils
 import cmk.gui.i18n
@@ -45,7 +45,7 @@ from cmk.gui.plugins.cron import (  # pylint: disable=unused-import
 
 loaded_with_language = False
 
-lock_file = cmk.paths.tmp_dir + "/cron.lastrun"
+lock_file = cmk.utils.paths.tmp_dir + "/cron.lastrun"
 
 
 # Load all view plugins

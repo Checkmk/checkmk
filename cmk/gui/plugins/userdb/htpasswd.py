@@ -34,8 +34,8 @@ import pathlib2 as pathlib
 from passlib.context import CryptContext  # type: ignore
 from passlib.hash import sha256_crypt  # type: ignore
 
-import cmk.paths
-import cmk.store as store
+import cmk.utils.paths
+import cmk.utils.store as store
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 
@@ -138,7 +138,7 @@ class HtpasswdUserConnector(UserConnector):
         return False
 
     def _is_automation_user(self, user_id):
-        return os.path.isfile(cmk.paths.var_dir + "/web/" + user_id.encode("utf-8") +
+        return os.path.isfile(cmk.utils.paths.var_dir + "/web/" + user_id.encode("utf-8") +
                               "/automation.secret")
 
     # Validate hashes taken from the htpasswd file. For the moment this function
@@ -174,4 +174,4 @@ class HtpasswdUserConnector(UserConnector):
         self._get_htpasswd().save(entries)
 
     def _get_htpasswd(self):
-        return Htpasswd(pathlib.Path(cmk.paths.htpasswd_file))
+        return Htpasswd(pathlib.Path(cmk.utils.paths.htpasswd_file))

@@ -36,7 +36,7 @@ import cmk.gui.watolib as watolib
 import cmk.gui.multitar as multitar
 import cmk.gui.table as table
 import cmk.gui.forms as forms
-import cmk.render as render
+import cmk.utils.render as render
 
 from cmk.gui.plugins.wato.utils import mode_registry, sort_sites
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode, WatoWebApiMode

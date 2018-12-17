@@ -29,7 +29,7 @@ this mode is used."""
 import copy
 from collections import namedtuple
 
-import cmk.paths
+import cmk.utils.paths
 
 import cmk.gui.config as config
 import cmk.gui.sites as sites

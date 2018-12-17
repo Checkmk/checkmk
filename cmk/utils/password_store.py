@@ -32,17 +32,17 @@ to make the pwstore option handling transparent for the script.
 
 Do it like this:
 
-  import cmk.password_store
-  cmk.password_store.replace_passwords()
+  import cmk.utils.password_store
+  cmk.utils.password_store.replace_passwords()
 
 """
 
 import sys
 
-import cmk.paths
-import cmk.store as store
+import cmk.utils.paths
+import cmk.utils.store as store
 
-password_store_path = cmk.paths.var_dir + "/stored_passwords"
+password_store_path = cmk.utils.paths.var_dir + "/stored_passwords"
 
 
 def bail_out(s):

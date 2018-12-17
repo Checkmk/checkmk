@@ -40,7 +40,7 @@ import traceback
 import itertools
 import multiprocessing
 
-import cmk.paths
+import cmk.utils.paths
 
 from cmk.gui.log import logger
 from cmk.gui.i18n import _
@@ -455,7 +455,7 @@ def extract_domains(tar, domains):
             pass
 
     # We are using the var_dir, because tmp_dir might not have enough space
-    restore_dir = cmk.paths.var_dir + "/wato/snapshots/restore_snapshot"
+    restore_dir = cmk.utils.paths.var_dir + "/wato/snapshots/restore_snapshot"
     if not os.path.exists(restore_dir):
         os.makedirs(restore_dir)
 

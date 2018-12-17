@@ -53,7 +53,7 @@ import cmk.gui.config as config
 import cmk.gui.table as table
 import cmk.gui.userdb as userdb
 import cmk.gui.pagetypes as pagetypes
-import cmk.store as store
+import cmk.utils.store as store
 import cmk.gui.metrics as metrics
 import cmk.gui.i18n
 from cmk.gui.i18n import _u, _

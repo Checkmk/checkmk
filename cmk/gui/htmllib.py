@@ -91,8 +91,8 @@ _default.default = json.JSONEncoder().default  # type: ignore
 # replacement:
 json.JSONEncoder.default = _default  # type: ignore
 
-import cmk.paths
-from cmk.exceptions import MKGeneralException
+import cmk.utils.paths
+from cmk.utils.exceptions import MKGeneralException
 from cmk.gui.exceptions import MKUserError, RequestTimeout
 
 import cmk.gui.utils as utils
@@ -1709,8 +1709,8 @@ class html(HTMLGenerator):
     def _plugin_stylesheets(self):
         plugin_stylesheets = set([])
         for directory in [
-                cmk.paths.web_dir + "/htdocs/css",
-                cmk.paths.local_web_dir + "/htdocs/css",
+                cmk.utils.paths.web_dir + "/htdocs/css",
+                cmk.utils.paths.local_web_dir + "/htdocs/css",
         ]:
             if os.path.exists(directory):
                 for fn in os.listdir(directory):
@@ -1731,7 +1731,7 @@ class html(HTMLGenerator):
             min_parts = ["_min", ""]
 
         for min_part in min_parts:
-            path_pattern = cmk.paths.omd_root + "%s" + rel_path + "/" + jsname + min_part + ".js"
+            path_pattern = cmk.utils.paths.omd_root + "%s" + rel_path + "/" + jsname + min_part + ".js"
             if os.path.exists(path_pattern % "") or os.path.exists(path_pattern % "/local"):
                 filename_for_browser = 'js/%s%s-%s.js' % (jsname, min_part, cmk.__version__)
                 break
@@ -1740,8 +1740,8 @@ class html(HTMLGenerator):
 
     def _css_filename_for_browser(self, css):
         rel_path = "/share/check_mk/web/htdocs/" + css + ".css"
-        if os.path.exists(cmk.paths.omd_root + rel_path) or \
-            os.path.exists(cmk.paths.omd_root + "/local" + rel_path):
+        if os.path.exists(cmk.utils.paths.omd_root + rel_path) or \
+            os.path.exists(cmk.utils.paths.omd_root + "/local" + rel_path):
             return '%s-%s.css' % (css, cmk.__version__)
 
     def html_head(self, title, javascripts=None, stylesheets=None, force=False):
@@ -2764,13 +2764,13 @@ hy
         if self._theme and self._theme != "classic":
             rel_path = "share/check_mk/web/htdocs/themes/%s/images/icon_%s.png" % (self._theme,
                                                                                    icon_name)
-            if os.path.exists(cmk.paths.omd_root + "/" + rel_path) or os.path.exists(
-                    cmk.paths.omd_root + "/local/" + rel_path):
+            if os.path.exists(cmk.utils.paths.omd_root + "/" + rel_path) or os.path.exists(
+                    cmk.utils.paths.omd_root + "/local/" + rel_path):
                 return "themes/%s/images/icon_%s.png" % (self._theme, icon_name)
 
         rel_path = "share/check_mk/web/htdocs/images/icon_" + icon_name + ".png"
-        if os.path.exists(cmk.paths.omd_root + "/" +
-                          rel_path) or os.path.exists(cmk.paths.omd_root + "/local/" + rel_path):
+        if os.path.exists(cmk.utils.paths.omd_root + "/" + rel_path) or os.path.exists(
+                cmk.utils.paths.omd_root + "/local/" + rel_path):
             return "images/icon_%s.png" % icon_name
 
         return "images/icons/%s.png" % icon_name
@@ -2787,8 +2787,8 @@ hy
 
         if self._theme and self._theme != "classic":
             rel_path = "share/check_mk/web/htdocs/themes/%s/%s" % (self._theme, img_path)
-            if os.path.exists(cmk.paths.omd_root + "/" + rel_path) or os.path.exists(
-                    cmk.paths.omd_root + "/local/" + rel_path):
+            if os.path.exists(cmk.utils.paths.omd_root + "/" + rel_path) or os.path.exists(
+                    cmk.utils.paths.omd_root + "/local/" + rel_path):
                 return "themes/%s/%s" % (self._theme, img_path)
 
         return img_path

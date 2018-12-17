@@ -40,7 +40,7 @@ except ImportError:
     from cgi import escape as html_escape
 
 from cmk_base.notify import find_wato_folder
-import cmk.password_store
+import cmk.utils.password_store
 
 
 def collect_context():
@@ -230,7 +230,7 @@ def retrieve_from_passwordstore(parameter):
 
     if len(value) == 2:
         if value[0] == 'store':
-            value = cmk.password_store.extract(value[1])
+            value = cmk.utils.password_store.extract(value[1])
         else:
             value = value[1]
     else:

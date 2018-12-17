@@ -29,7 +29,7 @@ import os
 import pprint
 
 import cmk
-import cmk.store as store
+import cmk.utils.store as store
 
 if cmk.is_managed_edition():
     import cmk.gui.cme.managed as managed

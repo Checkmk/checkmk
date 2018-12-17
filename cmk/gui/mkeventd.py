@@ -32,10 +32,10 @@ import os
 from pathlib2 import Path
 import livestatus
 
-import cmk.paths
+import cmk.utils.paths
 import cmk.ec.settings
 import cmk.ec.export
-import cmk.store
+import cmk.utils.store
 import cmk.utils
 
 import cmk.gui.config as config
@@ -52,12 +52,12 @@ from cmk.gui.permissions import (
 # Please sync these paths with htdocs/mkeventd.py
 mib_dirs = [('/usr/share/snmp/mibs', _('System MIBs'))]
 
-socket_path = cmk.paths.omd_root + "/tmp/run/mkeventd/status"
-compiled_mibs_dir = cmk.paths.omd_root + "/local/share/check_mk/compiled_mibs"
+socket_path = cmk.utils.paths.omd_root + "/tmp/run/mkeventd/status"
+compiled_mibs_dir = cmk.utils.paths.omd_root + "/local/share/check_mk/compiled_mibs"
 
 # Please sync these paths with htdocs/mkeventd.py
-mib_upload_dir = cmk.paths.omd_root + "/local/share/snmp/mibs"
-mib_dirs.insert(0, (cmk.paths.omd_root + "/share/snmp/mibs", _('MIBs shipped with Check_MK')))
+mib_upload_dir = cmk.utils.paths.omd_root + "/local/share/snmp/mibs"
+mib_dirs.insert(0, (cmk.utils.paths.omd_root + "/share/snmp/mibs", _('MIBs shipped with Check_MK')))
 mib_dirs.insert(0, (mib_upload_dir, _('Custom MIBs')))
 
 syslog_priorities = [
@@ -166,8 +166,8 @@ def eventd_configuration():
     if cached_config and cached_config[0] is html:
         return cached_config[1]
 
-    settings = cmk.ec.settings.settings('', Path(cmk.paths.omd_root),
-                                        Path(cmk.paths.default_config_dir), [''])
+    settings = cmk.ec.settings.settings('', Path(cmk.utils.paths.omd_root),
+                                        Path(cmk.utils.paths.default_config_dir), [''])
     cfg = cmk.ec.export.load_config(settings)
     cached_config = (html, cfg)
     return cfg
@@ -404,7 +404,7 @@ def event_rule_matches_non_inverted(rule_pack, rule, event):
 def check_timeperiod(tpname):
     try:
         livesock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        livesock.connect(cmk.paths.livestatus_unix_socket)
+        livesock.connect(cmk.utils.paths.livestatus_unix_socket)
         livesock.send("GET timeperiods\nFilter: name = %s\nColumns: in\n" % tpname)
         livesock.shutdown(socket.SHUT_WR)
         answer = livesock.recv(100).strip()

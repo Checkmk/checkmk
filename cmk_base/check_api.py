@@ -42,8 +42,8 @@ Modules available by default (pre imported by Check_MK):
     pprint
 
 Global variables:
-    from cmk.regex import regex
-    import cmk.render as render
+    from cmk.utils.regex import regex
+    import cmk.utils.render as render
     core_state_names     Names of states. Usually used to convert numeric states
                          to their name for adding it to the plugin output.
                          The mapping is like this:
@@ -111,12 +111,12 @@ from typing import Callable, Dict, Iterable, List, Optional, Tuple, Union  # pyl
 
 import six
 
-import cmk.debug as _debug
-import cmk.defines as _defines
-import cmk.paths as _paths
-from cmk.exceptions import MKGeneralException
-from cmk.regex import regex
-import cmk.render as render
+import cmk.utils.debug as _debug
+import cmk.utils.defines as _defines
+import cmk.utils.paths as _paths
+from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.regex import regex
+import cmk.utils.render as render
 
 # These imports are not meant for use in the API. So we prefix the names
 # with an underscore. These names will be skipped when loading into the

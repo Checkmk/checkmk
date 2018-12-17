@@ -11,7 +11,7 @@ import cmk_base.config as config
 
 @pytest.fixture(autouse=True)
 def patch_cmk_paths(monkeypatch, tmpdir):
-    monkeypatch.setattr("cmk.paths.local_check_manpages_dir", "%s" % tmpdir)
+    monkeypatch.setattr("cmk.utils.paths.local_check_manpages_dir", "%s" % tmpdir)
 
 
 def test_man_page_exists_only_shipped():
@@ -120,7 +120,7 @@ def test_manpage_catalog_headers():
         try:
             parsed = man_pages._parse_man_page_header(name, Path(path))
         except Exception as e:
-            if cmk.debug.enabled():
+            if cmk.utils.debug.enabled():
                 raise
             parsed = man_pages._create_fallback_man_page(name, Path(path), e)
 

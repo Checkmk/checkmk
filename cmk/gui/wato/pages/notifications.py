@@ -29,7 +29,7 @@ import abc
 import time
 
 import cmk
-import cmk.store as store
+import cmk.utils.store as store
 
 import cmk.gui.view_utils
 import cmk.gui.wato.user_profile
@@ -561,7 +561,7 @@ class ModeNotifications(NotificationsMode):
         if not self._show_backlog:
             return
 
-        backlog = store.load_data_from_file(cmk.paths.var_dir + "/notify/backlog.mk", [])
+        backlog = store.load_data_from_file(cmk.utils.paths.var_dir + "/notify/backlog.mk", [])
         if not backlog:
             return
 

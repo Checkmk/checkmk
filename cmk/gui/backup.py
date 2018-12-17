@@ -39,8 +39,8 @@ import subprocess
 import time
 import json
 
-import cmk.render as render
-import cmk.store as store
+import cmk.utils.render as render
+import cmk.utils.store as store
 from cmk.utils.schedule import next_scheduled_time
 
 import cmk.gui.forms as forms

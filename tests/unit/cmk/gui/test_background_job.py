@@ -5,7 +5,7 @@ import pytest  # type: ignore
 from pathlib2 import Path
 import testlib  # type: ignore
 
-import cmk.paths
+import cmk.utils.paths
 import cmk.gui.background_job as background_job
 import cmk.gui.gui_background_job as gui_background_job
 
@@ -16,7 +16,7 @@ import cmk.gui.log
 def debug_logging():
     cmk.gui.log.set_log_levels({"cmk.web": cmk.gui.log._logging.DEBUG})
     yield
-    cmk.gui.log.set_log_levels({"cmk.web": cmk.gui.log._logging.WARNING})
+    cmk.gui.log.set_log_levels({"cmk.web": cmk.gui.log._logging.INFO})
 
 
 @pytest.fixture(autouse=True)
@@ -30,7 +30,7 @@ def job_base_dir(tmpdir, monkeypatch):
     job_dir.mkdir()  # pylint: disable=no-member
 
     # Patch for web.log. Sholdn't we do this for all web tests?
-    monkeypatch.setattr(cmk.paths, "log_dir", str(log_dir))
+    monkeypatch.setattr(cmk.utils.paths, "log_dir", str(log_dir))
 
     monkeypatch.setattr(background_job.BackgroundJobDefines, "base_dir", str(job_dir))
     return job_dir

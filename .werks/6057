@@ -25,25 +25,25 @@ Use <tt>import livestatus</tt> and <tt>livestatus.lqencode()</tt>.
 
 Use <tt>import view</tt> and <tt>views.format_plugin_output()</tt>.
 
-<h3>Moved make_nagios_directory() and make_nagios_directories() to cmk.store</h3>
+<h3>Moved make_nagios_directory() and make_nagios_directories() to cmk.utils.store</h3>
 
-Use <tt>import cmk.store</tt> and <tt>cmk.store.mkdir()</tt> or <tt>cmk.store.makedirs()</tt>.
+Use <tt>import cmk.utils.store</tt> and <tt>cmk.utils.store.mkdir()</tt> or <tt>cmk.utils.store.makedirs()</tt>.
 
 <h3>Dropped create_user_file()</h3>
 
-Use <tt>cmk.store.save_file()</tt> instead.
+Use <tt>cmk.utils.store.save_file()</tt> instead.
 
 <h3>Dropped bytes_human_readable()</h3>
 
-Use <tt>cmk.render.bytes()</tt> instead.
+Use <tt>cmk.utils.render.bytes()</tt> instead.
 
 <h3>Dropped date_human_readable()</h3>
 
-Use <tt>cmk.render.date()</tt> instead.
+Use <tt>cmk.utils.render.date()</tt> instead.
 
 <h3>Dropped percent_human_redable()</h3>
 
-Use <tt>cmk.render.percent()</tt> instead.
+Use <tt>cmk.utils.render.percent()</tt> instead.
 
 <h3>Moved make_utf8() to cmk.utils</h3>
 
@@ -57,21 +57,21 @@ Use <tt>cmk.utils.quote_shell_string()</tt>.
 
 Use <tt>cmk.utils.pnp_cleanup()</tt>.
 
-<h3>Moved aquire_lock(), release_all_locks(), have_lock() and release_lock() to cmk.store</h3>
+<h3>Moved aquire_lock(), release_all_locks(), have_lock() and release_lock() to cmk.utils.store</h3>
 
-Use e.g. <tt>cmk.store.aquire_lock()</tt>.
+Use e.g. <tt>cmk.utils.store.aquire_lock()</tt>.
 
 <h3>Dropped age_human_readable()</h3>
 
-Use <tt>cmk.render.approx_age()</tt> instead.
+Use <tt>cmk.utils.render.approx_age()</tt> instead.
 
-<h3>Moved render_scientific() to cmk.render</h3>
+<h3>Moved render_scientific() to cmk.utils.render</h3>
 
-Use <tt>cmk.render.scientific()</tt>.
+Use <tt>cmk.utils.render.scientific()</tt>.
 
-<h3>Moved render_scientific() to cmk.render</h3>
+<h3>Moved render_scientific() to cmk.utils.render</h3>
 
-Use <tt>cmk.render.physical_precision()</tt>.
+Use <tt>cmk.utils.render.physical_precision()</tt>.
 
 <h3>Moved several functions to new utils module</h3>
 

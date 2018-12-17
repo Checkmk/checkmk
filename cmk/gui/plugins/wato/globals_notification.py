@@ -28,7 +28,7 @@
 # TODO: Remove all configuration for legacy-Email to deprecated, or completely
 # remove from WATO.
 
-import cmk.paths
+import cmk.utils.paths
 
 from cmk.gui.valuespec import (
     Age,
@@ -205,7 +205,7 @@ class ConfigVariableNotificationLogging(ConfigVariable):
             help=_("You can configure the notification mechanism to log more details about "
                    "the notifications into the notification log. This information are logged "
                    "into the file <tt>%s</tt>") %
-            site_neutral_path(cmk.paths.log_dir + "/notify.log"),
+            site_neutral_path(cmk.utils.paths.log_dir + "/notify.log"),
         )
 
 

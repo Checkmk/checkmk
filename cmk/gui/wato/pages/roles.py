@@ -41,7 +41,7 @@ configuration of all roles.
 
 import re
 
-import cmk.store as store
+import cmk.utils.store as store
 
 import cmk.gui.userdb as userdb
 import cmk.gui.config as config

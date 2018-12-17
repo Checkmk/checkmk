@@ -32,7 +32,7 @@ import signal
 import sys
 import time
 
-from cmk.exceptions import MKGeneralException, MKTerminate
+from cmk.utils.exceptions import MKGeneralException, MKTerminate
 
 # TODO: Clean up the call sites
 from cmk.utils import (  # pylint: disable=unused-import

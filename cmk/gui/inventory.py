@@ -36,7 +36,7 @@ from pathlib2 import Path
 
 import livestatus
 
-import cmk.paths
+import cmk.utils.paths
 from cmk.utils.structured_data import StructuredDataTree, Container, Numeration, Attributes
 
 import cmk.gui.pages
@@ -156,12 +156,12 @@ def get_history_deltas(hostname, search_timestamp=None):
     if '/' in hostname:
         return None  # just for security reasons
 
-    inventory_path = "%s/inventory/%s" % (cmk.paths.var_dir, hostname)
+    inventory_path = "%s/inventory/%s" % (cmk.utils.paths.var_dir, hostname)
     if not os.path.exists(inventory_path):
         return []
 
     latest_timestamp = str(int(os.stat(inventory_path).st_mtime))
-    inventory_archive_dir = "%s/inventory_archive/%s" % (cmk.paths.var_dir, hostname)
+    inventory_archive_dir = "%s/inventory_archive/%s" % (cmk.utils.paths.var_dir, hostname)
     try:
         archived_timestamps = sorted(os.listdir(inventory_archive_dir))
     except OSError:
@@ -202,12 +202,12 @@ def get_history_deltas(hostname, search_timestamp=None):
 
     delta_history = []
     for _idx, timestamp in enumerate(required_timestamps):
-        cached_delta_path = os.path.join(cmk.paths.var_dir, "inventory_delta_cache", hostname,
+        cached_delta_path = os.path.join(cmk.utils.paths.var_dir, "inventory_delta_cache", hostname,
                                          "%s_%s" % (previous_timestamp, timestamp))
 
         cached_data = None
         try:
-            cached_data = cmk.store.load_data_from_file(cached_delta_path)
+            cached_data = cmk.utils.store.load_data_from_file(cached_delta_path)
         except MKGeneralException:
             pass
 
@@ -225,8 +225,8 @@ def get_history_deltas(hostname, search_timestamp=None):
             delta_data = current_tree.compare_with(previous_tree)
             new, changed, removed, delta_tree = delta_data
 
-            cmk.store.save_file(cached_delta_path,
-                                repr((new, changed, removed, delta_tree.get_raw_tree())))
+            cmk.utils.store.save_file(cached_delta_path,
+                                      repr((new, changed, removed, delta_tree.get_raw_tree())))
             delta_history.append((timestamp, delta_data))
         except RequestTimeout:
             raise
@@ -277,7 +277,7 @@ def _load_inventory_tree(hostname):
         if '/' in hostname:
             # just for security reasons
             return
-        cache_path = "%s/inventory/%s" % (cmk.paths.var_dir, hostname)
+        cache_path = "%s/inventory/%s" % (cmk.utils.paths.var_dir, hostname)
         inventory_tree = StructuredDataTree().load_from(cache_path)
         inventory_tree_cache[hostname] = inventory_tree
     return inventory_tree
@@ -413,7 +413,7 @@ def page_host_inv_api():
 def has_inventory(hostname):
     if not hostname:
         return False
-    inventory_path = "%s/inventory/%s" % (cmk.paths.var_dir, hostname)
+    inventory_path = "%s/inventory/%s" % (cmk.utils.paths.var_dir, hostname)
     return os.path.exists(inventory_path)
 
 
@@ -471,9 +471,9 @@ def _write_python(response):
 class InventoryHousekeeping(object):
     def __init__(self):
         super(InventoryHousekeeping, self).__init__()
-        self._inventory_path = Path(cmk.paths.var_dir) / "inventory"
-        self._inventory_archive_path = Path(cmk.paths.var_dir) / "inventory_archive"
-        self._inventory_delta_cache_path = Path(cmk.paths.var_dir) / "inventory_delta_cache"
+        self._inventory_path = Path(cmk.utils.paths.var_dir) / "inventory"
+        self._inventory_archive_path = Path(cmk.utils.paths.var_dir) / "inventory_archive"
+        self._inventory_delta_cache_path = Path(cmk.utils.paths.var_dir) / "inventory_delta_cache"
 
     def run(self):
         if not self._inventory_delta_cache_path.exists() or not self._inventory_archive_path.exists(  # pylint: disable=no-member

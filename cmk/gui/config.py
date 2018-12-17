@@ -33,8 +33,8 @@ import cmk.gui.utils as utils
 import cmk.gui.i18n
 from cmk.gui.i18n import _
 import cmk.gui.log as log
-import cmk.paths
-import cmk.store as store
+import cmk.utils.paths
+import cmk.utils.store as store
 from cmk.gui.exceptions import MKConfigError, MKAuthException
 import cmk.gui.permissions as permissions
 
@@ -70,7 +70,7 @@ admin_users = []
 builtin_role_ids = ["user", "admin", "guest"]
 
 # Base directory of dynamic configuration
-config_dir = cmk.paths.var_dir + "/web"
+config_dir = cmk.utils.paths.var_dir + "/web"
 
 # Stores the initial configuration values
 default_config = {}
@@ -149,7 +149,7 @@ def initialize():
 # Read in a multisite.d/*.mk file
 def include(filename):
     if not filename.startswith("/"):
-        filename = cmk.paths.default_config_dir + "/" + filename
+        filename = cmk.utils.paths.default_config_dir + "/" + filename
 
     # Config file is obligatory. An empty example is installed
     # during setup.sh. Better signal an error then simply ignore
@@ -180,7 +180,7 @@ def load_config():
     include("multisite.mk")
 
     # Load also recursively all files below multisite.d
-    conf_dir = cmk.paths.default_config_dir + "/multisite.d"
+    conf_dir = cmk.utils.paths.default_config_dir + "/multisite.d"
     filelist = []
     if os.path.isdir(conf_dir):
         for root, _directories, files in os.walk(conf_dir):
@@ -956,8 +956,8 @@ def is_wato_slave_site():
 
 
 def _has_distributed_wato_file():
-    return os.path.exists(cmk.paths.check_mk_config_dir + "/distributed_wato.mk") \
-        and os.stat(cmk.paths.check_mk_config_dir + "/distributed_wato.mk").st_size != 0
+    return os.path.exists(cmk.utils.paths.check_mk_config_dir + "/distributed_wato.mk") \
+        and os.stat(cmk.utils.paths.check_mk_config_dir + "/distributed_wato.mk").st_size != 0
 
 
 def get_login_sites():
@@ -992,11 +992,11 @@ def site(site_id):
     # Now make sure that all important keys are available.
     # Add missing entries by supplying default values.
     s.setdefault("alias", site_id)
-    s.setdefault("socket", "unix:" + cmk.paths.livestatus_unix_socket)
+    s.setdefault("socket", "unix:" + cmk.utils.paths.livestatus_unix_socket)
     s.setdefault("url_prefix", "../")  # relative URL from /check_mk/
     if isinstance(s["socket"], tuple) and s["socket"][0] == "proxy":
         s["cache"] = s["socket"][1].get("cache", True)
-        s["socket"] = "unix:" + cmk.paths.livestatus_unix_socket + "proxy/" + site_id
+        s["socket"] = "unix:" + cmk.utils.paths.livestatus_unix_socket + "proxy/" + site_id
     else:
         s["cache"] = False
     s["id"] = site_id
@@ -1007,7 +1007,7 @@ def site_is_local(site_name):
     s = sites.get(site_name, {})
     sock = s.get("socket")
 
-    if not sock or sock == "unix:" + cmk.paths.livestatus_unix_socket:
+    if not sock or sock == "unix:" + cmk.utils.paths.livestatus_unix_socket:
         return True
 
     if isinstance(s["socket"], tuple) and s["socket"][0] == "proxy" \

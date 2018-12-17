@@ -36,9 +36,9 @@ import socket
 import sys
 import time
 
-import cmk.password_store
+import cmk.utils.password_store
 
-cmk.password_store.replace_passwords()
+cmk.utils.password_store.replace_passwords()
 
 
 def parse_exception(e):

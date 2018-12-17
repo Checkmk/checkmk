@@ -98,12 +98,12 @@ import inspect
 from hashlib import sha256
 
 import cmk
-import cmk.paths
+import cmk.utils.paths
 import cmk.utils.translations
-import cmk.store as store
-from cmk.regex import regex
-from cmk.defines import short_service_state_name
-import cmk.render as render
+import cmk.utils.store as store
+from cmk.utils.regex import regex
+from cmk.utils.defines import short_service_state_name
+import cmk.utils.render as render
 
 import cmk.gui.utils as utils
 import cmk.gui.sites as sites

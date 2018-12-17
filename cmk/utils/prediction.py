@@ -31,11 +31,12 @@ import time
 import livestatus  # type: ignore
 from livestatus import MKLivestatusNotFoundError
 
-from cmk.exceptions import MKGeneralException
-import cmk.log
-import cmk.paths
+from cmk.utils.exceptions import MKGeneralException
+import cmk.utils.debug
+import cmk.utils.log
+import cmk.utils.paths
 
-logger = cmk.log.get_logger(__name__)
+logger = cmk.utils.log.get_logger(__name__)
 
 
 # Check wether a certain time stamp lies with in daylight saving time (DST)
@@ -80,10 +81,11 @@ def get_rrd_data(hostname, service_description, varname, cf, fromtime, untiltime
                                                              hostname, service_description))))
 
     try:
-        connection = livestatus.SingleSiteConnection("unix:%s" % cmk.paths.livestatus_unix_socket)
+        connection = livestatus.SingleSiteConnection(
+            "unix:%s" % cmk.utils.paths.livestatus_unix_socket)
         response = connection.query_value(lql)
     except MKLivestatusNotFoundError as e:
-        if cmk.debug.enabled():
+        if cmk.utils.debug.enabled():
             raise
         raise MKGeneralException("Cannot get historic metrics via Livestatus: %s" % e)
 
@@ -92,7 +94,7 @@ def get_rrd_data(hostname, service_description, varname, cf, fromtime, untiltime
 
 
 def predictions_dir(hostname, service_description, dsname, create=False):
-    pred_dir = os.path.join(cmk.paths.var_dir, "prediction", hostname,
+    pred_dir = os.path.join(cmk.utils.paths.var_dir, "prediction", hostname,
                             cmk.utils.pnp_cleanup(service_description),
                             cmk.utils.pnp_cleanup(dsname))
 

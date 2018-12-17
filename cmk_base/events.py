@@ -40,8 +40,9 @@ import six
 # suppress "Cannot find module" error from mypy
 import livestatus  # type: ignore
 import cmk
-from cmk.regex import regex
-import cmk.daemon
+from cmk.utils.regex import regex
+import cmk.utils.debug
+import cmk.utils.daemon
 
 import cmk_base.config as config
 import cmk_base.core
@@ -89,7 +90,7 @@ def event_keepalive(event_function,
                     # had an issue related to os.urandom() which kept FDs open.
                     # This specific issue of Python 2.7.9 should've been fixed
                     # since Python 2.7.10. Just to be sure we keep cleaning up.
-                    cmk.daemon.closefrom(3)
+                    cmk.utils.daemon.closefrom(3)
 
                     os.execvp("cmk", sys.argv)
 
@@ -101,7 +102,7 @@ def event_keepalive(event_function,
                     except IOError as e:
                         new_data = ""
                     except Exception as e:
-                        if cmk.debug.enabled():
+                        if cmk.utils.debug.enabled():
                             raise
                         log_function("Cannot read data from CMC: %s" % e)
 
@@ -116,7 +117,7 @@ def event_keepalive(event_function,
                     context = raw_context_from_string(data.rstrip('\n'))
                     event_function(context)
                 except Exception as e:
-                    if cmk.debug.enabled():
+                    if cmk.utils.debug.enabled():
                         raise
                     log_function("ERROR %s\n%s" % (e, traceback.format_exc()))
 
@@ -128,7 +129,7 @@ def event_keepalive(event_function,
         except SystemExit as e:
             sys.exit(e)
         except Exception as e:
-            if cmk.debug.enabled():
+            if cmk.utils.debug.enabled():
                 raise
             log_function("ERROR %s\n%s" % (e, traceback.format_exc()))
 
@@ -136,19 +137,20 @@ def event_keepalive(event_function,
             try:
                 call_every_loop()
             except Exception as e:
-                if cmk.debug.enabled():
+                if cmk.utils.debug.enabled():
                     raise
                 log_function("ERROR %s\n%s" % (e, traceback.format_exc()))
 
 
 def config_timestamp():
     mtime = 0
-    for dirpath, _unused_dirnames, filenames in os.walk(cmk.paths.check_mk_config_dir):
+    for dirpath, _unused_dirnames, filenames in os.walk(cmk.utils.paths.check_mk_config_dir):
         for f in filenames:
             mtime = max(mtime, os.stat(dirpath + "/" + f).st_mtime)
 
     for path in [
-            cmk.paths.main_config_file, cmk.paths.final_config_file, cmk.paths.local_config_file
+            cmk.utils.paths.main_config_file, cmk.utils.paths.final_config_file,
+            cmk.utils.paths.local_config_file
     ]:
         try:
             mtime = max(mtime, os.stat(path).st_mtime)
@@ -169,7 +171,7 @@ def raw_context_from_string(data):
             varname, value = line.strip().split("=", 1)
             context[varname] = expand_backslashes(value)
     except Exception:  # line without '=' ignored or alerted
-        if cmk.debug.enabled():
+        if cmk.utils.debug.enabled():
             raise
     return context
 
@@ -250,7 +252,7 @@ def livestatus_fetch_contacts(host, service):
         return livestatus_fetch_contacts(host, None)
 
     except Exception:
-        if cmk.debug.enabled():
+        if cmk.utils.debug.enabled():
             raise
         return None  # We must allow notifications without Livestatus access
 
@@ -290,7 +292,7 @@ def complete_raw_context(raw_context, with_dump, log_func):
         raw_context["WHAT"] = "SERVICE" if raw_context.get("SERVICEDESC") else "HOST"
 
         raw_context.setdefault("MONITORING_HOST", socket.gethostname())
-        raw_context.setdefault("OMD_ROOT", cmk.paths.omd_root)
+        raw_context.setdefault("OMD_ROOT", cmk.utils.paths.omd_root)
         raw_context.setdefault("OMD_SITE", cmk.omd_site())
 
         # The Check_MK Micro Core sends the MICROTIME and no other time stamps. We add
@@ -417,7 +419,7 @@ def format_plugin_output(output):
     return output
 
 
-# TODO: Use cmk.render.*?
+# TODO: Use cmk.utils.render.*?
 def get_readable_rel_date(timestamp):
     try:
         change = int(timestamp)

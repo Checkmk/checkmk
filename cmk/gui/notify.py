@@ -29,7 +29,7 @@ import time
 import subprocess
 from typing import Dict, Any  # pylint: disable=unused-import
 
-import cmk.store as store
+import cmk.utils.store as store
 
 import cmk.gui.pages
 import cmk.gui.utils as utils

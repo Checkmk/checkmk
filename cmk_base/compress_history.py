@@ -29,10 +29,11 @@
 # logfiles and then compress them. Do *not* compress compressed
 # files again.
 
-from cmk.exceptions import MKBailOut
+from cmk.utils.exceptions import MKBailOut
 
-import cmk.log
-logger = cmk.log.get_logger(__name__)
+import cmk.utils.log
+import cmk.utils.debug
+logger = cmk.utils.log.get_logger(__name__)
 
 
 def do_compress_history(args):
@@ -44,7 +45,7 @@ def do_compress_history(args):
             logger.verbose("%s...", filename)
             compress_history_file(filename, filename + ".compressed")
         except Exception as e:
-            if cmk.debug.enabled():
+            if cmk.utils.debug.enabled():
                 raise
             raise MKBailOut("%s" % e)
 

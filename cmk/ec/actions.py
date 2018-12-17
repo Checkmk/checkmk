@@ -31,7 +31,8 @@ import time
 import six
 
 import cmk
-import cmk.defines
+import cmk.utils.debug
+import cmk.utils.defines
 import livestatus
 
 #.
@@ -339,7 +340,7 @@ def _base_notification_context(event, username, is_cancelling):
         "SERVICEOUTPUT": event["text"],
         "SERVICEPERFDATA": "",
         "SERVICEPROBLEMID": "ec-id-" + str(event["id"]),
-        "SERVICESTATE": cmk.defines.service_state_name(event["state"]),
+        "SERVICESTATE": cmk.utils.defines.service_state_name(event["state"]),
         "SERVICESTATEID": str(event["state"]),
         "SERVICE_EC_CONTACT": event.get("owner", ""),
         "SERVICE_SL": str(event["sl"]),
@@ -443,7 +444,7 @@ def _rbn_groups_contacts(groups):
         return []
 
     except Exception:
-        if cmk.debug.enabled():
+        if cmk.utils.debug.enabled():
             raise
         return []
 

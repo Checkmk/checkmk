@@ -39,8 +39,8 @@ from typing import NamedTuple, Any
 from pathlib2 import Path
 import boto3  # type: ignore
 import botocore  # type: ignore
-from cmk.paths import tmp_dir
-import cmk.password_store
+from cmk.utils.paths import tmp_dir
+import cmk.utils.password_store
 
 #   .--helpers-------------------------------------------------------------.
 #   |                  _          _                                        |
@@ -962,7 +962,7 @@ def setup_logging(opt_debug):
 
 def main(args=None):
     if args is None:
-        cmk.password_store.replace_passwords()
+        cmk.utils.password_store.replace_passwords()
         args = sys.argv[1:]
 
     args = parse_arguments(args)

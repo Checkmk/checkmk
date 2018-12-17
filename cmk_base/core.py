@@ -30,10 +30,10 @@ import os
 import subprocess
 import sys
 
-import cmk.paths
-import cmk.debug
+import cmk.utils.paths
+import cmk.utils.debug
 import cmk.utils.tty as tty
-from cmk.exceptions import MKGeneralException, MKTimeout
+from cmk.utils.exceptions import MKGeneralException, MKTimeout
 
 import cmk_base.console as console
 import cmk_base.config as config
@@ -75,14 +75,14 @@ def do_restart(core, only_reload=False):
             sys.exit(1)
 
         # Save current configuration
-        if os.path.exists(cmk.paths.nagios_objects_file):
-            backup_path = cmk.paths.nagios_objects_file + ".save"
+        if os.path.exists(cmk.utils.paths.nagios_objects_file):
+            backup_path = cmk.utils.paths.nagios_objects_file + ".save"
             console.verbose(
                 "Renaming %s to %s\n",
-                cmk.paths.nagios_objects_file,
+                cmk.utils.paths.nagios_objects_file,
                 backup_path,
                 stream=sys.stderr)
-            os.rename(cmk.paths.nagios_objects_file, backup_path)
+            os.rename(cmk.utils.paths.nagios_objects_file, backup_path)
         else:
             backup_path = None
 
@@ -92,8 +92,8 @@ def do_restart(core, only_reload=False):
             # TODO: Replace by MKBailOut()/MKTerminate()?
             console.error("Error creating configuration: %s\n" % e)
             if backup_path:
-                os.rename(backup_path, cmk.paths.nagios_objects_file)
-            if cmk.debug.enabled():
+                os.rename(backup_path, cmk.utils.paths.nagios_objects_file)
+            if cmk.utils.debug.enabled():
                 raise
             sys.exit(1)
 
@@ -108,15 +108,15 @@ def do_restart(core, only_reload=False):
             # TODO: Replace by MKBailOut()/MKTerminate()?
             console.error("Configuration for monitoring core is invalid. Rolling back.\n")
 
-            broken_config_path = "%s/check_mk_objects.cfg.broken" % cmk.paths.tmp_dir
-            file(broken_config_path, "w").write(file(cmk.paths.nagios_objects_file).read())
+            broken_config_path = "%s/check_mk_objects.cfg.broken" % cmk.utils.paths.tmp_dir
+            file(broken_config_path, "w").write(file(cmk.utils.paths.nagios_objects_file).read())
             console.error(
                 "The broken file has been copied to \"%s\" for analysis.\n" % broken_config_path)
 
             if backup_path:
-                os.rename(backup_path, cmk.paths.nagios_objects_file)
+                os.rename(backup_path, cmk.utils.paths.nagios_objects_file)
             else:
-                os.remove(cmk.paths.nagios_objects_file)
+                os.remove(cmk.utils.paths.nagios_objects_file)
             sys.exit(1)
 
     except Exception as e:
@@ -125,7 +125,7 @@ def do_restart(core, only_reload=False):
                 os.remove(backup_path)
         except:
             pass
-        if cmk.debug.enabled():
+        if cmk.utils.debug.enabled():
             raise
         # TODO: Replace by MKBailOut()/MKTerminate()?
         console.error("An error occurred: %s\n" % e)
@@ -136,7 +136,7 @@ def try_get_activation_lock():
     global _restart_lock_fd
     # In some bizarr cases (as cmk -RR) we need to avoid duplicate locking!
     if config.restart_locking and _restart_lock_fd is None:
-        lock_file = cmk.paths.default_config_dir + "/main.mk"
+        lock_file = cmk.utils.paths.default_config_dir + "/main.mk"
         _restart_lock_fd = os.open(lock_file, os.O_RDONLY)
         # Make sure that open file is not inherited to monitoring core!
         fcntl.fcntl(_restart_lock_fd, fcntl.F_SETFD, fcntl.FD_CLOEXEC)
@@ -156,7 +156,7 @@ def do_core_action(action, quiet=False):
 
     if config.monitoring_core == "nagios":
         os.putenv("CORE_NOVERIFY", "yes")
-        command = ["%s/etc/init.d/core" % cmk.paths.omd_root, action]
+        command = ["%s/etc/init.d/core" % cmk.utils.paths.omd_root, action]
     else:
         command = ["omd", action, "cmc"]
 
@@ -196,7 +196,7 @@ def check_timeperiod(timeperiod):
         raise
 
     except:
-        if cmk.debug.enabled():
+        if cmk.utils.debug.enabled():
             raise
 
         # If the query is not successful better skip this check then fail

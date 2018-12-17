@@ -10,7 +10,7 @@ import logging
 
 from testlib import CMKEventConsole, ec, web
 import cmk.ec.settings
-import cmk.paths
+import cmk.utils.paths
 import cmk.ec.main
 
 class FakeStatusSocket(object):
@@ -42,8 +42,8 @@ class FakeStatusSocket(object):
 def settings():
     return cmk.ec.settings.settings(
         '1.2.3i45',
-        pathlib.Path(cmk.paths.omd_root),
-        pathlib.Path(cmk.paths.default_config_dir),
+        pathlib.Path(cmk.utils.paths.omd_root),
+        pathlib.Path(cmk.utils.paths.default_config_dir),
         ['mkeventd'])
 
 

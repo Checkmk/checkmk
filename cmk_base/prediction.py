@@ -30,14 +30,14 @@ import math
 import os
 import time
 
-import cmk.debug
+import cmk.utils.debug
 import cmk.utils
-import cmk.log
-import cmk.defines as defines
+import cmk.utils.log
+import cmk.utils.defines as defines
 import cmk.utils.prediction
-from cmk.exceptions import MKGeneralException
+from cmk.utils.exceptions import MKGeneralException
 
-logger = cmk.log.get_logger(__name__)
+logger = cmk.utils.log.get_logger(__name__)
 
 
 def day_start(timestamp):

@@ -33,9 +33,9 @@ import tarfile
 import time
 import cStringIO as StringIO
 
-import cmk.paths
-import cmk.render as render
-from cmk.exceptions import MKGeneralException
+import cmk.utils.paths
+import cmk.utils.render as render
+from cmk.utils.exceptions import MKGeneralException
 
 import cmk_base.console as console
 
@@ -45,13 +45,13 @@ def backup_paths():
     # yapf: disable
     return [
         # tarname               path                 canonical name   description                is_dir
-        ('check_mk_configfile', cmk.paths.main_config_file,    "main.mk",       "Main configuration file",           False, ),
-        ('final_mk',            cmk.paths.final_config_file,   "final.mk",      "Final configuration file final.mk", False, ),
-        ('check_mk_configdir',  cmk.paths.check_mk_config_dir, "",              "Configuration sub files",           True,  ),
-        ('autochecksdir',       cmk.paths.autochecks_dir,      "",              "Automatically inventorized checks", True,  ),
-        ('counters_directory',  cmk.paths.counters_dir,        "",              "Performance counters",              True,  ),
-        ('tcp_cache_dir',       cmk.paths.tcp_cache_dir,       "",              "Agent cache",                       True,  ),
-        ('logwatch_dir',        cmk.paths.logwatch_dir,        "",              "Logwatch",                          True,  ),
+        ('check_mk_configfile', cmk.utils.paths.main_config_file,    "main.mk",       "Main configuration file",           False, ),
+        ('final_mk',            cmk.utils.paths.final_config_file,   "final.mk",      "Final configuration file final.mk", False, ),
+        ('check_mk_configdir',  cmk.utils.paths.check_mk_config_dir, "",              "Configuration sub files",           True,  ),
+        ('autochecksdir',       cmk.utils.paths.autochecks_dir,      "",              "Automatically inventorized checks", True,  ),
+        ('counters_directory',  cmk.utils.paths.counters_dir,        "",              "Performance counters",              True,  ),
+        ('tcp_cache_dir',       cmk.utils.paths.tcp_cache_dir,       "",              "Agent cache",                       True,  ),
+        ('logwatch_dir',        cmk.utils.paths.logwatch_dir,        "",              "Logwatch",                          True,  ),
     ]
     # yapf: enable
 

@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 """Managing in-memory caches through the execution time of cmk"""
 
-from cmk.exceptions import MKGeneralException
+from cmk.utils.exceptions import MKGeneralException
 
 import cmk_base.utils
 

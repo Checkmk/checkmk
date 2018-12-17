@@ -27,7 +27,7 @@
 
 import time
 
-import cmk.defines as defines
+import cmk.utils.defines as defines
 
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
@@ -675,7 +675,7 @@ class ModeEditTimeperiod(WatoMode):
 
     def _weekday_elements(self):
         elements = []
-        for tp_id, tp_title in cmk.defines.weekdays_by_name():
+        for tp_id, tp_title in cmk.utils.defines.weekdays_by_name():
             elements.append((tp_id, ListOfTimeRanges(title=tp_title)))
         return elements
 

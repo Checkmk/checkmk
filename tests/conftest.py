@@ -110,14 +110,14 @@ def fake_version_and_paths():
     import cmk
     monkeypatch.setattr(cmk, "omd_version", lambda: "%s.cee" % cmk.__version__)
 
-    monkeypatch.setattr("cmk.paths.checks_dir", "%s/checks" % cmk_path())
-    monkeypatch.setattr("cmk.paths.notifications_dir", "%s/notifications" % cmk_path())
-    monkeypatch.setattr("cmk.paths.inventory_dir", "%s/inventory" % cmk_path())
-    monkeypatch.setattr("cmk.paths.check_manpages_dir", "%s/checkman" % cmk_path())
-    monkeypatch.setattr("cmk.paths.tmp_dir", tmp_dir)
-    monkeypatch.setattr("cmk.paths.precompiled_checks_dir",
+    monkeypatch.setattr("cmk.utils.paths.checks_dir", "%s/checks" % cmk_path())
+    monkeypatch.setattr("cmk.utils.paths.notifications_dir", "%s/notifications" % cmk_path())
+    monkeypatch.setattr("cmk.utils.paths.inventory_dir", "%s/inventory" % cmk_path())
+    monkeypatch.setattr("cmk.utils.paths.check_manpages_dir", "%s/checkman" % cmk_path())
+    monkeypatch.setattr("cmk.utils.paths.tmp_dir", tmp_dir)
+    monkeypatch.setattr("cmk.utils.paths.precompiled_checks_dir",
                         os.path.join(tmp_dir, "var/check_mk/precompiled_checks"))
-    monkeypatch.setattr("cmk.paths.include_cache_dir",
+    monkeypatch.setattr("cmk.utils.paths.include_cache_dir",
                         os.path.join(tmp_dir, "check_mk/check_includes"))
 
 
@@ -129,13 +129,13 @@ def cleanup_cmk():
     if is_running_as_site_user():
         return
 
-    import cmk.paths
+    import cmk.utils.paths
 
-    if "pytest_cmk_" not in cmk.paths.tmp_dir:
+    if "pytest_cmk_" not in cmk.utils.paths.tmp_dir:
         return
 
     try:
-        shutil.rmtree(cmk.paths.tmp_dir)
+        shutil.rmtree(cmk.utils.paths.tmp_dir)
     except OSError as exc:
         if exc.errno != errno.ENOENT:
             raise  # re-raise exception

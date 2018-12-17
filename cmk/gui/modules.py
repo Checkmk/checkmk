@@ -50,7 +50,7 @@ import sys
 from types import ModuleType
 
 import cmk
-import cmk.paths
+import cmk.utils.paths
 
 import cmk.gui.utils as utils
 import cmk.gui.pages
@@ -148,7 +148,7 @@ def _cmk_gui_top_level_modules():
 
 
 def _find_local_web_plugins():
-    basedir = cmk.paths.local_web_dir + "/plugins/"
+    basedir = cmk.utils.paths.local_web_dir + "/plugins/"
 
     try:
         plugin_dirs = os.listdir(basedir)

@@ -51,18 +51,19 @@ import pathlib2 as pathlib
 import six
 
 import cmk
-import cmk.daemon
-import cmk.defines
+import cmk.utils.daemon
+import cmk.utils.defines
 import cmk.ec.actions
 import cmk.ec.export
 import cmk.ec.history
 import cmk.ec.settings
 import cmk.ec.snmp
-import cmk.log
-import cmk.paths
+import cmk.utils.log
+import cmk.utils.paths
 import cmk.utils.profile
-import cmk.render
-import cmk.regex
+import cmk.utils.render
+import cmk.utils.regex
+import cmk.utils.debug
 
 # suppress "Cannot find module" error from mypy
 import livestatus  # type: ignore
@@ -1450,7 +1451,7 @@ class EventServer(ECServerThread):
         if not value:
             return None
 
-        if cmk.regex.is_regex(value):
+        if cmk.utils.regex.is_regex(value):
             return re.compile(value, re.IGNORECASE)
         return val.lower()
 
@@ -1684,7 +1685,7 @@ class EventServer(ECServerThread):
             return False
 
         except Exception:
-            if cmk.debug.enabled():
+            if cmk.utils.debug.enabled():
                 raise
             return False
 
@@ -1855,7 +1856,7 @@ class EventServer(ECServerThread):
                 regex, subst = translation.get("regex")
                 if not regex.endswith('$'):
                     regex += '$'
-                rcomp = cmk.regex.regex(regex)
+                rcomp = cmk.utils.regex.regex(regex)
                 mo = rcomp.match(backedhost)
                 if mo:
                     backedhost = subst
@@ -2553,9 +2554,9 @@ class QueryGET(Query):
         "<": (lambda a, b: a < b),
         ">=": (lambda a, b: a >= b),
         "<=": (lambda a, b: a <= b),
-        "~": (lambda a, b: cmk.regex.regex(b).search(a)),
+        "~": (lambda a, b: cmk.utils.regex.regex(b).search(a)),
         "=~": (lambda a, b: a.lower() == b.lower()),
-        "~~": (lambda a, b: cmk.regex.regex(b.lower()).search(a.lower())),
+        "~~": (lambda a, b: cmk.utils.regex.regex(b.lower()).search(a.lower())),
         "in": (lambda a, b: a in b),
     }
 
@@ -3175,7 +3176,7 @@ class StatusServer(ECServerThread):
 
     def handle_command_reopenlog(self):
         self._logger.info("Closing this logfile")
-        cmk.log.open_log(str(self.settings.paths.log_file.value))
+        cmk.utils.log.open_log(str(self.settings.paths.log_file.value))
         self._logger.info("Opened new logfile")
 
     # Erase our current state and history!
@@ -4065,18 +4066,18 @@ def reload_configuration(settings, logger, lock_configuration, history, event_st
 
 def main():
     os.unsetenv("LANG")
-    logger = cmk.log.get_logger("mkeventd")
-    settings = cmk.ec.settings.settings(cmk.__version__, pathlib.Path(cmk.paths.omd_root),
-                                        pathlib.Path(cmk.paths.default_config_dir), sys.argv)
+    logger = cmk.utils.log.get_logger("mkeventd")
+    settings = cmk.ec.settings.settings(cmk.__version__, pathlib.Path(cmk.utils.paths.omd_root),
+                                        pathlib.Path(cmk.utils.paths.default_config_dir), sys.argv)
 
     pid_path = None
     try:
-        cmk.log.open_log(sys.stderr)
-        cmk.log.set_verbosity(settings.options.verbosity)
+        cmk.utils.log.open_log(sys.stderr)
+        cmk.utils.log.set_verbosity(settings.options.verbosity)
 
         settings.paths.log_file.value.parent.mkdir(parents=True, exist_ok=True)
         if not settings.options.foreground:
-            cmk.log.open_log(str(settings.paths.log_file.value))
+            cmk.utils.log.open_log(str(settings.paths.log_file.value))
 
         logger.info("-" * 65)
         logger.info("mkeventd version %s starting" % cmk.__version__)
@@ -4119,10 +4120,10 @@ def main():
 
         if not settings.options.foreground:
             pid_path.parent.mkdir(parents=True, exist_ok=True)
-            cmk.daemon.daemonize()
+            cmk.utils.daemon.daemonize()
             logger.info("Daemonized with PID %d." % os.getpid())
 
-        cmk.daemon.lock_with_pid_file(str(pid_path))
+        cmk.utils.daemon.lock_with_pid_file(str(pid_path))
 
         # Install signal hander
         def signal_handler(signum, stack_frame):
@@ -4182,7 +4183,7 @@ def main():
         bail_out(logger, traceback.format_exc())
 
     finally:
-        if pid_path and cmk.store.have_lock(str(pid_path)):
+        if pid_path and cmk.utils.store.have_lock(str(pid_path)):
             try:
                 pid_path.unlink()
             except OSError:

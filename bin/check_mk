@@ -43,10 +43,10 @@ if not os.environ.get("OMD_SITE"):
     sys.stderr.write("Check_MK can be used only as site user.\n")
     sys.exit(1)
 
-from cmk.exceptions import MKGeneralException, MKTerminate, MKBailOut
-import cmk.debug
-import cmk.log
-import cmk.paths
+from cmk.utils.exceptions import MKGeneralException, MKTerminate, MKBailOut
+import cmk.utils.debug
+import cmk.utils.log
+import cmk.utils.paths
 
 import cmk_base
 import cmk_base.console as console
@@ -55,8 +55,8 @@ import cmk_base.profiling as profiling
 from cmk_base.modes import modes
 import cmk_base.check_api as check_api
 
-cmk.log.setup_console_logging()
-logger = cmk.log.get_logger("base")
+cmk.utils.log.setup_console_logging()
+logger = cmk.utils.log.get_logger("base")
 
 cmk_base.utils.register_sigint_handler()
 
@@ -107,6 +107,6 @@ except MKTerminate, e:
 
 except (MKGeneralException, MKBailOut), e:
     sys.stderr.write("%s\n" % e)
-    if cmk.debug.enabled():
+    if cmk.utils.debug.enabled():
         raise
     sys.exit(3)

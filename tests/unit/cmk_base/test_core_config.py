@@ -1,6 +1,6 @@
 import pytest
 
-from cmk.exceptions import MKGeneralException
+from cmk.utils.exceptions import MKGeneralException
 import cmk_base.config as config
 import cmk_base.core_config as core_config
 

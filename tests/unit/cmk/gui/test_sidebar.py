@@ -3,7 +3,7 @@ import pytest
 import cmk.gui.sidebar as sidebar
 import cmk.gui.config as config
 import cmk.gui.pages
-import cmk.store as store
+import cmk.utils.store as store
 from cmk.gui.globals import html
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.sidebar import UserSidebarSnapin, SnapinVisibility

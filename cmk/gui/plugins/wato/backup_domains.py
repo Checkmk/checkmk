@@ -27,7 +27,7 @@
 import cmk.gui.watolib as watolib
 from cmk.gui.i18n import _
 
-import cmk.paths
+import cmk.utils.paths
 
 watolib.backup_domains.update({
     "check_mk": {
@@ -35,7 +35,7 @@ watolib.backup_domains.update({
         "title": _(
             "Hosts, Services, Groups, Timeperiods, Business Intelligence and Monitoring Configuration"
         ),
-        "prefix": cmk.paths.default_config_dir,
+        "prefix": cmk.utils.paths.default_config_dir,
         "paths": [
             ("file", "liveproxyd.mk"),
             ("file", "main.mk"),
@@ -53,7 +53,7 @@ watolib.backup_domains.update({
     "authorization_v1": {
         "group": _("Configuration"),
         "title": _("Local Authentication Data"),
-        "prefix": cmk.paths.omd_root,
+        "prefix": cmk.utils.paths.omd_root,
         "paths": [
             ("file", "etc/htpasswd"),
             ("file", "etc/auth.secret"),
@@ -67,13 +67,13 @@ watolib.backup_domains.update({
     "mkeventstatus": {
         "group": _("Configuration"),
         "title": _("Event Console Configuration"),
-        "prefix": cmk.paths.omd_root,
+        "prefix": cmk.utils.paths.omd_root,
         "paths": [("dir", "etc/check_mk/mkeventd.d"),],
         "default": True
     },
     "extensions": {
         "title": _("Extensions in <tt>~/local/</tt> and MKPs"),
-        "prefix": cmk.paths.omd_root,
+        "prefix": cmk.utils.paths.omd_root,
         "paths": [
             ("dir", "var/check_mk/packages"),
             ("dir", "local"),

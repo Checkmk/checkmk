@@ -34,7 +34,7 @@ import uuid
 import marshal
 import urlparse
 
-import cmk.paths
+import cmk.utils.paths
 
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError
@@ -166,8 +166,8 @@ def gen_id():
 #       be a large rewrite :-/
 def load_web_plugins(forwhat, globalvars):
     for plugins_path in [
-            cmk.paths.web_dir + "/plugins/" + forwhat,
-            cmk.paths.local_web_dir + "/plugins/" + forwhat
+            cmk.utils.paths.web_dir + "/plugins/" + forwhat,
+            cmk.utils.paths.local_web_dir + "/plugins/" + forwhat
     ]:
         if not os.path.exists(plugins_path):
             continue

@@ -26,7 +26,7 @@
 
 import math
 
-import cmk.debug
+import cmk.utils.debug
 
 
 def our_uptime():
@@ -47,7 +47,7 @@ def process(output):
             replacement = str(eval("agentsim_" + simfunc))  # nosec
             output = output[:i] + replacement + output[e + 1:]
     except Exception as e:
-        if cmk.debug.enabled():
+        if cmk.utils.debug.enabled():
             raise
 
     return output

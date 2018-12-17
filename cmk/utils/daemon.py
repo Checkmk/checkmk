@@ -35,8 +35,8 @@ from typing import Generator  # pylint: disable=unused-import
 
 from pathlib2 import Path  # pylint: disable=unused-import
 
-import cmk.store
-from cmk.exceptions import MKGeneralException
+import cmk.utils.store
+from cmk.utils.exceptions import MKGeneralException
 
 
 def daemonize(user=0, group=0):
@@ -110,7 +110,7 @@ def lock_with_pid_file(path):
     Use this after daemonizing or in foreground mode to ensure there is only
     one process running.
     """
-    if not cmk.store.try_aquire_lock(path):
+    if not cmk.utils.store.try_aquire_lock(path):
         raise MKGeneralException("Failed to aquire PID file lock: "
                                  "Another process is already running")
 
@@ -124,10 +124,10 @@ def lock_with_pid_file(path):
 def _cleanup_locked_pid_file(path):
     # type: (str) -> None
     """Cleanup the lock + file acquired by the function above"""
-    if not cmk.store.have_lock(path):
+    if not cmk.utils.store.have_lock(path):
         return
 
-    cmk.store.release_lock(path)
+    cmk.utils.store.release_lock(path)
 
     try:
         os.remove(path)

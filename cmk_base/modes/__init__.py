@@ -28,8 +28,8 @@ import sys
 import textwrap
 import getopt
 
-from cmk.plugin_loader import load_plugins
-from cmk.exceptions import MKBailOut, MKGeneralException
+from cmk.utils.plugin_loader import load_plugins
+from cmk.utils.exceptions import MKBailOut, MKGeneralException
 
 import cmk_base.config as config
 

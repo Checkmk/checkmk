@@ -24,7 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import cmk.paths
+import cmk.utils.paths
+import cmk.utils.debug
 
 
 def inv_export_software_csv(hostname, params, tree):
@@ -46,13 +47,13 @@ def inv_export_software_csv(hostname, params, tree):
 
     filename = params["filename"].replace("<HOST>", hostname)
     if not filename.startswith("/"):
-        filename = cmk.paths.var_dir + "/" + filename
+        filename = cmk.utils.paths.var_dir + "/" + filename
     dirname = filename.rsplit("/", 1)[0]
     if not os.path.exists(dirname):
         try:
             os.makedirs(dirname)
         except Exception, e:
-            if cmk.debug.enabled():
+            if cmk.utils.debug.enabled():
                 raise
             raise MKGeneralException("Cannot create missing directory %s: %s" % (dirname, e))
 

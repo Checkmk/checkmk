@@ -42,9 +42,9 @@ from pysmi.searcher.stub import StubSearcher
 from pysmi.error import PySmiError
 import six
 
-import cmk.paths
-import cmk.store as store
-import cmk.render
+import cmk.utils.paths
+import cmk.utils.store as store
+import cmk.utils.render
 
 import cmk.ec.export as ec
 import cmk.ec.defaults
@@ -133,7 +133,7 @@ from cmk.gui.plugins.wato.check_mk_configuration import (
 )
 from cmk.gui.plugins.wato.globals_notification import ConfigVariableGroupNotifications
 
-mkeventd_status_file = cmk.paths.omd_root + "/var/mkeventd/status"
+mkeventd_status_file = cmk.utils.paths.omd_root + "/var/mkeventd/status"
 
 #.
 #   .--ValueSpecs----------------------------------------------------------.
@@ -2530,7 +2530,8 @@ class ModeEventConsoleMIBs(EventConsoleMode):
                 table.text_cell(_("Filename"), filename)
                 table.text_cell(_("MIB"), mib.get("name", ""))
                 table.text_cell(_("Organization"), mib.get("organization", ""))
-                table.text_cell(_("Size"), cmk.render.fmt_bytes(mib.get("size", 0)), css="number")
+                table.text_cell(
+                    _("Size"), cmk.utils.render.fmt_bytes(mib.get("size", 0)), css="number")
 
         if is_custom_dir:
             html.button(
@@ -3439,7 +3440,7 @@ class ConfigVariableEventConsoleLogLevel(ConfigVariable):
                 help=_(
                     "You can configure the Event Console to log more details about it's actions. "
                     "These information are logged into the file <tt>%s</tt>") %
-                site_neutral_path(cmk.paths.log_dir + "/mkeventd.log"),
+                site_neutral_path(cmk.utils.paths.log_dir + "/mkeventd.log"),
                 elements=self._ec_log_level_elements(),
                 optional_keys=[],
             ),
@@ -3447,7 +3448,7 @@ class ConfigVariableEventConsoleLogLevel(ConfigVariable):
             # 0 -> normal logging
             # 1 -> verbose logging
             forth=
-            lambda x: {"cmk.mkeventd": (cmk.log.INFO if x == 0 else cmk.log.VERBOSE)} if x in (0, 1) else x,
+            lambda x: {"cmk.mkeventd": (cmk.utils.log.INFO if x == 0 else cmk.utils.log.VERBOSE)} if x in (0, 1) else x,
         )
 
     def _ec_log_level_elements(self):
@@ -3886,7 +3887,7 @@ def mkeventd_update_notifiation_configuration(hosts):
     if not remote_console:
         remote_console = ""
 
-    path = cmk.paths.nagios_conf_dir + "/mkeventd_notifications.cfg"
+    path = cmk.utils.paths.nagios_conf_dir + "/mkeventd_notifications.cfg"
     if not contactgroup and os.path.exists(path):
         os.remove(path)
     elif contactgroup:

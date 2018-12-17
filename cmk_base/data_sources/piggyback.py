@@ -26,7 +26,7 @@
 
 import os
 
-from cmk.paths import tmp_dir
+from cmk.utils.paths import tmp_dir
 
 from cmk_base.config import piggyback_max_cachefile_age
 from cmk_base.piggyback import get_piggyback_raw_data

@@ -32,7 +32,7 @@ import csv
 import time
 from difflib import SequenceMatcher
 
-import cmk.store as store
+import cmk.utils.store as store
 
 import cmk.gui.pages
 import cmk.gui.weblib as weblib
@@ -61,7 +61,7 @@ from cmk.gui.plugins.wato import (
 
 @mode_registry.register
 class ModeBulkImport(WatoMode):
-    _upload_tmp_path = cmk.paths.tmp_dir + "/host-import"
+    _upload_tmp_path = cmk.utils.paths.tmp_dir + "/host-import"
 
     @classmethod
     def name(cls):

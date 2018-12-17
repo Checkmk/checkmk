@@ -63,8 +63,8 @@ from ldap.controls import SimplePagedResultsControl  # type: ignore
 import six
 
 import cmk
-import cmk.paths
-import cmk.log
+import cmk.utils.paths
+import cmk.utils.log
 
 import cmk.gui.config as config
 import cmk.gui.log as log
@@ -210,7 +210,7 @@ class LDAPUserConnector(UserConnector):
         self._group_search_cache = {}
 
         # File for storing the time of the last success event
-        self._sync_time_file = cmk.paths.var_dir + '/web/ldap_%s_sync_time.mk' % self.id()
+        self._sync_time_file = cmk.utils.paths.var_dir + '/web/ldap_%s_sync_time.mk' % self.id()
 
         self._save_suffix()
 
@@ -236,7 +236,7 @@ class LDAPUserConnector(UserConnector):
     def connect_server(self, server):
         try:
             trace_args = {}
-            if self._logger.isEnabledFor(cmk.log.DEBUG):
+            if self._logger.isEnabledFor(cmk.utils.log.DEBUG):
                 os.environ["GNUTLS_DEBUG_LEVEL"] = "99"
                 ldap.set_option(ldap.OPT_DEBUG_LEVEL, 4095)
                 trace_args["trace_level"] = 2
@@ -255,7 +255,7 @@ class LDAPUserConnector(UserConnector):
 
             if 'use_ssl' in self._config:
                 conn.set_option(ldap.OPT_X_TLS_CACERTFILE,
-                                "%s/var/ssl/ca-certificates.crt" % cmk.paths.omd_root)
+                                "%s/var/ssl/ca-certificates.crt" % cmk.utils.paths.omd_root)
 
                 # Caused trouble on older systems or systems with some special configuration or set of
                 # libraries. For example we saw a Ubuntu 17.10 system with libldap  2.4.45+dfsg-1ubuntu1 and
@@ -376,7 +376,7 @@ class LDAPUserConnector(UserConnector):
 
     def _cache_nearest_dc(self, server):
         self._logger.debug(_('Caching nearest DC %s') % server)
-        cmk.store.save_file(self._nearest_dc_cache_filepath(), server)
+        cmk.utils.store.save_file(self._nearest_dc_cache_filepath(), server)
 
     def clear_nearest_dc_cache(self):
         if not self._uses_discover_nearest_server():
@@ -392,7 +392,7 @@ class LDAPUserConnector(UserConnector):
 
     @classmethod
     def _ldap_caches_filepath(cls):
-        return os.path.join(cmk.paths.tmp_dir, "ldap_caches")
+        return os.path.join(cmk.utils.paths.tmp_dir, "ldap_caches")
 
     @classmethod
     def config_changed(cls):

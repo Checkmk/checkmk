@@ -33,7 +33,7 @@ import time
 import six
 
 import cmk.ec.actions
-import cmk.render
+import cmk.utils.render
 
 # TODO: As one can see clearly below, we should really have a class hierarchy here...
 
@@ -263,7 +263,7 @@ def _get_mongodb(history, query):
     result = history._mongodb.db.ec_archive.find(query).sort('time', -1)
 
     # Might be used for debugging / profiling
-    #file(cmk.paths.omd_root + '/var/log/check_mk/ec_history_debug.log', 'a').write(
+    #file(cmk.utils.paths.omd_root + '/var/log/check_mk/ec_history_debug.log', 'a').write(
     #    pprint.pformat(filters) + '\n' + pprint.pformat(result.explain()) + '\n')
 
     if limit:
@@ -396,11 +396,11 @@ def _expire_logfiles(settings, config, logger, lock_history, flush):
             days = config["history_lifetime"]
             min_mtime = time.time() - days * 86400
             logger.verbose("Expiring logfiles (Horizon: %d days -> %s)" %
-                           (days, cmk.render.date_and_time(min_mtime)))
+                           (days, cmk.utils.render.date_and_time(min_mtime)))
             for path in settings.paths.history_dir.value.glob('*.log'):
                 if flush or path.stat().st_mtime < min_mtime:
                     logger.info("Deleting log file %s (age %s)" %
-                                (path, cmk.render.date_and_time(path.stat().st_mtime)))
+                                (path, cmk.utils.render.date_and_time(path.stat().st_mtime)))
                     path.unlink()
         except Exception as e:
             if settings.options.debug:

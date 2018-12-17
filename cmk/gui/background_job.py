@@ -39,10 +39,10 @@ from pathlib2 import Path
 
 from cmk.gui.i18n import _
 import cmk
-import cmk.log
-import cmk.daemon as daemon
-import cmk.store as store
-from cmk.exceptions import MKGeneralException, MKTerminate
+import cmk.utils.log
+import cmk.utils.daemon as daemon
+import cmk.utils.store as store
+from cmk.utils.exceptions import MKGeneralException, MKTerminate
 
 import cmk.gui.log
 
@@ -220,12 +220,12 @@ class BackgroundProcess(BackgroundProcessInterface, multiprocessing.Process):
         """In addition to the web.log we also want to see the job specific logs
         in stdout (which results in job progress info)"""
         handler = logging.StreamHandler(stream=sys.stdout)
-        handler.setFormatter(cmk.log.get_formatter())
+        handler.setFormatter(cmk.utils.log.get_formatter())
         cmk.gui.log.logger.addHandler(handler)
 
 
 class BackgroundJobDefines(object):
-    base_dir = os.path.join(cmk.paths.var_dir, "background_jobs")
+    base_dir = os.path.join(cmk.utils.paths.var_dir, "background_jobs")
     process_name = "cmk-job"  # NOTE: keep this name short! psutil.Process tends to truncate long names
 
     jobstatus_filename = "jobstatus.mk"
@@ -430,10 +430,10 @@ class BackgroundJob(object):
 
     def start(self):
         try:
-            cmk.store.aquire_lock(self._job_initializiation_lock)
+            cmk.utils.store.aquire_lock(self._job_initializiation_lock)
             self._start()
         finally:
-            cmk.store.release_lock(self._job_initializiation_lock)
+            cmk.utils.store.release_lock(self._job_initializiation_lock)
 
     def _start(self):
         if self.is_running():

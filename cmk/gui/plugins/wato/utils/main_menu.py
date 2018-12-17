@@ -30,7 +30,7 @@ from typing import Optional, Text  # pylint: disable=unused-import
 
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
-import cmk.plugin_registry
+import cmk.utils.plugin_registry
 from cmk.gui.globals import html
 
 
@@ -157,7 +157,7 @@ class MainModule(MenuItem):
         raise NotImplementedError()
 
 
-class ModuleRegistry(cmk.plugin_registry.ClassRegistry):
+class ModuleRegistry(cmk.utils.plugin_registry.ClassRegistry):
     def plugin_base_class(self):
         return MainModule
 

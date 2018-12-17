@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import re
-import cmk.defines as defines
+import cmk.utils.defines as defines
 
 from cmk.gui.plugins.wato.active_checks import check_icmp_params
 

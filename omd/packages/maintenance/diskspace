@@ -8,7 +8,7 @@ import glob
 import traceback
 import subprocess
 
-from cmk.render import fmt_bytes
+from cmk.utils.render import fmt_bytes
 
 opt_verbose = '-v' in sys.argv
 opt_force = '-f' in sys.argv

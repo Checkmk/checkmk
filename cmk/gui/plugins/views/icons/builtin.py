@@ -60,7 +60,7 @@
 import json
 
 import cmk.utils
-import cmk.render
+import cmk.utils.render
 
 import cmk.gui.metrics as metrics
 import cmk.gui.config as config
@@ -522,11 +522,11 @@ def paint_downtimes(what, row, tags, host_custom_vars):
                                                                                                                                                  11]
 
             if fixed:
-                time_info = "Start: %s, End: %s" % (cmk.render.date_and_time(start_time),
-                                                    cmk.render.date_and_time(end_time))
+                time_info = "Start: %s, End: %s" % (cmk.utils.render.date_and_time(start_time),
+                                                    cmk.utils.render.date_and_time(end_time))
             else:
                 time_info = "May start from %s till %s with duration of %s" % \
-                    (cmk.render.date_and_time(start_time), cmk.render.date_and_time(end_time), cmk.render.Age(duration))
+                    (cmk.utils.render.date_and_time(start_time), cmk.utils.render.date_and_time(end_time), cmk.utils.render.Age(duration))
 
             lines.append("%s (%s) - %s" % (author, time_info, comment))
 

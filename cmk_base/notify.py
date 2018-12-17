@@ -46,9 +46,10 @@ import time
 
 # suppress "Cannot find module" error from mypy
 import livestatus  # type: ignore
-from cmk.regex import regex
-import cmk.paths
-from cmk.exceptions import MKGeneralException
+import cmk.utils.debug
+from cmk.utils.regex import regex
+import cmk.utils.paths
+from cmk.utils.exceptions import MKGeneralException
 
 import cmk_base.utils
 import cmk_base.config as config
@@ -76,11 +77,11 @@ notify_mode = "notify"
 #   '----------------------------------------------------------------------'
 
 # Default settings
-notification_logdir = cmk.paths.var_dir + "/notify"
-notification_spooldir = cmk.paths.var_dir + "/notify/spool"
-notification_bulkdir = cmk.paths.var_dir + "/notify/bulk"
-notification_core_log = cmk.paths.var_dir + "/notify/nagios.log"  # Fallback for history if no CMC running
-notification_log = cmk.paths.log_dir + "/notify.log"
+notification_logdir = cmk.utils.paths.var_dir + "/notify"
+notification_spooldir = cmk.utils.paths.var_dir + "/notify/spool"
+notification_bulkdir = cmk.utils.paths.var_dir + "/notify/bulk"
+notification_core_log = cmk.utils.paths.var_dir + "/notify/nagios.log"  # Fallback for history if no CMC running
+notification_log = cmk.utils.paths.log_dir + "/notify.log"
 
 notification_log_template = \
     u"$CONTACTNAME$ - $NOTIFICATIONTYPE$ - " \
@@ -224,7 +225,7 @@ def do_notify(options, args):
             notify_notify(raw_context_from_env())
 
     except Exception:
-        crash_dir = cmk.paths.var_dir + "/notify"
+        crash_dir = cmk.utils.paths.var_dir + "/notify"
         if not os.path.exists(crash_dir):
             os.makedirs(crash_dir)
         file(crash_dir + "/crash.log", "a").write(
@@ -349,7 +350,7 @@ def locally_deliver_raw_context(raw_context, analyse=False):
             notify_plain_email(raw_context)
 
     except Exception as e:
-        if cmk.debug.enabled():
+        if cmk.utils.debug.enabled():
             raise
         notify_log("ERROR: %s\n%s" % (e, format_exception()))
 
@@ -553,7 +554,7 @@ def notify_rulebased(raw_context, analyse=False):
                         call_notification_script(plugin, context)
 
             except Exception as e:
-                if cmk.debug.enabled():
+                if cmk.utils.debug.enabled():
                     raise
                 fe = format_exception()
                 notify_log("    ERROR: %s" % e)
@@ -696,7 +697,7 @@ def rbn_get_bulk_params(rule):
         try:
             active = cmk_base.core.timeperiod_active(params["timeperiod"])
         except:
-            if cmk.debug.enabled():
+            if cmk.utils.debug.enabled():
                 raise
             # If a livestatus connection error appears we will bulk the
             # notification in the first place. When the connection is available
@@ -981,7 +982,7 @@ def rbn_groups_contacts(groups):
         return []
 
     except Exception:
-        if cmk.debug.enabled():
+        if cmk.utils.debug.enabled():
             raise
         return []
 
@@ -1282,16 +1283,16 @@ def create_bulk_parameter_context(params):
 
 def path_to_notification_script(plugin):
     # Call actual script without any arguments
-    local_path = cmk.paths.local_notifications_dir + "/" + plugin
+    local_path = cmk.utils.paths.local_notifications_dir + "/" + plugin
     if os.path.exists(local_path):
         path = local_path
     else:
-        path = cmk.paths.notifications_dir + "/" + plugin
+        path = cmk.utils.paths.notifications_dir + "/" + plugin
 
     if not os.path.exists(path):
         notify_log("Notification plugin '%s' not found" % plugin)
-        notify_log("  not in %s" % cmk.paths.notifications_dir)
-        notify_log("  and not in %s" % cmk.paths.local_notifications_dir)
+        notify_log("  not in %s" % cmk.utils.paths.notifications_dir)
+        notify_log("  and not in %s" % cmk.utils.paths.local_notifications_dir)
         return None
 
     return path
@@ -1690,7 +1691,7 @@ def send_ripe_bulks():
             try:
                 notify_bulk(bulk[0], bulk[-1])
             except Exception:
-                if cmk.debug.enabled():
+                if cmk.utils.debug.enabled():
                     raise
                 notify_log("Error sending bulk %s: %s" % (bulk[0], format_exception()))
 
@@ -1711,7 +1712,7 @@ def notify_bulk(dirname, uuids):
         try:
             params, context = eval(file(dirname + "/" + uuid).read())
         except Exception as e:
-            if cmk.debug.enabled():
+            if cmk.utils.debug.enabled():
                 raise
             notify_log("    Deleting corrupted or empty bulk file %s/%s: %s" % (dirname, uuid, e))
             continue
@@ -1951,7 +1952,7 @@ def _send_livestatus_command(command):
     try:
         livestatus.LocalConnection().command("[%d] %s" % (time.time(), command.encode("utf-8")))
     except Exception as e:
-        if cmk.debug.enabled():
+        if cmk.utils.debug.enabled():
             raise
         notify_log("WARNING: cannot send livestatus command: %s" % e)
         notify_log("Command was: %s" % command)

@@ -34,9 +34,9 @@ import socket
 import traceback
 from optparse import OptionParser
 
-import cmk.render
-import cmk.password_store
-cmk.password_store.replace_passwords()
+import cmk.utils.render
+import cmk.utils.password_store
+cmk.utils.password_store.replace_passwords()
 
 
 class Mail(object):
@@ -267,7 +267,7 @@ def main(options):
                 status = 0
                 status_icon = ""
                 for mail in old_mails:
-                    age = cmk.render.Age(now - mail.timestamp())
+                    age = cmk.utils.render.Age(now - mail.timestamp())
                     if float(age) >= options.crit_age:
                         report_age = age
                         status = 2
@@ -283,16 +283,16 @@ def main(options):
                             (status,
                              "oldest mail in %s is at least %s old %s(warn/crit at %s/%s)" %\
                              (mb, report_age, status_icon,
-                             cmk.render.Age(options.warn_age), cmk.render.Age(options.crit_age))))
+                             cmk.utils.render.Age(options.warn_age), cmk.utils.render.Age(options.crit_age))))
 
         if options.crit_new and options.warn_new:
             new_mails = imap.mails(mb, after=(now - options.crit_new))
             status = 2
-            report_age = cmk.render.Age(options.crit_new)
+            report_age = cmk.utils.render.Age(options.crit_new)
             if new_mails:
                 new_mails = new_mails[options.retrieve_max * -1:]
                 for mail in reversed(new_mails):
-                    age = cmk.render.Age(now - mail.timestamp())
+                    age = cmk.utils.render.Age(now - mail.timestamp())
                     if float(age) < options.warn_new:
                         status = 0
                         break
@@ -307,7 +307,7 @@ def main(options):
             if status > 0:
                 messages.append(
                     (status, "newest mail in %s is at least %s old %s(warn/crit at %s/%s)" %\
-                     (mb, report_age, status_icon, cmk.render.Age(options.warn_new), cmk.render.Age(options.crit_new))))
+                     (mb, report_age, status_icon, cmk.utils.render.Age(options.warn_new), cmk.utils.render.Age(options.crit_new))))
 
     if messages:
         status = max([m[0] for m in messages])

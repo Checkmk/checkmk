@@ -28,8 +28,8 @@
 import os
 import socket
 
-from cmk.regex import regex
-import cmk.store as store
+from cmk.utils.regex import regex
+import cmk.utils.store as store
 
 import cmk.gui.pages
 import cmk.gui.config as config

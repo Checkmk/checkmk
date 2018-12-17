@@ -27,7 +27,7 @@
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 
-from cmk.plugin_loader import load_plugins
+from cmk.utils.plugin_loader import load_plugins
 
 #.
 #   .--Plugin API----------------------------------------------------------.

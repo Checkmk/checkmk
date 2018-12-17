@@ -32,7 +32,7 @@ import json
 
 import six
 
-import cmk.plugin_registry
+import cmk.utils.plugin_registry
 
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
@@ -1535,7 +1535,7 @@ def sort_sites(sitelist):
     return sitelist
 
 
-class ModeRegistry(cmk.plugin_registry.ClassRegistry):
+class ModeRegistry(cmk.utils.plugin_registry.ClassRegistry):
     def plugin_base_class(self):
         return WatoMode
 

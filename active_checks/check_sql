@@ -34,8 +34,8 @@ import logging
 import os
 import sys
 
-import cmk.password_store
-cmk.password_store.replace_passwords()
+import cmk.utils.password_store
+cmk.utils.password_store.replace_passwords()
 
 log = logging.getLogger(__name__)
 

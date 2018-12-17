@@ -26,8 +26,8 @@
 
 import socket
 
-import cmk.debug
-from cmk.exceptions import MKTerminate, MKGeneralException
+import cmk.utils.debug
+from cmk.utils.exceptions import MKTerminate, MKGeneralException
 import cmk.utils.werks
 
 import cmk_base.utils as utils
@@ -135,7 +135,7 @@ class TCPDataSource(CheckMKAgentDataSource):
             raise
 
         except socket.error as e:
-            if cmk.debug.enabled():
+            if cmk.utils.debug.enabled():
                 raise
             raise MKAgentError("Communication failed: %s" % e)
         finally:
@@ -281,7 +281,7 @@ class TCPDataSource(CheckMKAgentDataSource):
 
             return True
         except Exception as e:
-            if cmk.debug.enabled():
+            if cmk.utils.debug.enabled():
                 raise
             raise MKGeneralException(
                 "Unable to check agent version (Agent: %s Expected: %s, Error: %s)" %

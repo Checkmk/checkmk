@@ -35,8 +35,8 @@ import pathlib2 as pathlib
 import six
 
 import cmk.utils
-import cmk.paths
-import cmk.store as store
+import cmk.utils.paths
+import cmk.utils.store as store
 
 import cmk.gui.pages
 import cmk.gui.utils as utils
@@ -244,7 +244,7 @@ def user_exists(username):
     if _user_exists_according_to_profile(username):
         return True
 
-    return Htpasswd(pathlib.Path(cmk.paths.htpasswd_file)).exists(username)
+    return Htpasswd(pathlib.Path(cmk.utils.paths.htpasswd_file)).exists(username)
 
 
 def _user_exists_according_to_profile(username):
@@ -325,8 +325,8 @@ def on_failed_login(username):
         save_users(users)
 
 
-root_dir = cmk.paths.check_mk_config_dir + "/wato/"
-multisite_dir = cmk.paths.default_config_dir + "/multisite.d/wato/"
+root_dir = cmk.utils.paths.check_mk_config_dir + "/wato/"
+multisite_dir = cmk.utils.paths.default_config_dir + "/multisite.d/wato/"
 
 
 # Old vs:
@@ -629,7 +629,7 @@ def load_users(lock=False):
             return []
 
     # FIXME TODO: Consolidate with htpasswd user connector
-    filename = cmk.paths.htpasswd_file
+    filename = cmk.utils.paths.htpasswd_file
     for line in readlines(filename):
         line = line.strip()
         if ':' in line:
@@ -656,7 +656,7 @@ def load_users(lock=False):
         # Other unknown entries will silently be dropped. Sorry...
 
     # Now read the serials, only process for existing users
-    serials_file = '%s/auth.serials' % os.path.dirname(cmk.paths.htpasswd_file)
+    serials_file = '%s/auth.serials' % os.path.dirname(cmk.utils.paths.htpasswd_file)
     for line in readlines(serials_file):
         line = line.strip()
         if ':' in line:
@@ -666,7 +666,7 @@ def load_users(lock=False):
                 result[user_id]['serial'] = utils.saveint(serial)
 
     # Now read the user specific files
-    directory = cmk.paths.var_dir + "/web/"
+    directory = cmk.utils.paths.var_dir + "/web/"
     for d in os.listdir(directory):
         if d[0] != '.':
             uid = d.decode("utf-8")
@@ -707,7 +707,7 @@ def load_users(lock=False):
 
 
 def custom_attr_path(userid, key):
-    return cmk.paths.var_dir + "/web/" + cmk.utils.make_utf8(userid) + "/" + key + ".mk"
+    return cmk.utils.paths.var_dir + "/web/" + cmk.utils.make_utf8(userid) + "/" + key + ".mk"
 
 
 def load_custom_attr(userid, key, conv_func, default=None):
@@ -794,7 +794,7 @@ def _save_user_profiles(updated_profiles):
     multisite_keys = _multisite_keys()
 
     for user_id, user in updated_profiles.items():
-        user_dir = cmk.paths.var_dir + "/web/" + user_id.encode("utf-8")
+        user_dir = cmk.utils.paths.var_dir + "/web/" + user_id.encode("utf-8")
         store.mkdir(user_dir)
 
         # authentication secret for local processes
@@ -838,8 +838,8 @@ def _cleanup_old_user_profiles(updated_profiles):
         "transids.mk",
         "serial.mk",
     ]
-    directory = cmk.paths.var_dir + "/web"
-    for user_dir in os.listdir(cmk.paths.var_dir + "/web"):
+    directory = cmk.utils.paths.var_dir + "/web"
+    for user_dir in os.listdir(cmk.utils.paths.var_dir + "/web"):
         if user_dir not in ['.', '..'] and user_dir.decode("utf-8") not in updated_profiles:
             entry = directory + "/" + user_dir
             if not os.path.isdir(entry):
@@ -859,8 +859,8 @@ def write_contacts_and_users_file(profiles, custom_default_config_dir=None):
         check_mk_config_dir = "%s/conf.d/wato" % custom_default_config_dir
         multisite_config_dir = "%s/multisite.d/wato" % custom_default_config_dir
     else:
-        check_mk_config_dir = "%s/conf.d/wato" % cmk.paths.default_config_dir
-        multisite_config_dir = "%s/multisite.d/wato" % cmk.paths.default_config_dir
+        check_mk_config_dir = "%s/conf.d/wato" % cmk.utils.paths.default_config_dir
+        multisite_config_dir = "%s/multisite.d/wato" % cmk.utils.paths.default_config_dir
 
     non_contact_attributes_cache = {}
     multisite_attributes_cache = {}
@@ -945,7 +945,7 @@ def _save_auth_serials(updated_profiles):
     serials = ""
     for user_id, user in updated_profiles.items():
         serials += '%s:%d\n' % (cmk.utils.make_utf8(user_id), user.get('serial', 0))
-    store.save_file('%s/auth.serials' % os.path.dirname(cmk.paths.htpasswd_file), serials)
+    store.save_file('%s/auth.serials' % os.path.dirname(cmk.utils.paths.htpasswd_file), serials)
 
 
 def rewrite_users():
@@ -1274,12 +1274,12 @@ def general_userdb_job():
     # We assume: Each user must visit this login page before using the multisite based
     #            authorization. So we can easily create the file here if it is missing.
     # This is a good place to replace old api based files in the future.
-    auth_php = cmk.paths.var_dir + '/wato/auth/auth.php'
+    auth_php = cmk.utils.paths.var_dir + '/wato/auth/auth.php'
     if not os.path.exists(auth_php) or os.path.getsize(auth_php) == 0:
         cmk.gui.plugins.userdb.hook_auth.create_auth_file("page_hook", load_users())
 
     # Create initial auth.serials file, same issue as auth.php above
-    serials_file = '%s/auth.serials' % os.path.dirname(cmk.paths.htpasswd_file)
+    serials_file = '%s/auth.serials' % os.path.dirname(cmk.utils.paths.htpasswd_file)
     if not os.path.exists(serials_file) or os.path.getsize(serials_file) == 0:
         save_users(load_users(lock=True))
 

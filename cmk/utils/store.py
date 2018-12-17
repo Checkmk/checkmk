@@ -37,11 +37,11 @@ from typing import List  # pylint: disable=unused-import
 
 import pathlib2 as pathlib
 
-import cmk.log
-from cmk.exceptions import MKGeneralException, MKTimeout
-from cmk.i18n import _
+import cmk.utils.log
+from cmk.utils.exceptions import MKGeneralException, MKTimeout
+from cmk.utils.i18n import _
 
-logger = cmk.log.get_logger("store")
+logger = cmk.utils.log.get_logger("store")
 
 # TODO: Make all methods handle paths the same way. e.g. mkdir() and makedirs()
 # care about encoding a path to UTF-8. The others don't to that.

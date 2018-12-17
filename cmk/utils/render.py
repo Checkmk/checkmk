@@ -34,7 +34,7 @@ import time
 import math
 from typing import Tuple  # pylint: disable=unused-import
 
-from cmk.i18n import _
+from cmk.utils.i18n import _
 
 #.
 #   .--Date/Time-----------------------------------------------------------.

@@ -28,8 +28,8 @@
 import re
 from typing import Dict, Pattern  # pylint:disable=unused-import
 
-from cmk.exceptions import MKGeneralException
-from cmk.i18n import _
+from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.i18n import _
 
 g_compiled_regexes = {}  # type: Dict[str, Pattern]
 

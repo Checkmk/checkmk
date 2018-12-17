@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 """Pages for managing backup and restore of WATO"""
 
-import cmk.paths
+import cmk.utils.paths
 
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
@@ -181,7 +181,7 @@ cmk.gui.pages.register_page_handler("ajax_backup_job_state",
 class SiteBackupKeypairStore(backup.BackupKeypairStore):
     def __init__(self):
         super(SiteBackupKeypairStore, self).__init__(
-            cmk.paths.default_config_dir + "/backup_keys.mk", "keys")
+            cmk.utils.paths.default_config_dir + "/backup_keys.mk", "keys")
 
 
 @mode_registry.register

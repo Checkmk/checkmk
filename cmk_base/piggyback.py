@@ -27,10 +27,10 @@
 import os
 import tempfile
 
-import cmk.paths
+import cmk.utils.paths
 import cmk.utils.translations
-import cmk.store as store
-from cmk.exceptions import MKGeneralException
+import cmk.utils.store as store
+from cmk.utils.exceptions import MKGeneralException
 
 import cmk_base.utils
 import cmk_base.console as console
@@ -74,7 +74,7 @@ def _get_piggyback_files(piggyback_max_cachefile_age, hostname):
     updated files/directories.
     """
     files = []
-    piggyback_dir = os.path.join(cmk.paths.tmp_dir, "piggyback", hostname)
+    piggyback_dir = os.path.join(cmk.utils.paths.tmp_dir, "piggyback", hostname)
 
     # cleanup_piggyback_files() may remove stale piggyback files of one source
     # host and also the directory "hostname" when the last piggyback file for the
@@ -137,7 +137,7 @@ def _is_piggyback_file_outdated(status_file_path, piggyback_file_path):
 
 
 def _piggyback_source_status_path(source_host):
-    return os.path.join(cmk.paths.tmp_dir, "piggyback_sources", source_host)
+    return os.path.join(cmk.utils.paths.tmp_dir, "piggyback_sources", source_host)
 
 
 def _remove_piggyback_file(piggyback_file_path):
@@ -161,7 +161,7 @@ def remove_source_status_file(source_host):
 def store_piggyback_raw_data(source_host, piggybacked_raw_data):
     piggyback_file_paths = []
     for piggybacked_host, lines in piggybacked_raw_data.items():
-        piggyback_file_path = os.path.join(cmk.paths.tmp_dir, "piggyback", piggybacked_host,
+        piggyback_file_path = os.path.join(cmk.utils.paths.tmp_dir, "piggyback", piggybacked_host,
                                            source_host)
         console.verbose("Storing piggyback data for: %s\n" % piggybacked_host)
         content = "\n".join(lines) + "\n"
@@ -224,7 +224,7 @@ def cleanup_piggyback_files(piggyback_max_cachefile_age):
 
 
 def _cleanup_old_source_status_files(piggyback_max_cachefile_age):
-    base_dir = os.path.join(cmk.paths.tmp_dir, "piggyback_sources")
+    base_dir = os.path.join(cmk.utils.paths.tmp_dir, "piggyback_sources")
     for entry in os.listdir(base_dir):
         if entry[0] == ".":
             continue
@@ -252,9 +252,9 @@ def _cleanup_old_piggybacked_files(piggyback_max_cachefile_age):
     - Remove all piggyback files that are older that the current status file of the source host
     - Cleanup empty backed host directories below "piggyback"
     """
-    keep_sources = set(os.listdir(os.path.join(cmk.paths.tmp_dir, "piggyback_sources")))
+    keep_sources = set(os.listdir(os.path.join(cmk.utils.paths.tmp_dir, "piggyback_sources")))
 
-    base_dir = os.path.join(cmk.paths.tmp_dir, "piggyback")
+    base_dir = os.path.join(cmk.utils.paths.tmp_dir, "piggyback")
     for backed_host_name in os.listdir(base_dir):
         if backed_host_name[0] == ".":
             continue

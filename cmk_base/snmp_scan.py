@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-from cmk.exceptions import MKGeneralException
+from cmk.utils.exceptions import MKGeneralException
 import cmk.utils.tty as tty
 
 import cmk_base.check_utils

@@ -26,7 +26,7 @@
 
 import os
 
-import cmk.paths
+import cmk.utils.paths
 
 import cmk.gui.watolib as watolib
 import cmk.gui.userdb as userdb
@@ -496,7 +496,7 @@ class ModeEditContactgroup(ModeEditGroup):
         # for each map. When no maps can be found skip this problem silently.
         # This only works in OMD environments.
         maps = []
-        nagvis_maps_path = cmk.paths.omd_root + '/etc/nagvis/maps'
+        nagvis_maps_path = cmk.utils.paths.omd_root + '/etc/nagvis/maps'
         for f in os.listdir(nagvis_maps_path):
             if f[0] != '.' and f.endswith('.cfg'):
                 maps.append((f[:-4], f[:-4]))

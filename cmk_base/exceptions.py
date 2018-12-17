@@ -29,7 +29,7 @@
 
 import traceback
 
-from cmk.exceptions import MKGeneralException as _MKGeneralException
+from cmk.utils.exceptions import MKGeneralException as _MKGeneralException
 
 
 class MKAgentError(Exception):

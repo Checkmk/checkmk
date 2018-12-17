@@ -34,7 +34,7 @@ import urllib3
 
 import cmk
 import cmk.utils.site
-from cmk.regex import regex
+from cmk.utils.regex import regex
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -135,7 +135,7 @@ class AggregationRawdataGenerator(object):
             self._username = self._credentials
 
             secret_file_path = Path(
-                cmk.paths.var_dir) / "web" / self._username / "automation.secret"
+                cmk.utils.paths.var_dir) / "web" / self._username / "automation.secret"
             self._secret = file(secret_file_path).read()
         else:
             self._username, self._secret = self._credentials[1]

@@ -1,5 +1,5 @@
 import pytest
-import cmk.render
+import cmk.utils.render
 
 
 @pytest.mark.parametrize("entry, result", [
@@ -14,4 +14,4 @@ import cmk.render
     ((6e15,), "5.33 PB"),
 ])
 def test_fmt_bytes(entry, result):
-    assert cmk.render.fmt_bytes(*entry) == result
+    assert cmk.utils.render.fmt_bytes(*entry) == result

@@ -27,14 +27,14 @@
 import subprocess
 import sys
 
-import cmk.paths
+import cmk.utils.paths
 import cmk.utils.tty as tty
 
 import cmk_base.console
 
 
 def do_check_nagiosconfig():
-    command = [cmk.paths.nagios_binary, "-vp", cmk.paths.nagios_config_file]
+    command = [cmk.utils.paths.nagios_binary, "-vp", cmk.utils.paths.nagios_config_file]
     cmk_base.console.verbose("Running '%s'\n" % subprocess.list2cmdline(command))
     cmk_base.console.output("Validating Nagios configuration...")
 

@@ -3,7 +3,7 @@ import pprint
 import pytest
 from testlib import repo_path, cmk_path, cmc_path, cme_path, CMKWebSession
 
-from cmk.exceptions import MKGeneralException
+from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.structured_data import StructuredDataTree, Container, Attributes, Numeration, Node
 
 # Convention: test functions are named like
@@ -354,7 +354,7 @@ def test_structured_data_NodeAttribute_has_edge(node_attribute, edge):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-TEST_DIR = "%s/tests/unit/cmk/structured_data/tree_test_data" % cmk_path()
+TEST_DIR = "%s/tests/unit/cmk/utils/structured_data/tree_test_data" % cmk_path()
 
 tree_name_old_addresses_arrays_memory = "%s/tree_old_addresses_arrays_memory" % TEST_DIR
 tree_name_old_addresses = "%s/tree_old_addresses" % TEST_DIR

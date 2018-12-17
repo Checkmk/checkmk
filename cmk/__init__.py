@@ -32,13 +32,13 @@ __version__ = "1.6.0i1"
 
 import os
 
-import cmk.paths
-from cmk.exceptions import MKGeneralException
-from cmk.i18n import _
+import cmk.utils.paths
+from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.i18n import _
 
 
 def omd_version():
-    return os.path.basename(os.readlink(cmk.paths.omd_root + "/version"))
+    return os.path.basename(os.readlink(cmk.utils.paths.omd_root + "/version"))
 
 
 def omd_site():

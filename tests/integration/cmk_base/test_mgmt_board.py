@@ -23,10 +23,10 @@ def reload_config():
 
 @pytest.fixture(scope="function")
 def enable_debug():
-    import cmk.debug
-    cmk.debug.enable()
+    import cmk.utils.debug
+    cmk.utils.debug.enable()
     yield
-    cmk.debug.disable()
+    cmk.utils.debug.disable()
 
 
 @pytest.fixture(autouse=True)

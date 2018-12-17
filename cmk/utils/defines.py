@@ -26,7 +26,7 @@
 """This module serves constants which are needed in several components
 of Check_MK."""
 
-from cmk.i18n import _
+from cmk.utils.i18n import _
 
 # TODO: Investigate Check_MK code for more defines and other places
 #       where similar strucures are defined and use the things from

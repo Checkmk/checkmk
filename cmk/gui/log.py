@@ -26,8 +26,8 @@
 
 import logging as _logging
 
-import cmk.log
-import cmk.paths
+import cmk.utils.log
+import cmk.utils.paths
 
 from cmk.gui.i18n import _
 
@@ -56,7 +56,7 @@ class CMKWebLogger(_logging.getLoggerClass()):
 
 _logging.setLoggerClass(CMKWebLogger)
 
-logger = cmk.log.get_logger("web")
+logger = cmk.utils.log.get_logger("web")
 
 
 def init_logging():
@@ -66,9 +66,9 @@ def init_logging():
 def _setup_web_log_logging():
     del logger.root.handlers[:]  # First remove all handlers
 
-    handler = _logging.FileHandler("%s/web.log" % cmk.paths.log_dir, encoding="UTF-8")
+    handler = _logging.FileHandler("%s/web.log" % cmk.utils.paths.log_dir, encoding="UTF-8")
 
-    handler.setFormatter(cmk.log.get_formatter())
+    handler.setFormatter(cmk.utils.log.get_formatter())
 
     # Setup logging for the root logger to be able to get library log entries in the
     # log of the web application
@@ -79,7 +79,7 @@ def set_log_levels(log_levels):
     # Setup logging for the root logger to be able to get library log entries in the
     # log of the web application
     logger.root.setLevel(log_levels["cmk.web"])
-    cmk.log.logger.setLevel(log_levels["cmk.web"])
+    cmk.utils.log.logger.setLevel(log_levels["cmk.web"])
 
     for logger_name, level in log_levels.items():
         _logging.getLogger(logger_name).setLevel(level)

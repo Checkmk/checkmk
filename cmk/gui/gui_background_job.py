@@ -25,9 +25,9 @@
 # Boston, MA 02110-1301 USA.
 
 import cmk
-import cmk.store
-import cmk.plugin_registry
-from cmk.exceptions import MKGeneralException
+import cmk.utils.store
+import cmk.utils.plugin_registry
+from cmk.utils.exceptions import MKGeneralException
 
 import cmk.gui.i18n
 import cmk.gui.sites as sites
@@ -225,7 +225,7 @@ class GUIBackgroundJob(GUIBackgroundJobSnapshottedFunctions):
         return None
 
 
-class GUIBackgroundJobRegistry(cmk.plugin_registry.ClassRegistry):
+class GUIBackgroundJobRegistry(cmk.utils.plugin_registry.ClassRegistry):
     def plugin_base_class(self):
         return GUIBackgroundJob
 
@@ -358,7 +358,7 @@ class JobRenderer(object):
         for left, right in [
             (_("ID"), job_id),
             (_("Title"), job_status["title"]),
-            (_("Started"), cmk.render.date_and_time(job_status["started"])),
+            (_("Started"), cmk.utils.render.date_and_time(job_status["started"])),
             (_("Owner"), job_status["user"]),
         ]:
             html.open_tr()
@@ -399,11 +399,12 @@ class JobRenderer(object):
 
         # Dynamic data
         loginfo = job_status.get("loginfo")
-        runtime_info = cmk.render.timespan(job_status.get("duration", 0))
+        runtime_info = cmk.utils.render.timespan(job_status.get("duration", 0))
         if job_status[
                 "state"] == background_job.JobStatus.state_running and "estimated_duration" in job_status:
             runtime_info += " (%s: %s)" % (_("estimated duration"),
-                                           cmk.render.timespan(job_status["estimated_duration"]))
+                                           cmk.utils.render.timespan(
+                                               job_status["estimated_duration"]))
         for left, right in [
             (_("Runtime"), runtime_info),
             (_("PID"), job_status.get("pid", "")),
@@ -523,7 +524,7 @@ class JobRenderer(object):
         html.td(job_status["state"], css=cls.get_css_for_jobstate(job_status["state"]))
 
         # Started
-        html.td(cmk.render.date_and_time(job_status["started"]), css="job_started")
+        html.td(cmk.utils.render.date_and_time(job_status["started"]), css="job_started")
 
         # Owner
         html.td(job_status.get("user", _("Unknown user")), css="job_owner")
@@ -532,7 +533,7 @@ class JobRenderer(object):
         html.td(job_status.get("pid", ""), css="job_pid")
 
         # Druation
-        html.td(cmk.render.timespan(job_status.get("duration", 0)), css="job_runtime")
+        html.td(cmk.utils.render.timespan(job_status.get("duration", 0)), css="job_runtime")
 
         # Progress info
         loginfo = job_status.get("loginfo")

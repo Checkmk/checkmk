@@ -3478,7 +3478,7 @@ def backup_site_files_to_tarfile(site, tar, options):
     exclude = get_exclude_patterns(options)
     exclude.append("tmp/*")  # Exclude all tmpfs files
 
-    # exclude all temporary files that are created during cmk.store writes
+    # exclude all temporary files that are created during cmk.utils.store writes
     exclude.append("*.mk.new*")
     exclude.append("var/log/.liveproxyd.state.new*")
 

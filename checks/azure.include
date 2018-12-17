@@ -25,6 +25,14 @@
 # Boston, MA 02110-1301 USA.
 import json
 
+_AZURE_METRIC_FMT = {
+    "percent": get_percent_human_readable,
+    "bytes": get_bytes_human_readable,
+    "bytes_per_second": lambda b: "%s/s" % get_bytes_human_readable(b),
+    "seconds": lambda s: "%.2f s" % s,
+    "milli_seconds": lambda ms: "%d ms" % (ms * 1000),
+}
+
 
 def azure_iter_informative_attrs(resource, include_keys=('location',)):
     def cap(string):  # not quite what str.title() does
@@ -74,12 +82,7 @@ def check_azure_metric(
         value *= 100.
         unit = "percent"
 
-    formatter = {
-        "percent": get_percent_human_readable,
-        "bytes": get_bytes_human_readable,
-        "seconds": lambda s: "%.2f s" % s,
-        "milli_seconds": lambda ms: "%d ms" % (ms * 1000),
-    }.get(unit, str)
+    formatter = _AZURE_METRIC_FMT.get(unit, str)
     text = "%s: %s" % (display_name, formatter(value))
 
     l_state, u_state = 0, 0

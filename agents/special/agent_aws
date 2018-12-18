@@ -792,6 +792,36 @@ class Glacier(AWSSection):
 
 
 #.
+#   .--cloud trail---------------------------------------------------------.
+#   |                 _                 _   _             _ _              |
+#   |             ___| | ___  _   _  __| | | |_ _ __ __ _(_) |             |
+#   |            / __| |/ _ \| | | |/ _` | | __| '__/ _` | | |             |
+#   |           | (__| | (_) | |_| | (_| | | |_| | | (_| | | |             |
+#   |            \___|_|\___/ \__,_|\__,_|  \__|_|  \__,_|_|_|             |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
+class CloudTrail(AWSSection):
+    @property
+    def name(self):
+        return "cloud_trail"
+
+    @property
+    def interval(self):
+        return 300
+
+    def _get_raw_result(self):
+        pass
+
+    def _extract_content_from(self, raw_result):
+        pass
+
+    def _format_content(self, content):
+        pass
+
+
+#.
 #   .--sections------------------------------------------------------------.
 #   |                               _   _                                  |
 #   |                 ___  ___  ___| |_(_) ___  _ __  ___                  |

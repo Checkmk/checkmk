@@ -27,24 +27,31 @@
 
 def check_bi_aggr_arguments(params):
     base_url, aggr_name, username, secret, opt_params = params
-    args = ' -b %s -a %s -u %s %s' % (quote_shell_string(base_url), quote_shell_string(aggr_name),
-                                      quote_shell_string(username),
-                                      passwordstore_get_cmdline(" -s %s", secret))
+    args = [
+        '-b',
+        base_url,
+        '-a',
+        aggr_name,
+        '-u',
+        username,
+        '-s',
+        passwordstore_get_cmdline("%s", secret),
+    ]
 
     if "auth_mode" in opt_params:
-        args += ' -m %s' % quote_shell_string(opt_params['auth_mode'])
+        args += ['-m', opt_params['auth_mode']]
 
     if "timeout" in opt_params:
-        args += ' -t %d' % opt_params['timeout']
+        args += ['-t', opt_params['timeout']]
 
     if opt_params.get("in_downtime"):
-        args += ' --in-downtime %s' % opt_params['in_downtime']
+        args += ['--in-downtime', opt_params['in_downtime']]
 
     if opt_params.get("acknowledged"):
-        args += ' --acknowledged %s' % opt_params['acknowledged']
+        args += ['--acknowledged', opt_params['acknowledged']]
 
     if opt_params.get("track_downtimes"):
-        args += ' -r -n $HOSTNAME$'
+        args += ['-r', '-n', 'HOSTNAME$']
 
     return args
 

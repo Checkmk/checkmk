@@ -1,0 +1,11 @@
+Title: oracle_undostat: Fixed crash if state in case of positive space error count is set to OK
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p10
+Date: 1545141404
+
+

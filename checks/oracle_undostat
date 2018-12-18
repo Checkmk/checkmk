@@ -56,13 +56,10 @@ def check_oracle_undostat(item, params, info):
             else:
                 state = 0
 
-            if nospaceerrcnt == 0:
-                nospaceerrcntpic = ""
-            else:
-                if params.get('nospaceerrcnt_state'):
-                    state_errcnt = params.get('nospaceerrcnt_state')
-                    state = max(state, state_errcnt)
-
+            nospaceerrcntpic = ""
+            if nospaceerrcnt:
+                state_errcnt = params['nospaceerrcnt_state']
+                state = max(state, state_errcnt)
                 if state_errcnt == 1:
                     nospaceerrcntpic = "(!)"
                 elif state_errcnt == 2:

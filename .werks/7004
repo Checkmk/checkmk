@@ -1,0 +1,16 @@
+Title: oracle_tablespaces: added support for temporary Tablespaces
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1547114074
+Class: feature
+
+It is possible to define rules for temporary Tablespaces. Please use the most
+current mk_oracle plugin, because old versions are not working. Be warned that
+monitoring of temporary Tablespacess could create some trouble, due to
+asynchronous execution of the Tablespace usage.
+The check ignores by default all temporary Tablepspace.
+
+Add 'temptablespace': True to the dictionary of the rule.

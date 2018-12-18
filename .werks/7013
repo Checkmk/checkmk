@@ -1,0 +1,25 @@
+Title: mk_mysql: Fixed detecting wrong MySQL instances
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1545148271
+
+On systems with mysqld running together with php-cgi using specific options on the command line
+(like it is done by Check_MK sites), it could happen that the mk_mysql agent plugin detects not
+existing MySQL instances which leads to UNKNOWN services in Check_MK.
+
+Processes that lead to wrong discovered services look like this:
+
+root       901     1  0 Dec10 ?        00:00:00 /bin/sh /usr/bin/mysqld_safe
+mysql     1274   901  0 Dec10 ?        01:27:32 /usr/sbin/mysqld --basedir=/usr --datadir=/var/lib/mysql --plugin-dir=/usr/lib/mysql/plugin --user=mysql --log-error=/var/log/mysql/error.log --pid-file=/var/run/mysqld/mysqld.pid --socket=/var/run/mysqld/mysqld.sock --port=3306
+wiki     16937 32282  0 13:21 ?        00:00:00 /usr/bin/php5-cgi -d session.save_handler=files -d session.save_path=/omd/sites/wiki/tmp/php/session -d upload_tmp_dir=/omd/sites/wiki/tmp/php/upload -d soap.wsdl_cache_dir=/omd/sites/wiki/tmp/php/wsdl-cache -d safe_mode=Off -d mysql.default_socket=/omd/sites/wiki/tmp/run/mysqld/mysqld.sock
+intern   27074 32276  0 10:39 ?        00:00:00 /usr/bin/php5-cgi -d session.save_handler=files -d session.save_path=/omd/sites/intern/tmp/php/session -d upload_tmp_dir=/omd/sites/intern/tmp/php/upload -d soap.wsdl_cache_dir=/omd/sites/intern/tmp/php/wsdl-cache -d safe_mode=Off -d mysql.default_socket=/omd/sites/intern/tmp/run/mysqld/mysqld.sock
+wiki     29129 32282  0 10:46 ?        00:00:02 /usr/bin/php5-cgi -d session.save_handler=files -d session.save_path=/omd/sites/wiki/tmp/php/session -d upload_tmp_dir=/omd/sites/wiki/tmp/php/upload -d soap.wsdl_cache_dir=/omd/sites/wiki/tmp/php/wsdl-cache -d safe_mode=Off -d mysql.default_socket=/omd/sites/wiki/tmp/run/mysqld/mysqld.sock
+root     29561 26105  0 16:51 pts/0    00:00:00 grep mysqld
+wiki     30673 32282  0 09:00 ?        00:00:03 /usr/bin/php5-cgi -d session.save_handler=files -d session.save_path=/omd/sites/wiki/tmp/php/session -d upload_tmp_dir=/omd/sites/wiki/tmp/php/upload -d soap.wsdl_cache_dir=/omd/sites/wiki/tmp/php/wsdl-cache -d safe_mode=Off -d mysql.default_socket=/omd/sites/wiki/tmp/run/mysqld/mysqld.sock
+
+Only the process 1274 should be detected as MySQL instance.

@@ -1,0 +1,14 @@
+Title: mk_oracle: Bugfix for missing ORACLE_SID in oratab
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1545138497
+Class: fix
+
+mk_oracle on servers with multiple Instances and missing
+entries in oratab could result in an early abort of the
+plugin. The abort leads to missing data from running Instances.
+
+This problem has been fixed. Please update the mk_oracle plugin.

@@ -6228,6 +6228,13 @@ register_check_parameters(
                      ]),
                  title=_('Map file online states'),
              )),
+            ("temptablespace",
+             DropdownChoice(
+                 title=_("Monitor temporary Tablespace"),
+                 choices=[
+                     (False, _("Ignore temporary Tablespaces (Default)")),
+                     (True, _("Apply rule to temporary Tablespaces")),
+                 ])),
         ],
     ),
     TextAscii(

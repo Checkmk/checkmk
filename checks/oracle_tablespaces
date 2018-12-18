@@ -356,8 +356,11 @@ def check_oracle_tablespaces(item, params, parsed):
         yield 0, "no autoextend"
 
     # Check free space, but only if status is not READONLY
-    # and Tablespace-Type must be PERMANENT
-    if ts_status != "READONLY" and ts_type == 'PERMANENT':
+    # and Tablespace-Type must be PERMANENT or TEMPORARY, when temptablespace is True
+    # old plugins without v$tempseg_usage info send TEMP as type.
+    # => Impossible to monitor old plugin with TEMP instead TEMPORARY
+    if ts_status != "READONLY" and \
+       (ts_type == 'PERMANENT' or (ts_type == 'TEMPORARY' and params.get("temptablespace"))):
 
         status = 0
         if crit is not None and free_space < crit:

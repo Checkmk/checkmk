@@ -38,6 +38,9 @@ description:
  free space will be honored. Table spaces in state {READONLY}
  will {not} be checked for the size.
 
+ {temptablespace}: Ignore temporary Tablespace by default. This
+ can be changed when this parameter is True.
+
  This check needs the Check_MK {mk_oracle}-plugin installed in
  the agent. Please refer to the online documentation
  for how to install that plugin.

@@ -858,16 +858,18 @@ multisite_icons_and_actions['stars'] = {
 
 
 def paint_icon_check_bi_aggr(what, row, tags, host_custom_vars):
+    # service_check_command looks like:
+    # u"check_mk_active-bi_aggr!... '-b' 'http://localhost/$HOSTNAME$' ... '-a' 'Host foobar' ..."
     if what == "service" and row.get("service_check_command",
                                      "").startswith("check_mk_active-bi_aggr!"):
         args = row['service_check_command']
-        start = args.find('-b \'') + 4
+        start = args.find('-b\' \'') + 5
         end = args.find('\' ', start)
         base_url = args[start:end].rstrip('/')
         base_url = base_url.replace('$HOSTADDRESS$', row['host_address'])
         base_url = base_url.replace('$HOSTNAME$', row['host_name'])
 
-        start = args.find('-a \'') + 4
+        start = args.find('-a\' \'') + 5
         end = args.find('\' ', start)
         aggr_name = args[start:end]
 

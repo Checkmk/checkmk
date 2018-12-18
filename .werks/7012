@@ -1,0 +1,12 @@
+Title: Availability: Improved rendering of labelling options
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1545142222
+
+The labelling options of the availability were not using the whole space
+of the option box.

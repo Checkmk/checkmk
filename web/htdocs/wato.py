@@ -10562,7 +10562,7 @@ class ModeEditSite(ModeSites):
         if self._new:
             return _("Create new site connection")
         else:
-            return _("Edit site connection %s") % html.render_tt(self._site_id)
+            return _("Edit site connection %s") % self._site_id
 
 
     def buttons(self):

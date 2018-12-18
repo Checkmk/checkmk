@@ -308,32 +308,33 @@ def check_oracle_tablespaces(item, params, parsed):
                 max_size   += df_size
                 free_space += df_free_space
 
-    infotexts = ["%s (%s), Size: %s, %s used (%s of max. %s), Free: %s" % \
+    yield 0, "%s (%s), Size: %s, %s used (%s of max. %s), Free: %s" % \
         (ts_status, ts_type, get_bytes_human_readable(current_size),
          get_percent_human_readable(100.0 * used_size / max_size),
          get_bytes_human_readable(used_size),
          get_bytes_human_readable(max_size),
-         get_bytes_human_readable(free_space))]
+         get_bytes_human_readable(free_space))
 
     if num_extensible > 0 and db_version <= 10:
         # only display the number of remaining extents in Databases <= 10g
-        infotexts.append("%d increments (%s)" % \
-                        (num_increments, get_bytes_human_readable(increment_size)))
+        yield 0, "%d increments (%s)" % \
+                        (num_increments, get_bytes_human_readable(increment_size))
 
-    warn, crit, levels_text, output_as_percentage = \
-        db_get_tablespace_levels_in_bytes(max_size, params)
+    if ts_status != "READONLY":
+        warn, crit, levels_text, output_as_percentage = \
+            db_get_tablespace_levels_in_bytes(max_size, params)
 
-    yield 0, ", ".join(infotexts), \
-        [("size", current_size, max_size - (warn or 0), max_size - (crit or 0)),
-         ("used", used_size), ("max_size", max_size)]
+        yield 0, "", \
+            [("size", current_size, max_size - (warn or 0), max_size - (crit or 0)),
+             ("used", used_size), ("max_size", max_size)]
 
-    # Check increment size, should not be set to default (1)
-    if params.get("defaultincrement"):
-        if uses_default_increment:
-            yield 1, "DEFAULT INCREMENT"
+        # Check increment size, should not be set to default (1)
+        if params.get("defaultincrement"):
+            if uses_default_increment:
+                yield 1, "DEFAULT INCREMENT"
 
     # Check autoextend status if parameter not set to None
-    if autoext is not None:
+    if autoext is not None and ts_status != "READONLY":
         if autoext and num_extensible == 0:
             autoext_info = "NO AUTOEXTEND"
         elif not autoext and num_extensible > 0:

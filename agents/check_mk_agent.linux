@@ -1033,7 +1033,7 @@ if type pvecm > /dev/null 2>&1 ; then
 fi
 
 # Iterate all running containers and report piggyback data for them
-if type docker > /dev/null 2>&1 && [ -z "$MK_IS_PIGGYBACKED" ]; then
+if type docker > /dev/null 2>&1; then
     echo "<<<docker_node_info:sep(58)>>>"
     # sed: protect leading whitespace
     docker info | sed 's/^/|/'

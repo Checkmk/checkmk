@@ -1,0 +1,12 @@
+Title: df: made rule being found when searching for "inodes"
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p38
+Date: 1545125007
+
+When searching for "inodes" in "host & service parameters" the rule was not found.
+This has been fixed now, as well as searching the plugin catalogue for the same phrase.

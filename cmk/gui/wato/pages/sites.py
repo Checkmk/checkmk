@@ -98,7 +98,7 @@ class ModeEditSite(ModeSites):
     def title(self):
         if self._new:
             return _("Create new site connection")
-        return _("Edit site connection %s") % html.render_tt(self._site_id)
+        return _("Edit site connection %s") % self._site_id
 
     def buttons(self):
         super(ModeEditSite, self).buttons()

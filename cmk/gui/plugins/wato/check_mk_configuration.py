@@ -2018,7 +2018,7 @@ class ConfigVariableUseNewDescriptionsFor(ConfigVariable):
                 ("nullmailer_mailq", _("Nullmailer: Mail Queue")),
                 ("barracuda_mailqueues", _("Barracuda: Mail Queue")),
                 ("qmail_stats", _("Qmail: Mail Queue")),
-                ("http", _("Check HTTP: Use HTTPS instead of HTTP for SSL/TLS connectoins")),
+                ("http", _("Check HTTP: Use HTTPS instead of HTTP for SSL/TLS connections")),
                 ("mssql_backup", _("MSSQL Backup")),
                 ("mssql_counters.cache_hits", _("MSSQL Cache Hits")),
                 ("mssql_counters.transactions", _("MSSQL Transactions")),

@@ -7761,6 +7761,7 @@ register_check_parameters(
     "filesystem",
     _("Filesystems (used space and growth)"),
     Dictionary(
+        help=_("This ruleset allows to set parameters for space and inodes usage"),
         elements = filesystem_elements,
         hidden_keys = ["flex_levels"],
         ignored_keys = ["patterns"],

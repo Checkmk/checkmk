@@ -1,4 +1,4 @@
-title: Used space in filesystems
+title: Used space and inodes in filesystems
 agents: linux, windows, aix, solaris, openvms, hpux, freebsd, netbsd, openbsd, macosx
 catalog: os/storage
 license: GPL
@@ -18,6 +18,10 @@ description:
  between the percentage values shown by that {df} version and the value
  shown in Check_MK. From our point of view, the calculation of Check_MK is
  more accurate.
+
+ {Inodes:} if the agent provides a {df} subsection for {inodes}, this check
+ measures the inodes usage. Thresholds default to (10%, 5%) remaining inodes and 
+ can be set/changed in ruleset {filesystems}.
 
  {Trends:} This checks supports filesystem {trends}. This means that the {df} check
  is able to compute the {change} of the used space over the time and can

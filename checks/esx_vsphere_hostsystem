@@ -413,52 +413,65 @@ check_info['esx_vsphere_hostsystem.maintenance'] = {
 # vmhba32:C0:T0:L0 active
 
 
+def lun_id_for_new_format(path):
+    hba_num = int(path.split(":")[0].replace("vmhba", ""))
+    lun_id = path.split(":")[-1]
+
+    # vmware specificies three different types of LUNs. Physical LUNs will
+    # reserves vmhba number 0-31. The other two reserve numbers of base64.
+    # The lower 32 range is reserved for pseudo logical LUNs. The upper 32
+    # for logical LUNs. e.g. 32-63 for pseudo logical LUNs like USB and
+    # 64-95 for logical LUNs like iSCSI.
+    # These should be added as different multipath LUNs.
+    if hba_num >= 32 and hba_num % 64 < 33:
+        return "%s pseudo-logical" % lun_id
+    if hba_num >= 32 and hba_num % 64 > 32:
+        return "%s logical" % lun_id
+    return "%s physical" % lun_id
+
+
+ESXLegacyPathInfo = collections.namedtuple('LegacyPathInfo', ['path_type', 'hw_type', 'lun_id'])
+
+
+def has_new_format(path):
+    # vSphere6 uses a different format, e.g "vmhba32:C0:T0:L0 active"
+    return len(path.split(":")) == 4 and path.startswith("vmhba")
+
+
+def parse_legacy_format(path):
+    path_tokens = path.split('-')
+    if "." not in path_tokens[-1]:
+        return None  # invalid format / unknown type
+    # We've seen path tokens which include more than one "."
+    # PATH_TYPE.A_NAME.AN_ID_WITH_UNDERSCORES_AND_NUMBERS
+    path_type, lun_id = path_tokens[-1].rsplit('.', 1)
+    hw_type = path.split('.')[0]
+    return ESXLegacyPathInfo(path_type, hw_type, lun_id)
+
+
+def legacy_path_matches(path_info):
+    return path_info.path_type in ['naa', 'eui'] and not path_info.hw_type == 'unknown'
+
+
 def esx_vsphere_multipath_convert(info):
     data = esx_vsphere_hostsystem_convert(info)
+
+    raw_path_states = data.get('config.multipathState.path')
+    if not raw_path_states:
+        return {}
+    path_states = zip(raw_path_states[::2], raw_path_states[1::2])
+
     paths = {}
-    data = data.get('config.multipathState.path')
-    if not data:
-        return paths
-
-    data = zip(data[::2], data[1::2])
-    for path, state in data:
-        # vSphere6 uses a different format, e.g "vmhba32:C0:T0:L0 active"
-        if len(path.split(":")) == 4 and path.startswith("vmhba"):
-            hba_num = int(path.split(":")[0].replace("vmhba", ""))
-            lun_id = path.split(":")[-1]
-
-            # vmware specificies three different types of LUNs. Physical LUNs will
-            # reserves vmhba number 0-31. The other two reserve numbers of base64.
-            # The lower 32 range is reserved for pseudo logical LUNs. The upper 32
-            # for logical LUNs. e.g. 32-63 for pseudo logical LUNs like USB and
-            # 64-95 for logical LUNs like iSCSI.
-            # These should be added as different multipath LUNs.
-            if hba_num >= 32 and hba_num % 64 < 33:
-                lun_id = "%s pseudo-logical" % lun_id
-            elif hba_num >= 32 and hba_num % 64 > 32:
-                lun_id = "%s logical" % lun_id
-            else:
-                lun_id = "%s physical" % lun_id
-
-            paths.setdefault(lun_id, [])
+    for path, state in path_states:
+        if has_new_format(path):
             # Note: There is no path type information available in these esx paths
-            paths[lun_id].append((state, None, path))
-
-        # Legacy format for older vSphere versions:
+            lun_id = lun_id_for_new_format(path)
+            paths.setdefault(lun_id, []).append((state, None, path))
         else:
-            path_tokens = path.split('-')
-            if "." not in path_tokens[-1]:
-                continue  # invalid format / unknown type
-            # We've seen path tokens which include more than one "."
-            # PATH_TYPE.A_NAME.AN_ID_WITH_UNDERSCORES_AND_NUMBERS
-            path_type, lun_id = path_tokens[-1].rsplit('.', 1)
-
-            hw_type = path.split('.')[0]
-
-            if path_type in ['naa', 'eui'] and not hw_type == 'unknown':
-                paths.setdefault(lun_id, [])
-                paths[lun_id].append((state, "%s/%s" % (path_type, hw_type), path))
-
+            path_info = parse_legacy_format(path)
+            if path_info and legacy_path_matches(path_info):
+                paths.setdefault(path_info.lun_id, []).append(
+                    (state, "%s/%s" % (path_info.path_type, path_info.hw_type), path))
     return paths
 
 

@@ -57,6 +57,10 @@ def _datetime_converter(o):
         return o.__str__()
 
 
+def _chunks(list_, length=100):
+    return [list_[i:i + length] for i in xrange(0, len(list_), length)]
+
+
 #.
 #   .--section API---------------------------------------------------------.
 #   |                       _   _                  _    ____ ___           |
@@ -233,11 +237,24 @@ class EC2(AWSSection):
         metrics = self._get_metrics()
         if not metrics:
             return {}
-        return self._client.get_metric_data(
-            MetricDataQueries=metrics,
-            StartTime=start_time,
-            EndTime=end_time,
-        )
+
+        # A single GetMetricData call can include up to 100 MetricDataQuery structures
+        # There's no pagination for this operation:
+        # self._client.can_paginate('get_metric_data') = False
+        raw_result = []
+        for chunk in _chunks(metrics):
+            response = self._client.get_metric_data(
+                MetricDataQueries=chunk,
+                StartTime=start_time,
+                EndTime=end_time,
+            )
+            try:
+                metrics = response['MetricDataResults']
+            except KeyError, e:
+                logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
+                continue
+            raw_result.extend(metrics)
+        return raw_result
 
     def _get_metrics(self):
         instance_ids = []
@@ -357,11 +374,24 @@ class S3(AWSSection):
         metrics = self._get_metrics()
         if not metrics:
             return {}
-        return self._client.get_metric_data(
-            MetricDataQueries=metrics,
-            StartTime=start_time,
-            EndTime=end_time,
-        )
+
+        # A single GetMetricData call can include up to 100 MetricDataQuery structures
+        # There's no pagination for this operation:
+        # self._client.can_paginate('get_metric_data') = False
+        raw_result = []
+        for chunk in _chunks(metrics):
+            response = self._client.get_metric_data(
+                MetricDataQueries=chunk,
+                StartTime=start_time,
+                EndTime=end_time,
+            )
+            try:
+                metrics = response['MetricDataResults']
+            except KeyError, e:
+                logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
+                continue
+            raw_result.extend(metrics)
+        return raw_result
 
     def _get_metrics(self):
         bucket_ids = []
@@ -403,11 +433,7 @@ class S3(AWSSection):
         return metrics
 
     def _extract_content_from(self, raw_result):
-        try:
-            return raw_result['MetricDataResults']
-        except KeyError, e:
-            logging.info("%s: KeyError %s; Available are %s", self.name, e, raw_result.keys())
-            return []
+        return raw_result
 
     def _format_content(self, content):
         content_by_piggyback_hosts = {}
@@ -536,11 +562,24 @@ class ELB(AWSSection):
         metrics = self._get_metrics()
         if not metrics:
             return {}
-        return self._client.get_metric_data(
-            MetricDataQueries=metrics,
-            StartTime=start_time,
-            EndTime=end_time,
-        )
+
+        # A single GetMetricData call can include up to 100 MetricDataQuery structures
+        # There's no pagination for this operation:
+        # self._client.can_paginate('get_metric_data') = False
+        raw_result = []
+        for chunk in _chunks(metrics):
+            response = self._client.get_metric_data(
+                MetricDataQueries=chunk,
+                StartTime=start_time,
+                EndTime=end_time,
+            )
+            try:
+                metrics = response['MetricDataResults']
+            except KeyError, e:
+                logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
+                continue
+            raw_result.extend(metrics)
+        return raw_result
 
     def _get_metrics(self):
         load_balancers = []
@@ -699,11 +738,24 @@ class EBS(AWSSection):
         metrics = self._get_metrics()
         if not metrics:
             return {}
-        return self._client.get_metric_data(
-            MetricDataQueries=metrics,
-            StartTime=start_time,
-            EndTime=end_time,
-        )
+
+        # A single GetMetricData call can include up to 100 MetricDataQuery structures
+        # There's no pagination for this operation:
+        # self._client.can_paginate('get_metric_data') = False
+        raw_result = []
+        for chunk in _chunks(metrics):
+            response = self._client.get_metric_data(
+                MetricDataQueries=chunk,
+                StartTime=start_time,
+                EndTime=end_time,
+            )
+            try:
+                metrics = response['MetricDataResults']
+            except KeyError, e:
+                logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
+                continue
+            raw_result.extend(metrics)
+        return raw_result
 
     def _get_metrics(self):
         volumes = []

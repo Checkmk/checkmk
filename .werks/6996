@@ -1,0 +1,10 @@
+Title: docker_node_network: Fixed crash of HW/SW inventory service if bridge name is missing
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1545220260
+Class: fix
+
+

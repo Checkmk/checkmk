@@ -31,10 +31,18 @@ def inventory_aws_s3_summary(parsed):
 
 
 def check_aws_s3_summary(item, params, parsed):
-    yield 0, 'Buckets: %s' % len(parsed)
+    yield 0, '%s buckets' % len(parsed)
+    buckets_by_region = {}
+    for row in parsed:
+        buckets_by_region.setdefault(row['LocationConstraint'], []).append(row)
+
+    for region, buckets in buckets_by_region.iteritems():
+        yield 0, "%s buckets in region %s" % (len(buckets), region)
+
     long_output = []
     for row in parsed:
-        long_output.append("Bucket: %s, Creation date: %s" % (row['Name'], row['CreationDate']))
+        long_output.append("Bucket: %s, Region: %s, Creation date: %s"\
+                           % (row['Name'], row['LocationConstraint'], row['CreationDate']))
     if long_output:
         yield 0, '\n%s' % '\n'.join(long_output)
 

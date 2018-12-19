@@ -318,14 +318,20 @@ class S3Summary(AWSSection):
         return 86400
 
     def _get_raw_result(self):
-        return self._client.list_buckets()
-
-    def _extract_content_from(self, raw_result):
+        raw_result = self._client.list_buckets()
         try:
-            return raw_result['Buckets']
+            buckets = raw_result['Buckets']
         except KeyError, e:
             logging.info("%s: KeyError %s; Available are %s", self.name, e, raw_result.keys())
             return []
+
+        for entry in buckets:
+            response = self._client.get_bucket_location(Bucket=entry['Name'])
+            entry['LocationConstraint'] = response['LocationConstraint']
+        return buckets
+
+    def _extract_content_from(self, raw_result):
+        return raw_result
 
     def _format_content(self, content):
         return [AWSSectionResult("", content)]

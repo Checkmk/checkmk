@@ -173,7 +173,7 @@ def extract_wmic_info(info):
             #
             # Node,
             if "Name" in row and "ProcessId" in row:
-                wmic_info[(row["node"], row["Name"], row["ProcessId"])] = row
+                wmic_info.setdefault((row["node"], row["Name"]), []).append(row)
         else:
             ps_result.append(line)  # plain list of process names
 
@@ -181,20 +181,14 @@ def extract_wmic_info(info):
 
 
 def merge_wmic(ps_result, wmic_info, wmic_headers):
-    def get_ps_info(node, name, processId=0):
-        for key, value in wmic_info.items():
-            if (not processId and key[0:2] == (node, name)) or key == (node, name, processId):
-                # each info is only returned once!
-                del wmic_info[key]
-                return value
-
     info = []
     seen_pids = set([])  # Remove duplicate entries
     cpu_cores = 1
     for line in ps_result:
-        psinfo = get_ps_info(line[0], line[1])
-        # Get number of CPU cores from system idle process
-        if psinfo:
+        psinfos = wmic_info.get((line[0], line[1]), [])
+        if psinfos:
+            psinfo = psinfos.pop()  # each info is used only once!
+            # Get number of CPU cores from system idle process
             if "ThreadCount" in wmic_headers and psinfo["Name"].lower() == "system idle process":
                 cpu_cores = int(psinfo["ThreadCount"])
             pid = int(psinfo["ProcessId"])

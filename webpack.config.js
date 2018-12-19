@@ -4,7 +4,8 @@ module.exports = {
     mode: "production",
     entry: {
         main: "./web/htdocs/js/index.js",
-        mobile: "./web/htdocs/js/mobile.js"
+        mobile: "./web/htdocs/js/mobile.js",
+        side: "./web/htdocs/js/side_index.js"
     },
     output: {
         path: path.resolve(__dirname, "web/htdocs/js"),
@@ -14,6 +15,7 @@ module.exports = {
         // from HTML code to work with the modules. Until then we need to keep the old behaviour of loading
         // all JS code in the global namespace
         libraryTarget: "window",
+        libraryExport: "default"
     },
     resolve: {
         modules: [

@@ -173,28 +173,6 @@ function time() {
     return (new Date()).getTime() / 1000;
 }
 
-// simple implementation of function default arguments when
-// using objects as function parameters. Example:
-// function xxx(args) {
-//     args = merge_args({
-//         'arg2': 'default_val',
-//     });
-// }
-// xxx({
-//   'arg1': 'val1',
-//   'arg3': 'val3',
-// })
-function merge_args()
-{
-    var defaults = arguments[0];
-    var args = arguments[1] || {};
-
-    for (var name in args)
-        defaults[name] = args[name];
-
-    return defaults;
-}
-
 // Tells the caller whether or not there are graphs on the current page
 function has_graphing()
 {
@@ -468,116 +446,6 @@ if (!("lastElementChild" in document.documentElement)) {
 //#   | AJAX call related functions                                        |
 //#   '--------------------------------------------------------------------'
 
-function call_ajax(url, optional_args)
-{
-    var args = merge_args({
-        add_ajax_id      : true,
-        plain_error      : false,
-        response_handler : null,
-        error_handler    : null,
-        handler_data     : null,
-        method           : "GET",
-        post_data        : null,
-        sync             : false
-    }, optional_args);
-
-    var AJAX = window.XMLHttpRequest ? new XMLHttpRequest()
-                                     : new ActiveXObject("Microsoft.XMLHTTP");
-    if (!AJAX)
-        return null;
-
-    // Dynamic part to prevent caching
-    if (args.add_ajax_id) {
-        url += url.indexOf('\?') !== -1 ? "&" : "?";
-        url += "_ajaxid="+Math.floor(Date.parse(new Date()) / 1000);
-    }
-
-    if (args.plain_error) {
-        url += url.indexOf('\?') !== -1 ? "&" : "?";
-        url += "_plain_error=1";
-    }
-
-    try {
-        AJAX.open(args.method, url, !args.sync);
-    } catch (e) {
-        if (args.error_handler) {
-            args.error_handler(args.handler_data, null, e);
-            return null;
-        } else {
-            throw e;
-        }
-    }
-
-    if (args.method == "POST") {
-        AJAX.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-    }
-
-    if (!args.sync) {
-        AJAX.onreadystatechange = function() {
-            if (AJAX && AJAX.readyState == 4) {
-                if (AJAX.status == 200) {
-                    if (args.response_handler)
-                        args.response_handler(args.handler_data, AJAX.responseText);
-                }
-                else if (AJAX.status == 401) {
-                    // This is reached when someone is not authenticated anymore
-                    // but has some webservices running which are still fetching
-                    // infos via AJAX. Reload the whole frameset or only the
-                    // single page in that case.
-                    if(top)
-                        top.location.reload();
-                    else
-                        document.location.reload();
-                }
-                else {
-                    if (args.error_handler)
-                        args.error_handler(args.handler_data, AJAX.status, AJAX.statusText);
-                }
-            }
-        };
-    }
-
-    AJAX.send(args.post_data);
-    return AJAX;
-}
-
-function get_url(url, handler, data, errorHandler, addAjaxId)
-{
-    var args = {
-        response_handler: handler
-    };
-
-    if (typeof data !== 'undefined')
-        args.handler_data = data;
-
-    if (typeof errorHandler !== 'undefined')
-        args.error_handler = errorHandler;
-
-    if (typeof addAjaxId !== 'undefined')
-        args.add_ajax_id = addAjaxId;
-
-    call_ajax(url, args);
-}
-
-function post_url(url, post_params, responseHandler, handler_data, errorHandler)
-{
-    var args = {
-        method: "POST",
-        post_data: post_params
-    };
-
-    if (typeof responseHandler !== 'undefined') {
-        args.response_handler = responseHandler;
-    }
-
-    if (typeof handler_data !== 'undefined')
-        args.handler_data = handler_data;
-
-    if (typeof errorHandler !== 'undefined')
-        args.error_handler = errorHandler;
-
-    call_ajax(url, args);
-}
 
 function bulkUpdateContents(ids, codes)
 {
@@ -929,6 +797,9 @@ function show_pnp_hover_graphs(url)
 
 function handle_check_mk_hover_graphs_response(_unused, code)
 {
+    if (!g_hover_menu)
+        return;
+
     if (code.indexOf('pnp4nagios') !== -1) {
         // fallback to pnp graph handling (received an URL with the previous ajax call)
         show_pnp_hover_graphs(code);

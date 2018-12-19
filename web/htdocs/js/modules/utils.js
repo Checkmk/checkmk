@@ -22,25 +22,25 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-import * as ajax from "ajax";
-import * as prediction from "prediction";
+// simple implementation of function default arguments when
+// using objects as function parameters. Example:
+// function xxx(args) {
+//     args = merge_args({
+//         'arg2': 'default_val',
+//     });
+// }
+// xxx({
+//   'arg1': 'val1',
+//   'arg3': 'val3',
+// })
+export function merge_args()
+{
+    var defaults = arguments[0];
+    var args = arguments[1] || {};
 
-require("script-loader!./checkmk.js");
-require("script-loader!./dashboard.js");
-require("colorpicker");
-require("script-loader!./wato.js");
+    for (var name in args)
+        defaults[name] = args[name];
 
-// TODO: Find a better solution for this CEE specific include
-try {
-    require("script-loader!../../../enterprise/web/htdocs/js/graphs.js");
-} catch(e) {} // eslint-disable-line no-empty
+    return defaults;
+}
 
-export default {
-    get_url: ajax.get_url,
-    post_url: ajax.post_url,
-    call_ajax: ajax.call_ajax,
-    cmk: {
-        prediction: prediction,
-        ajax: ajax,
-    }
-};

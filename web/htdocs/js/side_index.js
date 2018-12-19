@@ -1,3 +1,4 @@
+
 // +------------------------------------------------------------------+
 // |             ____ _               _        __  __ _  __           |
 // |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -23,24 +24,17 @@
 // Boston, MA 02110-1301 USA.
 
 import * as ajax from "ajax";
-import * as prediction from "prediction";
+import * as quicksearch from "quicksearch";
 
 require("script-loader!./checkmk.js");
-require("script-loader!./dashboard.js");
-require("colorpicker");
-require("script-loader!./wato.js");
-
-// TODO: Find a better solution for this CEE specific include
-try {
-    require("script-loader!../../../enterprise/web/htdocs/js/graphs.js");
-} catch(e) {} // eslint-disable-line no-empty
+require("script-loader!./sidebar.js");
 
 export default {
     get_url: ajax.get_url,
     post_url: ajax.post_url,
     call_ajax: ajax.call_ajax,
     cmk: {
-        prediction: prediction,
         ajax: ajax,
+        quicksearch: quicksearch
     }
 };

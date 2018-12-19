@@ -298,7 +298,7 @@ class DiscoveryResult(object):
         return "DiscoveryResult(%r)" % map(repr, self)
 
 
-def assertDiscoveryResultsEqual(actual, expected):
+def assertDiscoveryResultsEqual(check, actual, expected):
     """
     Compare two DiscoveryResults.
 
@@ -311,7 +311,17 @@ def assertDiscoveryResultsEqual(actual, expected):
     assert len(actual.entries) == len(expected.entries), \
            "DiscoveryResults are not of equal length"
     for enta, ente in zip(actual, expected):
-        assert enta == ente, "%r != %r" % (enta, ente)
+        item_a, default_params_a = enta
+        if isinstance(default_params_a, str):
+            default_params_a = eval(default_params_a, check.context, check.context)
+
+        item_e, default_params_e = ente
+        if isinstance(default_params_e, str):
+            default_params_e = eval(default_params_e, check.context, check.context)
+
+        assert item_a == item_e, "items differ: %r != %r" % (item_a, item_e)
+        assert default_params_a == default_params_e, "default parameters differ: %r != %r" % (
+            default_params_a, default_params_e)
 
 
 class BasicItemState(object):

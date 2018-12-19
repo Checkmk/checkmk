@@ -185,7 +185,7 @@ def check_systemd_units_services_summary(_no_item, params, parsed):
         if state == 0:
             continue
 
-        service_names = [s.name for s in services if s.active == active_state]
+        service_names = sorted(s.name for s in services if s.active == active_state)
         cnt = len(service_names)
         service_names = ", ".join(service_names)
         yield state, "%d service%s %s (%s)" % (cnt, '' if cnt == 1 else 's', active_state,

@@ -2493,7 +2493,7 @@ def test_declare_permission(monkeypatch):
 
 
 @pytest.mark.parametrize("do_sort,result", [
-    (True, ['sec1.1', 'sec1.a', 'sec1.A', 'sec1.b', 'sec1.g', 'sec1.Z', 'sec1.z']),
+    (True, ['sec1.1', 'sec1.A', 'sec1.a', 'sec1.b', 'sec1.g', 'sec1.Z', 'sec1.z']),
     (False, ['sec1.Z', 'sec1.z', 'sec1.A', 'sec1.b', 'sec1.a', 'sec1.1', 'sec1.g']),
 ])
 def test_permission_sorting(do_sort, result):

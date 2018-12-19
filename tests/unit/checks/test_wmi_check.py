@@ -28,7 +28,7 @@ def test_wmi_cpu_load_discovery(check_manager, check_name, info, expected):
     check = check_manager.get_check(check_name)
     discovery_result = DiscoveryResult(check.run_discovery(check.run_parse(info)))
     discovery_expected = DiscoveryResult(expected)
-    assertDiscoveryResultsEqual(discovery_result, discovery_expected)
+    assertDiscoveryResultsEqual(check, discovery_result, discovery_expected)
 
 
 @pytest.mark.parametrize("check_name,info,expected", [

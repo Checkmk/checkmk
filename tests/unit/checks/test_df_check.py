@@ -1,4 +1,4 @@
-import pytest
+import pytest  # type: ignore
 from checktestlib import DiscoveryResult, CheckResult, \
                          assertDiscoveryResultsEqual, MockHostExtraConf
 
@@ -273,7 +273,7 @@ def test_df_discovery_with_parse(check_manager, info, expected_result, inventory
 
     discovery_result = DiscoveryResult(raw_discovery_result)
     expected_result = DiscoveryResult(expected_result)
-    assertDiscoveryResultsEqual(discovery_result, expected_result)
+    assertDiscoveryResultsEqual(check, discovery_result, expected_result)
 
 
 @pytest.mark.parametrize("item,params,info,expected_result", [

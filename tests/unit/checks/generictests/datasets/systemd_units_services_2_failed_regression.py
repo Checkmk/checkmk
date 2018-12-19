@@ -22,5 +22,5 @@ checks = {
         },
         'states_default': 2,
         'else': 2
-    }, [(0, '2 services in total', []), (2, '2 services failed (foo, bar)', [])])]
+    }, [(0, '2 services in total', []), (2, '2 services failed (bar, foo)', [])])]
 }

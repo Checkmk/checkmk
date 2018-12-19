@@ -145,7 +145,7 @@ class PermissionRegistry(cmk.utils.plugin_registry.ClassRegistry):
         ]
 
         if section.do_sort:
-            return sorted(permissions, key=lambda p: p.title)
+            return sorted(permissions, key=lambda p: (p.title, p.sort_index))
         return sorted(permissions, key=lambda p: p.sort_index)
 
 

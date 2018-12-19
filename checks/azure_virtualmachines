@@ -136,7 +136,7 @@ def discover_azure_virtualmachines_summary(parsed):
 
 def check_azure_virtualmachines_summary(_summary, params, parsed):
 
-    fixed_resources_list = list(parsed.values())
+    fixed_resources_list = sorted(parsed.values())
     provisionings = [_azure_vms_get_status(r, 'ProvisioningState')[0] for r in fixed_resources_list]
     powers = [_azure_vms_get_status(r, 'PowerState')[0] for r in fixed_resources_list]
     groups = [r.get("group") for r in fixed_resources_list]

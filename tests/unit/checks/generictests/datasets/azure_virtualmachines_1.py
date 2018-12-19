@@ -113,8 +113,8 @@ checks = {
             (1, "VM stopped", []),
             (0, "Resource group: Glastonbury", []),
             (0, u'Location: westeurope', []),
-            (0, u'Monitoring-vm: true', []),
             (0, u'Monitoring-all: true', []),
+            (0, u'Monitoring-vm: true', []),
         ]),
         ("NotRunningUbuntu", {
             'map_provisioning_states': {
@@ -155,8 +155,8 @@ checks = {
             (0, "VM running", []),
             (0, "Resource group: Glastonbury", []),
             (0, u'Location: westeurope', []),
-            (0, u'Monitoring-vm: true', []),
             (0, u'Monitoring-all: true', []),
+            (0, u'Monitoring-vm: true', []),
         ]),
     ],
 }

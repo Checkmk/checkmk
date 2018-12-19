@@ -121,7 +121,7 @@ def discovery(check, subcheck, dataset, info_arg, immu):
     d_result = DiscoveryResult(d_result_raw)
     if subcheck in discov_expected:
         d_result_expected = DiscoveryResult(discov_expected[subcheck])
-        assertDiscoveryResultsEqual(d_result, d_result_expected)
+        assertDiscoveryResultsEqual(check, d_result, d_result_expected)
 
     return d_result
 

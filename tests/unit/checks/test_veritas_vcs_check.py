@@ -1,4 +1,4 @@
-import pytest
+import pytest  # type: ignore
 from checktestlib import DiscoveryResult, assertDiscoveryResultsEqual, \
                          CheckResult, assertCheckResultsEqual
 
@@ -420,7 +420,7 @@ def test_veritas_vcs_discovery_with_parse(check_manager, info, items):
         raw_result = check.run_discovery(parsed)
         result = DiscoveryResult(raw_result)
         result_expected = DiscoveryResult((i, None) for i in items[subcheck])
-        assertDiscoveryResultsEqual(result, result_expected)
+        assertDiscoveryResultsEqual(check, result, result_expected)
 
 
 #   . CHECK resource

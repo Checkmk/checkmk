@@ -24,8 +24,8 @@ def test_health_parse_yields_volume_name_as_items_despite_of_durable_id(check_ma
             ["volume-statistics", "2", "any-key-2", "ABC"]]
     check = check_manager.get_check("hp_msa_volume")
     parse_result = check.run_parse(info)
-    parsed_items = [item for item in parse_result]
-    expected_items = ['Bar 2', 'Bar 1']
+    parsed_items = sorted(parse_result.iterkeys())
+    expected_items = ['Bar 1', 'Bar 2']
     assert parsed_items == expected_items
 
 

@@ -43,7 +43,7 @@ def azure_iter_informative_attrs(resource, include_keys=('location',)):
         if key in resource:
             yield cap(key), resource[key]
 
-    for key, value in resource.get('tags', {}).iteritems():
+    for key, value in sorted(resource.get('tags', {}).iteritems()):
         if not key.startswith("hidden-"):
             yield cap(key), value
 

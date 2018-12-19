@@ -1384,6 +1384,7 @@ def test_grouped_rulespecs():
             'agent_config:msexch_database',
             'agent_config:mk_site_object_counts',
             'agent_config:mk_docker_container_piggybacked',
+            'agent_config:mk_docker_node',
             'agent_config:veeam_backup_status',
             'agent_config:mk_nfsiostat',
         ],

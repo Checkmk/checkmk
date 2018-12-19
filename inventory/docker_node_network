@@ -53,10 +53,14 @@ def inv_docker_node_network_networks(info, inventory_tree, status_data_tree):
 
         network_ = {
             "name": network_name,
-            "host_ifname": network["Options"]["com.docker.network.bridge.name"],
             "network_id": _docker_trunc_id(network["Id"]),
             "scope": network["Scope"],
         }
+
+        try:
+            network["host_ifname"] = network["Options"]["com.docker.network.bridge.name"]
+        except KeyError:
+            pass
 
         labels = sorted(["%s: %s" % (k, v) for k, v in network.get("Labels", {}).items()])
         if labels:

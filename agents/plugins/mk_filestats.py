@@ -172,8 +172,9 @@ class LazyFileStats(object):
 
         LOGGER.debug("os.stat(%r)", self.path)
 
+        path = self.path.encode('utf8')
         try:
-            stat = os.stat(self.path)
+            stat = os.stat(path)
         except OSError, exc:
             self.stat_status = "file vanished" if exc.errno == 2 else str(exc)
             return

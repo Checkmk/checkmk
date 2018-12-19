@@ -133,6 +133,7 @@ from cmk.gui.plugins.wato.utils import (
     SimpleEditMode,
     wato_root_dir,
     wato_styles,
+    ConfigHostname,
 )
 
 #.

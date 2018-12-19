@@ -34,6 +34,8 @@ import cmk.gui.watolib as watolib
 import cmk.gui.userdb as userdb
 import cmk.gui.forms as forms
 import cmk.gui.table as table
+from cmk.gui.valuespec import (
+    MonitoredHostname,)
 
 from cmk.gui.plugins.wato.utils import mode_registry, sort_sites
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode
@@ -91,7 +93,10 @@ class ModeEditSite(ModeSites):
         self._url_prefix = html.var("url_prefix", "").strip()
         self._timeout = html.var("timeout", "").strip()
         self._sh_site = html.var("sh_site")
-        self._sh_host = html.var("sh_host")
+
+        self._sh_host = self._vs_host().from_html_vars("sh_host")
+        self._vs_host().validate_value(self._sh_host, "sh_Host")
+
         self._repl = html.var("replication")
         self._multisiteurl = html.var("multisiteurl", "").strip()
 
@@ -337,7 +342,8 @@ class ModeEditSite(ModeSites):
             self._sh_host = ""
 
         html.write_text(_("host: "))
-        html.text_input("sh_host", self._sh_host, size=10)
+        self._vs_host().render_input("sh_host", self._sh_host)
+
         html.write_text(_(" on monitoring site: "))
 
         choices = [("", _("(no status host)"))] + [
@@ -362,6 +368,9 @@ class ModeEditSite(ModeSites):
         html.help(
             _("If you disable a connection, then no data of this site will be shown in the status GUI. "
               "The replication is not affected by this, however."))
+
+    def _vs_host(self):
+        return MonitoredHostname()
 
     def _page_replication_configuration(self):
         # Replication

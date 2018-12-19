@@ -39,6 +39,7 @@ from cmk.gui.plugins.wato import (
     WatoMode,
     mode_registry,
     global_buttons,
+    ConfigHostname,
 )
 
 
@@ -53,7 +54,9 @@ class ModePatternEditor(WatoMode):
         return ["pattern_editor"]
 
     def _from_vars(self):
-        self._hostname = html.var('host', '')
+        self._hostname = self._vs_host().from_html_vars("host")
+        self._vs_host().validate_value(self._hostname, "host")
+
         # TODO: validate all fields
         self._item = html.var('file', '')
         self._match_txt = html.var('match', '')
@@ -105,7 +108,7 @@ class ModePatternEditor(WatoMode):
         html.begin_form('try')
         forms.header(_('Try Pattern Match'))
         forms.section(_('Hostname'))
-        html.text_input('host')
+        self._vs_host().render_input("host", self._hostname)
         forms.section(_('Logfile'))
         html.text_input('file')
         forms.section(_('Text to match'))
@@ -119,6 +122,9 @@ class ModePatternEditor(WatoMode):
         html.del_var('folder')  # Never hand over the folder here
         html.hidden_fields()
         html.end_form()
+
+    def _vs_host(self):
+        return ConfigHostname()
 
     def _show_patterns(self):
         import cmk.gui.logwatch as logwatch
@@ -148,7 +154,7 @@ class ModePatternEditor(WatoMode):
                                                           self._item)
             elif self._item:
                 # If only a filename is given
-                rule_matches = rule.matches_item()
+                rule_matches = rule.matches_item(self._item)
             else:
                 # If no host/file given match all rules
                 rule_matches = True

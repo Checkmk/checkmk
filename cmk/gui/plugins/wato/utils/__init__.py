@@ -144,6 +144,7 @@ from cmk.gui.watolib import (
     simple_host_rule_match_conditions,
     transform_simple_to_multi_host_rule_match_conditions,
     rule_option_elements,
+    ConfigHostname,
 )
 from cmk.gui.plugins.watolib.utils import (
     config_variable_group_registry,

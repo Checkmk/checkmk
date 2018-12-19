@@ -777,31 +777,27 @@ class TextAsciiAutocomplete(TextAscii):
 
         html.write(json.dumps(result_data))
 
-
-# Renders an input field for entering a host name while providing
-# an auto completion dropdown field
-class MonitoredHostname(TextAsciiAutocomplete):
-    ident = "hostname"
-
-    def __init__(self, from_active_config=False, **kwargs):
-        super(MonitoredHostname, self).__init__(
-            "hostname",
-            {
-                # Autocomplete from active config via livestatus or WATO world
-                "from_active_config": from_active_config,
-            },
-            **kwargs)
-
-    # called by the webservice with the current input fiel value and
-    # the completions_params to get the list of choices
+    #@abc.abstractclassmethod
     @classmethod
     def autocomplete_choices(cls, value, params):
-        if params["from_active_config"]:
-            return cls._get_choices_via_livestatus(value)
-        return cls._get_choices_via_wato(value)
+        raise NotImplementedError()
+
+
+class MonitoredHostname(TextAsciiAutocomplete):
+    """Hostname input with dropdown completion
+
+    Renders an input field for entering a host name while providing an auto completion dropdown field.
+    Fetching the choices from the current live config via livestatus"""
+    ident = "monitored_hostname"
+
+    def __init__(self, **kwargs):
+        super(MonitoredHostname, self).__init__(
+            completion_ident=self.ident, completion_params={}, **kwargs)
 
     @classmethod
-    def _get_choices_via_livestatus(cls, value):
+    def autocomplete_choices(cls, value, params):
+        """Return the matching list of dropdown choices
+        Called by the webservice with the current input field value and the completions_params to get the list of choices"""
         import cmk.gui.sites as sites
 
         query = ("GET hosts\n"
@@ -810,10 +806,6 @@ class MonitoredHostname(TextAsciiAutocomplete):
         hosts = sorted(sites.live().query_column_unique(query))
 
         return [(h, h) for h in hosts]
-
-    @classmethod
-    def _get_choices_via_wato(cls, value):
-        raise NotImplementedError()
 
 
 # We can not use the decorator because it can not deal with classmethods as quick fix we

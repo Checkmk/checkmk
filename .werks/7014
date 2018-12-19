@@ -1,0 +1,12 @@
+Title: Add host name completion in different places
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1545206237
+Class: feature
+
+When entering host names in different places, like for example the parent attribute fields of a host
+or the nodes fields of a cluster host, a dropdown is shown with the host names matching the already
+inserted hostname parts. You may klick on the matching hostname to add it to the input field.

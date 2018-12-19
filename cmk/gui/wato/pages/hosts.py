@@ -38,7 +38,7 @@ from cmk.gui.plugins.wato.utils.context_buttons import host_status_button
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError, MKAuthException, MKGeneralException
-from cmk.gui.valuespec import ListOfStrings, TextAscii, Hostname
+from cmk.gui.valuespec import ListOfStrings, Hostname
 from cmk.gui.wato.pages.folders import delete_host_after_confirm
 
 
@@ -158,7 +158,7 @@ class HostMode(WatoMode):
 
     def _vs_cluster_nodes(self):
         return ListOfStrings(
-            valuespec=TextAscii(size=19),
+            valuespec=watolib.ConfigHostname(),
             orientation="horizontal",
         )
 

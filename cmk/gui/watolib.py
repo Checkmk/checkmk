@@ -115,6 +115,7 @@ from cmk.gui.valuespec import (
     TextAscii,
     TextUnicode,
     TextAreaUnicode,
+    TextAsciiAutocomplete,
     ValueSpec,
     ListChoice,
     Float,
@@ -122,6 +123,7 @@ from cmk.gui.valuespec import (
     Tuple,
     Age,
     RegExp,
+    MonitoredHostname,
 )
 
 if cmk.is_managed_edition():
@@ -10355,6 +10357,7 @@ def _common_host_rule_match_conditions():
          )),
         ("match_hosts",
          ListOfStrings(
+             valuespec=MonitoredHostname(),
              title=_("Match only the following hosts"),
              size=24,
              orientation="horizontal",
@@ -10365,6 +10368,7 @@ def _common_host_rule_match_conditions():
          )),
         ("match_exclude_hosts",
          ListOfStrings(
+             valuespec=MonitoredHostname(),
              title=_("Exclude the following hosts"),
              size=24,
              orientation="horizontal",
@@ -10831,6 +10835,26 @@ def DocumentationURL():
              ) % html.render_icon("url")),
         size=80,
     )
+
+
+class ConfigHostname(TextAsciiAutocomplete):
+    """Hostname input with dropdown completion
+
+    Renders an input field for entering a host name while providing an auto completion dropdown field.
+    Fetching the choices from the current WATO config"""
+    ident = "monitored_hostname"
+
+    def __init__(self, **kwargs):
+        super(ConfigHostname, self).__init__(
+            completion_ident=self.ident, completion_params={}, **kwargs)
+
+    @classmethod
+    def autocomplete_choices(cls, value, params):
+        """Return the matching list of dropdown choices
+        Called by the webservice with the current input field value and the completions_params to get the list of choices"""
+        all_hosts = Host.all()
+        match_pattern = re.compile(value, re.IGNORECASE)
+        return [(h, h) for h in all_hosts.keys() if match_pattern.search(h) is not None]
 
 
 #.

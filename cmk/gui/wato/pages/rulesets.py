@@ -42,7 +42,6 @@ from cmk.gui.globals import html
 from cmk.gui.valuespec import (
     ListChoice,
     Tuple,
-    TextAscii,
     ListOfStrings,
     Dictionary,
     RegExpUnicode,
@@ -64,6 +63,7 @@ from cmk.gui.plugins.wato import (
     rule_option_elements,
     may_edit_ruleset,
     search_form,
+    ConfigHostname,
 )
 
 
@@ -1479,7 +1479,7 @@ class EditRuleMode(WatoMode):
 
         explicit_hosts = [h.strip("!") for h in self._rule.host_list if h != watolib.ALL_HOSTS[0]]
         ListOfStrings(
-            orientation="horizontal", valuespec=TextAscii(size=30)).render_input(
+            orientation="horizontal", valuespec=ConfigHostname(size=30)).render_input(
                 "hostlist", explicit_hosts)
 
         html.checkbox(

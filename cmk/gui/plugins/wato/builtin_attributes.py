@@ -63,6 +63,7 @@ from cmk.gui.plugins.wato import (
     NagiosTextAttribute,
     ValueSpecAttribute,
     HostnameTranslation,
+    ConfigHostname,
 )
 
 declare_host_attribute(
@@ -194,6 +195,7 @@ class ParentsAttribute(ValueSpecAttribute):
         ValueSpecAttribute.__init__(
             self, "parents",
             ListOfStrings(
+                valuespec=ConfigHostname(),
                 title=_("Parents"),
                 help=_("Parents are used to configure the reachability of hosts by the "
                        "monitoring server. A host is considered to be <b>unreachable</b> if all "

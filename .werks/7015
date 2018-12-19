@@ -1,0 +1,10 @@
+Title: Fixed broken pattern analyzer when only matching a logfile without host name
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0p10
+Date: 1545206474
+Class: fix
+
+

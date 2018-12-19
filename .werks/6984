@@ -1,0 +1,16 @@
+Title: docker_node_disk_usage, docker_node_info, docker_node_images, docker_node_network: Extract sections to plugin
+Level: 2
+Component: checks
+Class: fix
+Compatible: incomp
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1545227106
+
+Due to poor performance of commands such as <tt>docker system df</tt> in some environments, the
+check_mk_agent would be slowed down to the point of unusability. To address this, these sections
+have been extracted into the <tt>mk_docker_node</tt> agent plugin, allowing them to be run asynchronously.
+
+If you update the agent and you need these sections, you will have to deploy the plugin to continue
+monitoring docker node information.

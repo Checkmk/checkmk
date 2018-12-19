@@ -22,29 +22,28 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
+import { get_url } from "ajax";
+
 var iCurrent = null;
 var oCurrent = null;
 var oldValue = "";
 var g_ajax_obj = null;
 
 // Register an input field to be a search field and add eventhandlers
-function mkSearchAddField(field) {
+export function register_search_field(field) {
     var oField = document.getElementById(field);
     if(oField) {
-        oField.onkeydown = function(e) { if (!e) e = window.event; return mkSearchKeyDown(e, oField); }
-        oField.onkeyup   = function(e) { if (!e) e = window.event; return mkSearchKeyUp(e, oField); }
-        oField.onclick   = function(e) { mkSearchClose(); return true; }
+        oField.onkeydown = function(e) { if (!e) e = window.event; return mkSearchKeyDown(e, oField); };
+        oField.onkeyup   = function(e) { if (!e) e = window.event; return mkSearchKeyUp(e, oField); };
+        oField.onclick   = function() { close_popup(); return true; };
 
         // On doubleclick toggle the list
-        oField.ondblclick  = function(e) { mkSearchToggle(oField); }
+        oField.ondblclick  = function() { toggle_popup(oField); };
     }
 }
 
-mkSearchAddField("mk_side_search_field");
-
 // On key release event handler
 function mkSearchKeyUp(e, oField) {
-
     var keyCode = e.which || e.keyCode;
 
     switch (keyCode) {
@@ -52,35 +51,35 @@ function mkSearchKeyUp(e, oField) {
         // 27: Escape
         case 13:
         case 27:
-            mkSearchClose();
+            close_popup();
             e.returnValue = false;
             e.cancelBubble = true;
-        break;
+            break;
 
         // Other keys
         default:
             if (oField.value == "") {
                 e.returnValue = false;
                 e.cancelBubble = true;
-                mkSearchClose();
+                close_popup();
             }
             else {
                 mkSearch(oField);
             }
-        break;
+            break;
     }
 }
 
 // On key press down event handler
-function mkSearchButton() {
+export function on_search_click() {
     var oField = document.getElementById("mk_side_search_field");
-    var ev = { "which" : 0, "keyCode" : 13 }
+    var ev = { "which" : 0, "keyCode" : 13 };
     return mkSearchKeyDown(ev, oField);
 }
 
 function search_dropdown_value() {
     if (oCurrent)
-        return oCurrent.id.replace('result_', '');
+        return oCurrent.id.replace("result_", "");
     else
         return null;
 }
@@ -93,35 +92,34 @@ function mkSearchKeyDown(e, oField) {
         case 13:
             if (oCurrent != null) {
                 mkSearchNavigate();
-	        oField.value = search_dropdown_value()
-                mkSearchClose();
+                oField.value = search_dropdown_value();
+                close_popup();
             } else {
                 if (oField.value == "")
                     return; /* search field empty, rather not show all services! */
                 // When nothing selected, navigate with the current contents of the field
-                top.frames['main'].location.href = 'search_open.py?q=' + encodeURIComponent(oField.value);
+                top.frames["main"].location.href = "search_open.py?q=" + encodeURIComponent(oField.value);
                 mkTermSearch();
-                mkSearchClose();
+                close_popup();
             }
 
             e.returnValue = false;
             e.cancelBubble = true;
-        break;
+            break;
 
         // Escape
         case 27:
-            mkSearchClose();
+            close_popup();
             e.returnValue = false;
             e.cancelBubble = true;
-        break;
+            break;
 
         // Tab
         case 9:
             if(mkSearchResultShown()) {
-                mkSearchClose();
+                close_popup();
             }
             return;
-        break;
 
         // Up/Down arrow (Must not be handled in onkeyup since this does not fire repeated events)
         case 38:
@@ -134,14 +132,13 @@ function mkSearchKeyDown(e, oField) {
 
             e.preventDefault();
             return false;
-        break;
     }
     oldValue = oField.value;
 }
 
 // Navigate to the target of the selected event
 function mkSearchNavigate() {
-    top.frames['main'].location.href = oCurrent.href;
+    top.frames["main"].location.href = oCurrent.href;
 }
 
 // Move one step of given size in the result list
@@ -152,7 +149,7 @@ function mkSearchMoveElement(step) {
 
     iCurrent += step;
 
-    var oResults = document.getElementById('mk_search_results');
+    var oResults = document.getElementById("mk_search_results");
     if (!oResults)
         return;
 
@@ -166,12 +163,12 @@ function mkSearchMoveElement(step) {
 
     var a = 0;
     for(var i = 0; i < oResults.length; i++) {
-        if(oResults[i].tagName == 'A') {
+        if(oResults[i].tagName == "A") {
             if(a == iCurrent) {
                 oCurrent = oResults[i];
-                oResults[i].setAttribute('class', 'active');
+                oResults[i].setAttribute("class", "active");
             } else {
-                oResults[i].setAttribute('class', 'inactive');
+                oResults[i].setAttribute("class", "inactive");
             }
             a++;
         }
@@ -180,21 +177,21 @@ function mkSearchMoveElement(step) {
 
 // Is the result list shown at the moment?
 function mkSearchResultShown() {
-    return document.getElementById('mk_search_results') ? true : false;
+    return document.getElementById("mk_search_results") ? true : false;
 }
 
 // Toggle the result list
-function mkSearchToggle(oField) {
+function toggle_popup(oField) {
     if(mkSearchResultShown()) {
-        mkSearchClose();
+        close_popup();
     } else {
         mkSearch(oField);
     }
 }
 
 // Close the result list
-function mkSearchClose() {
-    var oContainer = document.getElementById('mk_search_results');
+export function close_popup() {
+    var oContainer = document.getElementById("mk_search_results");
     if(oContainer) {
         oContainer.parentNode.removeChild(oContainer);
     }
@@ -204,17 +201,17 @@ function mkSearchClose() {
 }
 
 function handle_search_response(oField, code) {
-    if (code != '') {
-        var oContainer = document.getElementById('mk_search_results');
+    if (code != "") {
+        var oContainer = document.getElementById("mk_search_results");
         if(!oContainer) {
-            var oContainer = document.createElement('div');
-            oContainer.setAttribute('id', 'mk_search_results');
+            oContainer = document.createElement("div");
+            oContainer.setAttribute("id", "mk_search_results");
             oField.parentNode.appendChild(oContainer);
         }
 
         oContainer.innerHTML = code;
     } else {
-        mkSearchClose();
+        close_popup();
     }
 }
 
@@ -237,6 +234,5 @@ function mkSearch(oField) {
     oldValue = val;
 
     mkTermSearch();
-    g_ajax_obj = get_url('ajax_search.py?q=' + encodeURIComponent(val),
-            handle_search_response, oField);
+    g_ajax_obj = get_url("ajax_search.py?q=" + encodeURIComponent(val), handle_search_response, oField);
 }

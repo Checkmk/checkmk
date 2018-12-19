@@ -1444,6 +1444,9 @@ class html(HTMLGenerator):
         if name not in self._default_stylesheets:
             self._default_stylesheets.append(name)
 
+    def clear_default_javascript(self):
+        del self._default_javascripts[:]
+
     def add_default_javascript(self, name):
         if name not in self._default_javascripts:
             self._default_javascripts.append(name)

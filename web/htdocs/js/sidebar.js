@@ -88,8 +88,8 @@ function registerEdgeListeners(obj) {
 }
 
 function on_mouse_leave(e) {
-    if (typeof(mkSearchClose) != "undefined")
-        mkSearchClose();
+    if (typeof(cmk.quicksearch.close_popup) != "undefined")
+        cmk.quicksearch.close_popup();
     return stop_snapin_dragging(e);
 }
 
@@ -586,13 +586,13 @@ function scrollWheel(event){
 //
 
 // The refresh snapins do reload after a defined amount of time
-refresh_snapins = null;
+var refresh_snapins = null;
 // The restart snapins are notified about the restart of the nagios instance(s)
-restart_snapins = null;
+var restart_snapins = null;
 // Contains a timestamp which holds the time of the last nagios restart handling
-sidebar_restart_time = null;
+var sidebar_restart_time = null;
 // Configures the number of seconds to reload all snapins which request it
-sidebar_update_interval = null;
+var sidebar_update_interval = null;
 
 // Removes the snapin from the current sidebar and informs the server for persistance
 function remove_sidebar_snapin(oLink, url)
@@ -800,8 +800,8 @@ function storeScrollPos() {
  *************************************************/
 
 // FIXME: Make this somehow configurable - use the start url?
-g_last_view   = 'dashboard.py?name=main';
-g_last_folder = '';
+var g_last_view   = 'dashboard.py?name=main';
+var g_last_folder = '';
 
 // highlight the followed link (when both needed snapins are available)
 function highlight_link(link_obj, container_id) {

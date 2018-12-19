@@ -58,11 +58,14 @@ class QuicksearchSnapin(SidebarSnapin):
                  "<i>hg:</i> Hostgroup, <i>sg:</i> Servicegroup<br><i>ad:</i> Address, <i>al:</i> Alias, <i>tg:</i> Hosttag")
 
     def show(self):
-        html.open_div(id_="mk_side_search", class_="content_center", onclick="mkSearchClose();")
+        html.open_div(
+            id_="mk_side_search", class_="content_center", onclick="cmk.quicksearch.close_popup();")
         html.input(id_="mk_side_search_field", type_="text", name="search", autocomplete="off")
-        html.icon_button("#", _("Search"), "quicksearch", onclick="mkSearchButton();")
+        html.icon_button(
+            "#", _("Search"), "quicksearch", onclick="cmk.quicksearch.on_search_click();")
         html.close_div()
         html.div('', id_="mk_side_clear")
+        html.javascript("cmk.quicksearch.register_search_field('mk_side_search_field');")
 
     @classmethod
     def allowed_roles(cls):

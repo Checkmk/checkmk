@@ -37,7 +37,7 @@ var right_border  = 50;
 var top_border    = 40;
 var bottom_border = 50;
 
-function create_graph(cid, ft, ut, vmi, vma)
+export function create_graph(cid, ft, ut, vmi, vma)
 {
     // Keep important data as global variables, needed by
     // render_curve()
@@ -88,11 +88,11 @@ var lineb = "#bbbbbb";
 var linec = "#bbbbbb";
 
 
-function render_coordinates(v_scala, t_scala)
+export function render_coordinates(v_scala, t_scala)
 {
     // Create canvas
     var canvas = document.getElementById(canvas_id);
-    var c = canvas.getContext('2d');
+    var c = canvas.getContext("2d");
     c.font = "20px sans-serif";
 
     // Convert the coordinate system in a way, that we can directly
@@ -125,11 +125,12 @@ function render_coordinates(v_scala, t_scala)
     c.fillStyle="#000000";
 
     // Value scala (vertical)
+    var val, txt, p, w;
     for (i=0; i<v_scala.length; i++) {
-        var val = v_scala[i][0];
-        var txt = v_scala[i][1];
-        var p = point(0, val);
-        var w = c.measureText(txt).width;
+        val = v_scala[i][0];
+        txt = v_scala[i][1];
+        p = point(0, val);
+        w = c.measureText(txt).width;
         c.fillText(txt, left_border - w - 16, p[1] + 6);
         if (i%2)
             c.strokeStyle = lineb;
@@ -140,10 +141,10 @@ function render_coordinates(v_scala, t_scala)
 
     // Time scala (horizontal)
     for (i=0; i<t_scala.length; i++) {
-        var t = t_scala[i][0];
-        var txt = t_scala[i][1];
-        var p = point(t, 0);
-        var w = c.measureText(txt).width;
+        t = t_scala[i][0];
+        txt = t_scala[i][1];
+        p = point(t, 0);
+        w = c.measureText(txt).width;
         c.fillText(txt, p[0] - (w/2), height - bottom_border + 28);
         if (i%2)
             c.strokeStyle = lineb;
@@ -162,10 +163,8 @@ function render_coordinates(v_scala, t_scala)
 
 function point(t, v)
 {
-    p = [ left_border + (t - from_time) / (until_time - from_time) * netto_width,
-          height - bottom_border - ((v - v_min) / (v_max - v_min) * netto_height) ];
-
-    return p;
+    return [ left_border + (t - from_time) / (until_time - from_time) * netto_width,
+        height - bottom_border - ((v - v_min) / (v_max - v_min) * netto_height) ];
 }
 
 function line(c, t0, v0, t1, v1)
@@ -178,10 +177,10 @@ function line(c, t0, v0, t1, v1)
     c.stroke();
 }
 
-function render_point(t, v, color)
+export function render_point(t, v, color)
 {
     var canvas = document.getElementById(canvas_id);
-    var c = canvas.getContext('2d');
+    var c = canvas.getContext("2d");
     var p = point(t, v);
     c.beginPath();
     c.lineWidth = 4;
@@ -194,10 +193,10 @@ function render_point(t, v, color)
 }
 
 
-function render_curve(points, color, w, square)
+export function render_curve(points, color, w, square)
 {
     var canvas = document.getElementById(canvas_id);
-    var c = canvas.getContext('2d');
+    var c = canvas.getContext("2d");
 
     c.beginPath();
     c.strokeStyle = color;
@@ -206,7 +205,7 @@ function render_curve(points, color, w, square)
     var op;
     var time_step = (until_time - from_time) / points.length;
     var first = true;
-    for (i=0; i<points.length; i++) {
+    for (var i=0; i<points.length; i++) {
         if (points[i] == null) {
             c.stroke();
             first = true;
@@ -227,23 +226,24 @@ function render_curve(points, color, w, square)
     c.stroke();
 }
 
-function render_area(points, color, alpha)
+export function render_area(points, color, alpha)
 {
     render_dual_area(null, points, color, alpha);
 }
 
-function render_area_reverse(points, color, alpha)
+export function render_area_reverse(points, color, alpha)
 {
     render_dual_area(points, null, color, alpha);
 }
 
-function render_dual_area(lower_points, upper_points, color, alpha)
+export function render_dual_area(lower_points, upper_points, color, alpha)
 {
     var canvas = document.getElementById(canvas_id);
-    var c = canvas.getContext('2d');
+    var c = canvas.getContext("2d");
 
     c.fillStyle = color;
     c.globalAlpha = alpha;
+    var num_points;
     if (lower_points)
         num_points = lower_points.length;
     else
@@ -252,18 +252,19 @@ function render_dual_area(lower_points, upper_points, color, alpha)
     var time_step = 1.0 * (until_time - from_time) / num_points;
     var pix_step = 1.0 * netto_width / num_points;
 
-    for (i=0; i<num_points; i++) {
-        var x = point(from_time + time_step * i, 0)[0];
+    var x, yl, yu, h;
+    for (var i=0; i<num_points; i++) {
+        x = point(from_time + time_step * i, 0)[0];
         if (lower_points)
-            var yl = point(0, lower_points[i])[1];
+            yl = point(0, lower_points[i])[1];
         else
-            var yl = height - bottom_border;
+            yl = height - bottom_border;
 
         if (upper_points)
-            var yu = point(0, upper_points[i])[1];
+            yu = point(0, upper_points[i])[1];
         else
-            var yu = top_border;
-        var h = yu - yl;
+            yu = top_border;
+        h = yu - yl;
         c.fillRect(x, yl, pix_step, h);
     }
     c.globalAlpha = 1;

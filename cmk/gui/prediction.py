@@ -267,32 +267,35 @@ def create_graph(name, size, bounds, v_range, legend):
         html.write('<div class=color style="background-color: %s"></div><div class=entry>%s</div>' %
                    (color, title))
     html.write('</div></td></tr></table>')
-    html.javascript('create_graph("content_%s", %.4f, %.4f, %.4f, %.4f);' %
+    html.javascript('cmk.prediction.create_graph("content_%s", %.4f, %.4f, %.4f, %.4f);' %
                     (name, bounds[0], bounds[1], v_range[0], v_range[1]))
 
 
 def render_coordinates(v_scala, t_scala):
-    html.javascript('render_coordinates(%s, %s);' % (json.dumps(v_scala), json.dumps(t_scala)))
+    html.javascript(
+        'cmk.prediction.render_coordinates(%s, %s);' % (json.dumps(v_scala), json.dumps(t_scala)))
 
 
 def render_curve(points, color, width=1, square=False):
-    html.javascript('render_curve(%s, %s, %d, %d);' % (json.dumps(points), json.dumps(color), width,
-                                                       square and 1 or 0))
+    html.javascript('cmk.prediction.render_curve(%s, %s, %d, %d);' %
+                    (json.dumps(points), json.dumps(color), width, square and 1 or 0))
 
 
 def render_point(t, v, color):
-    html.javascript('render_point(%s, %s, %s);' % (json.dumps(t), json.dumps(v), json.dumps(color)))
+    html.javascript('cmk.prediction.render_point(%s, %s, %s);' % (json.dumps(t), json.dumps(v),
+                                                                  json.dumps(color)))
 
 
 def render_area(points, color, alpha=1.0):
-    html.javascript('render_area(%s, %s, %f);' % (json.dumps(points), json.dumps(color), alpha))
+    html.javascript(
+        'cmk.prediction.render_area(%s, %s, %f);' % (json.dumps(points), json.dumps(color), alpha))
 
 
 def render_area_reverse(points, color, alpha=1.0):
-    html.javascript(
-        'render_area_reverse(%s, %s, %f);' % (json.dumps(points), json.dumps(color), alpha))
+    html.javascript('cmk.prediction.render_area_reverse(%s, %s, %f);' % (json.dumps(points),
+                                                                         json.dumps(color), alpha))
 
 
 def render_dual_area(lower_points, upper_points, color, alpha=1.0):
-    html.javascript('render_dual_area(%s, %s, %s, %f);' %
+    html.javascript('cmk.prediction.render_dual_area(%s, %s, %s, %f);' %
                     (json.dumps(lower_points), json.dumps(upper_points), json.dumps(color), alpha))

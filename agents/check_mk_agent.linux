@@ -81,7 +81,7 @@ fi
 
 if [ "$ENCRYPTED" == "yes" ] ; then
     echo -n "00" # protocol version
-    exec > >(openssl enc -aes-256-cbc -md md5 -k $PASSPHRASE -nosalt)
+    exec > >(openssl enc -aes-256-cbc -md md5 -k "$PASSPHRASE" -nosalt)
 fi
 
 

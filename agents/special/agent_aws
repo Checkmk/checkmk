@@ -211,7 +211,7 @@ class EC2Summary(AWSSection):
         try:
             return raw_result['Reservations']
         except KeyError, e:
-            logging.info("%s: KeyError %s ", self.name, e)
+            logging.info("%s: KeyError %s; Available are %s", self.name, e, raw_result.keys())
             return
 
     def _format_content(self, content):
@@ -284,7 +284,7 @@ class EC2(AWSSection):
         try:
             return raw_result['MetricDataResults']
         except KeyError, e:
-            logging.info("%s: KeyError %s ", self.name, e)
+            logging.info("%s: KeyError %s; Available are %s", self.name, e, raw_result.keys())
             return []
 
     def _format_content(self, content):
@@ -324,7 +324,7 @@ class S3Summary(AWSSection):
         try:
             return raw_result['Buckets']
         except KeyError, e:
-            logging.info("%s: KeyError %s ", self.name, e)
+            logging.info("%s: KeyError %s; Available are %s", self.name, e, raw_result.keys())
             return []
 
     def _format_content(self, content):
@@ -400,7 +400,7 @@ class S3(AWSSection):
         try:
             return raw_result['MetricDataResults']
         except KeyError, e:
-            logging.info("%s: KeyError %s ", self.name, e)
+            logging.info("%s: KeyError %s; Available are %s", self.name, e, raw_result.keys())
             return []
 
     def _format_content(self, content):
@@ -437,7 +437,7 @@ class S3Objects(AWSSection):
             try:
                 content.setdefault(row['Name'], []).extend(row['Contents'])
             except KeyError, e:
-                logging.info("%s: KeyError %s ", self.name, e)
+                logging.info("%s: KeyError %s; Available are %s", self.name, e, row.keys())
                 continue
         return content
 
@@ -475,7 +475,7 @@ class ELBSummary(AWSSection):
         try:
             return raw_result['LoadBalancerDescriptions']
         except KeyError, e:
-            logging.info("%s: KeyError %s ", self.name, e)
+            logging.info("%s: KeyError %s; Available are %s", self.name, e, raw_result.keys())
             return []
 
     def _format_content(self, content):
@@ -501,11 +501,11 @@ class ELBHealth(AWSSection):
 
     def _extract_content_from(self, raw_result):
         content = {}
-        for name, attrs in raw_result.iteritems():
+        for name, row in raw_result.iteritems():
             try:
-                content.setdefault(name, attrs['InstanceStates'])
+                content.setdefault(name, row['InstanceStates'])
             except KeyError, e:
-                logging.info("%s: KeyError %s ", self.name, e)
+                logging.info("%s: KeyError %s; Available are %s", self.name, e, row.keys())
         return content
 
     def _format_content(self, content):
@@ -543,22 +543,22 @@ class ELB(AWSSection):
         metrics = []
         idx = 0
         for load_balancer in load_balancers:
-            for metric_name, unit in [
+            for metric_name, stat in [
                     # Load balancer metrics
-                ("RequestCount", ""),
-                ("SurgeQueueLength", ""),
-                ("SpilloverCount", ""),
-                ("HTTPCode_ELB_4XX", ""),
-                ("HTTPCode_ELB_5XX", ""),
+                ("RequestCount", "Sum"),
+                ("SurgeQueueLength", "Maximum"),
+                ("SpilloverCount", "Sum"),
+                ("HTTPCode_ELB_4XX", "Sum"),
+                ("HTTPCode_ELB_5XX", "Sum"),
                     # Backend metrics
-                ("HealthyHostCount", ""),
-                ("UnHealthyHostCount", ""),
-                ("Latency", ""),
-                ("HTTPCode_Backend_2XX", ""),
-                ("HTTPCode_Backend_3XX", ""),
-                ("HTTPCode_Backend_4XX", ""),
-                ("HTTPCode_Backend_5XX", ""),
-                ("BackendConnectionErrors", ""),
+                ("HealthyHostCount", "Average"),
+                ("UnHealthyHostCount", "Average"),
+                ("Latency", "Average"),
+                ("HTTPCode_Backend_2XX", "Sum"),
+                ("HTTPCode_Backend_3XX", "Sum"),
+                ("HTTPCode_Backend_4XX", "Sum"),
+                ("HTTPCode_Backend_5XX", "Sum"),
+                ("BackendConnectionErrors", "Sum"),
             ]:
                 metrics.append({
                     'Id': "%s_%s" % (metric_name.lower(), idx),
@@ -573,8 +573,7 @@ class ELB(AWSSection):
                             }]
                         },
                         'Period': self.period,
-                        'Stat': 'Average',
-                        'Unit': unit,
+                        'Stat': stat,
                     },
                 })
                 idx += 1
@@ -584,7 +583,7 @@ class ELB(AWSSection):
         try:
             return raw_result['MetricDataResults']
         except KeyError, e:
-            logging.info("%s: KeyError %s ", self.name, e)
+            logging.info("%s: KeyError %s; Available are %s", self.name, e, raw_result.keys())
             return []
 
     def _format_content(self, content):
@@ -627,7 +626,7 @@ class EBSSummary(AWSSection):
         try:
             return raw_result['Volumes']
         except KeyError, e:
-            logging.info("%s: KeyError %s ", self.name, e)
+            logging.info("%s: KeyError %s; Available are %s", self.name, e, raw_result.keys())
             return []
 
     def _format_content(self, content):
@@ -663,7 +662,7 @@ class EBSHealth(AWSSection):
             try:
                 content.setdefault(row['VolumeId'], row['VolumeStatus'])
             except KeyError, e:
-                logging.info("%s: KeyError %s ", self.name, e)
+                logging.info("%s: KeyError %s; Available are %s", self.name, e, row.keys())
         return content
 
     def _format_content(self, content):
@@ -707,28 +706,28 @@ class EBS(AWSSection):
         metrics = []
         idx = 0
         for volume_name, volume_type in volumes:
-            for metric_name, volume_types in [
+            for metric_name, unit, volume_types in [
                     # Disk IO
-                ("VolumeReadOps", []),
-                ("VolumeWriteOps", []),
-                ("VolumeReadBytes", []),
-                ("VolumeWriteBytes", []),
-                ("VolumeThroughputPercentage", ["io1"]),
-                ("VolumeConsumedReadWriteOps", ["io1"]),
+                ("VolumeReadOps", "Count", []),
+                ("VolumeWriteOps", "Count", []),
+                ("VolumeReadBytes", "Bytes", []),
+                ("VolumeWriteBytes", "Bytes", []),
+                ("VolumeThroughputPercentage", "Percent", ["io1"]),
+                ("VolumeConsumedReadWriteOps", "Count", ["io1"]),
                     # Latency
-                ("VolumeTotalReadTime", []),
-                ("VolumeTotalWriteTime", []),
+                ("VolumeTotalReadTime", "Seconds", []),
+                ("VolumeTotalWriteTime", "Seconds", []),
                     # Disk activity
-                ("VolumeQueueLength", []),
-                ("VolumeIdleTime", []),
-                ("BurstBalance", ["gp2", "st1", "sc1"]),
+                ("VolumeQueueLength", "Count", []),
+                ("VolumeIdleTime", "Seconds", []),
+                ("BurstBalance", "Percent", ["gp2", "st1", "sc1"]),
                     # Status checks
-                ("VolumeStatus", []),
-                ("IOPerformance", ["io1"]),
+                ("VolumeStatus", None, []),
+                ("IOPerformance", None, ["io1"]),
             ]:
                 if volume_types and volume_type not in volume_types:
                     continue
-                metrics.append({
+                metric = {
                     'Id': "%s_%s" % (metric_name.lower(), idx),
                     'Label': volume_name,
                     'MetricStat': {
@@ -743,7 +742,10 @@ class EBS(AWSSection):
                         'Period': self.period,
                         'Stat': 'Average',
                     },
-                })
+                }
+                if unit:
+                    metric['MetricStat']['Unit'] = unit
+                metrics.append(metric)
                 idx += 1
         return metrics
 
@@ -751,7 +753,7 @@ class EBS(AWSSection):
         try:
             return raw_result['MetricDataResults']
         except KeyError, e:
-            logging.info("%s: KeyError %s ", self.name, e)
+            logging.info("%s: KeyError %s; Available are %s", self.name, e, raw_result.keys())
             return []
 
     def _format_content(self, content):

@@ -80,13 +80,14 @@ def check_alcatel_fans(item, _no_params, info):
         1: "not running",
         2: "running",
     }
-    for nr, value in enumerate(info):
-        if nr + 1 == item:
-            fan_state = int(value[0])
-            state = 0
-            if fan_state != 2:
-                state = 2
-            return state, "Fan " + fan_states[fan_state]
+    try:
+        line = info[int(item) - 1]
+        fan_state = int(line[0])
+    except (ValueError, IndexError):
+        return
+
+    state = 0 if fan_state == 2 else 2
+    return state, "Fan " + fan_states.get(fan_state, "unknown (%s)" % fan_state)
 
 
 def inventory_alcatel_power(info):

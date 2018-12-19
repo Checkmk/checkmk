@@ -49,3 +49,4 @@ tests/web/data/*
 .venv
 *.gcov
 htmlcov/
+node_modules/

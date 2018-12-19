@@ -1,0 +1,23 @@
+{
+  "name": "check_mk",
+  "version": "1.0.0",
+  "description": "Check_MK - Your complete IT monitoring solution",
+  "main": "web/htdocs/js/index.js",
+  "directories": {
+    "doc": "doc",
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "http://git.mathias-kettner.de/check_mk.git"
+  },
+  "author": "",
+  "license": "GPL-2.0",
+  "devDependencies": {
+    "webpack": "^4.27.1",
+    "webpack-cli": "^3.1.2"
+  }
+}

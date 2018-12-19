@@ -47,9 +47,7 @@ from cmk.gui.plugins.wato.utils.base_modes import WatoWebApiMode
 
 def user_profile_async_replication_page():
     html.header(
-        _('Replicate new User Profile'),
-        javascripts=['wato'],
-        stylesheets=['check_mk', 'pages', 'wato', 'status'])
+        _('Replicate new User Profile'), stylesheets=['check_mk', 'pages', 'wato', 'status'])
 
     html.begin_context_buttons()
     html.context_button(_('User Profile'), 'user_profile.py', 'back')
@@ -240,7 +238,7 @@ def page_user_profile(change_pw=False):
     else:
         title = _("Edit User Profile")
 
-    html.header(title, javascripts=['wato'], stylesheets=['check_mk', 'pages', 'wato', 'status'])
+    html.header(title, stylesheets=['check_mk', 'pages', 'wato', 'status'])
 
     # Rule based notifications: The user currently cannot simply call the according
     # WATO module due to WATO permission issues. So we cannot show this button

@@ -93,8 +93,7 @@ class SnapinDashlet(IFrameDashlet):
         snapin_instance = snapin()
 
         html.set_browser_reload(self.refresh_interval())
-        html.html_head(
-            _('Snapin Dashlet'), javascripts=['sidebar'], stylesheets=['sidebar', 'status'])
+        html.html_head(_('Snapin Dashlet'), stylesheets=['sidebar', 'status'])
         html.style('''
 #side_content {
     height: auto;

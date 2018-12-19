@@ -140,7 +140,6 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
 
         html.header(
             self.title(),
-            javascripts=["wato"],
             stylesheets=wato_styles,
             show_body_start=display_options.enabled(display_options.H),
             show_top_heading=display_options.enabled(display_options.T))

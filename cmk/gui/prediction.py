@@ -50,7 +50,6 @@ def page_graph():
 
     html.header(
         _("Prediction for %s - %s - %s") % (host, service, dsname),
-        javascripts=["prediction"],
         stylesheets=["pages", "prediction"])
 
     # Get current value from perf_data via Livestatus

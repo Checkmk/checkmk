@@ -971,7 +971,7 @@ class html(HTMLGenerator):
         # style options
         self._body_classes = ['main']
         self._default_stylesheets = ["check_mk", "graphs"]
-        self._default_javascripts = ["checkmk", "graphs"]
+        self._default_javascripts = ["main"]
 
         # behaviour options
         self.render_headfoot = True

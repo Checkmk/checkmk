@@ -25,6 +25,10 @@
 /* Disable data-ajax per default, as it makes problems in most
    of our cases */
 
+require('script-loader!./checkmk.js');
+require('script-loader!../jquery/jquery-1.6.4.min.js');
+require('script-loader!../jquery/jquery.mobile-1.0.min.js');
+
 $(document).ready(function() {
     $("a").attr("data-ajax", "false");
     $("form").attr("data-ajax", "false");

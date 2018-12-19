@@ -61,10 +61,7 @@ def mobile_html_head(title, ready_code=""):
     html.write(
         html._render_opening_tag(
             "link", rel="apple-touch-icon", href="images/ios_logo.png", close_tag=True))
-    html.javascript_file(src='jquery/jquery-1.6.4.min.js')
-    html.javascript_file(src='js/mobile.js')
-    html.javascript_file(src='jquery/jquery.mobile-1.0.min.js')
-    html.javascript_file(src='js/checkmk.js')
+    html.javascript_file(src='js/mobile_min.js')
 
     if metrics.cmk_graphs_possible():
         html.javascript_file(src='js/graphs.js')

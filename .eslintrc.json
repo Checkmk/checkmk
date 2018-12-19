@@ -1,12 +1,16 @@
 {
     "env": {
-        "browser": true
+        "browser": true,
+        "commonjs": true
     },
-    "extends": "eslint:recommended",
+    "extends": ["eslint:recommended", "plugin:compat/recommended"],
     "parserOptions": {
-        "ecmaVersion": 5
+        "ecmaVersion": 6,
+        "sourceType": "module"
     },
+    "plugins": ["compat"],
     "rules": {
+        "strict": 1,
         "indent": [
             "error",
             4

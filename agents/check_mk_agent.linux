@@ -1001,32 +1001,6 @@ if type pvecm > /dev/null 2>&1 ; then
     pvecm nodes
 fi
 
-# Iterate all running containers and report piggyback data for them
-if type docker > /dev/null 2>&1; then
-    echo "<<<docker_node_info:sep(58)>>>"
-    # sed: protect leading whitespace
-    docker info | sed 's/^/|/'
-
-    echo "<<<docker_node_disk_usage:sep(0)>>>"
-    docker system df
-
-    echo "<<<docker_node_images>>>"
-    echo "[[[images]]]"
-    docker images --format "{{json .}}"
-
-    echo "[[[image_inspect]]]"
-    IMAGE_IDS=$(docker images | awk 'NR>1 {print $3}')
-    docker image inspect $IMAGE_IDS
-
-    echo "[[[containers]]]"
-    # equivalent of 'docker ps' for newer docker versions: 'docker container ls'
-    docker ps --all --format "{{json .}}"
-
-    echo "<<<docker_node_network:sep(0)>>>"
-    NETWORK_IDS=$(docker network ls -f 'driver=bridge' | awk 'NR>1 {print $1}')
-    docker network inspect $NETWORK_IDS
-fi
-
 # Start new liveupdate process in background on each agent execution. Starting
 # a new live update process will terminate the old one automatically after
 # max. 1 sec.

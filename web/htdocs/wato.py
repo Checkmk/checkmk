@@ -15865,7 +15865,7 @@ class ModePatternEditor(WatoMode):
                 rule_matches = rule.matches_host_and_item(watolib.Folder.current(), self._hostname, self._item)
             elif self._item:
                 # If only a filename is given
-                rule_matches = rule.matches_item()
+                rule_matches = rule.matches_item(self._item)
             else:
                 # If no host/file given match all rules
                 rule_matches = True

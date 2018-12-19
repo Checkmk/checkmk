@@ -546,8 +546,7 @@ def draw_dashboard(name):
     elif wato_folder is not None:
         title = watolib.get_folder_title(wato_folder) + " - " + title
 
-    html.header(
-        title, javascripts=["dashboard"], stylesheets=["pages", "dashboard", "status", "views"])
+    html.header(title, stylesheets=["pages", "dashboard", "status", "views"])
 
     html.open_div(class_=["dashboard_%s" % name], id_="dashboard")  # Container of all dashlets
 

@@ -63,7 +63,6 @@ class QuicksearchSnapin(SidebarSnapin):
         html.icon_button("#", _("Search"), "quicksearch", onclick="mkSearchButton();")
         html.close_div()
         html.div('', id_="mk_side_clear")
-        html.javascript_file(html.javascript_filename_for_browser("search"))
 
     @classmethod
     def allowed_roles(cls):

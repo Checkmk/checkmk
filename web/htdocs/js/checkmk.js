@@ -3689,7 +3689,6 @@ function download_gui_crash_report(data_url)
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    delete link;
 }
 
 //#.

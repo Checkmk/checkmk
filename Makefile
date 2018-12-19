@@ -88,7 +88,6 @@ FILES_TO_FORMAT    := $(wildcard $(addprefix agents/,*.cc *.c *.h)) \
 WERKS              := $(wildcard .werks/[0-9]*)
 
 JAVASCRIPT_SOURCES := $(filter-out %_min.js,$(wildcard $(addsuffix /web/htdocs/js/*.js,. enterprise managed)))
-JAVASCRIPT_MINI    := $(patsubst %.js,%_min.js,$(JAVASCRIPT_SOURCES))
 
 PNG_FILES          := $(wildcard $(addsuffix /*.png,web/htdocs/images web/htdocs/images/icons enterprise/web/htdocs/images enterprise/web/htdocs/images/icons managed/web/htdocs/images managed/web/htdocs/images/icons))
 
@@ -178,7 +177,7 @@ endif
 	rm -rf check-mk-$(EDITION)-$(OMD_VERSION)
 
 # This tar file is only used by "omd/packages/check_mk/Makefile"
-$(DISTNAME).tar.gz: mk-livestatus-$(VERSION).tar.gz .werks/werks $(JAVASCRIPT_MINI) ChangeLog
+$(DISTNAME).tar.gz: mk-livestatus-$(VERSION).tar.gz .werks/werks web/htdocs/js/main_min.js web/htdocs/js/mobile_min.js web/htdocs/js/side_min.js ChangeLog
 	@echo "Making $(DISTNAME)"
 	rm -rf $(DISTNAME)
 	mkdir -p $(DISTNAME)
@@ -316,15 +315,11 @@ optimize-images:
 	    echo "Missing pngcrush, not optimizing images! (run \"make setup\" to fix this)" ; \
 	fi
 
-install-minified-js: $(JAVASCRIPT_MINI)
-	cp $? $(DESTDIR)/web/htdocs/js
+node_modules: package.json
+	npm install
 
-%_min.js: %.js
-	@if type slimit >/dev/null 2>&1; then \
-	  cat $< | slimit > $@ ; \
-	else \
-	    echo "missing slimit: $< not minified, run \"make setup\" to fix this" ; \
-	fi
+web/htdocs/js/%_min.js: node_modules webpack.config.js $(JAVASCRIPT_SOURCES)
+	node_modules/.bin/webpack
 
 # TODO(sp) The target below is not correct, we should not e.g. remove any stuff
 # which is needed to run configure, this should live in a separate target. In
@@ -363,7 +358,6 @@ setup:
 	    llvm-7-dev \
 	    libsasl2-dev \
 	    pngcrush \
-	    slimit \
 	    valgrind \
 	    direnv \
 	    python-pip \
@@ -372,6 +366,7 @@ setup:
 	    ksh \
 	    p7zip-full
 	sudo -H pip install -U pipenv
+	$(MAKE) -C web setup
 	$(MAKE) -C omd setup
 	$(MAKE) -C omd openhardwaremonitor-setup
 	$(MAKE) -C docker setup

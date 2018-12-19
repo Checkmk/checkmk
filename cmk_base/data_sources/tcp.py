@@ -227,10 +227,10 @@ class TCPDataSource(CheckMKAgentDataSource):
         infotexts = []
         exceeding = allowed_nets - expected_nets
         if exceeding:
-            infotexts.append("agent allows extra: %s" % " ".join(exceeding))
+            infotexts.append("agent allows extra: %s" % " ".join(sorted(exceeding)))
         missing = expected_nets - allowed_nets
         if missing:
-            infotexts.append("agent blocks: %s" % " ".join(missing))
+            infotexts.append("agent blocks: %s" % " ".join(sorted(missing)))
 
         return 1, ", invalid access configuration: %s%s" \
                   % (", ".join(infotexts), state_markers[1])

@@ -92,7 +92,7 @@ def test_normalize_ip(ip_in, ips_out):
     ((1, ', invalid access configuration:'
       ' agent allows extra: 1.2.4.6 1.2.5.6(!)'), "1.2.{3,4,5}.6", "1.2.3.6"),
     ((1, ', invalid access configuration:'
-      ' agent blocks: 1.2.3.5 1.2.3.4(!)'), "1.2.3.6", "1.2.3.{4,5,6}"),
+      ' agent blocks: 1.2.3.4 1.2.3.5(!)'), "1.2.3.6", "1.2.3.{4,5,6}"),
 ])
 def test_tcpdatasource_only_from(monkeypatch, result, reported, rule):
     source = cmk_base.data_sources.tcp.TCPDataSource("hostname", "ipaddress")

@@ -420,7 +420,7 @@ def ps_count_check(processes, params, info_name):
     infotext += warntext
 
     if processes.running_on_nodes:
-        infotext += " [running on %s]" % ", ".join(processes.running_on_nodes)
+        infotext += " [running on %s]" % ", ".join(sorted(processes.running_on_nodes))
 
     return state, infotext, perfdata
 

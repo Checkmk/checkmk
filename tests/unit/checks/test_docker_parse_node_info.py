@@ -163,8 +163,8 @@ execfile(os.path.join(os.path.dirname(__file__), '../../../checks/docker.include
       ['|Registry', ' https', '//index.docker.io/v1/'],
       ['|WARNING', ' No swap limit support'],
       ['|Labels', ''],
-      ['| storage=ssd'],
       ['| staging=true'],
+      ['| storage=ssd'],
       ['|Experimental', ' false'],
       ['|Insecure Registries', ''],
       ['| 127.0.0.0/8'],
@@ -186,7 +186,7 @@ execfile(os.path.join(os.path.dirname(__file__), '../../../checks/docker.include
          "ContainersStopped": 10,
          "ContainersPaused": 1,
          "Images": 52,
-         "Labels": ["storage=ssd", "staging=true"],
+         "Labels": ["staging=true", "storage=ssd"],
          # needed for check:
          "Name": "ubuntu",
          "Containers": 14,

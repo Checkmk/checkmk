@@ -120,7 +120,7 @@ def parse_docker_node_info(info):
             pass
     # reconstruct labels (they where not in "k: v" format)
     parsed["Labels"] = []
-    for k in parsed.keys():  # pylint: disable=consider-iterating-dictionary
+    for k in sorted(parsed.keys()):  # pylint: disable=consider-iterating-dictionary
         if k.startswith("Labels") and k != "Labels":
             parsed["Labels"].append(k[6:] + parsed.pop(k))
     # reconstruct swarm info:

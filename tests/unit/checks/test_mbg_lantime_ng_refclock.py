@@ -1,4 +1,4 @@
-import pytest
+import pytest  # type: ignore
 from checktestlib import DiscoveryResult, assertDiscoveryResultsEqual, \
                          BasicCheckResult, CheckResult, assertCheckResultsEqual
 
@@ -17,7 +17,7 @@ meinberg_lantime_5 = [[u'1', u'14', u'3', u'1', u'150', u'6', u'8', u'0', u'0', 
 def test_discovery_mbg_lantime_ng_refclock(check_manager, info, expected):
     check = check_manager.get_check("mbg_lantime_ng_refclock")
     discovery = DiscoveryResult(check.run_discovery(info))
-    assertDiscoveryResultsEqual(discovery, expected)
+    assertDiscoveryResultsEqual(check, discovery, expected)
 
 
 @pytest.mark.parametrize("info,item,params,expected", [
@@ -41,7 +41,7 @@ def test_check_mbg_lantime_ng_refclock(check_manager, info, item, params, expect
 def test_discovery_mbg_lantime_ng_refclock_gps(check_manager, info, expected):
     check = check_manager.get_check("mbg_lantime_ng_refclock.gps")
     discovery = DiscoveryResult(check.run_discovery(info))
-    assertDiscoveryResultsEqual(discovery, expected)
+    assertDiscoveryResultsEqual(check, discovery, expected)
 
 
 @pytest.mark.parametrize("info,item,params,expected", [

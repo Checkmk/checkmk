@@ -13,12 +13,12 @@ module.exports = {
         // Keep this until we have cleaned up our JS files to work as modules and changed all call sites
         // from HTML code to work with the modules. Until then we need to keep the old behaviour of loading
         // all JS code in the global namespace
-        //libraryTarget: 'window',
-        //library: 'checkmk'
+        libraryTarget: "window",
     },
     resolve: {
         modules: [
             "node_modules",
+            path.resolve(__dirname, "web/htdocs/js/modules"),
             path.resolve(__dirname, "web/htdocs/js"),
             path.resolve(__dirname, "enterprise/web/htdocs/js")
         ]

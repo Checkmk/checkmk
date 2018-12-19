@@ -271,4 +271,5 @@ def test_locking(tmpdir):
             break
         time.sleep(0.01)
     assert store1.have_lock(path) == False
+    time.sleep(0.2)
     assert store2.have_lock(path) == True

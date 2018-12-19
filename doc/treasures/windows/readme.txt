@@ -2,7 +2,7 @@ Assorted Windows Utilities
 
 1. perf_reader.exe
 Synopsis: 
-    Prevent Handle Leaks on some ( usually old ) Windows OS 
+    Prevents Handle Leaks on some ( usually old ) Windows OS 
 Usage: 
     1. Create in check_mk folder subfolder "utils". For example:
         mkdir "c:\Program Files (x86)\check_mk\utils"
@@ -11,3 +11,9 @@ Usage:
     3. Optionally you may test functionality:
         goto folder "check_mk" and run check_mk_agent perfread
         Note: you may need administrative privileges.
+
+2. openhardwaremonitor-clean.cmd
+Synopsis: 
+    Solves problems with OpenHardwareMonitor section. 
+Usage: 
+    Run the script from Windows command line as Administrator

@@ -25,27 +25,36 @@
 # Boston, MA 02110-1301 USA.
 
 
+def parse_aws_s3_objects(info):
+    return parse_aws(info)[-1]
+
+
 def inventory_aws_s3_objects(parsed):
-    return [(row['Key'], {}) for row in parsed]
+    return [(bucket_name, {}) for bucket_name, metrics in parsed.iteritems() if metrics]
 
 
-def check_aws_s3_objects(item, params, parsed):
-    data = {}
-    for row in parsed:
-        if row['Key'] == item:
-            data = row
-            break
-    if not data:
-        return
-    yield 0, 'Size: %s' % get_bytes_human_readable(data['Size'])
-    yield 0, 'Last modified: %s' % data['LastModified']
-    yield 0, "Storage class: %s" % data['StorageClass']
+@get_parsed_item_data
+def check_aws_s3_objects(item, params, metrics):
+    sum_size = 0
+    num_objects = 0
+    largest = None
+    largest_size = 0
+    for row in metrics:
+        size = row['Size']
+        sum_size += row['Size']
+        num_objects += 1
+        if size >= largest_size:
+            largest = row['Key']
+            largest_size = size
+    yield 0, 'Number of object: %s' % num_objects
+    yield 0, 'Size: %s' % get_bytes_human_readable(sum_size)
+    yield 0, 'Largest: %s, %s' % (largest, get_bytes_human_readable(largest_size))
 
 
 check_info['aws_s3_objects'] = {
-    'parse_function': parse_aws,
+    'parse_function': parse_aws_s3_objects,
     'inventory_function': inventory_aws_s3_objects,
     'check_function': check_aws_s3_objects,
-    'service_description': 'AWS/S3 Object %s',
+    'service_description': 'AWS/S3 Objects %s',
     'includes': ['aws.include'],
 }

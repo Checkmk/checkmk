@@ -354,97 +354,6 @@ class S3Summary(AWSSection):
         return [AWSSectionResult("", content)]
 
 
-class S3(AWSSection):
-    """
-    The timerange between start time and end time should include midnight. Any
-    other time of day will not yield any data.
-    """
-
-    @property
-    def name(self):
-        return "s3"
-
-    @property
-    def interval(self):
-        return 86400
-
-    def _get_raw_result(self):
-        end_time = time.time()
-        start_time = end_time - self.period
-        metrics = self._get_metrics()
-        if not metrics:
-            return {}
-
-        # A single GetMetricData call can include up to 100 MetricDataQuery structures
-        # There's no pagination for this operation:
-        # self._client.can_paginate('get_metric_data') = False
-        raw_result = []
-        for chunk in _chunks(metrics):
-            response = self._client.get_metric_data(
-                MetricDataQueries=chunk,
-                StartTime=start_time,
-                EndTime=end_time,
-            )
-            try:
-                metrics = response['MetricDataResults']
-            except KeyError, e:
-                logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
-                continue
-            raw_result.extend(metrics)
-        return raw_result
-
-    def _get_metrics(self):
-        bucket_ids = []
-        for entry in self._received_results.get('s3_summary', []):
-            bucket_ids.append(entry['Name'])
-        metrics = []
-        idx = 0
-        for bucket_id in bucket_ids:
-            for metric_name, unit, storage_classes in [
-                ("BucketSizeBytes", "Bytes", [
-                    "StandardStorage",
-                    "StandardIAStorage",
-                    "ReducedRedundancyStorage",
-                ]),
-                ("NumberOfObjects", "Count", ["AllStorageTypes"]),
-            ]:
-                for storage_class in storage_classes:
-                    metrics.append({
-                        'Id': "%s_%s_%s" % (metric_name.lower(), storage_class.lower(), idx),
-                        'Label': bucket_id,
-                        'MetricStat': {
-                            'Metric': {
-                                'Namespace': 'AWS/S3',
-                                'MetricName': metric_name,
-                                'Dimensions': [{
-                                    'Name': "BucketName",
-                                    'Value': bucket_id,
-                                }, {
-                                    'Name': 'StorageType',
-                                    'Value': storage_class,
-                                }]
-                            },
-                            'Period': self.period,
-                            'Stat': 'Average',
-                            'Unit': unit,
-                        },
-                    })
-                    idx += 1
-        return metrics
-
-    def _extract_content_from(self, raw_result):
-        return raw_result
-
-    def _format_content(self, content):
-        content_by_piggyback_hosts = {}
-        for row in content:
-            content_by_piggyback_hosts.setdefault(row['Label'], []).append(row)
-        return [
-            AWSSectionResult(piggyback_hostname, rows)
-            for piggyback_hostname, rows in content_by_piggyback_hosts.iteritems()
-        ]
-
-
 class S3Objects(AWSSection):
     @property
     def name(self):
@@ -474,10 +383,7 @@ class S3Objects(AWSSection):
         return content
 
     def _format_content(self, content):
-        return [
-            AWSSectionResult(piggyback_hostname, rows)
-            for piggyback_hostname, rows in content.iteritems()
-        ]
+        return [AWSSectionResult("", [content])]
 
 
 #.
@@ -919,7 +825,6 @@ class AWSSections(object):
         #---sections--------------------------------------------------------
         ec2 = EC2(cloudwatch_client)
         s3_objects = S3Objects(s3_client)
-        s3 = S3(cloudwatch_client)
         elb_health = ELBHealth(elb_client)
         elb = ELB(cloudwatch_client)
         ebs_health = EBSHealth(ec2_client)
@@ -928,7 +833,6 @@ class AWSSections(object):
         #---register sections to distributors-------------------------------
         ec2_summary_distributor.add(ec2)
         s3_summary_distributor.add(s3_objects)
-        s3_summary_distributor.add(s3)
         elb_summary_distributor.add(elb_health)
         elb_summary_distributor.add(elb)
         ebs_summary_distributor.add(ebs_health)
@@ -943,7 +847,6 @@ class AWSSections(object):
         #---register sections for execution---------------------------------
         self._sections.append(ec2)
         self._sections.append(s3_objects)
-        self._sections.append(s3)
         self._sections.append(elb_health)
         self._sections.append(elb)
         self._sections.append(ebs_health)

@@ -1,0 +1,128 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2018             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+from cmk.special_agents.agent_kubernetes import parse_frac_prefix
+
+
+def parse_mul_prefix(value):
+    # type: (str) -> int
+    if value.endswith('k'):
+        return 1000 * int(value[:-1])
+    return int(value)
+
+
+@get_parsed_item_data
+def check_k8s_pods_memory(item, _no_params, metrics):
+
+    rss = 0
+    swap = 0
+    usage_bytes = 0
+    max_usage_bytes = 0
+
+    for pod_data in metrics:
+        rss += parse_mul_prefix(pod_data['metrics']['memory_rss'])
+        swap += parse_mul_prefix(pod_data['metrics']['memory_swap'])
+        usage_bytes += parse_mul_prefix(pod_data['metrics']['memory_usage_bytes'])
+        max_usage_bytes += parse_mul_prefix(pod_data['metrics']['memory_max_usage_bytes'])
+
+    yield check_levels(rss, 'rss', _no_params, human_readable_func=get_bytes_human_readable)
+    yield check_levels(swap, 'swap', _no_params, human_readable_func=get_bytes_human_readable)
+    yield check_levels(
+        usage_bytes, 'usage_bytes', _no_params, human_readable_func=get_bytes_human_readable)
+    yield check_levels(
+        max_usage_bytes,
+        'max_usage_bytes',
+        _no_params,
+        human_readable_func=get_bytes_human_readable)
+
+
+check_info['k8s_pods_memory'] = {
+    'parse_function': parse_k8s,
+    'inventory_function': discover(),
+    'check_function': check_k8s_pods_memory,
+    'service_description': 'Memory usage for Pods in %s namespace',
+    'includes': ['k8s.include'],
+}
+
+
+@get_parsed_item_data
+def check_k8s_pods_cpu(item, _no_params, metrics):
+
+    system = 0
+    user = 0
+    usage = 0
+
+    for pod_data in metrics:
+        system += parse_frac_prefix(pod_data['metrics']['cpu_system'])
+        user += parse_frac_prefix(pod_data['metrics']['cpu_user'])
+        usage += parse_frac_prefix(pod_data['metrics']['cpu_usage'])
+
+    yield check_levels(system, 'system', _no_params)
+    yield check_levels(user, 'user', _no_params)
+    yield check_levels(usage, 'usage', _no_params)
+
+
+check_info['k8s_pods_cpu'] = {
+    'parse_function': parse_k8s,
+    'inventory_function': discover(),
+    'check_function': check_k8s_pods_cpu,
+    'service_description': 'CPU usage for Pods in %s namespace',
+    'includes': ['k8s.include'],
+}
+
+
+@get_parsed_item_data
+def check_k8s_pods_fs(item, _no_params, metrics):
+
+    inodes = 0
+    reads = 0
+    writes = 0
+    limit_bytes = 0
+    usage_bytes = 0
+
+    for pod_data in metrics:
+        inodes += parse_frac_prefix(pod_data['metrics']['fs_inodes'])
+        reads += parse_frac_prefix(pod_data['metrics']['fs_reads'])
+        writes += parse_frac_prefix(pod_data['metrics']['fs_writes'])
+        limit_bytes += parse_mul_prefix(pod_data['metrics']['fs_limit_bytes'])
+        usage_bytes += parse_mul_prefix(pod_data['metrics']['fs_usage_bytes'])
+
+    yield check_levels(inodes, 'inodes', _no_params)
+    yield check_levels(reads, 'reads', _no_params)
+    yield check_levels(writes, 'writes', _no_params)
+    yield check_levels(
+        limit_bytes, 'limit_bytes', _no_params, human_readable_func=get_bytes_human_readable)
+    yield check_levels(
+        usage_bytes, 'usage_bytes', _no_params, human_readable_func=get_bytes_human_readable)
+
+
+check_info['k8s_pods_fs'] = {
+    'parse_function': parse_k8s,
+    'inventory_function': discover(),
+    'check_function': check_k8s_pods_fs,
+    'service_description': 'FS usage for Pods in %s namespace',
+    'includes': ['k8s.include'],
+}

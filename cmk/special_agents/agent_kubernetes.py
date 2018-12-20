@@ -95,7 +95,7 @@ def setup_logging(verbosity):
     logging.basicConfig(level=lvl, format=fmt)
 
 
-def parse_cpu(value):
+def parse_frac_prefix(value):
     # type: (str) -> float
     if value.endswith('m'):
         return 0.001 * float(value[:-1])
@@ -199,11 +199,11 @@ class Node(Metadata):
             return view
         capacity, allocatable = self._status.capacity, self._status.allocatable
         if capacity:
-            view['capacity']['cpu'] += parse_cpu(capacity.get('cpu', '0.0'))
+            view['capacity']['cpu'] += parse_frac_prefix(capacity.get('cpu', '0.0'))
             view['capacity']['memory'] += parse_memory(capacity.get('memory', '0.0'))
             view['capacity']['pods'] += int(capacity.get('pods', '0'))
         if allocatable:
-            view['allocatable']['cpu'] += parse_cpu(allocatable.get('cpu', '0.0'))
+            view['allocatable']['cpu'] += parse_frac_prefix(allocatable.get('cpu', '0.0'))
             view['allocatable']['memory'] += parse_memory(allocatable.get('memory', '0.0'))
             view['allocatable']['pods'] += int(allocatable.get('pods', '0'))
         return view
@@ -253,14 +253,14 @@ class Pod(Metadata):
                 continue
             limits = resources.limits
             if limits:
-                view['limits']['cpu'] += parse_cpu(limits.get('cpu', 'inf'))
+                view['limits']['cpu'] += parse_frac_prefix(limits.get('cpu', 'inf'))
                 view['limits']['memory'] += parse_memory(limits.get('memory', 'inf'))
             else:
                 view['limits']['cpu'] += float('inf')
                 view['limits']['memory'] += float('inf')
             requests = resources.requests
             if requests:
-                view['requests']['cpu'] += parse_cpu(requests.get('cpu', '0.0'))
+                view['requests']['cpu'] += parse_frac_prefix(requests.get('cpu', '0.0'))
                 view['requests']['memory'] += parse_memory(requests.get('memory', '0.0'))
         return view
 

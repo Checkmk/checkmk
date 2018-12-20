@@ -586,6 +586,10 @@ def write_groups(resources):
     section = Section('agent_info')
     section.add(('monitored-groups', json.dumps(groups)))
     section.write()
+    # create empty agent_info section for all groups, otherwise
+    # the service will only be discovered if something goes wrong
+    for group in groups:
+        Section('agent_info', group).write()
 
 
 def main(argv=None):

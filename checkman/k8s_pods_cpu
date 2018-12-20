@@ -1,0 +1,13 @@
+title: Kubernetes pods CPU resources
+agents: linux
+catalog: containerization/kubernetes
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the pods' cpu usage inside a namespace of a Kubernetes node.
+
+item:
+ The namespace whose cpu resources are monitored
+
+inventory:
+ One service per namespace is created.

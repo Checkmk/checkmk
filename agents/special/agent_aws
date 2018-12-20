@@ -189,6 +189,62 @@ class AWSSection(object):
 
 
 #.
+#   .--costs/usage---------------------------------------------------------.
+#   |                      _          __                                   |
+#   |         ___ ___  ___| |_ ___   / /   _ ___  __ _  __ _  ___          |
+#   |        / __/ _ \/ __| __/ __| / / | | / __|/ _` |/ _` |/ _ \         |
+#   |       | (_| (_) \__ \ |_\__ \/ /| |_| \__ \ (_| | (_| |  __/         |
+#   |        \___\___/|___/\__|___/_/  \__,_|___/\__,_|\__, |\___|         |
+#   |                                                  |___/               |
+#   '----------------------------------------------------------------------'
+
+# Interval between 'Start' and 'End' must be a DateInterval. 'End' is exclusive.
+# Example:
+# 2017-01-01 - 2017-05-01; cost and usage data is retrieved from 2017-01-01 up
+# to and including 2017-04-30 but not including 2017-05-01.
+# The GetCostAndUsageRequest operation supports only DAILY and MONTHLY granularities.
+
+
+class CostsAndUsage(AWSSection):
+    @property
+    def name(self):
+        return "costs_and_usage"
+
+    @property
+    def interval(self):
+        return 86400
+
+    def _get_raw_result(self):
+        fmt = "%Y-%m-%d"
+        now = time.time()
+        return self._client.get_cost_and_usage(
+            TimePeriod={
+                'Start': time.strftime(fmt, time.gmtime(now)),
+                'End': time.strftime(fmt, time.gmtime(now + self.interval)),
+            },
+            Granularity='DAILY',
+            Metrics=['UnblendedCost'],
+            GroupBy=[{
+                'Type': 'DIMENSION',
+                'Key': 'LINKED_ACCOUNT'
+            }, {
+                'Type': 'DIMENSION',
+                'Key': 'SERVICE'
+            }],
+        )
+
+    def _extract_content_from(self, raw_result):
+        try:
+            return raw_result['ResultsByTime']
+        except KeyError, e:
+            logging.info("%s: KeyError %s; Available are %s", self.name, e, raw_result.keys())
+            return
+
+    def _format_content(self, content):
+        return [AWSSectionResult("", content)]
+
+
+#.
 #   .--EC2-----------------------------------------------------------------.
 #   |                          _____ ____ ____                             |
 #   |                         | ____/ ___|___ \                            |
@@ -801,6 +857,7 @@ class AWSSections(object):
         self._exceptions = []
 
         #---clients---------------------------------------------------------
+        ce_client = self._init_client('ce')
         ec2_client = self._init_client('ec2')
         s3_client = self._init_client('s3')
         elb_client = self._init_client('elb')
@@ -819,6 +876,7 @@ class AWSSections(object):
         #---sections--------------------------------------------------------
         s3 = S3(s3_client)
         elb_health = ELBHealth(elb_client)
+        ce = CostsAndUsage(ce_client)
         ec2 = EC2(cloudwatch_client)
         elb = ELB(cloudwatch_client)
         ebs = EBS(cloudwatch_client)
@@ -837,6 +895,7 @@ class AWSSections(object):
         self._sections.append(ebs_summary)
 
         #---register sections for execution---------------------------------
+        self._sections.append(ce)
         self._sections.append(ec2)
         self._sections.append(s3)
         self._sections.append(elb_health)

@@ -49,3 +49,18 @@ register_check_parameters(
     None,
     match_type='dict',
 )
+
+register_check_parameters(
+    RulespecGroupCheckParametersApplications,
+    'aws_costs_and_usage',
+    _("AWS Costs and Usage"),
+    Dictionary(elements=[('levels_unblended',
+                          Tuple(
+                              title=_("Upper levels for unblended costs"),
+                              elements=[
+                                  Integer(title=_("Warning at")),
+                                  Integer(title=_("Critical at")),
+                              ]))]),
+    None,
+    match_type='dict',
+)

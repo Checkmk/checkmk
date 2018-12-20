@@ -1,0 +1,10 @@
+Title: aws_costs_and_usage, aws_costs_and_usage.per_service: New check which give an overview over the unblended costs of AWS accounts
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1545315123
+Class: feature
+
+

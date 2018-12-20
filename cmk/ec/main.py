@@ -225,7 +225,7 @@ class ECServerThread(threading.Thread):
     def run(self):
         self._logger.info("Starting up")
 
-        while not self._shal_terminate():
+        while not self._terminate_event.is_set():
             try:
                 with cmk.utils.profile.Profile(
                         enabled=self._profiling_enabled, profile_file=str(self._profile_file)):
@@ -237,9 +237,6 @@ class ECServerThread(threading.Thread):
                 time.sleep(1)
 
         self._logger.info("Terminated")
-
-    def _shal_terminate(self):
-        return self._terminate_event.is_set()
 
     def terminate(self):
         self._terminate_event.set()
@@ -938,7 +935,7 @@ class EventServer(ECServerThread):
         # fd to (fileobject, data)
         client_sockets = {}
         select_timeout = 1
-        while not self._shal_terminate():
+        while not self._terminate_event.is_set():
             try:
                 readable = select.select(listen_list + client_sockets.keys(), [], [],
                                          select_timeout)[0]
@@ -2978,7 +2975,7 @@ class StatusServer(ECServerThread):
         self._reopen_sockets = True
 
     def serve(self):
-        while not self._shal_terminate():
+        while not self._terminate_event.is_set():
             try:
                 client_socket = None
                 addr_info = None

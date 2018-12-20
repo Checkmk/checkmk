@@ -1,0 +1,74 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2018             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+AWSAvailabilityZoneMap = {
+    "us-east-1": "Virginia",
+    "us-west-1": "N. California",
+    "us-west-2": "Oregon",
+    "eu-west-1": "Ireland",
+    "eu-central-1": "Frankfurt",
+    "ap-southeast-1": "Singapore",
+    "ap-southeast-2": "Sydney",
+    "ap-northeast-1": "Tokyo",
+    "sa-east-1": "Sao Paulo",
+}
+
+
+def inventory_aws_elb_summary(parsed):
+    if parsed:
+        return [(None, {})]
+
+
+def check_aws_elb_summary(item, params, parsed):
+    yield 0, "Balancers: %s" % len(parsed)
+
+    balancers_by_avail_zone = {}
+    long_output = []
+    for row in parsed:
+        balancer_name = row['LoadBalancerName']
+        avail_zones_txt = []
+        for avail_zone in row['AvailabilityZones']:
+            avail_zone_readable = "%s (%s)" % (AWSAvailabilityZoneMap[avail_zone[:-1]],
+                                               avail_zone[-1])
+            balancers_by_avail_zone.setdefault(avail_zone_readable, []).append(balancer_name)
+            avail_zones_txt.append(avail_zone_readable)
+        long_output.append("Balancer: %s, Availability zones: %s"\
+                           % (balancer_name, ", ".join(avail_zones_txt)))
+
+    for avail_zone, balancers in balancers_by_avail_zone.iteritems():
+        yield 0, "%s: %s" % (avail_zone, len(balancers))
+
+    if long_output:
+        yield 0, '\n%s' % '\n'.join(long_output)
+
+
+check_info['aws_elb_summary'] = {
+    'parse_function': parse_aws,
+    'inventory_function': inventory_aws_elb_summary,
+    'check_function': check_aws_elb_summary,
+    'service_description': 'AWS/ELB Summary',
+    'includes': ['aws.include'],
+}

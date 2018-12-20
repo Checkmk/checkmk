@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "9505dfaedd438bfb82a7dad83417e836ff3995e41132a8a4d534162378ff74b5"
+            "sha256": "5d8f69a83ce41ca3d51d618ccc3b8be542e3028e8636a7ac3115eef8d01203d7"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -50,11 +50,11 @@
         },
         "azure-mgmt-monitor": {
             "hashes": [
-                "sha256:838867a150694837e9c6141760ff0f20fe9e5b7ab88f9ba868fde1810855895e",
-                "sha256:f1a58d483e3292ba4f7bbf3104573130c9265d6c9262e26b60cbfa950b5601e4"
+                "sha256:1c9457c38cfe6704de3ab7320a145bb3a25cd41f55242d53e5519bf3e676eb44",
+                "sha256:e0c04b05ed45e192215c75f63c7d3262cebd68337861545679119755645e9c18"
             ],
             "index": "pypi",
-            "version": "==0.5.2"
+            "version": "==0.4.0"
         },
         "azure-mgmt-nspkg": {
             "hashes": [
@@ -348,11 +348,11 @@
         },
         "msrestazure": {
             "hashes": [
-                "sha256:2e756de45ddc2ea7c34b8dc267a5d18804f2eb6a432626ace465ffed6081455d",
-                "sha256:73f31d3d0351a3f05b31b0b3018335dc78ee7664601198ee854f443e36df3660"
+                "sha256:4fc94a03ecd5b094ab904d929cc5be7a6a80262eab93948260cfe9081a9e6de4",
+                "sha256:89ec2d41bbcf9e38d12b61f923c2903059e87da2a8f1f6ac841bff85846b529e"
             ],
             "index": "pypi",
-            "version": "==0.5.0"
+            "version": "==0.4.34"
         },
         "mysqlclient": {
             "hashes": [
@@ -961,7 +961,7 @@
                 "sha256:9d98697f088eb1b0fa451391f91afb5e3ebde16bbdb272819fd091151fda4f1a",
                 "sha256:f0b0e4eba956de51238e17573b7087e852dfe9854afd2e9c873f73fc0ca0a6dd"
             ],
-            "markers": "python_version < '3.4'",
+            "markers": "python_version == '2.7'",
             "version": "==1.5"
         },
         "backports.ssl-match-hostname": {
@@ -1314,11 +1314,11 @@
         },
         "pytest": {
             "hashes": [
-                "sha256:1d131cc532be0023ef8ae265e2a779938d0619bb6c2510f52987ffcba7fa1ee4",
-                "sha256:ca4761407f1acc85ffd1609f464ca20bb71a767803505bd4127d0e45c5a50e23"
+                "sha256:f689bf2fc18c4585403348dd56f47d87780bf217c53ed9ae7a3e2d7faa45f8e9",
+                "sha256:f812ea39a0153566be53d88f8de94839db1e8a05352ed8a49525d7d7f37861e9"
             ],
             "index": "pypi",
-            "version": "==4.0.1"
+            "version": "==4.0.2"
         },
         "pytest-cov": {
             "hashes": [

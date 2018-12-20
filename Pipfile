@@ -83,8 +83,11 @@ isodate = "==0.6.0"
 oauthlib = "==2.1.0"
 requests-oauthlib = "==1.0.0"
 msrest = "==0.6.1"
-msrestazure = "==0.5.0"
-azure-mgmt-monitor = "==0.5.2"
+# use azure-mgmt-monitor 0.4.0 and its dependency
+# msrestazure 0.4.34 since the monitor version 0.5.0
+# will not deliver all metrics.
+msrestazure = "==0.4.34"
+azure-mgmt-monitor = "==0.4.0"
 azure-mgmt-resource = "==2.0.0"
 azure-mgmt-compute = "==4.3.1"
 configparser = "==3.5.0"

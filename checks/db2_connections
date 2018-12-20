@@ -64,7 +64,11 @@ def check_db2_connections(item, params, parsed):
             ms = int(latency)
         else:  # handle old time format: 'min:seconds.milliseconds'
             minutes, rest = data["latency"].split(":")
-            seconds, mseconds = rest.split(".")
+            # handle different locale settings
+            if ',' in rest:
+                seconds, mseconds = rest.split(",")
+            else:
+                seconds, mseconds = rest.split(".")
             ms = int(minutes) * 60 * 1000 + int(seconds) * 1000 + int(mseconds)
 
         yield 0, "Latency: %.2f ms" % ms, [("latency", ms)]

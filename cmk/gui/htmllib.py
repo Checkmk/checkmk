@@ -970,7 +970,7 @@ class html(HTMLGenerator):
 
         # style options
         self._body_classes = ['main']
-        self._default_stylesheets = ["check_mk", "graphs"]
+        self._default_stylesheets = ["main_min", "check_mk", "graphs"]
         self._default_javascripts = ["main"]
 
         # behaviour options
@@ -1439,6 +1439,9 @@ class html(HTMLGenerator):
     def set_browser_redirect(self, secs, url):
         self.browser_reload = secs
         self.browser_redirect = url
+
+    def clear_default_stylesheet(self):
+        del self._default_javascripts[:]
 
     def add_default_stylesheet(self, name):
         if name not in self._default_stylesheets:
@@ -2379,6 +2382,17 @@ class html(HTMLGenerator):
 
         if attrs.get("label"):
             self.label(attrs["label"], for_=varname)
+
+        # Do not enable select2 for select fields that allow multiple
+        # selections like the dual list choice valuespec
+        if "multiple" not in attrs:
+            if "class_" in attrs:
+                if isinstance(attrs["class_"], list):
+                    attrs["class_"].insert(0, "select2-enable")
+                else:
+                    attrs["class_"] = ["select2-enable", attrs["class_"]]
+            else:
+                attrs["class_"] = ["select2-enable"]
 
         self.open_select(name=varname, id_=varname, **attrs)
         for value, text in chs:

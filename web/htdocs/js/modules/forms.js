@@ -23,30 +23,14 @@
 // Boston, MA 02110-1301 USA.
 
 import $ from "jquery";
-import * as forms from "forms";
-import * as ajax from "ajax";
-import * as prediction from "prediction";
+import "select2";
+import "select2/dist/css/select2.css";
 
-require("script-loader!./checkmk.js");
-require("script-loader!./dashboard.js");
-require("colorpicker");
-require("script-loader!./wato.js");
-
-// TODO: Find a better solution for this CEE specific include
-try {
-    require("script-loader!../../../enterprise/web/htdocs/js/graphs.js");
-} catch(e) {} // eslint-disable-line no-empty
-
-$(() => {
-    forms.enable_select2();
-});
-
-export default {
-    get_url: ajax.get_url,
-    post_url: ajax.post_url,
-    call_ajax: ajax.call_ajax,
-    cmk: {
-        prediction: prediction,
-        ajax: ajax,
-    }
-};
+// html.dropdown() adds the .select2-enable class for all dropdowns
+// that should use the select2 powered dropdowns
+export function enable_select2() {
+    $(".select2-enable").select2({
+        dropdownAutoWidth : true,
+        minimumResultsForSearch: 5
+    });
+}

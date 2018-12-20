@@ -1,0 +1,10 @@
+Title: Dropdown fields are now searchable
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1545318888
+Class: feature
+
+All dropdown fields with more than 5 choices are now searchable.

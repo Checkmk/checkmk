@@ -986,3 +986,7 @@ table.modifydowntimes > tbody > tr > td:nth-child(1) {
 table.modifydowntimes > tbody > tr:nth-child(1) > td:nth-child(1)  {
     padding-top: 0px;
 }
+
+.select2-container--default .select2-results {
+    color: #000000;
+}

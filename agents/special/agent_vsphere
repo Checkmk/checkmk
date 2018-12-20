@@ -207,7 +207,7 @@ telegram_list = {
          '<ns1:pathSet>hardware.cpuInfo.numCpuThreads</ns1:pathSet>'\
          '<ns1:pathSet>hardware.cpuInfo.numCpuPackages</ns1:pathSet>'\
          '<ns1:pathSet>hardware.cpuInfo.numCpuCores</ns1:pathSet>'\
-         '<ns1:pathSet>config.multipathState.path</ns1:pathSet>'\
+         '<ns1:pathSet>config.storageDevice.multipathInfo</ns1:pathSet>'\
          '<ns1:pathSet>hardware.systemInfo.model</ns1:pathSet>'\
          '<ns1:pathSet>hardware.systemInfo.uuid</ns1:pathSet>'\
          '<ns1:pathSet>hardware.systemInfo.otherIdentifyingInfo</ns1:pathSet>'\
@@ -1513,12 +1513,17 @@ if not error:
                                 "key": key
                             }
 
-                    def eval_multipath_state(hostname, current_propname, multipath_propset):
-                        multipaths = get_pattern("<name>(.*?)</name><pathState>(.*?)</pathState>",
-                                                 value)
-                        for mp_name, mp_state in multipaths:
-                            hostsystems_properties[hostname].setdefault(
-                                current_propname, []).append("%s %s" % (mp_name, mp_state))
+                    def eval_multipath_info(hostname, current_propname, multipath_propset):
+                        multipath_infos = get_pattern("<id>(.*?)</id>.*?((?:<path>.*?</path>)+)",
+                                                      multipath_propset)
+                        for vml_id, xml_paths in multipath_infos:
+                            # The Lun ID is part of the VML ID: https://kb.vmware.com/s/article/2078730
+                            lun_id = vml_id[10:-12]
+                            for path_name, path_state in get_pattern(
+                                    "<name>(.*?)</name>.*?<state>(.*?)</state>", xml_paths):
+                                hostsystems_properties[hostname].setdefault(
+                                    current_propname, []).append(
+                                        "%s %s %s" % (lun_id, path_name, path_state))
 
                     def eval_propset_block(hostname, current_propname, elements, id_key, propset):
                         pattern = ""
@@ -1559,7 +1564,7 @@ if not error:
                             keys_index[key] = idx
 
                     eval_functions = {
-                        "config.multipathState.path": eval_multipath_state,
+                        "config.storageDevice.multipathInfo": eval_multipath_info,
                         "runtime.healthSystemRuntime.systemHealthInfo.numericSensorInfo": eval_sensor_info,
                         "runtime.healthSystemRuntime.hardwareStatusInfo.storageStatusInfo": eval_hardwarestatus_info,
                         "runtime.healthSystemRuntime.hardwareStatusInfo.cpuStatusInfo": eval_hardwarestatus_info,

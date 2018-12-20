@@ -1,0 +1,18 @@
+Title: agent_vsphere, esx_vsphere_hostsystem.multipath: use new API endpoint
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.6.0i1
+Date: 1548253810
+Class: feature
+
+For ESX versions above or equal to 6.5 the API endpoint "multipathState"
+does not deliver sufficient data for the subcheck esx_vsphere_hostsystem.multipath
+which may lead to a wrong output of the subcheck. Therefore, the subcheck now
+uses the "multipathInfo" API endpoint instead.
+
+For ESX versions below 6.5 which already use the ID of a LUN as an item
+no further actions are necessary. For new ESX version which use an item
+like e.g. "L0 physical" a service rediscovery is necessary. After the
+rediscovery new ESX versions will use the ID of a LUN as an item as well.

@@ -130,6 +130,7 @@ DiscoveryOptions = NamedTuple("DiscoveryOptions", [
 
 StartDiscoveryRequest = NamedTuple("StartDiscoveryRequest", [
     ("host", watolib.Host),
+    ("folder", watolib.Folder),
     ("options", DiscoveryOptions),
 ])
 
@@ -214,8 +215,9 @@ class ModeDiscovery(WatoMode):
     def page(self):
         self._async_progress_msg_container()
         self._service_container()
-        html.javascript("start_service_discovery(%s, %s)" % (json.dumps(self._host.name()),
-                                                             json.dumps(self._options._asdict())))
+        html.javascript("start_service_discovery(%s, %s, %s)" %
+                        (json.dumps(self._host.name()), json.dumps(self._host.folder().path()),
+                         json.dumps(self._options._asdict())))
 
     def _async_progress_msg_container(self):
         html.open_div(id_="async_progress_msg")
@@ -330,7 +332,8 @@ class AutomationServiceDiscoveryJob(AutomationCommand):
         host.need_permission("read")
 
         options = json.loads(html.get_ascii_input("options"))
-        return StartDiscoveryRequest(host=host, options=DiscoveryOptions(**options))
+        return StartDiscoveryRequest(
+            host=host, folder=host.folder(), options=DiscoveryOptions(**options))
 
     def execute(self, request):
         # type: (StartDiscoveryRequest) -> str
@@ -461,7 +464,8 @@ class ModeAjaxServiceDiscovery(WatoWebApiMode):
         request.setdefault("update_target", None)
         request.setdefault("update_services", [])
 
-        self._host = watolib.Folder.current().host(request["host_name"])
+        folder = watolib.Folder.folder(request["folder_path"])
+        self._host = folder.host(request["host_name"])
         if not self._host:
             raise MKUserError("host", _("You called this page with an invalid host name."))
         self._host.need_permission("read")
@@ -591,7 +595,8 @@ class ModeAjaxServiceDiscovery(WatoWebApiMode):
 
     def _get_check_table(self):
         # type: () -> DiscoveryResult
-        return _get_check_table(StartDiscoveryRequest(self._host, self._options))
+        return _get_check_table(
+            StartDiscoveryRequest(self._host, self._host.folder(), self._options))
 
     def _update_persisted_discovery_options(self):
         show_checkboxes = config.user.load_file("discovery_checkboxes", False)
@@ -1003,8 +1008,9 @@ class DiscoveryPageRenderer(object):
 
     def _start_js_call(self, options, request_vars=None):
         # type: (DiscoveryOptions, dict) -> str
-        return "start_service_discovery(%s, %s, %s, %s)" % (
+        return "start_service_discovery(%s, %s, %s, %s, %s)" % (
             json.dumps(self._host.name()),
+            json.dumps(self._host.folder().path()),
             json.dumps(options._asdict()),
             json.dumps(html.transaction_manager.get()),
             json.dumps(request_vars),
@@ -1114,8 +1120,9 @@ class DiscoveryPageRenderer(object):
 
         div_id = "activecheck_%s" % descr
         html.div(html.render_icon("reload", cssclass="reloading"), id_=div_id)
-        html.final_javascript("execute_active_check(%s, %s, %s, %s, %s);" % (
+        html.javascript("execute_active_check(%s, %s, %s, %s, %s, %s);" % (
             json.dumps(self._host.site_id() or ''),
+            json.dumps(self._host.folder().path()),
             json.dumps(self._host.name()),
             json.dumps(check_type),
             json.dumps(item),

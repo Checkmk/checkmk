@@ -902,7 +902,7 @@ function start_host_diag_test(ident, hostname, transid) {
 var g_service_discovery_result = null;
 var g_show_updating_timer = null;
 
-function start_service_discovery(host_name, discovery_options, transid, request_vars)
+function start_service_discovery(host_name, folder_path, discovery_options, transid, request_vars)
 {
     // When we receive no response for 2 seconds, then show the updating message
     g_show_updating_timer = setTimeout(function() {
@@ -913,19 +913,21 @@ function start_service_discovery(host_name, discovery_options, transid, request_
     monitor_async_progress({
         "update_url" : "ajax_service_discovery.py",
         "host_name": host_name,
+        "folder_path": folder_path,
         "transid": transid,
         "start_time" : time(),
         "is_finished_function": is_service_discovery_finished,
         "update_function": update_service_discovery,
         "finish_function": finish_service_discovery,
-        "post_data": get_service_discovery_post_data(host_name, discovery_options, transid, request_vars)
+        "post_data": get_service_discovery_post_data(host_name, folder_path, discovery_options, transid, request_vars)
     });
 }
 
-function get_service_discovery_post_data(host_name, discovery_options, transid, request_vars)
+function get_service_discovery_post_data(host_name, folder_path, discovery_options, transid, request_vars)
 {
     var request = {
         "host_name": host_name,
+        "folder_path": folder_path,
         "discovery_options": discovery_options,
         "discovery_result": g_service_discovery_result
     };
@@ -982,11 +984,12 @@ function update_service_discovery(handler_data, response) {
     }
 
     g_service_discovery_result = response.discovery_result;
-    handler_data.post_data = get_service_discovery_post_data(handler_data.host_name, response.discovery_options, handler_data.transid);
+    handler_data.post_data = get_service_discovery_post_data(handler_data.host_name, handler_data.folder_path, response.discovery_options, handler_data.transid);
 
     var container = document.getElementById("service_container");
     container.style.display = "block";
     container.innerHTML = response.body;
+    executeJSbyObject(container);
 
     update_service_discovery_activate_changes_button(response);
 }
@@ -1035,11 +1038,12 @@ function lock_service_discovery_controls(lock)
 // |                                                                       |
 // '-----------------------------------------------------------------------'
 
-function execute_active_check(site, hostname, checktype, item, divid)
+function execute_active_check(site, folder_path, hostname, checktype, item, divid)
 {
     var oDiv = document.getElementById(divid);
     var url = "wato_ajax_execute_check.py?" +
            "site="       + encodeURIComponent(site) +
+           "&folder="    + encodeURIComponent(folder_path) +
            "&host="      + encodeURIComponent(hostname)  +
            "&checktype=" + encodeURIComponent(checktype) +
            "&item="      + encodeURIComponent(item);

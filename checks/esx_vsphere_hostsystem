@@ -413,71 +413,24 @@ check_info['esx_vsphere_hostsystem.maintenance'] = {
 # vmhba32:C0:T0:L0 active
 
 
-def lun_id_for_new_format(path):
-    hba_num = int(path.split(":")[0].replace("vmhba", ""))
-    lun_id = path.split(":")[-1]
-
-    # vmware specificies three different types of LUNs. Physical LUNs will
-    # reserves vmhba number 0-31. The other two reserve numbers of base64.
-    # The lower 32 range is reserved for pseudo logical LUNs. The upper 32
-    # for logical LUNs. e.g. 32-63 for pseudo logical LUNs like USB and
-    # 64-95 for logical LUNs like iSCSI.
-    # These should be added as different multipath LUNs.
-    if hba_num >= 32 and hba_num % 64 < 33:
-        return "%s pseudo-logical" % lun_id
-    if hba_num >= 32 and hba_num % 64 > 32:
-        return "%s logical" % lun_id
-    return "%s physical" % lun_id
-
-
-ESXLegacyPathInfo = collections.namedtuple('LegacyPathInfo', ['path_type', 'hw_type', 'lun_id'])
-
-
-def has_new_format(path):
-    # vSphere6 uses a different format, e.g "vmhba32:C0:T0:L0 active"
-    return len(path.split(":")) == 4 and path.startswith("vmhba")
-
-
-def parse_legacy_format(path):
-    path_tokens = path.split('-')
-    if "." not in path_tokens[-1]:
-        return None  # invalid format / unknown type
-    # We've seen path tokens which include more than one "."
-    # PATH_TYPE.A_NAME.AN_ID_WITH_UNDERSCORES_AND_NUMBERS
-    path_type, lun_id = path_tokens[-1].rsplit('.', 1)
-    hw_type = path.split('.')[0]
-    return ESXLegacyPathInfo(path_type, hw_type, lun_id)
-
-
-def legacy_path_matches(path_info):
-    return path_info.path_type in ['naa', 'eui'] and not path_info.hw_type == 'unknown'
-
-
 def esx_vsphere_multipath_convert(info):
     data = esx_vsphere_hostsystem_convert(info)
 
-    raw_path_states = data.get('config.multipathState.path')
-    if not raw_path_states:
+    raw_path_info = data.get('config.storageDevice.multipathInfo')
+    if not raw_path_info:
         return {}
-    path_states = zip(raw_path_states[::2], raw_path_states[1::2])
+    path_info = zip(raw_path_info[::3], raw_path_info[1::3], raw_path_info[2::3])
 
     paths = {}
-    for path, state in path_states:
-        if has_new_format(path):
-            # Note: There is no path type information available in these esx paths
-            lun_id = lun_id_for_new_format(path)
-            paths.setdefault(lun_id, []).append((state, None, path))
-        else:
-            path_info = parse_legacy_format(path)
-            if path_info and legacy_path_matches(path_info):
-                paths.setdefault(path_info.lun_id, []).append(
-                    (state, "%s/%s" % (path_info.path_type, path_info.hw_type), path))
+    for lun_id, path, state in path_info:
+        paths.setdefault(lun_id, []).append((state, path))
+
     return paths
 
 
 def inventory_esx_vsphere_hostsystem_multipath(info):
     info, _ = info
-    return [(x, None) for x in esx_vsphere_multipath_convert(info).iterkeys()]
+    return [(x, None) for x in esx_vsphere_multipath_convert(info)]
 
 
 def check_esx_vsphere_hostsystem_multipath(item, params, info):
@@ -495,11 +448,10 @@ def check_esx_vsphere_hostsystem_multipath(item, params, info):
     message = ""
     path_names = []
 
-    for path, states in esx_vsphere_multipath_convert(info).items():
+    for path, states in esx_vsphere_multipath_convert(info).iteritems():
         if path == item:
             # Collect states
-            path_type = None
-            for path_state, path_type, path_name in states:
+            for path_state, path_name in states:
                 state_item = state_infos.get(path_state)
                 path_info = path_name
                 if state_item:
@@ -540,8 +492,6 @@ def check_esx_vsphere_hostsystem_multipath(item, params, info):
 
             # Output message
             message = ""
-            if path_type:
-                message += "Type %s, " % path_type
 
             element_text = []
             for element in "active", "dead", "disabled", "standby", "unknown":
@@ -553,7 +503,7 @@ def check_esx_vsphere_hostsystem_multipath(item, params, info):
     else:
         return 3, "Path not found in agent output"
 
-    return (state, message)
+    return state, message
 
 
 check_info['esx_vsphere_hostsystem.multipath'] = {

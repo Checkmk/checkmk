@@ -3,11 +3,6 @@ checkname = 'esx_vsphere_hostsystem'
 info = [
     [
         [
-            u'config.multipathState.path', u'vmhba0:C2:T0:L0', u'active', u'vmhba1:C0:T0:L0',
-            u'active', u'vmhba66:C0:T0:L0', u'active', u'vmhba66:C0:T1:L0', u'active',
-            u'vmhba66:C0:T2:L0', u'active'
-        ],
-        [
             u'config.storageDevice.multipathInfo', u'6e843b6d8f2740bdecbad4676da7a9dd',
             u'vmhba66:C0:T2:L0', u'active', u'6e843b6bc5cc897d430ad40b7d9172d1',
             u'vmhba66:C0:T0:L0', u'active', u'6e843b63fcbd92ad8f22d4cf7d8e6cdc',
@@ -62,7 +57,13 @@ discovery = {
     })],
     'mem_usage': [(None, 'esx_host_mem_default_levels')],
     'mem_usage_cluster': [],
-    'multipath': [(u'L0 physical', None), (u'L0 pseudo-logical', None)],
+    'multipath': [
+        (u'6e843b6d8f2740bdecbad4676da7a9dd', None),
+        (u'6e843b6bc5cc897d430ad40b7d9172d1', None),
+        (u'6e843b63fcbd92ad8f22d4cf7d8e6cdc', None),
+        (u'766d6862', None),
+        (u'600605b002db9f7018d0a40c2a1444b0', None),
+    ],
     'state': [(None, None)]
 }
 
@@ -96,24 +97,31 @@ checks = {
         )],
     )],
     'multipath': [
-        (
-            u'L0 physical',
-            {},
-            [(
-                0,
-                u'2 active, 0 dead, 0 disabled, 0 standby, 0 unknown\nIncluded Paths:\nvmhba0:C2:T0:L0\nvmhba1:C0:T0:L0',
-                [],
-            )],
-        ),
-        (
-            u'L0 pseudo-logical',
-            {},
-            [(
-                0,
-                u'3 active, 0 dead, 0 disabled, 0 standby, 0 unknown\nIncluded Paths:\nvmhba66:C0:T0:L0\nvmhba66:C0:T1:L0\nvmhba66:C0:T2:L0',
-                [],
-            )],
-        )
+        (u'6e843b6d8f2740bdecbad4676da7a9dd', {}, [(
+            0,
+            u'1 active, 0 dead, 0 disabled, 0 standby, 0 unknown\nIncluded Paths:\nvmhba66:C0:T2:L0',
+            [],
+        )]),
+        (u'6e843b6bc5cc897d430ad40b7d9172d1', {}, [(
+            0,
+            u'1 active, 0 dead, 0 disabled, 0 standby, 0 unknown\nIncluded Paths:\nvmhba66:C0:T0:L0',
+            [],
+        )]),
+        (u'6e843b63fcbd92ad8f22d4cf7d8e6cdc', {}, [(
+            0,
+            u'1 active, 0 dead, 0 disabled, 0 standby, 0 unknown\nIncluded Paths:\nvmhba66:C0:T1:L0',
+            [],
+        )]),
+        (u'766d6862', {}, [(
+            0,
+            u'1 active, 0 dead, 0 disabled, 0 standby, 0 unknown\nIncluded Paths:\nvmhba1:C0:T0:L0',
+            [],
+        )]),
+        (u'600605b002db9f7018d0a40c2a1444b0', {}, [(
+            0,
+            u'1 active, 0 dead, 0 disabled, 0 standby, 0 unknown\nIncluded Paths:\nvmhba0:C2:T0:L0',
+            [],
+        )]),
     ],
     'state': [(
         None,

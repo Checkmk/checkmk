@@ -1002,17 +1002,7 @@ class EventServer(ECServerThread):
             if pipe in readable:
                 try:
                     data = os.read(pipe, 4096)
-                    if len(data) == 0:  # END OF FILE!
-                        os.close(pipe)
-                        pipe = self.open_pipe()
-                        listen_list[0] = pipe
-                        # Pending fragments from previos reads that are not terminated
-                        # by a \n are ignored.
-                        if pipe_fragment:
-                            self._logger.warning(
-                                "Ignoring incomplete message '%s' from pipe" % pipe_fragment)
-                            pipe_fragment = ""
-                    else:
+                    if data:
                         # Prepend previous beginning of message to read data
                         data = pipe_fragment + data
                         pipe_fragment = ""
@@ -1026,6 +1016,16 @@ class EventServer(ECServerThread):
                                 pipe_fragment = data  # keep beginning of message, wait for \n
                         else:
                             self.process_raw_lines(data)
+                    else:  # EOF
+                        os.close(pipe)
+                        pipe = self.open_pipe()
+                        listen_list[0] = pipe
+                        # Pending fragments from previos reads that are not terminated
+                        # by a \n are ignored.
+                        if pipe_fragment:
+                            self._logger.warning(
+                                "Ignoring incomplete message '%s' from pipe" % pipe_fragment)
+                            pipe_fragment = ""
                 except Exception:
                     pass
 

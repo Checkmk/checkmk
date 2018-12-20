@@ -277,7 +277,7 @@ def drain_pipe(pipe):
         if pipe in readable:
             try:
                 data = os.read(pipe, 4096)
-                if len(data) == 0:  # END OF FILE!
+                if not data:  # EOF
                     break
             except Exception:
                 break  # Error while reading
@@ -2499,7 +2499,7 @@ class Queries(object):
             if len(parts) > 1:
                 break
             data = self._socket.recv(4096)
-            if len(data) == 0:
+            if not data:
                 if len(self._buffer) == 0:
                     raise StopIteration()
                 parts = [self._buffer, ""]

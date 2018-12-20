@@ -213,13 +213,32 @@ class EC2Summary(AWSSection):
 
     def _extract_content_from(self, raw_result):
         try:
-            return raw_result['Reservations']
+            reservations = raw_result['Reservations']
         except KeyError, e:
             logging.info("%s: KeyError %s; Available are %s", self.name, e, raw_result.keys())
-            return
+            return []
+        return {
+            "Reservations": reservations,
+            "mapping": self._map_instance_id_to_name(reservations),
+        }
+
+    def _map_instance_id_to_name(self, reservations):
+        mapping = {}
+        for row in reservations:
+            for instance in row.get('Instances', []):
+                instance_id = instance['InstanceId']
+                instance_name = self._extract_instance_name(instance, instance_id)
+                mapping.setdefault(instance_id, instance_name)
+        return mapping
+
+    def _extract_instance_name(self, instance, instance_id):
+        for row in instance.get('Tags', []):
+            if row.get('Key') == 'Name':
+                return row['Value']
+        return instance_id
 
     def _format_content(self, content):
-        return [AWSSectionResult("", content)]
+        return [AWSSectionResult("", content['Reservations'])]
 
 
 class EC2(AWSSection):
@@ -243,6 +262,8 @@ class EC2(AWSSection):
         # self._client.can_paginate('get_metric_data') = False
         raw_result = []
         for chunk in _chunks(metrics):
+            if not chunk:
+                continue
             response = self._client.get_metric_data(
                 MetricDataQueries=chunk,
                 StartTime=start_time,
@@ -257,10 +278,8 @@ class EC2(AWSSection):
         return raw_result
 
     def _get_metrics(self):
-        instance_ids = []
-        for entry in self._received_results.get('ec2_summary', []):
-            for instance in entry.get('Instances', []):
-                instance_ids.append(instance['InstanceId'])
+        instance_ids = self._received_results.get('ec2_summary', {})\
+                                             .get('mapping', {}).values()
         metrics = []
         idx = 0
         for instance_id in instance_ids:
@@ -298,11 +317,7 @@ class EC2(AWSSection):
         return metrics
 
     def _extract_content_from(self, raw_result):
-        try:
-            return raw_result['MetricDataResults']
-        except KeyError, e:
-            logging.info("%s: KeyError %s; Available are %s", self.name, e, raw_result.keys())
-            return []
+        return raw_result
 
     def _format_content(self, content):
         content_by_piggyback_hosts = {}
@@ -474,6 +489,8 @@ class ELB(AWSSection):
         # self._client.can_paginate('get_metric_data') = False
         raw_result = []
         for chunk in _chunks(metrics):
+            if not chunk:
+                continue
             response = self._client.get_metric_data(
                 MetricDataQueries=chunk,
                 StartTime=start_time,
@@ -581,15 +598,25 @@ class EBSSummary(AWSSection):
             return []
 
     def _format_content(self, content):
+        instance_ids = self._received_results.get('ec2_summary', {})\
+                                             .get('mapping', {})
         content_by_piggyback_hosts = {}
         for row in content:
             for attachment in row['Attachments']:
-                content_by_piggyback_hosts.setdefault(attachment['InstanceId'], [])\
+                attachment_id = attachment['InstanceId']
+                instance_name = instance_ids.get(attachment_id, attachment_id)
+                content_by_piggyback_hosts.setdefault(instance_name, [])\
                                           .append(row)
         return [
             AWSSectionResult(piggyback_hostname, rows)
             for piggyback_hostname, rows in content_by_piggyback_hosts.iteritems()
         ]
+
+    def _extract_instance_name(self, instance, instance_id):
+        for row in instance.get('Tags', []):
+            if row.get('Key') == 'Name':
+                return row['Value']
+        return instance_id
 
 
 class EBSHealth(AWSSection):
@@ -617,11 +644,15 @@ class EBSHealth(AWSSection):
         return content
 
     def _format_content(self, content):
+        instance_ids = self._received_results.get('ec2_summary', {})\
+                                             .get('mapping', {})
         content_by_piggyback_hosts = {}
         for row in self._received_results.get('ebs_summary', []):
             vol_id = row['VolumeId']
-            for attachement in row['Attachments']:
-                content_by_piggyback_hosts.setdefault(attachement['InstanceId'], [])\
+            for attachment in row['Attachments']:
+                attachment_id = attachment['InstanceId']
+                instance_name = instance_ids.get(attachment_id, attachment_id)
+                content_by_piggyback_hosts.setdefault(instance_name, [])\
                                           .append({vol_id: content[vol_id]})
         return [
             AWSSectionResult(piggyback_hostname, rows)
@@ -650,6 +681,8 @@ class EBS(AWSSection):
         # self._client.can_paginate('get_metric_data') = False
         raw_result = []
         for chunk in _chunks(metrics):
+            if not chunk:
+                continue
             response = self._client.get_metric_data(
                 MetricDataQueries=chunk,
                 StartTime=start_time,
@@ -664,12 +697,19 @@ class EBS(AWSSection):
         return raw_result
 
     def _get_metrics(self):
+        instance_ids = self._received_results.get('ec2_summary', {})\
+                                             .get('mapping', {})
         volumes = []
-        for entry in self._received_results.get('ebs_summary', []):
-            volumes.append((entry['VolumeId'], entry['VolumeType']))
+        for row in self._received_results.get('ebs_summary', []):
+            vol_id = row['VolumeId']
+            vol_type = row['VolumeType']
+            for attachment in row['Attachments']:
+                attachment_id = attachment['InstanceId']
+                instance_name = instance_ids.get(attachment_id, attachment_id)
+                volumes.append((instance_name, vol_id, vol_type))
         metrics = []
         idx = 0
-        for volume_name, volume_type in volumes:
+        for instance_name, volume_name, volume_type in volumes:
             for metric_name, unit, volume_types in [
                     # Disk IO
                 ("VolumeReadOps", "Count", []),
@@ -693,7 +733,7 @@ class EBS(AWSSection):
                     continue
                 metric = {
                     'Id': "%s_%s" % (metric_name.lower(), idx),
-                    'Label': volume_name,
+                    'Label': instance_name,
                     'MetricStat': {
                         'Metric': {
                             'Namespace': 'AWS/EBS',
@@ -714,15 +754,16 @@ class EBS(AWSSection):
         return metrics
 
     def _extract_content_from(self, raw_result):
-        try:
-            return raw_result['MetricDataResults']
-        except KeyError, e:
-            logging.info("%s: KeyError %s; Available are %s", self.name, e, raw_result.keys())
-            return []
+        return raw_result
 
     def _format_content(self, content):
-        #TODO instance ID as piggyback hostname
-        return
+        content_by_piggyback_hosts = {}
+        for row in content:
+            content_by_piggyback_hosts.setdefault(row['Label'], []).append(row)
+        return [
+            AWSSectionResult(piggyback_hostname, rows)
+            for piggyback_hostname, rows in content_by_piggyback_hosts.iteritems()
+        ]
 
 
 #.
@@ -832,6 +873,9 @@ class AWSSections(object):
 
         #---register sections to distributors-------------------------------
         ec2_summary_distributor.add(ec2)
+        ec2_summary_distributor.add(ebs_summary)
+        ec2_summary_distributor.add(ebs_health)
+        ec2_summary_distributor.add(ebs)
         s3_summary_distributor.add(s3_objects)
         elb_summary_distributor.add(elb_health)
         elb_summary_distributor.add(elb)

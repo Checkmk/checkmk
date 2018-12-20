@@ -2,7 +2,7 @@ Title: statgrab_mem: Plugin is now prioritized over solaris_mem if both is avail
 Level: 1
 Component: checks
 Class: fix
-Compatible: incompat
+Compatible: incomp
 Edition: cre
 State: unknown
 Version: 1.4.0p9

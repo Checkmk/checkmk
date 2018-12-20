@@ -2,7 +2,7 @@ Title: Reschedule active checks if neccessary after timeperiod change
 Level: 1
 Edition: cee
 Component: cmc
-Class: fi
+Class: fix
 State: unknown
 Version: 1.2.5i1
 Date: 1387303430

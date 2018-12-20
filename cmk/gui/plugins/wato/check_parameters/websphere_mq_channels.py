@@ -27,45 +27,14 @@
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
-    Integer,
     MonitoringState,
-    OptionalDropdownChoice,
-    Percentage,
     TextAscii,
-    Tuple,
 )
 from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersApplications,
     register_check_parameters,
 )
-
-websphere_mq_common_elements = [
-    ("message_count",
-     OptionalDropdownChoice(
-         title=_('Maximum number of messages'),
-         choices=[(None, _("Ignore these levels"))],
-         otherlabel=_("Set absolute levels"),
-         explicit=Tuple(
-             title=_('Maximum number of messages'),
-             elements=[
-                 Integer(title=_("Warning at")),
-                 Integer(title=_("Critical at")),
-             ]),
-         default_value=(1000, 1200))),
-    ("message_count_perc",
-     OptionalDropdownChoice(
-         title=_('Percentage of queue length'),
-         help=_('This setting only applies if the WebSphere MQ reports the queue length'),
-         choices=[(None, _("Ignore these levels"))],
-         otherlabel=_("Set relative levels"),
-         explicit=Tuple(
-             title=_('Percentage of queue length'),
-             elements=[
-                 Percentage(title=_("Warning at")),
-                 Percentage(title=_("Critical at")),
-             ]),
-         default_value=(80.0, 90.0))),
-]
+from cmk.gui.plugins.wato.check_parameters.websphere_mq import websphere_mq_common_elements
 
 register_check_parameters(
     RulespecGroupCheckParametersApplications,

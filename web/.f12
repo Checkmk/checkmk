@@ -6,7 +6,7 @@ SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 
 echo "Updating compiled JS files..."
-(cd .. ; node_modules/.bin/webpack)
+make -C .. web/htdocs/js/main_min.js web/htdocs/js/mobile_min.js web/htdocs/js/side_min.js
 
 echo "Update site $SITE..."
 

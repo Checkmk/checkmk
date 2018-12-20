@@ -26,7 +26,10 @@
 
 
 def parse_aws_s3_objects(info):
-    return parse_aws(info)[-1]
+    try:
+        return parse_aws(info)[-1]
+    except IndexError:
+        return {}
 
 
 def inventory_aws_s3_objects(parsed):

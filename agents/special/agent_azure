@@ -468,17 +468,25 @@ class AzureClient(object):  # pylint: disable=too-many-instance-attributes
 
         self.specific_clients = {}
 
-        # compute timespan once, and keep it fixed
-        t_end = datetime.datetime.utcnow()
-        t_min = t_end - datetime.timedelta(minutes=5)
-        t_hrs = t_end - datetime.timedelta(hours=2)
-        self.timespan_min = "/".join((t_min.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                                      t_end.strftime("%Y-%m-%dT%H:%M:%SZ")))
-        self.timespan_hrs = "/".join((t_hrs.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                                      t_end.strftime("%Y-%m-%dT%H:%M:%SZ")))
-
+        self.timespans = self._get_timespans()
         self.resources_cache = None
         self.metrics_cache = {}
+
+    @staticmethod
+    def _get_timespans():
+        """compute timespans dict"""
+        t_end = datetime.datetime.utcnow()
+
+        def interval(**kwargs):
+            start = t_end - datetime.timedelta(**kwargs)
+            return "%s/%s" % (start.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                              t_end.strftime("%Y-%m-%dT%H:%M:%SZ"))
+
+        timespans = {}
+        timespans["PT1M"] = interval(minutes=3)
+        timespans["PT5M"] = interval(minutes=15)
+        timespans["PT1H"] = interval(hours=3)
+        return timespans
 
     def init_specific(self, resources):
         r_types = set(r.info["type"] for r in resources)
@@ -508,7 +516,7 @@ class AzureClient(object):  # pylint: disable=too-many-instance-attributes
         metrics = []
 
         rid = resource.info["id"]
-        timespan = {"PT1M": self.timespan_min, "PT1H": self.timespan_hrs}[time_grain]
+        timespan = self.timespans[time_grain]
 
         LOG.debug(
             "metrics.list(%r, timespan=%r, interval=%r, metricnames=%r, aggregation=%r,"

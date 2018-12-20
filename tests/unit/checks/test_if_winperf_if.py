@@ -1,6 +1,6 @@
 import pytest
 
-from checktestlib import DiscoveryResult
+from checktestlib import DiscoveryResult, assertDiscoveryResultsEqual
 
 # Mark all tests in this file as check related tests
 pytestmark = pytest.mark.checks
@@ -150,4 +150,5 @@ def test_winperf_if_inventory_teaming(check_manager, monkeypatch, settings, info
     monkeypatch.setitem(check.context, "_prepare_if_group_patterns_from_conf", lambda: {})
     parsed = check.run_parse(info)
     actual_discovery = check.run_discovery(parsed)
-    assert DiscoveryResult(expected_discovery) == DiscoveryResult(actual_discovery)
+    assertDiscoveryResultsEqual(
+        DiscoveryResult(expected_discovery), DiscoveryResult(actual_discovery))

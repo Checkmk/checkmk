@@ -339,9 +339,11 @@ class SidebarRenderer(object):
             interval = config.sidebar_notify_interval
         else:
             interval = 'null'
-        html.clear_default_javascript()
+        html.clear_default_stylesheet()
         html.html_head(
-            _("Check_MK Sidebar"), javascripts=["side"], stylesheets=["sidebar", "status"])
+            _("Check_MK Sidebar"),
+            javascripts=["side"],
+            stylesheets=["side_min", "sidebar", "status"])
         html.write('<body class="side')
         if config.screenshotmode:
             html.write(" screenshotmode")

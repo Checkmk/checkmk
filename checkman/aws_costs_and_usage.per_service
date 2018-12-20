@@ -1,0 +1,14 @@
+title: AWS Costs and Usage Per Service
+agents: aws
+catalog: cloud/aws
+license: GPL
+distribution: check_mk
+description:
+ This check gives an overview over the unblended costs of each service
+ configured in AWS accounts.
+ To make this check work you have to configure the related special agent
+ {{Amazon Web Services (AWS)}}.
+ Upper levels are configurable; no default levels are set.
+
+inventory:
+ One service per AWS service will be created.

@@ -4701,6 +4701,12 @@ metric_info['write_avg_exe_ms'] = {
     'color': '#90ee90',
 }
 
+metric_info['aws_costs_unblended'] = {
+    'title': _('AWS Unblended costs'),
+    'unit': 'count',
+    'color': '11/a',
+}
+
 #.
 #   .--Checks--------------------------------------------------------------.
 #   |                    ____ _               _                            |

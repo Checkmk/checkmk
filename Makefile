@@ -400,8 +400,8 @@ config.status: $(DIST_DEPS)
 	  else \
 	    BOOST_OPT="DUMMY1=" ; \
 	  fi ; \
-	  if test -d "omd/packages/rrdtool/rrdtool-1.7.0/src/.libs"; then \
-	    RRD_OPT="LDFLAGS=-L$(realpath omd/packages/rrdtool/rrdtool-1.7.0/src/.libs)" ; \
+	  if test -d "omd/rrdtool-1.7.0/src/.libs"; then \
+	    RRD_OPT="LDFLAGS=-L$(realpath omd/rrdtool-1.7.0/src/.libs)" ; \
 	  else \
 	    RRD_OPT="DUMMY2=" ; \
 	  fi ; \

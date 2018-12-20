@@ -1,0 +1,11 @@
+Title: ACME SBC Health (via SNMP)
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1545291224
+Class: feature
+
+This SNMP check reports the health status in percent and the redundancy state of
+an ACME SBC device.

@@ -215,7 +215,7 @@ class ModeDiscovery(WatoMode):
     def page(self):
         self._async_progress_msg_container()
         self._service_container()
-        html.javascript("start_service_discovery(%s, %s, %s)" %
+        html.javascript("cmk.service_discovery.start(%s, %s, %s)" %
                         (json.dumps(self._host.name()), json.dumps(self._host.folder().path()),
                          json.dumps(self._options._asdict())))
 
@@ -1008,7 +1008,7 @@ class DiscoveryPageRenderer(object):
 
     def _start_js_call(self, options, request_vars=None):
         # type: (DiscoveryOptions, dict) -> str
-        return "start_service_discovery(%s, %s, %s, %s, %s)" % (
+        return "cmk.service_discovery.start(%s, %s, %s, %s, %s)" % (
             json.dumps(self._host.name()),
             json.dumps(self._host.folder().path()),
             json.dumps(options._asdict()),
@@ -1120,7 +1120,7 @@ class DiscoveryPageRenderer(object):
 
         div_id = "activecheck_%s" % descr
         html.div(html.render_icon("reload", cssclass="reloading"), id_=div_id)
-        html.javascript("execute_active_check(%s, %s, %s, %s, %s, %s);" % (
+        html.javascript("cmk.service_discovery.execute_active_check(%s, %s, %s, %s, %s, %s);" % (
             json.dumps(self._host.site_id() or ''),
             json.dumps(self._host.folder().path()),
             json.dumps(self._host.name()),

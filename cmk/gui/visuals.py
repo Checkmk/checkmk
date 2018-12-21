@@ -1593,7 +1593,8 @@ def ajax_popup_add():
                 html.open_li()
                 html.open_a(
                     href="javascript:void(0)",
-                    onclick="add_to_visual(\'%s\', \'%s\')" % (visual_type_name, name))
+                    onclick="cmk.popup_menu.add_to_visual(\'%s\', \'%s\')" % (visual_type_name,
+                                                                              name))
                 html.icon(None, visual_type_name.rstrip('s'))
                 html.write(title)
                 html.close_a()
@@ -1608,11 +1609,11 @@ def ajax_popup_add():
         html.close_li()
 
         html.open_li()
-        html.open_a(href="javascript:graph_export(\"graph_export\")")
+        html.open_a(href="javascript:cmk.popup_menu.graph_export(\"graph_export\")")
         html.icon(None, "download")
         html.write(_("Export as JSON"))
         html.close_a()
-        html.open_a(href="javascript:graph_export(\"graph_image\")")
+        html.open_a(href="javascript:cmk.popup_menu.graph_export(\"graph_image\")")
         html.icon(None, "download")
         html.write(_("Export as PNG"))
         html.close_a()

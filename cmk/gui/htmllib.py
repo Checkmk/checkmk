@@ -2879,13 +2879,13 @@ hy
                              onclose=None,
                              resizable=False):
 
-        onclick = 'toggle_popup(event, this, %s, %s, %s, %s, %s, %s, %s);' % \
-                    ("'%s'" % ident,
-                     "'%s'" % what if what else 'null',
-                     json.dumps(data) if data else 'null',
-                     "'%s'" % self.urlencode_vars(url_vars) if url_vars else 'null',
-                     "'%s'" % menu_content if menu_content else 'null',
-                     "'%s'" % onclose.replace("'", "\\'") if onclose else 'null',
+        onclick = 'cmk.popup_menu.toggle_popup(event, this, %s, %s, %s, %s, %s, %s, %s);' % \
+                    (json.dumps(ident),
+                     json.dumps(what if what else None),
+                     json.dumps(data if data else None),
+                     json.dumps(self.urlencode_vars(url_vars) if url_vars else None),
+                     json.dumps(menu_content if menu_content else None),
+                     json.dumps(onclose.replace("'", "\\'") if onclose else None),
                      json.dumps(resizable))
 
         #TODO: Check if HTML'ing content is correct and necessary!

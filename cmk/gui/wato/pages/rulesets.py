@@ -1472,7 +1472,7 @@ class EditRuleMode(WatoMode):
         html.checkbox(
             "explicit_hosts",
             checked,
-            onclick="valuespec_toggle_option(this, %r)" % div_id,
+            onclick="cmk.valuespecs.toggle_option(this, %r)" % div_id,
             label=_("Specify explicit host names"))
         html.open_div(style="display:none;" if not checked else None, id_=div_id)
         negate_hosts = len(self._rule.host_list) > 0 and self._rule.host_list[0].startswith("!")
@@ -1532,7 +1532,7 @@ class EditRuleMode(WatoMode):
             html.checkbox(
                 "explicit_services",
                 checked,
-                onclick="valuespec_toggle_option(this, %r)" % div_id,
+                onclick="cmk.valuespecs.toggle_option(this, %r)" % div_id,
                 label=_("Specify explicit values"))
             html.open_div(
                 id_=div_id, style=["display: none;" if not checked else "", "padding: 0px;"])

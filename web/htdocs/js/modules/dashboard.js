@@ -22,12 +22,13 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-// dashlet ids and urls
-var reload_on_resize = {};
+import * as utils from "utils";
+import * as ajax from "ajax";
 
+var reload_on_resize = {};
 var dashboard_properties = {};
 
-function set_dashboard_properties(properties) {
+export function set_dashboard_properties(properties) {
     dashboard_properties = properties;
 }
 
@@ -298,15 +299,15 @@ var g_dashboard_left    = null;
 var g_dashboard_width   = null;
 var g_dashboard_height  = null;
 
-function calculate_dashboard() {
+export function calculate_dashboard() {
     if (g_dashboard_resizer !== null)
         return; // another resize is processed
     g_dashboard_resizer = true;
 
     g_dashboard_top    = dashboard_properties.header_height + dashboard_properties.screen_margin;
     g_dashboard_left   = dashboard_properties.screen_margin;
-    g_dashboard_width  = pageWidth() - 2*dashboard_properties.screen_margin;
-    g_dashboard_height = cmk.utils.page_height() - 2*dashboard_properties.screen_margin - dashboard_properties.header_height;
+    g_dashboard_width  = utils.page_width() - 2*dashboard_properties.screen_margin;
+    g_dashboard_height = utils.page_height() - 2*dashboard_properties.screen_margin - dashboard_properties.header_height;
 
     var oDash = document.getElementById("dashboard");
     oDash.style.left     = g_dashboard_left + "px";
@@ -318,11 +319,11 @@ function calculate_dashboard() {
     g_dashboard_resizer = null;
 }
 
-function dashboard_scheduler(initial) {
+export function execute_dashboard_scheduler(initial) {
     // Stop reload of the dashlets in case the browser window / tab is not visible
     // for the user. Retry after short time.
-    if (!cmk.utils.is_window_active()) {
-        setTimeout(function(){ dashboard_scheduler(initial); }, 250);
+    if (!utils.is_window_active()) {
+        setTimeout(function(){ execute_dashboard_scheduler(initial); }, 250);
         return;
     }
 
@@ -339,7 +340,7 @@ function dashboard_scheduler(initial) {
                     url += "&mtime=" + dashboard_properties.dashboard_mtime;
                 else
                     url += "?mtime=" + dashboard_properties.dashboard_mtime;
-                get_url(url, dashboard_update_contents, "dashlet_inner_" + nr);
+                ajax.get_url(url, dashboard_update_contents, "dashlet_inner_" + nr);
             }
             else {
                 url(); // Execute "on_refresh" javascript function
@@ -350,26 +351,18 @@ function dashboard_scheduler(initial) {
     // Update timestamp every minute
     // Required if there are no refresh_dashlets present or all refresh times are > 60sec
     if (timestamp % 60 == 0)
-        update_header_timer();
+        utils.update_header_timer();
 
-    g_reload_timer = setTimeout(function() {
-        dashboard_scheduler(0);
+    setTimeout(function() {
+        execute_dashboard_scheduler(0);
     }, 1000);
 }
 
 function dashboard_update_contents(id, response_text) {
-    update_header_timer();
+    utils.update_header_timer();
 
     // Call the generic function to replace the dashlet inner code
-    cmk.utils.update_contents(id, response_text);
-}
-
-function update_dashlet(id, code) {
-    var obj = document.getElementById(id);
-    if (obj) {
-        obj.innerHTML = code;
-        executeJS(id);
-    }
+    utils.update_contents(id, response_text);
 }
 
 //
@@ -390,7 +383,7 @@ function toggle_dashboard_menu(show, event) {
 
         // Gather and update the position of the menu
         if (event) {
-            var target = getTarget(event);
+            var target = utils.get_target(event);
             controls.style.left = (event.clientX - target.offsetLeft + 5) + "px";
             controls.style.top  = (event.clientY - target.offsetTop + 5) + "px";
 
@@ -422,13 +415,13 @@ function hide_submenus() {
         subs[i].style.display = "none";
 }
 
-function show_submenu(id) {
+export function show_submenu(id) {
     document.getElementById(id + "_sub").style.display = "block";
 }
 
 var g_editing = false;
 
-function toggle_dashboard_edit() {
+export function toggle_dashboard_edit() {
     // First hide the controls menu
     toggle_dashboard_menu(false);
 
@@ -456,12 +449,12 @@ function toggle_dashboard_edit() {
         var url = window.parent.location.href;
         var new_url;
         if (url.indexOf("start_url") !== -1) {
-            var frame_url = decodeURIComponent(getUrlParam("start_url", url));
-            frame_url = makeuri({"edit": g_editing ? "1" : "0"}, frame_url);
-            new_url = makeuri({"start_url": frame_url}, url);
+            var frame_url = decodeURIComponent(utils.get_url_param("start_url", url));
+            frame_url = utils.makeuri({"edit": g_editing ? "1" : "0"}, frame_url);
+            new_url = utils.makeuri({"start_url": frame_url}, url);
         }
         else {
-            new_url = makeuri({"edit": g_editing ? "1" : "0"}, url);
+            new_url = utils.makeuri({"edit": g_editing ? "1" : "0"}, url);
         }
 
         window.parent.history.replaceState({}, document.title, new_url);
@@ -472,9 +465,9 @@ function toggle_dashboard_edit() {
 
 function toggle_grid() {
     if (!g_editing) {
-        remove_class(document.getElementById("dashboard"), "grid");
+        utils.remove_class(document.getElementById("dashboard"), "grid");
     } else {
-        add_class(document.getElementById("dashboard"), "grid");
+        utils.add_class(document.getElementById("dashboard"), "grid");
     }
 }
 
@@ -547,7 +540,7 @@ function dashlet_toggle_edit(dashlet_obj, edit) {
     var controls;
     if (edit) {
         // gray out the inner parts of the dashlet
-        add_class(dashlet_obj, "edit");
+        utils.add_class(dashlet_obj, "edit");
 
         // Create the dashlet controls
         controls = document.createElement("div");
@@ -557,7 +550,7 @@ function dashlet_toggle_edit(dashlet_obj, edit) {
         set_control_size(controls, dashlet_obj.clientWidth, dashlet_obj.clientHeight);
 
         // IE < 9: Without this fix the controls container is not working
-        if (cmk.utils.browser.is_ie_below_9()) {
+        if (utils.browser.is_ie_below_9()) {
             controls.style.background = "url(about:blank)";
         }
 
@@ -566,7 +559,7 @@ function dashlet_toggle_edit(dashlet_obj, edit) {
 
         // Create the size / grow indicators and resizer control elements
         var i;
-        if (has_class(dashlet_obj, "resizable")) {
+        if (utils.has_class(dashlet_obj, "resizable")) {
             for (i = 0; i < 2; i ++) {
                 if (i == 0)
                     render_sizer(controls, nr, i, anchor_id, dashlet.w);
@@ -622,7 +615,7 @@ function dashlet_toggle_edit(dashlet_obj, edit) {
 
     } else {
         // make the inner parts visible again
-        remove_class(dashlet_obj, "edit");
+        utils.remove_class(dashlet_obj, "edit");
 
         // Remove all dashlet controls
         controls = document.getElementById("dashlet_controls_"+nr);
@@ -771,23 +764,23 @@ function body_click_handler(event) {
     if (!event)
         event = window.event;
 
-    var target = getTarget(event);
-    var button = getButton(event);
+    var target = utils.get_target(event);
+    var button = utils.get_button(event);
 
     if (target.id == "dashboard" && button == "RIGHT") {
         // right click on the empty dashboard area
         toggle_dashboard_menu(undefined, event);
-        prevent_default_events(event);
+        utils.prevent_default_events(event);
         return false;
     }
     else if (target.parentNode.id == "controls_toggle" && button == "LEFT") {
         // left click on the controls menu
         toggle_dashboard_menu(undefined, event);
-        prevent_default_events(event);
+        utils.prevent_default_events(event);
         return false;
     }
     else if (target.parentNode.id != "controls_toggle"
-             && (!target.parentNode.parentNode || !has_class(target.parentNode.parentNode, "menu"))) {
+             && (!target.parentNode.parentNode || !utils.has_class(target.parentNode.parentNode, "menu"))) {
         // Hide the controls menu when clicked somewhere else
         toggle_dashboard_menu(false);
     }
@@ -809,10 +802,10 @@ function drag_dashlet_start(event) {
     if (!g_editing)
         return true;
 
-    var target = getTarget(event);
-    var button = getButton(event);
+    var target = utils.get_target(event);
+    var button = utils.get_button(event);
 
-    if (g_dragging === false && button == "LEFT" && has_class(target, "controls")) {
+    if (g_dragging === false && button == "LEFT" && utils.has_class(target, "controls")) {
         g_dragging = target.parentNode;
         var nr = parseInt(g_dragging.id.replace("dashlet_", ""));
         var dashlet = dashboard_properties.dashlets[nr];
@@ -875,7 +868,7 @@ function drag_dashlet_start(event) {
 
         edit_visualize(g_dragging, true);
 
-        prevent_default_events(event);
+        utils.prevent_default_events(event);
         return false;
     }
     return true;
@@ -962,7 +955,7 @@ function drag_dashlet_stop(event) {
 }
 
 function persist_dashlet_pos(nr) {
-    get_url("ajax_dashlet_pos.py?name=" + dashboard_properties.dashboard_name + "&id=" + nr
+    ajax.get_url("ajax_dashlet_pos.py?name=" + dashboard_properties.dashboard_name + "&id=" + nr
             + "&x=" + dashboard_properties.dashlets[nr].x + "&y=" + dashboard_properties.dashlets[nr].y
             + "&w=" + dashboard_properties.dashlets[nr].w + "&h=" + dashboard_properties.dashlets[nr].h,
             handle_dashlet_post_response, null, undefined, false); // eslint-disable-line indent
@@ -999,10 +992,10 @@ function resize_dashlet_start(event) {
     if (!g_editing)
         return true;
 
-    var target = getTarget(event);
-    var button = getButton(event);
+    var target = utils.get_target(event);
+    var button = utils.get_button(event);
 
-    if (g_resizing === false && button == "LEFT" && has_class(target, "resize")) {
+    if (g_resizing === false && button == "LEFT" && utils.has_class(target, "resize")) {
         var dashlet_obj = target.parentNode.parentNode;
 
         g_resizing = target;
@@ -1020,23 +1013,23 @@ function resize_dashlet_start(event) {
 
         edit_visualize(dashlet_obj, true);
 
-        prevent_default_events(event);
+        utils.prevent_default_events(event);
         return false;
     }
     return true;
 }
 
 function get_horizontal_direction(resizer) {
-    if (has_class(resizer, "resize0_0") || has_class(resizer, "resize_corner0") || has_class(resizer, "resize_corner3"))
+    if (utils.has_class(resizer, "resize0_0") || utils.has_class(resizer, "resize_corner0") || utils.has_class(resizer, "resize_corner3"))
         return "left";
-    else if (has_class(resizer, "resize0_1") || has_class(resizer, "resize_corner1") || has_class(resizer, "resize_corner2"))
+    else if (utils.has_class(resizer, "resize0_1") || utils.has_class(resizer, "resize_corner1") || utils.has_class(resizer, "resize_corner2"))
         return "right";
 }
 
 function get_vertical_direction(resizer) {
-    if (has_class(resizer, "resize1_0") || has_class(resizer, "resize_corner0") || has_class(resizer, "resize_corner1"))
+    if (utils.has_class(resizer, "resize1_0") || utils.has_class(resizer, "resize_corner0") || utils.has_class(resizer, "resize_corner1"))
         return "top";
-    else if (has_class(resizer, "resize1_1") || has_class(resizer, "resize_corner2") || has_class(resizer, "resize_corner3"))
+    else if (utils.has_class(resizer, "resize1_1") || utils.has_class(resizer, "resize_corner2") || utils.has_class(resizer, "resize_corner3"))
         return "bottom";
 }
 
@@ -1173,22 +1166,23 @@ function dashlet_resized(nr, dashlet_obj) {
  * Register the global event handlers, used for dragging of dashlets,
  * dialog control and resizing of dashlets
  */
+export function register_event_handlers() {
+    utils.add_event_handler("mousemove", function(e) {
+        return drag_dashlet(e) && resize_dashlet(e);
+    });
+    utils.add_event_handler("mousedown", function(e) {
+        return drag_dashlet_start(e) && resize_dashlet_start(e);
+    });
+    utils.add_event_handler("mouseup", function(e) {
+        return drag_dashlet_stop(e) && resize_dashlet_stop(e);
+    });
+    utils.add_event_handler("click", function(e) {
+        return body_click_handler(e);
+    });
 
-add_event_handler("mousemove", function(e) {
-    return drag_dashlet(e) && resize_dashlet(e);
-});
-add_event_handler("mousedown", function(e) {
-    return drag_dashlet_start(e) && resize_dashlet_start(e);
-});
-add_event_handler("mouseup", function(e) {
-    return drag_dashlet_stop(e) && resize_dashlet_stop(e);
-});
-add_event_handler("click", function(e) {
-    return body_click_handler(e);
-});
-
-// Totally disable the context menu for all dashboards
-add_event_handler("contextmenu", function(e) {
-    prevent_default_events(e);
-    return false;
-});
+    // Totally disable the context menu for all dashboards
+    utils.add_event_handler("contextmenu", function(e) {
+        utils.prevent_default_events(e);
+        return false;
+    });
+}

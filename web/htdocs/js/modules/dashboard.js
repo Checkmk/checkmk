@@ -26,7 +26,11 @@ import * as utils from "utils";
 import * as ajax from "ajax";
 
 var reload_on_resize = {};
-var dashboard_properties = {};
+export var dashboard_properties = {};
+
+export function set_reload_on_resize(dashlet_id, url) {
+    reload_on_resize[dashlet_id] = url;
+}
 
 export function set_dashboard_properties(properties) {
     dashboard_properties = properties;
@@ -1158,7 +1162,7 @@ function dashlet_resized(nr, dashlet_obj) {
     }
 
     if (typeof dashboard_properties.on_resize_dashlets[nr] != "undefined") {
-        dashboard_properties.on_resize_dashlets[nr]();
+        eval(dashboard_properties.on_resize_dashlets[nr])();
     }
 }
 

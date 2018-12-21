@@ -554,7 +554,7 @@ def draw_dashboard(name):
 
     refresh_dashlets = []  # Dashlets with automatic refresh, for Javascript
     dashlet_coords = []  # Dimensions and positions of dashlet
-    on_resize_dashlets = []  # javascript function to execute after ressizing the dashlet
+    on_resize_dashlets = {}  # javascript function to execute after ressizing the dashlet
     for nr, dashlet in enumerate(board["dashlets"]):
         dashlet_content_html = ""
         dashlet_title_html = ""
@@ -568,7 +568,7 @@ def draw_dashboard(name):
 
             on_resize = get_dashlet_on_resize(dashlet_instance)
             if on_resize:
-                on_resize_dashlets.append(on_resize)
+                on_resize_dashlets[nr] = on_resize
 
             dashlet_title_html = render_dashlet_title_html(dashlet_instance)
             dashlet_content_html = render_dashlet_content(dashlet_instance, is_update=False)
@@ -593,7 +593,7 @@ def draw_dashboard(name):
         "dashlet_padding": dashlet_padding,
         "dashlet_min_size": Dashlet.minimum_size,
         "refresh_dashlets": refresh_dashlets,
-        "on_resize_dashlets": dict(enumerate(on_resize_dashlets)),
+        "on_resize_dashlets": on_resize_dashlets,
         "dashboard_name": name,
         "dashboard_mtime": board['mtime'],
         "dashlets": dashlet_coords,
@@ -819,7 +819,7 @@ def get_dashlet_refresh(dashlet_instance):
 def get_dashlet_on_resize(dashlet_instance):
     on_resize = dashlet_instance.on_resize()
     if on_resize:
-        return '%d: function() {%s}' % (dashlet_instance.dashlet_id, on_resize)
+        return '(function() {%s})' % on_resize
     return None
 
 
@@ -901,7 +901,7 @@ def ajax_dashlet():
         # prevent reloading on the dashboard which already has the current mtime,
         # this is normally the user editing this dashboard. All others: reload
         # the whole dashboard once.
-        html.javascript('if (cmk.dashboard.dashlet_properties.dashboard_mtime < %d) {\n'
+        html.javascript('if (cmk.dashboard.dashboard_properties.dashboard_mtime < %d) {\n'
                         '    parent.location.reload();\n'
                         '}' % board['mtime'])
 

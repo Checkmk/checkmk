@@ -11,4 +11,4 @@ description:
  special agent {{Amazon Web Services (AWS)}}.
 
 inventory:
- One service per object will be created.
+ One service per bucket will be created.

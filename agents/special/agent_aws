@@ -340,26 +340,41 @@ class EC2(AWSSection):
 #   '----------------------------------------------------------------------'
 
 
-class S3Summary(AWSSection):
+class S3(AWSSection):
     @property
     def name(self):
-        return "s3_summary"
+        return "s3"
 
     @property
     def interval(self):
         return 86400
 
     def _get_raw_result(self):
-        raw_result = self._client.list_buckets()
+        response = self._client.list_buckets()
         try:
-            buckets = raw_result['Buckets']
-        except KeyError, e:
-            logging.info("%s: KeyError %s; Available are %s", self.name, e, raw_result.keys())
+            buckets = response['Buckets']
+        except KeyError as e:
+            logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
             return []
 
         for entry in buckets:
-            response = self._client.get_bucket_location(Bucket=entry['Name'])
-            entry['LocationConstraint'] = response['LocationConstraint']
+            bucket_name = entry['Name']
+            response = self._client.get_bucket_location(Bucket=bucket_name)
+            try:
+                location = response['LocationConstraint']
+            except KeyError as e:
+                logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
+            else:
+                entry['LocationConstraint'] = location
+
+            response = self._client.list_objects(Bucket=bucket_name)
+            try:
+                objects = response['Contents']
+            except KeyError as e:
+                logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
+            else:
+                entry['Contents'] = objects
+
         return buckets
 
     def _extract_content_from(self, raw_result):
@@ -367,38 +382,6 @@ class S3Summary(AWSSection):
 
     def _format_content(self, content):
         return [AWSSectionResult("", content)]
-
-
-class S3Objects(AWSSection):
-    @property
-    def name(self):
-        return "s3_objects"
-
-    @property
-    def interval(self):
-        return 86400
-
-    def _get_raw_result(self):
-        return [self._client.list_objects(Bucket=bucket_id) for bucket_id in self._get_bucket_ids()]
-
-    def _get_bucket_ids(self):
-        bucket_ids = []
-        for entry in self._received_results.get('s3_summary', []):
-            bucket_ids.append(entry['Name'])
-        return bucket_ids
-
-    def _extract_content_from(self, raw_result):
-        content = {}
-        for row in raw_result:
-            try:
-                content.setdefault(row['Name'], []).extend(row['Contents'])
-            except KeyError, e:
-                logging.info("%s: KeyError %s; Available are %s", self.name, e, row.keys())
-                continue
-        return content
-
-    def _format_content(self, content):
-        return [AWSSectionResult("", [content])]
 
 
 #.
@@ -853,19 +836,17 @@ class AWSSections(object):
 
         #---distributors----------------------------------------------------
         ec2_summary_distributor = ResultDistributor()
-        s3_summary_distributor = ResultDistributor()
         elb_summary_distributor = ResultDistributor()
         ebs_summary_distributor = ResultDistributor()
 
         #---sections with distributors--------------------------------------
         ec2_summary = EC2Summary(ec2_client, ec2_summary_distributor)
-        s3_summary = S3Summary(s3_client, s3_summary_distributor)
         elb_summary = ELBSummary(elb_client, elb_summary_distributor)
         ebs_summary = EBSSummary(ec2_client, ebs_summary_distributor)
 
         #---sections--------------------------------------------------------
+        s3 = S3(s3_client)
         ec2 = EC2(cloudwatch_client)
-        s3_objects = S3Objects(s3_client)
         elb_health = ELBHealth(elb_client)
         elb = ELB(cloudwatch_client)
         ebs_health = EBSHealth(ec2_client)
@@ -876,7 +857,6 @@ class AWSSections(object):
         ec2_summary_distributor.add(ebs_summary)
         ec2_summary_distributor.add(ebs_health)
         ec2_summary_distributor.add(ebs)
-        s3_summary_distributor.add(s3_objects)
         elb_summary_distributor.add(elb_health)
         elb_summary_distributor.add(elb)
         ebs_summary_distributor.add(ebs_health)
@@ -884,13 +864,12 @@ class AWSSections(object):
 
         #---register sections with distributors for execution---------------
         self._sections.append(ec2_summary)
-        self._sections.append(s3_summary)
         self._sections.append(elb_summary)
         self._sections.append(ebs_summary)
 
         #---register sections for execution---------------------------------
         self._sections.append(ec2)
-        self._sections.append(s3_objects)
+        self._sections.append(s3)
         self._sections.append(elb_health)
         self._sections.append(elb)
         self._sections.append(ebs_health)

@@ -262,103 +262,6 @@ function update_bulk_moveto(val) {
 }
 
 //#.
-//#   .-AsyncProg.---------------------------------------------------------.
-//#   |           _                         ____                           |
-//#   |          / \   ___ _   _ _ __   ___|  _ \ _ __ ___   __ _          |
-//#   |         / _ \ / __| | | | '_ \ / __| |_) | '__/ _ \ / _` |         |
-//#   |        / ___ \\__ \ |_| | | | | (__|  __/| | | (_) | (_| |_        |
-//#   |       /_/   \_\___/\__, |_| |_|\___|_|   |_|  \___/ \__, (_)       |
-//#   |                    |___/                            |___/          |
-//#   +--------------------------------------------------------------------+
-//#   | Generic asynchronous process handling used by activate changes and |
-//#   | the service discovery dialogs                                      |
-//#   '--------------------------------------------------------------------'
-
-// Is called after the activation has been started (got the activation_id) and
-// then in interval of 500 ms for updating the dialog state
-function monitor_async_progress(handler_data)
-{
-    call_ajax(handler_data.update_url, {
-        response_handler : handle_async_progress_update,
-        error_handler    : handle_async_progress_error,
-        handler_data     : handler_data,
-        method           : "POST",
-        post_data        : handler_data.post_data,
-        add_ajax_id      : false
-    });
-}
-
-function handle_async_progress_update(handler_data, response_json)
-{
-    var response = JSON.parse(response_json);
-    if (response.result_code == 1) {
-        show_async_progress_error(response.result);
-        return; // Abort on error!
-    } else {
-        handler_data.update_function(handler_data, response.result);
-
-        if (!handler_data.is_finished_function(response.result)) {
-            setTimeout(function() {
-                return monitor_async_progress(handler_data);
-            }, 500);
-        }
-        else {
-            handler_data.finish_function(response.result);
-        }
-    }
-}
-
-function handle_async_progress_error(handler_data, status_code, error_msg)
-{
-    if (time() - handler_data.start_time <= 10 && status_code == 503) {
-        show_async_progress_info("Failed to fetch state. This may be normal for a period of some seconds.");
-    } else if (status_code == 0) {
-        return; // not really an error. Reached when navigating away from the page
-    } else {
-        show_async_progress_error("Failed to fetch state ["+status_code+"]: " + error_msg + ". " +
-                              "Retrying in 1 second." +
-                              "<br><br>" +
-                              "In case this error persists for more than some seconds, please verify that all " +
-                              "processes of the site are running.");
-    }
-
-    setTimeout(function() {
-        return monitor_async_progress(handler_data);
-    }, 1000);
-}
-
-function show_async_progress_error(text)
-{
-    var container = document.getElementById("async_progress_msg");
-    container.style.display = "block";
-    var msg = container.childNodes[0];
-
-    add_class(msg, "error");
-    remove_class(msg, "success");
-
-    msg.innerHTML = text;
-}
-
-function show_async_progress_info(text)
-{
-    var container = document.getElementById("async_progress_msg");
-    container.style.display = "block";
-    var msg = container.childNodes[0];
-
-    add_class(msg, "success");
-    remove_class(msg, "error");
-
-    msg.innerHTML = text;
-}
-
-function hide_async_progress_msg()
-{
-    var msg = document.getElementById("async_progress_msg");
-    if (msg)
-        msg.style.display = "none";
-}
-
-//#.
 //#   .-Activation---------------------------------------------------------.
 //#   |              _        _   _            _   _                       |
 //#   |             / \   ___| |_(_)_   ____ _| |_(_) ___  _ __            |
@@ -392,7 +295,7 @@ function activate_changes(mode, site_id)
         }
 
         if (sites.length == 0) {
-            show_async_progress_error("You have to select a site.");
+            cmk.async_progress.show_error("You have to select a site.");
             return;
         }
 
@@ -419,7 +322,7 @@ function activate_changes(mode, site_id)
 
 function start_activation(sites, activate_until, comment, activate_foreign)
 {
-    show_async_progress_info("Initializing activation...");
+    cmk.async_progress.show_info("Initializing activation...");
 
     var post_data = "activate_until=" + encodeURIComponent(activate_until)
                   + "&sites=" + encodeURIComponent(sites.join(","))
@@ -444,13 +347,13 @@ function handle_start_activation(_unused, response_json)
     var response = JSON.parse(response_json);
 
     if (response.result_code == 1) {
-        show_async_progress_error(response.result);
+        cmk.async_progress.show_error(response.result);
         lock_activation_controls(false);
     } else {
-        show_async_progress_info("Activating...");
-        monitor_async_progress({
+        cmk.async_progress.show_info("Activating...");
+        cmk.async_progress.monitor({
             "update_url" : "ajax_activation_state.py?activation_id=" + encodeURIComponent(response.result.activation_id),
-            "start_time" : time(),
+            "start_time" : cmk.utils.time(),
             "update_function": update_activation_state,
             "is_finished_function": is_activation_progress_finished,
             "finish_function": finish_activation,
@@ -461,7 +364,7 @@ function handle_start_activation(_unused, response_json)
 
 function handle_start_activation_error(_unused, status_code, error_msg)
 {
-    show_async_progress_error("Failed to start activation ["+status_code+"]: " + error_msg);
+    cmk.async_progress.show_error("Failed to start activation ["+status_code+"]: " + error_msg);
     finish_activation(null);
 }
 
@@ -574,7 +477,7 @@ function update_site_activation_state(site_state)
     if (site_state["_status_details"]) {
         show_details(true);
 
-        var msg = document.getElementById("site_" + site_state["_site_id"] + "_details");
+        msg = document.getElementById("site_" + site_state["_site_id"] + "_details");
         msg.innerHTML = site_state["_status_details"];
     }
 
@@ -596,7 +499,7 @@ function update_site_progress(site_state)
 
     // TODO: Visualize overdue
 
-    var duration = parseFloat(time() - site_state["_time_started"]);
+    var duration = parseFloat(cmk.utils.time() - site_state["_time_started"]);
 
     var expected_duration = site_state["_expected_duration"];
     var duration_percent = duration * 100.0 / expected_duration;
@@ -610,7 +513,7 @@ function update_site_progress(site_state)
 
 function finish_activation(response)
 {
-    show_async_progress_info("Activation has finished. Reloading in 1 second.");
+    cmk.async_progress.show_info("Activation has finished. Reloading in 1 second.");
     lock_activation_controls(false);
 
     // Maybe change this not to make a reload and only update the relevant
@@ -881,16 +784,16 @@ function start_service_discovery(host_name, folder_path, discovery_options, tran
 {
     // When we receive no response for 2 seconds, then show the updating message
     g_show_updating_timer = setTimeout(function() {
-        show_async_progress_info("Updating...");
+        cmk.async_progress.show_info("Updating...");
     }, 2000);
 
     lock_service_discovery_controls(true);
-    monitor_async_progress({
+    cmk.async_progress.monitor({
         "update_url" : "ajax_service_discovery.py",
         "host_name": host_name,
         "folder_path": folder_path,
         "transid": transid,
-        "start_time" : time(),
+        "start_time" : cmk.utils.time(),
         "is_finished_function": is_service_discovery_finished,
         "update_function": update_service_discovery,
         "finish_function": finish_service_discovery,
@@ -940,9 +843,9 @@ function finish_service_discovery(response)
 {
     if (response.job_state == "exception"
         || response.job_state == "stopped") {
-        show_async_progress_error(response.message);
+        cmk.async_progress.show_error(response.message);
     } else {
-        //hide_async_progress_msg();
+        //cmk.async_progress.hide_msg();
     }
     lock_service_discovery_controls(false);
 }
@@ -953,9 +856,9 @@ function update_service_discovery(handler_data, response) {
     }
 
     if (response.message) {
-        show_async_progress_info(response.message);
+        cmk.async_progress.show_info(response.message);
     } else {
-        hide_async_progress_msg();
+        cmk.async_progress.hide_msg();
     }
 
     g_service_discovery_result = response.discovery_result;

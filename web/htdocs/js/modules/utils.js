@@ -271,3 +271,7 @@ export function makeuri(addvars, url) {
     return base + "?" + params.join("&");
 }
 
+// Returns timestamp in seconds incl. subseconds as decimal
+export function time() {
+    return (new Date()).getTime() / 1000;
+}

@@ -766,3 +766,218 @@ function unhide_context_buttons(oA)
     }
     oA.parentNode.style.display = "none";
 }
+
+/* Switch filter, commands and painter options */
+function view_toggle_form(button, form_id) {
+    var display = "none";
+    var down    = "up";
+
+    var form = document.getElementById(form_id);
+    if (form && form.style.display == "none") {
+        display = "";
+        down    = "down";
+    }
+
+    // Close all other view forms
+    var alldivs = document.getElementsByClassName('view_form');
+    for (var i=0; i<alldivs.length; i++) {
+        if (alldivs[i] != form) {
+            alldivs[i].style.display = "none";
+        }
+    }
+
+    if (form)
+        form.style.display = display;
+
+    // Make other buttons inactive
+    var allbuttons = document.getElementsByClassName('togglebutton');
+    for (var i=0; i<allbuttons.length; i++) {
+        var b = allbuttons[i];
+        if (b != button && !has_class(b, "empth") && !has_class(b, "checkbox")) {
+            remove_class(b, "down");
+            add_class(b, "up");
+        }
+    }
+    remove_class(button, "down");
+    remove_class(button, "up");
+    add_class(button, down);
+}
+
+function wheel_event_name()
+{
+    if ("onwheel" in window)
+        return "wheel";
+    else if (cmk.utils.browser.is_firefox())
+        return "DOMMouseScroll";
+    else
+        return "mousewheel";
+}
+
+function wheel_event_delta(event)
+{
+    return event.deltaY ? event.deltaY
+                        : event.detail ? event.detail * (-120)
+                                       : event.wheelDelta;
+}
+
+function init_optiondial(id)
+{
+    var container = document.getElementById(id);
+    make_unselectable(container);
+    cmk.utils.add_event_handler(wheel_event_name(), optiondial_wheel, container);
+}
+
+var g_dial_direction = 1;
+var g_last_optiondial = null;
+function optiondial_wheel(event) {
+    event = event || window.event;
+    var delta = wheel_event_delta(event);
+
+    // allow updates every 100ms
+    if (g_last_optiondial > cmk.utils.time() - 0.1) {
+        return prevent_default_events(event);
+    }
+    g_last_optiondial = cmk.utils.time();
+
+    var container = cmk.utils.get_target(event);
+    if (event.nodeType == 3) // defeat Safari bug
+        container = container.parentNode;
+    while (!container.className)
+        container = container.parentNode;
+
+    if (delta > 0)
+        g_dial_direction = -1;
+    container.onclick(event);
+    g_dial_direction = 1;
+
+    return prevent_default_events(event);
+}
+
+// used for refresh und num_columns
+function view_dial_option(oDiv, viewname, option, choices) {
+    // prevent double click from select text
+    var new_choice = choices[0]; // in case not contained in choices
+    for (var c = 0, choice = null, val = null; c < choices.length; c++) {
+        choice = choices[c];
+        val = choice[0];
+        if (has_class(oDiv, "val_" + val)) {
+            new_choice = choices[(c + choices.length + g_dial_direction) % choices.length];
+            change_class(oDiv, "val_" + val, "val_" + new_choice[0]);
+            break;
+        }
+    }
+
+    // Start animation
+    var step = 0;
+    var speed = 10;
+
+    for (var way = 0; way <= 10; way +=1) {
+        step += speed;
+        setTimeout(function(option, text, way, direction) {
+            return function() {
+                turn_dial(option, text, way, direction);
+            };
+        }(option, "", way, g_dial_direction), step);
+    }
+
+    for (var way = -10; way <= 0; way +=1) {
+        step += speed;
+        setTimeout(function(option, text, way, direction) {
+            return function() {
+                turn_dial(option, text, way, direction);
+            };
+        }(option, new_choice[1], way, g_dial_direction), step);
+    }
+
+    var url = "ajax_set_viewoption.py?view_name=" + viewname +
+              "&option=" + option + "&value=" + new_choice[0];
+    call_ajax(url, {
+        method           : "GET",
+        response_handler : function(handler_data, response_body) {
+            if (handler_data.option == "refresh")
+                set_reload(handler_data.new_value);
+            else
+                cmk.utils.schedule_reload('', 400.0);
+        },
+        handler_data     : {
+            new_value : new_choice[0],
+            option    : option
+        }
+    });
+}
+
+// way ranges from -10 to 10 means centered (normal place)
+function turn_dial(option, text, way, direction)
+{
+    var oDiv = document.getElementById("optiondial_" + option).getElementsByTagName("DIV")[0];
+    if (text && oDiv.innerHTML != text)
+        oDiv.innerHTML = text;
+    oDiv.style.top = (way * 1.3 * direction) + "px";
+}
+
+function make_unselectable(elem)
+{
+    elem.onselectstart = function() { return false; };
+    elem.style.MozUserSelect = "none";
+    elem.style.KhtmlUserSelect = "none";
+    elem.unselectable = "on";
+}
+
+// TODO: Is gColumnSwitchTimeout and view_switch_option needed at all?
+// TODO: Where is handleReload defined?
+/* Switch number of view columns, refresh and checkboxes. If the
+   choices are missing, we do a binary toggle. */
+gColumnSwitchTimeout = null;
+function view_switch_option(oDiv, viewname, option, choices) {
+    var new_value;
+    if (has_class(oDiv, "down")) {
+        new_value = false;
+        change_class(oDiv, "down", "up");
+    }
+    else {
+        new_value = true;
+        change_class(oDiv, "up", "down");
+    }
+    var new_choice = [ new_value, '' ];
+
+    var url = "ajax_set_viewoption.py?view_name=" + viewname +
+               "&option=" + option + "&value=" + new_choice[0];
+
+    call_ajax(url, {
+        method           : "GET",
+        response_handler : function(handler_data, response_body) {
+            if (handler_data.option == "refresh") {
+                set_reload(handler_data.new_value);
+            } else if (handler_data.option == "show_checkboxes") {
+                cmk.selection.set_selection_enabled(handler_data.new_value);
+            }
+
+            handleReload('');
+        },
+        handler_data     : {
+            new_value : new_value,
+            option    : option
+        }
+    });
+
+}
+
+var g_hosttag_groups = {};
+
+function host_tag_update_value(prefix, grp) {
+    var value_select = document.getElementById(prefix + '_val');
+
+    // Remove all options
+    value_select.options.length = 0;
+
+    if(grp === '')
+        return; // skip over when empty group selected
+
+    var opt = null;
+    for (var i = 0, len = g_hosttag_groups[grp].length; i < len; i++) {
+        opt = document.createElement('option');
+        opt.value = g_hosttag_groups[grp][i][0];
+        opt.text  = g_hosttag_groups[grp][i][1];
+        value_select.appendChild(opt);
+    }
+}

@@ -730,7 +730,7 @@ class IPv4Address(IPNetwork):
 
 class TextAsciiAutocomplete(TextAscii):
     def __init__(self, completion_ident, completion_params, **kwargs):
-        kwargs["onkeyup"] = "vs_autocomplete(this, %s, %s, %s);%s" % \
+        kwargs["onkeyup"] = "cmk.valuespecs.autocomplete(this, %s, %s, %s);%s" % \
                             (json.dumps(completion_ident),
                              json.dumps(completion_params),
                              json.dumps(kwargs.get("onkeyup")),
@@ -1311,7 +1311,7 @@ class ListOf(ValueSpec):
 
         if self._sort_by is not None:
             html.jsbutton(
-                varprefix + "_sort", _("Sort"), "valuespec_listof_sort(%s, %s, %s)" %
+                varprefix + "_sort", _("Sort"), "cmk.valuespecs.listof_sort(%s, %s, %s)" %
                 (json.dumps(varprefix), json.dumps(self._magic), json.dumps(self._sort_by)))
 
     def _show_reference_entry(self, varprefix, index, value):
@@ -1388,7 +1388,7 @@ class ListOf(ValueSpec):
         if self._movable:
             html.element_dragger_js(
                 "tr",
-                drop_handler="vs_listof_drop_handler",
+                drop_handler="cmk.valuespecs.listof_drop_handler",
                 handler_args={
                     "cur_index": index,
                     "varprefix": varprefix
@@ -1400,7 +1400,7 @@ class ListOf(ValueSpec):
         html.close_td()
 
     def _del_button(self, vp, nr):
-        js = "valuespec_listof_delete(%s, %s)" % (json.dumps(vp), json.dumps(nr))
+        js = "cmk.valuespecs.listof_delete(%s, %s)" % (json.dumps(vp), json.dumps(nr))
         html.icon_button("#", self._del_label, "delete", onclick=js)
 
     def canonical_value(self):
@@ -1467,7 +1467,7 @@ class ListOfMultiple(ValueSpec):
         self._delete_style = kwargs.get("delete_style", "default")  # or "filter"
 
     def del_button(self, varprefix, ident):
-        js = "vs_listofmultiple_del('%s', '%s')" % (varprefix, ident)
+        js = "cmk.valuespecs.listofmultiple_del('%s', '%s')" % (varprefix, ident)
         html.icon_button("#", self._del_label, "delete", onclick=js)
 
     def render_input(self, varprefix, value):
@@ -1528,9 +1528,9 @@ class ListOfMultiple(ValueSpec):
             choices,
             style="width: %dex" % self._size if self._size is not None else None,
             class_="vlof_filter" if self._delete_style == "filter" else None)
-        html.javascript('vs_listofmultiple_init(\'%s\');' % varprefix)
+        html.javascript('cmk.valuespecs.listofmultiple_init(\'%s\');' % varprefix)
         html.jsbutton(varprefix + '_add', self._add_label,
-                      "vs_listofmultiple_add('%s')" % varprefix)
+                      "cmk.valuespecs.listofmultiple_add('%s')" % varprefix)
 
     def canonical_value(self):
         return {}
@@ -4479,8 +4479,6 @@ class Color(ValueSpec):
         if not value:
             value = "#FFFFFF"
 
-        html.javascript_file("js/colorpicker.js")
-
         # Holds the actual value for form submission
         html.hidden_field(varprefix + "_value", value or '', varprefix + "_value", add_var=True)
 
@@ -4500,15 +4498,8 @@ class Color(ValueSpec):
                 (_("Hex color:"), varprefix)
 
         menu_content += "<script language=\"javascript\">" \
-            "vs_color_pickers[\"%s\"] = ColorPicker(document.getElementById(\"%s_picker\")," \
-            "            function(hex, hsv, rgb) { vs_update_color_picker(\"%s\", hex, false); }" \
-            ");" \
-            "document.getElementById(\"%s_input\").oninput = function() { " \
-            "    vs_update_color_picker(\"%s\", this.value, true); " \
-            "};" \
-            "vs_update_color_picker(\"%s\", \"%s\", true);" \
-            "</script>" % \
-                (varprefix, varprefix, varprefix, varprefix, varprefix, varprefix, value)
+            "cmk.valuespecs.add_color_picker(%s, %s)" \
+            "</script>" % (json.dumps(varprefix), json.dumps(value))
 
         html.popup_trigger(
             indicator,

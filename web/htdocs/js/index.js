@@ -49,7 +49,6 @@ import * as valuespecs from "valuespecs";
 import * as dashboard from "dashboard";
 
 require("script-loader!./checkmk.js");
-require("colorpicker");
 
 // TODO: Find a better solution for this CEE specific include
 try {

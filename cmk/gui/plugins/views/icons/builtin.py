@@ -349,7 +349,7 @@ def pnp_icon(row, what):
     return html.render_a(
         content=html.render_icon('pnp', ''),
         href=url,
-        onmouseout="hide_hover_menu()",
+        onmouseout="cmk.hover.hide()",
         onmouseover="show_hover_graphs(event, %s, %s, %s, %s, %s);" % (
             json.dumps(row['site']),
             json.dumps(row["host_name"]),

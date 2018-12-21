@@ -443,7 +443,7 @@ function show_hover_graphs(event, site_id, host_name, service_description, pnp_p
 {
     event = event || window.event;
 
-    show_hover_menu(event, "<div class=\"message\">Loading...</div>");
+    cmk.hover.show(event, "<div class=\"message\">Loading...</div>");
 
     if (force_pnp_graphing)
         show_pnp_hover_graphs(pnp_popup_url);
@@ -477,17 +477,13 @@ function show_pnp_hover_graphs(url)
 
 function handle_check_mk_hover_graphs_response(_unused, code)
 {
-    if (!g_hover_menu)
-        return;
-
     if (code.indexOf('pnp4nagios') !== -1) {
         // fallback to pnp graph handling (received an URL with the previous ajax call)
         show_pnp_hover_graphs(code);
         return;
     }
 
-    g_hover_menu.innerHTML = code;
-    executeJSbyObject(g_hover_menu);
+    cmk.hover.update_content(code);
 }
 
 
@@ -506,14 +502,14 @@ function handle_pnp_hover_graphs_response(_unused, code)
              + 'authentication.</div>';
     }
 
-    g_hover_menu.innerHTML = code;
-    executeJSbyObject(g_hover_menu);
+    cmk.hover.update_content(code);
 }
 
 
 function handle_hover_graphs_error(_unused, status_code, error_msg)
 {
-    g_hover_menu.innerHTML = '<div class=error>Update failed (' + status_code + ')</div>';
+    var code = '<div class=error>Update failed (' + status_code + ')</div>';
+    cmk.hover.update_content(code);
 }
 
 
@@ -2252,130 +2248,4 @@ function graph_export(page)
         "data_range": popup_data[2]["data_range"],
     };
     location.href = page + ".py?request=" + encodeURIComponent(JSON.stringify(request));
-}
-
-//#.
-//#   .-HoverMenu----------------------------------------------------------.
-//#   |          _   _                     __  __                          |
-//#   |         | | | | _____   _____ _ __|  \/  | ___ _ __  _   _         |
-//#   |         | |_| |/ _ \ \ / / _ \ '__| |\/| |/ _ \ '_ \| | | |        |
-//#   |         |  _  | (_) \ V /  __/ |  | |  | |  __/ | | | |_| |        |
-//#   |         |_| |_|\___/ \_/ \___|_|  |_|  |_|\___|_| |_|\__,_|        |
-//#   |                                                                    |
-//#   +--------------------------------------------------------------------+
-//#   | Mouseover hover menu, used for performance graph popups            |
-//#   '--------------------------------------------------------------------'
-
-var g_hover_menu = null;
-
-function hide_hover_menu()
-{
-    if (!g_hover_menu) {
-        return;
-    }
-
-    var hover_menu = g_hover_menu;
-    g_hover_menu = null;
-    hover_menu.parentNode.removeChild(hover_menu);
-}
-
-function show_hover_menu(event, code)
-{
-    event = event || window.event;
-    add_hover_menu();
-    update_hover_menu_content(code);
-    update_hover_menu_position(event);
-}
-
-function add_hover_menu()
-{
-    if (g_hover_menu) {
-        return;
-    }
-
-    g_hover_menu = document.createElement('div');
-    g_hover_menu.setAttribute('id', 'hover_menu');
-    document.body.appendChild(g_hover_menu);
-}
-
-function update_hover_menu_content(code)
-{
-    if (!g_hover_menu) {
-        return;
-    }
-
-    g_hover_menu.innerHTML = code;
-    executeJSbyObject(g_hover_menu);
-}
-
-function update_hover_menu_position(event)
-{
-    if (!g_hover_menu) {
-        return;
-    }
-
-    var hoverSpacer = 5;
-
-    // document.body.scrollTop does not work in IE
-    var scrollTop = document.body.scrollTop ? document.body.scrollTop :
-                                              document.documentElement.scrollTop;
-    var scrollLeft = document.body.scrollLeft ? document.body.scrollLeft :
-                                                document.documentElement.scrollLeft;
-
-    var x = event.clientX;
-    var y = event.clientY;
-
-    // hide the menu first to avoid an "up-then-over" visual effect
-    g_hover_menu.style.display = 'block';
-    g_hover_menu.style.left = (x + hoverSpacer + scrollLeft) + 'px';
-    g_hover_menu.style.top = (y + hoverSpacer + scrollTop) + 'px';
-
-    /**
-     * Check if the menu is "in screen" or too large.
-     * If there is some need for reposition try to reposition the hover menu
-     */
-
-    var hoverPosAndSizeOk = true;
-    if (!hover_menu_in_screen(g_hover_menu, hoverSpacer)) {
-        hoverPosAndSizeOk = false;
-    }
-
-    if (!hoverPosAndSizeOk) {
-        g_hover_menu.style.left = (x - hoverSpacer - g_hover_menu.clientWidth) + 'px';
-
-        if (hover_menu_in_screen(g_hover_menu, hoverSpacer)) {
-            hoverPosAndSizeOk = true;
-        }
-    }
-
-    // And if the hover menu is still not on the screen move it to the left edge
-    // and fill the whole screen width
-    if (!hover_menu_in_screen(g_hover_menu, hoverSpacer)) {
-        g_hover_menu.style.left = hoverSpacer + scrollLeft + 'px';
-        g_hover_menu.style.width = cmk.utils.page_width() - (2*hoverSpacer) + 'px';
-    }
-
-    var hoverTop = parseInt(g_hover_menu.style.top.replace('px', ''));
-    // Only move the menu to the top when the new top will not be
-    // out of sight
-    if (hoverTop +g_hover_menu.clientHeight > cmk.utils.page_height() && hoverTop -g_hover_menu.clientHeight >= 0) {
-        g_hover_menu.style.top = hoverTop -g_hover_menu.clientHeight - hoverSpacer + 'px';
-    }
-}
-
-function hover_menu_in_screen(hoverMenu, hoverSpacer)
-{
-    var hoverLeft = parseInt(hoverMenu.style.left.replace('px', ''));
-    var scrollLeft = document.body.scrollLeft ? document.body.scrollLeft :
-                                                document.documentElement.scrollLeft;
-
-    if(hoverLeft + hoverMenu.clientWidth >= cmk.utils.page_width() - scrollLeft) {
-        return false;
-    }
-
-    if(hoverLeft - hoverSpacer < 0) {
-        return false;
-    }
-
-    return true;
 }

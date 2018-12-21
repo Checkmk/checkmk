@@ -37,6 +37,7 @@ import * as help from "help";
 import * as availability from "availability";
 import * as sla from "sla";
 import * as bi from "bi";
+import * as crash_reporting from "crash_reporting";
 import * as dashboard from "dashboard";
 
 require("script-loader!./checkmk.js");
@@ -70,6 +71,7 @@ export default {
         availability: availability,
         sla: sla,
         bi: bi,
+        crash_reporting: crash_reporting,
         dashboard: dashboard
     },
     // TODO: Compatibility for not yet modularized JS code

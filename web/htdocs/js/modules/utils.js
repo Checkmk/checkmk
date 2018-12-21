@@ -22,6 +22,9 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
+import * as ajax from "ajax";
+import * as selection from "selection";
+
 export const browser = {
     agent: navigator.userAgent.toLowerCase(),
     is_opera: function() { return this.agent.indexOf("opera") != -1; },
@@ -274,4 +277,215 @@ export function makeuri(addvars, url) {
 // Returns timestamp in seconds incl. subseconds as decimal
 export function time() {
     return (new Date()).getTime() / 1000;
+}
+
+var g_sidebar_reload_timer = null;
+
+// reload sidebar, but preserve quicksearch field value and focus
+export function reload_sidebar()
+{
+    if (!parent || !parent.frames[0]) {
+        return;
+    }
+
+    var val = "";
+    var focused = false;
+    var field = parent.frames[0].document.getElementById("mk_side_search_field");
+    if (field) {
+        val = field.value;
+        focused = parent.frames[0].document.activeElement == field;
+    }
+
+    parent.frames[0].document.reloading = 1;
+    parent.frames[0].document.location.reload();
+
+    if (!field) {
+        return;
+    }
+
+    g_sidebar_reload_timer = setInterval(function (value, has_focus) {
+        return function() {
+            if (!parent.frames[0].document.reloading
+                && parent.frames[0].document.readyState === "complete") {
+                var field = parent.frames[0].document.getElementById("mk_side_search_field");
+                if (field) {
+                    field.value = value;
+                    if (has_focus) {
+                        field.focus();
+
+                        // Move caret to end
+                        if (field.setSelectionRange !== undefined)
+                            field.setSelectionRange(value.length, value.length);
+                    }
+                }
+
+                clearInterval(g_sidebar_reload_timer);
+                g_sidebar_reload_timer = null;
+            }
+        };
+    }(val, focused), 50);
+
+    field = null;
+}
+
+//#.
+//#   .-Page Reload--------------------------------------------------------.
+//#   |        ____                    ____      _                 _       |
+//#   |       |  _ \ __ _  __ _  ___  |  _ \ ___| | ___   __ _  __| |      |
+//#   |       | |_) / _` |/ _` |/ _ \ | |_) / _ \ |/ _ \ / _` |/ _` |      |
+//#   |       |  __/ (_| | (_| |  __/ |  _ <  __/ | (_) | (_| | (_| |      |
+//#   |       |_|   \__,_|\__, |\___| |_| \_\___|_|\___/ \__,_|\__,_|      |
+//#   |                   |___/                                            |
+//#   +--------------------------------------------------------------------+
+//#   |                                                                    |
+//#   '--------------------------------------------------------------------'
+
+// Stores the reload timer object (of views and also dashboards)
+var g_reload_timer = null;
+// This stores the refresh time of the page (But never 0)
+var g_reload_interval = 0; // seconds
+// This flag tells the handle_content_reload_error() function to add an
+// error message about outdated data to the content container or not.
+// The error message is only being added on the first error.
+var g_reload_error = false;
+
+
+// Issues the timer for the next page reload. If some timer is already
+// running, this timer is terminated and replaced by the new one.
+export function schedule_reload(url, milisecs)
+{
+    if (typeof url === "undefined")
+        url = ""; // reload current page (or just the content)
+
+    if (typeof milisecs === "undefined")
+        milisecs = parseFloat(g_reload_interval) * 1000; // use default reload interval
+
+    stop_reload_timer();
+
+    g_reload_timer = setTimeout(function() {
+        do_reload(url);
+    }, milisecs);
+}
+
+
+export function stop_reload_timer()
+{
+    if (g_reload_timer) {
+        clearTimeout(g_reload_timer);
+        g_reload_timer = null;
+    }
+}
+
+function do_reload(url)
+{
+    // Reschedule the reload in case the browser window / tab is not visible
+    // for the user. Retry after short time.
+    if (!is_window_active()) {
+        setTimeout(function(){ do_reload(url); }, 250);
+        return;
+    }
+
+    // Nicht mehr die ganze Seite neu laden, wenn es ein DIV "data_container" gibt.
+    // In dem Fall wird die aktuelle URL aus "window.location.href" geholt, für den Refresh
+    // modifiziert, der Inhalt neu geholt und in das DIV geschrieben.
+    if (!document.getElementById("data_container") || url !== "") {
+        if (url === "")
+            window.location.reload(false);
+        else
+            window.location.href = url;
+    }
+    else {
+        // Enforce specific display_options to get only the content data.
+        // All options in "opts" will be forced. Existing upper-case options will be switched.
+        var display_options = get_url_param("display_options");
+        // Removed "w" to reflect original rendering mechanism during reload
+        // For example show the "Your query produced more than 1000 results." message
+        // in views even during reload.
+        var opts = [ "h", "t", "b", "f", "c", "o", "d", "e", "r", "u" ];
+        var i;
+        for (i = 0; i < opts.length; i++) {
+            if (display_options.indexOf(opts[i].toUpperCase()) > -1)
+                display_options = display_options.replace(opts[i].toUpperCase(), opts[i]);
+            else
+                display_options += opts[i];
+        }
+
+        // Add optional display_options if not defined in original display_options
+        opts = [ "w" ];
+        for (i = 0; i < opts.length; i++) {
+            if (display_options.indexOf(opts[i].toUpperCase()) == -1)
+                display_options += opts[i];
+        }
+
+        var params = {"_display_options": display_options};
+        var real_display_options = get_url_param("display_options");
+        if (real_display_options !== "")
+            params["display_options"] = real_display_options;
+
+        params["_do_actions"] = get_url_param("_do_actions");
+
+        // For dashlet reloads add a parameter to mark this request as reload
+        if (window.location.href.indexOf("dashboard_dashlet.py") != -1)
+            params["_reload"] = "1";
+
+        if (selection.is_selection_enabled())
+            params["selection"] = selection.get_selection_id();
+
+        ajax.call_ajax(makeuri(params), {
+            response_handler : handle_content_reload,
+            error_handler    : handle_content_reload_error,
+            method           : "GET"
+        });
+    }
+}
+
+function handle_content_reload(_unused, code) {
+    g_reload_error = false;
+    var o = document.getElementById("data_container");
+    o.innerHTML = code;
+    execute_javascript_by_object(o);
+
+    // Update the header time
+    update_header_timer();
+
+    schedule_reload();
+}
+
+
+function handle_content_reload_error(_unused, status_code)
+{
+    if (!g_reload_error) {
+        var o = document.getElementById("data_container");
+        o.innerHTML = "<div class=error>Update failed (" + status_code
+                      + "). The shown data might be outdated</div>" + o.innerHTML;
+        g_reload_error = true;
+    }
+
+    // Continue update after the error
+    schedule_reload();
+}
+
+export function set_reload_interval(secs) {
+    update_foot_refresh(secs);
+    if (secs !== 0) {
+        g_reload_interval = secs;
+    }
+}
+
+function update_foot_refresh(secs)
+{
+    var o = document.getElementById("foot_refresh");
+    var o2 = document.getElementById("foot_refresh_time");
+    if (!o) {
+        return;
+    }
+
+    if(secs == 0) {
+        o.style.display = "none";
+    } else {
+        o.style.display = "inline-block";
+        if(o2) {
+            o2.innerHTML = secs;
+        }
+    }
 }

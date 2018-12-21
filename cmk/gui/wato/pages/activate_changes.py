@@ -244,9 +244,10 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
         html.jsbutton(
             "activate_affected",
             _("Activate affected"),
-            "activate_changes(\"affected\")",
+            "cmk.activation.activate_changes(\"affected\")",
             cssclass="hot")
-        html.jsbutton("activate_selected", _("Activate selected"), "activate_changes(\"selected\")")
+        html.jsbutton("activate_selected", _("Activate selected"),
+                      "cmk.activation.activate_changes(\"selected\")")
 
         html.hidden_fields()
         html.end_form()
@@ -376,7 +377,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
                         cssclass=["activate_site"],
                         title=_("This site is not update and needs a replication. Start it now."),
                         icon="need_replicate",
-                        onclick="activate_changes(\"site\", \"%s\")" % site_id)
+                        onclick="cmk.activation.activate_changes(\"site\", \"%s\")" % site_id)
 
                 if can_activate_all and need_restart:
                     html.icon_button(
@@ -386,7 +387,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
                         title=_(
                             "This site needs a restart for activating the changes. Start it now."),
                         icon="need_restart",
-                        onclick="activate_changes(\"site\", \"%s\")" % site_id)
+                        onclick="cmk.activation.activate_changes(\"site\", \"%s\")" % site_id)
 
                 if can_activate_all and not need_action:
                     html.icon(_("This site is up-to-date."), "siteuptodate")

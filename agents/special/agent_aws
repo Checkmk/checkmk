@@ -579,14 +579,29 @@ class EBSSummary(AWSSection):
         return 300
 
     def _get_raw_result(self):
-        return self._client.describe_volumes()
+        response = self._client.describe_volumes()
+        try:
+            volumes = {r['VolumeId']: r for r in response['Volumes']}
+        except KeyError, e:
+            logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
+            volumes = []
+
+        response = self._client.describe_volume_status()
+        try:
+            volume_states = {r['VolumeId']: r for r in response['VolumeStatuses']}
+        except KeyError, e:
+            logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
+            volume_states = []
+
+        raw_result = []
+        for volume_id in set(volumes.keys()).union(set(volume_states.keys())):
+            volume = volumes.get(volume_id, {})
+            volume.update(volume_states.get(volume_id, {}))
+            raw_result.append(volume)
+        return raw_result
 
     def _extract_content_from(self, raw_result):
-        try:
-            return raw_result['Volumes']
-        except KeyError, e:
-            logging.info("%s: KeyError %s; Available are %s", self.name, e, raw_result.keys())
-            return []
+        return raw_result
 
     def _format_content(self, content):
         instance_ids = self._received_results.get('ec2_summary', {})\
@@ -598,47 +613,6 @@ class EBSSummary(AWSSection):
                 instance_name = instance_ids.get(attachment_id, attachment_id)
                 content_by_piggyback_hosts.setdefault(instance_name, [])\
                                           .append(row)
-        return [
-            AWSSectionResult(piggyback_hostname, rows)
-            for piggyback_hostname, rows in content_by_piggyback_hosts.iteritems()
-        ]
-
-
-class EBSHealth(AWSSection):
-    @property
-    def name(self):
-        return "ebs_health"
-
-    @property
-    def interval(self):
-        return 300
-
-    def _get_raw_result(self):
-        volumes = []
-        for entry in self._received_results.get('ebs_summary', []):
-            volumes.append(entry['VolumeId'])
-        return self._client.describe_volume_status(VolumeIds=volumes)
-
-    def _extract_content_from(self, raw_result):
-        content = {}
-        for row in raw_result.get('VolumeStatuses', []):
-            try:
-                content.setdefault(row['VolumeId'], row['VolumeStatus'])
-            except KeyError, e:
-                logging.info("%s: KeyError %s; Available are %s", self.name, e, row.keys())
-        return content
-
-    def _format_content(self, content):
-        instance_ids = self._received_results.get('ec2_summary', {})\
-                                             .get('mapping', {})
-        content_by_piggyback_hosts = {}
-        for row in self._received_results.get('ebs_summary', []):
-            vol_id = row['VolumeId']
-            for attachment in row['Attachments']:
-                attachment_id = attachment['InstanceId']
-                instance_name = instance_ids.get(attachment_id, attachment_id)
-                content_by_piggyback_hosts.setdefault(instance_name, [])\
-                                          .append({vol_id: content[vol_id]})
         return [
             AWSSectionResult(piggyback_hostname, rows)
             for piggyback_hostname, rows in content_by_piggyback_hosts.iteritems()
@@ -851,17 +825,14 @@ class AWSSections(object):
         ec2 = EC2(cloudwatch_client)
         elb_health = ELBHealth(elb_client)
         elb = ELB(cloudwatch_client)
-        ebs_health = EBSHealth(ec2_client)
         ebs = EBS(cloudwatch_client)
 
         #---register sections to distributors-------------------------------
         ec2_summary_distributor.add(ec2)
         ec2_summary_distributor.add(ebs_summary)
-        ec2_summary_distributor.add(ebs_health)
         ec2_summary_distributor.add(ebs)
         elb_summary_distributor.add(elb_health)
         elb_summary_distributor.add(elb)
-        ebs_summary_distributor.add(ebs_health)
         ebs_summary_distributor.add(ebs)
 
         #---register sections with distributors for execution---------------
@@ -874,7 +845,6 @@ class AWSSections(object):
         self._sections.append(s3)
         self._sections.append(elb_health)
         self._sections.append(elb)
-        self._sections.append(ebs_health)
         self._sections.append(ebs)
 
     def _init_client(self, client_key):

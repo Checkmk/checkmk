@@ -99,6 +99,14 @@ function sort_select(select, cmp_func) {
     return;
 }
 
+function update_bulk_moveto(val) {
+    var fields = document.getElementsByClassName("bulk_moveto");
+    for(var i = 0; i < fields.length; i++)
+        for(var a = 0; a < fields[i].options.length; a++)
+            if(fields[i].options[a].value == val)
+                fields[i].options[a].selected = true;
+}
+
 
 //#.
 //#   .-Events-------------------------------------------------------------.

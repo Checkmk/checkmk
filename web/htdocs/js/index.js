@@ -43,11 +43,11 @@ import * as hover from "hover";
 import * as service_discovery from "service_discovery";
 import * as host_diagnose from "host_diagnose";
 import * as profile_replication from "profile_replication";
+import * as wato from "wato";
 import * as dashboard from "dashboard";
 
 require("script-loader!./checkmk.js");
 require("colorpicker");
-require("script-loader!./wato.js");
 
 // TODO: Find a better solution for this CEE specific include
 try {
@@ -82,6 +82,7 @@ export default {
         service_discovery: service_discovery,
         host_diagnose: host_diagnose,
         profile_replication: profile_replication,
+        wato: wato,
         dashboard: dashboard
     },
     // TODO: Compatibility for not yet modularized JS code

@@ -490,6 +490,14 @@ function update_foot_refresh(secs)
     }
 }
 
+export function toggle_folding(img, to_be_opened) {
+    if (to_be_opened) {
+        change_class(img, "closed", "open");
+    } else {
+        change_class(img, "open", "closed");
+    }
+}
+
 // Relative to viewport
 export function mouse_position(event) {
     return {

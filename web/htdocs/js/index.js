@@ -36,6 +36,7 @@ import * as element_dragging from "element_dragging";
 import * as help from "help";
 import * as availability from "availability";
 import * as sla from "sla";
+import * as bi from "bi";
 import * as dashboard from "dashboard";
 
 require("script-loader!./checkmk.js");
@@ -68,6 +69,7 @@ export default {
         help: help,
         availability: availability,
         sla: sla,
+        bi: bi,
         dashboard: dashboard
     },
     // TODO: Compatibility for not yet modularized JS code

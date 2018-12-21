@@ -1834,7 +1834,7 @@ class html(HTMLGenerator):
             _("Toggle context help texts"),
             "help",
             id_="helpbutton",
-            onclick="toggle_help()",
+            onclick="cmk.help.toggle()",
             style="display:none",
             cssclass=cssclass)
         self.open_a(href="https://mathias-kettner.com", class_="head_logo")
@@ -1903,7 +1903,7 @@ class html(HTMLGenerator):
 
     def body_end(self):
         if self.have_help:
-            self.javascript("enable_help();")
+            self.javascript("cmk.help.enable();")
         if self.final_javascript_code:
             self.javascript(self.final_javascript_code)
         self.javascript("cmk.visibility_detection.initialize();")

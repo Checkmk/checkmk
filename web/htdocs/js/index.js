@@ -33,6 +33,7 @@ import * as async_progress from "async_progress";
 import * as activation from "activation";
 import * as selection from "selection";
 import * as element_dragging from "element_dragging";
+import * as help from "help";
 import * as dashboard from "dashboard";
 
 require("script-loader!./checkmk.js");
@@ -62,6 +63,7 @@ export default {
         activation: activation,
         selection: selection,
         element_dragging: element_dragging,
+        help: help,
         dashboard: dashboard
     },
     // TODO: Compatibility for not yet modularized JS code

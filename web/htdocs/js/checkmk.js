@@ -1808,66 +1808,6 @@ function vs_update_color_picker(varprefix, hex, update_picker) {
         vs_color_pickers[varprefix].setHex(hex);
 }
 
-//#.
-//#   .-Help Toggle--------------------------------------------------------.
-//#   |          _   _      _         _____                 _              |
-//#   |         | | | | ___| |_ __   |_   _|__   __ _  __ _| | ___         |
-//#   |         | |_| |/ _ \ | '_ \    | |/ _ \ / _` |/ _` | |/ _ \        |
-//#   |         |  _  |  __/ | |_) |   | | (_) | (_| | (_| | |  __/        |
-//#   |         |_| |_|\___|_| .__/    |_|\___/ \__, |\__, |_|\___|        |
-//#   |                      |_|                |___/ |___/                |
-//#   +--------------------------------------------------------------------+
-//#   |                                                                    |
-//#   '--------------------------------------------------------------------'
-
-function enable_help()
-{
-    var help = document.getElementById('helpbutton');
-    help.style.display = "inline-block";
-}
-
-function toggle_help()
-{
-    var help = document.getElementById('helpbutton');
-    if (has_class(help, "active")) {
-        remove_class(help, "active");
-        add_class(help, "passive");
-        switch_help(false);
-    } else {
-        add_class(help, "active");
-        remove_class(help, "passive");
-        switch_help(true);
-    }
-}
-
-function switch_help(how)
-{
-    // recursive scan for all div class=help elements
-    var helpdivs = document.getElementsByClassName('help');
-    for (var i=0; i<helpdivs.length; i++) {
-        helpdivs[i].style.display = how ? "block" : "none";
-    }
-
-    // small hack for wato ruleset lists, toggle the "float" and "nofloat"
-    // classes on those objects to make the layout possible
-    var rulesetdivs = document.getElementsByClassName('ruleset');
-    for (var i = 0; i < rulesetdivs.length; i++) {
-        if (how) {
-            if (has_class(rulesetdivs[i], 'float')) {
-                remove_class(rulesetdivs[i], 'float');
-                add_class(rulesetdivs[i], 'nofloat');
-            }
-        } else {
-            if (has_class(rulesetdivs[i], 'nofloat')) {
-                remove_class(rulesetdivs[i], 'nofloat');
-                add_class(rulesetdivs[i], 'float');
-            }
-        }
-    }
-
-    get_url("ajax_switch_help.py?enabled=" + (how ? "yes" : ""));
-}
-
 /* Switch filter, commands and painter options */
 function view_toggle_form(button, form_id) {
     var display = "none";

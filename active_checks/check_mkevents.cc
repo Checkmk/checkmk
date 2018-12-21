@@ -71,21 +71,25 @@ std::ostream &operator<<(std::ostream &os, const State &state) {
     exit(static_cast<int>(state));
 }
 
-    [[noreturn]] void ioError(const std::string &message) {
+[[noreturn]] void ioError(const std::string &message) {
     reply(State::unknown, message + " (" + strerror(errno) + ")");
 }
 
-[[noreturn]] void tcpError(const std::string &message, const std::string &addr,
-                           int port) {
-    ioError(message + " to event daemon via TCP " + addr + ":" +
-            std::to_string(port));
+[[noreturn]] void missingHeader(const std::string &header,
+                                const std::string &query,
+                                const std::stringstream &response) {
+    auto resp = response.str();
+    reply(State::unknown,
+          "Event console answered with incorrect header (missing " + header +
+              ")\nQuery was:\n" + query + "\nReceived " +
+              std::to_string(resp.size()) + " byte response:\n" + resp);
 }
 
 void usage() {
     reply(
         State::unknown,
         "Usage: check_mkevents [-s SOCKETPATH] [-H REMOTE:PORT] [-a] HOST [APPLICATION]\n"
-        " -a    do not take into account acknowledged events.\n"
+        " -a    do not take acknowledged events into account.\n"
         " HOST  may be a hostname, and IP address or hostname/IP-address.");
 }
 
@@ -107,8 +111,6 @@ int main(int argc, char **argv) {
     // Parse arguments
     char *host = nullptr;
     char *remote_host = nullptr;
-    char remote_hostipaddress[64];
-    int remote_port = 6558;
     char *application = nullptr;
     bool ignore_acknowledged = false;
     std::string unixsocket_path;
@@ -140,46 +142,36 @@ int main(int argc, char **argv) {
         usage();
     }
 
-    // Get omd environment
-    if (unixsocket_path.empty() && remote_host == nullptr) {
-        char *omd_path = getenv("OMD_ROOT");
-        if (omd_path == nullptr) {
-            reply(State::unknown,
-                  "OMD_ROOT is not set, no socket path is defined.");
-        }
-        unixsocket_path = std::string(omd_path) + "/tmp/run/mkeventd/status";
-    }
-
+    int sock;
     if (remote_host != nullptr) {
-        struct hostent *he;
-        struct in_addr **addr_list;
         char *remote_hostaddress = strtok(remote_host, ":");
-        if ((he = gethostbyname(remote_hostaddress)) == nullptr) {
+        struct hostent *he = gethostbyname(remote_hostaddress);
+        if (he == nullptr) {
             reply(State::unknown, "Unable to resolve remote host address: " +
                                       std::string(remote_hostaddress));
         }
-        addr_list = reinterpret_cast<struct in_addr **>(he->h_addr_list);
+
+        auto addr_list = reinterpret_cast<struct in_addr **>(he->h_addr_list);
+        char remote_hostipaddress[64];
         for (int i = 0; addr_list[i] != nullptr; i++) {
             strncpy(remote_hostipaddress, inet_ntoa(*addr_list[i]),
                     sizeof(remote_hostipaddress));
         }
 
         char *port_str = strtok(nullptr, ":");
-        if (port_str != nullptr) {
-            remote_port = atoi(port_str);
-        }
-    }
+        int remote_port = port_str != nullptr ? atoi(port_str) : 6558;
 
-    // Create socket and setup connection
-    int sock;
-    struct timeval tv;
-    if (remote_host != nullptr) {
         sock = socket(AF_INET, SOCK_STREAM, 0);
+        if (sock == -1) {
+            ioError("Cannot create client socket");
+        }
+
+        struct timeval tv;
         tv.tv_sec = 10;
-        setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(struct timeval));
-        // Right now, there is no send timeout..
-        // setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, (struct timeval *)&tv,
-        // sizeof(struct timeval));
+        if (setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &tv,
+                       sizeof(struct timeval)) == -1) {
+            ioError("Cannot set socket reveive timeout");
+        }
 
         struct sockaddr_in addr;
         memset(&addr, 0, sizeof(addr));
@@ -187,27 +179,46 @@ int main(int argc, char **argv) {
         inet_aton(remote_hostipaddress, &addr.sin_addr);
         addr.sin_port = htons(remote_port);
 
-        if (0 > connect(sock, reinterpret_cast<struct sockaddr *>(&addr),
-                        sizeof(struct sockaddr_in))) {
-            tcpError("Cannot connect", remote_hostipaddress, remote_port);
+        if (connect(sock, reinterpret_cast<struct sockaddr *>(&addr),
+                    sizeof(struct sockaddr_in)) == -1) {
+            ioError("Cannot connect to event console at " +
+                    std::string(remote_hostipaddress) + ":" +
+                    std::to_string(remote_port));
         }
+
     } else {
+        // Get omd environment
+        if (unixsocket_path.empty()) {
+            char *omd_path = getenv("OMD_ROOT");
+            if (omd_path == nullptr) {
+                reply(State::unknown,
+                      "OMD_ROOT is not set, no socket path is defined.");
+            }
+            unixsocket_path =
+                std::string(omd_path) + "/tmp/run/mkeventd/status";
+        }
+
         sock = socket(PF_UNIX, SOCK_STREAM, 0);
-        if (sock < 0) {
+        if (sock == -1) {
             ioError("Cannot create client socket");
         }
 
+        struct timeval tv;
         tv.tv_sec = 3;
-        setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(struct timeval));
+        if (setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &tv,
+                       sizeof(struct timeval)) == -1) {
+            ioError("Cannot set socket reveive timeout");
+        }
 
-        struct sockaddr_un sockaddr;
-        sockaddr.sun_family = AF_UNIX;
-        strncpy(sockaddr.sun_path, unixsocket_path.c_str(),
-                sizeof(sockaddr.sun_path) - 1);
-        sockaddr.sun_path[sizeof(sockaddr.sun_path) - 1] = '\0';
+        struct sockaddr_un addr;
+        memset(&addr, 0, sizeof(addr));
+        addr.sun_family = AF_UNIX;
+        strncpy(addr.sun_path, unixsocket_path.c_str(),
+                sizeof(addr.sun_path) - 1);
+        addr.sun_path[sizeof(addr.sun_path) - 1] = '\0';
 
-        if (0 > connect(sock, reinterpret_cast<struct sockaddr *>(&sockaddr),
-                        sizeof(sockaddr))) {
+        if (connect(sock, reinterpret_cast<struct sockaddr *>(&addr),
+                    sizeof(addr)) == -1) {
             ioError("Cannot connect to event daemon via UNIX socket " +
                     unixsocket_path);
         }
@@ -242,35 +253,40 @@ int main(int argc, char **argv) {
         while (bytes_to_write > 0) {
             ssize_t bytes_written = write(sock, buffer, bytes_to_write);
             if (bytes_written == -1) {
-                tcpError("Cannot send query", remote_hostipaddress,
-                         remote_port);
+                ioError("Cannot send query to event console");
             }
             buffer += bytes_written;
             bytes_to_write -= bytes_written;
         }
         if (shutdown(sock, SHUT_WR) == -1) {
-            tcpError("Cannot shutdown socket", remote_hostipaddress,
-                     remote_port);
+            ioError("Cannot shutdown socket to event console");
         }
     }
 
     // Get response
-    char response_chunk[4096];
-    memset(response_chunk, 0, sizeof(response_chunk));
     std::stringstream response_stream;
-    ssize_t read_length;
-    while (0 <
-           (read_length = read(sock, response_chunk, sizeof(response_chunk)))) {
-        // replace binary 0 in response with space
-        for (int i = 0; i < read_length; i++) {
-            if (response_chunk[i] == 0) {
-                response_chunk[i] = ' ';
-            }
-        }
-        response_stream << std::string(response_chunk, read_length);
+    while (true) {
+        char response_chunk[4096];
         memset(response_chunk, 0, sizeof(response_chunk));
+        ssize_t bytes_read = read(sock, response_chunk, sizeof(response_chunk));
+        if (bytes_read == -1) {
+            if (errno != EINTR) {
+                ioError("Error while reading response");
+            }
+        } else if (bytes_read == 0) {
+            break;
+        } else {
+            for (int i = 0; i < bytes_read; i++) {
+                if (response_chunk[i] == 0) {
+                    response_chunk[i] = ' ';
+                }
+            }
+            response_stream << std::string(response_chunk, bytes_read);
+        }
     }
-    close(sock);
+    if (close(sock) == -1) {
+        ioError("Error while closing connection");
+    }
 
     // Start processing data
     std::string line;
@@ -299,11 +315,14 @@ int main(int argc, char **argv) {
     }
 
     // Basic header validation
-    if (idx_event_phase == -1 || idx_event_state == -1 ||
-        idx_event_text == -1) {
-        reply(State::unknown, "Invalid answer from event daemon\n" +
-                                  response_stream.str() + "\nQuery was:\n" +
-                                  query_message);
+    if (idx_event_phase == -1) {
+        missingHeader("event_phase", query_message, response_stream);
+    }
+    if (idx_event_state == -1) {
+        missingHeader("event_state", query_message, response_stream);
+    }
+    if (idx_event_text == -1) {
+        missingHeader("event_text", query_message, response_stream);
     }
 
     // Get data

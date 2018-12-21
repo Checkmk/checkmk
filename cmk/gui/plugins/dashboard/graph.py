@@ -164,7 +164,7 @@ function dashboard_render_graph(nr, graph_identification, graph_render_options, 
                   + "&height=" + c_h
                   + "&id=" + nr;
 
-    call_ajax("graph_dashlet.py", {
+    cmk.ajax.call_ajax("graph_dashlet.py", {
         post_data        : post_data,
         method           : "POST",
         response_handler : handle_dashboard_render_graph_response,
@@ -185,7 +185,7 @@ function handle_dashboard_render_graph_response(handler_data, response_body)
 
     var container = document.getElementById('dashlet_graph_' + nr);
     container.innerHTML = response_body;
-    executeJSbyObject(container);
+    cmk.utils.execute_javascript_by_object(container);
 }
 
 function dashboard_render_pnpgraph(nr, img_url)

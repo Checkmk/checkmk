@@ -98,7 +98,7 @@ function speedometer_show_speed(last_perc, program_start, scheduled_rate)
                            "&scheduled_rate=" + scheduled_rate +
                            "&program_start=" + program_start;
 
-    call_ajax(url, {
+    cmk.ajax.call_ajax(url, {
         response_handler: function(handler_data, response_body) {
             try {
                 var data = JSON.parse(response_body);

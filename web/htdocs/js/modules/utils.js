@@ -71,14 +71,6 @@ export function update_contents(id, code)
     }
 }
 
-// There may be some javascript code in the html code rendered by
-// sidebar.py. Execute it here. This is needed in some browsers.
-// TODO: Clean this special case up
-export function execute_javascript_by_id(id)
-{
-    execute_javascript_by_object(document.getElementById(id));
-}
-
 export var current_script = null;
 
 export function execute_javascript_by_object(obj)

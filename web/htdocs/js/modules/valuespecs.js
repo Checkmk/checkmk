@@ -575,7 +575,7 @@ export function listofmultiple_del(varprefix, ident) {
     // Remove it from the list of active elements
     var active = document.getElementById(varprefix + "_active");
     var l = active.value.split(";");
-    for (i in l) {
+    for (i = 0; i < l.length; i++) {
         if (l[i] == ident) {
             l.splice(i, 1);
             break;
@@ -590,7 +590,7 @@ function listofmultiple_toggle_fields(root, varprefix, enable) {
     var types = ["input", "select", "textarea"];
     for (var t in types) {
         var fields = root.getElementsByTagName(types[t]);
-        for (var i in fields) {
+        for (var i = 0; i < fields.length; i++) {
             fields[i].disabled = !enable;
         }
     }
@@ -604,7 +604,7 @@ export function listofmultiple_init(varprefix) {
     // Mark input fields of unused elements as disabled
     var container = document.getElementById(varprefix + "_table");
     var unused = document.getElementsByClassName("unused", container);
-    for (var i in unused) {
+    for (var i = 0; i < unused.length; i++) {
         listofmultiple_toggle_fields(unused[i], varprefix, false);
     }
 }

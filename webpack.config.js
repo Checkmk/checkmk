@@ -22,8 +22,7 @@ module.exports = {
         modules: [
             "node_modules",
             path.resolve(__dirname, "web/htdocs/js/modules"),
-            path.resolve(__dirname, "web/htdocs/js"),
-            path.resolve(__dirname, "enterprise/web/htdocs/js")
+            path.resolve(__dirname, "enterprise/web/htdocs/js/modules")
         ]
     },
     module: {

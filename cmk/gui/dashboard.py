@@ -87,7 +87,6 @@ builtin_dashboards_transformed = False
 screen_margin = 5  # Distance from the left border of the main-frame to the dashboard area
 dashlet_padding = 34, 4, -2, 4, 4  # Margin (N, E, S, W, N w/o title) between outer border of dashlet and its content
 #dashlet_padding  = 23, 2, 2, 2, 2 # Margin (N, E, S, W, N w/o title) between outer border of dashlet and its content
-corner_overlap = 22
 raster = 10  # Raster the dashlet coords are measured in (px)
 
 
@@ -585,32 +584,27 @@ def draw_dashboard(name):
 
     dashboard_edit_controls(name, board)
 
-    # Put list of all autorefresh-dashlets into Javascript and also make sure,
-    # that the dashbaord is painted initially. The resize handler will make sure
-    # that every time the user resizes the browser window the layout will be re-computed
-    # and all dashlets resized to their new positions and sizes.
-    # TODO: Use json.dumps() instead of these weird statements
-    html.javascript("""
-var MAX = %d;
-var GROW = %d;
-var grid_size = %d;
-var header_height = %d;
-var screen_margin = %d;
-var dashlet_padding = %s;
-var dashlet_min_size = %s;
-var corner_overlap = %d;
-var refresh_dashlets = %s;
-var on_resize_dashlets = {%s};
-var dashboard_name = '%s';
-var dashboard_mtime = %d;
-var dashlets = %s;
+    dashboard_properties = {
+        "MAX": MAX,
+        "GROW": GROW,
+        "grid_size": raster,
+        "header_height": header_height,
+        "screen_margin": screen_margin,
+        "dashlet_padding": dashlet_padding,
+        "dashlet_min_size": Dashlet.minimum_size,
+        "refresh_dashlets": refresh_dashlets,
+        "on_resize_dashlets": dict(enumerate(on_resize_dashlets)),
+        "dashboard_name": name,
+        "dashboard_mtime": board['mtime'],
+        "dashlets": dashlet_coords,
+    }
 
+    html.javascript("""
+set_dashboard_properties(%s);
 calculate_dashboard();
 window.onresize = function () { calculate_dashboard(); }
 dashboard_scheduler(1);
-    """ % (MAX, GROW, raster, header_height, screen_margin, json.dumps(dashlet_padding),
-           json.dumps(Dashlet.minimum_size), corner_overlap, json.dumps(refresh_dashlets),
-           ','.join(on_resize_dashlets), name, board['mtime'], json.dumps(dashlet_coords)))
+    """ % json.dumps(dashboard_properties))
 
     if mode == 'edit':
         html.javascript('toggle_dashboard_edit(true)')
@@ -906,7 +900,7 @@ def ajax_dashlet():
         # prevent reloading on the dashboard which already has the current mtime,
         # this is normally the user editing this dashboard. All others: reload
         # the whole dashboard once.
-        html.javascript('if (parent.dashboard_mtime < %d) {\n'
+        html.javascript('if (parent.dashlet_properties.dashboard_mtime < %d) {\n'
                         '    parent.location.reload();\n'
                         '}' % board['mtime'])
 

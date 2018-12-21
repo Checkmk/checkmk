@@ -25,6 +25,12 @@
 // dashlet ids and urls
 var reload_on_resize = {};
 
+var dashboard_properties = {};
+
+function set_dashboard_properties(properties) {
+    dashboard_properties = properties;
+}
+
 function size_dashlets() {
     var size_info = calculate_dashlets();
     var oDash = null;
@@ -52,8 +58,8 @@ function size_dashlets() {
             // 14 => 9 title padding + empty space on right of dashlet
             oDashTitle.style.width  = (d_width - 19) + "px";
             oDashTitle.style.display = disstyle;
-            oDashTitle.style.left = dashlet_padding[3] + "px";
-            oDashTitle.style.top = dashlet_padding[4] + 8 + "px";
+            oDashTitle.style.left = dashboard_properties.dashlet_padding[3] + "px";
+            oDashTitle.style.top = dashboard_properties.dashlet_padding[4] + 8 + "px";
         }
 
         // resize outer div
@@ -66,12 +72,12 @@ function size_dashlets() {
             oDash.style.height   = d_height + "px";
         }
 
-        var top_padding = dashlet_padding[0];
+        var top_padding = dashboard_properties.dashlet_padding[0];
         if (!has_title)
-            top_padding = dashlet_padding[4];
+            top_padding = dashboard_properties.dashlet_padding[4];
 
-        var netto_height = d_height - top_padding - dashlet_padding[2];
-        var netto_width  = d_width  - dashlet_padding[1] - dashlet_padding[3];
+        var netto_height = d_height - top_padding - dashboard_properties.dashlet_padding[2];
+        var netto_width  = d_width  - dashboard_properties.dashlet_padding[1] - dashboard_properties.dashlet_padding[3];
 
         // resize content div
         oDashInner = document.getElementById("dashlet_inner_" + d_number);
@@ -81,7 +87,7 @@ function size_dashlets() {
             var old_width  = oDashInner.clientWidth;
             var old_height = oDashInner.clientHeight;
 
-            oDashInner.style.left   = dashlet_padding[3] + "px";
+            oDashInner.style.left   = dashboard_properties.dashlet_padding[3] + "px";
             oDashInner.style.top    = top_padding + "px";
             if (netto_width > 0)
                 oDashInner.style.width  = netto_width + "px";
@@ -105,18 +111,18 @@ function size_dashlets() {
 
 function set_control_size(dash_controls, width, height)
 {
-    dash_controls.style.width = (width - dashlet_padding[1] - dashlet_padding[3]) + "px";
-    dash_controls.style.height = (height - dashlet_padding[2] - dashlet_padding[4]) + "px";
-    dash_controls.style.left = dashlet_padding[3] + "px";
-    dash_controls.style.top = dashlet_padding[4] + "px";
+    dash_controls.style.width = (width - dashboard_properties.dashlet_padding[1] - dashboard_properties.dashlet_padding[3]) + "px";
+    dash_controls.style.height = (height - dashboard_properties.dashlet_padding[2] - dashboard_properties.dashlet_padding[4]) + "px";
+    dash_controls.style.left = dashboard_properties.dashlet_padding[3] + "px";
+    dash_controls.style.top = dashboard_properties.dashlet_padding[4] + "px";
 }
 
 function is_dynamic(x) {
-    return x == MAX || x == GROW;
+    return x == dashboard_properties.MAX || x == dashboard_properties.GROW;
 }
 
 function align_to_grid(px) {
-    return ~~(px / grid_size) * grid_size;
+    return ~~(px / dashboard_properties.grid_size) * dashboard_properties.grid_size;
 }
 
 function vec(x, y) {
@@ -135,13 +141,13 @@ vec.prototype = {
         return new vec(this.x < 0 ? this.x + size_v.x + 1 : this.x - 1,
                        this.y < 0 ? this.y + size_v.y + 1 : this.y - 1);
     },
-    // Compute the initial size of the dashlet. If MAX is used,
+    // Compute the initial size of the dashlet. If dashboard_properties.MAX is used,
     // then the dashlet consumes all space in its growing direction,
     // regardless of any other dashlets.
     initial_size: function(pos_v, grid_v) {
         return new vec(
-            (this.x == MAX ? grid_v.x - Math.abs(pos_v.x) + 1 : (this.x == GROW ? dashlet_min_size[0] : this.x)),
-            (this.y == MAX ? grid_v.y - Math.abs(pos_v.y) + 1 : (this.y == GROW ? dashlet_min_size[1] : this.y))
+            (this.x == dashboard_properties.MAX ? grid_v.x - Math.abs(pos_v.x) + 1 : (this.x == dashboard_properties.GROW ? dashboard_properties.dashlet_min_size[0] : this.x)),
+            (this.y == dashboard_properties.MAX ? grid_v.y - Math.abs(pos_v.y) + 1 : (this.y == dashboard_properties.GROW ? dashboard_properties.dashlet_min_size[1] : this.y))
         );
     },
     // return codes:
@@ -150,8 +156,8 @@ vec.prototype = {
     // -1: grow direction left, up
     compute_grow_by: function(size_v) {
         return new vec(
-            (size_v.x != GROW ? 0 : (this.x < 0 ? -1 : 1)),
-            (size_v.y != GROW ? 0 : (this.y < 0 ? -1 : 1))
+            (size_v.x != dashboard_properties.GROW ? 0 : (this.x < 0 ? -1 : 1)),
+            (size_v.y != dashboard_properties.GROW ? 0 : (this.y < 0 ? -1 : 1))
         );
     },
     toString: function() {
@@ -161,13 +167,13 @@ vec.prototype = {
 
 function calculate_dashlets() {
     var screen_size = new vec(g_dashboard_width, g_dashboard_height);
-    var raster_size = screen_size.divide(grid_size);
+    var raster_size = screen_size.divide(dashboard_properties.grid_size);
     var used_matrix = {};
     var positions   = [];
 
     // first place all dashlets at their absolute positions
-    for (var nr = 0; nr < dashlets.length; nr++) {
-        var dashlet = dashlets[nr];
+    for (var nr = 0; nr < dashboard_properties.dashlets.length; nr++) {
+        var dashlet = dashboard_properties.dashlets[nr];
 
         // Relative position is as noted in the declaration. 1,1 => top left origin,
         // -1,-1 => bottom right origin, 0 is not allowed here
@@ -276,10 +282,10 @@ function calculate_dashlets() {
             right   = positions[nr][2],
             bottom  = positions[nr][3];
         size_info.push([
-            left * grid_size,
-            top * grid_size,
-            (right - left) * grid_size,
-            (bottom - top) * grid_size
+            left * dashboard_properties.grid_size,
+            top * dashboard_properties.grid_size,
+            (right - left) * dashboard_properties.grid_size,
+            (bottom - top) * dashboard_properties.grid_size
         ]);
     }
     return size_info;
@@ -296,10 +302,10 @@ function calculate_dashboard() {
         return; // another resize is processed
     g_dashboard_resizer = true;
 
-    g_dashboard_top    = header_height + screen_margin;
-    g_dashboard_left   = screen_margin;
-    g_dashboard_width  = pageWidth() - 2*screen_margin;
-    g_dashboard_height = cmk.utils.page_height() - 2*screen_margin - header_height;
+    g_dashboard_top    = dashboard_properties.header_height + dashboard_properties.screen_margin;
+    g_dashboard_left   = dashboard_properties.screen_margin;
+    g_dashboard_width  = pageWidth() - 2*dashboard_properties.screen_margin;
+    g_dashboard_height = cmk.utils.page_height() - 2*dashboard_properties.screen_margin - dashboard_properties.header_height;
 
     var oDash = document.getElementById("dashboard");
     oDash.style.left     = g_dashboard_left + "px";
@@ -321,18 +327,18 @@ function dashboard_scheduler(initial) {
 
     var timestamp = Date.parse(new Date()) / 1000;
     var newcontent = "";
-    for(var i = 0; i < refresh_dashlets.length; i++) {
-        var nr      = refresh_dashlets[i][0];
-        var refresh = refresh_dashlets[i][1];
-        var url     = refresh_dashlets[i][2];
+    for(var i = 0; i < dashboard_properties.refresh_dashlets.length; i++) {
+        var nr      = dashboard_properties.refresh_dashlets[i][0];
+        var refresh = dashboard_properties.refresh_dashlets[i][1];
+        var url     = dashboard_properties.refresh_dashlets[i][2];
 
         if ((initial && document.getElementById("dashlet_inner_" + nr).innerHTML == '')
                 || (refresh > 0 && timestamp % refresh == 0)) {
             if (typeof(url) === 'string') {
                 if (url.indexOf('\?') !== -1)
-                    url += "&mtime=" + dashboard_mtime;
+                    url += "&mtime=" + dashboard_properties.dashboard_mtime;
                 else
-                    url += "?mtime=" + dashboard_mtime;
+                    url += "?mtime=" + dashboard_properties.dashboard_mtime;
                 get_url(url, dashboard_update_contents, "dashlet_inner_" + nr);
             }
             else {
@@ -493,12 +499,12 @@ function render_sizer(controls, nr, i, anchor_id, size) {
     var sizer_lbl = document.createElement('div');
     sizer_lbl.className = 'sizer_lbl sizer_lbl'+i+' anchor'+anchor_id;
 
-    if (size == MAX) {
+    if (size == dashboard_properties.MAX) {
         sizer.className += ' max';
         //sizer_lbl.innerHTML = 'MAX';
         sizer.title = 'Use maximum available space in this direction';
     }
-    else if (size == GROW) {
+    else if (size == dashboard_properties.GROW) {
         sizer.className += ' grow';
         //sizer_lbl.innerHTML = 'GROW';
         sizer.title = 'Grow in this direction';
@@ -534,7 +540,7 @@ function render_corner_resizers(controls, dashlet_id) {
 function dashlet_toggle_edit(dashlet_obj, edit) {
     var nr = parseInt(dashlet_obj.id.replace('dashlet_', ''));
     var inner = document.getElementById('dashlet_inner_'+nr);
-    var dashlet = dashlets[nr];
+    var dashlet = dashboard_properties.dashlets[nr];
 
     var edit = edit === undefined ? g_editing : edit;
 
@@ -598,7 +604,7 @@ function dashlet_toggle_edit(dashlet_obj, edit) {
             return function() {
                 location.href = 'edit_dashlet.py?name=' + board_name + '&id=' + dashlet_id;
             };
-        }(nr, dashboard_name);
+        }(nr, dashboard_properties.dashboard_name);
         controls.appendChild(edit);
 
         // Add delete dashlet button
@@ -609,7 +615,7 @@ function dashlet_toggle_edit(dashlet_obj, edit) {
             return function() {
                 location.href = 'delete_dashlet.py?name=' + board_name + '&id=' + dashlet_id;
             };
-        }(nr, dashboard_name);
+        }(nr, dashboard_properties.dashboard_name);
         controls.appendChild(del);
 
     } else {
@@ -627,41 +633,41 @@ var g_last_absolute_widths  = {};
 var g_last_absolute_heights = {};
 
 function toggle_sizer(nr, sizer_id) {
-    var dashlet = dashlets[nr];
+    var dashlet = dashboard_properties.dashlets[nr];
     var dashlet_obj = document.getElementById('dashlet_'+nr);
 
     if (sizer_id == 0) {
         if (dashlet.w > 0) {
             g_last_absolute_widths[nr] = dashlet.w;
-            dashlet.w = GROW;
+            dashlet.w = dashboard_properties.GROW;
         }
-        else if (dashlet.w == GROW) {
+        else if (dashlet.w == dashboard_properties.GROW) {
             if (!(nr in g_last_absolute_widths))
-                g_last_absolute_widths[nr] = dashlet_obj.clientWidth / grid_size;
-            dashlet.w = MAX;
+                g_last_absolute_widths[nr] = dashlet_obj.clientWidth / dashboard_properties.grid_size;
+            dashlet.w = dashboard_properties.MAX;
         }
-        else if (dashlet.w == MAX) {
+        else if (dashlet.w == dashboard_properties.MAX) {
             if (nr in g_last_absolute_widths)
                 dashlet.w = g_last_absolute_widths[nr];
             else
-                dashlet.w = dashlet_obj.clientWidth / grid_size;
+                dashlet.w = dashlet_obj.clientWidth / dashboard_properties.grid_size;
         }
     }
     else {
         if (dashlet.h > 0) {
             g_last_absolute_heights[nr] = dashlet.h;
-            dashlet.h = GROW;
+            dashlet.h = dashboard_properties.GROW;
         }
-        else if (dashlet.h == GROW) {
+        else if (dashlet.h == dashboard_properties.GROW) {
             if (!(nr in g_last_absolute_heights))
-                g_last_absolute_heights[nr] = dashlet_obj.clientHeight / grid_size;
-            dashlet.h = MAX;
+                g_last_absolute_heights[nr] = dashlet_obj.clientHeight / dashboard_properties.grid_size;
+            dashlet.h = dashboard_properties.MAX;
         }
-        else if (dashlet.h == MAX) {
+        else if (dashlet.h == dashboard_properties.MAX) {
             if (nr in g_last_absolute_heights)
                 dashlet.h = g_last_absolute_heights[nr];
             else
-                dashlet.h = dashlet_obj.clientHeight / grid_size;
+                dashlet.h = dashlet_obj.clientHeight / dashboard_properties.grid_size;
         }
     }
 
@@ -691,7 +697,7 @@ function get_anchor_id(dashlet) {
 }
 
 function toggle_anchor(nr, anchor_id) {
-    if (anchor_id == get_anchor_id(dashlets[nr]))
+    if (anchor_id == get_anchor_id(dashboard_properties.dashlets[nr]))
         return; // anchor has not changed, skip it!
 
     calculate_relative_dashlet_coords(nr, anchor_id);
@@ -708,7 +714,7 @@ function toggle_anchor(nr, anchor_id) {
 // We do not want to recompute the dimensions of growing dashlets here,
 // use the current effective size
 function calculate_relative_dashlet_coords(nr, anchor_id) {
-    var dashlet = dashlets[nr];
+    var dashlet = dashboard_properties.dashlets[nr];
 
     // When the anchor id is not set explicit here autodetect the anchor
     // id which is currently used by the dashlet. Otherwise this function
@@ -719,13 +725,13 @@ function calculate_relative_dashlet_coords(nr, anchor_id) {
 
     var dashlet_obj = document.getElementById('dashlet_' + nr);
 
-    var x = dashlet_obj.offsetLeft / grid_size;
-    var y = dashlet_obj.offsetTop / grid_size;
-    var w = dashlet_obj.clientWidth / grid_size;
-    var h = dashlet_obj.clientHeight / grid_size;
+    var x = dashlet_obj.offsetLeft / dashboard_properties.grid_size;
+    var y = dashlet_obj.offsetTop / dashboard_properties.grid_size;
+    var w = dashlet_obj.clientWidth / dashboard_properties.grid_size;
+    var h = dashlet_obj.clientHeight / dashboard_properties.grid_size;
 
     var screen_size  = new vec(g_dashboard_width, g_dashboard_height);
-    var raster_size  = screen_size.divide(grid_size);
+    var raster_size  = screen_size.divide(dashboard_properties.grid_size);
 
     // Update fixed sizes in coord structure
     if (!is_dynamic(dashlet.w))
@@ -807,11 +813,11 @@ function drag_dashlet_start(event) {
     if (g_dragging === false && button == 'LEFT' && has_class(target, 'controls')) {
         g_dragging = target.parentNode;
         var nr = parseInt(g_dragging.id.replace('dashlet_', ''));
-        var dashlet = dashlets[nr];
+        var dashlet = dashboard_properties.dashlets[nr];
 
         // minimal dashlet sizes in pixels
-        var min_w = dashlet_min_size[0] * grid_size;
-        var min_h = dashlet_min_size[1] * grid_size;
+        var min_w = dashboard_properties.dashlet_min_size[0] * dashboard_properties.grid_size;
+        var min_h = dashboard_properties.dashlet_min_size[1] * dashboard_properties.grid_size;
 
         // reduce the dashlet to the minimum dashlet size for movement bound checks
         var x = g_dragging.offsetLeft;
@@ -954,9 +960,9 @@ function drag_dashlet_stop(event) {
 }
 
 function persist_dashlet_pos(nr) {
-    get_url('ajax_dashlet_pos.py?name=' + dashboard_name + '&id=' + nr
-            + '&x=' + dashlets[nr].x + '&y=' + dashlets[nr].y
-            + '&w=' + dashlets[nr].w + '&h=' + dashlets[nr].h,
+    get_url('ajax_dashlet_pos.py?name=' + dashboard_properties.dashboard_name + '&id=' + nr
+            + '&x=' + dashboard_properties.dashlets[nr].x + '&y=' + dashboard_properties.dashlets[nr].y
+            + '&w=' + dashboard_properties.dashlets[nr].w + '&h=' + dashboard_properties.dashlets[nr].h,
             handle_dashlet_post_response, null, undefined, false);
 }
 
@@ -965,7 +971,7 @@ function handle_dashlet_post_response(_unused, response_text) {
     if (parts[0] != 'OK') {
         alert('Error: ' + response_text);
     } else {
-        dashboard_mtime = parseInt(parts[1]);
+        dashboard_properties.dashboard_mtime = parseInt(parts[1]);
     }
 }
 
@@ -1054,8 +1060,8 @@ function resize_dashlet(event) {
     var board_w = align_to_grid(g_dashboard_width);
     var board_h = align_to_grid(g_dashboard_height);
 
-    var min_w = dashlet_min_size[0] * grid_size;
-    var min_h = dashlet_min_size[1] * grid_size;
+    var min_w = dashboard_properties.dashlet_min_size[0] * dashboard_properties.grid_size;
+    var min_h = dashboard_properties.dashlet_min_size[1] * dashboard_properties.grid_size;
 
     if (get_horizontal_direction(g_resizing) == 'left') {
         // resizing with left border
@@ -1157,8 +1163,8 @@ function dashlet_resized(nr, dashlet_obj) {
                               + '&height=' + dashlet_obj.clientHeight;
     }
 
-    if (typeof on_resize_dashlets[nr] != 'undefined') {
-        on_resize_dashlets[nr]();
+    if (typeof dashboard_properties.on_resize_dashlets[nr] != 'undefined') {
+        dashboard_properties.on_resize_dashlets[nr]();
     }
 }
 

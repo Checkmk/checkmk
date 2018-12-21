@@ -36,17 +36,18 @@ var g_sidebar_folded = false;
 
 // First firefox and then IE
 if (window.addEventListener) {
-  window.addEventListener("mousemove",     function(e) {
-                                             snapinDrag(e);
-                                             dragScroll(e);
-                                             return false;
-                                           }, false);
-  window.addEventListener("mousedown",        startDragScroll, false);
-  window.addEventListener("mouseup",          stopDragScroll,  false);
-  if(weAreFirefox)
-    window.addEventListener('DOMMouseScroll', scrollWheel,     false);
-  else
-    window.addEventListener('mousewheel',     scrollWheel,     false);
+    window.addEventListener("mousemove", function(e) {
+        snapinDrag(e);
+        dragScroll(e);
+        return false;
+    }, false);
+    window.addEventListener("mousedown", startDragScroll, false);
+    window.addEventListener("mouseup", stopDragScroll,  false);
+    if (weAreFirefox) {
+        window.addEventListener("DOMMouseScroll", scrollWheel,     false);
+    } else {
+        window.addEventListener("mousewheel",     scrollWheel,     false);
+    }
 }
 else {
   document.documentElement.onmousemove  = function(e) {
@@ -70,7 +71,7 @@ else {
 function registerEdgeListeners(obj) {
     var edges;
     if (!obj)
-        edges = [ parent.frames[1], document.getElementById('side_header'), document.getElementById('side_footer') ];
+        edges = [ parent.frames[1], document.getElementById("side_header"), document.getElementById("side_footer") ];
     else
         edges = [ obj ];
 
@@ -116,7 +117,7 @@ function snapinStartDrag(event) {
   var button = getButton(event);
 
   // Skip calls when already dragging or other button than left mouse
-  if (snapinDragging !== false || button != 'LEFT' || target.tagName != 'DIV')
+  if (snapinDragging !== false || button != "LEFT" || target.tagName != "DIV")
     return true;
 
   if (event.stopPropagation)
@@ -129,7 +130,7 @@ function snapinStartDrag(event) {
   snapinOffset   = [ event.clientY - target.parentNode.offsetTop,
                      event.clientX - target.parentNode.offsetLeft ];
   snapinStartPos = [ event.clientY, event.clientX ];
-  snapinScrollTop = document.getElementById('side_content').scrollTop;
+  snapinScrollTop = document.getElementById("side_content").scrollTop;
 
   // Disable the default events for all the different browsers
   if (event.preventDefault)
@@ -150,18 +151,18 @@ function snapinDrag(event) {
   // It can move e.g. if the scroll wheel is wheeled during dragging...
 
   // Drag the snapin
-  snapinDragging.style.position = 'absolute';
+  snapinDragging.style.position = "absolute";
   var newTop = event.clientY  - snapinOffset[0] - snapinScrollTop;
-  newTop += document.getElementById('side_content').scrollTop;
-  snapinDragging.style.top      = newTop + 'px';
-  snapinDragging.style.left     = (event.clientX - snapinOffset[1]) + 'px';
+  newTop += document.getElementById("side_content").scrollTop;
+  snapinDragging.style.top      = newTop + "px";
+  snapinDragging.style.left     = (event.clientX - snapinOffset[1]) + "px";
   snapinDragging.style.zIndex   = 200;
 
   // Refresh the drop marker
   removeSnapinDragIndicator();
 
-  var line = document.createElement('div');
-  line.setAttribute('id', 'snapinDragIndicator');
+  var line = document.createElement("div");
+  line.setAttribute("id", "snapinDragIndicator");
   var o = getSnapinTargetPos();
   if (o != null) {
     snapinAddBefore(o.parentNode, o, line);
@@ -180,7 +181,7 @@ function snapinAddBefore(par, o, add) {
 }
 
 function removeSnapinDragIndicator() {
-  var o = document.getElementById('snapinDragIndicator');
+  var o = document.getElementById("snapinDragIndicator");
   if (o) {
     o.parentNode.removeChild(o);
   }
@@ -191,9 +192,9 @@ function snapinDrop(event, targetpos) {
     return true;
 
   // Reset properties
-  snapinDragging.style.top      = '';
-  snapinDragging.style.left     = '';
-  snapinDragging.style.position = '';
+  snapinDragging.style.top      = "";
+  snapinDragging.style.left     = "";
+  snapinDragging.style.position = "";
 
   // Catch quick clicks without movement on the title bar
   // Don't reposition the object in this case.
@@ -211,12 +212,12 @@ function snapinDrop(event, targetpos) {
   snapinAddBefore(par, targetpos, snapinDragging);
 
   // Now send the new information to the backend
-  var thisId = snapinDragging.id.replace('snapin_container_', '');
+  var thisId = snapinDragging.id.replace("snapin_container_", "");
 
-  var before = '';
+  var before = "";
   if (targetpos != null)
-    before = '&before=' + targetpos.id.replace('snapin_container_', '');
-  get_url('sidebar_move_snapin.py?name=' + thisId + before);
+    before = "&before=" + targetpos.id.replace("snapin_container_", "");
+  get_url("sidebar_move_snapin.py?name=" + thisId + before);
 }
 
 function snapinTerminateDrag() {
@@ -224,9 +225,9 @@ function snapinTerminateDrag() {
     return true;
 	removeSnapinDragIndicator();
   // Reset properties
-  snapinDragging.style.top      = '';
-  snapinDragging.style.left     = '';
-  snapinDragging.style.position = '';
+  snapinDragging.style.top      = "";
+  snapinDragging.style.left     = "";
+  snapinDragging.style.position = "";
   snapinDragging = false;
 }
 
@@ -243,7 +244,7 @@ function getDivChildNodes(node) {
   var children = [];
   var childNodes = node.childNodes;
   for(var i = 0; i < childNodes.length; i++)
-    if(childNodes[i].tagName === 'DIV')
+    if(childNodes[i].tagName === "DIV")
       children.push(childNodes[i]);
   return children;
 }
@@ -259,7 +260,7 @@ function getSnapinList() {
     // Skip
     // - non snapin objects
     // - currently dragged object
-    if (child.id && child.id.substr(0, 7) == 'snapin_' && child.id != snapinDragging.id)
+    if (child.id && child.id.substr(0, 7) == "snapin_" && child.id != snapinDragging.id)
       l.push(child);
   }
 
@@ -268,7 +269,7 @@ function getSnapinList() {
 
 function getSnapinCoords(obj) {
   var snapinTop = snapinDragging.offsetTop;
-  // + document.getElementById('side_content').scrollTop;
+  // + document.getElementById("side_content").scrollTop;
 
   var bottomOffset = obj.offsetTop + obj.clientHeight - snapinTop;
   if (bottomOffset < 0)
@@ -299,7 +300,7 @@ function getSnapinTargetPos() {
   for(var i = 0; i < childs.length; i++) {
     var child = childs[i];
 
-    if (!child.id || child.id.substr(0, 7) != 'snapin_' || child.id == snapinDragging.id)
+    if (!child.id || child.id.substr(0, 7) != "snapin_" || child.id == snapinDragging.id)
       continue;
 
     // Initialize with the first snapin in the list
@@ -346,7 +347,7 @@ function contentFrameAccessible() {
 
 function update_content_location() {
     // init the original frameset title
-    if (typeof(window.parent.orig_title) == 'undefined') {
+    if (typeof(window.parent.orig_title) == "undefined") {
         window.parent.orig_title = window.parent.document.title;
     }
 
@@ -354,22 +355,22 @@ function update_content_location() {
 
     // Change the title to add the right frame title to reflect the
     // title of the content URL in the framesets title (window title or tab title)
-    if (content_frame.document.title != '') {
-        var page_title = window.parent.orig_title + ' - ' + content_frame.document.title;
+    if (content_frame.document.title != "") {
+        var page_title = window.parent.orig_title + " - " + content_frame.document.title;
     } else {
         var page_title = window.parent.orig_title;
     }
     window.parent.document.title = page_title;
 
     // Construct the URL to be called on page reload
-    var parts = window.parent.location.pathname.split('/')
+    var parts = window.parent.location.pathname.split("/")
     parts.pop();
-    var cmk_path = parts.join('/');
+    var cmk_path = parts.join("/");
     var rel_url = content_frame.location.pathname + content_frame.location.search + content_frame.location.hash
-    var index_url = cmk_path + '/index.py?start_url=' + encodeURIComponent(rel_url);
+    var index_url = cmk_path + "/index.py?start_url=" + encodeURIComponent(rel_url);
 
     if (window.parent.history.replaceState) {
-        if (rel_url && rel_url != 'blank') {
+        if (rel_url && rel_url != "blank") {
             // Update the URL to be called on reload, e.g. via F5, to make the
             // frameset switch to exactly this URL
             window.parent.history.replaceState({}, page_title, index_url);
@@ -386,7 +387,7 @@ function update_content_location() {
 }
 
 function debug(s) {
-    window.parent.frames[1].document.write(s+'<br />');
+    window.parent.frames[1].document.write(s+"<br />");
 }
 
 
@@ -394,9 +395,9 @@ function debug(s) {
 // but without scrolling. The height of the header and footer divs need
 // to be treated here.
 function set_sidebar_size() {
-    var oHeader  = document.getElementById('side_header');
-    var oContent = document.getElementById('side_content');
-    var oFooter  = document.getElementById('side_footer');
+    var oHeader  = document.getElementById("side_header");
+    var oContent = document.getElementById("side_content");
+    var oFooter  = document.getElementById("side_footer");
     var height   = pageHeight();
 
     // Don't handle zero heights
@@ -404,13 +405,13 @@ function set_sidebar_size() {
       return;
 
     // -2 -> take outer border of oHeader and oFooter into account
-    oContent.style.height = (height - oHeader.clientHeight - oFooter.clientHeight - 2) + 'px';
+    oContent.style.height = (height - oHeader.clientHeight - oFooter.clientHeight - 2) + "px";
 }
 
 var scrolling = true;
 
 function scrollwindow(speed){
-  var c = document.getElementById('side_content');
+  var c = document.getElementById("side_content");
 
   if (scrolling) {
     c.scrollTop += speed;
@@ -433,7 +434,7 @@ function startDragScroll(event) {
     var target = getTarget(event);
     var button = getButton(event);
 
-    if (button != 'LEFT')
+    if (button != "LEFT")
         return true; // only care about left clicks!
 
     if (g_sidebar_folded) {
@@ -442,22 +443,22 @@ function startDragScroll(event) {
     }
     else if (!g_sidebar_folded && event.clientX < 10 && target.tagName != "OPTION") {
         // When clicking on an <option> of the "core performance" snapins, an event
-        // with event.clientX equal 0 is triggered, don't know why. Filter out clicks
+        // with event.clientX equal 0 is triggered, don"t know why. Filter out clicks
         // on OPTION tags.
         fold_sidebar();
         return prevent_default_events(event);
     }
 
     if (dragging === false
-        && target.tagName != 'A'
-        && target.tagName != 'INPUT'
-        && target.tagName != 'SELECT'
-        && target.tagName != 'OPTION'
-        && !(target.tagName == 'DIV' && target.className == 'heading')) {
+        && target.tagName != "A"
+        && target.tagName != "INPUT"
+        && target.tagName != "SELECT"
+        && target.tagName != "OPTION"
+        && !(target.tagName == "DIV" && target.className == "heading")) {
 
         dragging = event;
         startY = event.clientY;
-        startScroll = document.getElementById('side_content').scrollTop;
+        startScroll = document.getElementById("side_content").scrollTop;
 
         return prevent_default_events(event);
     }
@@ -484,7 +485,7 @@ function dragScroll(event) {
     event.stopPropagation();
   event.cancelBubble = true;
 
-  var inhalt = document.getElementById('side_content');
+  var inhalt = document.getElementById("side_content");
   var diff = startY - event.clientY;
 
   inhalt.scrollTop += diff;
@@ -511,28 +512,28 @@ function sidebar_width()
 function fold_sidebar()
 {
     g_sidebar_folded = true;
-    document.getElementById('check_mk_sidebar').style.position = "relative";
-    document.getElementById('check_mk_sidebar').style.left = "-265px";
-    document.getElementById('side_footer').style.display = "none";
-    var version = document.getElementById('side_version');
+    document.getElementById("check_mk_sidebar").style.position = "relative";
+    document.getElementById("check_mk_sidebar").style.left = "-265px";
+    document.getElementById("side_footer").style.display = "none";
+    var version = document.getElementById("side_version");
     if (version)
         version.style.display = "none";
     parent.document.body.cols = sidebar_width() + ",*";
-    get_url('sidebar_fold.py?fold=yes');
+    get_url("sidebar_fold.py?fold=yes");
 }
 
 
 function unfold_sidebar()
 {
     g_sidebar_folded = false;
-    document.getElementById('check_mk_sidebar').style.position = "";
-    document.getElementById('check_mk_sidebar').style.left = "0";
-    document.getElementById('side_footer').style.display = "";
-    var version = document.getElementById('side_version');
+    document.getElementById("check_mk_sidebar").style.position = "";
+    document.getElementById("check_mk_sidebar").style.left = "0";
+    document.getElementById("side_footer").style.display = "";
+    var version = document.getElementById("side_version");
     if (version)
         version.style.display = "";
     parent.document.body.cols = sidebar_width() + ",*";
-    get_url('sidebar_fold.py?fold=');
+    get_url("sidebar_fold.py?fold=");
 }
 
 
@@ -646,9 +647,9 @@ function toggle_sidebar_snapin(oH2, url) {
         childs = oH2.parentNode.parentNode.childNodes;
     for (var i in childs) {
         child = childs[i];
-        if (child.tagName == 'DIV' && child.className == 'content')
+        if (child.tagName == "DIV" && child.className == "content")
             var oContent = child;
-        else if (child.tagName == 'DIV' && (child.className == 'head open' || child.className == "head closed"))
+        else if (child.tagName == "DIV" && (child.className == "head open" || child.className == "head closed"))
             var oHead = child;
     }
 
@@ -684,8 +685,8 @@ function switch_site(url) {
 var g_seconds_to_update = null;
 
 function refresh_single_snapin(name) {
-    var url = 'sidebar_snapin.py?names=' + name;
-    var ids = [ 'snapin_' + name ];
+    var url = "sidebar_snapin.py?names=" + name;
+    var ids = [ "snapin_" + name ];
     get_url(url, bulkUpdateContents, ids);
 }
 
@@ -707,7 +708,7 @@ function sidebar_scheduler() {
 
     for (var i = 0; i < refresh_snapins.length; i++) {
         var name = refresh_snapins[i][0];
-        if (refresh_snapins[i][1] != '') {
+        if (refresh_snapins[i][1] != "") {
             // Special handling for snapins like the nagvis maps snapin which request
             // to be updated from a special URL, use direct update of those snapins
             // from this url
@@ -725,13 +726,13 @@ function sidebar_scheduler() {
     // Are there any snapins to be bulk updates?
     if(to_be_updated.length > 0) {
         if (g_seconds_to_update <= 0) {
-            var url = 'sidebar_snapin.py?names=' + to_be_updated.join(',');
+            var url = "sidebar_snapin.py?names=" + to_be_updated.join(",");
             if (sidebar_restart_time !== null)
-                url += '&since=' + sidebar_restart_time;
+                url += "&since=" + sidebar_restart_time;
 
             var ids = [];
             for (var i = 0, len = to_be_updated.length; i < len; i++) {
-                ids.push('snapin_' + to_be_updated[i]);
+                ids.push("snapin_" + to_be_updated[i]);
             }
 
             get_url(url, bulkUpdateContents, ids);
@@ -785,14 +786,14 @@ function getCookie(cookieName) {
 }
 
 function initScrollPos() {
-    var scrollPos = getCookie('sidebarScrollPos');
+    var scrollPos = getCookie("sidebarScrollPos");
     if(!scrollPos)
         scrollPos = 0;
-    document.getElementById('side_content').scrollTop = scrollPos;
+    document.getElementById("side_content").scrollTop = scrollPos;
 }
 
 function storeScrollPos() {
-    setCookie('sidebarScrollPos', document.getElementById('side_content').scrollTop, null);
+    setCookie("sidebarScrollPos", document.getElementById("side_content").scrollTop, null);
 }
 
 /************************************************
@@ -800,46 +801,46 @@ function storeScrollPos() {
  *************************************************/
 
 // FIXME: Make this somehow configurable - use the start url?
-var g_last_view   = 'dashboard.py?name=main';
-var g_last_folder = '';
+var g_last_view   = "dashboard.py?name=main";
+var g_last_folder = "";
 
 // highlight the followed link (when both needed snapins are available)
 function highlight_link(link_obj, container_id) {
     var this_snapin = document.getElementById(container_id);
-    if (container_id == 'snapin_container_wato_folders')
-        var other_snapin = document.getElementById('snapin_container_views');
+    if (container_id == "snapin_container_wato_folders")
+        var other_snapin = document.getElementById("snapin_container_views");
     else
-        var other_snapin = document.getElementById('snapin_container_wato_folders');
+        var other_snapin = document.getElementById("snapin_container_wato_folders");
 
     if (this_snapin && other_snapin) {
         if (this_snapin.getElementsByClassName)
-            var links = this_snapin.getElementsByClassName('link');
+            var links = this_snapin.getElementsByClassName("link");
         else
-            var links = document.getElementsByClassName('link', this_snapin);
+            var links = document.getElementsByClassName("link", this_snapin);
 
         for (var i = 0; i < links.length; i++) {
-            links[i].style.fontWeight = 'normal';
+            links[i].style.fontWeight = "normal";
         }
 
-        link_obj.style.fontWeight = 'bold';
+        link_obj.style.fontWeight = "bold";
     }
 }
 
 function wato_folders_clicked(link_obj, folderpath) {
     g_last_folder = folderpath;
-    highlight_link(link_obj, 'snapin_container_wato_folders');
-    parent.frames[1].location = g_last_view + '&wato_folder=' + encodeURIComponent(g_last_folder);
+    highlight_link(link_obj, "snapin_container_wato_folders");
+    parent.frames[1].location = g_last_view + "&wato_folder=" + encodeURIComponent(g_last_folder);
 }
 
 function wato_views_clicked(link_obj) {
     g_last_view = link_obj.href;
 
-    highlight_link(link_obj, 'snapin_container_views');
-    highlight_link(link_obj, 'snapin_container_dashboards');
+    highlight_link(link_obj, "snapin_container_views");
+    highlight_link(link_obj, "snapin_container_dashboards");
 
-    if (g_last_folder != '') {
+    if (g_last_folder != "") {
         // Navigate by using javascript, cancel following the default link
-        parent.frames[1].location = g_last_view + '&wato_folder=' + encodeURIComponent(g_last_folder);
+        parent.frames[1].location = g_last_view + "&wato_folder=" + encodeURIComponent(g_last_folder);
         return false;
     } else {
         // Makes use the url stated in href attribute
@@ -853,17 +854,17 @@ function wato_views_clicked(link_obj) {
 
 /* Foldable Tree in snapin */
 function wato_tree_click(link_obj, folderpath) {
-    var topic  = document.getElementById('topic').value;
-    var target = document.getElementById('target_' + topic).value;
+    var topic  = document.getElementById("topic").value;
+    var target = document.getElementById("target_" + topic).value;
 
-    if(target.substr(0, 9) == 'dashboard') {
+    if(target.substr(0, 9) == "dashboard") {
         dashboard_name = target.substr(10, target.length);
-        href = 'dashboard.py?name=' + encodeURIComponent(dashboard_name);
+        href = "dashboard.py?name=" + encodeURIComponent(dashboard_name);
     } else {
-        href = 'view.py?view_name=' + encodeURIComponent(target);
+        href = "view.py?view_name=" + encodeURIComponent(target);
     }
 
-    href += '&wato_folder=' + encodeURIComponent(folderpath);
+    href += "&wato_folder=" + encodeURIComponent(folderpath);
 
     parent.frames[1].location = href;
 }
@@ -873,20 +874,20 @@ function wato_tree_topic_changed(topic_field) {
     var topic = topic_field.value;
 
     // Hide all select fields but the wanted one
-    var select_fields = document.getElementsByTagName('select');
+    var select_fields = document.getElementsByTagName("select");
     for(var i = 0; i < select_fields.length; i++) {
-        if(select_fields[i].id && select_fields[i].id.substr(0, 7) == 'target_') {
-            select_fields[i].selected = '';
-            if(select_fields[i].id == 'target_' + topic) {
-                select_fields[i].style.display = 'inline';
+        if(select_fields[i].id && select_fields[i].id.substr(0, 7) == "target_") {
+            select_fields[i].selected = "";
+            if(select_fields[i].id == "target_" + topic) {
+                select_fields[i].style.display = "inline";
             } else {
-                select_fields[i].style.display = 'none';
+                select_fields[i].style.display = "none";
             }
         }
     }
 
     // Then send the info to python code via ajax call for persistance
-    get_url('ajax_set_foldertree.py?topic=' + encodeURIComponent(topic) + '&target=');
+    get_url("ajax_set_foldertree.py?topic=" + encodeURIComponent(topic) + "&target=");
 }
 
 function wato_tree_target_changed(target_field) {
@@ -894,7 +895,7 @@ function wato_tree_target_changed(target_field) {
     var target = target_field.value;
 
     // Send the info to python code via ajax call for persistance
-    get_url('ajax_set_foldertree.py?topic=' + encodeURIComponent(topic) + '&target=' + encodeURIComponent(target));
+    get_url("ajax_set_foldertree.py?topic=" + encodeURIComponent(topic) + "&target=" + encodeURIComponent(target));
 }
 
 // adds a variable to a GET url, but tries to remove that
@@ -903,9 +904,9 @@ function wato_tree_target_changed(target_field) {
 // URL. This is not perfect but sufficient in order to avoid the URL
 // getting longer and longer.
 function add_html_var(url, varname, value) {
-    var re = new RegExp('&' + varname + '=[^&]*');
+    var re = new RegExp("&" + varname + "=[^&]*");
     var new_url = url.replace(re, "");
-    if (new_url.indexOf('?') != '-1')
+    if (new_url.indexOf("?") != "-1")
         new_url += "&" + varname + "=" + encodeURIComponent(value);
     else
         new_url += "?" + varname + "=" + encodeURIComponent(value);
@@ -920,8 +921,8 @@ function set_snapin_site(event, ident, select_field) {
     if (!event)
         event = window.event;
 
-    get_url('sidebar_ajax_set_snapin_site.py?ident=' + encodeURIComponent(ident)
-          + '&site=' + encodeURIComponent(select_field.value));
+    get_url("sidebar_ajax_set_snapin_site.py?ident=" + encodeURIComponent(ident)
+          + "&site=" + encodeURIComponent(select_field.value));
     location.reload();
     return prevent_default_events(event);
 }
@@ -943,7 +944,7 @@ function init_messages(interval) {
 
 function handle_update_messages(_unused, code) {
     // add new messages to container
-    var c = document.getElementById('messages');
+    var c = document.getElementById("messages");
     if (c) {
         c.innerHTML = code;
         executeJSbyObject(c);
@@ -953,58 +954,58 @@ function handle_update_messages(_unused, code) {
 
 function update_messages() {
     // Remove all pending messages from container
-    var c = document.getElementById('messages');
+    var c = document.getElementById("messages");
     if (c) {
-        c.innerHTML = '';
+        c.innerHTML = "";
     }
 
     // retrieve new messages
-    get_url('sidebar_get_messages.py', handle_update_messages);
+    get_url("sidebar_get_messages.py", handle_update_messages);
 }
 
 function get_hint_messages(c) {
     var hints;
     if (c.getElementsByClassName)
-        hints = c.getElementsByClassName('popup_msg');
+        hints = c.getElementsByClassName("popup_msg");
     else
-        hints = document.getElementsByClassName('popup_msg', c);
+        hints = document.getElementsByClassName("popup_msg", c);
     return hints;
 }
 
 function update_message_trigger() {
-    var c = document.getElementById('messages');
+    var c = document.getElementById("messages");
     if (c) {
-        var b = document.getElementById('msg_button');
+        var b = document.getElementById("msg_button");
         var hints = get_hint_messages(c);
         if (hints.length > 0) {
             // are there pending messages? make trigger visible
-            b.style.display = 'inline';
+            b.style.display = "inline";
 
             // Create/Update a blinking number label
-            var l = document.getElementById('msg_label');
+            var l = document.getElementById("msg_label");
             if (!l) {
-                var l = document.createElement('span');
-                l.setAttribute('id', 'msg_label');
+                var l = document.createElement("span");
+                l.setAttribute("id", "msg_label");
                 b.appendChild(l);
             }
 
-            l.innerHTML = '' + hints.length;
+            l.innerHTML = "" + hints.length;
         } else {
             // no messages: hide the trigger
-            b.style.display = 'none';
+            b.style.display = "none";
         }
     }
 }
 
 function mark_message_read(msg_id) {
-    get_url('sidebar_message_read.py?id=' + msg_id);
+    get_url("sidebar_message_read.py?id=" + msg_id);
 
     // Update the button state
     update_message_trigger();
 }
 
 function read_message() {
-    var c = document.getElementById('messages');
+    var c = document.getElementById("messages");
     if (!c)
         return;
 
@@ -1017,12 +1018,12 @@ function read_message() {
     c.parentNode.appendChild(msg);
 
     // tell server that the message has been read
-    var msg_id = msg.id.replace('message-', '');
+    var msg_id = msg.id.replace("message-", "");
     mark_message_read(msg_id);
 }
 
 function message_close(msg_id) {
-    var m = document.getElementById('message-' + msg_id);
+    var m = document.getElementById("message-" + msg_id);
     if (m) {
         m.parentNode.removeChild(m);
     }

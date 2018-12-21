@@ -26,6 +26,7 @@
 """Module to hold shared code for module internals and the plugins"""
 
 import abc
+import json
 
 import cmk.utils.plugin_registry
 
@@ -350,7 +351,8 @@ class IFrameDashlet(Dashlet):
         html.close_div()
 
         if self.reload_on_resize():
-            html.javascript('reload_on_resize["%d"] = "%s"' % (self._dashlet_id, iframe_url))
+            html.javascript('cmk.dashboard.set_reload_on_resize(%s, %s);' % (json.dumps(
+                self._dashlet_id), json.dumps(iframe_url)))
 
     def _get_iframe_url(self):
         if not self.is_iframe_dashlet():

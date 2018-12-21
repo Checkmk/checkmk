@@ -443,3 +443,5 @@
     window.ColorPicker = ColorPicker;
 
 })(window, window.document);
+
+export var ColorPicker = window.ColorPicker;

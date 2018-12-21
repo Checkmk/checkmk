@@ -24,6 +24,8 @@
 
 import * as utils from "utils";
 import * as popup_menu from "popup_menu";
+import * as ajax from "ajax";
+import * as colorpicker from "colorpicker";
 
 //#   +--------------------------------------------------------------------+
 //#   | Functions needed by HTML code from ValueSpec (valuespec.py)        |
@@ -191,7 +193,7 @@ export function listof_add(varprefix, magic, style)
     var str_count = "" + (count + 1);
     count_field.value = str_count;
 
-    var html_code = valuespec_listof_get_new_entry_html_code(varprefix, magic, str_count);
+    var html_code = listof_get_new_entry_html_code(varprefix, magic, str_count);
     var container = document.getElementById(varprefix + "_container");
 
     var new_child;
@@ -211,7 +213,7 @@ export function listof_add(varprefix, magic, style)
     listof_update_indices(varprefix);
 }
 
-function valuespec_listof_get_new_entry_html_code(varprefix, magic, str_count)
+function listof_get_new_entry_html_code(varprefix, magic, str_count)
 {
     var oPrototype = document.getElementById(varprefix + "_prototype");
     var html_code = oPrototype.innerHTML;
@@ -220,7 +222,7 @@ function valuespec_listof_get_new_entry_html_code(varprefix, magic, str_count)
     html_code = html_code.replace(re, str_count);
 
     // in some cases the magic might be URL encoded. Also replace these occurences.
-    re = new RegExp(encodeURIComponent(magic).replace('!', '%21'), "g");
+    re = new RegExp(encodeURIComponent(magic).replace("!", "%21"), "g");
 
     return html_code.replace(re, str_count);
 }
@@ -228,12 +230,12 @@ function valuespec_listof_get_new_entry_html_code(varprefix, magic, str_count)
 // When deleting we do not fix up indices but simply
 // remove the according list entry and add an invisible
 // input element with the name varprefix + "_deleted_%nr"
-function valuespec_listof_delete(varprefix, nr) {
+export function listof_delete(varprefix, nr) {
     var entry = document.getElementById(varprefix + "_entry_" + nr);
 
     var input = document.createElement("input");
     input.type = "hidden";
-    input.name = "_" + varprefix + '_deleted_' + nr;
+    input.name = "_" + varprefix + "_deleted_" + nr;
     input.value = "1";
 
     entry.parentNode.replaceChild(input, entry);
@@ -241,7 +243,7 @@ function valuespec_listof_delete(varprefix, nr) {
     listof_update_indices(varprefix);
 }
 
-function vs_listof_drop_handler(handler_args, new_index)
+export function listof_drop_handler(handler_args)
 {
     var varprefix = handler_args.varprefix;
     var cur_index = handler_args.cur_index;
@@ -262,12 +264,12 @@ function vs_listof_drop_handler(handler_args, new_index)
     listof_update_indices(varprefix);
 }
 
-function valuespec_listof_sort(varprefix, magic, sort_by) {
+export function listof_sort(varprefix, magic, sort_by) {
     var tbody = document.getElementById(varprefix + "_container");
     var rows = tbody.rows;
 
-    var entries = [], i;
-    for (var i = 0, td, sort_field_name, fields; i < rows.length; i++) {
+    var entries = [], i, td, sort_field_name, fields;
+    for (i = 0; i < rows.length; i++) {
         // Find the index of this row
         td = rows[i].cells[0]; /* TD with buttons */
         if(td.children.length == 0)
@@ -528,63 +530,64 @@ export function iconselector_toggle_names(event, varprefix) {
         utils.add_class(icons, "show_names");
 }
 
-function vs_listofmultiple_add(varprefix) {
-    var choice = document.getElementById(varprefix + '_choice');
+export function listofmultiple_add(varprefix) {
+    var choice = document.getElementById(varprefix + "_choice");
     var ident = choice.value;
 
-    if (ident == '')
+    if (ident == "")
         return;
 
     choice.options[choice.selectedIndex].disabled = true; // disable this choice
 
     // make the filter visible
-    var row = document.getElementById(varprefix + '_' + ident + '_row');
-    remove_class(row, 'unused');
+    var row = document.getElementById(varprefix + "_" + ident + "_row");
+    utils.remove_class(row, "unused");
 
     // Change the field names to used ones
-    vs_listofmultiple_toggle_fields(row, varprefix, true);
+    listofmultiple_toggle_fields(row, varprefix, true);
 
     // Set value emtpy after adding one element
-    choice.value = '';
+    choice.value = "";
 
     // Add it to the list of active elements
-    var active = document.getElementById(varprefix + '_active');
-    if (active.value != '')
-        active.value += ';'+ident;
+    var active = document.getElementById(varprefix + "_active");
+    if (active.value != "")
+        active.value += ";"+ident;
     else
         active.value = ident;
 }
 
-function vs_listofmultiple_del(varprefix, ident) {
+export function listofmultiple_del(varprefix, ident) {
     // make the filter invisible
-    var row = document.getElementById(varprefix + '_' + ident + '_row');
-    add_class(row, 'unused');
+    var row = document.getElementById(varprefix + "_" + ident + "_row");
+    utils.add_class(row, "unused");
 
     // Change the field names to unused ones
-    vs_listofmultiple_toggle_fields(row, varprefix, false);
+    listofmultiple_toggle_fields(row, varprefix, false);
 
     // Make it choosable from the dropdown field again
-    var choice = document.getElementById(varprefix + '_choice');
-    for (var i = 0; i < choice.children.length; i++)
+    var choice = document.getElementById(varprefix + "_choice");
+    var i;
+    for (i = 0; i < choice.children.length; i++)
         if (choice.children[i].value == ident)
             choice.children[i].disabled = false;
 
     // Remove it from the list of active elements
-    var active = document.getElementById(varprefix + '_active');
-    var l = active.value.split(';');
-    for (var i in l) {
+    var active = document.getElementById(varprefix + "_active");
+    var l = active.value.split(";");
+    for (i in l) {
         if (l[i] == ident) {
             l.splice(i, 1);
             break;
         }
     }
-    active.value = l.join(';');
+    active.value = l.join(";");
 }
 
-function vs_listofmultiple_toggle_fields(root, varprefix, enable) {
-    if (root.tagName != 'TR')
+function listofmultiple_toggle_fields(root, varprefix, enable) {
+    if (root.tagName != "TR")
         return; // only handle rows here
-    var types = ['input', 'select', 'textarea'];
+    var types = ["input", "select", "textarea"];
     for (var t in types) {
         var fields = root.getElementsByTagName(types[t]);
         for (var i in fields) {
@@ -593,26 +596,26 @@ function vs_listofmultiple_toggle_fields(root, varprefix, enable) {
     }
 }
 
-function vs_listofmultiple_init(varprefix) {
-    document.getElementById(varprefix + '_choice').value = '';
+export function listofmultiple_init(varprefix) {
+    document.getElementById(varprefix + "_choice").value = "";
 
-    vs_listofmultiple_disable_selected_options(varprefix);
+    listofmultiple_disable_selected_options(varprefix);
 
     // Mark input fields of unused elements as disabled
-    var container = document.getElementById(varprefix + '_table');
-    var unused = document.getElementsByClassName('unused', container);
+    var container = document.getElementById(varprefix + "_table");
+    var unused = document.getElementsByClassName("unused", container);
     for (var i in unused) {
-        vs_listofmultiple_toggle_fields(unused[i], varprefix, false);
+        listofmultiple_toggle_fields(unused[i], varprefix, false);
     }
 }
 
 // The <option> elements in the <select> field of the currently choosen
 // elements need to be disabled.
-function vs_listofmultiple_disable_selected_options(varprefix)
+function listofmultiple_disable_selected_options(varprefix)
 {
-    var active_choices = document.getElementById(varprefix + '_active').value.split(";");
+    var active_choices = document.getElementById(varprefix + "_active").value.split(";");
 
-    var choice_field = document.getElementById(varprefix + '_choice');
+    var choice_field = document.getElementById(varprefix + "_choice");
     for (var i = 0; i < choice_field.children.length; i++) {
         if (active_choices.indexOf(choice_field.children[i].value) !== -1) {
             choice_field.children[i].disabled = true;
@@ -622,7 +625,7 @@ function vs_listofmultiple_disable_selected_options(varprefix)
 
 var g_autocomplete_ajax = null;
 
-function vs_autocomplete(input, completion_ident, completion_params, on_change)
+export function autocomplete(input, completion_ident, completion_params, on_change)
 {
     // TextAscii does not set the id attribute on the input field.
     // Set the id to the name of the field here.
@@ -633,9 +636,9 @@ function vs_autocomplete(input, completion_ident, completion_params, on_change)
         g_autocomplete_ajax.abort();
     }
 
-    g_autocomplete_ajax = call_ajax("ajax_vs_autocomplete.py?ident=" + encodeURIComponent(completion_ident), {
-        response_handler : vs_autocomplete_handle_response,
-        error_handler    : vs_autocomplete_handle_error,
+    g_autocomplete_ajax = ajax.call_ajax("ajax_vs_autocomplete.py?ident=" + encodeURIComponent(completion_ident), {
+        response_handler : autocomplete_handle_response,
+        error_handler    : autocomplete_handle_error,
         handler_data     : [ input.id, on_change ],
         method           : "POST",
         post_data        : "params="+encodeURIComponent(JSON.stringify(completion_params))
@@ -645,7 +648,7 @@ function vs_autocomplete(input, completion_ident, completion_params, on_change)
     });
 }
 
-function vs_autocomplete_handle_response(handler_data, response_text)
+function autocomplete_handle_response(handler_data, response_text)
 {
     var input_id = handler_data[0];
     var on_change = handler_data[1];
@@ -653,12 +656,12 @@ function vs_autocomplete_handle_response(handler_data, response_text)
     try {
         var response = eval(response_text);
     } catch(e) {
-        vs_autocomplete_show_error(input_id, response_text);
+        autocomplete_show_error(input_id, response_text);
         return;
     }
 
     if (response.length == 0) {
-        vs_autocomplete_close(input_id);
+        autocomplete_close(input_id);
     }
     else {
         // When only one result and values equal, hide the menu
@@ -666,52 +669,52 @@ function vs_autocomplete_handle_response(handler_data, response_text)
         if (response.length == 1
             && input
             && response[0][0] == input.value) {
-            vs_autocomplete_close(input_id);
+            autocomplete_close(input_id);
             return;
         }
 
-        vs_autocomplete_show_choices(input_id, on_change, response);
+        autocomplete_show_choices(input_id, on_change, response);
     }
 }
 
-function vs_autocomplete_handle_error(handler_data, status_code, error_msg)
+function autocomplete_handle_error(handler_data, status_code, error_msg)
 {
     var input_id = handler_data[0];
 
     if (status_code == 0)
         return; // aborted (e.g. by subsequent call)
-    vs_autocomplete_show_error(input_id, error_msg + " (" + status_code + ")");
+    autocomplete_show_error(input_id, error_msg + " (" + status_code + ")");
 }
 
-function vs_autocomplete_show_choices(input_id, on_change, choices)
+function autocomplete_show_choices(input_id, on_change, choices)
 {
     var code = "<ul>";
     for(var i = 0; i < choices.length; i++) {
         var value = choices[i][0];
         var label = choices[i][1];
 
-        code += "<li onclick=\"vs_autocomplete_choose('"
+        code += "<li onclick=\"cmk.valuespecs.autocomplete_choose('"
                     + input_id + "', '" + value + "');"
                     + on_change + "\">" + label + "</li>";
     }
     code += "</ul>";
 
-    vs_autocomplete_show(input_id, code);
+    autocomplete_show(input_id, code);
 }
 
-function vs_autocomplete_choose(input_id, value)
+export function autocomplete_choose(input_id, value)
 {
     var input = document.getElementById(input_id);
     input.value = value;
-    vs_autocomplete_close(input_id);
+    autocomplete_close(input_id);
 }
 
-function vs_autocomplete_show_error(input_id, msg)
+function autocomplete_show_error(input_id, msg)
 {
-    vs_autocomplete_show(input_id, "<div class=error>ERROR: " + msg + "</div>");
+    autocomplete_show(input_id, "<div class=error>ERROR: " + msg + "</div>");
 }
 
-function vs_autocomplete_show(input_id, inner_html)
+function autocomplete_show(input_id, inner_html)
 {
     var popup = document.getElementById(input_id + "_popup");
     if (!popup) {
@@ -728,7 +731,7 @@ function vs_autocomplete_show(input_id, inner_html)
     popup.innerHTML = inner_html;
 }
 
-function vs_autocomplete_close(input_id)
+function autocomplete_close(input_id)
 {
     var popup = document.getElementById(input_id + "_popup");
     if (popup)
@@ -738,7 +741,19 @@ function vs_autocomplete_close(input_id)
 
 var vs_color_pickers = [];
 
-function vs_update_color_picker(varprefix, hex, update_picker) {
+export function add_color_picker(varprefix, value) {
+    vs_color_pickers[varprefix] = colorpicker.ColorPicker(document.getElementById(varprefix + "_picker"), function(hex) {
+        update_color_picker(varprefix, hex, false);
+    });
+
+    document.getElementById(varprefix+"_input").oninput = function() {
+        update_color_picker(varprefix, this.value, true);
+    };
+
+    update_color_picker(varprefix, value, true);
+}
+
+function update_color_picker(varprefix, hex, update_picker) {
     if (!/^#[0-9A-F]{6}$/i.test(hex))
         return; // skip invalid/unhandled colors
 
@@ -748,219 +763,4 @@ function vs_update_color_picker(varprefix, hex, update_picker) {
 
     if (update_picker)
         vs_color_pickers[varprefix].setHex(hex);
-}
-
-/* Switch filter, commands and painter options */
-function view_toggle_form(button, form_id) {
-    var display = "none";
-    var down    = "up";
-
-    var form = document.getElementById(form_id);
-    if (form && form.style.display == "none") {
-        display = "";
-        down    = "down";
-    }
-
-    // Close all other view forms
-    var alldivs = document.getElementsByClassName('view_form');
-    for (var i=0; i<alldivs.length; i++) {
-        if (alldivs[i] != form) {
-            alldivs[i].style.display = "none";
-        }
-    }
-
-    if (form)
-        form.style.display = display;
-
-    // Make other buttons inactive
-    var allbuttons = document.getElementsByClassName('togglebutton');
-    for (var i=0; i<allbuttons.length; i++) {
-        var b = allbuttons[i];
-        if (b != button && !has_class(b, "empth") && !has_class(b, "checkbox")) {
-            remove_class(b, "down");
-            add_class(b, "up");
-        }
-    }
-    remove_class(button, "down");
-    remove_class(button, "up");
-    add_class(button, down);
-}
-
-function wheel_event_name()
-{
-    if ("onwheel" in window)
-        return "wheel";
-    else if (cmk.utils.browser.is_firefox())
-        return "DOMMouseScroll";
-    else
-        return "mousewheel";
-}
-
-function wheel_event_delta(event)
-{
-    return event.deltaY ? event.deltaY
-                        : event.detail ? event.detail * (-120)
-                                       : event.wheelDelta;
-}
-
-function init_optiondial(id)
-{
-    var container = document.getElementById(id);
-    make_unselectable(container);
-    cmk.utils.add_event_handler(wheel_event_name(), optiondial_wheel, container);
-}
-
-var g_dial_direction = 1;
-var g_last_optiondial = null;
-function optiondial_wheel(event) {
-    event = event || window.event;
-    var delta = wheel_event_delta(event);
-
-    // allow updates every 100ms
-    if (g_last_optiondial > cmk.utils.time() - 0.1) {
-        return prevent_default_events(event);
-    }
-    g_last_optiondial = cmk.utils.time();
-
-    var container = cmk.utils.get_target(event);
-    if (event.nodeType == 3) // defeat Safari bug
-        container = container.parentNode;
-    while (!container.className)
-        container = container.parentNode;
-
-    if (delta > 0)
-        g_dial_direction = -1;
-    container.onclick(event);
-    g_dial_direction = 1;
-
-    return prevent_default_events(event);
-}
-
-// used for refresh und num_columns
-function view_dial_option(oDiv, viewname, option, choices) {
-    // prevent double click from select text
-    var new_choice = choices[0]; // in case not contained in choices
-    for (var c = 0, choice = null, val = null; c < choices.length; c++) {
-        choice = choices[c];
-        val = choice[0];
-        if (has_class(oDiv, "val_" + val)) {
-            new_choice = choices[(c + choices.length + g_dial_direction) % choices.length];
-            change_class(oDiv, "val_" + val, "val_" + new_choice[0]);
-            break;
-        }
-    }
-
-    // Start animation
-    var step = 0;
-    var speed = 10;
-
-    for (var way = 0; way <= 10; way +=1) {
-        step += speed;
-        setTimeout(function(option, text, way, direction) {
-            return function() {
-                turn_dial(option, text, way, direction);
-            };
-        }(option, "", way, g_dial_direction), step);
-    }
-
-    for (var way = -10; way <= 0; way +=1) {
-        step += speed;
-        setTimeout(function(option, text, way, direction) {
-            return function() {
-                turn_dial(option, text, way, direction);
-            };
-        }(option, new_choice[1], way, g_dial_direction), step);
-    }
-
-    var url = "ajax_set_viewoption.py?view_name=" + viewname +
-              "&option=" + option + "&value=" + new_choice[0];
-    call_ajax(url, {
-        method           : "GET",
-        response_handler : function(handler_data, response_body) {
-            if (handler_data.option == "refresh")
-                set_reload(handler_data.new_value);
-            else
-                cmk.utils.schedule_reload('', 400.0);
-        },
-        handler_data     : {
-            new_value : new_choice[0],
-            option    : option
-        }
-    });
-}
-
-// way ranges from -10 to 10 means centered (normal place)
-function turn_dial(option, text, way, direction)
-{
-    var oDiv = document.getElementById("optiondial_" + option).getElementsByTagName("DIV")[0];
-    if (text && oDiv.innerHTML != text)
-        oDiv.innerHTML = text;
-    oDiv.style.top = (way * 1.3 * direction) + "px";
-}
-
-function make_unselectable(elem)
-{
-    elem.onselectstart = function() { return false; };
-    elem.style.MozUserSelect = "none";
-    elem.style.KhtmlUserSelect = "none";
-    elem.unselectable = "on";
-}
-
-// TODO: Is gColumnSwitchTimeout and view_switch_option needed at all?
-// TODO: Where is handleReload defined?
-/* Switch number of view columns, refresh and checkboxes. If the
-   choices are missing, we do a binary toggle. */
-gColumnSwitchTimeout = null;
-function view_switch_option(oDiv, viewname, option, choices) {
-    var new_value;
-    if (has_class(oDiv, "down")) {
-        new_value = false;
-        change_class(oDiv, "down", "up");
-    }
-    else {
-        new_value = true;
-        change_class(oDiv, "up", "down");
-    }
-    var new_choice = [ new_value, '' ];
-
-    var url = "ajax_set_viewoption.py?view_name=" + viewname +
-               "&option=" + option + "&value=" + new_choice[0];
-
-    call_ajax(url, {
-        method           : "GET",
-        response_handler : function(handler_data, response_body) {
-            if (handler_data.option == "refresh") {
-                set_reload(handler_data.new_value);
-            } else if (handler_data.option == "show_checkboxes") {
-                cmk.selection.set_selection_enabled(handler_data.new_value);
-            }
-
-            handleReload('');
-        },
-        handler_data     : {
-            new_value : new_value,
-            option    : option
-        }
-    });
-
-}
-
-var g_hosttag_groups = {};
-
-function host_tag_update_value(prefix, grp) {
-    var value_select = document.getElementById(prefix + '_val');
-
-    // Remove all options
-    value_select.options.length = 0;
-
-    if(grp === '')
-        return; // skip over when empty group selected
-
-    var opt = null;
-    for (var i = 0, len = g_hosttag_groups[grp].length; i < len; i++) {
-        opt = document.createElement('option');
-        opt.value = g_hosttag_groups[grp][i][0];
-        opt.text  = g_hosttag_groups[grp][i][1];
-        value_select.appendChild(opt);
-    }
 }

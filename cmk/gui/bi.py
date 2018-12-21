@@ -2898,7 +2898,7 @@ class FoldableTreeRenderer(object):
             url=None,
             title=_("Assume another state for this item (reload page to activate)"),
             icon="assume_%s" % current_state,
-            onclick="toggle_assumption(this, '%s', '%s', '%s');" %
+            onclick="cmk.bi.toggle_assumption(this, '%s', '%s', '%s');" %
             (site, host, service.replace('\\', '\\\\') if service else ''),
             cssclass="assumption",
         )
@@ -2920,7 +2920,7 @@ class FoldableTreeRendererTree(FoldableTreeRenderer):
         return "aggrtree"
 
     def _toggle_js_function(self):
-        return "bi_toggle_subtree"
+        return "cmk.bi.toggle_subtree"
 
     def _show_subtree(self, tree, path, show_host):
         if self._is_leaf(tree):
@@ -3041,7 +3041,7 @@ class FoldableTreeRendererBoxes(FoldableTreeRenderer):
         return "aggrtree_box"
 
     def _toggle_js_function(self):
-        return "bi_toggle_box"
+        return "cmk.bi.toggle_box"
 
     def _show_subtree(self, tree, path, show_host):
         # Check if we have an assumed state: comparing assumed state (tree[1]) with state (tree[0])
@@ -3107,7 +3107,7 @@ class FoldableTreeRendererTable(FoldableTreeRendererTree):
         return "aggrtree"
 
     def _toggle_js_function(self):
-        return "bi_toggle_subtree"
+        return "cmk.bi.toggle_subtree"
 
     def _show_tree(self):
         td_style = None if self._wrap_texts == "wrap" else "white-space: nowrap;"

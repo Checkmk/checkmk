@@ -45,7 +45,7 @@ export function toggle(treename, id, fetch_url) {
         toggle_tree_state(treename, id, oTr, fetch_url);
 
         if (oImg)
-            toggle_folding(oImg, !utils.has_class(oTr, "closed"));
+            utils.toggle_folding(oImg, !utils.has_class(oTr, "closed"));
     }
     else {
         oImg = document.getElementById("treeimg." + treename + "." + id);
@@ -53,15 +53,7 @@ export function toggle(treename, id, fetch_url) {
         toggle_tree_state(treename, id, oBox, fetch_url);
 
         if (oImg)
-            toggle_folding(oImg, !utils.has_class(oBox, "closed"));
-    }
-}
-
-function toggle_folding(img, to_be_opened) {
-    if (to_be_opened) {
-        utils.change_class(img, "closed", "open");
-    } else {
-        utils.change_class(img, "open", "closed");
+            utils.toggle_folding(oImg, !utils.has_class(oBox, "closed"));
     }
 }
 

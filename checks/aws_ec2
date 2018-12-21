@@ -24,26 +24,27 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+EC2DefaultItemName = "DEFAULT"
+
 
 def parse_aws_ec2(info):
-    return {
-        EC2DefaultItemName: _extract_aws_metrics([
-            'StatusCheckFailed_Instance',
-            'StatusCheckFailed_System',
-            'CPUCreditUsage',
-            'CPUCreditBalance',
-            'CPUUtilization',
-            'DiskReadOps',
-            'DiskWriteOps',
-            'DiskReadBytes',
-            'DiskWriteBytes',
-            'NetworkIn',
-            'NetworkOut',
-        ], parse_aws(info)),
-    }
+    metrics = _extract_aws_metrics([
+        'StatusCheckFailed_Instance',
+        'StatusCheckFailed_System',
+        'CPUCreditUsage',
+        'CPUCreditBalance',
+        'CPUUtilization',
+        'DiskReadOps',
+        'DiskWriteOps',
+        'DiskReadBytes',
+        'DiskWriteBytes',
+        'NetworkIn',
+        'NetworkOut',
+    ], parse_aws(info))
+    if metrics:
+        return {EC2DefaultItemName: metrics}
+    return
 
-
-EC2DefaultItemName = "DEFAULT"
 
 #   .--status check--------------------------------------------------------.
 #   |           _        _                    _               _            |

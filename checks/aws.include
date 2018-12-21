@@ -52,11 +52,18 @@ def _extract_aws_metrics(expected_metric_names, parsed):
 def _extract_aws_metrics_by_labels(expected_metric_names, parsed):
     values_by_labels = {}
     for row in parsed:
+        row_id = row['Id']
+        row_label = row['Label']
+        row_values = row['Values']
         for expected_metric_name in expected_metric_names:
-            if row['Id'].startswith(expected_metric_name.lower()):
-                try:
-                    values_by_labels.setdefault(row['Label'], {})\
-                                    .setdefault(expected_metric_name, row['Values'][0])
-                except IndexError:
-                    pass
+            if not row_id.startswith(expected_metric_name.lower()):
+                continue
+
+            try:
+                value = row_values[0]
+            except IndexError:
+                continue
+            else:
+                values_by_labels.setdefault(row_label, {})\
+                                .setdefault(expected_metric_name, value)
     return values_by_labels

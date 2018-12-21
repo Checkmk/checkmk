@@ -216,7 +216,7 @@ class EC2Summary(AWSSection):
             reservations = raw_result['Reservations']
         except KeyError, e:
             logging.info("%s: KeyError %s; Available are %s", self.name, e, raw_result.keys())
-            return []
+            return {}
         return {
             "Reservations": reservations,
             "mapping": self._map_instance_id_to_name(reservations),
@@ -255,7 +255,7 @@ class EC2(AWSSection):
         start_time = end_time - self.period
         metrics = self._get_metrics()
         if not metrics:
-            return {}
+            return []
 
         # A single GetMetricData call can include up to 100 MetricDataQuery structures
         # There's no pagination for this operation:
@@ -278,11 +278,11 @@ class EC2(AWSSection):
         return raw_result
 
     def _get_metrics(self):
-        instance_ids = self._received_results.get('ec2_summary', {})\
-                                             .get('mapping', {}).values()
         metrics = []
         idx = 0
-        for instance_id in instance_ids:
+        for instance_id, instance_name in\
+            self._received_results.get('ec2_summary', {})\
+                                  .get('mapping', {}).iteritems():
             for metric_name, unit in [
                 ("CPUCreditUsage", "Count"),
                 ("CPUCreditBalance", "Count"),
@@ -298,7 +298,7 @@ class EC2(AWSSection):
             ]:
                 metrics.append({
                     'Id': "%s_%s" % (metric_name.lower(), idx),
-                    'Label': instance_id,
+                    'Label': instance_name,
                     'MetricStat': {
                         'Metric': {
                             'Namespace': 'AWS/EC2',
@@ -473,7 +473,7 @@ class ELB(AWSSection):
         start_time = end_time - self.period
         metrics = self._get_metrics()
         if not metrics:
-            return {}
+            return []
 
         # A single GetMetricData call can include up to 100 MetricDataQuery structures
         # There's no pagination for this operation:
@@ -539,11 +539,7 @@ class ELB(AWSSection):
         return metrics
 
     def _extract_content_from(self, raw_result):
-        try:
-            return raw_result['MetricDataResults']
-        except KeyError, e:
-            logging.info("%s: KeyError %s; Available are %s", self.name, e, raw_result.keys())
-            return []
+        return raw_result
 
     def _format_content(self, content):
         content_by_piggyback_hosts = {}
@@ -633,7 +629,7 @@ class EBS(AWSSection):
         start_time = end_time - self.period
         metrics = self._get_metrics()
         if not metrics:
-            return {}
+            return []
 
         # A single GetMetricData call can include up to 100 MetricDataQuery structures
         # There's no pagination for this operation:
@@ -822,8 +818,8 @@ class AWSSections(object):
 
         #---sections--------------------------------------------------------
         s3 = S3(s3_client)
-        ec2 = EC2(cloudwatch_client)
         elb_health = ELBHealth(elb_client)
+        ec2 = EC2(cloudwatch_client)
         elb = ELB(cloudwatch_client)
         ebs = EBS(cloudwatch_client)
 

@@ -267,7 +267,7 @@ class ModeFolder(WatoMode):
         html.open_div(
             class_=["floatfolder", "unlocked" if subfolder.may("read") else "locked"],
             id_="folder_%s" % subfolder.name(),
-            onclick="wato_open_folder(event, \'%s\');" % subfolder.url())
+            onclick="cmk.wato.open_folder(event, \'%s\');" % subfolder.url())
         self._show_subfolder_hoverarea(subfolder)
         self._show_subfolder_infos(subfolder)
         self._show_subfolder_title(subfolder)
@@ -278,8 +278,8 @@ class ModeFolder(WatoMode):
         if subfolder.may("read"):
             html.open_div(
                 class_="hoverarea",
-                onmouseover="wato_toggle_folder(event, this, true);",
-                onmouseout="wato_toggle_folder(event, this, false);")
+                onmouseover="cmk.wato.toggle_folder(event, this, true);",
+                onmouseout="cmk.wato.toggle_folder(event, this, false);")
             self._show_subfolder_buttons(subfolder)
             html.close_div()  # hoverarea
         else:

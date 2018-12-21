@@ -311,7 +311,7 @@ def section(title=None, checkbox=None, section_id=None, simple=False, hide=False
             else:
                 name, active, attrname = checkbox
                 html.checkbox(
-                    name, active, onclick='wato_toggle_attribute(this, \'%s\')' % attrname)
+                    name, active, onclick='cmk.wato.toggle_attribute(this, \'%s\')' % attrname)
             html.close_div()
         html.close_td()
     html.open_td(class_=["content", "simple" if simple else None])

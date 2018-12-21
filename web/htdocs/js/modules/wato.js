@@ -22,79 +22,51 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
+import * as utils from "utils";
+
 // ----------------------------------------------------------------------------
 // General functions for WATO
 // ----------------------------------------------------------------------------
 
-/* Used to check all checkboxes which have the given class set */
-function wato_check_all(css_class) {
-    var items = document.getElementsByClassName(css_class);
+var dialog_properties = null;
 
-    // First check if all boxes are checked
-    var all_checked = true, i;
-    for(i = 0; i < items.length && all_checked == true; i++)
-        if (items[i].checked == false)
-            all_checked = false;
-
-    // Now set the new state
-    for(i = 0; i < items.length; i++)
-        items[i].checked = !all_checked;
-}
-
-/* Make attributes visible or not when clicked on a checkbox */
-function wato_toggle_attribute(oCheckbox, attrname) {
-    var oEntry =   document.getElementById("attr_entry_" + attrname);
-    var oDefault = document.getElementById("attr_default_" + attrname);
-
-    // Permanent invisible attributes do
-    // not have attr_entry / attr_default
-    if (!oEntry){
-        return;
-    }
-
-    if (oCheckbox.checked) {
-        oEntry.style.display = "";
-        oDefault.style.display = "none";
-    }
-    else {
-        oEntry.style.display = "none";
-        oDefault.style.display = "";
-    }
+export function prepare_edit_dialog(attrs) {
+    dialog_properties = attrs;
 }
 
 /* Switch the visibility of all host attributes during the configuration
    of attributes of a host */
-function wato_fix_visibility() {
+export function fix_visibility() {
     /* First collect the current selection of all host attributes.
        They are in the same table as we are */
-    var current_tags = _get_effective_tags();
+    var current_tags = get_effective_tags();
     if (!current_tags)
         return;
 
-    var hide_topics = volatile_topics.slice(0);
+    var hide_topics = dialog_properties.volatile_topics.slice(0);
     /* Now loop over all attributes that have conditions. Those are
-       stored in the global variable wato_depends_on_tags, which is filled
+       stored in the global variable depends_on_tags, which is filled
        during the creation of the web page. */
 
     var index;
-    for (var i = 0; i < wato_check_attributes.length; i++) {
-        var attrname = wato_check_attributes[i];
+    for (var i = 0; i < dialog_properties.check_attributes.length; i++) {
+        var attrname = dialog_properties.check_attributes[i];
         /* Now comes the tricky part: decide whether that attribute should
            be visible or not: */
         var display = "";
 
         // Always invisible
-        if (hide_attributes.indexOf(attrname) > -1){
+        if (dialog_properties.hide_attributes.indexOf(attrname) > -1){
             display = "none";
         }
 
         // Visibility depends on roles
-        if (display == "" && attrname in wato_depends_on_roles) {
-            for (index = 0; index < wato_depends_on_roles[attrname].length; index++) {
-                var role = wato_depends_on_roles[attrname][index];
+        if (display == "" && attrname in dialog_properties.depends_on_roles) {
+            for (index = 0; index < dialog_properties.depends_on_roles[attrname].length; index++) {
+                var role = dialog_properties.depends_on_roles[attrname][index];
                 var negate = role[0] == "!";
                 var rolename = negate ? role.substr(1) : role;
-                var have_role = user_roles.indexOf(rolename) != -1;
+                var have_role = dialog_properties.user_roles.indexOf(rolename) != -1;
                 if (have_role == negate) {
                     display = "none";
                     break;
@@ -103,9 +75,9 @@ function wato_fix_visibility() {
         }
 
         // Visibility depends on tags
-        if (display == "" && attrname in wato_depends_on_tags) {
-            for (index = 0; index < wato_depends_on_tags[attrname].length; index++) {
-                var tag = wato_depends_on_tags[attrname][index];
+        if (display == "" && attrname in dialog_properties.depends_on_tags) {
+            for (index = 0; index < dialog_properties.depends_on_tags[attrname].length; index++) {
+                var tag = dialog_properties.depends_on_tags[attrname][index];
                 var negate_tag = tag[0] == "!";
                 var tagname = negate_tag ? tag.substr(1) : tag;
                 var have_tag = current_tags.indexOf(tagname) != -1;
@@ -137,7 +109,7 @@ function wato_fix_visibility() {
                 // Uncheck checkboxes of hidden fields
                 var chkbox = oAttrDisp.parentNode.childNodes[0].childNodes[1].childNodes[0];
                 chkbox.checked = false;
-                wato_toggle_attribute(chkbox, attrname);
+                toggle_attribute(chkbox, attrname);
 
                 oAttrDisp.value = "0";
             } else {
@@ -173,7 +145,28 @@ function wato_fix_visibility() {
     }
 }
 
-function _get_effective_tags()
+/* Make attributes visible or not when clicked on a checkbox */
+export function toggle_attribute(oCheckbox, attrname) {
+    var oEntry =   document.getElementById("attr_entry_" + attrname);
+    var oDefault = document.getElementById("attr_default_" + attrname);
+
+    // Permanent invisible attributes do
+    // not have attr_entry / attr_default
+    if (!oEntry){
+        return;
+    }
+
+    if (oCheckbox.checked) {
+        oEntry.style.display = "";
+        oDefault.style.display = "none";
+    }
+    else {
+        oEntry.style.display = "none";
+        oDefault.style.display = "";
+    }
+}
+
+function get_effective_tags()
 {
     var current_tags = [];
 
@@ -202,8 +195,8 @@ function _get_effective_tags()
                 var oCheckbox = oTdLegend.getElementsByTagName("input")[0];
                 if (oCheckbox.checked == false ){
                     var attrname = "attr_" + oCheckbox.name.replace(/.*_change_/, "");
-                    if (attrname in inherited_tags && inherited_tags[attrname] !== null){
-                        add_tag_id = inherited_tags[attrname];
+                    if (attrname in dialog_properties.inherited_tags && dialog_properties.inherited_tags[attrname] !== null){
+                        add_tag_id = dialog_properties.inherited_tags[attrname];
                     }
                 } else {
                     /* Find the <select>/<checkbox> object in this tr */
@@ -224,8 +217,8 @@ function _get_effective_tags()
             }
 
             current_tags.push(add_tag_id);
-            if (wato_aux_tags_by_tag[add_tag_id]) {
-                current_tags = current_tags.concat(wato_aux_tags_by_tag[add_tag_id]);
+            if (dialog_properties.aux_tags_by_tag[add_tag_id]) {
+                current_tags = current_tags.concat(dialog_properties.aux_tags_by_tag[add_tag_id]);
             }
         }
     }
@@ -233,7 +226,7 @@ function _get_effective_tags()
 }
 
 
-function wato_randomize_secret(id, len)
+export function randomize_secret(id, len)
 {
     var secret = "";
     for (var i=0; i<len; i++) {
@@ -244,31 +237,23 @@ function wato_randomize_secret(id, len)
     oInput.value = secret;
 }
 
-function toggle_container(id)
+export function toggle_container(id)
 {
     var obj = document.getElementById(id);
-    if (has_class(obj, "hidden"))
-        remove_class(obj, "hidden");
+    if (utils.has_class(obj, "hidden"))
+        utils.remove_class(obj, "hidden");
     else
-        add_class(obj, "hidden");
-}
-
-function update_bulk_moveto(val) {
-    var fields = document.getElementsByClassName("bulk_moveto");
-    for(var i = 0; i < fields.length; i++)
-        for(var a = 0; a < fields[i].options.length; a++)
-            if(fields[i].options[a].value == val)
-                fields[i].options[a].selected = true;
+        utils.add_class(obj, "hidden");
 }
 
 // ----------------------------------------------------------------------------
 // Folderlist
 // ----------------------------------------------------------------------------
 
-function wato_open_folder(event, link) {
+export function open_folder(event, link) {
     if (!event)
         event = window.event;
-    var target = getTarget(event);
+    var target = utils.get_target(event);
     if(target.tagName != "DIV") {
         // Skip this event on clicks on other elements than the pure div
         return false;
@@ -277,7 +262,7 @@ function wato_open_folder(event, link) {
     location.href = link;
 }
 
-function wato_toggle_folder(event, oDiv, on) {
+export function toggle_folder(event, oDiv, on) {
     if (!event)
         event = window.event;
 
@@ -309,9 +294,9 @@ function wato_toggle_folder(event, oDiv, on) {
     }
 
     if(on) {
-        add_class(obj, "open");
+        utils.add_class(obj, "open");
     } else {
-        remove_class(obj, "open");
+        utils.remove_class(obj, "open");
 
         // Hide the eventual open move dialog
         var move_dialog = document.getElementById("move_dialog_" + id);

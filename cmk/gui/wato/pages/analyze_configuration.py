@@ -141,7 +141,7 @@ class ModeAnalyzeConfig(WatoMode):
             None,
             _("Toggle result details"),
             "toggle_details",
-            onclick="toggle_container('test_result_details_%s')" % test_id)
+            onclick="cmk.wato.toggle_container('test_result_details_%s')" % test_id)
 
         worst_result = sorted(
             test_results_by_site["site_results"].values(), key=lambda result: result.status)[0]

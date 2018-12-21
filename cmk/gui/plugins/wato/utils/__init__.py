@@ -1750,7 +1750,7 @@ def configure_attributes(new,
                     "ignored_" + checkbox_name, disabled="disabled")
                 checkbox_code += html.render_hidden_field(checkbox_name, "on")
             else:
-                onclick = "wato_fix_visibility(); wato_toggle_attribute(this, '%s');" % attrname
+                onclick = "cmk.wato.fix_visibility(); cmk.wato.toggle_attribute(this, '%s');" % attrname
                 checkbox_kwargs = {"disabled": "disabled"} if disabled else {}
                 checkbox_code = html.render_checkbox(
                     checkbox_name, active, onclick=onclick, **checkbox_kwargs)
@@ -1830,25 +1830,21 @@ def configure_attributes(new,
             volatile_topics.append((topic or _("Basic settings")).encode('utf-8'))
 
     forms.end()
-    # Provide Javascript world with the tag dependency information
-    # of all attributes.
-    html.javascript("var inherited_tags = %s;\n"\
-                    "var wato_check_attributes = %s;\n"\
-                    "var wato_aux_tags_by_tag = %s;\n"\
-                    "var wato_depends_on_tags = %s;\n"\
-                    "var wato_depends_on_roles = %s;\n"\
-                    "var volatile_topics = %s;\n"\
-                    "var user_roles = %s;\n"\
-                    "var hide_attributes = %s;\n"\
-                    "wato_fix_visibility();\n" % (
-                       json.dumps(inherited_tags),
-                       json.dumps(list(set(dependency_mapping_tags.keys()+dependency_mapping_roles.keys()+hide_attributes))),
-                       json.dumps(_get_auxtags_by_tag()),
-                       json.dumps(dependency_mapping_tags),
-                       json.dumps(dependency_mapping_roles),
-                       json.dumps(volatile_topics),
-                       json.dumps(config.user.role_ids),
-                       json.dumps(hide_attributes)))
+
+    dialog_properties = {
+        "inherited_tags": inherited_tags,
+        "check_attributes": list(
+            set(dependency_mapping_tags.keys() + dependency_mapping_roles.keys() + hide_attributes)
+        ),
+        "aux_tags_by_tag": _get_auxtags_by_tag(),
+        "depends_on_tags": dependency_mapping_tags,
+        "depends_on_roles": dependency_mapping_roles,
+        "volatile_topics": volatile_topics,
+        "user_roles": config.user.role_ids,
+        "hide_attributes": hide_attributes,
+    }
+    html.javascript("cmk.wato.prepare_edit_dialog(%s);"
+                    "cmk.wato.fix_visibility();" % json.dumps(dialog_properties))
 
 
 def _get_auxtags_by_tag():

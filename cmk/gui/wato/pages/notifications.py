@@ -580,7 +580,7 @@ class ModeNotifications(NotificationsMode):
                     None,
                     _("Show / hide notification context"),
                     "toggle_context",
-                    onclick="toggle_container('notification_context_%d')" % nr)
+                    onclick="cmk.wato.toggle_container('notification_context_%d')" % nr)
 
                 replay_url = html.makeactionuri([("_replay", str(nr))])
                 html.icon_button(replay_url, _("Replay this notification, send it again!"),

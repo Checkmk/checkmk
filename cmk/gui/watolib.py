@@ -3559,7 +3559,7 @@ class HostTagListAttribute(HostTagAttribute):
             title=title,
             choices=self._get_tag_choices(tag_list),
             default_value=tag_list[0][0],
-            on_change="wato_fix_visibility();",
+            on_change="cmk.wato.fix_visibility();",
             encode_value=False,
         )
         super(HostTagListAttribute, self).__init__(vs, tag_id, tag_list)
@@ -3582,7 +3582,7 @@ class HostTagCheckboxAttribute(HostTagAttribute):
             label=_u(tag_list[0][1]),
             true_label=title,
             false_label="%s %s" % (_("Not"), title),
-            onclick="wato_fix_visibility();",
+            onclick="cmk.wato.fix_visibility();",
         )
         super(HostTagCheckboxAttribute, self).__init__(vs, tag_id, tag_list)
 

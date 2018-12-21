@@ -107,11 +107,6 @@ function rad(g) {
     return (g * 360 / 100 * Math.PI) / 180;
 }
 
-// Returns timestamp in seconds incl. subseconds as decimal
-function time() {
-    return (new Date()).getTime() / 1000;
-}
-
 // Tells the caller whether or not there are graphs on the current page
 function has_graphing()
 {
@@ -2331,10 +2326,10 @@ function optiondial_wheel(event) {
     var delta = wheel_event_delta(event);
 
     // allow updates every 100ms
-    if (g_last_optiondial > time() - 0.1) {
+    if (g_last_optiondial > cmk.utils.time() - 0.1) {
         return prevent_default_events(event);
     }
-    g_last_optiondial = time();
+    g_last_optiondial = cmk.utils.time();
 
     var container = cmk.utils.get_target(event);
     if (event.nodeType == 3) // defeat Safari bug

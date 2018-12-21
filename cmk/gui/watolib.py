@@ -7410,7 +7410,7 @@ def render_condition_editor(tag_specs, varprefix=""):
     def tag_condition_dropdown(tagtype, deflt, id_):
         html.open_td()
         dropdown_id = varprefix + tagtype + "_" + id_
-        onchange = "valuespec_toggle_dropdownn(this, '%stag_sel_%s');" % (varprefix, id_)
+        onchange = "cmk.valuespecs.toggle_tag_dropdown(this, '%stag_sel_%s');" % (varprefix, id_)
         choices = [
             ("ignore", _("ignore")),
             ("is", _("is")),
@@ -8839,7 +8839,7 @@ class RuleComment(TextAreaUnicode):
             None,
             title=_("Prefix date and your name to the comment"),
             icon="insertdate",
-            onclick="vs_rule_comment_prefix_date_and_user(this, '%s');" % date_and_user)
+            onclick="cmk.valuespecs.rule_comment_prefix_date_and_user(this, '%s');" % date_and_user)
         html.close_div()
 
 

@@ -996,7 +996,7 @@ class TextAreaUnicode(TextUnicode):
         if value is None:
             value = ""  # should never happen, but avoids exception for invalid input
         if self._rows == "auto":
-            func = 'valuespec_textarea_resize(this, %s);' % json.dumps(html.get_theme())
+            func = 'cmk.valuespecs.textarea_resize(this, %s);' % json.dumps(html.get_theme())
             attrs = {"onkeyup": func, "onmousedown": func, "onmouseup": func, "onmouseout": func}
             if html.has_var(varprefix):
                 rows = len(html.var(varprefix).splitlines())
@@ -1140,9 +1140,9 @@ class ListOfStrings(ValueSpec):
         html.close_div()
         html.div('', style="clear:left;")
         html.help(self.help())
-        html.javascript("list_of_strings_init(%s, %s, %s);" % (json.dumps(varprefix),
-                                                               json.dumps(self._split_on_paste),
-                                                               json.dumps(self._split_separators)))
+        html.javascript("cmk.valuespecs.list_of_strings_init(%s, %s, %s);" %
+                        (json.dumps(varprefix), json.dumps(self._split_on_paste),
+                         json.dumps(self._split_separators)))
 
     def canonical_value(self):
         return []
@@ -1279,7 +1279,7 @@ class ListOf(ValueSpec):
         html.close_div()
 
         if count:
-            html.javascript("valuespec_listof_update_indices(%s)" % json.dumps(varprefix))
+            html.javascript("cmk.valuespecs.listof_update_indices(%s)" % json.dumps(varprefix))
 
     def _show_entries(self, varprefix, value):
         if self._style == ListOf.Style.REGULAR:
@@ -1306,9 +1306,8 @@ class ListOf(ValueSpec):
 
     def _list_buttons(self, varprefix):
         html.jsbutton(
-            varprefix + "_add", self._add_label,
-            "valuespec_listof_add(%s, %s, %s)" % (json.dumps(varprefix), json.dumps(self._magic),
-                                                  json.dumps(self._style.value)))
+            varprefix + "_add", self._add_label, "cmk.valuespecs.listof_add(%s, %s, %s)" %
+            (json.dumps(varprefix), json.dumps(self._magic), json.dumps(self._style.value)))
 
         if self._sort_by is not None:
             html.jsbutton(
@@ -1952,7 +1951,7 @@ class CascadingDropdown(ValueSpec):
                 def_val = str(nr)
 
         vp = varprefix + "_sel"
-        onchange = "valuespec_cascading_change(this, '%s', %d);" % (varprefix, len(choices))
+        onchange = "cmk.valuespecs.cascading_change(this, '%s', %d);" % (varprefix, len(choices))
         html.dropdown(
             vp, options, deflt=def_val, onchange=onchange, ordered=self._sorted, label=self._label)
 
@@ -2159,7 +2158,7 @@ class ListChoice(ValueSpec):
         if self._toggle_all:
             html.a(
                 _("Check / Uncheck all"),
-                href="javascript:vs_list_choice_toggle_all('%s')" % varprefix)
+                href="javascript:cmk.valuespecs.list_choice_toggle_all('%s')" % varprefix)
 
         html.open_table(id_="%s_tbl" % varprefix, class_=["listchoice"])
         for nr, (key, title) in enumerate(elements):
@@ -2315,9 +2314,9 @@ class DualListChoice(ListChoice):
                 else:
                     unselected.append(e)
 
-        select_func = 'vs_duallist_switch(\'unselected\', \'%s\', %d);' % (
+        select_func = 'cmk.valuespecs.duallist_switch(\'unselected\', \'%s\', %d);' % (
             varprefix, 1 if self._custom_order else 0)
-        unselect_func = 'vs_duallist_switch(\'selected\', \'%s\', %d);' % (
+        unselect_func = 'cmk.valuespecs.duallist_switch(\'selected\', \'%s\', %d);' % (
             varprefix, 1 if self._custom_order else 0)
 
         html.open_table(
@@ -2346,7 +2345,8 @@ class DualListChoice(ListChoice):
 
             onchange_func = select_func if self._instant_add else ''
             if self._enlarge_active:
-                onchange_func = 'vs_duallist_enlarge(\'%s\', \'%s\');' % (suffix, varprefix)
+                onchange_func = 'cmk.valuespecs.duallist_enlarge(%s, %s);' % (json.dumps(suffix),
+                                                                              json.dumps(varprefix))
 
             attrs = {
                 'multiple': 'multiple',
@@ -2422,7 +2422,7 @@ class OptionalDropdownChoice(DropdownChoice):
             varprefix,
             options,
             deflt=defval,  # style="float:left;",
-            onchange="valuespec_toggle_dropdown(this, '%s_ex');" % varprefix)
+            onchange="cmk.valuespecs.toggle_dropdown(this, '%s_ex');" % varprefix)
         if html.has_var(varprefix):
             div_is_open = html.var(varprefix) == "other"
         else:
@@ -3113,7 +3113,8 @@ class Optional(ValueSpec):
             "%s_use" % varprefix,
             checked,
             label=label,
-            onclick="valuespec_toggle_option(this, %r, %r)" % (div_id, 1 if self._negate else 0))
+            onclick="cmk.valuespecs.toggle_option(this, %r, %r)" % (div_id,
+                                                                    1 if self._negate else 0))
 
         if self._sameline:
             html.nbsp()
@@ -3189,8 +3190,9 @@ class OptionalEdit(Optional):
             "%s_use" % varprefix,
             checked,
             label=label,
-            onclick="valuespec_toggle_option(this, %r, %r);valuespec_toggle_option(this, %r, %r)" %
-            (div_id + '_on', 1 if self._negate else 0, div_id + '_off', 0 if self._negate else 1))
+            onclick=
+            "cmk.valuespecs.toggle_option(this, %r, %r);cmk.valuespecs.toggle_option(this, %r, %r)"
+            % (div_id + '_on', 1 if self._negate else 0, div_id + '_off', 0 if self._negate else 1))
 
         html.nbsp()
         html.close_span()
@@ -3262,7 +3264,7 @@ class Alternative(ValueSpec):
             if not sel_option and vs == mvs:
                 sel_option = str(nr)
             options.append((str(nr), vs.title()))
-        onchange = "valuespec_cascading_change(this, '%s', %d);" % (varprefix, len(options))
+        onchange = "cmk.valuespecs.cascading_change(this, '%s', %d);" % (varprefix, len(options))
         if self._on_change:
             onchange += self._on_change
         if self._orientation == "horizontal":
@@ -3580,7 +3582,7 @@ class Dictionary(ValueSpec):
                     "%s_USE" % vp,
                     visible,
                     label=label,
-                    onclick="valuespec_toggle_option(this, %r)" % div_id)
+                    onclick="cmk.valuespecs.toggle_option(this, %r)" % div_id)
             else:
                 visible = True
                 if vs.title():
@@ -3666,7 +3668,7 @@ class Dictionary(ValueSpec):
                 checkbox_code = html.render_checkbox(
                     vp + "_USE",
                     deflt=visible,
-                    onclick="valuespec_toggle_option(this, %r)" % div_id)
+                    onclick="cmk.valuespecs.toggle_option(this, %r)" % div_id)
                 forms.section(vs.title(), checkbox=checkbox_code)
             else:
                 visible = True
@@ -4050,10 +4052,16 @@ class PasswordSpec(Password):
         TextAscii.render_input(self, varprefix, value)
         if not value:
             html.icon_button(
-                "#", _(u"Randomize password"), "random", onclick="vs_passwordspec_randomize(this);")
+                "#",
+                _(u"Randomize password"),
+                "random",
+                onclick="cmk.valuespecs.passwordspec_randomize(this);")
         if self._hidden:
             html.icon_button(
-                "#", _(u"Show/Hide password"), "showhide", onclick="vs_toggle_hidden(this);")
+                "#",
+                _(u"Show/Hide password"),
+                "showhide",
+                onclick="cmk.valuespecs.toggle_hidden(this);")
 
         self.password_plaintext_warning()
 
@@ -4359,8 +4367,8 @@ class IconSelector(ValueSpec):
             # TODO: TEST
             html.a(
                 category_alias,
-                href="javascript:vs_iconselector_toggle(\'%s\', \'%s\')" % (varprefix,
-                                                                            category_name),
+                href="javascript:cmk.valuespecs.iconselector_toggle(\'%s\', \'%s\')" %
+                (varprefix, category_name),
                 id_="%s_%s_nav" % (varprefix, category_name),
                 class_="%s_nav" % varprefix)
             html.close_li()
@@ -4378,7 +4386,8 @@ class IconSelector(ValueSpec):
                 html.open_a(
                     href=None,
                     class_="icon",
-                    onclick='vs_iconselector_select(event, \'%s\', \'%s\')' % (varprefix, icon),
+                    onclick='cmk.valuespecs.iconselector_select(event, \'%s\', \'%s\')' %
+                    (varprefix, icon),
                     title=icon,
                 )
 
@@ -4395,7 +4404,7 @@ class IconSelector(ValueSpec):
         html.jsbutton(
             "_toggle_names",
             _("Toggle names"),
-            onclick="vs_iconselector_toggle_names(event, %s)" % json.dumps(varprefix))
+            onclick="cmk.valuespecs.iconselector_toggle_names(event, %s)" % json.dumps(varprefix))
 
         import cmk.gui.config as config  # FIXME: Clean this up. But how?
         if config.user.may('wato.icons'):

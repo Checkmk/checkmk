@@ -44,6 +44,7 @@ import * as service_discovery from "service_discovery";
 import * as host_diagnose from "host_diagnose";
 import * as profile_replication from "profile_replication";
 import * as wato from "wato";
+import * as popup_menu from "popup_menu";
 import * as dashboard from "dashboard";
 
 require("script-loader!./checkmk.js");
@@ -83,6 +84,7 @@ export default {
         host_diagnose: host_diagnose,
         profile_replication: profile_replication,
         wato: wato,
+        popup_menu: popup_menu,
         dashboard: dashboard
     },
     // TODO: Compatibility for not yet modularized JS code

@@ -1202,8 +1202,8 @@ class OverridableContainer(Overridable, Container):
         html.open_li()
         html.open_a(
             href="javascript:void(0)",
-            onclick="pagetype_add_to_container('%s', '%s');cmk.utils.reload_sidebar();" %
-            (type_name, name))
+            onclick="cmk.popup_menu.pagetype_add_to_container('%s', '%s');cmk.utils.reload_sidebar();"
+            % (type_name, name))
         html.render_icon(type_name)
         html.write_text(title)
         html.close_a()
@@ -1218,7 +1218,7 @@ class OverridableContainer(Overridable, Container):
         })
         return handlers
 
-    # Callback for the Javascript function pagetype_add_to_container(). The
+    # Callback for the Javascript function cmk.popup_menu.pagetype_add_to_container(). The
     # create_info will contain a dictionary that is known to the underlying
     # element. Note: this is being called with the base class object Container,
     # not with any actual subclass like GraphCollection. We need to find that

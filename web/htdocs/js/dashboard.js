@@ -96,7 +96,7 @@ function size_dashlets() {
 
             if (old_width != oDashInner.clientWidth || old_height != oDashInner.clientHeight) {
                 if (!g_resizing
-                    || parseInt(g_resizing.parentNode.parentNode.id.replace('dashlet_', '')) != d_number)
+                    || parseInt(g_resizing.parentNode.parentNode.id.replace("dashlet_", "")) != d_number)
                 dashlet_resized(d_number, oDashInner);
             }
         }
@@ -161,7 +161,7 @@ vec.prototype = {
         );
     },
     toString: function() {
-        return this.x+'/'+this.y;
+        return this.x+"/"+this.y;
     }
 };
 
@@ -214,7 +214,7 @@ function calculate_dashlets() {
         // then the dashboard is too small for all dashlets (as it seems).
         for (var x = left; x < right; x++) {
             for (var y = top; y < bottom; y++) {
-                used_matrix[x+' '+y] = true;
+                used_matrix[x+" "+y] = true;
             }
         }
         // Helper variable for how to grow, both x and y in [-1, 0, 1]
@@ -227,13 +227,13 @@ function calculate_dashlets() {
         // Try if all needed squares are free
         for (var x = left; x < right; x++)
             for (var y = top; y < bottom; y++)
-                if (x+' '+y in used_matrix)
+                if (x+" "+y in used_matrix)
                     return false;
 
         // Allocate all needed squares
         for (var x = left; x < right; x++)
             for (var y = top; y < bottom; y++)
-                used_matrix[x+' '+y] = true;
+                used_matrix[x+" "+y] = true;
 
         return true;
     };
@@ -332,10 +332,10 @@ function dashboard_scheduler(initial) {
         var refresh = dashboard_properties.refresh_dashlets[i][1];
         var url     = dashboard_properties.refresh_dashlets[i][2];
 
-        if ((initial && document.getElementById("dashlet_inner_" + nr).innerHTML == '')
+        if ((initial && document.getElementById("dashlet_inner_" + nr).innerHTML == "")
                 || (refresh > 0 && timestamp % refresh == 0)) {
-            if (typeof(url) === 'string') {
-                if (url.indexOf('\?') !== -1)
+            if (typeof(url) === "string") {
+                if (url.indexOf("\?") !== -1)
                     url += "&mtime=" + dashboard_properties.dashboard_mtime;
                 else
                     url += "?mtime=" + dashboard_properties.dashboard_mtime;
@@ -377,28 +377,28 @@ function update_dashlet(id, code) {
 //
 
 function toggle_dashboard_menu(show, event) {
-    var controls = document.getElementById('controls');
+    var controls = document.getElementById("controls");
     if (!controls)
         return; // maybe not permitted -> skip
 
-    if (typeof show === 'undefined')
-        var show = controls.style.display == 'none';
+    if (typeof show === "undefined")
+        var show = controls.style.display == "none";
 
     if (show) {
-        controls.style.display = 'block';
+        controls.style.display = "block";
         hide_submenus();
 
         // Gather and update the position of the menu
         if (event) {
             var target = getTarget(event);
-            controls.style.left = (event.clientX - target.offsetLeft + 5) + 'px';
-            controls.style.top  = (event.clientY - target.offsetTop + 5) + 'px';
+            controls.style.left = (event.clientX - target.offsetLeft + 5) + "px";
+            controls.style.top  = (event.clientY - target.offsetTop + 5) + "px";
 
-            var dashboard = document.getElementById('dashboard');
+            var dashboard = document.getElementById("dashboard");
 
             // When menu is out of screen on the right, move to left
             if (controls.offsetLeft + controls.clientWidth > dashboard.clientWidth)
-                controls.style.left = (controls.offsetLeft - controls.clientWidth - 15) + 'px';
+                controls.style.left = (controls.offsetLeft - controls.clientWidth - 15) + "px";
 
             // When menu is out of screen on the bottom, move to top
             if (controls.offsetTop + controls.clientHeight > dashboard.clientHeight) {
@@ -406,24 +406,24 @@ function toggle_dashboard_menu(show, event) {
                 if (target != dashboard)
                     new_top -= dashboard.offsetTop;
 
-                controls.style.top = new_top + 'px';
+                controls.style.top = new_top + "px";
             }
         }
     }
     else {
-        controls.style.display = 'none';
+        controls.style.display = "none";
     }
 }
 
 function hide_submenus() {
     // hide all submenus
-    var subs = document.getElementsByClassName('sub');
+    var subs = document.getElementsByClassName("sub");
     for (var i = 0; i < subs.length; i++)
-        subs[i].style.display = 'none';
+        subs[i].style.display = "none";
 }
 
 function show_submenu(id) {
-    document.getElementById(id + '_sub').style.display = 'block';
+    document.getElementById(id + "_sub").style.display = "block";
 }
 
 var g_editing = false;
@@ -434,11 +434,11 @@ function toggle_dashboard_edit() {
 
     g_editing = !g_editing;
 
-    document.getElementById('control_edit').style.display = !g_editing ? 'block' : 'none';
-    document.getElementById('control_add').style.display = g_editing ? 'block' : 'none';
-    document.getElementById('control_view').style.display = g_editing ? 'block' : 'none';
+    document.getElementById("control_edit").style.display = !g_editing ? "block" : "none";
+    document.getElementById("control_add").style.display = g_editing ? "block" : "none";
+    document.getElementById("control_view").style.display = g_editing ? "block" : "none";
 
-    var dashlet_divs = document.getElementsByClassName('dashlet');
+    var dashlet_divs = document.getElementsByClassName("dashlet");
     for (var i = 0; i < dashlet_divs.length; i++)
         dashlet_toggle_edit(dashlet_divs[i]);
 
@@ -456,11 +456,11 @@ function toggle_dashboard_edit() {
         var url = window.parent.location.href;
         if (url.indexOf("start_url") !== -1) {
             var frame_url = decodeURIComponent(getUrlParam("start_url", url));
-            frame_url = makeuri({'edit': g_editing ? '1' : '0'}, frame_url);
-            new_url = makeuri({'start_url': frame_url}, url);
+            frame_url = makeuri({"edit": g_editing ? "1" : "0"}, frame_url);
+            new_url = makeuri({"start_url": frame_url}, url);
         }
         else {
-            new_url = makeuri({'edit': g_editing ? '1' : '0'}, url);
+            new_url = makeuri({"edit": g_editing ? "1" : "0"}, url);
         }
 
         window.parent.history.replaceState({}, document.title, new_url);
@@ -471,9 +471,9 @@ function toggle_dashboard_edit() {
 
 function toggle_grid() {
     if (!g_editing) {
-        remove_class(document.getElementById('dashboard'), 'grid');
+        remove_class(document.getElementById("dashboard"), "grid");
     } else {
-        add_class(document.getElementById('dashboard'), 'grid');
+        add_class(document.getElementById("dashboard"), "grid");
     }
 }
 
@@ -484,34 +484,34 @@ function toggle_grid() {
 // render top/bottom or left/right areas depending on dimension i
 function render_resize_controls(controls, i) {
     for (var a = 0; a < 2; a++) {
-        var resize = document.createElement('div');
-        resize.className = 'resize resize'+i+' resize'+i+'_'+a;
+        var resize = document.createElement("div");
+        resize.className = "resize resize"+i+" resize"+i+"_"+a;
         controls.appendChild(resize);
     }
 }
 
 function render_sizer(controls, nr, i, anchor_id, size) {
     // 0 ~ X, 1 ~ Y
-    var sizer = document.createElement('div');
-    sizer.className = 'sizer sizer'+i+' anchor'+anchor_id;
+    var sizer = document.createElement("div");
+    sizer.className = "sizer sizer"+i+" anchor"+anchor_id;
 
     // create the sizer label
-    var sizer_lbl = document.createElement('div');
-    sizer_lbl.className = 'sizer_lbl sizer_lbl'+i+' anchor'+anchor_id;
+    var sizer_lbl = document.createElement("div");
+    sizer_lbl.className = "sizer_lbl sizer_lbl"+i+" anchor"+anchor_id;
 
     if (size == dashboard_properties.MAX) {
-        sizer.className += ' max';
-        //sizer_lbl.innerHTML = 'MAX';
-        sizer.title = 'Use maximum available space in this direction';
+        sizer.className += " max";
+        //sizer_lbl.innerHTML = "MAX";
+        sizer.title = "Use maximum available space in this direction";
     }
     else if (size == dashboard_properties.GROW) {
-        sizer.className += ' grow';
-        //sizer_lbl.innerHTML = 'GROW';
-        sizer.title = 'Grow in this direction';
+        sizer.className += " grow";
+        //sizer_lbl.innerHTML = "GROW";
+        sizer.title = "Grow in this direction";
     }
     else {
-        sizer.className += ' abs';
-        sizer.title = 'Fixed size (drag border for resize)';
+        sizer.className += " abs";
+        sizer.title = "Fixed size (drag border for resize)";
         render_resize_controls(controls, i);
     }
 
@@ -531,40 +531,40 @@ function render_sizer(controls, nr, i, anchor_id, size) {
 
 function render_corner_resizers(controls, dashlet_id) {
     for (var corner_id = 0; corner_id < 4; corner_id++) {
-        var resize = document.createElement('div');
-        resize.className = 'resize resize_corner resize_corner'+corner_id;
+        var resize = document.createElement("div");
+        resize.className = "resize resize_corner resize_corner"+corner_id;
         controls.appendChild(resize);
     }
 }
 
 function dashlet_toggle_edit(dashlet_obj, edit) {
-    var nr = parseInt(dashlet_obj.id.replace('dashlet_', ''));
-    var inner = document.getElementById('dashlet_inner_'+nr);
+    var nr = parseInt(dashlet_obj.id.replace("dashlet_", ""));
+    var inner = document.getElementById("dashlet_inner_"+nr);
     var dashlet = dashboard_properties.dashlets[nr];
 
     var edit = edit === undefined ? g_editing : edit;
 
     if (edit) {
         // gray out the inner parts of the dashlet
-        add_class(dashlet_obj, 'edit');
+        add_class(dashlet_obj, "edit");
 
         // Create the dashlet controls
-        var controls = document.createElement('div');
-        controls.setAttribute('id', 'dashlet_controls_'+nr);
-        controls.className = 'controls';
+        var controls = document.createElement("div");
+        controls.setAttribute("id", "dashlet_controls_"+nr);
+        controls.className = "controls";
         dashlet_obj.appendChild(controls);
         set_control_size(controls, dashlet_obj.clientWidth, dashlet_obj.clientHeight);
 
         // IE < 9: Without this fix the controls container is not working
         if (cmk.utils.browser.is_ie_below_9()) {
-            controls.style.background = 'url(about:blank)';
+            controls.style.background = "url(about:blank)";
         }
 
         // Which is the anchor corner?
         var anchor_id = get_anchor_id(dashlet);
 
         // Create the size / grow indicators and resizer control elements
-        if (has_class(dashlet_obj, 'resizable')) {
+        if (has_class(dashlet_obj, "resizable")) {
             for (var i = 0; i < 2; i ++) {
                 if (i == 0)
                     render_sizer(controls, nr, i, anchor_id, dashlet.w);
@@ -578,12 +578,12 @@ function dashlet_toggle_edit(dashlet_obj, edit) {
 
         // Create the anchors
         for (var i = 0; i < 4; i++) {
-            var anchor = document.createElement('a');
-            anchor.className = 'anchor anchor'+i;
-            anchor.title = 'Currently growing from here';
+            var anchor = document.createElement("a");
+            anchor.className = "anchor anchor"+i;
+            anchor.title = "Currently growing from here";
             if (anchor_id != i) {
-                anchor.className += ' off';
-                anchor.title = 'Click to start growing from here';
+                anchor.className += " off";
+                anchor.title = "Click to start growing from here";
             }
 
             // js magic stuff - closures!
@@ -597,33 +597,33 @@ function dashlet_toggle_edit(dashlet_obj, edit) {
         }
 
         // Add edit dashlet button
-        var edit = document.createElement('a');
-        edit.className = 'edit';
-        edit.title = 'Edit properties of this dashlet';
+        var edit = document.createElement("a");
+        edit.className = "edit";
+        edit.title = "Edit properties of this dashlet";
         edit.onclick = function(dashlet_id, board_name) {
             return function() {
-                location.href = 'edit_dashlet.py?name=' + board_name + '&id=' + dashlet_id;
+                location.href = "edit_dashlet.py?name=" + board_name + "&id=" + dashlet_id;
             };
         }(nr, dashboard_properties.dashboard_name);
         controls.appendChild(edit);
 
         // Add delete dashlet button
-        var del = document.createElement('a');
-        del.className = 'del';
-        del.title = 'Delete this dashlet';
+        var del = document.createElement("a");
+        del.className = "del";
+        del.title = "Delete this dashlet";
         del.onclick = function(dashlet_id, board_name) {
             return function() {
-                location.href = 'delete_dashlet.py?name=' + board_name + '&id=' + dashlet_id;
+                location.href = "delete_dashlet.py?name=" + board_name + "&id=" + dashlet_id;
             };
         }(nr, dashboard_properties.dashboard_name);
         controls.appendChild(del);
 
     } else {
         // make the inner parts visible again
-        remove_class(dashlet_obj, 'edit');
+        remove_class(dashlet_obj, "edit");
 
         // Remove all dashlet controls
-        var controls = document.getElementById('dashlet_controls_'+nr);
+        var controls = document.getElementById("dashlet_controls_"+nr);
         controls.parentNode.removeChild(controls);
     }
 }
@@ -634,7 +634,7 @@ var g_last_absolute_heights = {};
 
 function toggle_sizer(nr, sizer_id) {
     var dashlet = dashboard_properties.dashlets[nr];
-    var dashlet_obj = document.getElementById('dashlet_'+nr);
+    var dashlet_obj = document.getElementById("dashlet_"+nr);
 
     if (sizer_id == 0) {
         if (dashlet.w > 0) {
@@ -703,7 +703,7 @@ function toggle_anchor(nr, anchor_id) {
     calculate_relative_dashlet_coords(nr, anchor_id);
 
     // Visualize the change within the dashlet
-    rerender_dashlet_controls(document.getElementById('dashlet_'+nr));
+    rerender_dashlet_controls(document.getElementById("dashlet_"+nr));
 
     // Apply the change to all rendered dashlets
     size_dashlets();
@@ -723,7 +723,7 @@ function calculate_relative_dashlet_coords(nr, anchor_id) {
         var anchor_id = get_anchor_id(dashlet);
     }
 
-    var dashlet_obj = document.getElementById('dashlet_' + nr);
+    var dashlet_obj = document.getElementById("dashlet_" + nr);
 
     var x = dashlet_obj.offsetLeft / dashboard_properties.grid_size;
     var y = dashlet_obj.offsetTop / dashboard_properties.grid_size;
@@ -772,20 +772,20 @@ function body_click_handler(event) {
     var target = getTarget(event);
     var button = getButton(event);
 
-    if (target.id == 'dashboard' && button == 'RIGHT') {
+    if (target.id == "dashboard" && button == "RIGHT") {
         // right click on the empty dashboard area
         toggle_dashboard_menu(undefined, event);
         prevent_default_events(event);
         return false;
     }
-    else if (target.parentNode.id == 'controls_toggle' && button == 'LEFT') {
+    else if (target.parentNode.id == "controls_toggle" && button == "LEFT") {
         // left click on the controls menu
         toggle_dashboard_menu(undefined, event);
         prevent_default_events(event);
         return false;
     }
-    else if (target.parentNode.id != 'controls_toggle'
-             && (!target.parentNode.parentNode || !has_class(target.parentNode.parentNode, 'menu'))) {
+    else if (target.parentNode.id != "controls_toggle"
+             && (!target.parentNode.parentNode || !has_class(target.parentNode.parentNode, "menu"))) {
         // Hide the controls menu when clicked somewhere else
         toggle_dashboard_menu(false);
     }
@@ -810,9 +810,9 @@ function drag_dashlet_start(event) {
     var target = getTarget(event);
     var button = getButton(event);
 
-    if (g_dragging === false && button == 'LEFT' && has_class(target, 'controls')) {
+    if (g_dragging === false && button == "LEFT" && has_class(target, "controls")) {
         g_dragging = target.parentNode;
-        var nr = parseInt(g_dragging.id.replace('dashlet_', ''));
+        var nr = parseInt(g_dragging.id.replace("dashlet_", ""));
         var dashlet = dashboard_properties.dashlets[nr];
 
         // minimal dashlet sizes in pixels
@@ -861,14 +861,14 @@ function drag_dashlet_start(event) {
 
         g_drag_start = {
             // mouse position in px relative to dashboard
-            'm_x': event.clientX - g_dashboard_left,
-            'm_y': event.clientY - g_dashboard_top,
+            "m_x": event.clientX - g_dashboard_left,
+            "m_y": event.clientY - g_dashboard_top,
             // x/y position of shrunk dashlet in px relative to dashboard
-            'x': x,
-            'y': y,
+            "x": x,
+            "y": y,
             // size of shrunk dashlet in px
-            'w': w,
-            'h': h,
+            "w": w,
+            "h": h,
         };
 
         edit_visualize(g_dragging, true);
@@ -890,7 +890,7 @@ function drag_dashlet(event) {
     if (!g_dragging)
         return true;
 
-    var nr = parseInt(g_dragging.id.replace('dashlet_', ''));
+    var nr = parseInt(g_dragging.id.replace("dashlet_", ""));
     var dashlet_obj = g_dragging;
 
     // get the relative mouse position offset to the dragging beginning
@@ -907,32 +907,32 @@ function drag_dashlet(event) {
 
     if (x < 0) {
         // reached left limit: left screen border
-        dashlet_obj.style.left  = '0px';
-        dashlet_obj.style.width = w + 'px';
+        dashlet_obj.style.left  = "0px";
+        dashlet_obj.style.width = w + "px";
     }
     else if (x + w > board_w) {
         // reached right limit: right screen border
-        dashlet_obj.style.left  = (board_w - w) + 'px';
-        dashlet_obj.style.width = w + 'px';
+        dashlet_obj.style.left  = (board_w - w) + "px";
+        dashlet_obj.style.width = w + "px";
     }
     else {
-        dashlet_obj.style.left  = x + 'px';
-        dashlet_obj.style.width = w + 'px';
+        dashlet_obj.style.left  = x + "px";
+        dashlet_obj.style.width = w + "px";
     }
 
     if (y < 0) {
         // reached top limit: top screen border
-        dashlet_obj.style.top   = '0px';
-        dashlet_obj.style.height = h + 'px';
+        dashlet_obj.style.top   = "0px";
+        dashlet_obj.style.height = h + "px";
     }
     else if (y + h > board_h) {
         // reached bottom limit: bottom screen border
-        dashlet_obj.style.top    = (board_h - h) + 'px';
-        dashlet_obj.style.height = h + 'px';
+        dashlet_obj.style.top    = (board_h - h) + "px";
+        dashlet_obj.style.height = h + "px";
     }
     else {
-        dashlet_obj.style.top    = y + 'px';
-        dashlet_obj.style.height = h + 'px';
+        dashlet_obj.style.top    = y + "px";
+        dashlet_obj.style.height = h + "px";
     }
 
     // Calculates new data for the internal coord structure
@@ -950,7 +950,7 @@ function drag_dashlet_stop(event) {
         return true;
 
     edit_visualize(g_dragging, false);
-    var nr = parseInt(g_dragging.id.replace('dashlet_', ''));
+    var nr = parseInt(g_dragging.id.replace("dashlet_", ""));
     g_dragging   = false;
     g_drag_start = null;
 
@@ -960,16 +960,16 @@ function drag_dashlet_stop(event) {
 }
 
 function persist_dashlet_pos(nr) {
-    get_url('ajax_dashlet_pos.py?name=' + dashboard_properties.dashboard_name + '&id=' + nr
-            + '&x=' + dashboard_properties.dashlets[nr].x + '&y=' + dashboard_properties.dashlets[nr].y
-            + '&w=' + dashboard_properties.dashlets[nr].w + '&h=' + dashboard_properties.dashlets[nr].h,
+    get_url("ajax_dashlet_pos.py?name=" + dashboard_properties.dashboard_name + "&id=" + nr
+            + "&x=" + dashboard_properties.dashlets[nr].x + "&y=" + dashboard_properties.dashlets[nr].y
+            + "&w=" + dashboard_properties.dashlets[nr].w + "&h=" + dashboard_properties.dashlets[nr].h,
             handle_dashlet_post_response, null, undefined, false);
 }
 
 function handle_dashlet_post_response(_unused, response_text) {
-    var parts = response_text.split(' ');
-    if (parts[0] != 'OK') {
-        alert('Error: ' + response_text);
+    var parts = response_text.split(" ");
+    if (parts[0] != "OK") {
+        alert("Error: " + response_text);
     } else {
         dashboard_properties.dashboard_mtime = parseInt(parts[1]);
     }
@@ -1000,21 +1000,21 @@ function resize_dashlet_start(event) {
     var target = getTarget(event);
     var button = getButton(event);
 
-    if (g_resizing === false && button == 'LEFT' && has_class(target, 'resize')) {
+    if (g_resizing === false && button == "LEFT" && has_class(target, "resize")) {
         var dashlet_obj = target.parentNode.parentNode;
-        var nr = parseInt(dashlet_obj.id.replace('dashlet_', ''));
+        var nr = parseInt(dashlet_obj.id.replace("dashlet_", ""));
 
         g_resizing = target;
         g_resize_start = {
             // mouse position in px
-            'm_x': event.clientX,
-            'm_y': event.clientY,
+            "m_x": event.clientX,
+            "m_y": event.clientY,
             // initial position in px
-            'x': dashlet_obj.offsetLeft,
-            'y': dashlet_obj.offsetTop,
+            "x": dashlet_obj.offsetLeft,
+            "y": dashlet_obj.offsetTop,
             // initial size in px
-            'w': dashlet_obj.clientWidth,
-            'h': dashlet_obj.clientHeight
+            "w": dashlet_obj.clientWidth,
+            "h": dashlet_obj.clientHeight
         };
 
         edit_visualize(dashlet_obj, true);
@@ -1026,17 +1026,17 @@ function resize_dashlet_start(event) {
 }
 
 function get_horizontal_direction(resizer) {
-    if (has_class(resizer, 'resize0_0') || has_class(resizer, 'resize_corner0') || has_class(resizer, 'resize_corner3'))
-        return 'left';
-    else if (has_class(resizer, 'resize0_1') || has_class(resizer, 'resize_corner1') || has_class(resizer, 'resize_corner2'))
-        return 'right';
+    if (has_class(resizer, "resize0_0") || has_class(resizer, "resize_corner0") || has_class(resizer, "resize_corner3"))
+        return "left";
+    else if (has_class(resizer, "resize0_1") || has_class(resizer, "resize_corner1") || has_class(resizer, "resize_corner2"))
+        return "right";
 }
 
 function get_vertical_direction(resizer) {
-    if (has_class(resizer, 'resize1_0') || has_class(resizer, 'resize_corner0') || has_class(resizer, 'resize_corner1'))
-        return 'top';
-    else if (has_class(resizer, 'resize1_1') || has_class(resizer, 'resize_corner2') || has_class(resizer, 'resize_corner3'))
-        return 'bottom';
+    if (has_class(resizer, "resize1_0") || has_class(resizer, "resize_corner0") || has_class(resizer, "resize_corner1"))
+        return "top";
+    else if (has_class(resizer, "resize1_1") || has_class(resizer, "resize_corner2") || has_class(resizer, "resize_corner3"))
+        return "bottom";
 }
 
 function resize_dashlet(event) {
@@ -1047,7 +1047,7 @@ function resize_dashlet(event) {
         return true;
 
     var dashlet_obj = g_resizing.parentNode.parentNode;
-    var nr = parseInt(dashlet_obj.id.replace('dashlet_', ''));
+    var nr = parseInt(dashlet_obj.id.replace("dashlet_", ""));
 
     var diff_x = align_to_grid(Math.abs(g_resize_start.m_x - event.clientX));
     var diff_y = align_to_grid(Math.abs(g_resize_start.m_y - event.clientY));
@@ -1063,71 +1063,71 @@ function resize_dashlet(event) {
     var min_w = dashboard_properties.dashlet_min_size[0] * dashboard_properties.grid_size;
     var min_h = dashboard_properties.dashlet_min_size[1] * dashboard_properties.grid_size;
 
-    if (get_horizontal_direction(g_resizing) == 'left') {
+    if (get_horizontal_direction(g_resizing) == "left") {
         // resizing with left border
         var new_x = g_resize_start.x - diff_x;
         if (new_x < 0) {
             // reached left limit: left screen border
-            dashlet_obj.style.left  = '0px';
-            dashlet_obj.style.width = (g_resize_start.w + g_resize_start.x) + 'px';
+            dashlet_obj.style.left  = "0px";
+            dashlet_obj.style.width = (g_resize_start.w + g_resize_start.x) + "px";
         }
         else if (g_resize_start.w + diff_x < min_w) {
             // reached right limit: minimum dashlet width
-            dashlet_obj.style.width = min_w + 'px';
+            dashlet_obj.style.width = min_w + "px";
         }
         else {
             // normal resize step
-            dashlet_obj.style.left  = new_x + 'px';
-            dashlet_obj.style.width = (g_resize_start.w + diff_x) + 'px';
+            dashlet_obj.style.left  = new_x + "px";
+            dashlet_obj.style.width = (g_resize_start.w + diff_x) + "px";
         }
     }
-    else if (get_horizontal_direction(g_resizing) == 'right') {
+    else if (get_horizontal_direction(g_resizing) == "right") {
         // resizing with right border
         if (g_resize_start.x + g_resize_start.w - diff_x > board_w) {
             // reached right limit: right screen border
-            dashlet_obj.style.width = (board_w - g_resize_start.x) + 'px';
+            dashlet_obj.style.width = (board_w - g_resize_start.x) + "px";
         }
         else if (g_resize_start.w - diff_x < min_w) {
             // reached left limit: minimum dashlet width
-            dashlet_obj.style.width = min_w + 'px';
+            dashlet_obj.style.width = min_w + "px";
         }
         else {
             // normal resize step
-            dashlet_obj.style.width = (g_resize_start.w - diff_x) + 'px';
+            dashlet_obj.style.width = (g_resize_start.w - diff_x) + "px";
         }
     }
 
-    if (get_vertical_direction(g_resizing) == 'top') {
+    if (get_vertical_direction(g_resizing) == "top") {
         // resizing with top border
         var new_y = g_resize_start.y - diff_y;
         if (new_y < 0) {
             // reached top limit: top screen border
-            dashlet_obj.style.top    = '0px';
-            dashlet_obj.style.height = (g_resize_start.h + g_resize_start.y) + 'px';
+            dashlet_obj.style.top    = "0px";
+            dashlet_obj.style.height = (g_resize_start.h + g_resize_start.y) + "px";
         }
         else if (g_resize_start.h + diff_y < min_h) {
             // reached bottom limit: minimum dashlet height
-            dashlet_obj.style.height = min_h + 'px';
+            dashlet_obj.style.height = min_h + "px";
         }
         else {
             // normal resize step
-            dashlet_obj.style.top    = new_y + 'px';
-            dashlet_obj.style.height = (g_resize_start.h + diff_y) + 'px';
+            dashlet_obj.style.top    = new_y + "px";
+            dashlet_obj.style.height = (g_resize_start.h + diff_y) + "px";
         }
     }
-    else if (get_vertical_direction(g_resizing) == 'bottom') {
+    else if (get_vertical_direction(g_resizing) == "bottom") {
         // resizing with bottom border
         if (g_resize_start.y + g_resize_start.h - diff_y >= board_h) {
             // reached bottom limit: bottom screen border
-            dashlet_obj.style.height = (board_h - g_resize_start.y) + 'px';
+            dashlet_obj.style.height = (board_h - g_resize_start.y) + "px";
         }
         else if (g_resize_start.h - diff_y < min_h) {
             // reached top limit: minimum dashlet height
-            dashlet_obj.style.height = min_h + 'px';
+            dashlet_obj.style.height = min_h + "px";
         }
         else {
             // normal resize step
-            dashlet_obj.style.height = (g_resize_start.h - diff_y) + 'px';
+            dashlet_obj.style.height = (g_resize_start.h - diff_y) + "px";
         }
     }
 
@@ -1146,7 +1146,7 @@ function resize_dashlet_stop(event) {
         return true;
 
     var dashlet_obj = g_resizing.parentNode.parentNode;
-    var nr = parseInt(dashlet_obj.id.replace('dashlet_', ''));
+    var nr = parseInt(dashlet_obj.id.replace("dashlet_", ""));
     edit_visualize(dashlet_obj, false);
     g_resizing = false;
 
@@ -1156,14 +1156,14 @@ function resize_dashlet_stop(event) {
 }
 
 function dashlet_resized(nr, dashlet_obj) {
-    if (typeof reload_on_resize[nr] != 'undefined') {
+    if (typeof reload_on_resize[nr] != "undefined") {
         var base_url = reload_on_resize[nr];
         var iframe = document.getElementById("dashlet_iframe_" + nr);
-        iframe.src = base_url + '&width=' + dashlet_obj.clientWidth
-                              + '&height=' + dashlet_obj.clientHeight;
+        iframe.src = base_url + "&width=" + dashlet_obj.clientWidth
+                              + "&height=" + dashlet_obj.clientHeight;
     }
 
-    if (typeof dashboard_properties.on_resize_dashlets[nr] != 'undefined') {
+    if (typeof dashboard_properties.on_resize_dashlets[nr] != "undefined") {
         dashboard_properties.on_resize_dashlets[nr]();
     }
 }
@@ -1173,21 +1173,21 @@ function dashlet_resized(nr, dashlet_obj) {
  * dialog control and resizing of dashlets
  */
 
-add_event_handler('mousemove', function(e) {
+add_event_handler("mousemove", function(e) {
     return drag_dashlet(e) && resize_dashlet(e);
 });
-add_event_handler('mousedown', function(e) {
+add_event_handler("mousedown", function(e) {
     return drag_dashlet_start(e) && resize_dashlet_start(e);
 });
-add_event_handler('mouseup', function(e) {
+add_event_handler("mouseup", function(e) {
     return drag_dashlet_stop(e) && resize_dashlet_stop(e);
 });
-add_event_handler('click', function(e) {
+add_event_handler("click", function(e) {
     return body_click_handler(e);
 });
 
 // Totally disable the context menu for all dashboards
-add_event_handler('contextmenu', function(e) {
+add_event_handler("contextmenu", function(e) {
     prevent_default_events(e);
     return false;
 });

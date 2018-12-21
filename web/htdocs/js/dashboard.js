@@ -95,9 +95,9 @@ function size_dashlets() {
                 oDashInner.style.height = netto_height + "px";
 
             if (old_width != oDashInner.clientWidth || old_height != oDashInner.clientHeight) {
-                if (!g_resizing
-                    || parseInt(g_resizing.parentNode.parentNode.id.replace("dashlet_", "")) != d_number)
-                dashlet_resized(d_number, oDashInner);
+                if (!g_resizing || parseInt(g_resizing.parentNode.parentNode.id.replace("dashlet_", "")) != d_number) {
+                    dashlet_resized(d_number, oDashInner);
+                }
             }
         }
 
@@ -139,7 +139,7 @@ vec.prototype = {
     },
     make_absolute: function(size_v) {
         return new vec(this.x < 0 ? this.x + size_v.x + 1 : this.x - 1,
-                       this.y < 0 ? this.y + size_v.y + 1 : this.y - 1);
+            this.y < 0 ? this.y + size_v.y + 1 : this.y - 1);
     },
     // Compute the initial size of the dashlet. If dashboard_properties.MAX is used,
     // then the dashlet consumes all space in its growing direction,
@@ -172,7 +172,8 @@ function calculate_dashlets() {
     var positions   = [];
 
     // first place all dashlets at their absolute positions
-    for (var nr = 0; nr < dashboard_properties.dashlets.length; nr++) {
+    var nr, top, left, right, bottom, grow_by;
+    for (nr = 0; nr < dashboard_properties.dashlets.length; nr++) {
         var dashlet = dashboard_properties.dashlets[nr];
 
         // Relative position is as noted in the declaration. 1,1 => top left origin,
@@ -191,7 +192,6 @@ function calculate_dashlets() {
 
         // Now compute the rectangle that is currently occupied. The coords
         // of bottomright are *not* included.
-        var top, left, right, bottom;
         if (rel_position.x > 0) {
             left = abs_position.x;
             right = left + used_size.x;
@@ -202,8 +202,8 @@ function calculate_dashlets() {
         }
 
         if (rel_position.y > 0) {
-            top = abs_position.y
-            bottom = top + used_size.y
+            top = abs_position.y;
+            bottom = top + used_size.y;
         }
         else {
             bottom = abs_position.y;
@@ -218,21 +218,22 @@ function calculate_dashlets() {
             }
         }
         // Helper variable for how to grow, both x and y in [-1, 0, 1]
-        var grow_by = rel_position.compute_grow_by(size);
+        grow_by = rel_position.compute_grow_by(size);
 
         positions.push([left, top, right, bottom, grow_by]);
     }
 
     var try_allocate = function(left, top, right, bottom) {
+        var x, y;
         // Try if all needed squares are free
-        for (var x = left; x < right; x++)
-            for (var y = top; y < bottom; y++)
+        for (x = left; x < right; x++)
+            for (y = top; y < bottom; y++)
                 if (x+" "+y in used_matrix)
                     return false;
 
         // Allocate all needed squares
-        for (var x = left; x < right; x++)
-            for (var y = top; y < bottom; y++)
+        for (x = left; x < right; x++)
+            for (y = top; y < bottom; y++)
                 used_matrix[x+" "+y] = true;
 
         return true;
@@ -243,13 +244,13 @@ function calculate_dashlets() {
     var at_least_one_expanded = true;
     while (at_least_one_expanded) {
         at_least_one_expanded = false;
-        var new_positions = []
-        for (var nr = 0; nr < positions.length; nr++) {
-            var left    = positions[nr][0],
-                top     = positions[nr][1],
-                right   = positions[nr][2],
-                bottom  = positions[nr][3],
-                grow_by = positions[nr][4];
+        var new_positions = [];
+        for (nr = 0; nr < positions.length; nr++) {
+            left    = positions[nr][0];
+            top     = positions[nr][1];
+            right   = positions[nr][2];
+            bottom  = positions[nr][3];
+            grow_by = positions[nr][4];
 
             // try to grow in X direction by one
             if (grow_by.x > 0 && right < raster_size.x && try_allocate(right, top, right+1, bottom)) {
@@ -276,11 +277,11 @@ function calculate_dashlets() {
     }
 
     var size_info = [];
-    for (var nr = 0; nr < positions.length; nr++) {
-        var left    = positions[nr][0],
-            top     = positions[nr][1],
-            right   = positions[nr][2],
-            bottom  = positions[nr][3];
+    for (nr = 0; nr < positions.length; nr++) {
+        left    = positions[nr][0];
+        top     = positions[nr][1];
+        right   = positions[nr][2];
+        bottom  = positions[nr][3];
         size_info.push([
             left * dashboard_properties.grid_size,
             top * dashboard_properties.grid_size,
@@ -292,8 +293,8 @@ function calculate_dashlets() {
 }
 
 var g_dashboard_resizer = null;
-var g_dashboard_top     = null
-var g_dashboard_left    = null
+var g_dashboard_top     = null;
+var g_dashboard_left    = null;
 var g_dashboard_width   = null;
 var g_dashboard_height  = null;
 
@@ -326,7 +327,6 @@ function dashboard_scheduler(initial) {
     }
 
     var timestamp = Date.parse(new Date()) / 1000;
-    var newcontent = "";
     for(var i = 0; i < dashboard_properties.refresh_dashlets.length; i++) {
         var nr      = dashboard_properties.refresh_dashlets[i][0];
         var refresh = dashboard_properties.refresh_dashlets[i][1];
@@ -335,7 +335,7 @@ function dashboard_scheduler(initial) {
         if ((initial && document.getElementById("dashlet_inner_" + nr).innerHTML == "")
                 || (refresh > 0 && timestamp % refresh == 0)) {
             if (typeof(url) === "string") {
-                if (url.indexOf("\?") !== -1)
+                if (url.indexOf("?") !== -1)
                     url += "&mtime=" + dashboard_properties.dashboard_mtime;
                 else
                     url += "?mtime=" + dashboard_properties.dashboard_mtime;
@@ -365,11 +365,11 @@ function dashboard_update_contents(id, response_text) {
 }
 
 function update_dashlet(id, code) {
-  var obj = document.getElementById(id);
-  if (obj) {
-    obj.innerHTML = code;
-    executeJS(id);
-  }
+    var obj = document.getElementById(id);
+    if (obj) {
+        obj.innerHTML = code;
+        executeJS(id);
+    }
 }
 
 //
@@ -382,7 +382,7 @@ function toggle_dashboard_menu(show, event) {
         return; // maybe not permitted -> skip
 
     if (typeof show === "undefined")
-        var show = controls.style.display == "none";
+        show = controls.style.display == "none";
 
     if (show) {
         controls.style.display = "block";
@@ -454,6 +454,7 @@ function toggle_dashboard_edit() {
     // The new URL computation needs to deal with it.
     if (window.parent.history.replaceState) {
         var url = window.parent.location.href;
+        var new_url;
         if (url.indexOf("start_url") !== -1) {
             var frame_url = decodeURIComponent(getUrlParam("start_url", url));
             frame_url = makeuri({"edit": g_editing ? "1" : "0"}, frame_url);
@@ -529,7 +530,7 @@ function render_sizer(controls, nr, i, anchor_id, size) {
         controls.appendChild(sizer_lbl);
 }
 
-function render_corner_resizers(controls, dashlet_id) {
+function render_corner_resizers(controls) {
     for (var corner_id = 0; corner_id < 4; corner_id++) {
         var resize = document.createElement("div");
         resize.className = "resize resize_corner resize_corner"+corner_id;
@@ -539,17 +540,17 @@ function render_corner_resizers(controls, dashlet_id) {
 
 function dashlet_toggle_edit(dashlet_obj, edit) {
     var nr = parseInt(dashlet_obj.id.replace("dashlet_", ""));
-    var inner = document.getElementById("dashlet_inner_"+nr);
     var dashlet = dashboard_properties.dashlets[nr];
 
-    var edit = edit === undefined ? g_editing : edit;
+    edit = edit === undefined ? g_editing : edit;
 
+    var controls;
     if (edit) {
         // gray out the inner parts of the dashlet
         add_class(dashlet_obj, "edit");
 
         // Create the dashlet controls
-        var controls = document.createElement("div");
+        controls = document.createElement("div");
         controls.setAttribute("id", "dashlet_controls_"+nr);
         controls.className = "controls";
         dashlet_obj.appendChild(controls);
@@ -564,8 +565,9 @@ function dashlet_toggle_edit(dashlet_obj, edit) {
         var anchor_id = get_anchor_id(dashlet);
 
         // Create the size / grow indicators and resizer control elements
+        var i;
         if (has_class(dashlet_obj, "resizable")) {
-            for (var i = 0; i < 2; i ++) {
+            for (i = 0; i < 2; i ++) {
                 if (i == 0)
                     render_sizer(controls, nr, i, anchor_id, dashlet.w);
                 else
@@ -573,11 +575,11 @@ function dashlet_toggle_edit(dashlet_obj, edit) {
             }
 
             if (!is_dynamic(dashlet.w) && !is_dynamic(dashlet.h))
-                render_corner_resizers(controls, nr);
+                render_corner_resizers(controls);
         }
 
         // Create the anchors
-        for (var i = 0; i < 4; i++) {
+        for (i = 0; i < 4; i++) {
             var anchor = document.createElement("a");
             anchor.className = "anchor anchor"+i;
             anchor.title = "Currently growing from here";
@@ -597,15 +599,15 @@ function dashlet_toggle_edit(dashlet_obj, edit) {
         }
 
         // Add edit dashlet button
-        var edit = document.createElement("a");
-        edit.className = "edit";
-        edit.title = "Edit properties of this dashlet";
-        edit.onclick = function(dashlet_id, board_name) {
+        var edit_button = document.createElement("a");
+        edit_button.className = "edit";
+        edit_button.title = "Edit properties of this dashlet";
+        edit_button.onclick = function(dashlet_id, board_name) {
             return function() {
                 location.href = "edit_dashlet.py?name=" + board_name + "&id=" + dashlet_id;
             };
         }(nr, dashboard_properties.dashboard_name);
-        controls.appendChild(edit);
+        controls.appendChild(edit_button);
 
         // Add delete dashlet button
         var del = document.createElement("a");
@@ -623,7 +625,7 @@ function dashlet_toggle_edit(dashlet_obj, edit) {
         remove_class(dashlet_obj, "edit");
 
         // Remove all dashlet controls
-        var controls = document.getElementById("dashlet_controls_"+nr);
+        controls = document.getElementById("dashlet_controls_"+nr);
         controls.parentNode.removeChild(controls);
     }
 }
@@ -720,7 +722,7 @@ function calculate_relative_dashlet_coords(nr, anchor_id) {
     // id which is currently used by the dashlet. Otherwise this function
     // will set a new anchor for the dashlet and recalculate the coordinates
     if (anchor_id === undefined) {
-        var anchor_id = get_anchor_id(dashlet);
+        anchor_id = get_anchor_id(dashlet);
     }
 
     var dashlet_obj = document.getElementById("dashlet_" + nr);
@@ -963,7 +965,7 @@ function persist_dashlet_pos(nr) {
     get_url("ajax_dashlet_pos.py?name=" + dashboard_properties.dashboard_name + "&id=" + nr
             + "&x=" + dashboard_properties.dashlets[nr].x + "&y=" + dashboard_properties.dashlets[nr].y
             + "&w=" + dashboard_properties.dashlets[nr].w + "&h=" + dashboard_properties.dashlets[nr].h,
-            handle_dashlet_post_response, null, undefined, false);
+            handle_dashlet_post_response, null, undefined, false); // eslint-disable-line indent
 }
 
 function handle_dashlet_post_response(_unused, response_text) {
@@ -1002,7 +1004,6 @@ function resize_dashlet_start(event) {
 
     if (g_resizing === false && button == "LEFT" && has_class(target, "resize")) {
         var dashlet_obj = target.parentNode.parentNode;
-        var nr = parseInt(dashlet_obj.id.replace("dashlet_", ""));
 
         g_resizing = target;
         g_resize_start = {

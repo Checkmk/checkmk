@@ -28,7 +28,7 @@
 
 function getElementsByClass(cl) {
     var items = new Array();
-    var elements = document.getElementsByTagName('*');
+    var elements = document.getElementsByTagName("*");
     for (var i = 0; i < elements.length; i++)
         if (elements[i].className == cl)
             items.push(elements[i]);
@@ -99,7 +99,7 @@ function wato_fix_visibility() {
         if( display == "" && attrname in wato_depends_on_roles){
             for (var index = 0; index < wato_depends_on_roles[attrname].length; index++) {
                 var role = wato_depends_on_roles[attrname][index];
-                var negate = role[0] == '!';
+                var negate = role[0] == "!";
                 var rolename = negate ? role.substr(1) : role;
                 var have_role = user_roles.indexOf(rolename) != -1;
                 if (have_role == negate) {
@@ -113,7 +113,7 @@ function wato_fix_visibility() {
         if( display == "" && attrname in wato_depends_on_tags){
             for (var index = 0; index < wato_depends_on_tags[attrname].length; index++) {
                 var tag = wato_depends_on_tags[attrname][index];
-                var negate = tag[0] == '!';
+                var negate = tag[0] == "!";
                 var tagname = negate ? tag.substr(1) : tag;
                 var have_tag = current_tags.indexOf(tagname) != -1;
                 if (have_tag == negate) {
@@ -199,7 +199,7 @@ function _get_effective_tags()
         for (var i = 0; i < oTable.childNodes.length; i++) {
             var oTr = oTable.childNodes[i];
             var add_tag_id = null;
-            if (oTr.tagName == 'TR') {
+            if (oTr.tagName == "TR") {
                 var oTdLegend = oTr.childNodes[0];
                 if (oTdLegend.className != "legend") {
                     continue;
@@ -208,7 +208,7 @@ function _get_effective_tags()
                 /* If the Checkbox is unchecked try to get a value from the inherited_tags */
                 var oCheckbox = oTdLegend.getElementsByTagName("input")[0];
                 if (oCheckbox.checked == false ){
-                    var attrname = 'attr_' + oCheckbox.name.replace(/.*_change_/, '');
+                    var attrname = "attr_" + oCheckbox.name.replace(/.*_change_/, "");
                     if (attrname in inherited_tags && inherited_tags[attrname] !== null){
                         add_tag_id = inherited_tags[attrname];
                     }
@@ -222,9 +222,9 @@ function _get_effective_tags()
                         continue;
 
                     var oElement = elements[0];
-                    if (oElement.type == 'checkbox' && oElement.checked) {
+                    if (oElement.type == "checkbox" && oElement.checked) {
                         add_tag_id = oElement.name.substr(4);
-                    } else if (oElement.tagName == 'SELECT') {
+                    } else if (oElement.tagName == "SELECT") {
                         add_tag_id = oElement.value;
                     }
                 }
@@ -261,7 +261,7 @@ function toggle_container(id)
 }
 
 function update_bulk_moveto(val) {
-    var fields = getElementsByClass('bulk_moveto');
+    var fields = getElementsByClass("bulk_moveto");
     for(var i = 0; i < fields.length; i++)
         for(var a = 0; a < fields[i].options.length; a++)
             if(fields[i].options[a].value == val)
@@ -640,7 +640,7 @@ function finish_activation(response)
 
     // Maybe change this not to make a reload and only update the relevant
     // parts of the activate changes page.
-    schedule_reload('', 1000);
+    schedule_reload("", 1000);
 
     // Trigger a reload of the sidebar (to update changes in WATO snapin)
     reload_sidebar();
@@ -687,7 +687,7 @@ function wato_do_profile_replication(siteid, est, progress_text) {
 function profile_replication_set_status(siteid, image, text) {
     var oImg = document.getElementById("site-" + siteid).childNodes[0];
     oImg.title = text;
-    oImg.src = 'images/icon_'+image+'.png';
+    oImg.src = "images/icon_"+image+".png";
 }
 
 function profile_replication_step(siteid, est, progress_text) {
@@ -696,13 +696,13 @@ function profile_replication_step(siteid, est, progress_text) {
         var perc = (20.0 - profile_replication_progress[siteid]) * 100 / 20;
         var img;
         if (perc >= 75)
-            img = 'repl_75';
+            img = "repl_75";
         else if (perc >= 50)
-            img = 'repl_50';
+            img = "repl_50";
         else if (perc >= 25)
-            img = 'repl_25';
+            img = "repl_25";
         else
-            img = 'repl_pending';
+            img = "repl_pending";
         profile_replication_set_status(siteid, img, progress_text);
         setTimeout("profile_replication_step('"+siteid+"',"+est+", '"+progress_text+"');", est/20);
     }
@@ -711,7 +711,7 @@ function profile_replication_step(siteid, est, progress_text) {
 function set_profile_replication_result(site_id, success, msg) {
     profile_replication_progress[site_id] = 0;
 
-    var icon_name = success ? 'repl_success' : 'repl_failed';
+    var icon_name = success ? "repl_success" : "repl_failed";
 
     profile_replication_set_status(site_id, icon_name, msg);
 
@@ -738,7 +738,7 @@ function wato_open_folder(event, link) {
     if (!event)
         event = window.event;
     var target = getTarget(event);
-    if(target.tagName != 'DIV') {
+    if(target.tagName != "DIV") {
         // Skip this event on clicks on other elements than the pure div
         return false;
     }
@@ -765,14 +765,14 @@ function wato_toggle_folder(event, oDiv, on) {
     var obj = oDiv.parentNode;
     var id = obj.id.substr(7);
 
-    var elements = ['edit', 'popup_trigger_move', 'delete'];
+    var elements = ["edit", "popup_trigger_move", "delete"];
     for(var num in elements) {
-        var elem = document.getElementById(elements[num] + '_' + id);
+        var elem = document.getElementById(elements[num] + "_" + id);
         if(elem) {
             if(on) {
-                elem.style.display = 'inline';
+                elem.style.display = "inline";
             } else {
-                elem.style.display = 'none';
+                elem.style.display = "none";
             }
         }
     }
@@ -783,9 +783,9 @@ function wato_toggle_folder(event, oDiv, on) {
         remove_class(obj, "open");
 
         // Hide the eventual open move dialog
-        var move_dialog = document.getElementById('move_dialog_' + id);
+        var move_dialog = document.getElementById("move_dialog_" + id);
         if(move_dialog) {
-            move_dialog.style.display = 'none';
+            move_dialog.style.display = "none";
         }
     }
 }
@@ -802,9 +802,9 @@ function wato_toggle_folder(event, oDiv, on) {
 function handle_host_diag_result(data, response_json) {
     var response = JSON.parse(response_json);
 
-    var img   = document.getElementById(data.ident + '_img');
-    var log   = document.getElementById(data.ident + '_log');
-    var retry = document.getElementById(data.ident + '_retry');
+    var img   = document.getElementById(data.ident + "_img");
+    var log   = document.getElementById(data.ident + "_log");
+    var retry = document.getElementById(data.ident + "_retry");
     remove_class(img, "reloading");
 
     var text = "";
@@ -827,51 +827,51 @@ function handle_host_diag_result(data, response_json) {
     log.innerText = text;
 
     retry.src = "images/icon_reload.png";
-    retry.style.display = 'inline';
+    retry.style.display = "inline";
     retry.parentNode.href = "javascript:start_host_diag_test('"+data.ident+"', '"+data.hostname+"', '"+response.result.next_transid+"');";
 }
 
 function start_host_diag_test(ident, hostname, transid) {
-    var log   = document.getElementById(ident + '_log');
-    var img   = document.getElementById(ident + '_img');
-    var retry = document.getElementById(ident + '_retry');
+    var log   = document.getElementById(ident + "_log");
+    var img   = document.getElementById(ident + "_img");
+    var retry = document.getElementById(ident + "_retry");
 
-    retry.style.display = 'none';
+    retry.style.display = "none";
 
-    var vars = '';
-    vars = '&_transid=' + encodeURIComponent(transid);
-    vars += '&ipaddress=' + encodeURIComponent(document.getElementsByName('vs_host_p_ipaddress')[0].value);
+    var vars = "";
+    vars = "&_transid=" + encodeURIComponent(transid);
+    vars += "&ipaddress=" + encodeURIComponent(document.getElementsByName("vs_host_p_ipaddress")[0].value);
 
 
     if (document.getElementsByName("vs_host_p_snmp_community_USE")[0].checked)
-        vars += '&snmp_community=' + encodeURIComponent(document.getElementsByName('vs_host_p_snmp_community')[0].value);
+        vars += "&snmp_community=" + encodeURIComponent(document.getElementsByName("vs_host_p_snmp_community")[0].value);
 
     if (document.getElementsByName("vs_host_p_snmp_v3_credentials_USE")[0].checked) {
-        v3_use = encodeURIComponent(document.getElementsByName('vs_host_p_snmp_v3_credentials_use')[0].value);
-        vars += '&snmpv3_use=' + v3_use;
+        v3_use = encodeURIComponent(document.getElementsByName("vs_host_p_snmp_v3_credentials_use")[0].value);
+        vars += "&snmpv3_use=" + v3_use;
         if (v3_use == "0") {
-            vars += '&snmpv3_security_name=' + encodeURIComponent(document.getElementsByName('vs_host_p_snmp_v3_credentials_0_1')[0].value);
+            vars += "&snmpv3_security_name=" + encodeURIComponent(document.getElementsByName("vs_host_p_snmp_v3_credentials_0_1")[0].value);
         }
         else if (v3_use == "1") {
-            vars += '&snmpv3_auth_proto=' + encodeURIComponent(document.getElementsByName('vs_host_p_snmp_v3_credentials_1_1')[0].value);
-            vars += '&snmpv3_security_name=' + encodeURIComponent(document.getElementsByName('vs_host_p_snmp_v3_credentials_1_2')[0].value);
-            vars += '&snmpv3_security_password=' + encodeURIComponent(document.getElementsByName('vs_host_p_snmp_v3_credentials_1_3')[0].value);
+            vars += "&snmpv3_auth_proto=" + encodeURIComponent(document.getElementsByName("vs_host_p_snmp_v3_credentials_1_1")[0].value);
+            vars += "&snmpv3_security_name=" + encodeURIComponent(document.getElementsByName("vs_host_p_snmp_v3_credentials_1_2")[0].value);
+            vars += "&snmpv3_security_password=" + encodeURIComponent(document.getElementsByName("vs_host_p_snmp_v3_credentials_1_3")[0].value);
         }
         else if (v3_use == "2") {
-            vars += '&snmpv3_auth_proto=' + encodeURIComponent(document.getElementsByName('vs_host_p_snmp_v3_credentials_2_1')[0].value);
-            vars += '&snmpv3_security_name=' + encodeURIComponent(document.getElementsByName('vs_host_p_snmp_v3_credentials_2_2')[0].value);
-            vars += '&snmpv3_security_password=' + encodeURIComponent(document.getElementsByName('vs_host_p_snmp_v3_credentials_2_3')[0].value);
-            vars += '&snmpv3_privacy_proto=' + encodeURIComponent(document.getElementsByName('vs_host_p_snmp_v3_credentials_2_4')[0].value);
-            vars += '&snmpv3_privacy_password=' + encodeURIComponent(document.getElementsByName('vs_host_p_snmp_v3_credentials_2_5')[0].value);
+            vars += "&snmpv3_auth_proto=" + encodeURIComponent(document.getElementsByName("vs_host_p_snmp_v3_credentials_2_1")[0].value);
+            vars += "&snmpv3_security_name=" + encodeURIComponent(document.getElementsByName("vs_host_p_snmp_v3_credentials_2_2")[0].value);
+            vars += "&snmpv3_security_password=" + encodeURIComponent(document.getElementsByName("vs_host_p_snmp_v3_credentials_2_3")[0].value);
+            vars += "&snmpv3_privacy_proto=" + encodeURIComponent(document.getElementsByName("vs_host_p_snmp_v3_credentials_2_4")[0].value);
+            vars += "&snmpv3_privacy_password=" + encodeURIComponent(document.getElementsByName("vs_host_p_snmp_v3_credentials_2_5")[0].value);
         }
     }
 
-    vars += '&agent_port=' + encodeURIComponent(document.getElementsByName('vs_rules_p_agent_port')[0].value);
-    vars += '&tcp_connect_timeout=' + encodeURIComponent(document.getElementsByName('vs_rules_p_tcp_connect_timeout')[0].value);
-    vars += '&snmp_timeout=' + encodeURIComponent(document.getElementsByName('vs_rules_p_snmp_timeout')[0].value);
-    vars += '&snmp_retries=' + encodeURIComponent(document.getElementsByName('vs_rules_p_snmp_retries')[0].value);
-    if (document.getElementsByName('vs_rules_p_datasource_program').length > 0) {
-        vars += '&datasource_program=' + encodeURIComponent(document.getElementsByName('vs_rules_p_datasource_program')[0].value);
+    vars += "&agent_port=" + encodeURIComponent(document.getElementsByName("vs_rules_p_agent_port")[0].value);
+    vars += "&tcp_connect_timeout=" + encodeURIComponent(document.getElementsByName("vs_rules_p_tcp_connect_timeout")[0].value);
+    vars += "&snmp_timeout=" + encodeURIComponent(document.getElementsByName("vs_rules_p_snmp_timeout")[0].value);
+    vars += "&snmp_retries=" + encodeURIComponent(document.getElementsByName("vs_rules_p_snmp_retries")[0].value);
+    if (document.getElementsByName("vs_rules_p_datasource_program").length > 0) {
+        vars += "&datasource_program=" + encodeURIComponent(document.getElementsByName("vs_rules_p_datasource_program")[0].value);
     }
 
     img.src = "images/icon_reload.png";

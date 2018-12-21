@@ -365,45 +365,53 @@ class IssueCollecter(object):
         return len(self._list)
 
 
-class AzureMetric(object):  # pylint: disable=too-few-public-methods
+class AzureMetricParseError(ValueError):
+    pass
 
-    HEADER = ("name", "aggregation", "value", "unit", "timestamp", "timegrain", "filters")
-    AGGREGATIONS = ("total", "average", "maximum", "minimum", "last", "count")
 
-    def __init__(self, metric, aggregations, time_grain, filter_, rid, err):
+class AzureMetric(object):  # pylint: disable=too-many-instance-attributes
+
+    HEADER = ("name", "aggregation", "value", "unit", "timestamp", "filter", "interval_id",
+              "interval")
+
+    def __init__(self, metric, aggregation, interval_id, filter_):
         super(AzureMetric, self).__init__()
 
-        self.rows = []
         self.name = metric.name.value
+        self.aggregation = aggregation
+        self.value = None
+        self.unit = metric.unit.name
+        self.timestamp = None
+        self.filter = filter_
+        self.interval_id = interval_id
+        self.interval = None
 
-        # Assuming this agent is executed to gather one value per metric
         count = len(metric.timeseries)
-        if count <> 1:
-            msg = "timeseries has %d elements for metric %s" % (count, self.name)
-            err.add("info", rid, msg)
-            LOG.warning(msg + " for resource %s" % rid)
+        if count == 0:
+            msg = "no timeseries found for metric %r" % self.name
+            raise AzureMetricParseError('info', msg)
 
         for measurement in reversed(metric.timeseries):
             if not measurement.data:
                 continue
 
-            for aggr in aggregations.split(','):
-                for data in reversed(measurement.data):
-                    if aggregations.startswith(aggr):
-                        LOG.debug("data: %s", data)
-                    if hasattr(data, aggr):
-                        value = getattr(data, aggr)
-                        # the field *may* be present, even if we did not ask for it.
-                        if value is not None:
-                            timestamp = calendar.timegm(data.time_stamp.utctimetuple())
-                            self.rows.append((self.name, aggr, value, metric.unit.name, timestamp,
-                                              time_grain, filter_))
-                            break
-                else:  # no break ocurred, we did not find anything
-                    logging.debug("not found: %s %s", self.name, aggr)
-        if not self.rows:
-            LOG.info("Found no aggregation for metric %r", self.name)
-        return
+            try:
+                self.interval = (measurement.data[-1].time_stamp - measurement.data[-2].time_stamp)
+            except (IndexError, TypeError):
+                pass
+
+            for data in reversed(measurement.data):
+                LOG.debug("data: %s", data)
+                self.value = getattr(data, aggregation, None)
+                if self.value is not None:
+                    self.timestamp = calendar.timegm(data.time_stamp.utctimetuple())
+                    return
+
+        raise AzureMetricParseError('warning', "not found: %s %s", self.name, aggregation)
+
+    @property
+    def tuple(self):
+        return tuple(getattr(self, field) for field in AzureMetric.HEADER)
 
 
 class AzureResource(object):
@@ -424,9 +432,9 @@ class AzureResource(object):
 
     def dumpinfo(self):
         lines = [("Resource",), (json.dumps(self.info),)]
-        m_lines = sum((m.rows for m in self.metrics), [])
-        if m_lines:
-            lines += [("metrics following", len(m_lines)), self.metrics[0].HEADER] + m_lines
+        if self.metrics:
+            lines += [("metrics following", len(self.metrics)), AzureMetric.HEADER]
+            lines += [m.tuple for m in self.metrics]
         return lines
 
 
@@ -508,44 +516,52 @@ class AzureClient(object):  # pylint: disable=too-many-instance-attributes
             self.resources_cache = map(AzureResource, raw_resources)
         return self.resources_cache
 
-    def _fetch_specific_metrics(self, resource, metricnames, time_grain, aggregations, filter_,
-                                err):
+    def _metric_api_call(self, rid, timespan, interval, metric, aggregation, filter_):
+        LOG.debug(
+            "metrics.list(%r, timespan=%r, interval=%r, metric=%r, aggregation=%r,"
+            " filter=%r, raw=True)", rid, timespan, interval, metric, aggregation, filter_)
+        raw = self._monitor_client.metrics.list(
+            rid,
+            timespan=timespan,
+            interval=interval,
+            metric=metric,
+            aggregation=aggregation,
+            filter=filter_,
+            raw=True,
+        )
+        # raw.output is what we'd gotten had we set raw=False.
+        # It is a paged object, make sure to actually retrieve
+        # all pages (as this may raise exceptions)
+        raw_metrics = list(raw.output.value)
+        return raw.response, raw_metrics
+
+    def _fetch_specific_metrics(self, resource, metricnames, time_grain, aggregation, filter_, err):
         if metricnames.count(',') >= 20:
             raise ValueError("Azure API won't have requests with more than 20 metrics!")
-
-        metrics = []
 
         rid = resource.info["id"]
         timespan = self.timespans[time_grain]
 
-        LOG.debug(
-            "metrics.list(%r, timespan=%r, interval=%r, metricnames=%r, aggregation=%r,"
-            " filter=%r, raw=True)", rid, timespan, time_grain, metricnames, aggregations, filter_)
         try:
-            # azure-api-call
-            raw = self._monitor_client.metrics.list(
-                rid,
-                timespan=timespan,
-                interval=time_grain,
-                metric=metricnames,
-                aggregation=aggregations,
-                filter=filter_,
-                raw=True,
-            )
-            LOG.debug("raw.response: %s", raw.response)
-            self.remaining_reads = raw.response.headers[
-                'x-ms-ratelimit-remaining-subscription-reads']
-            # raw.output is what we'd gotten had we set raw=False
-            LOG.debug("raw.ouput: %s", raw.output)
-            metrics += [
-                AzureMetric(metric, aggregations, time_grain, filter_, rid, err)
-                for metric in raw.output.value
-            ]
+            response, raw_metrics = self._metric_api_call(rid, timespan, time_grain, metricnames,
+                                                          aggregation, filter_)
         except ErrorResponseException as exc:
             if self.args.debug:
                 raise exc
             err.add("exception", rid, exc.message)
             LOG.exception(exc)
+            return []
+
+        LOG.debug("response: %s", response)
+        self.remaining_reads = response.headers['x-ms-ratelimit-remaining-subscription-reads']
+
+        metrics = []
+        for raw_metric in raw_metrics:
+            try:
+                metrics.append(AzureMetric(raw_metric, aggregation, time_grain, filter_))
+            except AzureMetricParseError as exc:
+                err.add(exc[0], rid, exc[1])
+                LOG.warning(exc.args[1])
 
         return metrics
 
@@ -556,8 +572,8 @@ class AzureClient(object):  # pylint: disable=too-many-instance-attributes
         metric_params = METRICS_SELECTED.get(resource.info["type"], [])
 
         metrics = []
-        for metricnames, time_grain, aggregations, filter_ in metric_params:
-            metrics += self._fetch_specific_metrics(resource, metricnames, time_grain, aggregations,
+        for metricnames, time_grain, aggregation, filter_ in metric_params:
+            metrics += self._fetch_specific_metrics(resource, metricnames, time_grain, aggregation,
                                                     filter_, err)
 
         return metrics

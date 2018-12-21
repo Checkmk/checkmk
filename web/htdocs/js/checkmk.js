@@ -2024,46 +2024,6 @@ function host_tag_update_value(prefix, grp) {
 }
 
 //#.
-//#   .-Availability-------------------------------------------------------.
-//#   |             _             _ _       _     _ _ _ _                  |
-//#   |            / \__   ____ _(_) | __ _| |__ (_) (_) |_ _   _          |
-//#   |           / _ \ \ / / _` | | |/ _` | '_ \| | | | __| | | |         |
-//#   |          / ___ \ V / (_| | | | (_| | |_) | | | | |_| |_| |         |
-//#   |         /_/   \_\_/ \__,_|_|_|\__,_|_.__/|_|_|_|\__|\__, |         |
-//#   |                                                     |___/          |
-//#   +--------------------------------------------------------------------+
-//#   |                                                                    |
-//#   '--------------------------------------------------------------------'
-
-function timeline_hover(row_nr, onoff)
-{
-    var row = document.getElementById("timetable_" + row_nr);
-    if (!row)
-        return;
-
-    if (onoff) {
-        add_class(row, 'hilite');
-    } else {
-        remove_class(row, 'hilite');
-    }
-}
-
-
-function timetable_hover(row_nr, onoff)
-{
-    var slice = document.getElementById("timeline_" + row_nr);
-    if (!slice)
-        return;
-
-    if (onoff) {
-        add_class(slice, 'hilite');
-    } else {
-        remove_class(slice, 'hilite');
-    }
-}
-
-
-//#.
 //#   .--SLA-----------------------------------------------------------------.
 //#   |                         ____  _        _                             |
 //#   |                        / ___|| |      / \                            |

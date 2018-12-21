@@ -396,8 +396,8 @@ def render_availability_timeline(what, av_entry, avoptions):
         for row_nr, row in enumerate(timeline_layout["table"]):
             table.row(
                 id_="timetable_%d" % row_nr,
-                onmouseover="timetable_hover(%d, 1);" % row_nr,
-                onmouseout="timetable_hover(%d, 0);" % row_nr)
+                onmouseover="cmk.availability.timetable_hover(%d, 1);" % row_nr,
+                onmouseout="cmk.availability.timetable_hover(%d, 0);" % row_nr)
             table.cell(_("Links"), css="buttons")
             if what == "bi":
                 url = html.makeuri([("timewarp", str(int(row["from"])))])
@@ -537,8 +537,8 @@ def render_timeline_bar(timeline_layout, style):
 
             if style == "standalone":
                 td_attrs.update({
-                    "onmouseover": "timeline_hover(%d, 1);" % row_nr,
-                    "onmouseout": "timeline_hover(%d, 0);" % row_nr,
+                    "onmouseover": "cmk.availability.timeline_hover(%d, 1);" % row_nr,
+                    "onmouseout": "cmk.availability.timeline_hover(%d, 0);" % row_nr,
                 })
 
         html.td('', **td_attrs)

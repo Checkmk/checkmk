@@ -89,7 +89,7 @@ def user_profile_async_replication_dialog(sites):
             estimated_duration = changes_manager.get_activation_time(
                 site_id, watolib.ACTIVATION_TIME_PROFILE_SYNC, 2.0)
             html.javascript(
-                'wato_do_profile_replication(\'%s\', %d, \'%s\');' %
+                'cmk.profile_replication.start(\'%s\', %d, \'%s\');' %
                 (site_id, int(estimated_duration * 1000.0), _('Replication in progress')))
             num_replsites += 1
         else:
@@ -98,7 +98,7 @@ def user_profile_async_replication_dialog(sites):
 
         html.close_div()
 
-    html.javascript('var g_num_replsites = %d;\n' % num_replsites)
+    html.javascript('cmk.profile_replication.prepare(%d);\n' % num_replsites)
 
     html.close_div()
 

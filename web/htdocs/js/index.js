@@ -42,6 +42,7 @@ import * as backup from "backup";
 import * as hover from "hover";
 import * as service_discovery from "service_discovery";
 import * as host_diagnose from "host_diagnose";
+import * as profile_replication from "profile_replication";
 import * as dashboard from "dashboard";
 
 require("script-loader!./checkmk.js");
@@ -80,6 +81,7 @@ export default {
         hover: hover,
         service_discovery: service_discovery,
         host_diagnose: host_diagnose,
+        profile_replication: profile_replication,
         dashboard: dashboard
     },
     // TODO: Compatibility for not yet modularized JS code

@@ -304,14 +304,14 @@ function handle_async_progress_update(handler_data, response_json)
     } else {
         handler_data.update_function(handler_data, response.result);
 
-	if (!handler_data.is_finished_function(response.result)) {
+        if (!handler_data.is_finished_function(response.result)) {
             setTimeout(function() {
-		return monitor_async_progress(handler_data);
-	    }, 500);
-	}
-	else {
+                return monitor_async_progress(handler_data);
+            }, 500);
+        }
+        else {
             handler_data.finish_function(response.result);
-	}
+        }
     }
 }
 

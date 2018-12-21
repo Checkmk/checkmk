@@ -1,0 +1,9 @@
+diff -Nur cryptography-2.4.1.orig/src/cryptography/hazmat/bindings/openssl/binding.py cryptography-2.4.1/src/cryptography/hazmat/bindings/openssl/binding.py
+--- cryptography-2.4.1.orig/src/cryptography/hazmat/bindings/openssl/binding.py	2018-11-12 01:52:23.000000000 +0100
++++ cryptography-2.4.1/src/cryptography/hazmat/bindings/openssl/binding.py	2018-12-21 08:43:00.152671521 +0100
+@@ -171,4 +171,4 @@
+ # is per module so this approach will not work.
+ Binding.init_static_locks()
+ 
+-_verify_openssl_version(Binding.lib)
++#_verify_openssl_version(Binding.lib)

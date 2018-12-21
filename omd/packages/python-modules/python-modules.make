@@ -125,6 +125,7 @@ else ifneq ($(filter $(DISTRO_CODE),el6),)
 else
     PYTHON_MODULES_LIST  += asn1crypto-0.24.0.tar.gz
     PYTHON_MODULES_LIST  += cryptography-2.4.1.tar.gz
+    PYTHON_MODULES_PATCHES += $(PACKAGE_DIR)/$(PYTHON_MODULES)/patches/0009-cryptography-2.4.1-disable-version-warning.patch
 endif
 
 PYTHON_MODULES_LIST += certifi-2018.10.15.tar.gz

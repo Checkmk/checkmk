@@ -108,12 +108,12 @@ def test_nesting(register_builtin_html):
     written_text = "".join(html.response.flush_output())
     assert compare_html(
         written_text, '''<h3>  TEST </h3>
-                            <script type="text/javascript">\nupdate_headinfo(\'1 row\');\n</script>
+                            <script type="text/javascript">\ncmk.utils.update_header_info(\'1 row\');\n</script>
                             <table class="data oddeven">
                             <tr>  <th>   A  </th>  <th>   B  </th> </tr>
                             <tr class="data odd0">  <td>   1  </td>  <td>
                                 <h3> TEST 2</h3>
-                                <script type="text/javascript">\nupdate_headinfo(\'1 row\');\n</script>
+                                <script type="text/javascript">\ncmk.utils.update_header_info(\'1 row\');\n</script>
                                 <table class="data oddeven">
                                 <tr><th>_</th><th>|</th></tr>
                                 <tr class="data odd0"><td>+</td><td>-</td></tr>
@@ -138,12 +138,12 @@ def test_nesting_context(register_builtin_html):
     written_text = "".join(html.response.flush_output())
     assert compare_html(
         written_text, '''<h3>  TEST </h3>
-                            <script type="text/javascript">\nupdate_headinfo(\'1 row\');\n</script>
+                            <script type="text/javascript">\ncmk.utils.update_header_info(\'1 row\');\n</script>
                             <table class="data oddeven">
                             <tr>  <th>   A  </th>  <th>   B  </th> </tr>
                             <tr class="data odd0">  <td>   1  </td>  <td>
                                 <h3> TEST 2</h3>
-                                <script type="text/javascript">\nupdate_headinfo(\'1 row\');\n</script>
+                                <script type="text/javascript">\ncmk.utils.update_header_info(\'1 row\');\n</script>
                                 <table class="data oddeven">
                                 <tr><th>_</th><th>|</th></tr>
                                 <tr class="data odd0"><td>+</td><td>-</td></tr>

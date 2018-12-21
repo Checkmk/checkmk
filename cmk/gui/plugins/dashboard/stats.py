@@ -204,7 +204,7 @@ function chart_pie(pie_id, x_scale, radius, color, right_side) {
 }
 
 
-if (has_canvas_support()) {
+if (cmk.dashboard.has_canvas_support()) {
     %(p)s
 }
 """ % {

@@ -1220,7 +1220,7 @@ class ModeBIAggregations(ModeBI):
         target = None
         if html.has_var('bulk_moveto'):
             target = html.var('bulk_moveto', '')
-            html.javascript('update_bulk_moveto("%s")' % target)
+            html.javascript('cmk.selection.update_bulk_moveto("%s")' % target)
 
         target_pack = None
         if target in self._packs:
@@ -1263,13 +1263,14 @@ class ModeBIAggregations(ModeBI):
                     "_bulk_move_bi_aggregations", _("Bulk move"), "submit", style=fieldstyle)
 
                 if html.has_var('bulk_moveto'):
-                    html.javascript('update_bulk_moveto("%s")' % html.var('bulk_moveto', ''))
+                    html.javascript(
+                        'cmk.selection.update_bulk_moveto("%s")' % html.var('bulk_moveto', ''))
 
                 html.select(
                     "bulk_moveto",
                     move_choices,
                     "@",
-                    onchange="update_bulk_moveto(this.value)",
+                    onchange="cmk.selection.update_bulk_moveto(this.value)",
                     attrs={
                         'class': 'bulk_moveto',
                         'style': fieldstyle
@@ -1435,7 +1436,7 @@ class ModeBIRules(ModeBI):
         target = None
         if html.has_var('bulk_moveto'):
             target = html.var('bulk_moveto', '')
-            html.javascript('update_bulk_moveto("%s")' % target)
+            html.javascript('cmk.selection.update_bulk_moveto("%s")' % target)
 
         target_pack = None
         if target in self._packs:
@@ -1495,13 +1496,14 @@ class ModeBIRules(ModeBI):
                 html.button("_bulk_move_bi_rules", _("Bulk move"), "submit", style=fieldstyle)
 
                 if html.has_var('bulk_moveto'):
-                    html.javascript('update_bulk_moveto("%s")' % html.var('bulk_moveto', ''))
+                    html.javascript(
+                        'cmk.selection.update_bulk_moveto("%s")' % html.var('bulk_moveto', ''))
 
                 html.select(
                     "bulk_moveto",
                     move_choices,
                     "@",
-                    onchange="update_bulk_moveto(this.value)",
+                    onchange="cmk.selection.update_bulk_moveto(this.value)",
                     attrs={
                         'class': 'bulk_moveto',
                         'style': fieldstyle

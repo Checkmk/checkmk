@@ -1455,7 +1455,7 @@ class html(HTMLGenerator):
             self._default_javascripts.append(name)
 
     def immediate_browser_redirect(self, secs, url):
-        self.javascript("set_reload(%s, '%s');" % (secs, url))
+        self.javascript("cmk.utils.set_reload(%s, '%s');" % (secs, url))
 
     def add_body_css_class(self, cls):
         self._body_classes.append(cls)
@@ -1689,10 +1689,10 @@ class html(HTMLGenerator):
 
         if self.browser_reload != 0:
             if self.browser_redirect != '':
-                self.javascript(
-                    'set_reload(%s, \'%s\')' % (self.browser_reload, self.browser_redirect))
+                self.javascript('cmk.utils.set_reload(%s, \'%s\')' % (self.browser_reload,
+                                                                      self.browser_redirect))
             else:
-                self.javascript('set_reload(%s)' % (self.browser_reload))
+                self.javascript('cmk.utils.set_reload(%s)' % (self.browser_reload))
 
         self.close_head()
 
@@ -2081,7 +2081,7 @@ class html(HTMLGenerator):
             self.begin_context_buttons()  # TODO: Check all calls. If done before, remove this!
 
         if not onclick and not disabled:
-            onclick = "view_toggle_form(this.parentNode, '%s');" % id_
+            onclick = "cmk.views.toggle_form(this.parentNode, '%s');" % id_
 
         if disabled:
             state = "off" if disabled else "on"
@@ -2228,7 +2228,8 @@ class html(HTMLGenerator):
         if (submit or label) and not id_:
             id_ = "ti_%s" % varname
 
-        onkeydown = None if not submit else HTML('textinput_enter_submit(\'%s\');' % submit)
+        onkeydown = None if not submit else HTML(
+            'cmk.forms.textinput_enter_submit(event, \'%s\');' % (submit))
 
         attributes = {
             "class": cssclass,
@@ -2651,7 +2652,7 @@ class html(HTMLGenerator):
             if self.context_button_hidden:
                 self.open_div(
                     title=_("Show all buttons"), id="toggle", class_=["contextlink", "short"])
-                self.a("...", onclick='unhide_context_buttons(this);', href='#')
+                self.a("...", onclick='cmk.utils.unhide_context_buttons(this);', href='#')
                 self.close_div()
             self.div("", class_="end")
             self.close_div()
@@ -2711,7 +2712,9 @@ class html(HTMLGenerator):
         self.open_div(class_=css_classes, id_=id_, style="display:%s;" % display)
 
         self.open_a(
-            href=url, title=hover_title, onclick="count_context_button(this);" if bestof else None)
+            href=url,
+            title=hover_title,
+            onclick="cmk.utils.count_context_button(this);" if bestof else None)
 
         if icon:
             self.icon('', icon, cssclass="inline", middle=False)

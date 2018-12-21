@@ -822,7 +822,7 @@ def paint_time_graph_pnp(row):
         pnp_theme = "multisite"
 
     return "pnpgraph", "<div id=\"%s\"></div>" \
-                       "<script>render_pnp_graphs('%s', '%s', '%s', '%s', '%s', '%s', '%s', %s, '%s', %s, %s, '%s')</script>" % \
+                       "<script>cmk.graph_integration.render_graphs('%s', '%s', '%s', '%s', '%s', '%s', '%s', %s, '%s', %s, %s, '%s')</script>" % \
                           (container_id, container_id, sitename, host, service, pnpview,
                            config.url_prefix() + "check_mk/", pnp_url, with_link, _('Add this graph to...'), from_ts, to_ts, pnp_theme)
 

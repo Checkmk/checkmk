@@ -327,3 +327,60 @@ function select_all_rows(elems, only_failed) {
     update_row_selection_information();
     set_rowselection("add", selection_properties.selected_rows);
 }
+
+// Toggles the datarows of the group which the given checkbox is part of.
+export function toggle_group_rows(checkbox) {
+    // 1. Find the first tbody parent
+    // 2. iterate over the children and search for the group header of the checkbox
+    //    - Save the TR with class groupheader
+    //    - End this search once found the checkbox element
+    var this_row = checkbox.parentNode.parentNode;
+    var rows     = this_row.parentNode.children;
+
+    var in_this_group = false;
+    var group_start   = null;
+    var group_end     = null;
+    for(var i = 0; i < rows.length; i++) {
+        if(rows[i].tagName !== "TR")
+            continue;
+
+        if(!in_this_group) {
+            // Search for the start of our group
+            // Save the current group row element
+            if(rows[i].className === "groupheader")
+                group_start = i + 1;
+
+            // Found the row of the checkbox? Then finished with this loop
+            if(rows[i] === this_row)
+                in_this_group = true;
+        } else {
+            // Found the start of our group. Now search for the end
+            if(rows[i].className === "groupheader") {
+                group_end = i;
+                break;
+            }
+        }
+    }
+
+    if(group_start === null)
+        group_start = 0;
+    if(group_end === null)
+        group_end = rows.length;
+
+    // Found the group start and end row of the checkbox!
+    var group_rows = [];
+    for(var a = group_start; a < group_end; a++) {
+        if(rows[a].tagName === "TR") {
+            group_rows.push(rows[a]);
+        }
+    }
+    toggle_all_rows(group_rows);
+}
+
+export function update_bulk_moveto(val) {
+    var fields = document.getElementsByClassName("bulk_moveto");
+    for(var i = 0; i < fields.length; i++)
+        for(var a = 0; a < fields[i].options.length; a++)
+            if(fields[i].options[a].value == val)
+                fields[i].options[a].selected = true;
+}

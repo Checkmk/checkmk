@@ -1278,7 +1278,7 @@ def render_view(view, rows, datasource, group_painters, painters, show_heading, 
             headinfo = "%d/%s" % (len(selected), headinfo)
 
         if html.output_format == "html":
-            html.javascript("update_headinfo('%s');" % headinfo)
+            html.javascript("cmk.utils.update_header_info(%s);" % json.dumps(headinfo))
 
             # The number of rows might have changed to enable/disable actions and checkboxes
             if show_buttons:
@@ -1430,10 +1430,10 @@ def view_optiondial(view, option, choices, help_txt):
         id_="optiondial_%s" % option,
         class_=["optiondial", option, "val_%s" % value],
         title=help_txt,
-        onclick="view_dial_option(this, \'%s\', \'%s\', %r)" % (view["name"], option, choices))
+        onclick="cmk.views.dial_option(this, \'%s\', \'%s\', %r)" % (view["name"], option, choices))
     html.div(title)
     html.close_div()
-    html.final_javascript("init_optiondial('optiondial_%s');" % option)
+    html.final_javascript("cmk.views.init_optiondial('optiondial_%s');" % option)
 
 
 def view_optiondial_off(option):
@@ -1608,8 +1608,9 @@ def show_context_links(thisview, datasource, show_filters, enable_commands, enab
 
 
 def update_context_links(enable_command_toggle, enable_checkbox_toggle):
-    html.javascript("update_togglebutton('commands', %d);" % (enable_command_toggle and 1 or 0))
-    html.javascript("update_togglebutton('checkbox', %d);" %
+    html.javascript(
+        "cmk.views.update_togglebutton('commands', %d);" % (enable_command_toggle and 1 or 0))
+    html.javascript("cmk.views.update_togglebutton('checkbox', %d);" %
                     (enable_command_toggle and enable_checkbox_toggle and 1 or 0,))
 
 

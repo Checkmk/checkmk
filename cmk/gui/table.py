@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import re
+import json
 from contextlib import contextmanager
 from typing import Optional, Text  # pylint: disable=unused-import
 
@@ -80,7 +81,7 @@ def end():
 
 def update_headinfo(num_rows):
     headinfo = _("1 row") if num_rows == 1 else _("%d rows") % num_rows
-    html.javascript("update_headinfo('%s');" % headinfo)
+    html.javascript("cmk.utils.update_header_info(%s);" % json.dumps(headinfo))
 
 
 #.

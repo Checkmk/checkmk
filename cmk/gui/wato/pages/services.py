@@ -1169,7 +1169,7 @@ class DiscoveryPageRenderer(object):
 
         table.cell(
             "<input type=button class=checkgroup name=_toggle_group"
-            " onclick=\"toggle_group_rows(this);\" value=\"X\" />",
+            " onclick=\"cmk.selection.toggle_group_rows(this);\" value=\"X\" />",
             sortable=False,
             css="checkbox")
         name = DiscoveryPageRenderer.checkbox_name(check_type, item)

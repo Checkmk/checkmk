@@ -192,7 +192,7 @@ def paint_reschedule(what, row, tags, host_custom_vars):
                 icon = 'reload_cmk'
                 txt = _('Reschedule \'Check_MK\' service')
 
-        url = 'onclick:reschedule_check(this, \'%s\', \'%s\', \'%s\', \'%s\');' % \
+        url = 'onclick:cmk.views.reschedule_check(this, \'%s\', \'%s\', \'%s\', \'%s\');' % \
                 (row["site"], row["host_name"], html.urlencode(servicedesc), html.urlencode(wait_svc))
         return icon, txt, url
 
@@ -350,7 +350,7 @@ def pnp_icon(row, what):
         content=html.render_icon('pnp', ''),
         href=url,
         onmouseout="cmk.hover.hide()",
-        onmouseover="show_hover_graphs(event, %s, %s, %s, %s, %s);" % (
+        onmouseover="cmk.graph_integration.show_hover_graphs(event, %s, %s, %s, %s, %s);" % (
             json.dumps(row['site']),
             json.dumps(row["host_name"]),
             json.dumps(row.get('service_description', '_HOST_')),

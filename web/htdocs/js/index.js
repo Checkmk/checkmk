@@ -46,9 +46,10 @@ import * as profile_replication from "profile_replication";
 import * as wato from "wato";
 import * as popup_menu from "popup_menu";
 import * as valuespecs from "valuespecs";
+import * as views from "views";
+import * as reload_pause from "reload_pause";
+import * as graph_integration from "graph_integration";
 import * as dashboard from "dashboard";
-
-require("script-loader!./checkmk.js");
 
 // TODO: Find a better solution for this CEE specific include
 try {
@@ -64,6 +65,7 @@ $(() => {
 
 export default {
     cmk: {
+        forms: forms,
         prediction: prediction,
         ajax: ajax,
         utils: utils,
@@ -86,6 +88,9 @@ export default {
         wato: wato,
         popup_menu: popup_menu,
         valuespecs: valuespecs,
+        views: views,
+        reload_pause: reload_pause,
+        graph_integration: graph_integration,
         dashboard: dashboard
     },
     // TODO: Compatibility for not yet modularized JS code

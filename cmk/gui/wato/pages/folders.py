@@ -606,7 +606,7 @@ class ModeFolder(WatoMode):
 
         row_count = len(rendered_hosts)
         headinfo = "%d %s" % (row_count, _("host") if row_count == 1 else _("hosts"))
-        html.javascript("update_headinfo('%s');" % headinfo)
+        html.javascript("cmk.utils.update_header_info(%s);" % json.dumps(headinfo))
 
         if show_checkboxes:
             selection_properties = {
@@ -670,12 +670,13 @@ class ModeFolder(WatoMode):
             if top:
                 field_name = '_top_bulk_moveto'
                 if html.has_var('bulk_moveto'):
-                    html.javascript('update_bulk_moveto("%s")' % html.var('bulk_moveto', ''))
+                    html.javascript(
+                        'cmk.selection.update_bulk_moveto("%s")' % html.var('bulk_moveto', ''))
             html.dropdown(
                 field_name,
                 choices,
                 deflt="@",
-                onchange="update_bulk_moveto(this.value)",
+                onchange="cmk.selection.update_bulk_moveto(this.value)",
                 class_='bulk_moveto')
 
     def _move_to_imported_folders(self, host_names_to_move):

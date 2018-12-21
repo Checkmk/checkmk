@@ -90,7 +90,7 @@ class ModeBackgroundJobsOverview(WatoMode):
         if any(
                 job_manager.get_running_job_ids(c)
                 for c in gui_background_job.job_registry.values()):
-            html.javascript("set_reload(0.8)")
+            html.set_browser_reload(0.8)
 
     def action(self):
         action_handler = gui_background_job.ActionHandler(stylesheets=wato_styles)
@@ -136,7 +136,7 @@ class ModeBackgroundJobDetails(WatoMode):
         job_manager = gui_background_job.GUIBackgroundJobManager()
         job_manager.show_job_details_from_snapshot(job_snapshot)
         if job_snapshot.is_running():
-            html.javascript("set_reload(1)")
+            html.set_browser_reload(1)
 
     def action(self):
         action_handler = gui_background_job.ActionHandler(stylesheets=wato_styles)

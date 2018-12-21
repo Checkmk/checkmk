@@ -821,8 +821,8 @@ class PageAbstractBackupJobState(object):
         html.open_div(id_="job_details")
         self.show_job_details()
         html.close_div()
-        html.javascript("refresh_job_details('%s', '%s', %s)" % (self._update_url(), self._ident,
-                                                                 "true" if is_site() else "false"))
+        html.javascript("cmk.backup.refresh_job_details('%s', '%s', %s)" %
+                        (self._update_url(), self._ident, "true" if is_site() else "false"))
 
     def _update_url(self):
         return "ajax_backup_job_state.py?job=%s" % self._ident

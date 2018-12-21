@@ -32,6 +32,7 @@ import * as visibility_detection from "visibility_detection";
 import * as async_progress from "async_progress";
 import * as activation from "activation";
 import * as selection from "selection";
+import * as element_dragging from "element_dragging";
 import * as dashboard from "dashboard";
 
 require("script-loader!./checkmk.js");
@@ -44,7 +45,10 @@ try {
 } catch(e) {} // eslint-disable-line no-empty
 
 $(() => {
+    utils.update_header_timer();
     forms.enable_select2();
+    // TODO: only register when needed?
+    element_dragging.register_event_handlers();
 });
 
 export default {
@@ -57,6 +61,7 @@ export default {
         async_progress: async_progress,
         activation: activation,
         selection: selection,
+        element_dragging: element_dragging,
         dashboard: dashboard
     },
     // TODO: Compatibility for not yet modularized JS code

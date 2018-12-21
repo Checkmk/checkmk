@@ -1162,6 +1162,10 @@ function dashlet_resized(nr, dashlet_obj) {
     }
 }
 
+export function has_canvas_support() {
+    return document.createElement("canvas").getContext;
+}
+
 /*
  * Register the global event handlers, used for dragging of dashlets,
  * dialog control and resizing of dashlets

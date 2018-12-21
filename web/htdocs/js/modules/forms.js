@@ -25,6 +25,7 @@
 import $ from "jquery";
 import "select2";
 import "select2/dist/css/select2.css";
+import * as utils from "utils";
 
 // html.dropdown() adds the .select2-enable class for all dropdowns
 // that should use the select2 powered dropdowns
@@ -34,3 +35,20 @@ export function enable_select2() {
         minimumResultsForSearch: 5
     });
 }
+
+// Handle Enter key in textfields
+export function textinput_enter_submit(e, submit) {
+    if (!e)
+        e = window.event;
+
+    var keyCode = e.which || e.keyCode;
+    if (keyCode == 13) {
+        if (submit) {
+            var button = document.getElementById(submit);
+            if (button)
+                button.click();
+        }
+        return utils.prevent_default_events(e);
+    }
+}
+

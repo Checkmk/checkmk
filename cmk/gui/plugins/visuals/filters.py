@@ -1270,7 +1270,7 @@ class FilterHostTags(Filter):
                 #     title = title.encode("utf-8")
                 grouped[entry[0]].append([tag, title])
 
-        html.javascript('g_hosttag_groups = %s;' % json.dumps(grouped))
+        html.javascript('cmk.utils.set_host_tag_groups(%s);' % json.dumps(grouped))
         html.open_table()
         for num in range(self.count):
             prefix = 'host_tag_%d' % num
@@ -1278,7 +1278,7 @@ class FilterHostTags(Filter):
             html.open_td()
             html.dropdown(
                 prefix + '_grp', [("", "")] + groups,
-                onchange='host_tag_update_value(\'%s\', this.value)' % prefix,
+                onchange='cmk.utils.host_tag_update_value(\'%s\', this.value)' % prefix,
                 style='width:129px',
                 ordered=True,
                 class_="grp")

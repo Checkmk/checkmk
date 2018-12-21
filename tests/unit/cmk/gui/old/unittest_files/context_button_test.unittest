@@ -9,7 +9,7 @@
                           'title': 'testtitle',
                           'url': 'www.test.me'}},
   'output': {'attributes': {'context_button_hidden': True},
-             'html_code': u'<div class="contextlinks"><div style="display:block;" class="contextlink"><a href="www.test.me"><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
+             'html_code': u'<div class="contextlinks"><div style="display:block;" class="contextlink"><a href="www.test.me"><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="cmk.utils.unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
  {'function_name': 'context_button_test',
   'input': {'arguments': {'bestof': None,
 
@@ -21,7 +21,7 @@
                           'title': 'testtitle',
                           'url': 'www.test.me'}},
   'output': {'attributes': {'context_button_hidden': True},
-             'html_code': u'<div class="contextlinks"><div style="display:block;" class="contextlink"><a href="www.test.me"><img src="images/icons/ico.png" class="icon inline" title /><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
+             'html_code': u'<div class="contextlinks"><div style="display:block;" class="contextlink"><a href="www.test.me"><img src="images/icons/ico.png" class="icon inline" title /><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="cmk.utils.unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
  {'function_name': 'context_button_test',
   'input': {'arguments': {'bestof': None,
 
@@ -33,7 +33,7 @@
                           'title': 'testtitle',
                           'url': 'www.test.me'}},
   'output': {'attributes': {'context_button_hidden': True},
-             'html_code': u'<div class="contextlinks"><div style="display:block;" class="contextlink"><a href="www.test.me" title="HoverMeBaby!"><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
+             'html_code': u'<div class="contextlinks"><div style="display:block;" class="contextlink"><a href="www.test.me" title="HoverMeBaby!"><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="cmk.utils.unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
  {'function_name': 'context_button_test',
   'input': {'arguments': {'bestof': None,
 
@@ -45,7 +45,7 @@
                           'title': 'testtitle',
                           'url': 'www.test.me'}},
   'output': {'attributes': {'context_button_hidden': True},
-             'html_code': u'<div class="contextlinks"><div style="display:block;" class="contextlink"><a href="www.test.me" title="HoverMeBaby!"><img src="images/icons/ico.png" class="icon inline" title /><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
+             'html_code': u'<div class="contextlinks"><div style="display:block;" class="contextlink"><a href="www.test.me" title="HoverMeBaby!"><img src="images/icons/ico.png" class="icon inline" title /><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="cmk.utils.unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
  {'function_name': 'context_button_test',
   'input': {'arguments': {'bestof': None,
 
@@ -105,7 +105,7 @@
                           'title': 'testtitle',
                           'url': 'www.test.me'}},
   'output': {'attributes': {'context_button_hidden': True},
-             'html_code': u'<div class="contextlinks"><div style="display:none;" class="contextlink"><a href="www.test.me" onclick="count_context_button(this);"><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
+             'html_code': u'<div class="contextlinks"><div style="display:none;" class="contextlink"><a href="www.test.me" onclick="cmk.utils.count_context_button(this);"><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="cmk.utils.unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
  {'function_name': 'context_button_test',
   'input': {'arguments': {'bestof': True,
 
@@ -117,7 +117,7 @@
                           'title': 'testtitle',
                           'url': 'www.test.me'}},
   'output': {'attributes': {'context_button_hidden': True},
-             'html_code': u'<div class="contextlinks"><div style="display:none;" class="contextlink"><a href="www.test.me" onclick="count_context_button(this);"><img src="images/icons/ico.png" class="icon inline" title /><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
+             'html_code': u'<div class="contextlinks"><div style="display:none;" class="contextlink"><a href="www.test.me" onclick="cmk.utils.count_context_button(this);"><img src="images/icons/ico.png" class="icon inline" title /><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="cmk.utils.unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
  {'function_name': 'context_button_test',
   'input': {'arguments': {'bestof': True,
 
@@ -129,7 +129,7 @@
                           'title': 'testtitle',
                           'url': 'www.test.me'}},
   'output': {'attributes': {'context_button_hidden': True},
-             'html_code': u'<div class="contextlinks"><div style="display:none;" class="contextlink"><a href="www.test.me" onclick="count_context_button(this);" title="HoverMeBaby!"><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
+             'html_code': u'<div class="contextlinks"><div style="display:none;" class="contextlink"><a href="www.test.me" onclick="cmk.utils.count_context_button(this);" title="HoverMeBaby!"><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="cmk.utils.unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
  {'function_name': 'context_button_test',
   'input': {'arguments': {'bestof': True,
 
@@ -141,7 +141,7 @@
                           'title': 'testtitle',
                           'url': 'www.test.me'}},
   'output': {'attributes': {'context_button_hidden': True},
-             'html_code': u'<div class="contextlinks"><div style="display:none;" class="contextlink"><a href="www.test.me" onclick="count_context_button(this);" title="HoverMeBaby!"><img src="images/icons/ico.png" class="icon inline" title /><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
+             'html_code': u'<div class="contextlinks"><div style="display:none;" class="contextlink"><a href="www.test.me" onclick="cmk.utils.count_context_button(this);" title="HoverMeBaby!"><img src="images/icons/ico.png" class="icon inline" title /><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="cmk.utils.unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
  {'function_name': 'context_button_test',
   'input': {'arguments': {'bestof': True,
 
@@ -153,7 +153,7 @@
                           'title': 'testtitle',
                           'url': 'www.test.me'}},
   'output': {'attributes': {'context_button_hidden': True},
-             'html_code': u'<div class="contextlinks"><div style="display:none;" class="contextlink"><a href="www.test.me" onclick="count_context_button(this);"><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
+             'html_code': u'<div class="contextlinks"><div style="display:none;" class="contextlink"><a href="www.test.me" onclick="cmk.utils.count_context_button(this);"><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="cmk.utils.unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
  {'function_name': 'context_button_test',
   'input': {'arguments': {'bestof': True,
 
@@ -165,7 +165,7 @@
                           'title': 'testtitle',
                           'url': 'www.test.me'}},
   'output': {'attributes': {'context_button_hidden': True},
-             'html_code': u'<div class="contextlinks"><div style="display:none;" class="contextlink"><a href="www.test.me" onclick="count_context_button(this);"><img src="images/icons/ico.png" class="icon inline" title /><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
+             'html_code': u'<div class="contextlinks"><div style="display:none;" class="contextlink"><a href="www.test.me" onclick="cmk.utils.count_context_button(this);"><img src="images/icons/ico.png" class="icon inline" title /><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="cmk.utils.unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
  {'function_name': 'context_button_test',
   'input': {'arguments': {'bestof': True,
 
@@ -177,7 +177,7 @@
                           'title': 'testtitle',
                           'url': 'www.test.me'}},
   'output': {'attributes': {'context_button_hidden': True},
-             'html_code': u'<div class="contextlinks"><div style="display:none;" class="contextlink"><a href="www.test.me" onclick="count_context_button(this);" title="HoverMeBaby!"><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
+             'html_code': u'<div class="contextlinks"><div style="display:none;" class="contextlink"><a href="www.test.me" onclick="cmk.utils.count_context_button(this);" title="HoverMeBaby!"><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="cmk.utils.unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
  {'function_name': 'context_button_test',
   'input': {'arguments': {'bestof': True,
 
@@ -189,7 +189,7 @@
                           'title': 'testtitle',
                           'url': 'www.test.me'}},
   'output': {'attributes': {'context_button_hidden': True},
-             'html_code': u'<div class="contextlinks"><div style="display:none;" class="contextlink"><a href="www.test.me" onclick="count_context_button(this);" title="HoverMeBaby!"><img src="images/icons/ico.png" class="icon inline" title /><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
+             'html_code': u'<div class="contextlinks"><div style="display:none;" class="contextlink"><a href="www.test.me" onclick="cmk.utils.count_context_button(this);" title="HoverMeBaby!"><img src="images/icons/ico.png" class="icon inline" title /><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="cmk.utils.unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
  {'function_name': 'context_button_test',
   'input': {'arguments': {'bestof': False,
 
@@ -201,7 +201,7 @@
                           'title': 'testtitle',
                           'url': 'www.test.me'}},
   'output': {'attributes': {'context_button_hidden': True},
-             'html_code': u'<div class="contextlinks"><div style="display:block;" class="contextlink"><a href="www.test.me"><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
+             'html_code': u'<div class="contextlinks"><div style="display:block;" class="contextlink"><a href="www.test.me"><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="cmk.utils.unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
  {'function_name': 'context_button_test',
   'input': {'arguments': {'bestof': False,
 
@@ -213,7 +213,7 @@
                           'title': 'testtitle',
                           'url': 'www.test.me'}},
   'output': {'attributes': {'context_button_hidden': True},
-             'html_code': u'<div class="contextlinks"><div style="display:block;" class="contextlink"><a href="www.test.me"><img src="images/icons/ico.png" class="icon inline" title /><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
+             'html_code': u'<div class="contextlinks"><div style="display:block;" class="contextlink"><a href="www.test.me"><img src="images/icons/ico.png" class="icon inline" title /><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="cmk.utils.unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
  {'function_name': 'context_button_test',
   'input': {'arguments': {'bestof': False,
 
@@ -225,7 +225,7 @@
                           'title': 'testtitle',
                           'url': 'www.test.me'}},
   'output': {'attributes': {'context_button_hidden': True},
-             'html_code': u'<div class="contextlinks"><div style="display:block;" class="contextlink"><a href="www.test.me" title="HoverMeBaby!"><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
+             'html_code': u'<div class="contextlinks"><div style="display:block;" class="contextlink"><a href="www.test.me" title="HoverMeBaby!"><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="cmk.utils.unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
  {'function_name': 'context_button_test',
   'input': {'arguments': {'bestof': False,
 
@@ -237,7 +237,7 @@
                           'title': 'testtitle',
                           'url': 'www.test.me'}},
   'output': {'attributes': {'context_button_hidden': True},
-             'html_code': u'<div class="contextlinks"><div style="display:block;" class="contextlink"><a href="www.test.me" title="HoverMeBaby!"><img src="images/icons/ico.png" class="icon inline" title /><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
+             'html_code': u'<div class="contextlinks"><div style="display:block;" class="contextlink"><a href="www.test.me" title="HoverMeBaby!"><img src="images/icons/ico.png" class="icon inline" title /><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="cmk.utils.unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
  {'function_name': 'context_button_test',
   'input': {'arguments': {'bestof': False,
 
@@ -297,7 +297,7 @@
                           'title': 'testtitle',
                           'url': 'www.test.me'}},
   'output': {'attributes': {'context_button_hidden': True},
-             'html_code': u'<div class="contextlinks"><div style="display:block;" class="contextlink hot"><a href="www.test.me"><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
+             'html_code': u'<div class="contextlinks"><div style="display:block;" class="contextlink hot"><a href="www.test.me"><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="cmk.utils.unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
  {'function_name': 'context_button_test',
   'input': {'arguments': {'bestof': None,
 
@@ -309,7 +309,7 @@
                           'title': 'testtitle',
                           'url': 'www.test.me'}},
   'output': {'attributes': {'context_button_hidden': True},
-             'html_code': u'<div class="contextlinks"><div style="display:block;" class="contextlink hot"><a href="www.test.me"><img src="images/icons/ico.png" class="icon inline" title /><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
+             'html_code': u'<div class="contextlinks"><div style="display:block;" class="contextlink hot"><a href="www.test.me"><img src="images/icons/ico.png" class="icon inline" title /><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="cmk.utils.unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
  {'function_name': 'context_button_test',
   'input': {'arguments': {'bestof': None,
 
@@ -321,7 +321,7 @@
                           'title': 'testtitle',
                           'url': 'www.test.me'}},
   'output': {'attributes': {'context_button_hidden': True},
-             'html_code': u'<div class="contextlinks"><div style="display:block;" class="contextlink hot"><a href="www.test.me" title="HoverMeBaby!"><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
+             'html_code': u'<div class="contextlinks"><div style="display:block;" class="contextlink hot"><a href="www.test.me" title="HoverMeBaby!"><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="cmk.utils.unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
  {'function_name': 'context_button_test',
   'input': {'arguments': {'bestof': None,
 
@@ -333,7 +333,7 @@
                           'title': 'testtitle',
                           'url': 'www.test.me'}},
   'output': {'attributes': {'context_button_hidden': True},
-             'html_code': u'<div class="contextlinks"><div style="display:block;" class="contextlink hot"><a href="www.test.me" title="HoverMeBaby!"><img src="images/icons/ico.png" class="icon inline" title /><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
+             'html_code': u'<div class="contextlinks"><div style="display:block;" class="contextlink hot"><a href="www.test.me" title="HoverMeBaby!"><img src="images/icons/ico.png" class="icon inline" title /><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="cmk.utils.unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
  {'function_name': 'context_button_test',
   'input': {'arguments': {'bestof': None,
 
@@ -393,7 +393,7 @@
                           'title': 'testtitle',
                           'url': 'www.test.me'}},
   'output': {'attributes': {'context_button_hidden': True},
-             'html_code': u'<div class="contextlinks"><div style="display:none;" class="contextlink hot"><a href="www.test.me" onclick="count_context_button(this);"><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
+             'html_code': u'<div class="contextlinks"><div style="display:none;" class="contextlink hot"><a href="www.test.me" onclick="cmk.utils.count_context_button(this);"><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="cmk.utils.unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
  {'function_name': 'context_button_test',
   'input': {'arguments': {'bestof': True,
 
@@ -405,7 +405,7 @@
                           'title': 'testtitle',
                           'url': 'www.test.me'}},
   'output': {'attributes': {'context_button_hidden': True},
-             'html_code': u'<div class="contextlinks"><div style="display:none;" class="contextlink hot"><a href="www.test.me" onclick="count_context_button(this);"><img src="images/icons/ico.png" class="icon inline" title /><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
+             'html_code': u'<div class="contextlinks"><div style="display:none;" class="contextlink hot"><a href="www.test.me" onclick="cmk.utils.count_context_button(this);"><img src="images/icons/ico.png" class="icon inline" title /><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="cmk.utils.unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
  {'function_name': 'context_button_test',
   'input': {'arguments': {'bestof': True,
 
@@ -417,7 +417,7 @@
                           'title': 'testtitle',
                           'url': 'www.test.me'}},
   'output': {'attributes': {'context_button_hidden': True},
-             'html_code': u'<div class="contextlinks"><div style="display:none;" class="contextlink hot"><a href="www.test.me" onclick="count_context_button(this);" title="HoverMeBaby!"><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
+             'html_code': u'<div class="contextlinks"><div style="display:none;" class="contextlink hot"><a href="www.test.me" onclick="cmk.utils.count_context_button(this);" title="HoverMeBaby!"><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="cmk.utils.unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
  {'function_name': 'context_button_test',
   'input': {'arguments': {'bestof': True,
 
@@ -429,7 +429,7 @@
                           'title': 'testtitle',
                           'url': 'www.test.me'}},
   'output': {'attributes': {'context_button_hidden': True},
-             'html_code': u'<div class="contextlinks"><div style="display:none;" class="contextlink hot"><a href="www.test.me" onclick="count_context_button(this);" title="HoverMeBaby!"><img src="images/icons/ico.png" class="icon inline" title /><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
+             'html_code': u'<div class="contextlinks"><div style="display:none;" class="contextlink hot"><a href="www.test.me" onclick="cmk.utils.count_context_button(this);" title="HoverMeBaby!"><img src="images/icons/ico.png" class="icon inline" title /><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="cmk.utils.unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
  {'function_name': 'context_button_test',
   'input': {'arguments': {'bestof': True,
 
@@ -441,7 +441,7 @@
                           'title': 'testtitle',
                           'url': 'www.test.me'}},
   'output': {'attributes': {'context_button_hidden': True},
-             'html_code': u'<div class="contextlinks"><div style="display:none;" class="contextlink hot"><a href="www.test.me" onclick="count_context_button(this);"><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
+             'html_code': u'<div class="contextlinks"><div style="display:none;" class="contextlink hot"><a href="www.test.me" onclick="cmk.utils.count_context_button(this);"><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="cmk.utils.unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
  {'function_name': 'context_button_test',
   'input': {'arguments': {'bestof': True,
 
@@ -453,7 +453,7 @@
                           'title': 'testtitle',
                           'url': 'www.test.me'}},
   'output': {'attributes': {'context_button_hidden': True},
-             'html_code': u'<div class="contextlinks"><div style="display:none;" class="contextlink hot"><a href="www.test.me" onclick="count_context_button(this);"><img src="images/icons/ico.png" class="icon inline" title /><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
+             'html_code': u'<div class="contextlinks"><div style="display:none;" class="contextlink hot"><a href="www.test.me" onclick="cmk.utils.count_context_button(this);"><img src="images/icons/ico.png" class="icon inline" title /><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="cmk.utils.unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
  {'function_name': 'context_button_test',
   'input': {'arguments': {'bestof': True,
 
@@ -465,7 +465,7 @@
                           'title': 'testtitle',
                           'url': 'www.test.me'}},
   'output': {'attributes': {'context_button_hidden': True},
-             'html_code': u'<div class="contextlinks"><div style="display:none;" class="contextlink hot"><a href="www.test.me" onclick="count_context_button(this);" title="HoverMeBaby!"><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
+             'html_code': u'<div class="contextlinks"><div style="display:none;" class="contextlink hot"><a href="www.test.me" onclick="cmk.utils.count_context_button(this);" title="HoverMeBaby!"><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="cmk.utils.unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
  {'function_name': 'context_button_test',
   'input': {'arguments': {'bestof': True,
 
@@ -477,7 +477,7 @@
                           'title': 'testtitle',
                           'url': 'www.test.me'}},
   'output': {'attributes': {'context_button_hidden': True},
-             'html_code': u'<div class="contextlinks"><div style="display:none;" class="contextlink hot"><a href="www.test.me" onclick="count_context_button(this);" title="HoverMeBaby!"><img src="images/icons/ico.png" class="icon inline" title /><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
+             'html_code': u'<div class="contextlinks"><div style="display:none;" class="contextlink hot"><a href="www.test.me" onclick="cmk.utils.count_context_button(this);" title="HoverMeBaby!"><img src="images/icons/ico.png" class="icon inline" title /><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="cmk.utils.unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
  {'function_name': 'context_button_test',
   'input': {'arguments': {'bestof': False,
 
@@ -489,7 +489,7 @@
                           'title': 'testtitle',
                           'url': 'www.test.me'}},
   'output': {'attributes': {'context_button_hidden': True},
-             'html_code': u'<div class="contextlinks"><div style="display:block;" class="contextlink hot"><a href="www.test.me"><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
+             'html_code': u'<div class="contextlinks"><div style="display:block;" class="contextlink hot"><a href="www.test.me"><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="cmk.utils.unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
  {'function_name': 'context_button_test',
   'input': {'arguments': {'bestof': False,
 
@@ -501,7 +501,7 @@
                           'title': 'testtitle',
                           'url': 'www.test.me'}},
   'output': {'attributes': {'context_button_hidden': True},
-             'html_code': u'<div class="contextlinks"><div style="display:block;" class="contextlink hot"><a href="www.test.me"><img src="images/icons/ico.png" class="icon inline" title /><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
+             'html_code': u'<div class="contextlinks"><div style="display:block;" class="contextlink hot"><a href="www.test.me"><img src="images/icons/ico.png" class="icon inline" title /><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="cmk.utils.unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
  {'function_name': 'context_button_test',
   'input': {'arguments': {'bestof': False,
 
@@ -513,7 +513,7 @@
                           'title': 'testtitle',
                           'url': 'www.test.me'}},
   'output': {'attributes': {'context_button_hidden': True},
-             'html_code': u'<div class="contextlinks"><div style="display:block;" class="contextlink hot"><a href="www.test.me" title="HoverMeBaby!"><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
+             'html_code': u'<div class="contextlinks"><div style="display:block;" class="contextlink hot"><a href="www.test.me" title="HoverMeBaby!"><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="cmk.utils.unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
  {'function_name': 'context_button_test',
   'input': {'arguments': {'bestof': False,
 
@@ -525,7 +525,7 @@
                           'title': 'testtitle',
                           'url': 'www.test.me'}},
   'output': {'attributes': {'context_button_hidden': True},
-             'html_code': u'<div class="contextlinks"><div style="display:block;" class="contextlink hot"><a href="www.test.me" title="HoverMeBaby!"><img src="images/icons/ico.png" class="icon inline" title /><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
+             'html_code': u'<div class="contextlinks"><div style="display:block;" class="contextlink hot"><a href="www.test.me" title="HoverMeBaby!"><img src="images/icons/ico.png" class="icon inline" title /><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="cmk.utils.unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
  {'function_name': 'context_button_test',
   'input': {'arguments': {'bestof': False,
 
@@ -585,7 +585,7 @@
                           'title': 'testtitle',
                           'url': 'www.test.me'}},
   'output': {'attributes': {'context_button_hidden': True},
-             'html_code': u'<div class="contextlinks"><div style="display:block;" class="contextlink" id="id1"><a href="www.test.me"><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
+             'html_code': u'<div class="contextlinks"><div style="display:block;" class="contextlink" id="id1"><a href="www.test.me"><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="cmk.utils.unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
  {'function_name': 'context_button_test',
   'input': {'arguments': {'bestof': None,
 
@@ -597,7 +597,7 @@
                           'title': 'testtitle',
                           'url': 'www.test.me'}},
   'output': {'attributes': {'context_button_hidden': True},
-             'html_code': u'<div class="contextlinks"><div style="display:block;" class="contextlink" id="id1"><a href="www.test.me"><img src="images/icons/ico.png" class="icon inline" title /><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
+             'html_code': u'<div class="contextlinks"><div style="display:block;" class="contextlink" id="id1"><a href="www.test.me"><img src="images/icons/ico.png" class="icon inline" title /><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="cmk.utils.unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
  {'function_name': 'context_button_test',
   'input': {'arguments': {'bestof': None,
 
@@ -609,7 +609,7 @@
                           'title': 'testtitle',
                           'url': 'www.test.me'}},
   'output': {'attributes': {'context_button_hidden': True},
-             'html_code': u'<div class="contextlinks"><div style="display:block;" class="contextlink" id="id1"><a href="www.test.me" title="HoverMeBaby!"><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
+             'html_code': u'<div class="contextlinks"><div style="display:block;" class="contextlink" id="id1"><a href="www.test.me" title="HoverMeBaby!"><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="cmk.utils.unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
  {'function_name': 'context_button_test',
   'input': {'arguments': {'bestof': None,
 
@@ -621,7 +621,7 @@
                           'title': 'testtitle',
                           'url': 'www.test.me'}},
   'output': {'attributes': {'context_button_hidden': True},
-             'html_code': u'<div class="contextlinks"><div style="display:block;" class="contextlink" id="id1"><a href="www.test.me" title="HoverMeBaby!"><img src="images/icons/ico.png" class="icon inline" title /><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
+             'html_code': u'<div class="contextlinks"><div style="display:block;" class="contextlink" id="id1"><a href="www.test.me" title="HoverMeBaby!"><img src="images/icons/ico.png" class="icon inline" title /><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="cmk.utils.unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
  {'function_name': 'context_button_test',
   'input': {'arguments': {'bestof': None,
 
@@ -681,7 +681,7 @@
                           'title': 'testtitle',
                           'url': 'www.test.me'}},
   'output': {'attributes': {'context_button_hidden': True},
-             'html_code': u'<div class="contextlinks"><div style="display:none;" class="contextlink" id="id1"><a href="www.test.me" onclick="count_context_button(this);"><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
+             'html_code': u'<div class="contextlinks"><div style="display:none;" class="contextlink" id="id1"><a href="www.test.me" onclick="cmk.utils.count_context_button(this);"><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="cmk.utils.unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
  {'function_name': 'context_button_test',
   'input': {'arguments': {'bestof': True,
 
@@ -693,7 +693,7 @@
                           'title': 'testtitle',
                           'url': 'www.test.me'}},
   'output': {'attributes': {'context_button_hidden': True},
-             'html_code': u'<div class="contextlinks"><div style="display:none;" class="contextlink" id="id1"><a href="www.test.me" onclick="count_context_button(this);"><img src="images/icons/ico.png" class="icon inline" title /><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
+             'html_code': u'<div class="contextlinks"><div style="display:none;" class="contextlink" id="id1"><a href="www.test.me" onclick="cmk.utils.count_context_button(this);"><img src="images/icons/ico.png" class="icon inline" title /><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="cmk.utils.unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
  {'function_name': 'context_button_test',
   'input': {'arguments': {'bestof': True,
 
@@ -705,7 +705,7 @@
                           'title': 'testtitle',
                           'url': 'www.test.me'}},
   'output': {'attributes': {'context_button_hidden': True},
-             'html_code': u'<div class="contextlinks"><div style="display:none;" class="contextlink" id="id1"><a href="www.test.me" onclick="count_context_button(this);" title="HoverMeBaby!"><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
+             'html_code': u'<div class="contextlinks"><div style="display:none;" class="contextlink" id="id1"><a href="www.test.me" onclick="cmk.utils.count_context_button(this);" title="HoverMeBaby!"><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="cmk.utils.unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
  {'function_name': 'context_button_test',
   'input': {'arguments': {'bestof': True,
 
@@ -717,7 +717,7 @@
                           'title': 'testtitle',
                           'url': 'www.test.me'}},
   'output': {'attributes': {'context_button_hidden': True},
-             'html_code': u'<div class="contextlinks"><div style="display:none;" class="contextlink" id="id1"><a href="www.test.me" onclick="count_context_button(this);" title="HoverMeBaby!"><img src="images/icons/ico.png" class="icon inline" title /><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
+             'html_code': u'<div class="contextlinks"><div style="display:none;" class="contextlink" id="id1"><a href="www.test.me" onclick="cmk.utils.count_context_button(this);" title="HoverMeBaby!"><img src="images/icons/ico.png" class="icon inline" title /><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="cmk.utils.unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
  {'function_name': 'context_button_test',
   'input': {'arguments': {'bestof': True,
 
@@ -729,7 +729,7 @@
                           'title': 'testtitle',
                           'url': 'www.test.me'}},
   'output': {'attributes': {'context_button_hidden': True},
-             'html_code': u'<div class="contextlinks"><div style="display:none;" class="contextlink" id="id1"><a href="www.test.me" onclick="count_context_button(this);"><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
+             'html_code': u'<div class="contextlinks"><div style="display:none;" class="contextlink" id="id1"><a href="www.test.me" onclick="cmk.utils.count_context_button(this);"><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="cmk.utils.unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
  {'function_name': 'context_button_test',
   'input': {'arguments': {'bestof': True,
 
@@ -741,7 +741,7 @@
                           'title': 'testtitle',
                           'url': 'www.test.me'}},
   'output': {'attributes': {'context_button_hidden': True},
-             'html_code': u'<div class="contextlinks"><div style="display:none;" class="contextlink" id="id1"><a href="www.test.me" onclick="count_context_button(this);"><img src="images/icons/ico.png" class="icon inline" title /><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
+             'html_code': u'<div class="contextlinks"><div style="display:none;" class="contextlink" id="id1"><a href="www.test.me" onclick="cmk.utils.count_context_button(this);"><img src="images/icons/ico.png" class="icon inline" title /><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="cmk.utils.unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
  {'function_name': 'context_button_test',
   'input': {'arguments': {'bestof': True,
 
@@ -753,7 +753,7 @@
                           'title': 'testtitle',
                           'url': 'www.test.me'}},
   'output': {'attributes': {'context_button_hidden': True},
-             'html_code': u'<div class="contextlinks"><div style="display:none;" class="contextlink" id="id1"><a href="www.test.me" onclick="count_context_button(this);" title="HoverMeBaby!"><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
+             'html_code': u'<div class="contextlinks"><div style="display:none;" class="contextlink" id="id1"><a href="www.test.me" onclick="cmk.utils.count_context_button(this);" title="HoverMeBaby!"><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="cmk.utils.unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
  {'function_name': 'context_button_test',
   'input': {'arguments': {'bestof': True,
 
@@ -765,7 +765,7 @@
                           'title': 'testtitle',
                           'url': 'www.test.me'}},
   'output': {'attributes': {'context_button_hidden': True},
-             'html_code': u'<div class="contextlinks"><div style="display:none;" class="contextlink" id="id1"><a href="www.test.me" onclick="count_context_button(this);" title="HoverMeBaby!"><img src="images/icons/ico.png" class="icon inline" title /><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
+             'html_code': u'<div class="contextlinks"><div style="display:none;" class="contextlink" id="id1"><a href="www.test.me" onclick="cmk.utils.count_context_button(this);" title="HoverMeBaby!"><img src="images/icons/ico.png" class="icon inline" title /><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="cmk.utils.unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
  {'function_name': 'context_button_test',
   'input': {'arguments': {'bestof': False,
 
@@ -777,7 +777,7 @@
                           'title': 'testtitle',
                           'url': 'www.test.me'}},
   'output': {'attributes': {'context_button_hidden': True},
-             'html_code': u'<div class="contextlinks"><div style="display:block;" class="contextlink" id="id1"><a href="www.test.me"><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
+             'html_code': u'<div class="contextlinks"><div style="display:block;" class="contextlink" id="id1"><a href="www.test.me"><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="cmk.utils.unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
  {'function_name': 'context_button_test',
   'input': {'arguments': {'bestof': False,
 
@@ -789,7 +789,7 @@
                           'title': 'testtitle',
                           'url': 'www.test.me'}},
   'output': {'attributes': {'context_button_hidden': True},
-             'html_code': u'<div class="contextlinks"><div style="display:block;" class="contextlink" id="id1"><a href="www.test.me"><img src="images/icons/ico.png" class="icon inline" title /><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
+             'html_code': u'<div class="contextlinks"><div style="display:block;" class="contextlink" id="id1"><a href="www.test.me"><img src="images/icons/ico.png" class="icon inline" title /><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="cmk.utils.unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
  {'function_name': 'context_button_test',
   'input': {'arguments': {'bestof': False,
 
@@ -801,7 +801,7 @@
                           'title': 'testtitle',
                           'url': 'www.test.me'}},
   'output': {'attributes': {'context_button_hidden': True},
-             'html_code': u'<div class="contextlinks"><div style="display:block;" class="contextlink" id="id1"><a href="www.test.me" title="HoverMeBaby!"><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
+             'html_code': u'<div class="contextlinks"><div style="display:block;" class="contextlink" id="id1"><a href="www.test.me" title="HoverMeBaby!"><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="cmk.utils.unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
  {'function_name': 'context_button_test',
   'input': {'arguments': {'bestof': False,
 
@@ -813,7 +813,7 @@
                           'title': 'testtitle',
                           'url': 'www.test.me'}},
   'output': {'attributes': {'context_button_hidden': True},
-             'html_code': u'<div class="contextlinks"><div style="display:block;" class="contextlink" id="id1"><a href="www.test.me" title="HoverMeBaby!"><img src="images/icons/ico.png" class="icon inline" title /><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
+             'html_code': u'<div class="contextlinks"><div style="display:block;" class="contextlink" id="id1"><a href="www.test.me" title="HoverMeBaby!"><img src="images/icons/ico.png" class="icon inline" title /><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="cmk.utils.unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
  {'function_name': 'context_button_test',
   'input': {'arguments': {'bestof': False,
 
@@ -873,7 +873,7 @@
                           'title': 'testtitle',
                           'url': 'www.test.me'}},
   'output': {'attributes': {'context_button_hidden': True},
-             'html_code': u'<div class="contextlinks"><div style="display:block;" class="contextlink hot" id="id1"><a href="www.test.me"><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
+             'html_code': u'<div class="contextlinks"><div style="display:block;" class="contextlink hot" id="id1"><a href="www.test.me"><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="cmk.utils.unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
  {'function_name': 'context_button_test',
   'input': {'arguments': {'bestof': None,
 
@@ -885,7 +885,7 @@
                           'title': 'testtitle',
                           'url': 'www.test.me'}},
   'output': {'attributes': {'context_button_hidden': True},
-             'html_code': u'<div class="contextlinks"><div style="display:block;" class="contextlink hot" id="id1"><a href="www.test.me"><img src="images/icons/ico.png" class="icon inline" title /><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
+             'html_code': u'<div class="contextlinks"><div style="display:block;" class="contextlink hot" id="id1"><a href="www.test.me"><img src="images/icons/ico.png" class="icon inline" title /><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="cmk.utils.unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
  {'function_name': 'context_button_test',
   'input': {'arguments': {'bestof': None,
 
@@ -897,7 +897,7 @@
                           'title': 'testtitle',
                           'url': 'www.test.me'}},
   'output': {'attributes': {'context_button_hidden': True},
-             'html_code': u'<div class="contextlinks"><div style="display:block;" class="contextlink hot" id="id1"><a href="www.test.me" title="HoverMeBaby!"><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
+             'html_code': u'<div class="contextlinks"><div style="display:block;" class="contextlink hot" id="id1"><a href="www.test.me" title="HoverMeBaby!"><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="cmk.utils.unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
  {'function_name': 'context_button_test',
   'input': {'arguments': {'bestof': None,
 
@@ -909,7 +909,7 @@
                           'title': 'testtitle',
                           'url': 'www.test.me'}},
   'output': {'attributes': {'context_button_hidden': True},
-             'html_code': u'<div class="contextlinks"><div style="display:block;" class="contextlink hot" id="id1"><a href="www.test.me" title="HoverMeBaby!"><img src="images/icons/ico.png" class="icon inline" title /><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
+             'html_code': u'<div class="contextlinks"><div style="display:block;" class="contextlink hot" id="id1"><a href="www.test.me" title="HoverMeBaby!"><img src="images/icons/ico.png" class="icon inline" title /><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="cmk.utils.unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
  {'function_name': 'context_button_test',
   'input': {'arguments': {'bestof': None,
 
@@ -969,7 +969,7 @@
                           'title': 'testtitle',
                           'url': 'www.test.me'}},
   'output': {'attributes': {'context_button_hidden': True},
-             'html_code': u'<div class="contextlinks"><div style="display:none;" class="contextlink hot" id="id1"><a href="www.test.me" onclick="count_context_button(this);"><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
+             'html_code': u'<div class="contextlinks"><div style="display:none;" class="contextlink hot" id="id1"><a href="www.test.me" onclick="cmk.utils.count_context_button(this);"><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="cmk.utils.unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
  {'function_name': 'context_button_test',
   'input': {'arguments': {'bestof': True,
 
@@ -981,7 +981,7 @@
                           'title': 'testtitle',
                           'url': 'www.test.me'}},
   'output': {'attributes': {'context_button_hidden': True},
-             'html_code': u'<div class="contextlinks"><div style="display:none;" class="contextlink hot" id="id1"><a href="www.test.me" onclick="count_context_button(this);"><img src="images/icons/ico.png" class="icon inline" title /><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
+             'html_code': u'<div class="contextlinks"><div style="display:none;" class="contextlink hot" id="id1"><a href="www.test.me" onclick="cmk.utils.count_context_button(this);"><img src="images/icons/ico.png" class="icon inline" title /><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="cmk.utils.unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
  {'function_name': 'context_button_test',
   'input': {'arguments': {'bestof': True,
 
@@ -993,7 +993,7 @@
                           'title': 'testtitle',
                           'url': 'www.test.me'}},
   'output': {'attributes': {'context_button_hidden': True},
-             'html_code': u'<div class="contextlinks"><div style="display:none;" class="contextlink hot" id="id1"><a href="www.test.me" onclick="count_context_button(this);" title="HoverMeBaby!"><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
+             'html_code': u'<div class="contextlinks"><div style="display:none;" class="contextlink hot" id="id1"><a href="www.test.me" onclick="cmk.utils.count_context_button(this);" title="HoverMeBaby!"><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="cmk.utils.unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
  {'function_name': 'context_button_test',
   'input': {'arguments': {'bestof': True,
 
@@ -1005,7 +1005,7 @@
                           'title': 'testtitle',
                           'url': 'www.test.me'}},
   'output': {'attributes': {'context_button_hidden': True},
-             'html_code': u'<div class="contextlinks"><div style="display:none;" class="contextlink hot" id="id1"><a href="www.test.me" onclick="count_context_button(this);" title="HoverMeBaby!"><img src="images/icons/ico.png" class="icon inline" title /><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
+             'html_code': u'<div class="contextlinks"><div style="display:none;" class="contextlink hot" id="id1"><a href="www.test.me" onclick="cmk.utils.count_context_button(this);" title="HoverMeBaby!"><img src="images/icons/ico.png" class="icon inline" title /><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="cmk.utils.unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
  {'function_name': 'context_button_test',
   'input': {'arguments': {'bestof': True,
 
@@ -1017,7 +1017,7 @@
                           'title': 'testtitle',
                           'url': 'www.test.me'}},
   'output': {'attributes': {'context_button_hidden': True},
-             'html_code': u'<div class="contextlinks"><div style="display:none;" class="contextlink hot" id="id1"><a href="www.test.me" onclick="count_context_button(this);"><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
+             'html_code': u'<div class="contextlinks"><div style="display:none;" class="contextlink hot" id="id1"><a href="www.test.me" onclick="cmk.utils.count_context_button(this);"><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="cmk.utils.unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
  {'function_name': 'context_button_test',
   'input': {'arguments': {'bestof': True,
 
@@ -1029,7 +1029,7 @@
                           'title': 'testtitle',
                           'url': 'www.test.me'}},
   'output': {'attributes': {'context_button_hidden': True},
-             'html_code': u'<div class="contextlinks"><div style="display:none;" class="contextlink hot" id="id1"><a href="www.test.me" onclick="count_context_button(this);"><img src="images/icons/ico.png" class="icon inline" title /><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
+             'html_code': u'<div class="contextlinks"><div style="display:none;" class="contextlink hot" id="id1"><a href="www.test.me" onclick="cmk.utils.count_context_button(this);"><img src="images/icons/ico.png" class="icon inline" title /><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="cmk.utils.unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
  {'function_name': 'context_button_test',
   'input': {'arguments': {'bestof': True,
 
@@ -1041,7 +1041,7 @@
                           'title': 'testtitle',
                           'url': 'www.test.me'}},
   'output': {'attributes': {'context_button_hidden': True},
-             'html_code': u'<div class="contextlinks"><div style="display:none;" class="contextlink hot" id="id1"><a href="www.test.me" onclick="count_context_button(this);" title="HoverMeBaby!"><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
+             'html_code': u'<div class="contextlinks"><div style="display:none;" class="contextlink hot" id="id1"><a href="www.test.me" onclick="cmk.utils.count_context_button(this);" title="HoverMeBaby!"><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="cmk.utils.unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
  {'function_name': 'context_button_test',
   'input': {'arguments': {'bestof': True,
 
@@ -1053,7 +1053,7 @@
                           'title': 'testtitle',
                           'url': 'www.test.me'}},
   'output': {'attributes': {'context_button_hidden': True},
-             'html_code': u'<div class="contextlinks"><div style="display:none;" class="contextlink hot" id="id1"><a href="www.test.me" onclick="count_context_button(this);" title="HoverMeBaby!"><img src="images/icons/ico.png" class="icon inline" title /><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
+             'html_code': u'<div class="contextlinks"><div style="display:none;" class="contextlink hot" id="id1"><a href="www.test.me" onclick="cmk.utils.count_context_button(this);" title="HoverMeBaby!"><img src="images/icons/ico.png" class="icon inline" title /><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="cmk.utils.unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
  {'function_name': 'context_button_test',
   'input': {'arguments': {'bestof': False,
 
@@ -1065,7 +1065,7 @@
                           'title': 'testtitle',
                           'url': 'www.test.me'}},
   'output': {'attributes': {'context_button_hidden': True},
-             'html_code': u'<div class="contextlinks"><div style="display:block;" class="contextlink hot" id="id1"><a href="www.test.me"><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
+             'html_code': u'<div class="contextlinks"><div style="display:block;" class="contextlink hot" id="id1"><a href="www.test.me"><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="cmk.utils.unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
  {'function_name': 'context_button_test',
   'input': {'arguments': {'bestof': False,
 
@@ -1077,7 +1077,7 @@
                           'title': 'testtitle',
                           'url': 'www.test.me'}},
   'output': {'attributes': {'context_button_hidden': True},
-             'html_code': u'<div class="contextlinks"><div style="display:block;" class="contextlink hot" id="id1"><a href="www.test.me"><img src="images/icons/ico.png" class="icon inline" title /><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
+             'html_code': u'<div class="contextlinks"><div style="display:block;" class="contextlink hot" id="id1"><a href="www.test.me"><img src="images/icons/ico.png" class="icon inline" title /><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="cmk.utils.unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
  {'function_name': 'context_button_test',
   'input': {'arguments': {'bestof': False,
 
@@ -1089,7 +1089,7 @@
                           'title': 'testtitle',
                           'url': 'www.test.me'}},
   'output': {'attributes': {'context_button_hidden': True},
-             'html_code': u'<div class="contextlinks"><div style="display:block;" class="contextlink hot" id="id1"><a href="www.test.me" title="HoverMeBaby!"><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
+             'html_code': u'<div class="contextlinks"><div style="display:block;" class="contextlink hot" id="id1"><a href="www.test.me" title="HoverMeBaby!"><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="cmk.utils.unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
  {'function_name': 'context_button_test',
   'input': {'arguments': {'bestof': False,
 
@@ -1101,7 +1101,7 @@
                           'title': 'testtitle',
                           'url': 'www.test.me'}},
   'output': {'attributes': {'context_button_hidden': True},
-             'html_code': u'<div class="contextlinks"><div style="display:block;" class="contextlink hot" id="id1"><a href="www.test.me" title="HoverMeBaby!"><img src="images/icons/ico.png" class="icon inline" title /><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
+             'html_code': u'<div class="contextlinks"><div style="display:block;" class="contextlink hot" id="id1"><a href="www.test.me" title="HoverMeBaby!"><img src="images/icons/ico.png" class="icon inline" title /><span>testtitle</span></a></div><div class="contextlink short" id="toggle" title="Show all buttons"><a href="#" onclick="cmk.utils.unhide_context_buttons(this);">...</a></div><div class="end"></div></div>'}},
  {'function_name': 'context_button_test',
   'input': {'arguments': {'bestof': False,
 

@@ -96,7 +96,7 @@ export function execute_javascript_by_object(obj)
                 eval(aScripts[i].text);
                 current_script = null;
             } catch(e) {
-                console.log(e);
+                //console.log(e);
                 alert(aScripts[i].text + "\nError:" + e.message);
             }
         }
@@ -220,6 +220,13 @@ export function update_header_timer() {
     date.innerHTML = date_format.replace(/yyyy/, year).replace(/mm/, month).replace(/dd/, day);
 }
 
+export function update_header_info(text)
+{
+    var oDiv = document.getElementById("headinfo");
+    if (oDiv) {
+        oDiv.innerHTML = text;
+    }
+}
 
 // Function gets the value of the given url parameter
 export function get_url_param(name, url) {
@@ -348,6 +355,18 @@ var g_reload_interval = 0; // seconds
 // error message about outdated data to the content container or not.
 // The error message is only being added on the first error.
 var g_reload_error = false;
+
+// When called with one or more parameters parameters it reschedules the
+// timer to the given interval. If the parameter is 0 the reload is stopped.
+// When called with two parmeters the 2nd one is used as new url.
+export function set_reload(secs, url)
+{
+    stop_reload_timer();
+    set_reload_interval(secs);
+    if (secs !== 0) {
+        schedule_reload(url);
+    }
+}
 
 
 // Issues the timer for the next page reload. If some timer is already
@@ -504,4 +523,64 @@ export function mouse_position(event) {
         x: event.clientX,
         y: event.clientY
     };
+}
+
+export function wheel_event_delta(event)
+{
+    return event.deltaY ? event.deltaY : event.detail ? event.detail * (-120) : event.wheelDelta;
+}
+
+export function wheel_event_name()
+{
+    if ("onwheel" in window)
+        return "wheel";
+    else if (browser.is_firefox())
+        return "DOMMouseScroll";
+    else
+        return "mousewheel";
+}
+
+export function count_context_button(oA)
+{
+    // Extract view name from id of parent div element
+    var handler = ajax.call_ajax("count_context_button.py?id=" + oA.parentNode.id, {
+        sync:true
+    });
+    return handler.responseText;
+}
+
+export function unhide_context_buttons(oA)
+{
+    var oNode;
+    var oTd = oA.parentNode.parentNode;
+    for (var i in oTd.children) {
+        oNode = oTd.children[i];
+        if (oNode.tagName == "DIV" && !has_class(oNode, "togglebutton"))
+            oNode.style.display = "";
+    }
+    oA.parentNode.style.display = "none";
+}
+
+var g_hosttag_groups = {};
+
+export function set_host_tag_groups(grouped) {
+    g_hosttag_groups = grouped;
+}
+
+export function host_tag_update_value(prefix, grp) {
+    var value_select = document.getElementById(prefix + "_val");
+
+    // Remove all options
+    value_select.options.length = 0;
+
+    if(grp === "")
+        return; // skip over when empty group selected
+
+    var opt = null;
+    for (var i = 0, len = g_hosttag_groups[grp].length; i < len; i++) {
+        opt = document.createElement("option");
+        opt.value = g_hosttag_groups[grp][i][0];
+        opt.text  = g_hosttag_groups[grp][i][1];
+        value_select.appendChild(opt);
+    }
 }

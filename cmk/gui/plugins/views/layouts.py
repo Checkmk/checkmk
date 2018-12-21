@@ -81,7 +81,7 @@ def render_group_checkbox_th():
         type_="button",
         class_="checkgroup",
         name="_toggle_group",
-        onclick="toggle_group_rows(this);",
+        onclick="cmk.selection.toggle_group_rows(this);",
         value='X')
     html.close_th()
 
@@ -313,7 +313,7 @@ def grouped_row_title(index, group_spec, num_rows, trclass, num_cells):
                 "%s0" % trclass])
     html.open_td(
         colspan=num_cells,
-        onclick="toggle_grouped_rows('grouped_rows', '%s', this, %d)" % (index, num_rows))
+        onclick="cmk.views.toggle_grouped_rows('grouped_rows', '%s', this, %d)" % (index, num_rows))
 
     html.img(
         "images/tree_black_closed.png",

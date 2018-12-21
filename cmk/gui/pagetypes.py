@@ -1202,7 +1202,8 @@ class OverridableContainer(Overridable, Container):
         html.open_li()
         html.open_a(
             href="javascript:void(0)",
-            onclick="pagetype_add_to_container('%s', '%s');reload_sidebar();" % (type_name, name))
+            onclick="pagetype_add_to_container('%s', '%s');cmk.utils.reload_sidebar();" %
+            (type_name, name))
         html.render_icon(type_name)
         html.write_text(title)
         html.close_a()

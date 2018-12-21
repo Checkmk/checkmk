@@ -33,51 +33,6 @@
 //#   | Generic library functions used anywhere in Check_MK                |
 //#   '--------------------------------------------------------------------'
 
-var g_sidebar_reload_timer = null;
-
-function reload_sidebar()
-{
-    if (parent && parent.frames[0]) {
-        // reload sidebar, but preserve eventual quicksearch field value and focus
-        var val = '';
-        var focused = false;
-        var field = parent.frames[0].document.getElementById('mk_side_search_field');
-        if (field) {
-            val = field.value;
-            focused = parent.frames[0].document.activeElement == field;
-        }
-
-        parent.frames[0].document.reloading = 1;
-        parent.frames[0].document.location.reload();
-
-        if (field) {
-            g_sidebar_reload_timer = setInterval(function (value, has_focus) {
-                return function() {
-                    if (!parent.frames[0].document.reloading
-                        && parent.frames[0].document.readyState === 'complete') {
-                        var field = parent.frames[0].document.getElementById('mk_side_search_field');
-                        if (field) {
-                            field.value = value;
-                            if (has_focus) {
-                                field.focus();
-
-                                // Move caret to end
-                                if (field.setSelectionRange !== undefined)
-                                    field.setSelectionRange(value.length, value.length);
-                            }
-                        }
-
-                        clearInterval(g_sidebar_reload_timer);
-                        g_sidebar_reload_timer = null;
-                    }
-                };
-            }(val, focused), 50);
-
-            field = null;
-        }
-    }
-}
-
 // Handle Enter key in textfields
 function textinput_enter_submit(e, submit) {
     if (!e) {
@@ -646,175 +601,19 @@ function reschedule_check(oLink, site, host, service, wait_svc) {
             reschedule_check_response_handler, img);
 }
 
-//#.
-//#   .-Page Reload--------------------------------------------------------.
-//#   |        ____                    ____      _                 _       |
-//#   |       |  _ \ __ _  __ _  ___  |  _ \ ___| | ___   __ _  __| |      |
-//#   |       | |_) / _` |/ _` |/ _ \ | |_) / _ \ |/ _ \ / _` |/ _` |      |
-//#   |       |  __/ (_| | (_| |  __/ |  _ <  __/ | (_) | (_| | (_| |      |
-//#   |       |_|   \__,_|\__, |\___| |_| \_\___|_|\___/ \__,_|\__,_|      |
-//#   |                   |___/                                            |
-//#   +--------------------------------------------------------------------+
-//#   |                                                                    |
-//#   '--------------------------------------------------------------------'
-
-// Stores the reload timer object (of views and also dashboards)
-var g_reload_timer = null;
 // Stores the reload pause timer object once the regular reload has
 // been paused e.g. by modifying a graphs timerange or vertical axis.
 var g_reload_pause_timer = null;
-// This stores the refresh time of the page (But never 0)
-var g_reload_interval = 0; // seconds
-// This flag tells the handle_content_reload_error() function to add an
-// error message about outdated data to the content container or not.
-// The error message is only being added on the first error.
-var g_reload_error = false;
-
-function update_foot_refresh(secs)
-{
-    var o = document.getElementById('foot_refresh');
-    var o2 = document.getElementById('foot_refresh_time');
-    if (o) {
-        if(secs == 0) {
-            o.style.display = 'none';
-        } else {
-            o.style.display = 'inline-block';
-            if(o2) {
-                o2.innerHTML = secs;
-            }
-        }
-    }
-}
 
 // When called with one or more parameters parameters it reschedules the
 // timer to the given interval. If the parameter is 0 the reload is stopped.
 // When called with two parmeters the 2nd one is used as new url.
 function set_reload(secs, url)
 {
-    stop_reload_timer();
-
-    update_foot_refresh(secs);
-
+    cmk.utils.stop_reload_timer();
+    cmk.utils.set_reload_interval(secs);
     if (secs !== 0) {
-        g_reload_interval = secs;
-        schedule_reload(url);
-    }
-}
-
-
-// Issues the timer for the next page reload. If some timer is already
-// running, this timer is terminated and replaced by the new one.
-function schedule_reload(url, milisecs)
-{
-    if (typeof url === 'undefined')
-        url = ''; // reload current page (or just the content)
-
-    if (typeof milisecs === 'undefined')
-        milisecs = parseFloat(g_reload_interval) * 1000; // use default reload interval
-
-    stop_reload_timer();
-
-    g_reload_timer = setTimeout(function() {
-        do_reload(url);
-    }, milisecs);
-}
-
-
-function handle_content_reload(_unused, code) {
-    g_reload_error = false;
-    var o = document.getElementById('data_container');
-    o.innerHTML = code;
-    executeJS('data_container');
-
-    // Update the header time
-    cmk.utils.update_header_timer();
-
-    schedule_reload();
-}
-
-
-function handle_content_reload_error(_unused, status_code, error_msg)
-{
-    if(!g_reload_error) {
-        var o = document.getElementById('data_container');
-        o.innerHTML = '<div class=error>Update failed (' + status_code
-                      + '). The shown data might be outdated</div>' + o.innerHTML;
-        g_reload_error = true;
-    }
-
-    // Continue update after the error
-    schedule_reload();
-}
-
-
-function stop_reload_timer()
-{
-    if (g_reload_timer) {
-        clearTimeout(g_reload_timer);
-        g_reload_timer = null;
-    }
-}
-
-
-function do_reload(url)
-{
-    // Reschedule the reload in case the browser window / tab is not visible
-    // for the user. Retry after short time.
-    if (!cmk.utils.is_window_active()) {
-        setTimeout(function(){ do_reload(url); }, 250);
-        return;
-    }
-
-    // Nicht mehr die ganze Seite neu laden, wenn es ein DIV "data_container" gibt.
-    // In dem Fall wird die aktuelle URL aus "window.location.href" geholt, für den Refresh
-    // modifiziert, der Inhalt neu geholt und in das DIV geschrieben.
-    if (!document.getElementById('data_container') || url !== '') {
-        if (url === '')
-            window.location.reload(false);
-        else
-            window.location.href = url;
-    }
-    else {
-        // Enforce specific display_options to get only the content data.
-        // All options in "opts" will be forced. Existing upper-case options will be switched.
-        var display_options = cmk.utils.get_url_param('display_options');
-        // Removed 'w' to reflect original rendering mechanism during reload
-        // For example show the "Your query produced more than 1000 results." message
-        // in views even during reload.
-        var opts = [ 'h', 't', 'b', 'f', 'c', 'o', 'd', 'e', 'r', 'u' ];
-        for (var i = 0; i < opts.length; i++) {
-            if (display_options.indexOf(opts[i].toUpperCase()) > -1)
-                display_options = display_options.replace(opts[i].toUpperCase(), opts[i]);
-            else
-                display_options += opts[i];
-        }
-
-        // Add optional display_options if not defined in original display_options
-        opts = [ 'w' ];
-        for (var i = 0; i < opts.length; i++) {
-            if (display_options.indexOf(opts[i].toUpperCase()) == -1)
-                display_options += opts[i];
-        }
-
-        var params = {'_display_options': display_options};
-        var real_display_options = cmk.utils.get_url_param('display_options');
-        if(real_display_options !== '')
-            params['display_options'] = real_display_options;
-
-        params['_do_actions'] = cmk.utis.get_url_param('_do_actions');
-
-        // For dashlet reloads add a parameter to mark this request as reload
-        if (window.location.href.indexOf("dashboard_dashlet.py") != -1)
-            params["_reload"] = "1";
-
-        if (g_selection_enabled)
-            params["selection"] = g_selection;
-
-        call_ajax(cmk.utils.makeuri(params), {
-            response_handler : handle_content_reload,
-            error_handler    : handle_content_reload_error,
-            method           : 'GET'
-        });
+        cmk.utils.schedule_reload(url);
     }
 }
 
@@ -825,7 +624,7 @@ function do_reload(url)
 // is reached, the whole page is reloaded.
 function pause_reload(seconds)
 {
-    stop_reload_timer();
+    cmk.utils.stop_reload_timer();
     draw_reload_pause_overlay(seconds);
     set_reload_pause_timer(seconds);
 }
@@ -955,10 +754,6 @@ function toggle_grouped_rows(tree, id, cell, num_rows)
 
 // The unique ID to identify the current page and its selections of a user
 var g_page_id = '';
-// The unique identifier of the selection
-var g_selection = '';
-// Tells us if the row selection is enabled at the moment
-var g_selection_enabled = false;
 // Holds the row numbers of all selected rows
 var g_selected_rows = [];
 
@@ -1026,7 +821,7 @@ function update_row_selection_information() {
 
 function set_rowselection(action, rows) {
     post_url('ajax_set_rowselection.py', 'id=' + g_page_id
-             + '&selection=' + g_selection
+             + '&selection=' + cmk.selection.get_selection_id() 
              + '&action=' + action
              + '&rows=' + rows.join(','));
 }
@@ -2389,7 +2184,7 @@ function view_dial_option(oDiv, viewname, option, choices) {
             if (handler_data.option == "refresh")
                 set_reload(handler_data.new_value);
             else
-                schedule_reload('', 400.0);
+                cmk.utils.schedule_reload('', 400.0);
         },
         handler_data     : {
             new_value : new_choice[0],
@@ -2441,7 +2236,7 @@ function view_switch_option(oDiv, viewname, option, choices) {
             if (handler_data.option == "refresh") {
                 set_reload(handler_data.new_value);
             } else if (handler_data.option == "show_checkboxes") {
-                g_selection_enabled = handler_data.new_value;
+                cmk.selection.set_selection_enabled(handler_data.new_value);
             }
 
             handleReload('');
@@ -2811,7 +2606,7 @@ function pagetype_add_to_container(page_type, page_name)
             if (response_body) {
                 var parts = response_body.split('\n');
                 if (parts[1] == "true")
-                    reload_sidebar();
+                    cmk.utils.reload_sidebar();
                 if (parts[0])
                     window.location.href = parts[0];
             }
@@ -3243,7 +3038,7 @@ function handle_job_detail_response(handler_data, response_body)
         refresh_job_details(handler_data["url"], handler_data["ident"], handler_data["is_site"]);
     }
     else {
-        reload_sidebar();
+        cmk.utils.reload_sidebar();
         window.location.reload();
     }
 }

@@ -30,6 +30,8 @@ import * as utils from "utils";
 import * as foldable_container from "foldable_container";
 import * as visibility_detection from "visibility_detection";
 import * as async_progress from "async_progress";
+import * as activation from "activation";
+import * as selection from "selection";
 import * as dashboard from "dashboard";
 
 require("script-loader!./checkmk.js");
@@ -53,6 +55,8 @@ export default {
         foldable_container: foldable_container,
         visibility_detection: visibility_detection,
         async_progress: async_progress,
+        activation: activation,
+        selection: selection,
         dashboard: dashboard
     },
     // TODO: Compatibility for not yet modularized JS code

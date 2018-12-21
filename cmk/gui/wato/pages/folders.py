@@ -609,11 +609,12 @@ class ModeFolder(WatoMode):
         html.javascript("update_headinfo('%s');" % headinfo)
 
         if show_checkboxes:
-            html.javascript('g_page_id = "wato-folder-%s";\n'
-                            'g_selection = "%s";\n'
-                            'g_selected_rows = %s;\n'
-                            'init_rowselect();' % ('/' + self._folder.path(), weblib.selection_id(),
-                                                   json.dumps(selected)))
+            html.javascript(
+                'g_page_id = "wato-folder-%s";\n'
+                'cmk.section.set_selection_id(%s);\n'
+                'g_selected_rows = %s;\n'
+                'init_rowselect();' % ('/' + self._folder.path(), json.dumps(weblib.selection_id()),
+                                       json.dumps(selected)))
 
     def _show_host_actions(self, host):
         html.icon_button(host.edit_url(), _("Edit the properties of this host"), "edit")

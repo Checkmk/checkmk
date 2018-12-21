@@ -1474,7 +1474,7 @@ class html(HTMLGenerator):
             self.write_html(self.render_reload_sidebar())
 
     def render_reload_sidebar(self):
-        return self.render_javascript("reload_sidebar()")
+        return self.render_javascript("cmk.utils.reload_sidebar()")
 
     #
     # Tree states

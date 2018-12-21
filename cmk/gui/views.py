@@ -29,6 +29,7 @@ import os
 import pprint
 import traceback
 import types
+import json
 from typing import Dict  # pylint: disable=unused-import
 
 import livestatus
@@ -1519,7 +1520,7 @@ def show_context_links(thisview, datasource, show_filters, enable_commands, enab
             "",
             hidden=not thisview.get("force_checkboxes"),
             disabled=True)
-        html.javascript('g_selection_enabled = %s;' % ('true' if selection_enabled else 'false'))
+        html.javascript('cmk.selection.set_selection_enabled(%s);' % json.dumps(selection_enabled))
 
     if display_options.enabled(display_options.O):
         if config.user.may("general.view_option_columns"):

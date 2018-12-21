@@ -26,27 +26,18 @@
 // General functions for WATO
 // ----------------------------------------------------------------------------
 
-function getElementsByClass(cl) {
-    var items = new Array();
-    var elements = document.getElementsByTagName("*");
-    for (var i = 0; i < elements.length; i++)
-        if (elements[i].className == cl)
-            items.push(elements[i]);
-    return items;
-}
-
 /* Used to check all checkboxes which have the given class set */
 function wato_check_all(css_class) {
-    var items = getElementsByClass(css_class);
+    var items = document.getElementsByClassName(css_class);
 
     // First check if all boxes are checked
-    var all_checked = true;
-    for(var i = 0; i < items.length && all_checked == true; i++)
+    var all_checked = true, i;
+    for(i = 0; i < items.length && all_checked == true; i++)
         if (items[i].checked == false)
             all_checked = false;
 
     // Now set the new state
-    for(var i = 0; i < items.length; i++)
+    for(i = 0; i < items.length; i++)
         items[i].checked = !all_checked;
 }
 
@@ -57,9 +48,10 @@ function wato_toggle_attribute(oCheckbox, attrname) {
 
     // Permanent invisible attributes do
     // not have attr_entry / attr_default
-    if( !oEntry ){
-       return;
+    if (!oEntry){
+        return;
     }
+
     if (oCheckbox.checked) {
         oEntry.style.display = "";
         oDefault.style.display = "none";
@@ -84,6 +76,7 @@ function wato_fix_visibility() {
        stored in the global variable wato_depends_on_tags, which is filled
        during the creation of the web page. */
 
+    var index;
     for (var i = 0; i < wato_check_attributes.length; i++) {
         var attrname = wato_check_attributes[i];
         /* Now comes the tricky part: decide whether that attribute should
@@ -91,13 +84,13 @@ function wato_fix_visibility() {
         var display = "";
 
         // Always invisible
-        if( hide_attributes.indexOf(attrname) > -1 ){
+        if (hide_attributes.indexOf(attrname) > -1){
             display = "none";
         }
 
         // Visibility depends on roles
-        if( display == "" && attrname in wato_depends_on_roles){
-            for (var index = 0; index < wato_depends_on_roles[attrname].length; index++) {
+        if (display == "" && attrname in wato_depends_on_roles) {
+            for (index = 0; index < wato_depends_on_roles[attrname].length; index++) {
                 var role = wato_depends_on_roles[attrname][index];
                 var negate = role[0] == "!";
                 var rolename = negate ? role.substr(1) : role;
@@ -110,13 +103,13 @@ function wato_fix_visibility() {
         }
 
         // Visibility depends on tags
-        if( display == "" && attrname in wato_depends_on_tags){
-            for (var index = 0; index < wato_depends_on_tags[attrname].length; index++) {
+        if (display == "" && attrname in wato_depends_on_tags) {
+            for (index = 0; index < wato_depends_on_tags[attrname].length; index++) {
                 var tag = wato_depends_on_tags[attrname][index];
-                var negate = tag[0] == "!";
-                var tagname = negate ? tag.substr(1) : tag;
+                var negate_tag = tag[0] == "!";
+                var tagname = negate_tag ? tag.substr(1) : tag;
                 var have_tag = current_tags.indexOf(tagname) != -1;
-                if (have_tag == negate) {
+                if (have_tag == negate_tag) {
                     display = "none";
                     break;
                 }
@@ -133,7 +126,7 @@ function wato_fix_visibility() {
             // Hidden attributes are not validated at all
             var oAttrDisp = document.getElementById("attr_display_" + attrname);
             if (!oAttrDisp) {
-                var oAttrDisp = document.createElement("input");
+                oAttrDisp = document.createElement("input");
                 oAttrDisp.name  = "attr_display_" + attrname;
                 oAttrDisp.id  = "attr_display_" + attrname;
                 oAttrDisp.type = "hidden";
@@ -153,9 +146,9 @@ function wato_fix_visibility() {
 
             // There is at least one item in this topic -> show it
             var topic = oTr.parentNode.childNodes[0].textContent;
-            if( display == "" ){
-                var index = hide_topics.indexOf(topic);
-                if( index != -1 )
+            if (display == ""){
+                index = hide_topics.indexOf(topic);
+                if (index != -1)
                     delete hide_topics[index];
             }
         }
@@ -261,7 +254,7 @@ function toggle_container(id)
 }
 
 function update_bulk_moveto(val) {
-    var fields = getElementsByClass("bulk_moveto");
+    var fields = document.getElementsByClassName("bulk_moveto");
     for(var i = 0; i < fields.length; i++)
         for(var a = 0; a < fields[i].options.length; a++)
             if(fields[i].options[a].value == val)
@@ -615,24 +608,6 @@ function update_site_progress(site_state)
     progress.style.width = width + "px";
 }
 
-function handle_activation_progress_error(handler_data, status_code, error_msg)
-{
-    if (time() - handler_data.start_time <= 10 && status_code == 503) {
-        show_async_progress_info("Failed to fetch activation state. In case you changed site management related " +
-                             "global settings this is normal for a period of some seconds.");
-    } else {
-        show_async_progress_error("Failed to fetch activation state ["+status_code+"]: " + error_msg + ". " +
-                              "Retrying in 1 second." +
-                              "<br><br>" +
-                              "In case this error persists for more than some seconds, please verify that all " +
-                              "processes of the site are running.");
-    }
-
-    setTimeout(function() {
-        return monitor_activation_progress(handler_data.start_time, handler_data.activation_id);
-    }, 1000);
-}
-
 function finish_activation(response)
 {
     show_async_progress_info("Activation has finished. Reloading in 1 second.");
@@ -667,7 +642,7 @@ function wato_do_profile_replication(siteid, est, progress_text) {
             set_profile_replication_result(handler_data["site_id"], success, msg);
         },
         error_handler    : function (handler_data, status_code, error_msg) {
-            set_profile_replication_result(handler_data["site_id"], False,
+            set_profile_replication_result(handler_data["site_id"], false,
                 "Failed to perform profile replication [" + status_code + "]: " + error_msg);
         },
         method           : "POST",
@@ -879,8 +854,8 @@ function start_host_diag_test(ident, hostname, transid) {
 
     log.innerHTML = "...";
     get_url("wato_ajax_diag_host.py?host=" + encodeURIComponent(hostname)
-            + "&_test=" + encodeURIComponent(ident) + vars,
-              handle_host_diag_result, { "hostname": hostname, "ident": ident });
+        + "&_test=" + encodeURIComponent(ident) + vars,
+        handle_host_diag_result, { "hostname": hostname, "ident": ident }); // eslint-disable-line indent
 }
 
 //#.
@@ -1055,16 +1030,17 @@ function handle_execute_active_check(oDiv, response_json)
 {
     var response = JSON.parse(response_json);
 
+    var state, statename, output;
     if (response.result_code == 1) {
-        var state     = 3;
-        var statename = "UNKN";
-        var output    = response.result;
+        state = 3;
+        statename = "UNKN";
+        output = response.result;
     } else {
-        var state     = response.result.state;
+        state = response.result.state;
         if (state == -1)
             state = "p"; // Pending
-        var statename = response.result.state_name;
-        var output    = response.result.output;
+        statename = response.result.state_name;
+        output    = response.result.output;
     }
 
     oDiv.innerHTML = output;

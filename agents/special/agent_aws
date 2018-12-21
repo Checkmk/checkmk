@@ -828,13 +828,23 @@ class CloudTrail(AWSSection):
         return 300
 
     def _get_raw_result(self):
-        pass
+        response = self._client.describe_trails()
+        try:
+            trails = {trail['Name']: trail for trail in response['trailList']}
+        except KeyError, e:
+            logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
+            trails = {}
+
+        for trail_name, trail in trails.iteritems():
+            response = self._client.get_trail_status(Name=trail_name)
+            trail['Status'] = response
+        return trails
 
     def _extract_content_from(self, raw_result):
-        pass
+        return raw_result
 
     def _format_content(self, content):
-        pass
+        return [AWSSectionResult("", content)]
 
 
 #.
@@ -861,6 +871,7 @@ class AWSSections(object):
         ec2_client = self._init_client('ec2')
         s3_client = self._init_client('s3')
         elb_client = self._init_client('elb')
+        cloudtrail_client = self._init_client('cloudtrail')
         cloudwatch_client = self._init_client('cloudwatch')
 
         #---distributors----------------------------------------------------
@@ -877,6 +888,7 @@ class AWSSections(object):
         s3 = S3(s3_client)
         elb_health = ELBHealth(elb_client)
         ce = CostsAndUsage(ce_client)
+        cloudtrail = CloudTrail(cloudtrail_client)
         ec2 = EC2(cloudwatch_client)
         elb = ELB(cloudwatch_client)
         ebs = EBS(cloudwatch_client)
@@ -901,6 +913,7 @@ class AWSSections(object):
         self._sections.append(elb_health)
         self._sections.append(elb)
         self._sections.append(ebs)
+        self._sections.append(cloudtrail)
 
     def _init_client(self, client_key):
         try:

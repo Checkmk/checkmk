@@ -321,7 +321,7 @@ def snapin_site_choice(ident, choices):
     site_choices = [
         ("", _("All sites")),
     ] + site_choices
-    onchange = "set_snapin_site(event, %s, this)" % json.dumps(ident)
+    onchange = "cmk.sidebar.set_snapin_site(event, %s, this)" % json.dumps(ident)
     html.dropdown("site", site_choices, deflt=site, onchange=onchange)
 
     return only_sites

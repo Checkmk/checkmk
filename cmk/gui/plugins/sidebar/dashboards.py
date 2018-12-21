@@ -68,7 +68,7 @@ class Dashboards(SidebarSnapin):
                     bulletlink(
                         title,
                         'dashboard.py?name=%s' % name,
-                        onclick="return wato_views_clicked(this)")
+                        onclick="return cmk.sidebar.wato_views_clicked(this)")
 
             if not first:  # at least one item rendered
                 if foldable:

@@ -265,7 +265,8 @@ def render_wato_foldertree():
     html.open_tr()
     html.td(_('Topic:'), class_="label")
     html.open_td()
-    html.dropdown("topic", topics, deflt=selected_topic, onchange='wato_tree_topic_changed(this)')
+    html.dropdown(
+        "topic", topics, deflt=selected_topic, onchange='cmk.sidebar.wato_tree_topic_changed(this)')
     html.close_td()
     html.close_tr()
 
@@ -293,7 +294,7 @@ def render_wato_foldertree():
             "target_%s" % topic,
             targets,
             deflt=default,
-            onchange='wato_tree_target_changed(this)',
+            onchange='cmk.sidebar.wato_tree_target_changed(this)',
             style=style)
 
     html.close_td()
@@ -302,7 +303,7 @@ def render_wato_foldertree():
 
     # Now render the whole tree
     if user_folders:
-        render_tree_folder("wato-hosts", user_folders.values()[0], 'wato_tree_click')
+        render_tree_folder("wato-hosts", user_folders.values()[0], 'cmk.sidebar.wato_tree_click')
 
 
 sidebar_snapins['wato_foldertree'] = {
@@ -337,7 +338,8 @@ def render_wato_folders():
     user_folders = compute_foldertree()
 
     if user_folders:
-        render_tree_folder("wato-folders", user_folders.values()[0], 'wato_folders_clicked')
+        render_tree_folder("wato-folders",
+                           user_folders.values()[0], 'cmk.sidebar.wato_folders_clicked')
 
 
 sidebar_snapins['wato_folders'] = {

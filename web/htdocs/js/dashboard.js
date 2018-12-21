@@ -299,7 +299,7 @@ function calculate_dashboard() {
     g_dashboard_top    = header_height + screen_margin;
     g_dashboard_left   = screen_margin;
     g_dashboard_width  = pageWidth() - 2*screen_margin;
-    g_dashboard_height = pageHeight() - 2*screen_margin - header_height;
+    g_dashboard_height = cmk.utils.page_height() - 2*screen_margin - header_height;
 
     var oDash = document.getElementById("dashboard");
     oDash.style.left     = g_dashboard_left + "px";
@@ -314,7 +314,7 @@ function calculate_dashboard() {
 function dashboard_scheduler(initial) {
     // Stop reload of the dashlets in case the browser window / tab is not visible
     // for the user. Retry after short time.
-    if (!is_window_active()) {
+    if (!cmk.utils.is_window_active()) {
         setTimeout(function(){ dashboard_scheduler(initial); }, 250);
         return;
     }
@@ -355,7 +355,7 @@ function dashboard_update_contents(id, response_text) {
     update_header_timer();
 
     // Call the generic function to replace the dashlet inner code
-    updateContents(id, response_text);
+    cmk.utils.update_contents(id, response_text);
 }
 
 function update_dashlet(id, code) {
@@ -550,7 +550,7 @@ function dashlet_toggle_edit(dashlet_obj, edit) {
         set_control_size(controls, dashlet_obj.clientWidth, dashlet_obj.clientHeight);
 
         // IE < 9: Without this fix the controls container is not working
-        if (is_ie_below_9()) {
+        if (cmk.utils.browser.is_ie_below_9()) {
             controls.style.background = 'url(about:blank)';
         }
 

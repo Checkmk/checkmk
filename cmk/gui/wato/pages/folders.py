@@ -511,7 +511,7 @@ class ModeFolder(WatoMode):
                             "_toggle_group",
                             type_="button",
                             class_="checkgroup",
-                            onclick="toggle_all_rows();",
+                            onclick="cmk.selection.toggle_all_rows();",
                             value='X'),
                         sortable=False,
                         css="checkbox")
@@ -609,12 +609,13 @@ class ModeFolder(WatoMode):
         html.javascript("update_headinfo('%s');" % headinfo)
 
         if show_checkboxes:
+            selection_properties = {
+                "page_id": "wato-folder-%s" % ('/' + self._folder.path()),
+                "selection_id": weblib.selection_id(),
+                "selected_rows": selected,
+            }
             html.javascript(
-                'g_page_id = "wato-folder-%s";\n'
-                'cmk.section.set_selection_id(%s);\n'
-                'g_selected_rows = %s;\n'
-                'init_rowselect();' % ('/' + self._folder.path(), json.dumps(weblib.selection_id()),
-                                       json.dumps(selected)))
+                'cmk.selection.init_rowselect(%s);' % (json.dumps(selection_properties)))
 
     def _show_host_actions(self, host):
         html.icon_button(host.edit_url(), _("Edit the properties of this host"), "edit")

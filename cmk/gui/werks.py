@@ -27,6 +27,7 @@
 # Functions for parsing Werks and showing the users a browsable change
 # log
 
+import itertools
 import os
 import re
 import time
@@ -333,54 +334,43 @@ def render_werks_table():
         werk_table_options = _default_werk_table_options()
     else:
         werk_table_options = _render_werk_table_options()
-
-    current_group, number_of_groups, number_of_werks = False, 0, 0
+    translator = cmk.utils.werks.WerkTranslator()
+    number_of_werks = 0
     sorter, grouper = _SORT_AND_GROUP[werk_table_options["grouping"]]
     werklist = sorter(werk  #
                       for werk in g_werks.values()
                       if werk_matches_options(werk, werk_table_options))
-
-    translator = cmk.utils.werks.WerkTranslator()
-    for werk in werklist:
-        group = grouper(werk)
-        if group != current_group:
-            if number_of_groups >= werk_table_options["group_limit"]:
-                break
-            number_of_groups += 1
-
-            if current_group != False:
-                table.end()
-            table.begin(
-                title=group,
+    groups = itertools.groupby(werklist, key=grouper)
+    for group_title, werks in itertools.islice(groups, werk_table_options["group_limit"]):
+        with table.open_table(
+                title=group_title,
                 limit=None,
                 searchable=False,
                 sortable=False,
                 css="werks",
-                update_page_head=False)
-            current_group = group
-
-        number_of_werks += 1
-
-        table.row()
-        table.cell(_("ID"), render_werk_id(werk, with_link=True), css="number narrow")
-        table.cell(_("Version"), werk["version"], css="number narrow")
-        table.cell(_("Date"), render_werk_date(werk), css="number narrow")
-        table.cell(
-            _("Class"), translator.class_of(werk), css="werkclass werkclass%s" % werk["class"])
-        table.cell(
-            _("Level"), translator.level_of(werk), css="werklevel werklevel%d" % werk["level"])
-        table.cell(
-            _("Compatibility"),
-            translator.compatibility_of(werk),
-            css="werkcomp werkcomp%s" % werk["compatible"])
-        table.cell(_("Component"), translator.component_of(werk), css="nowrap")
-        table.cell(_("Title"), render_werk_title(werk))
-
-    if current_group != False:
-        table.end()
+                update_page_head=False):
+            for werk in werks:
+                number_of_werks += 1
+                render_werks_table_row(translator, werk)
+    if number_of_werks:
         table.update_headinfo(number_of_werks)
     else:
         html.h3(_("No matching Werks found."))
+
+
+def render_werks_table_row(translator, werk):
+    table.row()
+    table.cell(_("ID"), render_werk_id(werk, with_link=True), css="number narrow")
+    table.cell(_("Version"), werk["version"], css="number narrow")
+    table.cell(_("Date"), render_werk_date(werk), css="number narrow")
+    table.cell(_("Class"), translator.class_of(werk), css="werkclass werkclass%s" % werk["class"])
+    table.cell(_("Level"), translator.level_of(werk), css="werklevel werklevel%d" % werk["level"])
+    table.cell(
+        _("Compatibility"),
+        translator.compatibility_of(werk),
+        css="werkcomp werkcomp%s" % werk["compatible"])
+    table.cell(_("Component"), translator.component_of(werk), css="nowrap")
+    table.cell(_("Title"), render_werk_title(werk))
 
 
 def werk_matches_options(werk, werk_table_options):

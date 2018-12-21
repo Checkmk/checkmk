@@ -1809,7 +1809,6 @@ class html(HTMLGenerator):
         if config.pagetitle_date_format:
             self.write(' &nbsp; <b id=headerdate format="%s"></b>' % config.pagetitle_date_format)
         self.write(' <b id=headertime></b>')
-        self.javascript('cmk.utils.update_header_timer()')
         self.top_heading_right()
 
     def top_heading_left(self, title):
@@ -2900,7 +2899,8 @@ hy
         self.write_html(
             self.render_element_dragger(
                 dragging_tag,
-                drop_handler="function(index){return element_drag_url_drop_handler(%s, index);})" %
+                drop_handler=
+                "function(index){return cmk.element_dragging.url_drop_handler(%s, index);})" %
                 json.dumps(base_url)))
 
     def element_dragger_js(self, dragging_tag, drop_handler, handler_args):
@@ -2917,7 +2917,7 @@ hy
             self.render_icon("drag", _("Move this entry")),
             href="javascript:void(0)",
             class_=["element_dragger"],
-            onmousedown="element_drag_start(event, this, %s, %s" % (json.dumps(
+            onmousedown="cmk.element_dragging.start(event, this, %s, %s" % (json.dumps(
                 dragging_tag.upper()), drop_handler))
 
     #

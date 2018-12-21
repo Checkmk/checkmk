@@ -73,31 +73,13 @@ function has_cross_domain_ajax_support()
     return 'withCredentials' in new XMLHttpRequest();
 }
 
-// Relative to viewport
-function mouse_position(event) {
-    return {
-        x: event.clientX,
-        y: event.clientY
-    };
-}
-
 // mouse offset to the top/left coordinates of an object
 function mouse_offset(obj, event){
     var obj_pos   = obj.getBoundingClientRect();
-    var mouse_pos = mouse_position(event);
+    var mouse_pos = cmk.utils.mouse_position(event);
     return {
         "x": mouse_pos.left - obj_pos.x,
         "y": mouse_pos.top - obj_pos.y
-    };
-}
-
-// mouse offset to the middle coordinates of an object
-function mouse_offset_to_middle(obj, event){
-    var obj_pos   = obj.getBoundingClientRect();
-    var mouse_pos = mouse_position(event);
-    return {
-        "x": mouse_pos.x - (obj_pos.left + obj_pos.width/2),
-        "y": mouse_pos.y - (obj_pos.top + obj_pos.height/2)
     };
 }
 
@@ -1085,174 +1067,6 @@ function init_rowselect() {
         if(tables[i].tagName === 'TABLE')
             table_init_rowselect(tables[i]);
 }
-
-//#.
-//#   .-ElementDrag--------------------------------------------------------.
-//#   |     _____ _                           _   ____                     |
-//#   |    | ____| | ___ _ __ ___   ___ _ __ | |_|  _ \ _ __ __ _  __ _    |
-//#   |    |  _| | |/ _ \ '_ ` _ \ / _ \ '_ \| __| | | | '__/ _` |/ _` |   |
-//#   |    | |___| |  __/ | | | | |  __/ | | | |_| |_| | | | (_| | (_| |   |
-//#   |    |_____|_|\___|_| |_| |_|\___|_| |_|\__|____/|_|  \__,_|\__, |   |
-//#   |                                                           |___/    |
-//#   +--------------------------------------------------------------------+
-//#   | Generic GUI element dragger. The user can grab an elment, drag it  |
-//#   | and moves a parent element of the picked element to another place. |
-//#   | On dropping, the page is being reloaded for persisting the move.   |
-//#   '--------------------------------------------------------------------
-
-var g_element_dragging = null;
-
-function element_drag_start(event, dragger, dragging_tag, drop_handler)
-{
-    if (!event)
-        event = window.event;
-
-    var button = cmk.utils.get_button(event);
-
-    // Skip calls when already dragging or other button than left mouse
-    if (g_element_dragging !== null || button != 'LEFT')
-        return true;
-
-    // Find the first parent of the given tag type
-    var dragging = dragger;
-    while (dragging && dragging.tagName != dragging_tag)
-        dragging = dragging.parentNode;
-
-    if (dragging.tagName != dragging_tag)
-        throw "Failed to find the parent node of " + dragger + " having the tag " + dragging_tag;
-
-    add_class(dragging, "dragging");
-
-    g_element_dragging = {
-        "dragging"     : dragging,
-        "moved"        : false,
-        "drop_handler" : drop_handler,
-    };
-
-    return prevent_default_events(event);
-}
-
-function element_dragging(event)
-{
-    if (!event)
-        event = window.event;
-
-    if (g_element_dragging === null)
-        return true;
-
-    position_dragging_object(event);
-}
-
-function position_dragging_object(event)
-{
-    var dragging  = g_element_dragging.dragging,
-        container = g_element_dragging.dragging.parentNode;
-
-    var get_previous = function(node) {
-        var previous = node.previousElementSibling;
-
-        // In case this is a header TR, don't move it above this!
-        // TODO: Does not work with all tables! See comment in finalize_dragging()
-        if (previous && previous.children && previous.children[0].tagName == "TH")
-            return null;
-
-        return previous;
-    };
-
-    var get_next = function(node) {
-        return node.nextElementSibling;
-    };
-
-    // Move it up?
-    var previous = get_previous(dragging);
-    while (previous && mouse_offset_to_middle(previous, event).y < 0) {
-        g_element_dragging.moved = true;
-        container.insertBefore(dragging, previous);
-        previous = get_previous(dragging);
-    }
-
-    // Move it down?
-    var next = get_next(dragging);
-    while (next && mouse_offset_to_middle(next, event).y > 0) {
-        g_element_dragging.moved = true;
-        container.insertBefore(dragging, next.nextElementSibling);
-        next = get_next(dragging);
-    }
-}
-
-function element_drag_stop(event)
-{
-    if (!event)
-        event = window.event;
-
-    if (g_element_dragging === null)
-        return true;
-
-    finalize_dragging();
-    g_element_dragging = null;
-
-    return prevent_default_events(event);
-}
-
-function finalize_dragging()
-{
-    var dragging = g_element_dragging.dragging;
-    remove_class(dragging, "dragging");
-
-    if (!g_element_dragging.moved)
-        return; // Nothing changed. Fine.
-
-    var elements = dragging.parentNode.children;
-
-    var index = Array.prototype.slice.call(elements).indexOf(dragging);
-
-    // TODO: This currently makes the draggig work with tables having:
-    // - no header
-    // - one header line
-    // Known things that don't work:
-    // - second header (actions in tables)
-    // - footer (like in WATO host list)
-    var has_header = elements[0].children[0].tagName == 'TH';
-    if (has_header)
-        index -= 1;
-
-    g_element_dragging.drop_handler(index);
-}
-
-function element_drag_url_drop_handler(base_url, index)
-{
-    var url = base_url + "&_index="+encodeURIComponent(index);
-    location.href = url;
-
-    //call_ajax(url, {
-    //    method           : "GET",
-    //    response_handler : handle_finalize_dragging,
-    //    error_handler    : handle_finalize_dragging_error,
-    //    plain_error      : true
-    //});
-}
-
-function handle_finalize_dragging(handler_data, response_text)
-{
-    if (response_text != "")
-        alert("Failed to persist drag result: " + response_text);
-}
-
-function handle_finalize_dragging_error(handler_data, status_code, error_msg)
-{
-    if (status_code != 0)
-        alert("Failed to persist drag result: (" + status_code + "): " + error_msg);
-}
-
-// TODO: Only register when needed?
-cmk.utils.add_event_handler('mousemove', function(event) {
-    return element_dragging(event);
-});
-
-// TODO: Only register when needed?
-cmk.utils.add_event_handler('mouseup', function(event) {
-    return element_drag_stop(event);
-});
 
 //#.
 //#   .-Context Button-----------------------------------------------------.
@@ -2391,7 +2205,6 @@ function sla_details_table_hover(tr, row_id, onoff) {
 
 var popup_data      = null;
 var popup_id        = null;
-var popup_contents  = {};
 
 function close_popup()
 {
@@ -2487,14 +2300,6 @@ function toggle_popup(event, trigger_obj, ident, what, data, url_vars, menu_cont
 
         content.innerHTML = '<img src="images/icon_reload.png" class="icon reloading">';
 
-        // populate the menu using a webservice, because the list of dashboards
-        // is not known in the javascript code. But it might have been cached
-        // before. In this case do not perform a second request.
-        // LM: Don't use the cache for the moment. There might be too many situations where
-        // we don't want the popup to be cached.
-        //if (ident in popup_contents)
-        //    menu.innerHTML = popup_contents[ident];
-        //else
         url_vars = !url_vars ? '' : '?'+url_vars;
         get_url('ajax_popup_'+what+'.py'+url_vars, handle_render_popup_contents, {
             ident: ident,
@@ -2509,7 +2314,6 @@ function toggle_popup(event, trigger_obj, ident, what, data, url_vars, menu_cont
 
 function handle_render_popup_contents(data, response_text)
 {
-    popup_contents[data.ident] = response_text;
     if (data.content) {
         data.content.innerHTML = response_text;
         fix_popup_menu_position(data.event, data.content);

@@ -489,3 +489,11 @@ function update_foot_refresh(secs)
         }
     }
 }
+
+// Relative to viewport
+export function mouse_position(event) {
+    return {
+        x: event.clientX,
+        y: event.clientY
+    };
+}

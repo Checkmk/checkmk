@@ -22,53 +22,50 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-var g_content_loc   = null;
+import * as utils from "utils";
+import * as ajax from "ajax";
+import * as quicksearch from "quicksearch";
 
+var g_content_loc   = null;
 var g_sidebar_folded = false;
 
-//
-// Sidebar styling and scrolling stuff
-//
-
-/************************************************
- * Register events
- *************************************************/
-
-// First firefox and then IE
-if (window.addEventListener) {
-    window.addEventListener("mousemove", function(e) {
-        snapinDrag(e);
-        dragScroll(e);
-        return false;
-    }, false);
-    window.addEventListener("mousedown", startDragScroll, false);
-    window.addEventListener("mouseup", stopDragScroll,  false);
-    if (weAreFirefox) {
-        window.addEventListener("DOMMouseScroll", scrollWheel,     false);
-    } else {
-        window.addEventListener("mousewheel",     scrollWheel,     false);
+export function register_event_handlers() {
+    // First firefox and then IE
+    if (window.addEventListener) {
+        window.addEventListener("mousemove", function(e) {
+            snapinDrag(e);
+            dragScroll(e);
+            return false;
+        }, false);
+        window.addEventListener("mousedown", startDragScroll, false);
+        window.addEventListener("mouseup", stopDragScroll,  false);
+        if (utils.browser.is_firefox()) {
+            window.addEventListener("DOMMouseScroll", scrollWheel,     false);
+        } else {
+            window.addEventListener("mousewheel",     scrollWheel,     false);
+        }
     }
-}
-else {
-    document.documentElement.onmousemove = function(e) {
-        // snapin drag 'n drop
-        snapinDrag(e);
+    else {
+        document.documentElement.onmousemove = function(e) {
+            // snapin drag 'n drop
+            snapinDrag(e);
+            // drag/drop scrolling
+            dragScroll(e);
+            return false;
+        };
         // drag/drop scrolling
-        dragScroll(e);
-        return false;
-    };
-    // drag/drop scrolling
-    document.documentElement.onmousedown  = startDragScroll;
-    document.documentElement.onmouseup    = stopDragScroll;
-    // mousewheel scrolling
-    document.documentElement.onmousewheel = scrollWheel;
+        document.documentElement.onmousedown  = startDragScroll;
+        document.documentElement.onmouseup    = stopDragScroll;
+        // mousewheel scrolling
+        document.documentElement.onmousewheel = scrollWheel;
+    }
 }
 
 // This ends drag scrolling when moving the mouse out of the sidebar
 // frame while performing a drag scroll.
 // This is no 100% solution. When moving the mouse out of browser window
 // without moving the mouse over the edge elements the dragging is not ended.
-function registerEdgeListeners(obj) {
+export function register_edge_listeners(obj) {
     var edges;
     if (!obj)
         edges = [ parent.frames[1], document.getElementById("side_header"), document.getElementById("side_footer") ];
@@ -78,7 +75,7 @@ function registerEdgeListeners(obj) {
     for(var i = 0; i < edges.length; i++) {
         // It is possible to open other domains in the content frame - don't register
         // the event in that case. It is not permitted by most browsers!
-        if(!contentFrameAccessible())
+        if(!is_content_frame_accessible())
             continue;
 
         if (window.addEventListener)
@@ -89,8 +86,8 @@ function registerEdgeListeners(obj) {
 }
 
 function on_mouse_leave(e) {
-    if (typeof(cmk.quicksearch.close_popup) != "undefined")
-        cmk.quicksearch.close_popup();
+    if (typeof(quicksearch.close_popup) != "undefined")
+        quicksearch.close_popup();
     return stop_snapin_dragging(e);
 }
 
@@ -109,12 +106,12 @@ var snapinOffset   = [ 0, 0 ];
 var snapinStartPos = [ 0, 0 ];
 var snapinScrollTop = 0;
 
-function snapinStartDrag(event) {
+export function snapin_start_drag(event) {
     if (!event)
         event = window.event;
 
-    var target = getTarget(event);
-    var button = getButton(event);
+    var target = utils.get_target(event);
+    var button = utils.get_button(event);
 
     // Skip calls when already dragging or other button than left mouse
     if (snapinDragging !== false || button != "LEFT" || target.tagName != "DIV")
@@ -217,7 +214,7 @@ function snapinDrop(event, targetpos) {
     var before = "";
     if (targetpos != null)
         before = "&before=" + targetpos.id.replace("snapin_container_", "");
-    get_url("sidebar_move_snapin.py?name=" + thisId + before);
+    ajax.get_url("sidebar_move_snapin.py?name=" + thisId + before);
 }
 
 function snapinTerminateDrag() {
@@ -231,7 +228,7 @@ function snapinTerminateDrag() {
     snapinDragging = false;
 }
 
-function snapinStopDrag(event) {
+export function snapin_stop_drag(event) {
     if (!event)
         event = window.event;
 
@@ -252,7 +249,7 @@ function getDivChildNodes(node) {
 function getSnapinList() {
     if (snapinDragging === false)
         return true;
-    
+
     var l = [];
     var childs = getDivChildNodes(snapinDragging.parentNode);
     for(var i = 0; i < childs.length; i++) {
@@ -263,7 +260,7 @@ function getSnapinList() {
         if (child.id && child.id.substr(0, 7) == "snapin_" && child.id != snapinDragging.id)
             l.push(child);
     }
-    
+
     return l;
 }
 
@@ -282,7 +279,7 @@ function getSnapinCoords(obj) {
     var offset = topOffset;
     var corner = 0;
     if (bottomOffset < topOffset) {
-        offset = bottomOffset
+        offset = bottomOffset;
         corner = 1;
     }
 
@@ -335,7 +332,7 @@ function getSnapinTargetPos() {
 
 // Checks if the sidebar can access the content frame. It might be denied
 // by the browser since it blocks cross domain access.
-function contentFrameAccessible() {
+export function is_content_frame_accessible() {
     try {
         parent.frames[1].document;
         return true;
@@ -344,7 +341,7 @@ function contentFrameAccessible() {
     }
 }
 
-function update_content_location() {
+export function update_content_location() {
     // init the original frameset title
     if (typeof(window.parent.orig_title) == "undefined") {
         window.parent.orig_title = window.parent.document.title;
@@ -386,19 +383,14 @@ function update_content_location() {
     }
 }
 
-function debug(s) {
-    window.parent.frames[1].document.write(s+"<br />");
-}
-
-
 // Set the size of the sidebar_content div to fit the whole screen
 // but without scrolling. The height of the header and footer divs need
 // to be treated here.
-function set_sidebar_size() {
+export function set_sidebar_size() {
     var oHeader  = document.getElementById("side_header");
     var oContent = document.getElementById("side_content");
     var oFooter  = document.getElementById("side_footer");
-    var height   = pageHeight();
+    var height   = utils.page_height();
 
     // Don't handle zero heights
     if (height == 0)
@@ -410,13 +402,13 @@ function set_sidebar_size() {
 
 var scrolling = true;
 
-function scrollwindow(speed){
-  var c = document.getElementById("side_content");
+export function scroll_window(speed){
+    var c = document.getElementById("side_content");
 
-  if (scrolling) {
-    c.scrollTop += speed;
-    setTimeout("scrollwindow("+speed+")", 10);
-  }
+    if (scrolling) {
+        c.scrollTop += speed;
+        setTimeout("cmk.sidebar.scroll_window("+speed+")", 10);
+    }
 }
 
 /************************************************
@@ -425,28 +417,27 @@ function scrollwindow(speed){
 
 var dragging = false;
 var startY = 0;
-var startScroll = 0;
 
 function startDragScroll(event) {
     if (!event)
         event = window.event;
 
-    var target = getTarget(event);
-    var button = getButton(event);
+    var target = utils.get_target(event);
+    var button = utils.get_button(event);
 
     if (button != "LEFT")
         return true; // only care about left clicks!
 
     if (g_sidebar_folded) {
         unfold_sidebar();
-        return prevent_default_events(event);
+        return utils.prevent_default_events(event);
     }
     else if (!g_sidebar_folded && event.clientX < 10 && target.tagName != "OPTION") {
         // When clicking on an <option> of the "core performance" snapins, an event
         // with event.clientX equal 0 is triggered, don"t know why. Filter out clicks
         // on OPTION tags.
         fold_sidebar();
-        return prevent_default_events(event);
+        return utils.prevent_default_events(event);
     }
 
     if (dragging === false
@@ -458,45 +449,44 @@ function startDragScroll(event) {
 
         dragging = event;
         startY = event.clientY;
-        startScroll = document.getElementById("side_content").scrollTop;
 
-        return prevent_default_events(event);
+        return utils.prevent_default_events(event);
     }
 
     return true;
 }
 
-function stopDragScroll(event){
+function stopDragScroll(){
     dragging = false;
 }
 
 function dragScroll(event) {
     if (!event)
         event = window.event;
-  
+
     if (dragging === false)
         return true;
-  
+
     if (event.preventDefault)
         event.preventDefault();
     event.returnValue = false;
-  
+
     if (event.stopPropagation)
         event.stopPropagation();
     event.cancelBubble = true;
-  
+
     var inhalt = document.getElementById("side_content");
     var diff = startY - event.clientY;
-  
+
     inhalt.scrollTop += diff;
-  
+
     // Opera does not fire onunload event which is used to store the scroll
     // position. So call the store function manually here.
-    if (weAreOpera)
-        storeScrollPos();
-  
+    if (utils.browser.is_opera())
+        store_scroll_position();
+
     startY = event.clientY;
-  
+
     dragging = event;
     return false;
 }
@@ -509,7 +499,7 @@ function sidebar_width()
         return 280;
 }
 
-function fold_sidebar()
+export function fold_sidebar()
 {
     g_sidebar_folded = true;
     document.getElementById("check_mk_sidebar").style.position = "relative";
@@ -519,7 +509,7 @@ function fold_sidebar()
     if (version)
         version.style.display = "none";
     parent.document.body.cols = sidebar_width() + ",*";
-    get_url("sidebar_fold.py?fold=yes");
+    ajax.get_url("sidebar_fold.py?fold=yes");
 }
 
 
@@ -533,7 +523,7 @@ function unfold_sidebar()
     if (version)
         version.style.display = "";
     parent.document.body.cols = sidebar_width() + ",*";
-    get_url("sidebar_fold.py?fold=");
+    ajax.get_url("sidebar_fold.py?fold=");
 }
 
 
@@ -542,14 +532,14 @@ function unfold_sidebar()
  * Mausrad scrollen
  *************************************************/
 
-function handle(delta) {
+function handle_scroll(delta) {
     if (delta < 0) {
         scrolling = true;
-        scrollwindow(-delta*20);
+        scroll_window(-delta*20);
         scrolling = false;
     } else {
         scrolling = true;
-        scrollwindow(-delta*20);
+        scroll_window(-delta*20);
         scrolling = false;
     }
 }
@@ -567,12 +557,12 @@ function scrollWheel(event){
         delta = -event.detail / 3;
 
     if (delta)
-        handle(delta);
+        handle_scroll(delta);
 
     // Opera does not fire onunload event which is used to store the scroll
     // position. So call the store function manually here.
-    if (weAreOpera)
-        storeScrollPos();
+    if (utils.browser.is_opera())
+        store_scroll_position();
 
     if (event.preventDefault)
         event.preventDefault();
@@ -595,15 +585,31 @@ var sidebar_restart_time = null;
 // Configures the number of seconds to reload all snapins which request it
 var sidebar_update_interval = null;
 
+export function set_restart_snapins(snapins) {
+    restart_snapins = snapins;
+}
+
+export function set_refresh_snapins(snapins) {
+    refresh_snapins = snapins;
+}
+
+export function set_sidebar_update_interval(interval) {
+    sidebar_update_interval = interval;
+}
+
+export function set_sidebar_restart_time(t) {
+    sidebar_restart_time = t;
+}
+
 // Removes the snapin from the current sidebar and informs the server for persistance
-function remove_sidebar_snapin(oLink, url)
+export function remove_sidebar_snapin(oLink, url)
 {
     var container = oLink.parentNode.parentNode.parentNode;
     var id = container.id.replace("snapin_container_", "");
 
-    call_ajax(url, {
+    ajax.call_ajax(url, {
         handler_data     : "snapin_" + id,
-        response_handler : function (id, _unused) {
+        response_handler : function (id) {
             remove_snapin(id);
         },
         method           : "GET"
@@ -636,7 +642,7 @@ function remove_snapin(id)
 }
 
 
-function toggle_sidebar_snapin(oH2, url) {
+export function toggle_sidebar_snapin(oH2, url) {
     // oH2 can also be an <a>. In that case it is the minimize
     // image itself
 
@@ -657,40 +663,59 @@ function toggle_sidebar_snapin(oH2, url) {
     var closed = oContent.style.display == "none";
     if (closed) {
         oContent.style.display = "block";
-        change_class(oHead, "closed", "open");
+        utils.change_class(oHead, "closed", "open");
     }
     else {
         oContent.style.display = "none";
-        change_class(oHead, "open", "closed");
+        utils.change_class(oHead, "open", "closed");
     }
     /* make this persistent -> save */
-    get_url(url + (closed ? "open" : "closed"));
+    ajax.get_url(url + (closed ? "open" : "closed"));
 }
 
-function reload_main_plus_sidebar(id, code) {
+function reload_main_plus_sidebar() {
     parent.frames[1].location.reload(); /* reload main frame */
     parent.frames[0].location.reload(); /* reload side bar */
 }
 
 // TODO move to managed/web/htdocs/js
-function switch_customer(customer_id, switch_state) {
-    get_url("switch_customer.py?_customer_switch=" + customer_id + ":" + switch_state,
-            reload_main_plus_sidebar, null);
+export function switch_customer(customer_id, switch_state) {
+    ajax.get_url("switch_customer.py?_customer_switch=" + customer_id + ":" + switch_state,
+        reload_main_plus_sidebar, null);
 }
 
-function switch_site(url) {
-    get_url(url, reload_main_plus_sidebar, null);
+export function switch_site(url) {
+    ajax.get_url(url, reload_main_plus_sidebar, null);
 }
+
+function bulk_update_contents(ids, codes)
+{
+    codes = eval(codes);
+    for (var i = 0, len = ids.length; i < len; i++) {
+        if (restart_snapins.indexOf(ids[i].replace("snapin_", "")) !== -1) {
+            // Snapins which rely on the restart time of nagios receive
+            // an empty code here when nagios has not been restarted
+            // since sidebar rendering or last update, skip it
+            if(codes[i] != "") {
+                utils.update_contents(ids[i], codes[i]);
+                sidebar_restart_time = Math.floor(Date.parse(new Date()) / 1000);
+            }
+        } else {
+            utils.update_contents(ids[i], codes[i]);
+        }
+    }
+}
+
 
 var g_seconds_to_update = null;
 
-function refresh_single_snapin(name) {
+export function refresh_single_snapin(name) {
     var url = "sidebar_snapin.py?names=" + name;
     var ids = [ "snapin_" + name ];
-    get_url(url, bulkUpdateContents, ids);
+    ajax.get_url(url, bulk_update_contents, ids);
 }
 
-function sidebar_scheduler() {
+export function execute_sidebar_scheduler() {
     if (g_seconds_to_update == null)
         g_seconds_to_update = sidebar_update_interval;
     else
@@ -698,8 +723,8 @@ function sidebar_scheduler() {
 
     // Stop reload of the snapins in case the browser window / tab is not visible
     // for the user. Retry after short time.
-    if (!is_window_active()) {
-        setTimeout(function(){ sidebar_scheduler(); }, 250);
+    if (!utils.is_window_active()) {
+        setTimeout(function(){ execute_sidebar_scheduler(); }, 250);
         return;
     }
 
@@ -715,7 +740,7 @@ function sidebar_scheduler() {
             url = refresh_snapins[i][1];
 
             if (g_seconds_to_update <= 0) {
-                get_url(url, updateContents, "snapin_" + name);
+                ajax.get_url(url, utils.update_contents, "snapin_" + name);
             }
         } else {
             // Internal update handling, use bulk update
@@ -730,12 +755,12 @@ function sidebar_scheduler() {
             if (sidebar_restart_time !== null)
                 url += "&since=" + sidebar_restart_time;
 
-            var ids = [];
-            for (i = 0, len = to_be_updated.length; i < len; i++) {
+            var ids = [], len = to_be_updated.length;
+            for (i = 0; i < len; i++) {
                 ids.push("snapin_" + to_be_updated[i]);
             }
 
-            get_url(url, bulkUpdateContents, ids);
+            ajax.get_url(url, bulk_update_contents, ids);
         }
     }
 
@@ -748,15 +773,15 @@ function sidebar_scheduler() {
 
     // Detect page changes and re-register the mousemove event handler
     // in the content frame. another bad hack ... narf
-    if(contentFrameAccessible() && g_content_loc != parent.frames[1].document.location.href) {
-        registerEdgeListeners(parent.frames[1]);
+    if(is_content_frame_accessible() && g_content_loc != parent.frames[1].document.location.href) {
+        register_edge_listeners(parent.frames[1]);
         update_content_location();
     }
 
     if (g_seconds_to_update <= 0)
         g_seconds_to_update = sidebar_update_interval;
 
-    setTimeout(function(){sidebar_scheduler();}, 1000);
+    setTimeout(function(){execute_sidebar_scheduler();}, 1000);
 }
 
 /************************************************
@@ -785,14 +810,14 @@ function getCookie(cookieName) {
     return decodeURIComponent(document.cookie.substring(cookieStart, cookieEnd));
 }
 
-function initScrollPos() {
+export function initialize_scroll_position() {
     var scrollPos = getCookie("sidebarScrollPos");
     if(!scrollPos)
         scrollPos = 0;
     document.getElementById("side_content").scrollTop = scrollPos;
 }
 
-function storeScrollPos() {
+export function store_scroll_position() {
     setCookie("sidebarScrollPos", document.getElementById("side_content").scrollTop, null);
 }
 
@@ -828,13 +853,13 @@ function highlight_link(link_obj, container_id) {
     }
 }
 
-function wato_folders_clicked(link_obj, folderpath) {
+export function wato_folders_clicked(link_obj, folderpath) {
     g_last_folder = folderpath;
     highlight_link(link_obj, "snapin_container_wato_folders");
     parent.frames[1].location = g_last_view + "&wato_folder=" + encodeURIComponent(g_last_folder);
 }
 
-function wato_views_clicked(link_obj) {
+export function wato_views_clicked(link_obj) {
     g_last_view = link_obj.href;
 
     highlight_link(link_obj, "snapin_container_views");
@@ -855,12 +880,13 @@ function wato_views_clicked(link_obj) {
  *************************************************/
 
 /* Foldable Tree in snapin */
-function wato_tree_click(link_obj, folderpath) {
+export function wato_tree_click(link_obj, folderpath) {
     var topic  = document.getElementById("topic").value;
     var target = document.getElementById("target_" + topic).value;
 
+    var href;
     if(target.substr(0, 9) == "dashboard") {
-        dashboard_name = target.substr(10, target.length);
+        var dashboard_name = target.substr(10, target.length);
         href = "dashboard.py?name=" + encodeURIComponent(dashboard_name);
     } else {
         href = "view.py?view_name=" + encodeURIComponent(target);
@@ -871,7 +897,7 @@ function wato_tree_click(link_obj, folderpath) {
     parent.frames[1].location = href;
 }
 
-function wato_tree_topic_changed(topic_field) {
+export function wato_tree_topic_changed(topic_field) {
     // First toggle the topic dropdown field
     var topic = topic_field.value;
 
@@ -889,44 +915,29 @@ function wato_tree_topic_changed(topic_field) {
     }
 
     // Then send the info to python code via ajax call for persistance
-    get_url("ajax_set_foldertree.py?topic=" + encodeURIComponent(topic) + "&target=");
+    ajax.get_url("ajax_set_foldertree.py?topic=" + encodeURIComponent(topic) + "&target=");
 }
 
-function wato_tree_target_changed(target_field) {
+export function wato_tree_target_changed(target_field) {
     var topic = target_field.id.substr(7, target_field.id.length);
     var target = target_field.value;
 
     // Send the info to python code via ajax call for persistance
-    get_url("ajax_set_foldertree.py?topic=" + encodeURIComponent(topic) + "&target=" + encodeURIComponent(target));
-}
-
-// adds a variable to a GET url, but tries to remove that
-// variable, if it is already existing in the URL. In order
-// to simplify the thing, we just look at the *end* of the
-// URL. This is not perfect but sufficient in order to avoid the URL
-// getting longer and longer.
-function add_html_var(url, varname, value) {
-    var re = new RegExp("&" + varname + "=[^&]*");
-    var new_url = url.replace(re, "");
-    if (new_url.indexOf("?") != "-1")
-        new_url += "&" + varname + "=" + encodeURIComponent(value);
-    else
-        new_url += "?" + varname + "=" + encodeURIComponent(value);
-    return new_url;
+    ajax.get_url("ajax_set_foldertree.py?topic=" + encodeURIComponent(topic) + "&target=" + encodeURIComponent(target));
 }
 
 /************************************************
  * Event console site selection
  *************************************************/
 
-function set_snapin_site(event, ident, select_field) {
+export function set_snapin_site(event, ident, select_field) {
     if (!event)
         event = window.event;
 
-    get_url("sidebar_ajax_set_snapin_site.py?ident=" + encodeURIComponent(ident)
+    ajax.get_url("sidebar_ajax_set_snapin_site.py?ident=" + encodeURIComponent(ident)
           + "&site=" + encodeURIComponent(select_field.value));
     location.reload();
-    return prevent_default_events(event);
+    return utils.prevent_default_events(event);
 }
 
 /************************************************
@@ -936,7 +947,7 @@ function set_snapin_site(event, ident, select_field) {
 // integer representing interval in seconds or <null> when disabled.
 var g_sidebar_notify_interval;
 
-function init_messages(interval) {
+export function init_messages(interval) {
     g_sidebar_notify_interval = interval;
 
     // Are there pending messages? Render the initial state of
@@ -949,7 +960,7 @@ function handle_update_messages(_unused, code) {
     var c = document.getElementById("messages");
     if (c) {
         c.innerHTML = code;
-        executeJSbyObject(c);
+        utils.execute_javascript_by_object(c);
         update_message_trigger();
     }
 }
@@ -962,7 +973,7 @@ function update_messages() {
     }
 
     // retrieve new messages
-    get_url("sidebar_get_messages.py", handle_update_messages);
+    ajax.get_url("sidebar_get_messages.py", handle_update_messages);
 }
 
 function get_hint_messages(c) {
@@ -999,14 +1010,14 @@ function update_message_trigger() {
     }
 }
 
-function mark_message_read(msg_id) {
-    get_url("sidebar_message_read.py?id=" + msg_id);
+export function mark_message_read(msg_id) {
+    ajax.get_url("sidebar_message_read.py?id=" + msg_id);
 
     // Update the button state
     update_message_trigger();
 }
 
-function read_message() {
+export function read_message() {
     var c = document.getElementById("messages");
     if (!c)
         return;
@@ -1024,7 +1035,7 @@ function read_message() {
     mark_message_read(msg_id);
 }
 
-function message_close(msg_id) {
+export function message_close(msg_id) {
     var m = document.getElementById("message-" + msg_id);
     if (m) {
         m.parentNode.removeChild(m);

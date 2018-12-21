@@ -1907,7 +1907,7 @@ class html(HTMLGenerator):
             self.javascript("enable_help();")
         if self.final_javascript_code:
             self.javascript(self.final_javascript_code)
-        self.javascript("initialize_visibility_detection();")
+        self.javascript("cmk.visibility_detection.initialize();")
         self.close_body()
         self.close_html()
 
@@ -2561,7 +2561,7 @@ class html(HTMLGenerator):
         if self._user_id:
             isopen = self.foldable_container_is_open(treename, id_, isopen)
 
-        onclick = "toggle_foldable_container(%s, %s, %s)"\
+        onclick = "cmk.foldable_container.toggle(%s, %s, %s)"\
                     % (json.dumps(treename), json.dumps(id_), json.dumps(fetch_url if fetch_url else ''))
 
         img_id = "treeimg.%s.%s" % (treename, id_)

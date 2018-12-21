@@ -347,8 +347,9 @@ class SidebarRenderer(object):
         html.write('<body class="side')
         if config.screenshotmode:
             html.write(" screenshotmode")
-        html.write('" onload="initScrollPos(); set_sidebar_size(); init_messages(%s);" '
-                   'onunload="storeScrollPos()">\n' % interval)
+        html.write(
+            '" onload="cmk.sidebar.initialize_scroll_position(); cmk.sidebar.set_sidebar_size(); cmk.sidebar.init_messages(%s);" '
+            'onunload="cmk.sidebar.store_scroll_position()">\n' % interval)
         html.open_div(id_="check_mk_sidebar")
 
         # FIXME: Move this to the code where views are needed (snapins?)
@@ -380,15 +381,19 @@ class SidebarRenderer(object):
 
         html.write("<script language=\"javascript\">\n")
         if restart_snapins:
-            html.write("sidebar_restart_time = %s\n" % time.time())
-        html.write("sidebar_update_interval = %0.2f;\n" % config.sidebar_update_interval)
-        html.write("registerEdgeListeners();\n")
-        html.write("set_sidebar_size();\n")
-        html.write("refresh_snapins = %s;\n" % json.dumps(refresh_snapins))
-        html.write("restart_snapins = %s;\n" % json.dumps(restart_snapins))
-        html.write("sidebar_scheduler();\n")
-        html.write("window.onresize = function() { set_sidebar_size(); };\n")
-        html.write("if (contentFrameAccessible()) { update_content_location(); };\n")
+            html.write("cmk.sidebar.set_sidebar_restart_time(%s);\n" % time.time())
+        html.write(
+            "cmk.sidebar.set_sidebar_update_interval(%0.2f);\n" % config.sidebar_update_interval)
+        html.write("cmk.sidebar.register_edge_listeners();\n")
+        html.write("cmk.sidebar.set_sidebar_size();\n")
+        html.write("cmk.sidebar.set_refresh_snapins(%s);\n" % json.dumps(refresh_snapins))
+        html.write("cmk.sidebar.set_restart_snapins(%s);\n" % json.dumps(restart_snapins))
+        html.write("cmk.sidebar.execute_sidebar_scheduler();\n")
+        html.write("cmk.sidebar.register_event_handlers();\n")
+        html.write("window.onresize = function() { cmk.sidebar.set_sidebar_size(); };\n")
+        html.write(
+            "if (cmk.sidebar.is_content_frame_accessible()) { cmk.sidebar.update_content_location(); };\n"
+        )
         html.write("</script>\n")
 
         html.body_end()
@@ -416,8 +421,8 @@ class SidebarRenderer(object):
             head_actions = {
                 "onmouseover": "document.body.style.cursor='move';",
                 "onmouseout ": "document.body.style.cursor='';",
-                "onmousedown": "snapinStartDrag(event)",
-                "onmouseup": "snapinStopDrag(event)"
+                "onmousedown": "cmk.sidebar.snapin_start_drag(event)",
+                "onmouseup": "cmk.sidebar.snapin_stop_drag(event)"
             }
 
         html.open_div(class_=["head", snapin.visible.value], **head_actions)
@@ -428,7 +433,7 @@ class SidebarRenderer(object):
                 "",
                 class_="minisnapin",
                 title=_("Toggle this snapin"),
-                onclick="toggle_sidebar_snapin(this, '%s')" % toggle_url)
+                onclick="cmk.sidebar.toggle_sidebar_snapin(this, '%s')" % toggle_url)
 
             # Button for closing (removing) a snapin
             html.open_div(class_="closesnapin")
@@ -437,14 +442,14 @@ class SidebarRenderer(object):
                 url=None,
                 title=_("Remove this snapin"),
                 icon="closesnapin",
-                onclick="remove_sidebar_snapin(this, '%s')" % close_url)
+                onclick="cmk.sidebar.remove_sidebar_snapin(this, '%s')" % close_url)
             html.close_div()
 
         # The heading. A click on the heading mini/maximizes the snapin
         toggle_actions = {}  # type: Dict[str, str]
         if config.user.may("general.configure_sidebar"):
             toggle_actions = {
-                "onclick": "toggle_sidebar_snapin(this,'%s')" % toggle_url,
+                "onclick": "cmk.sidebar.toggle_sidebar_snapin(this,'%s')" % toggle_url,
                 "onmouseover": "this.style.cursor='pointer'",
                 "onmouseout": "this.style.cursor='auto'"
             }
@@ -463,8 +468,8 @@ class SidebarRenderer(object):
             if not url is None:
                 # Fetch the contents from an external URL. Don't render it on our own.
                 refresh_url = url
-                html.javascript(
-                    "get_url(\"%s\", updateContents, \"snapin_%s\")" % (refresh_url, name))
+                html.javascript("cmk.ajax.get_url(\"%s\", cmk.utils.update_contents, \"snapin_%s\")"
+                                % (refresh_url, name))
         except Exception as e:
             logger.exception()
             write_snapin_exception(e)
@@ -544,7 +549,7 @@ class SidebarRenderer(object):
             "return void();",
             _("You have pending messages."),
             "sidebar_messages",
-            onclick='read_message()',
+            onclick='cmk.sidebar.read_message()',
             id_='msg_button',
             style='display:none')
         html.open_div(style="display:none;", id_="messages")
@@ -558,7 +563,7 @@ class SidebarRenderer(object):
         html.close_div()
 
         if user_config.folded:
-            html.final_javascript("fold_sidebar();")
+            html.final_javascript("cmk.sidebar.fold_sidebar();")
 
     def render_messages(self):
         for msg in notify.get_gui_messages():
@@ -568,12 +573,12 @@ class SidebarRenderer(object):
                     "x",
                     href="javascript:void(0)",
                     class_=["close"],
-                    onclick="message_close(\'%s\')" % msg['id'])
+                    onclick="cmk.sidebar.message_close(\'%s\')" % msg['id'])
                 html.write_text(msg['text'].replace('\n', '<br>\n'))
                 html.close_div()
             if 'gui_popup' in msg['methods']:
-                html.javascript('alert(\'%s\'); mark_message_read("%s")' % (html.attrencode(
-                    msg['text']).replace('\n', '\\n'), msg['id']))
+                html.javascript('alert(\'%s\'); cmk.sidebar.mark_message_read("%s")' %
+                                (html.attrencode(msg['text']).replace('\n', '\\n'), msg['id']))
 
 
 @cmk.gui.pages.register("side")

@@ -26,6 +26,9 @@ import $ from "jquery";
 import * as forms from "forms";
 import * as ajax from "ajax";
 import * as prediction from "prediction";
+import * as utils from "utils";
+import * as foldable_container from "foldable_container";
+import * as visibility_detection from "visibility_detection";
 
 require("script-loader!./checkmk.js");
 require("script-loader!./dashboard.js");
@@ -42,11 +45,24 @@ $(() => {
 });
 
 export default {
-    get_url: ajax.get_url,
-    post_url: ajax.post_url,
-    call_ajax: ajax.call_ajax,
     cmk: {
         prediction: prediction,
         ajax: ajax,
-    }
+        utils: utils,
+        foldable_container: foldable_container,
+        visibility_detection: visibility_detection
+    },
+    // TODO: Compatibility for not yet modularized JS code
+    executeJSbyObject: utils.execute_javascript_by_object,
+    executeJS: utils.execute_javascript_by_id,
+    getTarget: utils.get_target,
+    getButton: utils.get_button,
+    prevent_default_events: utils.prevent_default_events,
+    has_class: utils.has_class,
+    remove_class: utils.remove_class,
+    add_class: utils.add_class,
+    change_class: utils.change_class,
+    get_url: ajax.get_url,
+    post_url: ajax.post_url,
+    call_ajax: ajax.call_ajax
 };

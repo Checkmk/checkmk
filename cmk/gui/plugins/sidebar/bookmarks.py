@@ -242,8 +242,8 @@ class Bookmarks(SidebarSnapin):
 function add_bookmark() {
     url = parent.frames[1].location;
     title = parent.frames[1].document.title;
-    get_url("add_bookmark.py?title=" + encodeURIComponent(title)
-            + "&url=" + encodeURIComponent(url), updateContents, "snapin_bookmarks");
+    cmk.ajax.get_url("add_bookmark.py?title=" + encodeURIComponent(title)
+            + "&url=" + encodeURIComponent(url), cmk.utils.update_contents, "snapin_bookmarks");
 }""")
 
         for topic, bookmarks in self._get_bookmarks_by_topic():

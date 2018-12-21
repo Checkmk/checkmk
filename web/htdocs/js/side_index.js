@@ -25,10 +25,11 @@
 
 import "forms";
 import * as ajax from "ajax";
+import * as utils from "utils";
+import * as foldable_container from "foldable_container";
+import * as sidebar from "sidebar";
 import * as quicksearch from "quicksearch";
-
-require("script-loader!./checkmk.js");
-require("script-loader!./sidebar.js");
+import * as visibility_detection from "visibility_detection";
 
 export default {
     get_url: ajax.get_url,
@@ -36,6 +37,10 @@ export default {
     call_ajax: ajax.call_ajax,
     cmk: {
         ajax: ajax,
-        quicksearch: quicksearch
+        sidebar: sidebar,
+        utils: utils,
+        foldable_container: foldable_container,
+        quicksearch: quicksearch,
+        visibility_detection: visibility_detection
     }
 };

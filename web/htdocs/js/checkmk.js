@@ -33,52 +33,6 @@
 //#   | Generic library functions used anywhere in Check_MK                |
 //#   '--------------------------------------------------------------------'
 
-function has_class(o, cn) {
-    if (typeof(o.className) === 'undefined')
-        return false;
-    var parts = o.className.split(' ');
-    for (var x=0; x<parts.length; x++) {
-        if (parts[x] == cn)
-            return true;
-    }
-    return false;
-}
-
-function remove_class(o, cn) {
-    var parts = o.className.split(' ');
-    var new_parts = Array();
-    for (var x=0; x<parts.length; x++) {
-        if (parts[x] != cn)
-            new_parts.push(parts[x]);
-    }
-    o.className = new_parts.join(" ");
-}
-
-function add_class(o, cn) {
-    if (!has_class(o, cn))
-        o.className += " " + cn;
-}
-
-function change_class(o, a, b) {
-    remove_class(o, a);
-    add_class(o, b);
-}
-
-function pageHeight() {
-  var h;
-
-  if (window.innerHeight !== null && typeof window.innerHeight !== 'undefined' && window.innerHeight !== 0)
-    h = window.innerHeight;
-  else if (document.documentElement && document.documentElement.clientHeight)
-    h = document.documentElement.clientHeight;
-  else if (document.body !== null)
-    h = document.body.clientHeight;
-  else
-    h = null;
-
-  return h;
-}
-
 function pageWidth() {
   var w;
 
@@ -246,25 +200,12 @@ function sort_select(select, cmp_func) {
 //#   | User interaction event related                                     |
 //#   '--------------------------------------------------------------------'
 
-function getTarget(event) {
-    return event.target ? event.target : event.srcElement;
-}
-
 function get_event_offset_x(event) {
     return event.offsetX == undefined ? event.layerX : event.offsetX;
 }
 
 function get_event_offset_y(event) {
     return event.offsetY == undefined ? event.layerY : event.offsetY;
-}
-
-function getButton(event) {
-    if (event.which == null)
-        /* IE case */
-        return (event.button < 2) ? "LEFT" : ((event.button == 4) ? "MIDDLE" : "RIGHT");
-    else
-        /* All others */
-        return (event.which < 2) ? "LEFT" : ((event.which == 2) ? "MIDDLE" : "RIGHT");
 }
 
 // Adds document/window global event handlers
@@ -300,15 +241,6 @@ function del_event_handler(type, func, obj) {
     }
 }
 
-function prevent_default_events(event) {
-    if (event.preventDefault)
-        event.preventDefault();
-    if (event.stopPropagation)
-        event.stopPropagation();
-    event.returnValue = false;
-    return false;
-}
-
 //#.
 //#   .-Browser Fixes------------------------------------------------------.
 //#   |    ____                                    _____ _                 |
@@ -320,15 +252,6 @@ function prevent_default_events(event) {
 //#   +--------------------------------------------------------------------+
 //#   | Browser detection and browser related workarounds                  |
 //#   '--------------------------------------------------------------------'
-
-// FIXME: cleanup
-var browser         = navigator.userAgent.toLowerCase();
-var weAreOpera      = browser.indexOf("opera") != -1;
-var weAreFirefox    = browser.indexOf("firefox") != -1 || browser.indexOf("namoroka") != -1;
-
-function is_ie_below_9() {
-    return document.all && !document.addEventListener;
-}
 
 // Some browsers don't support indexOf on arrays. This implements the
 // missing method
@@ -431,79 +354,6 @@ if (!("lastElementChild" in document.documentElement)) {
             return this.children[this.children.length - 1];
         }
     });
-}
-
-
-//#.
-//#   .-AJAX---------------------------------------------------------------.
-//#   |                         _       _   _    __  __                    |
-//#   |                        / \     | | / \   \ \/ /                    |
-//#   |                       / _ \ _  | |/ _ \   \  /                     |
-//#   |                      / ___ \ |_| / ___ \  /  \                     |
-//#   |                     /_/   \_\___/_/   \_\/_/\_\                    |
-//#   |                                                                    |
-//#   +--------------------------------------------------------------------+
-//#   | AJAX call related functions                                        |
-//#   '--------------------------------------------------------------------'
-
-
-function bulkUpdateContents(ids, codes)
-{
-    codes = eval(codes);
-    for (var i = 0, len = ids.length; i < len; i++) {
-        if (restart_snapins.indexOf(ids[i].replace('snapin_', '')) !== -1) {
-            // Snapins which rely on the restart time of nagios receive
-            // an empty code here when nagios has not been restarted
-            // since sidebar rendering or last update, skip it
-            if(codes[i] != '') {
-                updateContents(ids[i], codes[i]);
-                sidebar_restart_time = Math.floor(Date.parse(new Date()) / 1000);
-            }
-        } else {
-            updateContents(ids[i], codes[i]);
-        }
-    }
-}
-
-// Updates the contents of a snapin or dashboard container after get_url
-function updateContents(id, code)
-{
-    var obj = document.getElementById(id);
-    if (obj) {
-        obj.innerHTML = code;
-        executeJS(id);
-    }
-}
-
-// There may be some javascript code in the html code rendered by
-// sidebar.py. Execute it here. This is needed in some browsers.
-function executeJS(id)
-{
-    executeJSbyObject(document.getElementById(id));
-}
-
-var g_current_script = null;
-
-function executeJSbyObject(obj)
-{
-    var aScripts = obj.getElementsByTagName('script');
-    for(var i = 0; i < aScripts.length; i++) {
-        if (aScripts[i].src && aScripts[i].src !== '') {
-            var oScr = document.createElement('script');
-            oScr.src = aScripts[i].src;
-            document.getElementsByTagName("HEAD")[0].appendChild(oScr);
-        }
-        else {
-            try {
-                g_current_script = aScripts[i];
-                eval(aScripts[i].text);
-                g_current_script = null;
-            } catch(e) {
-                console.log(e);
-                alert(aScripts[i].text + "\nError:" + e.message);
-            }
-        }
-    }
 }
 
 //#.
@@ -1040,7 +890,7 @@ function do_reload(url)
 {
     // Reschedule the reload in case the browser window / tab is not visible
     // for the user. Retry after short time.
-    if (!is_window_active()) {
+    if (!cmk.utils.is_window_active()) {
         setTimeout(function(){ do_reload(url); }, 250);
         return;
     }
@@ -1194,90 +1044,6 @@ function draw_reload_pause_overlay(seconds)
     document.body.appendChild(container);
 }
 
-//#.
-//#   .-Foldable Container-------------------------------------------------.
-//#   |     _____     _     _       _     _       ____            _        |
-//#   |    |  ___|__ | | __| | __ _| |__ | | ___ / ___|___  _ __ | |_      |
-//#   |    | |_ / _ \| |/ _` |/ _` | '_ \| |/ _ \ |   / _ \| '_ \| __|     |
-//#   |    |  _| (_) | | (_| | (_| | |_) | |  __/ |__| (_) | | | | |_ _    |
-//#   |    |_|  \___/|_|\__,_|\__,_|_.__/|_|\___|\____\___/|_| |_|\__(_)   |
-//#   |                                                                    |
-//#   +--------------------------------------------------------------------+
-//#   |                                                                    |
-//#   '--------------------------------------------------------------------'
-
-function toggle_folding(img, to_be_opened) {
-    if (to_be_opened) {
-        change_class(img, "closed", "open");
-    } else {
-        change_class(img, "open", "closed");
-    }
-}
-
-function toggle_tree_state(tree, name, oContainer, fetch_url) {
-    var state;
-    if (has_class(oContainer, 'closed')) {
-        change_class(oContainer, 'closed', 'open');
-
-        if (fetch_url && !oContainer.innerHTML) {
-            call_ajax(fetch_url, {
-                method           : "GET",
-                response_handler : function(handler_data, response_body) {
-                    handler_data.container.innerHTML = response_body;
-                },
-                handler_data     : {
-                    container: oContainer
-                }
-            });
-        }
-
-        state = 'on';
-        if (oContainer.tagName == 'TR') { // handle in-table toggling
-            while (oContainer = oContainer.nextElementSibling)
-                change_class(oContainer, 'closed', 'open');
-        }
-    }
-    else {
-        change_class(oContainer, 'open', 'closed');
-        state = 'off';
-        if (oContainer.tagName == 'TR') { // handle in-table toggling
-            while (oContainer = oContainer.nextElementSibling)
-                change_class(oContainer, 'open', 'closed');
-        }
-    }
-
-    persist_tree_state(tree, name, state);
-}
-
-function persist_tree_state(tree, name, state)
-{
-    get_url('tree_openclose.py?tree=' + encodeURIComponent(tree)
-            + '&name=' + encodeURIComponent(name) + '&state=' + state);
-}
-
-// fetch_url: dynamically load content of opened element.
-function toggle_foldable_container(treename, id, fetch_url) {
-    // Check, if we fold a NG-Norm
-    var oNform = document.getElementById('nform.' + treename + '.' + id);
-    if (oNform) {
-        var oImg = oNform.children[0];
-        var oTr = oNform.parentNode.nextElementSibling;
-        toggle_tree_state(treename, id, oTr, fetch_url);
-
-        if (oImg)
-            toggle_folding(oImg, !has_class(oTr, "closed"));
-    }
-    else {
-        var oImg = document.getElementById('treeimg.' + treename + '.' + id);
-        var oBox = document.getElementById('tree.' + treename + '.' + id);
-        toggle_tree_state(treename, id, oBox, fetch_url);
-
-        if (oImg)
-            toggle_folding(oImg, !has_class(oBox, "closed"));
-    }
-}
-
-
 function toggle_grouped_rows(tree, id, cell, num_rows)
 {
     var group_title_row = cell.parentNode;
@@ -1296,7 +1062,7 @@ function toggle_grouped_rows(tree, id, cell, num_rows)
     }
 
     toggle_folding(cell.getElementsByTagName("IMG")[0], toggle_img_open);
-    persist_tree_state(tree, id, state);
+    cmk.foldable_container.persist_tree_state(tree, id, state);
 
     var row = group_title_row;
     for (var i = 0; i < num_rows; i++) {
@@ -1444,7 +1210,7 @@ function toggle_row(e, elem) {
         e = window.event;
 
     // Skip handling clicks on links/images/...
-    var target = getTarget(e);
+    var target = cmk.utils.get_target(e);
     if(target.tagName != 'TD' && target.tagName != 'LABEL')
         return true;
 
@@ -1676,7 +1442,7 @@ function element_drag_start(event, dragger, dragging_tag, drop_handler)
     if (!event)
         event = window.event;
 
-    var button = getButton(event);
+    var button = cmk.utils.get_button(event);
 
     // Skip calls when already dragging or other button than left mouse
     if (g_element_dragging !== null || button != 'LEFT')
@@ -2663,7 +2429,7 @@ function wheel_event_name()
 {
     if ("onwheel" in window)
         return "wheel";
-    else if (weAreFirefox)
+    else if (cmk.utils.browser.is_firefox())
         return "DOMMouseScroll";
     else
         return "mousewheel";
@@ -2695,7 +2461,7 @@ function optiondial_wheel(event) {
     }
     g_last_optiondial = time();
 
-    var container = getTarget(event);
+    var container = cmk.utils.get_target(event);
     if (event.nodeType == 3) // defeat Safari bug
         container = container.parentNode;
     while (!container.className)
@@ -2980,7 +2746,7 @@ function close_popup()
 // Registerd as click handler on the page while the popup menu is opened
 // This is used to close the menu when the user clicks elsewhere
 function handle_popup_close(event) {
-    var target = getTarget(event);
+    var target = cmk.utils.get_target(event);
 
     // Check whether or not a parent of the clicked node is the popup menu
     while (target && target.id != 'popup_menu' && !has_class(target, 'popup_trigger')) { // FIXME
@@ -3296,7 +3062,7 @@ function update_hover_menu_position(event)
     var hoverTop = parseInt(g_hover_menu.style.top.replace('px', ''));
     // Only move the menu to the top when the new top will not be
     // out of sight
-    if (hoverTop +g_hover_menu.clientHeight > pageHeight() && hoverTop -g_hover_menu.clientHeight >= 0) {
+    if (hoverTop +g_hover_menu.clientHeight > cmk.utils.page_height() && hoverTop -g_hover_menu.clientHeight >= 0) {
         g_hover_menu.style.top = hoverTop -g_hover_menu.clientHeight - hoverSpacer + 'px';
     }
 }
@@ -3648,88 +3414,4 @@ function hide_job_detail_msg()
     var msg = document.getElementById("job_detail_msg");
     if (msg)
         msg.parentNode.removeChild(msg);
-}
-
-//#.
-//#   .--Visibility----------------------------------------------------------.
-//#   |               __     ___     _ _     _ _ _ _                         |
-//#   |               \ \   / (_)___(_) |__ (_) (_) |_ _   _                 |
-//#   |                \ \ / /| / __| | '_ \| | | | __| | | |                |
-//#   |                 \ V / | \__ \ | |_) | | | | |_| |_| |                |
-//#   |                  \_/  |_|___/_|_.__/|_|_|_|\__|\__, |                |
-//#   |                                                |___/                 |
-//#   +----------------------------------------------------------------------+
-//#   | Code for detecting the visibility of the current browser window/tab  |
-//#   '----------------------------------------------------------------------'
-
-var g_visibility_detection_enabled = true;
-
-// Whether or not the current browser window/tab is visible to the user
-function is_window_active()
-{
-    return !has_class(document.body, "hidden");
-}
-
-function initialize_visibility_detection() 
-{
-    var hidden_attr_name = "hidden";
-
-    // Standards:
-    if (hidden_attr_name in document)
-        document.addEventListener("visibilitychange", on_visibility_change);
-    else if ((hidden_attr_name = "mozHidden") in document)
-        document.addEventListener("mozvisibilitychange", on_visibility_change);
-    else if ((hidden_attr_name = "webkitHidden") in document)
-        document.addEventListener("webkitvisibilitychange", on_visibility_change);
-    else if ((hidden_attr_name = "msHidden") in document)
-        document.addEventListener("msvisibilitychange", on_visibility_change);
-
-    // This feature will not support IE 9 and lower or other incompatible
-    // browsers. By enabling the code below we could add the support, but
-    // we need to be sure that these assignments don't conflict with other
-    // already registered event handlers.
-    //else if ("onfocusin" in document) {
-    //    // IE 9 and lower:
-    //    document.onfocusin = document.onfocusout = onchange;
-    //}
-    //else {
-    //    // All others:
-    //    window.onpageshow = window.onpagehide
-    //        = window.onfocus = window.onblur = onchange;
-    //}
-
-    window.addEventListener("beforeunload", disable_visibility_detection);
-
-    function disable_visibility_detection(evt) {
-        g_visibility_detection_enabled = false;
-    }
-
-    function on_visibility_change(evt) {
-        var v = "visible", h = "hidden",
-            evtMap = {
-              focus:v, focusin:v, pageshow:v, blur:h, focusout:h, pagehide:h
-            };
-
-        if (!g_visibility_detection_enabled)
-            return;
-
-        remove_class(document.body, "visible");
-        remove_class(document.body, "hidden");
-
-        evt = evt || window.event;
-
-        var new_class;
-        if (evt.type in evtMap) {
-            new_class = evtMap[evt.type];
-        } else {
-            new_class = this[hidden_attr_name] ? "hidden" : "visible";
-        }
-        
-        //console.log([evt.type, new_class, document.hidden, location.href]);
-        add_class(document.body, new_class);
-    }
-
-    // set the initial state (but only if browser supports the Page Visibility API)
-    if (document[hidden_attr_name] !== undefined)
-        on_visibility_change({type: document[hidden_attr_name] ? "blur" : "focus"});
 }

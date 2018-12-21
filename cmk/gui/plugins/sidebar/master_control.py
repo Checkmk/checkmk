@@ -109,7 +109,7 @@ class MasterControlSnapin(SidebarSnapin):
                         ("state", "%d" % (1 - colvalue)),
                     ],
                                                          filename="switch_master_state.py")
-                    onclick = "get_url('%s', updateContents, 'snapin_master_control')" % url
+                    onclick = "cmk.ajax.get_url('%s', cmk.utils.update_contents, 'snapin_master_control')" % url
 
                     html.open_tr()
                     html.td(title, class_="left")

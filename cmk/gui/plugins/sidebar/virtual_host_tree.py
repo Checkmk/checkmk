@@ -276,18 +276,18 @@ class VirtualHostTree(SidebarSnapin):
 function virtual_host_tree_changed(field)
 {
     var tree_id = field.value;
-    call_ajax('sidebar_ajax_tag_tree.py?tree_id=' + escape(tree_id), {
+    cmk.ajax.call_ajax('sidebar_ajax_tag_tree.py?tree_id=' + escape(tree_id), {
         response_handler : function(handler_data, response_body) {
-            refresh_single_snapin("tag_tree");
+            cmk.sidebar.refresh_single_snapin("tag_tree");
         }
     });
 }
 
 function virtual_host_tree_enter(path)
 {
-    call_ajax('sidebar_ajax_tag_tree_enter.py?path=' + escape(path), {
+    cmk.ajax.call_ajax('sidebar_ajax_tag_tree_enter.py?path=' + escape(path), {
         response_handler : function(handler_data, response_body) {
-            refresh_single_snapin("tag_tree");
+            cmk.sidebar.refresh_single_snapin("tag_tree");
         }
     });
 }

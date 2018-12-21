@@ -98,7 +98,7 @@ class SiteStatus(SidebarSnapin):
                     content=state,
                     status=state,
                     title=_("enable this site") if state == "disabled" else _("disable this site"),
-                    onclick="switch_site(%s)" % (json.dumps(url)))
+                    onclick="cmk.sidebar.switch_site(%s)" % (json.dumps(url)))
             html.close_tr()
         html.close_table()
 

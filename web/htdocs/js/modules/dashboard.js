@@ -412,7 +412,7 @@ function toggle_dashboard_menu(show, event) {
     }
 }
 
-function hide_submenus() {
+export function hide_submenus() {
     // hide all submenus
     var subs = document.getElementsByClassName("sub");
     for (var i = 0; i < subs.length; i++)

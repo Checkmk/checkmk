@@ -51,10 +51,13 @@ import * as reload_pause from "reload_pause";
 import * as graph_integration from "graph_integration";
 import * as dashboard from "dashboard";
 
-// TODO: Find a better solution for this CEE specific include
+// Optional import is currently not possible using the ES6 imports
+var graphs;
 try {
-    require("script-loader!../../../enterprise/web/htdocs/js/graphs.js");
-} catch(e) {} // eslint-disable-line no-empty
+    graphs = require("graphs");
+} catch(e) {
+    graphs = null;
+}
 
 $(() => {
     utils.update_header_timer();
@@ -91,19 +94,7 @@ export default {
         views: views,
         reload_pause: reload_pause,
         graph_integration: graph_integration,
+        graphs: graphs,
         dashboard: dashboard
-    },
-    // TODO: Compatibility for not yet modularized JS code
-    executeJSbyObject: utils.execute_javascript_by_object,
-    executeJS: utils.execute_javascript_by_id,
-    getTarget: utils.get_target,
-    getButton: utils.get_button,
-    prevent_default_events: utils.prevent_default_events,
-    has_class: utils.has_class,
-    remove_class: utils.remove_class,
-    add_class: utils.add_class,
-    change_class: utils.change_class,
-    get_url: ajax.get_url,
-    post_url: ajax.post_url,
-    call_ajax: ajax.call_ajax
+    }
 };

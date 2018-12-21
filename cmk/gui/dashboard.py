@@ -738,7 +738,7 @@ def dashboard_edit_controls(name, board):
         html.open_a(
             href="edit_dashboard.py?load_name=%s&back=%s" % (name, html.urlencode(html.makeuri(
                 []))),
-            onmouseover="hide_submenus();")
+            onmouseover="cmk.dashboard.hide_submenus();")
         html.img(src="images/trans.png")
         html.write(_('Properties'))
         html.close_a()
@@ -753,7 +753,7 @@ def dashboard_edit_controls(name, board):
         html.open_a(
             href="javascript:void(0)",
             onclick="cmk.dashboard.toggle_dashboard_edit(false)",
-            onmouseover="hide_submenus();")
+            onmouseover="cmk.dashboard.hide_submenus();")
         html.img(src="images/trans.png")
         html.write(_('Stop Editing'))
         html.close_a()

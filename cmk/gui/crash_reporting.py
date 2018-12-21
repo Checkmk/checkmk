@@ -164,7 +164,7 @@ def show_context_buttons(what, tardata):
     elif what == "gui":
         download_data_url = "data:application/octet-stream;base64,%s" % base64.b64encode(tardata)
         html.context_button(
-            _("Download"), "javascript:download_gui_crash_report('%s')" % download_data_url,
+            _("Download"), "javascript:cmk.crash_reporting.download('%s')" % download_data_url,
             "download")
 
     html.end_context_buttons()
@@ -276,7 +276,7 @@ def handle_report_form(tardata, what):
             _("Failed to send the crash report. Please download it manually and send it "
               "to <a href=\"%s\">%s</a>") % (report_url, get_crash_report_target(what)))
         html.close_div()
-        html.javascript("submit_crash_report('https://mathias-kettner.de/crash_report.php', " \
+        html.javascript("cmk.crash_reporting.submit('https://mathias-kettner.de/crash_report.php', " \
                                             "'%s');" % url_encoded_params)
     except MKUserError as e:
         action_message = "%s" % e

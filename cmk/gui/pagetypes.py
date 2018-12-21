@@ -913,7 +913,7 @@ class Overridable(Base):
                                 "_toggle_group",
                                 type_="button",
                                 class_="checkgroup",
-                                onclick="toggle_all_rows(this.form);",
+                                onclick="cmk.selection.toggle_all_rows(this.form);",
                                 value='X'),
                             sortable=False,
                             css="checkbox")

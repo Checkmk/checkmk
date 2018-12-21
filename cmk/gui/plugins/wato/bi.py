@@ -1285,7 +1285,7 @@ class ModeBIAggregations(ModeBI):
                         "_toggle_group",
                         type_="button",
                         class_="checkgroup",
-                        onclick="toggle_all_rows();",
+                        onclick="cmk.selection.toggle_all_rows();",
                         value='X'),
                     sortable=False,
                     css="checkbox")
@@ -1528,7 +1528,7 @@ class ModeBIRules(ModeBI):
                             "_toggle_group",
                             type_="button",
                             class_="checkgroup",
-                            onclick="toggle_all_rows();",
+                            onclick="cmk.selection.toggle_all_rows();",
                             value='X'),
                         sortable=False,
                         css="checkbox")

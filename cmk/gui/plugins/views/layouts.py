@@ -54,11 +54,12 @@ def init_rowselect(view):
         return
 
     selected = weblib.get_rowselection('view-' + view['name'])
-    html.javascript('g_page_id = "view-%s";\n'
-                    'cmk.selection.set_selection_id(%s);\n'
-                    'g_selected_rows = %s;\n'
-                    'init_rowselect();' % (view['name'], json.dumps(weblib.selection_id()),
-                                           json.dumps(selected)))
+    selection_properties = {
+        "page_id": "view-%s" % view['name'],
+        "selection_id": weblib.selection_id(),
+        "selected_rows": selected,
+    }
+    html.javascript("cmk.selection.init_rowselect(%s);" % (json.dumps(selection_properties)))
 
 
 def render_checkbox(view, row, num_tds):

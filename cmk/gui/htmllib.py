@@ -1809,7 +1809,7 @@ class html(HTMLGenerator):
         if config.pagetitle_date_format:
             self.write(' &nbsp; <b id=headerdate format="%s"></b>' % config.pagetitle_date_format)
         self.write(' <b id=headertime></b>')
-        self.javascript('update_header_timer()')
+        self.javascript('cmk.utils.update_header_timer()')
         self.top_heading_right()
 
     def top_heading_left(self, title):

@@ -33,21 +33,6 @@
 //#   | Generic library functions used anywhere in Check_MK                |
 //#   '--------------------------------------------------------------------'
 
-function pageWidth() {
-  var w;
-
-  if (window.innerWidth !== null && typeof window.innerWidth !== 'undefined' && window.innerWidth !== 0)
-    w = window.innerWidth;
-  else if (document.documentElement && document.documentElement.clientWidth)
-    w = document.documentElement.clientWidth;
-  else if (document.body !== null)
-    w = document.body.clientWidth;
-  else
-    w = null;
-
-  return w;
-}
-
 var g_sidebar_reload_timer = null;
 
 function reload_sidebar()
@@ -208,23 +193,6 @@ function get_event_offset_y(event) {
     return event.offsetY == undefined ? event.layerY : event.offsetY;
 }
 
-// Adds document/window global event handlers
-function add_event_handler(type, func, obj) {
-    obj = (typeof(obj) === 'undefined') ? window : obj;
-
-    if (obj.addEventListener) {
-        // W3 standard browsers
-        obj.addEventListener(type, func, false);
-    }
-    else if (obj.attachEvent) {
-        // IE<9
-        obj.attachEvent("on" + type, func);
-    }
-    else {
-        obj["on" + type] = func;
-    }
-}
-
 function del_event_handler(type, func, obj) {
     obj = (typeof(obj) === 'undefined') ? window : obj;
 
@@ -356,71 +324,6 @@ if (!("lastElementChild" in document.documentElement)) {
     });
 }
 
-//#.
-//#   .-URL Handling-------------------------------------------------------.
-//#   |     _   _ ____  _       _   _                 _ _ _                |
-//#   |    | | | |  _ \| |     | | | | __ _ _ __   __| | (_)_ __   __ _    |
-//#   |    | | | | |_) | |     | |_| |/ _` | '_ \ / _` | | | '_ \ / _` |   |
-//#   |    | |_| |  _ <| |___  |  _  | (_| | | | | (_| | | | | | | (_| |   |
-//#   |     \___/|_| \_\_____| |_| |_|\__,_|_| |_|\__,_|_|_|_| |_|\__, |   |
-//#   |                                                           |___/    |
-//#   +--------------------------------------------------------------------+
-//#   |                                                                    |
-//#   '--------------------------------------------------------------------'
-
-// Function gets the value of the given url parameter
-function getUrlParam(name, url) {
-    name = name.replace('[', '\\[').replace(']', '\\]');
-    url = (typeof url === 'undefined') ? window.location : url;
-
-    var regex = new RegExp("[\\?&]" + name + "=([^&#]*)");
-    var results = regex.exec(url);
-    if(results === null)
-        return '';
-    return results[1];
-}
-
-/**
- * Function creates a new cleaned up URL
- * - Can add/overwrite parameters
- * - Removes _* parameters
- */
-function makeuri(addvars, url) {
-    url = (typeof(url) === 'undefined') ? window.location.href : url;
-
-    var tmp = url.split('?');
-    var base = tmp[0];
-    if(tmp.length > 1) {
-        // Remove maybe existing anchors
-        tmp = tmp[1].split('#');
-        // Split to array of param-strings (key=val)
-        tmp = tmp[0].split('&');
-    } else {
-        // Uri has no parameters
-        tmp = [];
-    }
-
-    var params = [];
-    var pair = null;
-
-    // Skip unwanted parmas
-    for(var i = 0; i < tmp.length; i++) {
-        pair = tmp[i].split('=');
-        if(pair[0][0] == '_' && pair[0] != "_username" && pair[0] != "_secret") // Skip _<vars>
-            continue;
-        if(addvars.hasOwnProperty(pair[0])) // Skip vars present in addvars
-            continue;
-        params.push(tmp[i]);
-    }
-
-    // Add new params
-    for (var key in addvars) {
-        params.push(encodeURIComponent(key) + '=' + encodeURIComponent(addvars[key]));
-    }
-
-    return base + '?' + params.join('&');
-}
-
 // ----------------------------------------------------------------------------
 // GUI styling
 // ----------------------------------------------------------------------------
@@ -549,7 +452,7 @@ function create_pnp_graph(data, params) {
 
         var view   = data['view'] == '' ? 0 : data['view'];
         // needs to be extracted from "params", hack!
-        var source = parseInt(getUrlParam('source', params)) + 1;
+        var source = parseInt(cmk.utils.get_url_param('source', params)) + 1;
 
         // Add the control for adding the graph to a visual
         var visualadd = document.createElement('a');
@@ -788,34 +691,6 @@ function update_foot_refresh(secs)
     }
 }
 
-function update_header_timer()
-{
-    var oTime = document.getElementById('headertime');
-    if (!oTime)
-        return;
-
-    var t = new Date();
-
-    var hours = t.getHours();
-    if (hours < 10)
-        hours = "0" + hours;
-
-    var min = t.getMinutes();
-    if (min < 10)
-        min = "0" + min;
-
-    oTime.innerHTML = hours + ':' + min;
-
-    var oDate = document.getElementById('headerdate');
-    if (oDate) {
-        var day   = ("0" + t.getDate()).slice(-2);
-        var month = ("0" + (t.getMonth() + 1)).slice(-2);
-        var year  = t.getFullYear();
-        var date_format = oDate.getAttribute("format");
-        oDate.innerHTML = date_format.replace(/yyyy/, year).replace(/mm/, month).replace(/dd/, day);
-    }
-}
-
 // When called with one or more parameters parameters it reschedules the
 // timer to the given interval. If the parameter is 0 the reload is stopped.
 // When called with two parmeters the 2nd one is used as new url.
@@ -857,7 +732,7 @@ function handle_content_reload(_unused, code) {
     executeJS('data_container');
 
     // Update the header time
-    update_header_timer();
+    cmk.utils.update_header_timer();
 
     schedule_reload();
 }
@@ -907,7 +782,7 @@ function do_reload(url)
     else {
         // Enforce specific display_options to get only the content data.
         // All options in "opts" will be forced. Existing upper-case options will be switched.
-        var display_options = getUrlParam('display_options');
+        var display_options = cmk.utils.get_url_param('display_options');
         // Removed 'w' to reflect original rendering mechanism during reload
         // For example show the "Your query produced more than 1000 results." message
         // in views even during reload.
@@ -927,11 +802,11 @@ function do_reload(url)
         }
 
         var params = {'_display_options': display_options};
-        var real_display_options = getUrlParam('display_options');
+        var real_display_options = cmk.utils.get_url_param('display_options');
         if(real_display_options !== '')
             params['display_options'] = real_display_options;
 
-        params['_do_actions'] = getUrlParam('_do_actions');
+        params['_do_actions'] = cmk.utis.get_url_param('_do_actions');
 
         // For dashlet reloads add a parameter to mark this request as reload
         if (window.location.href.indexOf("dashboard_dashlet.py") != -1)
@@ -940,7 +815,7 @@ function do_reload(url)
         if (g_selection_enabled)
             params["selection"] = g_selection;
 
-        call_ajax(makeuri(params), {
+        call_ajax(cmk.utils.makeuri(params), {
             response_handler : handle_content_reload,
             error_handler    : handle_content_reload_error,
             method           : 'GET'
@@ -1580,12 +1455,12 @@ function handle_finalize_dragging_error(handler_data, status_code, error_msg)
 }
 
 // TODO: Only register when needed?
-add_event_handler('mousemove', function(event) {
+cmk.utils.add_event_handler('mousemove', function(event) {
     return element_dragging(event);
 });
 
 // TODO: Only register when needed?
-add_event_handler('mouseup', function(event) {
+cmk.utils.add_event_handler('mouseup', function(event) {
     return element_drag_stop(event);
 });
 
@@ -2446,7 +2321,7 @@ function init_optiondial(id)
 {
     var container = document.getElementById(id);
     make_unselectable(container);
-    add_event_handler(wheel_event_name(), optiondial_wheel, container);
+    cmk.utils.add_event_handler(wheel_event_name(), optiondial_wheel, container);
 }
 
 var g_dial_direction = 1;
@@ -2789,7 +2664,7 @@ function toggle_popup(event, trigger_obj, ident, what, data, url_vars, menu_cont
     }
     popup_id = ident;
 
-    add_event_handler('click', handle_popup_close);
+    cmk.utils.add_event_handler('click', handle_popup_close);
 
     var menu = document.createElement('div');
     menu.setAttribute('id', 'popup_menu');
@@ -3056,7 +2931,7 @@ function update_hover_menu_position(event)
     // and fill the whole screen width
     if (!hover_menu_in_screen(g_hover_menu, hoverSpacer)) {
         g_hover_menu.style.left = hoverSpacer + scrollLeft + 'px';
-        g_hover_menu.style.width = pageWidth() - (2*hoverSpacer) + 'px';
+        g_hover_menu.style.width = cmk.utils.page_width() - (2*hoverSpacer) + 'px';
     }
 
     var hoverTop = parseInt(g_hover_menu.style.top.replace('px', ''));
@@ -3073,7 +2948,7 @@ function hover_menu_in_screen(hoverMenu, hoverSpacer)
     var scrollLeft = document.body.scrollLeft ? document.body.scrollLeft :
                                                 document.documentElement.scrollLeft;
 
-    if(hoverLeft + hoverMenu.clientWidth >= pageWidth() - scrollLeft) {
+    if(hoverLeft + hoverMenu.clientWidth >= cmk.utils.page_width() - scrollLeft) {
         return false;
     }
 

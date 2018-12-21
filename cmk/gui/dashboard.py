@@ -600,14 +600,15 @@ def draw_dashboard(name):
     }
 
     html.javascript("""
-set_dashboard_properties(%s);
-calculate_dashboard();
-window.onresize = function () { calculate_dashboard(); }
-dashboard_scheduler(1);
+cmk.dashboard.set_dashboard_properties(%s);
+cmk.dashboard.calculate_dashboard();
+window.onresize = function () { cmk.dashboard.calculate_dashboard(); }
+cmk.dashboard.execute_dashboard_scheduler(1);
+cmk.dashboard.register_event_handlers();
     """ % json.dumps(dashboard_properties))
 
     if mode == 'edit':
-        html.javascript('toggle_dashboard_edit(true)')
+        html.javascript('cmk.dashboard.toggle_dashboard_edit(true)')
 
     html.body_end()  # omit regular footer with status icons, etc.
 
@@ -696,7 +697,7 @@ def dashboard_edit_controls(name, board):
             class_=["sublink"],
             id_="control_add",
             style="display:%s;" % ("block" if html.var("edit") == '1' else "none"),
-            onmouseover="show_submenu(\'control_add\');")
+            onmouseover="cmk.dashboard.show_submenu(\'control_add\');")
         html.open_a(href="javascript:void(0)")
         html.img("images/dashboard_menuarrow.png")
         html.write_text(_("Add dashlet"))
@@ -751,7 +752,7 @@ def dashboard_edit_controls(name, board):
             id_="control_view")
         html.open_a(
             href="javascript:void(0)",
-            onclick="toggle_dashboard_edit(false)",
+            onclick="cmk.dashboard.toggle_dashboard_edit(false)",
             onmouseover="hide_submenus();")
         html.img(src="images/trans.png")
         html.write(_('Stop Editing'))
@@ -764,7 +765,7 @@ def dashboard_edit_controls(name, board):
         html.open_li(
             style="display:%s;" % ("none" if html.var("edit") == '1' else "block"),
             id_="control_edit")
-        html.open_a(href="javascript:void(0)", onclick="toggle_dashboard_edit(true);")
+        html.open_a(href="javascript:void(0)", onclick="cmk.dashboard.toggle_dashboard_edit(true);")
         html.img("images/trans.png")
         html.write(_('Edit Dashboard'))
         html.close_a()
@@ -900,7 +901,7 @@ def ajax_dashlet():
         # prevent reloading on the dashboard which already has the current mtime,
         # this is normally the user editing this dashboard. All others: reload
         # the whole dashboard once.
-        html.javascript('if (parent.dashlet_properties.dashboard_mtime < %d) {\n'
+        html.javascript('if (cmk.dashboard.dashlet_properties.dashboard_mtime < %d) {\n'
                         '    parent.location.reload();\n'
                         '}' % board['mtime'])
 

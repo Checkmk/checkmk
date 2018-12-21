@@ -29,9 +29,9 @@ import * as prediction from "prediction";
 import * as utils from "utils";
 import * as foldable_container from "foldable_container";
 import * as visibility_detection from "visibility_detection";
+import * as dashboard from "dashboard";
 
 require("script-loader!./checkmk.js");
-require("script-loader!./dashboard.js");
 require("colorpicker");
 require("script-loader!./wato.js");
 
@@ -50,7 +50,8 @@ export default {
         ajax: ajax,
         utils: utils,
         foldable_container: foldable_container,
-        visibility_detection: visibility_detection
+        visibility_detection: visibility_detection,
+        dashboard: dashboard
     },
     // TODO: Compatibility for not yet modularized JS code
     executeJSbyObject: utils.execute_javascript_by_object,

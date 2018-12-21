@@ -603,12 +603,6 @@ class EBSSummary(AWSSection):
             for piggyback_hostname, rows in content_by_piggyback_hosts.iteritems()
         ]
 
-    def _extract_instance_name(self, instance, instance_id):
-        for row in instance.get('Tags', []):
-            if row.get('Key') == 'Name':
-                return row['Value']
-        return instance_id
-
 
 class EBSHealth(AWSSection):
     @property

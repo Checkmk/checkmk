@@ -239,9 +239,9 @@ class ModeDiagHost(WatoMode):
 
             html.close_tr()
             html.close_table()
-            html.javascript(
-                'start_host_diag_test(%s, %s, %s)' % (json.dumps(ident), json.dumps(
-                    self._hostname), json.dumps(html.transaction_manager.fresh_transid())))
+            html.javascript('cmk.host_diagnose.start_test(%s, %s, %s)' %
+                            (json.dumps(ident), json.dumps(self._hostname),
+                             json.dumps(html.transaction_manager.fresh_transid())))
 
     def _vs_host(self):
         return Dictionary(

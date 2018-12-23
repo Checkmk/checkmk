@@ -1036,6 +1036,20 @@ table.data tr.notification_context table td {
     font-family: monospace;
 }
 
+table.data tr.data.dcd_log_entries > td {
+    font-family: monospace, sans-serif;
+    background-color: #000000;
+    color: #ffffff;
+}
+
+table.data tr.data.dcd_log_entries pre {
+    overflow-y: scroll;
+    resize:both;
+    max-height: 300px;
+    text-overflow: ellipsis;
+    max-width: 700px;
+}
+
 /*-------------------------------------------------------------------------.
 |               ____                                                       |
 |              |  _ \ _ __ ___   __ _ _ __ ___  ___ ___                    |

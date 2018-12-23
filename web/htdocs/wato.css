@@ -1047,7 +1047,6 @@ table.data tr.data.dcd_log_entries pre {
     resize:both;
     max-height: 300px;
     text-overflow: ellipsis;
-    max-width: 700px;
 }
 
 /*-------------------------------------------------------------------------.

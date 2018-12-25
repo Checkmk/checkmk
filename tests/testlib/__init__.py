@@ -1405,6 +1405,19 @@ class CMKWebSession(WebSession):
         hosts = self.get_all_hosts()
         assert hostname not in hosts
 
+    def delete_hosts(self, hostnames):
+        result = self._api_request("webapi.py?action=delete_hosts", {
+            "request": json.dumps({
+                "hostnames": hostnames,
+            }),
+        })
+
+        assert result is None
+
+        hosts = self.get_all_hosts()
+        for hostname in hostnames:
+            assert hostname not in hosts
+
     def get_all_groups(self, group_type):
         result = self._api_request("webapi.py?action=get_all_%sgroups" % group_type, {})
         return result

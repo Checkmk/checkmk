@@ -82,6 +82,20 @@ def test_delete_host(web):
         web.delete_host("test-host-delete")
 
 
+def test_delete_hosts(web):
+    try:
+        web.add_host(
+            "test-hosts-delete1", attributes={
+                "ipaddress": "127.0.0.1",
+            })
+        web.add_host(
+            "test-hosts-delete2", attributes={
+                "ipaddress": "127.0.0.1",
+            })
+    finally:
+        web.delete_hosts(["test-hosts-delete1", "test-hosts-delete2"])
+
+
 def test_get_host_effective_attributes(web):
     try:
         web.add_host(
@@ -246,9 +260,7 @@ def test_write_host_tags(web, site):
         assert "lan" in tags_by_host["test-host-lan2"]
 
     finally:
-        web.delete_host("test-host-lan2")
-        web.delete_host("test-host-lan")
-        web.delete_host("test-host-dmz")
+        web.delete_hosts(["test-host-lan2", "test-host-lan", "test-host-dmz"])
 
 
 # TODO: Parameterize test for cme / non cme

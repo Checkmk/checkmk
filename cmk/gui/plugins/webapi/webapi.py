@@ -216,6 +216,10 @@ class APICallHosts(APICallCollection):
                 "handler": self._add,
                 "locking": True,
             },
+            "add_hosts": {
+                "handler": self._add_hosts,
+                "locking": True,
+            },
             "edit_host": {
                 "handler": self._edit,
                 "locking": True,
@@ -281,6 +285,11 @@ class APICallHosts(APICallCollection):
         if cluster_nodes:
             cluster_nodes = map(str, cluster_nodes)
         watolib.Folder.folder(folder_path).create_hosts([(hostname, attributes, cluster_nodes)])
+
+    def _add_hosts(self, request):
+        validate_request_keys(request, required_keys=["hosts"])
+        for host_request in request["hosts"]:
+            self._add(host_request)
 
     def _edit(self, request):
         validate_request_keys(

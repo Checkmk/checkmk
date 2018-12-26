@@ -1263,6 +1263,26 @@ class CMKWebSession(WebSession):
         assert host["path"] == folder
         assert host["attributes"] == attributes
 
+    # hosts: List of tuples of this structure: (hostname, folder_path, attributes)
+    def add_hosts(self, create_hosts):
+        hosts = [{
+            "hostname": hostname,
+            "folder": folder,
+            "attributes": attributes,
+            "create_folders": True,
+        } for hostname, folder, attributes in create_hosts]
+
+        result = self._api_request("webapi.py?action=add_hosts", {
+            "request": json.dumps({
+                "hosts": hosts,
+            }),
+        })
+
+        assert result is None
+        hosts = self.get_all_hosts()
+        for hostname, _folder, _attributes in create_hosts:
+            assert hostname in hosts
+
     def get_host(self, hostname, effective_attributes=False):
         result = self._api_request(
             "webapi.py?action=get_host", {

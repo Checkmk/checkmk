@@ -59,6 +59,16 @@ def test_add_host_no_folder_create(web):
     assert "Unable to create parent folder" in exc_msg
 
 
+def test_add_hosts(web):
+    hosts = ["test-hosts1", "test-hosts2"]
+    try:
+        web.add_hosts([(hostname, "", {
+            "ipaddress": "127.0.0.1",
+        }) for hostname in hosts])
+    finally:
+        web.delete_hosts(hosts)
+
+
 def test_get_all_hosts_basic(web):
     try:
         web.add_host(

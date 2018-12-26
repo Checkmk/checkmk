@@ -69,6 +69,41 @@ def test_add_hosts(web):
         web.delete_hosts(hosts)
 
 
+def test_edit_host(web):
+    try:
+        web.add_host(
+            "test-edit-host", attributes={
+                "ipaddress": "127.0.0.1",
+            })
+
+        web.edit_host("test-edit-host", attributes={"ipaddress": "127.10.0.1"})
+    finally:
+        web.delete_host("test-edit-host")
+
+
+def test_edit_hosts(web):
+    try:
+        web.add_host(
+            "test-edit-hosts1", attributes={
+                "ipaddress": "127.0.0.1",
+            })
+        web.add_host(
+            "test-edit-hosts2", attributes={
+                "ipaddress": "127.0.0.1",
+            })
+
+        web.edit_hosts([
+            ("test-edit-hosts1", {
+                "ipaddress": "127.10.0.1"
+            }, []),
+            ("test-edit-hosts2", {
+                "ipaddress": "127.20.0.1"
+            }, []),
+        ])
+    finally:
+        web.delete_hosts(["test-edit-hosts1", "test-edit-hosts2"])
+
+
 def test_get_all_hosts_basic(web):
     try:
         web.add_host(

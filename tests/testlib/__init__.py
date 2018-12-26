@@ -1283,6 +1283,55 @@ class CMKWebSession(WebSession):
         for hostname, _folder, _attributes in create_hosts:
             assert hostname in hosts
 
+    def edit_host(self, hostname, attributes=None, unset_attributes=None, cluster_nodes=None):
+        if attributes is None:
+            attributes = {}
+
+        if unset_attributes is None:
+            unset_attributes = []
+
+        result = self._api_request(
+            "webapi.py?action=edit_host", {
+                "request": json.dumps({
+                    "hostname": hostname,
+                    "unset_attributes": unset_attributes,
+                    "attributes": attributes,
+                    "nodes": cluster_nodes,
+                }),
+            })
+
+        assert result is None
+
+        host = self.get_host(hostname)
+
+        assert host["hostname"] == hostname
+        assert host["attributes"] == attributes
+
+    def edit_hosts(self, edit_hosts):
+        hosts = [{
+            "hostname": hostname,
+            "attributes": attributes,
+            "unset_attributes": unset_attributes,
+        } for hostname, attributes, unset_attributes in edit_hosts]
+
+        result = self._api_request("webapi.py?action=edit_hosts", {
+            "request": json.dumps({
+                "hosts": hosts,
+            }),
+        })
+
+        assert result is None
+
+        hosts = self.get_all_hosts()
+        for hostname, attributes, unset_attributes in edit_hosts:
+            host = hosts[hostname]
+
+            for k, v in attributes.items():
+                assert host["attributes"][k] == v
+
+            for unset in unset_attributes:
+                assert unset not in host["attributes"]
+
     def get_host(self, hostname, effective_attributes=False):
         result = self._api_request(
             "webapi.py?action=get_host", {

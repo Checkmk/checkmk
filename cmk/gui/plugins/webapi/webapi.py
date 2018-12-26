@@ -224,6 +224,10 @@ class APICallHosts(APICallCollection):
                 "handler": self._edit,
                 "locking": True,
             },
+            "edit_hosts": {
+                "handler": self._edit_hosts,
+                "locking": True,
+            },
             "get_host": {
                 "handler": self._get,
                 "locking": False,
@@ -327,6 +331,11 @@ class APICallHosts(APICallCollection):
             cluster_nodes = map(str, cluster_nodes)
 
         host.edit(current_attributes, cluster_nodes)
+
+    def _edit_hosts(self, request):
+        validate_request_keys(request, required_keys=["hosts"])
+        for host_request in request["hosts"]:
+            self._edit(host_request)
 
     def _get(self, request):
         validate_request_keys(

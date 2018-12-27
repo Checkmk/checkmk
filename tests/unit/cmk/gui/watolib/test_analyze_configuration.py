@@ -18,6 +18,7 @@ def test_registered_ac_tests():
         'ACTestLDAPSecured',
         'ACTestLiveproxyd',
         'ACTestLivestatusUsage',
+        'ACTestLivestatusSecured',
         'ACTestNumberOfUsers',
         'ACTestOldDefaultCredentials',
         'ACTestPersistentConnections',

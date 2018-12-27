@@ -409,8 +409,10 @@ class ConfigDomainOMD(ConfigDomain):
             if settings["LIVESTATUS_TCP"]:
                 settings["LIVESTATUS_TCP"] = {
                     "port": int(settings["LIVESTATUS_TCP_PORT"]),
+                    "tls": settings["LIVESTATUS_TCP_TLS"],
                 }
                 del settings["LIVESTATUS_TCP_PORT"]
+                del settings["LIVESTATUS_TCP_TLS"]
 
                 # Be compatible to older sites that don't have the key in their config yet
                 settings.setdefault("LIVESTATUS_TCP_ONLY_FROM", "0.0.0.0")
@@ -453,6 +455,7 @@ class ConfigDomainOMD(ConfigDomain):
         if "LIVESTATUS_TCP" in settings:
             if settings["LIVESTATUS_TCP"] is not None:
                 settings["LIVESTATUS_TCP_PORT"] = "%s" % settings["LIVESTATUS_TCP"]["port"]
+                settings["LIVESTATUS_TCP_TLS"] = settings["LIVESTATUS_TCP"].get("tls", False)
 
                 if "only_from" in settings["LIVESTATUS_TCP"]:
                     settings["LIVESTATUS_TCP_ONLY_FROM"] = " ".join(

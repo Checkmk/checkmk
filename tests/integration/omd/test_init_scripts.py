@@ -17,6 +17,7 @@ def test_init_scripts(site):
         "pnp_gearman_worker",
         "rrdcached",
         "xinetd",
+        "stunnel",
     ]
 
     if site.version.edition() == "enterprise":

@@ -262,6 +262,38 @@ class ACTestLDAPSecured(ACTest):
 
 
 @ac_test_registry.register
+class ACTestLivestatusSecured(ACTest):
+    def category(self):
+        return ACTestCategories.security
+
+    def title(self):
+        return _("Livestatus encryption")
+
+    def help(self):
+        return _(
+            "<p>In distributed setups Livestatus is used to transport the status information "
+            "gathered in one site to the central site. Since Check_MK 1.6 it is natively "
+            "possible and highly recommended to encrypt this Livestatus traffic.</p> "
+            "<p>This can be enabled using the global setting "
+            "<a href=\"wato.py?mode=edit_configvar&varname=site_livestatus_tcp\">Access to Livestatus via TCP</a>. Before enabling this you should ensure that all your Livestatus clients "
+            "are able to handle the SSL encrypted Livestatus communication. Have a look at "
+            "<a href=\"werk.py?werk=7017\">werk #7017</a> for further information.</p>")
+
+    def is_relevant(self):
+        cfg = ConfigDomainOMD().default_globals()
+        return bool(cfg["site_livestatus_tcp"])
+
+    def execute(self):
+        cfg = ConfigDomainOMD().default_globals()
+        if not cfg["site_livestatus_tcp"]:
+            yield ACResultOK(_("Livestatus network traffic is encrypted"))
+            return
+
+        if not cfg["site_livestatus_tcp"]["tls"]:
+            yield ACResultCRIT(_("Livestatus network traffic is unencrypted"))
+
+
+@ac_test_registry.register
 class ACTestNumberOfUsers(ACTest):
     def category(self):
         return ACTestCategories.performance

@@ -63,6 +63,7 @@ debug:
 # Include rules to make packages
 include     packages/apache-omd/apache-omd.make \
     packages/boost/boost.make \
+    packages/stunnel/stunnel.make \
     packages/check_mk/check_mk.make \
     packages/check_multi/check_multi.make \
     packages/check_mysql_health/check_mysql_health.make \

@@ -536,8 +536,20 @@ class LivestatusViaTCP(Dictionary):
                  allow_empty=False,
                  default_value=["0.0.0.0", "::/0"],
              )),
+            ("tls",
+             FixedValue(
+                 True,
+                 title=_("Encrypt communication"),
+                 totext=_("Encrypt TCP Livestatus connections"),
+                 help=_("Since Check_MK 1.6 it is possible to encrypt the TCP Livestatus "
+                        "connections using SSL. This is enabled by default for sites that "
+                        "enable Livestatus via TCP with 1.6 or newer. Sites that already "
+                        "have this option enabled keep the communication unencrypted for "
+                        "compatibility reasons. However, it is highly recommended to "
+                        "migrate to an encrypted communication."),
+             )),
         ]
-        kwargs["optional_keys"] = ["only_from"]
+        kwargs["optional_keys"] = ["only_from", "tls"]
         super(LivestatusViaTCP, self).__init__(**kwargs)
 
 

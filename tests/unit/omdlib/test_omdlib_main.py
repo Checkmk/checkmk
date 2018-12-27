@@ -12,3 +12,15 @@ def test_read_skel_permissions(monkeypatch, tmpdir):
 
     omdlib.main.read_skel_permissions()
     assert omdlib.main.g_skel_permissions == {'bla': 493, 'blub': 420}
+
+
+def test_initialize_site_ca(monkeypatch, tmpdir):
+    site_id = "tested"
+    ca_path = Path("%s" % tmpdir) / site_id / "etc" / "ssl"
+    ca_path.mkdir(parents=True, exist_ok=True)
+
+    monkeypatch.setattr(omdlib.certs.CertificateAuthority, "ca_path", property(lambda x: ca_path))
+
+    omdlib.main.initialize_site_ca(omdlib.main.SiteContext(site_id))
+    assert (ca_path / "ca.pem").exists()
+    assert (ca_path / "sites" / ("%s.pem" % site_id)).exists()

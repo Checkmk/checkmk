@@ -1,0 +1,51 @@
+Title: Livestatus via TCP can now be encrypted
+Level: 2
+Component: livestatus
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1546074825
+Class: feature
+
+Livestatus has been a plain text protocol since it's invention. This is
+normally OK for system local connections via unix socket or TCP connections
+in secure networks.
+
+Users always had the choice to secure the communication using TLS (e.g.
+via stunnel), SSH, VPN or some other solution that encrypts the
+communication in their local setup.
+
+To improve the security for all users of Check_MK, we have now changed
+the Livestatus TCP communication to be encrypted by default using TLS.
+This is realized using an internal CA and internally generated
+certificates.
+
+Existing sites that already have Livestatus via TCP enabled before
+updating to 1.6 still use the unencrypted communication for
+compatibility. An analyze configuration" test will create a CRITICAL
+message about the unencrypted Livestatus TCP configuration in this
+situation.
+
+Technical details:
+
+<ul>
+<li>For new sites Livestatus via TCP is encrypted by default. Existing sites
+  which already have Livestatus via TCP enabled during the update keep the
+  communication unencrypted for compatibility reasons. This is managed using
+  the new 'omd config' option LIVESTATUS_TCP_TLS. This setting can also
+  be managed through the "Global Settings > Site Management".</li>
+<li>During update or site creation a site local CA certificate is created
+  to manage the sites local certificates.</li>
+<li>The site local certificate is created automatically during update or
+  site creation.</li>
+<li>The sites local CA and certificates are stored in 'etc/ssl'. The CA
+certificate is always located at 'etc/ssl/ca.pem'.</li>
+<li>The keys are 2048 bit RSA keys and the certificates are signed using
+  SHA512.</li>
+<li>The CA certificate is valid for 10 years, the site certificates are
+  valid for 3 years.</li>
+<li>Check_MK / OMD code may use 'omdlib.certs.SiteLocalCA(site_id)' to
+  use the local CA</li>
+<li>stunnel is introduced as site internal daemon that serves the TLS
+  wrapped socket once it has been enabled through 'omd config'.
+</ul>

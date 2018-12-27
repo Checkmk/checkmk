@@ -48,8 +48,10 @@ import signal
 from typing import Dict  # pylint: disable=unused-import
 from passlib.hash import sha256_crypt  # type: ignore
 import psutil  # type: ignore
+from pathlib2 import Path
 
 import omdlib
+import omdlib.certs
 
 #   .--Logging-------------------------------------------------------------.
 #   |                _                      _                              |
@@ -2004,6 +2006,17 @@ def call_hook(site, hook_name, args):
     return exitcode, content
 
 
+def initialize_site_ca(site):
+    """Initialize the site local CA and create the default site certificate
+    This will be used e.g. for serving SSL secured livestatus"""
+    ca = omdlib.certs.CertificateAuthority(
+        ca_path=Path(site.dir) / "etc" / "ssl",
+        ca_name="Site '%s' local CA" % site.name,
+    )
+    ca.initialize()
+    ca.create_site_certificate(site.name)
+
+
 def config_change(site, config_hooks):
     # Check whether or not site needs to be stopped. Stop and remember to start again later
     site_was_stopped = False
@@ -2830,6 +2843,8 @@ def finalize_size_as_user(site, what):
     # Run all hooks in order to setup things according to the
     # configuration settings
     config_set_all(site)
+    initialize_site_ca(site)
+
     save_site_conf(site)
 
     call_scripts(site, 'post-' + what)
@@ -3272,11 +3287,25 @@ def main_update(site, args, options=None):
 
     # Let hooks do their work and update configuration.
     config_set_all(site)
+    initialize_livestatus_tcp_tls_after_update(site)
+    initialize_site_ca(site)
 
     call_scripts(site, 'post-update')
 
     sys.stdout.write('Finished update.\n\n')
     stop_logging()
+
+
+def initialize_livestatus_tcp_tls_after_update(site):
+    """Keep unencrypted livestatus for old sites
+
+    In case LIVESTATUS_TCP is on prior to the update, don't enable the
+    encryption for compatibility. Only enable it for new sites (by the
+    default setting)."""
+    if site.conf["LIVESTATUS_TCP"] != "on":
+        return
+
+    config_set_value(site, {}, "LIVESTATUS_TCP_TLS", value="off", save=True)
 
 
 def _get_edition(omd_version):

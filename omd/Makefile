@@ -42,6 +42,7 @@ PACKAGES := \
     dokuwiki \
     jmx4perl \
     mk-livestatus \
+    stunnel \
     nagios \
     monitoring-plugins \
     nagvis \

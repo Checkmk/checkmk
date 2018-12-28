@@ -69,6 +69,7 @@ import requests
 from pathlib2 import Path
 import six
 
+import cmk
 import cmk.utils.daemon as daemon
 import cmk.utils.paths
 import cmk.utils.defines
@@ -4592,7 +4593,8 @@ def do_site_login(site_id, name, password):
         '_login': '1',
         '_username': name,
         '_password': password,
-        '_origtarget': 'automation_login.py',
+        '_origtarget': 'automation_login.py?_version=%s&_edition_short=%s' % (cmk.__version__,
+                                                                              cmk.edition_short()),
         '_plain_error': '1',
     }
     response = get_url(

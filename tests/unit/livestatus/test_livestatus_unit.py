@@ -56,15 +56,16 @@ def test_livestatus_local_connection(sock_path):
 
 @pytest.mark.parametrize("socket_url,result", [
     ("unix:/omd/sites/heute/tmp/run/live", (socket.AF_UNIX, "/omd/sites/heute/tmp/run/live")),
+    ("unix:/omd/sites/heute/tmp/run/li:ve", (socket.AF_UNIX, "/omd/sites/heute/tmp/run/li:ve")),
     ("tcp:127.0.0.1:1234", (socket.AF_INET, ("127.0.0.1", 1234))),
-    ("tcp:127.0.0.1:1234:3", (socket.AF_INET, ("127.0.0.1", 1234))),
+    ("tcp:126.0.0.1:abc", None),
     ("xyz:bla", None),
 ])
 def test_single_site_connection_socketurl(socket_url, result, monkeypatch):
     live = livestatus.SingleSiteConnection(socket_url)
 
     if result is None:
-        with pytest.raises(livestatus.MKLivestatusConfigError, match="Invalid livestatus URL"):
+        with pytest.raises(livestatus.MKLivestatusConfigError, match="Invalid livestatus"):
             live._parse_socket_url(socket_url)
         return
 

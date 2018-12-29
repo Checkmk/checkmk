@@ -313,20 +313,15 @@ class SingleSiteConnection(Helpers):
     def _parse_socket_url(self, url):
         # type: (str) -> Tuple[socket.AddressFamily, Union[str, tuple]]
         """Parses a Livestatus socket URL to address family and address"""
-        parts = url.split(":")
-        if parts[0] == "unix":
-            if len(parts) != 2:
-                raise MKLivestatusConfigError(
-                    "Invalid livestatus unix URL: %s. "
-                    "Correct example is 'unix:/var/run/nagios/rw/live'" % url)
+        family_txt, url = url.split(":", 1)
+        if family_txt == "unix":
+            return socket.AF_UNIX, url
 
-            return socket.AF_UNIX, parts[1]
-
-        elif parts[0] == "tcp":
+        elif family_txt == "tcp":
             try:
-                host = parts[1]
-                port = int(parts[2])
-            except:
+                host, port_txt = url.rsplit(":", 1)
+                port = int(port_txt)
+            except ValueError:
                 raise MKLivestatusConfigError("Invalid livestatus tcp URL '%s'. "
                                               "Correct example is 'tcp:somehost:6557'" % url)
             return socket.AF_INET, (host, port)

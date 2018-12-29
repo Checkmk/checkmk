@@ -1,12 +1,30 @@
 STUNNEL := stunnel
-STUNNEL_DIR := $(STUNNEL)-$(CMK_VERSION)
+STUNNEL_VERS := 5.50
+STUNNEL_DIR := $(STUNNEL)-$(STUNNEL_VERS)
 
-# Attention: copy-n-paste from check_mk/Makefile below...
-STUNNEL_INSTALL := $(BUILD_HELPER_DIR)/$(STUNNEL)-install
+STUNNEL_BUILD := $(BUILD_HELPER_DIR)/$(STUNNEL_DIR)-build
+STUNNEL_UNPACK := $(BUILD_HELPER_DIR)/$(STUNNEL_DIR)-unpack
+STUNNEL_INSTALL := $(BUILD_HELPER_DIR)/$(STUNNEL_DIR)-install
 
-.PHONY: $(STUNNEL) $(STUNNEL)-install $(STUNNEL)-skel
+.PHONY: $(STUNNEL) $(STUNNEL)-install $(STUNNEL)-skel $(STUNNEL)-clean
 
-$(STUNNEL_INSTALL):
+$(STUNNEL): $(STUNNEL_BUILD)
+
+$(STUNNEL)-install: $(STUNNEL_INSTALL)
+	
+$(STUNNEL_BUILD): $(STUNNEL_UNPACK)
+	cd $(STUNNEL_DIR) && \
+	    ./configure \
+		--prefix=$(OMD_ROOT)
+	$(MAKE) -C $(STUNNEL_DIR) -j4
+	$(TOUCH) $@
+
+$(STUNNEL_INSTALL): $(STUNNEL_BUILD)
+	$(MAKE) -C $(STUNNEL_DIR) DESTDIR=$(DESTDIR) install
+	rm -f $(DESTDIR)$(OMD_ROOT)/etc/stunnel/stunnel.conf-sample
 	$(TOUCH) $@
 
 $(STUNNEL)-skel:
+
+$(STUNNEL)-clean:
+	$(RM) -r $(STUNNEL_DIR) $(BUILD_HELPER_DIR)/$(STUNNEL)*

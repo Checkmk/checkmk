@@ -827,6 +827,7 @@ def _migrate_string_encoded_socket(value):
         host, port = address.rsplit(":", 1)
         return family_txt, {
             "address": (host, int(port)),
+            "tls": ("plain_text", {}),
         }
 
     raise NotImplementedError()

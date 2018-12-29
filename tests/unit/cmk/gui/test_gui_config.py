@@ -597,14 +597,16 @@ def test_permission_sorting(do_sort, result):
             "socket": "tcp:127.0.0.1:1234"
         }, {
             "socket": ("tcp", {
-                "address": ("127.0.0.1", 1234)
+                "address": ("127.0.0.1", 1234),
+                "tls": ("plain_text", {}),
             })
         }),
         ({
             "socket": "tcp6:::1:1234"
         }, {
             "socket": ("tcp6", {
-                "address": ("::1", 1234)
+                "address": ("::1", 1234),
+                "tls": ("plain_text", {}),
             })
         }),
         ({
@@ -632,20 +634,24 @@ def test_permission_sorting(do_sort, result):
         }),
         ({
             "socket": ("tcp", {
-                "address": ("127.0.0.1", 1234)
+                "address": ("127.0.0.1", 1234),
+                "tls": ("plain_text", {}),
             })
         }, {
             "socket": ("tcp", {
-                "address": ("127.0.0.1", 1234)
+                "address": ("127.0.0.1", 1234),
+                "tls": ("plain_text", {}),
             })
         }),
         ({
             "socket": ("tcp6", {
-                "address": ("::1", 1234)
+                "address": ("::1", 1234),
+                "tls": ("plain_text", {}),
             })
         }, {
             "socket": ("tcp6", {
-                "address": ("::1", 1234)
+                "address": ("::1", 1234),
+                "tls": ("plain_text", {}),
             })
         }),
         ({

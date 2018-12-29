@@ -269,9 +269,14 @@ class ModeEditSite(ModeSites):
 
     def _page_livestatus_settings(self):
         forms.header(_("Livestatus settings"))
-        forms.section(_("Connection"))
-        method = self._site.get("socket", None)
 
+        forms.section(_("Connection"))
+        method = self._site.get("socket", ("tcp", {
+            "address": ("", 6557),
+            "tls": ("encrypted", {
+                "verify": True,
+            })
+        }))
         self._site_mgmt.connection_method_valuespec().render_input("method", method)
         html.help(
             _("When connecting to remote site please make sure "

@@ -30,7 +30,8 @@ import time
 import re
 import os
 import ast
-from typing import Tuple, Union, Dict, Pattern  # pylint: disable=unused-import
+import ssl
+from typing import Tuple, Union, Dict, Pattern, Optional  # pylint: disable=unused-import
 
 #   .--Globals-------------------------------------------------------------.
 #   |                    ____ _       _           _                        |
@@ -241,8 +242,14 @@ class Query(object):
 
 
 class SingleSiteConnection(Helpers):
-    def __init__(self, socketurl, persist=False, allow_cache=False):
-        # type: (str, bool, bool) -> None
+    def __init__(self,
+                 socketurl,
+                 persist=False,
+                 allow_cache=False,
+                 tls=False,
+                 verify=True,
+                 ca_file_path=None):
+        # type: (str, bool, bool, bool, bool, Optional[str]) -> None
         """Create a new connection to a MK Livestatus socket"""
         super(SingleSiteConnection, self).__init__()
         self.prepend_site = False
@@ -258,6 +265,28 @@ class SingleSiteConnection(Helpers):
         self.socket = None
         self.timeout = None
         self.successful_persistence = False
+
+        # Whether to establish an encrypted connection
+        self.tls = tls
+        # Whether to accept any certificate or to verify it
+        self.tls_verify = verify
+        self._tls_ca_file_path = ca_file_path
+
+    @property
+    def tls_ca_file_path(self):
+        # type: () -> str
+        """CA file bundle to use for certificate verification"""
+        if self._tls_ca_file_path is None:
+            return self._site_local_ca_path()
+        return self._tls_ca_file_path
+
+    def _site_local_ca_path(self):
+        omd_root = os.getenv("OMD_ROOT")
+        if not omd_root:
+            raise MKLivestatusConfigError(
+                "OMD_ROOT is not set. You are not running in OMD context.")
+
+        return os.path.join(omd_root, "etc/ssl/ca.pem")
 
     def successfully_persisted(self):
         # type: () -> bool
@@ -278,10 +307,8 @@ class SingleSiteConnection(Helpers):
             return
 
         self.successful_persistence = False
-        self.socket = None
-
         family, address = self._parse_socket_url(self.socketurl)
-        self.socket = socket.socket(family, socket.SOCK_STREAM)
+        self.socket = self._create_socket(family)
 
         # If a timeout is set, then we retry after a failure with mild
         # a binary backoff.
@@ -295,6 +322,17 @@ class SingleSiteConnection(Helpers):
                     self.socket.settimeout(float(sleep_interval))
                 self.socket.connect(address)
                 break
+            except ssl.SSLError as e:
+                # Do not retry in case of SSL protocol / handshake errors. They don't seem to be
+                # recoverable by retrying
+
+                if "The handshake operation timed out" in str(e):
+                    raise MKLivestatusSocketError(
+                        "Cannot connect to '%s': %s. The encryption "
+                        "settings are probably wrong." % (self.socketurl, e))
+
+                raise
+
             except Exception as e:
                 if self.timeout:
                     time_left = self.timeout - (time.time() - before)
@@ -330,6 +368,29 @@ class SingleSiteConnection(Helpers):
 
         raise MKLivestatusConfigError("Invalid livestatus URL '%s'. "
                                       "Must begin with 'tcp:', 'tcp6:' or 'unix:'" % url)
+
+    def _create_socket(self, family):
+        """Creates the Livestatus client socket
+
+        It ensures that either a TLS secured socket or a plain text socket
+        is being created."""
+        sock = socket.socket(family, socket.SOCK_STREAM)
+
+        if not self.tls:
+            return sock
+
+        context = ssl.create_default_context()
+        context.check_hostname = False
+        context.verify_mode = ssl.CERT_REQUIRED if self.tls_verify else ssl.CERT_NONE
+        context.options |= ssl.OP_NO_TLSv1 | ssl.OP_NO_TLSv1_1
+
+        try:
+            context.load_verify_locations(cafile=self.tls_ca_file_path)
+        except Exception as e:
+            raise MKLivestatusConfigError(
+                "Failed to load CA file '%s': %s" % (self.tls_ca_file_path, e))
+
+        return context.wrap_socket(sock)
 
     def disconnect(self):
         self.socket = None
@@ -410,7 +471,8 @@ class SingleSiteConnection(Helpers):
             except:
                 self.disconnect()
                 raise MKLivestatusSocketError(
-                    "Malformed output. Livestatus TCP socket might be unreachable.")
+                    "Malformed output. Livestatus TCP socket might be unreachable or wrong"
+                    "encryption settings are used.")
 
             data = self.receive_data(length)
 
@@ -547,8 +609,17 @@ class MultiSiteConnection(Helpers):
             try:
                 url = site["socket"]
                 persist = not temporary and site.get("persist", False)
+                tls_type, tls_params = site.get("tls", ("plain_text", {}))
+
                 connection = SingleSiteConnection(
-                    url, persist, allow_cache=site.get("cache", False))
+                    socketurl=url,
+                    persist=persist,
+                    allow_cache=site.get("cache", False),
+                    tls=tls_type != "plain_text",
+                    verify=tls_params.get("verify", True),
+                    ca_file_path=tls_params.get("ca_file_path", None),
+                )
+
                 if "timeout" in site:
                     connection.set_timeout(int(site["timeout"]))
                 connection.connect()

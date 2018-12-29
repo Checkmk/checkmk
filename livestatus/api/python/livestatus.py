@@ -30,7 +30,7 @@ import time
 import re
 import os
 import ast
-from typing import Dict, Pattern  # pylint: disable=unused-import
+from typing import Tuple, Union, Dict, Pattern  # pylint: disable=unused-import
 
 #   .--Globals-------------------------------------------------------------.
 #   |                    ____ _       _           _                        |
@@ -43,6 +43,7 @@ from typing import Dict, Pattern  # pylint: disable=unused-import
 #   |  Global variables and Exception classes                              |
 #   '----------------------------------------------------------------------'
 
+# TODO: This mechanism does not take different connection options into account
 # Keep a global array of persistant connections
 persistent_connections = {}  # type: Dict[str, socket.socket]
 
@@ -241,11 +242,13 @@ class Query(object):
 
 class SingleSiteConnection(Helpers):
     def __init__(self, socketurl, persist=False, allow_cache=False):
+        # type: (str, bool, bool) -> None
         """Create a new connection to a MK Livestatus socket"""
         super(SingleSiteConnection, self).__init__()
         self.prepend_site = False
-        self.auth_users = {}
-        self.deadsites = {}  # never filled, just for compatibility
+        self.auth_users = {}  # type: Dict[str, str]
+        # never filled, just to have the same API as MultiSiteConnection (TODO: Cleanup)
+        self.deadsites = {}  # type: Dict[str, Dict[str, str]]
         self.limit = None
         self.add_headers = ""
         self.auth_header = ""
@@ -257,6 +260,7 @@ class SingleSiteConnection(Helpers):
         self.successful_persistence = False
 
     def successfully_persisted(self):
+        # type: () -> bool
         return self.successful_persistence
 
     def add_header(self, header):
@@ -274,31 +278,10 @@ class SingleSiteConnection(Helpers):
             return
 
         self.successful_persistence = False
-
-        # Create new socket
         self.socket = None
-        url = self.socketurl
-        parts = url.split(":")
-        if parts[0] == "unix":
-            if len(parts) != 2:
-                raise MKLivestatusConfigError(
-                    "Invalid livestatus unix URL: %s. "
-                    "Correct example is 'unix:/var/run/nagios/rw/live'" % url)
-            self.socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-            target = parts[1]
 
-        elif parts[0] == "tcp":
-            try:
-                host = parts[1]
-                port = int(parts[2])
-            except:
-                raise MKLivestatusConfigError("Invalid livestatus tcp URL '%s'. "
-                                              "Correct example is 'tcp:somehost:6557'" % url)
-            self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            target = (host, port)
-        else:
-            raise MKLivestatusConfigError("Invalid livestatus URL '%s'. "
-                                          "Must begin with 'tcp:' or 'unix:'" % url)
+        family, address = self._parse_socket_url(self.socketurl)
+        self.socket = socket.socket(family, socket.SOCK_STREAM)
 
         # If a timeout is set, then we retry after a failure with mild
         # a binary backoff.
@@ -310,7 +293,7 @@ class SingleSiteConnection(Helpers):
             try:
                 if self.timeout:
                     self.socket.settimeout(float(sleep_interval))
-                self.socket.connect(target)
+                self.socket.connect(address)
                 break
             except Exception as e:
                 if self.timeout:
@@ -326,6 +309,30 @@ class SingleSiteConnection(Helpers):
 
         if self.persist:
             persistent_connections[self.socketurl] = self.socket
+
+    def _parse_socket_url(self, url):
+        # type: (str) -> Tuple[socket.AddressFamily, Union[str, tuple]]
+        """Parses a Livestatus socket URL to address family and address"""
+        parts = url.split(":")
+        if parts[0] == "unix":
+            if len(parts) != 2:
+                raise MKLivestatusConfigError(
+                    "Invalid livestatus unix URL: %s. "
+                    "Correct example is 'unix:/var/run/nagios/rw/live'" % url)
+
+            return socket.AF_UNIX, parts[1]
+
+        elif parts[0] == "tcp":
+            try:
+                host = parts[1]
+                port = int(parts[2])
+            except:
+                raise MKLivestatusConfigError("Invalid livestatus tcp URL '%s'. "
+                                              "Correct example is 'tcp:somehost:6557'" % url)
+            return socket.AF_INET, (host, port)
+
+        raise MKLivestatusConfigError("Invalid livestatus URL '%s'. "
+                                      "Must begin with 'tcp:' or 'unix:'" % url)
 
     def disconnect(self):
         self.socket = None

@@ -23,10 +23,14 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-
-import socket, time, re, os
-import ast
 """MK Livestatus Python API"""
+
+import socket
+import time
+import re
+import os
+import ast
+from typing import Dict, Pattern  # pylint: disable=unused-import
 
 #   .--Globals-------------------------------------------------------------.
 #   |                    ____ _       _           _                        |
@@ -40,10 +44,10 @@ import ast
 #   '----------------------------------------------------------------------'
 
 # Keep a global array of persistant connections
-persistent_connections = {}
+persistent_connections = {}  # type: Dict[str, socket.socket]
 
 # Regular expression for removing Cache: headers if caching is not allowed
-remove_cache_regex = re.compile("\nCache:[^\n]*")
+remove_cache_regex = re.compile("\nCache:[^\n]*")  # type: Pattern
 
 
 class MKLivestatusException(Exception):
@@ -108,7 +112,7 @@ def lqencode(s):
 #   '----------------------------------------------------------------------'
 
 
-class Helpers:
+class Helpers(object):
     def query(self, query, add_headers=""):
         raise NotImplementedError()
 
@@ -235,9 +239,10 @@ class Query(object):
 #   '--------------------------------------------------------------------------'
 
 
-class BaseConnection:
+class BaseConnection(object):
     def __init__(self, socketurl, persist=False, allow_cache=False):
         """Create a new connection to a MK Livestatus socket"""
+        super(BaseConnection, self).__init__()
         self.add_headers = ""
         self.auth_header = ""
         self.persist = persist
@@ -367,7 +372,7 @@ class BaseConnection:
         try:
             # socket.send() will implicitely cast to str(), we need ot
             # convert to UTF-8 in order to avoid exceptions
-            if type(query) == unicode:
+            if isinstance(query, unicode):
                 query = query.encode("utf-8")
             self.socket.send(query)
         except IOError as e:
@@ -496,8 +501,7 @@ class SingleSiteConnection(BaseConnection, Helpers):
         data = self.do_query(query, add_headers)
         if self.prepend_site:
             return [[''] + line for line in data]
-        else:
-            return data
+        return data
 
     def command(self, command, site=None):
         self.do_command(command)
@@ -573,7 +577,7 @@ class MultiSiteConnection(Helpers):
         # Needed for temporary connection for status_hosts in disabled sites
         def disconnect_site(sitename):
             i = 0
-            for name, site, connection in self.connections:
+            for name, _site, _connection in self.connections:
                 if name == sitename:
                     del self.connections[i]
                     return
@@ -613,7 +617,7 @@ class MultiSiteConnection(Helpers):
         for sitename, site in sites.items() + extra_status_sites.items():
             status_host = site.get("status_host")
             if status_host:
-                if type(status_host) != tuple or len(status_host) != 2:
+                if not isinstance(status_host, tuple) or len(status_host) != 2:
                     raise MKLivestatusConfigError(
                         "Status host of site %s is %r, but must be pair of site and host" %
                         (sitename, status_host))
@@ -641,7 +645,6 @@ class MultiSiteConnection(Helpers):
                     status_host_states[(sitename, host)] = (state, lastup)
             except Exception as e:
                 raise MKLivestatusConfigError(e)
-                status_host_states[(sitename, host)] = (str(e), None)
         self.set_only_sites()  # clear site filter
 
         # Disconnect from disabled sites that we connected to only to
@@ -651,14 +654,12 @@ class MultiSiteConnection(Helpers):
 
         # Now loop over all sites having a status_host and take that state
         # of that into consideration
-
         for sitename, site in sites.items():
             status_host = site.get("status_host")
             if status_host:
                 now = time.time()
                 shs, lastup = status_host_states.get(status_host,
                                                      (4, now))  # None => Status host not existing
-                deltatime = now - lastup
                 if shs == 0 or shs is None:
                     connect_to_site(sitename, site)
                 else:
@@ -680,7 +681,7 @@ class MultiSiteConnection(Helpers):
                     }
 
     def add_header(self, header):
-        for sitename, site, connection in self.connections:
+        for _sitename, _site, connection in self.connections:
             connection.add_header(header)
 
     def set_prepend_site(self, p):
@@ -705,24 +706,23 @@ class MultiSiteConnection(Helpers):
         return [s[0] for s in self.connections]
 
     def successfully_persisted(self):
-        for sitename, site, connection in self.connections:
+        for _sitename, _site, connection in self.connections:
             if connection.successfully_persisted():
                 return True
         return False
 
     def set_auth_user(self, domain, user):
-        for sitename, site, connection in self.connections:
+        for _sitename, _site, connection in self.connections:
             connection.set_auth_user(domain, user)
 
     def set_auth_domain(self, domain):
-        for sitename, site, connection in self.connections:
+        for _sitename, _site, connection in self.connections:
             connection.set_auth_domain(domain)
 
     def query(self, query, add_headers=""):
         if self.parallelize:
             return self.query_parallel(query, add_headers)
-        else:
-            return self.query_non_parallel(query, add_headers)
+        return self.query_non_parallel(query, add_headers)
 
     def query_non_parallel(self, query, add_headers=""):
         result = []
@@ -765,7 +765,6 @@ class MultiSiteConnection(Helpers):
         else:
             connect_to_sites = self.connections
 
-        start_time = time.time()
         limit = self.limit
         if limit is not None:
             limit_header = "Limit: %d\n" % limit
@@ -797,7 +796,7 @@ class MultiSiteConnection(Helpers):
                 if self.prepend_site:
                     r = [[sitename] + l for l in r]
                 result += r
-            except suppress_exceptions:
+            except suppress_exceptions:  # pylint: disable=catching-non-exception
                 stillalive.append((sitename, site, connection))
                 continue
 
@@ -823,7 +822,7 @@ class MultiSiteConnection(Helpers):
 
     # Return connection to localhost (UNIX), if available
     def local_connection(self):
-        for sitename, site, connection in self.connections:
+        for _sitename, site, connection in self.connections:
             if site["socket"].startswith("unix:") and "liveproxy" not in site["socket"]:
                 return connection
         raise MKLivestatusConfigError("No livestatus connection to local host")

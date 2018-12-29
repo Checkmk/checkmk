@@ -149,8 +149,47 @@ class SiteManagement(object):
                          ),
                      ],
                  )),
+                ("tls", cls._tls_valuespec()),
             ],
             optional_keys=None,
+        )
+
+    @classmethod
+    def _tls_valuespec(cls):
+        return CascadingDropdown(
+            title=_("Encryption"),
+            choices=[
+                (
+                    "plain_text",
+                    _("Plain text (Unencrypted)"),
+                    FixedValue({}, totext=_("Use plain text, unencrypted transport")),
+                ),
+                ("encrypted", _("Encrypt data using TLS"),
+                 Dictionary(
+                     elements=[
+                         ("verify",
+                          Checkbox(
+                              title=_("Verify server certificate"),
+                              label=_(
+                                  "Verify the Livestatus server certificate using the local site CA"
+                              ),
+                              default_value=True,
+                              help=
+                              _("Either verify the server certificate using the site local CA or accept "
+                                "any certificate offered by the server. It is highly recommended to "
+                                "leave this enabled."),
+                          )),
+                     ],
+                     optional_keys=None,
+                 )),
+            ],
+            help=
+            _("When connecting to Check_MK versions older than 1.6 you can only use plain text "
+              "transport. Starting with Check_MK 1.6 it is possible to use encrypted Livestatus "
+              "communication. Sites created with 1.6 will automatically use encrypted communication "
+              "by default. Sites created with previous versions need to be configured manually to "
+              "enable the encryption. Have a look at <a href=\"werks.py?werk=7017\">werk #7017</a> "
+              "for further information."),
         )
 
     @classmethod

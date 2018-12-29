@@ -1,9 +1,18 @@
 import socket
+import ssl
+import os
 from contextlib import closing
 from pathlib2 import Path
 import pytest  # type: ignore
 
+import omdlib.certs as certs
 import livestatus
+
+
+@pytest.fixture
+def ca(tmpdir, monkeypatch):
+    p = Path("%s" % tmpdir) / "etc" / "ssl"
+    return certs.CertificateAuthority(p, "ca-name")
 
 
 @pytest.fixture()
@@ -79,7 +88,7 @@ def test_livestatus_ipv6_connection():
         except socket.error as e:
             # Skip this test in case ::1 can not be bound to
             # (happened in docker container with IPv6 disabled)
-            if e.errno == 99: # Cannot assign requested address
+            if e.errno == 99:  # Cannot assign requested address
                 pytest.skip("Unable to bind to ::1 (%s)" % e)
 
         port = sock.getsockname()[1]  # pylint: disable=no-member
@@ -108,3 +117,48 @@ def test_single_site_connection_socketurl(socket_url, result, monkeypatch):
         return
 
     assert live._parse_socket_url(socket_url) == result
+
+
+@pytest.mark.parametrize("tls", [True, False])
+@pytest.mark.parametrize("verify", [True, False])
+@pytest.mark.parametrize("ca_file_path", ["ca.pem", None])
+def test_create_socket(tls, verify, ca, ca_file_path, monkeypatch, tmpdir):
+    ca.initialize()
+
+    monkeypatch.setenv("OMD_ROOT", "%s" % tmpdir)
+
+    if ca_file_path is not None:
+        ca_file_path = "%s/%s" % (ca.ca_path, ca_file_path)
+
+    live = livestatus.SingleSiteConnection(
+        "unix:/tmp/xyz", tls=tls, verify=verify, ca_file_path=ca_file_path)
+
+    if ca_file_path is None:
+        ca_file_path = "%s/ca.pem" % ca.ca_path
+
+    sock = live._create_socket(socket.AF_INET)
+
+    if not tls:
+        assert isinstance(sock, socket.socket)
+        assert not isinstance(sock, ssl.SSLSocket)
+        return
+
+    assert isinstance(sock, ssl.SSLSocket)
+    assert sock.context.verify_mode == (ssl.CERT_REQUIRED if verify else ssl.CERT_NONE)
+    assert len(sock.context.get_ca_certs()) == 1
+    assert live.tls_ca_file_path == ca_file_path
+
+
+def test_create_socket_not_existing_ca_file():
+    live = livestatus.SingleSiteConnection(
+        "unix:/tmp/xyz", tls=True, verify=True, ca_file_path="/x/y/z.pem")
+    with pytest.raises(livestatus.MKLivestatusConfigError, match="No such file or"):
+        live._create_socket(socket.AF_INET)
+
+
+def test_create_socket_no_cert(tmpdir):
+    open("%s/z.pem" % tmpdir, "wb")
+    live = livestatus.SingleSiteConnection(
+        "unix:/tmp/xyz", tls=True, verify=True, ca_file_path="%s/z.pem" % tmpdir)
+    with pytest.raises(livestatus.MKLivestatusConfigError, match="unknown error"):
+        live._create_socket(socket.AF_INET)

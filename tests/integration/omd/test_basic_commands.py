@@ -10,6 +10,7 @@ def test_basic_commands(site):
         "bin/check_mk",
         "bin/cmk",
         "bin/omd",
+        "bin/stunnel",
     ]
 
     for rel_path in commands:

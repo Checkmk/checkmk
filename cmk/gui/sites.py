@@ -216,6 +216,9 @@ def _site_config_for_livestatus(site_id, site):
     if site["socket"][0] == "proxy":
         site["cache"] = site["socket"][1].get("cache", True)
 
+    if site["socket"][0] in ["tcp", "tcp6"]:
+        site["tls"] = site["socket"][1]["tls"]
+
     site["socket"] = encode_socket_for_livestatus(site_id, site["socket"])
 
     return site

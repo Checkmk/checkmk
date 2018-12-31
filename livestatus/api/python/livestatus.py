@@ -227,22 +227,26 @@ class Query(object):
 
 
 #.
-#   .--BaseConnection----------------------------------------------------------.
-#   | ____                  ____                            _   _              |
-#   || __ )  __ _ ___  ___ / ___|___  _ __  _ __   ___  ___| |_(_) ___   _ __  |
-#   ||  _ \ / _` / __|/ _ \ |   / _ \| '_ \| '_ \ / _ \/ __| __| |/ _ \ | '_ \ |
-#   || |_) | (_| \__ \  __/ |__| (_) | | | | | | |  __/ (__| |_| | (_) || | | ||
-#   ||____/ \__,_|___/\___|\____\___/|_| |_|_| |_|\___|\___|\__|_|\___/ |_| |_||
-#   |                                                                          |
-#   +--------------------------------------------------------------------------+
-#   |  Abstract base class of SingleSiteConnection and MultiSiteConnection     |
-#   '--------------------------------------------------------------------------'
+#   .--SingleSiteConn------------------------------------------------------.
+#   |  ____  _             _      ____  _ _        ____                    |
+#   | / ___|(_)_ __   __ _| | ___/ ___|(_) |_ ___ / ___|___  _ __  _ __    |
+#   | \___ \| | '_ \ / _` | |/ _ \___ \| | __/ _ \ |   / _ \| '_ \| '_ \   |
+#   |  ___) | | | | | (_| | |  __/___) | | ||  __/ |__| (_) | | | | | | |  |
+#   | |____/|_|_| |_|\__, |_|\___|____/|_|\__\___|\____\___/|_| |_|_| |_|  |
+#   |                |___/                                                 |
+#   +----------------------------------------------------------------------+
+#   |  Connections to one local Unix or remote TCP socket.                 |
+#   '----------------------------------------------------------------------'
 
 
-class BaseConnection(object):
+class SingleSiteConnection(Helpers):
     def __init__(self, socketurl, persist=False, allow_cache=False):
         """Create a new connection to a MK Livestatus socket"""
-        super(BaseConnection, self).__init__()
+        super(SingleSiteConnection, self).__init__()
+        self.prepend_site = False
+        self.auth_users = {}
+        self.deadsites = {}  # never filled, just for compatibility
+        self.limit = None
         self.add_headers = ""
         self.auth_header = ""
         self.persist = persist
@@ -451,41 +455,6 @@ class BaseConnection(object):
             # FIXME: ? self.disconnect()
             raise MKLivestatusSocketError("Unhandled exception: %s" % e)
 
-    def do_command(self, command):
-        if self.socket is None:
-            self.connect()
-        if not command.endswith("\n"):
-            command += "\n"
-        try:
-            self.socket.send("COMMAND " + command + "\n")
-        except IOError as e:
-            self.socket = None
-            if self.persist:
-                del persistent_connections[self.socketurl]
-            raise MKLivestatusSocketError(str(e))
-
-
-#.
-#   .--SingleSiteConn------------------------------------------------------.
-#   |  ____  _             _      ____  _ _        ____                    |
-#   | / ___|(_)_ __   __ _| | ___/ ___|(_) |_ ___ / ___|___  _ __  _ __    |
-#   | \___ \| | '_ \ / _` | |/ _ \___ \| | __/ _ \ |   / _ \| '_ \| '_ \   |
-#   |  ___) | | | | | (_| | |  __/___) | | ||  __/ |__| (_) | | | | | | |  |
-#   | |____/|_|_| |_|\__, |_|\___|____/|_|\__\___|\____\___/|_| |_|_| |_|  |
-#   |                |___/                                                 |
-#   +----------------------------------------------------------------------+
-#   |  Connections to one local Unix or remote TCP socket.                 |
-#   '----------------------------------------------------------------------'
-
-
-class SingleSiteConnection(BaseConnection, Helpers):
-    def __init__(self, socketurl, persist=False, allow_cache=False):
-        BaseConnection.__init__(self, socketurl, persist, allow_cache)
-        self.prepend_site = False
-        self.auth_users = {}
-        self.deadsites = {}  # never filled, just for compatibility
-        self.limit = None
-
     def set_prepend_site(self, p):
         self.prepend_site = p
 
@@ -505,6 +474,19 @@ class SingleSiteConnection(BaseConnection, Helpers):
 
     def command(self, command, site=None):
         self.do_command(command)
+
+    def do_command(self, command):
+        if self.socket is None:
+            self.connect()
+        if not command.endswith("\n"):
+            command += "\n"
+        try:
+            self.socket.send("COMMAND " + command + "\n")
+        except IOError as e:
+            self.socket = None
+            if self.persist:
+                del persistent_connections[self.socketurl]
+            raise MKLivestatusSocketError(str(e))
 
     # Set user to be used in certain authorization domain
     def set_auth_user(self, domain, user):

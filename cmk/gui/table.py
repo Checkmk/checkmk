@@ -40,43 +40,28 @@ tables = []
 
 @contextmanager
 def open_table(table_id=None, title=None, **kwargs):
-    begin(table_id, title, **kwargs)
+    tables.append(Table(table_id, title, **kwargs))
     try:
         yield
     finally:
-        end()
-
-
-def begin(table_id=None, title=None, **kwargs):
-    # type: (Optional[bytes], Optional[Text], **Text) -> None
-    tables.append(Table(table_id, title, **kwargs))
+        tables.pop().end()
 
 
 def row(*posargs, **kwargs):
-    assert tables
     tables[-1].row(*posargs, **kwargs)
 
 
 def text_cell(*posargs, **kwargs):
-    assert tables
     tables[-1].text_cell(*posargs, **kwargs)
 
 
 def cell(*posargs, **kwargs):
-    assert tables
     tables[-1].cell(*posargs, **kwargs)
 
 
 # Intermediate title, shown as soon as there is a following row.
 def groupheader(title):
-    assert tables
     tables[-1].groupheader(title)
-
-
-def end():
-    assert tables
-    table = tables.pop()
-    table.end()
 
 
 def update_headinfo(num_rows):

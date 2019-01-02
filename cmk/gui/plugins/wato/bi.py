@@ -38,7 +38,7 @@ else:
 
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
-import cmk.gui.table as table
+import cmk.gui.table
 import cmk.gui.forms as forms
 import cmk.gui.watolib as watolib
 from cmk.gui.exceptions import MKUserError, MKGeneralException, MKAuthException
@@ -1006,7 +1006,7 @@ class ModeBIPacks(ModeBI):
                 return ""
 
     def page(self):
-        with table.open_table(title=_("BI Configuration Packs")):
+        with cmk.gui.table.open_table(title=_("BI Configuration Packs")) as table:
             for pack_id, pack in sorted(self._packs.items()):
                 if not self.may_use_rules_in_pack(pack):
                     continue
@@ -1278,7 +1278,7 @@ class ModeBIAggregations(ModeBI):
         html.end_form()
 
     def _render_aggregations(self):
-        with table.open_table("bi_aggr", _("Aggregations")):
+        with cmk.gui.table.open_table("bi_aggr", _("Aggregations")) as table:
             for aggregation_id, aggregation in enumerate(self._pack["aggregations"]):
                 table.row()
                 table.cell(
@@ -1520,7 +1520,7 @@ class ModeBIRules(ModeBI):
         ]
         rules_refs.sort(cmp=lambda a, b: cmp(a[2][2], b[2][2]) or cmp(a[1]["title"], b[1]["title"]))
 
-        with table.open_table("bi_rules", title):
+        with cmk.gui.table.open_table("bi_rules", title) as table:
             for rule_id, rule, (aggr_refs, rule_refs, level) in rules_refs:
                 refs = aggr_refs + rule_refs
                 if not only_unused or refs == 0:
@@ -1629,7 +1629,7 @@ class ModeBIRuleTree(ModeBI):
     def page(self):
         _aggr_refs, rule_refs, _level = self.count_rule_references(self._ruleid)
         if rule_refs == 0:
-            with table.open_table(sortable=False, searchable=False):
+            with cmk.gui.table.open_table(sortable=False, searchable=False) as table:
                 table.row()
                 table.cell(_("Rule Tree"), css="bi_rule_tree")
                 self.render_rule_tree(self._ruleid, self._ruleid)

@@ -34,7 +34,7 @@ from cmk.utils.regex import escape_regex_chars
 
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
-import cmk.gui.table as table
+import cmk.gui.table
 import cmk.gui.forms as forms
 from cmk.gui.htmllib import HTML
 from cmk.gui.exceptions import MKUserError, MKAuthException
@@ -624,7 +624,7 @@ class ModeEditRuleset(WatoMode):
                   for folder, folder_rules in itertools.groupby(rules, key=lambda rule: rule[0]) \
                   if folder.is_transitive_parent_of(cur) or cur.is_transitive_parent_of(folder))
         for folder, folder_rules in groups:
-            with table.open_table(
+            with cmk.gui.table.open_table(
                     "rules_%s_%s" % (self._name, folder.ident()),
                     title="%s %s (%d)" % (_("Rules in folder"), folder.alias_path(show_main=False),
                                           ruleset.num_rules_in_folder(folder)),
@@ -632,12 +632,12 @@ class ModeEditRuleset(WatoMode):
                     searchable=False,
                     sortable=False,
                     limit=None,
-                    foldable=True):
+                    foldable=True) as table:
                 for _folder, rulenr, rule in folder_rules:
                     table.row(css=self._css_for_rule(search_options, rule))
                     self._set_focus(rulenr, rule)
-                    self._show_rule_icons(match_state, folder, rulenr, rule)
-                    self._rule_cells(rule)
+                    self._show_rule_icons(table, match_state, folder, rulenr, rule)
+                    self._rule_cells(table, rule)
 
     @staticmethod
     def _css_for_rule(search_options, rule):
@@ -656,7 +656,7 @@ class ModeEditRuleset(WatoMode):
            self._just_edited_rule.index() == rulenr:
             html.focus_here()
 
-    def _show_rule_icons(self, match_state, folder, rulenr, rule):
+    def _show_rule_icons(self, table, match_state, folder, rulenr, rule):
         if self._hostname:
             table.cell(_("Ma."))
             title, img = self._match(match_state, rule)
@@ -744,7 +744,7 @@ class ModeEditRuleset(WatoMode):
         html.icon_button(self._action_url(action, folder, rulenr), title, action)
 
     # TODO: Refactor this whole method
-    def _rule_cells(self, rule):
+    def _rule_cells(self, table, rule):
         rulespec = rule.ruleset.rulespec
         value = rule.value
         rule_options = rule.rule_options

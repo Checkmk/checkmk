@@ -44,7 +44,7 @@ import cmk.utils.store as store
 from cmk.utils.schedule import next_scheduled_time
 
 import cmk.gui.forms as forms
-import cmk.gui.table as table
+import cmk.gui.table
 import cmk.gui.key_mgmt as key_mgmt
 from cmk.gui.valuespec import (
     Password,
@@ -403,7 +403,7 @@ class Jobs(BackupEntityCollection):
 
     def show_list(self, editable=True):
         html.h2(_("Jobs"))
-        with table.open_table(sortable=False, searchable=False):
+        with cmk.gui.table.open_table(sortable=False, searchable=False) as table:
 
             for job_ident, job in sorted(self.objects.items()):
                 table.row()
@@ -926,7 +926,7 @@ class Target(BackupEntity):
         return self.type_class()(self.type_params())
 
     def show_backup_list(self, only_type):
-        with table.open_table(sortable=False, searchable=False):
+        with cmk.gui.table.open_table(sortable=False, searchable=False) as table:
 
             for backup_ident, info in sorted(self.backups().items()):
                 if info["type"] != only_type:
@@ -994,7 +994,7 @@ class Targets(BackupEntityCollection):
             html.write("<p>%s</p>" % _("These backup targets can not be edited here. You need to "
                                        "open the device backup management."))
 
-        with table.open_table(sortable=False, searchable=False):
+        with cmk.gui.table.open_table(sortable=False, searchable=False) as table:
 
             for target_ident, target in sorted(self.objects.items()):
                 table.row()

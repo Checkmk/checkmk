@@ -39,7 +39,7 @@ import cmk.utils.werks
 import cmk.gui.pages
 import cmk.gui.utils as utils
 import cmk.gui.config as config
-import cmk.gui.table as table
+import cmk.gui.table
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
@@ -342,23 +342,23 @@ def render_werks_table():
                       if werk_matches_options(werk, werk_table_options))
     groups = itertools.groupby(werklist, key=grouper)
     for group_title, werks in itertools.islice(groups, werk_table_options["group_limit"]):
-        with table.open_table(
+        with cmk.gui.table.open_table(
                 title=group_title,
                 limit=None,
                 searchable=False,
                 sortable=False,
                 css="werks",
-                update_page_head=False):
+                update_page_head=False) as table:
             for werk in werks:
                 number_of_werks += 1
-                render_werks_table_row(translator, werk)
+                render_werks_table_row(table, translator, werk)
     if number_of_werks:
-        table.update_headinfo(number_of_werks)
+        cmk.gui.table.update_headinfo(number_of_werks)
     else:
         html.h3(_("No matching Werks found."))
 
 
-def render_werks_table_row(translator, werk):
+def render_werks_table_row(table, translator, werk):
     table.row()
     table.cell(_("ID"), render_werk_id(werk, with_link=True), css="number narrow")
     table.cell(_("Version"), werk["version"], css="number narrow")

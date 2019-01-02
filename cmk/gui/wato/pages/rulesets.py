@@ -656,20 +656,8 @@ class ModeEditRuleset(WatoMode):
                 if skip_this_folder:
                     continue
 
-            css = []
-            if rule.is_disabled():
-                css.append("disabled")
-
-            if ruleset.has_rule_search_options(search_options) \
-               and rule.matches_search(search_options) \
-               and ("fulltext" not in search_options or not ruleset.matches_fulltext_search(search_options)):
-                css.append("matches_search")
-
-            table.row(css=" ".join(css) if css else None)
-
-            if self._just_edited_rule and self._just_edited_rule.folder == rule.folder and self._just_edited_rule.index(
-            ) == rulenr:
-                html.focus_here()
+            table.row(css=self._css_for_rule(search_options, ruleset, rule))
+            self._set_focus(rulenr, rule)
 
             # Rule matching
             if self._hostname:
@@ -722,43 +710,62 @@ class ModeEditRuleset(WatoMode):
                     img = 'nmatch'
                 html.icon(title, "rule%s" % img, middle=True)
 
-            # Disabling
-            table.cell("", css="buttons")
-            if rule.is_disabled():
-                html.icon(_("This rule is currently disabled and will not be applied"), "disabled")
-            else:
-                html.empty_icon()
-
-            table.cell(_("Actions"), css="buttons rulebuttons")
-            edit_url = watolib.folder_preserving_link([
-                ("mode", "edit_rule"),
-                ("ruleset_back_mode", self._back_mode),
-                ("varname", self._name),
-                ("rulenr", rulenr),
-                ("host", self._hostname),
-                ("item", watolib.mk_repr(self._item)),
-                ("rule_folder", folder.path()),
-            ])
-            html.icon_button(edit_url, _("Edit this rule"), "edit")
-
-            clone_url = watolib.folder_preserving_link([
-                ("mode", "clone_rule"),
-                ("ruleset_back_mode", self._back_mode),
-                ("varname", self._name),
-                ("rulenr", rulenr),
-                ("host", self._hostname),
-                ("item", watolib.mk_repr(self._item)),
-                ("rule_folder", folder.path()),
-            ])
-            html.icon_button(clone_url, _("Create a copy of this rule"), "clone")
-
-            html.element_dragger_url("tr", base_url=self._action_url("move_to", folder, rulenr))
-            self._rule_button("delete", _("Delete this rule"), folder, rulenr)
-
+            self._show_rule_icons(folder, rulenr, rule)
             self._rule_cells(rule)
 
         if last_folder is not None:
             table.end()
+
+    def _css_for_rule(self, search_options, ruleset, rule):
+        css = []
+        if rule.is_disabled():
+            css.append("disabled")
+
+        if ruleset.has_rule_search_options(search_options) \
+           and rule.matches_search(search_options) \
+           and ("fulltext" not in search_options or not ruleset.matches_fulltext_search(search_options)):
+            css.append("matches_search")
+
+        return " ".join(css) if css else None
+
+    def _set_focus(self, rulenr, rule):
+        if self._just_edited_rule and \
+           self._just_edited_rule.folder == rule.folder and \
+           self._just_edited_rule.index() == rulenr:
+            html.focus_here()
+
+    def _show_rule_icons(self, folder, rulenr, rule):
+        table.cell("", css="buttons")
+        if rule.is_disabled():
+            html.icon(_("This rule is currently disabled and will not be applied"), "disabled")
+        else:
+            html.empty_icon()
+
+        table.cell(_("Actions"), css="buttons rulebuttons")
+        edit_url = watolib.folder_preserving_link([
+            ("mode", "edit_rule"),
+            ("ruleset_back_mode", self._back_mode),
+            ("varname", self._name),
+            ("rulenr", rulenr),
+            ("host", self._hostname),
+            ("item", watolib.mk_repr(self._item)),
+            ("rule_folder", folder.path()),
+        ])
+        html.icon_button(edit_url, _("Edit this rule"), "edit")
+
+        clone_url = watolib.folder_preserving_link([
+            ("mode", "clone_rule"),
+            ("ruleset_back_mode", self._back_mode),
+            ("varname", self._name),
+            ("rulenr", rulenr),
+            ("host", self._hostname),
+            ("item", watolib.mk_repr(self._item)),
+            ("rule_folder", folder.path()),
+        ])
+        html.icon_button(clone_url, _("Create a copy of this rule"), "clone")
+
+        html.element_dragger_url("tr", base_url=self._action_url("move_to", folder, rulenr))
+        self._rule_button("delete", _("Delete this rule"), folder, rulenr)
 
     def _action_url(self, action, folder, rulenr):
         vars_ = [

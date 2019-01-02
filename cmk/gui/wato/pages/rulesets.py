@@ -26,6 +26,7 @@
 """WATO's awesome rule editor: Lets the user edit rule based parameters"""
 
 import abc
+import itertools
 import pprint
 import re
 
@@ -591,14 +592,8 @@ class ModeEditRuleset(WatoMode):
         ruleset = rulesets.get(self._name)
 
         html.help(ruleset.help())
-
         self._explain_match_type(ruleset.match_type())
-
-        if ruleset.is_empty():
-            html.div(_("There are no rules defined in this set."), class_="info")
-        else:
-            self._rule_listing(ruleset)
-
+        self._rule_listing(ruleset)
         self._create_form()
 
     def _explain_match_type(self, match_type):
@@ -617,115 +612,42 @@ class ModeEditRuleset(WatoMode):
         else:
             html.write_text(_("Unknown match type: %s") % match_type)
 
-    # TODO: Clean this function up!
     def _rule_listing(self, ruleset):
-        alread_matched = False
-        match_keys = set([])  # in case if match = "dict"
-        last_folder = None
-
+        rules = ruleset.get_rules()
+        if not rules:
+            html.div(_("There are no rules defined in this set."), class_="info")
+            return
+        match_state = {"matched": False, "keys": set()}
         search_options = ModeRuleSearch().search_options
-
-        skip_this_folder = False
-        for folder, rulenr, rule in ruleset.get_rules():
-            if folder != last_folder:
-                # Only show folders related to the currently viewed folder hierarchy
-                if folder.is_transitive_parent_of(watolib.Folder.current()) \
-                   or watolib.Folder.current().is_transitive_parent_of(folder):
-                    skip_this_folder = False
-                else:
-                    skip_this_folder = True
-                    continue
-
-                if last_folder is not None:
-                    table.end()
-
-                last_folder = folder
-
-                alias_path = folder.alias_path(show_main=False)
-                table_id = "rules_%s_%s" % (self._name, folder.ident())
-                table.begin(
-                    table_id,
-                    title="%s %s (%d)" % (_("Rules in folder"), alias_path,
+        cur = watolib.Folder.current()
+        groups = ((folder, folder_rules) \
+                  for folder, folder_rules in itertools.groupby(rules, key=lambda rule: rule[0]) \
+                  if folder.is_transitive_parent_of(cur) or cur.is_transitive_parent_of(folder))
+        for folder, folder_rules in groups:
+            with table.open_table(
+                    "rules_%s_%s" % (self._name, folder.ident()),
+                    title="%s %s (%d)" % (_("Rules in folder"), folder.alias_path(show_main=False),
                                           ruleset.num_rules_in_folder(folder)),
                     css="ruleset",
                     searchable=False,
                     sortable=False,
                     limit=None,
-                    foldable=True)
-            else:
-                if skip_this_folder:
-                    continue
+                    foldable=True):
+                for _folder, rulenr, rule in folder_rules:
+                    table.row(css=self._css_for_rule(search_options, rule))
+                    self._set_focus(rulenr, rule)
+                    self._show_rule_icons(match_state, folder, rulenr, rule)
+                    self._rule_cells(rule)
 
-            table.row(css=self._css_for_rule(search_options, ruleset, rule))
-            self._set_focus(rulenr, rule)
-
-            # Rule matching
-            if self._hostname:
-                table.cell(_("Ma."))
-                if rule.is_disabled():
-                    reasons = [_("This rule is disabled")]
-                else:
-                    reasons = list(
-                        rule.get_mismatch_reasons(watolib.Folder.current(), self._hostname,
-                                                  self._item))
-
-                matches_rule = not reasons
-
-                # Handle case where dict is constructed from rules
-                if matches_rule and ruleset.match_type() == "dict":
-                    if not rule.value:
-                        title = _("This rule matches, but does not define any parameters.")
-                        img = 'imatch'
-                    else:
-                        new_keys = set(rule.value.keys())  # pylint: disable=no-member
-                        if match_keys.isdisjoint(new_keys):
-                            title = _("This rule matches and defines new parameters.")
-                            img = 'match'
-                        elif new_keys.issubset(match_keys):
-                            title = _(
-                                "This rule matches, but all of its parameters are overridden by previous rules."
-                            )
-                            img = 'imatch'
-                        else:
-                            title = _(
-                                "This rule matches, but some of its parameters are overridden by previous rules."
-                            )
-                            img = 'pmatch'
-                        match_keys.update(new_keys)
-
-                elif matches_rule and (not alread_matched or ruleset.match_type() == "all"):
-                    title = _("This rule matches for the host '%s'") % self._hostname
-                    if ruleset.item_type():
-                        title += _(" and the %s '%s'.") % (ruleset.item_name(), self._item)
-                    else:
-                        title += "."
-                    img = 'match'
-                    alread_matched = True
-                elif matches_rule:
-                    title = _("This rule matches, but is overridden by a previous rule.")
-                    img = 'imatch'
-                    alread_matched = True
-                else:
-                    title = _("This rule does not match: %s") % " ".join(reasons)
-                    img = 'nmatch'
-                html.icon(title, "rule%s" % img, middle=True)
-
-            self._show_rule_icons(folder, rulenr, rule)
-            self._rule_cells(rule)
-
-        if last_folder is not None:
-            table.end()
-
-    def _css_for_rule(self, search_options, ruleset, rule):
+    @staticmethod
+    def _css_for_rule(search_options, rule):
         css = []
         if rule.is_disabled():
             css.append("disabled")
-
-        if ruleset.has_rule_search_options(search_options) \
-           and rule.matches_search(search_options) \
-           and ("fulltext" not in search_options or not ruleset.matches_fulltext_search(search_options)):
+        if rule.ruleset.has_rule_search_options(search_options) and \
+           rule.matches_search(search_options) and \
+           ("fulltext" not in search_options or not rule.ruleset.matches_fulltext_search(search_options)):
             css.append("matches_search")
-
         return " ".join(css) if css else None
 
     def _set_focus(self, rulenr, rule):
@@ -734,7 +656,12 @@ class ModeEditRuleset(WatoMode):
            self._just_edited_rule.index() == rulenr:
             html.focus_here()
 
-    def _show_rule_icons(self, folder, rulenr, rule):
+    def _show_rule_icons(self, match_state, folder, rulenr, rule):
+        if self._hostname:
+            table.cell(_("Ma."))
+            title, img = self._match(match_state, rule)
+            html.icon(title, "rule%s" % img, middle=True)
+
         table.cell("", css="buttons")
         if rule.is_disabled():
             html.icon(_("This rule is currently disabled and will not be applied"), "disabled")
@@ -766,6 +693,34 @@ class ModeEditRuleset(WatoMode):
 
         html.element_dragger_url("tr", base_url=self._action_url("move_to", folder, rulenr))
         self._rule_button("delete", _("Delete this rule"), folder, rulenr)
+
+    def _match(self, match_state, rule):
+        reasons = [_("This rule is disabled")] if rule.is_disabled() else \
+                  list(rule.get_mismatch_reasons(watolib.Folder.current(), self._hostname, self._item))
+        if reasons:
+            return _("This rule does not match: %s") % " ".join(reasons), 'nmatch'
+        ruleset = rule.ruleset
+        if ruleset.match_type() == "dict":
+            new_keys = set(rule.value.iterkeys())
+            already_existing = match_state["keys"] & new_keys
+            match_state["keys"] |= new_keys
+            if not new_keys:
+                return _("This rule matches, but does not define any parameters."), 'imatch'
+            if not already_existing:
+                return _("This rule matches and defines new parameters."), 'match'
+            if already_existing == new_keys:
+                return _(
+                    "This rule matches, but all of its parameters are overridden by previous rules."
+                ), 'imatch'
+            return _(
+                "This rule matches, but some of its parameters are overridden by previous rules."
+            ), 'pmatch'
+        if match_state["matched"] and ruleset.match_type() != "all":
+            return _("This rule matches, but is overridden by a previous rule."), 'imatch'
+        match_state["matched"] = True
+        return (_("This rule matches for the host '%s'") % self._hostname) + \
+            (_(" and the %s '%s'.") % (ruleset.item_name(), self._item) if ruleset.item_type() else "."), \
+            'match'
 
     def _action_url(self, action, folder, rulenr):
         vars_ = [

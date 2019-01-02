@@ -7,7 +7,7 @@ import pytest  # type: ignore
 import six
 
 from cmk.gui.i18n import _
-import cmk.gui.table as table
+import cmk.gui.table
 from cmk.gui.globals import html
 from tools import compare_html
 
@@ -42,7 +42,7 @@ def test_basic(register_builtin_html):
     table_id = 0
     title = " TEST "
 
-    with table.open_table(table_id, title, searchable=False, sortable=False):
+    with cmk.gui.table.open_table(table_id, title, searchable=False, sortable=False) as table:
         table.row()
         table.cell("A", "1")
         table.cell("B", "2")
@@ -58,7 +58,7 @@ def test_plug(register_builtin_html):
     table_id = 0
     title = " TEST "
 
-    with table.open_table(table_id, title, searchable=False, sortable=False):
+    with cmk.gui.table.open_table(table_id, title, searchable=False, sortable=False) as table:
         table.row()
         table.cell("A", "1")
         html.write("a")
@@ -79,7 +79,7 @@ def test_context(register_builtin_html):
     rows = [(i, i**3) for i in range(10)]
     header = ["Number", "Cubical"]
 
-    with table.open_table(table_id=table_id, searchable=False, sortable=False):
+    with cmk.gui.table.open_table(table_id=table_id, searchable=False, sortable=False) as table:
         for row in rows:
             table.row()
             for h, r in zip(header, row):
@@ -96,14 +96,14 @@ def test_nesting(register_builtin_html):
     table_id = 0
     title = " TEST "
 
-    with table.open_table(table_id, title, searchable=False, sortable=False):
-        table.row()
-        table.cell("A", "1")
-        table.cell("B", "")
-        with table.open_table(table_id + 1, title + "2", searchable=False, sortable=False):
-            table.row()
-            table.cell("_", "+")
-            table.cell("|", "-")
+    with cmk.gui.table.open_table(table_id, title, searchable=False, sortable=False) as table1:
+        table1.row()
+        table1.cell("A", "1")
+        table1.cell("B", "")
+        with cmk.gui.table.open_table(table_id + 1, title + "2", searchable=False, sortable=False) as table2:
+            table2.row()
+            table2.cell("_", "+")
+            table2.cell("|", "-")
 
     written_text = "".join(html.response.flush_output())
     assert compare_html(
@@ -126,14 +126,14 @@ def test_nesting_context(register_builtin_html):
     table_id = 0
     title = " TEST "
 
-    with table.open_table(table_id=table_id, title=title, searchable=False, sortable=False):
-        table.row()
-        table.cell("A", "1")
-        table.cell("B", "")
-        with table.open_table(table_id + 1, title + "2", searchable=False, sortable=False):
-            table.row()
-            table.cell("_", "+")
-            table.cell("|", "-")
+    with cmk.gui.table.open_table(table_id=table_id, title=title, searchable=False, sortable=False) as table1:
+        table1.row()
+        table1.cell("A", "1")
+        table1.cell("B", "")
+        with cmk.gui.table.open_table(table_id + 1, title + "2", searchable=False, sortable=False) as table2:
+            table2.row()
+            table2.cell("_", "+")
+            table2.cell("|", "-")
 
     written_text = "".join(html.response.flush_output())
     assert compare_html(
@@ -177,13 +177,13 @@ def test_table_cubical(register_builtin_html, monkeypatch, sortable, searchable,
     html.add_var('_%s_actions' % table_id, '1')
 
     # Table construction
-    with table.open_table(
+    with cmk.gui.table.open_table(
             table_id=table_id,
             title=title,
             sortable=sortable,
             searchable=searchable,
             limit=limit,
-            output_format=output_format):
+            output_format=output_format) as table:
         for row in rows:
             table.row()
             for h, r in zip(header, row):

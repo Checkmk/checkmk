@@ -40,9 +40,10 @@ tables = []
 
 @contextmanager
 def open_table(table_id=None, title=None, **kwargs):
-    tables.append(Table(table_id, title, **kwargs))
+    tab = Table(table_id, title, **kwargs)
+    tables.append(tab)
     try:
-        yield
+        yield tab
     finally:
         tables.pop().end()
 

@@ -945,7 +945,7 @@ class Overridable(Base):
                     html.help(_u(instance.description()))
 
                     # Custom columns specific to that page type
-                    instance.render_extra_columns()
+                    instance.render_extra_columns(table)
 
                     ### for title, renderer in custom_columns:
                     ###     table.cell(title, renderer(visual))
@@ -1016,7 +1016,7 @@ class Overridable(Base):
 
     # Override this in order to display additional columns of an instance
     # in the table of all instances.
-    def render_extra_columns(self):
+    def render_extra_columns(self, table):
         pass
 
     # Page for editing an existing page, or creating a new one

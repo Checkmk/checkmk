@@ -516,7 +516,7 @@ def page_list(what,
                 table.cell(_('Hidden'), visual["hidden"] and _("yes") or _("no"))
 
                 if render_custom_columns:
-                    render_custom_columns(visual_name, visual)
+                    render_custom_columns(table, visual_name, visual)
 
     html.footer()
 

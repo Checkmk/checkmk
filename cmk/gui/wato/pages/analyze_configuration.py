@@ -39,7 +39,7 @@ import cmk.utils.store as store
 
 import cmk.gui.watolib as watolib
 import cmk.gui.config as config
-from cmk.gui.table import Table
+from cmk.gui.table import table_element
 import cmk.gui.log as log
 from cmk.gui.exceptions import MKUserError, MKGeneralException
 from cmk.gui.i18n import _
@@ -123,7 +123,7 @@ class ModeAnalyzeConfig(WatoMode):
 
         for category_name, results_by_test in sorted(
                 results_by_category.items(), key=lambda x: watolib.ACTestCategories.title(x[0])):
-            with Table(
+            with table_element(
                     title=watolib.ACTestCategories.title(category_name),
                     css="data analyze_config",
                     sortable=False,

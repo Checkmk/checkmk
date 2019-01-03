@@ -36,7 +36,7 @@ import cmk.gui.wato.user_profile
 import cmk.gui.userdb as userdb
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
-from cmk.gui.table import Table
+from cmk.gui.table import table_element
 import cmk.gui.forms as forms
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
@@ -236,7 +236,7 @@ class NotificationsMode(EventsMode):
                 title = code + _("Notification rules of user %s") % userid
             else:
                 title = _("Global notification rules")
-            with Table(title=title, limit=None, sortable=False) as table:
+            with table_element(title=title, limit=None, sortable=False) as table:
 
                 if analyse:
                     analyse_rules, _analyse_plugins = analyse
@@ -534,7 +534,7 @@ class ModeNotifications(NotificationsMode):
             return False
 
         title = _("Overdue bulk notifications!") if only_ripe else _("Open bulk notifications")
-        with Table(title=title) as table:
+        with table_element(title=title) as table:
             for directory, age, interval, timeperiod, maxcount, uuids in bulks:
                 dirparts = directory.split("/")
                 contact = dirparts[-3]
@@ -565,7 +565,7 @@ class ModeNotifications(NotificationsMode):
         if not backlog:
             return
 
-        with Table(
+        with table_element(
                 table_id="backlog", title=_("Recent notifications (for analysis)"),
                 sortable=False) as table:
             for nr, context in enumerate(backlog):
@@ -697,7 +697,7 @@ class ModeNotifications(NotificationsMode):
                     start_nr += len(user_rules)
 
         if analyse:
-            with Table(table_id="plugins", title=_("Resulting notifications")) as table:
+            with table_element(table_id="plugins", title=_("Resulting notifications")) as table:
                 for contact, plugin, parameters, bulk in analyse[1]:
                     table.row()
                     if contact.startswith('mailto:'):

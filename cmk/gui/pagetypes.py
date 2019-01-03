@@ -44,7 +44,7 @@ import cmk.utils.store as store
 
 import cmk.gui.pages
 import cmk.gui.config as config
-from cmk.gui.table import Table
+from cmk.gui.table import table_element
 import cmk.gui.forms as forms
 import cmk.gui.userdb as userdb
 from cmk.gui.valuespec import (
@@ -903,7 +903,7 @@ class Overridable(Base):
             if what != "builtin":
                 html.begin_form("bulk_delete_%s" % what, method="POST")
 
-            with Table(limit=None) as table:
+            with table_element(limit=None) as table:
                 for instance in instances:
                     table.row()
 

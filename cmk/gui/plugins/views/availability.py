@@ -30,7 +30,7 @@ import itertools
 import cmk
 import cmk.gui.config as config
 import cmk.gui.availability as availability
-from cmk.gui.table import Table
+from cmk.gui.table import table_element
 import cmk.gui.bi as bi
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
@@ -391,7 +391,8 @@ def render_availability_timeline(what, av_entry, avoptions):
     # soso..
 
     # Table with detailed events
-    with Table("av_timeline", "", css="timelineevents", sortable=False, searchable=False) as table:
+    with table_element(
+            "av_timeline", "", css="timelineevents", sortable=False, searchable=False) as table:
         for row_nr, row in enumerate(timeline_layout["table"]):
             table.row(
                 id_="timetable_%d" % row_nr,
@@ -455,7 +456,7 @@ def render_availability_table(group_title, availability_table, what, avoptions):
     # TODO: If summary line is activated, then sorting should now move that line to the
     # top. It should also stay at the bottom. This would require an extension to the
     # table.py module.
-    with Table(
+    with table_element(
             "av_items",
             av_table["title"],
             css="availability",
@@ -803,7 +804,7 @@ def show_annotations(annotations, av_rawdata, what, avoptions, omit_service):
     annos_to_render = get_relevant_annotations(annotations, av_rawdata, what, avoptions)
     render_date = get_annotation_date_render_function(annos_to_render, avoptions)
 
-    with Table(title=_("Annotations"), omit_if_empty=True) as table:
+    with table_element(title=_("Annotations"), omit_if_empty=True) as table:
         for (site_id, host, service), annotation in annos_to_render:
             table.row()
             table.cell("", css="buttons")
@@ -1015,7 +1016,7 @@ def output_availability_csv(what, av_data, avoptions):
 
     av_output_set_content_disposition(_("Check_MK-Availability"))
     availability_tables = availability.compute_availability_groups(what, av_data, avoptions)
-    with Table("av_items", output_format="csv") as table:
+    with table_element("av_items", output_format="csv") as table:
         for group_title, availability_table in availability_tables:
             av_table = availability.layout_availability_table(what, group_title, availability_table,
                                                               avoptions)

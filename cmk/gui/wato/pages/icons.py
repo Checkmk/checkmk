@@ -30,7 +30,7 @@ import cmk.utils.paths
 import cmk.utils.store
 
 import cmk.gui.config as config
-from cmk.gui.table import Table
+from cmk.gui.table import table_element
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
@@ -156,7 +156,7 @@ class ModeIcons(WatoMode):
         html.end_form()
 
         icons = sorted(self._load_custom_icons().items())
-        with Table("icons", _("Custom Icons")) as table:
+        with table_element("icons", _("Custom Icons")) as table:
             for icon_name, category_name in icons:
                 table.row()
 

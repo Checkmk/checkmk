@@ -39,7 +39,7 @@ import cmk.utils.werks
 import cmk.gui.pages
 import cmk.gui.utils as utils
 import cmk.gui.config as config
-from cmk.gui.table import Table
+from cmk.gui.table import table_element
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
@@ -342,7 +342,7 @@ def render_werks_table():
                       if werk_matches_options(werk, werk_table_options))
     groups = itertools.groupby(werklist, key=grouper)
     for group_title, werks in itertools.islice(groups, werk_table_options["group_limit"]):
-        with Table(
+        with table_element(
                 title=group_title, limit=None, searchable=False, sortable=False,
                 css="werks") as table:
             for werk in werks:

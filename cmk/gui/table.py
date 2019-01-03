@@ -35,34 +35,14 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 
-tables = []
-
 
 @contextmanager
 def open_table(table_id=None, title=None, **kwargs):
-    tab = Table(table_id, title, **kwargs)
-    tables.append(tab)
+    table = Table(table_id, title, **kwargs)
     try:
-        yield tab
+        yield table
     finally:
-        tables.pop().end()
-
-
-def row(*posargs, **kwargs):
-    tables[-1].row(*posargs, **kwargs)
-
-
-def text_cell(*posargs, **kwargs):
-    tables[-1].text_cell(*posargs, **kwargs)
-
-
-def cell(*posargs, **kwargs):
-    tables[-1].cell(*posargs, **kwargs)
-
-
-# Intermediate title, shown as soon as there is a following row.
-def groupheader(title):
-    tables[-1].groupheader(title)
+        table.end()
 
 
 def update_headinfo(num_rows):
@@ -138,7 +118,7 @@ class Table(object):
 
     def text_cell(self, *args, **kwargs):
         kwargs["escape_text"] = True
-        cell(*args, **kwargs)
+        self.cell(*args, **kwargs)
 
     def cell(self, *posargs, **kwargs):
         self.finish_previous()

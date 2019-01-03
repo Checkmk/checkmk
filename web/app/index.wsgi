@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import httplib
 import os
 import traceback
 
@@ -43,7 +44,6 @@ import cmk.gui.login as login
 import cmk.gui.log as log
 import cmk.gui.htmllib
 import cmk.gui.http
-import cmk.gui.http_status
 import cmk.gui.globals
 from cmk.gui.log import logger
 from cmk.gui.i18n import _
@@ -130,9 +130,9 @@ class Application(object):
 
             # Some exception need to set a specific HTTP status code
             if ty == MKUnauthenticatedException:
-                html.response.set_status_code(cmk.gui.http_status.HTTP_UNAUTHORIZED)
+                html.response.set_status_code(httplib.UNAUTHORIZED)
             elif ty == livestatus.MKLivestatusException:
-                html.response.set_status_code(cmk.gui.http_status.HTTP_BAD_GATEWAY)
+                html.response.set_status_code(httplib.BAD_GATEWAY)
 
             if ty in [MKConfigError, MKGeneralException]:
                 logger.error(_("%s: %s") % (plain_title, e))

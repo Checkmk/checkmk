@@ -1,13 +1,13 @@
 import pytest
 import _pytest
-
-monkeypatch = _pytest.monkeypatch.MonkeyPatch()
+import werkzeug.wrappers
 
 import cmk.gui.config as config
 import cmk.gui.htmllib as htmllib
 import cmk.gui.http as http
 from cmk.gui.globals import html
 
+monkeypatch = _pytest.monkeypatch.MonkeyPatch()
 monkeypatch.setattr(config, "omd_site", lambda: "NO_SITE")
 
 
@@ -20,7 +20,7 @@ def register_builtin_html():
         "SCRIPT_NAME": "",
         "REQUEST_URI": "",
     }
-    _request = http.Request(wsgi_environ)
-    _response = http.Response(_request.is_ssl_request)
+    request = http.Request(wsgi_environ)
+    response = werkzeug.wrappers.Response()
 
-    html.set_current(htmllib.html(_request, _response))
+    html.set_current(htmllib.html(request, response))

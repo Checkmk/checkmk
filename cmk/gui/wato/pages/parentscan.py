@@ -35,7 +35,7 @@ import cmk.gui.gui_background_job as gui_background_job
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.exceptions import MKUserError
+from cmk.gui.exceptions import HTTPRedirect, MKUserError
 from cmk.gui.plugins.wato import (
     mode_registry,
     WatoMode,
@@ -296,7 +296,7 @@ class ModeParentScan(WatoMode):
                 None,
                 _("Failed to start parent scan: %s") % ("%s" % e).replace("\n", "\n<br>"))
 
-        html.response.http_redirect(self._job.detail_url())
+        raise HTTPRedirect(self._job.detail_url())
 
     def _get_tasks(self):
         if not html.var("all"):

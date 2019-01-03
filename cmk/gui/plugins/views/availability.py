@@ -1061,4 +1061,4 @@ def av_output_set_content_disposition(title):
     )
     if isinstance(filename, unicode):
         filename = filename.encode("utf-8")
-    html.response.set_http_header("Content-Disposition", "Attachment; filename=\"%s\"" % filename)
+    html.response.headers["Content-Disposition"] = "Attachment; filename=\"%s\"" % filename

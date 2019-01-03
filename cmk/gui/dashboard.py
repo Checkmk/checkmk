@@ -52,6 +52,7 @@ from cmk.gui.log import logger
 from cmk.gui.globals import html
 
 from cmk.gui.exceptions import (
+    HTTPRedirect,
     MKGeneralException,
     MKAuthException,
     MKUserError,
@@ -1109,9 +1110,7 @@ def choose_view(name):
             load_view_into_dashlet(dashlet, dashlet_id, view_name)
             add_dashlet(dashlet, dashboard)
 
-            html.response.http_redirect('edit_dashlet.py?name=%s&id=%d' % (name, dashlet_id))
-            return
-
+            raise HTTPRedirect('edit_dashlet.py?name=%s&id=%d' % (name, dashlet_id))
         except MKUserError as e:
             html.user_error(e)
 

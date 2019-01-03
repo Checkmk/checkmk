@@ -37,7 +37,7 @@ import cmk.gui.sites as sites
 from cmk.gui.log import logger
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
-from cmk.gui.exceptions import MKGeneralException, MKException
+from cmk.gui.exceptions import HTTPRedirect, MKGeneralException, MKException
 from cmk.gui.plugins.sidebar import SidebarSnapin, snapin_registry
 
 
@@ -186,7 +186,7 @@ class QuicksearchSnapin(SidebarSnapin):
             return
 
         url = generate_search_results(q)
-        html.response.http_redirect(url)
+        raise HTTPRedirect(url)
 
 
 # Ensures the provided search string is a regex, does some basic conversion

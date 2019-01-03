@@ -51,8 +51,9 @@ def test_HTMLGenerator(register_builtin_html):
 
 
 def test_multiclass_call(register_builtin_html):
-    html.div('', class_="1", css="3", cssclass="4", **{"class": "2"})
-    written_text = "".join(html.response.flush_output())
+    with html.plugged():
+        html.div('', class_="1", css="3", cssclass="4", **{"class": "2"})
+        written_text = "".join(html.drain())
     assert tools.compare_html(written_text, "<div class=\"1 3 4 2\"></div>")
 
 

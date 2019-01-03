@@ -1004,7 +1004,7 @@ class html(HTMLGenerator):
 
         self.enable_request_timeout()
 
-        self.response.set_content_type("text/html; charset=UTF-8")
+        self.response.headers["Content-type"] = "text/html; charset=UTF-8"
 
         self.init_mobile()
 
@@ -1012,16 +1012,15 @@ class html(HTMLGenerator):
 
         # Disable caching for all our pages as they are mostly dynamically generated,
         # user related and are required to be up-to-date on every refresh
-        self.response.set_http_header("Cache-Control", "no-cache")
+        self.response.headers["Cache-Control"] = "no-cache"
 
         try:
             self.set_output_format(self.get_ascii_input("output_format", "html").lower())
         except (MKUserError, MKGeneralException):
             pass  # Silently ignore unsupported formats
 
-    # TODO: Refactor call sites
     def _lowlevel_write(self, text):
-        self.response.write(text)
+        self.response.stream.write(text)
 
     def init_modes(self):
         """Initializes the operation mode of the html() object. This is called
@@ -1090,7 +1089,8 @@ class html(HTMLGenerator):
             # TODO: Make private
             self.mobile = bool(self.var("mobile"))
             # Persist the explicitly set state in a cookie to have it maintained through further requests
-            self.response.set_cookie("mobile", str(int(self.mobile)))
+            self.response.set_cookie(
+                "mobile", str(int(self.mobile)), secure=html.request.is_ssl_request, httponly=True)
 
         elif self.request.has_cookie("mobile"):
             self.mobile = self.request.cookie("mobile", "0") == "1"
@@ -1375,7 +1375,7 @@ class html(HTMLGenerator):
             raise MKGeneralException(_("Unsupported context type '%s'") % f)
 
         self.output_format = f
-        self.response.set_content_type(content_type)
+        self.response.headers["Content-type"] = content_type
 
     def is_api_call(self):
         return self.output_format != "html"
@@ -1545,14 +1545,15 @@ class html(HTMLGenerator):
             self.render_a("in the global settings", href=url))
 
     def del_language_cookie(self):
-        self.response.del_cookie("language")
+        self.response.delete_cookie("language")
 
     def set_language_cookie(self, lang):
         # type: (str) -> None
         cookie_lang = self.request.cookie("language")
         if cookie_lang != lang:
             if lang is not None:
-                self.response.set_cookie("language", lang)
+                self.response.set_cookie(
+                    "language", lang, secure=self.request.is_ssl_request, httponly=True)
             else:
                 self.del_language_cookie()
 

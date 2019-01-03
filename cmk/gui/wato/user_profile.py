@@ -35,7 +35,7 @@ import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
 import cmk.gui.login as login
 from cmk.gui.plugins.userdb.htpasswd import hash_password
-from cmk.gui.exceptions import MKUserError, MKGeneralException, MKAuthException
+from cmk.gui.exceptions import HTTPRedirect, MKUserError, MKGeneralException, MKAuthException
 from cmk.gui.i18n import _, _u
 from cmk.gui.globals import html
 
@@ -262,7 +262,7 @@ def page_user_profile(change_pw=False):
         html.reload_sidebar()
         if change_pw:
             html.message(_("Your password has been changed."))
-            html.response.http_redirect(html.var('_origtarget', 'index.py'))
+            raise HTTPRedirect(html.var('_origtarget', 'index.py'))
         else:
             html.message(_("Successfully updated user profile."))
             # Ensure theme changes are applied without additional user interaction

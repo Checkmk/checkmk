@@ -63,6 +63,7 @@ from cmk.gui.valuespec import (
 from cmk.gui.i18n import _u, _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import (
+    HTTPRedirect,
     MKGeneralException,
     MKUserError,
     MKInternalError,
@@ -313,9 +314,7 @@ def page_create_view(next_url=None):
                 next_url = html.makeuri([('datasource', ds)], filename="create_view_infos.py")
             else:
                 next_url = next_url + '&datasource=%s' % ds
-            html.response.http_redirect(next_url)
-            return
-
+            raise HTTPRedirect(next_url)
         except MKUserError as e:
             html.div(e, class_=["error"])
             html.add_user_error(e.varname, e)

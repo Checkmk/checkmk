@@ -30,7 +30,7 @@ import json
 import cmk.gui.utils as utils
 import cmk.gui.config as config
 import cmk.gui.weblib as weblib
-from cmk.gui.table import Table
+from cmk.gui.table import table_element
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import MKGeneralException
@@ -853,7 +853,7 @@ def csv_export_matrix(rows, view, group_cells, cells):
         create_matrices(rows, group_cells, cells, num_columns=None))[0]
     value_counts, _row_majorities = matrix_find_majorities(rows, cells)
 
-    with Table(output_format="csv") as table:
+    with table_element(output_format="csv") as table:
         for cell_nr, cell in enumerate(group_cells):
             table.row()
             table.cell("", cell.title(use_short=False))

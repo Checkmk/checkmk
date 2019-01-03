@@ -39,7 +39,7 @@ from OpenSSL import crypto
 import cmk.utils.render
 import cmk.utils.store as store
 
-from cmk.gui.table import Table
+from cmk.gui.table import table_element
 import cmk.gui.config as config
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
@@ -159,7 +159,7 @@ class PageKeyManagement(object):
         raise NotImplementedError()
 
     def page(self):
-        with Table(title=self._table_title(), searchable=False, sortable=False) as table:
+        with table_element(title=self._table_title(), searchable=False, sortable=False) as table:
 
             for key_id, key in sorted(self.keys.items()):
                 cert = crypto.load_certificate(crypto.FILETYPE_PEM, key["certificate"])

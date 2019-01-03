@@ -28,7 +28,7 @@
 import re
 
 import cmk.gui.watolib as watolib
-from cmk.gui.table import Table
+from cmk.gui.table import table_element
 import cmk.gui.forms as forms
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
@@ -165,7 +165,7 @@ class ModePatternEditor(WatoMode):
                 True,
                 HTML("<b>Rule #%d</b>" % (abs_rulenr + 1)),
                 indent=False)
-            with Table("pattern_editor_rule_%d" % abs_rulenr, sortable=False) as table:
+            with table_element("pattern_editor_rule_%d" % abs_rulenr, sortable=False) as table:
                 abs_rulenr += 1
 
                 # TODO: What's this?

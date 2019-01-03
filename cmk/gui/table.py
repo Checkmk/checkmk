@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+from contextlib import contextmanager
 import re
 import json
 
@@ -32,6 +33,18 @@ import cmk.gui.config as config
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
+
+
+@contextmanager
+def table_element(table_id=None, title=None, **kwargs):
+    with html.plugged():
+        table = Table(table_id, title, **kwargs)
+        try:
+            yield table
+        finally:
+            table._finish_previous()
+            table._end()
+
 
 #.
 #   .--Table---------------------------------------------------------------.
@@ -45,7 +58,7 @@ from cmk.gui.htmllib import HTML
 #   |                                                                      |
 #   | Usage:                                                               |
 #   |                                                                      |
-#   |        with Table() as table:                                        |
+#   |        with table_element() as table:                                |
 #   |            table.row()                                               |
 #   |            table.cell("header", "content")                           |
 #   |                                                                      |
@@ -90,8 +103,6 @@ class Table(object):
         self.help = kwargs.get("help", None)
         self.css = kwargs.get("css", None)
         self.mode = 'row'
-
-        html.plug()
 
     def row(self, *posargs, **kwargs):
         self._finish_previous()
@@ -158,13 +169,7 @@ class Table(object):
     def groupheader(self, title):
         self.next_header = title
 
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self._finish_previous()
-        html.unplug()
-
+    def _end(self):
         if not self.rows and self.options["omit_if_empty"]:
             return
 

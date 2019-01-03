@@ -50,7 +50,7 @@ from cmk.gui.valuespec import (
 )
 import cmk.gui.forms as forms
 import cmk.gui.config as config
-from cmk.gui.table import Table
+from cmk.gui.table import table_element
 import cmk.gui.userdb as userdb
 import cmk.gui.pagetypes as pagetypes
 import cmk.utils.store as store
@@ -451,7 +451,7 @@ def page_list(what,
         html.write(title1)
         html.close_h3()
 
-        with Table(css='data', limit=None) as table:
+        with table_element(css='data', limit=None) as table:
 
             for owner, visual_name, visual in items:
                 table.row(css='data')

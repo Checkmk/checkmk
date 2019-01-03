@@ -28,7 +28,7 @@ to hosts and that is the basis of the rules."""
 
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
-from cmk.gui.table import Table
+from cmk.gui.table import table_element
 import cmk.gui.forms as forms
 from cmk.gui.exceptions import MKUserError, MKAuthException
 from cmk.gui.i18n import _, _u
@@ -196,7 +196,7 @@ class ModeHostTags(WatoMode, watolib.HosttagsConfiguration):
             self._render_aux_tag_list()
 
     def _render_host_tag_list(self):
-        with Table(
+        with table_element(
                 "hosttags",
                 _("Host tag groups"),
                 help=(_("Host tags are the basis of Check_MK's rule based configuration. "
@@ -254,7 +254,7 @@ class ModeHostTags(WatoMode, watolib.HosttagsConfiguration):
                 html.end_form()
 
     def _render_aux_tag_list(self):
-        with Table(
+        with table_element(
                 "auxtags",
                 _("Auxiliary tags"),
                 help=_("Auxiliary tags can be attached to other tags. That way "

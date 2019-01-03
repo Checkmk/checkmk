@@ -106,8 +106,8 @@ class ModeGroups(WatoMode):
     def _collect_additional_data(self):
         pass
 
-    def _show_row_cells(self, name, group):
-        cmk.gui.table.cell(_("Actions"), css="buttons")
+    def _show_row_cells(self, table, name, group):
+        table.cell(_("Actions"), css="buttons")
         edit_url = watolib.folder_preserving_link([("mode", "edit_%s_group" % self.type_name),
                                                    ("edit", name)])
         delete_url = html.makeactionuri([("_delete", name)])
@@ -117,8 +117,8 @@ class ModeGroups(WatoMode):
         html.icon_button(clone_url, _("Create a copy of this group"), "clone")
         html.icon_button(delete_url, _("Delete"), "delete")
 
-        cmk.gui.table.cell(_("Name"), html.attrencode(name))
-        cmk.gui.table.cell(_("Alias"), html.attrencode(group['alias']))
+        table.cell(_("Name"), html.attrencode(name))
+        table.cell(_("Alias"), html.attrencode(group['alias']))
 
     def page(self):
         if not self._groups:
@@ -133,7 +133,7 @@ class ModeGroups(WatoMode):
         with cmk.gui.table.open_table(self.type_name + "groups") as table:
             for name, group in sorted_groups:
                 table.row()
-                self._show_row_cells(name, group)
+                self._show_row_cells(table, name, group)
 
 
 # TODO: abc.ABCMeta
@@ -365,9 +365,9 @@ class ModeContactgroups(ModeGroups):
             for cg in cgs:
                 self._members.setdefault(cg, []).append((userid, user.get('alias', userid)))
 
-    def _show_row_cells(self, name, group):
-        super(ModeContactgroups, self)._show_row_cells(name, group)
-        cmk.gui.table.cell(_("Members"))
+    def _show_row_cells(self, table, name, group):
+        super(ModeContactgroups, self)._show_row_cells(table, name, group)
+        table.cell(_("Members"))
         html.write_html(
             HTML(", ").join([
                 html.render_a(

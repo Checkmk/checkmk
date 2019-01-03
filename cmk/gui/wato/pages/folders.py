@@ -396,9 +396,9 @@ class ModeFolder(WatoMode):
         # at the top of the table.
         search_shown = False
 
-        def bulk_actions(at_least_one_imported, top, withsearch, colspan, show_checkboxes):
-            cmk.gui.table.row(collect_headers=False, fixed=True)
-            cmk.gui.table.cell(css="bulksearch", colspan=3)
+        def bulk_actions(table, at_least_one_imported, top, withsearch, colspan, show_checkboxes):
+            table.row(collect_headers=False, fixed=True)
+            table.cell(css="bulksearch", colspan=3)
 
             if not show_checkboxes:
                 onclick_uri = html.makeuri([('show_checkboxes', '1'),
@@ -420,7 +420,7 @@ class ModeFolder(WatoMode):
                 html.text_input("search")
                 html.button("_search", _("Search"))
                 html.set_focus("search")
-            cmk.gui.table.cell(css="bulkactions", colspan=colspan - 3)
+            table.cell(css="bulkactions", colspan=colspan - 3)
             html.write_text(' ' + _("Selected hosts:\n"))
 
             if not self._folder.locked_hosts():
@@ -480,7 +480,7 @@ class ModeFolder(WatoMode):
             # list shows more than 10 rows
             if more_than_ten_items and \
                 (config.user.may("wato.edit_hosts") or config.user.may("wato.manage_hosts")):
-                bulk_actions(at_least_one_imported, True, True, colspan, show_checkboxes)
+                bulk_actions(table, at_least_one_imported, True, True, colspan, show_checkboxes)
                 search_shown = True
 
             contact_group_names = userdb.load_group_information().get("contact", {})
@@ -596,7 +596,7 @@ class ModeFolder(WatoMode):
                     html.a(host.folder().alias_path(), href=host.folder().url())
 
             if config.user.may("wato.edit_hosts") or config.user.may("wato.manage_hosts"):
-                bulk_actions(at_least_one_imported, False, not search_shown, colspan,
+                bulk_actions(table, at_least_one_imported, False, not search_shown, colspan,
                              show_checkboxes)
 
         html.hidden_fields()

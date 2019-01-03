@@ -159,8 +159,8 @@ class SimpleListMode(SimpleWatoModeBase):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def _show_entry_cells(self, ident, entry):
-        # type: (str, dict) -> None
+    def _show_entry_cells(self, table, ident, entry):
+        # type: (cmk.gui.table.Table, str, dict) -> None
         """Shows the HTML code for the cells of an object row"""
         raise NotImplementedError()
 
@@ -230,14 +230,14 @@ class SimpleListMode(SimpleWatoModeBase):
         with cmk.gui.table.open_table(self._mode_type.type_name(), self._table_title()) as table:
             for ident, entry in sorted(entries.items(), key=lambda e: e[1]["title"]):
                 table.row()
-                self._show_row(ident, entry)
+                self._show_row(table, ident, entry)
 
-    def _show_row(self, ident, entry):
-        self._show_action_cell(ident)
-        self._show_entry_cells(ident, entry)
+    def _show_row(self, table, ident, entry):
+        self._show_action_cell(table, ident)
+        self._show_entry_cells(table, ident, entry)
 
-    def _show_action_cell(self, ident):
-        cmk.gui.table.cell(_("Actions"), css="buttons")
+    def _show_action_cell(self, table, ident):
+        table.cell(_("Actions"), css="buttons")
 
         edit_url = html.makeuri_contextless([
             ("mode", self._mode_type.edit_mode_name()),

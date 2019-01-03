@@ -655,13 +655,13 @@ class ModeDistributedMonitoring(ModeSites):
             for site_id, site in sites:
                 table.row()
 
-                self._page_buttons(site_id, site)
-                self._page_basic_settings(site_id, site)
-                self._page_livestatus_settings(site_id, site)
-                self._page_replication_configuration(site_id, site)
+                self._page_buttons(table, site_id, site)
+                self._page_basic_settings(table, site_id, site)
+                self._page_livestatus_settings(table, site_id, site)
+                self._page_replication_configuration(table, site_id, site)
 
-    def _page_buttons(self, site_id, site):
-        cmk.gui.table.cell(_("Actions"), css="buttons")
+    def _page_buttons(self, table, site_id, site):
+        table.cell(_("Actions"), css="buttons")
         edit_url = watolib.folder_preserving_link([("mode", "edit_site"), ("edit", site_id)])
         html.icon_button(edit_url, _("Properties"), "edit")
 
@@ -688,16 +688,16 @@ class ModeDistributedMonitoring(ModeSites):
 
             html.icon_button(globals_url, title, icon)
 
-    def _page_basic_settings(self, site_id, site):
-        cmk.gui.table.text_cell(_("ID"), site_id)
-        cmk.gui.table.text_cell(_("Alias"), site.get("alias", ""))
+    def _page_basic_settings(self, table, site_id, site):
+        table.text_cell(_("ID"), site_id)
+        table.text_cell(_("Alias"), site.get("alias", ""))
 
-    def _page_livestatus_settings(self, site_id, site):
+    def _page_livestatus_settings(self, table, site_id, site):
         # Socket
         socket = site.get("socket", _("local site"))
         if socket == "disabled:":
             socket = _("don't query status")
-        cmk.gui.table.cell(_("Socket"))
+        table.cell(_("Socket"))
         if isinstance(socket, tuple) and socket[0] == "proxy":
             html.write_text(_("Use livestatus Proxy-Daemon"))
         else:
@@ -706,29 +706,29 @@ class ModeDistributedMonitoring(ModeSites):
         # Status host
         if site.get("status_host"):
             sh_site, sh_host = site["status_host"]
-            cmk.gui.table.text_cell(_("Status host"), "%s/%s" % (sh_site, sh_host))
+            table.text_cell(_("Status host"), "%s/%s" % (sh_site, sh_host))
         else:
-            cmk.gui.table.text_cell(_("Status host"))
+            table.text_cell(_("Status host"))
 
         # Disabled
         if site.get("disabled", False) is True:
-            cmk.gui.table.text_cell(_("Disabled"), "<b>%s</b>" % _("yes"))
+            table.text_cell(_("Disabled"), "<b>%s</b>" % _("yes"))
         else:
-            cmk.gui.table.text_cell(_("Disabled"), _("no"))
+            table.text_cell(_("Disabled"), _("no"))
 
         # Timeout
         if "timeout" in site:
-            cmk.gui.table.text_cell(_("Timeout"), _("%d sec") % int(site["timeout"]), css="number")
+            table.text_cell(_("Timeout"), _("%d sec") % int(site["timeout"]), css="number")
         else:
-            cmk.gui.table.text_cell(_("Timeout"), "")
+            table.text_cell(_("Timeout"), "")
 
         # Persist
         if site.get("persist", False):
-            cmk.gui.table.text_cell(_("Pers."), "<b>%s</b>" % _("yes"))
+            table.text_cell(_("Pers."), "<b>%s</b>" % _("yes"))
         else:
-            cmk.gui.table.text_cell(_("Pers."), _("no"))
+            table.text_cell(_("Pers."), _("no"))
 
-    def _page_replication_configuration(self, site_id, site):
+    def _page_replication_configuration(self, table, site_id, site):
         # Replication
         if site.get("replication"):
             repl = _("Slave")
@@ -738,10 +738,10 @@ class ModeDistributedMonitoring(ModeSites):
                 repl += ", " + _("MKPs")
         else:
             repl = ""
-        cmk.gui.table.text_cell(_("Replication"), repl)
+        table.text_cell(_("Replication"), repl)
 
         # Login-Button for Replication
-        cmk.gui.table.cell(_("Login"))
+        table.cell(_("Login"))
         if repl:
             if site.get("secret"):
                 logout_url = watolib.make_action_link([("mode", "sites"), ("_logout", site_id)])

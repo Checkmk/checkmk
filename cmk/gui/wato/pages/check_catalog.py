@@ -29,7 +29,7 @@ import re
 import cmk.utils.man_pages as man_pages
 
 import cmk.gui.watolib as watolib
-import cmk.gui.table as table
+import cmk.gui.table
 from cmk.gui.htmllib import HTML
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
@@ -291,7 +291,8 @@ class ModeCheckPlugins(WatoMode):
             return self._titles.get(t, t)
 
         html.h2(heading)
-        with table.open_table(searchable=False, sortable=False, css="check_catalog"):
+        with cmk.gui.table.open_table(
+                searchable=False, sortable=False, css="check_catalog") as table:
             for entry in sorted(manpage_list, cmp=lambda a, b: cmp(a["title"], b["title"])):
                 if not isinstance(entry, dict):
                     continue

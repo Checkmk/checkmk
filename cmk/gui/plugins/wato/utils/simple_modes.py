@@ -35,7 +35,7 @@ b) A edit mode which can be used to create and edit an object.
 import abc
 from typing import Optional, List, Type, Union, Text, Tuple  # pylint: disable=unused-import
 
-import cmk.gui.table as table
+import cmk.gui.table
 import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
 from cmk.gui.globals import html
@@ -227,7 +227,7 @@ class SimpleListMode(SimpleWatoModeBase):
         self._show_table(self._store.filter_editable_entries(self._store.load_for_reading()))
 
     def _show_table(self, entries):
-        with table.open_table(self._mode_type.type_name(), self._table_title()):
+        with cmk.gui.table.open_table(self._mode_type.type_name(), self._table_title()) as table:
             for ident, entry in sorted(entries.items(), key=lambda e: e[1]["title"]):
                 table.row()
                 self._show_row(ident, entry)
@@ -237,7 +237,7 @@ class SimpleListMode(SimpleWatoModeBase):
         self._show_entry_cells(ident, entry)
 
     def _show_action_cell(self, ident):
-        table.cell(_("Actions"), css="buttons")
+        cmk.gui.table.cell(_("Actions"), css="buttons")
 
         edit_url = html.makeuri_contextless([
             ("mode", self._mode_type.edit_mode_name()),

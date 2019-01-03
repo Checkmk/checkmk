@@ -28,7 +28,7 @@ to hosts and that is the basis of the rules."""
 
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
-import cmk.gui.table as table
+import cmk.gui.table
 import cmk.gui.forms as forms
 from cmk.gui.exceptions import MKUserError, MKAuthException
 from cmk.gui.i18n import _, _u
@@ -196,7 +196,7 @@ class ModeHostTags(WatoMode, watolib.HosttagsConfiguration):
             self._render_aux_tag_list()
 
     def _render_host_tag_list(self):
-        with table.open_table(
+        with cmk.gui.table.open_table(
                 "hosttags",
                 _("Host tag groups"),
                 help=(_("Host tags are the basis of Check_MK's rule based configuration. "
@@ -207,7 +207,7 @@ class ModeHostTags(WatoMode, watolib.HosttagsConfiguration):
                         "<b>Network device</b> and <b>Test</b></i>.")),
                 empty_text=_("You haven't defined any tag groups yet."),
                 searchable=False,
-                sortable=False):
+                sortable=False) as table:
 
             effective_tag_groups = self._get_effective_tag_groups()
 
@@ -254,7 +254,7 @@ class ModeHostTags(WatoMode, watolib.HosttagsConfiguration):
                 html.end_form()
 
     def _render_aux_tag_list(self):
-        with table.open_table(
+        with cmk.gui.table.open_table(
                 "auxtags",
                 _("Auxiliary tags"),
                 help=_("Auxiliary tags can be attached to other tags. That way "
@@ -262,7 +262,7 @@ class ModeHostTags(WatoMode, watolib.HosttagsConfiguration):
                        "get also the tag <tt>tcp</tt>. This makes the configuration of "
                        "your hosts easier."),
                 empty_text=_("You haven't defined any auxiliary tags."),
-                searchable=False):
+                searchable=False) as table:
 
             aux_tags = config.BuiltinTags().get_effective_aux_tags(self._auxtags)
             effective_tag_groups = self._get_effective_tag_groups()

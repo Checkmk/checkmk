@@ -30,7 +30,7 @@ import cmk.utils.paths
 
 import cmk.gui.watolib as watolib
 import cmk.gui.userdb as userdb
-import cmk.gui.table as table
+import cmk.gui.table
 import cmk.gui.forms as forms
 from cmk.gui.htmllib import HTML
 from cmk.gui.exceptions import MKUserError
@@ -107,7 +107,7 @@ class ModeGroups(WatoMode):
         pass
 
     def _show_row_cells(self, name, group):
-        table.cell(_("Actions"), css="buttons")
+        cmk.gui.table.cell(_("Actions"), css="buttons")
         edit_url = watolib.folder_preserving_link([("mode", "edit_%s_group" % self.type_name),
                                                    ("edit", name)])
         delete_url = html.makeactionuri([("_delete", name)])
@@ -117,8 +117,8 @@ class ModeGroups(WatoMode):
         html.icon_button(clone_url, _("Create a copy of this group"), "clone")
         html.icon_button(delete_url, _("Delete"), "delete")
 
-        table.cell(_("Name"), html.attrencode(name))
-        table.cell(_("Alias"), html.attrencode(group['alias']))
+        cmk.gui.table.cell(_("Name"), html.attrencode(name))
+        cmk.gui.table.cell(_("Alias"), html.attrencode(group['alias']))
 
     def page(self):
         if not self._groups:
@@ -130,7 +130,7 @@ class ModeGroups(WatoMode):
 
         self._collect_additional_data()
 
-        with table.open_table(self.type_name + "groups"):
+        with cmk.gui.table.open_table(self.type_name + "groups") as table:
             for name, group in sorted_groups:
                 table.row()
                 self._show_row_cells(name, group)
@@ -367,7 +367,7 @@ class ModeContactgroups(ModeGroups):
 
     def _show_row_cells(self, name, group):
         super(ModeContactgroups, self)._show_row_cells(name, group)
-        table.cell(_("Members"))
+        cmk.gui.table.cell(_("Members"))
         html.write_html(
             HTML(", ").join([
                 html.render_a(

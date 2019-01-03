@@ -30,7 +30,7 @@ import itertools
 import cmk
 import cmk.gui.config as config
 import cmk.gui.availability as availability
-import cmk.gui.table as table
+import cmk.gui.table
 import cmk.gui.bi as bi
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
@@ -391,8 +391,8 @@ def render_availability_timeline(what, av_entry, avoptions):
     # soso..
 
     # Table with detailed events
-    with table.open_table(
-            "av_timeline", "", css="timelineevents", sortable=False, searchable=False):
+    with cmk.gui.table.open_table(
+            "av_timeline", "", css="timelineevents", sortable=False, searchable=False) as table:
         for row_nr, row in enumerate(timeline_layout["table"]):
             table.row(
                 id_="timetable_%d" % row_nr,
@@ -456,13 +456,13 @@ def render_availability_table(group_title, availability_table, what, avoptions):
     # TODO: If summary line is activated, then sorting should now move that line to the
     # top. It should also stay at the bottom. This would require an extension to the
     # table.py module.
-    with table.open_table(
+    with cmk.gui.table.open_table(
             "av_items",
             av_table["title"],
             css="availability",
             searchable=False,
             limit=None,
-            omit_headers="omit_headers" in avoptions["labelling"]):
+            omit_headers="omit_headers" in avoptions["labelling"]) as table:
 
         show_urls, show_timeline = False, False
         for row in av_table["rows"]:
@@ -804,7 +804,7 @@ def show_annotations(annotations, av_rawdata, what, avoptions, omit_service):
     annos_to_render = get_relevant_annotations(annotations, av_rawdata, what, avoptions)
     render_date = get_annotation_date_render_function(annos_to_render, avoptions)
 
-    with table.open_table(title=_("Annotations"), omit_if_empty=True):
+    with cmk.gui.table.open_table(title=_("Annotations"), omit_if_empty=True) as table:
         for (site_id, host, service), annotation in annos_to_render:
             table.row()
             table.cell("", css="buttons")
@@ -1003,7 +1003,7 @@ def handle_edit_annotations():
 
 
 def output_availability_csv(what, av_data, avoptions):
-    def cells_from_row(group_titles, group_cells, object_titles, cell_titles, row_object,
+    def cells_from_row(table, group_titles, group_cells, object_titles, cell_titles, row_object,
                        row_cells):
         for column_title, group_title in zip(group_titles, group_cells):
             table.cell(column_title, group_title)
@@ -1016,7 +1016,7 @@ def output_availability_csv(what, av_data, avoptions):
 
     av_output_set_content_disposition(_("Check_MK-Availability"))
     availability_tables = availability.compute_availability_groups(what, av_data, avoptions)
-    with table.open_table("av_items", output_format="csv"):
+    with cmk.gui.table.open_table("av_items", output_format="csv") as table:
         for group_title, availability_table in availability_tables:
             av_table = availability.layout_availability_table(what, group_title, availability_table,
                                                               avoptions)
@@ -1030,6 +1030,7 @@ def output_availability_csv(what, av_data, avoptions):
             for row in av_table["rows"]:
                 table.row()
                 cells_from_row(
+                    table,
                     group_titles,
                     group_cells,
                     av_table["object_titles"],
@@ -1043,6 +1044,7 @@ def output_availability_csv(what, av_data, avoptions):
 
             if "summary" in av_table:
                 cells_from_row(
+                    table,
                     group_titles,
                     group_cells,
                     av_table["object_titles"],

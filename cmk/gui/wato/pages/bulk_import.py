@@ -38,7 +38,7 @@ import cmk.gui.pages
 import cmk.gui.weblib as weblib
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
-import cmk.gui.table as table
+import cmk.gui.table
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
@@ -327,9 +327,9 @@ class ModeBulkImport(WatoMode):
         # Determine how many columns should be rendered by using the longest column
         num_columns = max([len(r) for r in [headers] + rows])
 
-        with table.open_table(
+        with cmk.gui.table.open_table(
                 sortable=False, searchable=False,
-                omit_headers=not self._params.get("has_title_line")):
+                omit_headers=not self._params.get("has_title_line")) as table:
 
             # Render attribute selection fields
             table.row()

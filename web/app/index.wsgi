@@ -66,7 +66,7 @@ class Application(object):
     def __init__(self, wsgi_environ, start_response):
         self._start_response = start_response
         self._request = cmk.gui.http.Request(wsgi_environ)
-        self._response = cmk.gui.http.Response(self._request)
+        self._response = cmk.gui.http.Response(self._request.is_ssl_request)
 
         # Create an object that contains all data about the request and
         # helper functions for creating valid HTML. Parse URI and

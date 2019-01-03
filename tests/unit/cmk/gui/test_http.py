@@ -52,8 +52,7 @@ def test_response_set_cookie(register_builtin_html):
 
 
 def test_response_set_cookie_secure(register_builtin_html, monkeypatch):
-    # TODO: Find better way to directly patch the property html.request.is_ssl_request
-    monkeypatch.setitem(html.request._wsgi_environ, "HTTP_X_FORWARDED_PROTO", "https")
+    monkeypatch.setattr(html.response, "_secure", True)
 
     html.response.set_cookie("auth_SITE", "user:123456:abcdefg")
 

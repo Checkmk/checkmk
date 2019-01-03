@@ -368,8 +368,7 @@ class ModeAuditLog(WatoMode):
                                                          self._options["display"][1])
         html.write(filename)
 
-        html.response.set_http_header("Content-Disposition",
-                                      "attachment; filename=\"%s\"" % filename)
+        html.response.headers["Content-Disposition"] = "attachment; filename=\"%s\"" % filename
 
         titles = (
             _('Date'),

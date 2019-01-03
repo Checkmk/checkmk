@@ -26,7 +26,6 @@
 """Wrapper layer between WSGI and the GUI application code"""
 
 import cgi
-import httplib
 import re
 
 import six
@@ -34,7 +33,6 @@ import werkzeug.http
 
 import cmk.gui.log as log
 from cmk.gui.i18n import _
-from cmk.gui.exceptions import HTTPRedirect
 
 
 class Request(object):
@@ -247,89 +245,3 @@ class Request(object):
 
     def uploaded_file(self, varname, default=None):
         return self.uploads.get(varname, default)
-
-
-class Response(object):
-    """HTTP response handling
-
-    The application uses this class to produce a HTTP response which is then handed
-    over to the WSGI server for sending the response to the client.
-    """
-
-    def __init__(self, secure):
-        super(Response, self).__init__()
-        self._logger = log.logger.getChild("http.Response")
-        self._secure = secure
-        self._status_code = httplib.OK
-        self._output = []
-        self._headers_out = []
-
-    def set_status_code(self, code):
-        """Set the HTTP status code of the response to the given code"""
-        self._status_code = code
-
-    def set_content_type(self, ty):
-        """Set the content type of the response to the given type"""
-        self.set_http_header("Content-type", ty)
-
-    def set_http_header(self, key, val, prevent_duplicate=True):
-        """Set a HTTP header to send to the client with the response.
-
-        By default this function ensures that no header is set twice. For some headers, like e.g.
-        cookies it makes sense to set the headers multiple times. Set prevent_duplicate=False to
-        get this behaviour."""
-        if prevent_duplicate:
-            for this_key, this_val in self._headers_out[:]:
-                if this_key == key:
-                    self._headers_out.remove((this_key, this_val))
-
-        self._headers_out.append((key, val))
-
-    def set_cookie(self, varname, value, expires=None):
-        """Send the given cookie to the client with the response"""
-        if expires is not None:
-            assert isinstance(expires, int)
-
-        cookie_header = werkzeug.http.dump_cookie(
-            varname,
-            value,
-            # Use cookie for all URLs of the host (to make cross site use possible)
-            path="/",
-            # Tell client not to use the cookie within javascript
-            httponly=True,
-            # Tell client to only use the cookie for SSL connections
-            secure=self._secure,
-            expires=expires,
-        )
-
-        self.set_http_header("Set-Cookie", cookie_header, prevent_duplicate=False)
-
-    def del_cookie(self, varname):
-        """Tell the client to invalidate cookies with the given varname"""
-        self.set_cookie(varname, '', expires=-60)
-
-    def http_redirect(self, url):
-        """Finalize the currently processed page with a HTTP redirect to the given URL"""
-        raise HTTPRedirect(url)
-
-    def write(self, text):
-        """Extend the response body with the given text"""
-        self._output.append(text)
-
-    @property
-    def http_status(self):
-        """Provides the HTTP response status header (code incl. text)"""
-        return "%d %s" % (self._status_code, werkzeug.http.HTTP_STATUS_CODES[self._status_code])
-
-    @property
-    def headers(self):
-        """Provides the HTTP response headers to be sent to the client"""
-        return self._headers_out
-
-    def flush_output(self):
-        """Get response body iterable for the response
-
-        The output is handed over as list with a single byte string
-        as recommended by PEP 3333."""
-        output, self._output = self._output, []
-        return ["".join(output)]

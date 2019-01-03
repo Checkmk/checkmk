@@ -42,15 +42,16 @@ def test_basic(register_builtin_html):
     table_id = 0
     title = " TEST "
 
-    with table_element(table_id, title, searchable=False, sortable=False) as table:
-        table.row()
-        table.cell("A", "1")
-        table.cell("B", "2")
-        table.row()
-        table.cell("A", "1")
-        table.cell("C", "4")
+    with html.plugged():
+        with table_element(table_id, title, searchable=False, sortable=False) as table:
+            table.row()
+            table.cell("A", "1")
+            table.cell("B", "2")
+            table.row()
+            table.cell("A", "1")
+            table.cell("C", "4")
 
-    written_text = "".join(html.response.flush_output())
+        written_text = "".join(html.drain())
     assert read_out_simple_table(written_text) == [[u'A', u'B'], [u'1', u'2'], [u'1', u'4']]
 
 
@@ -58,19 +59,20 @@ def test_plug(register_builtin_html):
     table_id = 0
     title = " TEST "
 
-    with table_element(table_id, title, searchable=False, sortable=False) as table:
-        table.row()
-        table.cell("A", "1")
-        html.write("a")
-        table.cell("B", "2")
-        html.write("b")
-        table.row()
-        table.cell("A", "1")
-        html.write("a")
-        table.cell("C", "4")
-        html.write("c")
+    with html.plugged():
+        with table_element(table_id, title, searchable=False, sortable=False) as table:
+            table.row()
+            table.cell("A", "1")
+            html.write("a")
+            table.cell("B", "2")
+            html.write("b")
+            table.row()
+            table.cell("A", "1")
+            html.write("a")
+            table.cell("C", "4")
+            html.write("c")
 
-    written_text = "".join(html.response.flush_output())
+        written_text = "".join(html.drain())
     assert read_out_simple_table(written_text) == [[u'A', u'B'], [u'1a', u'2b'], [u'1a', u'4c']]
 
 
@@ -79,13 +81,14 @@ def test_context(register_builtin_html):
     rows = [(i, i**3) for i in range(10)]
     header = ["Number", "Cubical"]
 
-    with table_element(table_id=table_id, searchable=False, sortable=False) as table:
-        for row in rows:
-            table.row()
-            for h, r in zip(header, row):
-                table.cell(_(h), r)
+    with html.plugged():
+        with table_element(table_id=table_id, searchable=False, sortable=False) as table:
+            for row in rows:
+                table.row()
+                for h, r in zip(header, row):
+                    table.cell(_(h), r)
 
-    written_text = "".join(html.response.flush_output())
+        written_text = "".join(html.drain())
     data = read_out_simple_table(written_text)
     assert data.pop(0) == header
     data = [tuple(map(int, row)) for row in data if row and row[0]]
@@ -96,16 +99,17 @@ def test_nesting(register_builtin_html):
     table_id = 0
     title = " TEST "
 
-    with table_element(table_id, title, searchable=False, sortable=False) as table1:
-        table1.row()
-        table1.cell("A", "1")
-        table1.cell("B", "")
-        with table_element(table_id + 1, title + "2", searchable=False, sortable=False) as table2:
-            table2.row()
-            table2.cell("_", "+")
-            table2.cell("|", "-")
+    with html.plugged():
+        with table_element(table_id, title, searchable=False, sortable=False) as table1:
+            table1.row()
+            table1.cell("A", "1")
+            table1.cell("B", "")
+            with table_element(table_id + 1, title + "2", searchable=False, sortable=False) as table2:
+                table2.row()
+                table2.cell("_", "+")
+                table2.cell("|", "-")
 
-    written_text = "".join(html.response.flush_output())
+        written_text = "".join(html.drain())
     assert compare_html(
         written_text, '''<h3>  TEST </h3>
                             <script type="text/javascript">\ncmk.utils.update_header_info(\'1 row\');\n</script>
@@ -126,16 +130,17 @@ def test_nesting_context(register_builtin_html):
     table_id = 0
     title = " TEST "
 
-    with table_element(table_id=table_id, title=title, searchable=False, sortable=False) as table1:
-        table1.row()
-        table1.cell("A", "1")
-        table1.cell("B", "")
-        with table_element(table_id + 1, title + "2", searchable=False, sortable=False) as table2:
-            table2.row()
-            table2.cell("_", "+")
-            table2.cell("|", "-")
+    with html.plugged():
+        with table_element(table_id=table_id, title=title, searchable=False, sortable=False) as table1:
+            table1.row()
+            table1.cell("A", "1")
+            table1.cell("B", "")
+            with table_element(table_id + 1, title + "2", searchable=False, sortable=False) as table2:
+                table2.row()
+                table2.cell("_", "+")
+                table2.cell("|", "-")
 
-    written_text = "".join(html.response.flush_output())
+        written_text = "".join(html.drain())
     assert compare_html(
         written_text, '''<h3>  TEST </h3>
                             <script type="text/javascript">\ncmk.utils.update_header_info(\'1 row\');\n</script>
@@ -177,20 +182,21 @@ def test_table_cubical(register_builtin_html, monkeypatch, sortable, searchable,
     html.add_var('_%s_actions' % table_id, '1')
 
     # Table construction
-    with table_element(
-            table_id=table_id,
-            title=title,
-            sortable=sortable,
-            searchable=searchable,
-            limit=limit,
-            output_format=output_format) as table:
-        for row in rows:
-            table.row()
-            for h, r in zip(header, row):
-                table.cell(_(h), r)
+    with html.plugged():
+        with table_element(
+                table_id=table_id,
+                title=title,
+                sortable=sortable,
+                searchable=searchable,
+                limit=limit,
+                output_format=output_format) as table:
+            for row in rows:
+                table.row()
+                for h, r in zip(header, row):
+                    table.cell(_(h), r)
 
-    # Get generated html
-    written_text = "".join(html.response.flush_output())
+        # Get generated html
+        written_text = "".join(html.drain())
 
     # Data assertions
     assert output_format in ['html', 'csv'], 'Fetch is not yet implemented'

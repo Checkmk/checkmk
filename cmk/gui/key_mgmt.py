@@ -416,9 +416,9 @@ class PageDownloadKey(object):
 
     def _send_download(self, keys, key_id):
         key = keys[key_id]
-        html.response.set_http_header("Content-Disposition",
-                                      "Attachment; filename=%s" % self._file_name(key_id, key))
-        html.response.set_http_header("Content-type", "application/x-pem-file")
+        html.response.headers["Content-Disposition"] = "Attachment; filename=%s" % self._file_name(
+            key_id, key)
+        html.response.headers["Content-type"] = "application/x-pem-file"
         html.write(key["private_key"])
         html.write(key["certificate"])
 

@@ -128,6 +128,7 @@ from cmk.gui.i18n import _u, _
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 from cmk.gui.exceptions import (
+    HTTPRedirect,
     MKGeneralException,
     MKUserError,
     MKAuthException,
@@ -676,7 +677,7 @@ class PageFetchAgentOutput(AgentOutputPage):
         action_handler = gui_background_job.ActionHandler()
 
         if action_handler.handle_actions() and action_handler.did_delete_job():
-            html.response.http_redirect(
+            raise HTTPRedirect(
                 html.makeuri_contextless([
                     ("host", self._host.name()),
                     ("type", self._ty),
@@ -744,7 +745,7 @@ class PageDownloadAgentOutput(AgentOutputPage):
         file_name = self.file_name(self._host.site_id(), self._host.name(), self._ty)
 
         html.set_output_format("text")
-        html.response.set_http_header("Content-Disposition", "Attachment; filename=%s" % file_name)
+        html.response.headers["Content-Disposition"] = "Attachment; filename=%s" % file_name
 
         preview_filepath = os.path.join(self._job.get_work_dir(), file_name)
         html.write(file(preview_filepath).read())

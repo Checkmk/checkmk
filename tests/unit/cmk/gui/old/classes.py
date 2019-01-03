@@ -6,6 +6,8 @@ import re
 import json
 import traceback
 
+import werkzeug.wrappers
+
 import cmk.gui.http as http
 import cmk.gui.htmllib as htmllib
 
@@ -17,10 +19,10 @@ class HTMLTester(htmllib.html):
             "wsgi.input"  : "",
             "SCRIPT_NAME" : "",
         }
-        _request = http.Request(wsgi_environ)
-        _response = http.Response(_request.is_ssl_request)
+        request = http.Request(wsgi_environ)
+        response = werkzeug.wrappers.Response()
 
-        super(HTMLTester, self).__init__(_request, _response)
+        super(HTMLTester, self).__init__(request, response)
 
 
     def context_button_test(obj, title, url, icon=None, hot=False, id_=None, bestof=None, hover_title=None, id_in_best=False):

@@ -35,7 +35,7 @@ from typing import Dict, List, Type, Callable  # pylint: disable=unused-import
 import cmk.gui.pages
 import cmk.gui.utils as utils
 from cmk.gui.log import logger
-from cmk.gui.exceptions import MKGeneralException, MKAuthException, MKUserError
+from cmk.gui.exceptions import HTTPRedirect, MKGeneralException, MKAuthException, MKUserError
 from cmk.gui.valuespec import (
     Dictionary,
     CascadingDropdown,
@@ -48,8 +48,8 @@ from cmk.gui.valuespec import (
     TextAscii,
     TextAreaUnicode,
 )
-import cmk.gui.forms as forms
 import cmk.gui.config as config
+import cmk.gui.forms as forms
 from cmk.gui.table import table_element
 import cmk.gui.userdb as userdb
 import cmk.gui.pagetypes as pagetypes
@@ -587,9 +587,7 @@ def page_create_visual(what, info_keys, next_url=None):
                     single_infos)
             else:
                 next_url += '&single_infos=%s' % ','.join(single_infos)
-            html.response.http_redirect(next_url)
-            return
-
+            raise HTTPRedirect(next_url)
         except MKUserError as e:
             html.user_error(e)
 

@@ -28,6 +28,8 @@ import httplib
 import os
 import traceback
 
+import werkzeug.wrappers
+
 import livestatus
 
 import cmk.utils.paths
@@ -63,10 +65,11 @@ from cmk.gui.exceptions import (
 class Application(object):
     """The Check_MK GUI WSGI entry point"""
 
-    def __init__(self, wsgi_environ, start_response):
+    def __init__(self, environ, start_response):
+        self._environ = environ
         self._start_response = start_response
-        self._request = cmk.gui.http.Request(wsgi_environ)
-        self._response = cmk.gui.http.Response(self._request.is_ssl_request)
+        self._request = cmk.gui.http.Request(environ)
+        self._response = werkzeug.wrappers.Response()
 
         # Create an object that contains all data about the request and
         # helper functions for creating valid HTML. Parse URI and
@@ -76,9 +79,10 @@ class Application(object):
             cmk.gui.globals.html.set_current(h)
         except Exception:
             logger.exception("Failed to process request")
-            self._response.set_content_type("text/plain; charset=UTF-8")
-            self._response.write("Failed to process request. Have a look at 'var/log/web.log' "
-                                 "for more information.\n")
+            self._response.headers["Content-type"] = "text/plain; charset=UTF-8"
+            self._response.stream.write(
+                "Failed to process request. Have a look at 'var/log/web.log' for more information.\n"
+            )
             return
 
         self._process_request()
@@ -93,11 +97,11 @@ class Application(object):
                 self._handle_request()
 
         except HTTPRedirect, e:
-            html.response.set_status_code(e.status)
-            html.response.set_http_header("Location", e.url)
+            self._response.status_code = e.status
+            self._response.headers["Location"] = e.url
 
         except FinalizeRequest, e:
-            html.response.set_status_code(e.status)
+            self._response.status_code = e.status
 
         except (
                 MKUserError,
@@ -130,9 +134,9 @@ class Application(object):
 
             # Some exception need to set a specific HTTP status code
             if ty == MKUnauthenticatedException:
-                html.response.set_status_code(httplib.UNAUTHORIZED)
+                self._response.status_code = httplib.UNAUTHORIZED
             elif ty == livestatus.MKLivestatusException:
-                html.response.set_status_code(httplib.BAD_GATEWAY)
+                self._response.status_code = httplib.BAD_GATEWAY
 
             if ty in [MKConfigError, MKGeneralException]:
                 logger.error(_("%s: %s") % (plain_title, e))
@@ -223,8 +227,8 @@ class Application(object):
         # Never render the login form directly when accessing urls like "index.py"
         # or "dashboard.py". This results in strange problems.
         if html.myfile != 'login':
-            html.response.http_redirect('%scheck_mk/login.py?_origtarget=%s' %
-                                        (config.url_prefix(), html.urlencode(html.makeuri([]))))
+            raise HTTPRedirect('%scheck_mk/login.py?_origtarget=%s' %
+                               (config.url_prefix(), html.urlencode(html.makeuri([]))))
         else:
             # This either displays the login page or validates the information submitted
             # to the login form. After successful login a http redirect to the originally
@@ -303,8 +307,7 @@ class Application(object):
 
     def __iter__(self):
         """Is called by the WSGI server to serve the current page"""
-        self._start_response(self._response.http_status, self._response.headers)
-        return iter(self._response.flush_output())
+        return self._response(self._environ, self._start_response)
 
 
 # Early initialization upon first start of the application by the server

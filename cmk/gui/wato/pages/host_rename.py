@@ -39,7 +39,7 @@ import cmk.gui.forms as forms
 import cmk.gui.background_job as background_job
 import cmk.gui.gui_background_job as gui_background_job
 from cmk.gui.htmllib import HTML
-from cmk.gui.exceptions import MKUserError, MKGeneralException, MKAuthException
+from cmk.gui.exceptions import HTTPRedirect, MKUserError, MKGeneralException, MKAuthException
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 
@@ -159,7 +159,7 @@ class ModeBulkRenameHost(WatoMode):
             except background_job.BackgroundJobAlreadyRunning as e:
                 raise MKGeneralException(_("Another host renaming job is already running: %s") % e)
 
-            html.response.http_redirect(host_renaming_job.detail_url())
+            raise HTTPRedirect(host_renaming_job.detail_url())
         elif c is False:  # not yet confirmed
             return ""
         else:
@@ -404,7 +404,7 @@ class ModeRenameHost(WatoMode):
             except background_job.BackgroundJobAlreadyRunning as e:
                 raise MKGeneralException(_("Another host renaming job is already running: %s") % e)
 
-            html.response.http_redirect(host_renaming_job.detail_url())
+            raise HTTPRedirect(host_renaming_job.detail_url())
 
         elif c is False:  # not yet confirmed
             return ""

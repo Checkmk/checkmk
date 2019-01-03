@@ -1391,7 +1391,7 @@ def output_csv_headers(view):
                               time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(time.time())))
     if isinstance(filename, unicode):
         filename = filename.encode("utf-8")
-    html.response.set_http_header("Content-Disposition", "Attachment; filename=\"%s\"" % filename)
+    html.response.headers["Content-Disposition"] = "Attachment; filename=\"%s\"" % filename
 
 
 def get_sorter_name_of_painter(painter_name):

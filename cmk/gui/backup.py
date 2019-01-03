@@ -61,7 +61,7 @@ from cmk.gui.valuespec import (
     ListOf,
     Timeofday,
 )
-from cmk.gui.exceptions import MKUserError, MKGeneralException
+from cmk.gui.exceptions import HTTPRedirect, MKUserError, MKGeneralException
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 
@@ -785,7 +785,7 @@ class PageEditBackupJob(object):
                 job.from_config(self._job_cfg)
 
             jobs.save()
-        html.response.http_redirect(html.makeuri_contextless([("mode", "backup")]))
+        raise HTTPRedirect(html.makeuri_contextless([("mode", "backup")]))
 
     def page(self):
         html.begin_form("edit_job", method="POST")
@@ -1175,7 +1175,7 @@ class PageEditBackupTarget(object):
                 target.from_config(self._target_cfg)
 
             targets.save()
-        html.response.http_redirect(html.makeuri_contextless([("mode", "backup_targets")]))
+        raise HTTPRedirect(html.makeuri_contextless([("mode", "backup_targets")]))
 
     def page(self):
         html.begin_form("edit_target", method="POST")

@@ -45,37 +45,35 @@ def test_request_processing(register_builtin_html):
 
 
 def test_response_set_cookie(register_builtin_html):
-    html.response.set_cookie("auth_SITE", "user:123456:abcdefg")
+    html.response.set_cookie("auth_SITE", "user:123456:abcdefg", httponly=True)
 
-    assert html.response.headers[-1] == \
-            ("Set-Cookie", "auth_SITE=user:123456:abcdefg; HttpOnly; Path=/")
+    assert html.response.headers.getlist("Set-Cookie")[-1] == \
+        "auth_SITE=user:123456:abcdefg; HttpOnly; Path=/"
 
 
 def test_response_set_cookie_secure(register_builtin_html, monkeypatch):
-    monkeypatch.setattr(html.response, "_secure", True)
+    html.response.set_cookie("auth_SITE", "user:123456:abcdefg", secure=True, httponly=True)
 
-    html.response.set_cookie("auth_SITE", "user:123456:abcdefg")
-
-    assert html.response.headers[-1] == \
-            ("Set-Cookie", "auth_SITE=user:123456:abcdefg; Secure; HttpOnly; Path=/")
+    assert html.response.headers.getlist("Set-Cookie")[-1] == \
+            "auth_SITE=user:123456:abcdefg; Secure; HttpOnly; Path=/"
 
 
 def test_response_set_cookie_expires(register_builtin_html, monkeypatch):
     monkeypatch.setattr(time, "time", lambda: 0)
 
-    html.response.set_cookie("auth_SITE", "user:123456:abcdefg", expires=60)
+    html.response.set_cookie("auth_SITE", "user:123456:abcdefg", expires=60, httponly=True)
 
-    assert html.response.headers[-1] == \
-            ("Set-Cookie", "auth_SITE=user:123456:abcdefg; Expires=Thu, 01-Jan-1970 00:01:00 GMT; HttpOnly; Path=/")
+    assert html.response.headers.getlist("Set-Cookie")[-1] == \
+            "auth_SITE=user:123456:abcdefg; Expires=Thu, 01-Jan-1970 00:01:00 GMT; HttpOnly; Path=/"
 
 
 def test_response_del_cookie(register_builtin_html, monkeypatch):
     monkeypatch.setattr(time, "time", lambda: 0)
 
-    html.response.del_cookie("auth_SITE")
+    html.response.delete_cookie("auth_SITE")
 
-    assert html.response.headers[-1] == \
-            ("Set-Cookie", "auth_SITE=; Expires=Wed, 31-Dec-1969 23:59:00 GMT; HttpOnly; Path=/")
+    assert html.response.headers.getlist("Set-Cookie")[-1] == \
+            "auth_SITE=; Expires=Thu, 01-Jan-1970 00:00:00 GMT; Max-Age=0; Path=/"
 
 
 # User IDs in Check_MK may contain non ascii characters. When they need to be encoded,

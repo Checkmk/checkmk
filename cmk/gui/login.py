@@ -43,7 +43,7 @@ from cmk.gui.htmllib import HTML
 
 import cmk.utils.paths
 
-from cmk.gui.exceptions import MKInternalError, MKAuthException, MKUserError, FinalizeRequest
+from cmk.gui.exceptions import HTTPRedirect, MKInternalError, MKAuthException, MKUserError, FinalizeRequest
 
 auth_type = None
 auth_logger = logger.getChild("auth")
@@ -144,7 +144,7 @@ def del_auth_cookie():
     for cookie_name in html.request.get_cookie_names():
         if cookie_name.startswith("auth_"):
             if auth_cookie_is_valid(cookie_name):
-                html.response.del_cookie(cookie_name)
+                html.response.delete_cookie(cookie_name)
 
 
 def auth_cookie_value(username):
@@ -176,11 +176,19 @@ def create_auth_session(username):
 
 
 def set_auth_cookie(username):
-    html.response.set_cookie(auth_cookie_name(), auth_cookie_value(username))
+    html.response.set_cookie(
+        auth_cookie_name(),
+        auth_cookie_value(username),
+        secure=html.request.is_ssl_request,
+        httponly=True)
 
 
 def set_session_cookie(username, session_id):
-    html.response.set_cookie(session_cookie_name(), session_cookie_value(username, session_id))
+    html.response.set_cookie(
+        session_cookie_name(),
+        session_cookie_value(username, session_id),
+        secure=html.request.is_ssl_request,
+        httponly=True)
 
 
 def session_cookie_name():
@@ -239,8 +247,8 @@ def check_auth_cookie(cookie_name):
     if html.myfile != 'user_change_pw':
         result = userdb.need_to_change_pw(username)
         if result:
-            html.response.http_redirect('user_change_pw.py?_origtarget=%s&reason=%s' %
-                                        (html.urlencode(html.makeuri([])), result))
+            raise HTTPRedirect('user_change_pw.py?_origtarget=%s&reason=%s' % (html.urlencode(
+                html.makeuri([])), result))
 
     # Return the authenticated username
     return username
@@ -411,10 +419,10 @@ def do_login():
                 # password needs to be changed
                 result = userdb.need_to_change_pw(username)
                 if result:
-                    html.response.http_redirect('user_change_pw.py?_origtarget=%s&reason=%s' %
-                                                (html.urlencode(origtarget), result))
+                    raise HTTPRedirect('user_change_pw.py?_origtarget=%s&reason=%s' %
+                                       (html.urlencode(origtarget), result))
                 else:
-                    html.response.http_redirect(origtarget)
+                    raise HTTPRedirect(origtarget)
             else:
                 userdb.on_failed_login(username)
                 raise MKUserError(None, _('Invalid credentials.'))
@@ -455,7 +463,7 @@ def normal_login_page(called_directly=True):
 
     # When someone calls the login page directly and is already authed redirect to main page
     if html.myfile == 'login' and check_auth(html.request):
-        html.response.http_redirect(origtarget)
+        raise HTTPRedirect(origtarget)
 
     html.open_div(id_="login")
 
@@ -524,14 +532,14 @@ def page_logout():
     invalidate_auth_session()
 
     if auth_type == 'cookie':
-        html.response.http_redirect(config.url_prefix() + 'check_mk/login.py')
+        raise HTTPRedirect(config.url_prefix() + 'check_mk/login.py')
     else:
         # Implement HTTP logout with cookie hack
         if not html.request.has_cookie('logout'):
-            html.response.set_http_header(
-                'WWW-Authenticate', 'Basic realm="OMD Monitoring Site %s"' % config.omd_site())
-            html.response.set_cookie('logout', '1')
+            html.response.headers[
+                'WWW-Authenticate'] = 'Basic realm="OMD Monitoring Site %s"' % config.omd_site()
+            html.response.set_cookie('logout', '1', secure=html.request.is_ssl_request)
             raise FinalizeRequest(httplib.UNAUTHORIZED)
         else:
-            html.response.del_cookie('logout')
-            html.response.http_redirect(config.url_prefix() + 'check_mk/')
+            html.response.delete_cookie('logout')
+            raise HTTPRedirect(config.url_prefix() + 'check_mk/')

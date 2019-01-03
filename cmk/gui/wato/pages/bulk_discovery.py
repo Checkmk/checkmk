@@ -36,7 +36,7 @@ import cmk.gui.sites as sites
 import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
 from cmk.gui.log import logger
-from cmk.gui.exceptions import MKUserError
+from cmk.gui.exceptions import HTTPRedirect, MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 import cmk.gui.gui_background_job as gui_background_job
@@ -238,7 +238,7 @@ class ModeBulkDiscovery(WatoMode):
                 None,
                 _("Failed to start discovery: %s") % ("%s" % e).replace("\n", "\n<br>"))
 
-        html.response.http_redirect(self._job.detail_url())
+        raise HTTPRedirect(self._job.detail_url())
 
     def page(self):
         config.user.need_permission("wato.services")

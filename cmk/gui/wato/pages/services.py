@@ -40,7 +40,7 @@ from cmk.utils.defines import short_service_state_name
 
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
-import cmk.gui.table as table
+import cmk.gui.table
 import cmk.gui.background_job as background_job
 from cmk.gui.gui_background_job import job_registry
 
@@ -879,7 +879,8 @@ class DiscoveryPageRenderer(object):
                 continue
 
             html.begin_form("checks_%s" % entry.table_group, method="POST", action="wato.py")
-            with table.open_table(css="data", searchable=False, limit=None, sortable=False):
+            with cmk.gui.table.open_table(
+                    css="data", searchable=False, limit=None, sortable=False) as table:
                 table.groupheader(self._get_group_header(entry))
 
                 if entry.show_bulk_actions and len(checks) > 10:
@@ -1020,8 +1021,8 @@ class DiscoveryPageRenderer(object):
         if not config.user.may("wato.services"):
             return
 
-        table.row(collect_headers=collect_headers, fixed=True)
-        table.cell(css="bulkactions service_discovery", colspan=self._bulk_action_colspan())
+        cmk.gui.table.row(collect_headers=collect_headers, fixed=True)
+        cmk.gui.table.cell(css="bulkactions service_discovery", colspan=self._bulk_action_colspan())
 
         if table_source == DiscoveryState.MONITORED:
             if config.user.may("wato.service_discovery_to_undecided"):
@@ -1086,14 +1087,14 @@ class DiscoveryPageRenderer(object):
         else:
             stateclass = "state svcstate state%s" % state
 
-        table.row(css="data", state=state)
+        cmk.gui.table.row(css="data", state=state)
 
         self._show_bulk_checkbox(discovery_result, request, check_type, item, show_bulk_actions)
         self._show_actions(discovery_result, check)
 
-        table.cell(_("State"), statename, css=stateclass)
-        table.cell(_("Service"), html.attrencode(descr))
-        table.cell(_("Status detail"))
+        cmk.gui.table.cell(_("State"), statename, css=stateclass)
+        cmk.gui.table.cell(_("Service"), html.attrencode(descr))
+        cmk.gui.table.cell(_("Status detail"))
         self._show_status_detail(table_source, check_type, item, descr, output)
 
         if table_source in [DiscoveryState.ACTIVE, DiscoveryState.ACTIVE_IGNORED]:
@@ -1102,10 +1103,10 @@ class DiscoveryPageRenderer(object):
             ctype = check_type
         manpage_url = watolib.folder_preserving_link([("mode", "check_manpage"),
                                                       ("check_type", ctype)])
-        table.cell(_("Check plugin"), html.render_a(content=ctype, href=manpage_url))
+        cmk.gui.table.cell(_("Check plugin"), html.render_a(content=ctype, href=manpage_url))
 
         if self._options.show_parameters:
-            table.cell(_("Check parameters"))
+            cmk.gui.table.cell(_("Check parameters"))
             self._show_check_parameters(table_source, check_type, checkgroup, params)
 
     def _show_status_detail(self, table_source, check_type, item, descr, output):
@@ -1160,14 +1161,14 @@ class DiscoveryPageRenderer(object):
             return
 
         if not show_bulk_actions:
-            table.cell(css="checkbox")
+            cmk.gui.table.cell(css="checkbox")
             return
 
         css_classes = ["service_checkbox"]
         if self._is_running(discovery_result):
             css_classes.append("disabled")
 
-        table.cell(
+        cmk.gui.table.cell(
             "<input type=button class=checkgroup name=_toggle_group"
             " onclick=\"cmk.selection.toggle_group_rows(this);\" value=\"X\" />",
             sortable=False,
@@ -1178,7 +1179,7 @@ class DiscoveryPageRenderer(object):
         html.checkbox(varname=name, deflt=checked, class_=css_classes)
 
     def _show_actions(self, discovery_result, check):
-        table.cell(css="buttons")
+        cmk.gui.table.cell(css="buttons")
         if not config.user.may("wato.services"):
             html.empty_icon()
             html.empty_icon()

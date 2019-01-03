@@ -27,7 +27,7 @@
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.userdb as userdb
-import cmk.gui.table as table
+import cmk.gui.table
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.valuespec import (
@@ -107,15 +107,15 @@ class ModePasswords(SimpleListMode):
         super(ModePasswords, self).page()
 
     def _show_entry_cells(self, ident, entry):
-        table.cell(_("Title"), html.render_text(entry["title"]))
-        table.cell(_("Editable by"))
+        cmk.gui.table.cell(_("Title"), html.render_text(entry["title"]))
+        cmk.gui.table.cell(_("Editable by"))
         if entry["owned_by"] is None:
             html.write_text(
                 _("Administrators (having the permission "
                   "\"Write access to all passwords\")"))
         else:
             html.write_text(self._contact_group_alias(entry["owned_by"]))
-        table.cell(_("Shared with"))
+        cmk.gui.table.cell(_("Shared with"))
         if not entry["shared_with"]:
             html.write_text(_("Not shared"))
         else:

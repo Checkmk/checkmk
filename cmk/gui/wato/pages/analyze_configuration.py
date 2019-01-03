@@ -39,7 +39,7 @@ import cmk.utils.store as store
 
 import cmk.gui.watolib as watolib
 import cmk.gui.config as config
-import cmk.gui.table as table
+import cmk.gui.table
 import cmk.gui.log as log
 from cmk.gui.exceptions import MKUserError, MKGeneralException
 from cmk.gui.i18n import _
@@ -123,17 +123,17 @@ class ModeAnalyzeConfig(WatoMode):
 
         for category_name, results_by_test in sorted(
                 results_by_category.items(), key=lambda x: watolib.ACTestCategories.title(x[0])):
-            with table.open_table(
+            with cmk.gui.table.open_table(
                     title=watolib.ACTestCategories.title(category_name),
                     css="data analyze_config",
                     sortable=False,
-                    searchable=False):
+                    searchable=False) as table:
 
                 for test_id, test_results_by_site in sorted(
                         results_by_test.items(), key=lambda x: x[1]["test"]["title"]):
-                    self._show_test_row(test_id, test_results_by_site, site_ids)
+                    self._show_test_row(table, test_id, test_results_by_site, site_ids)
 
-    def _show_test_row(self, test_id, test_results_by_site, site_ids):
+    def _show_test_row(self, table, test_id, test_results_by_site, site_ids):
         table.row()
 
         table.cell(_("Actions"), css="buttons", sortable=False)

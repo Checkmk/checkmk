@@ -32,7 +32,7 @@ import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.userdb as userdb
 import cmk.gui.utils as utils
-import cmk.gui.table as table
+import cmk.gui.table
 import cmk.gui.weblib as weblib
 import cmk.gui.forms as forms
 
@@ -397,8 +397,8 @@ class ModeFolder(WatoMode):
         search_shown = False
 
         def bulk_actions(at_least_one_imported, top, withsearch, colspan, show_checkboxes):
-            table.row(collect_headers=False, fixed=True)
-            table.cell(css="bulksearch", colspan=3)
+            cmk.gui.table.row(collect_headers=False, fixed=True)
+            cmk.gui.table.cell(css="bulksearch", colspan=3)
 
             if not show_checkboxes:
                 onclick_uri = html.makeuri([('show_checkboxes', '1'),
@@ -420,7 +420,7 @@ class ModeFolder(WatoMode):
                 html.text_input("search")
                 html.button("_search", _("Search"))
                 html.set_focus("search")
-            table.cell(css="bulkactions", colspan=colspan - 3)
+            cmk.gui.table.cell(css="bulkactions", colspan=colspan - 3)
             html.write_text(' ' + _("Selected hosts:\n"))
 
             if not self._folder.locked_hosts():
@@ -443,7 +443,7 @@ class ModeFolder(WatoMode):
 
         # Show table of hosts in this folder
         html.begin_form("hosts", method="POST")
-        with table.open_table("hosts", title=_("Hosts"), searchable=False):
+        with cmk.gui.table.open_table("hosts", title=_("Hosts"), searchable=False) as table:
 
             # Remember if that host has a target folder (i.e. was imported with
             # a folder information but not yet moved to that folder). If at least

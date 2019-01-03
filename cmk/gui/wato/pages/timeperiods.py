@@ -32,7 +32,7 @@ import cmk.utils.defines as defines
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.userdb as userdb
-import cmk.gui.table as table
+import cmk.gui.table
 import cmk.gui.forms as forms
 import cmk.gui.plugins.wato.utils
 import cmk.gui.wato.mkeventd
@@ -274,7 +274,8 @@ class ModeTimeperiods(WatoMode):
         return used_in
 
     def page(self):
-        with table.open_table("timeperiods", empty_text=_("There are no timeperiods defined yet.")):
+        with cmk.gui.table.open_table(
+                "timeperiods", empty_text=_("There are no timeperiods defined yet.")) as table:
             for name, timeperiod in sorted(self._timeperiods.items()):
                 table.row()
 

@@ -5,7 +5,7 @@ FILES_TO_CHECK := $(realpath $(addprefix ../../cmk/ec/,defaults.py export.py mai
 		  $(realpath $(wildcard ../../cmk/utils/*.py)) \
 		  $(realpath $(wildcard ../../cmk/notification_plugins/*.py)) \
 		  $(realpath $(wildcard ../../cmk_base/*.py)) \
-		  $(realpath $(addprefix ../../cmk/gui/,dashboard.py exceptions.py globals.py htmllib.py http_status.py \
+		  $(realpath $(addprefix ../../cmk/gui/,dashboard.py exceptions.py globals.py htmllib.py \
 		                                        i18n.py sidebar.py sites.py table.py visuals.py permissions.py)) \
 		  $(realpath $(addprefix ../../cmk/gui/plugins/userdb/,htpasswd.py utils.py)) \
 		  $(realpath $(wildcard ../../cmk/gui/plugins/wato/utils/*.py)) \

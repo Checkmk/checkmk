@@ -108,7 +108,7 @@ import cmk.utils.render as render
 import cmk.gui.utils as utils
 import cmk.gui.sites as sites
 import cmk.gui.config as config
-import cmk.gui.table
+from cmk.gui.table import Table
 import cmk.gui.multitar as multitar
 import cmk.gui.userdb as userdb
 import cmk.gui.weblib as weblib

@@ -30,7 +30,7 @@ import cmk.utils.render
 
 import cmk.gui.config as config
 import cmk.gui.sites as sites
-import cmk.gui.table
+from cmk.gui.table import Table
 import cmk.gui.watolib as watolib
 import cmk.gui.i18n
 import cmk.gui.pages
@@ -158,7 +158,7 @@ def load_failed_notifications(before=None, after=None, stat_only=False, extra_he
 
 
 def render_notification_table(failed_notifications):
-    with cmk.gui.table.open_table() as table:
+    with Table() as table:
         header = dict([(name, idx) for idx, name in enumerate(g_columns)])
 
         for row in failed_notifications:

@@ -30,7 +30,7 @@ import cmk.utils.paths
 
 import cmk.gui.watolib as watolib
 import cmk.gui.userdb as userdb
-import cmk.gui.table
+from cmk.gui.table import Table
 import cmk.gui.forms as forms
 from cmk.gui.htmllib import HTML
 from cmk.gui.exceptions import MKUserError
@@ -130,7 +130,7 @@ class ModeGroups(WatoMode):
 
         self._collect_additional_data()
 
-        with cmk.gui.table.open_table(self.type_name + "groups") as table:
+        with Table(self.type_name + "groups") as table:
             for name, group in sorted_groups:
                 table.row()
                 self._show_row_cells(table, name, group)

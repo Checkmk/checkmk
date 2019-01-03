@@ -29,7 +29,7 @@ import cmk.gui.pages
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.userdb as userdb
-import cmk.gui.table
+from cmk.gui.table import Table
 import cmk.gui.plugins.userdb.ldap_connector
 from cmk.gui.log import logger
 from cmk.gui.htmllib import HTML
@@ -112,7 +112,7 @@ class ModeLDAPConfig(LDAPMode):
             userdb.save_connection_config(connections)
 
     def page(self):
-        with cmk.gui.table.open_table() as table:
+        with Table() as table:
             for index, connection in enumerate(userdb.load_connection_config()):
                 table.row()
 
@@ -262,7 +262,7 @@ class ModeEditLDAPConnection(LDAPMode):
             connection = userdb.get_connection(self._connection_id)
             for address in connection.servers():
                 html.h3("%s: %s" % (_('Server'), address))
-                with cmk.gui.table.open_table('test', searchable=False) as table:
+                with Table('test', searchable=False) as table:
                     for title, test_func in self._tests():
                         table.row()
                         try:

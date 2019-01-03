@@ -47,7 +47,7 @@ import cmk.gui.userdb as userdb
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
-import cmk.gui.table
+from cmk.gui.table import Table
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import MKUserError
@@ -179,7 +179,7 @@ class ModeRoles(RoleManagement, WatoMode):
                     sites=config.get_login_sites())
 
     def page(self):
-        with cmk.gui.table.open_table("roles") as table:
+        with Table("roles") as table:
 
             users = userdb.load_users()
             for rid, role in sorted(self._roles.items(), key=lambda a: (a[1]["alias"], a[0])):
@@ -422,7 +422,7 @@ class ModeRoleMatrix(WatoMode):
             html.begin_foldable_container(
                 "perm_matrix", section.name, section.name == "general", section.title, indent=True)
 
-            with cmk.gui.table.open_table(section.name) as table:
+            with Table(section.name) as table:
 
                 for perm in permission_registry.get_sorted_permissions(section):
                     table.row()

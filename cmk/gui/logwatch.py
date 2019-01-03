@@ -30,7 +30,7 @@ import livestatus
 
 import cmk.gui.pages
 import cmk.gui.config as config
-import cmk.gui.table
+from cmk.gui.table import Table
 import cmk.gui.sites as sites
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
@@ -147,7 +147,7 @@ def show_host_log_list(site, host_name):
 
 # Displays a table of logfiles
 def list_logs(site, host_name, logfile_names):
-    with cmk.gui.table.open_table(empty_text=_("No logs found for this host.")) as table:
+    with Table(empty_text=_("No logs found for this host.")) as table:
 
         for file_name in logfile_names:
             table.row()

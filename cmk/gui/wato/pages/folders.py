@@ -32,7 +32,7 @@ import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.userdb as userdb
 import cmk.gui.utils as utils
-import cmk.gui.table
+from cmk.gui.table import Table
 import cmk.gui.weblib as weblib
 import cmk.gui.forms as forms
 
@@ -443,7 +443,7 @@ class ModeFolder(WatoMode):
 
         # Show table of hosts in this folder
         html.begin_form("hosts", method="POST")
-        with cmk.gui.table.open_table("hosts", title=_("Hosts"), searchable=False) as table:
+        with Table("hosts", title=_("Hosts"), searchable=False) as table:
 
             # Remember if that host has a target folder (i.e. was imported with
             # a folder information but not yet moved to that folder). If at least

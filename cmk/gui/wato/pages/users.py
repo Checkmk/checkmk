@@ -35,7 +35,7 @@ import cmk.utils.render as render
 import cmk.gui.userdb as userdb
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
-import cmk.gui.table
+from cmk.gui.table import Table
 import cmk.gui.forms as forms
 import cmk.gui.background_job as background_job
 import cmk.gui.gui_background_job as gui_background_job
@@ -228,8 +228,7 @@ class ModeUsers(WatoMode):
         timeperiods = watolib.load_timeperiods()
         contact_groups = userdb.load_group_information().get("contact", {})
 
-        with cmk.gui.table.open_table(
-                "users", None, empty_text=_("No users are defined yet.")) as table:
+        with Table("users", None, empty_text=_("No users are defined yet.")) as table:
             online_threshold = time.time() - config.user_online_maxage
             for uid, user in entries:
                 table.row()

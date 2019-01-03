@@ -109,9 +109,6 @@ class Application(object):
                 livestatus.MKLivestatusException,
         ), e:
             # TODO: Refactor all the special cases handled here to simplify the exception handling
-
-            html.unplug_all()
-
             ty = type(e)
             if ty == livestatus.MKLivestatusNotFoundError:
                 title = _("Data not found")
@@ -141,7 +138,6 @@ class Application(object):
                 logger.error(_("%s: %s") % (plain_title, e))
 
         except Exception, e:
-            html.unplug_all()
             logger.exception()
             if self._plain_error():
                 html.set_output_format("text")

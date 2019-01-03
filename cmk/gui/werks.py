@@ -343,18 +343,12 @@ def render_werks_table():
     groups = itertools.groupby(werklist, key=grouper)
     for group_title, werks in itertools.islice(groups, werk_table_options["group_limit"]):
         with cmk.gui.table.open_table(
-                title=group_title,
-                limit=None,
-                searchable=False,
-                sortable=False,
-                css="werks",
-                update_page_head=False) as table:
+                title=group_title, limit=None, searchable=False, sortable=False,
+                css="werks") as table:
             for werk in werks:
                 number_of_werks += 1
                 render_werks_table_row(table, translator, werk)
-    if number_of_werks:
-        cmk.gui.table.update_headinfo(number_of_werks)
-    else:
+    if not number_of_werks:
         html.h3(_("No matching Werks found."))
 
 

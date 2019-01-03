@@ -45,11 +45,6 @@ def open_table(table_id=None, title=None, **kwargs):
         table.end()
 
 
-def update_headinfo(num_rows):
-    headinfo = _("1 row") if num_rows == 1 else _("%d rows") % num_rows
-    html.javascript("cmk.utils.update_header_info(%s);" % json.dumps(headinfo))
-
-
 #.
 #   .--Table---------------------------------------------------------------.
 #   |                       _____     _     _                              |
@@ -100,7 +95,6 @@ class Table(object):
             "searchable": kwargs.get("searchable", True),
             "sortable": kwargs.get("sortable", True),
             "foldable": kwargs.get("foldable", False),
-            "update_page_head": kwargs.get("update_page_head", True),
             "output_format": kwargs.get("output_format", "html"),  # possible: html, csv, fetch
         }
 
@@ -288,8 +282,8 @@ class Table(object):
             return rows, actions_enabled, actions_visible, search_term, user_opts
 
     def _write_table(self, rows, actions_enabled, actions_visible, search_term):
-        if self.options["update_page_head"]:
-            update_headinfo(len(rows))
+        headinfo = _("1 row") if len(rows) == 1 else _("%d rows") % len(rows)
+        html.javascript("cmk.utils.update_header_info(%s);" % json.dumps(headinfo))
 
         table_id = self.id
         num_cols = len(self.headers)

@@ -24,9 +24,11 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import httplib
 from typing import Optional, Text  # pylint: disable=unused-import
 
-import cmk.gui.http_status
+from werkzeug.http import HTTP_STATUS_CODES
+
 from cmk.gui.i18n import _
 
 from cmk.utils.exceptions import MKGeneralException, MKException, MKTimeout
@@ -44,21 +46,19 @@ class FinalizeRequest(Exception):
     # TODO: Drop this default and make exit code explicit for all call sites
     def __init__(self, code=None):
         # type: (Optional[int]) -> None
-        self.status = code or cmk.gui.http_status.HTTP_OK  # type: int
-        super(FinalizeRequest, self).__init__(cmk.gui.http_status.status_with_reason(self.status))
+        self.status = code or httplib.OK
+        super(FinalizeRequest,
+              self).__init__("%d %s" % (self.status, HTTP_STATUS_CODES[self.status]))
 
 
 class HTTPRedirect(FinalizeRequest):
     """Is used to end the HTTP request processing from deeper code levels
     and making the client request another page after receiving the response."""
 
-    def __init__(self, url, code=cmk.gui.http_status.HTTP_MOVED_TEMPORARILY):
+    def __init__(self, url, code=httplib.FOUND):
         # type: (str, int) -> None
         super(HTTPRedirect, self).__init__(code)
-        if code not in [
-                cmk.gui.http_status.HTTP_MOVED_PERMANENTLY,
-                cmk.gui.http_status.HTTP_MOVED_TEMPORARILY
-        ]:
+        if code not in [httplib.MOVED_PERMANENTLY, httplib.FOUND]:
             raise Exception("Invalid status code: %d" % code)
 
         self.url = url  #type: str

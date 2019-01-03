@@ -25,15 +25,15 @@
 # Boston, MA 02110-1301 USA.
 """Wrapper layer between WSGI and the GUI application code"""
 
-import re
 import cgi
+import httplib
+import re
 
 import six
 import werkzeug.http
 
 import cmk.gui.log as log
 from cmk.gui.i18n import _
-import cmk.gui.http_status
 from cmk.gui.exceptions import HTTPRedirect
 
 
@@ -260,7 +260,7 @@ class Response(object):
         super(Response, self).__init__()
         self._logger = log.logger.getChild("http.Response")
         self._secure = secure
-        self._status_code = cmk.gui.http_status.HTTP_OK
+        self._status_code = httplib.OK
         self._output = []
         self._headers_out = []
 
@@ -319,7 +319,7 @@ class Response(object):
     @property
     def http_status(self):
         """Provides the HTTP response status header (code incl. text)"""
-        return cmk.gui.http_status.status_with_reason(self._status_code)
+        return "%d %s" % (self._status_code, werkzeug.http.HTTP_STATUS_CODES[self._status_code])
 
     @property
     def headers(self):

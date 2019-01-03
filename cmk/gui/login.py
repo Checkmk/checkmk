@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import httplib
 import os
 import time
 import traceback
@@ -530,7 +531,7 @@ def page_logout():
             html.response.set_http_header(
                 'WWW-Authenticate', 'Basic realm="OMD Monitoring Site %s"' % config.omd_site())
             html.response.set_cookie('logout', '1')
-            raise FinalizeRequest(401)
+            raise FinalizeRequest(httplib.UNAUTHORIZED)
         else:
             html.response.del_cookie('logout')
             html.response.http_redirect(config.url_prefix() + 'check_mk/')

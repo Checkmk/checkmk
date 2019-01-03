@@ -43,24 +43,19 @@ class RequestTimeout(MKTimeout):
 class FinalizeRequest(Exception):
     """Is used to end the HTTP request processing from deeper code levels"""
 
-    # TODO: Drop this default and make exit code explicit for all call sites
-    def __init__(self, code=None):
-        # type: (Optional[int]) -> None
-        self.status = code or httplib.OK
-        super(FinalizeRequest,
-              self).__init__("%d %s" % (self.status, HTTP_STATUS_CODES[self.status]))
+    def __init__(self, code):
+        # type: (int) -> None
+        super(FinalizeRequest, self).__init__("%d %s" % (code, HTTP_STATUS_CODES[code]))
+        self.status = code
 
 
 class HTTPRedirect(FinalizeRequest):
     """Is used to end the HTTP request processing from deeper code levels
     and making the client request another page after receiving the response."""
 
-    def __init__(self, url, code=httplib.FOUND):
-        # type: (str, int) -> None
-        super(HTTPRedirect, self).__init__(code)
-        if code not in [httplib.MOVED_PERMANENTLY, httplib.FOUND]:
-            raise Exception("Invalid status code: %d" % code)
-
+    def __init__(self, url):
+        # type: (str) -> None
+        super(HTTPRedirect, self).__init__(httplib.FOUND)
         self.url = url  #type: str
 
 

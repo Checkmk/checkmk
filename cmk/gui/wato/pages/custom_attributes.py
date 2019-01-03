@@ -31,7 +31,7 @@ import pprint
 import re
 
 import cmk.gui.forms as forms
-import cmk.gui.table
+from cmk.gui.table import Table
 import cmk.gui.userdb as userdb
 import cmk.gui.watolib as watolib
 import cmk.utils.store as store
@@ -424,7 +424,7 @@ class ModeCustomAttrs(WatoMode):
             html.div(_("No custom attributes are defined yet."), class_="info")
             return
 
-        with cmk.gui.table.open_table(self._type + "attrs") as table:
+        with Table(self._type + "attrs") as table:
             for custom_attr in sorted(self._attrs, key=lambda x: x['title']):
                 table.row()
 

@@ -34,7 +34,7 @@ from cmk.utils.regex import escape_regex_chars
 
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
-import cmk.gui.table
+from cmk.gui.table import Table
 import cmk.gui.forms as forms
 from cmk.gui.htmllib import HTML
 from cmk.gui.exceptions import MKUserError, MKAuthException
@@ -624,7 +624,7 @@ class ModeEditRuleset(WatoMode):
                   for folder, folder_rules in itertools.groupby(rules, key=lambda rule: rule[0]) \
                   if folder.is_transitive_parent_of(cur) or cur.is_transitive_parent_of(folder))
         for folder, folder_rules in groups:
-            with cmk.gui.table.open_table(
+            with Table(
                     "rules_%s_%s" % (self._name, folder.ident()),
                     title="%s %s (%d)" % (_("Rules in folder"), folder.alias_path(show_main=False),
                                           ruleset.num_rules_in_folder(folder)),

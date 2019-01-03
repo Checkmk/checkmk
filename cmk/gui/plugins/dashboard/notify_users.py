@@ -26,7 +26,7 @@
 
 import time
 
-import cmk.gui.table
+from cmk.gui.table import Table
 import cmk.gui.notify as notify
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
@@ -77,8 +77,7 @@ function delete_user_notification(msg_id, btn) {
 
     def show(self):
         html.open_div(class_="notify_users")
-        with cmk.gui.table.open_table(
-                "notify_users", sortable=False, searchable=False, omit_if_empty=True) as table:
+        with Table("notify_users", sortable=False, searchable=False, omit_if_empty=True) as table:
 
             for entry in sorted(notify.get_gui_messages(), key=lambda e: e["time"], reverse=True):
                 if "dashlet" not in entry["methods"]:

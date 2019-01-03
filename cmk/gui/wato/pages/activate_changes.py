@@ -34,7 +34,7 @@ from typing import NamedTuple, List
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.multitar as multitar
-import cmk.gui.table
+from cmk.gui.table import Table
 import cmk.gui.forms as forms
 import cmk.utils.render as render
 
@@ -283,8 +283,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
         )
 
     def _change_table(self):
-        with cmk.gui.table.open_table(
-                "changes", sortable=False, searchable=False, css="changes", limit=None) as table:
+        with Table("changes", sortable=False, searchable=False, css="changes", limit=None) as table:
             for _change_id, change in reversed(self._changes):
                 css = []
                 if self._is_foreign(change):
@@ -336,8 +335,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
             return html.render_a(title, href=url)
 
     def _activation_status(self):
-        with cmk.gui.table.open_table(
-                "site-status", searchable=False, sortable=False, css="activation") as table:
+        with Table("site-status", searchable=False, sortable=False, css="activation") as table:
 
             for site_id, site in sort_sites(self._activation_sites()):
                 table.row()

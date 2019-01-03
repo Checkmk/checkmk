@@ -33,7 +33,7 @@ from pathlib2 import Path
 import cmk.utils.render as render
 
 import cmk.gui.config as config
-import cmk.gui.table
+from cmk.gui.table import Table
 import cmk.gui.watolib as watolib
 from cmk.gui.display_options import display_options
 from cmk.gui.valuespec import (
@@ -139,7 +139,7 @@ class ModeAuditLog(WatoMode):
         self._display_log(log)
 
     def _display_log(self, log):
-        with cmk.gui.table.open_table(
+        with Table(
                 css="data wato auditlog audit", limit=None, sortable=False,
                 searchable=False) as table:
             for t, linkinfo, user, _action, text in log:

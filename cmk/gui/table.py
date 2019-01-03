@@ -26,24 +26,12 @@
 
 import re
 import json
-from contextlib import contextmanager
-from typing import Optional, Text  # pylint: disable=unused-import
 
 import cmk.gui.utils as utils
 import cmk.gui.config as config
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
-
-
-@contextmanager
-def open_table(table_id=None, title=None, **kwargs):
-    table = Table(table_id, title, **kwargs)
-    try:
-        yield table
-    finally:
-        table.end()
-
 
 #.
 #   .--Table---------------------------------------------------------------.
@@ -57,7 +45,7 @@ def open_table(table_id=None, title=None, **kwargs):
 #   |                                                                      |
 #   | Usage:                                                               |
 #   |                                                                      |
-#   |        with table.open():                                            |
+#   |        with Table() as table:                                        |
 #   |            table.row()                                               |
 #   |            table.cell("header", "content")                           |
 #   |                                                                      |
@@ -170,8 +158,10 @@ class Table(object):
     def groupheader(self, title):
         self.next_header = title
 
-    def end(self):
+    def __enter__(self):
+        return self
 
+    def __exit__(self, exc_type, exc_val, exc_tb):
         self.finish_previous()
         html.unplug()
 

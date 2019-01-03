@@ -40,7 +40,7 @@ from cmk.utils.defines import short_service_state_name
 
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
-import cmk.gui.table
+from cmk.gui.table import Table
 import cmk.gui.background_job as background_job
 from cmk.gui.gui_background_job import job_registry
 
@@ -879,8 +879,7 @@ class DiscoveryPageRenderer(object):
                 continue
 
             html.begin_form("checks_%s" % entry.table_group, method="POST", action="wato.py")
-            with cmk.gui.table.open_table(
-                    css="data", searchable=False, limit=None, sortable=False) as table:
+            with Table(css="data", searchable=False, limit=None, sortable=False) as table:
                 table.groupheader(self._get_group_header(entry))
 
                 if entry.show_bulk_actions and len(checks) > 10:

@@ -36,7 +36,7 @@ import cmk.gui.wato.user_profile
 import cmk.gui.userdb as userdb
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
-import cmk.gui.table
+from cmk.gui.table import Table
 import cmk.gui.forms as forms
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
@@ -236,7 +236,7 @@ class NotificationsMode(EventsMode):
                 title = code + _("Notification rules of user %s") % userid
             else:
                 title = _("Global notification rules")
-            with cmk.gui.table.open_table(title=title, limit=None, sortable=False) as table:
+            with Table(title=title, limit=None, sortable=False) as table:
 
                 if analyse:
                     analyse_rules, _analyse_plugins = analyse
@@ -534,7 +534,7 @@ class ModeNotifications(NotificationsMode):
             return False
 
         title = _("Overdue bulk notifications!") if only_ripe else _("Open bulk notifications")
-        with cmk.gui.table.open_table(title=title) as table:
+        with Table(title=title) as table:
             for directory, age, interval, timeperiod, maxcount, uuids in bulks:
                 dirparts = directory.split("/")
                 contact = dirparts[-3]
@@ -565,7 +565,7 @@ class ModeNotifications(NotificationsMode):
         if not backlog:
             return
 
-        with cmk.gui.table.open_table(
+        with Table(
                 table_id="backlog", title=_("Recent notifications (for analysis)"),
                 sortable=False) as table:
             for nr, context in enumerate(backlog):
@@ -697,8 +697,7 @@ class ModeNotifications(NotificationsMode):
                     start_nr += len(user_rules)
 
         if analyse:
-            with cmk.gui.table.open_table(
-                    table_id="plugins", title=_("Resulting notifications")) as table:
+            with Table(table_id="plugins", title=_("Resulting notifications")) as table:
                 for contact, plugin, parameters, bulk in analyse[1]:
                     table.row()
                     if contact.startswith('mailto:'):

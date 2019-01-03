@@ -33,7 +33,7 @@ import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.userdb as userdb
 import cmk.gui.forms as forms
-import cmk.gui.table
+from cmk.gui.table import Table
 from cmk.gui.valuespec import (
     MonitoredHostname,)
 
@@ -642,7 +642,7 @@ class ModeDistributedMonitoring(ModeSites):
         return False
 
     def page(self):
-        with cmk.gui.table.open_table(
+        with Table(
                 "sites",
                 _("Connections to local and remote sites"),
                 empty_text=_(

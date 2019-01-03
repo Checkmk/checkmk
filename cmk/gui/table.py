@@ -94,8 +94,8 @@ class Table(object):
         html.plug()
 
     def row(self, *posargs, **kwargs):
-        self.finish_previous()
-        self.next_func = self.add_row
+        self._finish_previous()
+        self.next_func = self._add_row
         self.next_args = posargs, kwargs
 
     def text_cell(self, *args, **kwargs):
@@ -103,16 +103,16 @@ class Table(object):
         self.cell(*args, **kwargs)
 
     def cell(self, *posargs, **kwargs):
-        self.finish_previous()
-        self.next_func = self.add_cell
+        self._finish_previous()
+        self.next_func = self._add_cell
         self.next_args = posargs, kwargs
 
-    def finish_previous(self):
+    def _finish_previous(self):
         if self.next_args is not None:
             self.next_func(*self.next_args[0], **self.next_args[1])
             self.next_func = None
 
-    def add_row(self, css=None, state=0, collect_headers=True, fixed=False, **attrs):
+    def _add_row(self, css=None, state=0, collect_headers=True, fixed=False, **attrs):
         if self.next_header:
             self.rows.append((self.next_header, None, "header", True, attrs))
             self.next_header = None
@@ -125,14 +125,14 @@ class Table(object):
         elif not collect_headers and self.options["collect_headers"] is True:
             self.options["collect_headers"] = False
 
-    def add_cell(self,
-                 title="",
-                 text="",
-                 css=None,
-                 help_txt=None,
-                 colspan=None,
-                 sortable=True,
-                 escape_text=False):
+    def _add_cell(self,
+                  title="",
+                  text="",
+                  css=None,
+                  help_txt=None,
+                  colspan=None,
+                  sortable=True,
+                  escape_text=False):
         if escape_text:
             text = html.permissive_attrencode(text)
         else:
@@ -162,7 +162,7 @@ class Table(object):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.finish_previous()
+        self._finish_previous()
         html.unplug()
 
         if not self.rows and self.options["omit_if_empty"]:

@@ -190,7 +190,7 @@ class Application(object):
                     handler()
                 except Exception, e:
                     self._show_exception_info(e)
-                raise FinalizeRequest()
+                raise FinalizeRequest(httplib.OK)
 
         # Ensure the user is authenticated. This call is wrapping all the different
         # authentication modes the Check_MK GUI supports and initializes the logged
@@ -231,7 +231,7 @@ class Application(object):
             # requested page is performed.
             login.page_login(self._plain_error())
 
-        raise FinalizeRequest()
+        raise FinalizeRequest(httplib.OK)
 
     def _localize_request(self):
         previous_language = cmk.gui.i18n.get_current_language()

@@ -68,8 +68,7 @@ def table_element(table_id=None, title=None, **kwargs):
 class Table(object):
     def __init__(self, table_id=None, title=None, **kwargs):
         super(Table, self).__init__()
-        self.next_func = id
-        self.next_args = None
+        self.next_func = lambda: None
         self.next_header = None
 
         # Use our pagename as table id if none is specified
@@ -106,22 +105,18 @@ class Table(object):
 
     def row(self, *posargs, **kwargs):
         self._finish_previous()
-        self.next_func = self._add_row
-        self.next_args = posargs, kwargs
+        self.next_func = lambda: self._add_row(*posargs, **kwargs)
 
     def text_cell(self, *args, **kwargs):
-        kwargs["escape_text"] = True
-        self.cell(*args, **kwargs)
+        self.cell(*args, escape_text=True, **kwargs)
 
     def cell(self, *posargs, **kwargs):
         self._finish_previous()
-        self.next_func = self._add_cell
-        self.next_args = posargs, kwargs
+        self.next_func = lambda: self._add_cell(*posargs, **kwargs)
 
     def _finish_previous(self):
-        if self.next_args is not None:
-            self.next_func(*self.next_args[0], **self.next_args[1])
-            self.next_func = None
+        self.next_func()
+        self.next_func = lambda: None
 
     def _add_row(self, css=None, state=0, collect_headers=True, fixed=False, **attrs):
         if self.next_header:

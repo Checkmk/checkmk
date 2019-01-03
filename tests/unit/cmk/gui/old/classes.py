@@ -18,7 +18,7 @@ class HTMLTester(htmllib.html):
             "SCRIPT_NAME" : "",
         }
         _request = http.Request(wsgi_environ)
-        _response = http.Response(_request)
+        _response = http.Response(_request.is_ssl_request)
 
         super(HTMLTester, self).__init__(_request, _response)
 

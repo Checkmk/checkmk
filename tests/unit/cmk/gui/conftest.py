@@ -21,6 +21,6 @@ def register_builtin_html():
         "REQUEST_URI": "",
     }
     _request = http.Request(wsgi_environ)
-    _response = http.Response(_request)
+    _response = http.Response(_request.is_ssl_request)
 
     html.set_current(htmllib.html(_request, _response))

@@ -256,12 +256,10 @@ class Response(object):
     over to the WSGI server for sending the response to the client.
     """
 
-    def __init__(self, request):
+    def __init__(self, secure):
         super(Response, self).__init__()
         self._logger = log.logger.getChild("http.Response")
-
-        self._request = request
-
+        self._secure = secure
         self._status_code = cmk.gui.http_status.HTTP_OK
         self._output = []
         self._headers_out = []
@@ -300,7 +298,7 @@ class Response(object):
             # Tell client not to use the cookie within javascript
             httponly=True,
             # Tell client to only use the cookie for SSL connections
-            secure=self._request.is_ssl_request,
+            secure=self._secure,
             expires=expires,
         )
 

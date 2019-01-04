@@ -200,14 +200,43 @@ def _get_enabled_and_disabled_sites():
     enabled_sites, disabled_sites = {}, {}
 
     for site_id, site in config.user.authorized_sites():
-        if config.user.is_site_disabled(site_id):
-            sites = disabled_sites
-        else:
-            sites = enabled_sites
+        site = _site_config_for_livestatus(site_id, site)
 
-        sites[site_id] = site
+        if config.user.is_site_disabled(site_id):
+            disabled_sites[site_id] = site
+        else:
+            enabled_sites[site_id] = site
 
     return enabled_sites, disabled_sites
+
+
+def _site_config_for_livestatus(site_id, site):
+    site = site.copy()
+
+    if site["socket"][0] == "proxy":
+        site["cache"] = site["socket"][1].get("cache", True)
+
+    site["socket"] = encode_socket_for_livestatus(site_id, site["socket"])
+
+    return site
+
+
+def encode_socket_for_livestatus(site_id, socket_spec):
+    family_spec, address_spec = socket_spec
+
+    if family_spec == "local":
+        return "unix:%s" % cmk.utils.paths.livestatus_unix_socket
+
+    if family_spec == "proxy":
+        return "unix:%sproxy/%s" % (cmk.utils.paths.livestatus_unix_socket, site_id)
+
+    if family_spec == "unix":
+        return "%s:%s" % (family_spec, address_spec["path"])
+
+    if family_spec in ["tcp", "tcp6"]:
+        return "%s:%s:%d" % (family_spec, address_spec["address"][0], address_spec["address"][1])
+
+    raise NotImplementedError()
 
 
 def update_site_states_from_dead_sites():

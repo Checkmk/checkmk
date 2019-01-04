@@ -559,3 +559,93 @@ def test_permission_sorting(do_sort, result):
 
     sorted_perms = [p.name for p in perms.get_sorted_permissions(Sec1())]
     assert sorted_perms == result
+
+
+@pytest.mark.parametrize(
+    "site,result",
+    [
+        # Possible formats pre 1.6:
+        ({}, {
+            "socket": ("local", None)
+        }),
+        ({
+            "socket": None
+        }, {
+            "socket": ("local", None)
+        }),
+        ({
+            "socket": "disabled"
+        }, {
+            "socket": ("local", None),
+            "disabled": True
+        }),
+        ({
+            "socket": "unix:/ab:c/xyz"
+        }, {
+            "socket": ("unix", {
+                "path": "/ab:c/xyz"
+            })
+        }),
+        ({
+            "socket": "tcp:127.0.0.1:1234"
+        }, {
+            "socket": ("tcp", {
+                "address": ("127.0.0.1", 1234)
+            })
+        }),
+        ({
+            "socket": "tcp6:::1:1234"
+        }, {
+            "socket": ("tcp6", {
+                "address": ("::1", 1234)
+            })
+        }),
+        # Is allowed in 1.6 and should not be converted
+        ({
+            "socket": ("proxy", {
+                "socket": ("unix", {
+                    "path": "/a/b/c"
+                })
+            })
+        }, {
+            "socket": ("proxy", {
+                "socket": ("unix", {
+                    "path": "/a/b/c"
+                })
+            })
+        }),
+        ({
+            "socket": ("tcp", {
+                "address": ("127.0.0.1", 1234)
+            })
+        }, {
+            "socket": ("tcp", {
+                "address": ("127.0.0.1", 1234)
+            })
+        }),
+        ({
+            "socket": ("tcp6", {
+                "address": ("::1", 1234)
+            })
+        }, {
+            "socket": ("tcp6", {
+                "address": ("::1", 1234)
+            })
+        }),
+        ({
+            "socket": ("local", None)
+        }, {
+            "socket": ("local", None)
+        }),
+        ({
+            "socket": ("unix", {
+                "path": "/a/b/c"
+            })
+        }, {
+            "socket": ("unix", {
+                "path": "/a/b/c"
+            })
+        }),
+    ])
+def test_migrate_old_site_config(site, result):
+    assert config.migrate_old_site_config({"mysite": site}) == {"mysite": result}

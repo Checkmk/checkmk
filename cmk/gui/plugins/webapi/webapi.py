@@ -966,7 +966,9 @@ class APICallSites(APICallCollection):
 
         site_mgmt.validate_configuration(request["site_id"], request["site_config"], all_sites)
 
-        all_sites[request["site_id"]] = request["site_config"]
+        sites = config.migrate_old_site_config({request["site_id"]: request["site_config"]})
+
+        all_sites.update(sites)
         site_mgmt.save_sites(all_sites)
 
     def _set_all(self, request):
@@ -982,7 +984,7 @@ class APICallSites(APICallCollection):
         for site_id, site_config in request["sites"].iteritems():
             site_mgmt.validate_configuration(site_id, site_config, request["sites"])
 
-        site_mgmt.save_sites(request["sites"])
+        site_mgmt.save_sites(config.migrate_old_site_config(request["sites"]))
 
     def _delete(self, request):
         validate_request_keys(

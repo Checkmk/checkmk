@@ -100,6 +100,36 @@ def lqencode(s):
     return s.replace('\n', '')
 
 
+def site_local_ca_path():
+    """Path to the site local CA bundle"""
+    omd_root = os.getenv("OMD_ROOT")
+    if not omd_root:
+        raise MKLivestatusConfigError("OMD_ROOT is not set. You are not running in OMD context.")
+
+    return os.path.join(omd_root, "etc/ssl/ca.pem")
+
+
+def create_client_socket(family, tls, verify, ca_file_path):
+    """Create a client socket object for the livestatus connection"""
+    sock = socket.socket(family, socket.SOCK_STREAM)
+
+    if not tls:
+        return sock
+
+    context = ssl.create_default_context()
+    context.check_hostname = False
+    context.verify_mode = ssl.CERT_REQUIRED if verify else ssl.CERT_NONE
+    context.options |= ssl.OP_NO_TLSv1 | ssl.OP_NO_TLSv1_1
+
+    ca_file_path = ca_file_path if ca_file_path is not None else site_local_ca_path()
+    try:
+        context.load_verify_locations(ca_file_path)
+    except Exception as e:
+        raise MKLivestatusConfigError("Failed to load CA file '%s': %s" % (ca_file_path, e))
+
+    return context.wrap_socket(sock)
+
+
 #.
 #   .--Helpers-------------------------------------------------------------.
 #   |                  _   _      _                                        |
@@ -277,16 +307,8 @@ class SingleSiteConnection(Helpers):
         # type: () -> str
         """CA file bundle to use for certificate verification"""
         if self._tls_ca_file_path is None:
-            return self._site_local_ca_path()
+            return site_local_ca_path()
         return self._tls_ca_file_path
-
-    def _site_local_ca_path(self):
-        omd_root = os.getenv("OMD_ROOT")
-        if not omd_root:
-            raise MKLivestatusConfigError(
-                "OMD_ROOT is not set. You are not running in OMD context.")
-
-        return os.path.join(omd_root, "etc/ssl/ca.pem")
 
     def successfully_persisted(self):
         # type: () -> bool
@@ -374,23 +396,7 @@ class SingleSiteConnection(Helpers):
 
         It ensures that either a TLS secured socket or a plain text socket
         is being created."""
-        sock = socket.socket(family, socket.SOCK_STREAM)
-
-        if not self.tls:
-            return sock
-
-        context = ssl.create_default_context()
-        context.check_hostname = False
-        context.verify_mode = ssl.CERT_REQUIRED if self.tls_verify else ssl.CERT_NONE
-        context.options |= ssl.OP_NO_TLSv1 | ssl.OP_NO_TLSv1_1
-
-        try:
-            context.load_verify_locations(cafile=self.tls_ca_file_path)
-        except Exception as e:
-            raise MKLivestatusConfigError(
-                "Failed to load CA file '%s': %s" % (self.tls_ca_file_path, e))
-
-        return context.wrap_socket(sock)
+        return create_client_socket(family, self.tls, self.tls_verify, self._tls_ca_file_path)
 
     def disconnect(self):
         self.socket = None

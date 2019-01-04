@@ -29,12 +29,13 @@ def test_base_path_redirects(site):
 def test_cmk_base_path_access(site):
     web = CMKWebSession(site)
 
+    # TODO: Figure out if which status code we *really* expect here: 301 or 302?
     web.check_redirect("/%s/check_mk/" % site.id,
-        expected_code=301,
+        expected_code=302,
         expected_target="/%s/check_mk/login.py?_origtarget=index.py" % site.id)
 
     web.check_redirect("/%s/check_mk/index.py" % site.id,
-        expected_code=301,
+        expected_code=302,
         expected_target="/%s/check_mk/login.py?_origtarget=index.py" % site.id)
 
 

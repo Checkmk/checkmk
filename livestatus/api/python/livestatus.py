@@ -317,17 +317,19 @@ class SingleSiteConnection(Helpers):
         if family_txt == "unix":
             return socket.AF_UNIX, url
 
-        elif family_txt == "tcp":
+        elif family_txt in ["tcp", "tcp6"]:
             try:
                 host, port_txt = url.rsplit(":", 1)
                 port = int(port_txt)
             except ValueError:
-                raise MKLivestatusConfigError("Invalid livestatus tcp URL '%s'. "
-                                              "Correct example is 'tcp:somehost:6557'" % url)
-            return socket.AF_INET, (host, port)
+                raise MKLivestatusConfigError(
+                    "Invalid livestatus tcp URL '%s'. "
+                    "Correct example is 'tcp:somehost:6557' or 'tcp6:somehost:6557'" % url)
+            address_family = socket.AF_INET if family_txt == "tcp" else socket.AF_INET6
+            return address_family, (host, port)
 
         raise MKLivestatusConfigError("Invalid livestatus URL '%s'. "
-                                      "Must begin with 'tcp:' or 'unix:'" % url)
+                                      "Must begin with 'tcp:', 'tcp6:' or 'unix:'" % url)
 
     def disconnect(self):
         self.socket = None

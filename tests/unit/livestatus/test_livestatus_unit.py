@@ -1,4 +1,5 @@
 import socket
+from contextlib import closing
 from pathlib2 import Path
 import pytest  # type: ignore
 
@@ -54,11 +55,48 @@ def test_livestatus_local_connection(sock_path):
     assert isinstance(live, livestatus.SingleSiteConnection)
 
 
+def test_livestatus_ipv4_connection():
+    with closing(socket.socket(socket.AF_INET)) as sock:
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)  # pylint: disable=no-member
+
+        # Pick a random port
+        sock.bind(("127.0.0.1", 0))  # pylint: disable=no-member
+        port = sock.getsockname()[1]  # pylint: disable=no-member
+
+        sock.listen(1)  # pylint: disable=no-member
+
+        live = livestatus.SingleSiteConnection("tcp:127.0.0.1:%d" % port)
+        live.connect()
+
+
+def test_livestatus_ipv6_connection():
+    with closing(socket.socket(socket.AF_INET6)) as sock:
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)  # pylint: disable=no-member
+
+        # Pick a random port
+        try:
+            sock.bind(("::1", 0))  # pylint: disable=no-member
+        except socket.error as e:
+            # Skip this test in case ::1 can not be bound to
+            # (happened in docker container with IPv6 disabled)
+            if e.errno == 99: # Cannot assign requested address
+                pytest.skip("Unable to bind to ::1 (%s)" % e)
+
+        port = sock.getsockname()[1]  # pylint: disable=no-member
+
+        sock.listen(1)  # pylint: disable=no-member
+
+        live = livestatus.SingleSiteConnection("tcp6:::1:%d" % port)
+        live.connect()
+
+
 @pytest.mark.parametrize("socket_url,result", [
     ("unix:/omd/sites/heute/tmp/run/live", (socket.AF_UNIX, "/omd/sites/heute/tmp/run/live")),
     ("unix:/omd/sites/heute/tmp/run/li:ve", (socket.AF_UNIX, "/omd/sites/heute/tmp/run/li:ve")),
     ("tcp:127.0.0.1:1234", (socket.AF_INET, ("127.0.0.1", 1234))),
     ("tcp:126.0.0.1:abc", None),
+    ("tcp6:::1:1234", (socket.AF_INET6, ("::1", 1234))),
+    ("tcp6:::1:abc", None),
     ("xyz:bla", None),
 ])
 def test_single_site_connection_socketurl(socket_url, result, monkeypatch):

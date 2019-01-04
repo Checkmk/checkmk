@@ -1,0 +1,26 @@
+Title: Livestatus can now be configured to connect via IPv6
+Level: 2
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1546113685
+Class: feature
+
+In previous versions it was not possible to connect the GUI to a remote site
+via Livestatus using IPv6. This is now possible and can be configured from the
+"Distributed Monitoring" configuration.
+
+Technically this was prevented by several smaller things.
+
+The internal Livestatus xinetd configuration now allows ::/0 besides 0.0.0.0 by
+default. In case you have modified this setting and want to use IPv6, you may
+have to add the IPv6 addresses of your choice to this option.
+
+The site configuration GUI is now able to handle IPv6 addresses properly.
+
+The internally used livestatus.py Livestatus client implementation supports
+IPv6 now. Livestatus proxy can now connect to Livestatus via IPv6 and also the
+cascading proxy feature, which is used to make the local unix socket of a site
+available via the network, can now be used with IPv6 in addition to the already
+existing IPv4 support.

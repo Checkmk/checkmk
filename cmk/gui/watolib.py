@@ -102,8 +102,9 @@ from cmk.gui.exceptions import MKGeneralException, MKAuthException, MKUserError,
 from cmk.gui.valuespec import (
     Dictionary,
     Integer,
+    HostAddress,
     ListOfStrings,
-    IPv4Network,
+    IPNetwork,
     Checkbox,
     Transform,
     DropdownChoice,
@@ -4028,7 +4029,8 @@ class SiteManagement(object):
                 None,
                 totext="",
             )),
-            ("tcp", _("Connect via TCP (IPv4)"), cls._tcp_socket_valuespec()),
+            ("tcp", _("Connect via TCP (IPv4)"), cls._tcp_socket_valuespec(ipv6=False)),
+            ("tcp6", _("Connect via TCP (IPv6)"), cls._tcp_socket_valuespec(ipv6=True)),
             ("unix", _("Connect via UNIX socket"),
              Dictionary(
                  elements=[
@@ -4044,7 +4046,7 @@ class SiteManagement(object):
         return conn_choices
 
     @classmethod
-    def _tcp_socket_valuespec(cls):
+    def _tcp_socket_valuespec(cls, ipv6):
         return Dictionary(
             elements=[
                 ("address",
@@ -4052,10 +4054,12 @@ class SiteManagement(object):
                      title=_("TCP address to connect to"),
                      orientation="float",
                      elements=[
-                         TextAscii(
+                         HostAddress(
                              label=_("Host:"),
                              allow_empty=False,
                              size=15,
+                             allow_ipv4_address=not ipv6,
+                             allow_ipv6_address=ipv6,
                          ),
                          Integer(
                              label=_("Port:"),
@@ -10789,9 +10793,10 @@ class LivestatusViaTCP(Dictionary):
                  help=_("The access to Livestatus via TCP will only be allowed from the "
                         "configured source IP addresses. You can either configure specific "
                         "IP addresses or networks in the syntax <tt>10.3.3.0/24</tt>."),
-                 valuespec=IPv4Network(),
+                 valuespec=IPNetwork(),
                  orientation="horizontal",
                  allow_empty=False,
+                 default_value=["0.0.0.0", "::/0"],
              )),
         ]
         kwargs["optional_keys"] = ["only_from"]

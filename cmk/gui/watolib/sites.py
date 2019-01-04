@@ -530,17 +530,19 @@ class CEESiteManagement(SiteManagement):
 
         conf = {}
         for siteid, siteconf in sites.items():
-            family_spec, address_spec = siteconf["socket"]
-            if family_spec == "proxy":
-                conf[siteid] = {
-                    "socket": address_spec["socket"],
-                }
+            socket_type, params = siteconf["socket"]
+            if socket_type != "proxy":
+                continue
 
-                if "tcp" in address_spec:
-                    conf[siteid]["tcp"] = address_spec["tcp"]
+            conf[siteid] = {
+                "socket": params["socket"],
+            }
 
-                if address_spec["params"]:
-                    conf[siteid].update(address_spec["params"])
+            if "tcp" in params:
+                conf[siteid]["tcp"] = params["tcp"]
+
+            if params["params"]:
+                conf[siteid].update(params["params"])
 
         store.save_to_mk_file(path, "sites", conf)
 

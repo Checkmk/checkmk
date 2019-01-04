@@ -1,10 +1,11 @@
 import pytest
 import _pytest
-import werkzeug.wrappers
+from werkzeug.test import create_environ
+from werkzeug.wrappers import Response
 
 import cmk.gui.config as config
 import cmk.gui.htmllib as htmllib
-import cmk.gui.http as http
+from cmk.gui.http import Request
 from cmk.gui.globals import html
 
 monkeypatch = _pytest.monkeypatch.MonkeyPatch()
@@ -14,13 +15,5 @@ monkeypatch.setattr(config, "omd_site", lambda: "NO_SITE")
 @pytest.fixture()
 def register_builtin_html():
     """This fixture registers a global htmllib.html() instance just like the regular GUI"""
-    wsgi_environ = {
-        # TODO: This is no complete WSGI environment. Produce some
-        "wsgi.input": "",
-        "SCRIPT_NAME": "",
-        "REQUEST_URI": "",
-    }
-    request = http.Request(wsgi_environ)
-    response = werkzeug.wrappers.Response()
-
-    html.set_current(htmllib.html(request, response))
+    environ = dict(create_environ(), REQUEST_URI='')
+    html.set_current(htmllib.html(Request(environ), Response()))

@@ -4014,7 +4014,6 @@ def save_site_global_settings(vars_):
 class SiteManagement(object):
     @classmethod
     def connection_method_valuespec(cls):
-        # ValueSpecs for the more complex input fields
         return CascadingDropdown(
             orientation="horizontal",
             choices=cls._connection_choices(),
@@ -4023,31 +4022,50 @@ class SiteManagement(object):
     @classmethod
     def _connection_choices(cls):
         conn_choices = [
-            (None, _("Connect to the local site")),
-            ("tcp", _("Connect via TCP"), cls._tcp_port_valuespec()),
+            ("local", _("Connect to the local site"), FixedValue(
+                None,
+                totext="",
+            )),
+            ("tcp", _("Connect via TCP (IPv4)"), cls._tcp_socket_valuespec()),
             ("unix", _("Connect via UNIX socket"),
-             TextAscii(label=_("Path:"), size=40, allow_empty=False)),
+             Dictionary(
+                 elements=[
+                     ("path", TextAscii(
+                         label=_("Path:"),
+                         size=40,
+                         allow_empty=False,
+                     )),
+                 ],
+                 optional_keys=None,
+             )),
         ]
         return conn_choices
 
     @classmethod
-    def _tcp_port_valuespec(cls):
-        return Tuple(
-            title=_("TCP Port to connect to"),
-            orientation="float",
+    def _tcp_socket_valuespec(cls):
+        return Dictionary(
             elements=[
-                TextAscii(
-                    label=_("Host:"),
-                    allow_empty=False,
-                    size=15,
-                ),
-                Integer(
-                    label=_("Port:"),
-                    minvalue=1,
-                    maxvalue=65535,
-                    default_value=6557,
-                ),
-            ])
+                ("address",
+                 Tuple(
+                     title=_("TCP address to connect to"),
+                     orientation="float",
+                     elements=[
+                         TextAscii(
+                             label=_("Host:"),
+                             allow_empty=False,
+                             size=15,
+                         ),
+                         Integer(
+                             label=_("Port:"),
+                             minvalue=1,
+                             maxvalue=65535,
+                             default_value=6557,
+                         ),
+                     ],
+                 )),
+            ],
+            optional_keys=None,
+        )
 
     @classmethod
     def user_sync_valuespec(cls):
@@ -4078,7 +4096,7 @@ class SiteManagement(object):
             raise MKUserError("url_prefix", _("The URL prefix must end with a slash."))
 
         # Connection
-        if site_configuration.get("socket") is None and site_id != config.omd_site():
+        if site_configuration["socket"][0] == "local" and site_id != config.omd_site():
             raise MKUserError(
                 "method_sel",
                 _("You can only configure a local site connection for "
@@ -4121,7 +4139,7 @@ class SiteManagement(object):
                     "multisiteurl",
                     _("The Multisites URL must begin with <tt>http://</tt> or <tt>https://</tt>."))
 
-            if "socket" not in site_configuration:
+            if site_configuration["socket"][0] == "local":
                 raise MKUserError("replication",
                                   _("You cannot do replication with the local site."))
 
@@ -4134,26 +4152,19 @@ class SiteManagement(object):
         if not os.path.exists(sites_mk):
             return config.default_single_site_configuration()
 
-        vars_ = {"sites": {}}
-        execfile(sites_mk, vars_, vars_)
+        config_vars = {"sites": {}}
+        execfile(sites_mk, config_vars, config_vars)
 
-        # Be compatible to old "disabled" value in socket attribute.
-        # Can be removed one day.
-        for site in vars_['sites'].itervalues():
-            socket = site.get("socket")
-            if socket == 'disabled':
-                site['disabled'] = True
-                del site['socket']
+        if not config_vars["sites"]:
+            return config.default_single_site_configuration()
 
-            elif isinstance(socket, tuple) and socket[0] == "proxy":
+        sites = config.migrate_old_site_config(config_vars["sites"])
+        for site in sites.itervalues():
+            socket = site["socket"]
+            if socket[0] == "proxy":
                 site["socket"] = ("proxy", cls.transform_old_connection_params(socket[1]))
 
-        if not vars_["sites"]:
-            # There seem to be installations out there which have a sites.mk
-            # which has an empty sites dictionary. Apply the default configuration
-            # for these sites too.
-            return config.default_single_site_configuration()
-        return vars_["sites"]
+        return sites
 
     @classmethod
     def save_sites(cls, sites, activate=True):
@@ -4299,16 +4310,13 @@ class CEESiteManagement(SiteManagement):
                 optional_keys = ["tcp"],
                 columns = 1,
                 elements = [
-                    ("socket", Alternative(
-                        title = _("Connect to"),
-                        style = "dropdown",
-                        elements = [
-                            FixedValue(None,
-                                title = _("Connect to the local site"),
-                                totext = "",
-                            ),
-                            cls._tcp_port_valuespec(),
-                        ],
+                    ("socket", Transform(
+                        CascadingDropdown(
+                            title = _("Connect to"),
+                            orientation="horizontal",
+                            choices=super(CEESiteManagement, cls)._connection_choices(),
+                        ),
+                        forth=cls._transform_old_socket_spec,
                     )),
                     ("tcp", LivestatusViaTCP(
                         title = _("Allow access via TCP"),
@@ -4341,6 +4349,22 @@ class CEESiteManagement(SiteManagement):
         )))
 
         return choices
+
+    # Duplicate code with cmk.cee.liveproxy.Channel._transform_old_socket_spec
+    @classmethod
+    def _transform_old_socket_spec(cls, sock_spec):
+        """Transforms pre 1.6 socket configs"""
+        if isinstance(sock_spec, six.string_types):
+            return "unix", {
+                "path": sock_spec,
+            }
+
+        if isinstance(sock_spec, tuple) and len(sock_spec) == 2 and isinstance(sock_spec[1], int):
+            return "tcp", {
+                "address": sock_spec,
+            }
+
+        return sock_spec
 
     @classmethod
     def liveproxyd_connection_params_elements(cls):
@@ -4442,17 +4466,17 @@ class CEESiteManagement(SiteManagement):
 
         conf = {}
         for siteid, siteconf in sites.items():
-            s = siteconf.get("socket")
-            if isinstance(s, tuple) and s[0] == "proxy":
+            family_spec, address_spec = siteconf["socket"]
+            if family_spec == "proxy":
                 conf[siteid] = {
-                    "socket": s[1]["socket"],
+                    "socket": address_spec["socket"],
                 }
 
-                if "tcp" in s[1]:
-                    conf[siteid]["tcp"] = s[1]["tcp"]
+                if "tcp" in address_spec:
+                    conf[siteid]["tcp"] = address_spec["tcp"]
 
-                if s[1]["params"]:
-                    conf[siteid].update(s[1]["params"])
+                if address_spec["params"]:
+                    conf[siteid].update(address_spec["params"])
 
         store.save_to_mk_file(path, "sites", conf)
 
@@ -4501,27 +4525,19 @@ def our_site_id():
     return None
 
 
-def create_nagvis_backends(sites):
+def create_nagvis_backends(sites_config):
     cfg = [
         '; MANAGED BY CHECK_MK WATO - Last Update: %s' % time.strftime('%Y-%m-%d %H:%M:%S'),
     ]
-    for site_id, site in sites.items():
+    for site_id, site in sites_config.items():
         if site == config.omd_site():
             continue  # skip local site, backend already added by omd
-        if 'socket' not in site:
-            continue  # skip sites without configured sockets
 
         # Handle special data format of livestatus proxy config
-        if isinstance(site['socket'], tuple):
-            if isinstance(site['socket'][1]['socket'], tuple):
-                socket = 'tcp:%s:%d' % site['socket'][1]['socket']
-            elif site['socket'][1]['socket'] is None:
-                socket = 'unix:%s' % cmk.utils.paths.livestatus_unix_socket
-            else:
-                raise NotImplementedError()
-
+        if site['socket'][0] == "proxy":
+            socket = sites.encode_socket_for_livestatus(site_id, site["socket"][1]["socket"])
         else:
-            socket = site['socket']
+            socket = sites.encode_socket_for_livestatus(site_id, site['socket'])
 
         cfg += [
             '',
@@ -10206,12 +10222,7 @@ class AutomationCheckAnalyzeConfig(AutomationCommand):
 def site_is_using_livestatus_proxy(site_id):
     sites = SiteManagementFactory().factory().load_sites()
     site = sites[site_id]
-
-    socket = site.get("socket")
-    if not socket:
-        return False  # local site
-
-    return isinstance(socket, tuple) and socket[0] == "proxy"
+    return site["socket"][0] == "proxy"
 
 
 #.

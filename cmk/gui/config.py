@@ -28,7 +28,8 @@ import sys
 import errno
 import os
 import copy
-from typing import Callable  # pylint: disable=unused-import
+from typing import Callable, Union, Tuple, Dict  # pylint: disable=unused-import
+import six
 
 import cmk.gui.utils as utils
 import cmk.gui.i18n
@@ -193,10 +194,9 @@ def load_config():
     for p in filelist:
         include(p)
 
-    # Prevent problem when user has deleted all sites from his configuration
-    # and sites is {}. We assume a default single site configuration in
-    # that case.
-    if not sites:
+    if sites:
+        sites = migrate_old_site_config(sites)
+    else:
         sites = default_single_site_configuration()
 
     migrate_old_sample_config_tag_groups(wato_host_tags, wato_aux_tags)
@@ -772,6 +772,58 @@ class BuiltinTags(object):
         return aux_tags_
 
 
+# During development of the 1.6 version the site configuration has been cleaned up in several ways:
+# 1. The "socket" attribute could be "disabled" to disable a site connection. This has already been
+#    deprecated long time ago and was not configurable in WATO. This has now been superceeded by
+#    the dedicated "disabled" attribute.
+# 2. The "socket" attribute was optional. A not present socket meant "connect to local unix" socket.
+#    This is now replaced with a value like this ("local", None) to reflect the generic
+#    CascadingDropdown() data structure of "(type, attributes)".
+# 3. The "socket" attribute was stored in the livestatus.py socketurl encoded format, at least when
+#    livestatus proxy was not used. This is now stored in the CascadingDropdown() native format and
+#    converted here to the correct format.
+def migrate_old_site_config(site_config):
+    if not site_config:
+        # Prevent problem when user has deleted all sites from his
+        # configuration and sites is {}. We assume a default single site
+        # configuration in that case.
+        return default_single_site_configuration()
+
+    for site in site_config.itervalues():
+        if site.get("socket") is None:
+            site["socket"] = ("local", None)
+            continue
+
+        socket = site["socket"]
+        if socket == 'disabled':
+            site['disabled'] = True
+            site['socket'] = ("local", None)
+            continue
+
+        if isinstance(socket, six.string_types):
+            site["socket"] = _migrate_string_encoded_socket(socket)
+
+    return site_config
+
+
+def _migrate_string_encoded_socket(value):
+    # type: (str) -> Tuple[str, Union[Dict]]
+    family_txt, address = value.split(":", 1)  # pylint: disable=no-member
+
+    if family_txt == "unix":
+        return "unix", {
+            "path": value.split(":", 1)[1],
+        }
+
+    if family_txt in ["tcp", "tcp6"]:
+        host, port = address.rsplit(":", 1)
+        return family_txt, {
+            "address": (host, int(port)),
+        }
+
+    raise NotImplementedError()
+
+
 # Previous to 1.5 the "Agent type" tag group was created as sample config and was not
 # a builtin tag group (which can not be modified by the user). With werk #5535 we changed
 # the tag scheme and need to deal with the user config (which might extend the original tag group).
@@ -928,6 +980,7 @@ def default_single_site_configuration():
     return {
         omd_site(): {
             'alias': _("Local site %s") % omd_site(),
+            'socket': ("local", None),
             'disable_wato': True,
             'disabled': False,
             'insecure': False,
@@ -955,9 +1008,8 @@ def sitenames():
 # TODO: All site listing functions should return the same data structure, e.g. a list of
 #       pairs (site_id, site)
 def allsites():
-    return dict([(name, site(name))
-                 for name in sitenames()
-                 if not site(name).get("disabled", False) and site(name)['socket'] != 'disabled'])
+    return dict(
+        [(name, site(name)) for name in sitenames() if not site(name).get("disabled", False)])
 
 
 def configured_sites():
@@ -1009,26 +1061,29 @@ def site(site_id):
     # Now make sure that all important keys are available.
     # Add missing entries by supplying default values.
     s.setdefault("alias", site_id)
-    s.setdefault("socket", "unix:" + cmk.utils.paths.livestatus_unix_socket)
+    s.setdefault("socket", ("local", None))
     s.setdefault("url_prefix", "../")  # relative URL from /check_mk/
-    if isinstance(s["socket"], tuple) and s["socket"][0] == "proxy":
-        s["cache"] = s["socket"][1].get("cache", True)
-        s["socket"] = "unix:" + cmk.utils.paths.livestatus_unix_socket + "proxy/" + site_id
-    else:
-        s["cache"] = False
     s["id"] = site_id
     return s
 
 
-def site_is_local(site_name):
-    s = sites.get(site_name, {})
-    sock = s.get("socket")
+def site_is_local(site_id):
+    family_spec, address_spec = site(site_id)["socket"]
 
-    if not sock or sock == "unix:" + cmk.utils.paths.livestatus_unix_socket:
+    if _is_local_socket_spec(family_spec, address_spec):
         return True
 
-    if isinstance(s["socket"], tuple) and s["socket"][0] == "proxy" \
-       and s["socket"][1]["socket"] is None:
+    if family_spec == "proxy" and _is_local_socket_spec(*address_spec["socket"]):
+        return True
+
+    return False
+
+
+def _is_local_socket_spec(family_spec, address_spec):
+    if family_spec == "local":
+        return True
+
+    if family_spec == "unix" and address_spec["path"] == cmk.utils.paths.livestatus_unix_socket:
         return True
 
     return False

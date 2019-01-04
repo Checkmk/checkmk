@@ -173,16 +173,7 @@ class ModeEditSite(ModeSites):
         vs_connection = self._site_mgmt.connection_method_valuespec()
         method = vs_connection.from_html_vars("method")
         vs_connection.validate_value(method, "method")
-        if isinstance(method, tuple) and method[0] in ["unix", "tcp"]:
-            if method[0] == "unix":
-                self._new_site["socket"] = "unix:" + method[1]
-            else:
-                self._new_site["socket"] = "tcp:%s:%d" % method[1]
-        elif method:
-            self._new_site["socket"] = method
-
-        elif "socket" in self._new_site:
-            del self._new_site["socket"]
+        self._new_site["socket"] = method
 
         # Timeout
         if self._timeout != "":
@@ -238,7 +229,7 @@ class ModeEditSite(ModeSites):
         # are not edited with this dialog
         if not self._new:
             for key in old_site.keys():
-                if key not in self._new_site and key != "socket":
+                if key not in self._new_site:
                     self._new_site[key] = old_site[key]
 
         self._site_mgmt.validate_configuration(self._site_id or self._id, self._new_site,
@@ -279,13 +270,6 @@ class ModeEditSite(ModeSites):
         forms.header(_("Livestatus settings"))
         forms.section(_("Connection"))
         method = self._site.get("socket", None)
-
-        if isinstance(method, str) and method.startswith("unix:"):
-            method = ('unix', method[5:])
-
-        elif isinstance(method, str) and method.startswith("tcp:"):
-            parts = method.split(":")[1:]  # pylint: disable=no-member
-            method = ('tcp', (parts[0], int(parts[1])))
 
         self._site_mgmt.connection_method_valuespec().render_input("method", method)
         html.help(
@@ -694,14 +678,9 @@ class ModeDistributedMonitoring(ModeSites):
 
     def _page_livestatus_settings(self, table, site_id, site):
         # Socket
-        socket = site.get("socket", _("local site"))
-        if socket == "disabled:":
-            socket = _("don't query status")
         table.cell(_("Socket"))
-        if isinstance(socket, tuple) and socket[0] == "proxy":
-            html.write_text(_("Use livestatus Proxy-Daemon"))
-        else:
-            html.write_text(socket)
+        vs_connection = self._site_mgmt.connection_method_valuespec()
+        html.write(vs_connection.value_to_text(site["socket"]))
 
         # Status host
         if site.get("status_host"):

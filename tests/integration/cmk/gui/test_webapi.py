@@ -129,20 +129,33 @@ def test_get_all_sites(web, site):
     assert site.id in response["sites"]
 
 
-def test_set_site(web, site):
+@pytest.mark.parametrize("sock_spec", [
+    "tcp:1.2.3.4:6557",
+    ("tcp", {
+        "address": ("1.2.3.4", 6557),
+        "tls": ("plain_text", {}),
+    }),
+])
+def test_set_site(web, site, sock_spec):
     original_site = web.get_site(site.id)
     assert site.id == original_site["site_id"]
 
     new_site_id = "testsite"
     new_site_config = copy.deepcopy(original_site["site_config"])
-    new_site_config["socket"] = "tcp:1.2.3.4:6557"
+    new_site_config["socket"] = sock_spec
+
+    expected_site_config = copy.deepcopy(original_site["site_config"])
+    expected_site_config["socket"] = ("tcp", {
+        "address": ("1.2.3.4", 6557),
+        "tls": ("plain_text", {}),
+    })
 
     try:
         web.set_site(new_site_id, new_site_config)
 
         new_response = web.get_site(new_site_id)
         assert new_site_id == new_response["site_id"]
-        assert new_response["site_config"] == new_site_config
+        assert new_response["site_config"] == expected_site_config
 
         original_response = web.get_site(site.id)
         assert site.id == original_response["site_id"]
@@ -151,14 +164,27 @@ def test_set_site(web, site):
         web.delete_site(new_site_id)
 
 
-def test_set_all_sites(web, site):
+@pytest.mark.parametrize("sock_spec", [
+    "tcp:1.2.3.4:6557",
+    ("tcp", {
+        "address": ("1.2.3.4", 6557),
+        "tls": ("plain_text", {}),
+    }),
+])
+def test_set_all_sites(web, site, sock_spec):
     response = web.get_all_sites()
     del response["configuration_hash"]
 
     new_site_id = "testsite"
 
     new_site_config = copy.deepcopy(response["sites"][site.id])
-    new_site_config["socket"] = "tcp:1.2.3.4:6557"
+    new_site_config["socket"] = sock_spec
+
+    expected_site_config = copy.deepcopy(copy.deepcopy(response["sites"][site.id]))
+    expected_site_config["socket"] = ("tcp", {
+        "address": ("1.2.3.4", 6557),
+        "tls": ("plain_text", {}),
+    })
 
     response["sites"][new_site_id] = new_site_config
 
@@ -167,7 +193,7 @@ def test_set_all_sites(web, site):
 
         response = web.get_site(new_site_id)
         assert new_site_id == response["site_id"]
-        assert response["site_config"] == new_site_config
+        assert response["site_config"] == expected_site_config
     finally:
         web.delete_site(new_site_id)
 

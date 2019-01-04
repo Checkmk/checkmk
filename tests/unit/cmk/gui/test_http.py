@@ -1,25 +1,21 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-import time
 import io
+import time
+
+from werkzeug.test import create_environ
 
 import cmk.gui.http as http
 from cmk.gui.globals import html
 
 
 def test_http_request_allowed_vars():
-    wsgi_environ = {
-        # Please note: This is no complete WSGI environment
-        "REQUEST_METHOD" : "POST",
-        # Contains a variable that has a base64 coded value in it's name. This
-        # is done for example on the service discovery page or on the user
-        # editing page.
-        "wsgi.input"     : io.BytesIO("asd=x&_Y21rYWRtaW4%3D=aaa"),
-        "SCRIPT_NAME"    : "",
-        "REQUEST_URI"    : "",
-    }
-    req = http.Request(wsgi_environ)
+    environ = dict(create_environ(method="POST",
+                                  content_type="application/x-www-form-urlencoded",
+                                  input_stream=io.BytesIO("asd=x&_Y21rYWRtaW4%3D=aaa")),
+                   REQUEST_URI='')
+    req = http.Request(environ)
     assert req.var("asd") == "x"
     assert req.var("_Y21rYWRtaW4=") == "aaa"
 
@@ -85,14 +81,9 @@ def test_response_del_cookie(register_builtin_html, monkeypatch):
 # We dropped the old format during 1.6 development. It would be a good time to drop the
 # compatibility with the old format earliest with 1.7.
 def test_pre_16_format_cookie_handling(monkeypatch):
-    wsgi_environ = {
-        # This is no complete WSGI environment. But we currently don't need more.
-        "wsgi.input"  : "",
-        "SCRIPT_NAME" : "",
-        "HTTP_COOKIE" : "xyz=123; auth_stable=lärs:1534272374.61:1f59cac3fcd5bcc389e4f8397bed315b; abc=123"
-    }
-
-    request = http.Request(wsgi_environ)
+    environ = dict(create_environ(),
+                   HTTP_COOKIE="xyz=123; auth_stable=lärs:1534272374.61:1f59cac3fcd5bcc389e4f8397bed315b; abc=123")
+    request = http.Request(environ)
 
     assert isinstance(request.cookie("auth_stable"), bytes)
     assert request.cookie("auth_stable") == "lärs:1534272374.61:1f59cac3fcd5bcc389e4f8397bed315b"

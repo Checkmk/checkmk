@@ -467,6 +467,7 @@ def init_watolib_datastructures():
     if config.wato_use_git:
         prepare_git_commit()
 
+    reset_need_sidebar_reload()
     update_config_based_host_attributes()
 
 
@@ -10497,16 +10498,22 @@ def validate_all_hosts(hostnames, force_all=False):
         return {}
 
 
+# TODO: Cleanup this global state
 g_need_sidebar_reload = None
+
+
+def reset_need_sidebar_reload():
+    global g_need_sidebar_reload
+    g_need_sidebar_reload = None
 
 
 def need_sidebar_reload():
     global g_need_sidebar_reload
-    g_need_sidebar_reload = id(html)
+    g_need_sidebar_reload = True
 
 
 def is_sidebar_reload_needed():
-    return g_need_sidebar_reload == id(html)
+    return g_need_sidebar_reload
 
 
 def folder_preserving_link(add_vars):

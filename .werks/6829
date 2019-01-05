@@ -1,4 +1,4 @@
-Title: squashfs is a read-only filesystem and is therefore not monitored
+Title: df mounts: Skip squashfs filesystems
 Level: 1
 Component: checks
 Compatible: compat
@@ -7,4 +7,6 @@ Version: 1.6.0i1
 Date: 1539336597
 Class: fix
 
-
+The filesystem squashfs is a read-only filesystem and is therefore not monitored.
+This makes the df and mounts checks ignore e.g. the mounts that are created for
+snaps in newer Ubuntu versions.

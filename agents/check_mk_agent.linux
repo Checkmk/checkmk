@@ -427,7 +427,7 @@ fi
 # Check mount options. Filesystems may switch to 'ro' in case
 # of a read error.
 echo '<<<mounts>>>'
-grep ^/dev < /proc/mounts
+grep ^/dev < /proc/mounts | grep -v " squashfs "
 
 # processes including username, without kernel processes
 echo '<<<ps>>>'

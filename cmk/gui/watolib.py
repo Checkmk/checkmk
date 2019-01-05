@@ -4017,6 +4017,7 @@ class SiteManagement(object):
         return CascadingDropdown(
             orientation="horizontal",
             choices=cls._connection_choices(),
+            render=CascadingDropdown.Render.foldable,
         )
 
     @classmethod

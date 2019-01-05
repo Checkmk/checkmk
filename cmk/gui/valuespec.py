@@ -1860,6 +1860,10 @@ class HostState(DropdownChoice):
 # y is the value of the valuespec assigned to that entry.
 # choices is a list of triples: [ ( value, title, vs ), ... ]
 class CascadingDropdown(ValueSpec):
+    class Render(Enum):
+        normal = "normal"
+        foldable = "foldable"
+
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)
 
@@ -1872,6 +1876,7 @@ class CascadingDropdown(ValueSpec):
         self._separator = kwargs.get("separator", ", ")
         self._sorted = kwargs.get("sorted", True)
         self._orientation = kwargs.get("orientation", "vertical")  # or horizontal
+        self._render = kwargs.get("render", CascadingDropdown.Render.normal)
         if kwargs.get("encoding", "tuple") == "list":
             self._encoding_type = list
         else:
@@ -1996,8 +2001,26 @@ class CascadingDropdown(ValueSpec):
                (value == val):
                 if not vs:
                     return title
+
+                rendered_value = vs.value_to_text(value[1])
+                if not rendered_value:
+                    return title
+
+                if self._render == CascadingDropdown.Render.foldable:
+                    with html.plugged():
+                        html.begin_foldable_container(
+                            "foldable_cascading_dropdown",
+                            id_=hashlib.sha256(repr(value)).hexdigest(),
+                            isopen=False,
+                            title=title,
+                            indent=False)
+                        html.write(vs.value_to_text(value[1]))
+                        html.end_foldable_container()
+                    return html.drain()
+
                 return title + self._separator + \
-                   vs.value_to_text(value[1])
+                       vs.value_to_text(value[1])
+
         return ""  # Nothing selected? Should never happen
 
     def from_html_vars(self, varprefix):

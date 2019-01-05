@@ -29,6 +29,8 @@ from cmk.gui.valuespec import (
     Dictionary,
     MonitoringState,
     TextAscii,
+    Tuple,
+    Integer,
 )
 from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersApplications,
@@ -70,6 +72,25 @@ register_check_parameters(
              MonitoringState(title="State when performance data is disabled", default_value=1)),
             ("check_external_commands",
              MonitoringState(title="State when not checking external commands", default_value=2)),
+            ("site_cert_days",
+             Tuple(
+                 title=_("Site certificate validity"),
+                 help=_("Minimum number of days a certificate has to be valid."),
+                 elements=[
+                     Integer(
+                         title=_("Warning at or below"),
+                         minvalue=0,
+                         unit=_("days"),
+                         default_value=30,
+                     ),
+                     Integer(
+                         title=_("Critical at or below"),
+                         minvalue=0,
+                         unit=_("days"),
+                         default_value=7,
+                     ),
+                 ],
+             ))
         ]),
     TextAscii(title=_("Name of the monitoring site"),),
     match_type="dict",

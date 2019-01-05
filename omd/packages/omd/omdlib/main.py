@@ -3339,6 +3339,8 @@ def main_init_action(site, command, args, options=None):
         if site.is_disabled():
             continue
 
+        site.load_config()
+
         # Handle non autostart sites
         if command in [ "start", "restart", "reload" ] or \
             ( "auto" in options and command == "status" ):

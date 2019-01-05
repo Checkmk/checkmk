@@ -44,6 +44,7 @@ factory_settings["livestatus_status_default_levels"] = {
     "enable_notifications": 2,
     "process_performance_data": 1,
     "check_external_commands": 2,
+    "site_cert_days": (30, 7),
 }
 
 
@@ -65,11 +66,31 @@ def parse_livestatus_status(info):
     return parsed
 
 
-def inventory_livestatus_status(parsed):
-    return [(site, {}) for (site, status) in parsed.items() if status is not None]
+def parse_livestatus_ssl_certs(info):
+    if not info:
+        return {}
+
+    parsed = {}
+    site = None
+    for line in info:
+        if line and line[0][0] == "[" and line[0][-1] == "]":
+            site = line[0][1:-1]
+            parsed[site] = {}
+
+        elif site and len(line) == 2:
+            pem_path, valid_until = line
+            parsed[site][pem_path] = valid_until
+
+    return parsed
 
 
-def check_livestatus_status(item, params, parsed):
+def inventory_livestatus_status(sections):
+    return [(site, {}) for (site, status) in sections[0].items() if status is not None]
+
+
+def check_livestatus_status(item, params, sections):
+    parsed, ssl_certs = sections[0], parse_livestatus_ssl_certs(sections[1])
+
     if item not in parsed:
         return
     status = parsed[item]
@@ -121,6 +142,20 @@ def check_livestatus_status(item, params, parsed):
     yield 0, "Core version: %s" % status["program_version"]
     yield 0, "Livestatus version: %s" % status["livestatus_version"]
 
+    pem_path = "/omd/sites/%s/etc/ssl/sites/%s.pem" % (item, item)
+    cert_valid_until = ssl_certs.get(item, {}).get(pem_path)
+    if cert_valid_until is not None:
+        days_left = (int(cert_valid_until) - time.time()) / 86400.0
+        valid_until_formatted = time.strftime("%Y-%m-%d %H:%M:%S",
+                                              time.localtime(int(cert_valid_until)))
+        yield check_levels(
+            value=days_left,
+            dsname="site_cert_days",
+            infoname="Site certificate validity (until %s)" % valid_until_formatted,
+            unit="days",
+            params=(None, None, params["site_cert_days"][0], params["site_cert_days"][1]),
+        )
+
     settings = [
         ("execute_host_checks", "Active host checks are disabled"),
         ("execute_service_checks", "Active service checks are disabled"),
@@ -162,4 +197,5 @@ check_info['livestatus_status'] = {
     "has_perfdata": True,
     "group": "livestatus_status",
     "default_levels_variable": "livestatus_status_default_levels",
+    "extra_sections": ["livestatus_ssl_certs"],
 }

@@ -580,14 +580,14 @@ class EBSSummary(AWSSection):
             volumes = {r['VolumeId']: r for r in response['Volumes']}
         except KeyError, e:
             logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
-            volumes = []
+            volumes = {}
 
         response = self._client.describe_volume_status()
         try:
             volume_states = {r['VolumeId']: r for r in response['VolumeStatuses']}
         except KeyError, e:
             logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
-            volume_states = []
+            volume_states = {}
 
         raw_result = []
         for volume_id in set(volumes.keys()).union(set(volume_states.keys())):

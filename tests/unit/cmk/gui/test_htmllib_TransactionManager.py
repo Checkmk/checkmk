@@ -49,7 +49,7 @@ def test_transaction_valid(tm, transid, ignore_transids, result, monkeypatch, is
         assert tm._ignore_transids == True
 
     if transid is not None:
-        tm._request.vars["_transid"] = transid
+        tm._request.set_var("_transid", transid)
         assert tm._request.has_var("_transid")
         assert tm._request.var("_transid") == transid
 
@@ -63,7 +63,7 @@ def test_transaction_valid(tm, transid, ignore_transids, result, monkeypatch, is
 
 def test_is_transaction(tm):
     assert not tm.is_transaction()
-    tm._request.vars["_transid"] = "123"
+    tm._request.set_var("_transid", "123")
     assert tm.is_transaction()
 
 
@@ -72,7 +72,7 @@ def test_check_transaction_invalid(tm, monkeypatch):
 
 def test_check_transaction_valid(tm, monkeypatch, mocker):
     valid_transid = "%d/abc" % time.time()
-    tm._request.vars["_transid"] = valid_transid
+    tm._request.set_var("_transid", valid_transid)
 
     monkeypatch.setattr(tm, "_load_transids", lambda: [valid_transid])
 
@@ -83,7 +83,7 @@ def test_check_transaction_valid(tm, monkeypatch, mocker):
 
 def test_check_transaction_automation(tm, monkeypatch, mocker):
     tm.ignore()
-    tm._request.vars["_transid"] = "-1"
+    tm._request.set_var("_transid", "-1")
 
     invalidate = mocker.patch.object(tm, "_invalidate")
     assert tm.check_transaction() == True

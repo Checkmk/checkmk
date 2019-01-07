@@ -1131,10 +1131,6 @@ class html(HTMLGenerator):
         return self.request.var_utf8(varname, deflt)
 
     # TODO: Refactor call sites to html.request.*
-    def all_vars(self):
-        return self.request.all_vars()
-
-    # TODO: Refactor call sites to html.request.*
     def all_varnames_with_prefix(self, prefix):
         return self.request.all_varnames_with_prefix(prefix)
 
@@ -1163,7 +1159,7 @@ class html(HTMLGenerator):
         self.request.del_all_vars(prefix)
 
     def stash_vars(self):
-        self._var_stash.append(self.request.vars.copy())
+        self._var_stash.append(dict(self.request.all_vars()))
 
     def unstash_vars(self):
         self.request.vars = self._var_stash.pop()
@@ -1250,7 +1246,7 @@ class html(HTMLGenerator):
                 raise MKUserError("request",
                                   _("Failed to parse JSON request: '%s': %s") % (json_request, e))
 
-        for key, val in self.all_vars().items():
+        for key, val in self.request.all_vars():
             if key not in ["request", "output_format"] + exclude_vars:
                 request[key] = val.decode("utf-8")
 
@@ -1586,8 +1582,8 @@ class html(HTMLGenerator):
     # [('varname1', value1), ('varname2', value2) ]
     def makeuri(self, addvars, remove_prefix=None, filename=None, delvars=None):
         new_vars = [nv[0] for nv in addvars]
-        vars_ = [(v, self.var(v))
-                 for v in self.request.vars
+        vars_ = [(v, val)
+                 for v, val in self.request.all_vars()
                  if v[0] != "_" and v not in new_vars and (not delvars or v not in delvars)]
         if remove_prefix is not None:
             vars_ = [i for i in vars_ if not i[0].startswith(remove_prefix)]
@@ -1940,10 +1936,9 @@ class html(HTMLGenerator):
         add_action_vars = args.get("add_action_vars", False)
         if varlist is not None:
             for var in varlist:
-                value = self.request.vars.get(var, "")
-                self.hidden_field(var, value)
+                self.hidden_field(var, self.request.var(var, ""))
         else:  # add *all* get variables, that are not set by any input!
-            for var in self.request.vars:
+            for var, _val in self.request.all_vars():
                 if var not in self.form_vars and \
                     (var[0] != "_" or add_action_vars): # and var != "filled_in":
                     self.hidden_field(var, self.get_unicode_input(var))
@@ -2176,7 +2171,7 @@ class html(HTMLGenerator):
 
         # Model
         error = self.user_errors.get(varname)
-        value = self.request.vars.get(varname, default_value)
+        value = self.request.var(varname, default_value)
         if not value:
             value = ""
         if error:
@@ -2434,7 +2429,7 @@ class html(HTMLGenerator):
                 self.open_center()
             self.open_div(class_="really")
             self.write_text(msg)
-            # FIXME: When this confirms another form, use the form name from self.request.vars()
+            # FIXME: When this confirms another form, use the form name from self.request.all_vars()
             self.begin_form("confirm", method=method, action=action, add_transid=add_transid)
             self.hidden_fields(add_action_vars=True)
             self.button("_do_confirm", _("Yes!"), "really")
@@ -2914,12 +2909,11 @@ hy
         self.end_foldable_container()
 
     def debug_vars(self, prefix=None, hide_with_mouse=True, vars_=None):
-        if not vars_:
-            vars_ = self.request.vars
+        it = self.request.all_vars() if vars_ is None else vars_.iteritems()
         hover = "this.style.display=\'none\';"
         self.open_table(class_=["debug_vars"], onmouseover=hover if hide_with_mouse else None)
         self.tr(self.render_th(_("POST / GET Variables"), colspan="2"))
-        for name, value in sorted(vars_.items()):
+        for name, value in sorted(it):
             if name in ["_password", "password"]:
                 value = "***"
             if not prefix or name.startswith(prefix):

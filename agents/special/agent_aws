@@ -798,13 +798,28 @@ class Glacier(AWSSection):
         return 300
 
     def _get_raw_result(self):
-        pass
+        response = self._client.list_vaults()
+        try:
+            vaults = {r['VaultName']: r for r in response['VaultList']}
+        except KeyError, e:
+            logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
+            vaults = {}
+
+        for vault_name, vault in vaults.iteritems():
+            response = self._client.list_jobs(vaultName=vault_name)
+            try:
+                jobs = response['JobList']
+            except KeyError, e:
+                logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
+                jobs = []
+            vault['Jobs'] = jobs
+        return vaults
 
     def _extract_content_from(self, raw_result):
-        pass
+        return raw_result
 
     def _format_content(self, content):
-        pass
+        return [AWSSectionResult("", content)]
 
 
 #.
@@ -872,6 +887,7 @@ class AWSSections(object):
         s3_client = self._init_client('s3')
         elb_client = self._init_client('elb')
         cloudtrail_client = self._init_client('cloudtrail')
+        glacier_client = self._init_client('glacier')
         cloudwatch_client = self._init_client('cloudwatch')
 
         #---distributors----------------------------------------------------
@@ -892,6 +908,7 @@ class AWSSections(object):
         ec2 = EC2(cloudwatch_client)
         elb = ELB(cloudwatch_client)
         ebs = EBS(cloudwatch_client)
+        glacier = Glacier(glacier_client)
 
         #---register sections to distributors-------------------------------
         ec2_summary_distributor.add(ec2)
@@ -914,6 +931,7 @@ class AWSSections(object):
         self._sections.append(elb)
         self._sections.append(ebs)
         self._sections.append(cloudtrail)
+        self._sections.append(glacier)
 
     def _init_client(self, client_key):
         try:

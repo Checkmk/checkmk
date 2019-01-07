@@ -36,11 +36,6 @@ factory_settings["dell_powerconnect_temp_default_values"] = {
 }
 
 
-def inventory_dell_powerconnect_temp(checkname, info):
-    for _temp, _state in info:
-        return [("Ambient", {})]
-
-
 def parse_dell_powerconnect_temp(info):
     try:
         temp_str, dev_status = info[0]

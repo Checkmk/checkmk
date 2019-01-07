@@ -181,6 +181,7 @@ catalog_titles = {
         "kaspersky"     : "Kaspersky Lab",
         "mcafee"        : "McAfee",
         "barracuda"     : "Barracuda",
+        "vnx"           : "VNX NAS",
 
     "os"       : "Operating Systems",
         "aix"           : "AIX",

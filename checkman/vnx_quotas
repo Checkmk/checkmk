@@ -1,0 +1,15 @@
+title: VNX NAS DBs: Quotas
+agents: vnx
+catalog: app/storage/vnx
+license: GPL
+distribution: check_mk
+description:
+ This check measures the usage of quotas of VNX NAS DBs.
+ The usage is checked against a warning and a critical level
+ which can be specified in numerous ways.
+
+item:
+ The Quota name.
+
+inventory:
+ One service is created per quota.

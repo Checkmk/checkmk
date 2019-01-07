@@ -1,0 +1,11 @@
+title: VNX NAS DBs: Version info
+agents: vnx
+catalog: app/storage/vnx
+license: GPL
+distribution: check_mk
+description:
+ This check displays the version and model information of VNX NAS DBs.
+ The check is always OK.
+
+inventory:
+ One service is created.

@@ -1,0 +1,160 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# ..|..,total,avail,used,totalKB
+# <<<vnx_quotas:sep(124)>>>
+# [[[fs]]]
+# fv51_01|806636,806636,0,0,825996248
+# fv51_02|100774,100773,0,0,103193048
+# fv52_01|252030,252030,0,0,258079448
+# fv52_04|20104,20103,0,0,20586968
+# fv53_01|1032512,1032512,0,0,1057293272
+# fv53_04|20104,20103,0,0,20586968
+# fv54_01|50355,50355,0,0,51564248
+# fv54_02|120941,120941,0,0,123844568
+# fv56_01|50355,50355,0,0,51564248
+# fv56_02|50355,50355,0,0,51564248
+# fv56_03|352868,352867,0,0,361337048
+# fv56_04|100774,100773,0,0,103193048
+# fv56_05|30188,30187,0,0,30912728
+# fv56_06|857055,857055,0,0,877625048
+# fv58_01|30188,30187,0,0,30912728
+# fv61_01|201611,201611,0,0,206450648
+# fv61_02|70523,70522,0,0,72215768
+# fv61_03|30188,30187,0,0,30912728
+# fv61_04|10020,10020,0,0,10261208
+
+# ..|..|blochusage|blockhardlimit
+# [[[quotas]]]
+# vdmfv51|fv51_01|/hmtest|0|0
+# vdmfv51|fv51_01|/BOEINT|0|1048576
+# vdmfv51|fv51_01|/BOEPROD|0|73400320
+# vdmfv51|fv51_01|/QIA|0|1048576
+# vdmfv51|fv51_01|/DEV|0|157286400
+# vdmfv51|fv51_01|/P90|0|52428800
+# vdmfv51|fv51_01|/P62|0|786432000
+# vdmfv51|fv51_02|/bo_transfer|0|205520896
+# vdmfv52|fv52_01|/saptrans|0|471859200
+# vdmfv52|fv52_04|/b10_gkretail|0|134217728
+# vdmfv53|fv53_01|/sapcd|0|1073741824
+# vdmfv53|fv53_04|/sap-template|0|104857600
+# vdmfv54|fv54_01|/p22_archiv|0|1048576
+# vdmfv54|fv54_01|/f22_archiv|0|1048576
+# vdmfv54|fv54_01|/e22_archiv|0|1048576
+# vdmfv54|fv54_01|/u1_ebv_zr|0|52428800
+
+discovery_rules_vnx_quotas = []
+
+
+def parse_vnx_quotas(info):
+    parsed = {"fs": {}, "quotas": {}}
+    section = None
+    for line in info:
+        if line[0].startswith("[[[") and line[0].endswith("]]]"):
+            section = line[0][3:-3]
+            continue
+
+        stripped_entries = [x.strip() for x in line]
+        if section == "fs":
+            parsed["fs"].setdefault(stripped_entries[0], {"data": stripped_entries[1].split(",")})
+
+        elif section == "quotas":
+            if len(stripped_entries) <> 5:
+                continue
+
+            dms, fs, mp, used_str, limit_str = stripped_entries
+            name = "%s %s" % (dms, mp)
+            parsed["quotas"].setdefault(name, {"fs": fs, "usage": None})
+            parsed["quotas"][name]["usage"] = used_str, limit_str, 0
+
+    return parsed
+
+
+def vnx_quotas_renaming(name, mappings):
+    for match, substitution in mappings:
+        if match.startswith("~"):
+            num_perc_s = substitution.count("%s")
+            reg = regex(match[1:])
+            matchobj = reg.match(name)
+            if matchobj:
+                matches = [g and g or "" for g in matchobj.groups()]
+                for nr, group in enumerate(matches):
+                    substitution = substitution.replace("%%%d" % (nr + 1), group)
+                substitution = substitution % tuple(matches[:num_perc_s])
+                return substitution
+
+        elif name == match:
+            return substitution
+
+    return name
+
+
+def inventory_vnx_quotas(parsed):
+    discovery = []
+    settings = host_extra_conf(host_name(), discovery_rules_vnx_quotas)
+    for name in parsed["quotas"].iterkeys():
+        dms, mp = name.split(" ")
+        if settings:
+            dms = vnx_quotas_renaming(dms, settings[0].get("dms_names"))
+            mp = vnx_quotas_renaming(mp, settings[0].get("mp_names"))
+        discovery.append(("%s %s" % (dms, mp), {"pattern": name}))
+    return discovery
+
+
+def check_vnx_quotas(item, params, parsed):
+    for quota_name in parsed["quotas"]:
+        if item == quota_name or quota_name == params["pattern"]:
+            data = parsed["quotas"][quota_name]
+            fs = data.get("fs")
+            used_kb, limit_kb_str, reserved_kb = data["usage"]
+
+            # Special case as customer said:
+            # if BlockHardLimit == "0" or "NoLimit" then we take filesystem size
+            if limit_kb_str in ["0", "NoLimit"] and fs in parsed["fs"]:
+                _total_size_mb, available_mb, _used_mb, \
+                    _used_perc, total_size_kb = parsed["fs"][fs]["data"]
+                size_mb = int(total_size_kb) / 1024.0
+            else:
+                size_mb = int(limit_kb_str) / 1024.0
+
+            available_mb = size_mb - int(used_kb) / 1024.0
+            reserved_mb = reserved_kb / 1024.0
+            state, infotext, perfdata = df_check_filesystem_single(item, size_mb, available_mb,
+                                                                   reserved_mb, None, None, params)
+
+            return state, infotext.replace("filesystem", "quota"), perfdata
+
+
+check_info['vnx_quotas'] = {
+    'parse_function': parse_vnx_quotas,
+    'inventory_function': inventory_vnx_quotas,
+    'check_function': check_vnx_quotas,
+    'service_description': 'VNX Quota %s',
+    'has_perfdata': True,
+    'group': "filesystem",
+    'default_levels_variable': 'filesystem_default_levels',
+    'includes': ['df.include', 'size_trend.include'],
+}

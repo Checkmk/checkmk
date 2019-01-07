@@ -476,6 +476,7 @@ def test_grouped_rulespecs():
             'special_agents:azure',
             'special_agents:bi',
             'special_agents:aws',
+            'special_agents:vnx_quotas',
         ],
         'checkparams/networking': [
             'ping_levels',
@@ -1322,6 +1323,7 @@ def test_grouped_rulespecs():
             'inventory_fujitsu_ca_ports',
             'discovery_mssql_backup',
             'winperf_msx_queues_inventory',
+            'discovery_rules_vnx_quotas',
         ],
         'agents/agent_plugins': [
             'agent_config:jar_signature',

@@ -25,7 +25,6 @@
 # Boston, MA 02110-1301 USA.
 """Wrapper layer between WSGI and the GUI application code"""
 
-import cgi
 import re
 
 import six
@@ -34,6 +33,14 @@ import werkzeug.wrappers
 
 import cmk.gui.log as log
 from cmk.gui.i18n import _
+
+# TODO: For some aracane reason, we are a bit restrictive about the allowed
+# variable names. Try to figure out why...
+_VARNAME_REGEX = re.compile(r'^[\w.%*+=-]+$')
+
+
+def _valid_varname(v):
+    return _VARNAME_REGEX.match(v)
 
 
 class Request(object):
@@ -49,63 +56,27 @@ class Request(object):
         self._logger = log.logger.getChild("http.Request")
 
         self._wsgi_environ = wsgi_environ
+        self._wrequest = werkzeug.wrappers.Request(wsgi_environ)
 
-        # Structures filled using the request environment
-        self.vars = {}
-        self.listvars = {}  # for variables with more than one occurrence
-        self.uploads = {}
+        values = [(k, vs) for k, vs in self._wrequest.values.lists() if _valid_varname(k)]
+        # Last occurrence takes precedence, making appending to current URL simpler
+        # TODO: Some code *directly* accesses and modifies vars, remove that!
+        self.vars = {k: vs[-1] for k, vs in values}
+        self._listvars = {k: vs for k, vs in values if len(vs) > 1}
+
+        # NOTE: There could be multiple entries with the same key, we ignore that for now...
+        self._uploads = {}
+        for k, f in self._wrequest.files.iteritems():
+            # TODO: We read the whole data here and remember it. Should we
+            # offer the underlying stream directly?
+            self._uploads[k] = (f.filename, f.mimetype, f.read())
+            f.close()
+
         # TODO: To be compatible with Check_MK <1.5 handling / code base we
         # prevent parse_cookie() from decoding the stuff to unicode. One bright
         # day we'll switch all input stuff to be parsed to unicode, then we'll
         # clean this up!
         self.cookies = werkzeug.http.parse_cookie(wsgi_environ, charset=None)
-
-        self._init_vars(wsgi_environ)
-
-    def _init_vars(self, wsgi_environ):
-        wsgi_input = wsgi_environ["wsgi.input"]
-        if not wsgi_input:
-            return
-
-        fields = None
-        try:
-            fields = cgi.FieldStorage(wsgi_input, None, "", wsgi_environ, keep_blank_values=1)
-        except MemoryError:
-            raise Exception('The maximum request size has been exceeded.')
-
-        self._init_vars_from_field_storage(fields)
-
-    def _init_vars_from_field_storage(self, fields):
-        # TODO: Previously the regex below matched any alphanumeric character plus any character
-        # from set(r'%*+,-./:;<=>?@[\_'), but this was very probably unintended. Now we only allow
-        # alphanumeric characters plus any character from set('%*+-._'), which is probably still a
-        # bit too broad. We should really figure out what we need and make sure that we only use
-        # that restricted set.
-        varname_regex = re.compile(r'^[\w.%*+=-]+$')
-
-        for field in fields.list:
-            varname = field.name
-
-            # To prevent variours injections, we only allow a defined set
-            # of characters to be used in variables
-            if not varname_regex.match(varname):
-                continue
-
-            # put uploaded file infos into separate storage
-            if field.filename is not None:
-                self.uploads[varname] = (field.filename, field.type, field.value)
-
-            else:  # normal variable
-                # Multiple occurrance of a variable? Store in extra list dict
-                if varname in self.vars:
-                    if varname in self.listvars:
-                        self.listvars[varname].append(field.value)
-                    else:
-                        self.listvars[varname] = [self.vars[varname], field.value]
-                # In the single-value-store the last occurrance of a variable
-                # has precedence. That makes appending variables to the current
-                # URL simpler.
-                self.vars[varname] = field.value
 
     @property
     def requested_file(self):
@@ -202,19 +173,19 @@ class Request(object):
                 yield varname
 
     # Return all values of a variable that possible occurs more
-    # than once in the URL. note: self.listvars does contain those
+    # than once in the URL. note: self._listvars does contain those
     # variable only, if the really occur more than once.
     def list_var(self, varname):
-        if varname in self.listvars:
-            return self.listvars[varname]
+        if varname in self._listvars:
+            return self._listvars[varname]
         elif varname in self.vars:
             return [self.vars[varname]]
         return []
 
-    # Adds a variable to listvars and also set it
+    # Adds a variable to _listvars and also set it
     def add_var(self, varname, value):
-        self.listvars.setdefault(varname, [])
-        self.listvars[varname].append(value)
+        self._listvars.setdefault(varname, [])
+        self._listvars[varname].append(value)
         self.vars[varname] = value
 
     # TODO: self.vars should be strictly read only in the Request() object
@@ -232,20 +203,20 @@ class Request(object):
     # TODO: self.vars should be strictly read only in the Request() object
     def del_var(self, varname):
         self.vars.pop(varname, None)
-        self.listvars.pop(varname, None)
+        self._listvars.pop(varname, None)
 
     # TODO: self.vars should be strictly read only in the Request() object
     def del_all_vars(self, prefix=None):
         if not prefix:
             self.vars = {}
-            self.listvars = {}
+            self._listvars = {}
         else:
             self.vars = dict(p for p in self.vars.iteritems() if not p[0].startswith(prefix))
-            self.listvars = dict(
-                p for p in self.listvars.iteritems() if not p[0].startswith(prefix))
+            self._listvars = dict(
+                p for p in self._listvars.iteritems() if not p[0].startswith(prefix))
 
-    def uploaded_file(self, varname, default=None):
-        return self.uploads.get(varname, default)
+    def uploaded_file(self, varname):
+        return self._uploads.get(varname)
 
 
 class Response(werkzeug.wrappers.Response):

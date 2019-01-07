@@ -49,49 +49,48 @@
 lparstat_default_levels = (5, 10)
 
 
-def inventory_lparstat(info):
-    if len(info) >= 1 and len(info[-1]) >= 5:
-        return [(None, "lparstat_default_levels")]
+def parse_lparstat_aix(info):
+    if not info:
+        return {}
+    if len(info) < 4:
+        return {'update_required': True}
+
+    parsed = {}
+    for index, key in enumerate(info[1]):
+        name = key.lstrip('%')
+        uom = '%' if '%' in key else ''
+        try:
+            value = float(info[3][index])
+        except (IndexError, ValueError):
+            continue
+
+        if name in ('user', 'sys', 'idle', 'wait'):
+            parsed.setdefault('cpu', {})[name] = value
+        else:
+            parsed.setdefault('util', []).append((name, value, uom))
+
+    return parsed
 
 
-def check_lparstat(item, params, info):
-    if len(info) == 1:
-        # Old agent provided only the values in a single line
-        line = info[0]
-        if len(line) == 12:
-            cols = ['physc', 'entc', 'lbusy', 'app', 'vcsw', 'phint', 'nsp', 'utcyc']
-            uom = ['', '%', '', '', '', '', '%', '%']
-            values = line[-8:]
-        elif len(line) == 11:
-            cols = ['physc', 'entc', 'lbusy', 'app', 'vcsw', 'phint', 'nsp']
-            uom = ['', '%', '', '', '', '', '%']
-            values = line[-7:]
-        elif len(line) == 10:
-            cols = ['physc', 'entc', 'lbusy', 'app', 'vcsw', 'phint']
-            uom = ['', '%', '', '', '', '']
-            values = line[-6:]
-        elif len(line) == 9:
-            cols = ['physc', 'entc', 'lbusy', 'app']
-            uom = ['', '%', '', '']
-            values = line[-4:]
-        elif len(line) == 6:
-            cols = ['nsp', 'utcyc']
-            uom = ['%', '%']
-            values = line[-2:]
-        # else:
-        # Invalid output, let exception happen
-    else:
-        # The new agent provides three lines, the title line, spacer line and the values
-        cols = [c.replace('%', '') for c in info[-3]]
-        uom = ['%' * ('%' in c) for c in info[-3]]
-        values = info[-1]
+def inventory_lparstat(parsed):
+    if parsed:
+        yield None, "lparstat_default_levels"
 
-    perfdata = zip(cols, map(float, values))
-    output = ', '.join("%s: %s%s" % (c.title(), v, u) for c, v, u in zip(cols, values, uom))
-    return 0, output, perfdata
+
+def check_lparstat(_no_item, _no_params, parsed):
+    if not parsed:
+        return
+    if parsed.get('update_required'):
+        yield 3, "Please upgrade your AIX agent."
+        return
+
+    utilization = parsed.get('util', [])
+    for name, value, uom in utilization:
+        yield 0, "%s: %s%s" % (name.title(), value, uom), [(name, value)]
 
 
 check_info["lparstat_aix"] = {
+    'parse_function': parse_lparstat_aix,
     'check_function': check_lparstat,
     'inventory_function': inventory_lparstat,
     'service_description': 'lparstat',
@@ -102,22 +101,22 @@ check_info["lparstat_aix"] = {
 kernel_util_default_levels = None
 
 
-def inventory_lparstat_aix_cpu(info):
-    if len(info) >= 1 and len(info[-1]) >= 4:
-        return [(None, "kernel_util_default_levels")]
+def inventory_lparstat_aix_cpu(parsed):
+    if parsed.get('cpu') or parsed.get('update_required'):
+        yield None, "kernel_util_default_levels"
 
 
-def check_lparstat_aix_cpu(_no_item, params, info):
-    if len(info) == 1:
-        line = info[0]  # old (single line) agent output
-    else:
-        line = info[-1]
-    user, system, wait, _idle = map(float, line[:4])
-    perfdata = [
-        ("user", user),
-        ("system", system),
-        ("wait", wait),
-    ]
+def check_lparstat_aix_cpu(_no_item, params, parsed):
+    if parsed.get('update_required'):
+        yield 3, "Please upgrade your AIX agent."
+        return
+
+    cpu = parsed.get('cpu', {})
+    user, system, wait = cpu.get('user'), cpu.get('sys'), cpu.get('wait')
+    if None in (user, system, wait):
+        return
+
+    perfdata = [("user", user), ("system", system), ("wait", wait)]
 
     util = user + system + wait
 
@@ -142,7 +141,7 @@ def check_lparstat_aix_cpu(_no_item, params, info):
         elif wait >= warn:
             result = max(result, 1)
 
-    return (result, infotext, perfdata)
+    yield result, infotext, perfdata
 
 
 check_info['lparstat_aix.cpu_util'] = {

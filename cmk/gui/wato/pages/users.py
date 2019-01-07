@@ -225,7 +225,7 @@ class ModeUsers(WatoMode):
         html.begin_form("bulk_delete_form", method="POST")
 
         roles = userdb.load_roles()
-        timeperiods = watolib.load_timeperiods()
+        timeperiods = watolib.timeperiods.load_timeperiods()
         contact_groups = userdb.load_group_information().get("contact", {})
 
         with table_element("users", None, empty_text=_("No users are defined yet.")) as table:
@@ -386,7 +386,7 @@ class ModeUsers(WatoMode):
                         tp = user.get("notification_period", "24X7")
                         if tp not in timeperiods:
                             tp = tp + _(" (invalid)")
-                        elif tp not in watolib.builtin_timeperiods():
+                        elif tp not in watolib.timeperiods.builtin_timeperiods():
                             url = watolib.folder_preserving_link([("mode", "edit_timeperiod"),
                                                                   ("edit", tp)])
                             tp = html.render_a(timeperiods[tp].get("alias", tp), href=url)
@@ -437,7 +437,7 @@ class ModeEditUser(WatoMode):
         # Load data that is referenced - in order to display dropdown
         # boxes and to check for validity.
         self._contact_groups = userdb.load_group_information().get("contact", {})
-        self._timeperiods = watolib.load_timeperiods()
+        self._timeperiods = watolib.timeperiods.load_timeperiods()
         self._roles = userdb.load_roles()
 
         if cmk.is_managed_edition():

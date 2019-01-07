@@ -96,6 +96,7 @@ from cmk.gui.plugins.wato.utils.main_menu import (
     register_modules,
 )
 import cmk.gui.watolib as watolib
+from cmk.gui.watolib.timeperiods import TimeperiodSelection
 from cmk.gui.watolib import (
     service_levels,
     get_search_expression,
@@ -139,7 +140,6 @@ from cmk.gui.watolib import (
     LivestatusViaTCP,
     WatoBackgroundJob,
     UserSelection,
-    TimeperiodSelection,
     multifolder_host_rule_match_conditions,
     simple_host_rule_match_conditions,
     transform_simple_to_multi_host_rule_match_conditions,
@@ -1007,7 +1007,7 @@ class TimeperiodValuespec(ValueSpec):
                 (self.tp_values_key,
                  ListOf(
                      Tuple(elements=[
-                         TimeperiodSelection(
+                         watolib.timeperiods.TimeperiodSelection(
                              title=_("Match only during timeperiod"),
                              help=_("Match this rule only during times where the "
                                     "selected timeperiod from the monitoring "
@@ -1486,7 +1486,7 @@ class EventsMode(WatoMode):
               ),
             ),
             ( "match_timeperiod",
-              TimeperiodSelection(
+              watolib.timeperiods.TimeperiodSelection(
                   title = _("Match only during timeperiod"),
                   help = _("Match this rule only during times where the selected timeperiod from the monitoring "
                            "system is active."),

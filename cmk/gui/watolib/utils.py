@@ -27,3 +27,4 @@
 import cmk.utils.paths
 
 wato_root_dir = cmk.utils.paths.check_mk_config_dir + "/wato/"
+multisite_dir = cmk.utils.paths.default_config_dir + "/multisite.d/wato/"

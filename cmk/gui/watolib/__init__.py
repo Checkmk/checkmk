@@ -131,7 +131,9 @@ from cmk.gui.valuespec import (
 
 import cmk.gui.watolib.timeperiods
 from cmk.gui.watolib.utils import (
-    wato_root_dir,)
+    wato_root_dir,
+    multisite_dir,
+)
 
 if cmk.is_managed_edition():
     import cmk.gui.cme.managed as managed
@@ -166,7 +168,6 @@ NO_ITEM = {}  # Just an arbitrary unique thing
 ENTRY_NEGATE_CHAR = "!"
 
 # Some paths and directories
-multisite_dir = cmk.utils.paths.default_config_dir + "/multisite.d/wato/"
 sites_mk = cmk.utils.paths.default_config_dir + "/multisite.d/sites.mk"
 var_dir = cmk.utils.paths.var_dir + "/wato/"
 audit_log_path = var_dir + "log/audit.log"
@@ -2570,16 +2571,6 @@ def validate_host_uniqueness(varname, host_name):
 #   +----------------------------------------------------------------------+
 #   |  Functions called by others that import wato (such as views)         |
 #   '----------------------------------------------------------------------'
-
-
-# Create an URL to a certain WATO folder when we just know its path
-def link_to_folder_by_path(path):
-    return "wato.py?mode=folder&folder=" + html.urlencode(path)
-
-
-# Create an URL to the edit-properties of a host when we just know its name
-def link_to_host_by_name(host_name):
-    return "wato.py?" + html.urlencode_vars([("mode", "edit_host"), ("host", host_name)])
 
 
 # Return a list with all the titles of the paths'

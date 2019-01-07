@@ -348,7 +348,7 @@ function run_real_time_checks()
 }
 
 echo '<<<check_mk>>>'
-echo Version: 1.5.0p10
+echo Version: 1.5.0p11
 echo "AgentOS: linux"
 echo "Hostname: $HOSTNAME"
 echo "AgentDirectory: $MK_CONFDIR"

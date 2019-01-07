@@ -1134,13 +1134,6 @@ class html(HTMLGenerator):
     def all_varnames_with_prefix(self, prefix):
         return self.request.all_varnames_with_prefix(prefix)
 
-    # Return all values of a variable that possible occurs more
-    # than once in the URL. note: self.listvars does contain those
-    # variable only, if the really occur more than once.
-    # TODO: Refactor call sites to html.request.*
-    def list_var(self, varname):
-        return self.request.list_var(varname)
-
     # Adds a variable to listvars and also set it
     # TODO: Refactor call sites to html.request.*
     def add_var(self, varname, value):
@@ -1967,7 +1960,7 @@ class html(HTMLGenerator):
 
         return self.has_var("filled_in") and (
             form_name is None or \
-            form_name in self.list_var("filled_in"))
+            form_name in self.request.list_var("filled_in"))
 
     def do_actions(self):
         return self.var("_do_actions") not in ["", None, _("No")]

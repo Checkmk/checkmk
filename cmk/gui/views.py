@@ -1566,7 +1566,6 @@ def show_context_links(thisview, datasource, show_filters, enable_commands, enab
 
     ## Large buttons
     if display_options.enabled(display_options.B):
-        import cmk.gui.watolib as watolib
         # WATO: If we have a host context, then show button to WATO, if permissions allow this
         if html.request.has_var("host") \
            and config.wato_enabled \
@@ -1574,9 +1573,9 @@ def show_context_links(thisview, datasource, show_filters, enable_commands, enab
            and (config.user.may("wato.hosts") or config.user.may("wato.seeall")):
             host = html.request.var("host")
             if host:
-                url = watolib.link_to_host_by_name(host)
+                url = _link_to_host_by_name(host)
             else:
-                url = watolib.link_to_folder_by_path(html.request.var("wato_folder", ""))
+                url = _link_to_folder_by_path(html.request.var("wato_folder", ""))
             html.context_button(
                 _("WATO"), url, "wato", id_="wato", bestof=config.context_buttons_to_show)
 
@@ -1628,6 +1627,19 @@ def show_context_links(thisview, datasource, show_filters, enable_commands, enab
         execute_hooks('buttons-end')
 
     html.end_context_buttons()
+
+
+def _link_to_folder_by_path(path):
+    # type: (str) -> str
+    """Return an URL to a certain WATO folder when we just know its path"""
+    return html.makeuri_contextless([("mode", "folder"), ("folder", path)], filename="wato.py")
+
+
+def _link_to_host_by_name(host_name):
+    # type: (str) -> str
+    """Return an URL to the edit-properties of a host when we just know its name"""
+    return html.makeuri_contextless([("mode", "edit_host"), ("host", host_name)],
+                                    filename="wato.py")
 
 
 def update_context_links(enable_command_toggle, enable_checkbox_toggle):

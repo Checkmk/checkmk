@@ -70,6 +70,8 @@ class Application(object):
         self._start_response = start_response
         self._request = cmk.gui.http.Request(environ)
         self._response = werkzeug.wrappers.Response()
+        # NOTE: Currently we rely on a *relavtive* Location header in redirects!
+        self._response.autocorrect_location_header = False
 
         # Create an object that contains all data about the request and
         # helper functions for creating valid HTML. Parse URI and

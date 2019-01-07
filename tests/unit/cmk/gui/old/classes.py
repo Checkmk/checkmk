@@ -3,16 +3,15 @@
 # > py.test -s -k test_html_generator.py
 
 from werkzeug.test import create_environ
-from werkzeug.wrappers import Response
 
-from cmk.gui.http import Request
+from cmk.gui.http import Request, Response
 import cmk.gui.htmllib as htmllib
 
 # A Class which can be used to simulate HTML generation in varios tests in tests/web/
 class HTMLTester(htmllib.html):
     def __init__(self):
         environ = dict(create_environ(), REQUEST_URI='')
-        super(HTMLTester, self).__init__(Request(environ), Response())
+        super(HTMLTester, self).__init__(Request(environ), Response(is_secure=False))
 
 
     def context_button_test(obj, title, url, icon=None, hot=False, id_=None, bestof=None, hover_title=None, id_in_best=False):

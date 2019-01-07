@@ -28,8 +28,6 @@ import httplib
 import os
 import traceback
 
-import werkzeug.wrappers
-
 import livestatus
 
 import cmk.utils.paths
@@ -69,9 +67,7 @@ class Application(object):
         self._environ = environ
         self._start_response = start_response
         self._request = cmk.gui.http.Request(environ)
-        self._response = werkzeug.wrappers.Response()
-        # NOTE: Currently we rely on a *relavtive* Location header in redirects!
-        self._response.autocorrect_location_header = False
+        self._response = cmk.gui.http.Response(is_secure=self._request.is_ssl_request)
 
         # Create an object that contains all data about the request and
         # helper functions for creating valid HTML. Parse URI and

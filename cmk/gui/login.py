@@ -176,19 +176,11 @@ def create_auth_session(username):
 
 
 def set_auth_cookie(username):
-    html.response.set_cookie(
-        auth_cookie_name(),
-        auth_cookie_value(username),
-        secure=html.request.is_ssl_request,
-        httponly=True)
+    html.response.set_http_cookie(auth_cookie_name(), auth_cookie_value(username))
 
 
 def set_session_cookie(username, session_id):
-    html.response.set_cookie(
-        session_cookie_name(),
-        session_cookie_value(username, session_id),
-        secure=html.request.is_ssl_request,
-        httponly=True)
+    html.response.set_http_cookie(session_cookie_name(), session_cookie_value(username, session_id))
 
 
 def session_cookie_name():
@@ -538,7 +530,7 @@ def page_logout():
         if not html.request.has_cookie('logout'):
             html.response.headers[
                 'WWW-Authenticate'] = 'Basic realm="OMD Monitoring Site %s"' % config.omd_site()
-            html.response.set_cookie('logout', '1', secure=html.request.is_ssl_request)
+            html.response.set_http_cookie('logout', '1')
             raise FinalizeRequest(httplib.UNAUTHORIZED)
         else:
             html.response.delete_cookie('logout')

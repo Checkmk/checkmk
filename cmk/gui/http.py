@@ -30,6 +30,7 @@ import re
 
 import six
 import werkzeug.http
+import werkzeug.wrappers
 
 import cmk.gui.log as log
 from cmk.gui.i18n import _
@@ -245,3 +246,17 @@ class Request(object):
 
     def uploaded_file(self, varname, default=None):
         return self.uploads.get(varname, default)
+
+
+class Response(werkzeug.wrappers.Response):
+    # NOTE: Currently we rely on a *relavtive* Location header in redirects!
+    autocorrect_location_header = False
+
+    def __init__(self, is_secure, *args, **kwargs):
+        super(Response, self).__init__(*args, **kwargs)
+        self._is_secure = is_secure
+
+    def set_http_cookie(self, key, value, secure=None):
+        if secure is None:
+            secure = self._is_secure
+        super(Response, self).set_cookie(key, value, secure=secure, httponly=True)

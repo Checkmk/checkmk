@@ -1511,3 +1511,20 @@ register_rule(
     ),
     title=_('Amazon Web Services (AWS)'),
     match='first')
+
+register_rule(
+    RulespecGroupDatasourcePrograms,
+    "special_agents:vnx_quotas",
+    Dictionary(
+        title=_("Check VNX quotas and filesystems"),
+        elements=[
+            ("user", TextAscii(title=_("NAS DB user name"))),
+            ("password", Password(title=_("Password"))),
+            ("nas_db", TextAscii(title=_("NAS DB path"))),
+        ],
+        optional_keys=[],
+    ),
+    factory_default=watolib.Rulespec.
+    FACTORY_DEFAULT_UNUSED,  # No default, do not use setting if no rule matches
+    match='first',
+)

@@ -1,0 +1,11 @@
+Title: New special agent for NAS DBs
+Level: 1
+Component: agents
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1487765255
+Class: feature
+
+Introduced new special agent which collects data about filesystem
+and quotas and filesystems of NAS DBs.

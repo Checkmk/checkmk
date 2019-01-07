@@ -60,7 +60,7 @@ class Request(object):
 
         values = [(k, vs) for k, vs in self._wrequest.values.lists() if _valid_varname(k)]
         # Last occurrence takes precedence, making appending to current URL simpler
-        # TODO: Some code *directly* accesses and modifies vars, remove that!
+        # TODO: html.unstash_vars() *directly* modifies vars, remove that!
         self.vars = {k: vs[-1] for k, vs in values}
         self._listvars = {k: vs for k, vs in values if len(vs) > 1}
 
@@ -165,7 +165,7 @@ class Request(object):
         return val
 
     def all_vars(self):
-        return self.vars
+        return self.vars.iteritems()
 
     def all_varnames_with_prefix(self, prefix):
         for varname in self.vars:

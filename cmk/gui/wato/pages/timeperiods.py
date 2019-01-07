@@ -75,7 +75,7 @@ class ModeTimeperiods(WatoMode):
 
     def __init__(self):
         super(ModeTimeperiods, self).__init__()
-        self._timeperiods = watolib.load_timeperiods()
+        self._timeperiods = watolib.timeperiods.load_timeperiods()
 
     def title(self):
         return _("Timeperiods")
@@ -92,7 +92,7 @@ class ModeTimeperiods(WatoMode):
     def action(self):
         delname = html.request.var("_delete")
         if delname and html.transaction_valid():
-            if delname in watolib.builtin_timeperiods():
+            if delname in watolib.timeperiods.builtin_timeperiods():
                 raise MKUserError("_delete", _("Builtin timeperiods can not be modified"))
 
             usages = self._find_usages_of_timeperiod(delname)
@@ -111,7 +111,7 @@ class ModeTimeperiods(WatoMode):
                   "it is not being used by any rule or user profile right now.") % delname)
             if c:
                 del self._timeperiods[delname]
-                watolib.save_timeperiods(self._timeperiods)
+                watolib.timeperiods.save_timeperiods(self._timeperiods)
                 watolib.add_change("edit-timeperiods", _("Deleted timeperiod %s") % delname)
             elif c is False:
                 return ""
@@ -144,7 +144,7 @@ class ModeTimeperiods(WatoMode):
         rulesets.load()
 
         for varname, ruleset in rulesets.get_rulesets().items():
-            if not isinstance(ruleset.valuespec(), watolib.TimeperiodSelection):
+            if not isinstance(ruleset.valuespec(), watolib.timeperiods.TimeperiodSelection):
                 continue
 
             for _folder, _rulenr, rule in ruleset.get_rules():
@@ -172,7 +172,7 @@ class ModeTimeperiods(WatoMode):
 
     def _find_usages_in_other_timeperiods(self, tpname):
         used_in = []
-        for tpn, tp in watolib.load_timeperiods().items():
+        for tpn, tp in watolib.timeperiods.load_timeperiods().items():
             if tpname in tp.get("exclude", []):
                 used_in.append(
                     ("%s: %s (%s)" % (_("Timeperiod"), tp.get("alias", tpn), _("excluded")),
@@ -280,7 +280,7 @@ class ModeTimeperiods(WatoMode):
                 table.row()
 
                 table.cell(_("Actions"), css="buttons")
-                if name in watolib.builtin_timeperiods():
+                if name in watolib.timeperiods.builtin_timeperiods():
                     html.write_text(html.i(_("(builtin)")))
                 else:
                     self._action_buttons(name)
@@ -577,11 +577,11 @@ class ModeEditTimeperiod(WatoMode):
         return ["timeperiods"]
 
     def _from_vars(self):
-        self._timeperiods = watolib.load_timeperiods()
+        self._timeperiods = watolib.timeperiods.load_timeperiods()
         self._name = html.request.var("edit")  # missing -> new group
         self._new = self._name is None
 
-        if self._name in watolib.builtin_timeperiods():
+        if self._name in watolib.timeperiods.builtin_timeperiods():
             raise MKUserError("edit", _("Builtin timeperiods can not be modified"))
 
         if self._new:
@@ -772,7 +772,7 @@ class ModeEditTimeperiod(WatoMode):
             watolib.add_change("edit-timeperiods", _("Modified time period %s") % self._name)
 
         self._timeperiods[self._name] = self._timeperiod
-        watolib.save_timeperiods(self._timeperiods)
+        watolib.timeperiods.save_timeperiods(self._timeperiods)
         return "timeperiods"
 
     def page(self):

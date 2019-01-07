@@ -82,7 +82,7 @@ import cmk.ec.export
 import cmk.utils.regex
 import cmk.utils.plugin_registry
 
-import cmk.gui.utils as utils
+import cmk.gui.utils
 import cmk.gui.config as config
 import cmk.gui.hooks as hooks
 import cmk.gui.userdb as userdb
@@ -129,6 +129,10 @@ from cmk.gui.valuespec import (
     MonitoredHostname,
 )
 
+import cmk.gui.watolib.timeperiods
+from cmk.gui.watolib.utils import (
+    wato_root_dir,)
+
 if cmk.is_managed_edition():
     import cmk.gui.cme.managed as managed
 
@@ -162,7 +166,6 @@ NO_ITEM = {}  # Just an arbitrary unique thing
 ENTRY_NEGATE_CHAR = "!"
 
 # Some paths and directories
-wato_root_dir = cmk.utils.paths.check_mk_config_dir + "/wato/"
 multisite_dir = cmk.utils.paths.default_config_dir + "/multisite.d/wato/"
 sites_mk = cmk.utils.paths.default_config_dir + "/multisite.d/sites.mk"
 var_dir = cmk.utils.paths.var_dir + "/wato/"
@@ -226,7 +229,7 @@ g_host_attribute = {}
 
 
 def load_watolib_plugins():
-    utils.load_web_plugins("watolib", globals())
+    cmk.gui.utils.load_web_plugins("watolib", globals())
 
 
 # TODO: Must only be unlocked when it was not locked before. We should find a more
@@ -4517,7 +4520,7 @@ def get_login_secret(create_on_demand=False):
     if not create_on_demand:
         return None
 
-    secret = utils.get_random_string(32)
+    secret = cmk.gui.utils.get_random_string(32)
     store.save_data_to_file(path, secret)
     return secret
 
@@ -5253,7 +5256,7 @@ class ActivateChangesWriter(ActivateChanges):
                                      need_sync, need_restart, domains)
 
     def _new_change_id(self):
-        return utils.gen_id()
+        return cmk.gui.utils.gen_id()
 
     def _add_change_to_site(self, site_id, change_id, action_name, text, obj, add_user, need_sync,
                             need_restart, domains):
@@ -5412,7 +5415,7 @@ class ActivateChangesManager(ActivateChanges):
         return False  # No site reported running -> not running
 
     def _new_activation_id(self):
-        return utils.gen_id()
+        return cmk.gui.utils.gen_id()
 
     def _get_sites(self, sites):
         for site_id in sites:
@@ -8910,69 +8913,6 @@ def may_override_read_only_mode():
 
 
 #.
-#   .--Timeperiods---------------------------------------------------------.
-#   |      _____ _                                _           _            |
-#   |     |_   _(_)_ __ ___   ___ _ __   ___ _ __(_) ___   __| |___        |
-#   |       | | | | '_ ` _ \ / _ \ '_ \ / _ \ '__| |/ _ \ / _` / __|       |
-#   |       | | | | | | | | |  __/ |_) |  __/ |  | | (_) | (_| \__ \       |
-#   |       |_| |_|_| |_| |_|\___| .__/ \___|_|  |_|\___/ \__,_|___/       |
-#   |                            |_|                                       |
-#   +----------------------------------------------------------------------+
-
-
-def builtin_timeperiods():
-    return {
-        "24X7": {
-            "alias": _("Always"),
-            "monday": ("00:00", "24:00"),
-            "tuesday": ("00:00", "24:00"),
-            "wednesday": ("00:00", "24:00"),
-            "thursday": ("00:00", "24:00"),
-            "friday": ("00:00", "24:00"),
-            "saturday": ("00:00", "24:00"),
-            "sunday": ("00:00", "24:00"),
-        }
-    }
-
-
-def load_timeperiods():
-    timeperiods = store.load_from_mk_file(wato_root_dir + "timeperiods.mk", "timeperiods", {})
-    timeperiods.update(builtin_timeperiods())
-    return timeperiods
-
-
-def save_timeperiods(timeperiods):
-    store.mkdir(wato_root_dir)
-    store.save_to_mk_file(
-        wato_root_dir + "timeperiods.mk",
-        "timeperiods",
-        filter_builtin_timeperiods(timeperiods),
-        pprint_value=config.wato_pprint_config)
-
-
-def filter_builtin_timeperiods(timeperiods):
-    builtin_keys = builtin_timeperiods().keys()
-    return {k: v for k, v in timeperiods.items() if k not in builtin_keys}
-
-
-class TimeperiodSelection(DropdownChoice):
-    def __init__(self, **kwargs):
-        kwargs.setdefault("no_preselect", True)
-        kwargs.setdefault("no_preselect_title", _("Select a timeperiod"))
-        DropdownChoice.__init__(self, choices=self._get_choices, **kwargs)
-
-    def _get_choices(self):
-        timeperiods = load_timeperiods()
-        elements = [(name, "%s - %s" % (name, tp["alias"])) for (name, tp) in timeperiods.items()]
-
-        always = ("24X7", _("Always"))
-        if always not in elements:
-            elements.insert(0, always)
-
-        return sorted(elements, key=lambda x: x[1].lower())
-
-
-#.
 #   .--Groups--------------------------------------------------------------.
 #   |                    ____                                              |
 #   |                   / ___|_ __ ___  _   _ _ __  ___                    |
@@ -8992,7 +8932,7 @@ def is_alias_used(my_what, my_name, my_alias):
                 return False, _("This alias is already used in the %s group %s.") % (what, gid)
 
     # Timeperiods
-    timeperiods = load_timeperiods()
+    timeperiods = cmk.gui.watolib.timeperiods.load_timeperiods()
     for key, value in timeperiods.items():
         if value.get("alias") == my_alias and (my_what != "timeperiods" or my_name != key):
             return False, _("This alias is already used in timeperiod %s.") % key
@@ -9450,7 +9390,7 @@ def get_vs_flexible_notifications():
                                      default_value=False,
                                  )),
                                 ("timeperiod",
-                                 TimeperiodSelection(
+                                 cmk.gui.watolib.timeperiods.TimeperiodSelection(
                                      title=_("Timeperiod"),
                                      help=_("Do only notifiy alerts within this time period"),
                                  )),

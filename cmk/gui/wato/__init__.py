@@ -321,7 +321,6 @@ subgroup_inventory = RulespecGroupCheckParametersDiscovery().sub_group_name
 # the current plugin API functions working
 from cmk.gui.watolib import (
     PasswordStore,
-    TimeperiodSelection,
     register_rulegroup,
     register_rule,
     register_hook,

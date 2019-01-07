@@ -1095,7 +1095,7 @@ class EditNotificationRuleMode(NotificationsMode):
                                     "the option \"Also Bulk outside of timeperiod\" can be used."),
                                   elements=[
                                       ("timeperiod",
-                                       watolib.TimeperiodSelection(
+                                       watolib.timeperiods.TimeperiodSelection(
                                            title=
                                            _("Only bulk notifications during the following timeperiod"
                                             ),)),

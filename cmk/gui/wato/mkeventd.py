@@ -107,7 +107,6 @@ from cmk.gui.plugins.wato.utils import (
     mode_registry,
     SNMPCredentials,
     HostnameTranslation,
-    TimeperiodSelection,
     GroupSelection,
     ConfigDomainEventConsole,
     rule_option_elements,
@@ -763,7 +762,7 @@ def vs_mkeventd_rule(customer=None):
              ],
          )),
         ("match_timeperiod",
-         TimeperiodSelection(
+         watolib.timeperiods.TimeperiodSelection(
              title=_("Match only during timeperiod"),
              help=
              _("Match this rule only during times where the selected timeperiod from the monitoring "

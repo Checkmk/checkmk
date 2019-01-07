@@ -40,27 +40,18 @@ def test_request_processing(register_builtin_html):
     # html.parse_field_storage(["field1", "field2"], handle_uploads_as_file_obj = False)
 
 
-def test_response_set_cookie(register_builtin_html):
-    html.response.set_cookie("auth_SITE", "user:123456:abcdefg", httponly=True)
+def test_response_set_http_cookie(register_builtin_html):
+    html.response.set_http_cookie("auth_SITE", "user:123456:abcdefg")
 
     assert html.response.headers.getlist("Set-Cookie")[-1] == \
         "auth_SITE=user:123456:abcdefg; HttpOnly; Path=/"
 
 
-def test_response_set_cookie_secure(register_builtin_html, monkeypatch):
-    html.response.set_cookie("auth_SITE", "user:123456:abcdefg", secure=True, httponly=True)
+def test_response_set_http_cookie_secure(register_builtin_html, monkeypatch):
+    html.response.set_http_cookie("auth_SITE", "user:123456:abcdefg", secure=True)
 
     assert html.response.headers.getlist("Set-Cookie")[-1] == \
             "auth_SITE=user:123456:abcdefg; Secure; HttpOnly; Path=/"
-
-
-def test_response_set_cookie_expires(register_builtin_html, monkeypatch):
-    monkeypatch.setattr(time, "time", lambda: 0)
-
-    html.response.set_cookie("auth_SITE", "user:123456:abcdefg", expires=60, httponly=True)
-
-    assert html.response.headers.getlist("Set-Cookie")[-1] == \
-            "auth_SITE=user:123456:abcdefg; Expires=Thu, 01-Jan-1970 00:01:00 GMT; HttpOnly; Path=/"
 
 
 def test_response_del_cookie(register_builtin_html, monkeypatch):

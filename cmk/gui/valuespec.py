@@ -2251,7 +2251,7 @@ class MultiSelect(ListChoice):
     def from_html_vars(self, varprefix):
         self.load_elements()
         value = []
-        hv = html.list_var(varprefix)
+        hv = html.request.list_var(varprefix)
         for key, _title in self._elements:
             if key in hv:
                 value.append(key)

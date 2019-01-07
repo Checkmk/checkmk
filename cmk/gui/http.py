@@ -58,7 +58,9 @@ class Request(object):
         self._wsgi_environ = wsgi_environ
         self._wrequest = werkzeug.wrappers.Request(wsgi_environ)
 
-        values = [(k, vs) for k, vs in self._wrequest.values.lists() if _valid_varname(k)]
+        values = [
+            (k, vs.encode("utf-8")) for k, vs in self._wrequest.values.lists() if _valid_varname(k)
+        ]
         # Last occurrence takes precedence, making appending to current URL simpler
         # TODO: html.unstash_vars() *directly* modifies vars, remove that!
         self.vars = {k: vs[-1] for k, vs in values}

@@ -185,12 +185,6 @@ class Request(object):
             return [self.vars[varname]]
         return []
 
-    # Adds a variable to _listvars and also set it
-    def add_var(self, varname, value):
-        self._listvars.setdefault(varname, [])
-        self._listvars[varname].append(value)
-        self.vars[varname] = value
-
     # TODO: self.vars should be strictly read only in the Request() object
     def set_var(self, varname, value):
         if value is None:

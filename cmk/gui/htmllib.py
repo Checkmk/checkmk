@@ -1134,11 +1134,6 @@ class html(HTMLGenerator):
     def all_varnames_with_prefix(self, prefix):
         return self.request.all_varnames_with_prefix(prefix)
 
-    # Adds a variable to listvars and also set it
-    # TODO: Refactor call sites to html.request.*
-    def add_var(self, varname, value):
-        self.request.add_var(varname, value)
-
     # TODO: Refactor call sites to html.request.*
     def set_var(self, varname, value):
         self.request.set_var(varname, value)

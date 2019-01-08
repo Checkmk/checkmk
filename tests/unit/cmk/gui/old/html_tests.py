@@ -156,7 +156,7 @@ def add_html_vars(html, add_vars):
         return
     for key, value in add_vars.iteritems():
         if value is not None:
-            html.add_var(key, value)
+            html.set_var(key, value)
 
 
 # set the state of an html object

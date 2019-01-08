@@ -43,8 +43,6 @@ def parse_liebert(info):
         elements = zip(line[0::3], line[1::3], line[2::3])
 
         for element in elements:
-            if not element[0]:
-                continue
             name = get_item_name(element[0])
             parsed[name] = [ element[1], element[2] ]
 
@@ -73,8 +71,6 @@ def parse_liebert_without_unit(info):
         elements = zip(line[0::2], line[1::2])
 
         for element in elements:
-            if not element[0]:
-                continue
             name = get_item_name(element[0])
             parsed[name] = element[1]
 

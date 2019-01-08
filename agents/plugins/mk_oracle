@@ -209,6 +209,12 @@ ASYNC_ASM_SECTIONS="asm_diskgroup"
 # Interval for running async checks (in seconds)
 CACHE_MAXAGE=600
 
+# set OLRLOC=/dev/null in mk_oracle.cfg to disable the discovery from GI/Restart.
+# A fully configured oratab is mandatory, when this has been disabled.
+# Be aware! Please disable OLRLOC for failover cluster with custom
+# clusterware resources.
+OLRLOC=/etc/oracle/olr.loc
+
 # You can specify a list of SIDs to monitor. Those databases will
 # only be handled, if they are found running, though!
 #
@@ -382,23 +388,44 @@ logging () {
 set_ora_env () {
     local sid=${1}
     ORACLE_SID="$sid"
+    unset ORA_HOME_SOURCE
 
     if [[ "$sid" =~ ^REMOTE_INSTANCE_.* ]]; then
         # we get the ORACLE_HOME from mk_oracle.cfg for REMOTE execution
         ORACLE_HOME=${ORACLE_HOME:-${REMOTE_ORACLE_HOME}}
+        export ORA_HOME_SOURCE="(remote):"
 
     else
         # we work in local mode
-        test -f /etc/oratab && ORATAB=/etc/oratab
-        # /var/opt/oracle/oratab is needed for Oracle Solaris
-        test -f /var/opt/oracle/oratab && ORATAB=/var/opt/oracle/oratab
-        if ! test -f ${ORATAB:-""}; then
-            logging -c "[${sid}] [set_ora_env]" "ORA-99999 oratab not found in local mode"
-            echo "ORA-99999 oratab not found" >&2
-            exit 1
+        # GI/Restart installed?
+        if [ -f ${OLRLOC} ]; then
+            # oratab is not supported in Grid-Infrastructure 12.2+
+            # => fetch ORACLE_HOME from cluster repository for all GI/Restart Environments!
+            # OLRLOC holds CRS_HOME
+            . ${OLRLOC}
+            export ORA_HOME_SOURCE="(GI):    "
+
+            # set ORACLE_HOME = crs_home for ASM
+            if [ "${ORACLE_SID:0:1}" = '+' ]; then
+                ORACLE_HOME=${crs_home}
+            else
+                # get ORACLE_HOME with crsctl from Oracle Grid Infrastructure / Restart
+                ORACLE_HOME=$(${crs_home}/bin/crsctl stat res -p -w "((TYPE = ora.database.type) and (GEN_USR_ORA_INST_NAME = ${ORACLE_SID}))" | grep "^ORACLE_HOME=" | cut -d"=" -f2)
+            fi
+        else
+            # Single Instance with oratab
+            test -f /etc/oratab && ORATAB=/etc/oratab
+            # /var/opt/oracle/oratab is needed for Oracle Solaris
+            test -f /var/opt/oracle/oratab && ORATAB=/var/opt/oracle/oratab
+            if ! test -f ${ORATAB:-""}; then
+                logging -c "[${sid}] [set_ora_env]" "ORA-99999 oratab not found in local mode"
+                echo "ORA-99999 oratab not found" >&2
+                exit 1
+            fi
+            ORACLE_HOME=$("${GREP}" "^${ORACLE_SID}:" <"${ORATAB}" | cut -d":" -f2)
+            export ORA_HOME_SOURCE="(oratab):"
         fi
 
-        ORACLE_HOME=$("${GREP}" "^${ORACLE_SID}:" <"${ORATAB}" | cut -d":" -f2)
         if [ -z "${ORACLE_HOME}" ]; then
             # cut last number from SID for Oracle RAC to find entry in oratab
             ORACLE_HOME=$("${GREP}" "^${ORACLE_SID/%[0-9]/}:" <"${ORATAB}" | cut -d":" -f2)
@@ -1955,6 +1982,7 @@ do_testmode () {
     echo
     echo "---login----------------------------------------------------------------"
     echo "    Operating System:       ${OS_TYPE}"
+    echo "    ORACLE_HOME ${ORA_HOME_SOURCE}   ${ORACLE_HOME}"
     echo "    Logincheck to Instance: ${MK_SID}"
     echo "    Version:                ${ORACLE_VERSION}"
     echo "select '    Login ok User:          ' || user || ' on ' || host_name ||' Instance ' || instance_name

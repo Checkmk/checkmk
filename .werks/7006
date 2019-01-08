@@ -1,0 +1,28 @@
+Title: mk_oracle: Support for policy managed Database
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1547539497
+Class: feature
+
+The plugin is able to work with Grid-Infrastructure and Oracle Restart for
+Version 12.2+. There is no guarantee that the oratab has valid entries anymore.
+In most configurations the data for ASM and instances are missing from 18c
+onwards. The plugin reads the ORACLE_HOME from the cluster registry. This also
+makes the plugin compatible for Clusters with policy managed databases, which
+was not supported in previous versions. Mostly known in environments with '_1'
+at the end of the ORACLE_SID in oratab.
+
+Incompatible Change:
+Please be aware that this feauture must be disabled in installations with
+Oracle Grid Infrastructure and custom scripts for Failover Clusters. These type
+of installation is rare and need a valid configuration in oratab and as a
+result the automatic gathering of ORACLE_HOME from the cluster repository must
+be disabled. Please set the variable OLRLOC in mk_oracle.cfg to a non existing
+file or /dev/null to disable this feauture. Real Application Clusters or Oracle
+Restart with version 11.2+ are not affected. Please disable it for CRS
+10.1-11.1 as well. This change can be ignorred in normal single Instance
+installations without Grid Infrastructure or Oracle Restart - mostly known as
+installations without ASM.

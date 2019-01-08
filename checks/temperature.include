@@ -67,10 +67,6 @@ def to_celsius(reading, unit, relative=False):
     return reading
 
 
-def convert_unit_relative(value, in_unit, out_unit):
-    return from_celsius(to_celsius(value, in_unit, relative=True), out_unit, relative=True)
-
-
 # Format number according to its datatype
 def render_temp(n, output_unit, relative=False):
     t = from_celsius(n, output_unit, relative)

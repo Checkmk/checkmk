@@ -62,10 +62,3 @@ def brocade_fcport_getitem(number_of_ports, index, portname, is_isl, settings):
     if portname.strip() and uses_portname:
         itemname += " " + portname.strip()
     return itemname
-
-
-# Inverse to the above. Caveat: Maps back to an index that starts with 1,
-# as the SNMP tables in brocade_fcport and brocade_sfp are indexed this way.
-# TODO: Check whether we can simplify brocade_fcport a bit using this.
-def brocade_item_to_port_number(item):
-    return int(item.split()[0]) + 1

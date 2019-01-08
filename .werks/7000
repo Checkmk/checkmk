@@ -1,0 +1,10 @@
+Title: liebert.include: Fixed discovery of empty sensor names
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1546955746
+Class: fix
+
+

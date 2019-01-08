@@ -2229,35 +2229,6 @@ class ListChoice(ValueSpec):
         return value not in d
 
 
-# A alternative way of editing list choices
-class MultiSelect(ListChoice):
-    def __init__(self, **kwargs):
-        ListChoice.__init__(self, **kwargs)
-
-    def _render_field(self, name, choices, selected=None):
-        if selected is None:
-            selected = []
-        html.open_select(multiple="", name=name)
-        for key, title in choices:
-            html.option(title, value=key, selected='' if key in selected else None)
-
-        html.close_select()
-
-    def render_input(self, varprefix, value):
-        self.classtype_info()
-        self.load_elements()
-        self._render_field(varprefix, self._elements, value)
-
-    def from_html_vars(self, varprefix):
-        self.load_elements()
-        value = []
-        hv = html.request.list_var(varprefix)
-        for key, _title in self._elements:
-            if key in hv:
-                value.append(key)
-        return value
-
-
 # Implements a choice of items which is realized with
 # two ListChoices select fields. One contains all available
 # items and one contains all selected items.

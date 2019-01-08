@@ -1,5 +1,5 @@
 import time
-import signal
+import multiprocessing
 import sys
 import pytest  # type: ignore
 from pathlib2 import Path
@@ -46,12 +46,14 @@ class DummyBackgroundJob(gui_background_job.GUIBackgroundJob):
         kwargs["title"] = self.gui_title
         kwargs["deletable"] = False
         kwargs["stoppable"] = True
+        self.finish_hello_event = multiprocessing.Event()
 
         super(DummyBackgroundJob, self).__init__(self.job_prefix, **kwargs)
 
     def execute_hello(self, job_interface):
         sys.stdout.write("Hallo :-)\n")
         sys.stdout.flush()
+        self.finish_hello_event.wait()
 
     def execute_endless(self):
         sys.stdout.write("Hanging loop\n")
@@ -67,12 +69,13 @@ def test_start_job():
     assert status["state"] == background_job.JobStatus.state_initialized
 
     job.start()
-    time.sleep(1)
     assert job.is_running()
 
     with pytest.raises(background_job.BackgroundJobAlreadyRunning):
         job.start()
     assert job.is_running()
+
+    job.finish_hello_event.set()
 
     testlib.wait_until(
         lambda: job.get_status()["state"] not in [ background_job.JobStatus.state_initialized, background_job.JobStatus.state_running ],

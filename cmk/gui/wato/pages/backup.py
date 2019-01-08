@@ -34,6 +34,7 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.plugins.wato.utils.context_buttons import home_button
 from cmk.gui.plugins.wato.utils.base_modes import WatoWebApiMode
+from cmk.gui.valuespec import Checkbox
 
 from cmk.gui.plugins.wato import (
     WatoMode,
@@ -148,6 +149,19 @@ class ModeEditBackupJob(backup.PageEditBackupJob, WatoMode):
 
     def keys(self):
         return SiteBackupKeypairStore()
+
+    def custom_job_attributes(self):
+        return [
+            ("no_history",
+             Checkbox(
+                 title=_("Do not backup historical data"),
+                 help=_(
+                     "You may use this option to create a much smaller partial backup of the site."
+                 ),
+                 label=_(
+                     "Do not backup metric data (RRD files), the monitoring history and log files"),
+             )),
+        ]
 
 
 @mode_registry.register

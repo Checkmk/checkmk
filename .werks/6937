@@ -1,0 +1,19 @@
+Title: Agent Updater: Make executable format rule optional again
+Level: 1
+Component: agents
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.5.0p11
+Date: 1546947942
+
+Regression since Werk 6934:
+
+With Check_MK 1.5.0p10, baking agents would fail if the rule
+"Executable format (Linux)" is not set within the Agent Updater
+ruleset. Since this rule is intended to be optional, this werk
+restores the normal behavior.
+
+As a workaround for 1.5.0p10, please set the rule to "64bit packaged binary"
+to obtain the default setting and make the agents bakeable again.

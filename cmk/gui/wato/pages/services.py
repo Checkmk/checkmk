@@ -462,6 +462,7 @@ class ModeAjaxServiceDiscovery(WatoWebApiMode):
         request = self.webapi_request()
         html.del_var("request")  # Do not add this to URLs constructed later
         request.setdefault("update_target", None)
+        request.setdefault("update_source", None)
         request.setdefault("update_services", [])
 
         folder = watolib.Folder.folder(request["folder_path"])
@@ -806,6 +807,9 @@ class ModeAjaxServiceDiscovery(WatoWebApiMode):
             return table_source  # should never happen
 
         if self._options.action == DiscoveryAction.BULK_UPDATE:
+            if table_source != request["update_source"]:
+                return table_source
+
             if not self._options.show_checkboxes:
                 return update_target
 
@@ -1062,7 +1066,11 @@ class DiscoveryPageRenderer(object):
         html.jsbutton(
             "_bulk_%s_%s" % (source, target),
             target_label,
-            self._start_js_call(options, request_vars={"update_target": target}),
+            self._start_js_call(
+                options, request_vars={
+                    "update_target": target,
+                    "update_source": source,
+                }),
             title=_("Move %s to %s services") % (label, target),
             disabled=self._is_running(discovery_result),
         )
@@ -1269,6 +1277,7 @@ class DiscoveryPageRenderer(object):
                 options,
                 request_vars={
                     "update_target": table_target,
+                    "update_source": table_source,
                     "update_services": [checkbox_name],
                 }),
         )
@@ -1284,6 +1293,7 @@ class DiscoveryPageRenderer(object):
                 options,
                 request_vars={
                     "update_target": DiscoveryState.REMOVED,
+                    "update_source": table_source,
                     "update_services": [checkbox_name],
                 }),
         )

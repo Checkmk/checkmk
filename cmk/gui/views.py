@@ -92,8 +92,7 @@ from cmk.gui.plugins.views.utils import (  # pylint: disable=unused-import
 
 # Needed for legacy (pre 1.6) plugins
 from cmk.gui.plugins.views.icons import (  # pylint: disable=unused-import
-    multisite_icons, multisite_icons_and_actions, get_multisite_icons, get_icons,
-    iconpainter_columns,
+    multisite_icons_and_actions, get_multisite_icons, get_icons, iconpainter_columns,
 )
 
 import cmk.gui.plugins.views.inventory

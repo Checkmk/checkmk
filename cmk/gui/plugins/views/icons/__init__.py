@@ -46,8 +46,6 @@ from cmk.utils.plugin_loader import load_plugins
 #   |                         |___/                                        |
 #   '----------------------------------------------------------------------'
 
-# Deprecated in 1.2.7i1
-multisite_icons = []
 # Use this structure for new icons
 multisite_icons_and_actions = {}
 
@@ -61,18 +59,6 @@ def get_multisite_icons():
             "sort_index": 30,
         }
         icon.update(icon_config)
-        icons[icon_id] = icon
-
-    # multisite_icons has been deprecated, but to be compatible to old icon
-    # plugins transform them to the new structure. We use part of the paint
-    # function name as icon id.
-    for icon_config in multisite_icons:
-        icon = {
-            "toplevel": False,
-            "sort_index": 30,
-        }
-        icon.update(icon_config)
-        icon_id = icon['paint'].__name__.replace('paint_', '')
         icons[icon_id] = icon
 
     # Now apply the user customized options
@@ -157,6 +143,7 @@ def _process_multisite_icon(what, row, tags, custom_vars, icon_id, icon):
     if isinstance(result, six.string_types + (HTML,)):
         # TODO: This is handling the deprecated API with 1.2.7. Remove this one day. But there
         # are icons that still use this API. These need to be cleaned up before.
+        # LM: There are icons that still use this API
         if result[0] == '<':
             # seems like an old format icon (html code). In regular rendering
             # case (html), it can simply be appended to the output. Otherwise

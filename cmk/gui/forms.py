@@ -38,7 +38,7 @@ g_section_isopen = False
 
 # A input function with the same call syntax as htmllib.textinput()
 def textinput(valuespec, varprefix, defvalue):
-    if html.form_filled_in():
+    if html.form_submitted(html.form_name):
         value = valuespec.from_html_vars(varprefix)
     else:
         value = defvalue

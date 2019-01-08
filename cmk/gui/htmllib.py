@@ -1150,7 +1150,9 @@ class html(HTMLGenerator):
         self._var_stash.append(dict(self.request.all_vars()))
 
     def unstash_vars(self):
-        self.request.vars = self._var_stash.pop()
+        self.request.del_all_vars()
+        for varname, value in self._var_stash.pop().iteritems():
+            self.request.set_var(varname, value)
 
     def get_ascii_input(self, varname, deflt=None):
         """Helper to retrieve a byte string and ensure it only contains ASCII characters
@@ -1946,37 +1948,25 @@ class html(HTMLGenerator):
     # Form submission and variable handling
     #
 
-    # Check if the current form is currently filled in (i.e. we display
-    # the form a second time while showing value typed in at the first
-    # time and complaining about invalid user input)
-    def form_filled_in(self, form_name=None):
-        if form_name is None:
-            form_name = self.form_name
-
-        return self.has_var("filled_in") and (
-            form_name is None or \
-            form_name in self.request.list_var("filled_in"))
-
     def do_actions(self):
         return self.var("_do_actions") not in ["", None, _("No")]
 
+    # Check if the given form is currently filled in (i.e. we display
+    # the form a second time while showing value typed in at the first
+    # time and complaining about invalid user input)
     def form_submitted(self, form_name=None):
-        if form_name:
-            return self.var("filled_in") == form_name
-        return self.has_var("filled_in")
+        return self.var("filled_in") == form_name
 
     # Get value of checkbox. Return True, False or None. None means
     # that no form has been submitted. The problem here is the distintion
     # between False and None. The browser does not set the variables for
     # Checkboxes that are not checked :-(
-    def get_checkbox(self, varname, form_name=None):
+    def get_checkbox(self, varname):
         if self.has_var(varname):
             return bool(self.var(varname))
-        elif not self.form_filled_in(form_name):
-            return None
-
-        # Form filled in but variable missing -> Checkbox not checked
-        return False
+        if self.form_submitted(self.form_name):
+            return False  # Form filled in but variable missing -> Checkbox not checked
+        return None
 
     #
     # Button elements

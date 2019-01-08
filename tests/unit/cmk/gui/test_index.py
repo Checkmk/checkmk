@@ -27,11 +27,9 @@ def test_get_start_url_user_config(monkeypatch, register_builtin_html):
     assert cmk.gui.main._get_start_url() == "user_url.py"
 
 
-def test_get_start_url(monkeypatch, register_builtin_html):
+def test_get_start_url(register_builtin_html):
     start_url = "dashboard.py?name=mein_dashboard"
-    monkeypatch.setattr(html.request, "vars", {
-        "start_url": start_url,
-    })
+    html.request.set_var("start_url", start_url)
 
     assert cmk.gui.main._get_start_url() == start_url
 
@@ -43,10 +41,8 @@ def test_get_start_url(monkeypatch, register_builtin_html):
     "javAscRiPt:alert(1)",
     "localhost:80/bla",
 ])
-def test_get_start_url_invalid(monkeypatch, register_builtin_html, invalid_url):
-    monkeypatch.setattr(html.request, "vars", {
-        "start_url": invalid_url,
-    })
+def test_get_start_url_invalid(register_builtin_html, invalid_url):
+    html.request.set_var("start_url", invalid_url)
 
     assert cmk.gui.main._get_start_url() == "dashboard.py"
 

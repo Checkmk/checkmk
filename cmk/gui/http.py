@@ -54,22 +54,17 @@ class Request(object):
     def __init__(self, wsgi_environ):
         super(Request, self).__init__()
         self._logger = log.logger.getChild("http.Request")
-
         self._wsgi_environ = wsgi_environ
-        self._wrequest = werkzeug.wrappers.Request(wsgi_environ)
 
-        values = [(k, [v.encode("utf-8")
-                       for v in vs])
-                  for k, vs in self._wrequest.values.lists()
-                  if _valid_varname(k)]
         # Last occurrence takes precedence, making appending to current URL simpler
-        # TODO: html.unstash_vars() *directly* modifies vars, remove that!
-        self.vars = {k: vs[-1] for k, vs in values}
-        self._listvars = {k: vs for k, vs in values if len(vs) > 1}
+        wrequest = werkzeug.wrappers.Request(wsgi_environ)
+        self._vars = {k: vs[-1].encode("utf-8") \
+                      for k, vs in wrequest.values.lists()
+                      if _valid_varname(k)}
 
         # NOTE: There could be multiple entries with the same key, we ignore that for now...
         self._uploads = {}
-        for k, f in self._wrequest.files.iteritems():
+        for k, f in wrequest.files.iteritems():
             # TODO: We read the whole data here and remember it. Should we
             # offer the underlying stream directly?
             self._uploads[k] = (f.filename, f.mimetype, f.read())
@@ -152,65 +147,53 @@ class Request(object):
     #
 
     def var(self, varname, deflt=None):
-        return self.vars.get(varname, deflt)
+        return self._vars.get(varname, deflt)
 
     def has_var(self, varname):
-        return varname in self.vars
+        return varname in self._vars
 
     def has_var_prefix(self, prefix):
         """Checks if a variable with a given prefix is present"""
-        return any(var.startswith(prefix) for var in self.vars)
+        return any(var.startswith(prefix) for var in self._vars)
 
     def var_utf8(self, varname, deflt=None):
-        val = self.vars.get(varname, deflt)
+        val = self._vars.get(varname, deflt)
         if isinstance(val, str):
             return val.decode("utf-8")
         return val
 
     def all_vars(self):
-        return self.vars.iteritems()
+        return self._vars.iteritems()
 
     def all_varnames_with_prefix(self, prefix):
-        for varname in self.vars:
+        for varname in self._vars:
             if varname.startswith(prefix):
                 yield varname
 
-    # Return all values of a variable that possible occurs more
-    # than once in the URL. note: self._listvars does contain those
-    # variable only, if the really occur more than once.
-    def list_var(self, varname):
-        if varname in self._listvars:
-            return self._listvars[varname]
-        elif varname in self.vars:
-            return [self.vars[varname]]
-        return []
-
-    # TODO: self.vars should be strictly read only in the Request() object
+    # TODO: self._vars should be strictly read only in the Request() object
     def set_var(self, varname, value):
         if value is None:
             self.del_var(varname)
 
         elif isinstance(value, six.string_types):
-            self.vars[varname] = value
+            self._vars[varname] = value
 
         else:
             # crash report please
             raise TypeError(_("Only str and unicode values are allowed, got %s") % type(value))
 
-    # TODO: self.vars should be strictly read only in the Request() object
+    # TODO: self._vars should be strictly read only in the Request() object
     def del_var(self, varname):
-        self.vars.pop(varname, None)
-        self._listvars.pop(varname, None)
+        self._vars.pop(varname, None)
 
-    # TODO: self.vars should be strictly read only in the Request() object
+    # TODO: self._vars should be strictly read only in the Request() object
     def del_all_vars(self, prefix=None):
         if not prefix:
-            self.vars = {}
-            self._listvars = {}
+            self._vars = {}
         else:
-            self.vars = dict(p for p in self.vars.iteritems() if not p[0].startswith(prefix))
-            self._listvars = dict(
-                p for p in self._listvars.iteritems() if not p[0].startswith(prefix))
+            self._vars = {(varname, value) \
+                          for varname, value in self.all_vars() \
+                          if not value.startswith(prefix)}
 
     def uploaded_file(self, varname):
         return self._uploads.get(varname)

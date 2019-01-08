@@ -2309,7 +2309,7 @@ class html(HTMLGenerator, RequestHandler):
         if (submit or label) and not id_:
             id_ = "ti_%s" % varname
 
-        onkeydown = None if not submit else HTML('textinput_enter_submit(\'%s\');' % submit)
+        onkeydown = None if not submit else HTML('textinput_enter_submit(event, \'%s\');' % submit)
 
         attributes = {"class"        : cssclass,
                       "id"           : id_,

@@ -1,0 +1,10 @@
+Title: ipmi_sensors: Treat "S0/G0" as "System full operational, working" state
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.4.0p38
+Date: 1546948273
+Class: fix
+
+

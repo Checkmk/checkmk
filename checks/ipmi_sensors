@@ -126,7 +126,7 @@ def parse_freeipmi(info):
             status_txt = status_txt[:-1]
         if status_txt in [ "NA", "N/A", "Unknown" ] or "_=_" in status_txt:
             status_txt = None
-        elif status_txt == "S0G0":
+        elif status_txt in ["S0G0", "S0/G0"]:
             status_txt = "System full operational, working"
         else:
             status_txt = status_txt.replace("_", " ")

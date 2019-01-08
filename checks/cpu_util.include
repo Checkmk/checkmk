@@ -57,23 +57,27 @@ def transform_cpu_info(element):
     return int_casted_entries + [0] * (11 - len(int_casted_entries))
 
 
-def check_cpu_util(util, params, this_time=None, cores=None):
+def check_cpu_util(util, params, this_time=None, cores=None, perf_max=100):
     # Convert legacy param style to new dict style
-    if this_time is None:
-        this_time = time.time()
-
     if params is None:
         params = {}
     elif isinstance(params, tuple):
         params = {"levels": params}
 
+    if this_time is None:
+        this_time = time.time()
+
     levels = params.get("util")
     if levels is None:  # legacy rules before 1.6
         levels = params.get("levels")
 
+    warn, crit = levels if isinstance(levels, tuple) else (None, None)  # only for perfdata
+    perfdata = [("util", util, warn, crit, 0, perf_max)]
+
     # Averaging
     if "average" in params:
         util_avg = get_average("cpu_utilization.avg", this_time, util, params["average"])
+        perfdata.append(("util_average", util_avg, warn, crit, 0, perf_max))
         state, infotext, extraperf = check_levels(
             util_avg,
             "util_average",
@@ -87,11 +91,6 @@ def check_cpu_util(util, params, this_time=None, cores=None):
             levels,
             human_readable_func=get_percent_human_readable,
             infoname="total cpu")
-
-    warn, crit = levels if isinstance(levels, tuple) else (None, None)  # only for perfdata
-    perfdata = [("util", util, warn, crit, 0, 100)]
-    if "average" in params:
-        perfdata.append(("util_average", util_avg, warn, crit, 0, 100))
 
     perfdata += extraperf[1:]  # reference curve for predictive levels
     yield state, infotext, perfdata

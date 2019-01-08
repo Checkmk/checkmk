@@ -6937,7 +6937,7 @@ class ModeEditLDAPConnection(LDAPMode):
                 ],
                 default_value = "sub",
             )),
-            ("user_filter", TextAscii(
+            ("user_filter", TextUnicode(
                 title = _("Search Filter"),
                 help = _("Using this option you can define an optional LDAP filter which is used during "
                          "LDAP searches. It can be used to only handle a subset of the users below the given "
@@ -7026,7 +7026,7 @@ class ModeEditLDAPConnection(LDAPMode):
                 ],
                 default_value = "sub",
             )),
-            ("group_filter", TextAscii(
+            ("group_filter", TextUnicode(
                 title = _("Search Filter"),
                 help = _("Using this option you can define an optional LDAP filter which is used "
                          "during group related LDAP searches. It can be used to only handle a "

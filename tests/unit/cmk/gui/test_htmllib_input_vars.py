@@ -7,11 +7,9 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import html
 
 
-def test_get_ascii_input(monkeypatch, register_builtin_html):
-    monkeypatch.setattr(html.request, "vars", {
-        "xyz": "x",
-        "abc": "äbc",
-    })
+def test_get_ascii_input(register_builtin_html):
+    html.request.set_var("xyz", "x")
+    html.request.set_var("abc", "äbc")
 
     assert html.get_ascii_input("xyz") == "x"
     assert isinstance(html.get_ascii_input("xyz"), str)
@@ -24,12 +22,10 @@ def test_get_ascii_input(monkeypatch, register_builtin_html):
     assert html.get_ascii_input("zzz") is None
 
 
-def test_get_integer_input(monkeypatch, register_builtin_html):
-    monkeypatch.setattr(html.request, "vars", {
-        "number": "2",
-        "float": "2.2",
-        "not_a_number": "a",
-    })
+def test_get_integer_input(register_builtin_html):
+    html.request.set_var("number", "2")
+    html.request.set_var("float", "2.2")
+    html.request.set_var("not_a_number", "a")
 
     with pytest.raises(MKUserError) as e:
         html.get_integer_input("not_existing")
@@ -57,24 +53,20 @@ def test_get_integer_input(monkeypatch, register_builtin_html):
     "://localhost",
     "localhost:80/bla",
 ])
-def test_get_url_input_invalid_urls(monkeypatch, register_builtin_html, invalid_url):
-    monkeypatch.setattr(html.request, "vars", {
-        "varname": invalid_url,
-    })
+def test_get_url_input_invalid_urls(register_builtin_html, invalid_url):
+    html.request.set_var("varname", invalid_url)
 
     with pytest.raises(MKUserError) as e:
         html.get_url_input("varname")
     assert "not a valid URL" in "%s" % e
 
 
-def test_get_url_input(monkeypatch, register_builtin_html):
-    monkeypatch.setattr(html.request, "vars", {
-        "url": "view.py?bla=blub",
-        "no_url": "2",
-        "invalid_url": "http://bla/",
-        "invalid_char": "viäw.py",
-        "invalid_char2": "vi+w.py",
-    })
+def test_get_url_input(register_builtin_html):
+    html.request.set_var("url", "view.py?bla=blub")
+    html.request.set_var("no_url", "2")
+    html.request.set_var("invalid_url", "http://bla/")
+    html.request.set_var("invalid_char", "viäw.py")
+    html.request.set_var("invalid_char2", "vi+w.py")
 
     with pytest.raises(MKUserError) as e:
         html.get_url_input("not_existing")

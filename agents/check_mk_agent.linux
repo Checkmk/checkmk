@@ -1032,6 +1032,11 @@ if type pvecm > /dev/null 2>&1 ; then
     pvecm nodes
 fi
 
+if [ -r /run/haproxy/admin.sock ] && type socat >/dev/null 2>&1; then
+    echo "<<<haproxy:sep(44)>>>"
+    echo "show stat" | socat - UNIX-CONNECT:/run/haproxy/admin.sock
+fi
+
 # Start new liveupdate process in background on each agent execution. Starting
 # a new live update process will terminate the old one automatically after
 # max. 1 sec.

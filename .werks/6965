@@ -1,0 +1,11 @@
+Title: Fixed socket timeout handling in check_mkevents active check
+Level: 2
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1546958524
+Class: fix
+
+The microseconds part of the socket timeout was not set, so a "Numerical
+argument out of domain" error could happen randomly.  This has been fixed.

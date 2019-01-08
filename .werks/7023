@@ -1,0 +1,11 @@
+Title: LDAP: User and group search filter can now contain non ASCII characters
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1546954389
+
+

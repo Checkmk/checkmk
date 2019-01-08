@@ -24,6 +24,30 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
+def inventory_alcatel_power(info):
+    for line in info:
+        oid_end, _, device_type, power_type = line
+        if (power_type and power_type != '0' or device_type in [
+                '0x35000001', '0x45000002', '0x45000004', '0x45000008', '0x45000009'
+        ]):
+            yield oid_end, None
+
+
+def check_alcatel_power(item, _no_params, info):
+    for line in info:
+        oid_end, status, device_type, power_type = line
+        if item == oid_end:
+            if (power_type and power_type == '0' or device_type not in [
+                    '0x35000001', '0x45000004', '0x45000002', '0x45000008', '0x45000009'
+            ]):
+                return 3, "No Power supply connected to this port"
+            if status != '1':
+                return 2, "Supply in error condition (%s)" % status
+            return 0, "Supply status OK"
+    return 3, "Supply not found"
+
+
 check_info["alcatel_power"] = {
     "check_function": check_alcatel_power,
     "inventory_function": inventory_alcatel_power,

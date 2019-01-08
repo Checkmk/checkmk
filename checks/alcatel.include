@@ -90,29 +90,6 @@ def check_alcatel_fans(item, _no_params, info):
     return state, "Fan " + fan_states.get(fan_state, "unknown (%s)" % fan_state)
 
 
-def inventory_alcatel_power(info):
-    for line in info:
-        oid_end, _, device_type, power_type = line
-        if (power_type and power_type != '0' or device_type in [
-                '0x35000001', '0x45000002', '0x45000004', '0x45000008', '0x45000009'
-        ]):
-            yield oid_end, None
-
-
-def check_alcatel_power(item, _no_params, info):
-    for line in info:
-        oid_end, status, device_type, power_type = line
-        if item == oid_end:
-            if (power_type and power_type == '0' or device_type not in [
-                    '0x35000001', '0x45000004', '0x45000002', '0x45000008', '0x45000009'
-            ]):
-                return 3, "No Power supply connected to this port"
-            if status != '1':
-                return 2, "Supply in error condition (%s)" % status
-            return 0, "Supply status OK"
-    return 3, "Supply not found"
-
-
 def inventory_alcatel_temp(info):
     with_slot = len(info) != 1
     for index, row in enumerate(info):

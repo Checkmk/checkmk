@@ -80,25 +80,6 @@ def inventory_oracle_crs_res(parsed):
     return [(name, None) for name in parsed[1]]
 
 
-def get_oracle_crs_runninginfo(item, data):
-    infotext = ''
-    for line in data:
-        resname = line[0]['NAME']
-        resstate = line[0]['STATE'].split(' ', 1)[0]
-        nodename = line[1]
-
-        if item == resname  and nodename not in ('nodename', 'csslocal', 'crslocal') \
-        and resstate == 'ONLINE':
-
-            # sometime there is only 'ONLINE' instead 'ONLINE on <nodename>'
-            # prevent duplicate entries
-            infotextshort = ' [online on %s]' % (nodename)
-            if infotextshort not in infotext:
-                infotext += infotextshort
-
-    return infotext
-
-
 def check_oracle_crs_res(item, _no_params, parsed):
     _crs_nodename, ressources = parsed
 

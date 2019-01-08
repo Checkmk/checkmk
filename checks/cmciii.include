@@ -25,12 +25,6 @@
 # Boston, MA 02110-1301 USA.
 
 
-def cmciii_get_unit_number(units, unit_name):
-    namelist = map(list, zip(*units))[1]
-    if unit_name in namelist:
-        return str(namelist.index(unit_name) + 1)
-
-
 def extract_cmciii_lcp_temps(liste):
     miste = []
     for l in liste:

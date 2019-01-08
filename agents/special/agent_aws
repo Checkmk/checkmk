@@ -931,10 +931,6 @@ class AWSSections(object):
             else:
                 self._results.setdefault((section.name, section.interval), result)
 
-        if not self._results:
-            logging.info("No results or cached data")
-            return
-
         self._write_exceptions()
         self._write_section_results(now)
 
@@ -973,6 +969,10 @@ class AWSSections(object):
         sys.stdout.write("%s\n" % out)
 
     def _write_section_results(self, now):
+        if not self._results:
+            logging.info("No results or cached data")
+            return
+
         for (section_name, section_interval), result in self._results.iteritems():
             if not result:
                 logging.info("No results of %s", section_name)

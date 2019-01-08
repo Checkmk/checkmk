@@ -1,0 +1,11 @@
+Title: BI aggregation list now shows icons for the aggregation config options
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1546958239
+Class: feature
+
+The aggregation list of WATO now shows icons for the aggregation option flags
+(enabled/disabled, single/multiple hosts, hard/all states, downtime aggregate WARN/CRIT).

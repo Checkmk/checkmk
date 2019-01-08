@@ -1314,12 +1314,27 @@ class ModeBIAggregations(ModeBI):
                     if "customer" in aggregation:
                         html.write_text(managed.get_customer_name(aggregation))
 
-                table.text_cell("", css="buttons")
+                table.text_cell(_("Options"), css="buttons")
 
                 if aggregation["disabled"]:
                     html.icon(_("This aggregation is currently disabled."), "disabled")
+                else:
+                    html.icon(_("This aggregation is currently enabled."), "enabled")
+
                 if aggregation["single_host"]:
                     html.icon(_("This aggregation covers only data from a single host."), "host")
+                else:
+                    html.icon(_("This aggregation works with data of multiple hosts."), "aggr")
+
+                if aggregation["hard_states"]:
+                    html.icon(_("Base state computation on hard states"), "hard_states")
+                else:
+                    html.icon(_("Base state computation on soft and hard states"), "all_states")
+
+                if aggregation["downtime_aggr_warn"]:
+                    html.icon(_("Escalate downtimes based on aggregated WARN state"), "warning")
+                else:
+                    html.icon(_("Escalate downtimes based on aggregated CRIT state"), "critical")
 
                 table.text_cell(_("Groups"), ", ".join(aggregation["groups"]))
 

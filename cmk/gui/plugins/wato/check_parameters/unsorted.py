@@ -6063,6 +6063,18 @@ cpu_util_common_elements = [
          ],
          help=_("Here you can set levels on the CPU utilization on single cores"),
      )),
+    ("util",
+     Levels(
+         title=_("Levels on total CPU utilization"),
+         unit="%",
+         default_levels=(90, 95),
+         default_difference=(5, 8),
+         default_value=None,
+         help=_("The CPU utilization sums up the percentages of CPU time that is used "
+                "for user processes, kernel routines (system), disk wait (sometimes also "
+                "called IO wait) or nothing (idle). The levels are always applied "
+                "on the average utiliazation since the last check - which is usually one minute."),
+     )),
     ("core_util_time_total",
      Tuple(
          title=_("Levels over an extended time period on total CPU utilization"),
@@ -6102,35 +6114,36 @@ cpu_util_common_elements = [
                 "as well as devices monitored through the host-resource mib"))),
 ]
 
+
+def transform_legacy_cpu_utilization_os(params):
+    if "levels" in params:
+        params['util'] = params.pop('levels')
+    return params
+
+
 register_check_parameters(
     RulespecGroupCheckParametersOperatingSystem,
     "cpu_utilization_os",
     _("CPU utilization for simple devices"),
-    Dictionary(
-        help=_("This rule configures levels for the CPU utilization (not load) for "
-               "the operating systems Windows and VMWare ESX host systems, as well as devices "
-               "implementing the Host Resources MIB. The utilization "
-               "ranges from 0 to 100 - regardless of the number of CPUs."),
-        elements=[
-            ("average",
-             Integer(
-                 title=_("Averaging"),
-                 help=_("When this option is activated then the CPU utilization is being "
-                        "averaged <b>before</b> the levels are being applied."),
-                 unit=_("minutes"),
-                 minvalue=1,
-                 default_value=15,
-                 label=_("Compute average over last "),
-             )),
-            ("levels",
-             Levels(
-                 title=_("Levels on total CPU utilization"),
-                 unit="%",
-                 default_levels=(85, 90),
-                 default_difference=(5, 8),
-                 default_value=None,
-             )),
-        ] + cpu_util_common_elements,
+    Transform(
+        Dictionary(
+            help=_("This rule configures levels for the CPU utilization (not load) for "
+                   "the operating systems Windows and VMWare ESX host systems, as well as devices "
+                   "implementing the Host Resources MIB. The utilization "
+                   "ranges from 0 to 100 - regardless of the number of CPUs."),
+            elements=[
+                ("average",
+                 Integer(
+                     title=_("Averaging"),
+                     help=_("When this option is activated then the CPU utilization is being "
+                            "averaged <b>before</b> the levels are being applied."),
+                     unit=_("minutes"),
+                     minvalue=1,
+                     default_value=15,
+                     label=_("Compute average over last "),
+                 )),
+            ] + cpu_util_common_elements),
+        forth=transform_legacy_cpu_utilization_os,
     ),
     None,
     match_type="dict",
@@ -6150,20 +6163,6 @@ register_check_parameters(
     _("CPU utilization on Linux/UNIX"),
     Transform(
         Dictionary(elements=[
-            ("util",
-             Levels(
-                 title=_("Levels on total CPU utilization"),
-                 unit="%",
-                 default_levels=(90, 95),
-                 default_difference=(5, 8),
-                 default_value=None,
-                 help=
-                 _("The CPU utilization sums up the percentages of CPU time that is used "
-                   "for user processes, kernel routines (system), disk wait (sometimes also "
-                   "called IO wait) or nothing (idle). The levels are always applied "
-                   "on the average utiliazation since the last check - which is usually one minute."
-                  ),
-             )),
             ("iowait",
              Tuple(
                  title=_("Levels on disk wait (IO wait)"),

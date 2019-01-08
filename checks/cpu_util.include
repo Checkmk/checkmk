@@ -67,7 +67,9 @@ def check_cpu_util(util, params, this_time=None, cores=None):
     elif isinstance(params, tuple):
         params = {"levels": params}
 
-    levels = params.get("levels")
+    levels = params.get("util")
+    if levels is None:  # legacy rules before 1.6
+        levels = params.get("levels")
 
     # Averaging
     if "average" in params:

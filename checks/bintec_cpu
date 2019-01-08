@@ -42,12 +42,12 @@ def check_bintec_cpu(_no_item, params, info):
     streams = float(info[0][2])
     util = user + system + streams
 
-    for res in check_cpu_util(util, params):
-        state, infotext, perfdata = res
-        yield state, "total: %s" % infotext, perfdata
+    yield 0, "user: %.1f%%" % user
+    yield 0, "system: %.1f%%" % system
+    yield 0, "streams: %.1f%%" % streams, [("streams", streams)]
 
-    yield 0, "user: %.1f%%, system: %.1f%%, streams: %.1f%%" % \
-             (user, system, streams), [ ("streams", "%.3f" % streams), ]
+    for res in check_cpu_util(util, params):
+        yield res
 
 
 check_info['bintec_cpu'] = {

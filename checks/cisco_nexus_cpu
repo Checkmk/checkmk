@@ -27,7 +27,7 @@
 # .1.3.6.1.4.1.9.9.305.1.1.1.0 1 --> CISCO-SYSTEM-EXT-MIB::cseSysCPUUtilization.0
 
 factory_settings["cisco_nexus_cpu_default_levels"] = {
-    'levels': (80.0, 90.0),
+    'util': (80.0, 90.0),
 }
 
 

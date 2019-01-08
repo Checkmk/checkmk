@@ -1,0 +1,40 @@
+import cmk.gui.plugins.views.icons as icons
+
+
+def test_builtin_icons_and_actions():
+    builtin_icons = sorted(icons.get_multisite_icons().keys())
+    assert builtin_icons == sorted([
+        'action_menu',
+        'agent_deployment',
+        'aggregation_checks',
+        'aggregations',
+        'check_manpage',
+        'check_period',
+        'crashed_check',
+        'custom_action',
+        'deployment_status',
+        'download_agent_output',
+        'download_snmp_walk',
+        'icon_image',
+        'inventory',
+        'logwatch',
+        'mkeventd',
+        'notes',
+        'perfgraph',
+        'prediction',
+        'reschedule',
+        'rule_editor',
+        'stars',
+        'status_acknowledged',
+        'status_active_checks',
+        'status_comments',
+        'status_downtimes',
+        'status_flapping',
+        'status_notification_period',
+        'status_notifications_enabled',
+        'status_passive_checks',
+        'status_service_period',
+        'status_shadow',
+        'status_stale',
+        'wato',
+    ])

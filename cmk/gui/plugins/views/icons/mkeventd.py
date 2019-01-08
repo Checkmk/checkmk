@@ -28,10 +28,13 @@ import cmk.gui.config as config
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 
-from . import multisite_icons
+from cmk.gui.plugins.views.icons import multisite_icons_and_actions
 
 
 def paint_mkeventd(what, row, tags, custom_vars):
+    if not config.mkeventd_enabled:
+        return
+
     # show for services based on the mkevents active check
     command = row[what + '_check_command']
 
@@ -96,9 +99,10 @@ def paint_mkeventd(what, row, tags, custom_vars):
     return 'mkeventd', title, url_prefix + url
 
 
-if config.mkeventd_enabled:
-    multisite_icons.append({
-        'columns': ['check_command'],
-        'host_columns': ['address', 'name'],
-        'paint': paint_mkeventd,
-    })
+multisite_icons_and_actions["mkeventd"] = {
+    "columns": ["check_command"],
+    "host_columns": ["address", "name"],
+    "paint": paint_mkeventd,
+    "toplevel": False,
+    "sort_index": 30,
+}

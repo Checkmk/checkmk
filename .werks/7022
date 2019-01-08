@@ -1,0 +1,12 @@
+Title: Backup can now be configured to exclude historical data
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1546952557
+Class: feature
+
+The site backup in WATO can now be configured to create partial backups of a site. The backup
+excludes the metric data (RRD files), the monitoring history and log files in this mode. Such
+backups are much smaller in general and can be created much faster.

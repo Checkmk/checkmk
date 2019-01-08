@@ -600,6 +600,9 @@ def do_site_backup(opts, site=None, try_stop=True):
     if not compress_archives():
         cmd.append("--no-compression")
 
+    if backup_without_history():
+        cmd.append("--no-past")
+
     # When executed as site user, "omd backup" is executed without the site
     # name and always performing backup for the current site. When executed
     # as root, the site argument has to be given and must be handed over to
@@ -1034,6 +1037,10 @@ def needed_backup_archive_files(info):
 
 def compress_archives():
     return g_job_config["compress"]
+
+
+def backup_without_history():
+    return g_job_config.get("no_history", False)
 
 
 def encrypt_archives():

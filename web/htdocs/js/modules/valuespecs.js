@@ -25,6 +25,7 @@
 import * as utils from "utils";
 import * as popup_menu from "popup_menu";
 import * as ajax from "ajax";
+import * as forms from "forms";
 import * as colorpicker from "colorpicker";
 
 //#   +--------------------------------------------------------------------+
@@ -209,6 +210,7 @@ export function listof_add(varprefix, magic, style)
 
     container.appendChild(new_child);
     utils.execute_javascript_by_object(new_child);
+    forms.enable_select2(new_child);
 
     listof_update_indices(varprefix);
 }

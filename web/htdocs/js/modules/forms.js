@@ -29,8 +29,14 @@ import * as utils from "utils";
 
 // html.dropdown() adds the .select2-enable class for all dropdowns
 // that should use the select2 powered dropdowns
-export function enable_select2() {
-    $(".select2-enable").select2({
+export function enable_select2(container=null) {
+    let elements;
+    if (container)
+        elements = $(container).find(".select2-enable:visible");
+    else
+        elements = $(".select2-enable:visible");
+
+    elements.select2({
         dropdownAutoWidth : true,
         minimumResultsForSearch: 5
     });

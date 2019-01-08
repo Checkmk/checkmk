@@ -440,19 +440,13 @@ class TextAscii(ValueSpec):
 
     def render_input(self, varprefix, value):
         self.classtype_info()
-        if value is None:
-            value = ""
-        else:
-            value = "%s" % value
+        value_text = "%s" % value if value is not None else ""
 
         if self._label:
             html.write(self._label)
             html.nbsp()
 
-        if self._hidden:
-            type_ = "password"
-        else:
-            type_ = "text"
+        type_ = "password" if self._hidden else "text"
 
         attrs = {}
         if self._onkeyup:
@@ -460,7 +454,7 @@ class TextAscii(ValueSpec):
 
         html.text_input(
             varprefix,
-            value,
+            value_text,
             size=self._size,
             try_max_width=self._try_max_width,
             read_only=self._read_only,

@@ -66,6 +66,7 @@ def parse(args):
     p.add_argument('host', metavar='HOST', help='Kubernetes host to connect to')
     p.add_argument('--port', type=int, default=443, help='Port to connect to')
     p.add_argument('--token', required=True, help='Token for that user')
+    p.add_argument('--url-prefix', help='Custom URL prefix for Kubernetes API calls')
     p.add_argument('--no-cert-check', action='store_true', help='Disable certificate verification')
     p.add_argument(
         '--profile',
@@ -648,7 +649,10 @@ def get_api_client(arguments):
     logging.info('Constructing API client')
 
     config = client.Configuration()
-    config.host = 'https://%s:%s' % (arguments.host, arguments.port)
+    if arguments.url_prefix:
+        config.host = '%s:%s' % (arguments.url_prefix, arguments.port)
+    else:
+        config.host = 'https://%s:%s' % (arguments.host, arguments.port)
     config.api_key_prefix['authorization'] = 'Bearer'
     config.api_key['authorization'] = arguments.token
 

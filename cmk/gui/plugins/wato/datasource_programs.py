@@ -116,6 +116,7 @@ register_rule(
                 allow_empty=False,
             )),
             ("port", Integer(title=_(u"Port"), default_value=443)),
+            ("url-prefix", HTTPUrl(title=_("Custom URL prefix"), allow_empty=False)),
             ("no-cert-check",
              Alternative(
                  title=_("Disable certificate verification"),
@@ -125,7 +126,7 @@ register_rule(
                  ],
                  default_value=False)),
         ],
-        optional_keys=["port", "no-cert-check"],
+        optional_keys=["port", "url-prefix", "no-cert-check"],
     ),
     match="first",
     title=_(u"Kubernetes"),

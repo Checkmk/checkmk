@@ -924,11 +924,15 @@ class AWSSections(object):
                 logging.info(msg)
                 raise AWSSectionError(msg)
 
-            if any([r.content for r in result]):
-                self._write_section_result(section_name, int(now + section_interval + 60), result)
+            persist_suffix = ""
+            if section_interval > 60:
+                persist_suffix = ":persist(%s)" % int(now + section_interval + 60)
 
-    def _write_section_result(self, section_name, until, result):
-        section_header = "<<<aws_%s:persist(%s)>>>\n" % (section_name, until)
+            if any([r.content for r in result]):
+                self._write_section_result(section_name, persist_suffix, result)
+
+    def _write_section_result(self, section_name, persist_suffix, result):
+        section_header = "<<<aws_%s%s>>>\n" % (section_name, persist_suffix)
         for row in result:
             write_piggyback_header = row.piggyback_hostname\
                                      and row.piggyback_hostname != self._hostname

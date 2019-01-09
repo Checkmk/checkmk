@@ -217,16 +217,16 @@ PS_DISCOVERY_WATO_RULES = [
     }),
     ({
         "default_params": {
+            "cpu_rescale_max": True,
             "cpu_average": 15,
             "process_info": "html",
             "resident_levels_perc": (25.0, 50.0),
             "virtual_levels": (1024**3, 2 * 1024**3),
             "resident_levels": (1024**3, 2 * 1024**3),
+            "icon": "emacs.png",
         },
-        "icon": "emacs.png",
         "descr": "emacs",
         "match": "emacs",
-        'cpu_rescale_max': True,
         "user": False
     }, [], ["@all"], {
         "description": u"emacs",
@@ -267,10 +267,10 @@ PS_DISCOVERY_WATO_RULES = [
 ]
 
 PS_DISCOVERY_SPECS = [
-    ("smss", "~smss.exe", None, None, {
+    ("smss", "~smss.exe", None, {
         'cpu_rescale_max': None
     }),
-    ("svchost", "svchost.exe", None, None, {
+    ("svchost", "svchost.exe", None, {
         "cpulevels": (90.0, 98.0),
         'cpu_rescale_max': None,
         "handle_count": (1000, 2000),
@@ -281,29 +281,30 @@ PS_DISCOVERY_SPECS = [
         "single_cpulevels": (90.0, 98.0),
         "virtual_levels": (1073741824000, 2147483648000),
     }),
-    ("firefox is on %s", "~.*(fire)fox", None, None, {
+    ("firefox is on %s", "~.*(fire)fox", None, {
         "process_info": "text",
         'cpu_rescale_max': None,
     }),
-    ("emacs", "emacs", False, "emacs.png", {
+    ("emacs", "emacs", False, {
         "cpu_average": 15,
         'cpu_rescale_max': True,
         "process_info": "html",
         "resident_levels_perc": (25.0, 50.0),
         "virtual_levels": (1024**3, 2 * 1024**3),
         "resident_levels": (1024**3, 2 * 1024**3),
+        "icon": "emacs.png",
     }),
-    ("cron", "~.*cron", "root", None, {
+    ("cron", "~.*cron", "root", {
         "max_age": (3600, 7200),
         'cpu_rescale_max': None,
         "resident_levels_perc": (25.0, 50.0),
         "single_cpulevels": (90.0, 98.0),
         "resident_levels": (104857600, 209715200)
     }),
-    ("sshd", "~.*sshd", None, None, {
+    ("sshd", "~.*sshd", None, {
         'cpu_rescale_max': None
     }),
-    ('PS counter', None, 'zombie', None, {
+    ('PS counter', None, 'zombie', {
         'cpu_rescale_max': None
     }),
 ]
@@ -359,12 +360,14 @@ def test_parse_ps_time(check_manager, text, result):
     (("sshd", 1, 1, 99, 99), {
         "process": "sshd",
         "user": None,
-        "levels": (1, 1, 99, 99)
+        "levels": (1, 1, 99, 99),
+        'cpu_rescale_max': None,
     }),
     (("sshd", "root", 2, 2, 5, 5), {
         "process": "sshd",
         "user": "root",
-        "levels": (2, 2, 5, 5)
+        "levels": (2, 2, 5, 5),
+        'cpu_rescale_max': None,
     }),
     ({
         "user": "foo",
@@ -377,6 +380,18 @@ def test_parse_ps_time(check_manager, text, result):
         "user": "foo",
         "process": "/usr/bin/foo",
         "levels": (1, 1, 3, 3),
+        'cpu_rescale_max': None,
+    }),
+    ({
+        "user": "foo",
+        "process": "/usr/bin/foo",
+        "levels": (1, 1, 3, 3),
+        'cpu_rescale_max': True,
+    }, {
+        "user": "foo",
+        "process": "/usr/bin/foo",
+        "levels": (1, 1, 3, 3),
+        'cpu_rescale_max': True,
     }),
 ])
 def test_cleanup_params(check_manager, params, result):
@@ -609,12 +624,10 @@ def test_check_ps_common_cpu(check_manager, monkeypatch, data):
     ((1, 1, 99999, 99999),
      CheckResult([
          (2, "0 processes: (ok from 1 to 99999)", [("count", 0, 100000, 100000, 0)]),
-         (0, "0.0% CPU", [("pcpu", 0)]),
      ])),
     ((0, 0, 99999, 99999),
      CheckResult([
          (0, "0 processes", [("count", 0, 100000, 100000, 0)]),
-         (0, "0.0% CPU", [("pcpu", 0)]),
      ])),
 ])
 def test_check_ps_common_count(check_manager, levels, reference):
@@ -644,8 +657,8 @@ def test_subset_patterns(check_manager):
 
     # Boundary in match is necessary otherwise main instance accumulates all
     wato_rule = [({
-        'cpu_rescale_max': True,
         'default_params': {
+            'cpu_rescale_max': True,
             'levels': (1, 1, 99999, 99999)
         },
         'match': '~(main.*)\\b',

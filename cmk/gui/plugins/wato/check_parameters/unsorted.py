@@ -24,12 +24,10 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import re
 import cmk.utils.defines as defines
 
 from cmk.gui.plugins.wato.active_checks import check_icmp_params
 
-from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
@@ -46,7 +44,6 @@ from cmk.gui.valuespec import (
     ListOfStrings,
     FixedValue,
     DualListChoice,
-    RadioChoice,
     TextUnicode,
     RegExpUnicode,
 )
@@ -56,9 +53,7 @@ from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersNetworking,
     RulespecGroupCheckParametersStorage,
     register_rule,
-    UserIconOrAction,
 )
-from cmk.gui.plugins.wato.check_parameters.ps import process_level_elements
 
 # TODO: Sort all rules and check parameters into the figlet header sections.
 # Beware: there are dependencies, so sometimes the order matters.  All rules
@@ -96,193 +91,6 @@ register_rule(
 #   |           |___|_| |_|\_/ \___|_| |_|\__\___/|_|   \__, |             |
 #   |                                                   |___/              |
 #   '----------------------------------------------------------------------'
-
-
-# In version 1.2.4 the check parameters for the resulting ps check
-# where defined in the dicovery rule. We moved that to an own rule
-# in the classical check parameter style. In order to support old
-# configuration we allow reading old discovery rules and ship these
-# settings in an optional sub-dictionary.
-def convert_inventory_processes(old_dict):
-    new_dict = {"default_params": {}}
-    for key, value in old_dict.items():
-        if key in [
-                'levels',
-                'handle_count',
-                'cpulevels',
-                'cpu_average',
-                'virtual_levels',
-                'resident_levels',
-        ]:
-            new_dict["default_params"][key] = value
-        elif key != "perfdata":
-            new_dict[key] = value
-
-    # New cpu rescaling load rule
-    if old_dict.get('cpu_rescale_max') is None:
-        new_dict['cpu_rescale_max'] = True
-
-    return new_dict
-
-
-def forbid_re_delimiters_inside_groups(pattern, varprefix):
-    # Used as input validation in PS check wato config
-    group_re = r'\(.*?\)'
-    for match in re.findall(group_re, pattern):
-        for char in ['\\b', '$', '^']:
-            if char in match:
-                raise MKUserError(
-                    varprefix,
-                    _('"%s" is not allowed inside the regular expression group %s. '
-                      'Bounding characters inside groups will vanish after discovery, '
-                      'because processes are instanced for every matching group. '
-                      'Thus enforce delimiters outside the group.') % (char, match))
-
-
-register_rule(
-    RulespecGroupCheckParametersDiscovery,
-    varname="inventory_processes_rules",
-    title=_('Process Discovery'),
-    help=_(
-        "This ruleset defines criteria for automatically creating checks for running processes "
-        "based upon what is running when the service discovery is done. These services will be "
-        "created with default parameters. They will get critical when no process is running and "
-        "OK otherwise. You can parameterize the check with the ruleset <i>State and count of processes</i>."
-    ),
-    valuespec=Transform(
-        Dictionary(
-            elements=[
-                ('descr',
-                 TextAscii(
-                     title=_('Process Name'),
-                     style="dropdown",
-                     allow_empty=False,
-                     help=
-                     _('<p>The process name may contain one or more occurances of <tt>%s</tt>. If you do this, then the pattern must be a regular '
-                       'expression and be prefixed with ~. For each <tt>%s</tt> in the description, the expression has to contain one "group". A group '
-                       'is a subexpression enclosed in brackets, for example <tt>(.*)</tt> or <tt>([a-zA-Z]+)</tt> or <tt>(...)</tt>. When the inventory finds a process '
-                       'matching the pattern, it will substitute all such groups with the actual values when creating the check. That way one '
-                       'rule can create several checks on a host.</p>'
-                       '<p>If the pattern contains more groups then occurrances of <tt>%s</tt> in the service description then only the first matching '
-                       'subexpressions  are used for the  service descriptions. The matched substrings corresponding to the remaining groups '
-                       'are copied into the regular expression, nevertheless.</p>'
-                       '<p>As an alternative to <tt>%s</tt> you may also use <tt>%1</tt>, <tt>%2</tt>, etc. '
-                       'These will be replaced by the first, second, ... matching group. This allows you to reorder things.</p>'
-                      ),
-                 )),
-                (
-                    'match',
-                    Alternative(
-                        title=_("Process Matching"),
-                        style="dropdown",
-                        elements=[
-                            TextAscii(
-                                title=_("Exact name of the process without argments"),
-                                label=_("Executable:"),
-                                size=50,
-                            ),
-                            Transform(
-                                RegExp(
-                                    size=50,
-                                    mode=RegExp.prefix,
-                                    validate=forbid_re_delimiters_inside_groups,
-                                ),
-                                title=_("Regular expression matching command line"),
-                                label=_("Command line:"),
-                                help=
-                                _("This regex must match the <i>beginning</i> of the complete "
-                                  "command line of the process including arguments.<br>"
-                                  "When using groups, matches will be instantiated "
-                                  "during process discovery. e.g. (py.*) will match python, python_dev "
-                                  "and python_test and discover 3 services. At check time, because "
-                                  "python is a substring of python_test and python_dev it will aggregate"
-                                  "all process that start with python. If that is not the intended behavior "
-                                  "please use a delimiter like '$' or '\\b' around the group, e.g. (py.*)$"
-                                 ),
-                                forth=lambda x: x[1:],  # remove ~
-                                back=lambda x: "~" + x,  # prefix ~
-                            ),
-                            FixedValue(
-                                None,
-                                totext="",
-                                title=_("Match all processes"),
-                            )
-                        ],
-                        match=lambda x: (not x and 2) or (x[0] == '~' and 1 or 0),
-                        default_value='/usr/sbin/foo')),
-                ('user',
-                 Alternative(
-                     title=_('Name of the User'),
-                     style="dropdown",
-                     elements=[
-                         FixedValue(
-                             None,
-                             totext="",
-                             title=_("Match all users"),
-                         ),
-                         TextAscii(
-                             title=_('Exact name of the user'),
-                             label=_("User:"),
-                         ),
-                         FixedValue(
-                             False,
-                             title=_('Grab user from found processess'),
-                             totext='',
-                         ),
-                     ],
-                     help=
-                     _('<p>The user specification can either be a user name (string). The inventory will then trigger only if that user matches '
-                       'the user the process is running as and the resulting check will require that user. Alternatively you can specify '
-                       '"grab user". If user is not selected the created check will not check for a specific user.</p>'
-                       '<p>Specifying "grab user" makes the created check expect the process to run as the same user as during inventory: the user '
-                       'name will be hardcoded into the check. In that case if you put %u into the service description, that will be replaced '
-                       'by the actual user name during inventory. You need that if your rule might match for more than one user - your would '
-                       'create duplicate services with the same description otherwise.</p><p>Windows users are specified by the namespace followed by '
-                       'the actual user name. For example "\\\\NT AUTHORITY\\NETWORK SERVICE" or "\\\\CHKMKTEST\\Administrator".</p>'
-                      ),
-                 )),
-                ('icon',
-                 UserIconOrAction(
-                     title=_("Add custom icon or action"),
-                     help=_(
-                         "You can assign icons or actions to the found services in the status GUI."
-                     ),
-                 )),
-                ("cpu_rescale_max",
-                 RadioChoice(
-                     title=_("CPU rescale maximum load"),
-                     help=_("CPU utilization is delivered by the Operating "
-                            "System as a per CPU core basis. Thus each core contributes "
-                            "with a 100% at full utilization, producing a maximum load "
-                            "of N*100% (N=number of cores). For simplicity this maximum "
-                            "can be rescaled down, making 100% the maximum and thinking "
-                            "in terms of total CPU utilization."),
-                     default_value=True,
-                     orientation="vertical",
-                     choices=[
-                         (True, _("100% is all cores at full load")),
-                         (False,
-                          _("<b>N</b> * 100% as each core contributes with 100% at full load")),
-                     ])),
-                ('default_params',
-                 Dictionary(
-                     title=_("Default parameters for detected services"),
-                     help=
-                     _("Here you can select default parameters that are being set "
-                       "for detected services. Note: the preferred way for setting parameters is to use "
-                       "the rule set <a href='wato.py?varname=checkgroup_parameters%3Apsmode=edit_ruleset'> "
-                       "State and Count of Processes</a> instead. "
-                       "A change there will immediately be active, while a change in this rule "
-                       "requires a re-discovery of the services."),
-                     elements=process_level_elements,
-                 )),
-            ],
-            required_keys=["descr", "cpu_rescale_max"],
-        ),
-        forth=convert_inventory_processes,
-    ),
-    match='all',
-)
 
 register_rule(
     RulespecGroupCheckParametersDiscovery,

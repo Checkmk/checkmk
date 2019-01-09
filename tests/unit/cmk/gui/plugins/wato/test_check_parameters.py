@@ -1,6 +1,7 @@
 import pytest
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.plugins.wato.check_parameters.unsorted import forbid_re_delimiters_inside_groups
+from cmk.gui.plugins.wato.check_parameters.ps import (forbid_re_delimiters_inside_groups,
+                                                      convert_inventory_processes)
 from cmk.gui.plugins.wato.check_parameters.cpu_utilization import transform_cpu_iowait
 
 
@@ -34,3 +35,49 @@ def test_validate_ps_forbidden_regex(pattern):
 ])
 def test_transform_cpu_iowait(params, result):
     assert transform_cpu_iowait(params) == result
+
+
+@pytest.mark.parametrize('params, result', [
+    ({}, {
+        'default_params': {
+            "cpu_rescale_max": None
+        }
+    }),
+    ({
+        'levels': (1, 1, 50, 50),
+    }, {
+        'default_params': {
+            'levels': (1, 1, 50, 50),
+            "cpu_rescale_max": None,
+        },
+    }),
+    ({
+        'user': False,
+        'default_params': {
+            'virtual_levels': (50, 100),
+        }
+    }, {
+        'user': False,
+        'default_params': {
+            'virtual_levels': (50, 100),
+            "cpu_rescale_max": None,
+        }
+    }),
+    ({
+        'default_params': {
+            'cpu_rescale_max': True
+        },
+        'match': '/usr/lib/firefox/firefox',
+        'descr': 'firefox',
+        'user': False
+    }, {
+        'default_params': {
+            'cpu_rescale_max': True
+        },
+        'match': '/usr/lib/firefox/firefox',
+        'descr': 'firefox',
+        'user': False
+    }),
+])
+def test_convert_inventory_process(params, result):
+    assert convert_inventory_processes(params) == result

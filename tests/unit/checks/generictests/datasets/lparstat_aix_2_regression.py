@@ -65,11 +65,10 @@ checks = {
     ],
     'cpu_util': [
         (None, None, [
-            (0, 'user: 0.2%, system: 0.4%, wait: 0.0%', [
-                ('user', 0.2, None, None, None, None),
-                ('system', 0.4, None, None, None, None),
-                ('wait', 0.0, None, None, None, None),
-            ]),
+            (0, 'user: 0.20%', [('user', 0.2)]),
+            (0, 'system: 0.40%', [('system', 0.4)]),
+            (0, 'wait: 0.00%', [('wait', 0.0)]),
+            (0, 'total cpu: 0.60%', [('util', 0.6000000000000001, None, None, 0, None)]),
         ]),
     ],
 }

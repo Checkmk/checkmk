@@ -17,7 +17,7 @@ discovery = {
 checks = {
     '': [
         (None, None, [
-            (0, 'Physc: 0.02',[('physc', 0.02, None, None, None, None)]),
+            (0, 'Physc: 0.02', [('physc', 0.02, None, None, None, None)]),
             (0, 'Entc: 9.3%', [('entc', 9.3, None, None, None, None)]),
             (0, 'Lbusy: 0.1', [('lbusy', 0.1, None, None, None, None)]),
             (0, 'App: 519.0', [('app', 519.0, None, None, None, None)]),
@@ -27,18 +27,23 @@ checks = {
         ]),
     ],
     'cpu_util': [
-        (None, None, [(0, 'user: 0.2%, system: 1.2%, wait: 0.2%',
-                            [('user', 0.2, None, None, None, None),
-                             ('system', 1.2, None, None, None, None),
-                             ('wait', 0.2, None, None, None, None)])]),
-        (None, (0.1, 0.3), [(1, 'user: 0.2%, system: 1.2%, wait: 0.2%',
-                             [('user', 0.2, None, None, None, None),
-                              ('system', 1.2, None, None, None, None),
-                              ('wait', 0.2, None, None, None, None)])]),
-        (None, {
-            'util': (0.5, 1.3)
-        }, [(2, 'user: 0.2%, system: 1.2%, wait: 0.2%', [('user', 0.2, None, None, None, None),
-                                                         ('system', 1.2, None, None, None, None),
-                                                         ('wait', 0.2, None, None, None, None)])]),
+        (None, None, [
+            (0, 'user: 0.20%', [('user', 0.2)]),
+            (0, 'system: 1.20%', [('system', 1.2)]),
+            (0, 'wait: 0.20%', [('wait', 0.2)]),
+            (0, 'total cpu: 1.60%', [('util', 1.5999999999999999, None, None, 0, None)]),
+        ]),
+        (None, (0.1, 0.3), [
+            (0, 'user: 0.20%', [('user', 0.2)]),
+            (0, 'system: 1.20%', [('system', 1.2)]),
+            (1, 'wait: 0.20% (warn/crit at 0.10%/0.30%)', [('wait', 0.2, 0.1, 0.3)]),
+            (0, 'total cpu: 1.60%', [('util', 1.5999999999999999, None, None, 0, None)]),
+        ]),
+        (None, {'util': (0.5, 1.3)}, [
+            (0, 'user: 0.20%', [('user', 0.2)]),
+            (0, 'system: 1.20%', [('system', 1.2)]),
+            (0, 'wait: 0.20%', [('wait', 0.2)]),
+            (2, 'total cpu: 1.60% (warn/crit at 0.50%/1.30%)', [('util', 1.5999999999999999, 0.5, 1.3, 0, None)]),
+        ]),
     ]
 }

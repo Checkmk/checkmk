@@ -1,0 +1,12 @@
+Title: lparstat_aix.cpu: Add levels for utilization
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1547044973
+Class: feature
+
+You can now set levels for the CPU utilization as well as for IO-wait.
+Also available: Averaging and levels for time periods where CPU
+utilization is above the CPU entitlement.

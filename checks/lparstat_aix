@@ -100,26 +100,12 @@ def check_lparstat_aix_cpu(_no_item, params, parsed):
     # and legacy None defaults before 1.6
     params = transform_cpu_iowait(params)
 
-    perfdata = [("user", user), ("system", system), ("wait", wait)]
+    yield check_levels(user, "user", None, "%")
+    yield check_levels(system, "system", None, "%")
+    yield check_levels(wait, "wait", params.get('iowait'), "%")
 
-    infotext = "user: %2.1f%%, system: %2.1f%%, wait: %2.1f%%" % (user, system, wait)
-
-    result = 0
-
-    if isinstance(params.get('util'), tuple):
-        warn, crit = params['util']
-        if util >= crit:
-            result = max(result, 2)
-        elif util >= warn:
-            result = max(result, 1)
-    if 'iowait' in params:
-        warn, crit = params['iowait']
-        if wait >= crit:
-            result = max(result, 2)
-        elif wait >= warn:
-            result = max(result, 1)
-
-    yield result, infotext, perfdata
+    for util_result in check_cpu_util(util, params, perf_max=None):
+        yield util_result
 
 
 check_info['lparstat_aix.cpu_util'] = {
@@ -128,5 +114,5 @@ check_info['lparstat_aix.cpu_util'] = {
     "service_description": "CPU utilization",
     "has_perfdata": True,
     "group": "cpu_iowait",
-    'includes': ['transforms.include'],
+    "includes": ["transforms.include", "cpu_util.include"],
 }

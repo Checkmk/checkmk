@@ -246,6 +246,13 @@ class Worker(threading.Thread):
         if "selection=" in url:
             raise InvalidUrl("Skipping selection URL: %s" % url)
 
+        # TODO: Remove this exclude when ModeCheckManPage works without an
+        # automation call. Currently we have to use such a call to enrich the
+        # man page with some additional info from config.check_info, see
+        # AutomationGetCheckManPage.
+        if "mode=check_manpage" in url and "wato.py" in url:
+            raise InvalidUrl("Skipping man page URL: %s" % url)
+
         # Don't follow filled in filter form views
         if "view.py" in url and "filled_in=filter" in url:
             raise InvalidUrl("Skipping filled in filter URL: %s" % url)

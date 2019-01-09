@@ -633,7 +633,7 @@ def rename_host_tags_after_confirmation(tag_id, operations):
     elif mode:
         # make attribute unknown to system, important for save() operations
         if tag_id and isinstance(operations, list):
-            watolib.undeclare_host_tag_attribute(tag_id)
+            watolib.host_attributes.undeclare_host_tag_attribute(tag_id)
         affected_folders, affected_hosts, affected_rulesets = \
         _change_host_tags_in_folders(tag_id, operations, mode, watolib.Folder.root_folder())
         return _("Modified folders: %d, modified hosts: %d, modified rulesets: %d") % \

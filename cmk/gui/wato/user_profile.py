@@ -39,8 +39,8 @@ from cmk.gui.exceptions import HTTPRedirect, MKUserError, MKGeneralException, MK
 from cmk.gui.i18n import _, _u
 from cmk.gui.globals import html
 
-from cmk.gui.wato.pages.users import (
-    select_language,)
+from cmk.gui.watolib.changes import ACTIVATION_TIME_PROFILE_SYNC
+from cmk.gui.wato.pages.users import select_language
 
 from cmk.gui.plugins.wato.utils.base_modes import WatoWebApiMode
 
@@ -87,7 +87,7 @@ def user_profile_async_replication_dialog(sites):
             changes_manager = watolib.ActivateChanges()
             changes_manager.load()
             estimated_duration = changes_manager.get_activation_time(
-                site_id, watolib.ACTIVATION_TIME_PROFILE_SYNC, 2.0)
+                site_id, ACTIVATION_TIME_PROFILE_SYNC, 2.0)
             html.javascript(
                 'cmk.profile_replication.start(\'%s\', %d, \'%s\');' %
                 (site_id, int(estimated_duration * 1000.0), _('Replication in progress')))
@@ -374,8 +374,8 @@ class ModeAjaxProfileReplication(WatoWebApiMode):
             site, {user_id: users[user_id]})
 
         duration = time.time() - start
-        watolib.ActivateChanges().update_activation_time(
-            site_id, watolib.ACTIVATION_TIME_PROFILE_SYNC, duration)
+        watolib.ActivateChanges().update_activation_time(site_id, ACTIVATION_TIME_PROFILE_SYNC,
+                                                         duration)
         return result
 
 

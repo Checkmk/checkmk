@@ -42,6 +42,7 @@ from cmk.gui.htmllib import HTML
 from cmk.gui.exceptions import HTTPRedirect, MKUserError, MKGeneralException, MKAuthException
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
+from cmk.gui.watolib.hosts_and_folders import validate_host_uniqueness
 
 from cmk.gui.valuespec import (
     Hostname,
@@ -414,7 +415,7 @@ class ModeRenameHost(WatoMode):
             raise MKUserError(varname, _("Please specify a host name."))
         elif watolib.Folder.current().has_host(host_name):
             raise MKUserError(varname, _("A host with this name already exists in this folder."))
-        watolib.validate_host_uniqueness(varname, host_name)
+        validate_host_uniqueness(varname, host_name)
         Hostname().validate_value(host_name, varname)
 
     def page(self):

@@ -24,7 +24,111 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import re
+import pprint
+import base64
+import pickle
+from contextlib import contextmanager
+
 import cmk.utils.paths
+import cmk.utils.store as store
+
+import cmk.gui.config as config
+
+# Constants used in configuration files
+ALL_HOSTS = ['@all']
+ALL_SERVICES = [""]
+NEGATE = '@negate'
+NO_ITEM = {}  # Just an arbitrary unique thing
+ENTRY_NEGATE_CHAR = "!"
 
 wato_root_dir = cmk.utils.paths.check_mk_config_dir + "/wato/"
 multisite_dir = cmk.utils.paths.default_config_dir + "/multisite.d/wato/"
+# TODO: Move this to CEE specific code again
+liveproxyd_config_dir = cmk.utils.paths.default_config_dir + "/liveproxyd.d/wato/"
+
+
+# TODO: Find a better place later
+def rename_host_in_list(thelist, oldname, newname):
+    did_rename = False
+    for nr, element in enumerate(thelist):
+        if element == oldname:
+            thelist[nr] = newname
+            did_rename = True
+        elif element == '!' + oldname:
+            thelist[nr] = '!' + newname
+            did_rename = True
+    return did_rename
+
+
+# Convert old tuple representation to new dict representation of
+# folder's group settings
+# TODO: Find a better place later
+def convert_cgroups_from_tuple(value):
+    if isinstance(value, dict):
+        if "use_for_services" in value:
+            return value
+
+        new_value = {
+            "use_for_services": False,
+        }
+        new_value.update(value)
+        return value
+
+    return {
+        "groups": value[1],
+        "recurse_perms": False,
+        "use": value[0],
+        "use_for_services": False,
+        "recurse_use": False,
+    }
+
+
+# TODO: Find a better place later
+def host_attribute_matches(crit, value):
+    if crit and crit[0] == "~":
+        # insensitive infix regex match
+        return re.search(crit[1:], value, re.IGNORECASE) is not None
+
+    # insensitive infix search
+    return crit.lower() in value.lower()
+
+
+# Returns the ID of the default site. This is the site the main folder has
+# configured by default. It inherits to all folders and hosts which don't have
+# a site set on their own.
+# In standalone and master sites this defaults to the local site. In distributed
+# slave sites, we don't know the site ID of the master site. We set this explicit
+# to false to configure that this host is monitored by another site (that we don't
+# know about).
+# TODO: Find a better place later
+def default_site():
+    if config.is_wato_slave_site():
+        return False
+    return config.default_site()
+
+
+def format_config_value(value):
+    format_func = pprint.pformat if config.wato_pprint_config else repr
+    return format_func(value)
+
+
+@contextmanager
+def exclusive_lock():
+    path = cmk.utils.paths.default_config_dir + "/multisite.mk"
+    store.aquire_lock(path)
+    try:
+        yield
+    finally:
+        store.release_lock(path)
+
+
+# TODO: Use exclusive_lock() and nuke this!
+def lock_exclusive():
+    store.aquire_lock(cmk.utils.paths.default_config_dir + "/multisite.mk")
+
+
+def mk_repr(s):
+    if not config.wato_legacy_eval:
+        return base64.b64encode(repr(s))
+    return base64.b64encode(pickle.dumps(s))

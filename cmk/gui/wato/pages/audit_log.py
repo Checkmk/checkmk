@@ -54,7 +54,7 @@ from cmk.gui.plugins.wato import WatoMode, mode_registry, wato_confirm
 
 @mode_registry.register
 class ModeAuditLog(WatoMode):
-    log_path = Path(watolib.audit_log_path)
+    log_path = Path(watolib.changes.audit_log_path)
 
     @classmethod
     def name(cls):

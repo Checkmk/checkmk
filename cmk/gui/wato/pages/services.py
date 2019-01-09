@@ -53,6 +53,10 @@ from cmk.gui.watolib import (
     automation_command_registry,
     AutomationCommand,
 )
+from cmk.gui.watolib.automations import (
+    sync_changes_before_remote_automation,
+    check_mk_automation,
+)
 
 from cmk.gui.plugins.wato import (
     host_status_button,
@@ -271,7 +275,7 @@ def _get_check_table_from_remote(request):
     Falling back to the previously existing try-inventry and inventory automation calls.
     """
     try:
-        watolib.sync_changes_before_remote_automation(request.host.site_id())
+        sync_changes_before_remote_automation(request.host.site_id())
 
         return DiscoveryResult(*ast.literal_eval(
             watolib.do_remote_automation(
@@ -286,7 +290,7 @@ def _get_check_table_from_remote(request):
         # Compatibility for pre 1.6 remote sites.
         # TODO: Replace with helpful exception in 1.7.
         if request.options.action == DiscoveryAction.REFRESH:
-            _counts, _failed_hosts = watolib.check_mk_automation(
+            _counts, _failed_hosts = check_mk_automation(
                 request.host.site_id(), "inventory",
                 ["@scan", "refresh", request.host.name()])
 
@@ -300,7 +304,7 @@ def _get_check_table_from_remote(request):
 
         options.append(request.host.name())
 
-        check_table = watolib.check_mk_automation(request.host.site_id(), "try-inventory", options)
+        check_table = check_mk_automation(request.host.site_id(), "try-inventory", options)
 
         return DiscoveryResult(
             job_status={
@@ -401,11 +405,11 @@ class ServiceDiscoveryBackgroundJob(WatoBackgroundJob):
     def _perform_service_scan(self, request):
         """The try-inventory automation refreshes the Check_MK internal cache and makes the new
         information available to the next try-inventory call made by get_result()."""
-        watolib.check_mk_automation(request.host.site_id(), "try-inventory",
-                                    self._get_automation_options(request))
+        check_mk_automation(request.host.site_id(), "try-inventory",
+                            self._get_automation_options(request))
 
     def _perform_automatic_refresh(self, request):
-        _counts, _failed_hosts = watolib.check_mk_automation(
+        _counts, _failed_hosts = check_mk_automation(
             request.host.site_id(), "inventory",
             ["@scan", "refresh", request.host.name()])
         # In distributed sites this must not add a change on the remote site. We need to build
@@ -439,7 +443,7 @@ class ServiceDiscoveryBackgroundJob(WatoBackgroundJob):
         # time for all data of a host. The data sources should be able to provide this information
         # somehow.
         check_table_created = time.time()
-        check_table = watolib.check_mk_automation(
+        check_table = check_mk_automation(
             request.host.site_id(), "try-inventory",
             ["@noscan", "@raiseerrors", request.host.name()])
 
@@ -704,8 +708,7 @@ class ModeAjaxServiceDiscovery(WatoWebApiMode):
         message = _("Saved check configuration of host '%s' with %d services") % \
                     (self._host.name(), len(checks))
         watolib.add_service_change(self._host, "set-autochecks", message, need_sync=need_sync)
-        watolib.check_mk_automation(self._host.site_id(), "set-autochecks", [self._host.name()],
-                                    checks)
+        check_mk_automation(self._host.site_id(), "set-autochecks", [self._host.name()], checks)
 
     def _save_host_service_enable_disable_rules(self, to_enable, to_disable):
         self._save_service_enable_disable_rules(to_enable, value=False)
@@ -1498,7 +1501,7 @@ class ModeAjaxExecuteCheck(WatoWebApiMode):
     def page(self):
         watolib.init_wato_datastructures(with_wato_lock=True)
         try:
-            state, output = watolib.check_mk_automation(
+            state, output = check_mk_automation(
                 self._site,
                 "active-check", [self._host_name, self._check_type, self._item],
                 sync=False)

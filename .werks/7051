@@ -1,0 +1,12 @@
+Title: agent_salesforce: fix a crash of the special agent
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0p12
+Date: 1547043361
+Class: fix
+
+The special agent now uses the python distributed with Check_MK.
+Previously /usr/bin/python was used which lead to a crash, because
+the module cmk_special_agent_api could not be found.

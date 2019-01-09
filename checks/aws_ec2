@@ -46,6 +46,14 @@ def parse_aws_ec2(info):
     return
 
 
+def inventory_aws_ec2_cpu_credits(parsed, required_metrics):
+    metrics = parsed.get(EC2DefaultItemName, {})
+    for required_metric in required_metrics:
+        if required_metric not in metrics:
+            return []
+    return [(None, {})]
+
+
 #   .--status check--------------------------------------------------------.
 #   |           _        _                    _               _            |
 #   |       ___| |_ __ _| |_ _   _ ___    ___| |__   ___  ___| | __        |
@@ -80,7 +88,8 @@ def check_aws_ec2_status_check(item, params, parsed):
 
 check_info['aws_ec2'] = {
     'parse_function': parse_aws_ec2,
-    'inventory_function': discover_single,
+    'inventory_function':
+        lambda p: inventory_aws_ec2_cpu_credits(p, ['StatusCheckFailed_System', 'StatusCheckFailed_Instance']),
     'check_function': check_aws_ec2_status_check,
     'service_description': 'AWS/EC2 Status Check',
     'includes': ['aws.include'],
@@ -112,7 +121,8 @@ def check_aws_ec2_cpu_credits(item, params, parsed):
 
 
 check_info['aws_ec2.cpu_credits'] = {
-    'inventory_function': discover_single,
+    'inventory_function':
+        lambda p: inventory_aws_ec2_cpu_credits(p, ['CPUCreditUsage', 'CPUCreditBalance']),
     'check_function': check_aws_ec2_cpu_credits,
     'service_description': 'AWS/EC2 CPU Credits',
     'group': 'aws_ec2_cpu_credits',
@@ -142,7 +152,7 @@ def check_aws_ec2_cpu_util(item, params, parsed):
 
 
 check_info['aws_ec2.cpu_util'] = {
-    'inventory_function': discover_single,
+    'inventory_function': lambda p: inventory_aws_ec2_cpu_credits(p, ['CPUUtilization']),
     'check_function': check_aws_ec2_cpu_util,
     'service_description': 'AWS/EC2 CPU utilization',
     'group': 'cpu_utilization',

@@ -78,6 +78,8 @@ from cmk.gui.plugins.views import (
 )
 
 from cmk.gui.plugins.views.icons import (
+    Icon,
+    icon_and_action_registry,
     multisite_icons_and_actions,
 )
 
@@ -93,36 +95,41 @@ from cmk.gui.plugins.views.icons import (
 #   '----------------------------------------------------------------------'
 
 
-def paint_action_menu(what, row, tags, host_custom_vars):
-    url_vars = [
-        ('host', row['host_name']),
-    ]
+@icon_and_action_registry.register
+class ActionMenuIcon(Icon):
+    @classmethod
+    def ident(cls):
+        return "action_menu"
 
-    if row.get('site'):
-        url_vars.append(('site', row['site']))
+    def default_toplevel(self):
+        return True
 
-    if what == 'service':
-        url_vars.append(('service', row['service_description']))
+    def default_sort_index(self):
+        return 10
 
-    if html.has_var('display_options'):
-        url_vars.append(('display_options', html.var('display_options')))
-    if html.has_var('_display_options'):
-        url_vars.append(('_display_options', html.var('_display_options')))
-    url_vars.append(('_back_url', html.makeuri([])))
+    def render(self, what, row, tags, custom_vars):
+        url_vars = [
+            ('host', row['host_name']),
+        ]
 
-    return html.render_popup_trigger(
-        html.render_icon('menu', _('Open the action menu'), cssclass="iconbutton"),
-        'action_menu',
-        'action_menu',
-        url_vars=url_vars)
+        if row.get('site'):
+            url_vars.append(('site', row['site']))
 
+        if what == 'service':
+            url_vars.append(('service', row['service_description']))
 
-multisite_icons_and_actions['action_menu'] = {
-    'columns': [],
-    'paint': paint_action_menu,
-    'toplevel': True,
-    'sort_index': 10,
-}
+        if html.has_var('display_options'):
+            url_vars.append(('display_options', html.var('display_options')))
+        if html.has_var('_display_options'):
+            url_vars.append(('_display_options', html.var('_display_options')))
+        url_vars.append(('_back_url', html.makeuri([])))
+
+        return html.render_popup_trigger(
+            html.render_icon('menu', _('Open the action menu'), cssclass="iconbutton"),
+            'action_menu',
+            'action_menu',
+            url_vars=url_vars)
+
 
 #.
 #   .--Icon-Image----------------------------------------------------------.

@@ -1,0 +1,11 @@
+Title: dell_om_fans: Fixed crash if only one device level (crit) is given
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p12
+Date: 1547023047
+
+

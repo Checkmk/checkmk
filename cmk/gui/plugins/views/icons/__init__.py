@@ -62,17 +62,6 @@ def get_multisite_icons():
     for icon_class in icon_and_action_registry.values():
         icons[icon_class.ident()] = icon_class()
 
-    # Now apply the global settings customized options
-    for icon_id, cfg in config.builtin_icon_visibility.items():
-        icon = icon_and_action_registry.get(icon_id)
-        if icon is None:
-            continue
-
-        if 'toplevel' in cfg:
-            icon.override_toplevel(cfg['toplevel'])
-        if 'sort_index' in cfg:
-            icon.override_sort_index(cfg['sort_index'])
-
     return icons
 
 
@@ -94,7 +83,7 @@ def get_icons(what, row, toplevel):
 
     # Extract needed custom variables
     tags = host_custom_vars.get('TAGS', '').split()
-    user_action_ids = custom_vars.get('ACTIONS', '').split(',')
+    user_icon_ids = custom_vars.get('ACTIONS', '').split(',')
 
     # Icons is a list of triple or quintuplets with these elements:
     # (toplevel, sort_index, html_code)
@@ -103,22 +92,21 @@ def get_icons(what, row, toplevel):
     #     is written to HTML
     #  -> or when an exception occured
     # (toplevel, sort_index, icon_name, title, url)
-    icons = _process_multisite_icons(what, row, tags, host_custom_vars, toplevel)
-    icons += _process_custom_user_icons_and_actions(user_action_ids, toplevel)
+    icons = _process_icons(what, row, tags, host_custom_vars, toplevel, user_icon_ids)
     return sorted(icons, key=lambda i: i[0])
 
 
-def _process_multisite_icons(what, row, tags, custom_vars, toplevel):
+def _process_icons(what, row, tags, custom_vars, toplevel, user_icon_ids):
     icons = []
     for icon_id, icon in get_multisite_icons().items():
-        if icon.type() != 'icon':
-            continue
-
         if icon.toplevel() != toplevel:
             continue
 
+        if icon.type() == "custom_icon" and icon_id not in user_icon_ids:
+            continue
+
         try:
-            for icon in _process_multisite_icon(what, row, tags, custom_vars, icon_id, icon):
+            for icon in _process_icon(what, row, tags, custom_vars, icon_id, icon):
                 icons.append(icon)
         except Exception:
             icons.append((icon.sort_index(),
@@ -126,7 +114,7 @@ def _process_multisite_icons(what, row, tags, custom_vars, toplevel):
     return icons
 
 
-def _process_multisite_icon(what, row, tags, custom_vars, icon_id, icon):
+def _process_icon(what, row, tags, custom_vars, icon_id, icon):
     # In old versions, the icons produced html code directly. The new API
     # is that the icon functions need to return:
     # a) None          - nothing to be rendered
@@ -174,21 +162,6 @@ def _process_multisite_icon(what, row, tags, custom_vars, icon_id, icon):
             icon_name, title, url = result
 
     yield icon.sort_index(), icon_name, title, url
-
-
-def _process_custom_user_icons_and_actions(user_action_ids, toplevel):
-    icons = []
-    for uid in user_action_ids:
-        try:
-            icon = config.user_icons_and_actions[uid]
-        except KeyError:
-            continue  # Silently skip not existing icons
-
-        if icon.get('toplevel', False) == toplevel:
-            sort_index = icon.get('sort_index', 15)
-            icons.append((sort_index, icon['icon'], icon.get('title'), icon.get('url')))
-
-    return icons
 
 
 # toplevel may be

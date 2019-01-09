@@ -28,6 +28,7 @@ import sys
 import errno
 import os
 import copy
+from typing import Callable  # pylint: disable=unused-import
 
 import cmk.gui.utils as utils
 import cmk.gui.i18n
@@ -199,6 +200,21 @@ def load_config():
         sites = default_single_site_configuration()
 
     migrate_old_sample_config_tag_groups(wato_host_tags, wato_aux_tags)
+
+    execute_post_config_load_hooks()
+
+
+def execute_post_config_load_hooks():
+    for func in _post_config_load_hooks:
+        func()
+
+
+_post_config_load_hooks = []
+
+
+def register_post_config_load_hook(func):
+    # type: (Callable) -> None
+    _post_config_load_hooks.append(func)
 
 
 def _initialize_with_default_config():
@@ -764,6 +780,7 @@ class BuiltinTags(object):
 # a) Check whether or not the tag group has been modified. If not, simply remove it from the user
 #    config and use the builtin tag group in the future.
 # b) Extend the tag group in the user configuration with the tag configuration we need for 1.5.
+# TODO: Move to wato/watolib and register using register_post_config_load_hook()
 def migrate_old_sample_config_tag_groups(host_tags, aux_tags_):
     remove_old_sample_config_tag_groups(host_tags, aux_tags_)
     extend_user_modified_tag_groups(host_tags)

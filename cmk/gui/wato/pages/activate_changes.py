@@ -42,6 +42,8 @@ from cmk.gui.plugins.wato.utils import mode_registry, sort_sites
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode, WatoWebApiMode
 from cmk.gui.plugins.wato.utils.html_elements import wato_styles
 from cmk.gui.plugins.wato.utils.context_buttons import home_button
+import cmk.gui.watolib.snapshots
+import cmk.gui.watolib.changes
 
 from cmk.gui.pages import register_page_handler
 from cmk.gui.display_options import display_options
@@ -133,7 +135,8 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
             need_restart=True)
 
         self._extract_snapshot(file_to_restore)
-        watolib.execute_activate_changes([d.ident for d in watolib.ConfigDomain.enabled_domains()])
+        cmk.gui.watolib.changes.execute_activate_changes(
+            [d.ident for d in watolib.ConfigDomain.enabled_domains()])
 
         for site_id in self.activation_site_ids():
             self.confirm_site_changes(site_id)
@@ -157,7 +160,8 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
 
     # TODO: Remove once new changes mechanism has been implemented
     def _extract_snapshot(self, snapshot_file):
-        self._extract_from_file(watolib.snapshot_dir + snapshot_file, watolib.backup_domains)
+        self._extract_from_file(cmk.gui.watolib.snapshots.snapshot_dir + snapshot_file,
+                                watolib.backup_domains)
 
     # TODO: Remove once new changes mechanism has been implemented
     def _extract_from_file(self, filename, elements):
@@ -170,7 +174,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
     # TODO: Remove once new changes mechanism has been implemented
     def _get_last_wato_snapshot_file(self):
         for snapshot_file in self._get_snapshots():
-            status = watolib.get_snapshot_status(snapshot_file)
+            status = cmk.gui.watolib.snapshots.get_snapshot_status(snapshot_file)
             if status['type'] == 'automatic' and not status['broken']:
                 return snapshot_file
 
@@ -178,8 +182,8 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
     def _get_snapshots(self):
         snapshots = []
         try:
-            for f in os.listdir(watolib.snapshot_dir):
-                if os.path.isfile(watolib.snapshot_dir + f):
+            for f in os.listdir(cmk.gui.watolib.snapshots.snapshot_dir):
+                if os.path.isfile(cmk.gui.watolib.snapshots.snapshot_dir + f):
                     snapshots.append(f)
             snapshots.sort(reverse=True)
         except OSError:
@@ -522,4 +526,4 @@ class AutomationActivateChanges(watolib.AutomationCommand):
         return ActivateChangesRequest(site_id=site_id, domains=domains)
 
     def execute(self, request):
-        return watolib.execute_activate_changes(request.domains)
+        return cmk.gui.watolib.changes.execute_activate_changes(request.domains)

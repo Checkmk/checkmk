@@ -148,7 +148,7 @@ class ModeEditSite(ModeSites):
 
         # In case a site is not being replicated anymore, confirm all changes for this site!
         if not self._repl:
-            watolib.clear_site_replication_status(self._id)
+            watolib.changes.clear_site_replication_status(self._id)
 
         if self._id != config.omd_site():
             # On central site issue a change only affecting the GUI

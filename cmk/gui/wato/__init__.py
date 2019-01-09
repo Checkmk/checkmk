@@ -557,7 +557,7 @@ def _wato_page_handler(current_mode, mode_permissions, mode_class):
         html.reload_sidebar()
 
     if config.wato_use_git and html.is_transaction():
-        watolib.do_git_commit()
+        watolib.git.do_git_commit()
 
     wato_html_footer(
         display_options.enabled(display_options.Z), display_options.enabled(display_options.H))

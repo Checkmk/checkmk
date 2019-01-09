@@ -6,9 +6,9 @@ distribution: check_mk
 description:
  Check CPU utilization (user, system, idle) and IO-Wait on an
  OpenVMS system. The number of CPUs is taken into account so that
- maximum percentage is 100% is refers to the total CPUs available.
+ maximum percentage is 100% and refers to the total CPUs available.
 
- A level can be set only on {wait} (disk wait).
+ Levels can be set only on {wait} (disk wait) and the utilization.
 
 inventory:
  One check per host is created for OpenVMS systems.

@@ -1,0 +1,10 @@
+Title: vms_cpu: Levels for utilization
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1547031355
+Class: feature
+
+Levels and averaging can now be configured for the utilization.

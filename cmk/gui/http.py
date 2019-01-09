@@ -172,15 +172,9 @@ class Request(object):
 
     # TODO: self._vars should be strictly read only in the Request() object
     def set_var(self, varname, value):
-        if value is None:
-            self.del_var(varname)
-
-        elif isinstance(value, six.string_types):
-            self._vars[varname] = value
-
-        else:
-            # crash report please
+        if not isinstance(value, six.string_types):
             raise TypeError(_("Only str and unicode values are allowed, got %s") % type(value))
+        self._vars[varname] = value
 
     # TODO: self._vars should be strictly read only in the Request() object
     def del_var(self, varname):

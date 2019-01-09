@@ -419,7 +419,8 @@ class S3(AWSSection):
             try:
                 location = response['LocationConstraint']
             except KeyError as e:
-                logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
+                logging.info("%s/%s: KeyError %s; Available are %s", self.name, bucket_name, e,
+                             response.keys())
             else:
                 bucket['LocationConstraint'] = location
 
@@ -427,7 +428,8 @@ class S3(AWSSection):
             try:
                 objects = response['Contents']
             except KeyError as e:
-                logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
+                logging.info("%s/%s: KeyError %s; Available are %s", self.name, bucket_name, e,
+                             response.keys())
             else:
                 bucket['Contents'] = objects
         return buckets
@@ -473,7 +475,8 @@ class ELBSummary(AWSSection):
             try:
                 states = response['InstanceStates']
             except KeyError, e:
-                logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
+                logging.info("%s/%s: KeyError %s; Available are %s", self.name, load_balancer_name,
+                             e, response.keys())
             else:
                 load_balancer['InstanceStates'] = states
         return load_balancers
@@ -810,7 +813,8 @@ class Glacier(AWSSection):
             try:
                 jobs = response['JobList']
             except KeyError, e:
-                logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
+                logging.info("%s/%s: KeyError %s; Available are %s", self.name, vault_name, e,
+                             response.keys())
                 jobs = []
             vault['Jobs'] = jobs
         return vaults

@@ -66,6 +66,9 @@ class PermissionSectionNotificationPlugins(PermissionSection):
 # new notification plugins in the local hierarchy.
 def load_plugins(force):
     for name, attrs in watolib.load_notification_scripts().items():
+        if name[0] == ".":
+            continue
+
         config.declare_permission("notification_plugin.%s" % name, _u(attrs["title"]), u"",
                                   ["admin", "user"])
 

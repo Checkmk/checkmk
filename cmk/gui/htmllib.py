@@ -28,7 +28,7 @@
 #
 # Notes for future rewrite:
 #
-# - Find all call sites which do something like "int(html.var(...))"
+# - Find all call sites which do something like "int(html.request.var(...))"
 #   and replace it with html.get_integer_input(...)
 #
 # - Make clear which functions return values and which write out values
@@ -1049,14 +1049,14 @@ class html(HTMLGenerator):
 
     def _init_debug_mode(self):
         # Debug flag may be set via URL to override the configuration
-        if self.var("debug"):
+        if self.request.var("debug"):
             config.debug = True
         self.enable_debug = config.debug
 
     # Enabling the screenshot mode omits the fancy background and
     # makes it white instead.
     def _init_screenshot_mode(self):
-        if self.var("screenshotmode", config.screenshotmode):
+        if self.request.var("screenshotmode", config.screenshotmode):
             self.screenshotmode = True
 
     def _requested_file_name(self):
@@ -1082,9 +1082,9 @@ class html(HTMLGenerator):
         return myfile
 
     def init_mobile(self):
-        if self.has_var("mobile"):
+        if self.request.has_var("mobile"):
             # TODO: Make private
-            self.mobile = bool(self.var("mobile"))
+            self.mobile = bool(self.request.var("mobile"))
             # Persist the explicitly set state in a cookie to have it maintained through further requests
             self.response.set_http_cookie("mobile", str(int(self.mobile)))
 
@@ -1110,26 +1110,6 @@ class html(HTMLGenerator):
     # HTTP variable processing
     #
 
-    # TODO: Refactor call sites to html.request.*
-    def var(self, varname, deflt=None):
-        return self.request.var(varname, deflt)
-
-    # TODO: Refactor call sites to html.request.*
-    def has_var(self, varname):
-        return self.request.has_var(varname)
-
-    # TODO: Refactor call sites to html.request.*
-    def var_utf8(self, varname, deflt=None):
-        return self.request.var_utf8(varname, deflt)
-
-    # TODO: Refactor call sites to html.request.*
-    def set_var(self, varname, value):
-        self.request.set_var(varname, value)
-
-    # TODO: Refactor call sites to html.request.*
-    def del_var(self, varname):
-        self.request.del_var(varname)
-
     @contextmanager
     def stashed_vars(self):
         saved_vars = dict(self.request.itervars())
@@ -1144,7 +1124,7 @@ class html(HTMLGenerator):
         """Helper to retrieve a byte string and ensure it only contains ASCII characters
         In case a non ASCII character is found an MKUserError() is raised."""
         try:
-            value = self.var(varname, deflt)
+            value = self.request.var(varname, deflt)
             if value is not None:
                 value.decode("ascii")
             return value
@@ -1153,7 +1133,7 @@ class html(HTMLGenerator):
 
     def get_unicode_input(self, varname, deflt=None):
         try:
-            return self.var_utf8(varname, deflt)
+            return self.request.var_utf8(varname, deflt)
         except UnicodeDecodeError:
             raise MKUserError(
                 varname,
@@ -1161,11 +1141,11 @@ class html(HTMLGenerator):
                   "You need to provide a UTF-8 encoded text."))
 
     def get_integer_input(self, varname, deflt=None):
-        if deflt is not None and not self.has_var(varname):
+        if deflt is not None and not self.request.has_var(varname):
             return deflt
 
         try:
-            return int(self.var(varname))
+            return int(self.request.var(varname))
         except TypeError:
             raise MKUserError(varname, _("The parameter \"%s\" is missing.") % varname)
         except ValueError:
@@ -1184,12 +1164,12 @@ class html(HTMLGenerator):
         In case the parameter is not given or is not valid the deflt URL will
         be used. In case no deflt URL is given a MKUserError() is raised.
         """
-        if not self.has_var(varname):
+        if not self.request.has_var(varname):
             if deflt is not None:
                 return deflt
             raise MKUserError(varname, _("The parameter \"%s\" is missing.") % varname)
 
-        url = self.var(varname)
+        url = self.request.var(varname)
         if not utils.is_allowed_url(url):
             if deflt:
                 return deflt
@@ -1205,9 +1185,9 @@ class html(HTMLGenerator):
         if exclude_vars is None:
             exclude_vars = []
 
-        if self.var("request_format") == "python":
+        if self.request.var("request_format") == "python":
             try:
-                python_request = self.var("request", "{}")
+                python_request = self.request.var("request", "{}")
                 request = ast.literal_eval(python_request)
             except (SyntaxError, ValueError) as e:
                 raise MKUserError(
@@ -1215,7 +1195,7 @@ class html(HTMLGenerator):
                     _("Failed to parse Python request: '%s': %s") % (python_request, e))
         else:
             try:
-                json_request = self.var("request", "{}")
+                json_request = self.request.var("request", "{}")
                 request = json.loads(json_request)
                 request["request_format"] = "json"
             except ValueError as e:  # Python3: json.JSONDecodeError
@@ -1422,7 +1402,7 @@ class html(HTMLGenerator):
         self.final_javascript_code += code + "\n"
 
     def reload_sidebar(self):
-        if not self.has_var("_ajaxid"):
+        if not self.request.has_var("_ajaxid"):
             self.write_html(self.render_reload_sidebar())
 
     def render_reload_sidebar(self):
@@ -1935,21 +1915,21 @@ class html(HTMLGenerator):
     #
 
     def do_actions(self):
-        return self.var("_do_actions") not in ["", None, _("No")]
+        return self.request.var("_do_actions") not in ["", None, _("No")]
 
     # Check if the given form is currently filled in (i.e. we display
     # the form a second time while showing value typed in at the first
     # time and complaining about invalid user input)
     def form_submitted(self, form_name=None):
-        return self.var("filled_in") == form_name
+        return self.request.var("filled_in") == form_name
 
     # Get value of checkbox. Return True, False or None. None means
     # that no form has been submitted. The problem here is the distintion
     # between False and None. The browser does not set the variables for
     # Checkboxes that are not checked :-(
     def get_checkbox(self, varname):
-        if self.has_var(varname):
-            return bool(self.var(varname))
+        if self.request.has_var(varname):
+            return bool(self.request.var(varname))
         if self.form_submitted(self.form_name):
             return False  # Form filled in but variable missing -> Checkbox not checked
         return None
@@ -2246,7 +2226,7 @@ class html(HTMLGenerator):
             attrs = {}
 
         # Model
-        value = self.var(varname, deflt)
+        value = self.request.var(varname, deflt)
         error = self.user_errors.get(varname)
 
         self.form_vars.append(varname)
@@ -2343,7 +2323,7 @@ class html(HTMLGenerator):
             self.close_x()
 
     def icon_dropdown(self, varname, choices, deflt=""):
-        current = self.var(varname, deflt)
+        current = self.request.var(varname, deflt)
         if varname:
             self.form_vars.append(varname)
 
@@ -2380,12 +2360,12 @@ class html(HTMLGenerator):
     # add_header: A title can be given to make the confirm method render the HTML
     #             header when showing the confirm message.
     def confirm(self, msg, method="POST", action=None, add_transid=False, add_header=False):
-        if self.var("_do_actions") == _("No"):
+        if self.request.var("_do_actions") == _("No"):
             # User has pressed "No", now invalidate the unused transid
             self.check_transaction()
             return  # None --> "No"
 
-        if not self.has_var("_do_confirm"):
+        if not self.request.has_var("_do_confirm"):
             if add_header != False:
                 self.header(add_header)
 
@@ -2427,8 +2407,8 @@ class html(HTMLGenerator):
         self.form_vars.append(varname)
 
         # Controller
-        if self.has_var(varname):
-            checked = self.var(varname) == value
+        if self.request.has_var(varname):
+            checked = self.request.var(varname) == value
 
         # View
         id_ = "rb_%s_%s" % (varname, value) if label else None
@@ -2897,7 +2877,7 @@ hy
             cssclass="inline")
 
         # TODO: Move this away from here. Make a context button. The view should handle this
-        if self.myfile == "view" and self.var('mode') != 'availability' and config.user.may(
+        if self.myfile == "view" and self.request.var('mode') != 'availability' and config.user.may(
                 "general.csv_export"):
             self.icon_button(
                 self.makeuri([("output_format", "csv_export")]),
@@ -2908,7 +2888,7 @@ hy
 
         # TODO: This needs to be realized as plugin mechanism
         if self.myfile == "view":
-            mode_name = "availability" if self.var("mode") == "availability" else "view"
+            mode_name = "availability" if self.request.var("mode") == "availability" else "view"
 
             encoded_vars = {}
             for k, v in self.page_context.items():
@@ -2923,7 +2903,7 @@ hy
                 'add_visual',
                 'add_visual',
                 data=[mode_name, encoded_vars, {
-                    'name': self.var('view_name')
+                    'name': self.request.var('view_name')
                 }],
                 url_vars=[("add_type", mode_name)])
 
@@ -2936,7 +2916,7 @@ hy
                 'add_visual',
                 'add_visual',
                 data=["graph_collection", {}, {
-                    'name': self.var('name')
+                    'name': self.request.var('name')
                 }],
                 url_vars=[("add_type", "graph_collection")])
 
@@ -3026,8 +3006,8 @@ hy
 
     # TODO: Remove this specific legacy function. Change code using this to valuespecs
     def get_datetime_input(self, varname):
-        t = self.var(varname + "_time")
-        d = self.var(varname + "_date")
+        t = self.request.var(varname + "_time")
+        d = self.request.var(varname + "_date")
         if not t or not d:
             raise MKUserError([varname + "_date", varname + "_time"],
                               _("Please specify a date and time."))
@@ -3041,7 +3021,7 @@ hy
 
     # TODO: Remove this specific legacy function. Change code using this to valuespecs
     def get_time_input(self, varname, what):
-        t = self.var(varname)
+        t = self.request.var(varname)
         if not t:
             raise MKUserError(varname, _("Please specify %s.") % what)
 

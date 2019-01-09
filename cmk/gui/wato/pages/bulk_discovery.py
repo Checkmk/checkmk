@@ -190,8 +190,8 @@ class ModeBulkDiscovery(WatoMode):
         return ["hosts", "services"]
 
     def _from_vars(self):
-        self._start = bool(html.var("_start"))
-        self._all = bool(html.var("all"))
+        self._start = bool(html.request.var("_start"))
+        self._all = bool(html.request.var("all"))
         self._just_started = False
         self._get_bulk_discovery_params()
         self._job = BulkDiscoveryBackgroundJob()

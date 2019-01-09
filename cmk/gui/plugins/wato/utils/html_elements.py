@@ -35,7 +35,7 @@ _html_head_open = False
 
 # Show confirmation dialog, send HTML-header if dialog is shown.
 def wato_confirm(html_title, message):
-    if not html.has_var("_do_confirm") and not html.has_var("_do_actions"):
+    if not html.request.has_var("_do_confirm") and not html.request.has_var("_do_actions"):
         wato_html_head(html_title)
     return html.confirm(message)
 

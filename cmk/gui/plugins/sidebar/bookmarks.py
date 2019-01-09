@@ -294,8 +294,8 @@ div.bookmark {
 """
 
     def _ajax_add_bookmark(self):
-        title = html.var("title")
-        url = html.var("url")
+        title = html.request.var("title")
+        url = html.request.var("url")
         if title and url:
             BookmarkList.validate_url(url, "url")
             self._add_bookmark(title, url)

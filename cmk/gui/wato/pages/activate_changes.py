@@ -105,7 +105,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
         return True
 
     def action(self):
-        if html.var("_action") != "discard":
+        if html.request.var("_action") != "discard":
             return
 
         if not html.check_transaction():
@@ -510,13 +510,14 @@ class AutomationActivateChanges(watolib.AutomationCommand):
         return "activate-changes"
 
     def get_request(self):
-        site_id = html.var("site_id")
+        site_id = html.request.var("site_id")
         self._verify_slave_site_config(site_id)
 
         try:
-            domains = ast.literal_eval(html.var("domains"))
+            domains = ast.literal_eval(html.request.var("domains"))
         except SyntaxError:
-            raise watolib.MKAutomationException(_("Invalid request: %r") % html.var("domains"))
+            raise watolib.MKAutomationException(
+                _("Invalid request: %r") % html.request.var("domains"))
 
         return ActivateChangesRequest(site_id=site_id, domains=domains)
 

@@ -123,7 +123,7 @@ def page_user_profile(change_pw=False):
         raise MKAuthException(_('User profiles can not be edited (WATO is disabled).'))
 
     success = None
-    if html.has_var('_save') and html.check_transaction():
+    if html.request.has_var('_save') and html.check_transaction():
         users = userdb.load_users(lock=True)
 
         try:
@@ -131,7 +131,7 @@ def page_user_profile(change_pw=False):
             if config.user.may('general.edit_profile'):
                 if not change_pw:
                     set_lang = html.get_checkbox('_set_lang')
-                    language = html.var('language')
+                    language = html.request.var('language')
                     # Set the users language if requested
                     if set_lang:
                         if language == '':
@@ -170,9 +170,9 @@ def page_user_profile(change_pw=False):
             # Change the password if requested
             password_changed = False
             if config.user.may('general.change_password'):
-                cur_password = html.var('cur_password')
-                password = html.var('password')
-                password2 = html.var('password2', '')
+                cur_password = html.request.var('cur_password')
+                password = html.request.var('password')
+                password2 = html.request.var('password2', '')
 
                 if change_pw:
                     # Force change pw mode
@@ -252,7 +252,7 @@ def page_user_profile(change_pw=False):
             html.context_button(_("Notifications"), url, "notifications")
             html.end_context_buttons()
     else:
-        reason = html.var('reason')
+        reason = html.request.var('reason')
         if reason == 'expired':
             html.p(_('Your password is too old, you need to choose a new password.'))
         else:
@@ -262,7 +262,7 @@ def page_user_profile(change_pw=False):
         html.reload_sidebar()
         if change_pw:
             html.message(_("Your password has been changed."))
-            raise HTTPRedirect(html.var('_origtarget', 'index.py'))
+            raise HTTPRedirect(html.request.var('_origtarget', 'index.py'))
         else:
             html.message(_("Successfully updated user profile."))
             # Ensure theme changes are applied without additional user interaction

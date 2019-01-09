@@ -91,7 +91,7 @@ class ModeEditCustomAttr(WatoMode):
         return self._all_attrs[self._type]
 
     def _from_vars(self):
-        self._name = html.var("edit")  # missing -> new custom attr
+        self._name = html.request.var("edit")  # missing -> new custom attr
         self._new = self._name is None
 
         # TODO: Inappropriate Intimacy: custom host attributes should not now about
@@ -157,13 +157,13 @@ class ModeEditCustomAttr(WatoMode):
                     "alias",
                     _("This alias is already used by the attribute %s.") % this_attr['name'])
 
-        topic = html.var('topic', '').strip()
+        topic = html.request.var('topic', '').strip()
         help_txt = html.get_unicode_input('help').strip()
         show_in_table = html.get_checkbox('show_in_table')
         add_custom_macro = html.get_checkbox('add_custom_macro')
 
         if self._new:
-            self._name = html.var("name", '').strip()
+            self._name = html.request.var("name", '').strip()
             if not self._name:
                 raise MKUserError("name", _("Please specify a name for the new attribute."))
             if ' ' in self._name:
@@ -176,7 +176,7 @@ class ModeEditCustomAttr(WatoMode):
             if [a for a in self._attrs if a['name'] == self._name]:
                 raise MKUserError("name", _("Sorry, there is already an attribute with that name."))
 
-            ty = html.var('type', '').strip()
+            ty = html.request.var('type', '').strip()
             if ty not in [t[0] for t in custom_attr_types()]:
                 raise MKUserError('type', _('The choosen attribute type is invalid.'))
 
@@ -401,8 +401,8 @@ class ModeCustomAttrs(WatoMode):
         raise NotImplementedError()
 
     def action(self):
-        if html.var('_delete'):
-            delname = html.var("_delete")
+        if html.request.var('_delete'):
+            delname = html.request.var("_delete")
 
             # FIXME: Raise an error if the attribute is still used
 

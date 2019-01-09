@@ -85,7 +85,7 @@ class ModeAuditLog(WatoMode):
         return self.log_path.exists()
 
     def action(self):
-        if html.var("_action") == "clear":
+        if html.request.var("_action") == "clear":
             config.user.need_permission("wato.auditlog")
             config.user.need_permission("wato.clear_auditlog")
             config.user.need_permission("wato.edit")
@@ -96,7 +96,7 @@ class ModeAuditLog(WatoMode):
         vs_options.validate_value(value, "options")
         self._options = value
 
-        if html.var("_action") == "csv":
+        if html.request.var("_action") == "csv":
             config.user.need_permission("wato.auditlog")
             return self._export_audit_log()
 

@@ -80,7 +80,7 @@ class ModeRuleEditor(WatoMode):
 
     def __init__(self):
         super(ModeRuleEditor, self).__init__()
-        self._only_host = html.var("host")
+        self._only_host = html.request.var("host")
 
     def title(self):
         if self._only_host:
@@ -175,28 +175,30 @@ class RulesetMode(WatoMode):
         self._group_name = html.get_ascii_input("group")
 
         #  Explicitly hide deprecated rulesets by default
-        if not html.has_var("search_p_ruleset_deprecated"):
-            html.set_var("search_p_ruleset_deprecated", DropdownChoice.option_id(False))
-            html.set_var("search_p_ruleset_deprecated_USE", "on")
+        if not html.request.has_var("search_p_ruleset_deprecated"):
+            html.request.set_var("search_p_ruleset_deprecated", DropdownChoice.option_id(False))
+            html.request.set_var("search_p_ruleset_deprecated_USE", "on")
 
         # Transform group argument to the "rule search arguments"
         # Keeping this for compatibility reasons for the moment
         if self._group_name:
-            html.set_var("search_p_ruleset_group", DropdownChoice.option_id(self._group_name))
-            html.set_var("search_p_ruleset_group_USE", "on")
-            html.del_var("group")
+            html.request.set_var("search_p_ruleset_group",
+                                 DropdownChoice.option_id(self._group_name))
+            html.request.set_var("search_p_ruleset_group_USE", "on")
+            html.request.del_var("group")
 
         # Transform the search argument to the "rule search" arguments
-        if html.has_var("search"):
-            html.set_var("search_p_fulltext", html.get_unicode_input("search"))
-            html.set_var("search_p_fulltext_USE", "on")
-            html.del_var("search")
+        if html.request.has_var("search"):
+            html.request.set_var("search_p_fulltext", html.get_unicode_input("search"))
+            html.request.set_var("search_p_fulltext_USE", "on")
+            html.request.del_var("search")
 
         # Transform the folder argumen (from URL or bradcrumb) to the "rule search arguments
-        if html.var("folder"):
-            html.set_var("search_p_rule_folder_0", DropdownChoice.option_id(html.var("folder")))
-            html.set_var("search_p_rule_folder_1", DropdownChoice.option_id(True))
-            html.set_var("search_p_rule_folder_USE", "on")
+        if html.request.var("folder"):
+            html.request.set_var("search_p_rule_folder_0",
+                                 DropdownChoice.option_id(html.request.var("folder")))
+            html.request.set_var("search_p_rule_folder_1", DropdownChoice.option_id(True))
+            html.request.set_var("search_p_rule_folder_USE", "on")
 
         self._search_options = ModeRuleSearch().search_options
 
@@ -441,7 +443,7 @@ class ModeEditRuleset(WatoMode):
                 check_command = check_command[9:]
                 self._name = "checkgroup_parameters:" + checks[check_command].get("group", "")
                 descr_pattern = checks[check_command]["service_description"].replace("%s", "(.*)")
-                matcher = re.search(descr_pattern, html.var("service_description"))
+                matcher = re.search(descr_pattern, html.request.var("service_description"))
                 if matcher:
                     try:
                         self._item = matcher.group(1)
@@ -458,9 +460,9 @@ class ModeEditRuleset(WatoMode):
 
         if not self._item:
             self._item = watolib.NO_ITEM
-            if html.has_var("item"):
+            if html.request.has_var("item"):
                 try:
-                    self._item = watolib.mk_eval(html.var("item"))
+                    self._item = watolib.mk_eval(html.request.var("item"))
                 except:
                     pass
 
@@ -476,17 +478,17 @@ class ModeEditRuleset(WatoMode):
     # working before. Focus this rule row again to make multiple actions with a single
     # rule easier to handle
     def _just_edited_rule_from_vars(self):
-        if not html.has_var("rule_folder") or not html.has_var("rulenr"):
+        if not html.request.has_var("rule_folder") or not html.request.has_var("rulenr"):
             self._just_edited_rule = None
             return
 
-        rule_folder = watolib.Folder.folder(html.var("rule_folder"))
+        rule_folder = watolib.Folder.folder(html.request.var("rule_folder"))
         rulesets = watolib.FolderRulesets(rule_folder)
         rulesets.load()
         ruleset = rulesets.get(self._name)
 
         try:
-            rulenr = int(html.var("rulenr"))  # rule number relative to folder
+            rulenr = int(html.request.var("rulenr"))  # rule number relative to folder
             self._just_edited_rule = ruleset.get_rule(rule_folder, rulenr)
         except (IndexError, TypeError, ValueError, KeyError):
             self._just_edited_rule = None
@@ -496,7 +498,7 @@ class ModeEditRuleset(WatoMode):
 
         if self._hostname:
             title += _(" for host %s") % self._hostname
-            if html.has_var("item") and self._rulespec.item_type:
+            if html.request.has_var("item") and self._rulespec.item_type:
                 title += _(" and %s '%s'") % (self._rulespec.item_name, self._item)
 
         return title
@@ -533,21 +535,21 @@ class ModeEditRuleset(WatoMode):
             cmk.gui.cee.plugins.wato.agent_bakery.agent_bakery_context_button(self._name)
 
     def action(self):
-        rule_folder = watolib.Folder.folder(html.var("_folder", html.var("folder")))
+        rule_folder = watolib.Folder.folder(html.request.var("_folder", html.request.var("folder")))
         rule_folder.need_permission("write")
         rulesets = watolib.FolderRulesets(rule_folder)
         rulesets.load()
         ruleset = rulesets.get(self._name)
 
         try:
-            rulenr = int(html.var("_rulenr"))  # rule number relativ to folder
+            rulenr = int(html.request.var("_rulenr"))  # rule number relativ to folder
             rule = ruleset.get_rule(rule_folder, rulenr)
         except (IndexError, TypeError, ValueError, KeyError):
             raise MKUserError("rulenr",
                               _("You are trying to edit a rule which does not exist "
                                 "anymore."))
 
-        action = html.var("_action")
+        action = html.request.var("_action")
 
         if action == "delete":
             c = wato_confirm(
@@ -572,7 +574,7 @@ class ModeEditRuleset(WatoMode):
             elif action == "top":
                 ruleset.move_rule_to_top(rule)
             elif action == "move_to":
-                ruleset.move_rule_to(rule, int(html.var("_index")))
+                ruleset.move_rule_to(rule, int(html.request.var("_index")))
             else:
                 ruleset.move_rule_to_bottom(rule)
 
@@ -724,18 +726,18 @@ class ModeEditRuleset(WatoMode):
 
     def _action_url(self, action, folder, rulenr):
         vars_ = [
-            ("mode", html.var('mode', 'edit_ruleset')),
+            ("mode", html.request.var('mode', 'edit_ruleset')),
             ("ruleset_back_mode", self._back_mode),
             ("varname", self._name),
             ("_folder", folder.path()),
             ("_rulenr", str(rulenr)),
             ("_action", action),
         ]
-        if html.var("rule_folder"):
+        if html.request.var("rule_folder"):
             vars_.append(("rule_folder", folder.path()))
-        if html.var("host"):
+        if html.request.var("host"):
             vars_.append(("host", self._hostname))
-        if html.var("item"):
+        if html.request.var("item"):
             vars_.append(("item", self._item))
 
         return make_action_link(vars_)
@@ -970,14 +972,15 @@ class ModeEditRuleset(WatoMode):
         html.close_td()
         html.open_td()
 
-        html.dropdown("rule_folder", watolib.Folder.folder_choices(), deflt=html.var('folder'))
+        html.dropdown(
+            "rule_folder", watolib.Folder.folder_choices(), deflt=html.request.var('folder'))
         html.close_td()
         html.close_tr()
         html.close_table()
         html.write_text("\n")
         html.hidden_field("varname", self._name)
         html.hidden_field("mode", "new_rule")
-        html.hidden_field('folder', html.var('folder'))
+        html.hidden_field('folder', html.request.var('folder'))
         html.end_form()
 
 
@@ -992,7 +995,7 @@ class ModeRuleSearch(WatoMode):
         return ["rulesets"]
 
     def __init__(self):
-        self.back_mode = html.var("back_mode", "rulesets")
+        self.back_mode = html.request.var("back_mode", "rulesets")
         super(ModeRuleSearch, self).__init__()
 
     def title(self):
@@ -1017,7 +1020,7 @@ class ModeRuleSearch(WatoMode):
         html.end_form()
 
     def _from_vars(self):
-        if html.var("_reset_search"):
+        if html.request.var("_reset_search"):
             html.request.del_vars("search_")
             self.search_options = {}
             return
@@ -1176,7 +1179,7 @@ class ModeRuleSearch(WatoMode):
 
 class EditRuleMode(WatoMode):
     def _from_vars(self):
-        self._name = html.var("varname")
+        self._name = html.request.var("varname")
 
         if not may_edit_ruleset(self._name):
             raise MKAuthException(_("You are not permitted to access this ruleset."))
@@ -1186,7 +1189,7 @@ class EditRuleMode(WatoMode):
         except KeyError:
             raise MKUserError("varname", _("The ruleset \"%s\" does not exist.") % self._name)
 
-        self._back_mode = html.var('back_mode', 'edit_ruleset')
+        self._back_mode = html.request.var('back_mode', 'edit_ruleset')
 
         self._set_folder()
 
@@ -1197,18 +1200,18 @@ class EditRuleMode(WatoMode):
         self._set_rule()
 
     def _set_folder(self):
-        self._folder = watolib.Folder.folder(html.var("rule_folder"))
+        self._folder = watolib.Folder.folder(html.request.var("rule_folder"))
 
     def _set_rule(self):
-        if html.var("rulenr"):
+        if html.request.var("rulenr"):
             try:
-                rulenr = int(html.var("rulenr"))
+                rulenr = int(html.request.var("rulenr"))
                 self._rule = self._ruleset.get_rule(self._folder, rulenr)
             except (KeyError, TypeError, ValueError, IndexError):
                 raise MKUserError(
                     "rulenr", _("You are trying to edit a rule which does "
                                 "not exist anymore."))
-        elif html.var("_export_rule"):
+        elif html.request.var("_export_rule"):
             self._rule = watolib.Rule(self._folder, self._ruleset)
             self._update_rule_from_html_vars()
 
@@ -1223,15 +1226,15 @@ class EditRuleMode(WatoMode):
             var_list = [
                 ("mode", "edit_ruleset"),
                 ("varname", self._name),
-                ("host", html.var("host", "")),
+                ("host", html.request.var("host", "")),
             ]
-            if html.var("item"):
-                var_list.append(("item", html.var("item")))
+            if html.request.var("item"):
+                var_list.append(("item", html.request.var("item")))
             backurl = watolib.folder_preserving_link(var_list)
 
         else:
             backurl = watolib.folder_preserving_link([('mode', self._back_mode),
-                                                      ("host", html.var("host", ""))])
+                                                      ("host", html.request.var("host", ""))])
 
         html.context_button(_("Abort"), backurl, "abort")
 
@@ -1242,12 +1245,12 @@ class EditRuleMode(WatoMode):
         self._update_rule_from_html_vars()
 
         # Check permissions on folders
-        new_rule_folder = watolib.Folder.folder(html.var("new_rule_folder"))
+        new_rule_folder = watolib.Folder.folder(html.request.var("new_rule_folder"))
         if not isinstance(self, ModeNewRule):
             self._folder.need_permission("write")
         new_rule_folder.need_permission("write")
 
-        if html.var("_export_rule"):
+        if html.request.var("_export_rule"):
             return "edit_rule"
 
         if new_rule_folder == self._folder:
@@ -1294,7 +1297,7 @@ class EditRuleMode(WatoMode):
             value = self._ruleset.valuespec().from_html_vars("ve")
             self._ruleset.valuespec().validate_value(value, "ve")
         else:
-            value = html.var("value") == "yes"
+            value = html.request.var("value") == "yes"
         self._rule.value = value
 
     @abc.abstractmethod
@@ -1365,7 +1368,7 @@ class EditRuleMode(WatoMode):
         return tag_list, host_list, item_list
 
     def page(self):
-        if html.var("_export_rule"):
+        if html.request.var("_export_rule"):
             self._show_rule_representation()
 
         else:
@@ -1626,30 +1629,30 @@ class ModeNewRule(EditRuleMode):
         return _("New rule: %s") % self._rulespec.title
 
     def _set_folder(self):
-        if html.has_var("_new_rule"):
+        if html.request.has_var("_new_rule"):
             # Start creating new rule in the choosen folder
-            self._folder = watolib.Folder.folder(html.var("rule_folder"))
+            self._folder = watolib.Folder.folder(html.request.var("rule_folder"))
 
-        elif html.has_var("_new_host_rule"):
+        elif html.request.has_var("_new_host_rule"):
             # Start creating new rule for a specific host
             self._folder = watolib.Folder.current()
 
         else:
             # Submitting the creation dialog
-            self._folder = watolib.Folder.folder(html.var("new_rule_folder"))
+            self._folder = watolib.Folder.folder(html.request.var("new_rule_folder"))
 
     def _set_rule(self):
         host_list = watolib.ALL_HOSTS
         item_list = [""]
 
-        if html.has_var("_new_host_rule"):
-            hostname = html.var("host")
+        if html.request.has_var("_new_host_rule"):
+            hostname = html.request.var("host")
             if hostname:
                 host_list = [hostname]
 
             if self._rulespec.item_type:
                 item = watolib.mk_eval(
-                    html.var("item")) if html.has_var("item") else watolib.NO_ITEM
+                    html.request.var("item")) if html.request.has_var("item") else watolib.NO_ITEM
                 if item != watolib.NO_ITEM:
                     item_list = ["%s$" % escape_regex_chars(item)]
 

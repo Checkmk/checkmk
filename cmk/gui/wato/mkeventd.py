@@ -1096,18 +1096,18 @@ class EventConsoleMode(WatoMode):
         html.end_form()
         html.br()
 
-        if html.var("simulate") or html.var("_generate"):
+        if html.request.var("simulate") or html.request.var("_generate"):
             return vs_mkeventd_event.from_html_vars("event")
         return None
 
     def _event_simulation_action(self):
         # Validation of input for rule simulation (no further action here)
-        if html.var("simulate") or html.var("_generate"):
+        if html.request.var("simulate") or html.request.var("_generate"):
             event = vs_mkeventd_event.from_html_vars("event")
             vs_mkeventd_event.validate_value(event, "event")
             config.user.save_file("simulated_event", event)
 
-        if html.has_var("_generate") and html.check_transaction():
+        if html.request.has_var("_generate") and html.check_transaction():
             if not event.get("application"):
                 raise MKUserError("event_p_application", _("Please specify an application name"))
             if not event.get("host"):
@@ -1187,8 +1187,8 @@ class ModeEventConsoleRulePacks(EventConsoleMode):
             return action_outcome
 
         # Deletion of rule packs
-        if html.has_var("_delete"):
-            nr = int(html.var("_delete"))
+        if html.request.has_var("_delete"):
+            nr = int(html.request.var("_delete"))
             rule_pack = self._rule_packs[nr]
             c = wato_confirm(
                 _("Confirm rule pack deletion"),
@@ -1202,7 +1202,7 @@ class ModeEventConsoleRulePacks(EventConsoleMode):
                 return ""
 
         # Reset all rule hit counteres
-        elif html.has_var("_reset_counters"):
+        elif html.request.has_var("_reset_counters"):
             c = wato_confirm(
                 _("Confirm counter reset"),
                 _("Do you really want to reset all rule hit counters in <b>all rule packs</b> to zero?"
@@ -1214,7 +1214,7 @@ class ModeEventConsoleRulePacks(EventConsoleMode):
                 return ""
 
         # Copy rules from master
-        elif html.has_var("_copy_rules"):
+        elif html.request.has_var("_copy_rules"):
             c = wato_confirm(
                 _("Confirm copying rules"),
                 _("Do you really want to copy all event rules from the master and "
@@ -1230,7 +1230,7 @@ class ModeEventConsoleRulePacks(EventConsoleMode):
                 return ""
 
         # Move rule packages
-        elif html.has_var("_move"):
+        elif html.request.has_var("_move"):
             from_pos = html.get_integer_input("_move")
             to_pos = html.get_integer_input("_index")
             rule_pack = self._rule_packs[from_pos]
@@ -1241,7 +1241,7 @@ class ModeEventConsoleRulePacks(EventConsoleMode):
                              _("Changed position of rule pack %s") % rule_pack["id"])
 
         # Export rule pack
-        elif html.has_var("_export"):
+        elif html.request.has_var("_export"):
             nr = html.get_integer_input("_export")
             try:
                 rule_pack = self._rule_packs[nr]
@@ -1255,7 +1255,7 @@ class ModeEventConsoleRulePacks(EventConsoleMode):
                              _("Made rule pack %s available for MKP export") % rule_pack["id"])
 
         # Make rule pack non-exportable
-        elif html.has_var("_dissolve"):
+        elif html.request.has_var("_dissolve"):
             nr = html.get_integer_input("_dissolve")
             try:
                 self._rule_packs[nr] = self._rule_packs[nr].rule_pack
@@ -1267,7 +1267,7 @@ class ModeEventConsoleRulePacks(EventConsoleMode):
                              _("Removed rule_pack %s from MKP export") % self._rule_packs[nr]["id"])
 
         # Reset to rule pack provided via MKP
-        elif html.has_var("_reset"):
+        elif html.request.has_var("_reset"):
             nr = html.get_integer_input("_reset")
             try:
                 self._rule_packs[nr] = ec.MkpRulePackProxy(self._rule_packs[nr]['id'])
@@ -1280,7 +1280,7 @@ class ModeEventConsoleRulePacks(EventConsoleMode):
                 self._rule_packs[nr].id_)
 
         # Synchronize modified rule pack with MKP
-        elif html.has_var("_synchronize"):
+        elif html.request.has_var("_synchronize"):
             nr = html.get_integer_input("_synchronize")
             export_mkp_rule_pack(self._rule_packs[nr])
             try:
@@ -1499,7 +1499,7 @@ class ModeEventConsoleRules(EventConsoleMode):
         return ["mkeventd.edit"]
 
     def _from_vars(self):
-        self._rule_pack_id = html.var("rule_pack")
+        self._rule_pack_id = html.request.var("rule_pack")
         self._rule_pack_nr, self._rule_pack = self._rule_pack_with_id(self._rule_pack_id)
         self._rules = self._rule_pack["rules"]
 
@@ -1523,12 +1523,13 @@ class ModeEventConsoleRules(EventConsoleMode):
         id_to_mkp = self._get_rule_pack_to_mkp_map()
         type_ = ec.RulePackType.type_of(self._rule_pack, id_to_mkp)
 
-        if html.var("_move_to"):
+        if html.request.var("_move_to"):
             if html.check_transaction():
                 for move_nr, rule in enumerate(self._rules):
                     move_var = "_move_to_%s" % rule["id"]
-                    if html.var(move_var):
-                        other_pack_nr, other_pack = self._rule_pack_with_id(html.var(move_var))
+                    if html.request.var(move_var):
+                        other_pack_nr, other_pack = self._rule_pack_with_id(
+                            html.request.var(move_var))
 
                         other_type_ = ec.RulePackType.type_of(other_pack, id_to_mkp)
                         if other_type_ == ec.RulePackType.unmodified_mkp:
@@ -1556,8 +1557,8 @@ class ModeEventConsoleRules(EventConsoleMode):
         if action_outcome:
             return action_outcome
 
-        if html.has_var("_delete"):
-            nr = int(html.var("_delete"))
+        if html.request.has_var("_delete"):
+            nr = int(html.request.var("_delete"))
             rule = self._rules[nr]
             c = wato_confirm(
                 _("Confirm rule deletion"),
@@ -1580,7 +1581,7 @@ class ModeEventConsoleRules(EventConsoleMode):
                 return
 
         if html.check_transaction():
-            if html.has_var("_move"):
+            if html.request.has_var("_move"):
                 from_pos = html.get_integer_input("_move")
                 to_pos = html.get_integer_input("_index")
 
@@ -1880,13 +1881,14 @@ class ModeEventConsoleEditRule(EventConsoleMode):
         return ["mkeventd.edit"]
 
     def _from_vars(self):
-        if html.has_var("rule_pack"):
-            self._rule_pack_nr, self._rule_pack = self._rule_pack_with_id(html.var("rule_pack"))
+        if html.request.has_var("rule_pack"):
+            self._rule_pack_nr, self._rule_pack = self._rule_pack_with_id(
+                html.request.var("rule_pack"))
 
         else:
             # In links from multisite views the rule pack is not known.
             # We just know the rule id and need to find the pack ourselves.
-            rule_id = html.var("rule_id")
+            rule_id = html.request.var("rule_id")
             if rule_id is None:
                 raise MKUserError("rule_id", _("The rule you are trying to edit does not exist."))
 
@@ -1895,8 +1897,8 @@ class ModeEventConsoleEditRule(EventConsoleMode):
                 for rnr, rule in enumerate(pack["rules"]):
                     if rule_id == rule["id"]:
                         self._rule_pack_nr, self._rule_pack = nr, pack
-                        html.set_var("edit", str(rnr))
-                        html.set_var("rule_pack", pack["id"])
+                        html.request.set_var("edit", str(rnr))
+                        html.request.set_var("rule_pack", pack["id"])
                         break
 
             if not self._rule_pack:
@@ -1904,12 +1906,12 @@ class ModeEventConsoleEditRule(EventConsoleMode):
 
         self._rules = self._rule_pack["rules"]
 
-        self._edit_nr = int(html.var("edit", -1))  # missing -> new rule
-        self._clone_nr = int(html.var("clone", -1))  # Only needed in 'new' mode
+        self._edit_nr = int(html.request.var("edit", -1))  # missing -> new rule
+        self._clone_nr = int(html.request.var("clone", -1))  # Only needed in 'new' mode
         self._new = self._edit_nr < 0
 
         if self._new:
-            if self._clone_nr >= 0 and not html.var("_clear"):
+            if self._clone_nr >= 0 and not html.request.var("_clear"):
                 self._rule = {}
                 self._rule.update(self._rules[self._clone_nr])
             else:
@@ -2059,7 +2061,7 @@ class ModeEventConsoleStatus(EventConsoleMode):
         if not config.user.may("mkeventd.switchmode"):
             return
 
-        if html.has_var("_switch_sync"):
+        if html.request.has_var("_switch_sync"):
             new_mode = "sync"
         else:
             new_mode = "takeover"
@@ -2159,8 +2161,8 @@ class ModeEventConsoleSettings(EventConsoleMode, GlobalSettingsMode):
 
     # TODO: Consolidate with ModeEditGlobals.action()
     def action(self):
-        varname = html.var("_varname")
-        action = html.var("_action")
+        varname = html.request.var("_varname")
+        action = html.request.var("_action")
         if not varname:
             return
 
@@ -2287,8 +2289,8 @@ class ModeEventConsoleMIBs(EventConsoleMode):
         self._config_button()
 
     def action(self):
-        if html.has_var("_delete"):
-            filename = html.var("_delete")
+        if html.request.has_var("_delete"):
+            filename = html.request.var("_delete")
             mibs = self._load_snmp_mibs(cmk.gui.mkeventd.mib_upload_dir)
             if filename in mibs:
                 c = wato_confirm(
@@ -2313,7 +2315,7 @@ class ModeEventConsoleMIBs(EventConsoleMode):
                     else:
                         raise MKUserError("_upload_mib", "%s" % e)
 
-        elif html.var("_bulk_delete_custom_mibs"):
+        elif html.request.var("_bulk_delete_custom_mibs"):
             return self._bulk_delete_custom_mibs_after_confirm()
 
     def _upload_mib(self, filename, mimetype, content):

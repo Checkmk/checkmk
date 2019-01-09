@@ -184,9 +184,9 @@ div.snapin table.master_control td img.iconbutton {
         if not html.check_transaction():
             return
 
-        site = html.var("site")
-        column = html.var("switch")
-        state = int(html.var("state"))
+        site = html.request.var("site")
+        column = html.request.var("switch")
+        state = int(html.request.var("state"))
         commands = {
             ("enable_notifications", 1): "ENABLE_NOTIFICATIONS",
             ("enable_notifications", 0): "DISABLE_NOTIFICATIONS",

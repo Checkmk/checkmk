@@ -50,9 +50,9 @@ from cmk.gui.exceptions import MKGeneralException, MKUserError, MKAuthException
 
 @cmk.gui.pages.register("logwatch")
 def page_show():
-    site = html.var("site")  # optional site hint
-    host_name = html.var("host", "")
-    file_name = html.var("file", "")
+    site = html.request.var("site")  # optional site hint
+    host_name = html.request.var("host", "")
+    file_name = html.request.var("file", "")
 
     # Fix problem when URL is missing certain illegal characters
     try:
@@ -65,7 +65,7 @@ def page_show():
     # a) all logs on all hosts
     # b) all logs on one host_name
     # c) one log on one host_name
-    if html.has_var('_ack') and not html.var("_do_actions") == _("No"):
+    if html.request.has_var('_ack') and not html.request.var("_do_actions") == _("No"):
         sites.live().set_auth_domain('action')
         do_log_ack(site, host_name, file_name)
         return
@@ -90,7 +90,7 @@ def show_log_list():
 
     html.begin_context_buttons()
     html.context_button(
-        _("Analyze Patterns"), "%swato.py?mode=pattern_editor" % html.var('master_url', ''),
+        _("Analyze Patterns"), "%swato.py?mode=pattern_editor" % html.request.var('master_url', ''),
         'analyze')
     ack_button()
     html.end_context_buttons()
@@ -189,7 +189,7 @@ def show_file(site, host_name, file_name):
     button_all_logfiles()
     html.context_button(_("Analyze patterns"), analyse_url(site, host_name, file_name), 'analyze')
 
-    if html.var('_hidecontext', 'no') == 'yes':
+    if html.request.var('_hidecontext', 'no') == 'yes':
         hide_context_label = _('Show Context')
         hide_context_param = 'no'
         hide = True
@@ -314,7 +314,7 @@ def do_log_ack(site, host_name, file_name):
         html.context_button(_("Back to Logfile"), html.makeuri([]))
     html.end_context_buttons()
 
-    ack = html.var('_ack')
+    ack = html.request.var('_ack')
     if not html.confirm(
             _("Do you really want to acknowledge %s by <b>deleting</b> all stored messages?") %
             ack_msg):

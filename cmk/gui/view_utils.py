@@ -85,8 +85,8 @@ def get_host_list_links(site, hosts):
             ("host", host),
         ]
 
-        if html.var("display_options"):
-            args.append(("display_options", html.var("display_options")))
+        if html.request.var("display_options"):
+            args.append(("display_options", html.request.var("display_options")))
 
         url = html.makeuri_contextless(args, filename="view.py")
         link = unicode(html.render_a(host, href=url))

@@ -166,7 +166,7 @@ class QuicksearchSnapin(SidebarSnapin):
         }
 
     def _ajax_search(self):
-        q = html.var_utf8('q').strip()
+        q = html.request.var_utf8('q').strip()
         if not q:
             return
 
@@ -181,7 +181,7 @@ class QuicksearchSnapin(SidebarSnapin):
             html.show_error(traceback.format_exc())
 
     def _page_search_open(self):
-        q = html.var('q').strip()
+        q = html.request.var('q').strip()
         if not q:
             return
 

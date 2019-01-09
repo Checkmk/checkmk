@@ -58,8 +58,8 @@ class ModePatternEditor(WatoMode):
         self._vs_host().validate_value(self._hostname, "host")
 
         # TODO: validate all fields
-        self._item = html.var('file', '')
-        self._match_txt = html.var('match', '')
+        self._item = html.request.var('file', '')
+        self._match_txt = html.request.var('match', '')
 
         self._host = watolib.Folder.current().host(self._hostname)
 
@@ -119,7 +119,7 @@ class ModePatternEditor(WatoMode):
         html.text_input('match', cssclass='match', size=100)
         forms.end()
         html.button('_try', _('Try out'))
-        html.del_var('folder')  # Never hand over the folder here
+        html.request.del_var('folder')  # Never hand over the folder here
         html.hidden_fields()
         html.end_form()
 

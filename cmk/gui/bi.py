@@ -2602,7 +2602,7 @@ def ajax_set_assumption():
         key = (site, host, service)
     else:
         key = (site, host)
-    state = html.var("state")
+    state = html.request.var("state")
     load_assumptions()
     if state == 'none':
         del g_assumptions[key]
@@ -2621,7 +2621,7 @@ def ajax_save_treestate():
 
     if saved_ex_level != current_ex_level:
         html.set_tree_states('bi', {})
-    html.set_tree_state('bi', path, html.var("state") == "open")
+    html.set_tree_state('bi', path, html.request.var("state") == "open")
     html.save_tree_states()
 
     save_ex_level(current_ex_level)
@@ -2630,11 +2630,11 @@ def ajax_save_treestate():
 @cmk.gui.pages.register("bi_render_tree")
 def ajax_render_tree():
     aggr_group = html.get_unicode_input("group")
-    reqhosts = [tuple(sitehost.split('#')) for sitehost in html.var("reqhosts").split(',')]
+    reqhosts = [tuple(sitehost.split('#')) for sitehost in html.request.var("reqhosts").split(',')]
     aggr_title = html.get_unicode_input("title")
-    omit_root = bool(html.var("omit_root"))
-    boxes = bool(html.var("boxes"))
-    only_problems = bool(html.var("only_problems"))
+    omit_root = bool(html.request.var("omit_root"))
+    boxes = bool(html.request.var("boxes"))
+    only_problems = bool(html.request.var("only_problems"))
 
     # Make sure that BI aggregates are available
     if config.bi_precompile_on_demand:
@@ -2689,7 +2689,7 @@ def compute_output_message(effective_state, rule):
 
 
 def render_tree_json(row):
-    expansion_level = int(html.var("expansion_level", 999))
+    expansion_level = int(html.request.var("expansion_level", 999))
 
     saved_expansion_level = load_ex_level()
     treestate = html.get_tree_states('bi')

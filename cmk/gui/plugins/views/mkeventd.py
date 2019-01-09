@@ -385,12 +385,12 @@ if config.mkeventd_enabled:
 
             # Found no cleaner way to get the view. Sorry.
             # TODO: This needs to be cleaned up with the new view implementation.
-            if html.has_var("name") and html.has_var("id"):
-                ident = int(html.var("id"))
+            if html.request.has_var("name") and html.request.has_var("id"):
+                ident = int(html.request.var("id"))
 
                 import cmk.gui.dashboard as dashboard
                 dashboard.load_dashboards()
-                view = dashboard.get_dashlet(html.var("name"), ident)
+                view = dashboard.get_dashlet(html.request.var("name"), ident)
 
                 # These actions are not performed within the dashlet. Assume the title url still
                 # links to the source view where the action can be performed.
@@ -404,7 +404,7 @@ if config.mkeventd_enabled:
                 # Regular view
                 # TODO: Find a better place for permitted_views that is importable on module level
                 from cmk.gui.views import permitted_views
-                view = permitted_views()[(html.var("view_name"))]
+                view = permitted_views()[(html.request.var("view_name"))]
                 filename = None
 
             urlvars += [
@@ -602,7 +602,7 @@ if config.mkeventd_enabled:
         html.button('_mkeventd_update', _("Update"))
 
     def command_mkeventd_update(cmdtag, spec, row):
-        if html.var('_mkeventd_update'):
+        if html.request.var('_mkeventd_update'):
             if config.user.may("mkeventd.update_comment"):
                 comment = html.get_unicode_input("_mkeventd_comment").strip().replace(";", ",")
             else:
@@ -639,7 +639,7 @@ if config.mkeventd_enabled:
         MonitoringState().render_input("_mkeventd_state", 2)
 
     def command_mkeventd_changestate(cmdtag, spec, row):
-        if html.var('_mkeventd_changestate'):
+        if html.request.var('_mkeventd_changestate'):
             state = MonitoringState().from_html_vars("_mkeventd_state")
             return "CHANGESTATE;%s;%s;%s" % (row["event_id"], config.user.id,
                                              state), _("change the state")
@@ -669,7 +669,7 @@ if config.mkeventd_enabled:
 
     def command_mkeventd_action(cmdtag, spec, row):
         for action_id, title in mkeventd.action_choices(omit_hidden=True):
-            if html.var("_action_" + action_id):
+            if html.request.var("_action_" + action_id):
                 return "ACTION;%s;%s;%s" % (row["event_id"], config.user.id, action_id), (
                     _("execute the action \"%s\"") % title)
 
@@ -691,7 +691,7 @@ if config.mkeventd_enabled:
     )
 
     def command_mkeventd_delete(cmdtag, spec, row):
-        if html.var("_delete_event"):
+        if html.request.var("_delete_event"):
             command = "DELETE;%s;%s" % (row["event_id"], config.user.id)
             title = _("<b>archive</b>")
             return command, title
@@ -713,7 +713,7 @@ if config.mkeventd_enabled:
     )
 
     def command_archive_events_of_hosts(cmdtag, spec, row):
-        if html.var("_archive_events_of_hosts"):
+        if html.request.var("_archive_events_of_hosts"):
             if cmdtag == "HOST":
                 tag = "host"
             elif cmdtag == "SVC":

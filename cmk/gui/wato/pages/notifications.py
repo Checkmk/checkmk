@@ -265,7 +265,7 @@ class NotificationsMode(EventsMode):
                         "notification_plugin.%s" % rule['notify_plugin'][0])
 
                     if show_buttons and actions_allowed:
-                        anavar = html.var("analyse", "")
+                        anavar = html.request.var("analyse", "")
                         delete_url = make_action_link([
                             ("mode", listmode),
                             ("user", userid),
@@ -437,24 +437,24 @@ class ModeNotifications(NotificationsMode):
             html.context_button(_("Show Bulks"), html.makeactionuri([("_show_bulks", "1")]), "bulk")
 
     def action(self):
-        if html.has_var("_show_user"):
+        if html.request.has_var("_show_user"):
             if html.check_transaction():
-                self._show_user_rules = bool(html.var("_show_user"))
+                self._show_user_rules = bool(html.request.var("_show_user"))
                 self._save_notification_display_options()
 
-        elif html.has_var("_show_backlog"):
+        elif html.request.has_var("_show_backlog"):
             if html.check_transaction():
-                self._show_backlog = bool(html.var("_show_backlog"))
+                self._show_backlog = bool(html.request.var("_show_backlog"))
                 self._save_notification_display_options()
 
-        elif html.has_var("_show_bulks"):
+        elif html.request.has_var("_show_bulks"):
             if html.check_transaction():
-                self._show_bulks = bool(html.var("_show_bulks"))
+                self._show_bulks = bool(html.request.var("_show_bulks"))
                 self._save_notification_display_options()
 
-        elif html.has_var("_replay"):
+        elif html.request.has_var("_replay"):
             if html.check_transaction():
-                nr = int(html.var("_replay"))
+                nr = int(html.request.var("_replay"))
                 watolib.check_mk_local_automation("notification-replay", [str(nr)], None)
                 return None, _("Replayed notifiation number %d") % (nr + 1)
 
@@ -587,7 +587,7 @@ class ModeNotifications(NotificationsMode):
                 html.icon_button(replay_url, _("Replay this notification, send it again!"),
                                  "replay")
 
-                if html.var("analyse") and nr == int(html.var("analyse")):
+                if html.request.var("analyse") and nr == int(html.request.var("analyse")):
                     html.icon(_("You are analysing this notification"), "rulematch")
 
                 table.cell(_("Nr."), nr + 1, css="number")
@@ -668,8 +668,8 @@ class ModeNotifications(NotificationsMode):
     # TODO: Refactor this
     def _show_rules(self):
         # Do analysis
-        if html.var("analyse"):
-            nr = int(html.var("analyse"))
+        if html.request.var("analyse"):
+            nr = int(html.request.var("analyse"))
             analyse = watolib.check_mk_local_automation("notification-analyse", [str(nr)], None)
         else:
             analyse = False
@@ -726,7 +726,7 @@ class UserNotificationsMode(NotificationsMode):
         self._start_async_repl = False
 
     def _from_vars(self):
-        self._users = userdb.load_users(lock=html.is_transaction() or html.has_var("_move"))
+        self._users = userdb.load_users(lock=html.is_transaction() or html.request.has_var("_move"))
 
         try:
             user = self._users[self._user_id()]
@@ -755,8 +755,8 @@ class UserNotificationsMode(NotificationsMode):
                                             ("user", self._user_id())]), "new")
 
     def action(self):
-        if html.has_var("_delete"):
-            nr = int(html.var("_delete"))
+        if html.request.has_var("_delete"):
+            nr = int(html.request.var("_delete"))
             rule = self._rules[nr]
             c = wato_confirm(
                 _("Confirm notification rule deletion"),
@@ -774,7 +774,7 @@ class UserNotificationsMode(NotificationsMode):
             else:
                 return
 
-        elif html.has_var("_move"):
+        elif html.request.has_var("_move"):
             if html.check_transaction():
                 from_pos = html.get_integer_input("_move")
                 to_pos = html.get_integer_input("_index")
@@ -873,7 +873,7 @@ class EditNotificationRuleMode(NotificationsMode):
             self._rules = watolib.load_notification_rules(lock=html.is_transaction())
 
         if self._new:
-            if self._clone_nr >= 0 and not html.var("_clear"):
+            if self._clone_nr >= 0 and not html.request.var("_clear"):
                 self._rule = {}
                 try:
                     self._rule.update(self._rules[self._clone_nr])

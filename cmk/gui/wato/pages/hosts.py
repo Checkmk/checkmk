@@ -236,7 +236,7 @@ class ModeEditHost(HostMode):
             _("Update DNS Cache"), html.makeactionuri([("_update_dns_cache", "1")]), "update")
 
     def action(self):
-        if html.var("_update_dns_cache"):
+        if html.request.var("_update_dns_cache"):
             if html.check_transaction():
                 config.user.need_permission("wato.update_dns_cache")
                 num_updated, failed_hosts = watolib.check_mk_automation(
@@ -249,7 +249,7 @@ class ModeEditHost(HostMode):
             else:
                 return None
 
-        if html.var("delete"):  # Delete this host
+        if html.request.var("delete"):  # Delete this host
             if not html.transaction_valid():
                 return "folder"
             return delete_host_after_confirm(self._host.name())
@@ -259,10 +259,10 @@ class ModeEditHost(HostMode):
             watolib.Host.host(self._host.name()).edit(attributes, self._get_cluster_nodes())
             self._host = watolib.Folder.current().host(self._host.name())
 
-        if html.var("services"):
+        if html.request.var("services"):
             return "inventory"
-        elif html.var("diag_host"):
-            html.set_var("_try", "1")
+        elif html.request.var("diag_host"):
+            html.request.set_var("_try", "1")
             return "diag_host"
         return "folder"
 
@@ -288,7 +288,7 @@ class CreateHostMode(HostMode):
         raise NotImplementedError()
 
     def _from_vars(self):
-        if html.var("clone") and self._init_host():
+        if html.request.var("clone") and self._init_host():
             self._mode = "clone"
         else:
             self._mode = "new"
@@ -315,7 +315,7 @@ class CreateHostMode(HostMode):
         attributes = watolib.collect_attributes(self._host_type_name())
         cluster_nodes = self._get_cluster_nodes()
 
-        hostname = html.var("host")
+        hostname = html.request.var("host")
         Hostname().validate_value(hostname, "host")
 
         if html.check_transaction():
@@ -331,10 +331,10 @@ class CreateHostMode(HostMode):
         else:
             create_msg = None
 
-        if html.var("services"):
+        if html.request.var("services"):
             return "inventory"
-        elif html.var("diag_host"):
-            html.set_var("_try", "1")
+        elif html.request.var("diag_host"):
+            html.request.set_var("_try", "1")
             return "diag_host", create_msg
         return "folder", create_msg
 
@@ -363,7 +363,7 @@ class ModeCreateHost(CreateHostMode):
     def _init_new_host_object(cls):
         return watolib.Host(
             folder=watolib.Folder.current(),
-            host_name=html.var("host"),
+            host_name=html.request.var("host"),
             attributes={},
             cluster_nodes=None)
 
@@ -399,7 +399,7 @@ class ModeCreateCluster(CreateHostMode):
     def _init_new_host_object(cls):
         return watolib.Host(
             folder=watolib.Folder.current(),
-            host_name=html.var("host"),
+            host_name=html.request.var("host"),
             attributes={},
             cluster_nodes=[])
 

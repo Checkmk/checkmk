@@ -371,7 +371,7 @@ class PageRenderer(Base):
 
     @classmethod
     def requested_page(cls):
-        name = html.var(cls.ident_attr())
+        name = html.request.var(cls.ident_attr())
         cls.load()
         page = cls.find_page(name)
         if not page:
@@ -844,9 +844,9 @@ class Overridable(Base):
         html.end_context_buttons()
 
         # Deletion
-        delname = html.var("_delete")
+        delname = html.request.var("_delete")
         if delname and html.transaction_valid():
-            owner = html.var('_owner', config.user.id)
+            owner = html.request.var('_owner', config.user.id)
 
             try:
                 instance = cls.instance((owner, delname))
@@ -877,12 +877,12 @@ class Overridable(Base):
                 html.user_error(e)
 
         # Bulk delete
-        if html.var("_bulk_delete_my") and html.transaction_valid():
+        if html.request.var("_bulk_delete_my") and html.transaction_valid():
             if cls._bulk_delete_after_confirm("my") is False:
                 html.footer()
                 return
 
-        elif html.var("_bulk_delete_foreign") and html.transaction_valid():
+        elif html.request.var("_bulk_delete_foreign") and html.transaction_valid():
             if cls._bulk_delete_after_confirm("foreign") is False:
                 html.footer()
                 return
@@ -1031,7 +1031,7 @@ class Overridable(Base):
         # "create" -> create completely new page
         # "clone"  -> like new, but prefill form with values from existing page
         # "edit"   -> edit existing page
-        mode = html.var('mode', 'edit')
+        mode = html.request.var('mode', 'edit')
         if mode == "create":
             title = cls.phrase("create")
             page_dict = {
@@ -1040,11 +1040,11 @@ class Overridable(Base):
             }
         else:
             # Load existing page. visual from disk - and create a copy if 'load_user' is set
-            page_name = html.var("load_name")
+            page_name = html.request.var("load_name")
             if mode == "edit":
                 title = cls.phrase("edit")
 
-                owner_user_id = html.var("owner", config.user.id)
+                owner_user_id = html.request.var("owner", config.user.id)
                 if owner_user_id == config.user.id:
                     page = cls.find_my_page(page_name)
                 else:
@@ -1058,7 +1058,7 @@ class Overridable(Base):
                 cls.remove_instance((owner_user_id, page_name))  # will be added later again
             else:  # clone
                 title = cls.phrase("clone")
-                load_user = html.var_utf8("load_user")  # FIXME: Change varname to "owner"
+                load_user = html.request.var_utf8("load_user")  # FIXME: Change varname to "owner"
 
                 try:
                     page = cls.instance((load_user, page_name))
@@ -1083,7 +1083,7 @@ class Overridable(Base):
         )
 
         def validate(page_dict):
-            owner_user_id = html.var("owner", config.user.id)
+            owner_user_id = html.request.var("owner", config.user.id)
             page_name = page_dict["name"]
             if owner_user_id == config.user.id:
                 page = cls.find_my_page(page_name)
@@ -1103,7 +1103,7 @@ class Overridable(Base):
                 for key, value in page_dict.items():
                     new_page_dict.setdefault(key, value)
 
-            owner = html.var("owner", config.user.id)
+            owner = html.request.var("owner", config.user.id)
             new_page_dict["owner"] = owner
             new_page = cls(new_page_dict)
 
@@ -1225,10 +1225,10 @@ class OverridableContainer(Overridable, Container):
     # class by the URL variable page_type.
     @classmethod
     def ajax_add_element(cls):
-        page_type_name = html.var("page_type")
-        page_name = html.var("page_name")
-        element_type = html.var("element_type")
-        create_info = json.loads(html.var("create_info"))
+        page_type_name = html.request.var("page_type")
+        page_name = html.request.var("page_name")
+        element_type = html.request.var("element_type")
+        create_info = json.loads(html.request.var("create_info"))
 
         page_ty = page_types[page_type_name]
         target_page, need_sidebar_reload = page_ty.add_element_via_popup(

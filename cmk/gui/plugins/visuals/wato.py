@@ -91,7 +91,7 @@ class FilterWatoFile(Filter):
 
     def filter(self, infoname):
         self.check_wato_data_update()
-        current = html.var(self.name)
+        current = html.request.var(self.name)
         if current:
             path_regex = "^/wato/%s" % current.replace("\n", "")  # prevent insertions attack
             if current.endswith("/"):  # Hosts directly in this folder
@@ -138,7 +138,7 @@ class FilterWatoFile(Filter):
         # The call below needs to use some sort of indicator wether the cache needs
         # to be renewed or not.
         self.check_wato_data_update()
-        current = html.var(self.name)
+        current = html.request.var(self.name)
         if current and current != "/":
             return self.path_to_tree.get(current)
 

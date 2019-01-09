@@ -78,9 +78,9 @@ def page_crashed(what):
         return
 
     if what == "check":
-        site = html.var("site")
-        host = html.var("host")
-        service = html.var("service")
+        site = html.request.var("site")
+        host = html.request.var("host")
+        service = html.request.var("service")
 
         tardata = get_crash_report_archive_as_string(site, host, service)
     else:
@@ -97,7 +97,7 @@ def page_crashed(what):
 
     show_context_buttons(what, tardata)
 
-    if html.has_var("_report") and html.check_transaction():
+    if html.request.has_var("_report") and html.check_transaction():
         details = handle_report_form(tardata, what)
     else:
         details = {}
@@ -145,9 +145,9 @@ def show_crash_report_details(info):
 def show_context_buttons(what, tardata):
     html.begin_context_buttons()
     if what == "check":
-        site = html.var("site")
-        host = html.var("host")
-        service = html.var("service")
+        site = html.request.var("site")
+        host = html.request.var("host")
+        service = html.request.var("service")
 
         host_url = html.makeuri([("view_name", "hoststatus"), ("host", host), ("site", site)],
                                 filename="view.py")
@@ -512,9 +512,9 @@ def create_gui_crash_report(what):
 
 @cmk.gui.pages.register("download_crash_report")
 def page_download_crash_report():
-    site = html.var("site")
-    host = html.var("host")
-    service = html.var("service")
+    site = html.request.var("site")
+    host = html.request.var("host")
+    service = html.request.var("service")
 
     filename = "Check_MK_Crash_%s_%s_%s.tar.gz" % \
         (html.urlencode(host), html.urlencode(service), time.strftime("%Y-%m-%d_%H-%M-%S"))

@@ -80,7 +80,7 @@ class Table(object):
         except:
             limit = None
         limit = kwargs.get('limit', limit)
-        if html.var('limit') == 'none' or kwargs.get("output_format", "html") != "html":
+        if html.request.var('limit') == 'none' or kwargs.get("output_format", "html") != "html":
             limit = None
 
         self.id = table_id
@@ -169,7 +169,7 @@ class Table(object):
             return
 
         if self.options["output_format"] == "csv":
-            self._write_csv(csv_separator=html.var("csv_separator", ";"))
+            self._write_csv(csv_separator=html.request.var("csv_separator", ";"))
             return
 
         if self.title:
@@ -237,12 +237,12 @@ class Table(object):
 
             # Handle the initial visibility of the actions
             actions_visible = user_opts[table_id].get('actions_visible', False)
-            if html.var('_%s_actions' % table_id):
-                actions_visible = html.var('_%s_actions' % table_id) == '1'
+            if html.request.var('_%s_actions' % table_id):
+                actions_visible = html.request.var('_%s_actions' % table_id) == '1'
                 user_opts[table_id]['actions_visible'] = actions_visible
 
-            if html.var('_%s_reset' % table_id):
-                html.del_var('_%s_search' % table_id)
+            if html.request.var('_%s_reset' % table_id):
+                html.request.del_var('_%s_search' % table_id)
                 if 'search' in table_opts:
                     del table_opts['search']  # persist
 
@@ -251,20 +251,20 @@ class Table(object):
                 search_term = html.get_unicode_input('_%s_search' % table_id,
                                                      table_opts.get('search', '')).lower()
                 if search_term:
-                    html.set_var('_%s_search' % table_id, search_term)
+                    html.request.set_var('_%s_search' % table_id, search_term)
                     table_opts['search'] = search_term  # persist
                     rows = _filter_rows(rows, search_term)
 
-            if html.var('_%s_reset_sorting' % table_id):
-                html.del_var('_%s_sort' % table_id)
+            if html.request.var('_%s_reset_sorting' % table_id):
+                html.request.del_var('_%s_sort' % table_id)
                 if 'sort' in table_opts:
                     del table_opts['sort']  # persist
 
             if self.options["sortable"]:
                 # Now apply eventual sorting settings
-                sort = html.var('_%s_sort' % table_id, table_opts.get('sort'))
+                sort = html.request.var('_%s_sort' % table_id, table_opts.get('sort'))
                 if sort is not None:
-                    html.set_var('_%s_sort' % table_id, sort)
+                    html.request.set_var('_%s_sort' % table_id, sort)
                     table_opts['sort'] = sort  # persist
                     sort_col, sort_reverse = map(int, sort.split(',', 1))
                     rows = _sort_rows(rows, sort_col, sort_reverse)
@@ -298,7 +298,7 @@ class Table(object):
                 html.set_focus("_%s_search" % table_id)
                 html.close_div()
 
-            if html.has_var('_%s_sort' % table_id):
+            if html.request.has_var('_%s_sort' % table_id):
                 html.open_div(class_=["sort"])
                 html.button("_%s_reset_sorting" % table_id, _("Reset sorting"))
                 html.close_div()
@@ -397,7 +397,7 @@ class Table(object):
                 html.open_th(class_=css_class)
             else:
                 reverse = 0
-                sort = html.var('_%s_sort' % table_id)
+                sort = html.request.var('_%s_sort' % table_id)
                 if sort:
                     sort_col, sort_reverse = map(int, sort.split(',', 1))
                     if sort_col == nr:

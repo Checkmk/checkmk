@@ -404,10 +404,10 @@ def page_list(what,
     html.end_context_buttons()
 
     # Deletion of visuals
-    delname = html.var("_delete")
+    delname = html.request.var("_delete")
     if delname and html.transaction_valid():
         if config.user.may('general.delete_foreign_%s' % what):
-            user_id = html.var('_user_id', config.user.id)
+            user_id = html.request.var('_user_id', config.user.id)
         else:
             user_id = config.user.id
 
@@ -577,7 +577,7 @@ def page_create_visual(what, info_keys, next_url=None):
           'object type below and continue.') % what_s)
     html.close_p()
 
-    if html.var('save') and html.check_transaction():
+    if html.request.var('save') and html.check_transaction():
         try:
             single_infos = vs_infos.from_html_vars('single_infos')
             vs_infos.validate_value(single_infos, 'single_infos')
@@ -702,12 +702,12 @@ def page_edit_visual(what,
     visual = {}
 
     # Load existing visual from disk - and create a copy if 'load_user' is set
-    visualname = html.var("load_name")
+    visualname = html.request.var("load_name")
     oldname = visualname
-    mode = html.var('mode', 'edit')
+    mode = html.request.var('mode', 'edit')
     owner_user_id = config.user.id
     if visualname:
-        cloneuser = html.var("load_user")
+        cloneuser = html.request.var("load_user")
         if cloneuser is not None:
             mode = 'clone'
             visual = copy.deepcopy(all_visuals.get((cloneuser, visualname), None))
@@ -731,7 +731,7 @@ def page_edit_visual(what,
             if cloneuser == owner_user_id:
                 visual["title"] += _(" (Copy)")
         else:
-            owner_user_id = html.var("owner", config.user.id)
+            owner_user_id = html.request.var("owner", config.user.id)
             visual = all_visuals.get((owner_user_id, visualname))
             if not visual:
                 visual = all_visuals.get(('', visualname))  # load builtin visual
@@ -750,7 +750,7 @@ def page_edit_visual(what,
     else:
         mode = 'create'
         single_infos = []
-        single_infos_raw = html.var('single_infos')
+        single_infos_raw = html.request.var('single_infos')
         if single_infos_raw:
             single_infos = single_infos_raw.split(',')
             for key in single_infos:
@@ -848,10 +848,10 @@ def page_edit_visual(what,
     # handle case of save or try or press on search button
     save_and_go = None
     for nr, (title, pagename, icon) in enumerate(sub_pages):
-        if html.var("save%d" % nr):
+        if html.request.var("save%d" % nr):
             save_and_go = pagename
 
-    if save_and_go or html.var("save") or html.var("search"):
+    if save_and_go or html.request.var("save") or html.request.var("search"):
         try:
             general_properties = vs_general.from_html_vars('general')
             vs_general.validate_value(general_properties, 'general')
@@ -889,7 +889,7 @@ def page_edit_visual(what,
 
             visual['context'] = process_context_specs(context_specs)
 
-            if html.var("save") or save_and_go:
+            if html.request.var("save") or save_and_go:
                 if save_and_go:
                     back_url = html.makeuri_contextless(
                         [(visual_types[what]['ident_attr'], visual['name'])],
@@ -921,9 +921,9 @@ def page_edit_visual(what,
     html.begin_form("visual", method="POST")
     html.hidden_field("back", back_url)
     html.hidden_field("mode", mode)
-    if html.has_var("load_user"):
+    if html.request.has_var("load_user"):
         html.hidden_field("load_user",
-                          html.var("load_user"))  # safe old name in case user changes it
+                          html.request.var("load_user"))  # safe old name in case user changes it
     html.hidden_field("load_name", oldname)  # safe old name in case user changes it
 
     # FIXME: Hier werden die Flags aus visibility nicht korrekt geladen. Wäre es nicht besser,
@@ -1113,17 +1113,17 @@ def add_context_to_uri_vars(visual, only_count=False):
     # filter vars in "multiple" context are not enforced.
     for key in get_single_info_keys(visual):
         if key in visual['context']:
-            html.set_var(key, "%s" % visual['context'][key])
+            html.request.set_var(key, "%s" % visual['context'][key])
 
     # Now apply the multiple context filters
     for filter_vars in visual['context'].itervalues():
         if isinstance(filter_vars, dict):  # this is a multi-context filter
             # We add the filter only if *none* of its HTML variables are present on the URL
             # This important because checkbox variables are not present if the box is not checked.
-            skip = any(html.has_var(uri_varname) for uri_varname in filter_vars.iterkeys())
+            skip = any(html.request.has_var(uri_varname) for uri_varname in filter_vars.iterkeys())
             if not skip or only_count:
                 for uri_varname, value in filter_vars.items():
-                    html.set_var(uri_varname, "%s" % value)
+                    html.request.set_var(uri_varname, "%s" % value)
 
 
 # Vice versa: find all filters that belong to the current URI variables
@@ -1137,12 +1137,12 @@ def get_context_from_uri_vars(only_infos=None, single_infos=None):
         if only_infos is None or filter_object.info in only_infos:
             this_filter_vars = {}
             for varname in filter_object.htmlvars:
-                if html.has_var(varname):
+                if html.request.has_var(varname):
                     if filter_object.info in single_infos:
-                        context[filter_name] = html.var(varname)
+                        context[filter_name] = html.request.var(varname)
                         break
                     else:
-                        this_filter_vars[varname] = html.var(varname)
+                        this_filter_vars[varname] = html.request.var(varname)
             if this_filter_vars:
                 context[filter_name] = this_filter_vars
     return context
@@ -1159,9 +1159,9 @@ def get_filter_headers(datasource, context):
             # first set the HTML variables. Sorry - the filters need this
             if isinstance(filter_vars, dict):  # this is a multi-context filter
                 for uri_varname, value in filter_vars.items():
-                    html.set_var(uri_varname, value)
+                    html.request.set_var(uri_varname, value)
             else:
-                html.set_var(filter_name, filter_vars)
+                html.request.set_var(filter_name, filter_vars)
 
         # Now compute filter headers for all infos of the used datasource
         our_infos = datasource["infos"]
@@ -1420,7 +1420,7 @@ def collect_context_links(this_visual, mobile=False, only_types=None):
     # compute list of html variables needed for this visual
     active_filter_vars = set([])
     for var in get_singlecontext_html_vars(this_visual).iterkeys():
-        if html.has_var(var):
+        if html.request.has_var(var):
             active_filter_vars.add(var)
 
     context_links = []
@@ -1484,8 +1484,8 @@ def collect_context_links_of(visual_type_name, this_visual, active_filter_vars, 
             single_info_keys=visual["single_infos"],
             filter_names=dict(vars_values).keys())
 
-        if add_site_hint and html.var('site'):
-            vars_values.append(('site', html.var('site')))
+        if add_site_hint and html.request.var('site'):
+            vars_values.append(('site', html.request.var('site')))
 
         # Optional feature of visuals: Make them dynamically available as links or not.
         # This has been implemented for HW/SW inventory views which are often useless when a host
@@ -1564,7 +1564,7 @@ def transform_old_visual(visual):
 # TODO: Remove this code as soon as everything is moved over to pagetypes.py
 @cmk.gui.pages.register("ajax_popup_add_visual")
 def ajax_popup_add():
-    add_type = html.var("add_type")
+    add_type = html.request.var("add_type")
 
     html.open_ul()
 
@@ -1621,19 +1621,19 @@ def ajax_popup_add():
 
 @cmk.gui.pages.register("ajax_add_visual")
 def ajax_add_visual():
-    visual_type_name = html.var('visual_type')  # dashboards / views / ...
+    visual_type_name = html.request.var('visual_type')  # dashboards / views / ...
     visual_type = visual_types[visual_type_name]
     module_name = visual_type["module_name"]
     visual_module = importlib.import_module(module_name)
     handler = visual_module.__dict__[visual_type["add_visual_handler"]]
 
-    visual_name = html.var("visual_name")  # add to this visual
+    visual_name = html.request.var("visual_name")  # add to this visual
 
     # type of the visual to add (e.g. view)
-    element_type = html.var("type")
+    element_type = html.request.var("type")
 
     extra_data = []
     for what in ['context', 'params']:
-        extra_data.append(json.loads(html.var(what)))
+        extra_data.append(json.loads(html.request.var(what)))
 
     handler(visual_name, element_type, *extra_data)

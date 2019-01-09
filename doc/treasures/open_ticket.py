@@ -7,8 +7,8 @@ config.declare_permission("action.sap_openticket", _("Open Support Ticket"),
 
 
 def command_open_ticket(cmdtag, spec, row):
-    if html.var("_sap_openticket"):
-        comment = u"OPENTICKET:" + html.var_utf8("_sap_ticket_comment")
+    if html.request.var("_sap_openticket"):
+        comment = u"OPENTICKET:" + html.request.var_utf8("_sap_ticket_comment")
         broadcast = 0
         forced = 2
         command = "SEND_CUSTOM_%s_NOTIFICATION;%s;%s;%s;%s" % \

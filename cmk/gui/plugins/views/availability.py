@@ -79,10 +79,10 @@ def get_availability_options_from_url(what):
 
 
 def render_availability_options(what):
-    if html.var("_reset"):
+    if html.request.var("_reset"):
         config.user.save_file("avoptions", {})
         html.request.del_vars("avo_")
-        html.del_var("avoptions")
+        html.request.del_var("avoptions")
 
     avoptions = availability.get_default_avoptions()
 
@@ -94,7 +94,7 @@ def render_availability_options(what):
     html.begin_form("avoptions")
     html.hidden_field("avoptions", "set")
     avoption_entries = availability.get_avoption_entries(what)
-    if html.var("avoptions") == "set":
+    if html.request.var("avoptions") == "set":
         for name, height, _show_in_reporting, vs in avoption_entries:
             try:
                 avoptions[name] = vs.from_html_vars("avo_" + name)
@@ -103,7 +103,7 @@ def render_availability_options(what):
                 html.add_user_error(e.varname, e)
                 is_open = True
 
-    if html.var("_unset_logrow_limit") == "1":
+    if html.request.var("_unset_logrow_limit") == "1":
         avoptions["logrow_limit"] = 0
 
     range_vs = None
@@ -186,7 +186,7 @@ def render_availability_page(view, datasource, context, filterheaders, only_site
     # - Show availability table (stats) "table"
     # - Show timeline                   "timeline"
     # --> controlled by URL variable "av_mode"
-    av_mode = html.var("av_mode", "table")
+    av_mode = html.request.var("av_mode", "table")
 
     if av_mode == "timeline":
         title = _("Availability Timeline")
@@ -199,13 +199,14 @@ def render_availability_page(view, datasource, context, filterheaders, only_site
     # --> controlled by URL variables "av_site", "av_host" and "av_service"
     # --> controlled by "av_aggr" in case of BI aggregate
     title += " - "
-    if html.var("av_host"):
-        av_object = (html.var("av_site"), html.var("av_host"), html.var("av_service"))
+    if html.request.var("av_host"):
+        av_object = (html.request.var("av_site"), html.request.var("av_host"),
+                     html.request.var("av_service"))
         title += av_object[1]
         if av_object[2]:
             title += " - " + av_object[2]
-    elif html.var("av_aggr"):
-        av_object = (None, None, html.var("av_aggr"))
+    elif html.request.var("av_aggr"):
+        av_object = (None, None, html.request.var("av_aggr"))
         title += av_object[2]
     else:
         av_object = None
@@ -240,8 +241,8 @@ def render_availability_page(view, datasource, context, filterheaders, only_site
 
     # Remove variables for editing annotations, otherwise they will make it into the uris
     html.request.del_vars("anno_")
-    if html.var("filled_in") == "editanno":
-        html.del_var("filled_in")
+    if html.request.var("filled_in") == "editanno":
+        html.request.del_var("filled_in")
 
     if display_options.enabled(display_options.B):
         html.begin_context_buttons()
@@ -399,7 +400,8 @@ def render_availability_timeline(what, av_entry, avoptions):
             table.cell(_("Links"), css="buttons")
             if what == "bi":
                 url = html.makeuri([("timewarp", str(int(row["from"])))])
-                if html.var("timewarp") and int(html.var("timewarp")) == int(row["from"]):
+                if html.request.var("timewarp") and int(html.request.var("timewarp")) == int(
+                        row["from"]):
                     html.disabled_icon_button("timewarp_off")
                 else:
                     html.icon_button(
@@ -569,7 +571,7 @@ def render_timeline_bar(timeline_layout, style):
 def render_bi_availability(title, aggr_rows):
     config.user.need_permission("general.see_availability")
 
-    av_mode = html.var("av_mode", "availability")
+    av_mode = html.request.var("av_mode", "availability")
     avoptions = get_availability_options_from_url("bi")
     if av_mode == "timeline":
         title = _("Timeline of") + " " + title
@@ -617,7 +619,7 @@ def render_bi_availability(title, aggr_rows):
         timewarpcode = ""
 
         try:
-            timewarp = int(html.var("timewarp"))
+            timewarp = int(html.request.var("timewarp"))
         except:
             timewarp = None
 
@@ -651,7 +653,7 @@ def render_bi_availability(title, aggr_rows):
                     "aggr_output": eff_state["output"],
                     "aggr_hosts": node["reqhosts"],
                     "aggr_function": node["func"],
-                    "aggr_group": html.var("aggr_group"),
+                    "aggr_group": html.request.var("aggr_group"),
                 }
 
                 renderer = bi.FoldableTreeRendererTree(
@@ -856,11 +858,11 @@ def show_annotations(annotations, av_rawdata, what, avoptions, omit_service):
 
 
 def edit_annotation():
-    site_id = html.var("anno_site") or ""
-    hostname = html.var("anno_host")
-    service = html.var("anno_service") or None
-    fromtime = float(html.var("anno_from"))
-    untiltime = float(html.var("anno_until"))
+    site_id = html.request.var("anno_site") or ""
+    hostname = html.request.var("anno_host")
+    service = html.request.var("anno_service") or None
+    fromtime = float(html.request.var("anno_from"))
+    untiltime = float(html.request.var("anno_until"))
     site_host_svc = (site_id, hostname, service)
 
     # Find existing annotation with this specification
@@ -892,7 +894,7 @@ def edit_annotation():
             value["date"] = time.time()
             value["author"] = config.user.id
             availability.update_annotations(site_host_svc, value, replace_existing=annotation)
-            html.del_var("filled_in")
+            html.request.del_var("filled_in")
             return False
         except MKUserError as e:
             html.user_error(e)
@@ -953,12 +955,12 @@ def _vs_annotation():
 
 # Called at the beginning of every availability page
 def handle_delete_annotations():
-    if html.var("_delete_annotation"):
-        site_id = html.var("anno_site") or ""
-        hostname = html.var("anno_host")
-        service = html.var("anno_service") or None
-        fromtime = float(html.var("anno_from"))
-        untiltime = float(html.var("anno_until"))
+    if html.request.var("_delete_annotation"):
+        site_id = html.request.var("anno_site") or ""
+        hostname = html.request.var("anno_host")
+        service = html.request.var("anno_service") or None
+        fromtime = float(html.request.var("anno_from"))
+        untiltime = float(html.request.var("anno_until"))
         site_host_svc = (site_id, hostname, service)
 
         annotations = availability.load_annotations()
@@ -979,7 +981,7 @@ def handle_edit_annotations():
     # Avoid reshowing edit form after edit and reload
     if html.is_transaction() and not html.transaction_valid():
         return False
-    if html.var("anno_host") and not html.var("_delete_annotation"):
+    if html.request.var("anno_host") and not html.request.var("_delete_annotation"):
         finished = edit_annotation()
     else:
         finished = False

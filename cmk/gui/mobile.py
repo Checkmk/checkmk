@@ -201,7 +201,7 @@ def page_login():
 
     html.begin_form("login", method='POST', add_transid=False)
     # Keep information about original target URL
-    origtarget = html.var('_origtarget', '')
+    origtarget = html.request.var('_origtarget', '')
     if not origtarget and not html.myfile == 'login':
         origtarget = html.request.requested_url
     html.hidden_field('_origtarget', html.attrencode(origtarget))
@@ -270,7 +270,7 @@ def page_index():
 @cmk.gui.pages.register("mobile_view")
 def page_view():
     views.load_views()
-    view_name = html.var("view_name")
+    view_name = html.request.var("view_name")
     if not view_name:
         return page_index()
 
@@ -303,7 +303,7 @@ def render_view(view, rows, datasource, group_painters, painters, show_heading, 
 
     home = ("mobile.py", "Home", "home")
 
-    page = html.var("page")
+    page = html.request.var("page")
     if not page:
         if view.get("mustsearch"):
             page = "filter"
@@ -333,7 +333,7 @@ def render_view(view, rows, datasource, group_painters, painters, show_heading, 
         if config.user.may("general.act"):
             jqm_page_header(_("Commands"), left_button=home, id_="commands")
             show_commands = True
-            if html.has_var("_do_actions"):
+            if html.request.has_var("_do_actions"):
                 try:
                     show_commands = do_commands(view, datasource["infos"][0], rows)
                 except MKUserError as e:

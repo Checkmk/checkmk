@@ -192,14 +192,14 @@ def render_page_confirm(acktime, prev_url, failed_notifications):
 
 @cmk.gui.pages.register("clear_failed_notifications")
 def page_clear():
-    acktime = html.var('acktime')
+    acktime = html.request.var('acktime')
     if acktime is None:
         acktime = time.time()
     else:
         acktime = float(acktime)
 
     prev_url = html.get_url_input('prev_url', '')
-    if html.var('_confirm'):
+    if html.request.var('_confirm'):
         acknowledge_failed_notifications(acktime)
         html.reload_sidebar()
 

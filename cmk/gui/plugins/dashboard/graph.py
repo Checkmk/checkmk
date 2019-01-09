@@ -291,7 +291,7 @@ function load_graph_img(nr, img, img_url, c_w, c_h)
                 "title_format": title_format,
             }
 
-        host = self._dashlet_spec['context'].get('host', html.var("host"))
+        host = self._dashlet_spec['context'].get('host', html.request.var("host"))
         if not host:
             raise MKUserError('host', _('Missing needed host parameter.'))
 
@@ -301,8 +301,8 @@ function load_graph_img(nr, img, img_url, c_w, c_h)
 
         # When the site is available via URL context, use it. Otherwise it is needed
         # to check all sites for the requested host
-        if html.has_var('site'):
-            site = html.var('site')
+        if html.request.has_var('site'):
+            site = html.request.var('site')
         else:
             query = "GET hosts\nFilter: name = %s\nColumns: name" % livestatus.lqencode(host)
             try:

@@ -187,11 +187,11 @@ class SimpleListMode(SimpleWatoModeBase):
         if not html.transaction_valid():
             return
 
-        if not html.has_var("_action"):
+        if not html.request.has_var("_action"):
             return
 
-        if html.var("_action") != "delete":
-            return self._handle_custom_action(html.var("_action"))
+        if html.request.var("_action") != "delete":
+            return self._handle_custom_action(html.request.var("_action"))
 
         confirm = wato_confirm(_("Confirm deletion"), self._delete_confirm_message())
         if confirm is False:

@@ -125,8 +125,8 @@ class ModeRoles(RoleManagement, WatoMode):
             _("Matrix"), watolib.folder_preserving_link([("mode", "role_matrix")]), "matrix")
 
     def action(self):
-        if html.var("_delete"):
-            delid = html.var("_delete")
+        if html.request.var("_delete"):
+            delid = html.request.var("_delete")
 
             if delid not in self._roles:
                 raise MKUserError(None, _("This role does not exist."))
@@ -146,9 +146,9 @@ class ModeRoles(RoleManagement, WatoMode):
             elif c is False:
                 return ""
 
-        elif html.var("_clone"):
+        elif html.request.var("_clone"):
             if html.check_transaction():
-                cloneid = html.var("_clone")
+                cloneid = html.request.var("_clone")
 
                 try:
                     cloned_role = self._roles[cloneid]
@@ -245,7 +245,7 @@ class ModeEditRole(RoleManagement, WatoMode):
         config.load_dynamic_permissions()
 
     def _from_vars(self):
-        self._role_id = html.var("edit")
+        self._role_id = html.request.var("edit")
 
         try:
             self._role = self._roles[self._role_id]
@@ -269,7 +269,7 @@ class ModeEditRole(RoleManagement, WatoMode):
         if not unique:
             raise MKUserError("alias", info)
 
-        new_id = html.var("id")
+        new_id = html.request.var("id")
         if len(new_id) == 0:
             raise MKUserError("id", _("Please specify an ID for the new role."))
         if not re.match("^[-a-z0-9A-Z_]*$", new_id):
@@ -283,7 +283,7 @@ class ModeEditRole(RoleManagement, WatoMode):
 
         # based on
         if not self._role.get("builtin"):
-            basedon = html.var("basedon")
+            basedon = html.request.var("basedon")
             if basedon not in config.builtin_role_ids:
                 raise MKUserError("basedon",
                                   _("Invalid valid for based on. Must be id of builtin rule."))

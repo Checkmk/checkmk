@@ -177,7 +177,7 @@ class ModeDiscovery(WatoMode):
             action=DiscoveryAction.NONE,
             show_checkboxes=show_checkboxes,
             show_parameters=show_parameters,
-            ignore_errors=bool(html.var("ignoreerrors")),
+            ignore_errors=bool(html.request.var("ignoreerrors")),
         )
 
     def title(self):
@@ -460,7 +460,7 @@ class ModeAjaxServiceDiscovery(WatoWebApiMode):
         config.user.need_permission("wato.hosts")
 
         request = self.webapi_request()
-        html.del_var("request")  # Do not add this to URLs constructed later
+        html.request.del_var("request")  # Do not add this to URLs constructed later
         request.setdefault("update_target", None)
         request.setdefault("update_source", None)
         request.setdefault("update_services", [])
@@ -1493,7 +1493,7 @@ class ModeAjaxExecuteCheck(WatoWebApiMode):
         # TODO: Validate
         self._check_type = html.get_ascii_input("checktype")
         # TODO: Validate
-        self._item = html.var("item")
+        self._item = html.request.var("item")
 
     def page(self):
         watolib.init_wato_datastructures(with_wato_lock=True)

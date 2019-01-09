@@ -120,35 +120,35 @@ class ModeFolder(WatoMode):
                 _("Refine Search"), self._folder.url([("mode", "search")]), "search")
 
     def action(self):
-        if html.var("_search"):  # just commit to search form
+        if html.request.var("_search"):  # just commit to search form
             return
 
         ### Operations on SUBFOLDERS
 
-        if html.var("_delete_folder"):
+        if html.request.var("_delete_folder"):
             if html.transaction_valid():
-                return self._delete_subfolder_after_confirm(html.var("_delete_folder"))
+                return self._delete_subfolder_after_confirm(html.request.var("_delete_folder"))
             return
 
-        elif html.has_var("_move_folder_to"):
+        elif html.request.has_var("_move_folder_to"):
             if html.check_transaction():
-                what_folder = watolib.Folder.folder(html.var("_ident"))
-                target_folder = watolib.Folder.folder(html.var("_move_folder_to"))
+                what_folder = watolib.Folder.folder(html.request.var("_ident"))
+                target_folder = watolib.Folder.folder(html.request.var("_move_folder_to"))
                 watolib.Folder.current().move_subfolder_to(what_folder, target_folder)
             return
 
         ### Operations on HOSTS
 
         # Deletion of single hosts
-        delname = html.var("_delete_host")
+        delname = html.request.var("_delete_host")
         if delname and watolib.Folder.current().has_host(delname):
             return delete_host_after_confirm(delname)
 
         # Move single hosts to other folders
-        if html.has_var("_move_host_to"):
-            hostname = html.var("_ident")
+        if html.request.has_var("_move_host_to"):
+            hostname = html.request.var("_ident")
             if hostname:
-                target_folder = watolib.Folder.folder(html.var("_move_host_to"))
+                target_folder = watolib.Folder.folder(html.request.var("_move_host_to"))
                 watolib.Folder.current().move_hosts([hostname], target_folder)
                 return
 
@@ -157,7 +157,7 @@ class ModeFolder(WatoMode):
             return
 
         # Host table: No error message on search filter reset
-        if html.var("_hosts_reset_sorting") or html.var("_hosts_sort"):
+        if html.request.var("_hosts_reset_sorting") or html.request.var("_hosts_sort"):
             return
 
         selected_host_names = watolib.get_hostnames_from_checkboxes()
@@ -165,19 +165,20 @@ class ModeFolder(WatoMode):
             raise MKUserError(None,
                               _("Please select some hosts before doing bulk operations on hosts."))
 
-        if html.var("_bulk_inventory"):
+        if html.request.var("_bulk_inventory"):
             return "bulkinventory"
 
-        elif html.var("_parentscan"):
+        elif html.request.var("_parentscan"):
             return "parentscan"
 
         # Deletion
-        if html.var("_bulk_delete"):
+        if html.request.var("_bulk_delete"):
             return self._delete_hosts_after_confirm(selected_host_names)
 
         # Move
-        elif html.var("_bulk_move"):
-            target_folder_path = html.var("bulk_moveto", html.var("_top_bulk_moveto"))
+        elif html.request.var("_bulk_move"):
+            target_folder_path = html.request.var("bulk_moveto",
+                                                  html.request.var("_top_bulk_moveto"))
             if target_folder_path == "@":
                 raise MKUserError("bulk_moveto", _("Please select the destination folder"))
             target_folder = watolib.Folder.folder(target_folder_path)
@@ -186,13 +187,13 @@ class ModeFolder(WatoMode):
                                                       target_folder.title())
 
         # Move to target folder (from import)
-        elif html.var("_bulk_movetotarget"):
+        elif html.request.var("_bulk_movetotarget"):
             return self._move_to_imported_folders(selected_host_names)
 
-        elif html.var("_bulk_edit"):
+        elif html.request.var("_bulk_edit"):
             return "bulkedit"
 
-        elif html.var("_bulk_cleanup"):
+        elif html.request.var("_bulk_cleanup"):
             return "bulkcleanup"
 
     def _delete_subfolder_after_confirm(self, subfolder_name):
@@ -385,11 +386,11 @@ class ModeFolder(WatoMode):
         if not self._folder.has_hosts():
             return
 
-        show_checkboxes = html.var('show_checkboxes', '0') == '1'
+        show_checkboxes = html.request.var('show_checkboxes', '0') == '1'
 
         hostnames = self._folder.hosts().keys()
         hostnames.sort(cmp=utils.cmp_num_split)
-        search_text = html.var("search")
+        search_text = html.request.var("search")
 
         # Helper function for showing bulk actions. This is needed at the bottom
         # of the table of hosts and - if there are more than just a few - also
@@ -669,9 +670,9 @@ class ModeFolder(WatoMode):
             field_name = 'bulk_moveto'
             if top:
                 field_name = '_top_bulk_moveto'
-                if html.has_var('bulk_moveto'):
-                    html.javascript(
-                        'cmk.selection.update_bulk_moveto("%s")' % html.var('bulk_moveto', ''))
+                if html.request.has_var('bulk_moveto'):
+                    html.javascript('cmk.selection.update_bulk_moveto("%s")' % html.request.var(
+                        'bulk_moveto', ''))
             html.dropdown(
                 field_name,
                 choices,
@@ -755,11 +756,11 @@ class ModeAjaxPopupMoveToFolder(WatoWebApiMode):
     """Renders the popup menu contents for either moving a host or a folder to another folder"""
 
     def _from_vars(self):
-        self._what = html.var("what")
+        self._what = html.request.var("what")
         if self._what not in ["host", "folder"]:
             raise NotImplementedError()
 
-        self._ident = html.var("ident")
+        self._ident = html.request.var("ident")
 
         self._back_url = html.get_url_input("back_url")
         if not self._back_url or not self._back_url.startswith("wato.py"):
@@ -829,8 +830,8 @@ class FolderMode(WatoMode):
         raise NotImplementedError()
 
     def buttons(self):
-        if html.has_var("backfolder"):
-            back_folder = watolib.Folder.folder(html.var("backfolder"))
+        if html.request.has_var("backfolder"):
+            back_folder = watolib.Folder.folder(html.request.var("backfolder"))
         else:
             back_folder = self._folder
         html.context_button(_("Back"), back_folder.url(), "back")
@@ -847,8 +848,8 @@ class FolderMode(WatoMode):
         self._save(title, attributes)
 
         # Edit icon on subfolder preview should bring user back to parent folder
-        if html.has_var("backfolder"):
-            watolib.Folder.set_current(watolib.Folder.folder(html.var("backfolder")))
+        if html.request.has_var("backfolder"):
+            watolib.Folder.set_current(watolib.Folder.folder(html.request.var("backfolder")))
         return "folder"
 
     # TODO: Clean this method up! Split new/edit handling to sub classes
@@ -936,7 +937,7 @@ class ModeCreateFolder(FolderMode):
 
     def _save(self, title, attributes):
         if not config.wato_hide_filenames:
-            name = html.var("name", "").strip()
+            name = html.request.var("name", "").strip()
             watolib.check_wato_foldername("name", name)
         else:
             name = watolib.create_wato_foldername(title)

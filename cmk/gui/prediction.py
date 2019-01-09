@@ -44,9 +44,9 @@ graph_size = 2000, 700
 
 @cmk.gui.pages.register("prediction_graph")
 def page_graph():
-    host = html.var("host")
-    service = html.var("service")
-    dsname = html.var("dsname")
+    host = html.request.var("host")
+    service = html.request.var("service")
+    dsname = html.request.var("dsname")
 
     html.header(
         _("Prediction for %s - %s - %s") % (host, service, dsname),
@@ -62,7 +62,7 @@ def page_graph():
               "available for this service."))
 
     # Load all prediction information, sort by time of generation
-    tg_name = html.var("timegroup")
+    tg_name = html.request.var("timegroup")
     timegroup = None
     timegroups = []
     now = time.time()

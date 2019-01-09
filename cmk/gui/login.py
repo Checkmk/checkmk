@@ -208,7 +208,7 @@ def renew_cookie(cookie_name, username):
     # Do not renew if:
     # a) The _ajaxid var is set
     # b) A logout is requested
-    if (html.myfile != 'logout' and not html.has_var('_ajaxid')) \
+    if (html.myfile != 'logout' and not html.request.has_var('_ajaxid')) \
        and cookie_name == auth_cookie_name():
         auth_logger.debug(
             "Renewing auth cookie (%s.py, vars: %r)" % (html.myfile, dict(html.request.itervars())))
@@ -281,7 +281,7 @@ def auth_cookie_is_valid(cookie_name):
 def check_auth(request):
     user_id = check_auth_web_server(request)
 
-    if html.var("_secret"):
+    if html.request.var("_secret"):
         user_id = check_auth_automation()
 
     elif config.auth_by_http_header:
@@ -303,10 +303,10 @@ def check_auth(request):
 
 
 def check_auth_automation():
-    secret = html.var("_secret", "").strip()
+    secret = html.request.var("_secret", "").strip()
     user_id = html.get_unicode_input("_username", "").strip()
-    html.del_var('_username')
-    html.del_var('_secret')
+    html.request.del_var('_username')
+    html.request.del_var('_secret')
     if secret and user_id and "/" not in user_id:
         path = cmk.utils.paths.var_dir + "/web/" + user_id.encode("utf-8") + "/automation.secret"
         if os.path.isfile(path) and file(path).read().strip() == secret:
@@ -362,13 +362,13 @@ def set_auth_type(ty):
 
 def do_login():
     # handle the sent login form
-    if html.var('_login'):
+    if html.request.var('_login'):
         try:
             username = html.get_unicode_input('_username', '').rstrip()
             if username == '':
                 raise MKUserError('_username', _('No username given.'))
 
-            password = html.var('_password', '')
+            password = html.request.var('_password', '')
             if password == '':
                 raise MKUserError('_password', _('No password given.'))
 
@@ -427,7 +427,7 @@ def do_login():
 def page_login(no_html_output=False):
     # Initialize the cmk.gui.i18n for the login dialog. This might be overridden
     # later after user login
-    cmk.gui.i18n.localize(html.var("lang", config.get_language()))
+    cmk.gui.i18n.localize(html.request.var("lang", config.get_language()))
 
     result = do_login()
     if isinstance(result, tuple):

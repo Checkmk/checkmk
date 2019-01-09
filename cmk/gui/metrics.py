@@ -613,7 +613,7 @@ class MetricometerRendererDual(MetricometerRenderer):
 @cmk.gui.pages.register("noauth:pnp_template")
 def page_pnp_template():
     try:
-        template_id = html.var("id")
+        template_id = html.request.var("id")
 
         check_command, perf_var_string = template_id.split(":", 1)
         perf_var_names = perf_var_string.split(",")
@@ -883,9 +883,9 @@ def get_graph_template_by_source(graph_templates, source):
 # This page is called for the popup of the graph icon of hosts/services.
 @cmk.gui.pages.register("host_service_graph_popup")
 def page_host_service_graph_popup():
-    site_id = html.var('site')
-    host_name = html.var('host_name')
-    service_description = html.var_utf8('service')
+    site_id = html.request.var('site')
+    host_name = html.request.var('host_name')
+    service_description = html.request.var_utf8('service')
 
     # TODO: Refactor this to some OO based approach
     if cmk_graphs_possible(site_id):
@@ -925,15 +925,15 @@ def host_service_graph_popup_pnp(site, host_name, service_description):
 
 @cmk.gui.pages.register("graph_dashlet")
 def page_graph_dashlet():
-    spec = html.var("spec")
+    spec = html.request.var("spec")
     if not spec:
         raise MKUserError("spec", _("Missing spec parameter"))
-    graph_identification = json.loads(html.var("spec"))
+    graph_identification = json.loads(html.request.var("spec"))
 
-    render = html.var("render")
+    render = html.request.var("render")
     if not render:
         raise MKUserError("render", _("Missing render parameter"))
-    custom_graph_render_options = json.loads(html.var("render"))
+    custom_graph_render_options = json.loads(html.request.var("render"))
 
     # TODO: Refactor this to some OO based approach
     if cmk_graphs_possible():
@@ -958,7 +958,7 @@ def host_service_graph_dashlet_pnp(graph_identification):
         pnp_theme = "multisite"
 
     html.write(url_prefix + "pnp4nagios/index.php/image?host=%s&srv=%s&source=%d&view=%s&theme=%s" % \
-        (html.urlencode(pnp_host), html.urlencode(pnp_svc), source, html.var("timerange"), pnp_theme))
+        (html.urlencode(pnp_host), html.urlencode(pnp_svc), source, html.request.var("timerange"), pnp_theme))
 
 
 #.

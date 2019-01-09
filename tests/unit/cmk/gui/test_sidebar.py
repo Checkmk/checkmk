@@ -3,10 +3,8 @@ import pytest
 import cmk.gui.sidebar as sidebar
 import cmk.gui.config as config
 import cmk.gui.pages
-import cmk.utils.store as store
 from cmk.gui.globals import html
-from cmk.gui.exceptions import MKUserError
-from cmk.gui.sidebar import UserSidebarSnapin, SnapinVisibility
+from cmk.gui.sidebar import UserSidebarSnapin
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -28,11 +26,11 @@ def user(monkeypatch):
 
 def test_user_config_fold_unfold():
     user_config = sidebar.UserSidebarConfig(config.user, config.sidebar)
-    assert user_config.folded == False
+    assert user_config.folded is False
     user_config.folded = True
-    assert user_config.folded == True
+    assert user_config.folded is True
     user_config.folded = False
-    assert user_config.folded == False
+    assert user_config.folded is False
 
 
 def test_user_config_add_snapin():
@@ -115,7 +113,7 @@ def test_user_config_move_snapin_before(mocker, move_id, before_id, result):
 
 def test_load_default_config(monkeypatch):
     user_config = sidebar.UserSidebarConfig(config.user, config.sidebar)
-    assert user_config.folded == False
+    assert user_config.folded is False
     assert user_config.snapins == [
         UserSidebarSnapin.from_snapin_type_id('tactical_overview'),
         UserSidebarSnapin.from_snapin_type_id('search'),
@@ -133,7 +131,7 @@ def test_load_legacy_list_user_config(monkeypatch):
                    ("views", "closed")])
 
     user_config = sidebar.UserSidebarConfig(config.user, config.sidebar)
-    assert user_config.folded == False
+    assert user_config.folded is False
     assert user_config.snapins == [
         UserSidebarSnapin.from_snapin_type_id('tactical_overview'),
         UserSidebarSnapin(sidebar.snapin_registry["views"], sidebar.SnapinVisibility.CLOSED),
@@ -146,7 +144,7 @@ def test_load_legacy_off_user_config(monkeypatch):
                    ("views", "closed")])
 
     user_config = sidebar.UserSidebarConfig(config.user, config.sidebar)
-    assert user_config.folded == False
+    assert user_config.folded is False
     assert user_config.snapins == [
         UserSidebarSnapin(sidebar.snapin_registry["views"], sidebar.SnapinVisibility.CLOSED),
     ]
@@ -160,7 +158,7 @@ def test_load_skip_not_existing(monkeypatch):
         })
 
     user_config = sidebar.UserSidebarConfig(config.user, config.sidebar)
-    assert user_config.folded == False
+    assert user_config.folded is False
     assert user_config.snapins == [
         UserSidebarSnapin(sidebar.snapin_registry["views"], sidebar.SnapinVisibility.CLOSED),
     ]
@@ -175,7 +173,7 @@ def test_load_skip_not_permitted(monkeypatch):
     monkeypatch.setattr(config.user, "may", lambda x: x != "sidesnap.tactical_overview")
 
     user_config = sidebar.UserSidebarConfig(config.user, config.sidebar)
-    assert user_config.folded == False
+    assert user_config.folded is False
     assert user_config.snapins == [
         UserSidebarSnapin(sidebar.snapin_registry["views"], sidebar.SnapinVisibility.CLOSED),
     ]
@@ -191,7 +189,7 @@ def test_load_user_config(monkeypatch):
     })
 
     user_config = sidebar.UserSidebarConfig(config.user, config.sidebar)
-    assert user_config.folded == True
+    assert user_config.folded is True
     assert user_config.snapins == [
         UserSidebarSnapin(sidebar.snapin_registry["search"], sidebar.SnapinVisibility.CLOSED),
         UserSidebarSnapin.from_snapin_type_id('views'),
@@ -223,21 +221,13 @@ def test_ajax_fold_page():
     (False, "yes", True),
     (True, "", False),
 ])
-def test_ajax_fold(mocker, origin_state, fold_var, set_state):
-    class MockHtml(object):
-        def var(self, varname):
-            if varname == "fold":
-                return fold_var
-
-        def set_output_format(self, f):
-            pass
-
+def test_ajax_fold(register_builtin_html, mocker, origin_state, fold_var, set_state):
+    html.request.set_var("fold", fold_var)
     m_config = mocker.patch.object(config.user, "load_file", return_value={
         "fold": origin_state,
         "snapins": [("tactical_overview", "open")],
     })
     m_save = mocker.patch.object(config.user, "save_file")
-    html.set_current(MockHtml())
 
     sidebar.ajax_fold()
 
@@ -263,17 +253,9 @@ def test_ajax_openclose_page():
     ("open",   "off"),
     ("closed", "off"),
 ])
-def test_ajax_openclose_close(mocker, origin_state, set_state):
-    class MockHtml(object):
-        def var(self, varname):
-            if varname == "name":
-                return "tactical_overview"
-            elif varname == "state":
-                return set_state
-
-        def set_output_format(self, f):
-            pass
-
+def test_ajax_openclose_close(register_builtin_html, mocker, origin_state, set_state):
+    html.request.set_var("name", "tactical_overview")
+    html.request.set_var("state", set_state)
     m_config = mocker.patch.object(config.user, "load_file", return_value={
         "fold": False,
         "snapins": [
@@ -281,7 +263,6 @@ def test_ajax_openclose_close(mocker, origin_state, set_state):
             ("views", "open"),
         ],
     })
-    html.set_current(MockHtml())
     m_save = mocker.patch.object(config.user, "save_file")
 
     sidebar.ajax_openclose()
@@ -318,19 +299,9 @@ def test_move_snapin_not_permitted(monkeypatch, mocker):
     ("tactical_overview",  "views", True),
     ("not_existing",  "admin", None),
 ])
-def test_move_snapin(mocker, move, before, do_save):
-    class MockHtml(object):
-        def var(self, varname):
-            if varname == "name":
-                return move
-            elif varname == "before":
-                return before
-
-        def set_output_format(self, f):
-            pass
-
-    html.set_current(MockHtml())
-
+def test_move_snapin(register_builtin_html, mocker, move, before, do_save):
+    html.request.set_var("name", move)
+    html.request.set_var("before", before)
     m_save = mocker.patch.object(sidebar.UserSidebarConfig, "save")
 
     sidebar.move_snapin()

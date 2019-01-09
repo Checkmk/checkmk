@@ -84,7 +84,7 @@ class DisplayOptions(object):
     def load_from_html(self):
         # Parse display options and
         if html.output_format == "html":
-            options = html.var("display_options", "")
+            options = html.request.var("display_options", "")
         else:
             options = display_options.all_off()
 
@@ -97,22 +97,22 @@ class DisplayOptions(object):
         # a special var _display_options for defining the display_options for rendering
         # the data table to be reloaded. The contents of "display_options" are used for
         # linking to other views.
-        if html.has_var('_display_options'):
-            self.options = self._merge_with_defaults(html.var("_display_options", ""))
+        if html.request.has_var('_display_options'):
+            self.options = self._merge_with_defaults(html.request.var("_display_options", ""))
 
         # But there is one special case: The sorter links! These links need to know
         # about the provided display_option parameter. The links could use
         # "display_options.options" but this contains the implicit options which should
         # not be added to the URLs. So the real parameters need to be preserved for
         # this case.
-        self.title_options = html.var("display_options")
+        self.title_options = html.request.var("display_options")
 
         # If display option 'M' is set, then all links are targetet to the 'main'
         # frame. Also the display options are removed since the view in the main
         # frame should be displayed in standard mode.
         if self.disabled(self.M):
             html.set_link_target("main")
-            html.del_var("display_options")
+            html.request.del_var("display_options")
 
     # If all display_options are upper case assume all not given values default
     # to lower-case. Vice versa when all display_options are lower case.

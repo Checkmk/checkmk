@@ -70,9 +70,9 @@ class ModeAnalyzeConfig(WatoMode):
         self._acks = self._load_acknowledgements()
 
     def _from_vars(self):
-        self._show_ok = html.has_var("show_ok")
-        self._show_failed = not html.has_var("hide_failed")
-        self._show_ack = html.has_var("show_ack")
+        self._show_ok = html.request.has_var("show_ok")
+        self._show_failed = not html.request.has_var("hide_failed")
+        self._show_ack = html.request.has_var("show_ack")
 
     def title(self):
         return _("Analyze configuration")
@@ -81,30 +81,30 @@ class ModeAnalyzeConfig(WatoMode):
         if not html.check_transaction():
             return
 
-        test_id = html.var("_test_id")
-        site_id = html.var("_site_id")
+        test_id = html.request.var("_test_id")
+        site_id = html.request.var("_site_id")
         status_id = html.get_integer_input("_status_id", 0)
 
         if not test_id:
             raise MKUserError("_ack_test_id", _("Needed variable missing"))
 
-        if html.var("_do") in ["ack", "unack"]:
+        if html.request.var("_do") in ["ack", "unack"]:
             if not site_id:
                 raise MKUserError("_ack_site_id", _("Needed variable missing"))
 
             if site_id not in watolib.ActivateChanges().activation_site_ids():
                 raise MKUserError("_ack_site_id", _("Invalid site given"))
 
-        if html.var("_do") == "ack":
+        if html.request.var("_do") == "ack":
             self._acknowledge_test(test_id, site_id, status_id)
 
-        elif html.var("_do") == "unack":
+        elif html.request.var("_do") == "unack":
             self._unacknowledge_test(test_id, site_id, status_id)
 
-        elif html.var("_do") == "disable":
+        elif html.request.var("_do") == "disable":
             self._disable_test(test_id)
 
-        elif html.var("_do") == "enable":
+        elif html.request.var("_do") == "enable":
             self._enable_test(test_id)
 
         else:

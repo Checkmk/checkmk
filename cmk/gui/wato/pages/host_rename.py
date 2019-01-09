@@ -385,7 +385,7 @@ class ModeRenameHost(WatoMode):
             raise MKUserError("newname",
                               _("You cannot rename a host while you have pending changes."))
 
-        newname = html.var("newname")
+        newname = html.request.var("newname")
         self._check_new_host_name("newname", newname)
         c = wato_confirm(
             _("Confirm renaming of host"),

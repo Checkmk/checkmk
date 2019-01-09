@@ -2259,11 +2259,11 @@ class DeltaNodeRenderer(NodeRenderer):
 # Ajax call for fetching parts of the tree
 @cmk.gui.pages.register("ajax_inv_render_tree")
 def ajax_inv_render_tree():
-    site_id = html.var("site")
-    hostname = html.var("host")
-    invpath = html.var("path")
-    tree_id = html.var("treeid", "")
-    show_internal_tree_paths = bool(html.var("show_internal_tree_paths"))
+    site_id = html.request.var("site")
+    hostname = html.request.var("host")
+    invpath = html.request.var("path")
+    tree_id = html.request.var("treeid", "")
+    show_internal_tree_paths = bool(html.request.var("show_internal_tree_paths"))
     if tree_id:
         struct_tree = inventory.load_delta_tree(hostname, int(tree_id[1:]))
         tree_renderer = DeltaNodeRenderer(site_id, hostname, tree_id, invpath)

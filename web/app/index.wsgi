@@ -251,18 +251,18 @@ class Application(object):
     def _fail_silently(self):
         """Ajax-Functions want no HTML output in case of an error but
         just a plain server result code of 500"""
-        return html.has_var("_ajaxid")
+        return html.request.has_var("_ajaxid")
 
     def _plain_error(self):
         """Webservice functions may decide to get a normal result code
         but a text with an error message in case of an error"""
-        return html.has_var("_plain_error") or html.myfile == "webapi"
+        return html.request.has_var("_plain_error") or html.myfile == "webapi"
 
     def _profiling_enabled(self):
         if config.profile is False:
             return False  # Not enabled
 
-        if config.profile == "enable_by_var" and not html.has_var("_profile"):
+        if config.profile == "enable_by_var" and not html.request.has_var("_profile"):
             return False  # Not enabled by HTTP variable
 
         return True
@@ -270,7 +270,7 @@ class Application(object):
     # TODO: This is a page handler. It should not be located in generic application
     # object. Move it to another place
     def _page_not_found(self):
-        if html.has_var("_plain_error"):
+        if html.request.has_var("_plain_error"):
             html.write(_("Page not found"))
         else:
             html.header(_("Page not found"))

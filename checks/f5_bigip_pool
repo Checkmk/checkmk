@@ -38,6 +38,9 @@ def parse_f5_bigip_pool(info):
     parsed = {}
     processed_member_info = False
     for block in info:
+        if not block:
+            continue
+
         # Member information
         if len(block[0]) == 3 and processed_member_info:
             break

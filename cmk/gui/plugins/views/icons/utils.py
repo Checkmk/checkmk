@@ -28,7 +28,28 @@ import abc
 from typing import Union, Optional, Tuple  # pylint: disable=unused-import
 
 import cmk.gui.config as config
+from cmk.gui.i18n import _
 import cmk.utils.plugin_registry
+from cmk.gui.permissions import (
+    permission_section_registry,
+    PermissionSection,
+    declare_permission,
+)
+
+
+@permission_section_registry.register
+class PermissionSectionIconsAndActions(PermissionSection):
+    @property
+    def name(self):
+        return "icons_and_actions"
+
+    @property
+    def title(self):
+        return _("Icons")
+
+    @property
+    def do_sort(self):
+        return True
 
 
 class Icon(object):
@@ -111,7 +132,12 @@ class IconRegistry(cmk.utils.plugin_registry.ClassRegistry):
         return Icon
 
     def _register(self, plugin_class):
-        self._entries[plugin_class.ident()] = plugin_class
+        ident = plugin_class.ident()
+        self._entries[ident] = plugin_class
+
+        declare_permission("icons_and_actions.%s" % ident, ident,
+                           _("Allow to see the icon %s in the host and service views") % ident,
+                           config.builtin_role_ids)
 
 
 icon_and_action_registry = IconRegistry()

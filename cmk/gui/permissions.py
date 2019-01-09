@@ -164,6 +164,7 @@ def declare_permission_section(name, title, prio=50, do_sort=False):
 
 
 # Kept for compatibility with pre 1.6 GUI plugins
+# Some dynamically registered permissions still use this
 def declare_permission(name, title, description, defaults):
     if isinstance(name, unicode):
         name = name.encode("utf-8")

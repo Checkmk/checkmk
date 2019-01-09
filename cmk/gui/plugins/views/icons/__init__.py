@@ -105,6 +105,9 @@ def _process_icons(what, row, tags, custom_vars, toplevel, user_icon_ids):
         if icon.type() == "custom_icon" and icon_id not in user_icon_ids:
             continue
 
+        if not config.user.may("icons_and_actions.%s" % icon_id):
+            continue
+
         try:
             for icon in _process_icon(what, row, tags, custom_vars, icon_id, icon):
                 icons.append(icon)

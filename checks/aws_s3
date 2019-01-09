@@ -47,12 +47,15 @@ def check_aws_s3_summary(item, params, parsed):
     buckets_by_region = {}
     long_output = []
     for bucket_name, row in parsed.iteritems():
-        buckets_by_region.setdefault(row['LocationConstraint'], []).append(row)
+        region = row['LocationConstraint']
+        if not region:
+            region = "unknown"
+        buckets_by_region.setdefault(region, []).append(row)
         long_output.append("Bucket: %s, Region: %s, Creation date: %s"\
-                           % (bucket_name, row['LocationConstraint'], row['CreationDate']))
+                           % (bucket_name, region, row['CreationDate']))
 
     for region, buckets in buckets_by_region.iteritems():
-        yield 0, "%s buckets in region %s" % (len(buckets), region)
+        yield 0, "%s: %s" % (region, len(buckets))
 
     if long_output:
         yield 0, '\n%s' % '\n'.join(long_output)
@@ -98,5 +101,5 @@ def check_aws_s3_objects(item, params, metrics):
 check_info['aws_s3.objects'] = {
     'inventory_function': discover(),
     'check_function': check_aws_s3_objects,
-    'service_description': 'AWS/S3 %s Objects',
+    'service_description': 'AWS/S3 Objects %s',
 }

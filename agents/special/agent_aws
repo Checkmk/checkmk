@@ -413,6 +413,7 @@ class S3(AWSSection):
             logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
             return []
 
+        paginator = self._client.get_paginator('list_objects')
         for bucket in buckets:
             bucket_name = bucket['Name']
             response = self._client.get_bucket_location(Bucket=bucket_name)
@@ -424,14 +425,17 @@ class S3(AWSSection):
             else:
                 bucket['LocationConstraint'] = location
 
-            response = self._client.list_objects(Bucket=bucket_name)
-            try:
-                objects = response['Contents']
-            except KeyError as e:
-                logging.info("%s/%s: KeyError %s; Available are %s", self.name, bucket_name, e,
-                             response.keys())
-            else:
-                bucket['Contents'] = objects
+            contents = []
+            pages = paginator.paginate(Bucket=bucket_name)
+            for page in pages:
+                try:
+                    objects = page['Contents']
+                except KeyError as e:
+                    logging.info("%s/%s: KeyError %s; Available are %s", self.name, bucket_name, e,
+                                 page.keys())
+                else:
+                    contents += objects
+            bucket['Contents'] = contents
         return buckets
 
     def _extract_content_from(self, raw_result):

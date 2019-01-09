@@ -202,10 +202,6 @@ $(DISTNAME).tar.gz: mk-livestatus-$(VERSION).tar.gz .werks/werks web/htdocs/js/m
 	    --exclude "cme.py*" \
 	    cmk_base/* ; \
 	  rm cmk_base/*.pyc
-	python -m compileall agents/special/lib ; \
-	  tar czf $(DISTNAME)/special_agent_api.tar.gz $(TAROPTS) -C agents/special/lib cmk_special_agent_api.py \
-	    --exclude ".f12"
-	  rm agents/special/lib/*.pyc
 	tar czf $(DISTNAME)/werks.tar.gz $(TAROPTS) -C .werks werks
 	tar czf $(DISTNAME)/checks.tar.gz $(TAROPTS) -C checks $$(cd checks ; ls)
 	tar czf $(DISTNAME)/active_checks.tar.gz $(TAROPTS) -C active_checks $$(cd active_checks ; ls)

@@ -6,4 +6,3 @@ SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 
 sudo cp agent_* $ROOT/share/check_mk/agents/special/
-sudo cp lib/cmk_special_agent_api.py $ROOT/lib/python/

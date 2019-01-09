@@ -25,9 +25,9 @@
 # Boston, MA 02110-1301 USA.
 
 import sys
-import cmk_special_agent_api as special_agent_api
+import cmk.special_agents.utils as utils
 
-agent = special_agent_api.AgentJSON("salesforce", "Salesforce")
+agent = utils.AgentJSON("salesforce", "Salesforce")
 content = agent.get_content()
 for section, section_content in content.iteritems():
     sys.stdout.write("<<<%s>>>\n" % section)

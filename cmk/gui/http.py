@@ -191,7 +191,7 @@ class Request(object):
         if not prefix:
             self._vars = {}
         else:
-            self._vars = {(varname, value) \
+            self._vars = {varname: value \
                           for varname, value in self.all_vars() \
                           if not value.startswith(prefix)}
 

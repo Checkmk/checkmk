@@ -476,7 +476,7 @@ def create_crash_dump_info_file(tar, what):
             "page": html.myfile + ".py",
             "vars": {
                 key: "***" if value in ["password", "_password"] else value
-                for key, value in html.request.all_vars()
+                for key, value in html.request.itervars()
             },
             "username": config.user.id,
             "user_agent": html.request.user_agent,

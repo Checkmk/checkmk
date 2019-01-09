@@ -86,8 +86,8 @@ class ModeBulkEdit(WatoMode):
         # first set.
         host_hash = html.var("host_hash")
         if not host_hash or host_hash != current_host_hash:
-            html.del_all_vars(prefix="attr_")
-            html.del_all_vars(prefix="bulk_change_")
+            html.request.del_vars(prefix="attr_")
+            html.request.del_vars(prefix="bulk_change_")
 
         html.p("%s%s %s" %
                (_("You have selected <b>%d</b> hosts for bulk edit. You can now change "

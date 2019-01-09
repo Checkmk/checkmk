@@ -2691,7 +2691,7 @@ class SearchFolder(BaseFolder):
 
         url_vars = [("host_search", "1")] + add_vars
 
-        for varname, value in html.request.all_vars():
+        for varname, value in html.request.itervars():
             if varname.startswith("host_search_") \
                 or varname.startswith("_change"):
                 url_vars.append((varname, value))

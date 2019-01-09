@@ -291,13 +291,12 @@ class ModeEditRole(RoleManagement, WatoMode):
 
         # Permissions
         permissions = self._role["permissions"]
-        for var_name in html.all_varnames_with_prefix("perm_"):
+        for var_name, value in html.request.itervars(prefix="perm_"):
             try:
                 perm = permission_registry[var_name[5:]]()
             except KeyError:
                 continue
 
-            value = html.var(var_name)
             if value == "yes":
                 permissions[perm.name] = True
             elif value == "no":

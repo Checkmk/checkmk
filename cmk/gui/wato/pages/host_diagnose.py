@@ -132,7 +132,7 @@ class ModeDiagHost(WatoMode):
             return_message = _("Updated attributes: ") + ", ".join(return_message)
 
             self._host.update_attributes(new)
-            html.del_all_vars()
+            html.request.del_vars()
             html.set_var("host", self._hostname)
             html.set_var("folder", watolib.Folder.current().path())
             return "edit_host", return_message

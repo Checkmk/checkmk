@@ -152,23 +152,16 @@ class Request(object):
     def has_var(self, varname):
         return varname in self._vars
 
-    def has_var_prefix(self, prefix):
-        """Checks if a variable with a given prefix is present"""
-        return any(var.startswith(prefix) for var in self._vars)
-
     def var_utf8(self, varname, deflt=None):
         val = self._vars.get(varname, deflt)
         if isinstance(val, str):
             return val.decode("utf-8")
         return val
 
-    def all_vars(self):
-        return self._vars.iteritems()
-
-    def all_varnames_with_prefix(self, prefix):
-        for varname in self._vars:
-            if varname.startswith(prefix):
-                yield varname
+    def itervars(self, prefix=""):
+        return (item \
+                for item in self._vars.iteritems() \
+                if item[0].startswith(prefix))
 
     # TODO: self._vars should be strictly read only in the Request() object
     def set_var(self, varname, value):
@@ -181,13 +174,9 @@ class Request(object):
         self._vars.pop(varname, None)
 
     # TODO: self._vars should be strictly read only in the Request() object
-    def del_all_vars(self, prefix=None):
-        if not prefix:
-            self._vars = {}
-        else:
-            self._vars = {varname: value \
-                          for varname, value in self.all_vars() \
-                          if not value.startswith(prefix)}
+    def del_vars(self, prefix=None):
+        for varname, _value in list(self.itervars(prefix)):
+            self.del_var(varname)
 
     def uploaded_file(self, varname):
         return self._uploads.get(varname)

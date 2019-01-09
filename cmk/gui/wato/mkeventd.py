@@ -2441,7 +2441,7 @@ class ModeEventConsoleMIBs(EventConsoleMode):
     def _bulk_delete_custom_mibs_after_confirm(self):
         custom_mibs = self._load_snmp_mibs(cmk.gui.mkeventd.mib_upload_dir)
         selected_custom_mibs = []
-        for varname in html.all_varnames_with_prefix("_c_mib_"):
+        for varname, _value in html.request.itervars(prefix="_c_mib_"):
             if html.get_checkbox(varname):
                 filename = varname.split("_c_mib_")[-1]
                 if filename in custom_mibs:

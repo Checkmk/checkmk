@@ -653,7 +653,7 @@ def render_dashlet_content(dashlet_instance, is_update, stash_html_vars=True):
 
     if stash_html_vars:
         with html.stashed_vars():
-            html.del_all_vars()
+            html.request.del_vars()
             html.set_var("name", dashlet_instance.dashboard_name)
             return update_or_show()
     else:

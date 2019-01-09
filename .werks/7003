@@ -1,0 +1,11 @@
+Title: f5_bigip_pool: Fixed crash if no SNMP info
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1547030399
+
+

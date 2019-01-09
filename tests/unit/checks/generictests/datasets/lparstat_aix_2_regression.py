@@ -47,8 +47,8 @@ info = [[u'System',
          u'0.64']]
 
 
-discovery = {'': [(None, 'lparstat_default_levels')],
-             'cpu_util': [(None, 'kernel_util_default_levels')]}
+discovery = {'': [(None, {})],
+             'cpu_util': [(None, {})]}
 
 
 checks = {

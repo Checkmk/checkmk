@@ -46,8 +46,6 @@
 # ----- ----- ------ ------ ----- ----- ------ ----- ----- -----
 #   0.1   0.2    0.0   99.6  0.04   1.8    2.3   371     0    58
 
-lparstat_default_levels = (5, 10)
-
 
 def parse_lparstat_aix(info):
     if not info:
@@ -74,7 +72,7 @@ def parse_lparstat_aix(info):
 
 def inventory_lparstat(parsed):
     if parsed:
-        yield None, "lparstat_default_levels"
+        yield None, {}
 
 
 def check_lparstat(_no_item, _no_params, parsed):
@@ -97,13 +95,10 @@ check_info["lparstat_aix"] = {
     'has_perfdata': True,
 }
 
-# Utilization and IO/Wait
-kernel_util_default_levels = None
-
 
 def inventory_lparstat_aix_cpu(parsed):
     if parsed.get('cpu') or parsed.get('update_required'):
-        yield None, "kernel_util_default_levels"
+        yield None, {}
 
 
 def check_lparstat_aix_cpu(_no_item, params, parsed):
@@ -122,9 +117,8 @@ def check_lparstat_aix_cpu(_no_item, params, parsed):
 
     infotext = "user: %2.1f%%, system: %2.1f%%, wait: %2.1f%%" % (user, system, wait)
 
-    # You may set a warning/critical level on the io wait
-    # percentage. This can be done by setting params to
-    # a pair of (warn, crit)
+    # ancient legacy rule
+    # and legacy None defaults before 1.6
     params = transform_cpu_iowait(params)
     result = 0
 

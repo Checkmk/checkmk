@@ -211,7 +211,7 @@ def renew_cookie(cookie_name, username):
     if (html.myfile != 'logout' and not html.has_var('_ajaxid')) \
        and cookie_name == auth_cookie_name():
         auth_logger.debug(
-            "Renewing auth cookie (%s.py, vars: %r)" % (html.myfile, dict(html.request.all_vars())))
+            "Renewing auth cookie (%s.py, vars: %r)" % (html.myfile, dict(html.request.itervars())))
         renew_auth_session(username)
 
 

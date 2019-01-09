@@ -1018,7 +1018,7 @@ class ModeRuleSearch(WatoMode):
 
     def _from_vars(self):
         if html.var("_reset_search"):
-            html.del_all_vars("search_")
+            html.request.del_vars("search_")
             self.search_options = {}
             return
 
@@ -1028,7 +1028,7 @@ class ModeRuleSearch(WatoMode):
         # In case all checkboxes are unchecked, treat this like the reset search button press
         # and remove all vars
         if not value:
-            html.del_all_vars("search_")
+            html.request.del_vars("search_")
 
         self.search_options = value
 

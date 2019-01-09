@@ -676,7 +676,7 @@ def command_downtime(cmdtag, spec, row):
     else:
         title_start = _("schedule an immediate downtime")
 
-    rangebtns = html.all_varnames_with_prefix("_downrange")
+    rangebtns = (varname for varname, _value in html.request.itervars(prefix="_downrange"))
 
     def resolve_end(name):
         now = time.localtime(down_from)

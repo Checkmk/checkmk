@@ -992,7 +992,7 @@ class Overridable(Base):
     @classmethod
     def _bulk_delete_after_confirm(cls, what):
         to_delete = []
-        for varname in html.all_varnames_with_prefix("_c_%s+" % what):
+        for varname, _value in html.request.itervars(prefix="_c_%s+" % what):
             if html.get_checkbox(varname):
                 checkbox_ident = varname.split("_c_%s+" % what)[-1]
                 to_delete.append(checkbox_ident.split("+", 1))

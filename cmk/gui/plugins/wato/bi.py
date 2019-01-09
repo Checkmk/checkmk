@@ -943,11 +943,9 @@ class ModeBI(WatoMode, BIManagement):
 
     def _get_selection(self, _type):
         checkbox_name = "_c_%s_" % _type
-        selection = []
-        for varname in html.all_varnames_with_prefix(checkbox_name):
-            if html.get_checkbox(varname):
-                selection.append(varname.split(checkbox_name)[-1])
-        return selection
+        return [varname.split(checkbox_name)[-1] \
+                for varname, _value in html.request.itervars(prefix=checkbox_name)
+                if html.get_checkbox(varname)]
 
 
 #.

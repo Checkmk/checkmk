@@ -928,7 +928,7 @@ class TimeperiodValuespec(ValueSpec):
 
     def render_input(self, varprefix, value):
         # The display mode differs when the valuespec is activated
-        vars_copy = dict(html.request.all_vars())
+        vars_copy = dict(html.request.itervars())
 
         # The timeperiod mode can be set by either the GUI switch or by the value itself
         # GUI switch overrules the information stored in the value

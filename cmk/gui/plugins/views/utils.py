@@ -157,7 +157,7 @@ class PainterOptions(object):
         # Also remove the options from current html vars. Otherwise the
         # painter option form will display the just removed options as
         # defaults of the painter option form.
-        for varname in html.all_varnames_with_prefix("po_"):
+        for varname, _value in list(html.request.itervars(prefix="po_")):
             html.del_var(varname)
 
     def get_valuespec_of(self, name):

@@ -81,7 +81,7 @@ def get_availability_options_from_url(what):
 def render_availability_options(what):
     if html.var("_reset"):
         config.user.save_file("avoptions", {})
-        html.request.del_all_vars("avo_")
+        html.request.del_vars("avo_")
         html.del_var("avoptions")
 
     avoptions = availability.get_default_avoptions()
@@ -239,7 +239,7 @@ def render_availability_page(view, datasource, context, filterheaders, only_site
     html.write(confirmation_html_code)
 
     # Remove variables for editing annotations, otherwise they will make it into the uris
-    html.del_all_vars("anno_")
+    html.request.del_vars("anno_")
     if html.var("filled_in") == "editanno":
         html.del_var("filled_in")
 

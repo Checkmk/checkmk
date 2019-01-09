@@ -1154,25 +1154,24 @@ def get_filter_headers(datasource, context):
     # Prepare Filter headers for Livestatus
     filter_headers = ""
     only_sites = None
-    html.stash_vars()
-    for filter_name, filter_vars in context.items():
-        # first set the HTML variables. Sorry - the filters need this
-        if isinstance(filter_vars, dict):  # this is a multi-context filter
-            for uri_varname, value in filter_vars.items():
-                html.set_var(uri_varname, value)
-        else:
-            html.set_var(filter_name, filter_vars)
-
-    # Now compute filter headers for all infos of the used datasource
-    our_infos = datasource["infos"]
-    for filter_name, filter_object in multisite_filters.items():
-        if filter_object.info in our_infos:
-            header = filter_object.filter(datasource["table"])
-            if header.startswith("Sites:"):
-                only_sites = header.strip().split(" ")[1:]
+    with html.stashed_vars():
+        for filter_name, filter_vars in context.items():
+            # first set the HTML variables. Sorry - the filters need this
+            if isinstance(filter_vars, dict):  # this is a multi-context filter
+                for uri_varname, value in filter_vars.items():
+                    html.set_var(uri_varname, value)
             else:
-                filter_headers += header
-    html.unstash_vars()
+                html.set_var(filter_name, filter_vars)
+
+        # Now compute filter headers for all infos of the used datasource
+        our_infos = datasource["infos"]
+        for filter_name, filter_object in multisite_filters.items():
+            if filter_object.info in our_infos:
+                header = filter_object.filter(datasource["table"])
+                if header.startswith("Sites:"):
+                    only_sites = header.strip().split(" ")[1:]
+                else:
+                    filter_headers += header
     return filter_headers, only_sites
 
 

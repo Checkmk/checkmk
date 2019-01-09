@@ -30,22 +30,6 @@
 # | Joerg Linge 2009 <joerg.linge@pnp4nagios.org>     Copyright 2010 |
 # +------------------------------------------------------------------+
 
-# %user  %sys  %wait  %idle physc %entc  lbusy   app  vcsw phint
-# -----  ----  -----  ----- ----- ----- ------   ---  ---- -----
-#   2.5   6.0    0.1   91.5  0.03  11.4    1.8  3.27 1976647217 490545630
-
-# %user  %sys  %wait  %idle physc %entc  lbusy  vcsw phint  %nsp  %utcyc
-# ----- ----- ------ ------ ----- ----- ------ ----- ----- -----  ------
-#   0.2   0.4    0.0   99.3  0.02   1.7    0.0   215     3   101   0.64
-
-# %user  %sys  %wait  %idle physc %entc  lbusy   app  vcsw phint  %nsp  %utcyc
-# ----- ----- ------ ------ ----- ----- ------   --- ----- ----- -----  ------
-#   0.1   0.4    0.0   99.5  0.02   1.6    0.0  3.97   297     0   101   0.64
-
-# %user  %sys  %wait  %idle physc %entc  lbusy  vcsw phint  %nsp
-# ----- ----- ------ ------ ----- ----- ------ ----- ----- -----
-#   0.1   0.2    0.0   99.6  0.04   1.8    2.3   371     0    58
-
 
 def parse_lparstat_aix(info):
     if not info:
@@ -111,15 +95,15 @@ def check_lparstat_aix_cpu(_no_item, params, parsed):
     if None in (user, system, wait):
         return
 
-    perfdata = [("user", user), ("system", system), ("wait", wait)]
-
     util = user + system + wait
-
-    infotext = "user: %2.1f%%, system: %2.1f%%, wait: %2.1f%%" % (user, system, wait)
-
     # ancient legacy rule
     # and legacy None defaults before 1.6
     params = transform_cpu_iowait(params)
+
+    perfdata = [("user", user), ("system", system), ("wait", wait)]
+
+    infotext = "user: %2.1f%%, system: %2.1f%%, wait: %2.1f%%" % (user, system, wait)
+
     result = 0
 
     if isinstance(params.get('util'), tuple):

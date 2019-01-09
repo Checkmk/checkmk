@@ -67,7 +67,7 @@ LOG = logging.getLogger(__name__)
 METRICS_SELECTED = {
     # to add a new metric, just add a made up name, run the
     # agent, and you'll get a error listing available metrics!
-    # key: list of (name(s), grain, aggregation, filter)
+    # key: list of (name(s), interval, aggregation, filter)
     'Microsoft.Network/virtualNetworkGateways': [
         ('AverageBandwidth,P2SBandwidth', 'PT1M', 'average', None),
         ('P2SConnectionCount', 'PT1M', 'maximum', None),
@@ -535,15 +535,15 @@ class AzureClient(object):  # pylint: disable=too-many-instance-attributes
         raw_metrics = list(raw.output.value)
         return raw.response, raw_metrics
 
-    def _fetch_specific_metrics(self, resource, metricnames, time_grain, aggregation, filter_, err):
+    def _fetch_specific_metrics(self, resource, metricnames, interval, aggregation, filter_, err):
         if metricnames.count(',') >= 20:
             raise ValueError("Azure API won't have requests with more than 20 metrics!")
 
         rid = resource.info["id"]
-        timespan = self.timespans[time_grain]
+        timespan = self.timespans[interval]
 
         try:
-            response, raw_metrics = self._metric_api_call(rid, timespan, time_grain, metricnames,
+            response, raw_metrics = self._metric_api_call(rid, timespan, interval, metricnames,
                                                           aggregation, filter_)
         except ErrorResponseException as exc:
             if self.args.debug:
@@ -558,7 +558,7 @@ class AzureClient(object):  # pylint: disable=too-many-instance-attributes
         metrics = []
         for raw_metric in raw_metrics:
             try:
-                metrics.append(AzureMetric(raw_metric, aggregation, time_grain, filter_))
+                metrics.append(AzureMetric(raw_metric, aggregation, interval, filter_))
             except AzureMetricParseError as exc:
                 err.add(exc[0], rid, exc[1])
                 LOG.warning(exc.args[1])
@@ -572,8 +572,8 @@ class AzureClient(object):  # pylint: disable=too-many-instance-attributes
         metric_params = METRICS_SELECTED.get(resource.info["type"], [])
 
         metrics = []
-        for metricnames, time_grain, aggregation, filter_ in metric_params:
-            metrics += self._fetch_specific_metrics(resource, metricnames, time_grain, aggregation,
+        for metricnames, interval, aggregation, filter_ in metric_params:
+            metrics += self._fetch_specific_metrics(resource, metricnames, interval, aggregation,
                                                     filter_, err)
 
         return metrics

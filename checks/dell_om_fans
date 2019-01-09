@@ -30,6 +30,28 @@ def inventory_dell_om_fans(info):
     for line in info:
         yield ( line[0], {} )
 
+def _construct_levels(warn_upper, crit_upper, warn_lower, crit_lower):
+    # We've seen several possibilities:
+    # - 1, 2, 3, 4
+    # - "", "", 3, 4
+    # - "", "", "", 4
+    if warn_lower not in ["", None] and crit_lower not in ["", None]:
+        lower = (int(warn_lower), int(crit_lower))
+    elif crit_lower not in ["", None]:
+        lower = (int(crit_lower), int(crit_lower))
+    else:
+        lower = (None, None)
+
+    if warn_upper not in ["", None] and crit_upper not in ["", None]:
+        upper = (int(warn_upper), int(crit_upper))
+    elif crit_upper not in ["", None]:
+        upper = (int(crit_upper), int(crit_upper))
+    else:
+        upper = (None, None)
+
+    return lower, upper
+
+
 def check_dell_om_fans(item, params, info):
     translate_status = {
         "1"  : (3, "OTHER"),
@@ -50,17 +72,11 @@ def check_dell_om_fans(item, params, info):
             state, state_readable = translate_status[status]
             yield state, "Status: %s, Name: %s" % \
                             (state_readable, name)
-
-            value = int(value)
             if not params:
-                params = {
-                    'lower' : (int(warn_lower), int(crit_lower)),
-                }
-                if not warn_upper == "" and \
-                       crit_upper == "":
-                    params["upper"] = (int(warn_upper), int(crit_upper))
-
-            yield check_fan(value, params)
+                lower, upper = _construct_levels(warn_upper, crit_upper, warn_lower, crit_lower)
+                params['lower'] = lower
+                params['upper'] = upper
+            yield check_fan(int(value), params)
 
 
 check_info["dell_om_fans"] = {

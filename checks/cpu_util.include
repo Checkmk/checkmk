@@ -31,7 +31,7 @@
 # 2. Variant: dictionary:
 #
 #  param = {
-#     "levels" : .... --> compatible with check_levels(), optional
+#     "util" : .... --> compatible with check_levels(), optional
 #     "average" : 15 # -> compute average for 15 minutes, optional
 #   }
 
@@ -62,7 +62,7 @@ def check_cpu_util(util, params, this_time=None, cores=None, perf_max=100):
     if params is None:
         params = {}
     elif isinstance(params, tuple):
-        params = {"levels": params}
+        params = {"util": params}
 
     if this_time is None:
         this_time = time.time()

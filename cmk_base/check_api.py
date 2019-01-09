@@ -384,7 +384,7 @@ def check_levels(value,
                          the value. It has priority over the unit argument.
     infoname: Perf value name for infotext, defaults to dsname
     """
-    if unit:
+    if unit not in ('', '%'):
         unit = " " + unit  # Insert space before MB, GB, etc.
 
     if human_readable_func is None:

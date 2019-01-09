@@ -1,7 +1,11 @@
+import pytest
+import cmk.gui.views
+import cmk.gui.cee.plugins.views.icons
 import cmk.gui.plugins.views.icons as icons
 
 
 def test_builtin_icons_and_actions():
+    cmk.gui.views.transform_old_dict_based_icons()
     builtin_icons = sorted(icons.get_multisite_icons().keys())
     assert builtin_icons == sorted([
         'action_menu',
@@ -38,3 +42,39 @@ def test_builtin_icons_and_actions():
         'status_stale',
         'wato',
     ])
+
+
+def test_legacy_icon_plugin():
+    icon = {
+        "columns": ["column"],
+        "host_columns": ["hcol"],
+        "service_columns": ["scol"],
+        "paint": lambda: "bla",
+        "sort_index": 10,
+        "toplevel": True,
+    }
+    cmk.gui.views.multisite_icons_and_actions["legacy"] = icon
+    cmk.gui.views.transform_old_dict_based_icons()
+
+    registered_icon = icons.get_multisite_icons()["legacy"]
+    assert registered_icon.columns() == icon["columns"]
+    assert registered_icon.host_columns() == icon["host_columns"]
+    assert registered_icon.service_columns() == icon["service_columns"]
+    assert registered_icon.render() == icon["paint"]()
+    assert registered_icon.toplevel() is True
+    assert registered_icon.sort_index() == 10
+
+
+def test_legacy_icon_plugin_defaults():
+    icon = {
+        "columns": ["column"],
+        "host_columns": ["hcol"],
+        "service_columns": ["scol"],
+        "paint": lambda: "bla",
+    }
+    cmk.gui.views.multisite_icons_and_actions["legacy"] = icon
+    cmk.gui.views.transform_old_dict_based_icons()
+
+    registered_icon = icons.get_multisite_icons()["legacy"]
+    assert registered_icon.toplevel() is False
+    assert registered_icon.sort_index() == 30

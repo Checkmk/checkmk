@@ -77,8 +77,9 @@ from cmk.gui.plugins.views import (
     is_stale,
 )
 
-from . import (
-    multisite_icons_and_actions,)
+from cmk.gui.plugins.views.icons import (
+    multisite_icons_and_actions,
+)
 
 #   .--Action Menu---------------------------------------------------------.
 #   |          _        _   _               __  __                         |

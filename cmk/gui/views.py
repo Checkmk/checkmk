@@ -72,6 +72,10 @@ from cmk.gui.permissions import (
     permission_section_registry,
     PermissionSection,
 )
+from cmk.gui.plugins.views.icons.utils import (
+    icon_and_action_registry,
+    Icon,
+)
 
 # Needed for legacy (pre 1.6) plugins
 from cmk.gui.htmllib import HTML  # pylint: disable=unused-import
@@ -140,6 +144,8 @@ def load_plugins(force):
     load_host_tag_painters()
     clear_alarm_sound_states()
 
+    transform_old_dict_based_icons()
+
     # This must be set after plugin loading to make broken plugins raise
     # exceptions all the time and not only the first time (when the plugins
     # are loaded).
@@ -154,6 +160,25 @@ def load_plugins(force):
     config.declare_dynamic_permissions(lambda: visuals.declare_custom_permissions('views'))
 
     cmk.gui.plugins.views.inventory.declare_inventory_columns()
+
+
+# Transform pre 1.6 icon plugins. Deprecate this one day.
+def transform_old_dict_based_icons():
+    for icon_id, icon in multisite_icons_and_actions.items():
+        icon_class = type(
+            "LegacyIcon%s" % icon_id.title(), (Icon,), {
+                "_ident": icon_id,
+                "_icon_spec": icon,
+                "ident": classmethod(lambda cls: cls._ident),
+                "sort_index": lambda self: self._icon_spec.get("sort_index", 30),
+                "toplevel": lambda self: self._icon_spec.get("toplevel", False),
+                "render": lambda self, *args: self._icon_spec["paint"](*args),
+                "columns": lambda self: self._icon_spec.get("columns", []),
+                "host_columns": lambda self: self._icon_spec.get("host_columns", []),
+                "service_columns": lambda self: self._icon_spec.get("service_columns", []),
+            })
+
+        icon_and_action_registry.register_plugin(icon_class)
 
 
 multisite_views = {}  # type: Dict

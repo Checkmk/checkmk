@@ -1237,8 +1237,8 @@ class ConfigVariableBuiltinIconVisibility(ConfigVariable):
         )
 
     def _get_builtin_icons(self):
-        import cmk.gui.views as views
-        return [(id_, id_) for id_ in views.get_multisite_icons()]
+        import cmk.gui.plugins.views.icons
+        return [(id_, id_) for id_ in cmk.gui.plugins.views.icons.get_multisite_icons()]
 
 
 @config_variable_registry.register

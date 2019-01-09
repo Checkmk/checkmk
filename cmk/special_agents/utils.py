@@ -23,9 +23,14 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-
-import sys, requests, getopt
 """Place for common code shared among different Check_MK special agents"""
+
+import getopt
+import json
+import pprint
+import sys
+
+import requests
 
 
 class AgentJSON(object):
@@ -51,7 +56,7 @@ USAGE: agent_%s --section_url [{section_name},{url}]
         long_options = ["section_url=", "help", "newline_replacement=", "debug"]
 
         try:
-            opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
+            opts, _args = getopt.getopt(sys.argv[1:], short_options, long_options)
         except getopt.GetoptError as err:
             sys.stderr.write("%s\n" % err)
             sys.exit(1)
@@ -81,7 +86,6 @@ USAGE: agent_%s --section_url [{section_name},{url}]
             content[section_name].append(requests.get(url).text.replace("\n", newline_replacement))
 
         if opt_debug:
-            import pprint, json
             for line in content:
                 try:
                     pprint.pprint(json.loads(line))

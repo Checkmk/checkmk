@@ -25,82 +25,93 @@
 # Boston, MA 02110-1301 USA.
 
 import cmk.gui.config as config
-from cmk.gui.i18n import _
 from cmk.gui.globals import html
+from cmk.gui.i18n import _
+from cmk.gui.plugins.views import display_options
+from cmk.gui.plugins.views.icons import Icon, icon_and_action_registry
 
-from cmk.gui.plugins.views import (display_options)
 
-from . import multisite_icons_and_actions
+@icon_and_action_registry.register
+class WatoIcon(Icon):
+    @classmethod
+    def ident(cls):
+        return "wato"
 
+    def host_columns(self):
+        return ['filename']
 
-def wato_link(folder, site, hostname, where):
-    if not config.wato_enabled:
-        return
+    def render(self, what, row, tags, custom_vars):
+        def may_see_hosts():
+            return config.user.may("wato.use") and \
+              (config.user.may("wato.seeall") or config.user.may("wato.hosts"))
 
-    if display_options.enabled(display_options.X):
-        url = "wato.py?folder=%s&host=%s" % \
-           (html.urlencode(folder), html.urlencode(hostname))
-        if where == "inventory":
-            url += "&mode=inventory"
-            help_txt = _("Edit services")
-            icon = "services"
+        if not may_see_hosts() or html.mobile:
+            return
+
+        wato_folder = _wato_folder_from_filename(row["host_filename"])
+        if wato_folder is not None:
+            if what == "host":
+                return self._wato_link(wato_folder, row["site"], row["host_name"], "edithost")
+            elif row["service_description"] in ["Check_MK inventory", "Check_MK Discovery"]:
+                return self._wato_link(wato_folder, row["site"], row["host_name"], "inventory")
+
+    def _wato_link(self, folder, site, hostname, where):
+        if not config.wato_enabled:
+            return
+
+        if display_options.enabled(display_options.X):
+            url = "wato.py?folder=%s&host=%s" % \
+              (html.urlencode(folder), html.urlencode(hostname))
+            if where == "inventory":
+                url += "&mode=inventory"
+                help_txt = _("Edit services")
+                icon = "services"
+            else:
+                url += "&mode=edit_host"
+                help_txt = _("Edit this host")
+                icon = "wato"
+            return icon, help_txt, url
         else:
-            url += "&mode=edit_host"
-            help_txt = _("Edit this host")
-            icon = "wato"
-        return icon, help_txt, url
-    else:
-        return
+            return
 
 
-def wato_folder_from_filename(filename):
-    if filename.startswith("/wato/") and filename.endswith("hosts.mk"):
-        return filename[6:-8].rstrip("/")
+@icon_and_action_registry.register
+class DownloadAgentOutputIcon(Icon):
+    """Action for downloading the current agent output."""
+
+    @classmethod
+    def ident(cls):
+        return "download_agent_output"
+
+    def default_sort_index(self):
+        return 50
+
+    def host_columns(self):
+        return ["filename", "check_type"]
+
+    def render(self, what, row, tags, custom_vars):
+        return _paint_download_host_info(what, row, tags, custom_vars, ty="agent")  # pylint: disable=no-value-for-parameter
 
 
-def paint_wato(what, row, tags, custom_vars):
-    def may_see_hosts():
-        return config.user.may("wato.use") and \
-           (config.user.may("wato.seeall") or config.user.may("wato.hosts"))
+@icon_and_action_registry.register
+class DownloadSnmpWalkIcon(Icon):
+    """Action for downloading the current snmp output."""
 
-    if not may_see_hosts() or html.mobile:
-        return
+    @classmethod
+    def ident(cls):
+        return "download_snmp_walk"
 
-    wato_folder = wato_folder_from_filename(row["host_filename"])
-    if wato_folder is not None:
-        if what == "host":
-            return wato_link(wato_folder, row["site"], row["host_name"], "edithost")
-        elif row["service_description"] in ["Check_MK inventory", "Check_MK Discovery"]:
-            return wato_link(wato_folder, row["site"], row["host_name"], "inventory")
+    def host_columns(self):
+        return ["filename"]
 
+    def default_sort_index(self):
+        return 50
 
-multisite_icons_and_actions['wato'] = {
-    'host_columns': ["filename"],
-    'paint': paint_wato,
-}
-
-#.
-#   .--Agent-Output--------------------------------------------------------.
-#   |     _                    _         ___        _               _      |
-#   |    / \   __ _  ___ _ __ | |_      / _ \ _   _| |_ _ __  _   _| |_    |
-#   |   / _ \ / _` |/ _ \ '_ \| __|____| | | | | | | __| '_ \| | | | __|   |
-#   |  / ___ \ (_| |  __/ | | | ||_____| |_| | |_| | |_| |_) | |_| | |_    |
-#   | /_/   \_\__, |\___|_| |_|\__|     \___/ \__,_|\__| .__/ \__,_|\__|   |
-#   |         |___/                                    |_|                 |
-#   +----------------------------------------------------------------------+
-#   | Action for downloading the current agent output                      |
-#   '----------------------------------------------------------------------'
+    def render(self, what, row, tags, custom_vars):
+        return _paint_download_host_info(what, row, tags, custom_vars, ty="walk")  # pylint: disable=no-value-for-parameter
 
 
-def paint_download_agent_output(*args):
-    return paint_download_host_info(*args, ty="agent")  # pylint: disable=no-value-for-parameter
-
-
-def paint_download_snmp_walk(*args):
-    return paint_download_host_info(*args, ty="walk")  # pylint: disable=no-value-for-parameter
-
-
-def paint_download_host_info(what, row, tags, host_custom_vars, ty):
+def _paint_download_host_info(what, row, tags, host_custom_vars, ty):
     if (what == "host" or (what == "service" and row["service_description"] == "Check_MK")) \
        and config.user.may("wato.download_agent_output") \
        and not row["host_check_type"] == 2: # Not for shadow hosts
@@ -116,7 +127,7 @@ def paint_download_host_info(what, row, tags, host_custom_vars, ty):
 
         params = [
             ("host", row["host_name"]),
-            ("folder", wato_folder_from_filename(row["host_filename"])),
+            ("folder", _wato_folder_from_filename(row["host_filename"])),
             ("type", ty),
             ("_start", "1"),
         ]
@@ -137,16 +148,6 @@ def paint_download_host_info(what, row, tags, host_custom_vars, ty):
         return "agent_output", title, url
 
 
-multisite_icons_and_actions['download_agent_output'] = {
-    'host_columns': ["filename", "check_type"],
-    'paint': paint_download_agent_output,
-    'toplevel': False,
-    'sort_index': 50,
-}
-
-multisite_icons_and_actions['download_snmp_walk'] = {
-    'host_columns': ["filename"],
-    'paint': paint_download_snmp_walk,
-    'toplevel': False,
-    'sort_index': 50,
-}
+def _wato_folder_from_filename(filename):
+    if filename.startswith("/wato/") and filename.endswith("hosts.mk"):
+        return filename[6:-8].rstrip("/")

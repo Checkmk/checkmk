@@ -1,0 +1,12 @@
+Title: Icons & actions visibility can now be controlled by user permissions
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1547038453
+Class: feature
+
+The visibility of the standard and custom icons & actions can now be controlled
+by user permissions. By default the users of all roles may see all icons & actions.
+Each icon can be hidden for a role by disabling the permission to see an icon.

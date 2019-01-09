@@ -174,7 +174,7 @@ class Request(object):
         self._vars.pop(varname, None)
 
     # TODO: self._vars should be strictly read only in the Request() object
-    def del_vars(self, prefix=None):
+    def del_vars(self, prefix=""):
         for varname, _value in list(self.itervars(prefix)):
             self.del_var(varname)
 

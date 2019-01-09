@@ -5,8 +5,9 @@ license: GPL
 distribution: check_mk
 description:
  This check measures the CPU utilization during the last check
- cycle. A level can be set only on {wait} (disk wait). If you
- want to set levels on your CPU usage you better use the check
+ cycle.
+ Levels can be set on {wait} (disk wait) and the utilizaion.
+ If you want to set levels on your CPU load you better use the check
  {ucd_cpu_load}.
 
  The information is fetched via SNMP from the UCD SNMP daemon.

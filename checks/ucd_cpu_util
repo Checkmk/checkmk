@@ -32,23 +32,23 @@
 #    UCD-SNMP-MIB::ssCpuRawKernel.0 = Counter32: 96265777
 #    UCD-SNMP-MIB::ssCpuRawInterrupt.0 = Counter32: 1940759
 
-kernel_util_default_levels = None
-
 
 def inventory_ucd_cpu_util(info):
-    if len(info) == 1:
-        return [(None, "kernel_util_default_levels")]
+    if info:
+        yield None, {}
 
 
 def check_ucd_cpu_util(item, params, info):
-    counters = map(saveint, info[0])
-    rates = []
-    this_time = time.time()
+    # ancient iowait tuple rule
+    # and legacy None default prior to 1.6
+    params = transform_cpu_iowait(params)
 
-    for n, c in enumerate(counters):
-        name = "cpu.util.%d" % n
-        rate = get_rate(name, this_time, c)
-        rates.append(rate)
+    counters = map(saveint, info[0])
+    this_time = time.time()
+    rates = [
+        get_rate("cpu.util.%d" % index, this_time, counter)
+        for index, counter in enumerate(counters)
+    ]
 
     total = sum(rates)
     if total == 0:
@@ -58,30 +58,14 @@ def check_ucd_cpu_util(item, params, info):
     user = 100 * (parts[0] + parts[1])
     system = 100 * (parts[2] + parts[5] + parts[6])
     wait = 100 * (parts[4])
+    util = user + system + wait
 
-    perfdata = [
-        ("user", "%.3f" % user),
-        ("system", "%.3f" % system),
-        ("wait", "%.3f" % wait),
-    ]
+    yield check_levels(user, "user", None, '%')
+    yield check_levels(system, "system", None, '%')
+    yield check_levels(wait, "wait", params.get("iowait"), '%')
 
-    status = 0
-    status_txt = ''
-    params = transform_cpu_iowait(params)
-    try:
-        warn, crit = params['iowait']
-        if wait >= crit:
-            status = 2
-            status_txt = ' wait too large (!!)'
-        elif wait >= warn:
-            status = 1
-            status_txt = ' wait too large (!)'
-    except:
-        pass
-
-    return (status,
-            "user: %2.1f%%, system: %2.1f%%, wait: %2.1f%%%s" % (user, system, wait, status_txt),
-            perfdata)
+    for util_result in check_cpu_util(util, params):
+        yield util_result
 
 
 check_info["ucd_cpu_util"] = {
@@ -91,6 +75,6 @@ check_info["ucd_cpu_util"] = {
     'has_perfdata': True,
     'snmp_info': ('.1.3.6.1.4.1.2021.11', [50, 51, 52, 53, 54, 55, 56]),
     'snmp_scan_function': prefer_hr_else_ucd,
-    'includes': ["ucd_hr.include", "transforms.include"],
+    'includes': ["ucd_hr.include", "transforms.include", "cpu_util.include"],
     'group': 'cpu_iowait',
 }

@@ -124,8 +124,8 @@ class PageKeyManagement(object):
         raise NotImplementedError()
 
     def action(self):
-        if self._may_edit_config() and html.has_var("_delete"):
-            key_id = int(html.var("_delete"))
+        if self._may_edit_config() and html.request.has_var("_delete"):
+            key_id = int(html.request.var("_delete"))
             if key_id not in self.keys:
                 return
 
@@ -196,7 +196,7 @@ class PageEditKey(object):
             # Remove the secret key from known URL vars. Otherwise later constructed URLs
             # which use the current page context will contain the passphrase which could
             # leak the secret information
-            html.del_var("key_p_passphrase")
+            html.request.del_var("key_p_passphrase")
             self._vs_key().validate_value(value, "key")
             self._create_key(value)
             return self.back_mode
@@ -274,7 +274,7 @@ class PageUploadKey(object):
     def action(self):
         if html.check_transaction():
             value = self._vs_key().from_html_vars("key")
-            html.del_var("key_p_passphrase")
+            html.request.del_var("key_p_passphrase")
             self._vs_key().validate_value(value, "key")
 
             key_file = self._get_uploaded(value, "key_file")
@@ -398,7 +398,7 @@ class PageDownloadKey(object):
             keys = self.load()
 
             try:
-                key_id = int(html.var("key"))
+                key_id = int(html.request.var("key"))
             except ValueError:
                 raise MKUserError(None, _("You need to provide a valid key id."))
 

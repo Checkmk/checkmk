@@ -59,9 +59,9 @@ class ModeRandomHosts(WatoMode):
         if not html.check_transaction():
             return "folder"
 
-        count = int(html.var("count"))
-        folders = int(html.var("folders"))
-        levels = int(html.var("levels"))
+        count = int(html.request.var("count"))
+        folders = int(html.request.var("folders"))
+        levels = int(html.request.var("levels"))
         created = self._create_random_hosts(watolib.Folder.current(), count, folders, levels)
         return "folder", _("Created %d random hosts.") % created
 

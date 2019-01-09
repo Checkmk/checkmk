@@ -124,8 +124,8 @@ class DashletStats(Dashlet):
         for (name, color, viewurl, query), count in table_entries:
             url = "view.py?view_name=" + viewurl + "&filled_in=filter&search=1"
             for filter_name, url_params in self._dashlet_spec['context'].items():
-                if filter_name == "wato_folder" and html.has_var("wato_folder"):
-                    url += "&wato_folder=" + html.var("wato_folder")
+                if filter_name == "wato_folder" and html.request.has_var("wato_folder"):
+                    url += "&wato_folder=" + html.request.var("wato_folder")
 
                 elif filter_name == "svcstate":
                     # The svcstate filter URL vars are controlled by dashlet

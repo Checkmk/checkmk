@@ -588,18 +588,18 @@ class ActionHandler(object):
 
     def confirm_dialog_opened(self):
         for action_var in [self.stop_job_var, self.delete_job_var]:
-            if html.has_var(action_var):
+            if html.request.has_var(action_var):
                 return True
         return False
 
     def handle_actions(self):
-        if html.var(self.acknowledge_job_var):
+        if html.request.var(self.acknowledge_job_var):
             self.acknowledge_job()
             return True
-        if html.var(self.stop_job_var):
+        if html.request.var(self.stop_job_var):
             self.stop_job()
             return True
-        elif html.var(self.delete_job_var):
+        elif html.request.var(self.delete_job_var):
             self.delete_job()
             return True
         return False
@@ -614,7 +614,7 @@ class ActionHandler(object):
         return self._did_delete_job
 
     def acknowledge_job(self):
-        job_id = html.var(self.acknowledge_job_var)
+        job_id = html.request.var(self.acknowledge_job_var)
         job = GUIBackgroundJob(job_id)
         if not job.is_available():
             return
@@ -623,7 +623,7 @@ class ActionHandler(object):
         job.acknowledge(config.user.id)
 
     def stop_job(self):
-        job_id = html.var(self.stop_job_var)
+        job_id = html.request.var(self.stop_job_var)
         if not job_id:
             return
 
@@ -643,7 +643,7 @@ class ActionHandler(object):
             html.message(_("Background job has been stopped"))
 
     def delete_job(self):
-        job_id = html.var(self.delete_job_var)
+        job_id = html.request.var(self.delete_job_var)
         if not job_id:
             return
 

@@ -75,8 +75,8 @@ class ModeGroups(WatoMode):
         global_buttons()
 
     def action(self):
-        if html.var('_delete'):
-            delname = html.var("_delete")
+        if html.request.var('_delete'):
+            delname = html.request.var("_delete")
             usages = watolib.find_usages_of_group(delname, self.type_name)
 
             if usages:
@@ -156,11 +156,11 @@ class ModeEditGroup(WatoMode):
         self._groups = all_groups.setdefault(self.type_name, {})
 
     def _from_vars(self):
-        self._name = html.var("edit")  # missing -> new group
+        self._name = html.request.var("edit")  # missing -> new group
         self._new = self._name is None
 
         if self._new:
-            clone_group = html.var("clone")
+            clone_group = html.request.var("clone")
             if clone_group:
                 self._name = clone_group
 
@@ -199,7 +199,7 @@ class ModeEditGroup(WatoMode):
         self._determine_additional_group_data()
 
         if self._new:
-            self._name = html.var("name").strip()
+            self._name = html.request.var("name").strip()
             watolib.add_group(self._name, self.type_name, self.group)
         else:
             watolib.edit_group(self._name, self.type_name, self.group)

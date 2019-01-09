@@ -1529,8 +1529,8 @@ def paint_host_group_memberlist(row):
     links = []
     for group in row["host_groups"]:
         link = "view.py?view_name=hostgroup&hostgroup=" + group
-        if html.var("display_options"):
-            link += "&display_options=%s" % html.attrencode(html.var("display_options"))
+        if html.request.var("display_options"):
+            link += "&display_options=%s" % html.attrencode(html.request.var("display_options"))
         links.append(html.render_a(group, link))
     return "", HTML(", ").join(links)
 

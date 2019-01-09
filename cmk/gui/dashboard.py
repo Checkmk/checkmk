@@ -485,10 +485,10 @@ def permitted_dashboards():
 def page_dashboard():
     load_dashboards()
 
-    name = html.var("name")
+    name = html.request.var("name")
     if not name:
         name = "main"
-        html.set_var("name", name)  # make sure that URL context is always complete
+        html.request.set_var("name", name)  # make sure that URL context is always complete
     if name not in available_dashboards:
         raise MKUserError("name", _('The requested dashboard does not exist.'))
 
@@ -515,7 +515,7 @@ def load_dashboard_with_cloning(name, edit=True):
 # Actual rendering function
 def draw_dashboard(name):
     mode = 'display'
-    if html.var('edit') == '1':
+    if html.request.var('edit') == '1':
         mode = 'edit'
 
     if mode == 'edit' and not config.user.may("general.edit_dashboards"):
@@ -528,7 +528,7 @@ def draw_dashboard(name):
     # WATO subfolder or file. This could be a configurable feature in
     # future, but currently we assume, that *all* dashboards are filename
     # sensitive.
-    wato_folder = html.var("wato_folder")
+    wato_folder = html.request.var("wato_folder")
 
     title = visuals.visual_title('dashboard', board)
 
@@ -643,7 +643,7 @@ def render_dashlet_content(dashlet_instance, is_update, stash_html_vars=True):
     def update_or_show():
         visuals.add_context_to_uri_vars(dashlet_instance.dashlet_spec)
         if dashlet_instance.wato_folder is not None:
-            html.set_var("wato_folder", dashlet_instance.wato_folder)
+            html.request.set_var("wato_folder", dashlet_instance.wato_folder)
         with html.plugged():
             if is_update:
                 dashlet_instance.update()
@@ -654,7 +654,7 @@ def render_dashlet_content(dashlet_instance, is_update, stash_html_vars=True):
     if stash_html_vars:
         with html.stashed_vars():
             html.request.del_vars()
-            html.set_var("name", dashlet_instance.dashboard_name)
+            html.request.set_var("name", dashlet_instance.dashboard_name)
             return update_or_show()
     else:
         return update_or_show()
@@ -695,7 +695,7 @@ def dashboard_edit_controls(name, board):
         html.open_li(
             class_=["sublink"],
             id_="control_add",
-            style="display:%s;" % ("block" if html.var("edit") == '1' else "none"),
+            style="display:%s;" % ("block" if html.request.var("edit") == '1' else "none"),
             onmouseover="cmk.dashboard.show_submenu(\'control_add\');")
         html.open_a(href="javascript:void(0)")
         html.img("images/dashboard_menuarrow.png")
@@ -747,7 +747,7 @@ def dashboard_edit_controls(name, board):
         # Stop editing
         #
         html.open_li(
-            style="display:%s;" % ("block" if html.var("edit") == '1' else "none"),
+            style="display:%s;" % ("block" if html.request.var("edit") == '1' else "none"),
             id_="control_view")
         html.open_a(
             href="javascript:void(0)",
@@ -762,7 +762,7 @@ def dashboard_edit_controls(name, board):
         # Enable editing link
         #
         html.open_li(
-            style="display:%s;" % ("none" if html.var("edit") == '1' else "block"),
+            style="display:%s;" % ("none" if html.request.var("edit") == '1' else "block"),
             id_="control_edit")
         html.open_a(href="javascript:void(0)", onclick="cmk.dashboard.toggle_dashboard_edit(true);")
         html.img("images/trans.png")
@@ -883,7 +883,7 @@ def draw_dashlet(dashlet_instance, dashlet_content_html, dashlet_title_html):
 
 @cmk.gui.pages.register("dashboard_dashlet")
 def ajax_dashlet():
-    name = html.var('name')
+    name = html.request.var('name')
     if not name:
         raise MKUserError("name", _('The name of the dashboard is missing.'))
 
@@ -916,7 +916,7 @@ def ajax_dashlet():
     if the_dashlet['type'] not in dashlet_registry:
         raise MKUserError("id", _('The requested dashlet type does not exist.'))
 
-    wato_folder = html.var("wato_folder")
+    wato_folder = html.request.var("wato_folder")
 
     dashlet_type = get_dashlet_type(the_dashlet)
     dashlet_instance = dashlet_type(name, board, ident, the_dashlet, wato_folder)
@@ -1041,8 +1041,8 @@ def create_dashboard(old_dashboard, dashboard):
 
 @cmk.gui.pages.register("create_view_dashlet")
 def page_create_view_dashlet():
-    create = html.var('create', '1') == '1'
-    name = html.var('name')
+    create = html.request.var('create', '1') == '1'
+    name = html.request.var('name')
 
     if create:
         import cmk.gui.views as views
@@ -1057,7 +1057,7 @@ def page_create_view_dashlet():
 @cmk.gui.pages.register("create_view_dashlet_infos")
 def page_create_view_dashlet_infos():
     import cmk.gui.views as views
-    ds_name = html.var('datasource')
+    ds_name = html.request.var('datasource')
     if ds_name not in views.multisite_datasources:
         raise MKUserError("datasource", _('The given datasource is not supported'))
 
@@ -1066,12 +1066,13 @@ def page_create_view_dashlet_infos():
         'views',
         views.multisite_datasources[ds_name]['infos'],
         next_url=html.makeuri_contextless([
-            ('name', html.var('name')),
+            ('name', html.request.var('name')),
             ('type', 'view'),
             ('datasource', ds_name),
             ('back', html.makeuri([])),
             ('next',
-             html.makeuri_contextless([('name', html.var('name')), ('edit', '1')], 'dashboard.py')),
+             html.makeuri_contextless([('name', html.request.var('name')),
+                                       ('edit', '1')], 'dashboard.py')),
         ],
                                           filename='edit_dashlet.py'))
 
@@ -1087,12 +1088,12 @@ def choose_view(name):
 
     html.header(_('Create Dashlet from existing View'), stylesheets=["pages"])
     html.begin_context_buttons()
-    back_url = html.get_url_input("back",
-                                  "dashboard.py?edit=1&name=%s" % html.urlencode(html.var('name')))
+    back_url = html.get_url_input(
+        "back", "dashboard.py?edit=1&name=%s" % html.urlencode(html.request.var('name')))
     html.context_button(_("Back"), back_url, "back")
     html.end_context_buttons()
 
-    if html.var('save') and html.check_transaction():
+    if html.request.var('save') and html.check_transaction():
         try:
             view_name = vs_view.from_html_vars('view')
             vs_view.validate_value(view_name, 'view')
@@ -1131,13 +1132,13 @@ def page_edit_dashlet():
     if not config.user.may("general.edit_dashboards"):
         raise MKAuthException(_("You are not allowed to edit dashboards."))
 
-    board = html.var('name')
+    board = html.request.var('name')
     if not board:
         raise MKUserError("name", _('The name of the dashboard is missing.'))
 
-    ty = html.var('type')
+    ty = html.request.var('type')
 
-    if html.has_var('id'):
+    if html.request.has_var('id'):
         ident = html.get_integer_input("id")
     else:
         ident = None
@@ -1169,7 +1170,7 @@ def page_edit_dashlet():
         }
         ident = len(dashboard['dashlets'])
 
-        single_infos_raw = html.var('single_infos')
+        single_infos_raw = html.request.var('single_infos')
         single_infos = []
         if single_infos_raw:
             single_infos = single_infos_raw.split(',')
@@ -1275,7 +1276,7 @@ def page_edit_dashlet():
         # It's a tuple of functions which should be used to render and parse the params
         render_input_func, handle_input_func = params()
 
-    if html.var('save') and html.transaction_valid():
+    if html.request.var('save') and html.transaction_valid():
         try:
             general_properties = vs_general.from_html_vars('general')
             vs_general.validate_value(general_properties, 'general')
@@ -1338,7 +1339,7 @@ def page_delete_dashlet():
     if not config.user.may("general.edit_dashboards"):
         raise MKAuthException(_("You are not allowed to edit dashboards."))
 
-    board = html.var('name')
+    board = html.request.var('name')
     if not board:
         raise MKUserError("name", _('The name of the dashboard is missing.'))
 
@@ -1400,7 +1401,7 @@ def check_ajax_update():
     if not config.user.may("general.edit_dashboards"):
         raise MKAuthException(_("You are not allowed to edit dashboards."))
 
-    board = html.var('name')
+    board = html.request.var('name')
     if not board:
         raise MKUserError("name", _('The name of the dashboard is missing.'))
 
@@ -1426,15 +1427,15 @@ def ajax_dashlet_pos():
 
     board['mtime'] = int(time.time())
 
-    dashlet['position'] = int(html.var('x')), int(html.var('y'))
-    dashlet['size'] = int(html.var('w')), int(html.var('h'))
+    dashlet['position'] = int(html.request.var('x')), int(html.request.var('y'))
+    dashlet['size'] = int(html.request.var('w')), int(html.request.var('h'))
     visuals.save('dashboards', dashboards)
     html.write('OK %d' % board['mtime'])
 
 
 @cmk.gui.pages.register("ajax_delete_user_notification")
 def ajax_delete_user_notification():
-    msg_id = html.var("id")
+    msg_id = html.request.var("id")
     notify.delete_gui_message(msg_id)
 
 

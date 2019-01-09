@@ -84,7 +84,7 @@ class ModeBulkEdit(WatoMode):
         # and then another bulk edit has made, the attributes need to be reset before
         # rendering the form. Otherwise the second edit will have the attributes of the
         # first set.
-        host_hash = html.var("host_hash")
+        host_hash = html.request.var("host_hash")
         if not host_hash or host_hash != current_host_hash:
             html.request.del_vars(prefix="attr_")
             html.request.del_vars(prefix="bulk_change_")

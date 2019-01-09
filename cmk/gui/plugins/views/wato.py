@@ -66,7 +66,7 @@ def get_wato_folder(row, how, with_links=True):
         # We assume that only hosts are show, that are below the
         # current WATO path. If not then better output absolute
         # path then wrong path.
-        current_path = html.var("wato_folder")
+        current_path = html.request.var("wato_folder")
         if not current_path or not wato_path.startswith(current_path):
             return " / ".join(title_path)
 

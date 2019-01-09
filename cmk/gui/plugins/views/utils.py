@@ -116,11 +116,11 @@ class PainterOptions(object):
         if not self.painter_option_form_enabled():
             return
 
-        if html.has_var("_reset_painter_options"):
+        if html.request.has_var("_reset_painter_options"):
             self._clear_painter_options(view_name)
             return
 
-        elif html.has_var("_update_painter_options"):
+        elif html.request.has_var("_update_painter_options"):
             self._set_from_submitted_form(view_name)
 
     def _set_from_submitted_form(self, view_name):
@@ -158,7 +158,7 @@ class PainterOptions(object):
         # painter option form will display the just removed options as
         # defaults of the painter option form.
         for varname, _value in list(html.request.itervars(prefix="po_")):
-            html.del_var(varname)
+            html.request.del_var(varname)
 
     def get_valuespec_of(self, name):
         opt = multisite_painter_options[name]
@@ -384,7 +384,7 @@ def url_to_view(row, view_name):
         if add_site_hint and row.get('site'):
             url_vars.append(('site', row['site']))
 
-        do = html.var("display_options")
+        do = html.request.var("display_options")
         if do:
             url_vars.append(("display_options", do))
 
@@ -728,7 +728,7 @@ def join_row(row, cell):
 
 def get_view_infos(view):
     """Return list of available datasources (used to render filters)"""
-    ds_name = view.get('datasource', html.var('datasource'))
+    ds_name = view.get('datasource', html.request.var('datasource'))
     return multisite_datasources[ds_name]['infos']
 
 
@@ -1413,7 +1413,7 @@ def get_separated_sorters(view):
     # then remove the group sorters. The left sorters must be the user
     # individual sorters for this view.
     # Then remove the user sorters from the view sorters
-    user_sort = parse_url_sorters(html.var('sort'))
+    user_sort = parse_url_sorters(html.request.var('sort'))
 
     substract_sorters(user_sort, group_sort)
     substract_sorters(view_sort, user_sort)

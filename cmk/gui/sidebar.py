@@ -595,8 +595,8 @@ def ajax_snapin():
 
     user_config = UserSidebarConfig(config.user, config.sidebar)
 
-    snapin_id = html.var("name")
-    snapin_ids = [snapin_id] if snapin_id else html.var("names", "").split(",")
+    snapin_id = html.request.var("name")
+    snapin_ids = [snapin_id] if snapin_id else html.request.var("names", "").split(",")
 
     snapin_code = []
     for snapin_id in snapin_ids:
@@ -608,7 +608,7 @@ def ajax_snapin():
         # them, when the core has been restarted after their initial
         # rendering
         if not snapin_instance.refresh_regularly() and snapin_instance.refresh_on_restart():
-            since = float(html.var('since', 0))
+            since = float(html.request.var('since', 0))
             newest = since
             for site in sites.states().values():
                 prog_start = site.get("program_start", 0)
@@ -638,7 +638,7 @@ def ajax_snapin():
 def ajax_fold():
     html.set_output_format("json")
     user_config = UserSidebarConfig(config.user, config.sidebar)
-    user_config.folded = html.var("fold") == "yes"
+    user_config.folded = html.request.var("fold") == "yes"
     user_config.save()
 
 
@@ -649,8 +649,8 @@ def ajax_openclose():
     if not config.user.may("general.configure_sidebar"):
         return None
 
-    snapin_id = html.var("name")
-    state = html.var("state")
+    snapin_id = html.request.var("name")
+    state = html.request.var("state")
     if state not in [SnapinVisibility.OPEN.value, SnapinVisibility.CLOSED.value, "off"]:
         raise MKUserError("state", "Invalid state: %s" % state)
 
@@ -676,8 +676,8 @@ def move_snapin():
     if not config.user.may("general.configure_sidebar"):
         return None
 
-    snapin_id = html.var("name")
-    before_id = html.var("before")
+    snapin_id = html.request.var("name")
+    before_id = html.request.var("before")
 
     user_config = UserSidebarConfig(config.user, config.sidebar)
 
@@ -704,7 +704,7 @@ def ajax_get_messages():
 def ajax_message_read():
     html.set_output_format("json")
     try:
-        notify.delete_gui_message(html.var('id'))
+        notify.delete_gui_message(html.request.var('id'))
         html.write("OK")
     except:
         if config.debug:
@@ -810,7 +810,7 @@ class PageAddSnapin(object):
         CustomSnapins.context_button_list()
         html.end_context_buttons()
 
-        addname = html.var("name")
+        addname = html.request.var("name")
         if addname in snapin_registry and addname not in self._used_snapins(
         ) and html.check_transaction():
             self._user_config.add_snapin(UserSidebarSnapin.from_snapin_type_id(addname))
@@ -856,11 +856,11 @@ class PageAddSnapin(object):
 @cmk.gui.pages.register("sidebar_ajax_set_snapin_site")
 def ajax_set_snapin_site():
     html.set_output_format("json")
-    ident = html.var("ident")
+    ident = html.request.var("ident")
     if ident not in snapin_registry:
         raise MKUserError(None, _("Invalid ident"))
 
-    site = html.var("site")
+    site = html.request.var("site")
     site_choices = dict([ ("", _("All sites")), ] \
                  +  config.get_event_console_site_choices())
 

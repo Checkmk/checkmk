@@ -71,7 +71,7 @@ def page_version():
 
 
 def handle_acknowledgement():
-    if html.var("_werk_ack") and html.check_transaction():
+    if html.request.var("_werk_ack") and html.check_transaction():
         werk_id = html.get_integer_input("_werk_ack")
         if werk_id not in g_werks:
             raise MKUserError("werk", _("This werk does not exist."))
@@ -85,7 +85,7 @@ def handle_acknowledgement():
             html.reload_sidebar()
             load_werks()  # reload ack states after modification
 
-    elif html.var("_ack_all"):
+    elif html.request.var("_ack_all"):
         if html.confirm(
                 _("Do you really want to acknowledge <b>all</b> incompatible werks?"),
                 method="GET"):
@@ -296,7 +296,7 @@ def render_unacknowleged_werks():
             _("Acknowledge all"), html.makeactionuri([("_ack_all", "1")]), "werk_ack")
         html.end_context_buttons()
 
-    if werks and not html.has_var("show_unack"):
+    if werks and not html.request.has_var("show_unack"):
         html.open_div(class_=["warning"])
         html.write_text(
             _("<b>Warning:</b> There are %d unacknowledged incompatible werks:") % len(werks))
@@ -330,7 +330,7 @@ _SORT_AND_GROUP = {
 
 
 def render_werks_table():
-    if html.var("show_unack") and not html.has_var("wo_set"):
+    if html.request.var("show_unack") and not html.request.has_var("wo_set"):
         werk_table_options = _default_werk_table_options()
     else:
         werk_table_options = _render_werk_table_options()
@@ -415,7 +415,7 @@ def _render_werk_table_options():
     for name, height, vs, default_value in _werk_table_option_entries():
         value = default_value
         try:
-            if html.has_var("wo_set"):
+            if html.request.has_var("wo_set"):
                 value = vs.from_html_vars("wo_" + name)
                 vs.validate_value(value, "wo_" + name)
         except MKUserError as e:

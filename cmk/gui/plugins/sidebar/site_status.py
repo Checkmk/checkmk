@@ -152,7 +152,7 @@ table.sitestate td.state {
         if not html.check_transaction():
             return
 
-        switch_var = html.var("_site_switch")
+        switch_var = html.request.var("_site_switch")
         if switch_var:
             for info in switch_var.split(","):
                 sitename, onoff = info.split(":")

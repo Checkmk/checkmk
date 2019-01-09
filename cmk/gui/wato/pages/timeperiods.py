@@ -90,7 +90,7 @@ class ModeTimeperiods(WatoMode):
             "ical")
 
     def action(self):
-        delname = html.var("_delete")
+        delname = html.request.var("_delete")
         if delname and html.transaction_valid():
             if delname in watolib.builtin_timeperiods():
                 raise MKUserError("_delete", _("Builtin timeperiods can not be modified"))
@@ -397,24 +397,24 @@ class ModeTimeperiodImportICal(WatoMode):
                 raise
             raise MKUserError('ical_file', _('Failed to parse file: %s') % e)
 
-        html.set_var('alias', data.get('descr', data.get('name', filename)))
+        html.request.set_var('alias', data.get('descr', data.get('name', filename)))
 
         for day in defines.weekday_ids():
-            html.set_var('%s_0_from' % day, '')
-            html.set_var('%s_0_until' % day, '')
+            html.request.set_var('%s_0_from' % day, '')
+            html.request.set_var('%s_0_until' % day, '')
 
-        html.set_var('except_count', "%d" % len(data['events']))
+        html.request.set_var('except_count', "%d" % len(data['events']))
         for index, event in enumerate(data['events']):
             index += 1
-            html.set_var('except_%d_0' % index, event['date'])
-            html.set_var('except_indexof_%d' % index, "%d" % index)
+            html.request.set_var('except_%d_0' % index, event['date'])
+            html.request.set_var('except_indexof_%d' % index, "%d" % index)
 
             if ical["times"]:
                 for n, time_spec in enumerate(ical["times"]):
                     start_time = ":".join("%02d" % x for x in time_spec[0])
                     end_time = ":".join("%02d" % x for x in time_spec[1])
-                    html.set_var('except_%d_1_%d_from' % (index, n), start_time)
-                    html.set_var('except_%d_1_%d_until' % (index, n), end_time)
+                    html.request.set_var('except_%d_1_%d_from' % (index, n), start_time)
+                    html.request.set_var('except_%d_1_%d_until' % (index, n), end_time)
 
         return "edit_timeperiod"
 
@@ -578,14 +578,14 @@ class ModeEditTimeperiod(WatoMode):
 
     def _from_vars(self):
         self._timeperiods = watolib.load_timeperiods()
-        self._name = html.var("edit")  # missing -> new group
+        self._name = html.request.var("edit")  # missing -> new group
         self._new = self._name is None
 
         if self._name in watolib.builtin_timeperiods():
             raise MKUserError("edit", _("Builtin timeperiods can not be modified"))
 
         if self._new:
-            clone_name = html.var("clone")
+            clone_name = html.request.var("clone")
             if clone_name:
                 self._name = clone_name
 

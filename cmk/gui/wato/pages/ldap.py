@@ -80,8 +80,8 @@ class ModeLDAPConfig(LDAPMode):
 
     def action(self):
         connections = userdb.load_connection_config(lock=True)
-        if html.has_var("_delete"):
-            index = int(html.var("_delete"))
+        if html.request.has_var("_delete"):
+            index = int(html.request.var("_delete"))
             connection = connections[index]
             c = wato_confirm(
                 _("Confirm deletion of LDAP connection"),
@@ -97,7 +97,7 @@ class ModeLDAPConfig(LDAPMode):
             else:
                 return
 
-        elif html.has_var("_move"):
+        elif html.request.has_var("_move"):
             if not html.check_transaction():
                 return
 
@@ -162,12 +162,12 @@ class ModeEditLDAPConnection(LDAPMode):
         return ["global"]
 
     def _from_vars(self):
-        self._connection_id = html.var("id")
+        self._connection_id = html.request.var("id")
         self._connection_cfg = {}
         self._connections = userdb.load_connection_config(lock=html.is_transaction())
 
         if self._connection_id is None:
-            clone_id = html.var("clone")
+            clone_id = html.request.var("clone")
             if clone_id is not None:
                 self._connection_cfg = self._get_connection_cfg_and_index(clone_id)[0]
 
@@ -221,11 +221,11 @@ class ModeEditLDAPConnection(LDAPMode):
 
         userdb.save_connection_config(self._connections)
         config.user_connections = self._connections  # make directly available on current page
-        if html.var("_save"):
+        if html.request.var("_save"):
             return "ldap_config"
         else:
             # Fix the case where a user hit "Save & Test" during creation
-            html.set_var('id', self._connection_id)
+            html.request.set_var('id', self._connection_id)
 
     def page(self):
         html.open_div(id_="ldap")
@@ -246,7 +246,7 @@ class ModeEditLDAPConnection(LDAPMode):
 
         html.open_td(style="padding-left:10px;vertical-align:top")
         html.h2(_('Diagnostics'))
-        if not html.var('_test') or not self._connection_id:
+        if not html.request.var('_test') or not self._connection_id:
             html.message(
                 HTML(
                     '<p>%s</p><p>%s</p>' %

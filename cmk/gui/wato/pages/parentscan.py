@@ -260,24 +260,24 @@ class ModeParentScan(WatoMode):
         html.context_button(_("Folder"), watolib.Folder.current().url(), "back")
 
     def _from_vars(self):
-        self._start = bool(html.var("_start"))
+        self._start = bool(html.request.var("_start"))
         # 'all' not set -> only scan checked hosts in current folder, no recursion
         # otherwise: all host in this folder, maybe recursively
-        self._all = bool(html.var("all"))
+        self._all = bool(html.request.var("all"))
         self._complete_folder = self._all
 
         # Ignored during initial form display
         # TODO: Make dedicated class or class members
         self._settings = {
-            "where": html.var("where"),
+            "where": html.request.var("where"),
             "alias": html.get_unicode_input("alias", "").strip() or None,
             "recurse": html.get_checkbox("recurse"),
-            "select": html.var("select"),
-            "timeout": utils.saveint(html.var("timeout")) or 8,
-            "probes": utils.saveint(html.var("probes")) or 2,
-            "max_ttl": utils.saveint(html.var("max_ttl")) or 10,
+            "select": html.request.var("select"),
+            "timeout": utils.saveint(html.request.var("timeout")) or 8,
+            "probes": utils.saveint(html.request.var("probes")) or 2,
+            "max_ttl": utils.saveint(html.request.var("max_ttl")) or 10,
             "force_explicit": html.get_checkbox("force_explicit"),
-            "ping_probes": utils.saveint(html.var("ping_probes")) or 0,
+            "ping_probes": utils.saveint(html.request.var("ping_probes")) or 0,
         }
         self._job = ParentScanBackgroundJob()
 
@@ -299,7 +299,7 @@ class ModeParentScan(WatoMode):
         raise HTTPRedirect(self._job.detail_url())
 
     def _get_tasks(self):
-        if not html.var("all"):
+        if not html.request.var("all"):
             return self._get_current_folder_host_tasks()
         return self._get_folder_tasks()
 

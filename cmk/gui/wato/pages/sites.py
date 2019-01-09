@@ -87,18 +87,18 @@ class ModeEditSite(ModeSites):
             self._site = configured_sites.get(self._site_id, {})
 
     def _from_html_vars(self):
-        self._site_id = html.var("edit")
-        self._clone_id = html.var("clone")
-        self._id = html.var("id")
-        self._url_prefix = html.var("url_prefix", "").strip()
-        self._timeout = html.var("timeout", "").strip()
-        self._sh_site = html.var("sh_site")
+        self._site_id = html.request.var("edit")
+        self._clone_id = html.request.var("clone")
+        self._id = html.request.var("id")
+        self._url_prefix = html.request.var("url_prefix", "").strip()
+        self._timeout = html.request.var("timeout", "").strip()
+        self._sh_site = html.request.var("sh_site")
 
         self._sh_host = self._vs_host().from_html_vars("sh_host")
         self._vs_host().validate_value(self._sh_host, "sh_Host")
 
-        self._repl = html.var("replication")
-        self._multisiteurl = html.var("multisiteurl", "").strip()
+        self._repl = html.request.var("replication")
+        self._multisiteurl = html.request.var("multisiteurl", "").strip()
 
     def title(self):
         if self._new:
@@ -483,15 +483,15 @@ class ModeDistributedMonitoring(ModeSites):
             _("New connection"), watolib.folder_preserving_link([("mode", "edit_site")]), "new")
 
     def action(self):
-        delete_id = html.var("_delete")
+        delete_id = html.request.var("_delete")
         if delete_id and html.transaction_valid():
             self._action_delete(delete_id)
 
-        logout_id = html.var("_logout")
+        logout_id = html.request.var("_logout")
         if logout_id:
             return self._action_logout(logout_id)
 
-        login_id = html.var("_login")
+        login_id = html.request.var("_login")
         if login_id:
             return self._action_login(login_id)
 
@@ -557,7 +557,7 @@ class ModeDistributedMonitoring(ModeSites):
 
     def _action_login(self, login_id):
         configured_sites = self._site_mgmt.load_sites()
-        if html.var("_abort"):
+        if html.request.var("_abort"):
             return "sites"
 
         if not html.check_transaction():
@@ -566,9 +566,9 @@ class ModeDistributedMonitoring(ModeSites):
         site = configured_sites[login_id]
         error = None
         # Fetch name/password of admin account
-        if html.has_var("_name"):
-            name = html.var("_name", "").strip()
-            passwd = html.var("_passwd", "").strip()
+        if html.request.has_var("_name"):
+            name = html.request.var("_name", "").strip()
+            passwd = html.request.var("_passwd", "").strip()
             try:
                 if not html.get_checkbox("_confirm"):
                     raise MKUserError(
@@ -763,7 +763,7 @@ class ModeEditSiteGlobals(ModeSites, GlobalSettingsMode):
 
     def __init__(self):
         super(ModeEditSiteGlobals, self).__init__()
-        self._site_id = html.var("site")
+        self._site_id = html.request.var("site")
         self._configured_sites = self._site_mgmt.load_sites()
         try:
             self._site = self._configured_sites[self._site_id]
@@ -794,8 +794,8 @@ class ModeEditSiteGlobals(ModeSites, GlobalSettingsMode):
 
     # TODO: Consolidate with ModeEditGlobals.action()
     def action(self):
-        varname = html.var("_varname")
-        action = html.var("_action")
+        varname = html.request.var("_varname")
+        action = html.request.var("_action")
         if not varname:
             return
 

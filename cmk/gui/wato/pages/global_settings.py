@@ -63,7 +63,7 @@ class GlobalSettingsMode(WatoMode):
 
     def _from_vars(self):
         self._search = watolib.get_search_expression()
-        self._show_only_modified = html.has_var("show_only_modified")
+        self._show_only_modified = html.request.has_var("show_only_modified")
 
     def _groups(self, show_all=False):
         groups = []
@@ -149,7 +149,7 @@ class GlobalSettingsMode(WatoMode):
 
                 edit_url = watolib.folder_preserving_link([("mode", self._edit_mode()),
                                                            ("varname", varname),
-                                                           ("site", html.var("site", ""))])
+                                                           ("site", html.request.var("site", ""))])
                 title = html.render_a(
                     title_text,
                     href=edit_url,
@@ -227,7 +227,7 @@ class EditGlobalSettingMode(WatoMode):
         self._global_settings = {}
 
     def action(self):
-        if html.var("_reset"):
+        if html.request.var("_reset"):
             if not watolib.is_a_checkbox(self._valuespec):
                 c = wato_confirm(
                     _("Resetting configuration variable"),
@@ -361,11 +361,11 @@ class ModeEditGlobals(GlobalSettingsMode):
             cmk.gui.cme.plugins.wato.managed.cme_global_settings_buttons()
 
     def action(self):
-        varname = html.var("_varname")
+        varname = html.request.var("_varname")
         if not varname:
             return
 
-        action = html.var("_action")
+        action = html.request.var("_action")
 
         config_variable = config_variable_registry[varname]()
         def_value = self._default_values[varname]
@@ -446,7 +446,7 @@ class ModeEditSiteGlobalSetting(EditGlobalSettingMode):
     def _from_vars(self):
         super(ModeEditSiteGlobalSetting, self)._from_vars()
 
-        self._site_id = html.var("site")
+        self._site_id = html.request.var("site")
         if self._site_id:
             self._configured_sites = watolib.SiteManagementFactory().factory().load_sites()
             try:

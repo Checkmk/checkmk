@@ -118,7 +118,7 @@ def page_api():
         config.user.need_permission("wato.use")
         config.user.need_permission("wato.api_allowed")
 
-        action = html.var('action')
+        action = html.request.var('action')
         if action not in api_actions:
             raise MKUserError(None, "Unknown API action %s" % html.attrencode(action))
 
@@ -133,8 +133,8 @@ def page_api():
         # However, the plugin may have an own mechanism to interpret the request
         request_object = {}
         if api_actions[action].get("dont_eval_request"):
-            if html.var("request"):
-                request_object = html.var("request")
+            if html.request.var("request"):
+                request_object = html.request.var("request")
         else:
             request_object = html.get_request(exclude_vars=["action", "pretty_print"])
 

@@ -77,17 +77,17 @@ class ViewDashlet(IFrameDashlet):
     @classmethod
     def add_url(cls):
         return 'create_view_dashlet.py?name=%s&back=%s' % \
-            (html.urlencode(html.var('name')), html.urlencode(html.makeuri([('edit', '1')])))
+            (html.urlencode(html.request.var('name')), html.urlencode(html.makeuri([('edit', '1')])))
 
     def update(self):
-        is_reload = html.has_var("_reload")
+        is_reload = html.request.has_var("_reload")
 
         display_options = "SIXLW"
         if not is_reload:
             display_options += "HR"
 
-        html.set_var('display_options', display_options)
-        html.set_var('_display_options', display_options)
+        html.request.set_var('display_options', display_options)
+        html.request.set_var('_display_options', display_options)
         html.add_body_css_class('dashlet')
 
         views.load_views()

@@ -110,7 +110,7 @@ class ModeUsers(WatoMode):
             "ldap")
 
     def action(self):
-        if html.var('_delete'):
+        if html.request.var('_delete'):
             delid = html.get_unicode_input("_delete")
             c = wato_confirm(
                 _("Confirm deletion of user %s") % delid,
@@ -120,7 +120,7 @@ class ModeUsers(WatoMode):
             elif c is False:
                 return ""
 
-        elif html.var('_sync') and html.check_transaction():
+        elif html.request.var('_sync') and html.check_transaction():
             try:
 
                 job = userdb.UserSyncBackgroundJob()
@@ -137,7 +137,7 @@ class ModeUsers(WatoMode):
                 logger.exception()
                 raise MKUserError(None, traceback.format_exc().replace('\n', '<br>\n'))
 
-        elif html.var("_bulk_delete_users"):
+        elif html.request.var("_bulk_delete_users"):
             return self._bulk_delete_users_after_confirm()
 
         elif html.check_transaction():
@@ -497,16 +497,16 @@ class ModeEditUser(WatoMode):
             increase_serial = True  # when user is being locked now, increase the auth serial
 
         # Authentication: Password or Secret
-        auth_method = html.var("authmethod")
+        auth_method = html.request.var("authmethod")
         if auth_method == "secret":
-            secret = html.var("_auth_secret", "").strip()
+            secret = html.request.var("_auth_secret", "").strip()
             user_attrs["automation_secret"] = secret
             user_attrs["password"] = hash_password(secret)
             increase_serial = True  # password changed, reflect in auth serial
 
         else:
-            password = html.var("_password_" + self._pw_suffix(), '').strip()
-            password2 = html.var("_password2_" + self._pw_suffix(), '').strip()
+            password = html.request.var("_password_" + self._pw_suffix(), '').strip()
+            password2 = html.request.var("_password2_" + self._pw_suffix(), '').strip()
 
             # We compare both passwords only, if the user has supplied
             # the repeation! We are so nice to our power users...
@@ -546,7 +546,7 @@ class ModeEditUser(WatoMode):
             del user_attrs["idle_timeout"]
 
         # Pager
-        user_attrs["pager"] = html.var("pager", '').strip()
+        user_attrs["pager"] = html.request.var("pager", '').strip()
 
         if cmk.is_managed_edition():
             customer = self._vs_customer.from_html_vars("customer")
@@ -573,7 +573,7 @@ class ModeEditUser(WatoMode):
 
         # Language configuration
         set_lang = html.get_checkbox("_set_lang")
-        language = html.var("language")
+        language = html.request.var("language")
         if set_lang:
             if language == "":
                 language = None
@@ -594,7 +594,7 @@ class ModeEditUser(WatoMode):
             # Notifications
             user_attrs["notifications_enabled"] = html.get_checkbox("notifications_enabled")
 
-            ntp = html.var("notification_period")
+            ntp = html.request.var("notification_period")
             if ntp not in self._timeperiods:
                 ntp = "24X7"
             user_attrs["notification_period"] = ntp

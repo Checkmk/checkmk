@@ -82,22 +82,22 @@ class ModeBulkImport(WatoMode):
     def buttons(self):
         html.context_button(
             _("Abort"), watolib.folder_preserving_link([("mode", "folder")]), "abort")
-        if html.has_var("file_id"):
+        if html.request.has_var("file_id"):
             html.context_button(
                 _("Back"), watolib.folder_preserving_link([("mode", "bulk_import")]), "back")
 
     def action(self):
         if html.transaction_valid():
-            if html.has_var("_do_upload"):
+            if html.request.has_var("_do_upload"):
                 self._upload_csv_file()
 
             self._read_csv_file()
 
-            if html.var("_do_import"):
+            if html.request.var("_do_import"):
                 return self._import()
 
     def _file_path(self):
-        file_id = html.var("file_id", "%s-%d" % (config.user.id, int(time.time())))
+        file_id = html.request.var("file_id", "%s-%d" % (config.user.id, int(time.time())))
         return self._upload_tmp_path + "/%s.csv" % file_id
 
     # Upload the CSV file into a temporary directoy to make it available not only
@@ -117,10 +117,10 @@ class ModeBulkImport(WatoMode):
         store.save_file(self._file_path(), content.encode("utf-8"))
 
         # make selections available to next page
-        html.set_var("file_id", file_id)
+        html.request.set_var("file_id", file_id)
 
         if upload_info["do_service_detection"]:
-            html.set_var("do_service_detection", "1")
+            html.request.set_var("do_service_detection", "1")
 
     def _cleanup_old_files(self):
         for f in os.listdir(self._upload_tmp_path):
@@ -200,13 +200,13 @@ class ModeBulkImport(WatoMode):
                 msg += "<li>%s</li>" % fail_msg
             msg += "</ul>"
 
-        if num_succeeded > 0 and html.var("do_service_detection") == "1":
+        if num_succeeded > 0 and html.request.var("do_service_detection") == "1":
             # Create a new selection for performing the bulk discovery
             weblib.set_rowselection('wato-folder-/' + watolib.Folder.current().path(), selected,
                                     'set')
-            html.set_var('mode', 'bulkinventory')
-            html.set_var('_bulk_inventory', '1')
-            html.set_var('show_checkboxes', '1')
+            html.request.set_var('mode', 'bulkinventory')
+            html.request.set_var('_bulk_inventory', '1')
+            html.request.set_var('show_checkboxes', '1')
             return "bulkinventory"
         return "folder", msg
 
@@ -217,7 +217,7 @@ class ModeBulkImport(WatoMode):
         host_name = None
         attributes = {}
         for col_num, value in enumerate(row):
-            attribute = html.var("attribute_%d" % col_num)
+            attribute = html.request.var("attribute_%d" % col_num)
             if attribute == "host_name":
                 Hostname().validate_value(value, "host")
                 host_name = value
@@ -249,7 +249,7 @@ class ModeBulkImport(WatoMode):
         return host_name, attributes
 
     def page(self):
-        if not html.has_var("file_id"):
+        if not html.request.has_var("file_id"):
             self._upload_form()
         else:
             self._preview()
@@ -337,11 +337,11 @@ class ModeBulkImport(WatoMode):
                 header = headers[col_num] if len(headers) > col_num else None
                 table.cell(html.render_text(header))
                 attribute_varname = "attribute_%d" % col_num
-                if html.var(attribute_varname):
-                    attribute_method = html.var("attribute_varname")
+                if html.request.var(attribute_varname):
+                    attribute_method = html.request.var("attribute_varname")
                 else:
                     attribute_method = self._try_detect_default_attribute(attributes, header)
-                    html.del_var(attribute_varname)
+                    html.request.del_var(attribute_varname)
 
                 html.dropdown(
                     "attribute_%d" % col_num,

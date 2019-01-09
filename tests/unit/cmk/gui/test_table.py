@@ -178,8 +178,8 @@ def test_table_cubical(register_builtin_html, monkeypatch, sortable, searchable,
     table_id = 0
     title = " TEST "
     separator = ';'
-    html.set_var('_%s_sort' % table_id, "1,0")
-    html.set_var('_%s_actions' % table_id, '1')
+    html.request.set_var('_%s_sort' % table_id, "1,0")
+    html.request.set_var('_%s_actions' % table_id, '1')
 
     # Table construction
     with html.plugged():

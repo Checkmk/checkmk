@@ -87,7 +87,7 @@ class ModeHostTags(WatoMode, watolib.HosttagsConfiguration):
 
     def action(self):
         # Deletion of tag groups
-        del_id = html.var("_delete")
+        del_id = html.request.var("_delete")
         if del_id:
             operations = None
             for e in self._hosttags:
@@ -117,7 +117,7 @@ class ModeHostTags(WatoMode, watolib.HosttagsConfiguration):
                 return "hosttags", message != True and message or None
 
         # Deletion of auxiliary tags
-        del_nr = html.var("_delaux")
+        del_nr = html.request.var("_delaux")
         if del_nr:
             nr = int(del_nr)
             del_id = self._auxtags[nr][0]
@@ -162,7 +162,7 @@ class ModeHostTags(WatoMode, watolib.HosttagsConfiguration):
                 add_change("edit-hosttags", _("Removed auxiliary tag %s (%s)") % (message, del_id))
                 return "hosttags", message != True and message or None
 
-        move_nr = html.var("_move")
+        move_nr = html.request.var("_move")
         if move_nr is not None:
             if html.check_transaction():
                 move_nr = int(move_nr)
@@ -334,7 +334,7 @@ class ModeEditAuxtag(ModeEditHosttagConfiguration):
         return _("Edit auxiliary tag")
 
     def _is_new_aux_tag(self):
-        return html.var("edit") is None
+        return html.request.var("edit") is None
 
     def buttons(self):
         html.context_button(
@@ -381,10 +381,10 @@ class ModeEditAuxtag(ModeEditHosttagConfiguration):
         return "hosttags"
 
     def _get_tag_number(self):
-        return int(html.var("edit"))
+        return int(html.request.var("edit"))
 
     def _get_tag_id(self):
-        return html.var("tag_id")
+        return html.request.var("tag_id")
 
     def page(self):
         if self._is_new_aux_tag():
@@ -451,7 +451,7 @@ class ModeEditHosttagGroup(ModeEditHosttagConfiguration):
         return _("Edit tag group")
 
     def _is_new_hosttag_group(self):
-        return html.var("edit") is None
+        return html.request.var("edit") is None
 
     def buttons(self):
         html.context_button(
@@ -586,7 +586,7 @@ class ModeEditHosttagGroup(ModeEditHosttagConfiguration):
         html.end_form()
 
     def _get_taggroup_id(self):
-        return html.var("edit", html.var("tag_id"))
+        return html.request.var("edit", html.request.var("tag_id"))
 
     def _get_taggroups_valuespec(self):
         aux_tags = config.BuiltinTags().get_effective_aux_tags(
@@ -626,7 +626,7 @@ def rename_host_tags_after_confirmation(tag_id, operations):
     the the users' wishes. In case auf auxiliary tags the tag_id is None. In
     other cases it is the id of the tag group currently being edited.
     """
-    mode = html.var("_repair")
+    mode = html.request.var("_repair")
     if mode == "abort":
         raise MKUserError("id_0", _("Aborting change."))
 

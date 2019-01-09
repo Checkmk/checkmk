@@ -482,7 +482,7 @@ function virtual_host_tree_enter(path)
     def _ajax_tag_tree(self):
         html.set_output_format("json")
         self._load()
-        new_tree = html.var("tree_id")
+        new_tree = html.request.var("tree_id")
 
         if new_tree not in self._trees:
             raise MKUserError("conf", _("This virtual host tree does not exist."))
@@ -495,7 +495,7 @@ function virtual_host_tree_enter(path)
     def _ajax_tag_tree_enter(self):
         html.set_output_format("json")
         self._load()
-        path = html.var("path").split("|") if html.var("path") else []
+        path = html.request.var("path").split("|") if html.request.var("path") else []
         self._cwds[self._current_tree_id] = path
         self._save_user_settings()
         html.write("OK")

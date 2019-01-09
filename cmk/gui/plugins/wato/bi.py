@@ -117,8 +117,8 @@ class BIManagement(object):
             self._user_contactgroups = None  # meaning I am admin
 
         # Most modes need a pack as context
-        if html.has_var("pack"):
-            self._pack_id = html.var("pack")
+        if html.request.has_var("pack"):
+            self._pack_id = html.request.var("pack")
             try:
                 self._pack = self._packs[self._pack_id]
             except KeyError:
@@ -980,8 +980,8 @@ class ModeBIPacks(ModeBI):
                 _("New BI Pack"), html.makeuri_contextless([("mode", "bi_edit_pack")]), "new")
 
     def action(self):
-        if config.user.may("wato.bi_admin") and html.has_var("_delete"):
-            pack_id = html.var("_delete")
+        if config.user.may("wato.bi_admin") and html.request.has_var("_delete"):
+            pack_id = html.request.var("_delete")
             try:
                 pack = self._packs[pack_id]
             except KeyError:
@@ -1174,13 +1174,13 @@ class ModeBIAggregations(ModeBI):
     def action(self):
         self.must_be_contact_for_pack()
 
-        if html.var("_del_aggr"):
+        if html.request.var("_del_aggr"):
             return self._delete_after_confirm()
 
-        elif html.var("_bulk_delete_bi_aggregations"):
+        elif html.request.var("_bulk_delete_bi_aggregations"):
             return self._bulk_delete_after_confirm()
 
-        elif html.var("_bulk_move_bi_aggregations"):
+        elif html.request.var("_bulk_move_bi_aggregations"):
             return self._bulk_move_after_confirm()
 
     def _delete_after_confirm(self):
@@ -1216,8 +1216,8 @@ class ModeBIAggregations(ModeBI):
 
     def _bulk_move_after_confirm(self):
         target = None
-        if html.has_var('bulk_moveto'):
-            target = html.var('bulk_moveto', '')
+        if html.request.has_var('bulk_moveto'):
+            target = html.request.var('bulk_moveto', '')
             html.javascript('cmk.selection.update_bulk_moveto("%s")' % target)
 
         target_pack = None
@@ -1260,9 +1260,9 @@ class ModeBIAggregations(ModeBI):
                 html.button(
                     "_bulk_move_bi_aggregations", _("Bulk move"), "submit", style=fieldstyle)
 
-                if html.has_var('bulk_moveto'):
-                    html.javascript(
-                        'cmk.selection.update_bulk_moveto("%s")' % html.var('bulk_moveto', ''))
+                if html.request.has_var('bulk_moveto'):
+                    html.javascript('cmk.selection.update_bulk_moveto("%s")' % html.request.var(
+                        'bulk_moveto', ''))
 
                 html.select(
                     "bulk_moveto",
@@ -1355,7 +1355,7 @@ class ModeBIRules(ModeBI):
 
     def __init__(self):
         ModeBI.__init__(self)
-        self._view_type = html.var("view", "list")
+        self._view_type = html.request.var("view", "list")
 
     def title(self):
         if self._view_type == "list":
@@ -1380,17 +1380,17 @@ class ModeBIRules(ModeBI):
     def action(self):
         self.must_be_contact_for_pack()
 
-        if html.var("_del_rule"):
+        if html.request.var("_del_rule"):
             return self._delete_after_confirm()
 
-        elif html.var("_bulk_delete_bi_rules"):
+        elif html.request.var("_bulk_delete_bi_rules"):
             return self._bulk_delete_after_confirm()
 
-        elif html.var("_bulk_move_bi_rules"):
+        elif html.request.var("_bulk_move_bi_rules"):
             return self._bulk_move_after_confirm()
 
     def _delete_after_confirm(self):
-        rule_id = html.var("_del_rule")
+        rule_id = html.request.var("_del_rule")
         self._check_delete_rule_id_permission(rule_id)
         c = wato_confirm(
             _("Confirm rule deletion"),
@@ -1432,8 +1432,8 @@ class ModeBIRules(ModeBI):
 
     def _bulk_move_after_confirm(self):
         target = None
-        if html.has_var('bulk_moveto'):
-            target = html.var('bulk_moveto', '')
+        if html.request.has_var('bulk_moveto'):
+            target = html.request.var('bulk_moveto', '')
             html.javascript('cmk.selection.update_bulk_moveto("%s")' % target)
 
         target_pack = None
@@ -1493,9 +1493,9 @@ class ModeBIRules(ModeBI):
             if move_choices:
                 html.button("_bulk_move_bi_rules", _("Bulk move"), "submit", style=fieldstyle)
 
-                if html.has_var('bulk_moveto'):
-                    html.javascript(
-                        'cmk.selection.update_bulk_moveto("%s")' % html.var('bulk_moveto', ''))
+                if html.request.has_var('bulk_moveto'):
+                    html.javascript('cmk.selection.update_bulk_moveto("%s")' % html.request.var(
+                        'bulk_moveto', ''))
 
                 html.select(
                     "bulk_moveto",
@@ -1895,7 +1895,7 @@ class ModeBIEditRule(ModeBI):
         self.must_be_contact_for_pack()
 
         if self._new:
-            cloneid = html.var("clone")
+            cloneid = html.request.var("clone")
             if cloneid:
                 try:
                     value = self._pack["rules"][cloneid]

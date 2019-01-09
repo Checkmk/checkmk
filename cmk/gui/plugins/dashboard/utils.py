@@ -224,8 +224,8 @@ class Dashlet(object):
                     if param in global_context:
                         self._dashlet_spec['context'][param] = global_context[param]
                     else:
-                        self._dashlet_spec['context'][param] = html.var(param)
-                        url_vars.append((param, html.var(param)))
+                        self._dashlet_spec['context'][param] = html.request.var(param)
+                        url_vars.append((param, html.request.var(param)))
         return url_vars
 
     def _add_wato_folder_to_url(self, url):

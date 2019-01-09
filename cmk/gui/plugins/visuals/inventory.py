@@ -50,12 +50,12 @@ class FilterInvtableText(Filter):
 
     def display(self):
         htmlvar = self.htmlvars[0]
-        current_value = html.var(htmlvar, "")
+        current_value = html.request.var(htmlvar, "")
         html.text_input(htmlvar, current_value)
 
     def filter_table(self, rows):
         htmlvar = self.htmlvars[0]
-        filtertext = html.var(htmlvar, "").strip().lower()
+        filtertext = html.request.var(htmlvar, "").strip().lower()
         if not filtertext:
             return rows
 
@@ -149,8 +149,8 @@ class FilterInvtableIDRange(Filter):
         html.number_input(self.name + "_to")
 
     def filter_table(self, rows):
-        from_value = utils.saveint(html.var(self.name + "_from"))
-        to_value = utils.saveint(html.var(self.name + "_to"))
+        from_value = utils.saveint(html.request.var(self.name + "_from"))
+        to_value = utils.saveint(html.request.var(self.name + "_to"))
 
         if not from_value and not to_value:
             return rows
@@ -193,7 +193,7 @@ class FilterInvtableOperStatus(Filter):
         # are either on (default) or off (unset)
         settings = set([])
         for varname in self.htmlvars:
-            settings.add(html.var(varname))
+            settings.add(html.request.var(varname))
         if len(settings) == 1:
             return rows
 
@@ -218,7 +218,7 @@ class FilterInvtableAdminStatus(Filter):
         html.end_radio_group()
 
     def filter_table(self, rows):
-        current = html.var(self.name)
+        current = html.request.var(self.name)
         if current not in ("1", "2"):
             return rows
 
@@ -242,7 +242,7 @@ class FilterInvtableAvailable(Filter):
         html.end_radio_group()
 
     def filter_table(self, rows):
-        current = html.var(self.name)
+        current = html.request.var(self.name)
         if current not in ("no", "yes"):
             return rows
 
@@ -273,7 +273,7 @@ class FilterInvtableInterfaceType(Filter):
         )
 
     def selection(self):
-        current = html.var(self.name, "").strip().split("|")
+        current = html.request.var(self.name, "").strip().split("|")
         if current == ['']:
             return []
         return current
@@ -307,8 +307,8 @@ class FilterInvtableVersion(Filter):
         html.text_input(self.htmlvars[1], size=9)
 
     def filter_table(self, rows):
-        from_version = html.var(self.htmlvars[0])
-        to_version = html.var(self.htmlvars[1])
+        from_version = html.request.var(self.htmlvars[0])
+        to_version = html.request.var(self.htmlvars[1])
         if not from_version and not to_version:
             return rows  # Filter not used
 
@@ -334,12 +334,12 @@ class FilterInvText(Filter):
 
     def display(self):
         htmlvar = self.htmlvars[0]
-        current_value = html.var(htmlvar, "")
+        current_value = html.request.var(htmlvar, "")
         html.text_input(htmlvar, current_value)
 
     def filter_table(self, rows):
         htmlvar = self.htmlvars[0]
-        filtertext = html.var(htmlvar, "").strip().lower()
+        filtertext = html.request.var(htmlvar, "").strip().lower()
         if not filtertext:
             return rows
 
@@ -375,21 +375,21 @@ class FilterInvFloat(Filter):
     def display(self):
         html.write_text(_("From: "))
         htmlvar = self.htmlvars[0]
-        current_value = html.var(htmlvar, "")
+        current_value = html.request.var(htmlvar, "")
         html.number_input(htmlvar, current_value)
         if self._unit:
             html.write(self._unit)
 
         html.write_text("&nbsp;&nbsp;" + _("To: "))
         htmlvar = self.htmlvars[1]
-        current_value = html.var(htmlvar, "")
+        current_value = html.request.var(htmlvar, "")
         html.number_input(htmlvar, current_value)
         if self._unit:
             html.write(self._unit)
 
     def filter_table(self, rows):
         fromvar = self.htmlvars[0]
-        fromtext = html.var(fromvar)
+        fromtext = html.request.var(fromvar)
         lower = None
         if fromtext:
             try:
@@ -398,7 +398,7 @@ class FilterInvFloat(Filter):
                 pass
 
         tovar = self.htmlvars[1]
-        totext = html.var(tovar)
+        totext = html.request.var(tovar)
         upper = None
         if totext:
             try:
@@ -519,10 +519,10 @@ class FilterInvHasSoftwarePackage(Filter):
         if not name:
             return rows
 
-        from_version = html.var(self._varprefix + "from_version")
-        to_version = html.var(self._varprefix + "to_version")
+        from_version = html.request.var(self._varprefix + "from_version")
+        to_version = html.request.var(self._varprefix + "to_version")
         negate = html.get_checkbox(self._varprefix + "negate")
-        match = html.var(self._varprefix + "match")
+        match = html.request.var(self._varprefix + "match")
         if match == "regex":
             try:
                 name = re.compile(name)

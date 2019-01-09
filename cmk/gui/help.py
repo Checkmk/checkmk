@@ -33,6 +33,6 @@ from cmk.gui.globals import html
 
 @cmk.gui.pages.register("ajax_switch_help")
 def ajax_switch_help():
-    state = html.var("enabled", "") != ""
+    state = html.request.var("enabled", "") != ""
     config.user.save_file("help", state)
     html.write(json.dumps(state))

@@ -130,14 +130,14 @@ class Filter(object):
     def value(self):
         val = {}
         for varname in self.htmlvars:
-            val[varname] = html.var(varname, '')
+            val[varname] = html.request.var(varname, '')
         return val
 
     # Is used to populate a value, for example loaded from persistance, into
     # the HTML context where it can be used by e.g. the display() method.
     def set_value(self, value):
         for varname in self.htmlvars:
-            html.set_var(varname, value.get(varname))
+            html.request.set_var(varname, value.get(varname))
 
 
 # TODO: We should merge this with Filter() and make all vars unicode ...
@@ -157,7 +157,7 @@ class FilterTristate(Filter):
         self.deflt = deflt
 
     def display(self):
-        current = html.var(self.varname)
+        current = html.request.var(self.varname)
         html.begin_radio_group(horizontal=True)
         for value, text in [("1", _("yes")), ("0", _("no")), ("-1", _("(ignore)"))]:
             checked = current == value or (current in [None, ""] and int(value) == self.deflt)
@@ -236,10 +236,10 @@ class FilterTime(Filter):
     def _get_time_range_of(self, what):
         varprefix = self.name + "_" + what
 
-        rangename = html.var(varprefix + "_range")
+        rangename = html.request.var(varprefix + "_range")
         if rangename == "abs":
             try:
-                return time.mktime(time.strptime(html.var(varprefix), "%Y-%m-%d"))
+                return time.mktime(time.strptime(html.request.var(varprefix), "%Y-%m-%d"))
             except:
                 html.add_user_error(varprefix, _("Please enter the date in the format YYYY-MM-DD."))
                 return None
@@ -252,7 +252,7 @@ class FilterTime(Filter):
             secs = count * int(rangename)
             return int(time.time()) - secs
         except:
-            html.set_var(varprefix, "")
+            html.request.set_var(varprefix, "")
             return None
 
 
@@ -283,7 +283,7 @@ class FilterSite(Filter):
         return sorted(choices, key=lambda a: a[1].lower())
 
     def heading_info(self):
-        current_value = html.var("site")
+        current_value = html.request.var("site")
         if current_value:
             alias = config.site(current_value)["alias"]
             return alias

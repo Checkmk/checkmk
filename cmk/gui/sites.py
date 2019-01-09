@@ -279,7 +279,7 @@ def _livestatus_auth_user():
     if not config.user.may("general.see_all"):
         return config.user.id
 
-    force_authuser = html.var("force_authuser")
+    force_authuser = html.request.var("force_authuser")
     if force_authuser == "1":
         return config.user.id
     elif force_authuser == "0":

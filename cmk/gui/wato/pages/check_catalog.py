@@ -357,7 +357,7 @@ class ModeCheckManPage(WatoMode):
 
     def buttons(self):
         global_buttons()
-        if html.has_var("back"):
+        if html.request.has_var("back"):
             back_url = html.get_url_input("back")
             html.context_button(_("Back"), back_url, "back")
 

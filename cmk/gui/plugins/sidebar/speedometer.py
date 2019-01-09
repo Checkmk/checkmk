@@ -199,9 +199,9 @@ canvas#speedometer {
             # Try to get values from last call in order to compute
             # driftig speedometer-needle and to reuse the scheduled
             # check reate.
-            last_perc = float(html.var("last_perc"))
-            scheduled_rate = float(html.var("scheduled_rate"))
-            last_program_start = int(html.var("program_start"))
+            last_perc = float(html.request.var("last_perc"))
+            scheduled_rate = float(html.request.var("scheduled_rate"))
+            last_program_start = int(html.request.var("program_start"))
 
             # Get the current rates and the program start time. If there
             # are more than one site, we simply add the start times.

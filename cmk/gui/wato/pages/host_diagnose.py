@@ -78,7 +78,7 @@ class ModeDiagHost(WatoMode):
         ]
 
     def _from_vars(self):
-        self._hostname = html.var("host")
+        self._hostname = html.request.var("host")
         if not self._hostname:
             raise MKGeneralException(_('The hostname is missing.'))
 
@@ -104,14 +104,14 @@ class ModeDiagHost(WatoMode):
         if not html.check_transaction():
             return
 
-        if html.var('_try'):
+        if html.request.var('_try'):
             try:
                 self._validate_diag_html_vars()
             except MKUserError as e:
                 html.add_user_error(e.varname, e)
             return
 
-        if html.var('_save'):
+        if html.request.var('_save'):
             # Save the ipaddress and/or community
             vs_host = self._vs_host()
             new = vs_host.from_html_vars('vs_host')
@@ -133,8 +133,8 @@ class ModeDiagHost(WatoMode):
 
             self._host.update_attributes(new)
             html.request.del_vars()
-            html.set_var("host", self._hostname)
-            html.set_var("folder", watolib.Folder.current().path())
+            html.request.set_var("host", self._hostname)
+            html.request.set_var("folder", watolib.Folder.current().path())
             return "edit_host", return_message
 
     def _validate_diag_html_vars(self):
@@ -199,7 +199,7 @@ class ModeDiagHost(WatoMode):
         self._show_diagnose_output()
 
     def _show_diagnose_output(self):
-        if not html.var('_try'):
+        if not html.request.var('_try'):
             html.message(
                 _('You can diagnose the connection to a specific host using this dialog. '
                   'You can either test whether your current configuration is still working '

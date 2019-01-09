@@ -30,8 +30,8 @@ def test_cookie_handling(register_builtin_html, monkeypatch):
 
 # TODO: Write valid test
 def test_request_processing(register_builtin_html):
-    html.set_var("varname", "1a")
-    html.set_var("varname2", "1")
+    html.request.set_var("varname", "1a")
+    html.request.set_var("varname2", "1")
 
     html.get_unicode_input("varname", deflt = "lol")
     html.get_integer_input("varname2")

@@ -103,8 +103,8 @@ class ModeIcons(WatoMode):
                   'choose another name for your icon.'))
 
     def action(self):
-        if html.has_var("_delete"):
-            icon_name = html.var("_delete")
+        if html.request.has_var("_delete"):
+            icon_name = html.request.var("_delete")
             if icon_name in self._load_custom_icons():
                 c = wato_confirm(
                     _("Confirm Icon deletion"),
@@ -117,7 +117,7 @@ class ModeIcons(WatoMode):
                 else:
                     return
 
-        elif html.has_var("_do_upload"):
+        elif html.request.has_var("_do_upload"):
             vs_upload = self._vs_upload()
             icon_info = vs_upload.from_html_vars('_upload_icon')
             vs_upload.validate_value(icon_info, '_upload_icon')

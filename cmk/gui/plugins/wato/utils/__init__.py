@@ -932,7 +932,7 @@ class TimeperiodValuespec(ValueSpec):
 
         # The timeperiod mode can be set by either the GUI switch or by the value itself
         # GUI switch overrules the information stored in the value
-        if html.has_var(self.tp_toggle_var):
+        if html.request.has_var(self.tp_toggle_var):
             is_active = self._is_switched_on()
         else:
             is_active = self.is_active(value)
@@ -970,7 +970,7 @@ class TimeperiodValuespec(ValueSpec):
         return text
 
     def from_html_vars(self, varprefix):
-        if html.var(self.tp_current_mode) == "1":
+        if html.request.var(self.tp_current_mode) == "1":
             # Fetch the timespecific settings
             parameters = self._get_timeperiod_valuespec().from_html_vars(varprefix)
             if parameters[self.tp_values_key]:
@@ -1022,7 +1022,7 @@ class TimeperiodValuespec(ValueSpec):
 
     # Checks whether the tp-mode is switched on through the gui
     def _is_switched_on(self):
-        return html.var(self.tp_toggle_var) == "1"
+        return html.request.var(self.tp_toggle_var) == "1"
 
     # Checks whether the value itself already uses the tp-mode
     def is_active(self, value):
@@ -1501,8 +1501,8 @@ class EventsMode(WatoMode):
         raise NotImplementedError()
 
     def _generic_rule_list_actions(self, rules, what, what_title, save_rules):
-        if html.has_var("_delete"):
-            nr = int(html.var("_delete"))
+        if html.request.has_var("_delete"):
+            nr = int(html.request.var("_delete"))
             rule = rules[nr]
             c = wato_confirm(
                 _("Confirm deletion of %s") % what_title,
@@ -1517,7 +1517,7 @@ class EventsMode(WatoMode):
             else:
                 return
 
-        elif html.has_var("_move"):
+        elif html.request.has_var("_move"):
             if html.check_transaction():
                 from_pos = html.get_integer_input("_move")
                 to_pos = html.get_integer_input("_index")

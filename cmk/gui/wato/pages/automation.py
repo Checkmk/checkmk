@@ -55,7 +55,7 @@ class ModeAutomationLogin(WatoWebApiMode):
 
         html.set_output_format("python")
 
-        if not html.has_var("_version"):
+        if not html.request.has_var("_version"):
             # Be compatible to calls from sites using versions before 1.5.0p10.
             # Deprecate with 1.7 by throwing an exception in this situation.
             response = watolib.get_login_secret(create_on_demand=True)
@@ -97,10 +97,10 @@ class ModeAutomation(WatoWebApiMode):
 
     def _from_vars(self):
         self._authenticate()
-        self._command = html.var("command")
+        self._command = html.request.var("command")
 
     def _authenticate(self):
-        secret = html.var("secret")
+        secret = html.request.var("secret")
 
         if not secret:
             raise MKAuthException(_("Missing secret for automation command."))
@@ -126,11 +126,11 @@ class ModeAutomation(WatoWebApiMode):
         self._execute_automation_command(automation_command)
 
     def _execute_cmk_automation(self):
-        cmk_command = html.var("automation")
-        args = watolib.mk_eval(html.var("arguments"))
-        indata = watolib.mk_eval(html.var("indata"))
-        stdin_data = watolib.mk_eval(html.var("stdin_data"))
-        timeout = watolib.mk_eval(html.var("timeout"))
+        cmk_command = html.request.var("automation")
+        args = watolib.mk_eval(html.request.var("arguments"))
+        indata = watolib.mk_eval(html.request.var("indata"))
+        stdin_data = watolib.mk_eval(html.request.var("stdin_data"))
+        timeout = watolib.mk_eval(html.request.var("timeout"))
         result = watolib.check_mk_local_automation(cmk_command, args, indata, stdin_data, timeout)
         # Don't use write_text() here (not needed, because no HTML document is rendered)
         html.write(repr(result))
@@ -146,11 +146,11 @@ class ModeAutomation(WatoWebApiMode):
             html.write_text(_("Internal automation error: %s\n%s") % (e, traceback.format_exc()))
 
     def _automation_push_profile(self):
-        site_id = html.var("siteid")
+        site_id = html.request.var("siteid")
         if not site_id:
             raise MKGeneralException(_("Missing variable siteid"))
 
-        user_id = html.var("user_id")
+        user_id = html.request.var("user_id")
         if not user_id:
             raise MKGeneralException(_("Missing variable user_id"))
 
@@ -161,7 +161,7 @@ class ModeAutomation(WatoWebApiMode):
                 _("Site ID mismatch. Our ID is '%s', but you are saying we are '%s'.") % (our_id,
                                                                                           site_id))
 
-        profile = html.var("profile")
+        profile = html.request.var("profile")
         if not profile:
             raise MKGeneralException(_('Invalid call: The profile is missing.'))
 

@@ -92,7 +92,7 @@ def edit_dictionaries(dictionaries,
         else:
             sections.append((keyname, None, d))  # valuespec Dictionary, title used from dict
 
-    if html.var("filled_in") == formname and html.transaction_valid():
+    if html.request.var("filled_in") == formname and html.transaction_valid():
         if not preview and consume_transid:
             html.check_transaction()
 
@@ -176,7 +176,7 @@ def edit_dictionaries(dictionaries,
             buttontext = _("Save")
         html.button("save", buttontext)
     # Should be ignored be hidden_fields, but I do not dare to change it there
-    html.del_var("filled_in")
+    html.request.del_var("filled_in")
     html.hidden_fields()
     html.end_form()
 
@@ -192,7 +192,7 @@ def edit_valuespec(vs,
                    consume_transid=True,
                    focus=None):
 
-    if html.var("filled_in") == formname and html.transaction_valid():
+    if html.request.var("filled_in") == formname and html.transaction_valid():
         if consume_transid:
             html.check_transaction()
 
@@ -224,7 +224,7 @@ def edit_valuespec(vs,
         buttontext = _("Save")
     html.button("save", buttontext)
     # Should be ignored be hidden_fields, but I do not dare to change it there
-    html.del_var("filled_in")
+    html.request.del_var("filled_in")
     html.hidden_fields()
     if focus:
         html.set_focus(focus)

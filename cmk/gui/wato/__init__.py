@@ -432,7 +432,7 @@ def page_handler():
             _("Check_MK can only be configured on "
               "the managers central site."))
 
-    current_mode = html.var("mode") or "main"
+    current_mode = html.request.var("mode") or "main"
     mode_permissions, mode_class = get_mode_permission_and_class(current_mode)
 
     display_options.load_from_html()
@@ -497,7 +497,7 @@ def page_handler():
                 mode_permissions, mode_class = get_mode_permission_and_class(newmode)
                 current_mode = newmode
                 mode = mode_class()
-                html.set_var("mode", newmode)  # will be used by makeuri
+                html.request.set_var("mode", newmode)  # will be used by makeuri
 
                 # Check general permissions for the new mode
                 if mode_permissions is not None and not config.user.may("wato.seeall"):
@@ -615,11 +615,11 @@ class AgentOutputPage(object):
     def _from_vars(self):
         config.user.need_permission("wato.download_agent_output")
 
-        host_name = html.var("host")
+        host_name = html.request.var("host")
         if not host_name:
             raise MKGeneralException(_("The host is missing."))
 
-        ty = html.var("type")
+        ty = html.request.var("type")
         if ty not in ["walk", "agent"]:
             raise MKGeneralException(_("Invalid type specified."))
         self._ty = ty
@@ -660,7 +660,7 @@ class PageFetchAgentOutput(AgentOutputPage):
 
         self._action()
 
-        if html.has_var("_start"):
+        if html.request.has_var("_start"):
             try:
                 self._job.start()
             except background_job.BackgroundJobAlreadyRunning:

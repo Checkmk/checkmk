@@ -329,7 +329,7 @@ def page_create_view(next_url=None):
     html.context_button(_("Back"), html.get_url_input("back", "edit_views.py"), "back")
     html.end_context_buttons()
 
-    if html.var('save') and html.check_transaction():
+    if html.request.var('save') and html.check_transaction():
         try:
             ds = vs_ds.from_html_vars('ds')
             vs_ds.validate_value(ds, 'ds')
@@ -361,7 +361,7 @@ def page_create_view(next_url=None):
 
 @cmk.gui.pages.register("create_view_infos")
 def page_create_view_infos():
-    ds_name = html.var('datasource')
+    ds_name = html.request.var('datasource')
     if ds_name not in multisite_datasources:
         raise MKGeneralException(_('The given datasource is not supported'))
 
@@ -632,7 +632,7 @@ def view_editor_specs(ds_name, general_properties=True):
 
 
 def render_view_config(view, general_properties=True):
-    ds_name = view.get("datasource", html.var("datasource"))
+    ds_name = view.get("datasource", html.request.var("datasource"))
     if not ds_name:
         raise MKInternalError(_("No datasource defined."))
     if ds_name not in multisite_datasources:
@@ -744,7 +744,7 @@ def transform_valuespec_value_to_view(view):
 # old_view is the old view dict which might be loaded from storage.
 # view is the new dict object to be updated.
 def create_view_from_valuespec(old_view, view):
-    ds_name = old_view.get('datasource', html.var('datasource'))
+    ds_name = old_view.get('datasource', html.request.var('datasource'))
     view['datasource'] = ds_name
     vs_value = {}
     for ident, vs in view_editor_specs(ds_name):
@@ -860,7 +860,7 @@ def show_view(view,
     browser_reload = painter_options.get("refresh", view.get("browser_reload", None))
 
     force_checkboxes = view.get("force_checkboxes", False)
-    show_checkboxes = force_checkboxes or html.var('show_checkboxes', '0') == '1'
+    show_checkboxes = force_checkboxes or html.request.var('show_checkboxes', '0') == '1'
 
     # Get the datasource (i.e. the logical table)
     try:
@@ -891,10 +891,10 @@ def show_view(view,
     # FIXME TODO HACK to make grouping single contextes possible on host/service infos
     # Is hopefully cleaned up soon.
     if view['datasource'] in ['hosts', 'services']:
-        if html.has_var('hostgroup') and not html.has_var("opthost_group"):
-            html.set_var("opthost_group", html.var("hostgroup"))
-        if html.has_var('servicegroup') and not html.has_var("optservice_group"):
-            html.set_var("optservice_group", html.var("servicegroup"))
+        if html.request.has_var('hostgroup') and not html.request.has_var("opthost_group"):
+            html.request.set_var("opthost_group", html.request.var("hostgroup"))
+        if html.request.has_var('servicegroup') and not html.request.has_var("optservice_group"):
+            html.request.set_var("optservice_group", html.request.var("servicegroup"))
 
     # TODO: Another hack :( Just like the above one: When opening the view "ec_events_of_host",
     # which is of single context "host" using a host name of a unrelated event, the list of
@@ -912,8 +912,8 @@ def show_view(view,
         use_filters = [f for f in use_filters if f.name != "host"]
 
         # Set the value for the event host filter
-        if not html.has_var("event_host"):
-            html.set_var("event_host", html.var("host"))
+        if not html.request.has_var("event_host"):
+            html.request.set_var("event_host", html.request.var("host"))
 
     # Now populate the HTML vars with context vars from the view definition. Hard
     # coded default values are treated differently:
@@ -941,8 +941,8 @@ def show_view(view,
         filterheaders += header
 
     # Apply the site hint / filter
-    if html.var("site"):
-        only_sites = [html.var("site")]
+    if html.request.var("site"):
+        only_sites = [html.request.var("site")]
     else:
         only_sites = None
 
@@ -957,8 +957,8 @@ def show_view(view,
 
     # Fork to availability view. We just need the filter headers, since we do not query the normal
     # hosts and service table, but "statehist". This is *not* true for BI availability, though (see later)
-    if html.var("mode") == "availability" and ("aggr" not in datasource["infos"] or
-                                               html.var("timeline_aggr")):
+    if html.request.var("mode") == "availability" and ("aggr" not in datasource["infos"] or
+                                                       html.request.var("timeline_aggr")):
 
         context = visuals.get_context_from_uri_vars(datasource['infos'])
         context.update(visuals.get_singlecontext_html_vars(view))
@@ -970,7 +970,7 @@ def show_view(view,
 
     # Sorting - use view sorters and URL supplied sorters
     if not only_count:
-        user_sorters = parse_url_sorters(html.var("sort"))
+        user_sorters = parse_url_sorters(html.request.var("sort"))
         if user_sorters:
             sorter_list = user_sorters
         else:
@@ -1001,7 +1001,7 @@ def show_view(view,
 
     # Fetch data. Some views show data only after pressing [Search]
     if (only_count or (not view.get("mustsearch")) or
-            html.var("filled_in") in ["filter", 'actions', 'confirm', 'painteroptions']):
+            html.request.var("filled_in") in ["filter", 'actions', 'confirm', 'painteroptions']):
         # names for additional columns (through Stats: headers)
         add_columns = datasource.get("add_columns", [])
 
@@ -1049,7 +1049,7 @@ def show_view(view,
     for filter_ in all_active_filters:
         rows = filter_.filter_table(rows)
 
-    if html.var("mode") == "availability":
+    if html.request.var("mode") == "availability":
         cmk.gui.plugins.views.availability.render_bi_availability(view_title(view), rows)
         return
 
@@ -1057,7 +1057,7 @@ def show_view(view,
     if only_count:
         for filter_vars in view["context"].itervalues():
             for varname in filter_vars.iterkeys():
-                html.del_var(varname)
+                html.request.del_var(varname)
         return len(rows)
 
     # The layout of the view: it can be overridden by several specifying
@@ -1112,7 +1112,7 @@ def get_regular_cells(cell_list):
 def get_needed_regular_columns(cells, sorters, datasource):
     # BI availability needs aggr_tree
     # TODO: wtf? a full reset of the list? Move this far away to a special place!
-    if html.var("mode") == "availability" and "aggr" in datasource["infos"]:
+    if html.request.var("mode") == "availability" and "aggr" in datasource["infos"]:
         return ["aggr_tree", "aggr_name", "aggr_group"]
 
     columns = columns_of_cells(cells)
@@ -1236,7 +1236,7 @@ def render_view(view, rows, datasource, group_painters, painters, show_heading, 
     html.show_user_errors()
 
     # Filter form
-    filter_isopen = view.get("mustsearch") and not html.var("filled_in")
+    filter_isopen = view.get("mustsearch") and not html.request.var("filled_in")
     if display_options.enabled(display_options.F) and len(show_filters) > 0:
         show_filter_form(filter_isopen, show_filters)
 
@@ -1249,7 +1249,7 @@ def render_view(view, rows, datasource, group_painters, painters, show_heading, 
 
         # There are one shot actions which only want to affect one row, filter the rows
         # by this id during actions
-        if html.has_var("_row_id") and html.do_actions():
+        if html.request.has_var("_row_id") and html.do_actions():
             rows = filter_by_row_id(view, rows)
 
         if html.do_actions() and html.transaction_valid():  # submit button pressed, no reload
@@ -1274,7 +1274,7 @@ def render_view(view, rows, datasource, group_painters, painters, show_heading, 
 
         # There are one shot actions which only want to affect one row, filter the rows
         # by this id during actions
-        if html.has_var("_row_id") and html.do_actions():
+        if html.request.has_var("_row_id") and html.do_actions():
             rows = filter_by_row_id(view, rows)
 
         try:
@@ -1425,7 +1425,7 @@ def play_alarm_sounds():
 
 # How many data rows may the user query?
 def get_limit():
-    limitvar = html.var("limit", "soft")
+    limitvar = html.request.var("limit", "soft")
     if limitvar == "hard" and config.user.may("general.ignore_soft_limit"):
         return config.hard_query_limit
     elif limitvar == "none" and config.user.may("general.ignore_hard_limit"):
@@ -1468,9 +1468,9 @@ def view_optiondial_off(option):
 # browser reload of the DIV containing the actual status data is done.
 @cmk.gui.pages.register("ajax_set_viewoption")
 def ajax_set_viewoption():
-    view_name = html.var("view_name")
-    option = html.var("option")
-    value = html.var("value")
+    view_name = html.request.var("view_name")
+    option = html.request.var("option")
+    value = html.request.var("value")
     value = {'true': True, 'false': False}.get(value, value)
     if isinstance(value, str) and value[0].isdigit():
         try:
@@ -1497,9 +1497,9 @@ def show_context_links(thisview, datasource, show_filters, enable_commands, enab
 
     ## Small buttons
     html.open_div(class_="context_buttons_small")
-    filter_isopen = html.var("filled_in") != "filter" and thisview.get("mustsearch")
+    filter_isopen = html.request.var("filled_in") != "filter" and thisview.get("mustsearch")
     if display_options.enabled(display_options.F):
-        if html.var("filled_in") == "filter":
+        if html.request.var("filled_in") == "filter":
             icon = "filters_set"
             help_txt = _("The current data is being filtered")
         else:
@@ -1568,15 +1568,15 @@ def show_context_links(thisview, datasource, show_filters, enable_commands, enab
     if display_options.enabled(display_options.B):
         import cmk.gui.watolib as watolib
         # WATO: If we have a host context, then show button to WATO, if permissions allow this
-        if html.has_var("host") \
+        if html.request.has_var("host") \
            and config.wato_enabled \
            and config.user.may("wato.use") \
            and (config.user.may("wato.hosts") or config.user.may("wato.seeall")):
-            host = html.var("host")
+            host = html.request.var("host")
             if host:
                 url = watolib.link_to_host_by_name(host)
             else:
-                url = watolib.link_to_folder_by_path(html.var("wato_folder", ""))
+                url = watolib.link_to_folder_by_path(html.request.var("wato_folder", ""))
             html.context_button(
                 _("WATO"), url, "wato", id_="wato", bestof=config.context_buttons_to_show)
 
@@ -1639,7 +1639,7 @@ def update_context_links(enable_command_toggle, enable_checkbox_toggle):
 
 @cmk.gui.pages.register("count_context_button")
 def ajax_count_button():
-    id_ = html.var("id")
+    id_ = html.request.var("id")
     counts = config.user.load_file("buttoncounts", {})
     for i in counts:
         counts[i] *= 0.95
@@ -1843,7 +1843,7 @@ def show_command_form(is_open, datasource):
         if what in command["tables"] and config.user.may(command["permission"]):
             # Some special commands can be shown on special views using this option.
             # It is currently only used in custom views, not shipped with check_mk.
-            if command.get('only_view') and html.var('view_name') != command['only_view']:
+            if command.get('only_view') and html.request.var('view_name') != command['only_view']:
                 continue
             group = command.get("group", "various")
             by_group.setdefault(group, []).append(command)
@@ -1992,13 +1992,13 @@ def do_actions(view, what, action_rows, backurl):
     if message:
         if html.output_format == "html":  # sorry for this hack
             message += '<br><a href="%s">%s</a>' % (backurl, _('Back to view'))
-            if html.var("show_checkboxes") == "1":
-                html.del_var("selection")
+            if html.request.var("show_checkboxes") == "1":
+                html.request.del_var("selection")
                 weblib.selection_id()
-                backurl += "&selection=" + html.var("selection")
+                backurl += "&selection=" + html.request.var("selection")
                 message += '<br><a href="%s">%s</a>' % (backurl,
                                                         _('Back to view with checkboxes reset'))
-            if html.var("_show_result") == "0":
+            if html.request.var("_show_result") == "0":
                 html.immediate_browser_redirect(0.5, backurl)
         html.message(message)
 
@@ -2006,7 +2006,7 @@ def do_actions(view, what, action_rows, backurl):
 
 
 def filter_by_row_id(view, rows):
-    wanted_row_id = html.var("_row_id")
+    wanted_row_id = html.request.var("_row_id")
 
     for row in rows:
         if row_id(view, row) == wanted_row_id:
@@ -2095,9 +2095,9 @@ def docu_link(topic, text):
 
 @cmk.gui.pages.register("ajax_popup_icon_selector")
 def ajax_popup_icon_selector():
-    varprefix = html.var('varprefix')
-    value = html.var('value')
-    allow_empty = html.var('allow_empty') == '1'
+    varprefix = html.request.var('varprefix')
+    value = html.request.var('value')
+    allow_empty = html.request.var('allow_empty') == '1'
 
     vs = IconSelector(allow_empty=allow_empty)
     vs.render_popup_input(varprefix, value)
@@ -2143,9 +2143,9 @@ def query_action_data(what, host, site, svcdesc):
 
 @cmk.gui.pages.register("ajax_popup_action_menu")
 def ajax_popup_action_menu():
-    site = html.var('site')
-    host = html.var('host')
-    svcdesc = html.var('service')
+    site = html.request.var('site')
+    host = html.request.var('host')
+    svcdesc = html.request.var('service')
     what = 'service' if svcdesc else 'host'
 
     display_options.load_from_html()
@@ -2211,8 +2211,8 @@ def do_reschedule():
     if not config.user.may("action.reschedule"):
         raise MKGeneralException("You are not allowed to reschedule checks.")
 
-    site = html.var("site")
-    host = html.var("host", "")
+    site = html.request.var("site")
+    host = html.request.var("host", "")
     if not host:
         raise MKGeneralException("Action reschedule: missing host name")
 

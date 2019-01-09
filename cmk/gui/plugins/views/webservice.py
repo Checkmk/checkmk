@@ -127,7 +127,7 @@ multisite_layouts["json"] = {
 
 
 def render_jsonp(rows, view, group_cells, cells, num_columns, show_checkboxes):
-    html.write("%s(\n" % html.var('jsonp', 'myfunction'))
+    html.write("%s(\n" % html.request.var('jsonp', 'myfunction'))
     render_json(rows, view, group_cells, cells, num_columns, show_checkboxes)
     html.write_text(");\n")
 
@@ -150,7 +150,7 @@ def render_csv(rows, view, group_cells, cells, num_columns, show_checkboxes, exp
         stripped = html.strip_tags(content).replace('\n', '').replace('"', '""')
         return stripped.encode("utf-8")
 
-    csv_separator = html.var("csv_separator", ";")
+    csv_separator = html.request.var("csv_separator", ";")
     first = True
     for cell in group_cells + cells:
         if first:

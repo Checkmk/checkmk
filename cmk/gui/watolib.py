@@ -1116,7 +1116,7 @@ class BaseFolder(WithPermissionsAndAttributes):
             if keepvarnames is None:
                 keepvarnames = ["mode"]
 
-            keepvars = [(name, html.var(name)) for name in keepvarnames]
+            keepvars = [(name, html.request.var(name)) for name in keepvarnames]
             if link_to_folder:
                 keepvars.append(("mode", "folder"))
 
@@ -1174,7 +1174,7 @@ class BaseFolder(WithPermissionsAndAttributes):
                 html.hidden_fields()
             else:
                 for var in keepvarnames:
-                    html.hidden_field(var, html.var(var))
+                    html.hidden_field(var, html.request.var(var))
             html.close_form()
             html.close_div()
             breadcrump_element_end('end')
@@ -1306,13 +1306,13 @@ class CREFolder(BaseFolder):
         if folder:
             return folder
 
-        if html.has_var("folder"):
+        if html.request.has_var("folder"):
             try:
-                folder = Folder.folder(html.var("folder"))
+                folder = Folder.folder(html.request.var("folder"))
             except MKGeneralException as e:
                 raise MKUserError("folder", "%s" % e)
         else:
-            host_name = html.var("host")
+            host_name = html.request.var("host")
             folder = Folder.root_folder()
             if host_name:  # find host with full scan. Expensive operation
                 host = Host.host(host_name)
@@ -2119,7 +2119,7 @@ class CREFolder(BaseFolder):
                 break
         if not have_mode:
             url_vars.append(("mode", "folder"))
-        if html.var("debug") == "1":
+        if html.request.var("debug") == "1":
             add_vars.append(("debug", "1"))
         url_vars += add_vars
         return html.makeuri_contextless(url_vars, filename="wato.py")
@@ -2610,15 +2610,15 @@ def get_folder_title(path):
 class SearchFolder(BaseFolder):
     @staticmethod
     def criteria_from_html_vars():
-        crit = {".name": html.var("host_search_host")}
+        crit = {".name": html.request.var("host_search_host")}
         crit.update(collect_attributes("host_search", do_validate=False, varprefix="host_search_"))
         return crit
 
     # This method is allowed to return None when no search is currently performed.
     @staticmethod
     def current_search_folder():
-        if html.has_var("host_search"):
-            base_folder = Folder.folder(html.var("folder", ""))
+        if html.request.has_var("host_search"):
+            base_folder = Folder.folder(html.request.var("folder", ""))
             search_criteria = SearchFolder.criteria_from_html_vars()
             folder = SearchFolder(base_folder, search_criteria)
             Folder.set_current(folder)
@@ -3313,7 +3313,7 @@ class Attribute(object):
     def needs_validation(self, for_what):
         if not self.is_visible(for_what):
             return False
-        return html.var('attr_display_%s' % self._name, "1") == "1"
+        return html.request.var('attr_display_%s' % self._name, "1") == "1"
 
     # Gets the type of current view as argument and returns whether or not
     # this attribute is shown in this type of view
@@ -3462,7 +3462,7 @@ class FixedTextAttribute(TextAttribute):
             html.write(value)
 
     def from_html_vars(self, varprefix):
-        return html.var(varprefix + "attr_" + self.name())
+        return html.request.var(varprefix + "attr_" + self.name())
 
 
 # A text attribute that is stored in a Nagios custom macro
@@ -3507,7 +3507,7 @@ class EnumAttribute(Attribute):
         html.dropdown(varprefix + "attr_" + self.name(), self._enumlist, value)
 
     def from_html_vars(self, varprefix):
-        return html.var(varprefix + "attr_" + self.name(), self.default_value())
+        return html.request.var(varprefix + "attr_" + self.name(), self.default_value())
 
 
 class HostTagAttribute(ValueSpecAttribute):
@@ -3681,7 +3681,7 @@ class ContactGroupsAttribute(Attribute):
         # If we're just editing a host, then some of the checkboxes will be missing.
         # This condition is not very clean, but there is no other way to savely determine
         # the context.
-        is_host = bool(html.var("host")) or html.var("mode") == "newhost"
+        is_host = bool(html.request.var("host")) or html.request.var("mode") == "newhost"
         is_search = varprefix == "host_search"
 
         # Only show contact groups I'm currently in and contact
@@ -3892,7 +3892,7 @@ def collect_attributes(for_what, do_validate=True, varprefix=""):
     host = {}
     for attr, _topic in all_host_attributes():
         attrname = attr.name()
-        if not html.var(for_what + "_change_%s" % attrname, False):
+        if not html.request.var(for_what + "_change_%s" % attrname, False):
             continue
 
         value = attr.from_html_vars(varprefix)
@@ -4828,7 +4828,7 @@ class AutomationPushSnapshot(AutomationCommand):
 
     def get_request(self):
         # type: () -> PushSnapshotRequest
-        site_id = html.var("siteid")
+        site_id = html.request.var("siteid")
         self._verify_slave_site_config(site_id)
 
         snapshot = html.request.uploaded_file("snapshot")
@@ -4935,7 +4935,7 @@ class PushUserProfilesToSite(AutomationCommand):
         return "push-profiles"
 
     def get_request(self):
-        return PushUserProfilesRequest(ast.literal_eval(html.var("profiles")))
+        return PushUserProfilesRequest(ast.literal_eval(html.request.var("profiles")))
 
     def execute(self, request):
         user_profiles = request.user_profiles
@@ -7424,7 +7424,7 @@ def render_condition_editor(tag_specs, varprefix=""):
 
         html.open_td(class_="tag_sel")
         if html.form_submitted():
-            div_is_open = html.var(dropdown_id, "ignore") != "ignore"
+            div_is_open = html.request.var(dropdown_id, "ignore") != "ignore"
         else:
             div_is_open = deflt != "ignore"
         html.open_div(
@@ -7495,11 +7495,11 @@ def get_tag_conditions(varprefix=""):
     tag_list = []
     for entry in config.host_tag_groups():
         id_, _title, tags = entry[:3]
-        mode = html.var(varprefix + "tag_" + id_)
+        mode = html.request.var(varprefix + "tag_" + id_)
         if len(tags) == 1:
             tagvalue = tags[0][0]
         else:
-            tagvalue = html.var(varprefix + "tagvalue_" + id_)
+            tagvalue = html.request.var(varprefix + "tagvalue_" + id_)
 
         if mode == "is":
             tag_list.append(tagvalue)
@@ -7508,7 +7508,7 @@ def get_tag_conditions(varprefix=""):
 
     # Auxiliary tags
     for id_, _title in config.aux_tags():
-        mode = html.var(varprefix + "auxtag_" + id_)
+        mode = html.request.var(varprefix + "auxtag_" + id_)
         if mode == "is":
             tag_list.append(id_)
         elif mode == "isnot":
@@ -8897,7 +8897,7 @@ def is_read_only_mode_enabled():
 
 def may_override_read_only_mode():
     return config.user.id in config.wato_read_only["rw_users"] \
-            or (html.var("mode") == "read_only" and config.user.may("wato.set_read_only"))
+            or (html.request.var("mode") == "read_only" and config.user.may("wato.set_read_only"))
 
 
 #.
@@ -9761,7 +9761,7 @@ class AutomationNetworkScan(AutomationCommand):
 
     def get_request(self):
         # type: () -> NetworkScanRequest
-        folder_path = html.var("folder")
+        folder_path = html.request.var("folder")
         if folder_path is None:
             raise MKGeneralException(_("Folder path is missing"))
         return NetworkScanRequest(folder_path=folder_path)
@@ -10788,10 +10788,10 @@ class LivestatusViaTCP(Dictionary):
 def get_hostnames_from_checkboxes(filterfunc=None):
     """Create list of all host names that are select with checkboxes in the current file.
     This is needed for bulk operations."""
-    show_checkboxes = html.var("show_checkboxes") == "1"
+    show_checkboxes = html.request.var("show_checkboxes") == "1"
     if show_checkboxes:
         selected = weblib.get_rowselection('wato-folder-/' + Folder.current().path())
-    search_text = html.var("search")
+    search_text = html.request.var("search")
 
     selected_host_names = []
     for host_name, host in sorted(Folder.current().hosts().items()):

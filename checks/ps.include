@@ -82,7 +82,7 @@ def ps_data_configured_inventory_rules(invdata):
             inv_entry += ([],)
             default_levels = inv_entry[3:7]
 
-        inventory_specs.append(inv_entry[:3] + (None,) + ({"levels": default_levels},))
+        inventory_specs.append(inv_entry[:3] + ({"levels": default_levels},))
 
     return inventory_specs
 
@@ -103,10 +103,10 @@ def ps_wato_configured_inventory_rules(invrules):
 
         v = rule[0]
         default_params = v.get('default_params', v)
-        default_params['cpu_rescale_max'] = v.get('cpu_rescale_max')
+        if "cpu_rescale_max" not in default_params:
+            default_params["cpu_rescale_max"] = None
 
-        inventory_specs.append((v['descr'], v.get('match'), v.get('user'), v.get('icon'),
-                                default_params))
+        inventory_specs.append((v['descr'], v.get('match'), v.get('user'), default_params))
 
     return inventory_specs
 
@@ -116,7 +116,7 @@ def inventory_ps_common(invdata, invrules, parsed):
 
     inventory = []
     for line in parsed:
-        for servicedesc, pattern, userspec, icon, default_params in inventory_specs:
+        for servicedesc, pattern, userspec, default_params in inventory_specs:
             # First entry in line is the node name or None for non-clusters
             process_line = line[1:]
             matches = process_matches(process_line, pattern, userspec)
@@ -146,9 +146,6 @@ def inventory_ps_common(invdata, invrules, parsed):
                 "match_groups": match_groups,
                 "user": i_userspec,
             }
-
-            if icon:
-                inv_params["icon"] = icon
 
             # default_params is either a clean dict with optional
             # parameters to set as default or - from version 1.2.4 - the
@@ -300,6 +297,8 @@ def parse_ps_time(text):
     return 86400 * days + day_secs
 
 
+# This function is repeated in cmk/gui/plugins/wato/check_parameters/ps.py
+# Update that function too until we can import them
 def ps_cleanup_params(params):
     # New parameter format: dictionary. Example:
     # {
@@ -326,9 +325,8 @@ def ps_cleanup_params(params):
         params = {
             "process": procname,
             "levels": (warnmin, okmin, okmax, warnmax),
+            "user": user,
         }
-
-        params["user"] = user
 
     elif any(k in params for k in ['okmin', 'warnmin', 'okmax', 'warnmax']):
         params["levels"] = (
@@ -337,6 +335,9 @@ def ps_cleanup_params(params):
             params.pop("okmax", 99999),
             params.pop("warnmax", 99999),
         )
+
+    if "cpu_rescale_max" not in params:
+        params["cpu_rescale_max"] = None
 
     return params
 
@@ -355,7 +356,8 @@ def check_ps_common(item, params, parsed, cpu_cores=1, info_name="process", tota
         yield memory_perc_check(processes, params, total_ram)
 
     # CPU
-    yield cpu_check(processes.percent_cpu, item, params)
+    if processes.count:
+        yield cpu_check(processes.percent_cpu, item, params)
 
     if "single_cpulevels" in params:
         for ps_state in individual_process_check(processes, params):

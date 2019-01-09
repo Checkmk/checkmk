@@ -31,7 +31,7 @@ def agent_kubernetes_arguments(params, _hostname, ipaddress):
     if "port" in params:
         args += ["--port", str(params["port"])]
 
-    if "no-cert-check" in params:
+    if params.get('no-cert-check', False):
         args += ["--no-cert-check"]
 
     if "url-prefix" in params:

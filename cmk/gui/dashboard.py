@@ -640,26 +640,24 @@ def render_dashlet_title_html(dashlet_instance):
 
 
 def render_dashlet_content(dashlet_instance, is_update, stash_html_vars=True):
-    if stash_html_vars:
-        html.stash_vars()
-        html.del_all_vars()
-        html.set_var("name", dashlet_instance.dashboard_name)
-
-    try:
+    def update_or_show():
         visuals.add_context_to_uri_vars(dashlet_instance.dashlet_spec)
         if dashlet_instance.wato_folder is not None:
             html.set_var("wato_folder", dashlet_instance.wato_folder)
-
         with html.plugged():
-            if not is_update:
-                dashlet_instance.show()
-            else:
+            if is_update:
                 dashlet_instance.update()
-
+            else:
+                dashlet_instance.show()
             return html.drain()
-    finally:
-        if stash_html_vars:
-            html.unstash_vars()
+
+    if stash_html_vars:
+        with html.stashed_vars():
+            html.del_all_vars()
+            html.set_var("name", dashlet_instance.dashboard_name)
+            return update_or_show()
+    else:
+        return update_or_show()
 
 
 def render_dashlet_exception_content(dashlet_instance, nr, e):

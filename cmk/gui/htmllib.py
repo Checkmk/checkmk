@@ -992,9 +992,6 @@ class html(HTMLGenerator):
         self.start_time = time.time()
         self.last_measurement = self.start_time
 
-        # Variable management
-        self._var_stash = []
-
         # Register helpers
         self.encoder = Encoder()
         self.timeout_manager = TimeoutManager()
@@ -1146,13 +1143,15 @@ class html(HTMLGenerator):
     def del_all_vars(self, prefix=None):
         self.request.del_all_vars(prefix)
 
-    def stash_vars(self):
-        self._var_stash.append(dict(self.request.all_vars()))
-
-    def unstash_vars(self):
-        self.request.del_all_vars()
-        for varname, value in self._var_stash.pop().iteritems():
-            self.request.set_var(varname, value)
+    @contextmanager
+    def stashed_vars(self):
+        saved_vars = dict(self.request.all_vars())
+        try:
+            yield
+        finally:
+            self.request.del_all_vars()
+            for varname, value in saved_vars.iteritems():
+                self.request.set_var(varname, value)
 
     def get_ascii_input(self, varname, deflt=None):
         """Helper to retrieve a byte string and ensure it only contains ASCII characters

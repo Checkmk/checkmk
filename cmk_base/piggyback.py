@@ -169,7 +169,7 @@ def store_piggyback_raw_data(source_host, piggybacked_raw_data):
         piggyback_file_paths.append(piggyback_file_path)
 
     # Store the last contact with this piggyback source to be able to filter outdated data later
-    # We use the mtime of this file later for comparision.
+    # We use the mtime of this file later for comparison.
     # Only do this for hosts that sent piggyback data this turn, cleanup the status file when no
     # piggyback data was sent this turn.
     if piggybacked_raw_data:

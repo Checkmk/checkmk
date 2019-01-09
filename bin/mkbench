@@ -176,7 +176,7 @@ def usage(error=None):
     sys.stdout.write("system. The test is saving different static information of\n")
     sys.stdout.write("the system (Installed CPUs, memory, disks, ...) and captures\n")
     sys.stdout.write("the most important peformance relevant values during testing\n")
-    sys.stdout.write("for later analysis and comparision.\n")
+    sys.stdout.write("for later analysis and comparison.\n")
     sys.stdout.write("\n")
     sys.stdout.write("The results of mkbench are stored in 'var/mkbench'.\n")
     sys.stdout.write("\n")

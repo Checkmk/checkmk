@@ -4,7 +4,7 @@ checkname = 'lparstat_aix'
 
 
 info = [
-    ['System Config line is currently not used'],
+    ['System', 'Config', 'type=Dedicated', 'ent=7.0', 'what=ever'],
     [u'%user', u'%sys', u'%wait', u'%idle', u'physc', u'%entc', u'lbusy',
      u'vcsw', u'phint', u'%nsp', u'%utcyc'],
     [u'#', u'-----', u'-----', u'------', u'------', u'-----', u'-----',
@@ -36,6 +36,9 @@ checks = {
             (0, 'system: 0.40%', [('system', 0.4)]),
             (0, 'wait: 0.00%', [('wait', 0.0)]),
             (0, 'total cpu: 0.60%', [('util', 0.6000000000000001, None, None, 0, None)]),
+            (0, '100% corresponding to: 7.00 physical processors', [
+                ('cpu_entitlement', 7.0)]),
+            (0, "", [('cpu_entitlement_util', 0.04200000000000001)]),
         ]),
     ],
 }

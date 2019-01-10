@@ -8329,6 +8329,10 @@ graph_info["fgpa_utilization"] = {
     "range": (0, 100),
 }
 
+#
+# CPU UTILIZATION
+#
+
 graph_info["util_average"] = {
     "metrics": [
         ("util", "area"),
@@ -8365,61 +8369,6 @@ graph_info["cpu_utilization_2"] = {
         "util1:crit",
     ],
     "range": (0, 100),
-}
-
-graph_info["per_core_utilization"] = {
-    "title": _("Per Core utilization"),
-    "metrics": [("cpu_core_util_%d" % num, "line") for num in range(MAX_CORES)],
-    "range": (0, 100),
-    "optional_metrics": ["cpu_core_util_%d" % num for num in range(2, MAX_CORES)]
-}
-
-graph_info["fs_used"] = {
-    "metrics": [
-        ("fs_used", "area"),
-        ("fs_size,fs_used,-#e3fff9", "stack", _("Free space")),
-        ("fs_size", "line"),
-    ],
-    "scalars": [
-        "fs_used:warn",
-        "fs_used:crit",
-    ],
-    "range": (0, "fs_used:max"),
-    "conflicting_metrics": ["fs_free"],
-}
-
-# draw a different graph if space reserved for root was excluded
-graph_info["fs_used_2"] = {
-    "metrics": [
-        ("fs_used", "area"),
-        ("fs_free", "stack"),
-        ("reserved", "stack"),
-        ("fs_size", "line"),
-    ],
-    "scalars": [
-        "fs_used:warn",
-        "fs_used:crit",
-    ],
-    "range": (0, "fs_used:max"),
-}
-
-graph_info["growing"] = {
-    "title": _("Growing"),
-    "metrics": [(
-        "fs_growth.max,0,MAX",
-        "area",
-        _("Growth"),
-    ),],
-}
-
-graph_info["shrinking"] = {
-    "title": _("Shrinking"),
-    "consolidation_function": "min",
-    "metrics": [("fs_growth.min,0,MIN,-1,*#299dcf", "-area", _("Shrinkage")),],
-}
-
-graph_info["fs_trend"] = {
-    "metrics": [("fs_trend", "line"),],
 }
 
 graph_info["cpu_utilization_3"] = {
@@ -8495,6 +8444,61 @@ graph_info["cpu_utilization_8"] = {
         ("interrupt", "stack"),
     ],
     "range": (0, 100),
+}
+
+graph_info["per_core_utilization"] = {
+    "title": _("Per Core utilization"),
+    "metrics": [("cpu_core_util_%d" % num, "line") for num in range(MAX_CORES)],
+    "range": (0, 100),
+    "optional_metrics": ["cpu_core_util_%d" % num for num in range(2, MAX_CORES)]
+}
+
+graph_info["fs_used"] = {
+    "metrics": [
+        ("fs_used", "area"),
+        ("fs_size,fs_used,-#e3fff9", "stack", _("Free space")),
+        ("fs_size", "line"),
+    ],
+    "scalars": [
+        "fs_used:warn",
+        "fs_used:crit",
+    ],
+    "range": (0, "fs_used:max"),
+    "conflicting_metrics": ["fs_free"],
+}
+
+# draw a different graph if space reserved for root was excluded
+graph_info["fs_used_2"] = {
+    "metrics": [
+        ("fs_used", "area"),
+        ("fs_free", "stack"),
+        ("reserved", "stack"),
+        ("fs_size", "line"),
+    ],
+    "scalars": [
+        "fs_used:warn",
+        "fs_used:crit",
+    ],
+    "range": (0, "fs_used:max"),
+}
+
+graph_info["growing"] = {
+    "title": _("Growing"),
+    "metrics": [(
+        "fs_growth.max,0,MAX",
+        "area",
+        _("Growth"),
+    ),],
+}
+
+graph_info["shrinking"] = {
+    "title": _("Shrinking"),
+    "consolidation_function": "min",
+    "metrics": [("fs_growth.min,0,MIN,-1,*#299dcf", "-area", _("Shrinkage")),],
+}
+
+graph_info["fs_trend"] = {
+    "metrics": [("fs_trend", "line"),],
 }
 
 graph_info["wasted_space_of_tables_and_indexes"] = {

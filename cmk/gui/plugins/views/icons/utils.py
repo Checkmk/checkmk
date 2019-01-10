@@ -95,11 +95,11 @@ class Icon(object):
     def default_toplevel(self):
         # type: () -> bool
         """Whether or not to display the icon in the column or the action menu"""
-        return 30
+        return False
 
     def default_sort_index(self):
         # type: () -> int
-        return False
+        return 30
 
     def __init__(self):
         super(Icon, self).__init__()

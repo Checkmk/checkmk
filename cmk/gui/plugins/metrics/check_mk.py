@@ -8342,9 +8342,7 @@ graph_info["util_average"] = {
         "util:warn",
         "util:crit",
     ],
-    "range": (0, 100),
-    "optional_metrics": ["util_average"],
-    "conflicting_metrics": ["user"],
+    "range": ("util:min", "util:max"),
 }
 
 graph_info["cpu_utilization_1"] = {

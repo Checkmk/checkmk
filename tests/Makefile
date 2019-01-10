@@ -60,16 +60,16 @@ test-format-python: $(VENV) ../.style.yapf
 	sed -e 's/^+++ //' -e 's/[[:blank:]]*(reformatted)$$/:1:1: error: file needs formatting/'
 
 test-gui-crawl: $(VENV)
-	$(PYTEST) -T gui_crawl
+	$(PYTEST) -T gui_crawl $(realpath integration/cmk/gui/test_crawl.py)
 
 test-integration: $(VENV)
-	$(PYTEST) -T integration
+	$(PYTEST) -T integration $(realpath integration)
 
 test-packaging: $(VENV)
-	$(PYTEST) -T packaging
+	$(PYTEST) -T packaging packaging
 
 test-pylint: $(VENV)
-	$(PYTEST) -T pylint
+	$(PYTEST) -T pylint pylint
 
 test-shellcheck:
 	@CMK_DIR="$(realpath ..)" ; \

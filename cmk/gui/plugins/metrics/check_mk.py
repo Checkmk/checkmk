@@ -1536,6 +1536,18 @@ metric_info["util15"] = {
     "color": "#9a52bf",
 }
 
+metric_info["cpu_entitlement"] = {
+    "title": _("Entitlement"),
+    "unit": "",
+    "color": "#66FF66",
+}
+
+metric_info["cpu_entitlement_util"] = {
+    "title": _("Utilization"),
+    "unit": "",
+    "color": "#FF5555",
+}
+
 MAX_CORES = 128
 
 for i in range(MAX_CORES):
@@ -8345,7 +8357,7 @@ graph_info["util_average_1"] = {
     "range": ("util:min", "util:max"),
 }
 
-graph_info["cpu_average_2"] = {
+graph_info["util_average_2"] = {
     "title": _("CPU utilization"),
     "metrics": [("util1", "area"), ("util15", "line")],
     "scalars": [
@@ -8442,6 +8454,11 @@ graph_info["cpu_utilization_8"] = {
         ("interrupt", "stack"),
     ],
     "range": (0, 100),
+}
+
+graph_info["cpu_entitlement"] = {
+    "title": _("CPU entitlement"),
+    "metrics": [("cpu_entitlement", "area"), ("cpu_entitlement_util", "line")],
 }
 
 graph_info["per_core_utilization"] = {

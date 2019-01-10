@@ -37,7 +37,10 @@ def parse_lparstat_aix(info):
     if len(info) < 4:
         return {'update_required': True}
 
-    parsed = {}
+    # get system config:
+    kv_pairs = (word for word in info[0] if '=' in word)
+    parsed = {'system_config': dict(kv.split('=', 1) for kv in kv_pairs)}
+
     for index, key in enumerate(info[1]):
         name = key.lstrip('%')
         uom = '%' if '%' in key else ''
@@ -106,6 +109,25 @@ def check_lparstat_aix_cpu(_no_item, params, parsed):
 
     for util_result in check_cpu_util(util, params, perf_max=None):
         yield util_result
+
+    config = parsed.get('system_config', {})
+    partition_type = config.get('type', '').lower()
+    try:
+        kwargs = {
+            'shared': {
+                'infoname': "100% corresponding to entitled processing capacity",
+                'unit': "CPUs"
+            },
+            'dedicated': {
+                'infoname': "100% corresponding to",
+                'unit': "physical processors"
+            },
+        }[partition_type]
+        cpu_entitlement = float(config['ent'])
+    except (KeyError, ValueError):
+        return
+    yield check_levels(cpu_entitlement, 'cpu_entitlement', None, **kwargs)
+    yield 0, "", [('cpu_entitlement_util', util / 100. * cpu_entitlement)]
 
 
 check_info['lparstat_aix.cpu_util'] = {

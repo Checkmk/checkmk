@@ -1,0 +1,11 @@
+Title: lparstat_aix: Add CPU entitlement info and graph
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1547124006
+Class: feature
+
+The CPU utilization service now shows the CPU entitlement
+alongside the current total utilization.

@@ -1772,96 +1772,6 @@ register_check_parameters(
 
 register_check_parameters(
     RulespecGroupCheckParametersStorage,
-    "mongodb_flushing",
-    _("MongoDB Flushes"),
-    Dictionary(elements=[
-        (
-            "average_time",
-            Tuple(
-                title=_("Average flush time"),
-                elements=[
-                    Integer(title=_("Warning at"), unit="ms", default_value=50),
-                    Integer(title=_("Critical at"), unit="ms", default_value=100),
-                    Integer(title=_("Time interval"), unit="minutes", default_value=10),
-                ]),
-        ),
-        (
-            "last_time",
-            Tuple(
-                title=_("Last flush time"),
-                elements=[
-                    Integer(title=_("Warning at"), unit="ms", default_value=50),
-                    Integer(title=_("Critical at"), unit="ms", default_value=100),
-                ]),
-        ),
-    ]),
-    None,
-    match_type="dict")
-
-register_check_parameters(
-    RulespecGroupCheckParametersStorage,
-    "mongodb_asserts",
-    _("MongoDB Assert Rates"),
-    Dictionary(
-        elements=[("%s_assert_rate" % what,
-                   Tuple(
-                       title=_("%s rate") % what.title(),
-                       elements=[
-                           Float(title=_("Warning at"), unit=_("Asserts / s"), default_value=1.0),
-                           Float(title=_("Critical at"), unit=_("Asserts / s"), default_value=2.0),
-                       ])) for what in ["msg", "rollovers", "regular", "warning", "user"]],),
-    None,
-    match_type="dict")
-
-register_check_parameters(
-    RulespecGroupCheckParametersStorage,
-    "mongodb_mem",
-    _("MongoDB Memory"),
-    Dictionary(
-        title=_("MongoDB Memory"),
-        elements=[
-            ("resident_levels",
-             Tuple(
-                 title=_("Resident memory usage"),
-                 help=
-                 _("The value of resident is roughly equivalent to the amount of RAM, "
-                   "currently used by the database process. In normal use this value tends to grow. "
-                   "In dedicated database servers this number tends to approach the total amount of system memory."
-                  ),
-                 elements=[
-                     Filesize(title=_("Warning at"), default_value=1 * 1024**3),
-                     Filesize(title=_("Critical at"), default_value=2 * 1024**3),
-                 ],
-             )),
-            ("mapped_levels",
-             Tuple(
-                 title=_("Mapped memory usage"),
-                 help=_(
-                     "The value of mapped shows the amount of mapped memory by the database. "
-                     "Because MongoDB uses memory-mapped files, this value is likely to be to be "
-                     "roughly equivalent to the total size of your database or databases."),
-                 elements=[
-                     Filesize(title=_("Warning at"), default_value=1 * 1024**3),
-                     Filesize(title=_("Critical at"), default_value=2 * 1024**3),
-                 ],
-             )),
-            ("virtual_levels",
-             Tuple(
-                 title=_("Virtual memory usage"),
-                 help=_(
-                     "Virtual displays the quantity of virtual memory used by the mongod process. "
-                 ),
-                 elements=[
-                     Filesize(title=_("Warning at"), default_value=2 * 1024**3),
-                     Filesize(title=_("Critical at"), default_value=4 * 1024**3),
-                 ],
-             )),
-        ]),
-    None,
-    match_type="dict")
-
-register_check_parameters(
-    RulespecGroupCheckParametersStorage,
     "openhardwaremonitor_smart",
     _("OpenHardwareMonitor S.M.A.R.T."),
     Dictionary(elements=[
@@ -1879,24 +1789,6 @@ register_check_parameters(
         title=_("Device Name"),
         help=_("Name of the Hard Disk as reported by OHM: hdd0, hdd1, ..."),
     ),
-    match_type="dict")
-
-register_check_parameters(
-    RulespecGroupCheckParametersStorage,
-    "mongodb_locks",
-    _("MongoDB Locks"),
-    Dictionary(
-        elements=[("%s_locks" % what,
-                   Tuple(
-                       title=_("%s Locks") % what.title().replace("_", " "),
-                       elements=[
-                           Integer(title=_("Warning at"), minvalue=0),
-                           Integer(title=_("Critical at"), minvalue=0),
-                       ])) for what in [
-                           "clients_readers", "clients_writers", "clients_total", "queue_readers",
-                           "queue_writers", "queue_total"
-                       ]],),
-    None,
     match_type="dict")
 
 register_check_parameters(
@@ -1970,44 +1862,6 @@ register_check_parameters(
 
 register_check_parameters(
     RulespecGroupCheckParametersStorage,
-    "emcvnx_disks",
-    _("EMC VNX Enclosures"),
-    Dictionary(elements=[
-        ("state_read_error",
-         Tuple(
-             title=_("State on hard read error"),
-             elements=[
-                 MonitoringState(
-                     title=_("State"),
-                     default_value=2,
-                 ),
-                 Integer(
-                     title=_("Minimum error count"),
-                     default_value=2,
-                 ),
-             ])),
-        ("state_write_error",
-         Tuple(
-             title=_("State on hard write error"),
-             elements=[
-                 MonitoringState(
-                     title=_("State"),
-                     default_value=2,
-                 ),
-                 Integer(
-                     title=_("Minimum error count"),
-                     default_value=2,
-                 ),
-             ])),
-        ("state_rebuilding",
-         MonitoringState(default_value=1, title=_("State when rebuildung enclosure"))),
-    ]),
-    TextAscii(title=_("Enclosure ID"), allow_empty=True),
-    match_type="dict",
-)
-
-register_check_parameters(
-    RulespecGroupCheckParametersStorage,
     "lvm_lvs_pools",
     _("Logical Volume Pools (LVM)"),
     Dictionary(elements=[
@@ -2037,40 +1891,6 @@ register_check_parameters(
         allow_empty=True,
     ),
     match_type="dict")
-
-register_check_parameters(
-    RulespecGroupCheckParametersStorage,
-    "emcvnx_storage_pools",
-    _("EMC VNX storage pools"),
-    Dictionary(elements=[
-        ("percent_full",
-         Tuple(
-             title=_("Upper levels for physical capacity in percent"),
-             elements=[
-                 Percentage(title=_("Warning at"), default_value=70.0),
-                 Percentage(title=_("Critical at"), default_value=90.0),
-             ])),
-    ]),
-    TextAscii(title=_("Pool name")),
-    match_type="dict",
-)
-
-register_check_parameters(
-    RulespecGroupCheckParametersStorage,
-    "emcvnx_storage_pools_tiering",
-    _("EMC VNX storage pools tiering"),
-    Dictionary(elements=[
-        ("time_to_complete",
-         Tuple(
-             title=_("Upper levels for estimated time to complete"),
-             elements=[
-                 Age(title=_("Warning at"), default_value=300 * 60 * 60),
-                 Age(title=_("Critical at"), default_value=350 * 60 * 60),
-             ])),
-    ]),
-    TextAscii(title=_("Pool name")),
-    match_type="dict",
-)
 
 register_check_parameters(
     RulespecGroupCheckParametersStorage,

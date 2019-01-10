@@ -1,13 +1,14 @@
 # encoding: utf-8
 
-import cmk.utils.store as store
-from cmk.utils.exceptions import MKGeneralException
-import imp
 import sys
 import threading
 import time
 import os
+
 import pytest
+
+import cmk.utils.store as store
+from cmk.utils.exceptions import MKGeneralException
 
 def test_load_data_from_file_not_existing(tmpdir):
     data = store.load_data_from_file("%s/x" % tmpdir)
@@ -28,8 +29,8 @@ def test_load_data_not_locked(tmpdir):
     locked_file = tmpdir.join("locked_file")
     locked_file.write("[1, 2]")
 
-    data = store.load_data_from_file("%s" % locked_file)
-    assert store.have_lock("%s" % locked_file) == False
+    store.load_data_from_file("%s" % locked_file)
+    assert store.have_lock("%s" % locked_file) is False
 
 
 def test_load_data_from_file_locking(tmpdir):
@@ -38,7 +39,7 @@ def test_load_data_from_file_locking(tmpdir):
 
     data = store.load_data_from_file("%s" % locked_file, lock=True)
     assert data == [1, 2]
-    assert store.have_lock("%s" % locked_file) == True
+    assert store.have_lock("%s" % locked_file) is True
 
 
 def test_load_data_from_not_permitted_file(tmpdir):
@@ -57,9 +58,9 @@ def test_load_data_from_file_dict(tmpdir):
     locked_file.write(repr({"1": 2, "ä": u"ß"}))
 
     data = store.load_data_from_file("%s" % locked_file)
-    assert type(data) == dict
+    assert isinstance(data, dict)
     assert data["1"] == 2
-    assert type(data["ä"]) == unicode
+    assert isinstance(data["ä"], unicode)
     assert data["ä"] == u"ß"
 
 
@@ -115,9 +116,9 @@ def test_acquire_lock(tmpdir):
 
     path = "%s" % locked_file
 
-    assert store.have_lock(path) == False
+    assert store.have_lock(path) is False
     store.aquire_lock(path)
-    assert store.have_lock(path) == True
+    assert store.have_lock(path) is True
 
 
 def test_acquire_lock_twice(tmpdir):
@@ -126,11 +127,11 @@ def test_acquire_lock_twice(tmpdir):
 
     path = "%s" % locked_file
 
-    assert store.have_lock(path) == False
+    assert store.have_lock(path) is False
     store.aquire_lock(path)
-    assert store.have_lock(path) == True
+    assert store.have_lock(path) is True
     store.aquire_lock(path)
-    assert store.have_lock(path) == True
+    assert store.have_lock(path) is True
 
 
 def test_release_lock_not_locked():
@@ -143,11 +144,11 @@ def test_release_lock(tmpdir):
 
     path = "%s" % locked_file
 
-    assert store.have_lock(path) == False
+    assert store.have_lock(path) is False
     store.aquire_lock(path)
-    assert store.have_lock(path) == True
+    assert store.have_lock(path) is True
     store.release_lock(path)
-    assert store.have_lock(path) == False
+    assert store.have_lock(path) is False
 
 
 def test_release_lock_already_closed(tmpdir):
@@ -156,14 +157,14 @@ def test_release_lock_already_closed(tmpdir):
 
     path = "%s" % locked_file
 
-    assert store.have_lock(path) == False
+    assert store.have_lock(path) is False
     store.aquire_lock(path)
-    assert store.have_lock(path) == True
+    assert store.have_lock(path) is True
 
     os.close(store._acquired_locks[path])
 
     store.release_lock(path)
-    assert store.have_lock(path) == False
+    assert store.have_lock(path) is False
 
 
 def test_release_all_locks(tmpdir):
@@ -175,17 +176,17 @@ def test_release_all_locks(tmpdir):
     path1 = "%s" % locked_file1
     path2 = "%s" % locked_file2
 
-    assert store.have_lock(path1) == False
+    assert store.have_lock(path1) is False
     store.aquire_lock(path1)
-    assert store.have_lock(path1) == True
+    assert store.have_lock(path1) is True
 
-    assert store.have_lock(path2) == False
+    assert store.have_lock(path2) is False
     store.aquire_lock(path2)
-    assert store.have_lock(path2) == True
+    assert store.have_lock(path2) is True
 
     store.release_all_locks()
-    assert store.have_lock(path1) == False
-    assert store.have_lock(path2) == False
+    assert store.have_lock(path1) is False
+    assert store.have_lock(path2) is False
 
 
 def test_release_all_locks_already_closed(tmpdir):
@@ -194,14 +195,14 @@ def test_release_all_locks_already_closed(tmpdir):
 
     path = "%s" % locked_file
 
-    assert store.have_lock(path) == False
+    assert store.have_lock(path) is False
     store.aquire_lock(path)
-    assert store.have_lock(path) == True
+    assert store.have_lock(path) is True
 
     os.close(store._acquired_locks[path])
 
     store.release_all_locks()
-    assert store.have_lock(path) == False
+    assert store.have_lock(path) is False
 
 
 class LockTestThread(threading.Thread):
@@ -217,15 +218,15 @@ class LockTestThread(threading.Thread):
     def run(self):
         while True:
             if self.do == "lock":
-                assert self.store.have_lock(self.path) == False
+                assert self.store.have_lock(self.path) is False
                 self.store.aquire_lock(self.path)
-                assert self.store.have_lock(self.path) == True
+                assert self.store.have_lock(self.path) is True
                 self.do = None
 
             elif self.do == "unlock":
-                assert self.store.have_lock(self.path) == True
+                assert self.store.have_lock(self.path) is True
                 self.store.release_lock(self.path)
-                assert self.store.have_lock(self.path) == False
+                assert self.store.have_lock(self.path) is False
                 self.do = None
 
             else:
@@ -234,9 +235,10 @@ class LockTestThread(threading.Thread):
 
 
 def test_locking(tmpdir):
+    # HACK: We abuse modules as data containers, so we have to do this Kung Fu...
     store1 = sys.modules["cmk.utils.store"]
     del sys.modules["cmk.utils.store"]
-    import cmk.utils.store as store
+    import cmk.utils.store as _store  # pylint: disable=reimported
     store2 = sys.modules["cmk.utils.store"]
 
     assert store1 != store2
@@ -256,13 +258,13 @@ def test_locking(tmpdir):
         if store1.have_lock(path):
             break
         time.sleep(0.01)
-    assert store1.have_lock(path) == True
+    assert store1.have_lock(path) is True
 
     # Now try to get lock with store2
     t2.do = "lock"
     time.sleep(0.2)
-    assert store1.have_lock(path) == True
-    assert store2.have_lock(path) == False
+    assert store1.have_lock(path) is True
+    assert store2.have_lock(path) is False
 
     # And now unlock store1 and check whether store2 has the lock now
     t1.do = "unlock"
@@ -270,6 +272,6 @@ def test_locking(tmpdir):
         if not store1.have_lock(path):
             break
         time.sleep(0.01)
-    assert store1.have_lock(path) == False
+    assert store1.have_lock(path) is False
     time.sleep(0.2)
-    assert store2.have_lock(path) == True
+    assert store2.have_lock(path) is True

@@ -60,30 +60,32 @@ def test_user_config_get_not_existing_snapin():
     assert "does not exist" in msg
 
 
-@pytest.mark.parametrize("move_id,before_id,result", [
-    ("tactical_overview",  "views", [
-        UserSidebarSnapin.from_snapin_type_id("admin"),
-        UserSidebarSnapin.from_snapin_type_id("tactical_overview"),
-        UserSidebarSnapin.from_snapin_type_id("views"),
-    ]),
-    ("tactical_overview",  "admin", [
-        UserSidebarSnapin.from_snapin_type_id("tactical_overview"),
-        UserSidebarSnapin.from_snapin_type_id("admin"),
-        UserSidebarSnapin.from_snapin_type_id("views"),
-    ]),
-    ("not_existing",  "admin", None),
-    # TODO: Shouldn't this also be handled?
-    #("admin",  "not_existing", [
-    #    ("admin", "open"),
-    #    ("views", "open"),
-    #    ("tactical_overview", "open"),
-    #]),
-    ("admin",  "", [
-        UserSidebarSnapin.from_snapin_type_id("views"),
-        UserSidebarSnapin.from_snapin_type_id("tactical_overview"),
-        UserSidebarSnapin.from_snapin_type_id("admin"),
-    ]),
-])
+@pytest.mark.parametrize(
+    "move_id,before_id,result",
+    [
+        ("tactical_overview", "views", [
+            UserSidebarSnapin.from_snapin_type_id("admin"),
+            UserSidebarSnapin.from_snapin_type_id("tactical_overview"),
+            UserSidebarSnapin.from_snapin_type_id("views"),
+        ]),
+        ("tactical_overview", "admin", [
+            UserSidebarSnapin.from_snapin_type_id("tactical_overview"),
+            UserSidebarSnapin.from_snapin_type_id("admin"),
+            UserSidebarSnapin.from_snapin_type_id("views"),
+        ]),
+        ("not_existing", "admin", None),
+        # TODO: Shouldn't this also be handled?
+        #("admin",  "not_existing", [
+        #    ("admin", "open"),
+        #    ("views", "open"),
+        #    ("tactical_overview", "open"),
+        #]),
+        ("admin", "", [
+            UserSidebarSnapin.from_snapin_type_id("views"),
+            UserSidebarSnapin.from_snapin_type_id("tactical_overview"),
+            UserSidebarSnapin.from_snapin_type_id("admin"),
+        ]),
+    ])
 def test_user_config_move_snapin_before(mocker, move_id, before_id, result):
     user_config = sidebar.UserSidebarConfig(config.user, config.sidebar)
     del user_config.snapins[:]
@@ -121,14 +123,14 @@ def test_load_default_config(monkeypatch):
         UserSidebarSnapin(sidebar.snapin_registry["reports"], sidebar.SnapinVisibility.CLOSED),
         UserSidebarSnapin.from_snapin_type_id('bookmarks'),
         UserSidebarSnapin.from_snapin_type_id('admin'),
-        UserSidebarSnapin(sidebar.snapin_registry["master_control"], sidebar.SnapinVisibility.CLOSED),
+        UserSidebarSnapin(sidebar.snapin_registry["master_control"],
+                          sidebar.SnapinVisibility.CLOSED),
     ]
 
 
 def test_load_legacy_list_user_config(monkeypatch):
     monkeypatch.setattr(sidebar.UserSidebarConfig, "_user_config",
-        lambda x: [("tactical_overview", "open"),
-                   ("views", "closed")])
+                        lambda x: [("tactical_overview", "open"), ("views", "closed")])
 
     user_config = sidebar.UserSidebarConfig(config.user, config.sidebar)
     assert user_config.folded is False
@@ -140,8 +142,7 @@ def test_load_legacy_list_user_config(monkeypatch):
 
 def test_load_legacy_off_user_config(monkeypatch):
     monkeypatch.setattr(sidebar.UserSidebarConfig, "_user_config",
-        lambda x: [("search", "off"),
-                   ("views", "closed")])
+                        lambda x: [("search", "off"), ("views", "closed")])
 
     user_config = sidebar.UserSidebarConfig(config.user, config.sidebar)
     assert user_config.folded is False
@@ -164,7 +165,7 @@ def test_load_skip_not_existing(monkeypatch):
     ]
 
 
-def test_load_skip_not_permitted(monkeypatch):
+def test_load_skip_not_permitted(monkeypatch, register_builtin_html):
     monkeypatch.setattr(sidebar.UserSidebarConfig, "_user_config",
         lambda x: {
             "fold": False,
@@ -223,10 +224,13 @@ def test_ajax_fold_page():
 ])
 def test_ajax_fold(register_builtin_html, mocker, origin_state, fold_var, set_state):
     html.request.set_var("fold", fold_var)
-    m_config = mocker.patch.object(config.user, "load_file", return_value={
-        "fold": origin_state,
-        "snapins": [("tactical_overview", "open")],
-    })
+    m_config = mocker.patch.object(
+        config.user,
+        "load_file",
+        return_value={
+            "fold": origin_state,
+            "snapins": [("tactical_overview", "open")],
+        })
     m_save = mocker.patch.object(config.user, "save_file")
 
     sidebar.ajax_fold()
@@ -246,23 +250,26 @@ def test_ajax_openclose_page():
 
 
 @pytest.mark.parametrize("origin_state,set_state", [
-    ("open",   "closed"),
+    ("open", "closed"),
     ("closed", "open"),
     ("closed", "closed"),
-    ("open",   "open"),
-    ("open",   "off"),
+    ("open", "open"),
+    ("open", "off"),
     ("closed", "off"),
 ])
 def test_ajax_openclose_close(register_builtin_html, mocker, origin_state, set_state):
     html.request.set_var("name", "tactical_overview")
     html.request.set_var("state", set_state)
-    m_config = mocker.patch.object(config.user, "load_file", return_value={
-        "fold": False,
-        "snapins": [
-            ("tactical_overview", origin_state),
-            ("views", "open"),
-        ],
-    })
+    m_config = mocker.patch.object(
+        config.user,
+        "load_file",
+        return_value={
+            "fold": False,
+            "snapins": [
+                ("tactical_overview", origin_state),
+                ("views", "open"),
+            ],
+        })
     m_save = mocker.patch.object(config.user, "save_file")
 
     sidebar.ajax_openclose()
@@ -272,15 +279,17 @@ def test_ajax_openclose_close(register_builtin_html, mocker, origin_state, set_s
     ]
 
     if set_state != "off":
-        snapins.insert(0, UserSidebarSnapin.from_config({
-            "snapin_type_id": "tactical_overview",
-            "visibility": set_state
-        }))
+        snapins.insert(
+            0,
+            UserSidebarSnapin.from_config({
+                "snapin_type_id": "tactical_overview",
+                "visibility": set_state
+            }))
 
     m_config.assert_called_once()
     m_save.assert_called_once_with("sidebar", {
         "fold": False,
-        "snapins": [ e.to_config() for e in snapins ],
+        "snapins": [e.to_config() for e in snapins],
     })
 
 
@@ -288,7 +297,7 @@ def test_move_snapin_page():
     assert cmk.gui.pages.get_page_handler("sidebar_move_snapin") == sidebar.move_snapin
 
 
-def test_move_snapin_not_permitted(monkeypatch, mocker):
+def test_move_snapin_not_permitted(monkeypatch, mocker, register_builtin_html):
     monkeypatch.setattr(config.user, "may", lambda x: x != "general.configure_sidebar")
     m_load = mocker.patch.object(sidebar.UserSidebarConfig, "_load")
     sidebar.move_snapin()
@@ -296,8 +305,8 @@ def test_move_snapin_not_permitted(monkeypatch, mocker):
 
 
 @pytest.mark.parametrize("move,before,do_save", [
-    ("tactical_overview",  "views", True),
-    ("not_existing",  "admin", None),
+    ("tactical_overview", "views", True),
+    ("not_existing", "admin", None),
 ])
 def test_move_snapin(register_builtin_html, mocker, move, before, do_save):
     html.request.set_var("name", move)

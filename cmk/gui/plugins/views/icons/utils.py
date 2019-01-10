@@ -54,11 +54,23 @@ class PermissionSectionIconsAndActions(PermissionSection):
 
 class Icon(object):
     __metaclass__ = abc.ABCMeta
+    _custom_toplevel = None  # type: Optional[bool]
+    _custom_sort_index = None  # type: Optional[int]
 
     @classmethod
     def type(cls):
         # type: () -> str
         return "icon"
+
+    @classmethod
+    def override_toplevel(cls, toplevel):
+        # type: (bool) -> None
+        cls._custom_toplevel = toplevel
+
+    @classmethod
+    def override_sort_index(cls, sort_index):
+        # type: (int) -> None
+        cls._custom_sort_index = sort_index
 
     @classmethod
     @abc.abstractmethod
@@ -101,11 +113,6 @@ class Icon(object):
         # type: () -> int
         return 30
 
-    def __init__(self):
-        super(Icon, self).__init__()
-        self._custom_toplevel = None  # type: Optional[bool]
-        self._custom_sort_index = None  # type: Optional[int]
-
     def toplevel(self):
         # type: () -> bool
         if self._custom_toplevel is not None:
@@ -117,14 +124,6 @@ class Icon(object):
         if self._custom_sort_index is not None:
             return self._custom_sort_index
         return self.default_sort_index()
-
-    def override_toplevel(self, toplevel):
-        # type: (bool) -> None
-        self._custom_toplevel = toplevel
-
-    def override_sort_index(self, sort_index):
-        # type: (int) -> None
-        self._custom_sort_index = sort_index
 
 
 class IconRegistry(cmk.utils.plugin_registry.ClassRegistry):

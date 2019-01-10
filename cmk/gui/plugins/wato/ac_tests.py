@@ -37,6 +37,7 @@ import cmk.gui.plugins.userdb.htpasswd
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import MKGeneralException
+from cmk.gui.watolib.sites import SiteManagementFactory
 
 from cmk.gui.plugins.wato import (
     ACTestCategories,
@@ -46,6 +47,7 @@ from cmk.gui.plugins.wato import (
     ACResultWARN,
     ACResultOK,
     ConfigDomainOMD,
+    SiteBackupJobs,
 )
 
 
@@ -83,7 +85,7 @@ class ACTestPersistentConnections(ACTest):
     def _check_site(self, site_id, site_config):
         persist = site_config.get("persist", False)
 
-        if persist and watolib.site_is_using_livestatus_proxy(site_id):
+        if persist and _site_is_using_livestatus_proxy(site_id):
             yield ACResultWARN(
                 _("Persistent connections are nearly useless "
                   "with Livestatus Proxy Daemon. Better disable it."))
@@ -126,7 +128,7 @@ class ACTestLiveproxyd(ACTest):
                 yield result
 
     def _check_site(self, site_id):
-        if watolib.site_is_using_livestatus_proxy(site_id):
+        if _site_is_using_livestatus_proxy(site_id):
             yield ACResultOK(_("Site is using the Livestatus Proxy Daemon"))
 
         elif not watolib.is_wato_slave_site():
@@ -367,7 +369,7 @@ class ACTestBackupConfigured(ACTest):
         return True
 
     def execute(self):
-        jobs = watolib.SiteBackupJobs()
+        jobs = SiteBackupJobs()
         if jobs.choices():
             yield ACResultOK(_("You have configured %d backup jobs") % len(jobs.choices()))
         else:
@@ -392,7 +394,7 @@ class ACTestBackupNotEncryptedConfigured(ACTest):
         return True
 
     def execute(self):
-        jobs = watolib.SiteBackupJobs()
+        jobs = SiteBackupJobs()
         for job in jobs.objects.itervalues():
             if job.is_encrypted():
                 yield ACResultOK(_("The job \"%s\" is encrypted") % job.title())
@@ -794,3 +796,9 @@ class ACTestRulebasedNotifications(ACTest):
             yield ACResultCRIT('Rulebased notifications are deactivated in the global settings')
         else:
             yield ACResultOK(_("Rulebased notifications are activated"))
+
+
+def _site_is_using_livestatus_proxy(site_id):
+    sites = SiteManagementFactory().factory().load_sites()
+    site = sites[site_id]
+    return site["socket"][0] == "proxy"

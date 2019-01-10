@@ -346,7 +346,6 @@ from cmk.gui.watolib import (
     ACResultWARN,
     ACResultOK,
     LivestatusViaTCP,
-    SiteBackupJobs,
     make_action_link,
     is_a_checkbox,
     get_search_expression,

@@ -39,6 +39,7 @@ from cmk.gui.valuespec import Checkbox
 from cmk.gui.plugins.wato import (
     WatoMode,
     mode_registry,
+    SiteBackupJobs,
 )
 
 
@@ -61,7 +62,7 @@ class ModeBackup(backup.PageBackup, WatoMode):
         return _("Site backup")
 
     def jobs(self):
-        return watolib.SiteBackupJobs()
+        return SiteBackupJobs()
 
     def keys(self):
         return SiteBackupKeypairStore()
@@ -87,7 +88,7 @@ class ModeBackupTargets(backup.PageBackupTargets, WatoMode):
         return SiteBackupTargets()
 
     def jobs(self):
-        return watolib.SiteBackupJobs()
+        return SiteBackupJobs()
 
     def page(self):
         self.targets().show_list()
@@ -120,7 +121,7 @@ class ModeEditBackupJob(backup.PageEditBackupJob, WatoMode):
         return ["backups"]
 
     def jobs(self):
-        return watolib.SiteBackupJobs()
+        return SiteBackupJobs()
 
     def targets(self):
         return SiteBackupTargets()
@@ -175,7 +176,7 @@ class ModeBackupJobState(backup.PageBackupJobState, WatoMode):
         return ["backups"]
 
     def jobs(self):
-        return watolib.SiteBackupJobs()
+        return SiteBackupJobs()
 
 
 class ModeAjaxBackupJobState(WatoWebApiMode):
@@ -209,7 +210,7 @@ class ModeBackupKeyManagement(SiteBackupKeypairStore, backup.PageBackupKeyManage
         return ["backups"]
 
     def jobs(self):
-        return watolib.SiteBackupJobs()
+        return SiteBackupJobs()
 
 
 @mode_registry.register

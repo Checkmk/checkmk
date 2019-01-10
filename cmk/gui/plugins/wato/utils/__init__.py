@@ -27,8 +27,10 @@
 
 # TODO: More feature related splitting up would be better
 
+import os
 import abc
 import json
+import subprocess
 
 import six
 
@@ -36,6 +38,7 @@ import cmk.utils.plugin_registry
 
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
+import cmk.gui.backup as backup
 from cmk.gui.i18n import _u, _
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
@@ -1873,3 +1876,17 @@ def some_host_hasnt_set(folder, attrname):
             return True
 
     return False
+
+
+class SiteBackupJobs(backup.Jobs):
+    def __init__(self):
+        super(SiteBackupJobs, self).__init__(backup.site_config_path())
+
+    def _apply_cron_config(self):
+        p = subprocess.Popen(["omd", "restart", "crontab"],
+                             close_fds=True,
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.STDOUT,
+                             stdin=open(os.devnull))
+        if p.wait() != 0:
+            raise MKGeneralException(_("Failed to apply the cronjob config: %s") % p.stdout.read())

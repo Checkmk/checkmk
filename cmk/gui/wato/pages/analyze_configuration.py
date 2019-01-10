@@ -51,6 +51,12 @@ from cmk.gui.plugins.wato import (
     mode_registry,
 )
 
+from cmk.gui.watolib.analyze_configuration import (
+    ACResult,
+    ACTestCategories,
+    AutomationCheckAnalyzeConfig,
+)
+
 
 @mode_registry.register
 class ModeAnalyzeConfig(WatoMode):
@@ -122,9 +128,9 @@ class ModeAnalyzeConfig(WatoMode):
         site_ids = sorted(self._analyze_site_ids())
 
         for category_name, results_by_test in sorted(
-                results_by_category.items(), key=lambda x: watolib.ACTestCategories.title(x[0])):
+                results_by_category.items(), key=lambda x: ACTestCategories.title(x[0])):
             with table_element(
-                    title=watolib.ACTestCategories.title(category_name),
+                    title=ACTestCategories.title(category_name),
                     css="data analyze_config",
                     sortable=False,
                     searchable=False) as table:
@@ -275,7 +281,7 @@ class ModeAnalyzeConfig(WatoMode):
                 elif result["state"] == 0:
                     test_results = []
                     for result_data in result["response"]:
-                        result = watolib.ACResult.from_repr(result_data)
+                        result = ACResult.from_repr(result_data)
                         test_results.append(result)
 
                     results_by_site[site_id] = test_results
@@ -333,7 +339,7 @@ class ModeAnalyzeConfig(WatoMode):
             log.init_logging()
 
             if config.site_is_local(site_id):
-                automation = watolib.AutomationCheckAnalyzeConfig()
+                automation = AutomationCheckAnalyzeConfig()
                 results_data = automation.execute(automation.get_request())
 
             else:

@@ -88,7 +88,6 @@ import cmk.gui.hooks as hooks
 import cmk.gui.userdb as userdb
 import cmk.gui.multitar as multitar
 import cmk.gui.mkeventd as mkeventd
-import cmk.gui.backup as backup
 import cmk.gui.log as log
 import cmk.gui.background_job as background_job
 import cmk.gui.gui_background_job as gui_background_job
@@ -182,8 +181,18 @@ from cmk.gui.watolib.sidebar_reload import (
     is_sidebar_reload_needed,
     need_sidebar_reload,
 )
-from cmk.gui.watolib.snapshots import (
-    backup_domains,)
+from cmk.gui.watolib.analyze_configuration import (
+    ACResultNone,
+    ACResultCRIT,
+    ACResultWARN,
+    ACResultOK,
+    ACTestCategories,
+    ACTest,
+    ac_test_registry,
+)
+from cmk.gui.watolib.snapshots import backup_domains
+from cmk.gui.watolib.automation_commands import (AutomationCommand, automation_command_registry)
+from cmk.gui.watolib.global_settings import load_configuration_settings
 from cmk.gui.watolib.utils import (
     ALL_HOSTS,
     ALL_SERVICES,
@@ -865,81 +874,6 @@ def get_folder_title(path):
 
 
 #.
-#   .--Automations---------------------------------------------------------.
-#   |        _         _                        _   _                      |
-#   |       / \  _   _| |_ ___  _ __ ___   __ _| |_(_) ___  _ __  ___      |
-#   |      / _ \| | | | __/ _ \| '_ ` _ \ / _` | __| |/ _ \| '_ \/ __|     |
-#   |     / ___ \ |_| | || (_) | | | | | | (_| | |_| | (_) | | | \__ \     |
-#   |    /_/   \_\__,_|\__\___/|_| |_| |_|\__,_|\__|_|\___/|_| |_|___/     |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   | Managing the available automation calls                              |
-#   '----------------------------------------------------------------------'
-
-
-class AutomationCommand(object):
-    """Abstract base class for all automation commands"""
-    __metaclass__ = abc.ABCMeta
-
-    @abc.abstractmethod
-    def command_name(self):
-        # type: () -> str
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def get_request(self):
-        # type: () -> ...
-        """Get request variables from environment
-
-        In case an automation command needs to read variables from the HTTP request this has to be done
-        in this method. The request produced by this function is 1:1 handed over to the execute() method."""
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def execute(self, request):
-        # type: (...) -> ...
-        raise NotImplementedError()
-
-    def _verify_slave_site_config(self, site_id):
-        # type: (str) -> None
-        if not site_id:
-            raise MKGeneralException(_("Missing variable siteid"))
-
-        our_id = config.omd_site()
-
-        if not config.is_single_local_site():
-            raise MKGeneralException(
-                _("Configuration error. You treat us as "
-                  "a <b>slave</b>, but we have an own distributed WATO configuration!"))
-
-        if our_id is not None and our_id != site_id:
-            raise MKGeneralException(
-                _("Site ID mismatch. Our ID is '%s', but you are saying we are '%s'.") % (our_id,
-                                                                                          site_id))
-
-        # Make sure there are no local changes we would lose!
-        changes = ActivateChanges()
-        changes.load()
-        pending = list(reversed(changes.grouped_changes()))
-        if pending:
-            message = _("There are %d pending changes that would get lost. The most recent are: "
-                       ) % len(pending)
-            message += ", ".join(change["text"] for _change_id, change in pending[:10])
-
-            raise MKGeneralException(message)
-
-
-class AutomationCommandRegistry(cmk.utils.plugin_registry.ClassRegistry):
-    def plugin_base_class(self):
-        return AutomationCommand
-
-    def _register(self, plugin_class):
-        self._entries[plugin_class().command_name()] = plugin_class
-
-
-automation_command_registry = AutomationCommandRegistry()
-
-#.
 #   .--Attributes----------------------------------------------------------.
 #   |              _   _   _        _ _           _                        |
 #   |             / \ | |_| |_ _ __(_) |__  _   _| |_ ___  ___             |
@@ -1595,34 +1529,6 @@ def get_sorted_host_attributes_by_topic(topic):
         if atopic == topic:
             attributes.append(attr)
     return attributes
-
-
-#.
-# Persistenz: Speicherung der Werte
-# - WATO speichert seine Variablen für main.mk in conf.d/wato/global.mk
-# - Daten, die der User in main.mk einträgt, müssen WATO auch bekannt sein.
-#   Sie werden als Defaultwerte verwendet.
-# - Daten, die der User in final.mk oder local.mk einträgt, werden von WATO
-#   völlig ignoriert. Der Admin kann hier Werte überschreiben, die man mit
-#   WATO dann nicht ändern kann. Und man sieht auch nicht, dass der Wert
-#   nicht änderbar ist.
-# - WATO muss irgendwie von Check_MK herausbekommen, welche Defaultwerte
-#   Variablen haben bzw. welche Einstellungen diese Variablen nach main.mk
-#   haben.
-# - WATO kann main.mk nicht selbst einlesen, weil dann der Kontext fehlt
-#   (Default-Werte der Variablen aus Check_MK und aus den Checks)
-# - --> Wir machen eine automation, die alle Konfigurationsvariablen
-#   ausgibt
-
-
-def load_configuration_settings(site_specific=False):
-    settings = {}
-    for domain in ConfigDomain.enabled_domains():
-        if site_specific:
-            settings.update(domain().load_site_globals())
-        else:
-            settings.update(domain().load())
-    return settings
 
 
 def save_global_settings(vars_, site_specific=False):
@@ -5004,275 +4910,6 @@ def _ping(address):
                             stdout=open(os.devnull, "a"),
                             stderr=subprocess.STDOUT,
                             close_fds=True).wait() == 0
-
-
-#.
-#   .--Backups-------------------------------------------------------------.
-#   |                ____             _                                    |
-#   |               | __ )  __ _  ___| | ___   _ _ __  ___                 |
-#   |               |  _ \ / _` |/ __| |/ / | | | '_ \/ __|                |
-#   |               | |_) | (_| | (__|   <| |_| | |_) \__ \                |
-#   |               |____/ \__,_|\___|_|\_\\__,_| .__/|___/                |
-#   |                                           |_|                        |
-#   +----------------------------------------------------------------------+
-#   | Managing backup and restore of WATO                                  |
-#   '----------------------------------------------------------------------'
-
-
-class SiteBackupJobs(backup.Jobs):
-    def __init__(self):
-        super(SiteBackupJobs, self).__init__(backup.site_config_path())
-
-    def _apply_cron_config(self):
-        p = subprocess.Popen(["omd", "restart", "crontab"],
-                             close_fds=True,
-                             stdout=subprocess.PIPE,
-                             stderr=subprocess.STDOUT,
-                             stdin=open(os.devnull))
-        if p.wait() != 0:
-            raise MKGeneralException(_("Failed to apply the cronjob config: %s") % p.stdout.read())
-
-
-#.
-#   .--Best Practices------------------------------------------------------.
-#   |   ____            _     ____                 _   _                   |
-#   |  | __ )  ___  ___| |_  |  _ \ _ __ __ _  ___| |_(_) ___ ___  ___     |
-#   |  |  _ \ / _ \/ __| __| | |_) | '__/ _` |/ __| __| |/ __/ _ \/ __|    |
-#   |  | |_) |  __/\__ \ |_  |  __/| | | (_| | (__| |_| | (_|  __/\__ \    |
-#   |  |____/ \___||___/\__| |_|   |_|  \__,_|\___|\__|_|\___\___||___/    |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   | Provides the user with hints about his setup. Performs different     |
-#   | checks and tells the user what could be improved.                    |
-#   '----------------------------------------------------------------------'
-
-
-class ACResult(object):
-    status = None
-
-    def __init__(self, text):
-        super(ACResult, self).__init__()
-        self.text = text
-        self.site_id = config.omd_site()
-
-    def from_test(self, test):
-        self.test_id = test.id()
-        self.category = test.category()
-        self.title = test.title()
-        self.help = test.help()
-
-    @classmethod
-    def merge(cls, *results):
-        """Create a new result object from the given result objects.
-
-        a) use the worst state
-        b) concatenate the texts
-        """
-        texts, worst_cls = [], ACResultOK
-        for result in results:
-            text = result.text
-            if result.status != 0:
-                text += " (%s)" % ("!" * result.status)
-            texts.append(text)
-
-            if result.status > worst_cls.status:
-                worst_cls = result.__class__
-
-        return worst_cls(", ".join(texts))
-
-    def status_name(self):
-        return cmk.utils.defines.short_service_state_name(self.status)
-
-    @classmethod
-    def from_repr(cls, repr_data):
-        result_class_name = repr_data.pop("class_name")
-        result = globals()[result_class_name](repr_data["text"])
-
-        for key, val in repr_data.items():
-            setattr(result, key, val)
-
-        return result
-
-    def __repr__(self):
-        return repr({
-            "site_id": self.site_id,
-            "class_name": self.__class__.__name__,
-            "text": self.text,
-            # These fields are be static - at least for the current version, but
-            # we transfer them to the central system to be able to handle test
-            # results of tests not known to the central site.
-            "test_id": self.test_id,
-            "category": self.category,
-            "title": self.title,
-            "help": self.help,
-        })
-
-
-class ACResultNone(ACResult):
-    status = -1
-
-
-class ACResultCRIT(ACResult):
-    status = 2
-
-
-class ACResultWARN(ACResult):
-    status = 1
-
-
-class ACResultOK(ACResult):
-    status = 0
-
-
-class ACTestCategories(object):
-    usability = "usability"
-    performance = "performance"
-    security = "security"
-    reliability = "reliability"
-    deprecations = "deprecations"
-
-    @classmethod
-    def title(cls, ident):
-        return {
-            "usability": _("Usability"),
-            "performance": _("Performance"),
-            "security": _("Security"),
-            "reliability": _("Reliability"),
-            "deprecations": _("Deprecations"),
-        }[ident]
-
-
-class ACTest(object):
-    def __init__(self):
-        self._executed = False
-        self._results = []
-
-    def id(self):
-        return self.__class__.__name__
-
-    def category(self):
-        """Return the internal name of the category the BP test is associated with"""
-        raise NotImplementedError()
-
-    def title(self):
-        raise NotImplementedError()
-
-    def help(self):
-        raise NotImplementedError()
-
-    def is_relevant(self):
-        """A test can check whether or not is relevant for the current evnironment.
-        In case this method returns False, the check will not be executed and not
-        be shown to the user."""
-        raise NotImplementedError()
-
-    def execute(self):
-        """Implement the test logic here. The method needs to add one or more test
-        results like this:
-
-        yield ACResultOK(_("it's fine"))
-        """
-        raise NotImplementedError()
-
-    def run(self):
-        self._executed = True
-        try:
-            # Do not merge results that have been gathered on one site for different sites
-            results = list(self.execute())
-            num_sites = len(set(r.site_id for r in results))
-            if num_sites > 1:
-                for result in results:
-                    result.from_test(self)
-                    yield result
-                return
-
-            # Merge multiple results produced for a single site
-            total_result = ACResult.merge(*list(self.execute()))
-            total_result.from_test(self)
-            yield total_result
-        except Exception:
-            logger.exception()
-            result = ACResultCRIT(
-                "<pre>%s</pre>" % _("Failed to execute the test %s: %s") % (html.attrencode(
-                    self.__class__.__name__), traceback.format_exc()))
-            result.from_test(self)
-            yield result
-
-    def status(self):
-        return max([0] + [r.status for r in self.results])
-
-    def status_name(self):
-        return cmk.utils.defines.short_service_state_name(self.status())
-
-    @property
-    def results(self):
-        if not self._executed:
-            raise MKGeneralException(_("The test has not been executed yet"))
-        return self._results
-
-    def _uses_microcore(self):
-        """Whether or not the local site is using the CMC"""
-        local_connection = cmk.gui.sites.livestatus.LocalConnection()
-        version = local_connection.query_value("GET status\nColumns: program_version\n", deflt="")
-        return version.startswith("Check_MK")
-
-    def _get_effective_global_setting(self, varname):
-        global_settings = load_configuration_settings()
-        default_values = ConfigDomain().get_all_default_globals()
-
-        if is_wato_slave_site():
-            current_settings = load_configuration_settings(site_specific=True)
-        else:
-            sites = SiteManagementFactory.factory().load_sites()
-            current_settings = sites[config.omd_site()].get("globals", {})
-
-        if varname in current_settings:
-            value = current_settings[varname]
-        elif varname in global_settings:
-            value = global_settings[varname]
-        else:
-            value = default_values[varname]
-
-        return value
-
-
-class ACTestRegistry(cmk.utils.plugin_registry.ClassRegistry):
-    def plugin_base_class(self):
-        return ACTest
-
-    def _register(self, plugin_class):
-        self._entries[plugin_class.__name__] = plugin_class
-
-
-ac_test_registry = ACTestRegistry()
-
-
-@automation_command_registry.register
-class AutomationCheckAnalyzeConfig(AutomationCommand):
-    def command_name(self):
-        return "check-analyze-config"
-
-    def get_request(self):
-        return None
-
-    def execute(self, _unused_request):
-        results = []
-        for test_cls in ac_test_registry.values():
-            test = test_cls()
-
-            if not test.is_relevant():
-                continue
-
-            for result in test.run():
-                results.append(result)
-
-        return results
-
-
-def site_is_using_livestatus_proxy(site_id):
-    sites = SiteManagementFactory().factory().load_sites()
-    site = sites[site_id]
-    return site["socket"][0] == "proxy"
 
 
 #.

@@ -19,13 +19,13 @@ echo "[[[errorlog]]]"
 # the last line we already reported (may be empty)
 LINE=$(tail -n1 "$MK_LOGWATCH_AIX_STATE" 2> /dev/null)
 
-if [[ "$LINE" ]]; then  # get rid of all lines after that:
+if [ "$LINE" ]; then  # get rid of all lines after that:
     OUT=$(errpt | awk '/'"$LINE"'/ {exit}; (NR>1) {printf "C %s\n", $0}')
 else  # LINE is empty -> report all
     OUT=$(errpt | awk '(NR>1) {printf "C %s\n", $0}')
 fi
 
-if [[ "$OUT" ]]; then
+if [ "$OUT" ]; then
     # output data; if successful, remember most recent
     echo "$OUT" && echo "$OUT" | head -n1 | sed 's/^C\ //' > "$MK_LOGWATCH_AIX_STATE"
 fi

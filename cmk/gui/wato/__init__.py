@@ -442,8 +442,13 @@ def page_handler():
 
     # If we do an action, we aquire an exclusive lock on the complete WATO.
     if html.is_transaction():
-        watolib.lock_exclusive()
+        with watolib.exclusive_lock():
+            _wato_page_handler(current_mode, mode_permissions, mode_class)
+    else:
+        _wato_page_handler(current_mode, mode_permissions, mode_class)
 
+
+def _wato_page_handler(current_mode, mode_permissions, mode_class):
     try:
         init_wato_datastructures(with_wato_lock=not html.is_transaction())
     except:

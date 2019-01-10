@@ -159,14 +159,19 @@ def page_api():
         if "request_format" in request_object:
             del request_object["request_format"]
 
+        def execute_action():
+            if watolib.is_read_only_mode_enabled() and not watolib.may_override_read_only_mode():
+                raise MKUserError(None, watolib.read_only_message())
+            return {
+                "result_code": 0,
+                "result": api_actions[action]["handler"](request_object),
+            }
+
         if api_actions[action].get("locking", True):
-            watolib.lock_exclusive()  # unlock is done automatically
-
-        if watolib.is_read_only_mode_enabled() and not watolib.may_override_read_only_mode():
-            raise MKUserError(None, watolib.read_only_message())
-
-        action_response = api_actions[action]["handler"](request_object)
-        response = {"result_code": 0, "result": action_response}
+            with watolib.exclusive_lock():
+                return execute_action()
+        else:
+            return execute_action()
 
     except MKAuthException as e:
         response = {

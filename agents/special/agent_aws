@@ -220,7 +220,7 @@ class CostsAndUsage(AWSSection):
         return self._client.get_cost_and_usage(
             TimePeriod={
                 'Start': time.strftime(fmt, time.gmtime(now)),
-                'End': time.strftime(fmt, time.gmtime(now + self.interval)),
+                'End': time.strftime(fmt, time.gmtime(now + self.period)),
             },
             Granularity='DAILY',
             Metrics=['UnblendedCost'],
@@ -881,65 +881,19 @@ class CloudTrail(AWSSection):
 #   '----------------------------------------------------------------------'
 
 
-class AWSSections(object):
-    def __init__(self, session, hostname):
+class AWSSectionsTmpl(object):
+    def __init__(self, hostname, access_key_id, secret_access_key, region):
         self._hostname = hostname
-        self._session = session
+        self._session = self._init_session(access_key_id, secret_access_key, region)
         self._sections = []
         self._results = {}
         self._exceptions = []
 
-        #---clients---------------------------------------------------------
-        ce_client = self._init_client('ce')
-        ec2_client = self._init_client('ec2')
-        s3_client = self._init_client('s3')
-        elb_client = self._init_client('elb')
-        cloudtrail_client = self._init_client('cloudtrail')
-        glacier_client = self._init_client('glacier')
-        cloudwatch_client = self._init_client('cloudwatch')
-
-        #---distributors----------------------------------------------------
-        ec2_summary_distributor = ResultDistributor()
-        elb_summary_distributor = ResultDistributor()
-        ebs_summary_distributor = ResultDistributor()
-
-        #---sections with distributors--------------------------------------
-        ec2_summary = EC2Summary(ec2_client, ec2_summary_distributor)
-        elb_summary = ELBSummary(elb_client, elb_summary_distributor)
-        ebs_summary = EBSSummary(ec2_client, ebs_summary_distributor)
-
-        #---sections--------------------------------------------------------
-        s3 = S3(s3_client)
-        elb_health = ELBHealth(elb_client)
-        ce = CostsAndUsage(ce_client)
-        cloudtrail = CloudTrail(cloudtrail_client)
-        ec2 = EC2(cloudwatch_client)
-        elb = ELB(cloudwatch_client)
-        ebs = EBS(cloudwatch_client)
-        glacier = Glacier(glacier_client)
-
-        #---register sections to distributors-------------------------------
-        ec2_summary_distributor.add(ec2)
-        ec2_summary_distributor.add(ebs_summary)
-        ec2_summary_distributor.add(ebs)
-        elb_summary_distributor.add(elb_health)
-        elb_summary_distributor.add(elb)
-        ebs_summary_distributor.add(ebs)
-
-        #---register sections with distributors for execution---------------
-        self._sections.append(ec2_summary)
-        self._sections.append(elb_summary)
-        self._sections.append(ebs_summary)
-
-        #---register sections for execution---------------------------------
-        self._sections.append(ce)
-        self._sections.append(ec2)
-        self._sections.append(s3)
-        self._sections.append(elb_health)
-        self._sections.append(elb)
-        self._sections.append(ebs)
-        self._sections.append(cloudtrail)
-        self._sections.append(glacier)
+    def _init_session(self, access_key_id, secret_access_key, region):
+        return boto3.session.Session(
+            aws_access_key_id=access_key_id,
+            aws_secret_access_key=secret_access_key,
+            region_name=region)
 
     def _init_client(self, client_key):
         try:
@@ -1005,7 +959,7 @@ class AWSSections(object):
             out = "\n".join([e.message for e in self._exceptions])
         else:
             out = "No exceptions"
-        sys.stdout.write("%s\n" % out)
+        sys.stdout.write("%s: %s\n" % (self.__class__.__name__, out))
 
     def _write_section_results(self, now):
         if not self._results:
@@ -1040,6 +994,80 @@ class AWSSections(object):
             sys.stdout.write("%s\n" % json.dumps(row.content, default=_datetime_converter))
             if write_piggyback_header:
                 sys.stdout.write("<<<<>>>>\n")
+
+
+class AWSSectionsUSEast(AWSSectionsTmpl):
+    """
+    Some clients like CostExplorer only work with US East region:
+    https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/ce-api.html
+    """
+
+    def __init__(self, hostname, access_key_id, secret_access_key):
+        super(AWSSectionsUSEast, self).__init__(hostname, access_key_id, secret_access_key,
+                                                "us-east-1")
+
+        #---clients---------------------------------------------------------
+        ce_client = self._init_client('ce')
+
+        #---sections--------------------------------------------------------
+        ce = CostsAndUsage(ce_client)
+
+        #---register sections for execution---------------------------------
+        self._sections.append(ce)
+
+
+class AWSSections(AWSSectionsTmpl):
+    def __init__(self, hostname, access_key_id, secret_access_key, region):
+        super(AWSSections, self).__init__(hostname, access_key_id, secret_access_key, region)
+
+        #---clients---------------------------------------------------------
+        ec2_client = self._init_client('ec2')
+        s3_client = self._init_client('s3')
+        elb_client = self._init_client('elb')
+        cloudtrail_client = self._init_client('cloudtrail')
+        glacier_client = self._init_client('glacier')
+        cloudwatch_client = self._init_client('cloudwatch')
+
+        #---distributors----------------------------------------------------
+        ec2_summary_distributor = ResultDistributor()
+        elb_summary_distributor = ResultDistributor()
+        ebs_summary_distributor = ResultDistributor()
+
+        #---sections with distributors--------------------------------------
+        ec2_summary = EC2Summary(ec2_client, ec2_summary_distributor)
+        elb_summary = ELBSummary(elb_client, elb_summary_distributor)
+        ebs_summary = EBSSummary(ec2_client, ebs_summary_distributor)
+
+        #---sections--------------------------------------------------------
+        s3 = S3(s3_client)
+        elb_health = ELBHealth(elb_client)
+        cloudtrail = CloudTrail(cloudtrail_client)
+        ec2 = EC2(cloudwatch_client)
+        elb = ELB(cloudwatch_client)
+        ebs = EBS(cloudwatch_client)
+        glacier = Glacier(glacier_client)
+
+        #---register sections to distributors-------------------------------
+        ec2_summary_distributor.add(ec2)
+        ec2_summary_distributor.add(ebs_summary)
+        ec2_summary_distributor.add(ebs)
+        elb_summary_distributor.add(elb_health)
+        elb_summary_distributor.add(elb)
+        ebs_summary_distributor.add(ebs)
+
+        #---register sections with distributors for execution---------------
+        self._sections.append(ec2_summary)
+        self._sections.append(elb_summary)
+        self._sections.append(ebs_summary)
+
+        #---register sections for execution---------------------------------
+        self._sections.append(ec2)
+        self._sections.append(s3)
+        self._sections.append(elb_health)
+        self._sections.append(elb)
+        self._sections.append(ebs)
+        self._sections.append(cloudtrail)
+        self._sections.append(glacier)
 
 
 #.
@@ -1110,14 +1138,17 @@ def main(args=None):
     args = parse_arguments(args)
     setup_logging(args.debug)
 
-    s = boto3.session.Session(
-        aws_access_key_id=args.aws_access_key_id,
-        aws_secret_access_key=args.aws_secret_access_key,
-        region_name=args.region)
+    hostname = args.hostname
+    access_key_id = args.aws_access_key_id
+    secret_access_key = args.aws_secret_access_key
+    use_cache = not args.no_cache
 
     try:
-        aws_sections = AWSSections(s, args.hostname)
-        aws_sections.run(use_cache=not args.no_cache)
+        aws_sections_us_east = AWSSectionsUSEast(hostname, access_key_id, secret_access_key)
+        aws_sections_us_east.run(use_cache=use_cache)
+
+        aws_sections = AWSSections(hostname, access_key_id, secret_access_key, args.region)
+        aws_sections.run(use_cache=use_cache)
     except Exception as e:
         if args.debug:
             raise

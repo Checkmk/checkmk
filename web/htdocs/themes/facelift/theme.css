@@ -1801,6 +1801,10 @@ div.contextlinks {
 table.nform tr.open td.content .checkbox {
   margin-left: 4px; }
 
+body.main.screenshotmode table.nform {
+    background-color: transparent;
+}
+
 img.glass {
   display: none; }
 

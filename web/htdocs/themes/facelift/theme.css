@@ -312,6 +312,8 @@ table {
     table.data tr td.gap {
       background: #f0f2f4;
       border: 1px solid #f0f2f4; }
+    .screenshotmode table.data tr td.gap {
+      background: white; border-style: none; }
     table.data tr th a.toggle_actions img, table.data tr th body.main .popup_menu span.toggle_actions img, body.main .popup_menu table.data tr th span.toggle_actions img {
       filter: invert(100%); }
     table.data tr.notification_context table {

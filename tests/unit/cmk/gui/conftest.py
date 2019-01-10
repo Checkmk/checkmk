@@ -16,3 +16,6 @@ def register_builtin_html():
     """This fixture registers a global htmllib.html() instance just like the regular GUI"""
     environ = dict(create_environ(), REQUEST_URI='')
     html.set_current(htmllib.html(Request(environ), Response(is_secure=False)))
+    yield
+    html.finalize()
+    html.unset_current()

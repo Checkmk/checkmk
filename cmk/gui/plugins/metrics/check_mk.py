@@ -8333,7 +8333,7 @@ graph_info["fgpa_utilization"] = {
 # CPU UTILIZATION
 #
 
-graph_info["util_average"] = {
+graph_info["util_average_1"] = {
     "metrics": [
         ("util", "area"),
         ("util_average", "line"),
@@ -8343,6 +8343,16 @@ graph_info["util_average"] = {
         "util:crit",
     ],
     "range": ("util:min", "util:max"),
+}
+
+graph_info["cpu_average_2"] = {
+    "title": _("CPU utilization"),
+    "metrics": [("util1", "area"), ("util15", "line")],
+    "scalars": [
+        "util1:warn",
+        "util1:crit",
+    ],
+    "range": (0, 100),
 }
 
 graph_info["cpu_utilization_1"] = {
@@ -8355,16 +8365,6 @@ graph_info["cpu_utilization_1"] = {
     "scalars": [
         "util:warn",
         "util:crit",
-    ],
-    "range": (0, 100),
-}
-
-graph_info["cpu_utilization_2"] = {
-    "title": _("CPU utilization"),
-    "metrics": [("util1", "area"), ("util15", "line")],
-    "scalars": [
-        "util1:warn",
-        "util1:crit",
     ],
     "range": (0, 100),
 }

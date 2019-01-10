@@ -1184,20 +1184,6 @@ register_check_parameters(
 
 register_check_parameters(
     RulespecGroupCheckParametersEnvironment,
-    "fan_failures",
-    _("Number of fan failures"),
-    Tuple(
-        title=_("Number of fan failures"),
-        elements=[
-            Integer(title="Warning at", default_value=1),
-            Integer(title="Critical at", default_value=2),
-        ]),
-    None,
-    "first",
-)
-
-register_check_parameters(
-    RulespecGroupCheckParametersEnvironment,
     "pll_lock_voltage",
     _("Lock Voltage for PLLs"),
     Dictionary(
@@ -1310,45 +1296,6 @@ register_check_parameters(
     match_type="first",
 )
 
-bvip_link_states = [
-    (0, "No Link"),
-    (1, "10 MBit - HalfDuplex"),
-    (2, "10 MBit - FullDuplex"),
-    (3, "100 Mbit - HalfDuplex"),
-    (4, "100 Mbit - FullDuplex"),
-    (5, "1 Gbit - FullDuplex"),
-    (7, "Wifi"),
-]
-
-register_check_parameters(
-    RulespecGroupCheckParametersEnvironment,
-    "bvip_link",
-    _("Allowed Network states on Bosch IP Cameras"),
-    Dictionary(
-        title=_("Update State"),
-        elements=[
-            ("ok_states",
-             ListChoice(
-                 title=_("States which result in OK"),
-                 choices=bvip_link_states,
-                 default_value=[0, 4, 5])),
-            ("warn_states",
-             ListChoice(
-                 title=_("States which result in Warning"),
-                 choices=bvip_link_states,
-                 default_value=[7])),
-            ("crit_states",
-             ListChoice(
-                 title=_("States which result in Critical"),
-                 choices=bvip_link_states,
-                 default_value=[1, 2, 3])),
-        ],
-        optional_keys=None,
-    ),
-    None,
-    match_type="dict",
-)
-
 register_check_parameters(
     RulespecGroupCheckParametersEnvironment,
     "ocprot_current",
@@ -1360,24 +1307,6 @@ register_check_parameters(
         ],),
     TextAscii(title=_("The Index of the Overcurrent Protector")),
     match_type="first",
-)
-
-register_check_parameters(
-    RulespecGroupCheckParametersEnvironment,
-    'brightness',
-    _("Brightness Levels"),
-    Levels(
-        title=_("Brightness"),
-        unit=_("lx"),
-        default_value=None,
-        default_difference=(2.0, 4.0),
-        default_levels=(50.0, 100.0),
-    ),
-    TextAscii(
-        title=_("Sensor name"),
-        help=_("The identifier of the sensor."),
-    ),
-    match_type="dict",
 )
 
 register_check_parameters(
@@ -1489,19 +1418,6 @@ register_check_parameters(
             Float(title=_(u"Warning below"), default_value=95.0),
             Float(title=_(u"Critical below"), default_value=90.0),
         ]), TextAscii(title=_(u"Port index or 'Total'")), "first")
-
-register_check_parameters(
-    RulespecGroupCheckParametersStorage,
-    "blank_tapes",
-    _("Remaining blank tapes in DIVA CSM Devices"),
-    Tuple(
-        elements=[
-            Integer(title=_("Warning below"), default_value=5),
-            Integer(title=_("Critical below"), default_value=1),
-        ],),
-    None,
-    match_type="first",
-)
 
 register_check_parameters(
     RulespecGroupCheckParametersStorage,
@@ -1624,203 +1540,6 @@ register_check_parameters(
         allow_empty=True,
     ),
     match_type="dict")
-
-register_check_parameters(
-    RulespecGroupCheckParametersStorage,
-    "filehandler",
-    _("Filehandler"),
-    Dictionary(elements=[
-        (
-            "levels",
-            Tuple(
-                title=_("Levels"),
-                default_value=(80.0, 90.0),
-                elements=[
-                    Percentage(title=_("Warning at"), unit=_("%")),
-                    Percentage(title=_("Critical at"), unit=_("%"))
-                ]),
-        ),
-    ]),
-    None,
-    match_type="dict")
-
-register_check_parameters(
-    RulespecGroupCheckParametersStorage,
-    "brocade_fcport",
-    _("Brocade FibreChannel ports"),
-    Dictionary(
-        elements=[(
-            "bw",
-            Alternative(
-                title=_("Throughput levels"),
-                help=_("Please note: in a few cases the automatic detection of the link speed "
-                       "does not work. In these cases you have to set the link speed manually "
-                       "below if you want to monitor percentage values"),
-                elements=[
-                    Tuple(
-                        title=_("Used bandwidth of port relative to the link speed"),
-                        elements=[
-                            Percentage(title=_("Warning at"), unit=_("percent")),
-                            Percentage(title=_("Critical at"), unit=_("percent")),
-                        ]),
-                    Tuple(
-                        title=_("Used Bandwidth of port in megabyte/s"),
-                        elements=[
-                            Integer(title=_("Warning at"), unit=_("MByte/s")),
-                            Integer(title=_("Critical at"), unit=_("MByte/s")),
-                        ])
-                ])),
-                  ("assumed_speed",
-                   Float(
-                       title=_("Assumed link speed"),
-                       help=_("If the automatic detection of the link speed does "
-                              "not work you can set the link speed here."),
-                       unit=_("GByte/s"))),
-                  ("rxcrcs",
-                   Tuple(
-                       title=_("CRC errors rate"),
-                       elements=[
-                           Percentage(title=_("Warning at"), unit=_("percent")),
-                           Percentage(title=_("Critical at"), unit=_("percent")),
-                       ])),
-                  ("rxencoutframes",
-                   Tuple(
-                       title=_("Enc-Out frames rate"),
-                       elements=[
-                           Percentage(title=_("Warning at"), unit=_("percent")),
-                           Percentage(title=_("Critical at"), unit=_("percent")),
-                       ])),
-                  ("rxencinframes",
-                   Tuple(
-                       title=_("Enc-In frames rate"),
-                       elements=[
-                           Percentage(title=_("Warning at"), unit=_("percent")),
-                           Percentage(title=_("Critical at"), unit=_("percent")),
-                       ])),
-                  ("notxcredits",
-                   Tuple(
-                       title=_("No-TxCredits errors"),
-                       elements=[
-                           Percentage(title=_("Warning at"), unit=_("percent")),
-                           Percentage(title=_("Critical at"), unit=_("percent")),
-                       ])),
-                  ("c3discards",
-                   Tuple(
-                       title=_("C3 discards"),
-                       elements=[
-                           Percentage(title=_("Warning at"), unit=_("percent")),
-                           Percentage(title=_("Critical at"), unit=_("percent")),
-                       ])),
-                  ("average",
-                   Integer(
-                       title=_("Averaging"),
-                       help=_(
-                           "If this parameter is set, all throughputs will be averaged "
-                           "over the specified time interval before levels are being applied. Per "
-                           "default, averaging is turned off. "),
-                       unit=_("minutes"),
-                       minvalue=1,
-                       default_value=60,
-                   )),
-                  ("phystate",
-                   Optional(
-                       ListChoice(
-                           title=_("Allowed states (otherwise check will be critical)"),
-                           choices=[
-                               (1, _("noCard")),
-                               (2, _("noTransceiver")),
-                               (3, _("laserFault")),
-                               (4, _("noLight")),
-                               (5, _("noSync")),
-                               (6, _("inSync")),
-                               (7, _("portFault")),
-                               (8, _("diagFault")),
-                               (9, _("lockRef")),
-                           ]),
-                       title=_("Physical state of port"),
-                       negate=True,
-                       label=_("ignore physical state"),
-                   )),
-                  ("opstate",
-                   Optional(
-                       ListChoice(
-                           title=_("Allowed states (otherwise check will be critical)"),
-                           choices=[
-                               (0, _("unknown")),
-                               (1, _("online")),
-                               (2, _("offline")),
-                               (3, _("testing")),
-                               (4, _("faulty")),
-                           ]),
-                       title=_("Operational state"),
-                       negate=True,
-                       label=_("ignore operational state"),
-                   )),
-                  ("admstate",
-                   Optional(
-                       ListChoice(
-                           title=_("Allowed states (otherwise check will be critical)"),
-                           choices=[
-                               (1, _("online")),
-                               (2, _("offline")),
-                               (3, _("testing")),
-                               (4, _("faulty")),
-                           ]),
-                       title=_("Administrative state"),
-                       negate=True,
-                       label=_("ignore administrative state"),
-                   ))]),
-    TextAscii(
-        title=_("port name"),
-        help=_("The name of the switch port"),
-    ),
-    match_type="dict",
-)
-
-register_check_parameters(
-    RulespecGroupCheckParametersStorage, "brocade_sfp", _("Brocade SFPs"),
-    Dictionary(elements=[
-        ("rx_power",
-         Tuple(
-             title=_("Rx power level"),
-             elements=[
-                 Float(title=_("Critical below"), unit=_("dBm")),
-                 Float(title=_("Warning below"), unit=_("dBm")),
-                 Float(title=_("Warning at"), unit=_("dBm")),
-                 Float(title=_("Critical at"), unit=_("dBm"))
-             ])),
-        ("tx_power",
-         Tuple(
-             title=_("Tx power level"),
-             elements=[
-                 Float(title=_("Critical below"), unit=_("dBm")),
-                 Float(title=_("Warning below"), unit=_("dBm")),
-                 Float(title=_("Warning at"), unit=_("dBm")),
-                 Float(title=_("Critical at"), unit=_("dBm"))
-             ])),
-    ]), TextAscii(title=_("Port index")), "dict")
-
-register_check_parameters(
-    RulespecGroupCheckParametersStorage, "fcport_words", _("Atto Fibrebridge FC port"),
-    Dictionary(
-        title=_("Levels for transmitted and received words"),
-        elements=[
-            ("fc_tx_words", Levels(title=_("Tx"), unit=_("words/s"))),
-            ("fc_rx_words", Levels(title=_("Rx"), unit=_("words/s"))),
-        ],
-    ), TextAscii(title=_("Port index"),), "dict")
-
-register_check_parameters(
-    RulespecGroupCheckParametersStorage, "fs_mount_options",
-    _("Filesystem mount options (Linux/UNIX)"),
-    ListOfStrings(
-        title=_("Expected mount options"),
-        help=_("Specify all expected mount options here. If the list of "
-               "actually found options differs from this list, the check will go "
-               "warning or critical. Just the option <tt>commit</tt> is being "
-               "ignored since it is modified by the power saving algorithms."),
-        valuespec=TextUnicode(),
-    ), TextAscii(title=_("Mount point"), allow_empty=False), "first")
 
 register_check_parameters(
     RulespecGroupCheckParametersStorage,

@@ -28,6 +28,7 @@ functionality is the locked file opening realized with the File() context
 manager."""
 
 import ast
+import errno
 import fcntl
 import os
 import pprint
@@ -102,12 +103,10 @@ def load_mk_file(path, default=None, lock=False):
     try:
         try:
             execfile(path, globals(), default)
-            return default
         except IOError as e:
-            if e.errno == 2:  # IOError: [Errno 2] No such file or directory
-                return default
-            else:
+            if e.errno != errno.ENOENT:  # No such file or directory
                 raise
+        return default
 
     except MKTimeout:
         raise
@@ -145,10 +144,9 @@ def load_data_from_file(path, default=None, lock=False):
 
             return ast.literal_eval(content)
         except IOError as e:
-            if e.errno == 2:  # IOError: [Errno 2] No such file or directory
-                return default
-
-            raise
+            if e.errno != errno.ENOENT:  # No such file or directory
+                raise
+            return default
 
     except MKTimeout:
         raise
@@ -232,9 +230,7 @@ def save_file(path, content, mode=0660):
             if tmp_path:
                 os.unlink(tmp_path)
         except IOError as e:
-            if e.errno == 2:  # No such file or directory
-                pass
-            else:
+            if e.errno != errno.ENOENT:  # No such file or directory
                 raise
 
         # TODO: How to handle debug mode or logging?
@@ -312,10 +308,9 @@ def try_aquire_lock(path):
         aquire_lock(path, blocking=False)
         return True
     except IOError as e:
-        if e.errno == 11:  # Resource temporarily unavailable
-            return False
-        else:
+        if e.errno != errno.EAGAIN:  # Try again
             raise
+        return False
 
 
 def release_lock(path):
@@ -331,9 +326,7 @@ def release_lock(path):
         try:
             os.close(fd)
         except OSError as e:
-            if e.errno == 9:  # OSError: [Errno 9] Bad file descriptor
-                pass
-            else:
+            if e.errno != errno.EBADF:  # Bad file number
                 raise
 
         g_aquired_locks.remove((lock_path, fd))

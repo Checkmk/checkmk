@@ -83,7 +83,7 @@ def check_cpu_util(util, params, this_time=None, cores=None, perf_max=100):
             "util_average",
             levels,
             human_readable_func=get_percent_human_readable,
-            infoname="%dmin average")
+            infoname="%dmin average" % params["average"])
     else:
         state, infotext, extraperf = check_levels(
             util,

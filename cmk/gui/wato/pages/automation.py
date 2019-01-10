@@ -87,14 +87,6 @@ class ModeAutomation(WatoWebApiMode):
         # logged in user here.
         config.set_super_user()
 
-        # To prevent mixups in written files we use the same lock here as for
-        # the normal WATO page processing. This might not be needed for some
-        # special automation requests, like inventory e.g., but to keep it simple,
-        # we request the lock in all cases.
-        watolib.lock_exclusive()
-
-        watolib.init_wato_datastructures(with_wato_lock=False)
-
     def _from_vars(self):
         self._authenticate()
         self._command = html.request.var("command")
@@ -109,21 +101,28 @@ class ModeAutomation(WatoWebApiMode):
             raise MKAuthException(_("Invalid automation secret."))
 
     def page(self):
-        # TODO: Refactor these two calls to also use the automation_command_registry
-        if self._command == "checkmk-automation":
-            self._execute_cmk_automation()
-            return
+        # To prevent mixups in written files we use the same lock here as for
+        # the normal WATO page processing. This might not be needed for some
+        # special automation requests, like inventory e.g., but to keep it simple,
+        # we request the lock in all cases.
+        with watolib.exclusive_lock():
+            watolib.init_wato_datastructures(with_wato_lock=False)
 
-        elif self._command == "push-profile":
-            self._execute_push_profile()
-            return
+            # TODO: Refactor these two calls to also use the automation_command_registry
+            if self._command == "checkmk-automation":
+                self._execute_cmk_automation()
+                return
 
-        try:
-            automation_command = watolib.automation_command_registry[self._command]
-        except KeyError:
-            raise MKGeneralException(_("Invalid automation command: %s.") % self._command)
+            elif self._command == "push-profile":
+                self._execute_push_profile()
+                return
 
-        self._execute_automation_command(automation_command)
+            try:
+                automation_command = watolib.automation_command_registry[self._command]
+            except KeyError:
+                raise MKGeneralException(_("Invalid automation command: %s.") % self._command)
+
+            self._execute_automation_command(automation_command)
 
     def _execute_cmk_automation(self):
         cmk_command = html.request.var("automation")

@@ -10544,11 +10544,6 @@ def lock_exclusive():
     store.aquire_lock(cmk.utils.paths.default_config_dir + "/multisite.mk")
 
 
-# TODO: Use exclusive_lock() and nuke this!
-def unlock_exclusive():
-    store.release_lock(cmk.utils.paths.default_config_dir + "/multisite.mk")
-
-
 def git_command(args):
     command = ["git"] + [a.encode("utf-8") for a in args]
     logger.debug("GIT: Execute in %s: %s" % (cmk.utils.paths.default_config_dir,

@@ -868,23 +868,19 @@ def add_scanned_hosts_to_folder(folder, found):
         if not watolib.Host.host_exists(host_name):
             entries.append((host_name, attrs, None))
 
-    watolib.lock_exclusive()
-    folder.create_hosts(entries)
-    folder.save()
-    watolib.unlock_exclusive()
+    with watolib.exclusive_lock():
+        folder.create_hosts(entries)
+        folder.save()
 
 
 def save_network_scan_result(folder, result):
     # Reload the folder, lock WATO before to protect against concurrency problems.
-    watolib.lock_exclusive()
-
-    # A user might have changed the folder somehow since starting the scan. Load the
-    # folder again to get the current state.
-    write_folder = watolib.Folder.folder(folder.path())
-    write_folder.set_attribute("network_scan_result", result)
-    write_folder.save()
-
-    watolib.unlock_exclusive()
+    with watolib.exclusive_lock():
+        # A user might have changed the folder somehow since starting the scan. Load the
+        # folder again to get the current state.
+        write_folder = watolib.Folder.folder(folder.path())
+        write_folder.set_attribute("network_scan_result", result)
+        write_folder.save()
 
 
 #.

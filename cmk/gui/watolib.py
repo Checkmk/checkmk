@@ -46,6 +46,7 @@ import abc
 import ast
 import base64
 import cStringIO
+from contextlib import contextmanager
 import copy
 import glob
 from hashlib import sha256
@@ -236,16 +237,16 @@ def init_wato_datastructures(with_wato_lock=False):
         not _need_to_create_sample_config():
         return
 
-    if with_wato_lock:
-        lock_exclusive()
-
-    if not os.path.exists(ConfigDomainCACertificates.trusted_cas_file):
-        ConfigDomainCACertificates().activate()
-
-    _create_sample_config()
+    def init():
+        if not os.path.exists(ConfigDomainCACertificates.trusted_cas_file):
+            ConfigDomainCACertificates().activate()
+        _create_sample_config()
 
     if with_wato_lock:
-        unlock_exclusive()
+        with exclusive_lock():
+            init()
+    else:
+        init()
 
 
 # TODO: Create a hook here and move CEE and other specific things away
@@ -5459,35 +5460,33 @@ class ActivateChangesManager(ActivateChanges):
 
     # Lock WATO modifications during snapshot creation
     def _create_snapshots(self):
-        lock_exclusive()
+        with exclusive_lock():
+            if not self._changes:
+                raise MKUserError(None, _("Currently there are no changes to activate."))
 
-        if not self._changes:
-            raise MKUserError(None, _("Currently there are no changes to activate."))
+            if self._get_last_change_id() != self._activate_until:
+                raise MKUserError(
+                    None,
+                    _("Another change has been made in the meantime. Please review it "
+                      "to ensure you also want to activate it now and start the "
+                      "activation again."))
 
-        if self._get_last_change_id() != self._activate_until:
-            raise MKUserError(
-                None,
-                _("Another change has been made in the meantime. Please review it "
-                  "to ensure you also want to activate it now and start the "
-                  "activation again."))
+            # Create (legacy) WATO config snapshot
+            start = time.time()
+            logger.debug("Snapshot creation started")
+            # TODO: Remove/Refactor once new changes mechanism has been implemented
+            #       This single function is responsible for the slow activate changes (python tar packaging..)
+            create_snapshot(self._comment)
 
-        # Create (legacy) WATO config snapshot
-        start = time.time()
-        logger.debug("Snapshot creation started")
-        # TODO: Remove/Refactor once new changes mechanism has been implemented
-        #       This single function is responsible for the slow activate changes (python tar packaging..)
-        create_snapshot(self._comment)
+            work_dir = os.path.join(self.activation_tmp_base_dir, self._activation_id)
+            if cmk.is_managed_edition():
+                import cmk.gui.cme.managed_snapshots as managed_snapshots
+                managed_snapshots.CMESnapshotManager(
+                    work_dir, self._get_site_configurations()).generate_snapshots()
+            else:
+                self._generate_snapshots(work_dir)
 
-        work_dir = os.path.join(self.activation_tmp_base_dir, self._activation_id)
-        if cmk.is_managed_edition():
-            import cmk.gui.cme.managed_snapshots as managed_snapshots
-            managed_snapshots.CMESnapshotManager(
-                work_dir, self._get_site_configurations()).generate_snapshots()
-        else:
-            self._generate_snapshots(work_dir)
-
-        logger.debug("Snapshot creation took %.4f" % (time.time() - start))
-        unlock_exclusive()
+            logger.debug("Snapshot creation took %.4f" % (time.time() - start))
 
     def _get_site_configurations(self):
         site_configurations = {}
@@ -5664,8 +5663,7 @@ class ActivateChangesManager(ActivateChanges):
 
     # Cleanup stale activations?
     def _do_housekeeping(self):
-        lock_exclusive()
-        try:
+        with exclusive_lock():
             for activation_id in self._existing_activation_ids():
                 # skip the current activation_id
                 if self._activation_id == activation_id:
@@ -5690,8 +5688,6 @@ class ActivateChangesManager(ActivateChanges):
                     if delete:
                         shutil.rmtree("%s/%s" % (ActivateChangesManager.activation_tmp_base_dir,
                                                  activation_id))
-        finally:
-            unlock_exclusive()
 
     def _existing_activation_ids(self):
         ids = []
@@ -10536,10 +10532,22 @@ def make_action_link(vars_):
     return folder_preserving_link(vars_ + [("_transid", html.transaction_manager.get())])
 
 
+@contextmanager
+def exclusive_lock():
+    path = cmk.utils.paths.default_config_dir + "/multisite.mk"
+    store.aquire_lock(path)
+    try:
+        yield
+    finally:
+        store.release_lock(path)
+
+
+# TODO: Use exclusive_lock() and nuke this!
 def lock_exclusive():
     store.aquire_lock(cmk.utils.paths.default_config_dir + "/multisite.mk")
 
 
+# TODO: Use exclusive_lock() and nuke this!
 def unlock_exclusive():
     store.release_lock(cmk.utils.paths.default_config_dir + "/multisite.mk")
 

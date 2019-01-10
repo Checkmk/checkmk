@@ -132,22 +132,16 @@ class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
         return counts, failed_hosts
 
     def _process_discovery_results(self, task, job_interface, counts, failed_hosts):
-        try:
-            # The following code updates the host config. The progress from loading the WATO folder
-            # until it has been saved needs to be locked.
-            watolib.lock_exclusive()
-
+        # The following code updates the host config. The progress from loading the WATO folder
+        # until it has been saved needs to be locked.
+        with watolib.exclusive_lock():
             watolib.Folder.invalidate_caches()
             folder = watolib.Folder.folder(task.folder_path)
-
             for hostname in task.host_names:
                 self._process_service_counts_for_host(counts[hostname])
                 msg = self._process_discovery_result_for_host(
                     folder.host(hostname), failed_hosts.get(hostname, False), counts[hostname])
                 job_interface.send_progress_update("%s: %s" % (hostname, msg))
-
-        finally:
-            watolib.unlock_exclusive()
 
     def _process_service_counts_for_host(self, host_counts):
         self._num_services_added += host_counts[0]

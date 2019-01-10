@@ -127,13 +127,10 @@ class ParentScanBackgroundJob(WatoBackgroundJob):
         state, skipped_gateways, error = gateways[0][1:]
 
         if state in ["direct", "root", "gateway"]:
-            try:
-                # The following code updates the host config. The progress from loading the WATO folder
-                # until it has been saved needs to be locked.
-                watolib.lock_exclusive()
+            # The following code updates the host config. The progress from loading the WATO folder
+            # until it has been saved needs to be locked.
+            with watolib.exclusive_lock():
                 self._configure_host_and_gateway(task, settings, state, gateway)
-            finally:
-                watolib.unlock_exclusive()
         else:
             self._logger.error(error)
 

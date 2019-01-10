@@ -36,6 +36,7 @@ from cmk.gui.table import table_element
 import cmk.gui.forms as forms
 import cmk.gui.plugins.wato.utils
 import cmk.gui.wato.mkeventd
+from cmk.gui.watolib.notifications import load_notification_rules
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
@@ -181,7 +182,7 @@ class ModeTimeperiods(WatoMode):
 
     def _find_usages_in_notification_rules(self, tpname):
         used_in = []
-        for index, rule in enumerate(watolib.load_notification_rules()):
+        for index, rule in enumerate(load_notification_rules()):
             used_in += self._find_usages_in_notification_rule(tpname, index, rule)
         return used_in
 

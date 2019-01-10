@@ -72,6 +72,11 @@ from cmk.gui.plugins.wato import (
     rule_option_elements,
 )
 
+from cmk.gui.watolib.notifications import (
+    save_notification_rules,
+    load_notification_rules,
+)
+
 
 class NotificationsMode(EventsMode):
     # TODO: Clean this up. Use inheritance
@@ -460,11 +465,10 @@ class ModeNotifications(NotificationsMode):
 
         else:
             return self._generic_rule_list_actions(self._get_notification_rules(), "notification",
-                                                   _("notification rule"),
-                                                   watolib.save_notification_rules)
+                                                   _("notification rule"), save_notification_rules)
 
     def _get_notification_rules(self):
-        return watolib.load_notification_rules()
+        return load_notification_rules()
 
     def _save_notification_display_options(self):
         config.user.save_file(
@@ -870,7 +874,7 @@ class EditNotificationRuleMode(NotificationsMode):
             user = self._users[self._user_id()]
             self._rules = user.setdefault("notification_rules", [])
         else:
-            self._rules = watolib.load_notification_rules(lock=html.is_transaction())
+            self._rules = load_notification_rules(lock=html.is_transaction())
 
         if self._new:
             if self._clone_nr >= 0 and not html.request.var("_clear"):
@@ -1231,7 +1235,7 @@ class EditNotificationRuleMode(NotificationsMode):
         if self._user_id():
             userdb.save_users(self._users)
         else:
-            watolib.save_notification_rules(self._rules)
+            save_notification_rules(self._rules)
 
         if self._new:
             log_what = "new-notification-rule"

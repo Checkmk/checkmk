@@ -43,6 +43,10 @@ from cmk.gui.exceptions import HTTPRedirect, MKUserError, MKGeneralException, MK
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.watolib.hosts_and_folders import validate_host_uniqueness
+from cmk.gui.watolib.notifications import (
+    load_notification_rules,
+    save_notification_rules,
+)
 
 from cmk.gui.valuespec import (
     Hostname,
@@ -538,11 +542,11 @@ def rename_host_in_event_rules(oldname, newname):
                 actions += ["notify_user"] * num_changed
                 some_user_changed = True
 
-    rules = watolib.load_notification_rules()
+    rules = load_notification_rules()
     num_changed = rename_in_event_rules(rules)
     if num_changed:
         actions += ["notify_global"] * num_changed
-        watolib.save_notification_rules(rules)
+        save_notification_rules(rules)
 
     try:
         import cmk.gui.cee.plugins.wato.alert_handling as alert_handling

@@ -133,6 +133,7 @@ import cmk.gui.watolib.git
 import cmk.gui.watolib.changes
 # TODO: Cleanup all except declare_host_attribute which is still neded for pre 1.6 plugin
 # compatibility. For the others: Find the call sites and change to full module import
+from cmk.gui.watolib.notifications import save_notification_rules
 from cmk.gui.watolib.timeperiods import TimeperiodSelection
 from cmk.gui.watolib.host_attributes import (
     all_host_attributes,
@@ -4336,43 +4337,6 @@ def find_usages_of_host_group(name):
 
 def find_usages_of_service_group(name):
     return find_usages_of_group_in_rules(name, ['service_groups'])
-
-
-#.
-#   .--Notifications-(Rule Based)------------------------------------------.
-#   |       _   _       _   _  __ _           _   _                        |
-#   |      | \ | | ___ | |_(_)/ _(_) ___ __ _| |_(_) ___  _ __  ___        |
-#   |      |  \| |/ _ \| __| | |_| |/ __/ _` | __| |/ _ \| '_ \/ __|       |
-#   |      | |\  | (_) | |_| |  _| | (_| (_| | |_| | (_) | | | \__ \       |
-#   |      |_| \_|\___/ \__|_|_| |_|\___\__,_|\__|_|\___/|_| |_|___/       |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   |  Module for managing the new rule based notifications.               |
-#   '----------------------------------------------------------------------'
-
-
-def load_notification_rules(lock=False):
-    filename = wato_root_dir + "notifications.mk"
-    notification_rules = store.load_from_mk_file(filename, "notification_rules", [], lock=lock)
-
-    # Convert to new plugin configuration format
-    for rule in notification_rules:
-        if "notify_method" in rule:
-            method = rule["notify_method"]
-            plugin = rule["notify_plugin"]
-            del rule["notify_method"]
-            rule["notify_plugin"] = (plugin, method)
-
-    return notification_rules
-
-
-def save_notification_rules(rules):
-    store.mkdir(wato_root_dir)
-    store.save_to_mk_file(
-        wato_root_dir + "notifications.mk",
-        "notification_rules",
-        rules,
-        pprint_value=config.wato_pprint_config)
 
 
 #.

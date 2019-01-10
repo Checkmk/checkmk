@@ -34,7 +34,7 @@ import os
 import pprint
 import tempfile
 import time
-from typing import List  # pylint: disable=unused-import
+from typing import Dict, List  # pylint: disable=unused-import
 
 import pathlib2 as pathlib
 
@@ -266,12 +266,11 @@ def save_to_mk_file(path, key, value, pprint_value=False):
 #   | wait forever.                                                        |
 #   '----------------------------------------------------------------------'
 
-g_aquired_locks = []
-g_locked_paths = []  # type: List[str]
+_acquired_locks = {}  # type: Dict[str, int]
 
 
 def aquire_lock(path, blocking=True):
-    if path in g_locked_paths:
+    if have_lock(path):
         return True  # No recursive locking
 
     logger.debug("Try aquire lock on %s", path)
@@ -297,10 +296,8 @@ def aquire_lock(path, blocking=True):
             os.close(fd)
             fd = fd_new
 
+    _acquired_locks[path] = fd
     logger.debug("Got lock on %s", path)
-
-    g_aquired_locks.append((path, fd))
-    g_locked_paths.append(path)
 
 
 def try_aquire_lock(path):
@@ -314,43 +311,31 @@ def try_aquire_lock(path):
 
 
 def release_lock(path):
-    if path not in g_locked_paths:
+    if not have_lock(path):
         return  # no unlocking needed
-
     logger.debug("Releasing lock on %s", path)
-
-    for lock_path, fd in g_aquired_locks:
-        if lock_path != path:
-            continue
-
-        try:
-            os.close(fd)
-        except OSError as e:
-            if e.errno != errno.EBADF:  # Bad file number
-                raise
-
-        g_aquired_locks.remove((lock_path, fd))
-        break
-
-    g_locked_paths.remove(path)
+    fd = _acquired_locks.get(path)
+    if fd is None:
+        return
+    try:
+        os.close(fd)
+    except OSError as e:
+        if e.errno != errno.EBADF:  # Bad file number
+            raise
+    _acquired_locks.pop(path, None)
     logger.debug("Released lock on %s", path)
 
 
 def have_lock(path):
-    return path in g_locked_paths
+    return path in _acquired_locks
 
 
 def release_all_locks():
-    global g_aquired_locks, g_locked_paths
     logger.debug("Releasing all locks")
-    logger.debug("g_aquired_locks: %r", g_aquired_locks)
-    logger.debug("g_locked_paths: %r", g_locked_paths)
-
-    for path, _unused_fd in g_aquired_locks[:]:
+    logger.debug("_acquired_locks: %r", _acquired_locks)
+    for path in list(_acquired_locks.iterkeys()):
         release_lock(path)
-
-    g_aquired_locks = []
-    g_locked_paths = []
+    _acquired_locks.clear()
 
 
 # Experimental but not used yet.

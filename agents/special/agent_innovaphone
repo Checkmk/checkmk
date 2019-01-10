@@ -29,6 +29,10 @@ import base64
 import urllib2
 import xml.etree.ElementTree as etree
 
+if len(sys.argv) != 4:
+    sys.stderr.write("usage: agent_innovaphone HOST USER PASSWORD\n")
+    sys.exit(1)
+
 server = sys.argv[1]
 user = sys.argv[2]
 password = sys.argv[3]

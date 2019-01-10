@@ -58,6 +58,8 @@
 #  implemented
 
 import os
+import socket
+import sys
 
 from optparse import OptionParser
 import time
@@ -279,7 +281,11 @@ def main():
         return 1
 
     conn = IPConnection()
-    conn.connect(settings['host'], settings['port'])
+    try:
+        conn.connect(settings['host'], settings['port'])
+    except socket.error as e:
+        sys.stderr.write('%s\n' % e)
+        return 1
 
     device_handlers = init_device_handlers()
 

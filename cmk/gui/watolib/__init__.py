@@ -4066,53 +4066,6 @@ class RuleComment(TextAreaUnicode):
 
 
 #.
-#   .--Read-Only-----------------------------------------------------------.
-#   |           ____                _        ___        _                  |
-#   |          |  _ \ ___  __ _  __| |      / _ \ _ __ | |_   _            |
-#   |          | |_) / _ \/ _` |/ _` |_____| | | | '_ \| | | | |           |
-#   |          |  _ <  __/ (_| | (_| |_____| |_| | | | | | |_| |           |
-#   |          |_| \_\___|\__,_|\__,_|      \___/|_| |_|_|\__, |           |
-#   |                                                     |___/            |
-#   +----------------------------------------------------------------------+
-#   | WATO can be set into read only mode manually.                        |
-#   '----------------------------------------------------------------------'
-
-
-def read_only_message():
-    text = _("The configuration is currently in read only mode. ")
-
-    if config.wato_read_only["enabled"] is True:
-        text += _("The read only mode is enabled until it is turned of manually. ")
-
-    elif isinstance(config.wato_read_only['enabled'], tuple):
-        end_time = config.wato_read_only['enabled'][1]
-        text += _("The read only mode is enabled until %s. ") % render.date_and_time(end_time)
-
-    if may_override_read_only_mode():
-        text += _("But you are allowed to make changes anyway. ")
-
-    text += "<br><br>" + _("Reason: %s") % config.wato_read_only["message"]
-
-    return text
-
-
-def is_read_only_mode_enabled():
-    if not config.wato_read_only:
-        return False
-    if config.wato_read_only["enabled"] is True:
-        return True
-    if isinstance(config.wato_read_only['enabled'], tuple):
-        start_time, end_time = config.wato_read_only['enabled']
-        return start_time <= time.time() <= end_time
-    return False
-
-
-def may_override_read_only_mode():
-    return config.user.id in config.wato_read_only["rw_users"] \
-            or (html.request.var("mode") == "read_only" and config.user.may("wato.set_read_only"))
-
-
-#.
 #   .--Groups--------------------------------------------------------------.
 #   |                    ____                                              |
 #   |                   / ___|_ __ ___  _   _ _ __  ___                    |

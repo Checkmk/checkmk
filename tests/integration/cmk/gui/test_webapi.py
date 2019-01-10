@@ -133,7 +133,7 @@ def test_get_all_sites(web, site):
     "tcp:1.2.3.4:6557",
     ("tcp", {
         "address": ("1.2.3.4", 6557),
-        "tls": ("plain_text", {}),
+        #"tls": ("plain_text", {}),
     }),
 ])
 def test_set_site(web, site, sock_spec):
@@ -147,7 +147,7 @@ def test_set_site(web, site, sock_spec):
     expected_site_config = copy.deepcopy(original_site["site_config"])
     expected_site_config["socket"] = ("tcp", {
         "address": ("1.2.3.4", 6557),
-        "tls": ("plain_text", {}),
+        #"tls": ("plain_text", {}),
     })
 
     try:
@@ -168,7 +168,7 @@ def test_set_site(web, site, sock_spec):
     "tcp:1.2.3.4:6557",
     ("tcp", {
         "address": ("1.2.3.4", 6557),
-        "tls": ("plain_text", {}),
+        #"tls": ("plain_text", {}),
     }),
 ])
 def test_set_all_sites(web, site, sock_spec):
@@ -183,7 +183,7 @@ def test_set_all_sites(web, site, sock_spec):
     expected_site_config = copy.deepcopy(copy.deepcopy(response["sites"][site.id]))
     expected_site_config["socket"] = ("tcp", {
         "address": ("1.2.3.4", 6557),
-        "tls": ("plain_text", {}),
+        #"tls": ("plain_text", {}),
     })
 
     response["sites"][new_site_id] = new_site_config

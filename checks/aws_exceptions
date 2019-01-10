@@ -33,7 +33,7 @@ def inventory_aws_exceptions(info):
 def check_aws_exceptions(item, params, info):
     for line in info:
         joined_line = " ".join(line)
-        if joined_line == 'No exceptions':
+        if joined_line.endswith('No exceptions'):
             state = 0
         else:
             state = 2

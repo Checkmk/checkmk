@@ -8893,19 +8893,12 @@ def read_only_message():
 def is_read_only_mode_enabled():
     if not config.wato_read_only:
         return False
-
-    enabled = False
     if config.wato_read_only["enabled"] is True:
-        enabled = True
-    elif isinstance(config.wato_read_only['enabled'], tuple):
+        return True
+    if isinstance(config.wato_read_only['enabled'], tuple):
         start_time, end_time = config.wato_read_only['enabled']
-        now = time.time()
-        enabled = now >= start_time and now <= end_time
-
-    if not enabled:
-        return False
-
-    return True
+        return start_time <= time.time() <= end_time
+    return False
 
 
 def may_override_read_only_mode():

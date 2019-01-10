@@ -319,6 +319,7 @@ subgroup_inventory = RulespecGroupCheckParametersDiscovery().sub_group_name
 # Make some functions of watolib available to WATO plugins without using the
 # watolib module name. This is mainly done for compatibility reasons to keep
 # the current plugin API functions working
+import cmk.gui.watolib.read_only
 from cmk.gui.watolib import (
     PasswordStore,
     register_rulegroup,
@@ -475,8 +476,9 @@ def _wato_page_handler(current_mode, mode_permissions, mode_class):
                 if mode_permissions:
                     ensure_mode_permissions(mode_permissions)
 
-            if watolib.is_read_only_mode_enabled() and not watolib.may_override_read_only_mode():
-                raise MKUserError(None, watolib.read_only_message())
+            if cmk.gui.watolib.read_only.is_enabled(
+            ) and not cmk.gui.watolib.read_only.may_override():
+                raise MKUserError(None, cmk.gui.watolib.read_only.message())
 
             result = mode.action()
             if isinstance(result, tuple):
@@ -540,8 +542,8 @@ def _wato_page_handler(current_mode, mode_permissions, mode_class):
                                         watolib.folder_preserving_link([("mode", target)]))
         html.end_context_buttons()
 
-    if not html.is_transaction() or (watolib.is_read_only_mode_enabled() and
-                                     watolib.may_override_read_only_mode()):
+    if not html.is_transaction() or (cmk.gui.watolib.read_only.is_enabled() and
+                                     cmk.gui.watolib.read_only.may_override()):
         _show_read_only_warning()
 
     # Show outcome of action
@@ -589,8 +591,8 @@ def ensure_mode_permissions(mode_permissions):
 
 
 def _show_read_only_warning():
-    if watolib.is_read_only_mode_enabled():
-        html.show_warning(watolib.read_only_message())
+    if cmk.gui.watolib.read_only.is_enabled():
+        html.show_warning(cmk.gui.watolib.read_only.message())
 
 
 #.

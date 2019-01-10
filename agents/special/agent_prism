@@ -193,6 +193,13 @@ def main():
         options, _args = parser.parse_args()
         settings = vars(options)
 
+    if (settings.get('server') is None or settings.get('username') is None or
+            settings.get('password') is None):
+        sys.stderr.write(
+            'usage: agent_prism --server SERVER --username USER --password PASSWORD [--port PORT]\n'
+        )
+        sys.exit(1)
+
     req_headers = gen_headers(settings['username'], settings['password'])
 
     global base_url

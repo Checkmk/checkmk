@@ -5939,7 +5939,7 @@ check_metrics["check_mk-vms_sys.util"] = {
 
 check_metrics["check_mk-winperf.cpuusage"] = {
     "cpuusage": {
-        "name": "util"
+        "name": "util_numcpu_as_max"
     },
 }
 
@@ -8355,16 +8355,16 @@ graph_info["cpu_average_2"] = {
     "range": (0, 100),
 }
 
-graph_info["cpu_utilization_1"] = {
-    "title": _("CPU utilization (%(util:max@count) CPU Threads)"),
+graph_info["cpu_utilization_numcpus"] = {
+    "title": _("CPU utilization (%(util_numcpu_as_max:max@count) CPU Threads)"),
     "metrics": [
-        ("util,user,-#ff6000", "stack", _("Privileged")),
+        ("util_numcpu_as_max,user,-#ff6000", "stack", _("Privileged")),
         ("user", "area"),
-        ("util#008000", "line", _("Total")),
+        ("util_numcpu_as_max#008000", "line", _("Total")),
     ],
     "scalars": [
-        "util:warn",
-        "util:crit",
+        "util_numcpu_as_max:warn",
+        "util_numcpu_as_max:crit",
     ],
     "range": (0, 100),
 }

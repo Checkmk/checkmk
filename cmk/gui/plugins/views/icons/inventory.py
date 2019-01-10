@@ -24,26 +24,29 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import cmk.gui.inventory as inventory
 import cmk.gui.config as config
+import cmk.gui.inventory as inventory
 from cmk.gui.i18n import _
-from . import multisite_icons_and_actions
+from cmk.gui.plugins.views.icons import Icon, icon_and_action_registry
 
 
-def paint_icon_inventory(what, row, tags, customer_vars):
-    # TODO: Clean this up somehow
-    from cmk.gui.plugins.views import url_to_view
-    if (what == "host" or row.get("service_check_command","").startswith("check_mk_active-cmk_inv!")) \
-        and inventory.has_inventory(row["host_name"]):
+@icon_and_action_registry.register
+class InventoryIcon(Icon):
+    @classmethod
+    def ident(cls):
+        return "inventory"
 
-        if not config.user.may("view.inv_host"):
-            return
+    def host_columns(self):
+        return ["name"]
 
-        return 'inv', _("Show Hardware/Software Inventory of this host"), url_to_view(
-            row, 'inv_host')
+    def render(self, what, row, tags, custom_vars):
+        # TODO: Clean this up somehow
+        from cmk.gui.plugins.views import url_to_view
+        if (what == "host" or row.get("service_check_command","").startswith("check_mk_active-cmk_inv!")) \
+            and inventory.has_inventory(row["host_name"]):
 
+            if not config.user.may("view.inv_host"):
+                return
 
-multisite_icons_and_actions['inventory'] = {
-    'host_columns': ["name"],
-    'paint': paint_icon_inventory,
-}
+            return 'inv', _("Show Hardware/Software Inventory of this host"), url_to_view(
+                row, 'inv_host')

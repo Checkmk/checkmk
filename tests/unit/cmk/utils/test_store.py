@@ -160,7 +160,7 @@ def test_release_lock_already_closed(tmpdir):
     store.aquire_lock(path)
     assert store.have_lock(path) == True
 
-    os.close([ fd for p, fd in store.g_aquired_locks if p == path ][0])
+    os.close(store._acquired_locks[path])
 
     store.release_lock(path)
     assert store.have_lock(path) == False
@@ -198,7 +198,7 @@ def test_release_all_locks_already_closed(tmpdir):
     store.aquire_lock(path)
     assert store.have_lock(path) == True
 
-    os.close([ fd for p, fd in store.g_aquired_locks if p == path ][0])
+    os.close(store._acquired_locks[path])
 
     store.release_all_locks()
     assert store.have_lock(path) == False

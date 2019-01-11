@@ -715,7 +715,7 @@ def dashboard_edit_controls(name, board):
                 return 'create_view_dashlet.py?name=%s&create=0&back=%s' % \
                             (html.urlencode(name), html.urlencode(html.makeuri([('edit', '1')])))
 
-        dashlet_registry.register_plugin(ExistingView)
+        dashlet_registry.register(ExistingView)
 
         for ty, dashlet_type in sorted(dashlet_registry.items(), key=lambda x: x[1].sort_index()):
             if dashlet_type.is_selectable():

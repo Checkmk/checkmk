@@ -56,18 +56,12 @@ class ClassRegistry(object):
         raise NotImplementedError()
 
     def register(self, plugin_class):
-        """Decorator to register a class with the registry"""
+        """Register a class with the registry, can be used as a decorator"""
         if not issubclass(plugin_class, self.plugin_base_class()):
             raise TypeError('%s is not a subclass of %s' % (plugin_class.__name__,
                                                             self.plugin_base_class().__name__))
         self._register(plugin_class)
         return plugin_class
-
-    def register_plugin(self, plugin_class):
-        """Method for registering a plugin with the registry.
-
-        Result is equal to use the register() decorator"""
-        self.register(plugin_class)
 
     @abc.abstractmethod
     def _register(self, plugin_class):

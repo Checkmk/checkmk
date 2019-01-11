@@ -176,4 +176,4 @@ def _register_custom_user_icons_and_actions(user_icons_and_actions):
                 "render": lambda self, *args: (self._icon_spec["icon"], self._icon_spec.get("title"), self._icon_spec.get("url")),
             })
 
-        icon_and_action_registry.register_plugin(icon_class)
+        icon_and_action_registry.register(icon_class)

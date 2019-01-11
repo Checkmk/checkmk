@@ -555,7 +555,7 @@ def test_permission_sorting(do_sort, result):
                 "description": "bla",
                 "defaults": ["admin"],
             })
-        perms.register_plugin(cls)
+        perms.register(cls)
 
     sorted_perms = [p.name for p in perms.get_sorted_permissions(Sec1())]
     assert sorted_perms == result

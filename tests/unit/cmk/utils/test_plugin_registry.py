@@ -18,7 +18,7 @@ class PluginRegistry(cmk.utils.plugin_registry.ClassRegistry):
 @pytest.fixture(scope="module")
 def basic_registry():
     registry = PluginRegistry()
-    registry.register_plugin(Plugin)
+    registry.register(Plugin)
     return registry
 
 
@@ -45,7 +45,7 @@ def test_method_registration():
     class MethodRegisteredPlugin(Plugin):
         pass
 
-    registry.register_plugin(MethodRegisteredPlugin)
+    registry.register(MethodRegisteredPlugin)
     assert registry.get("MethodRegisteredPlugin") == MethodRegisteredPlugin
 
 

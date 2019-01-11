@@ -178,7 +178,7 @@ def transform_old_dict_based_icons():
                 "service_columns": lambda self: self._icon_spec.get("service_columns", []),
             })
 
-        icon_and_action_registry.register_plugin(icon_class)
+        icon_and_action_registry.register(icon_class)
 
 
 multisite_views = {}  # type: Dict

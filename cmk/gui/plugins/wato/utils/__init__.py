@@ -39,6 +39,7 @@ import cmk.utils.plugin_registry
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
 import cmk.gui.backup as backup
+import cmk.gui.hooks as hooks
 from cmk.gui.i18n import _u, _
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
@@ -112,7 +113,6 @@ from cmk.gui.watolib import (
     add_change,
     log_audit,
     site_neutral_path,
-    register_hook,
     rulespec_group_registry,
     RulespecGroup,
     RulespecSubGroup,
@@ -1890,3 +1890,8 @@ class SiteBackupJobs(backup.Jobs):
                              stdin=open(os.devnull))
         if p.wait() != 0:
             raise MKGeneralException(_("Failed to apply the cronjob config: %s") % p.stdout.read())
+
+
+# TODO: Kept for compatibility with pre-1.6 WATO plugins
+def register_hook(name, func):
+    hooks.register_from_plugin(name, func)

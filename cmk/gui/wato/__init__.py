@@ -324,7 +324,6 @@ from cmk.gui.watolib import (
     PasswordStore,
     register_rulegroup,
     register_rule,
-    register_hook,
     add_replication_paths,
     UserSelection,
     ConfigDomainGUI,

@@ -696,8 +696,8 @@ class MatchPluginRegistry(cmk.utils.plugin_registry.ClassRegistry):
     def plugin_base_class(self):
         return QuicksearchMatchPlugin
 
-    def _register(self, plugin_class):
-        self._entries[plugin_class.__name__] = plugin_class
+    def plugin_name(self, plugin_class):
+        return plugin_class.__name__
 
 
 match_plugin_registry = MatchPluginRegistry()

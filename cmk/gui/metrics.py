@@ -377,8 +377,8 @@ class MetricometerRendererRegistry(cmk.utils.plugin_registry.ClassRegistry):
     def plugin_base_class(self):
         return MetricometerRenderer
 
-    def _register(self, plugin_class):
-        self._entries[plugin_class.type_name()] = plugin_class
+    def plugin_name(self, plugin_class):
+        return plugin_class.type_name()
 
     def get_renderer(self, perfometer, translated_metrics):
         subclass = self[perfometer["type"]]

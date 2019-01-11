@@ -41,8 +41,8 @@ class ClassRegistry(object):
     The snapins are loaded by importing cmk.gui.plugins.[component]. These plugins
     contain subclasses of the cmk.gui.plugins.PluginBase (e.g. SidebarSnpain) class.
 
-    Entries are registered with this registry using either the register_plugin()
-    method or the ClassRegistry.register() decorator.
+    Entries are registered with this registry using register(), typically via decoration.
+
     """
     __metaclass__ = abc.ABCMeta
 
@@ -55,17 +55,21 @@ class ClassRegistry(object):
     def plugin_base_class(self):
         raise NotImplementedError()
 
+    @abc.abstractmethod
+    def plugin_name(self, plugin_class):
+        raise NotImplementedError()
+
+    def registration_hook(self, plugin_class):
+        pass
+
     def register(self, plugin_class):
         """Register a class with the registry, can be used as a decorator"""
         if not issubclass(plugin_class, self.plugin_base_class()):
             raise TypeError('%s is not a subclass of %s' % (plugin_class.__name__,
                                                             self.plugin_base_class().__name__))
-        self._register(plugin_class)
+        self.registration_hook(plugin_class)
+        self._entries[self.plugin_name(plugin_class)] = plugin_class
         return plugin_class
-
-    @abc.abstractmethod
-    def _register(self, plugin_class):
-        raise NotImplementedError()
 
     def __contains__(self, text):
         return text in self._entries

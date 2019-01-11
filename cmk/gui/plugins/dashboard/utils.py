@@ -374,9 +374,8 @@ class DashletRegistry(cmk.utils.plugin_registry.ClassRegistry):
     def plugin_base_class(self):
         return Dashlet
 
-    def _register(self, plugin_class):
-        snapin_id = plugin_class.type_name()
-        self._entries[snapin_id] = plugin_class
+    def plugin_name(self, plugin_class):
+        return plugin_class.type_name()
 
 
 dashlet_registry = DashletRegistry()

@@ -64,8 +64,8 @@ class PermissionSectionRegistry(cmk.utils.plugin_registry.ClassRegistry):
     def plugin_base_class(self):
         return PermissionSection
 
-    def _register(self, plugin_class):
-        self._entries[plugin_class().name] = plugin_class
+    def plugin_name(self, plugin_class):
+        return plugin_class().name
 
     def get_sorted_sections(self):
         return sorted([s() for s in self.values()], key=lambda s: (s.sort_index, s.title))
@@ -132,11 +132,12 @@ class PermissionRegistry(cmk.utils.plugin_registry.ClassRegistry):
     def plugin_base_class(self):
         return Permission
 
-    def _register(self, plugin_class):
+    def plugin_name(self, plugin_class):
+        return plugin_class().name
+
+    def registration_hook(self, plugin_class):
         plugin_class._sort_index = self._index_counter
         self._index_counter += 1
-
-        self._entries[plugin_class().name] = plugin_class
 
     def get_sorted_permissions(self, section):
         """Returns the sorted permissions of a section respecting the sorting config of the section"""

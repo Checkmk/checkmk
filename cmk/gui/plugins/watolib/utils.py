@@ -135,8 +135,8 @@ class ConfigDomainRegistry(cmk.utils.plugin_registry.ClassRegistry):
     def plugin_base_class(self):
         return ConfigDomain
 
-    def _register(self, plugin_class):
-        self._entries[plugin_class.ident] = plugin_class
+    def plugin_name(self, plugin_class):
+        return plugin_class.ident
 
 
 config_domain_registry = ConfigDomainRegistry()
@@ -188,8 +188,8 @@ class ConfigVariableGroupRegistry(cmk.utils.plugin_registry.ClassRegistry):
     def plugin_base_class(self):
         return ConfigVariableGroup
 
-    def _register(self, plugin_class):
-        self._entries[plugin_class().ident()] = plugin_class
+    def plugin_name(self, plugin_class):
+        return plugin_class().ident()
 
 
 config_variable_group_registry = ConfigVariableGroupRegistry()
@@ -242,8 +242,8 @@ class ConfigVariableRegistry(cmk.utils.plugin_registry.ClassRegistry):
     def plugin_base_class(self):
         return ConfigVariable
 
-    def _register(self, plugin_class):
-        self._entries[plugin_class().ident()] = plugin_class
+    def plugin_name(self, plugin_class):
+        return plugin_class().ident()
 
 
 config_variable_registry = ConfigVariableRegistry()

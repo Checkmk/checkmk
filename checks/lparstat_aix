@@ -40,6 +40,9 @@ def parse_lparstat_aix(info):
     # get system config:
     kv_pairs = (word for word in info[0] if '=' in word)
     parsed = {'system_config': dict(kv.split('=', 1) for kv in kv_pairs)}
+    # from ibm.com: 'If there are two SMT threads, the row is displayed as "on."'
+    if parsed['system_config'].get('smt', '').lower() == 'on':
+        parsed['system_config']['smt'] = '2'
 
     for index, key in enumerate(info[1]):
         name = key.lstrip('%')

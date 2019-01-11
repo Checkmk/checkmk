@@ -59,13 +59,15 @@ def inv_prtconf(info):
         if line[0].startswith("========="):
             break  # ignore the rest of the output currently
 
+    cpu_dict = inv_tree("hardware.cpu.")
+
     for varname, value in confdict.items():
         if varname == "CPU Type":
             if value == "64-bit":
                 arch = "ppc64"
             else:
                 arch = "ppc"
-            inv_tree("hardware.cpu.")["arch"] = arch
+            cpu_dict["arch"] = arch
 
         elif varname == "Kernel Type":
             if value == "64-bit":
@@ -75,13 +77,13 @@ def inv_prtconf(info):
             inv_tree("software.os.")["arch"] = arch
 
         elif varname == "Processor Type":
-            inv_tree("hardware.cpu.")["model"] = value
+            cpu_dict["model"] = value
 
         elif varname == "Processor Clock Speed":
-            inv_tree("hardware.cpu.")["max_speed"] = float(value.split()[0]) * 1000 * 1000
+            cpu_dict["max_speed"] = float(value.split()[0]) * 1000 * 1000
 
         elif varname == "Number Of Processors":
-            inv_tree("hardware.cpu.")["cpus"] = int(value)
+            cpu_dict.setdefault("cpus", int(value))
 
         elif varname == "Firmware Version":
             inv_tree("hardware.bios.")["version"] = value

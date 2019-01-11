@@ -47,6 +47,7 @@ import cmk.gui.userdb as userdb
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
+import cmk.gui.hooks as hooks
 from cmk.gui.table import table_element
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
@@ -91,7 +92,7 @@ class RoleManagement(object):
             self._roles,
             pprint_value=config.wato_pprint_config)
 
-        watolib.call_hook_roles_saved(self._roles)
+        hooks.call("roles-saved", self._roles)
 
     # Adapt references in users. Builtin rules cannot
     # be renamed and are not handled here. If new_id is None,

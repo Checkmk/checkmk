@@ -1385,3 +1385,18 @@ def execute_activate_changes(domains):
         results[domain] = warnings or []
 
     return results
+
+
+def confirm_all_local_changes():
+    ActivateChanges().confirm_site_changes(config.omd_site())
+
+
+def get_pending_changes_info():
+    changes = ActivateChanges()
+    return changes.get_changes_estimate()
+
+
+def get_number_of_pending_changes():
+    changes = ActivateChanges()
+    changes.load()
+    return len(changes.grouped_changes())

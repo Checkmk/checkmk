@@ -57,11 +57,16 @@ def parse_prtconf(info):
         if line[0].startswith("========="):
             break  # ignore the rest of the output currently
         if len(line) == 2:
-            varname = line[0]
-            value = line[1].strip()
-            parsed[varname] = value
+            k, v = line
+            parsed[k] = v.strip()
 
     return parsed
+
+
+def _split_vendor(string):
+    if string.upper().startswith("IBM"):
+        return "IBM", string[3:].lstrip('., -/')
+    return "", string
 
 
 def inv_prtconf(info, inventory_tree):
@@ -70,6 +75,7 @@ def inv_prtconf(info, inventory_tree):
     cpu_dict = inventory_tree.get_dict("hardware.cpu.")
     sys_dict = inventory_tree.get_dict("hardware.system.")
     mem_dict = inventory_tree.get_dict("hardware.memory.")
+    fmw_dict = inventory_tree.get_dict("software.firmware.")
 
     cpu_type = parsed.get("CPU Type")
     if cpu_type is not None:
@@ -94,19 +100,23 @@ def inv_prtconf(info, inventory_tree):
 
     fw_version = parsed.get("Firmware Version")
     if fw_version is not None:
-        bios_dict = inventory_tree.get_dict("hardware.bios.")
-        bios_dict["version"] = fw_version
-        if fw_version.startswith("IBM"):
-            bios_dict["vendor"] = "IBM"
-            sys_dict["manufacturer"] = "IBM"
+        vendor, fmw_dict["version"] = _split_vendor(fw_version)
+        if vendor:
+            fmw_dict["vendor"] = vendor
+
+    fw_platform_level = parsed.get("Platform Firmware level")
+    if fw_platform_level is not None:
+        fmw_dict["platform_level"] = fw_platform_level
 
     serial = parsed.get("Machine Serial Number")
     if serial is not None:
         sys_dict["serial"] = serial
 
-    product = parsed.get("System Model")
-    if product is not None:
-        sys_dict["product"] = product
+    model = parsed.get("System Model")
+    if model is not None:
+        manufacturer, sys_dict["product"] = _split_vendor(model)
+        if manufacturer:
+            sys_dict["manufacturer"] = manufacturer
 
     ram = parsed.get("Memory Size")
     if ram is not None:

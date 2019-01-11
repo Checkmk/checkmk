@@ -7705,8 +7705,7 @@ rulespec_group_registry = RulespecGroupRegistry()
 
 # TODO: Kept for compatibility with pre 1.6 plugins
 def register_rulegroup(group_name, title, help_text):
-    rulespec_group_registry.register_plugin(
-        _get_legacy_rulespec_group_class(group_name, title, help_text))
+    rulespec_group_registry.register(_get_legacy_rulespec_group_class(group_name, title, help_text))
 
 
 def get_rulegroup(group_name):
@@ -7714,7 +7713,7 @@ def get_rulegroup(group_name):
         group_class = rulespec_group_registry[group_name]
     except KeyError:
         group_class = _get_legacy_rulespec_group_class(group_name, group_title=None, help_text=None)
-        rulespec_group_registry.register_plugin(group_class)
+        rulespec_group_registry.register(group_class)
     return group_class()
 
 

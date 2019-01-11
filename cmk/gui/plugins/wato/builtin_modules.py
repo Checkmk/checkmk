@@ -555,4 +555,4 @@ class MainModuleDownloadAgents(MainModule):
 # Register the builtin agent download page on the top level of WATO only when the agent bakery
 # does not exist (e.g. when using CRE)
 if cmk.is_raw_edition():
-    main_module_registry.register_plugin(MainModuleDownloadAgents)
+    main_module_registry.register(MainModuleDownloadAgents)

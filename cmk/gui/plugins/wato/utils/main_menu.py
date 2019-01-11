@@ -190,7 +190,7 @@ def register_modules(*args):
                 "description": wato_module.description,
                 "sort_index": wato_module.sort_index,
             })
-        main_module_registry.register_plugin(cls)
+        main_module_registry.register(cls)
 
 
 def get_modules():

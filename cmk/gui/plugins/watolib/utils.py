@@ -286,4 +286,4 @@ def register_configvar(group,
             "allow_reset": lambda self: allow_reset,
             "in_global_settings": lambda self: in_global_settings,
         })
-    config_variable_registry.register_plugin(cls)
+    config_variable_registry.register(cls)

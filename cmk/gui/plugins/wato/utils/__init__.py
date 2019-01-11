@@ -733,7 +733,7 @@ def register_check_parameters(subgroup,
         checkparams_static_sub_group_class = type("%sStatic" % subgroup.__name__, (subgroup,), {
             "main_group": main_group_static_class,
         })
-        rulespec_group_registry.register_plugin(checkparams_static_sub_group_class)
+        rulespec_group_registry.register(checkparams_static_sub_group_class)
 
         register_rule(
             checkparams_static_sub_group_class,

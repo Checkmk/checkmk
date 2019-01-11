@@ -58,6 +58,11 @@ then
         oslevel -sq
     fi
 
+    if type lparstat > /dev/null; then
+        echo "<<<aix_lparstat_inventory:sep(0):persist($UNTIL)>>>"
+        lparstat -i
+    fi
+
     # If you run the prtconf command without any flags, it displays the system model, machine serial,
     # processor type, number of processors, processor clock speed, cpu type, total memory size, network information, filesystem
     # information, paging space information, and devices information.

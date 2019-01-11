@@ -103,7 +103,7 @@ def inv_esx_vsphere_hostsystem(info):
         node["bus_speed"] = float(data["hardware.cpuPkg"]["0"]["busHz"])
 
     if "hardware.biosInfo" in data:
-        node = inv_tree("hardware.bios.")
+        node = inv_tree("software.bios.")
         node["version"] = data["hardware.biosInfo"]["biosVersion"]
 
     try:

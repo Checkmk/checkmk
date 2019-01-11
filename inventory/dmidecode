@@ -119,7 +119,7 @@ def inv_dmidecode_parse_date(value):
 
 def inv_dmidecode_parse_bios(lines):
     inv_dmidecode_parse_generic(
-        "hardware.bios.", lines, {
+        "software.bios.", lines, {
             "Vendor": "vendor",
             "Version": "version",
             "Release Date": ("date", inv_dmidecode_parse_date),

@@ -10,9 +10,9 @@ info = [[
         [
             'Wiederherstellbar:', 'Der', 'Netzwerk-Host', 'lpr2', 'ist', 'beschaeftigt,',
             'erneuter', 'Versuch', 'in', '30', 'Sekunden'
-        ], ['---'], ['lpr2-2', 'root', '1024', 'Tue', 'Jun', '28', '09:05:56', '2010'],
-        ['lpr2-3', 'root', '1024', 'Tue', '28', 'Jun', '2010', '01:02:35', 'PM', 'CET'],
-        ['lpr2-4', 'root', '1024', 'Tue', '29', 'Jun', '2010', '09:05:54', 'AM', 'CET']]
+        ], ['---'], ['lpr2-2', 'root', '1024', 'Tue', '28', 'Jun', '2010', '01:02:35', 'PM', 'CET'],
+        ['lpr2-3', 'root', '1024', 'Tue', '29', 'Jun', '2010', '09:05:54', 'AM', 'CET'],
+        ['lpr2-4', 'root', '1024', 'Tue', 'Jun', '29', '09:05:56', '2010']]
 
 discovery = {'': [('lpr2', {}), ('spr1', {})]}
 
@@ -27,7 +27,7 @@ checks = {
         0,
         'now printing lpr2-3. enabled since Tue Jun 29 09:22:04 2010 (Wiederherstellbar: Der Netzwerk-Host lpr2 ist beschaeftigt, erneuter Versuch in 30 Sekunden)',
         []), (0, 'Jobs: 3', [('jobs', 3, 5, 10, 0, None)]),
-        (2, 'Oldest job is from Mon Jun 28 09:05:56 2010', [])]),
+        (2, 'Oldest job is from Mon Jun 28 14:02:35 2010', [])]),
          ('spr1', {
              'disabled_since': 2,
              'is_idle': 0,

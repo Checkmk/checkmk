@@ -1,2 +1,3 @@
-needed-packages
+needed-packages*
+distro-*.mk
 check-mk*.tar.gz

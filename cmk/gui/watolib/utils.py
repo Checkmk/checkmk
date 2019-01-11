@@ -30,6 +30,7 @@ import base64
 import pickle
 from contextlib import contextmanager
 
+import cmk
 import cmk.utils.paths
 import cmk.utils.store as store
 
@@ -132,3 +133,7 @@ def mk_repr(s):
     if not config.wato_legacy_eval:
         return base64.b64encode(repr(s))
     return base64.b64encode(pickle.dumps(s))
+
+
+def has_agent_bakery():
+    return not cmk.is_raw_edition()

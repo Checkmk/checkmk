@@ -130,10 +130,11 @@ class IconRegistry(cmk.utils.plugin_registry.ClassRegistry):
     def plugin_base_class(self):
         return Icon
 
-    def _register(self, plugin_class):
-        ident = plugin_class.ident()
-        self._entries[ident] = plugin_class
+    def plugin_name(self, plugin_class):
+        return plugin_class.ident()
 
+    def registration_hook(self, plugin_class):
+        ident = self.plugin_name(plugin_class)
         declare_permission("icons_and_actions.%s" % ident, ident,
                            _("Allow to see the icon %s in the host and service views") % ident,
                            config.builtin_role_ids)

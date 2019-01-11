@@ -66,8 +66,8 @@ class AutomationCommandRegistry(cmk.utils.plugin_registry.ClassRegistry):
     def plugin_base_class(self):
         return AutomationCommand
 
-    def _register(self, plugin_class):
-        self._entries[plugin_class().command_name()] = plugin_class
+    def plugin_name(self, plugin_class):
+        return plugin_class().command_name()
 
 
 automation_command_registry = AutomationCommandRegistry()

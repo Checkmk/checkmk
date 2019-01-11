@@ -150,12 +150,12 @@ class SnapinRegistry(cmk.utils.plugin_registry.ClassRegistry):
     def plugin_base_class(self):
         return SidebarSnapin
 
-    def _register(self, plugin_class):
-        snapin_id = plugin_class.type_name()
-        self._entries[snapin_id] = plugin_class
+    def plugin_name(self, plugin_class):
+        return plugin_class.type_name()
 
+    def registration_hook(self, plugin_class):
         config.declare_permission(
-            "sidesnap.%s" % snapin_id,
+            "sidesnap.%s" % self.plugin_name(plugin_class),
             plugin_class.title(),
             plugin_class.description(),
             plugin_class.allowed_roles(),

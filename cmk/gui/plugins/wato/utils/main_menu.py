@@ -161,8 +161,8 @@ class ModuleRegistry(cmk.utils.plugin_registry.ClassRegistry):
     def plugin_base_class(self):
         return MainModule
 
-    def _register(self, plugin_class):
-        self._entries[plugin_class().mode_or_url] = plugin_class
+    def plugin_name(self, plugin_class):
+        return plugin_class().mode_or_url
 
 
 main_module_registry = ModuleRegistry()

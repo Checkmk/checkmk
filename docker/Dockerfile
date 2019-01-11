@@ -42,6 +42,8 @@ RUN set -e \
         inetutils-syslogd \
         bsd-mailx \
         gnupg2 \
+        openssh-client \
+        iputils-ping \
         dpkg-sig \
         $(cat needed-packages) \
     && apt-get clean \

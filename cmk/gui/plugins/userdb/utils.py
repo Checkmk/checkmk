@@ -195,7 +195,7 @@ class UserConnectorRegistry(cmk.utils.plugin_registry.ClassRegistry):
     Have a look at the base class for details."""
 
     def plugin_base_class(self):
-        return cmk.gui.plugins.userdb.UserConnector
+        return UserConnector
 
     def _register(self, plugin_class):
         plugin_class.migrate_config()
@@ -210,7 +210,7 @@ class UserAttributeRegistry(cmk.utils.plugin_registry.ClassRegistry):
     Have a look at the base class for details."""
 
     def plugin_base_class(self):
-        return cmk.gui.plugins.userdb.UserAttribute
+        return UserAttribute
 
     def _register(self, plugin_class):
         self._entries[plugin_class.name()] = plugin_class

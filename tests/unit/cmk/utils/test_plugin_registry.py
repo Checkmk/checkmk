@@ -32,7 +32,7 @@ def test_decorator_registration():
     assert registry.items() == []
 
     @registry.register
-    class DecoratedPlugin(object):
+    class DecoratedPlugin(Plugin):
         pass
 
     assert registry.get("DecoratedPlugin") == DecoratedPlugin
@@ -42,7 +42,7 @@ def test_method_registration():
     registry = PluginRegistry()
     assert registry.items() == []
 
-    class MethodRegisteredPlugin(object):
+    class MethodRegisteredPlugin(Plugin):
         pass
 
     registry.register_plugin(MethodRegisteredPlugin)
@@ -59,7 +59,7 @@ def test_delitem(basic_registry):
         del basic_registry["bla"]
 
     @basic_registry.register
-    class DelPlugin(object):
+    class DelPlugin(Plugin):
         pass
 
     del basic_registry["DelPlugin"]

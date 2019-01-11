@@ -48,20 +48,28 @@
 # not being parsed.
 
 
-def inv_prtconf(info):
-    confdict = {}
+def parse_prtconf(info):
+    parsed = {}
+
     for line in info:
+        if not line:
+            continue
+        if line[0].startswith("========="):
+            break  # ignore the rest of the output currently
         if len(line) == 2:
             varname = line[0]
             value = line[1].strip()
-            confdict[varname] = value
+            parsed[varname] = value
 
-        if line[0].startswith("========="):
-            break  # ignore the rest of the output currently
+    return parsed
+
+
+def inv_prtconf(info):
+    parsed = parse_prtconf(info)
 
     cpu_dict = inv_tree("hardware.cpu.")
 
-    for varname, value in confdict.items():
+    for varname, value in parsed.items():
         if varname == "CPU Type":
             if value == "64-bit":
                 arch = "ppc64"

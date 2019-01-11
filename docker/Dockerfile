@@ -25,7 +25,7 @@ ARG MAIL_RELAY_HOST
 ENV MAIL_RELAY_HOST=""
 
 # Make the list of required packages available to the following command
-COPY needed-packages /needed-packages
+COPY needed-packages-${CMK_VERSION} /needed-packages
 
 # First install the tools we need for fetching the package and installation
 # Then fetch the package and install it. This will make sure all Check_MK

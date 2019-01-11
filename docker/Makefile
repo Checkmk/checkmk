@@ -49,14 +49,17 @@ setup:
 setversion:
 	sed -i 's/^ARG CMK_VERSION=.*$$/ARG CMK_VERSION="$(NEW_VERSION)"/g' Dockerfile
 
-needed-packages: ../omd/distros/DEBIAN_9.mk
-	echo -e 'needed-packages:\n\t@echo \$$(OS_PACKAGES) > needed-packages\n' | \
-	    make -f - -f ../omd/distros/DEBIAN_9.mk --no-print-directory needed-packages
+distro-%.mk:
+	git show $(GIT_REF):../omd/distros/DEBIAN_9.mk > $@
+
+needed-packages-%: distro-%.mk
+	echo -e '$@:\n\t@echo \$$(OS_PACKAGES) > $@\n' | \
+	    make -f - -f $< --no-print-directory $@
 
 check-mk-$(EDITION)-docker-$(VERSION).tar.gz: image
 	docker save $(DOCKER_REPO_NAME)/check-mk-$(EDITION):$(VERSION) | gzip > check-mk-$(EDITION)-docker-$(VERSION).tar.gz
 
-image: needed-packages
+image: needed-packages-$(VERSION)
 	docker build \
 	    --build-arg CMK_VERSION="$(VERSION)" \
 	    --build-arg CMK_EDITION="$(EDITION)" \
@@ -64,7 +67,7 @@ image: needed-packages
 	    -t $(DOCKER_REPO_NAME)/check-mk-$(EDITION):$(VERSION) \
 	    .
 
-image-daily: needed-packages
+image-daily: needed-packages-$(VERSION)
 	BRANCH_PREFIX="$$(git rev-parse --abbrev-ref HEAD)" ; \
 	if [[ "$$BRANCH_PREFIX" == "master" || "$$BRANCH_PREFIX" =~ "/" ]]; then \
 	    BRANCH_PREFIX="" ; \
@@ -91,5 +94,5 @@ test-lint-entrypoint:
 clean:
 	-docker rmi $(DOCKER_REPO_NAME)/check-mk-$(EDITION):latest || true
 	-docker rmi $(DOCKER_REPO_NAME)/check-mk-$(EDITION):$(VERSION) || true
-	[ -e needed-packages ] && rm needed-packages || true
+	ls needed-packages-* >/dev/null 2>&1 && rm needed-packages-* || true
 	ls check-mk-*-docker-*.tar.gz >/dev/null 2>&1 && rm check-mk-*-docker-*.tar.gz || true

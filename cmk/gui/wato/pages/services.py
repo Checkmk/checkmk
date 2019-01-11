@@ -41,7 +41,7 @@ from cmk.utils.defines import short_service_state_name
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 from cmk.gui.table import table_element
-import cmk.gui.background_job as background_job
+from cmk.gui.background_job import BackgroundProcessInterface, JobStatus  # pylint: disable=unused-import
 from cmk.gui.gui_background_job import job_registry
 
 from cmk.gui.pages import register_page_handler
@@ -309,7 +309,7 @@ def _get_check_table_from_remote(request):
         return DiscoveryResult(
             job_status={
                 "is_running": False,
-                "state": background_job.JobStatus.state_initialized,
+                "state": JobStatus.state_initialized,
             },
             check_table=check_table,
             check_table_created=time.time(),
@@ -386,8 +386,8 @@ class ServiceDiscoveryBackgroundJob(WatoBackgroundJob):
 
         super(ServiceDiscoveryBackgroundJob, self).__init__(job_id, **kwargs)
 
-    def discover(self, request):
-        # type: (StartDiscoveryRequest) -> None
+    def discover(self, request, job_interface):
+        # type: (StartDiscoveryRequest, BackgroundProcessInterface) -> None
         """Target function of the background job"""
         print "Starting job..."
         if request.options.action == DiscoveryAction.SCAN:
@@ -523,25 +523,25 @@ class ModeAjaxServiceDiscovery(WatoWebApiMode):
         import cmk.gui.log
 
         if discovery_result.job_status[
-                "state"] == background_job.JobStatus.state_initialized and discovery_result.job_status[
+                "state"] == JobStatus.state_initialized and discovery_result.job_status[
                     "is_running"]:
             return _("Initializing discovery...")
 
         job_title = discovery_result.job_status.get("title", _("Service discovery"))
         duration_txt = cmk.utils.render.Age(discovery_result.job_status["duration"])
 
-        if discovery_result.job_status["state"] == background_job.JobStatus.state_running:
+        if discovery_result.job_status["state"] == JobStatus.state_running:
             return _("%s running for %s") % (job_title, duration_txt)
 
-        if discovery_result.job_status["state"] == background_job.JobStatus.state_exception:
+        if discovery_result.job_status["state"] == JobStatus.state_exception:
             return _("%s failed after %s: %s (see <tt>var/log/web.log</tt> for further information)") % \
                                 (job_title, duration_txt, "\n".join(discovery_result.job_status["loginfo"]["JobException"]))
 
         messages = []
-        if discovery_result.job_status["state"] == background_job.JobStatus.state_stopped:
+        if discovery_result.job_status["state"] == JobStatus.state_stopped:
             messages.append(_("%s was stopped after %s") % (job_title, duration_txt))
 
-        elif discovery_result.job_status["state"] == background_job.JobStatus.state_finished:
+        elif discovery_result.job_status["state"] == JobStatus.state_finished:
             messages.append(_("%s finished after %s") % (job_title, duration_txt))
 
         cmk_check_entries = [

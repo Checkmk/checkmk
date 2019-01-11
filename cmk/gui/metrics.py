@@ -885,7 +885,7 @@ def get_graph_template_by_source(graph_templates, source):
 def page_host_service_graph_popup():
     site_id = html.request.var('site')
     host_name = html.request.var('host_name')
-    service_description = html.request.var_utf8('service')
+    service_description = html.get_unicode_input('service')
 
     # TODO: Refactor this to some OO based approach
     if cmk_graphs_possible(site_id):

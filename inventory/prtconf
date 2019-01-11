@@ -90,6 +90,10 @@ def inv_prtconf(info, inventory_tree):
     if proc_type is not None:
         cpu_dict["model"] = proc_type
 
+    proc_impl_mode = parsed.get("Processor Implementation Mode")
+    if proc_impl_mode is not None:
+        cpu_dict["implementation_mode"] = proc_impl_mode
+
     max_speed = parsed.get("Processor Clock Speed")
     if max_speed is not None:
         cpu_dict["max_speed"] = float(max_speed.split()[0]) * 1000 * 1000

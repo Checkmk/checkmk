@@ -38,7 +38,7 @@ def inv_dell_idrac_info(info):
     node['serial'] = serial
     node['expresscode'] = expresscode
 
-    node = inv_tree("hardware.bios.")
+    node = inv_tree("software.bios.")
     node['version'] = bios_version
     node['vendor'] = bios_vendor
 

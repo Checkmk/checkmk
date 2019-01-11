@@ -38,7 +38,7 @@
 
 
 def inv_win_bios(info):
-    node = inv_tree("hardware.bios.")
+    node = inv_tree("software.bios.")
     smbios_version = ""
     bios_version = ""
     for line in info:

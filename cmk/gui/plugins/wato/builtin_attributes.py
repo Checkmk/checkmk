@@ -614,7 +614,7 @@ declare_host_attribute(
         "locked_attributes",
         ListOf(
             DropdownChoice(
-                choices=lambda: [(a.name(), a.title()) for a in watolib.host_attributes.all_host_attributes()],
+                choices=lambda: [(a.name(), a.title()) for a, _topic in watolib.host_attributes.all_host_attributes()],
                 sorted=True,
             ),
             title=_("Locked attributes"),

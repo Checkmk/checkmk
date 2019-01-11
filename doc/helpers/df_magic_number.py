@@ -31,7 +31,7 @@ if len(sys.argv) > 1:
     normsize = float(sys.argv[1])
 
 
-def print_levels(exp):
+def print_levels(level, exp):
     sys.stdout.write("f=%3.1f: " % exp)
     for size in [5, 10, 20, 50, 100, 300, 800]:
         hgb_size = size / normsize
@@ -46,6 +46,6 @@ def print_levels(exp):
 for level in [.80, .85, .90, .95]:
     sys.stdout.write("Level for %.0f GB Normpartition: %d%%\n" % (normsize, int(level * 100)))
     for exp in [1.0, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2]:
-        print_levels(exp)
+        print_levels(level, exp)
     sys.stdout.write("-" * 80)
     sys.stdout.write("\n")

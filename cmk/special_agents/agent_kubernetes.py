@@ -48,6 +48,7 @@ from typing import (  # pylint: disable=unused-import
 )
 
 from kubernetes import client
+from kubernetes.client.rest import ApiException
 
 import cmk.utils.profile
 import cmk.utils.password_store
@@ -492,6 +493,31 @@ class RoleList(ListLike[Role]):
         }
 
 
+class Metric(object):
+    def __init__(self, metric):
+        self.from_object = metric['describedObject']
+        self.metrics = {metric['metricName']: metric.get('value')}
+
+    def __add__(self, other):
+        assert self.from_object == other.from_object
+        self.metrics.update(other.metrics)
+        return self
+
+    def __str__(self):
+        return str(self.__dict__)
+
+    def __repr__(self):
+        return str(self.__dict__)
+
+
+class MetricList(ListLike[Metric]):
+    def __add__(self, other):
+        return MetricList([a + b for a, b in zip(self, other)])
+
+    def list_metrics(self):
+        return [item.__dict__ for item in self]
+
+
 class Group(object):
     """
     A group of elements where an element is e.g. a piggyback host.
@@ -591,6 +617,8 @@ class ApiData(object):
         storage_api = client.StorageV1Api(api_client)
         rbac_authorization_api = client.RbacAuthorizationV1Api(api_client)
 
+        self.custom_api = client.CustomObjectsApi(api_client)
+
         logging.debug('Retrieving data')
         storage_classes = storage_api.list_storage_class()
         namespaces = core_api.list_namespace()
@@ -614,6 +642,56 @@ class ApiData(object):
         self.persistent_volume_claims = PersistentVolumeClaimList(
             map(PersistentVolumeClaim, pvcs.items))
         self.pods = PodList(map(Pod, pods.items))
+
+        pods_custom_metrics = {
+            "memory": ['memory_rss', 'memory_swap', 'memory_usage_bytes', 'memory_max_usage_bytes'],
+            "fs": ['fs_inodes', 'fs_reads', 'fs_writes', 'fs_limit_bytes', 'fs_usage_bytes'],
+            "cpu": ['cpu_system', 'cpu_user', 'cpu_usage']
+        }
+
+        self.pods_Metrics = dict()  # type: Dict[str, Dict[str, List]]
+        for metric_group, metrics in pods_custom_metrics.items():
+            self.pods_Metrics[metric_group] = self.get_namespaced_group_metric(metrics)
+
+    def get_namespaced_group_metric(self, metrics):
+        # type: (List[str]) -> Dict[str, List]
+        queries = [self.get_namespaced_custom_pod_metric(metric) for metric in metrics]
+
+        grouped_metrics = {}  # type: Dict[str, List]
+        for response in queries:
+            for namespace in response:
+                grouped_metrics.setdefault(namespace, []).append(response[namespace])
+
+        for namespace in grouped_metrics:
+            grouped_metrics[namespace] = reduce(operator.add,
+                                                grouped_metrics[namespace]).list_metrics()
+
+        return grouped_metrics
+
+    def get_namespaced_custom_pod_metric(self, metric):
+        # type: (str) -> Dict
+
+        logging.debug('Query Custom Metrics Endpoint: %s', metric)
+        custom_metric = {}
+        for namespace in self.namespaces:
+            try:
+                data = map(
+                    Metric,
+                    self.custom_api.get_namespaced_custom_object(
+                        'custom.metrics.k8s.io',
+                        'v1beta1',
+                        namespace.name,
+                        'pods/*',
+                        metric,
+                    )['items'])
+                custom_metric[namespace.name] = MetricList(data)
+            except ApiException as err:
+                if err.status == 404:
+                    logging.info('Data unavailable. No pods in namespace %s', namespace.name)
+                else:
+                    raise err
+
+        return custom_metric
 
     def cluster_sections(self):
         # type: () -> str
@@ -642,6 +720,14 @@ class ApiData(object):
         g.join('k8s_resources', self.pods.pods_per_node())
         g.join('k8s_conditions', self.nodes.conditions())
         return '\n'.join(g.output())
+
+    def custom_metrics_section(self):
+        # type: () -> str
+        logging.info('Output pods custom metrics')
+        e = Element()
+        for c_metric in self.pods_Metrics:
+            e.get('k8s_pods_%s' % c_metric).insert(self.pods_Metrics[c_metric])
+        return '\n'.join(e.output())
 
 
 def get_api_client(arguments):
@@ -682,6 +768,7 @@ def main(args=None):
             api_data = ApiData(api_client)
             print(api_data.cluster_sections())
             print(api_data.node_sections())
+            print(api_data.custom_metrics_section())
     except Exception as e:
         if arguments.debug:
             raise

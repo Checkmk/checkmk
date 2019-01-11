@@ -457,7 +457,7 @@ def check_diskstat_dict(item, params, disks):
             wait = disk.pop("average_" + what)
             yield check_levels(
                 wait,
-                what,
+                "disk_average_" + what,
                 params.get(what),
                 unit="ms",
                 scale=0.001,
@@ -485,7 +485,11 @@ def check_diskstat_dict(item, params, disks):
         if what in disk:
             ql = disk.pop(what)
             yield check_levels(
-                ql, what, params.get(what), statemarkers=False, infoname="Average %s" % plugin_text)
+                ql,
+                "disk_" + what,
+                params.get(what),
+                statemarkers=False,
+                infoname="Average %s" % plugin_text)
 
     # I/O operations
     for what in "read", "write":

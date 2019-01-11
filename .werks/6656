@@ -1,0 +1,12 @@
+Title: Bug predictive levels Diskstat, read-write wait
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1547207314
+
+Predictive levels on diskstat check could not reach the read-wait, nor write-wait perf data.
+

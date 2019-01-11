@@ -616,13 +616,19 @@ inventory_displayhints.update({
     ".hardware.cpu.cores_per_cpu": {"title": _("Cores per CPU"), "paint": "count"},
     ".hardware.cpu.threads_per_cpu": {"title": _("Hyperthreads per CPU"), "paint": "count"},
     ".hardware.cpu.threads": {"title": _("Total Number of Hyperthreads"), "paint": "count"},
+    ".hardware.cpu.smt_threads": {"title": _("Simultaneous multithreading"), "paint": "count"},
+    ".hardware.cpu.sharing_mode": {"title": _("CPU sharing mode")},
     ".hardware.cpu.cpus": {
-        "title": _("Total Number of CPUs"), "short": _("CPUs"), "paint": "count"
+        "title": _("Number of physical CPUs"), "short": _("CPUs"), "paint": "count"
+    },
+    ".hardware.cpu.logical_cpus": {
+        "title": _("Number of logical CPUs"), "short": _("Logical CPUs"), "paint": "count"
     },
     ".hardware.cpu.arch": {"title": _("CPU Architecture"), "short": _("CPU Arch")},
     ".hardware.cpu.cores": {
         "title": _("Total Number of Cores"), "short": _("Cores"), "paint": "count"
     },
+    ".hardware.cpu.entitlement": {"title": _("CPU Entitlement")},
     ".hardware.memory.": {"title": _("Memory (RAM)")},
     ".hardware.memory.total_ram_usable": {"title": _("Total usable RAM"), "paint": "bytes_rounded"},
     ".hardware.memory.total_swap": {"title": _("Total swap space"), "paint": "bytes_rounded"},

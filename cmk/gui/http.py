@@ -152,12 +152,6 @@ class Request(object):
     def has_var(self, varname):
         return varname in self._vars
 
-    def var_utf8(self, varname, deflt=None):
-        val = self._vars.get(varname, deflt)
-        if isinstance(val, str):
-            return val.decode("utf-8")
-        return val
-
     def itervars(self, prefix=""):
         return (item \
                 for item in self._vars.iteritems() \

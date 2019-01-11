@@ -55,7 +55,7 @@ class DummyBackgroundJob(gui_background_job.GUIBackgroundJob):
         sys.stdout.flush()
         self.finish_hello_event.wait()
 
-    def execute_endless(self):
+    def execute_endless(self, job_interface):
         sys.stdout.write("Hanging loop\n")
         sys.stdout.flush()
         time.sleep(100)

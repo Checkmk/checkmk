@@ -194,9 +194,7 @@ class BackgroundProcess(BackgroundProcessInterface, multiprocessing.Process):
     def _execute_function(self):
         func_ptr, args, kwargs = self._job_parameters["function_parameters"]
         job_interface = BackgroundProcessInterface(self._job_parameters)
-
-        if "job_interface" in func_ptr.func_code.co_varnames:
-            kwargs["job_interface"] = job_interface
+        kwargs["job_interface"] = job_interface
 
         try:
             func_ptr(*args, **kwargs)

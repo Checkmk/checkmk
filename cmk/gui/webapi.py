@@ -169,9 +169,9 @@ def page_api():
 
         if api_actions[action].get("locking", True):
             with watolib.exclusive_lock():
-                return execute_action()
+                response = execute_action()
         else:
-            return execute_action()
+            response = execute_action()
 
     except MKAuthException as e:
         response = {

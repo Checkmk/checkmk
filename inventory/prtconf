@@ -64,52 +64,57 @@ def parse_prtconf(info):
     return parsed
 
 
-def inv_prtconf(info):
+def inv_prtconf(info, inventory_tree):
     parsed = parse_prtconf(info)
 
-    cpu_dict = inv_tree("hardware.cpu.")
+    cpu_dict = inventory_tree.get_dict("hardware.cpu.")
+    sys_dict = inventory_tree.get_dict("hardware.system.")
+    mem_dict = inventory_tree.get_dict("hardware.memory.")
 
-    for varname, value in parsed.items():
-        if varname == "CPU Type":
-            if value == "64-bit":
-                arch = "ppc64"
-            else:
-                arch = "ppc"
-            cpu_dict["arch"] = arch
+    cpu_type = parsed.get("CPU Type")
+    if cpu_type is not None:
+        cpu_dict["arch"] = "ppc64" if cpu_type == "64-bit" else "ppc"
 
-        elif varname == "Kernel Type":
-            if value == "64-bit":
-                arch = "ppc64"
-            else:
-                arch = "ppc"
-            inv_tree("software.os.")["arch"] = arch
+    kernel_type = parsed.get("Kernel Type")
+    if kernel_type is not None:
+        os_dict = inventory_tree.get_dict("software.os.")
+        os_dict["arch"] = "ppc64" if kernel_type == "64-bit" else "ppc"
 
-        elif varname == "Processor Type":
-            cpu_dict["model"] = value
+    proc_type = parsed.get("Processor Type")
+    if proc_type is not None:
+        cpu_dict["model"] = proc_type
 
-        elif varname == "Processor Clock Speed":
-            cpu_dict["max_speed"] = float(value.split()[0]) * 1000 * 1000
+    max_speed = parsed.get("Processor Clock Speed")
+    if max_speed is not None:
+        cpu_dict["max_speed"] = float(max_speed.split()[0]) * 1000 * 1000
 
-        elif varname == "Number Of Processors":
-            cpu_dict.setdefault("cpus", int(value))
+    num_cpu = parsed.get("Number Of Processors")
+    if num_cpu is not None:
+        cpu_dict.setdefault("cpus", int(num_cpu))
 
-        elif varname == "Firmware Version":
-            inv_tree("hardware.bios.")["version"] = value
-            if value.startswith("IBM"):
-                inv_tree("hardware.bios.")["vendor"] = "IBM"
-                inv_tree("hardware.system.")["manufacturer"] = "IBM"
+    fw_version = parsed.get("Firmware Version")
+    if fw_version is not None:
+        bios_dict = inventory_tree.get_dict("hardware.bios.")
+        bios_dict["version"] = fw_version
+        if fw_version.startswith("IBM"):
+            bios_dict["vendor"] = "IBM"
+            sys_dict["manufacturer"] = "IBM"
 
-        elif varname == "Machine Serial Number":
-            inv_tree("hardware.system.")["serial"] = value
+    serial = parsed.get("Machine Serial Number")
+    if serial is not None:
+        sys_dict["serial"] = serial
 
-        elif varname == "System Model":
-            inv_tree("hardware.system.")["product"] = value
+    product = parsed.get("System Model")
+    if product is not None:
+        sys_dict["product"] = product
 
-        elif varname == "Memory Size":
-            inv_tree("hardware.memory.")["total_ram_usable"] = int(value.split()[0]) * 1024 * 1024
+    ram = parsed.get("Memory Size")
+    if ram is not None:
+        mem_dict["total_ram_usable"] = int(ram.split()[0]) * 1024 * 1024
 
-        elif varname == "Total Paging Space":
-            inv_tree("hardware.memory.")["total_swap"] = int(value.replace("MB", "")) * 1024 * 1024
+    swap = parsed.get("Total Paging Space")
+    if swap is not None:
+        mem_dict["total_swap"] = int(swap.replace("MB", "")) * 1024 * 1024
 
 
 inv_info['prtconf'] = {

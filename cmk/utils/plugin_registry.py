@@ -30,8 +30,6 @@ import abc
 #       for example let all use a static/class method .name().
 #       We could standardize this by making all plugin classes inherit
 #       from a plugin base class instead of "object".
-# TODO: _register should always validate that the given plugin class is
-# based on plugin_base_class
 
 # TODO: Decide which base class to implement
 # (https://docs.python.org/2/library/collections.html) and cleanup
@@ -59,6 +57,9 @@ class ClassRegistry(object):
 
     def register(self, plugin_class):
         """Decorator to register a class with the registry"""
+        if not issubclass(plugin_class, self.plugin_base_class()):
+            raise TypeError('%s is not a subclass of %s' % (plugin_class.__name__,
+                                                            self.plugin_base_class().__name__))
         self._register(plugin_class)
         return plugin_class
 
@@ -66,7 +67,7 @@ class ClassRegistry(object):
         """Method for registering a plugin with the registry.
 
         Result is equal to use the register() decorator"""
-        self._register(plugin_class)
+        self.register(plugin_class)
 
     @abc.abstractmethod
     def _register(self, plugin_class):

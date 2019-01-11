@@ -1133,7 +1133,8 @@ class html(HTMLGenerator):
 
     def get_unicode_input(self, varname, deflt=None):
         try:
-            return self.request.var_utf8(varname, deflt)
+            val = self.request.var(varname, deflt)
+            return val.decode("utf-8") if isinstance(val, str) else val
         except UnicodeDecodeError:
             raise MKUserError(
                 varname,

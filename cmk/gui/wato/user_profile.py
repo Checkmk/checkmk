@@ -39,10 +39,12 @@ from cmk.gui.exceptions import HTTPRedirect, MKUserError, MKGeneralException, MK
 from cmk.gui.i18n import _, _u
 from cmk.gui.globals import html
 
-from cmk.gui.watolib.changes import ACTIVATION_TIME_PROFILE_SYNC
+from cmk.gui.watolib.changes import add_change
+from cmk.gui.watolib.activate_changes import ACTIVATION_TIME_PROFILE_SYNC
 from cmk.gui.wato.pages.users import select_language
 
 from cmk.gui.plugins.wato.utils.base_modes import WatoWebApiMode
+from cmk.gui.watolib.user_profile import push_user_profiles_to_site_transitional_wrapper
 
 
 def user_profile_async_replication_page():
@@ -93,7 +95,7 @@ def user_profile_async_replication_dialog(sites):
                 (site_id, int(estimated_duration * 1000.0), _('Replication in progress')))
             num_replsites += 1
         else:
-            watolib.add_profile_replication_change(site_id, status_txt)
+            _add_profile_replication_change(site_id, status_txt)
         html.span(site.get('alias', site_id))
 
         html.close_div()
@@ -101,6 +103,15 @@ def user_profile_async_replication_dialog(sites):
     html.javascript('cmk.profile_replication.prepare(%d);\n' % num_replsites)
 
     html.close_div()
+
+
+def _add_profile_replication_change(site_id, result):
+    """Add pending change entry to make sync possible later for admins"""
+    add_change(
+        "edit-users",
+        _('Profile changed (sync failed: %s)') % result,
+        sites=[site_id],
+        need_restart=False)
 
 
 @cmk.gui.pages.register("user_change_pw")
@@ -359,7 +370,7 @@ class ModeAjaxProfileReplication(WatoWebApiMode):
         result = self._synchronize_profile(site_id, site, config.user.id)
 
         if result != True:
-            watolib.add_profile_replication_change(site_id, result)
+            _add_profile_replication_change(site_id, result)
             raise MKGeneralException(result)
 
         return _("Replication completed successfully.")
@@ -370,8 +381,7 @@ class ModeAjaxProfileReplication(WatoWebApiMode):
             raise MKUserError(None, _('The requested user does not exist'))
 
         start = time.time()
-        result = watolib.push_user_profiles_to_site_transitional_wrapper(
-            site, {user_id: users[user_id]})
+        result = push_user_profiles_to_site_transitional_wrapper(site, {user_id: users[user_id]})
 
         duration = time.time() - start
         watolib.ActivateChanges().update_activation_time(site_id, ACTIVATION_TIME_PROFILE_SYNC,

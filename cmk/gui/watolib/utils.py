@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import ast
 import re
 import pprint
 import base64
@@ -35,6 +36,9 @@ import cmk.utils.paths
 import cmk.utils.store as store
 
 import cmk.gui.config as config
+from cmk.gui.globals import html
+from cmk.gui.i18n import _
+from cmk.gui.exceptions import MKGeneralException
 
 # Constants used in configuration files
 ALL_HOSTS = ['@all']
@@ -135,5 +139,23 @@ def mk_repr(s):
     return base64.b64encode(pickle.dumps(s))
 
 
+# TODO: Deprecate this legacy format with 1.4.0 or later?!
+def mk_eval(s):
+    try:
+        if not config.wato_legacy_eval:
+            return ast.literal_eval(base64.b64decode(s))
+        return pickle.loads(base64.b64decode(s))
+    except:
+        raise MKGeneralException(_('Unable to parse provided data: %s') % html.render_text(repr(s)))
+
+
 def has_agent_bakery():
     return not cmk.is_raw_edition()
+
+
+def site_neutral_path(path):
+    if path.startswith('/omd'):
+        parts = path.split('/')
+        parts[3] = '[SITE_ID]'
+        return '/'.join(parts)
+    return path

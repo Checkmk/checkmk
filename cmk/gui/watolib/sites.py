@@ -27,18 +27,22 @@
 import os
 import re
 import time
+import shutil
+import traceback
+from typing import NamedTuple
 import six
 
 import cmk
 import cmk.utils.store as store
 
 import cmk.gui.sites
+import cmk.gui.multitar as multitar
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
 import cmk.gui.hooks as hooks
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
-from cmk.gui.exceptions import MKUserError
+from cmk.gui.exceptions import MKUserError, MKGeneralException
 from cmk.gui.valuespec import (
     CascadingDropdown,
     Checkbox,
@@ -57,12 +61,17 @@ from cmk.gui.valuespec import (
 )
 
 import cmk.gui.watolib.changes
+import cmk.gui.watolib.activate_changes
 import cmk.gui.watolib.sidebar_reload
-from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.config_domains import (
     ConfigDomainLiveproxy,
     ConfigDomainGUI,
 )
+from cmk.gui.watolib.automation_commands import (
+    AutomationCommand,
+    automation_command_registry,
+)
+from cmk.gui.watolib.global_settings import save_site_global_settings
 from cmk.gui.watolib.utils import (
     default_site,
     multisite_dir,
@@ -245,6 +254,8 @@ class SiteManagement(object):
 
     @classmethod
     def save_sites(cls, sites, activate=True):
+        # TODO: Clean this up
+        from cmk.gui.watolib.hosts_and_folders import Folder
         store.mkdir(multisite_dir)
         store.save_to_mk_file(sites_mk, "sites", sites)
 
@@ -263,6 +274,8 @@ class SiteManagement(object):
 
     @classmethod
     def delete_site(cls, site_id):
+        # TODO: Clean this up
+        from cmk.gui.watolib.hosts_and_folders import Folder
         all_sites = cls.load_sites()
         if site_id not in all_sites:
             raise MKUserError(None, _("Unable to delete unknown site id: %s") % site_id)
@@ -287,7 +300,7 @@ class SiteManagement(object):
 
         del all_sites[site_id]
         cls.save_sites(all_sites)
-        cmk.gui.watolib.changes.clear_site_replication_status(site_id)
+        cmk.gui.watolib.activate_changes.clear_site_replication_status(site_id)
         cmk.gui.watolib.changes.add_change(
             "edit-sites",
             _("Deleted site %s") % html.render_tt(site_id),
@@ -595,3 +608,62 @@ def _delete_distributed_wato_file():
     # directory!
     if os.path.exists(p):
         store.save_file(p, "")
+
+
+PushSnapshotRequest = NamedTuple("PushSnapshotRequest", [("site_id", str), ("tar_content", str)])
+
+
+@automation_command_registry.register
+class AutomationPushSnapshot(AutomationCommand):
+    def command_name(self):
+        return "push-snapshot"
+
+    def get_request(self):
+        # type: () -> PushSnapshotRequest
+        site_id = html.request.var("siteid")
+        self._verify_slave_site_config(site_id)
+
+        snapshot = html.request.uploaded_file("snapshot")
+        if not snapshot:
+            raise MKGeneralException(_('Invalid call: The snapshot is missing.'))
+
+        return PushSnapshotRequest(site_id=site_id, tar_content=snapshot[2])
+
+    def execute(self, request):
+        # type: (PushSnapshotRequest) -> bool
+        multitar.extract_from_buffer(request.tar_content,
+                                     cmk.gui.watolib.activate_changes.get_replication_paths())
+
+        try:
+            self._save_site_globals_on_slave_site(request.tar_content)
+
+            cmk.gui.watolib.activate_changes.confirm_all_local_changes()  # pending changes are lost
+
+            hooks.call("snapshot-pushed")
+
+            # Create rule making this site only monitor our hosts
+            create_distributed_wato_file(request.site_id, is_slave=True)
+        except Exception:
+            raise MKGeneralException(
+                _("Failed to deploy configuration: \"%s\". "
+                  "Please note that the site configuration has been synchronized "
+                  "partially.") % traceback.format_exc())
+
+        cmk.gui.watolib.changes.log_audit(
+            None, "replication",
+            _("Synchronized with master (my site id is %s.)") % request.site_id)
+
+        return True
+
+    def _save_site_globals_on_slave_site(self, tarcontent):
+        tmp_dir = cmk.utils.paths.tmp_dir + "/sitespecific-%s" % id(html)
+        try:
+            if not os.path.exists(tmp_dir):
+                store.mkdir(tmp_dir)
+
+            multitar.extract_from_buffer(tarcontent, [("dir", "sitespecific", tmp_dir)])
+
+            site_globals = store.load_data_from_file(tmp_dir + "/sitespecific.mk", {})
+            save_site_global_settings(site_globals)
+        finally:
+            shutil.rmtree(tmp_dir)

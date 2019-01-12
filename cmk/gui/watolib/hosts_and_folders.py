@@ -26,6 +26,7 @@
 
 import os
 import time
+import re
 import shutil
 import cStringIO
 
@@ -2409,3 +2410,40 @@ def collect_hosts(folder):
 
 def folder_preserving_link(add_vars):
     return Folder.current().url(add_vars)
+
+
+def make_action_link(vars_):
+    return folder_preserving_link(vars_ + [("_transid", html.transaction_manager.get())])
+
+
+def get_folder_title_path(path, with_links=False):
+    """Return a list with all the titles of the paths'
+    components, e.g. "muc/north" -> [ "Main Directory", "Munich", "North" ]"""
+    # In order to speed this up, we work with a per HTML-request cache
+    cache_name = "wato_folder_titles" + (with_links and "_linked" or "")
+    cache = html.set_cache_default(cache_name, {})
+    if path not in cache:
+        cache[path] = Folder.folder(path).title_path(with_links)
+    return cache[path]
+
+
+def get_folder_title(path):
+    """Return the title of a folder - which is given as a string path"""
+    folder = Folder.folder(path)
+    if folder:
+        return folder.title()
+    return path
+
+
+# TODO: Move to Folder()?
+def check_wato_foldername(htmlvarname, name, just_name=False):
+    if not just_name and Folder.current().has_subfolder(name):
+        raise MKUserError(htmlvarname, _("A folder with that name already exists."))
+
+    if not name:
+        raise MKUserError(htmlvarname, _("Please specify a name."))
+
+    if not re.match("^[-a-z0-9A-Z_]*$", name):
+        raise MKUserError(
+            htmlvarname,
+            _("Invalid folder name. Only the characters a-z, A-Z, 0-9, _ and - are allowed."))

@@ -40,6 +40,7 @@ from cmk.gui.plugins.wato import (
     mode_registry,
     WatoMode,
     WatoBackgroundJob,
+    get_hosts_from_checkboxes,
 )
 
 ParentScanTask = collections.namedtuple("ParentScanTask", ["site_id", "folder_path", "host_name"])
@@ -303,7 +304,7 @@ class ModeParentScan(WatoMode):
     def _get_current_folder_host_tasks(self):
         """only scan checked hosts in current folder, no recursion"""
         tasks = []
-        for host in watolib.get_hosts_from_checkboxes():
+        for host in get_hosts_from_checkboxes():
             if self._include_host(host, self._settings["select"]):
                 tasks.append(ParentScanTask(host.site_id(), host.folder().path(), host.name()))
         return tasks
@@ -356,7 +357,7 @@ class ModeParentScan(WatoMode):
         # Mode of action
         html.open_p()
         if not self._complete_folder:
-            num_selected = len(watolib.get_hosts_from_checkboxes())
+            num_selected = len(get_hosts_from_checkboxes())
             html.write_text(_("You have selected <b>%d</b> hosts for parent scan. ") % num_selected)
         html.p(
             _("The parent scan will try to detect the last gateway "

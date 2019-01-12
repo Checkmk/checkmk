@@ -45,6 +45,7 @@ from cmk.gui.plugins.wato import (
     WatoMode,
     WatoBackgroundJob,
     mode_registry,
+    get_hostnames_from_checkboxes,
 )
 
 DiscoveryTask = namedtuple("DiscoveryTask", ["site_id", "folder_path", "host_names"])
@@ -297,7 +298,7 @@ class ModeBulkDiscovery(WatoMode):
             else:
                 filterfunc = None
 
-            for host_name in watolib.get_hostnames_from_checkboxes(filterfunc):
+            for host_name in get_hostnames_from_checkboxes(filterfunc):
                 if restrict_to_hosts and host_name not in restrict_to_hosts:
                     continue
                 if host_name in skip_hosts:

@@ -29,6 +29,7 @@ import time
 
 import cmk.utils.store as store
 
+import cmk.gui.userdb as userdb
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 from cmk.gui.i18n import _
@@ -135,7 +136,7 @@ class ModeManageReadOnly(WatoMode):
                      ])),
                 ("rw_users",
                  ListOf(
-                     watolib.UserSelection(),
+                     userdb.UserSelection(),
                      title=_("Can still edit"),
                      help=_("Users listed here are still allowed to modify things."),
                      movable=False,

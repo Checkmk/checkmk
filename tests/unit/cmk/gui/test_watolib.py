@@ -3,6 +3,7 @@ import pytest  # type: ignore
 # Triggers plugin loading of plugins.wato which registers all the plugins
 import cmk.gui.wato  # pylint: disable=unused-import
 import cmk.gui.watolib as watolib
+import cmk.gui.watolib.rulespecs
 from cmk.gui.valuespec import (
     ValueSpec,
     Dictionary,
@@ -1620,8 +1621,9 @@ def test_rulespec_get_host_groups():
 
 
 def test_register_rule(monkeypatch):
-    monkeypatch.setattr(watolib, "g_rulespecs", watolib.Rulespecs())
-    monkeypatch.setattr(watolib, "rulespec_group_registry", watolib.RulespecGroupRegistry())
+    monkeypatch.setattr(cmk.gui.watolib.rulespecs, "g_rulespecs", watolib.Rulespecs())
+    monkeypatch.setattr(cmk.gui.watolib.rulespecs, "rulespec_group_registry",
+                        watolib.RulespecGroupRegistry())
 
     watolib.register_rule(
         "grouping",
@@ -1633,18 +1635,21 @@ def test_register_rule(monkeypatch):
         match="dict",
     )
 
-    group = watolib.get_rulegroup("grouping")
+    group = cmk.gui.watolib.rulespecs.get_rulegroup("grouping")
     assert group.name == "grouping"
     assert group.title == "grouping"
 
-    rulespec_names = [r.name for r in watolib.g_rulespecs.get_by_group("grouping")]
+    rulespec_names = [
+        r.name for r in cmk.gui.watolib.rulespecs.g_rulespecs.get_by_group("grouping")
+    ]
     assert "dingdong_group" in rulespec_names
     assert len(rulespec_names) == 1
 
 
 def test_register_check_parameters(monkeypatch):
-    monkeypatch.setattr(watolib, "g_rulespecs", watolib.Rulespecs())
-    monkeypatch.setattr(watolib, "rulespec_group_registry", watolib.RulespecGroupRegistry())
+    monkeypatch.setattr(cmk.gui.watolib.rulespecs, "g_rulespecs", watolib.Rulespecs())
+    monkeypatch.setattr(cmk.gui.watolib.rulespecs, "rulespec_group_registry",
+                        watolib.RulespecGroupRegistry())
 
     register_check_parameters(
         "netblabla",
@@ -1656,20 +1661,24 @@ def test_register_check_parameters(monkeypatch):
     )
 
     # Check either registration as discovery check ruleset
-    group = watolib.get_rulegroup("checkparams/netblabla")
+    group = cmk.gui.watolib.rulespecs.get_rulegroup("checkparams/netblabla")
     assert group.name == "checkparams/netblabla"
     assert group.title == "netblabla"
 
-    rulespec_names = [r.name for r in watolib.g_rulespecs.get_by_group("checkparams/netblabla")]
+    rulespec_names = [
+        r.name for r in cmk.gui.watolib.rulespecs.g_rulespecs.get_by_group("checkparams/netblabla")
+    ]
     assert "checkgroup_parameters:check_group_name" in rulespec_names
     assert len(rulespec_names) == 1
 
     # and also as static ruleset
-    group = watolib.get_rulegroup("static/netblabla")
+    group = cmk.gui.watolib.rulespecs.get_rulegroup("static/netblabla")
     assert group.name == "static/netblabla"
     assert group.title == "netblabla"
 
-    rulespec_names = [r.name for r in watolib.g_rulespecs.get_by_group("static/netblabla")]
+    rulespec_names = [
+        r.name for r in cmk.gui.watolib.rulespecs.g_rulespecs.get_by_group("static/netblabla")
+    ]
     assert "static_checks:check_group_name" in rulespec_names
     assert len(rulespec_names) == 1
 

@@ -52,6 +52,7 @@ from cmk.gui.valuespec import (
     DualListChoice,
     FixedValue,
 )
+from cmk.gui.watolib.users import delete_users, edit_users
 
 from cmk.gui.plugins.wato.utils.html_elements import (
     wato_styles,)
@@ -116,7 +117,7 @@ class ModeUsers(WatoMode):
                 _("Confirm deletion of user %s") % delid,
                 _("Do you really want to delete the user %s?") % delid)
             if c:
-                watolib.delete_users([delid])
+                delete_users([delid])
             elif c is False:
                 return ""
 
@@ -161,7 +162,7 @@ class ModeUsers(WatoMode):
                 _("Confirm deletion of %d users") % len(selected_users),
                 _("Do you really want to delete %d users?") % len(selected_users))
             if c:
-                watolib.delete_users(selected_users)
+                delete_users(selected_users)
             elif c is False:
                 return ""
 
@@ -616,7 +617,7 @@ class ModeEditUser(WatoMode):
         # Generate user "object" to update
         user_object = {self._user_id: {"attributes": user_attrs, "is_new_user": self._is_new_user}}
         # The following call validates and updated the users
-        watolib.edit_users(user_object)
+        edit_users(user_object)
         return "users"
 
     def page(self):

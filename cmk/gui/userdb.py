@@ -46,7 +46,11 @@ import cmk.gui.background_job as background_job
 import cmk.gui.gui_background_job as gui_background_job
 from cmk.gui.exceptions import MKUserError, MKInternalError
 from cmk.gui.log import logger
-from cmk.gui.valuespec import DualListChoice, TextAscii
+from cmk.gui.valuespec import (
+    DualListChoice,
+    TextAscii,
+    DropdownChoice,
+)
 import cmk.gui.i18n
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
@@ -356,6 +360,34 @@ def transform_userdb_automatic_sync(val):
         return "all"
 
     return val
+
+
+class UserSelection(DropdownChoice):
+    """Dropdown for choosing a multisite user"""
+
+    def __init__(self, **kwargs):
+        only_contacts = kwargs.get("only_contacts", False)
+        kwargs["choices"] = self._generate_wato_users_elements_function(
+            kwargs.get("none"), only_contacts=only_contacts)
+        kwargs["invalid_choice"] = "complain"  # handle vanished users correctly!
+        DropdownChoice.__init__(self, **kwargs)
+
+    def _generate_wato_users_elements_function(self, none_value, only_contacts=False):
+        def get_wato_users(nv):
+            users = load_users()
+            elements = [(name, "%s - %s" % (name, us.get("alias", name)))
+                        for (name, us) in users.items()
+                        if (not only_contacts or us.get("contactgroups"))]
+            elements.sort()
+            if nv is not None:
+                elements = [(None, none_value)] + elements
+            return elements
+
+        return lambda: get_wato_users(none_value)
+
+    def value_to_text(self, value):
+        text = DropdownChoice.value_to_text(self, value)
+        return text.split(" - ")[-1]
 
 
 #.

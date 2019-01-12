@@ -7,7 +7,7 @@ import cmk.utils.plugin_registry
 import cmk.gui.config as config
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.watolib.changes import ActivateChanges
+from cmk.gui.watolib.activate_changes import ActivateChanges
 
 
 class AutomationCommand(object):

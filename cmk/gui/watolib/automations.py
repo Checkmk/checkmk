@@ -40,8 +40,9 @@ import cmk.gui.hooks as hooks
 from cmk.gui.htmllib import Encoder
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.watolib.utils import (
-    mk_repr,)
+from cmk.gui.globals import html
+from cmk.gui.watolib.sites import SiteManagementFactory
+from cmk.gui.watolib.utils import mk_repr
 from cmk.gui.exceptions import (
     MKGeneralException,
     MKUserError,
@@ -172,8 +173,8 @@ def check_mk_remote_automation(site_id,
 # If the site is not up-to-date, synchronize it first.
 def sync_changes_before_remote_automation(site_id):
     # TODO: Cleanup this local import
-    import cmk.gui.watolib.changes
-    manager = cmk.gui.watolib.changes.ActivateChangesManager()
+    import cmk.gui.watolib.activate_changes
+    manager = cmk.gui.watolib.activate_changes.ActivateChangesManager()
     manager.load()
 
     if not manager.is_sync_needed(site_id):
@@ -276,3 +277,40 @@ def get_url(url, insecure, auth=None, data=None, files=None, timeout=None):
         raise MKUserError(None, _("HTTP Error - %d: %s") % (response.status_code, response.text))
 
     return response.text
+
+
+def do_site_login(site_id, name, password):
+    sites = SiteManagementFactory().factory().load_sites()
+    site = sites[site_id]
+    if not name:
+        raise MKUserError("_name", _("Please specify your administrator login on the remote site."))
+    if not password:
+        raise MKUserError("_passwd", _("Please specify your password."))
+
+    # Trying basic auth AND form based auth to ensure the site login works.
+    # Adding _ajaxid makes the web service fail silently with an HTTP code and
+    # not output HTML code for an error screen.
+    url = site["multisiteurl"] + 'login.py'
+    post_data = {
+        '_login': '1',
+        '_username': name,
+        '_password': password,
+        '_origtarget': 'automation_login.py?_version=%s&_edition_short=%s' % (cmk.__version__,
+                                                                              cmk.edition_short()),
+        '_plain_error': '1',
+    }
+    response = get_url(
+        url, site.get('insecure', False), auth=(name, password), data=post_data).strip()
+    if '<html>' in response.lower():
+        message = _("Authentication to web service failed.<br>Message:<br>%s") % \
+            html.strip_tags(html.strip_scripts(response))
+        if config.debug:
+            message += "<br>" + _("Automation URL:") + " <tt>%s</tt><br>" % url
+        raise MKAutomationException(message)
+    elif not response:
+        raise MKAutomationException(_("Empty response from web service"))
+    else:
+        try:
+            return ast.literal_eval(response)
+        except:
+            raise MKAutomationException(response)

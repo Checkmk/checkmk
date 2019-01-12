@@ -65,6 +65,7 @@ from cmk.gui.plugins.wato import (
     may_edit_ruleset,
     search_form,
     ConfigHostname,
+    HostTagCondition,
 )
 
 
@@ -1137,7 +1138,7 @@ class ModeRuleSearch(WatoMode):
                      size=60,
                      mode=RegExpUnicode.infix,
                  )),
-                ("rule_hosttags", watolib.HostTagCondition(title=_("Used host tags"))),
+                ("rule_hosttags", HostTagCondition(title=_("Used host tags"))),
                 ("rule_disabled",
                  DropdownChoice(
                      title=_("Disabled"),
@@ -1313,7 +1314,9 @@ class EditRuleMode(WatoMode):
                  (self._ruleset.title(), self._folder.alias_path())
 
     def _get_rule_conditions(self):
-        tag_list = watolib.get_tag_conditions()
+        vs_tag_conditions = HostTagCondition()
+        tag_list = vs_tag_conditions.from_html_vars("")
+        vs_tag_conditions.validate_value(tag_list, "")
 
         # Host list
         if not html.get_checkbox("explicit_hosts"):
@@ -1423,7 +1426,7 @@ class EditRuleMode(WatoMode):
 
         # Host tags
         forms.section(_("Host tags"))
-        watolib.render_condition_editor(self._rule.tag_specs)
+        HostTagCondition().render_input(varprefix="", value=self._rule.tag_specs)
         html.help(
             _("The rule will only be applied to hosts fulfilling all "
               "of the host tag conditions listed here, even if they appear "

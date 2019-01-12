@@ -36,7 +36,12 @@ from cmk.gui.table import table_element
 import cmk.gui.weblib as weblib
 import cmk.gui.forms as forms
 
-from cmk.gui.plugins.wato.utils import mode_registry, configure_attributes
+from cmk.gui.watolib.hosts_and_folders import Folder
+from cmk.gui.plugins.wato.utils import (
+    mode_registry,
+    configure_attributes,
+    get_hostnames_from_checkboxes,
+)
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode, WatoWebApiMode
 from cmk.gui.plugins.wato.utils.html_elements import wato_confirm
 from cmk.gui.plugins.wato.utils.main_menu import MainMenu, MenuItem
@@ -160,7 +165,7 @@ class ModeFolder(WatoMode):
         if html.request.var("_hosts_reset_sorting") or html.request.var("_hosts_sort"):
             return
 
-        selected_host_names = watolib.get_hostnames_from_checkboxes()
+        selected_host_names = get_hostnames_from_checkboxes()
         if len(selected_host_names) == 0:
             raise MKUserError(None,
                               _("Please select some hosts before doing bulk operations on hosts."))
@@ -730,7 +735,7 @@ class ModeFolder(WatoMode):
                 if subfolder:
                     folder = subfolder
                 else:
-                    name = watolib.create_wato_foldername(parts[0], folder)
+                    name = _create_wato_foldername(parts[0], folder)
                     folder = folder.create_subfolder(name, parts[0], {})
                 parts = parts[1:]
 
@@ -940,9 +945,44 @@ class ModeCreateFolder(FolderMode):
             name = html.request.var("name", "").strip()
             watolib.check_wato_foldername("name", name)
         else:
-            name = watolib.create_wato_foldername(title)
+            name = _create_wato_foldername(title)
 
         watolib.Folder.current().create_subfolder(name, title, attributes)
+
+
+# TODO: Move to Folder()?
+def _create_wato_foldername(title, in_folder=None):
+    if in_folder is None:
+        in_folder = Folder.current()
+
+    basename = _convert_title_to_filename(title)
+    c = 1
+    name = basename
+    while True:
+        if not in_folder.has_subfolder(name):
+            break
+        c += 1
+        name = "%s-%d" % (basename, c)
+    return name
+
+
+# TODO: Move to Folder()?
+def _convert_title_to_filename(title):
+    converted = ""
+    for c in title.lower():
+        if c == u'ä':
+            converted += 'ae'
+        elif c == u'ö':
+            converted += 'oe'
+        elif c == u'ü':
+            converted += 'ue'
+        elif c == u'ß':
+            converted += 'ss'
+        elif c in "abcdefghijklmnopqrstuvwxyz0123456789-_":
+            converted += c
+        else:
+            converted += "_"
+    return str(converted)
 
 
 class ModeAjaxSetFoldertree(WatoWebApiMode):

@@ -109,6 +109,7 @@ from cmk.gui.plugins.wato.utils import (
     RulespecGroupCheckParametersPrinters,
     RulespecGroupCheckParametersStorage,
     RulespecGroupCheckParametersVirtualization,
+    FullPathFolderChoice,
     rule_option_elements,
     search_form,
     ServiceDescriptionTranslation,
@@ -135,6 +136,10 @@ from cmk.gui.plugins.wato.utils import (
     wato_styles,
     ConfigHostname,
     SiteBackupJobs,
+    get_notification_parameters,
+    HostTagCondition,
+    get_hostnames_from_checkboxes,
+    get_hosts_from_checkboxes,
 )
 
 #.

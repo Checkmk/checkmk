@@ -29,6 +29,7 @@ automation functions on slaves,"""
 import traceback
 
 import cmk
+import cmk.utils.store as store
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.userdb as userdb
@@ -58,12 +59,12 @@ class ModeAutomationLogin(WatoWebApiMode):
         if not html.request.has_var("_version"):
             # Be compatible to calls from sites using versions before 1.5.0p10.
             # Deprecate with 1.7 by throwing an exception in this situation.
-            response = watolib.get_login_secret(create_on_demand=True)
+            response = _get_login_secret(create_on_demand=True)
         else:
             response = {
                 "version": cmk.__version__,
                 "edition_short": cmk.edition_short(),
-                "login_secret": watolib.get_login_secret(create_on_demand=True),
+                "login_secret": _get_login_secret(create_on_demand=True),
             }
         html.write_html(repr(response))
 
@@ -97,7 +98,7 @@ class ModeAutomation(WatoWebApiMode):
         if not secret:
             raise MKAuthException(_("Missing secret for automation command."))
 
-        if secret != watolib.get_login_secret():
+        if secret != _get_login_secret():
             raise MKAuthException(_("Invalid automation secret."))
 
     def page(self):
@@ -185,3 +186,18 @@ class ModeAutomation(WatoWebApiMode):
 
 
 register_page_handler("noauth:automation", lambda: ModeAutomation().page())
+
+
+def _get_login_secret(create_on_demand=False):
+    path = cmk.utils.paths.var_dir + "/wato/automation_secret.mk"
+
+    secret = store.load_data_from_file(path)
+    if secret is not None:
+        return secret
+
+    if not create_on_demand:
+        return None
+
+    secret = cmk.gui.utils.get_random_string(32)
+    store.save_data_to_file(path, secret)
+    return secret

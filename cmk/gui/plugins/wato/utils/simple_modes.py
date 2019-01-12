@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 """These modes implement a complete set of modes for managing a set of standard objects
 
-Together with watolib.WatoSimpleConfigFile() as store class this implements
+Together with WatoSimpleConfigFile() as store class this implements
 
 a) A list mode where all objects are shown. All objects can be deleted here.
    New objects can be created from here.
@@ -41,9 +41,14 @@ import cmk.gui.forms as forms
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.plugins.wato.utils.valuespecs import (
+    DocumentationURL,
+    RuleComment,
+)
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode
 from cmk.gui.plugins.wato.utils.context_buttons import global_buttons
 from cmk.gui.plugins.wato.utils.html_elements import wato_confirm
+from cmk.gui.watolib.simple_config_file import WatoSimpleConfigFile  # pylint: disable=unused-import
 from cmk.gui.valuespec import (
     ID,
     FixedValue,
@@ -129,7 +134,7 @@ class SimpleWatoModeBase(WatoMode):
     __metaclass__ = abc.ABCMeta
 
     def __init__(self, mode_type, store):
-        # type: (SimpleModeType, watolib.WatoSimpleConfigFile) -> None
+        # type: (SimpleModeType, WatoSimpleConfigFile) -> None
         self._mode_type = mode_type
         self._store = store
 
@@ -358,8 +363,8 @@ class SimpleEditMode(SimpleWatoModeBase):
                  allow_empty=False,
                  size=80,
              )),
-            ("comment", watolib.RuleComment()),
-            ("docu_url", watolib.DocumentationURL()),
+            ("comment", RuleComment()),
+            ("docu_url", DocumentationURL()),
         ] + disable_attr + site_attr
 
         return elements

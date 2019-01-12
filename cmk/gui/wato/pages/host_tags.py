@@ -43,6 +43,9 @@ from cmk.gui.valuespec import (
     OptionalDropdownChoice,
 )
 
+from cmk.gui.watolib.host_tags import is_builtin_aux_tag
+from cmk.gui.watolib.host_attributes import update_config_based_host_attributes
+
 from cmk.gui.plugins.wato.utils.main_menu import (
     MainMenu,
     MenuItem,
@@ -274,7 +277,7 @@ class ModeHostTags(WatoMode, watolib.HosttagsConfiguration):
                 table.row()
                 topic, title = watolib.parse_hosttag_title(title)
                 table.cell(_("Actions"), css="buttons")
-                if watolib.is_builtin_aux_tag(tag_id):
+                if is_builtin_aux_tag(tag_id):
                     html.i("(%s)" % _("builtin"))
                 else:
                     edit_url = watolib.folder_preserving_link([("mode", "edit_auxtag"), ("edit",
@@ -484,7 +487,7 @@ class ModeEditHosttagGroup(ModeEditHosttagConfiguration):
 
             # Make sure, that all tags are active (also manual ones from main.mk)
             config.load_config()
-            watolib.update_config_based_host_attributes()
+            update_config_based_host_attributes()
             add_change("edit-hosttags", _("Created new host tag group '%s'") % changed_tag_group.id)
             return "hosttags", _("Created new host tag group '%s'") % changed_tag_group.title
         else:
@@ -524,7 +527,7 @@ class ModeEditHosttagGroup(ModeEditHosttagConfiguration):
             if message:
                 changed_hosttags_config.save()
                 config.load_config()
-                watolib.update_config_based_host_attributes()
+                update_config_based_host_attributes()
                 add_change("edit-hosttags",
                            _("Edited host tag group %s (%s)") % (message, self._get_taggroup_id()))
                 return "hosttags", message != True and message or None

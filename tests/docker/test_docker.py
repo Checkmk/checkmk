@@ -51,8 +51,8 @@ def client():
     return docker.DockerClient(base_url="tcp://127.0.0.1:2376")
 
 
-def _image_name(edition, version):
-    return "docker-tests/check-mk-%s-%s-%s" % (edition, branch_name, version.version)
+def _image_name(version):
+    return "docker-tests/check-mk-%s-%s-%s" % (version.edition(), branch_name, version.version)
 
 
 def _prepare_build():
@@ -61,15 +61,15 @@ def _prepare_build():
                             cwd=build_path).wait() == 0
 
 
-def _build(request, client, edition, version, add_args=None):
+def _build(request, client, version, add_args=None):
     _prepare_build()
 
     image, build_logs = client.images.build(
         path=build_path,
-        tag=_image_name(edition, version),
+        tag=_image_name(version),
         buildargs={
             "CMK_VERSION": version.version,
-            "CMK_EDITION": edition,
+            "CMK_EDITION": version.edition(),
             "CMK_DL_CREDENTIALS": ":".join(testlib.get_cmk_download_credentials()),
         })
 
@@ -116,13 +116,25 @@ def _build(request, client, edition, version, add_args=None):
     return image, build_logs
 
 
-def _start(request, client, edition="enterprise", version=None, is_update=False, **kwargs):
+def _pull(client, version):
+    if version.edition() != "raw":
+        raise Exception("Can only fetch raw edition at the moment")
+
+    return client.images.pull("checkmk/check-mk-raw", tag=version.version)
+
+
+def _start(request, client, version=None, is_update=False, **kwargs):
     if version is None:
         version = build_version()
 
-    _image, _build_logs = _build(request, client, edition, version)
+    if version.version == build_version().version:
+        _image, _build_logs = _build(request, client, version)
+    else:
+        # In case the given version is not the current branch version, don't
+        # try to build it. Download it instead!
+        _image = _pull(client, version)
 
-    c = client.containers.run(image=_image_name(edition, version), detach=True, **kwargs)
+    c = client.containers.run(image=_image.id, detach=True, **kwargs)
 
     try:
         site_id = kwargs.get("environment", {}).get("CMK_SITE_ID", "cmk")
@@ -156,7 +168,7 @@ def _start(request, client, edition="enterprise", version=None, is_update=False,
         #    "managed",
     ])
 def test_start_simple(request, client, edition):
-    c = _start(request, client, edition)
+    c = _start(request, client)
 
     cmds = [p[-1] for p in c.top()["Processes"]]
     assert "cron -f" in cmds
@@ -226,10 +238,8 @@ def test_start_execute_custom_command(request, client):
 
 
 def test_start_with_custom_command(request, client, version):
-    edition = "enterprise"
-    _build(request, client, edition, version)
-    output = client.containers.run(
-        image=_image_name(edition, version), detach=False, command=["bash", "-c", "echo 1"])
+    image, _build_logs = _build(request, client, version)
+    output = client.containers.run(image=image.id, detach=False, command=["bash", "-c", "echo 1"])
 
     assert "Created new site" in output
     assert output.endswith("1\n")
@@ -243,7 +253,7 @@ def test_build_using_local_deb(request, client, version):
             f.write("")
 
         with pytest.raises(docker.errors.BuildError):
-            _build(request, client, "enterprise", version)
+            _build(request, client, version)
     finally:
         os.unlink(pkg_path)
 
@@ -256,7 +266,7 @@ def test_build_using_local_gpg_pubkey(request, client, version):
             f.write("")
 
         with pytest.raises(docker.errors.BuildError):
-            _build(request, client, "enterprise", version)
+            _build(request, client, version)
     finally:
         os.unlink(pkg_path)
 
@@ -289,7 +299,7 @@ def test_update(request, client, version):
     old_version = testlib.CMKVersion(
         version="1.5.0p5",
         branch="1.5.0",
-        edition=testlib.CMKVersion.CEE,
+        edition=testlib.CMKVersion.CRE,
     )
 
     # 1. create container with old version and add a file to mark the pre-update state
@@ -309,11 +319,10 @@ def test_update(request, client, version):
     # 3. start intermediate container in the background and keep it running.
     # Don't use the regular startup procedure (which would start the site). Use
     # read to wait for termination of the container
-    edition = "enterprise"
-    _build(request, client, edition, version)
+    image, _build_logs = _build(request, client, version)
     c_tmp = client.containers.run(
         name="%s-update" % container_name,
-        image=_image_name(edition, version),
+        image=image.id,
         detach=True,
         command=["bash", "-c", "echo HI ; read"],
         stdin_open=True,

@@ -49,8 +49,16 @@ setup:
 setversion:
 	sed -i 's/^ARG CMK_VERSION=.*$$/ARG CMK_VERSION="$(NEW_VERSION)"/g' Dockerfile
 
+# When executed by tests/docker/test_docker.py the update test creates a
+# 1.5.0 container which needs the distro file from the 1.5.0 branch. In
+# other build cases (e.g. during daily builds) we only have a source tar
+# and no git repository. In this case simply use the available distro file.
 distro-%.mk:
-	git show $(GIT_REF):../omd/distros/DEBIAN_9.mk > $@
+	if [ -d ../.git ]; then \
+	    git show $(GIT_REF):../omd/distros/DEBIAN_9.mk > $@ ; \
+	else \
+	    cp ../omd/distros/DEBIAN_9.mk $@ ; \
+	fi
 
 needed-packages-%: distro-%.mk
 	echo -e '$@:\n\t@echo \$$(OS_PACKAGES) > $@\n' | \

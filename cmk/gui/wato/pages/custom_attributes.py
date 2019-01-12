@@ -38,6 +38,8 @@ import cmk.utils.store as store
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
+from cmk.gui.watolib.host_attributes import declare_custom_host_attrs
+from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.plugins.wato import WatoMode, add_change, mode_registry, wato_confirm
 
 
@@ -47,9 +49,9 @@ def update_user_custom_attrs():
 
 
 def update_host_custom_attrs():
-    watolib.declare_custom_host_attrs()
-    watolib.Folder.invalidate_caches()
-    watolib.Folder.root_folder().rewrite_hosts_files()
+    declare_custom_host_attrs()
+    Folder.invalidate_caches()
+    Folder.root_folder().rewrite_hosts_files()
 
 
 def load_custom_attrs_from_mk_file(lock):

@@ -31,7 +31,11 @@ import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
 
-from cmk.gui.plugins.wato.utils import mode_registry, configure_attributes
+from cmk.gui.plugins.wato.utils import (
+    mode_registry,
+    configure_attributes,
+    ConfigHostname,
+)
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode
 from cmk.gui.plugins.wato.utils.context_buttons import host_status_button
 
@@ -158,7 +162,7 @@ class HostMode(WatoMode):
 
     def _vs_cluster_nodes(self):
         return ListOfStrings(
-            valuespec=watolib.ConfigHostname(),
+            valuespec=ConfigHostname(),
             orientation="horizontal",
         )
 

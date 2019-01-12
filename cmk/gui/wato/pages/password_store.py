@@ -25,7 +25,6 @@
 # Boston, MA 02110-1301 USA.
 
 import cmk.gui.config as config
-import cmk.gui.watolib as watolib
 import cmk.gui.userdb as userdb
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
@@ -37,6 +36,7 @@ from cmk.gui.valuespec import (
     DualListChoice,
 )
 
+from cmk.gui.watolib.password_store import PasswordStore
 from cmk.gui.plugins.wato import (
     ConfigDomainCore,
     SimpleModeType,
@@ -76,7 +76,7 @@ class ModePasswords(SimpleListMode):
     def __init__(self):
         super(ModePasswords, self).__init__(
             mode_type=PasswordStoreModeType(),
-            store=watolib.PasswordStore(),
+            store=PasswordStore(),
         )
         self._contact_groups = userdb.load_group_information().get("contact", {})
 
@@ -137,7 +137,7 @@ class ModeEditPassword(SimpleEditMode):
     def __init__(self):
         super(ModeEditPassword, self).__init__(
             mode_type=PasswordStoreModeType(),
-            store=watolib.PasswordStore(),
+            store=PasswordStore(),
         )
 
     def _vs_individual_elements(self):

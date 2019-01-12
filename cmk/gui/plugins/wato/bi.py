@@ -78,6 +78,7 @@ from cmk.gui.plugins.wato import (
     global_buttons,
     add_change,
     wato_confirm,
+    HostTagCondition,
 )
 
 #   .--Base class----------------------------------------------------------.
@@ -651,7 +652,7 @@ class ModeBI(WatoMode, BIManagement):
                          ('child', _("The found hosts' childs")),
                          ('child_with', _("The found hosts' childs (with child filtering)"),
                           Tuple(elements=[
-                              watolib.HostTagCondition(title=_("Child Host Tags:")),
+                              HostTagCondition(title=_("Child Host Tags:")),
                               self._host_valuespec(_("Child host name:")),
                           ])),
                          ('parent', _("The found hosts' parents")),
@@ -668,7 +669,7 @@ class ModeBI(WatoMode, BIManagement):
                          'The place holder <tt>$HOSTNAME$</tt> contains the name of the child '
                          'host and <tt>$2$</tt> the name of the parent host.'),
                  ),
-                 watolib.HostTagCondition(title=_("Host Tags:")),
+                 HostTagCondition(title=_("Host Tags:")),
                  self._host_valuespec(_("Host name:")),
                  CascadingDropdown(
                      title=_("Nodes to create:"),
@@ -682,7 +683,7 @@ class ModeBI(WatoMode, BIManagement):
              ])),
             ("foreach_service", _("Create nodes based on a service search"),
              Tuple(elements=[
-                 watolib.HostTagCondition(title=_("Host Tags:")),
+                 HostTagCondition(title=_("Host Tags:")),
                  self._host_valuespec(_("Host name:")),
                  TextAscii(
                      title=_("Service Regex:"),

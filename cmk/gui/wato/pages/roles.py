@@ -61,15 +61,13 @@ from cmk.gui.permissions import (
 from cmk.gui.plugins.wato.utils.html_elements import (
     search_form,)
 
-from cmk.gui.watolib import (
-    get_search_expression,)
-
 from cmk.gui.plugins.wato import (
     WatoMode,
     mode_registry,
     wato_confirm,
     global_buttons,
     make_action_link,
+    get_search_expression,
 )
 
 

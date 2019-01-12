@@ -127,7 +127,7 @@ def page_api():
             config.user.need_permission(permission)
 
         # Initialize host and site attributes
-        watolib.init_watolib_datastructures()
+        watolib.init_wato_datastructures()
 
         # Prepare request_object
         # Most of the time the request is given as json

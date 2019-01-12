@@ -32,13 +32,14 @@ import cmk
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
+from cmk.gui.valuespec import Checkbox, Transform
 
 from cmk.gui.plugins.watolib.utils import (
     config_variable_group_registry,
     config_variable_registry,
     ConfigDomain,
 )
-from cmk.gui.plugins.wato.utils import mode_registry
+from cmk.gui.plugins.wato.utils import mode_registry, get_search_expression
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode
 from cmk.gui.plugins.wato.utils.html_elements import search_form, wato_confirm
 from cmk.gui.plugins.wato.utils.context_buttons import global_buttons
@@ -62,7 +63,7 @@ class GlobalSettingsMode(WatoMode):
         self._current_settings = {}
 
     def _from_vars(self):
-        self._search = watolib.get_search_expression()
+        self._search = get_search_expression()
         self._show_only_modified = html.request.has_var("show_only_modified")
 
     def _groups(self, show_all=False):
@@ -185,7 +186,7 @@ class GlobalSettingsMode(WatoMode):
                     modified_cls = None
                     title = None
 
-                if watolib.is_a_checkbox(valuespec):
+                if is_a_checkbox(valuespec):
                     html.open_div(class_=["toggle_switch_container", modified_cls])
                     html.toggle_switch(
                         enabled=value,
@@ -220,15 +221,20 @@ class EditGlobalSettingMode(WatoMode):
             raise MKUserError("varname",
                               _("The global setting \"%s\" does not exist.") % self._varname)
 
-        if not watolib.may_edit_configvar(self._varname):
+        if not self._may_edit_configvar(self._varname):
             raise MKAuthException(_("You are not permitted to edit this global setting."))
 
         self._current_settings = watolib.load_configuration_settings()
         self._global_settings = {}
 
+    def _may_edit_configvar(self, varname):
+        if varname in ["actions"]:
+            return config.user.may("wato.add_or_modify_executables")
+        return True
+
     def action(self):
         if html.request.var("_reset"):
-            if not watolib.is_a_checkbox(self._valuespec):
+            if not is_a_checkbox(self._valuespec):
                 c = wato_confirm(
                     _("Resetting configuration variable"),
                     _("Do you really want to reset this configuration variable "
@@ -370,7 +376,7 @@ class ModeEditGlobals(GlobalSettingsMode):
         config_variable = config_variable_registry[varname]()
         def_value = self._default_values[varname]
 
-        if action == "reset" and not watolib.is_a_checkbox(config_variable.valuespec()):
+        if action == "reset" and not is_a_checkbox(config_variable.valuespec()):
             c = wato_confirm(
                 _("Resetting configuration variable"),
                 _("Do you really want to reset the configuration variable <b>%s</b> "
@@ -477,3 +483,12 @@ class ModeEditSiteGlobalSetting(EditGlobalSettingMode):
     def _show_global_setting(self):
         forms.section(_("Global setting"))
         html.write_html(self._valuespec.value_to_text(self._global_settings[self._varname]))
+
+
+def is_a_checkbox(vs):
+    """Checks if a valuespec is a Checkbox"""
+    if isinstance(vs, Checkbox):
+        return True
+    elif isinstance(vs, Transform):
+        return is_a_checkbox(vs._valuespec)
+    return False

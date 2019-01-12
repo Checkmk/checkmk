@@ -2637,7 +2637,7 @@ def synchronize_profiles_to_sites(logger, profiles_to_synchronize):
 
 
 def _sychronize_profile_worker(site_configuration):
-    import cmk.gui.watolib as watolib
+    import cmk.gui.watolib.user_profile as user_profile
     states, site_id, site, profiles_to_synchronize = site_configuration
 
     if not site.get("replication"):
@@ -2652,7 +2652,7 @@ def _sychronize_profile_worker(site_configuration):
             site_id, error_text=_("Site %s is dead") % site_id, failed=True)
 
     try:
-        result = watolib.push_user_profiles_to_site_transitional_wrapper(
+        result = user_profile.push_user_profiles_to_site_transitional_wrapper(
             site, profiles_to_synchronize)
         if result != True:
             return SynchronizationResult(site_id, error_text=result, failed=True)

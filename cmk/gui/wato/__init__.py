@@ -303,6 +303,10 @@ from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersPrinters,
     RulespecGroupCheckParametersStorage,
     RulespecGroupCheckParametersVirtualization,
+    get_hostnames_from_checkboxes,
+    get_hosts_from_checkboxes,
+    get_search_expression,
+    register_notification_parameters,
 )
 # Has to be kept for compatibility with pre 1.6 register_rule() and register_check_parameters()
 # calls in the WATO plugin context
@@ -319,13 +323,12 @@ subgroup_inventory = RulespecGroupCheckParametersDiscovery().sub_group_name
 # Make some functions of watolib available to WATO plugins without using the
 # watolib module name. This is mainly done for compatibility reasons to keep
 # the current plugin API functions working
+import cmk.gui.watolib.network_scan
 import cmk.gui.watolib.read_only
 from cmk.gui.watolib import (
-    PasswordStore,
     register_rulegroup,
     register_rule,
     add_replication_paths,
-    UserSelection,
     ConfigDomainGUI,
     ConfigDomainCore,
     ConfigDomainOMD,
@@ -333,7 +336,6 @@ from cmk.gui.watolib import (
     add_change,
     add_service_change,
     site_neutral_path,
-    register_notification_parameters,
     declare_host_attribute,
     Attribute,
     ContactGroupsAttribute,
@@ -346,16 +348,7 @@ from cmk.gui.watolib import (
     ACResultOK,
     LivestatusViaTCP,
     make_action_link,
-    is_a_checkbox,
-    get_search_expression,
-    may_edit_configvar,
-    multifolder_host_rule_match_conditions,
-    simple_host_rule_match_conditions,
-    transform_simple_to_multi_host_rule_match_conditions,
-    WatoBackgroundJob,
     init_wato_datastructures,
-    get_hostnames_from_checkboxes,
-    get_hosts_from_checkboxes,
 )
 from cmk.gui.plugins.watolib.utils import (
     register_configvar,
@@ -707,7 +700,7 @@ cmk.gui.pages.register_page_handler("fetch_agent_output", lambda: PageFetchAgent
 
 
 @gui_background_job.job_registry.register
-class FetchAgentOutputBackgroundJob(WatoBackgroundJob):
+class FetchAgentOutputBackgroundJob(cmk.gui.plugins.wato.utils.WatoBackgroundJob):
     job_prefix = "agent-output-"
     gui_title = _("Fetch agent output")
 
@@ -810,7 +803,7 @@ def execute_network_scan_job():
 
     try:
         if config.site_is_local(folder.site_id()):
-            found = watolib.do_network_scan(folder)
+            found = cmk.gui.watolib.network_scan.do_network_scan(folder)
         else:
             found = watolib.do_remote_automation(
                 config.site(folder.site_id()), "network-scan", [("folder", folder.path())])

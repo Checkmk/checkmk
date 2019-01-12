@@ -44,6 +44,7 @@ from cmk.gui.plugins.wato.utils.html_elements import wato_styles
 from cmk.gui.plugins.wato.utils.context_buttons import home_button
 import cmk.gui.watolib.snapshots
 import cmk.gui.watolib.changes
+import cmk.gui.watolib.activate_changes
 
 from cmk.gui.pages import register_page_handler
 from cmk.gui.display_options import display_options
@@ -130,15 +131,14 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
         watolib.add_change(
             "changes-discarded",
             msg,
-            sites=self.activation_site_ids(),
             domains=watolib.ConfigDomain.enabled_domains(),
             need_restart=True)
 
         self._extract_snapshot(file_to_restore)
-        cmk.gui.watolib.changes.execute_activate_changes(
+        cmk.gui.watolib.activate_changes.execute_activate_changes(
             [d.ident for d in watolib.ConfigDomain.enabled_domains()])
 
-        for site_id in self.activation_site_ids():
+        for site_id in cmk.gui.watolib.changes.activation_site_ids():
             self.confirm_site_changes(site_id)
 
         html.header(
@@ -343,7 +343,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
         with table_element(
                 "site-status", searchable=False, sortable=False, css="activation") as table:
 
-            for site_id, site in sort_sites(self._activation_sites()):
+            for site_id, site in sort_sites(cmk.gui.watolib.changes.activation_sites()):
                 table.row()
 
                 site_status, status = self._get_site_status(site_id, site)
@@ -526,4 +526,4 @@ class AutomationActivateChanges(watolib.AutomationCommand):
         return ActivateChangesRequest(site_id=site_id, domains=domains)
 
     def execute(self, request):
-        return cmk.gui.watolib.changes.execute_activate_changes(request.domains)
+        return cmk.gui.watolib.activate_changes.execute_activate_changes(request.domains)

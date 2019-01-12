@@ -30,22 +30,28 @@
 import os
 import abc
 import json
+import re
 import subprocess
+import time
 
 import six
 
 import cmk.utils.plugin_registry
 
+import cmk.gui.mkeventd
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
 import cmk.gui.backup as backup
 import cmk.gui.hooks as hooks
+import cmk.gui.weblib as weblib
+import cmk.gui.gui_background_job as gui_background_job
 from cmk.gui.i18n import _u, _
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 from cmk.gui.exceptions import MKUserError, MKGeneralException
 from cmk.gui.valuespec import (
     TextAscii,
+    TextAsciiAutocomplete,
     Dictionary,
     RadioChoice,
     Tuple,
@@ -70,6 +76,7 @@ from cmk.gui.valuespec import (
     DualListChoice,
     ValueSpec,
     Url,
+    MonitoredHostname,
 )
 from cmk.gui.plugins.wato.utils.base_modes import (
     WatoMode,
@@ -99,11 +106,16 @@ from cmk.gui.plugins.wato.utils.main_menu import (
     WatoModule,
     register_modules,
 )
+from cmk.gui.plugins.wato.utils.valuespecs import (
+    DocumentationURL,
+    RuleComment,
+)
 import cmk.gui.watolib as watolib
+from cmk.gui.watolib.password_store import PasswordStore
+from cmk.gui.watolib.host_tags import group_hosttags_by_topic
 from cmk.gui.watolib.timeperiods import TimeperiodSelection
+from cmk.gui.watolib.users import notification_script_title
 from cmk.gui.watolib import (
-    service_levels,
-    get_search_expression,
     multisite_dir,
     wato_root_dir,
     user_script_title,
@@ -112,14 +124,12 @@ from cmk.gui.watolib import (
     wato_fileheader,
     add_change,
     log_audit,
-    site_neutral_path,
     rulespec_group_registry,
     RulespecGroup,
     RulespecSubGroup,
     get_rulegroup,
     register_rule,
     declare_host_attribute,
-    register_notification_parameters,
     add_replication_paths,
     make_action_link,
     folder_preserving_link,
@@ -141,13 +151,8 @@ from cmk.gui.watolib import (
     ConfigDomainGUI,
     ConfigDomainCACertificates,
     LivestatusViaTCP,
-    WatoBackgroundJob,
-    UserSelection,
-    multifolder_host_rule_match_conditions,
-    simple_host_rule_match_conditions,
-    transform_simple_to_multi_host_rule_match_conditions,
-    rule_option_elements,
-    ConfigHostname,
+    site_neutral_path,
+    lock_exclusive,
 )
 from cmk.gui.plugins.watolib.utils import (
     config_variable_group_registry,
@@ -568,7 +573,7 @@ class GroupSelection(ElementSelection):
 
 
 def passwordstore_choices():
-    store = watolib.PasswordStore()
+    store = PasswordStore()
     return [(ident, pw["title"])
             for ident, pw in store.filter_usable_entries(store.load_for_reading()).items()]
 
@@ -1265,6 +1270,26 @@ class CheckTypeSelection(DualListChoice):
         return elements
 
 
+class ConfigHostname(TextAsciiAutocomplete):
+    """Hostname input with dropdown completion
+
+    Renders an input field for entering a host name while providing an auto completion dropdown field.
+    Fetching the choices from the current WATO config"""
+    ident = "monitored_hostname"
+
+    def __init__(self, **kwargs):
+        super(ConfigHostname, self).__init__(
+            completion_ident=self.ident, completion_params={}, **kwargs)
+
+    @classmethod
+    def autocomplete_choices(cls, value, params):
+        """Return the matching list of dropdown choices
+        Called by the webservice with the current input field value and the completions_params to get the list of choices"""
+        all_hosts = watolib.Host.all()
+        match_pattern = re.compile(value, re.IGNORECASE)
+        return [(h, h) for h in all_hosts.keys() if match_pattern.search(h) is not None]
+
+
 class EventsMode(WatoMode):
     __metaclass__ = abc.ABCMeta
 
@@ -1355,7 +1380,7 @@ class EventsMode(WatoMode):
 
     @classmethod
     def _generic_rule_match_conditions(cls):
-        return simple_host_rule_match_conditions() + [
+        return _simple_host_rule_match_conditions() + [
             ( "match_servicegroups",
               userdb.GroupChoice("service",
                   title = _("Match Service Groups"),
@@ -1460,7 +1485,7 @@ class EventsMode(WatoMode):
             ),
             ( "match_contacts",
               ListOf(
-                  UserSelection(only_contacts = True),
+                  userdb.UserSelection(only_contacts = True),
                       title = _("Match Contacts"),
                       help = _("The host/service must have one of the selected contacts."),
                       movable = False,
@@ -1483,8 +1508,8 @@ class EventsMode(WatoMode):
                 orientation = "horizontal",
                 show_titles = False,
                 elements = [
-                  DropdownChoice(label = _("from:"),  choices = service_levels, prefix_values = True),
-                  DropdownChoice(label = _(" to:"),  choices = service_levels, prefix_values = True),
+                  DropdownChoice(label = _("from:"),  choices = cmk.gui.mkeventd.service_levels, prefix_values = True),
+                  DropdownChoice(label = _(" to:"),  choices = cmk.gui.mkeventd.service_levels, prefix_values = True),
                 ],
               ),
             ),
@@ -1895,3 +1920,373 @@ class SiteBackupJobs(backup.Jobs):
 # TODO: Kept for compatibility with pre-1.6 WATO plugins
 def register_hook(name, func):
     hooks.register_from_plugin(name, func)
+
+
+_notification_parameters = {}
+
+
+def get_notification_parameters():
+    return _notification_parameters
+
+
+def register_notification_parameters(scriptname, valuespec):
+    rulespec_group_class = rulespec_group_registry["monconf/notifications"]
+    _register_user_script_parameters(_notification_parameters, "notification_parameters",
+                                     rulespec_group_class, scriptname, valuespec)
+
+
+def _register_user_script_parameters(ruleset_dict, ruleset_dict_name, ruleset_group, scriptname,
+                                     valuespec):
+    script_title = notification_script_title(scriptname)
+    title = _("Parameters for %s") % script_title
+    valuespec._title = _("Call with the following parameters:")
+
+    register_rule(
+        ruleset_group,
+        ruleset_dict_name + ":" + scriptname,
+        valuespec,
+        title,
+        itemtype=None,
+        match="dict")
+    ruleset_dict[scriptname] = valuespec
+
+
+class HostTagCondition(ValueSpec):
+    """ValueSpec for editing a tag-condition"""
+
+    def render_input(self, varprefix, value):
+        self._render_condition_editor(varprefix, value)
+
+    def from_html_vars(self, varprefix):
+        return self._get_tag_conditions(varprefix)
+
+    def _get_tag_conditions(self, varprefix):
+        """Retrieve current tag condition settings from HTML variables"""
+        if varprefix:
+            varprefix += "_"
+        # Main tags
+        tag_list = []
+        for entry in config.host_tag_groups():
+            id_, _title, tags = entry[:3]
+            mode = html.request.var(varprefix + "tag_" + id_)
+            if len(tags) == 1:
+                tagvalue = tags[0][0]
+            else:
+                tagvalue = html.request.var(varprefix + "tagvalue_" + id_)
+
+            if mode == "is":
+                tag_list.append(tagvalue)
+            elif mode == "isnot":
+                tag_list.append("!" + tagvalue)
+
+        # Auxiliary tags
+        for id_, _title in config.aux_tags():
+            mode = html.request.var(varprefix + "auxtag_" + id_)
+            if mode == "is":
+                tag_list.append(id_)
+            elif mode == "isnot":
+                tag_list.append("!" + id_)
+
+        return tag_list
+
+    def canonical_value(self):
+        return []
+
+    def value_to_text(self, value):
+        return "|".join(value)
+
+    def validate_datatype(self, value, varprefix):
+        if not isinstance(value, list):
+            raise MKUserError(varprefix,
+                              _("The list of host tags must be a list, but "
+                                "is %r") % type(value))
+        for x in value:
+            if not isinstance(x, str):
+                raise MKUserError(
+                    varprefix,
+                    _("The list of host tags must only contain strings "
+                      "but also contains %r") % x)
+
+    def validate_value(self, value, varprefix):
+        pass
+
+    def _render_condition_editor(self, varprefix, tag_specs):
+        """Render HTML input fields for editing a tag based condition"""
+        if varprefix:
+            varprefix += "_"
+
+        if not config.aux_tags() + config.host_tag_groups():
+            html.write(
+                _("You have not configured any <a href=\"wato.py?mode=hosttags\">host tags</a>."))
+            return
+
+        # Determine current (default) setting of tag by looking
+        # into tag_specs (e.g. [ "snmp", "!tcp", "test" ] )
+        def current_tag_setting(choices):
+            default_tag = None
+            ignore = True
+            for t in tag_specs:
+                if t[0] == '!':
+                    n = True
+                    t = t[1:]
+                else:
+                    n = False
+                if t in [x[0] for x in choices]:
+                    default_tag = t
+                    ignore = False
+                    negate = n
+            if ignore:
+                deflt = "ignore"
+            elif negate:
+                deflt = "isnot"
+            else:
+                deflt = "is"
+            return default_tag, deflt
+
+        # Show dropdown with "is/isnot/ignore" and beginning
+        # of div that is switched visible by is/isnot
+        def tag_condition_dropdown(tagtype, deflt, id_):
+            html.open_td()
+            dropdown_id = varprefix + tagtype + "_" + id_
+            onchange = "cmk.valuespecs.toggle_tag_dropdown(this, '%stag_sel_%s');" % (varprefix,
+                                                                                      id_)
+            choices = [
+                ("ignore", _("ignore")),
+                ("is", _("is")),
+                ("isnot", _("isnot")),
+            ]
+            html.dropdown(dropdown_id, choices, deflt=deflt, onchange=onchange)
+            html.close_td()
+
+            html.open_td(class_="tag_sel")
+            if html.form_submitted():
+                div_is_open = html.request.var(dropdown_id, "ignore") != "ignore"
+            else:
+                div_is_open = deflt != "ignore"
+            html.open_div(
+                id_="%stag_sel_%s" % (varprefix, id_),
+                style="display: none;" if not div_is_open else None)
+
+        auxtags = group_hosttags_by_topic(config.aux_tags())
+        hosttags = group_hosttags_by_topic(config.host_tag_groups())
+        all_topics = set([])
+        for topic, _taggroups in auxtags + hosttags:
+            all_topics.add(topic)
+        all_topics = list(all_topics)
+        all_topics.sort()
+        make_foldable = len(all_topics) > 1
+        for topic in all_topics:
+            if make_foldable:
+                html.begin_foldable_container("topic", varprefix + topic, True,
+                                              HTML("<b>%s</b>" % (_u(topic))))
+            html.open_table(class_=["hosttags"])
+
+            # Show main tags
+            for t, grouped_tags in hosttags:
+                if t == topic:
+                    for entry in grouped_tags:
+                        id_, title, choices = entry[:3]
+                        html.open_tr()
+                        html.open_td(class_="title")
+                        html.write("%s: &nbsp;" % _u(title))
+                        html.close_td()
+                        default_tag, deflt = current_tag_setting(choices)
+                        tag_condition_dropdown("tag", deflt, id_)
+                        if len(choices) == 1:
+                            html.write_text(" " + _("set"))
+                        else:
+                            html.dropdown(
+                                varprefix + "tagvalue_" + id_,
+                                [(t[0], _u(t[1])) for t in choices if t[0] is not None],
+                                deflt=default_tag)
+                        html.close_div()
+                        html.close_td()
+                        html.close_tr()
+
+            # And auxiliary tags
+            for t, grouped_tags in auxtags:
+                if t == topic:
+                    for id_, title in grouped_tags:
+                        html.open_tr()
+                        html.open_td(class_="title")
+                        html.write("%s: &nbsp;" % _u(title))
+                        html.close_td()
+                        default_tag, deflt = current_tag_setting([(id_, _u(title))])
+                        tag_condition_dropdown("auxtag", deflt, id_)
+                        html.write_text(" " + _("set"))
+                        html.close_div()
+                        html.close_td()
+                        html.close_tr()
+
+            html.close_table()
+            if make_foldable:
+                html.end_foldable_container()
+
+
+def transform_simple_to_multi_host_rule_match_conditions(value):
+    if value and "match_folder" in value:
+        value["match_folders"] = [value.pop("match_folder")]
+    return value
+
+
+def _simple_host_rule_match_conditions():
+    return [_site_rule_match_condition(),
+            _single_folder_rule_match_condition()] + _common_host_rule_match_conditions()
+
+
+def multifolder_host_rule_match_conditions():
+    return [_site_rule_match_condition(),
+            _multi_folder_rule_match_condition()] + _common_host_rule_match_conditions()
+
+
+def _site_rule_match_condition():
+    return (
+        "match_site",
+        DualListChoice(
+            title=_("Match site"),
+            help=_("This condition makes the rule match only hosts of "
+                   "the selected sites."),
+            choices=config.site_attribute_choices,
+        ),
+    )
+
+
+def _multi_folder_rule_match_condition():
+    return (
+        "match_folders",
+        ListOf(
+            FullPathFolderChoice(
+                title=_("Folder"),
+                help=_("This condition makes the rule match only hosts that are managed "
+                       "via WATO and that are contained in this folder - either directly "
+                       "or in one of its subfolders."),
+            ),
+            add_label=_("Add additional folder"),
+            title=_("Match folders"),
+            movable=False),
+    )
+
+
+def _common_host_rule_match_conditions():
+    return [
+        ("match_hosttags", HostTagCondition(title=_("Match Host Tags"))),
+        ("match_hostgroups",
+         userdb.GroupChoice(
+             "host",
+             title=_("Match Host Groups"),
+             help=_("The host must be in one of the selected host groups"),
+             allow_empty=False,
+         )),
+        ("match_hosts",
+         ListOfStrings(
+             valuespec=MonitoredHostname(),
+             title=_("Match only the following hosts"),
+             size=24,
+             orientation="horizontal",
+             allow_empty=False,
+             empty_text=
+             _("Please specify at least one host. Disable the option if you want to allow all hosts."
+              ),
+         )),
+        ("match_exclude_hosts",
+         ListOfStrings(
+             valuespec=MonitoredHostname(),
+             title=_("Exclude the following hosts"),
+             size=24,
+             orientation="horizontal",
+         ))
+    ]
+
+
+def _single_folder_rule_match_condition():
+    return (
+        "match_folder",
+        FolderChoice(
+            title=_("Match folder"),
+            help=_("This condition makes the rule match only hosts that are managed "
+                   "via WATO and that are contained in this folder - either directly "
+                   "or in one of its subfolders."),
+        ),
+    )
+
+
+def get_search_expression():
+    search = html.get_unicode_input("search")
+    if search is not None:
+        search = search.strip().lower()
+    return search
+
+
+def get_hostnames_from_checkboxes(filterfunc=None):
+    """Create list of all host names that are select with checkboxes in the current file.
+    This is needed for bulk operations."""
+    show_checkboxes = html.request.var("show_checkboxes") == "1"
+    if show_checkboxes:
+        selected = weblib.get_rowselection('wato-folder-/' + watolib.Folder.current().path())
+    search_text = html.request.var("search")
+
+    selected_host_names = []
+    for host_name, host in sorted(watolib.Folder.current().hosts().items()):
+        if (not search_text or (search_text.lower() in host_name.lower())) \
+            and (not show_checkboxes or ('_c_' + host_name) in selected):
+            if filterfunc is None or \
+               filterfunc(host):
+                selected_host_names.append(host_name)
+    return selected_host_names
+
+
+def get_hosts_from_checkboxes(filterfunc=None):
+    """Create list of all host objects that are select with checkboxes in the current file.
+    This is needed for bulk operations."""
+    folder = watolib.Folder.current()
+    return [folder.host(host_name) for host_name in get_hostnames_from_checkboxes(filterfunc)]
+
+
+class WatoBackgroundProcess(gui_background_job.GUIBackgroundProcess):
+    def initialize_environment(self):
+        super(WatoBackgroundProcess, self).initialize_environment()
+
+        if self._jobstatus.get_status().get("lock_wato"):
+            cmk.utils.store.release_all_locks()
+            lock_exclusive()
+
+
+class WatoBackgroundJob(gui_background_job.GUIBackgroundJob):
+    _background_process_class = WatoBackgroundProcess
+
+
+class FullPathFolderChoice(DropdownChoice):
+    def __init__(self, **kwargs):
+        kwargs["choices"] = watolib.Folder.folder_choices_fulltitle
+        kwargs.setdefault("title", _("Folder"))
+        DropdownChoice.__init__(self, **kwargs)
+
+
+class FolderChoice(DropdownChoice):
+    def __init__(self, **kwargs):
+        kwargs["choices"] = watolib.Folder.folder_choices
+        kwargs.setdefault("title", _("Folder"))
+        DropdownChoice.__init__(self, **kwargs)
+
+
+def rule_option_elements(disabling=True):
+    elements = [
+        ("description",
+         TextUnicode(
+             title=_("Description"),
+             help=_("A description or title of this rule"),
+             size=80,
+         )),
+        ("comment", RuleComment()),
+        ("docu_url", DocumentationURL()),
+    ]
+    if disabling:
+        elements += [
+            ("disabled",
+             Checkbox(
+                 title=_("Rule activation"),
+                 help=_("Disabled rules are kept in the configuration but are not applied."),
+                 label=_("do not apply this rule"),
+             )),
+        ]
+    return elements

@@ -42,6 +42,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.valuespec import (
+    TextUnicode,
     Dictionary,
     Alternative,
     FixedValue,
@@ -70,8 +71,8 @@ from cmk.gui.plugins.wato import (
     make_action_link,
     add_change,
     rule_option_elements,
+    get_notification_parameters,
 )
-
 from cmk.gui.watolib.notifications import (
     save_notification_rules,
     load_notification_rules,
@@ -795,13 +796,18 @@ class UserNotificationsMode(NotificationsMode):
     def page(self):
         if self._start_async_repl:
             cmk.gui.wato.user_profile.user_profile_async_replication_dialog(
-                sites=watolib.get_notification_sync_sites())
+                sites=_get_notification_sync_sites())
             html.h3(_('Notification Rules'))
 
         self._render_notification_rules(
             self._rules,
             self._user_id(),
             profilemode=isinstance(self, ModePersonalUserNotifications))
+
+
+def _get_notification_sync_sites():
+    return sorted(site_id for site_id, _site in config.wato_slave_sites()
+                  if not config.site_is_local(site_id))
 
 
 @mode_registry.register
@@ -933,7 +939,7 @@ class EditNotificationRuleMode(NotificationsMode):
                  )),
                 ("contact_users",
                  ListOf(
-                     watolib.UserSelection(only_contacts=False),
+                     userdb.UserSelection(only_contacts=False),
                      title=_("The following users"),
                      help=_(
                          "Enter a list of user IDs to be notified here. These users need to be members "
@@ -1056,10 +1062,12 @@ class EditNotificationRuleMode(NotificationsMode):
             elements=rule_option_elements() + section_override + self._rule_match_conditions() +
             section_contacts + [
                 # Notification
-                (
-                    "notify_plugin",
-                    watolib.get_vs_notification_methods(),
-                ),
+                ("notify_plugin",
+                 CascadingDropdown(
+                     title=_("Notification Method"),
+                     choices=self._notification_script_choices_with_parameters,
+                     default_value=("mail", {}),
+                 )),
                 ("bulk",
                  Transform(
                      CascadingDropdown(
@@ -1164,6 +1172,36 @@ class EditNotificationRuleMode(NotificationsMode):
             validate=self._validate_notification_rule,
         )
 
+    def _notification_script_choices_with_parameters(self):
+        choices = []
+        script_params = get_notification_parameters()
+        for script_name, title in watolib.notification_script_choices():
+            if script_name in script_params:
+                vs = script_params[script_name]
+            else:
+                vs = ListOfStrings(
+                    title=_("Call with the following parameters:"),
+                    help=
+                    _("The given parameters are available in scripts as NOTIFY_PARAMETER_1, NOTIFY_PARAMETER_2, etc."
+                     ),
+                    valuespec=TextUnicode(size=24),
+                    orientation="horizontal",
+                )
+
+            vs_alternative = Alternative(
+                style="dropdown",
+                elements=[
+                    vs,
+                    FixedValue(
+                        None,
+                        totext=_("previous notifications of this type are cancelled"),
+                        title=_("Cancel previous notifications")),
+                ],
+            )
+
+            choices.append((script_name, title, vs_alternative))
+        return choices
+
     def _validate_notification_rule(self, rule, varprefix):
         if "bulk" in rule and rule["notify_plugin"][1] is None:
             raise MKUserError(
@@ -1257,7 +1295,7 @@ class EditNotificationRuleMode(NotificationsMode):
     def page(self):
         if self._start_async_repl:
             cmk.gui.wato.user_profile.user_profile_async_replication_dialog(
-                sites=watolib.get_notification_sync_sites())
+                sites=_get_notification_sync_sites())
             return
 
         html.begin_form("rule", method="POST")

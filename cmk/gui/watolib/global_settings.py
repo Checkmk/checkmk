@@ -24,7 +24,11 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-from cmk.gui.plugins.watolib.utils import ConfigDomain
+from cmk.gui.watolib.config_domains import ConfigDomainGUI
+from cmk.gui.plugins.watolib.utils import (
+    ConfigDomain,
+    config_variable_registry,
+)
 
 
 def load_configuration_settings(site_specific=False):
@@ -35,3 +39,33 @@ def load_configuration_settings(site_specific=False):
         else:
             settings.update(domain().load())
     return settings
+
+
+def save_global_settings(vars_, site_specific=False):
+    per_domain = {}
+    # TODO: Uee _get_global_config_var_names() from domain class?
+    for config_variable_class in config_variable_registry.values():
+        config_variable = config_variable_class()
+        domain = config_variable.domain()
+        varname = config_variable.ident()
+        if varname not in vars_:
+            continue
+        per_domain.setdefault(domain.ident, {})[varname] = vars_[varname]
+
+    # The global setting wato_enabled is not registered in the configuration domains
+    # since the user must not change it directly. It is set by D-WATO on slave sites.
+    if "wato_enabled" in vars_:
+        per_domain.setdefault(ConfigDomainGUI.ident, {})["wato_enabled"] = vars_["wato_enabled"]
+    if "userdb_automatic_sync" in vars_:
+        per_domain.setdefault(ConfigDomainGUI.ident,
+                              {})["userdb_automatic_sync"] = vars_["userdb_automatic_sync"]
+
+    for domain in ConfigDomain.enabled_domains():
+        if site_specific:
+            domain().save_site_globals(per_domain.get(domain.ident, {}))
+        else:
+            domain().save(per_domain.get(domain.ident, {}))
+
+
+def save_site_global_settings(vars_):
+    save_global_settings(vars_, site_specific=True)

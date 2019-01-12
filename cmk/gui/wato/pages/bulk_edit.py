@@ -33,7 +33,12 @@ import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
 
-from cmk.gui.plugins.wato.utils import mode_registry, configure_attributes
+from cmk.gui.plugins.wato.utils import (
+    mode_registry,
+    configure_attributes,
+    get_hostnames_from_checkboxes,
+    get_hosts_from_checkboxes,
+)
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode
 
 from cmk.gui.globals import html
@@ -64,7 +69,7 @@ class ModeBulkEdit(WatoMode):
         config.user.need_permission("wato.edit_hosts")
 
         changed_attributes = watolib.collect_attributes("bulk")
-        host_names = watolib.get_hostnames_from_checkboxes()
+        host_names = get_hostnames_from_checkboxes()
         for host_name in host_names:
             host = watolib.Folder.current().host(host_name)
             host.update_attributes(changed_attributes)
@@ -75,7 +80,7 @@ class ModeBulkEdit(WatoMode):
         return "folder", _("Edited %d hosts") % len(host_names)
 
     def page(self):
-        host_names = watolib.get_hostnames_from_checkboxes()
+        host_names = get_hostnames_from_checkboxes()
         hosts = dict(
             [(host_name, watolib.Folder.current().host(host_name)) for host_name in host_names])
         current_host_hash = sha256(repr(hosts))
@@ -136,7 +141,7 @@ class ModeBulkCleanup(WatoMode):
         if "contactgroups" in to_clean:
             self._folder.need_permission("write")
 
-        hosts = watolib.get_hosts_from_checkboxes()
+        hosts = get_hosts_from_checkboxes()
 
         # Check all permissions before doing any edit
         for host in hosts:
@@ -156,7 +161,7 @@ class ModeBulkCleanup(WatoMode):
         return to_clean
 
     def page(self):
-        hosts = watolib.get_hosts_from_checkboxes()
+        hosts = get_hosts_from_checkboxes()
 
         html.p(
             _("You have selected <b>%d</b> hosts for bulk cleanup. This means removing "

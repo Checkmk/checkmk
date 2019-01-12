@@ -38,6 +38,7 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import MKUserError, MKAuthException, MKException
 from cmk.gui.plugins.userdb.htpasswd import hash_password
+import cmk.gui.watolib.users
 
 import cmk.gui.bi as bi
 
@@ -510,7 +511,7 @@ api_actions["get_all_users"] = {
 
 def action_delete_users(request):
     validate_request_keys(request, required_keys=["users"])
-    watolib.delete_users(request.get("users"))
+    cmk.gui.watolib.users.delete_users(request.get("users"))
 
 
 api_actions["delete_users"] = {
@@ -534,7 +535,7 @@ def action_add_users(request):
         user_template.update(values)
         new_user_objects[user_id] = {"attributes": user_template, "is_new_user": True}
 
-    watolib.edit_users(new_user_objects)
+    cmk.gui.watolib.users.edit_users(new_user_objects)
 
 
 api_actions["add_users"] = {
@@ -577,7 +578,7 @@ def action_edit_users(request):
 
         edit_user_objects[user_id] = {"attributes": user_attrs, "is_new_user": False}
 
-    watolib.edit_users(edit_user_objects)
+    cmk.gui.watolib.users.edit_users(edit_user_objects)
 
 
 api_actions["edit_users"] = {

@@ -1122,7 +1122,7 @@ class EventConsoleMode(WatoMode):
             what,
             message,
             domains=[ConfigDomainEventConsole],
-            sites=watolib.get_event_console_sync_sites())
+            sites=_get_event_console_sync_sites())
 
     def _changes_button(self):
         changelog_button()
@@ -2264,7 +2264,12 @@ class ModeEventConsoleEditGlobalSetting(EditGlobalSettingMode):
         return "mkeventd_config"
 
     def _affected_sites(self):
-        return watolib.get_event_console_sync_sites()
+        return _get_event_console_sync_sites()
+
+
+def _get_event_console_sync_sites():
+    """Returns a list of site ids which gets the Event Console configuration replicated"""
+    return [s[0] for s in config.get_event_console_site_choices()]
 
 
 @mode_registry.register

@@ -46,7 +46,8 @@ from cmk.gui.globals import html
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.log import logger
 
-from cmk.gui.wato.pages.global_settings import GlobalSettingsMode
+from cmk.gui.watolib.activate_changes import clear_site_replication_status
+from cmk.gui.wato.pages.global_settings import GlobalSettingsMode, is_a_checkbox
 
 
 # TODO: Rename to SitesMode()
@@ -148,7 +149,7 @@ class ModeEditSite(ModeSites):
 
         # In case a site is not being replicated anymore, confirm all changes for this site!
         if not self._repl:
-            watolib.changes.clear_site_replication_status(self._id)
+            clear_site_replication_status(self._id)
 
         if self._id != config.omd_site():
             # On central site issue a change only affecting the GUI
@@ -781,7 +782,7 @@ class ModeEditSiteGlobals(ModeSites, GlobalSettingsMode):
         config_variable = watolib.config_variable_registry[varname]()
         def_value = self._global_settings.get(varname, self._default_values[varname])
 
-        if action == "reset" and not watolib.is_a_checkbox(config_variable.valuespec()):
+        if action == "reset" and not is_a_checkbox(config_variable.valuespec()):
             c = wato_confirm(
                 _("Removing site specific configuration variable"),
                 _("Do you really want to remove the configuration variable <b>%s</b> "

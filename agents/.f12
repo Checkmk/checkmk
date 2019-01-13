@@ -5,7 +5,7 @@ SITE=${SITE:-$(cat ../.site 2>/dev/null || true)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 
-sudo rsync -varx --delete --exclude=.f12* --exclude=.gitignore --exclude=baked* ./ $ROOT/share/check_mk/agents/
+sudo rsync -varx --delete --exclude=.f12* --exclude windows --exclude=.gitignore --exclude=baked* ./ $ROOT/share/check_mk/agents/
 if [ -e /etc/check_mk ]; then
     sudo install -m 644 cfg_examples/logwatch.cfg /etc/check_mk/
 fi

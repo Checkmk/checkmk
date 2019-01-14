@@ -1684,6 +1684,23 @@ class CMKWebSession(WebSession):
 
         return result
 
+    def get_inventory(self, hosts, site=None, paths=None):
+        request = {
+            "hosts": hosts,
+        }
+        if site is not None:
+            request["site"] = site
+        if paths is not None:
+            request["paths"] = paths
+        result = self._api_request("webapi.py?action=get_inventory", {
+            "request": json.dumps(request),
+        })
+
+        assert isinstance(result, dict)
+        for host in hosts:
+            assert isinstance(result[host], dict)
+        return result
+
 
 class CMKEventConsole(CMKWebSession):
     def __init__(self, site):

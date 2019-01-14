@@ -1,4 +1,4 @@
-# Needed to make the test load all webapi plugins (incl. CEE)
+# force loading of web API plugins
 import cmk.gui.webapi  # pylint: disable=unused-import
 
 from cmk.gui.plugins.webapi.utils import api_call_collection_registry
@@ -46,6 +46,7 @@ def test_registered_api_call_collections():
         'get_graph',
         'get_host',
         'get_hosttags',
+        'get_inventory',
         'get_ruleset',
         'get_rulesets_info',
         'get_site',

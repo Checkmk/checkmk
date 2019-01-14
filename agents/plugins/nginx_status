@@ -62,8 +62,8 @@ if os.path.exists(config_file):
 def try_detect_servers():
     pids = []
     results = []
-    for line in os.popen('netstat -tlnp 2>/dev/null').readlines():
-        parts = line.split()
+    for netstat_line in os.popen('netstat -tlnp 2>/dev/null').readlines():
+        parts = netstat_line.split()
         # Skip lines with wrong format
         if len(parts) < 7 or '/' not in parts[6]:
             continue
@@ -87,22 +87,22 @@ def try_detect_servers():
             continue
         pids.append(pid)
 
-        proto = 'http'
-        address, port = parts[3].rsplit(':', 1)
-        port = int(port)
+        server_proto = 'http'
+        server_address, server_port = parts[3].rsplit(':', 1)
+        server_port = int(server_port)
 
         # Use localhost when listening globally
-        if address == '0.0.0.0':
-            address = '127.0.0.1'
-        elif address == '::':
-            address = '::1'
+        if server_address == '0.0.0.0':
+            server_address = '127.0.0.1'
+        elif server_address == '::':
+            server_address = '::1'
 
         # Switch protocol if port is SSL port. In case you use SSL on another
         # port you would have to change/extend the ssl_port list
-        if port in ssl_ports:
-            proto = 'https'
+        if server_port in ssl_ports:
+            server_proto = 'https'
 
-        results.append((proto, address, port))
+        results.append((server_proto, server_address, server_port))
 
     return results
 

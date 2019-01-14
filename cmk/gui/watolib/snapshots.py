@@ -73,7 +73,6 @@ def create_snapshot(comment):
 # TODO: Remove once new changes mechanism has been implemented
 def _do_create_snapshot(data):
     snapshot_name = data["snapshot_name"]
-    snapshot_dir = cmk.utils.paths.var_dir + "/wato/snapshots"
     work_dir = snapshot_dir + "/workdir/%s" % snapshot_name
 
     try:

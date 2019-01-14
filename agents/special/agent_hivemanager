@@ -51,7 +51,7 @@ def get_url(address):
 
 
 print "<<<hivemanager_devices:sep(124)>>>"
-address = "https://%s/hm/api/v1/devices" % ip
+url = "https://%s/hm/api/v1/devices" % ip
 informations = [
     'hostName',
     'clients',
@@ -68,7 +68,7 @@ informations = [
     'location',
     'networkPolicy',
 ]
-for line in json.loads(get_url(address).read()):
+for line in json.loads(get_url(url).read()):
     if line['upTime'] == '':
         line['upTime'] = "down"
     print "|".join(map(str, ["%s::%s" % (x, y) for x, y in line.items() if x in informations]))

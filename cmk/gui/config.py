@@ -789,19 +789,19 @@ def migrate_old_site_config(site_config):
         # configuration in that case.
         return default_single_site_configuration()
 
-    for site in site_config.itervalues():
-        if site.get("socket") is None:
-            site["socket"] = ("local", None)
+    for site_cfg in site_config.itervalues():
+        if site_cfg.get("socket") is None:
+            site_cfg["socket"] = ("local", None)
             continue
 
-        socket = site["socket"]
+        socket = site_cfg["socket"]
         if socket == 'disabled':
-            site['disabled'] = True
-            site['socket'] = ("local", None)
+            site_cfg['disabled'] = True
+            site_cfg['socket'] = ("local", None)
             continue
 
         if isinstance(socket, six.string_types):
-            site["socket"] = _migrate_string_encoded_socket(socket)
+            site_cfg["socket"] = _migrate_string_encoded_socket(socket)
 
     return site_config
 

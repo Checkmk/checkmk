@@ -319,11 +319,11 @@ def main(options):
 
 
 if __name__ == "__main__":
-    options = parse_args()
+    opts = parse_args()
     try:
-        main(options)
+        main(opts)
     except Exception, e:
         output("An exception occured (Run in debug mode for details): %s" % e)
-        if options.debug:
+        if opts.debug:
             output(traceback.format_exc())
         sys.exit(3)

@@ -40,11 +40,11 @@ import cmk.utils.password_store
 cmk.utils.password_store.replace_passwords()
 
 
-def parse_exception(e):
-    e = str(e)
-    if e[0] == '{':
-        e = "%d - %s" % eval(e).values()[0]
-    return str(e)
+def parse_exception(exc):
+    exc = str(exc)
+    if exc[0] == '{':
+        exc = "%d - %s" % eval(exc).values()[0]
+    return str(exc)
 
 
 def bail_out(rc, s, perfdata=None):
@@ -204,9 +204,9 @@ for o, a in opts:
         body_limit = int(a)
 
 param_names = dict(opts).keys()
-for p in required_params:
-    if '--' + p not in param_names:
-        usage('The needed parameter --%s is missing' % p)
+for param_name in required_params:
+    if '--' + param_name not in param_names:
+        usage('The needed parameter --%s is missing' % param_name)
 
 if fetch_proto not in ['IMAP', 'POP3']:
     usage('The given protocol is not supported.')

@@ -94,6 +94,7 @@ from cmk.gui.plugins.wato import (
 )
 
 from cmk.gui.plugins.wato.omd_configuration import ConfigVariableGroupSiteManagement
+from cmk.gui.plugins.views.icons import icon_and_action_registry
 
 #   .--Global Settings-----------------------------------------------------.
 #   |  ____ _       _           _   ____       _   _   _                   |
@@ -1237,8 +1238,7 @@ class ConfigVariableBuiltinIconVisibility(ConfigVariable):
         )
 
     def _get_builtin_icons(self):
-        import cmk.gui.plugins.views.icons
-        return [(id_, id_) for id_ in cmk.gui.plugins.views.icons.get_multisite_icons()]
+        return [(id_, id_) for id_ in icon_and_action_registry.keys()]
 
 
 @config_variable_registry.register

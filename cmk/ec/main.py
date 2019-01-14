@@ -307,7 +307,7 @@ def match(pattern, text, complete=True):
     return False
 
 
-def pattern(pat):
+def format_pattern(pat):
     try:
         return pat.pattern
     except Exception:
@@ -370,8 +370,8 @@ def replace_groups(text, origtext, match_groups):
         if not isinstance(values, tuple):
             continue
 
-        for idx, match in enumerate(values):
-            text = text.replace("$%s_%d$" % (key_prefix.upper(), idx + 1), match)
+        for idx, match_value in enumerate(values):
+            text = text.replace("$%s_%d$" % (key_prefix.upper(), idx + 1), match_value)
 
     return text
 
@@ -2371,7 +2371,7 @@ class RuleMatcher(object):
         if match(rule.get("match_host"), event["host"], complete=True) is False:
             if self._debug_rules:
                 self._logger.info("  did not match because of wrong host '%s' (need '%s')" %
-                                  (event["host"], pattern(rule.get("match_host"))))
+                                  (event["host"], format_pattern(rule.get("match_host"))))
             return False
         return True
 
@@ -2744,8 +2744,8 @@ class StatusTable(object):
             # Apply filters
             # TODO: History filtering is done in history load code. Check for improvements
             if query.filters and query.table_name != "history":
-                match = query.filter_row(row)
-                if not match:
+                matched = query.filter_row(row)
+                if not matched:
                     continue
 
             yield self._build_result_row(row, requested_column_indexes)

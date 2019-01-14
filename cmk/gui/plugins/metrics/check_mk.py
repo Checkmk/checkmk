@@ -31,7 +31,7 @@ from cmk.gui.i18n import _
 
 from cmk.utils.render import scale_factor_prefix
 
-from . import (
+from cmk.gui.plugins.metrics import (
     unit_info,
     metric_info,
     check_metrics,
@@ -187,9 +187,9 @@ def bytes_human_readable_list(values, *args, **kwargs):
 
     scaled_values = ["%.*f" % (precision, float(value) / scale_factor) for value in values]
 
-    unit = kwargs.get("unit", "B")
+    unit_txt = kwargs.get("unit", "B")
 
-    return scale_prefix + unit, scaled_values
+    return scale_prefix + unit_txt, scaled_values
 
 
 # Output in bytes/days, value is in bytes/s
@@ -381,49 +381,55 @@ def indexed_color(idx, total):
 
 
 MAX_NUMBER_HOPS = 45  # the amount of hop metrics, graphs and perfometers to create
-for idx in range(0, MAX_NUMBER_HOPS):
-    if idx:
-        prefix_perf = "hop_%d_" % idx
-        prefix_text = "Hop %d " % idx
-    else:
-        prefix_perf = ""
-        prefix_text = ""
 
-    metric_info["%srta" % prefix_perf] = {
-        "title": _("%sRound trip average") % prefix_text,
-        "unit": "s",
-        "color": "33/a"
-    }
 
-    metric_info["%srtmin" % prefix_perf] = {
-        "title": _("%sRound trip minimum") % prefix_text,
-        "unit": "s",
-        "color": "42/a",
-    }
+def register_hop_metrics():
+    for idx in range(0, MAX_NUMBER_HOPS):
+        if idx:
+            prefix_perf = "hop_%d_" % idx
+            prefix_text = "Hop %d " % idx
+        else:
+            prefix_perf = ""
+            prefix_text = ""
 
-    metric_info["%srtmax" % prefix_perf] = {
-        "title": _("%sRound trip maximum") % prefix_text,
-        "unit": "s",
-        "color": "42/b",
-    }
+        metric_info["%srta" % prefix_perf] = {
+            "title": _("%sRound trip average") % prefix_text,
+            "unit": "s",
+            "color": "33/a"
+        }
 
-    metric_info["%srtstddev" % prefix_perf] = {
-        "title": _("%sRound trip standard devation") % prefix_text,
-        "unit": "s",
-        "color": "16/a",
-    }
+        metric_info["%srtmin" % prefix_perf] = {
+            "title": _("%sRound trip minimum") % prefix_text,
+            "unit": "s",
+            "color": "42/a",
+        }
 
-    metric_info["%spl" % prefix_perf] = {
-        "title": _("%sPacket loss") % prefix_text,
-        "unit": "%",
-        "color": "#ffc030",
-    }
+        metric_info["%srtmax" % prefix_perf] = {
+            "title": _("%sRound trip maximum") % prefix_text,
+            "unit": "s",
+            "color": "42/b",
+        }
 
-    metric_info["%sresponse_time" % prefix_perf] = {
-        "title": _("%sResponse time") % prefix_text,
-        "unit": "s",
-        "color": "23/a"
-    }
+        metric_info["%srtstddev" % prefix_perf] = {
+            "title": _("%sRound trip standard devation") % prefix_text,
+            "unit": "s",
+            "color": "16/a",
+        }
+
+        metric_info["%spl" % prefix_perf] = {
+            "title": _("%sPacket loss") % prefix_text,
+            "unit": "%",
+            "color": "#ffc030",
+        }
+
+        metric_info["%sresponse_time" % prefix_perf] = {
+            "title": _("%sResponse time") % prefix_text,
+            "unit": "s",
+            "color": "23/a"
+        }
+
+
+register_hop_metrics()
 
 metric_info["rtt"] = {
     "title": _("Round trip time"),
@@ -1274,13 +1280,23 @@ metric_info["24ghz_clients"] = {
     "color": "14/a",
 }
 
-for what, color in [("msg", "12"), ("rollovers", "13"), ("regular", "14"), ("warning", "15"),
-                    ("user", "16")]:
-    metric_info["assert_%s" % what] = {
-        "title": _("%s Asserts") % what.title(),
-        "unit": "count",
-        "color": "%s/a" % color,
-    }
+
+def register_assert_metrics():
+    for what, color in [
+        ("msg", "12"),
+        ("rollovers", "13"),
+        ("regular", "14"),
+        ("warning", "15"),
+        ("user", "16"),
+    ]:
+        metric_info["assert_%s" % what] = {
+            "title": _("%s Asserts") % what.title(),
+            "unit": "count",
+            "color": "%s/a" % color,
+        }
+
+
+register_assert_metrics()
 
 metric_info["vol_context_switches"] = {
     "title": _("Voluntary context switches"),
@@ -3190,84 +3206,89 @@ metric_info["net_data_sent"] = {
     "color": "42/a",
 }
 
-for ty, unit in [("requests", "1/s"), ("bytes", "bytes/s"), ("secs", "1/s")]:
-    metric_info[ty + "_cmk_views"] = {
-        "title": _("Check_MK: Views"),
-        "unit": unit,
-        "color": "#ff8080",
-    }
 
-    metric_info[ty + "_cmk_wato"] = {
-        "title": _("Check_MK: WATO"),
-        "unit": unit,
-        "color": "#377cab",
-    }
+def register_omd_apache_metrics():
+    for ty, unit in [("requests", "1/s"), ("bytes", "bytes/s"), ("secs", "1/s")]:
+        metric_info[ty + "_cmk_views"] = {
+            "title": _("Check_MK: Views"),
+            "unit": unit,
+            "color": "#ff8080",
+        }
 
-    metric_info[ty + "_cmk_bi"] = {
-        "title": _("Check_MK: BI"),
-        "unit": unit,
-        "color": "#4eb0f2",
-    }
+        metric_info[ty + "_cmk_wato"] = {
+            "title": _("Check_MK: WATO"),
+            "unit": unit,
+            "color": "#377cab",
+        }
 
-    metric_info[ty + "_cmk_snapins"] = {
-        "title": _("Check_MK: Snapins"),
-        "unit": unit,
-        "color": "#ff4040",
-    }
+        metric_info[ty + "_cmk_bi"] = {
+            "title": _("Check_MK: BI"),
+            "unit": unit,
+            "color": "#4eb0f2",
+        }
 
-    metric_info[ty + "_cmk_dashboards"] = {
-        "title": _("Check_MK: Dashboards"),
-        "unit": unit,
-        "color": "#4040ff",
-    }
+        metric_info[ty + "_cmk_snapins"] = {
+            "title": _("Check_MK: Snapins"),
+            "unit": unit,
+            "color": "#ff4040",
+        }
 
-    metric_info[ty + "_cmk_other"] = {
-        "title": _("Check_MK: Other"),
-        "unit": unit,
-        "color": "#5bb9eb",
-    }
+        metric_info[ty + "_cmk_dashboards"] = {
+            "title": _("Check_MK: Dashboards"),
+            "unit": unit,
+            "color": "#4040ff",
+        }
 
-    metric_info[ty + "_nagvis_snapin"] = {
-        "title": _("NagVis: Snapin"),
-        "unit": unit,
-        "color": "#f2904e",
-    }
+        metric_info[ty + "_cmk_other"] = {
+            "title": _("Check_MK: Other"),
+            "unit": unit,
+            "color": "#5bb9eb",
+        }
 
-    metric_info[ty + "_nagvis_ajax"] = {
-        "title": _("NagVis: AJAX"),
-        "unit": unit,
-        "color": "#af91eb",
-    }
+        metric_info[ty + "_nagvis_snapin"] = {
+            "title": _("NagVis: Snapin"),
+            "unit": unit,
+            "color": "#f2904e",
+        }
 
-    metric_info[ty + "_nagvis_other"] = {
-        "title": _("NagVis: Other"),
-        "unit": unit,
-        "color": "#f2df40",
-    }
+        metric_info[ty + "_nagvis_ajax"] = {
+            "title": _("NagVis: AJAX"),
+            "unit": unit,
+            "color": "#af91eb",
+        }
 
-    metric_info[ty + "_images"] = {
-        "title": _("Image"),
-        "unit": unit,
-        "color": "#91cceb",
-    }
+        metric_info[ty + "_nagvis_other"] = {
+            "title": _("NagVis: Other"),
+            "unit": unit,
+            "color": "#f2df40",
+        }
 
-    metric_info[ty + "_styles"] = {
-        "title": _("Styles"),
-        "unit": unit,
-        "color": "#c6f24e",
-    }
+        metric_info[ty + "_images"] = {
+            "title": _("Image"),
+            "unit": unit,
+            "color": "#91cceb",
+        }
 
-    metric_info[ty + "_scripts"] = {
-        "title": _("Scripts"),
-        "unit": unit,
-        "color": "#4ef26c",
-    }
+        metric_info[ty + "_styles"] = {
+            "title": _("Styles"),
+            "unit": unit,
+            "color": "#c6f24e",
+        }
 
-    metric_info[ty + "_other"] = {
-        "title": _("Other"),
-        "unit": unit,
-        "color": "#4eeaf2",
-    }
+        metric_info[ty + "_scripts"] = {
+            "title": _("Scripts"),
+            "unit": unit,
+            "color": "#4ef26c",
+        }
+
+        metric_info[ty + "_other"] = {
+            "title": _("Other"),
+            "unit": unit,
+            "color": "#4eeaf2",
+        }
+
+
+register_omd_apache_metrics()
 
 metric_info["total_modems"] = {
     "title": _("Total number of modems"),
@@ -3437,28 +3458,32 @@ metric_info["time_transfer"] = {
     "color": "41/a",
 }
 
-for volume_info in ["NFS", "NFSv4", "NFSv4.1", "CIFS", "SAN", "FCP", "ISCSI"]:
-    for what, unit in [
-        ("data", "bytes"),
-        ("latency", "s"),
-        ("ios", "1/s"),
-        ("throughput", "bytes/s"),
-        ("ops", "1/s"),
-    ]:
 
-        volume = volume_info.lower().replace(".", "_")
+def register_netapp_api_vs_traffic_metrics():
+    for volume_info in ["NFS", "NFSv4", "NFSv4.1", "CIFS", "SAN", "FCP", "ISCSI"]:
+        for what, unit in [
+            ("data", "bytes"),
+            ("latency", "s"),
+            ("ios", "1/s"),
+            ("throughput", "bytes/s"),
+            ("ops", "1/s"),
+        ]:
+            volume = volume_info.lower().replace(".", "_")
 
-        metric_info["%s_read_%s" % (volume, what)] = {
-            "title": _("%s read %s") % (volume_info, what),
-            "unit": unit,
-            "color": "31/a",
-        }
+            metric_info["%s_read_%s" % (volume, what)] = {
+                "title": _("%s read %s") % (volume_info, what),
+                "unit": unit,
+                "color": "31/a",
+            }
 
-        metric_info["%s_write_%s" % (volume, what)] = {
-            "title": _("%s write %s") % (volume_info, what),
-            "unit": unit,
-            "color": "44/a",
-        }
+            metric_info["%s_write_%s" % (volume, what)] = {
+                "title": _("%s write %s") % (volume_info, what),
+                "unit": unit,
+                "color": "44/a",
+            }
+
+
+register_netapp_api_vs_traffic_metrics()
 
 metric_info["nfs_ios"] = {
     "title": _("NFS operations"),
@@ -3705,97 +3730,102 @@ metric_info["sslproxy_active_sessions"] = {
     "color": "#11FF11",
 }
 
-for what, descr, color in [
-    ("busy", "too many", "11/a"),
-    ("unhealthy", "not attempted", "13/a"),
-    ("req", "requests", "15/a"),
-    ("recycle", "recycles", "21/a"),
-    ("retry", "retry", "23/a"),
-    ("fail", "failures", "25/a"),
-    ("toolate", "was closed", "31/a"),
-    ("conn", "success", "33/a"),
-    ("reuse", "reuses", "35/a"),
-]:
-    metric_info_key = "varnish_backend_%s_rate" % what
-    metric_info[metric_info_key] = {
-        "title": _("Backend Conn. %s") % descr,
-        "unit": "1/s",
-        "color": color,
-    }
 
-for what, descr, color in [
-    ("hit", "hits", "11/a"),
-    ("miss", "misses", "13/a"),
-    ("hitpass", "hits for pass", "21/a"),
-]:
-    metric_info_key = "varnish_cache_%s_rate" % what
-    metric_info[metric_info_key] = {
-        "title": _("Cache %s") % descr,
-        "unit": "1/s",
-        "color": color,
-    }
+def register_varnish_metrics():
+    for what, descr, color in [
+        ("busy", "too many", "11/a"),
+        ("unhealthy", "not attempted", "13/a"),
+        ("req", "requests", "15/a"),
+        ("recycle", "recycles", "21/a"),
+        ("retry", "retry", "23/a"),
+        ("fail", "failures", "25/a"),
+        ("toolate", "was closed", "31/a"),
+        ("conn", "success", "33/a"),
+        ("reuse", "reuses", "35/a"),
+    ]:
+        metric_info_key = "varnish_backend_%s_rate" % what
+        metric_info[metric_info_key] = {
+            "title": _("Backend Conn. %s") % descr,
+            "unit": "1/s",
+            "color": color,
+        }
 
-for what, descr, color in [
-    ("drop", _("Connections dropped"), "12/a"),
-    ("req", _("Client requests received"), "22/a"),
-    ("conn", _("Client connections accepted"), "32/a"),
-    ("drop_late", _("Connection dropped late"), "42/a"),
-]:
-    metric_info_key = "varnish_client_%s_rate" % what
-    metric_info[metric_info_key] = {
-        "title": descr,
-        "unit": "1/s",
-        "color": color,
-    }
+    for what, descr, color in [
+        ("hit", "hits", "11/a"),
+        ("miss", "misses", "13/a"),
+        ("hitpass", "hits for pass", "21/a"),
+    ]:
+        metric_info_key = "varnish_cache_%s_rate" % what
+        metric_info[metric_info_key] = {
+            "title": _("Cache %s") % descr,
+            "unit": "1/s",
+            "color": color,
+        }
 
-for what, descr, color in [
-    ("oldhttp", _("Fetch pre HTTP/1.1 closed"), "11/a"),
-    ("head", _("Fetch head"), "13/a"),
-    ("eof", _("Fetch EOF"), "15/a"),
-    ("zero", _("Fetch zero length"), "21/a"),
-    ("304", _("Fetch no body (304)"), "23/a"),
-    ("1xx", _("Fetch no body (1xx)"), "25/a"),
-    ("204", _("Fetch no body (204)"), "31/a"),
-    ("length", _("Fetch with length"), "33/a"),
-    ("failed", _("Fetch failed"), "35/a"),
-    ("bad", _("Fetch had bad headers"), "41/a"),
-    ("close", _("Fetch wanted close"), "43/a"),
-    ("chunked", _("Fetch chunked"), "45/a"),
-]:
-    metric_info_key = "varnish_fetch_%s_rate" % what
-    metric_info[metric_info_key] = {
-        "title": descr,
-        "unit": "1/s",
-        "color": color,
-    }
+    for what, descr, color in [
+        ("drop", _("Connections dropped"), "12/a"),
+        ("req", _("Client requests received"), "22/a"),
+        ("conn", _("Client connections accepted"), "32/a"),
+        ("drop_late", _("Connection dropped late"), "42/a"),
+    ]:
+        metric_info_key = "varnish_client_%s_rate" % what
+        metric_info[metric_info_key] = {
+            "title": descr,
+            "unit": "1/s",
+            "color": color,
+        }
 
-for what, descr, color in [
-    ("expired", _("Expired objects"), "21/a"),
-    ("lru_nuked", _("LRU nuked objects"), "31/a"),
-    ("lru_moved", _("LRU moved objects"), "41/a"),
-]:
-    metric_info_key = "varnish_objects_%s_rate" % what
-    metric_info[metric_info_key] = {
-        "title": descr,
-        "unit": "1/s",
-        "color": color,
-    }
+    for what, descr, color in [
+        ("oldhttp", _("Fetch pre HTTP/1.1 closed"), "11/a"),
+        ("head", _("Fetch head"), "13/a"),
+        ("eof", _("Fetch EOF"), "15/a"),
+        ("zero", _("Fetch zero length"), "21/a"),
+        ("304", _("Fetch no body (304)"), "23/a"),
+        ("1xx", _("Fetch no body (1xx)"), "25/a"),
+        ("204", _("Fetch no body (204)"), "31/a"),
+        ("length", _("Fetch with length"), "33/a"),
+        ("failed", _("Fetch failed"), "35/a"),
+        ("bad", _("Fetch had bad headers"), "41/a"),
+        ("close", _("Fetch wanted close"), "43/a"),
+        ("chunked", _("Fetch chunked"), "45/a"),
+    ]:
+        metric_info_key = "varnish_fetch_%s_rate" % what
+        metric_info[metric_info_key] = {
+            "title": descr,
+            "unit": "1/s",
+            "color": color,
+        }
 
-for what, descr, color in [
-    ("", _("Worker threads"), "11/a"),
-    ("_lqueue", _("Work request queue length"), "13/a"),
-    ("_create", _("Worker threads created"), "15/a"),
-    ("_drop", _("Dropped work requests"), "21/a"),
-    ("_failed", _("Worker threads not created"), "23/a"),
-    ("_queued", _("Queued work requests"), "25/a"),
-    ("_max", _("Worker threads limited"), "31/a"),
-]:
-    metric_info_key = "varnish_worker%s_rate" % what
-    metric_info[metric_info_key] = {
-        "title": descr,
-        "unit": "1/s",
-        "color": color,
-    }
+    for what, descr, color in [
+        ("expired", _("Expired objects"), "21/a"),
+        ("lru_nuked", _("LRU nuked objects"), "31/a"),
+        ("lru_moved", _("LRU moved objects"), "41/a"),
+    ]:
+        metric_info_key = "varnish_objects_%s_rate" % what
+        metric_info[metric_info_key] = {
+            "title": descr,
+            "unit": "1/s",
+            "color": color,
+        }
+
+    for what, descr, color in [
+        ("", _("Worker threads"), "11/a"),
+        ("_lqueue", _("Work request queue length"), "13/a"),
+        ("_create", _("Worker threads created"), "15/a"),
+        ("_drop", _("Dropped work requests"), "21/a"),
+        ("_failed", _("Worker threads not created"), "23/a"),
+        ("_queued", _("Queued work requests"), "25/a"),
+        ("_max", _("Worker threads limited"), "31/a"),
+    ]:
+        metric_info_key = "varnish_worker%s_rate" % what
+        metric_info[metric_info_key] = {
+            "title": descr,
+            "unit": "1/s",
+            "color": color,
+        }
+
+
+register_varnish_metrics()
 
 # ESI = Edge Side Includes
 metric_info["varnish_esi_errors_rate"] = {
@@ -4128,12 +4158,17 @@ skype_mobile_devices = [
     ("mac", "Mac", "23/a"),
 ]
 
-for device, name, color in skype_mobile_devices:
-    metric_info["ucwa_active_sessions_%s" % device] = {
-        "title": _("UCWA - Active Sessions (%s)") % name,
-        "unit": "count",
-        "color": color
-    }
+
+def register_skype_mobile_metrics():
+    for device, name, color in skype_mobile_devices:
+        metric_info["ucwa_active_sessions_%s" % device] = {
+            "title": _("UCWA - Active Sessions (%s)") % name,
+            "unit": "count",
+            "color": color
+        }
+
+
+register_skype_mobile_metrics()
 
 metric_info["web_requests_processing"] = {
     "title": _("WEB - Requests in Processing"),
@@ -4141,26 +4176,31 @@ metric_info["web_requests_processing"] = {
     "color": "12/a"
 }
 
-for what, descr, unit, color in [
-    ("db_cpu", "DB CPU time", "1/s", "11/a"),
-    ("db_time", "DB time", "1/s", "15/a"),
-    ("buffer_hit_ratio", "buffer hit ratio", "%", "21/a"),
-    ("physical_reads", "physical reads", "1/s", "43/b"),
-    ("physical_writes", "physical writes", "1/s", "26/a"),
-    ("db_block_gets", "block gets", "1/s", "13/a"),
-    ("db_block_change", "block change", "1/s", "15/a"),
-    ("consistent_gets", "consistent gets", "1/s", "23/a"),
-    ("free_buffer_wait", "free buffer wait", "1/s", "25/a"),
-    ("buffer_busy_wait", "buffer busy wait", "1/s", "41/a"),
-    ("library_cache_hit_ratio", "library cache hit ratio", "%", "21/b"),
-    ("pins_sum", "pins sum", "1/s", "41/a"),
-    ("pin_hits_sum", "pin hits sum", "1/s", "46/a"),
-]:
-    metric_info["oracle_%s" % what] = {
-        "title": _("ORACLE %s") % descr,
-        "unit": unit,
-        "color": color,
-    }
+
+def register_oracle_metrics():
+    for what, descr, unit, color in [
+        ("db_cpu", "DB CPU time", "1/s", "11/a"),
+        ("db_time", "DB time", "1/s", "15/a"),
+        ("buffer_hit_ratio", "buffer hit ratio", "%", "21/a"),
+        ("physical_reads", "physical reads", "1/s", "43/b"),
+        ("physical_writes", "physical writes", "1/s", "26/a"),
+        ("db_block_gets", "block gets", "1/s", "13/a"),
+        ("db_block_change", "block change", "1/s", "15/a"),
+        ("consistent_gets", "consistent gets", "1/s", "23/a"),
+        ("free_buffer_wait", "free buffer wait", "1/s", "25/a"),
+        ("buffer_busy_wait", "buffer busy wait", "1/s", "41/a"),
+        ("library_cache_hit_ratio", "library cache hit ratio", "%", "21/b"),
+        ("pins_sum", "pins sum", "1/s", "41/a"),
+        ("pin_hits_sum", "pin hits sum", "1/s", "46/a"),
+    ]:
+        metric_info["oracle_%s" % what] = {
+            "title": _("ORACLE %s") % descr,
+            "unit": unit,
+            "color": color,
+        }
+
+
+register_oracle_metrics()
 
 metric_info["dhcp_discovery"] = {
     "title": _("DHCP Discovery messages"),
@@ -4565,31 +4605,36 @@ metric_info["mail_received_rate"] = {
     "color": "31/a",
 }
 
-for what, color in [
-    ('Total', '14/b'),
-    ('Infected', '53/b'),
-    ('Analyzed', '23/a'),
-    ('Bypass', '13/b'),
-]:
-    metric_info_key = '%s_rate' % what.lower()
-    metric_info[metric_info_key] = {
-        'title': _('%s per Second') % what,
-        'unit': '1/s',
-        'color': color,
-    }
 
-for what, color in [
-    ('Attachment', '14/b'),
-    ('URL', '13/b'),
-    ('Malicious Attachment', '23/a'),
-    ('Malicious URL', '53/b'),
-]:
-    metric_info_key = 'fireeye_stat_%s' % what.replace(' ', '').lower()
-    metric_info[metric_info_key] = {
-        'title': _('Emails containing %s per Second') % what,
-        'unit': '1/s',
-        'color': color,
-    }
+def register_fireye_metrics():
+    for what, color in [
+        ('Total', '14/b'),
+        ('Infected', '53/b'),
+        ('Analyzed', '23/a'),
+        ('Bypass', '13/b'),
+    ]:
+        metric_info_key = '%s_rate' % what.lower()
+        metric_info[metric_info_key] = {
+            'title': _('%s per Second') % what,
+            'unit': '1/s',
+            'color': color,
+        }
+
+    for what, color in [
+        ('Attachment', '14/b'),
+        ('URL', '13/b'),
+        ('Malicious Attachment', '23/a'),
+        ('Malicious URL', '53/b'),
+    ]:
+        metric_info_key = 'fireeye_stat_%s' % what.replace(' ', '').lower()
+        metric_info[metric_info_key] = {
+            'title': _('Emails containing %s per Second') % what,
+            'unit': '1/s',
+            'color': color,
+        }
+
+
+register_fireye_metrics()
 
 metric_info["queue"] = {
     "title": _("Queue length"),
@@ -7894,23 +7939,28 @@ perfometer_info.append({
     "total": "active_vpn_tunnels:max"
 })
 
-for x in reversed(range(1, MAX_NUMBER_HOPS)):
-    perfometer_info.append({
-        "type": "dual",
-        "perfometers": [
-            {
-                "type": "linear",
-                "segments": ["hop_%d_pl" % x],
-                "total": 100.0,
-            },
-            {
-                "type": "logarithmic",
-                "metric": "hop_%d_rta" % x,
-                "half_value": 0.1,
-                "exponent": 4
-            },
-        ],
-    })
+
+def register_hop_perfometers():
+    for x in reversed(range(1, MAX_NUMBER_HOPS)):
+        perfometer_info.append({
+            "type": "dual",
+            "perfometers": [
+                {
+                    "type": "linear",
+                    "segments": ["hop_%d_pl" % x],
+                    "total": 100.0,
+                },
+                {
+                    "type": "logarithmic",
+                    "metric": "hop_%d_rta" % x,
+                    "half_value": 0.1,
+                    "exponent": 4
+                },
+            ],
+        })
+
+
+register_hop_perfometers()
 
 perfometer_info.append({
     "type": "logarithmic",
@@ -7919,9 +7969,14 @@ perfometer_info.append({
     "exponent": 2,
 })
 
+
+def get_skype_mobile_perfometer_segments():
+    return ["active_sessions_%s" % device for device, _name, _color in skype_mobile_devices]
+
+
 perfometer_info.append({
     "type": "linear",
-    "segments": ["active_sessions_%s" % device for device, name, color in skype_mobile_devices],
+    "segments": get_skype_mobile_perfometer_segments(),
     # there is no limit and no way to determine the max so far for
     # all segments
 })
@@ -9364,38 +9419,43 @@ graph_info["fc_errors_detailed"] = {
     ]
 }
 
-for what, text in [
-    ("nfs", "NFS"),
-    ("cifs", "CIFS"),
-    ("san", "SAN"),
-    ("fcp", "FCP"),
-    ("iscsi", "iSCSI"),
-    ("nfsv4", "NFSv4"),
-    ("nfsv4_1", "NFSv4.1"),
-]:
-    graph_info["%s_traffic" % what] = {
-        "title": _("%s traffic") % text,
-        "metrics": [
-            ("%s_read_data" % what, "-area"),
-            ("%s_write_data" % what, "area"),
-        ],
-    }
 
-    graph_info["%s_latency" % what] = {
-        "title": _("%s latency") % text,
-        "metrics": [
-            ("%s_read_latency" % what, "-area"),
-            ("%s_write_latency" % what, "area"),
-        ],
-    }
+def register_netapp_api_vs_traffic_graphs():
+    for what, text in [
+        ("nfs", "NFS"),
+        ("cifs", "CIFS"),
+        ("san", "SAN"),
+        ("fcp", "FCP"),
+        ("iscsi", "iSCSI"),
+        ("nfsv4", "NFSv4"),
+        ("nfsv4_1", "NFSv4.1"),
+    ]:
+        graph_info["%s_traffic" % what] = {
+            "title": _("%s traffic") % text,
+            "metrics": [
+                ("%s_read_data" % what, "-area"),
+                ("%s_write_data" % what, "area"),
+            ],
+        }
 
-    graph_info["%s_ops" % what] = {
-        "title": _("%s operations") % text,
-        "metrics": [
-            ("%s_read_ops" % what, "-area"),
-            ("%s_write_ops" % what, "area"),
-        ],
-    }
+        graph_info["%s_latency" % what] = {
+            "title": _("%s latency") % text,
+            "metrics": [
+                ("%s_read_latency" % what, "-area"),
+                ("%s_write_latency" % what, "area"),
+            ],
+        }
+
+        graph_info["%s_ops" % what] = {
+            "title": _("%s operations") % text,
+            "metrics": [
+                ("%s_read_ops" % what, "-area"),
+                ("%s_write_ops" % what, "area"),
+            ],
+        }
+
+
+register_netapp_api_vs_traffic_graphs()
 
 graph_info["harddrive_health_statistic"] = {
     "title": _("Harddrive health statistic"),
@@ -9443,23 +9503,28 @@ graph_info["packet_loss"] = {
     ]
 }
 
-for idx in range(1, MAX_NUMBER_HOPS):
-    graph_info["hop_%d_round_trip_average" % idx] = {
-        "title": _("Hop %d Round trip average") % idx,
-        "metrics": [
-            ("hop_%d_rtmax" % idx, "area"),
-            ("hop_%d_rtmin" % idx, "area"),
-            ("hop_%d_rta" % idx, "line"),
-            ("hop_%d_rtstddev" % idx, "line"),
-        ],
-    }
-    graph_info["hop_%d_packet_loss" % idx] = {
-        "title": _("Hop %d Packet loss") % idx,
-        "metrics": [("hop_%d_pl" % idx, "area"),],
-    }
+
+def register_hop_graphs():
+    for idx in range(1, MAX_NUMBER_HOPS):
+        graph_info["hop_%d_round_trip_average" % idx] = {
+            "title": _("Hop %d Round trip average") % idx,
+            "metrics": [
+                ("hop_%d_rtmax" % idx, "area"),
+                ("hop_%d_rtmin" % idx, "area"),
+                ("hop_%d_rta" % idx, "line"),
+                ("hop_%d_rtstddev" % idx, "line"),
+            ],
+        }
+        graph_info["hop_%d_packet_loss" % idx] = {
+            "title": _("Hop %d Packet loss") % idx,
+            "metrics": [("hop_%d_pl" % idx, "area"),],
+        }
 
 
-def create_hop_response_graph():
+register_hop_graphs()
+
+
+def register_hop_response_graph():
     new_graph = {
         "title": _("Hop response times"),
         "metrics": [],
@@ -9475,7 +9540,7 @@ def create_hop_response_graph():
     graph_info["hop_response_time"] = new_graph
 
 
-create_hop_response_graph()
+register_hop_response_graph()
 
 graph_info["mem_perm_used"] = {
     "metrics": [("mem_perm_used", "area")],
@@ -9622,10 +9687,15 @@ graph_info["packets_dropped"] = {
     ]
 }
 
+
+def get_skype_mobile_metrics():
+    return [("active_sessions_%s" % device, idx == 0 and "area" or "stack")
+            for idx, (device, _name, _color) in enumerate(skype_mobile_devices[::-1])]
+
+
 graph_info["active_sessions"] = {
     "title": _("Active Sessions"),
-    "metrics": [("active_sessions_%s" % device, idx == 0 and "area" or "stack")
-                for idx, (device, name, color) in enumerate(skype_mobile_devices[::-1])]
+    "metrics": get_skype_mobile_metrics(),
 }
 
 graph_info["streams"] = {

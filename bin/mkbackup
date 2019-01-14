@@ -133,7 +133,7 @@ def is_cma():
     return os.path.exists("/etc/cma/cma.conf")
 
 
-def site_id():
+def current_site_id():
     return os.environ.get("OMD_SITE")
 
 
@@ -147,7 +147,7 @@ def system_config_path():
 
 
 def site_config_path():
-    if not site_id():
+    if not current_site_id():
         raise Exception("Not executed in OMD environment!")
     return "%s/etc/check_mk/backup.mk" % os.environ["OMD_ROOT"]
 
@@ -271,9 +271,9 @@ def load_config():
             system_targets = load_file(system_config_path())["targets"]
 
             # only load non conflicting targets
-            for target_ident, target_cfg in system_targets.items():
+            for target_ident, target_config in system_targets.items():
                 if target_ident not in config["targets"]:
-                    config["targets"][target_ident] = target_cfg
+                    config["targets"][target_ident] = target_config
 
         except IOError:
             # Not existing system wide config is OK. In this case there
@@ -329,7 +329,7 @@ def create_backup_info():
 
 
 def add_site_info_to_backup_info(info):
-    info["site_id"] = site_id()
+    info["site_id"] = current_site_id()
     info["site_version"] = site_version(info["site_id"])
 
 
@@ -608,11 +608,11 @@ def do_site_backup(opts, site=None, try_stop=True):
     # as root, the site argument has to be given and must be handed over to
     # "omd backup".
     if site is None:
-        site = site_id()
+        site = current_site_id()
     else:
         if not is_root():
             raise MKGeneralException("Requested backup of site %s, "
-                                     "but not running as root." % site_id)
+                                     "but not running as root." % site)
         cmd.append(site)
 
     cmd.append("-")
@@ -1029,7 +1029,7 @@ def needed_backup_archive_files(info):
         #needed_files += [ "site-%s" % s for s in existing_sites() ]
     else:
         # Care about restore from a backup made in a site with another site_id
-        site = info.get("site_id", site_id())
+        site = info.get("site_id", current_site_id())
         needed_files = ["site-%s" % site]
 
     return [f + archive_suffix() for f in needed_files]
@@ -1083,7 +1083,7 @@ def verify_backup_exists():
 def verify_backup_consistency(info):
     log("Verifying backup consistency")
     needed_files = needed_backup_archive_files(info)
-    optional_files = [e[0] for e in info["files"] if e[0] not in needed_files]
+    optional_files = [entry[0] for entry in info["files"] if entry[0] not in needed_files]
 
     verify_backup_files(info, needed_files, needed=True)
     verify_backup_files(info, optional_files, needed=False)
@@ -1289,7 +1289,7 @@ def load_job(local_job_id):
 
 def globalize_job_id(local_job_id):
     parts = []
-    site = site_id()
+    site = current_site_id()
 
     if site:
         parts.append("Check_MK")
@@ -1378,7 +1378,7 @@ def state_path():
         if is_root():
             name = "restore"
         else:
-            name = "restore-%s" % site_id()
+            name = "restore-%s" % current_site_id()
 
     return "%s/%s.state" % (path, name)
 
@@ -1486,11 +1486,11 @@ def do_site_restore(opts, info, site=None):
     # "omd restore".
     if site is None:
         # Care about restore from a backup made in a site with another site_id
-        site = info.get("site_id", site_id())
+        site = info.get("site_id", current_site_id())
     else:
         if not is_root():
             raise MKGeneralException("Requested restore of site %s, "
-                                     "but not running as root." % site_id)
+                                     "but not running as root." % site)
         cmd.append("--reuse")
         cmd.append(site)
 

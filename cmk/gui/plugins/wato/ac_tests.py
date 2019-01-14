@@ -799,6 +799,6 @@ class ACTestRulebasedNotifications(ACTest):
 
 
 def _site_is_using_livestatus_proxy(site_id):
-    sites = SiteManagementFactory().factory().load_sites()
-    site = sites[site_id]
-    return site["socket"][0] == "proxy"
+    site_configs = SiteManagementFactory().factory().load_sites()
+    site_cfg = site_configs[site_id]
+    return site_cfg["socket"][0] == "proxy"

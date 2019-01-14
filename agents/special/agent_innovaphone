@@ -91,23 +91,23 @@ def get_licenses():
 base_url = "/LOG0/CNT/mod_cmd.xml?cmd=xml-counts"
 counter_address = "http://%s%s" % (server, base_url)
 p = etree.parse(get_url(counter_address))
-data = p.getroot()
+root_data = p.getroot()
 
 informations = {}
-for line in data:
-    n = line.get('n')
-    x = line.get('x')
+for entry in root_data:
+    n = entry.get('n')
+    x = entry.get('x')
     informations[n] = x
 
 s_prefix = "innovaphone_"
 for what in ["CPU", "MEM", "TEMP"]:
     if informations.get(what):
-        name = s_prefix + what.lower()
-        get_informations(name, informations[what], what)
+        section_name = s_prefix + what.lower()
+        get_informations(section_name, informations[what], what)
 
 print "<<<%schannels>>>" % s_prefix
-for channel in range(1, 5):
-    get_pri_channel('PRI' + str(channel))
+for channel_num in range(1, 5):
+    get_pri_channel('PRI' + str(channel_num))
 
 print "<<<%slicenses>>>" % s_prefix
 get_licenses()

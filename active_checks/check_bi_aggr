@@ -147,7 +147,7 @@ if track_downtime and not hostname:
 
 
 def init_auth():
-    auth = None
+    auth_obj = None
     if username and password:
         if auth_mode == 'kerberos':
             from requests_kerberos import HTTPKerberosAuth
@@ -162,12 +162,12 @@ def init_auth():
                     "stdout: %s\nstderr: %s\nrc: %s" % (output, errors, kinit.returncode))
                 sys.exit(1)
 
-            auth = HTTPKerberosAuth(principal=username)
+            auth_obj = HTTPKerberosAuth(principal=username)
         elif auth_mode == 'digest':
-            auth = requests.auth.HTTPDigestAuth(username, password)
+            auth_obj = requests.auth.HTTPDigestAuth(username, password)
         else:
-            auth = requests.auth.HTTPBasicAuth(username, password)
-    return auth
+            auth_obj = requests.auth.HTTPBasicAuth(username, password)
+    return auth_obj
 
 url = "%s/check_mk/view.py" \
       "?view_name=aggr_single_api" \

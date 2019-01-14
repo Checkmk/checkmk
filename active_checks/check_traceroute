@@ -69,13 +69,13 @@ def option_to_state(c):
 
 
 def check_traceroute(target, routes, nodns, method):
-    args = ["traceroute"]
+    cmd = ["traceroute"]
     if nodns:
-        args.append("-n")
+        cmd.append("-n")
     if method:
-        args.append(method)
-    args.append(target)
-    p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=False)
+        cmd.append(method)
+    cmd.append(target)
+    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=False)
     sto, ste = p.communicate()
     if p.returncode:
         return 3, "UNKNOWN - " + ste.replace("\n", " "), ""
@@ -156,7 +156,7 @@ long_options = [
     "debug",
 ]
 
-routes = []
+route_params = []
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
@@ -168,7 +168,7 @@ try:
         elif o in ['-d', '--debug']:
             opt_debug = True
         elif o in ['-w', '-W', '-c', '-C']:
-            routes.append((o[1], a))
+            route_params.append((o[1], a))
         elif o == '-n':
             opt_nodns = True
         elif o in ['-T', '-I']:
@@ -183,9 +183,10 @@ try:
     if len(args) < 1:
         bail_out("Please specify the target destination.")
 
-    target = args[0]
+    target_address = args[0]
 
-    status, output, long_output = check_traceroute(target, routes, opt_nodns, opt_method)
+    status, output, long_output = check_traceroute(target_address, route_params, opt_nodns,
+                                                   opt_method)
     sys.stdout.write(output.strip() + "\n" + long_output)
     sys.exit(status)
 

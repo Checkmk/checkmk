@@ -80,7 +80,7 @@ for o, a in opts:
         sys.exit(0)
 
 if len(args) == 1:
-    host_address = args[0]
+    opt_host_address = args[0]
 elif not args:
     sys.stderr.write("ERROR: No host given.\n")
     sys.exit(1)
@@ -155,7 +155,7 @@ class Server(object):
         return self.communicate(payload, {"classname": classname})
 
 
-handle = Server(host_address)
+handle = Server(opt_host_address)
 handle.login(opt_username, opt_password)
 
 entities = [
@@ -223,9 +223,9 @@ for header, entries in entities:
     sys.stdout.write("<<<%s:sep(9)>>>\n" % header)
     for entry, fields in entries:
         try:
-            response = handle.get_class(entry)
-            elements = get_pattern('<%(entry)s (.*?)/>' % {"entry": entry}, response)
-            for element in elements:
+            response_text = handle.get_class(entry)
+            matched_elements = get_pattern('<%(entry)s (.*?)/>' % {"entry": entry}, response_text)
+            for element in matched_elements:
                 sys.stdout.write("%s\t" % entry)
                 values = []
                 for field in fields:

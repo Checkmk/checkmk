@@ -210,8 +210,8 @@ def query(what, params, debug=False):
         sys.stdout.write("Given-Params: %s\n" % params)
 
     f = fd.create_function_call()
-    for key, val in params.items():
-        getattr(f, key)(val)
+    for param_key, val in params.items():
+        getattr(f, param_key)(val)
     f.invoke()
 
     ret = f.RETURN.value
@@ -239,9 +239,9 @@ def logout():
     })
 
 
-def mon_list(cfg):
+def mon_list(cfg_entry):
     f = query("BAPI_SYSTEM_MON_GETLIST", {
-        'EXTERNAL_USER_NAME': cfg['user'],
+        'EXTERNAL_USER_NAME': cfg_entry['user'],
     })
     l = []
     for mon in f.MONITOR_NAMES.value:
@@ -259,14 +259,15 @@ def mon_list(cfg):
 #    return l
 
 
-def mon_tree(cfg, ms_name, mon_name):
-    f = query("BAPI_SYSTEM_MON_GETTREE", {
-        'EXTERNAL_USER_NAME': cfg['user'],
-        'MONITOR_NAME': {
-            "MS_NAME": ms_name,
-            "MONI_NAME": mon_name
-        },
-    })
+def mon_tree(cfg_entry, ms_name, mon_name):
+    f = query(
+        "BAPI_SYSTEM_MON_GETTREE", {
+            'EXTERNAL_USER_NAME': cfg_entry['user'],
+            'MONITOR_NAME': {
+                "MS_NAME": ms_name,
+                "MONI_NAME": mon_name
+            },
+        })
     tree = f.TREE_NODES.value
     for node in tree:
         node['PATH'] = ms_name + SEPARATOR + node_path(tree, node)
@@ -285,15 +286,15 @@ def tid(node):
     }
 
 
-def mon_perfdata(cfg, node):
+def mon_perfdata(cfg_entry, node):
     f = query('BAPI_SYSTEM_MTE_GETPERFCURVAL', {
-        'EXTERNAL_USER_NAME': cfg['user'],
+        'EXTERNAL_USER_NAME': cfg_entry['user'],
         'TID': tid(node),
     })
     value = f.CURRENT_VALUE.value['LASTPERVAL']
 
     f = query('BAPI_SYSTEM_MTE_GETPERFPROP', {
-        'EXTERNAL_USER_NAME': cfg['user'],
+        'EXTERNAL_USER_NAME': cfg_entry['user'],
         'TID': tid(node),
     })
     if f.PROPERTIES.value['DECIMALS'] != 0:
@@ -303,9 +304,9 @@ def mon_perfdata(cfg, node):
     return value, uom
 
 
-def mon_msg(cfg, node):
+def mon_msg(cfg_entry, node):
     f = query('BAPI_SYSTEM_MTE_GETSMVALUE', {
-        'EXTERNAL_USER_NAME': cfg['user'],
+        'EXTERNAL_USER_NAME': cfg_entry['user'],
         'TID': tid(node),
     })
     data = f.VALUE.value
@@ -321,9 +322,9 @@ def parse_dt(d, t):
     return datetime.datetime(*time.strptime(d + t, '%Y%m%d%H%M%S')[:6])
 
 
-def mon_alerts(cfg, node):
+def mon_alerts(cfg_entry, node):
     f = query('BAPI_SYSTEM_MTE_GETALERTS', {
-        'EXTERNAL_USER_NAME': cfg['user'],
+        'EXTERNAL_USER_NAME': cfg_entry['user'],
         'TID': tid(node),
     })
     return f.ALERTS.value
@@ -340,9 +341,9 @@ def aid(alert):
     }
 
 
-def alert_details(cfg, alert):
+def alert_details(cfg_entry, alert):
     f = query('BAPI_SYSTEM_ALERT_GETDETAILS', {
-        'EXTERNAL_USER_NAME': cfg['user'],
+        'EXTERNAL_USER_NAME': cfg_entry['user'],
         'AID': aid(alert),
     })
     #prop  = f.PROPERTIES.value
@@ -351,7 +352,7 @@ def alert_details(cfg, alert):
     return state, msg
 
 
-def process_alerts(cfg, logs, ms_name, mon_name, node, alerts):
+def process_alerts(cfg_entry, logs, ms_name, mon_name, node, alerts):
     global state_file_changed
 
     sid = node["MTSYSID"].strip() or 'Other'
@@ -376,7 +377,7 @@ def process_alerts(cfg, logs, ms_name, mon_name, node, alerts):
         if not newest_log_dt or dt > newest_log_dt:
             newest_log_dt = dt  # store the newest log of this run
 
-        alert_state, alert_msg = alert_details(cfg, alert)
+        alert_state, alert_msg = alert_details(cfg_entry, alert)
         # Format lines to "logwatch" format
         logs[hostname][logfile].append('%s %s %s' % (STATE_LOGWATCH_MAP[alert_state['VALUE']],
                                                      dt.strftime("%Y-%m-%d %H:%M:%S"), alert_msg))
@@ -516,10 +517,10 @@ try:
     # Only write the state file once per run. And only when it has been changed
     if state_file_changed:
         new_file = STATE_FILE + '.new'
-        fd = os.open(new_file, os.O_WRONLY | os.O_CREAT)
-        fcntl.flock(fd, fcntl.LOCK_EX)
-        os.write(fd, repr(states))
-        os.close(fd)
+        state_fd = os.open(new_file, os.O_WRONLY | os.O_CREAT)
+        fcntl.flock(state_fd, fcntl.LOCK_EX)
+        os.write(state_fd, repr(states))
+        os.close(state_fd)
         os.rename(STATE_FILE + '.new', STATE_FILE)
 
 except Exception, e:

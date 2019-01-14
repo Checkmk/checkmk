@@ -168,8 +168,6 @@ class SNMPDataSource(DataSource):
 
         self._verify_ipaddress()
 
-        persisted_sections = self._load_persisted_sections()
-
         check_plugin_names = self.get_check_plugin_names()
 
         access_data = self._get_access_data()
@@ -197,7 +195,7 @@ class SNMPDataSource(DataSource):
 
             # This checks data is configured to be persisted (snmp_check_interval) and recent enough.
             # Skip gathering new data here. The persisted data will be added latera
-            if section_name in persisted_sections:
+            if section_name in self._persisted_sections:
                 self._logger.debug(
                     "%s: Skip fetching data (persisted info exists)" % (check_plugin_name))
                 continue
@@ -248,8 +246,8 @@ class SNMPDataSource(DataSource):
             key=lambda x: (not ('cpu' in x or x in cpu_checks_without_cpu_in_check_name), x))
 
     def _convert_to_sections(self, raw_data):
-        persisted_sections = self._extract_persisted_sections(raw_data)
-        return HostSections(raw_data, persisted_sections=persisted_sections)
+        sections_to_persist = self._extract_persisted_sections(raw_data)
+        return HostSections(raw_data, persisted_sections=sections_to_persist)
 
     def _extract_persisted_sections(self, raw_data):
         """Extract the sections to be persisted from the raw_data and return it

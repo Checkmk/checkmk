@@ -1,0 +1,11 @@
+Title: SNMP Checks: Fixed randomly missing data, when using the rule "Check intervals for SNMP checks"
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1542114586
+
+One outcome of this bug was that successive service discoveries reported different amounts of services found.

@@ -116,16 +116,7 @@ def page_api():
         if not config.wato_enabled:
             raise MKUserError(None, _("WATO is disabled on this site."))
 
-        config.user.need_permission("wato.use")
-        config.user.need_permission("wato.api_allowed")
-
-        action = html.request.var('action')
-        api_call = api_call_collection_registry.get(action)
-        if not api_call:
-            raise MKUserError(None, "Unknown API action %s" % html.attrencode(action))
-
-        for permission in api_call.get("required_permissions", []):
-            config.user.need_permission(permission)
+        api_call = _get_api_call()
 
         # Initialize host and site attributes
         watolib.init_wato_datastructures()
@@ -193,3 +184,15 @@ def page_api():
         }
 
     html.write(_FORMATTERS[html.output_format][1 if pretty_print else 0](response))
+
+
+def _get_api_call():
+    action = html.request.var('action')
+    for cls in api_call_collection_registry.values():
+        api_call = cls().get_api_calls().get(action)
+        if api_call:
+            for permission in ["wato.use", "wato.api_allowed"] + \
+                              api_call.get("required_permissions", []):
+                config.user.need_permission(permission)
+            return api_call
+    raise MKUserError(None, "Unknown API action %s" % html.attrencode(action))

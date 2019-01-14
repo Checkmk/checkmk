@@ -1,12 +1,13 @@
 # encoding: utf-8
 
-import pytest
 import subprocess
 import re
 import os
-import lockfile
+import lockfile  # type: ignore
+import pytest  # type: ignore
 
-from testlib import web, repo_path
+from testlib import web  # pylint: disable=unused-import
+
 
 @pytest.fixture(scope="function")
 def test_cfg(web, site, tmpdir):
@@ -44,8 +45,7 @@ def test_cfg(web, site, tmpdir):
                 'remote': ('local', {
                     'is_mountpoint': False,
                     'path': backup_path
-                    }
-                ),
+                }),
                 'title': u't\xe4rget'
             },
         },
@@ -82,7 +82,8 @@ def _execute_backup(site, job_id="testjob"):
     with BackupLock():
         # Perform the backup
         p = site.execute(["mkbackup", "backup", job_id],
-                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                         stdout=subprocess.PIPE,
+                         stderr=subprocess.PIPE)
         stdout, stderr = p.communicate()
         assert stderr == ""
         assert p.wait() == 0
@@ -90,18 +91,21 @@ def _execute_backup(site, job_id="testjob"):
 
     # Check successful backup listing
     p = site.execute(["mkbackup", "list", "test-target"],
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                     stdout=subprocess.PIPE,
+                     stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
     assert stderr == ""
     assert p.wait() == 0
-    assert ("%s-complete" % job_id.replace("-", "+")) in stdout
+    assert "%s-complete" % job_id.replace("-", "+") in stdout
 
     if job_id == "testjob-encrypted":
         assert "C0:4E:D4:4B:B4:AB:8B:3F:B4:09:32:CE:7D:A6:CF:76" in stdout
 
     # Extract and return backup id
     print stdout
-    matches = re.search("Backup-ID:\s+(Check_MK-[a-zA-Z0-9_+\.-]+-%s-complete)" % job_id.replace("-", "\+"), stdout)
+    matches = re.search(
+        r"Backup-ID:\s+(Check_MK-[a-zA-Z0-9_+\.-]+-%s-complete)" % job_id.replace("-", "\\+"),
+        stdout)
     assert matches is not None
     backup_id = matches.groups()[0]
 
@@ -111,12 +115,13 @@ def _execute_backup(site, job_id="testjob"):
 def _execute_restore(site, backup_id, env=None):
     with BackupLock():
         p = site.execute(["mkbackup", "restore", "test-target", backup_id],
-                stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
+                         stdout=subprocess.PIPE,
+                         stderr=subprocess.PIPE,
+                         env=env)
         stdout, stderr = p.communicate()
         assert "Restore completed" in stdout, "Invalid output: %r" % stdout
         assert stderr == ""
         assert p.wait() == 0
-
 
 
 #.
@@ -132,6 +137,7 @@ def _execute_restore(site, backup_id, env=None):
 #   | functional test should be implemented in unit tests (see below).     |
 #   '----------------------------------------------------------------------'
 
+
 def test_mkbackup_help(site):
     p = site.execute(["mkbackup"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
@@ -142,7 +148,7 @@ def test_mkbackup_help(site):
 
 def test_mkbackup_list_unconfigured(site):
     p = site.execute(["mkbackup", "list"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    stdout, stderr = p.communicate()
+    stderr = p.communicate()[1]
     assert stderr.startswith("mkbackup is not configured yet")
     assert p.wait() == 3
 
@@ -158,7 +164,8 @@ def test_mkbackup_list_targets(site, test_cfg):
 
 def test_mkbackup_list_backups(site, test_cfg):
     p = site.execute(["mkbackup", "list", "test-target"],
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                     stdout=subprocess.PIPE,
+                     stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
     assert stderr == ""
     assert p.wait() == 0
@@ -167,8 +174,7 @@ def test_mkbackup_list_backups(site, test_cfg):
 
 
 def test_mkbackup_list_backups_invalid_target(site, test_cfg):
-    p = site.execute(["mkbackup", "list", "xxx"],
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    p = site.execute(["mkbackup", "list", "xxx"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
     assert stderr.startswith("This backup target does not exist")
     assert p.wait() == 3
@@ -176,8 +182,7 @@ def test_mkbackup_list_backups_invalid_target(site, test_cfg):
 
 
 def test_mkbackup_list_jobs(site, test_cfg):
-    p = site.execute(["mkbackup", "jobs"],
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    p = site.execute(["mkbackup", "jobs"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
     assert stderr == ""
     assert p.wait() == 0

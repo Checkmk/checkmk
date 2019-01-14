@@ -1,0 +1,12 @@
+Title: fileinfo.groups: fix display bug in service discovery
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0p12
+Date: 1547459719
+Class: fix
+
+The service discovery for fileinfo.groups showed an error starting with
+"Invalid check parameter: Undefined key 'group_patterns'". This commit
+resolves this issue.

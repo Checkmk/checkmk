@@ -6463,7 +6463,7 @@ register_check_parameters(
                     count = 3,
             )),
         ],
-        ignored_keys = ["precompiled_patterns"]
+        ignored_keys = ["precompiled_patterns", "group_patterns"]
     ),
     TextAscii(
         title = _("File Group Name"),

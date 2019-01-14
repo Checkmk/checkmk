@@ -41,57 +41,87 @@ factory_settings["lnx_thermal_default_levels"] = {
 }
 
 
-@discover
-def inventory_lnx_thermal(line):
-    return line[0].replace('thermal_zone', 'Zone ')
-
-
-def check_lnx_thermal(item, params, info):
+def parse_lnx_thermal(info):
+    """
+    Supported format:
+    - Temperature is either the 3rd or 4th element in an info row.
+    - After temperature follows pairwise trip point temperature and trip point type.
+    - Considered trip points are critical, passive, hot.
+    - A known, not considered trip point is active.
+    - In case trip point values are 0 or negative (known default values) they are ignored.
+    """
+    if not info:
+        return {}
+    parsed = {}
     for line in info:
-        if line[0].replace('thermal_zone', 'Zone ') == item or\
-                line[0].replace('thermal_zone', '') == item:
-            # ['thermal_zone0', 'enabled', 'acpitz', '51000', '90000', 'critical', '79000', 'passive']
-
-            # Some devices report an empty value for the 3rd field (type). Trying to fix those lines.
-            # -> thermal_zone1 pkg-temp-0  44000 0 passive 0 passive
-            try:
-                int(line[2])
-                int(line[3])
-                line = line[:2] + [''] + line[2:]
-            except:
-                pass  # -> regular line
-
-            # convert values from millidegree
-            temp = int(line[3]) / 1000.0
-
-            # parse trip points
-            dev_warn = None
-            dev_crit = None
-            if len(line) > 4:
-                trip_points = dict(zip(line[5::2], [int(x) / 1000.0 for x in line[4::2]]))
-                for tp_name, level in trip_points.iteritems():
-                    # ignore active cooling device trip points (means enabling a fan or similar)
-                    if tp_name == 'active':
-                        continue
-                    if level != 0:
-                        if tp_name in ['hot', 'critical']:
-                            dev_crit = level
-                        else:
-                            dev_warn = level
-
-            # If only one relevant trip point is found, use that for both warn and crit
-            if (dev_warn is not None) != (dev_crit is not None):
-                dev_warn = dev_crit = max(dev_warn, dev_crit)
-
-            if dev_warn and dev_crit:
-                dev_levels = (dev_warn, dev_crit)
+        zone_identifier = 0
+        temperature_3rd_element_idx = 2
+        temperature_4th_element_idx = 3
+        temperature_factor = 1000.0
+        zone_raw = line[zone_identifier]
+        try:
+            int(line[temperature_3rd_element_idx])  # may raise an exception
+            temperature = int(line[temperature_3rd_element_idx]) / temperature_factor
+            trip_points = dict(zip(line[4::2], [int(x) / temperature_factor for x in line[3::2]]))
+        except ValueError:
+            temperature = int(line[temperature_4th_element_idx]) / temperature_factor
+            trip_points = dict(zip(line[5::2], [int(x) / temperature_factor for x in line[4::2]]))
+        zone_formatted = zone_raw.replace('thermal_zone', 'Zone ')
+        parsed[zone_formatted] = {}
+        temperature_and_trip_points = ('temperature', 'passive', 'critical', 'hot')
+        for key in temperature_and_trip_points:
+            parsed[zone_formatted].setdefault(key, None)
+        parsed[zone_formatted]['temperature'] = temperature
+        for tp_name, tp_value in trip_points.items():
+            if tp_name in trip_points and tp_value > 0:
+                parsed[zone_formatted][tp_name] = tp_value
             else:
-                dev_levels = None
+                # ignore trip point types not supported yet
+                pass
+    return parsed
 
-            return check_temperature(temp, params, "lnx_thermal_%s" % item, dev_levels=dev_levels)
+
+def inventory_lnx_thermal(parsed):
+    for item in parsed.keys():
+        yield item, {}
+
+
+def check_lnx_thermal(item, params, parsed):
+    """
+    - Trip points hot and critical are considered for the device crit level. In case both trip
+      points are given the lower value is considered for the device crit level.
+    - Trip point passive is considered for the device warn level.
+    - In case both hot and critical trip points are given the lower trip point value
+      is considered for the device crit level.
+    - Trip point temperatures are provided via performance data.
+    """
+    temperature = parsed.get(item).get('temperature')
+    warn_level = parsed.get(item).get('passive')
+    hot_value = parsed.get(item).get('hot')
+    critical_value = parsed.get(item).get('critical')
+
+    if not temperature:
+        return 3, "Item not found or invalid agent data."
+
+    if hot_value and critical_value:
+        crit_level = min(hot_value, critical_value)
+    else:
+        crit_level = hot_value or critical_value
+
+    if not crit_level or not warn_level:
+        crit_level = crit_level or warn_level
+        warn_level = warn_level or crit_level
+
+    if warn_level and crit_level:
+        levels = (warn_level, crit_level)
+    else:
+        levels = None
+
+    return check_temperature(temperature, params, "lnx_thermal_%s" % item, dev_levels=levels)
 
 
 check_info['lnx_thermal'] = {
+    "parse_function": parse_lnx_thermal,
     "inventory_function": inventory_lnx_thermal,
     "check_function": check_lnx_thermal,
     "service_description": "Temperature %s",

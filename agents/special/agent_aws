@@ -1124,6 +1124,7 @@ AWSRegions = [
     ("eu-west-1", "EU (Ireland)"),
     ("eu-west-2", "EU (London)"),
     ("eu-west-3", "EU (Paris)"),
+    ("eu-north-1", "EU (Stockholm)"),
     ("sa-east-1", "South America (Sao Paulo)"),
     ("us-east-2", "US East (Ohio)"),
     ("us-east-1", "US East (N. Virginia)"),
@@ -1136,6 +1137,9 @@ AWSServices = [
     ("ec2", "Elastic Compute Cloud (EC2)"),
     ("ebs", "Elastic Block Storage (EBS)"),
     ("s3", "Simple Storage Service (S3)"),
+    #("elb", "Elastic Load Balancing (ELB)"),
+    #("cloudtrail", ""),
+    #("glacier", ""),
 ]
 
 

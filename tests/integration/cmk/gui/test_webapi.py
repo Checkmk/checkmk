@@ -745,3 +745,17 @@ def test_get_graph_hover(web, graph_test_config):
         assert curve_value["rendered_value"][1] == "n/a"
         #assert isinstance(curve_value["rendered_value"][0], (int, float))
         #assert curve_value["rendered_value"][1] != ""
+
+
+def test_get_inventory(web):
+    try:
+        web.add_host(
+            "test-host", attributes={
+                "ipaddress": "127.0.0.1",
+            })
+
+        inv = web.get_inventory(["test-host"])
+
+        assert inv["test-host"] == {}
+    finally:
+        web.delete_host("test-host")

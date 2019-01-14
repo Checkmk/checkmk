@@ -380,14 +380,14 @@ def page_host_inv_api():
         if hosts:
             result = {}
             for host_name in hosts:
-                result[host_name] = _inventory_of_host(host_name, request)
+                result[host_name] = inventory_of_host(host_name, request)
 
         else:
             host_name = request.get("host")
             if host_name is None:
                 raise MKUserError("host", _("You need to provide a \"host\"."))
 
-            result = _inventory_of_host(host_name, request)
+            result = inventory_of_host(host_name, request)
 
             if not result and not has_inventory(host_name):
                 raise MKGeneralException(_("Found no inventory data for this host."))
@@ -417,7 +417,7 @@ def has_inventory(hostname):
     return os.path.exists(inventory_path)
 
 
-def _inventory_of_host(host_name, request):
+def inventory_of_host(host_name, request):
     site = request.get("site")
     if not _may_see(host_name, site):
         raise MKAuthException(_("Sorry, you are not allowed to access the host %s.") % host_name)

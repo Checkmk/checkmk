@@ -1,0 +1,10 @@
+Title: HW/SW inventory: Fixed API error 'Too many values to unpack'
+Level: 1
+Component: inv
+Compatible: compat
+Edition: cre
+Version: 1.5.0p12
+Date: 1547479895
+Class: fix
+
+

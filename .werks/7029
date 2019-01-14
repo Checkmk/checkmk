@@ -1,0 +1,15 @@
+Title: Skip adding PING service to piggyback only hosts without IP
+Level: 1
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1547497560
+Class: fix
+
+When a host is configured as "No agent", "No SNMP" and "No IP address"
+host it is not useful to add a "PING" service to it in case there are
+other services on this host because there is no address to be pinged.
+
+This combination of tags e.g. is used by the Dynamic configuration to
+create hosts that represent container objects or similar.

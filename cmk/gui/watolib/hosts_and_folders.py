@@ -1919,7 +1919,8 @@ class CREHost(WithPermissionsAndAttributes):
         # SNMP, it needs to get the ping tag assigned.
         # Because we need information from multiple attributes to get this
         # information, we need to add this decision here.
-        if "no-snmp" in tags and "no-agent" in tags:
+        # Skip this in case no-ip is configured: A ping check is useless in this case
+        if "no-snmp" in tags and "no-agent" in tags and not "no-ip" in tags:
             tags.add("ping")
 
         # The following code is needed to migrate host/rule matching from <1.5

@@ -138,8 +138,15 @@ all_hosts = []
 # TODO: This is a derived variable. Should be handled like others
 # (hosttags, service_service_levels, ...)
 host_paths = {}
-snmp_hosts = [(['snmp'], _ALL_HOSTS)]
-tcp_hosts = [(['tcp'], _ALL_HOSTS), (_NEGATE, ['snmp'], _ALL_HOSTS), (['!ping'], _ALL_HOSTS)]
+snmp_hosts = [
+    (['snmp'], _ALL_HOSTS),
+]
+tcp_hosts = [
+    (['tcp'], _ALL_HOSTS),
+    (_NEGATE, ['snmp'], _ALL_HOSTS),
+    # Match all those that don't have ping and don't have no-agent set
+    (['!ping', '!no-agent'], _ALL_HOSTS),
+]
 bulkwalk_hosts = []
 snmpv2c_hosts = []
 snmp_without_sys_descr = []

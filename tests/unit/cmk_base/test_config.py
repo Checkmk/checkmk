@@ -84,6 +84,30 @@ def test_management_address_of(monkeypatch, attrs, result):
 
 
 @pytest.mark.parametrize("hostname,tags,result", [
+    ("testhost", [], True),
+    ("testhost", ["cmk-agent"], True),
+    ("testhost", ["cmk-agent", "tcp"], True),
+    ("testhost", ["snmp", "tcp"], True),
+    ("testhost", ["ping"], False),
+    ("testhost", ["no-agent", "no-snmp"], False),
+])
+def test_is_tcp_host(monkeypatch, hostname, tags, result):
+    monkeypatch.setattr(config, "tags_of_host", lambda h: {hostname: tags}[h])
+    assert config.is_tcp_host(hostname) == result
+
+
+@pytest.mark.parametrize("hostname,tags,result", [
+    ("testhost", [], False),
+    ("testhost", ["cmk-agent"], False),
+    ("testhost", ["snmp", "tcp"], True),
+    ("testhost", ["snmp"], True),
+])
+def test_is_snmp_host(monkeypatch, hostname, tags, result):
+    monkeypatch.setattr(config, "tags_of_host", lambda h: {hostname: tags}[h])
+    assert config.is_snmp_host(hostname) == result
+
+
+@pytest.mark.parametrize("hostname,tags,result", [
     ("testhost", [], False),
     ("testhost", ["all-agents"], True),
     ("testhost", ["special-agents"], False),

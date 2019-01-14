@@ -55,8 +55,8 @@ if not cmk.is_raw_edition():
 
 # TODO: Kept for compatibility reasons with legacy plugins
 from cmk.gui.plugins.webapi.utils import (  # pylint: disable=unused-import
-    api_actions, add_configuration_hash, validate_request_keys, validate_config_hash,
-    validate_host_attributes, check_hostname,
+    add_configuration_hash, api_call_collection_registry, check_hostname, validate_config_hash,
+    validate_host_attributes, validate_request_keys,
 )
 
 loaded_with_language = False
@@ -120,10 +120,11 @@ def page_api():
         config.user.need_permission("wato.api_allowed")
 
         action = html.request.var('action')
-        if action not in api_actions:
+        api_call = api_call_collection_registry.get(action)
+        if not api_call:
             raise MKUserError(None, "Unknown API action %s" % html.attrencode(action))
 
-        for permission in api_actions[action].get("required_permissions", []):
+        for permission in api_call.get("required_permissions", []):
             config.user.need_permission(permission)
 
         # Initialize host and site attributes
@@ -133,7 +134,7 @@ def page_api():
         # Most of the time the request is given as json
         # However, the plugin may have an own mechanism to interpret the request
         request_object = {}
-        if api_actions[action].get("dont_eval_request"):
+        if api_call.get("dont_eval_request"):
             if html.request.var("request"):
                 request_object = html.request.var("request")
         else:
@@ -142,14 +143,14 @@ def page_api():
         # Check if the data was sent with the correct data format
         # Some API calls only allow python code
         # TODO: convert the api_action dict into an object which handles the validation
-        required_input_format = api_actions[action].get("required_input_format")
+        required_input_format = api_call.get("required_input_format")
         if required_input_format:
             if required_input_format != request_object["request_format"]:
                 raise MKUserError(
                     None,
                     "This API call requires a %s-encoded request parameter" % required_input_format)
 
-        required_output_format = api_actions[action].get("required_output_format")
+        required_output_format = api_call.get("required_output_format")
         if required_output_format:
             if required_output_format != html.output_format:
                 raise MKUserError(
@@ -166,10 +167,10 @@ def page_api():
                 raise MKUserError(None, cmk.gui.watolib.read_only.message())
             return {
                 "result_code": 0,
-                "result": api_actions[action]["handler"](request_object),
+                "result": api_call["handler"](request_object),
             }
 
-        if api_actions[action].get("locking", True):
+        if api_call.get("locking", True):
             with watolib.exclusive_lock():
                 response = execute_action()
         else:

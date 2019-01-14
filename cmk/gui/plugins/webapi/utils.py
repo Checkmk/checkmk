@@ -41,9 +41,6 @@ from cmk.gui.log import logger
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.valuespec import Hostname
 
-# TODO: refactor to plugin_registry
-api_actions = {}
-
 
 class APICallCollection(object):
     __metaclass__ = abc.ABCMeta

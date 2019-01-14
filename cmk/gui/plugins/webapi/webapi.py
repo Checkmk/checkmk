@@ -26,8 +26,9 @@
 
 # TODO CLEANUP: Replace MKUserError by MKAPIError or something like that
 
-import os
 import copy
+from functools import partial
+import os
 
 import cmk
 
@@ -45,7 +46,6 @@ import cmk.gui.bi as bi
 from cmk.gui.plugins.webapi import (
     APICallCollection,
     api_call_collection_registry,
-    api_actions,
     validate_request_keys,
     validate_host_attributes,
     validate_config_hash,
@@ -420,87 +420,105 @@ class APICallHosts(APICallCollection):
 #   +----------------------------------------------------------------------+
 
 
-def action_get_all_groups(request, group_type):
-    return userdb.load_group_information().get(group_type, {})
-
-
-def action_delete_group(request, group_type):
-    validate_request_keys(request, required_keys=["groupname"])
-    groupname = request.get("groupname")
-    watolib.delete_group(groupname, group_type)
-
-
-def get_group_extra_info(request, group_type):
-    extra_info = {}
-    extra_info["alias"] = request.get("alias")
-
-    if group_type == "contact" and "nagvis_maps" in request:
-        extra_info["nagvis_maps"] = request["nagvis_maps"]
-
-    if cmk.is_managed_edition():
-        extra_info["customer"] = request["customer"]
-
-    return extra_info
-
-
-def validate_group_request_keys(request, group_type):
-    required_keys = ["groupname", "alias"]
-
-    if cmk.is_managed_edition():
-        required_keys.append("customer")
-
-    if group_type == "contact":
-        validate_request_keys(request, required_keys=required_keys, optional_keys=["nagvis_maps"])
-    else:
-        validate_request_keys(request, required_keys=required_keys)
-
-
-def action_add_group(request, group_type):
-    validate_group_request_keys(request, group_type)
-    watolib.add_group(
-        request.get("groupname"),
-        group_type,
-        get_group_extra_info(request, group_type),
-    )
-
-
-def action_edit_group(request, group_type):
-    validate_group_request_keys(request, group_type)
-    watolib.edit_group(
-        request.get("groupname"),
-        group_type,
-        get_group_extra_info(request, group_type),
-    )
-
-
-def register_group_apis():
-    for group_type in ["contact", "host", "service"]:
-        api_actions["get_all_%sgroups" % group_type] = {
-            # Note: group_type=group_type bypasses pythons late binding behaviour
-            "handler": lambda x, group_type=group_type: action_get_all_groups(x, group_type),
-            "locking": False,
+@api_call_collection_registry.register
+class APICallGroups(APICallCollection):
+    def get_api_calls(self):
+        return {
+            "get_all_contactgroups": {
+                "handler": partial(self._get_all_groups, "contact"),
+                "locking": False,
+            },
+            "delete_contactgroup": {
+                "handler": partial(self._delete_group, "contact"),
+                "locking": True,
+            },
+            "add_contactgroup": {
+                "handler": partial(self._add_group, "contact"),
+                "locking": True,
+            },
+            "edit_contactgroup": {
+                "handler": partial(self._edit_group, "contact"),
+                "locking": True,
+            },
+            "get_all_hostgroups": {
+                "handler": partial(self._get_all_groups, "host"),
+                "locking": False,
+            },
+            "delete_hostgroup": {
+                "handler": partial(self._delete_group, "host"),
+                "locking": True,
+            },
+            "add_hostgroup": {
+                "handler": partial(self._add_group, "host"),
+                "locking": True,
+            },
+            "edit_hostgroup": {
+                "handler": partial(self._edit_group, "host"),
+                "locking": True,
+            },
+            "get_all_servicegroups": {
+                "handler": partial(self._get_all_groups, "service"),
+                "locking": False,
+            },
+            "delete_servicegroup": {
+                "handler": partial(self._delete_group, "service"),
+                "locking": True,
+            },
+            "add_servicegroup": {
+                "handler": partial(self._add_group, "service"),
+                "locking": True,
+            },
+            "edit_servicegroup": {
+                "handler": partial(self._edit_group, "service"),
+                "locking": True,
+            },
         }
 
-        api_actions["delete_%sgroup" % group_type] = {
-            # Note: group_type=group_type bypasses pythons late binding behaviour
-            "handler": lambda x, group_type=group_type: action_delete_group(x, group_type),
-            "locking": True,
-        }
+    def _get_all_groups(self, group_type, request):
+        return userdb.load_group_information().get(group_type, {})
 
-        api_actions["add_%sgroup" % group_type] = {
-            # Note: group_type=group_type bypasses pythons late binding behaviour
-            "handler": lambda x, group_type=group_type: action_add_group(x, group_type),
-            "locking": True,
-        }
+    def _delete_group(self, group_type, request):
+        validate_request_keys(request, required_keys=["groupname"])
+        groupname = request.get("groupname")
+        watolib.delete_group(groupname, group_type)
 
-        api_actions["edit_%sgroup" % group_type] = {
-            # Note: group_type=group_type bypasses pythons late binding behaviour
-            "handler": lambda x, group_type=group_type: action_edit_group(x, group_type),
-            "locking": True,
-        }
+    def _add_group(self, group_type, request):
+        self._validate_group_request_keys(group_type, request)
+        watolib.add_group(
+            request.get("groupname"),
+            group_type,
+            self._get_group_extra_info(group_type, request),
+        )
 
+    def _edit_group(self, group_type, request):
+        self._validate_group_request_keys(group_type, request)
+        watolib.edit_group(
+            request.get("groupname"),
+            group_type,
+            self._get_group_extra_info(group_type, request),
+        )
 
-register_group_apis()  # Otherwise, group_type is known in the global scope..
+    def _validate_group_request_keys(self, group_type, request):
+        required_keys = ["groupname", "alias"]
+        if cmk.is_managed_edition():
+            required_keys.append("customer")
+        optional_keys = []
+        if group_type == "contact":
+            optional_keys.append("nagvis_maps")
+        validate_request_keys(request, required_keys=required_keys, optional_keys=optional_keys)
+
+    def _get_group_extra_info(self, group_type, request):
+        extra_info = {}
+        extra_info["alias"] = request.get("alias")
+
+        if group_type == "contact" and "nagvis_maps" in request:
+            extra_info["nagvis_maps"] = request["nagvis_maps"]
+
+        if cmk.is_managed_edition():
+            extra_info["customer"] = request["customer"]
+
+        return extra_info
+
 
 #.
 #   .--Users---------------------------------------------------------------.
@@ -513,96 +531,84 @@ register_group_apis()  # Otherwise, group_type is known in the global scope..
 #   +----------------------------------------------------------------------+
 
 
-def action_get_all_users(request):
-    validate_request_keys(request, [])
-    all_users = userdb.load_users(lock=False)
-    return all_users
+@api_call_collection_registry.register
+class APICallUsers(APICallCollection):
+    def get_api_calls(self):
+        return {
+            "get_all_users": {
+                "handler": self._get_all_users,
+                "locking": False,
+            },
+            "delete_users": {
+                "handler": self._delete_users,
+                "locking": True,
+            },
+            "add_users": {
+                "handler": self._add_users,
+                "locking": True,
+            },
+            "edit_users": {
+                "handler": self._edit_users,
+                "locking": True,
+            }
+        }
 
+    def _get_all_users(self, request):
+        validate_request_keys(request, [])
+        return userdb.load_users(lock=False)
 
-api_actions["get_all_users"] = {
-    "handler": action_get_all_users,
-    "locking": False,
-}
+    def _delete_users(self, request):
+        validate_request_keys(request, required_keys=["users"])
+        cmk.gui.watolib.users.delete_users(request.get("users"))
 
-###############
+    def _add_users(self, request):
+        validate_request_keys(request, required_keys=["users"])
+        users_from_request = request.get("users")
+        new_user_objects = {}
+        for user_id, values in users_from_request.items():
+            user_template = userdb.new_user_template("htpasswd")
+            if "password" in values:
+                values["password"] = hash_password(values["password"])
+                values["serial"] = 1
 
+            user_template.update(values)
+            new_user_objects[user_id] = {"attributes": user_template, "is_new_user": True}
+        cmk.gui.watolib.users.edit_users(new_user_objects)
 
-def action_delete_users(request):
-    validate_request_keys(request, required_keys=["users"])
-    cmk.gui.watolib.users.delete_users(request.get("users"))
+    def _edit_users(self, request):
+        validate_request_keys(request, required_keys=["users"])
 
+        # A dictionary with the userid as key
+        # Each value is a {"set_attributes": {"alias": "test"},
+        #                  "unset_attributes": ["pager", "email"]}
 
-api_actions["delete_users"] = {
-    "handler": action_delete_users,
-    "locking": True,
-}
+        user_settings = request.get("users")
+        all_users = userdb.load_users()
 
-###############
+        edit_user_objects = {}
+        for user_id, settings in user_settings.items():
+            if user_id not in all_users:
+                raise MKUserError(None, _("Unknown user: %s") % user_id)
 
+            if all_users[user_id].get("connector", "htpasswd") != "htpasswd":
+                raise MKUserError(None, _("This user is not a htpasswd user: %s") % user_id)
 
-def action_add_users(request):
-    validate_request_keys(request, required_keys=["users"])
-    users_from_request = request.get("users")
-    new_user_objects = {}
-    for user_id, values in users_from_request.items():
-        user_template = userdb.new_user_template("htpasswd")
-        if "password" in values:
-            values["password"] = hash_password(values["password"])
-            values["serial"] = 1
+            user_attrs = copy.deepcopy(all_users[user_id])
+            user_attrs.update(settings.get("set_attributes", {}))
+            for entry in settings.get("unset_attributes", []):
+                if entry not in user_attrs:
+                    continue
+                del user_attrs[entry]
 
-        user_template.update(values)
-        new_user_objects[user_id] = {"attributes": user_template, "is_new_user": True}
+            new_password = settings.get("set_attributes", {}).get("password")
+            if new_password:
+                user_attrs["password"] = hash_password(new_password)
+                user_attrs["serial"] = user_attrs.get("serial", 0) + 1
 
-    cmk.gui.watolib.users.edit_users(new_user_objects)
+            edit_user_objects[user_id] = {"attributes": user_attrs, "is_new_user": False}
 
+        cmk.gui.watolib.users.edit_users(edit_user_objects)
 
-api_actions["add_users"] = {
-    "handler": action_add_users,
-    "locking": True,
-}
-
-###############
-
-
-def action_edit_users(request):
-    validate_request_keys(request, required_keys=["users"])
-
-    # A dictionary with the userid as key
-    # Each value is a {"set_attributes": {"alias": "test"},
-    #                  "unset_attributes": ["pager", "email"]}
-
-    user_settings = request.get("users")
-    all_users = userdb.load_users()
-
-    edit_user_objects = {}
-    for user_id, settings in user_settings.items():
-        if user_id not in all_users:
-            raise MKUserError(None, _("Unknown user: %s") % user_id)
-
-        if all_users[user_id].get("connector", "htpasswd") != "htpasswd":
-            raise MKUserError(None, _("This user is not a htpasswd user: %s") % user_id)
-
-        user_attrs = copy.deepcopy(all_users[user_id])
-        user_attrs.update(settings.get("set_attributes", {}))
-        for entry in settings.get("unset_attributes", []):
-            if entry not in user_attrs:
-                continue
-            del user_attrs[entry]
-
-        new_password = settings.get("set_attributes", {}).get("password")
-        if new_password:
-            user_attrs["password"] = hash_password(new_password)
-            user_attrs["serial"] = user_attrs.get("serial", 0) + 1
-
-        edit_user_objects[user_id] = {"attributes": user_attrs, "is_new_user": False}
-
-    cmk.gui.watolib.users.edit_users(edit_user_objects)
-
-
-api_actions["edit_users"] = {
-    "handler": action_edit_users,
-    "locking": True,
-}
 
 #.
 #   .--Rules---------------------------------------------------------------.
@@ -1075,126 +1081,123 @@ class APICallBIAggregationState(APICallCollection):
 #   +----------------------------------------------------------------------+
 
 
-def action_discover_services(request):
-    validate_request_keys(request, required_keys=["hostname"], optional_keys=["mode"])
-
-    mode = request.get("mode", "new")
-    hostname = request.get("hostname")
-
-    check_hostname(hostname, should_exist=True)
-
-    host = watolib.Host.host(hostname)
-
-    host_attributes = host.effective_attributes()
-
-    if host.is_cluster():
-        # This is currently the only way to get some actual discovery statitics.
-        # Start a dry-run -> Get statistics
-        # Do an actual discovery on the nodes -> data is written
-        result = watolib.check_mk_automation(
-            host_attributes.get("site"), "try-inventory", ["@scan"] + [hostname])
-        counts = {"new": 0, "old": 0}
-        for entry in result:
-            if entry[0] in counts:
-                counts[entry[0]] += 1
-
-        counts = {
-            hostname: (
-                counts["new"],
-                0,  # this info is not available for clusters
-                counts["old"],
-                counts["new"] + counts["old"])
+@api_call_collection_registry.register
+class APICallOther(APICallCollection):
+    def get_api_calls(self):
+        return {
+            "discover_services": {
+                "handler": self._discover_services,
+                "required_permissions": ["wato.services"],
+                "locking": True,
+            },
+            "activate_changes": {
+                "handler": self._activate_changes,
+                "locking": True,
+            }
         }
 
-        # A cluster cannot fail, just the nodes. This information is currently discarded
-        failed_hosts = None
-        watolib.check_mk_automation(
-            host_attributes.get("site"), "inventory", ["@scan", mode] + host.cluster_nodes())
-    else:
-        counts, failed_hosts = watolib.check_mk_automation(
-            host_attributes.get("site"), "inventory", ["@scan", mode] + [hostname])
+    def _discover_services(self, request):
+        validate_request_keys(request, required_keys=["hostname"], optional_keys=["mode"])
 
-    if failed_hosts:
-        if not host.discovery_failed():
-            host.set_discovery_failed()
-        raise MKUserError(None,
-                          _("Failed to inventorize %s: %s") % (hostname, failed_hosts[hostname]))
+        mode = request.get("mode", "new")
+        hostname = request.get("hostname")
 
-    if host.discovery_failed():
-        host.clear_discovery_failed()
+        check_hostname(hostname, should_exist=True)
 
-    if mode == "refresh":
-        message = _("Refreshed check configuration of host [%s] with %d services") % (
-            hostname, counts[hostname][3])
-        watolib.add_service_change(host, "refresh-autochecks", message)
-    else:
-        message = _("Saved check configuration of host [%s] with %d services") % (
-            hostname, counts[hostname][3])
-        watolib.add_service_change(host, "set-autochecks", message)
+        host = watolib.Host.host(hostname)
 
-    msg = _("Service discovery successful. Added %d, Removed %d, Kept %d, New Count %d") % tuple(
-        counts[hostname])
-    return msg
+        host_attributes = host.effective_attributes()
 
+        if host.is_cluster():
+            # This is currently the only way to get some actual discovery statitics.
+            # Start a dry-run -> Get statistics
+            # Do an actual discovery on the nodes -> data is written
+            result = watolib.check_mk_automation(
+                host_attributes.get("site"), "try-inventory", ["@scan"] + [hostname])
+            counts = {"new": 0, "old": 0}
+            for entry in result:
+                if entry[0] in counts:
+                    counts[entry[0]] += 1
 
-api_actions["discover_services"] = {
-    "handler": action_discover_services,
-    "required_permissions": ["wato.services"],
-    "locking": True,
-}
+            counts = {
+                hostname: (
+                    counts["new"],
+                    0,  # this info is not available for clusters
+                    counts["old"],
+                    counts["new"] + counts["old"])
+            }
 
-###############
+            # A cluster cannot fail, just the nodes. This information is currently discarded
+            failed_hosts = None
+            watolib.check_mk_automation(
+                host_attributes.get("site"), "inventory", ["@scan", mode] + host.cluster_nodes())
+        else:
+            counts, failed_hosts = watolib.check_mk_automation(
+                host_attributes.get("site"), "inventory", ["@scan", mode] + [hostname])
 
+        if failed_hosts:
+            if not host.discovery_failed():
+                host.set_discovery_failed()
+            raise MKUserError(
+                None,
+                _("Failed to inventorize %s: %s") % (hostname, failed_hosts[hostname]))
 
-def action_activate_changes(request):
-    validate_request_keys(
-        request, optional_keys=["mode", "sites", "allow_foreign_changes", "comment"])
+        if host.discovery_failed():
+            host.clear_discovery_failed()
 
-    mode = request.get("mode", "dirty")
-    if request.get("allow_foreign_changes"):
-        allow_foreign_changes = bool(int(request.get("allow_foreign_changes")))
-    else:
-        allow_foreign_changes = False
+        if mode == "refresh":
+            message = _("Refreshed check configuration of host [%s] with %d services") % (
+                hostname, counts[hostname][3])
+            watolib.add_service_change(host, "refresh-autochecks", message)
+        else:
+            message = _("Saved check configuration of host [%s] with %d services") % (
+                hostname, counts[hostname][3])
+            watolib.add_service_change(host, "set-autochecks", message)
 
-    sites = request.get("sites")
+        msg = _("Service discovery successful. Added %d, Removed %d, Kept %d, New Count %d"
+               ) % tuple(counts[hostname])
+        return msg
 
-    changes = watolib.ActivateChanges()
-    changes.load()
+    def _activate_changes(self, request):
+        validate_request_keys(
+            request, optional_keys=["mode", "sites", "allow_foreign_changes", "comment"])
 
-    if changes.has_foreign_changes():
-        if not config.user.may("wato.activateforeign"):
-            raise MKAuthException(_("You are not allowed to activate changes of other users."))
-        if not allow_foreign_changes:
-            raise MKAuthException(_("There are changes from other users and foreign changes "\
-                                    "are not allowed in this API call."))
+        mode = request.get("mode", "dirty")
+        if request.get("allow_foreign_changes"):
+            allow_foreign_changes = bool(int(request.get("allow_foreign_changes")))
+        else:
+            allow_foreign_changes = False
 
-    if mode == "specific":
-        for site in sites:
-            if site not in config.allsites().keys():
-                raise MKUserError(None, _("Unknown site %s") % html.attrencode(site))
+        sites = request.get("sites")
 
-    manager = watolib.ActivateChangesManager()
-    manager.load()
+        changes = watolib.ActivateChanges()
+        changes.load()
 
-    if not manager.has_changes():
-        raise MKUserError(None, _("Currently there are no changes to activate."))
+        if changes.has_foreign_changes():
+            if not config.user.may("wato.activateforeign"):
+                raise MKAuthException(_("You are not allowed to activate changes of other users."))
+            if not allow_foreign_changes:
+                raise MKAuthException(_("There are changes from other users and foreign changes "\
+                                        "are not allowed in this API call."))
 
-    if not sites:
-        sites = manager.dirty_and_active_activation_sites()
+        if mode == "specific":
+            for site in sites:
+                if site not in config.allsites().keys():
+                    raise MKUserError(None, _("Unknown site %s") % html.attrencode(site))
 
-    comment = request.get("comment", "").strip()
-    if comment == "":
-        comment = None
+        manager = watolib.ActivateChangesManager()
+        manager.load()
 
-    manager.start(sites, comment=comment, activate_foreign=allow_foreign_changes)
-    manager.wait_for_completion()
-    return manager.get_state()
+        if not manager.has_changes():
+            raise MKUserError(None, _("Currently there are no changes to activate."))
 
+        if not sites:
+            sites = manager.dirty_and_active_activation_sites()
 
-api_actions["activate_changes"] = {
-    "handler": action_activate_changes,
-    "locking": True,
-}
+        comment = request.get("comment", "").strip()
+        if comment == "":
+            comment = None
 
-for api_call_class in api_call_collection_registry.values():
-    api_actions.update(api_call_class().get_api_calls())
+        manager.start(sites, comment=comment, activate_foreign=allow_foreign_changes)
+        manager.wait_for_completion()
+        return manager.get_state()

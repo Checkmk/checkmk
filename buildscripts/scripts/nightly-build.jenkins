@@ -1,36 +1,98 @@
-def DISTRO_LIST = ["node-ubuntu-18.04", "centos-6"]
-def BUILDS = [:]
-def DAILY_DATA = '/var/jenkins_home/daily-data'
+import java.text.SimpleDateFormat
+
+def DISTRO_LIST = ["ubuntu-18.04", "centos-6"]
+def PACKAGE_BUILDS = [:]
+def AGENT_BIT_LIST = ["64bit", "32bit"]
+def AGENT_BUILDS= [:]
+
+def dateFormat = new SimpleDateFormat("yyyy.MM.dd")
+def date = new Date()
+def CMK_VERS = dateFormat.format(date)
+def DAILY_DATA = '/var/jenkins_home/daily-data/' + BRANCH_NAME.replaceAll("/","-") + '/' + CMK_VERS
 
 node {
-    docker.image('node-ubuntu-18.04').inside('--cap-add=SYS_ADMIN -u 0:0 --network local-infra') {
-        stage('Initial checkout') {
+    docker.image('ubuntu-18.04-windows').inside('-u 0:0 --cap-add=SYS_ADMIN --network local-infra') {
+        stage('checkout sources') {
            cleanWs()
-           sh "rm -rf ${DAILY_DATA}/*"
+           sh "rm -rf ${DAILY_DATA}"
+           // Add line to delete folders older than 10 days
            dir("${DAILY_DATA}/git") {
-               checkout(scm)
+                checkout(scm)
+                // Actually Dependent on Edition. For now set to Enterprise!
+                sh 'rm -rf managed'
+                println(CMK_VERS)
+                sh "make NEW_VERSION=${CMK_VERS} setversion"
+            }
+        }
+    }
+}
+
+AGENT_BIT_LIST.each { BIT ->
+    AGENT_BUILDS['build agent updater ' + BIT] = {
+        node {
+            docker.image(BIT + '/ubuntu:feisty').inside('-u 0:0 --cap-add=SYS_ADMIN --network local-infra') {
+                stage('build agent updater ' + BIT) {
+                    cleanWs()
+                    if (BIT == '64bit') {
+                        BIT = ''
+                    } else {
+                        BIT = '-32'
+                    }
+                    sh "mkdir agent-updater${BIT}-work agent-updater${BIT}-dest"
+                    sh "mount -t overlay overlay -o lowerdir=${DAILY_DATA}/git,upperdir=${WORKSPACE}/agent-updater${BIT}-dest,workdir=${WORKSPACE}/agent-updater${BIT}-work ${WORKSPACE}/agent-updater${BIT}-dest"
+                    sh 'echo $BITNESS_SUFFIX'
+                    sh script: """cd agent-updater${BIT}-dest/enterprise/agents/plugins \
+                        && CHROOT_BUILD_DIR=${WORKSPACE}/agent-updater${BIT}-dest \
+                            BITNESS_SUFFIX='${BIT}' \
+                            make"""
+                    sh "mkdir -p ${DAILY_DATA}/agent-updater${BIT}; cp agent-updater${BIT}-dest/enterprise/agents/plugins/cmk-update-agent${BIT} ${DAILY_DATA}/agent-updater"
+                    sh "until umount agent-updater${BIT}-dest; do sleep 1; done"
+                }
+            }
+        }
+    }
+}
+parallel AGENT_BUILDS
+
+node {
+    docker.image('ubuntu-18.04-windows').inside('-u 0:0 --cap-add=SYS_ADMIN --network local-infra') {
+        stage('create tarball') {
+           dir("${DAILY_DATA}/git") {
+                sh "cp ${DAILY_DATA}/agent-updater/* enterprise/agents/plugins/"
+                // Workaround as long as Windows build does not exist:
+                // Create agent.exe -> Make won't try to build it
+                sh 'touch enterprise/agents/windows/plugins/cmk-update-agent.exe'
+                sh 'make dist'
             }
         }
     }
 }
 
 DISTRO_LIST.each { DISTRO ->
-    BUILDS[DISTRO] = {
+    PACKAGE_BUILDS[DISTRO] = {
         node {
             docker.image(DISTRO).inside('--cap-add=SYS_ADMIN -u 0:0 --network local-infra') {
-                stage(DISTRO + ' setup WS') {
+                stage('build' + DISTRO + ' package') {
                     cleanWs()
-                    sh 'mkdir work'
-                    sh 'mkdir dest'
-                    sh 'mount -t overlay overlay -o lowerdir=/var/jenkins_home/daily-data/git,upperdir=${WORKSPACE}/dest,workdir=${WORKSPACE}/work ${WORKSPACE}/dest'
-                }
-                stage(DISTRO + 'Build something') {
-                    dir('dest'){
-                        sh 'make -C omd jmx4perl'
+                    sh 'mkdir work dest'
+                    sh "mount -t overlay overlay -o lowerdir=${DAILY_DATA}/git,upperdir=${WORKSPACE}/dest,workdir=${WORKSPACE}/work ${WORKSPACE}/dest"
+                    dir('dest') {
+                        sh """
+                            case $DISTRO in
+                                centos*|rh*|sles*|opensuse*)
+                                    make -C omd rpm
+                                    ;;
+                                cma*)
+                                    make -C cma
+                                    ;;
+                                *)
+                                    DEBFULLNAME='Check_MK Team' DEBEMAIL='feedback@check-mk.org' make -C omd deb
+                                    ;;
+                            esac
+                        """
                     }
-                }
-                stage(DISTRO + 'Archiving') {
                     sh 'until umount dest; do sleep 1; done'
+                    sh "rm -rf ${DAILY_DATA}/${DISTRO}-{dest,work}"
                     sh "mv dest ${DAILY_DATA}/${DISTRO}-dest"
                     sh "mv work ${DAILY_DATA}/${DISTRO}-work"
                     sh "ls -lah ${DAILY_DATA}"
@@ -39,4 +101,4 @@ DISTRO_LIST.each { DISTRO ->
         }
     }
 }
-parallel BUILDS
+parallel PACKAGE_BUILDS

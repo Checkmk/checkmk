@@ -1,0 +1,57 @@
+#!/bin/bash
+set -x
+
+GCC_MAJOR="8"
+GCC_MINOR="2"
+GCC_PATCHLEVEL="0"
+BINUTILS_VERSION="2.31.1"
+GDB_VERSION="8.2"
+
+GCC_VERSION="${GCC_MAJOR}.${GCC_MINOR}.${GCC_PATCHLEVEL}"
+PREFIX="/opt/gcc-${GCC_VERSION}"
+
+mkdir /tmp/build-gcc-toolchain
+cd /tmp/build-gcc-toolchain
+
+# To avoid repeated downloads of the sources + the prerequisites, we
+# pre-package things together:
+wget https://ftp.gnu.org/gnu/binutils/binutils-${BINUTILS_VERSION}.tar.gz
+wget ftp://ftp.gwdg.de/pub/misc/gcc/releases/gcc-${GCC_VERSION}/gcc-${GCC_VERSION}.tar.gz
+tar xzf gcc-${GCC_VERSION}.tar.gz
+( cd gcc-${GCC_VERSION} && ./contrib/download_prerequisites )
+tar czf gcc-${GCC_VERSION}-with-prerequisites.tar.gz gcc-${GCC_VERSION}
+
+tar xzf binutils-${BINUTILS_VERSION}.tar.gz
+mkdir binutils-${BINUTILS_VERSION}-build
+cd binutils-${BINUTILS_VERSION}-build
+../binutils-${BINUTILS_VERSION}/configure \
+    --prefix=${PREFIX}
+make -j8
+make install
+cd ..
+
+tar xzf gcc-${GCC_VERSION}-with-prerequisites.tar.gz
+mkdir gcc-${GCC_VERSION}-build
+cd gcc-${GCC_VERSION}-build
+../gcc-${GCC_VERSION}/configure \
+    --prefix=${PREFIX} \
+    --program-suffix=-${GCC_MAJOR} \
+    --enable-linker-build-id \
+    --disable-multilib \
+    --enable-languages=c,c++
+make -j8
+make install
+cd ..
+
+tar xzf gdb-${GDB_VERSION}.tar.gz
+mkdir gdb-${GDB_VERSION}-build
+cd gdb-${GDB_VERSION}-build
+../gdb-${GDB_VERSION}/configure \
+    --prefix=${PREFIX} \
+    $(python -V 2>&1 | grep -q 'Python 2\.4\.' && echo "--with-python=no")
+make -j8
+make install
+cd ..
+
+ln -sf ${PREFIX}/bin/* /usr/local/bin
+rm -rf /tmp/build-gcc-toolchain

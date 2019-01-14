@@ -136,17 +136,17 @@ check-version:
 # is currently not used by most distros
 # Would also use --exclude-vcs, but this is also not available
 # And --transform is also missing ...
-dist: mk-livestatus-$(VERSION).tar.gz $(DISTNAME).tar.gz config.h.in $(DIST_DEPS)
+dist: $(DISTNAME).tar.gz config.h.in $(DIST_DEPS)
 ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise agents/plugins/cmk-update-agent
 	$(MAKE) -C enterprise agents/plugins/cmk-update-agent-32
 	$(MAKE) -C enterprise agents/windows/plugins/cmk-update-agent.exe
 endif
-	@set -e -o pipefail ; EXCLUDES= ; \
+	set -e -o pipefail ; EXCLUDES= ; \
 	if [ -d .git ]; then \
 	    git rev-parse --short HEAD > COMMIT ; \
 	    for X in $$(git ls-files --directory --others -i --exclude-standard) ; do \
-	    if [[ $$X != aclocal.m4 && $$X != config.h.in  && ! "$(DIST_DEPS)" =~ (^|[[:space:]])$$X($$|[[:space:]]) && $$X != $(DISTNAME).tar.gz ]]; then \
+	    if [[ $$X != aclocal.m4 && $$X != config.h.in  && ! "$(DIST_DEPS)" =~ (^|[[:space:]])$$X($$|[[:space:]]) && $$X != $(DISTNAME).tar.gz && $$X != omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz && $$X != livestatus/* && $$X != enterprise/* ]]; then \
 		    EXCLUDES+=" --exclude $${X%*/}" ; \
 		fi ; \
 	    done ; \
@@ -177,7 +177,7 @@ endif
 	rm -rf check-mk-$(EDITION)-$(OMD_VERSION)
 
 # This tar file is only used by "omd/packages/check_mk/Makefile"
-$(DISTNAME).tar.gz: mk-livestatus-$(VERSION).tar.gz .werks/werks web/htdocs/js/main_min.js web/htdocs/js/mobile_min.js web/htdocs/js/side_min.js ChangeLog
+$(DISTNAME).tar.gz: omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .werks/werks web/htdocs/js/main_min.js web/htdocs/js/mobile_min.js web/htdocs/js/side_min.js ChangeLog
 	@echo "Making $(DISTNAME)"
 	rm -rf $(DISTNAME)
 	mkdir -p $(DISTNAME)
@@ -210,7 +210,7 @@ $(DISTNAME).tar.gz: mk-livestatus-$(VERSION).tar.gz .werks/werks web/htdocs/js/m
 	tar czf $(DISTNAME)/checkman.tar.gz $(TAROPTS) -C checkman $$(cd checkman ; ls)
 	tar czf $(DISTNAME)/web.tar.gz $(TAROPTS) -C web htdocs app
 
-	tar xzf mk-livestatus-$(VERSION).tar.gz
+	tar xzf omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz
 	tar czf $(DISTNAME)/livestatus.tar.gz $(TAROPTS) -C mk-livestatus-$(VERSION) $$(cd mk-livestatus-$(VERSION) ; ls -A )
 	rm -rf mk-livestatus-$(VERSION)
 
@@ -268,13 +268,13 @@ packages:
 
 # NOTE: Old tar versions (e.g. on CentOS 5) don't have the --transform option,
 # so we do things in a slightly complicated way.
-mk-livestatus-$(VERSION).tar.gz:
+omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz:
 	rm -rf mk-livestatus-$(VERSION)
 	mkdir -p mk-livestatus-$(VERSION)
 	tar cf -  $(TAROPTS) -C livestatus $$(cd livestatus ; echo $(LIVESTATUS_SOURCES) ) | tar xf - -C mk-livestatus-$(VERSION)
 	cp -a configure.ac m4 mk-livestatus-$(VERSION)
 	cd mk-livestatus-$(VERSION) && autoreconf --install --include=m4 && rm -rf autom4te.cache
-	tar czf mk-livestatus-$(VERSION).tar.gz $(TAROPTS) mk-livestatus-$(VERSION)
+	tar czf omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz $(TAROPTS) mk-livestatus-$(VERSION)
 	rm -rf mk-livestatus-$(VERSION)
 
 version:
@@ -325,7 +325,7 @@ web/htdocs/js/%_min.js: node_modules webpack.config.js $(JAVASCRIPT_SOURCES)
 clean:
 	make -C omd clean
 	rm -rf clang-analyzer dist.tmp rpm.topdir *.rpm *.deb *.exe \
-	       mk-livestatus-*.tar.gz \
+	       omd/packages/mk-livestatus/mk-livestatus-*.tar.gz \
 	       $(NAME)-*.tar.gz *~ counters autochecks \
 	       precompiled cache web/htdocs/js/*_min.js \
 	       .werks/werks \

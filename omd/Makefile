@@ -250,7 +250,6 @@ rpm:
 	if [ "$(EDITION)" =  "raw" ]; then \
 	    sed -i '/icmpsender/d;/icmpreceiver/d' omd.spec ; \
 	fi
-	make -C $(REPO_PATH) dist
 	mkdir -p $(RPM_TOPDIR)/{SOURCES,BUILD,RPMS,SRPMS,SPECS}
 	cp ../check-mk-$(EDITION)-$(OMD_VERSION).tar.gz $(RPM_TOPDIR)/SOURCES
 	# NO_BRP_STALE_LINK_ERROR ignores errors when symlinking from skel to

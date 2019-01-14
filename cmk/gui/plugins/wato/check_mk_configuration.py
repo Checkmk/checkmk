@@ -1895,6 +1895,13 @@ class ConfigVariableDefaultUserProfile(ConfigVariable):
                  default_value=[],
                  choices=self._list_contactgroups,
              )),
+            ("force_authuser",
+             Checkbox(
+                 title=_("Visibility of Hosts/Services"),
+                 label=_("Only show hosts and services the user is a contact for"),
+                 help=_("Specifiy the initial setting for an automatically created user."),
+                 default_value=False,
+             ))
         ]
 
     def _list_roles(self):

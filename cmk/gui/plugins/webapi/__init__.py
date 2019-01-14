@@ -39,7 +39,6 @@ from cmk.utils.plugin_loader import load_plugins
 from cmk.gui.plugins.webapi.utils import (
     APICallCollection,
     api_call_collection_registry,
-    api_actions,
     validate_request_keys,
     validate_host_attributes,
     validate_config_hash,

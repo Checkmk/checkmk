@@ -32,7 +32,9 @@ AWSCostAndUageMetrics = [
 def parse_aws_costs_and_usage(info):
     parsed = {}
     for row in parse_aws(info):
+        timeperiod = row['TimePeriod']['Start']
         for group in row.get('Groups', []):
+            service_name = " ".join(group['Keys'])
             for metric_name, metrics in group['Metrics'].iteritems():
                 try:
                     costs = float(metrics['Amount'])
@@ -40,7 +42,7 @@ def parse_aws_costs_and_usage(info):
                 except (KeyError, ValueError):
                     continue
                 else:
-                    parsed.setdefault(" ".join(group['Keys']), {})\
+                    parsed.setdefault((timeperiod, service_name), {})\
                           .setdefault(metric_name, (costs, unit))
     return parsed
 
@@ -64,17 +66,17 @@ def inventory_aws_costs_and_usage_summary(parsed):
 
 def check_aws_costs_and_usage_summary(item, params, parsed):
     amounts_by_metrics = collections.defaultdict(float)
-    for metrics in parsed.itervalues():
+    for (timeperiod, _service_name), metrics in parsed.iteritems():
         for title, metric_name, key, in AWSCostAndUageMetrics:
             costs, unit = metrics[metric_name]
-            amounts_by_metrics[(title, unit, key)] += costs
+            amounts_by_metrics[(timeperiod, title, unit, key)] += costs
 
-    for (title, unit, key), costs in amounts_by_metrics.iteritems():
+    for (timeperiod, title, unit, key), costs in amounts_by_metrics.iteritems():
         yield check_levels(
             costs,
             "aws_costs_%s" % key,
             params.get('levels_%s' % key, (None, None)),
-            infoname="Total %s %s" % (title, unit))
+            infoname="(%s) Total %s %s" % (timeperiod, title, unit))
 
 
 check_info['aws_costs_and_usage'] = {
@@ -99,19 +101,27 @@ check_info['aws_costs_and_usage'] = {
 
 
 def inventory_aws_costs_and_usage_per_service(parsed):
-    for service_name in parsed.iterkeys():
+    for (_timeperiod, service_name) in parsed.iterkeys():
         yield service_name, {}
 
 
-@get_parsed_item_data
-def check_aws_costs_and_usage_per_service(item, params, metrics):
+def check_aws_costs_and_usage_per_service(item, params, parsed):
+    data = None
+    timeperiod = None
+    for (timeperiod, service_name), metrics in parsed.iteritems():
+        if item == service_name:
+            data = metrics
+            break
+    if not data:
+        return
+
     for title, metric_name, key in AWSCostAndUageMetrics:
-        costs, unit = metrics[metric_name]
+        costs, unit = data[metric_name]
         yield check_levels(
             costs,
             "aws_costs_%s" % key,
             params.get('levels_%s' % key, (None, None)),
-            infoname="%s %s" % (title, unit))
+            infoname="(%s) %s %s" % (timeperiod, title, unit))
 
 
 check_info['aws_costs_and_usage.per_service'] = {

@@ -219,7 +219,7 @@ class CostsAndUsage(AWSSection):
         now = time.time()
         return self._client.get_cost_and_usage(
             TimePeriod={
-                'Start': time.strftime(fmt, time.gmtime(now - self.period)),
+                'Start': time.strftime(fmt, time.gmtime(now - self.interval)),
                 'End': time.strftime(fmt, time.gmtime(now)),
             },
             Granularity='DAILY',
@@ -839,6 +839,8 @@ class Glacier(AWSSection):
 #   |            \___|_|\___/ \__,_|\__,_|  \__|_|  \__,_|_|_|             |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
+
+# AWS eigener Monitoring service
 
 
 class CloudTrail(AWSSection):

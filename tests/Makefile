@@ -80,7 +80,8 @@ test-shellcheck:
 		"$$ENTERPRISE_DIR/agents/mk-remote-alert-handler"
 
 test-unit: $(VENV)
-	$(PYTEST) -T unit
+	$(PYTEST) -T unit git unit
 
 test-unit-coverage-html: $(VENV)
-	$(COVERAGE) run --rcfile=.coveragerc_unit -m pytest -T unit ; $(COVERAGE) html
+	$(COVERAGE) run --rcfile=.coveragerc_unit -m pytest -T unit git unit
+	$(COVERAGE) html

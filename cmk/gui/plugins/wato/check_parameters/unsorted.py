@@ -1880,7 +1880,7 @@ register_check_parameters(
                    "a conjunction are reached then the related state is reported."),
              )),
         ],
-        ignored_keys=["precompiled_patterns"]),
+        ignored_keys=["precompiled_patterns", "group_patterns"]),
     TextAscii(
         title=_("File Group Name"),
         help=_(

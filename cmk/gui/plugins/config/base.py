@@ -299,6 +299,7 @@ user_connections = []
 default_user_profile = {
     'contactgroups': [],
     'roles': ['user'],
+    'force_authuser': False,
 }
 lock_on_logon_failures = False
 user_idle_timeout = None

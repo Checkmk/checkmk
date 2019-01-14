@@ -1,0 +1,10 @@
+Title: LDAP sync: Visibility of Hosts/Services can now be set via default user profile
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1547476075
+Class: feature
+
+

@@ -1466,9 +1466,9 @@ register_rule(
                  title=_("The secret key for your AWS account"),
                  allow_empty=False,
              )),
-            ("--region",
-             DropdownChoice(
-                 title=_("The region to use"),
+            ("--regions",
+             ListChoice(
+                 title=_("Regions to use"),
                  choices=sorted([
                      ("ap-south-1", _("Asia Pacific (Mumbai)")),
                      ("ap-northeast-3", _("Asia Pacific (Osaka-Local)")),
@@ -1491,6 +1491,20 @@ register_rule(
                  ],
                                 key=lambda x: x[1]),
              )),
+            (
+                "--services",
+                ListChoice(
+                    title=_("Services to monitor"),
+                    choices=[
+                        ("ce", _("Costs and usage")),
+                        ("ec2", _("Elastic Compute Cloud (EC2)")),
+                        ("ebs", _("Elastic Block Storage (EBS)")),
+                        ("s3", _("Simple Storage Service (S3)")),
+                        #("elb", _("Elastic Load Balancing (ELB)")),
+                        #("cloudtrail", _("")),
+                        #("glacier", _("")),
+                    ],
+                )),
         ],
         optional_keys=[],
     ),

@@ -26,15 +26,21 @@
 
 
 def agent_aws_arguments(params, hostname, ipaddress):
-    return [
+    args = [
         "--aws-access-key-id",
         params["--aws-access-key-id"],
         "--aws-secret-access-key",
         passwordstore_get_cmdline("%s", params["--aws-secret-access-key"]),
-        "--region",
-        params["--region"],
+    ]
+    args.append("--regions")
+    args += params["--regions"]
+    args.append("--services")
+    args += params["--services"]
+    args += [
+        "--hostname",
         hostname,
     ]
+    return args
 
 
 special_agent_info['aws'] = agent_aws_arguments

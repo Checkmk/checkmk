@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+
 import pytest
+
+from checktestlib import DiscoveryResult, assertDiscoveryResultsEqual
 
 # Mark all tests in this file as check related tests
 pytestmark = pytest.mark.checks
-
 
 def splitter(text, split_symbol=None):
     return [line.split(split_symbol) for line in text.split("\n")]
@@ -27,9 +29,11 @@ result_discovery = [[('Zone %s' % i, {}) for i in [0, 1, 3, 5]],
 
 
 @pytest.mark.parametrize("info, result", zip(agent_info, result_discovery))
-def test_parse(check_manager, info, result):
+def test_parse_and_discovery_function(check_manager, info, result):
     check = check_manager.get_check("lnx_thermal")
-    assert list(check.run_discovery(info)) == result
+    parsed = check.run_parse(info)
+    discovery = DiscoveryResult(check.run_discovery(parsed))
+    assertDiscoveryResultsEqual(check, discovery, DiscoveryResult(result))
 
 
 result_check = [
@@ -50,7 +54,8 @@ result_check = [
 
 @pytest.mark.parametrize("info, discovered, checked", zip(agent_info, result_discovery,
                                                           result_check))
-def test_parse(check_manager, info, discovered, checked):
+def test_check_functions_perfdata(check_manager, info, discovered, checked):
     check = check_manager.get_check("lnx_thermal")
+    parsed = check.run_parse(info)
     for (item, params), result in zip(discovered, checked):
-        assert check.run_check(item, params, info) == result
+        assert check.run_check(item, {}, parsed) == result

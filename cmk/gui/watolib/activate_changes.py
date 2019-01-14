@@ -37,7 +37,7 @@ import cmk.utils.render as render
 
 import cmk.gui.utils
 import cmk.gui.hooks as hooks
-import cmk.gui.sites as sites
+import cmk.gui.sites
 import cmk.gui.userdb as userdb
 import cmk.gui.config as config
 import cmk.gui.multitar as multitar
@@ -310,7 +310,7 @@ class ActivateChanges(object):
             site_status = {}
             status = "disabled"
         else:
-            site_status = sites.state(site_id, {})
+            site_status = cmk.gui.sites.state(site_id, {})
             status = site_status.get("state", "unknown")
 
         return site_status, status
@@ -690,15 +690,15 @@ class ActivateChangesManager(ActivateChanges):
         if not sites:
             sites = cmk.gui.watolib.sites.SiteManagementFactory().factory().load_sites()
         site = sites[site_id]
-        config = site.get("globals", {})
+        site_globals = site.get("globals", {})
 
-        config.update({
+        site_globals.update({
             "wato_enabled": not site.get("disable_wato", True),
             "userdb_automatic_sync": site.get("user_sync",
                                               userdb.user_sync_default_config(site_id)),
         })
 
-        store.save_data_to_file(tmp_dir + "/sitespecific.mk", config)
+        store.save_data_to_file(tmp_dir + "/sitespecific.mk", site_globals)
 
     def _start_activation(self):
         self._log_activation()
@@ -849,7 +849,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         os.setsid()
 
         # Cleanup existing livestatus connections (may be opened later when needed)
-        sites.disconnect()
+        cmk.gui.sites.disconnect()
 
         # Cleanup resources of the apache
         for x in range(3, 256):

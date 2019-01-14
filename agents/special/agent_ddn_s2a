@@ -48,15 +48,15 @@ username = args.username
 password = args.password
 
 
-def commandstring(command, username, password):
-    return "%s@%s@%s@0@0@$" % (command, username, password)
+def commandstring(command_txt, username_txt, password_txt):
+    return "%s@%s@%s@0@0@$" % (command_txt, username_txt, password_txt)
 
 
-def query(sock, commandstring):
-    sock.sendall(commandstring)
+def query(s, command_txt):
+    s.sendall(command_txt)
     response = []
     while True:
-        next_part = sock.recv(2048)
+        next_part = s.recv(2048)
         response.append(next_part)
         if not next_part:
             break

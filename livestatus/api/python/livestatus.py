@@ -462,7 +462,7 @@ class SingleSiteConnection(Helpers):
     def set_prepend_site(self, p):
         self.prepend_site = p
 
-    def set_only_sites(self, os=None):
+    def set_only_sites(self, sites=None):
         pass
 
     def set_limit(self, limit=None):

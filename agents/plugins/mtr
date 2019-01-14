@@ -99,30 +99,30 @@ def read_config():
             sys.stdout.write("Not configured, %s missing\n" % config_filename)
         sys.exit(0)
 
-    config = ConfigParser.SafeConfigParser(default_options)
+    cfg = ConfigParser.SafeConfigParser(default_options)
     # Let ConfigParser figure it out
     for config_file in [config_filename] + glob.glob(config_dir):
         try:
-            if not config.read(config_file):
+            if not cfg.read(config_file):
                 sys.stdout.write("**ERROR** Failed to parse configuration file %s!\n" % config_file)
         except Exception as e:
             sys.stdout.write(
                 "**ERROR** Failed to parse config file %s: %s\n" % (config_file, repr(e)))
 
-    if len(config.sections()) == 0:
+    if len(cfg.sections()) == 0:
         sys.stdout.write("**ERROR** Configuration defines no hosts!\n")
         sys.exit(0)
 
-    return config
+    return cfg
 
 
 # structure of statusfile
 # # HOST        |LASTTIME |HOPCOUNT|HOP1|Loss%|Snt|Last|Avg|Best|Wrst|StDev|HOP2|...|HOP8|...|StdDev
 # www.google.com|145122481|8|192.168.1.1|0.0%|10|32.6|3.6|0.3|32.6|10.2|192.168.0.1|...|9.8
 def read_status():
-    status = {}
+    current_status = {}
     if not os.path.exists(status_filename):
-        return status
+        return current_status
 
     for line in file(status_filename):
         try:
@@ -133,10 +133,10 @@ def read_status():
                 continue
             host = parts[0]
             lasttime = int(float(parts[1]))
-            status[host] = {'hops': {}, 'lasttime': lasttime}
+            current_status[host] = {'hops': {}, 'lasttime': lasttime}
             hops = int(parts[2])
             for i in range(0, hops):
-                status[host]["hops"][i + 1] = {
+                current_status[host]["hops"][i + 1] = {
                     'hopname': parts[i * 8 + 3].rstrip(),
                     'loss': parts[i * 8 + 4].rstrip(),
                     'snt': parts[i * 8 + 5].rstrip(),
@@ -149,12 +149,12 @@ def read_status():
         except Exception as e:
             sys.stdout.write(
                 "*ERROR** (BUG) Could not parse status line: %s, reason: %s\n" % (line, repr(e)))
-    return status
+    return current_status
 
 
-def save_status(status):
+def save_status(current_status):
     f = file(status_filename, "w")
-    for host, hostdict in status.items():
+    for host, hostdict in current_status.items():
         hopnum = len(hostdict["hops"].keys())
         lastreport = hostdict["lasttime"]
         hoststring = "%s|%s|%s" % (host, lastreport, hopnum)
@@ -403,11 +403,11 @@ def start_mtr(host):
 sys.stdout.write("<<<mtr:sep(124)>>>\n")
 config = read_config()
 status = read_status()
-for host in config.sections():
+for host_name in config.sections():
     # Parse outstanding report
-    parse_report(host)
+    parse_report(host_name)
     # Output last known values
-    output_report(host)
+    output_report(host_name)
     # Start new if needed
-    start_mtr(host)
+    start_mtr(host_name)
 save_status(status)

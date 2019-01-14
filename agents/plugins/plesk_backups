@@ -60,16 +60,16 @@ def get_domains():
     cursor2 = db.cursor()
 
     cursor.execute('SELECT id, name FROM domains')
-    domains = {}
-    for domain_id, domain in cursor.fetchall():
+    domain_collection = {}
+    for this_domain_id, this_domain in cursor.fetchall():
         cursor2.execute('SELECT param, value FROM BackupsSettings '
-                        'WHERE id = %d AND type = \'domain\'' % domain_id)
+                        'WHERE id = %d AND type = \'domain\'' % this_domain_id)
         params = dict(cursor2.fetchall())
-        domains[domain] = params
+        domain_collection[this_domain] = params
 
     cursor2.close()
     cursor.close()
-    return domains
+    return domain_collection
 
 
 #
@@ -129,7 +129,7 @@ for domain, p in domains.iteritems():
         # Get total size of all files on FTP
         f = []
 
-        def get_size(ftp, base_dir, l=None):
+        def get_size(ftp_conn, base_dir, l=None):
             if l and l.split()[-1] in ['.', '..']:
                 return 0
 
@@ -137,9 +137,9 @@ for domain, p in domains.iteritems():
             if not l or l[0] == 'd':
                 subdir = '/' + l.split()[-1] if l else ''
                 dir_files = []
-                ftp.retrlines('LIST %s%s' % (base_dir, subdir), callback=dir_files.append)
-                for line in dir_files:
-                    size += get_size(ftp, '%s%s' % (base_dir, subdir), line)
+                ftp_conn.retrlines('LIST %s%s' % (base_dir, subdir), callback=dir_files.append)
+                for ln in dir_files:
+                    size += get_size(ftp_conn, '%s%s' % (base_dir, subdir), ln)
             else:
                 size += int(l.split()[-5])
             return size

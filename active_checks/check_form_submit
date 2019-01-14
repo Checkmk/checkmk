@@ -159,9 +159,9 @@ else:
     portspec = ':%d' % port
 
 
-def debug(s):
+def debug(msg):
     if opt_debug:
-        sys.stderr.write('%s\n' % s)
+        sys.stderr.write('%s\n' % msg)
 
 
 class HostResult(Exception):
@@ -298,8 +298,8 @@ def parse_form(content):
     return form
 
 
-def update_form_vars(form):
-    v = form['elements'].copy()
+def update_form_vars(form_elem):
+    v = form_elem['elements'].copy()
     v.update(params)
     return v
 
@@ -312,9 +312,9 @@ try:
         try:
             # Perform first HTTP request to fetch the page containing the form(s)
             url = get_full_uri(host, uri)
-            code, real_url, content = open_url(url)
+            code, real_url, body = open_url(url)
 
-            form = parse_form(content)
+            form = parse_form(body)
 
             # Get all fields and prefilled values from that form
             # Put the values of the given query params in these forms
@@ -364,7 +364,7 @@ try:
 
         txt = '%d succeeded, %d failed' % (len(success), len(failed))
         if failed:
-            txt += ' (%s)' % ', '.join(['%s: %s' % (n, s[1]) for n, s in failed])
+            txt += ' (%s)' % ', '.join(['%s: %s' % (n, msg[1]) for n, msg in failed])
         bail_out(sum_state, txt)
 
 except Exception, e:

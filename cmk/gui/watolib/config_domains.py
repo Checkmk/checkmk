@@ -394,10 +394,10 @@ class ConfigDomainOMD(ConfigDomain):
     #
     # Sadly we can not use the Transform() valuespecs, because each configvar
     # only get's the value associated with it's config key.
-    def _from_omd_config(self, config):
+    def _from_omd_config(self, omd_config):
         settings = {}
 
-        for key, value in config.items():
+        for key, value in omd_config.items():
             if value == "on":
                 settings[key] = True
             elif value == "off":
@@ -446,47 +446,46 @@ class ConfigDomainOMD(ConfigDomain):
 
     # Bring the WATO internal representation int OMD configuration settings.
     # Counterpart of the _from_omd_config() method.
-    def _to_omd_config(self, config):
-        settings = {}
-
+    def _to_omd_config(self, settings):
         # Convert to OMD key
-        config = dict([(key.upper()[5:], val) for key, val in config.items()])
+        settings = dict([(key.upper()[5:], val) for key, val in settings.items()])
 
-        if "LIVESTATUS_TCP" in config:
-            if config["LIVESTATUS_TCP"] is not None:
-                config["LIVESTATUS_TCP_PORT"] = "%s" % config["LIVESTATUS_TCP"]["port"]
+        if "LIVESTATUS_TCP" in settings:
+            if settings["LIVESTATUS_TCP"] is not None:
+                settings["LIVESTATUS_TCP_PORT"] = "%s" % settings["LIVESTATUS_TCP"]["port"]
 
-                if "only_from" in config["LIVESTATUS_TCP"]:
-                    config["LIVESTATUS_TCP_ONLY_FROM"] = " ".join(
-                        config["LIVESTATUS_TCP"]["only_from"])
+                if "only_from" in settings["LIVESTATUS_TCP"]:
+                    settings["LIVESTATUS_TCP_ONLY_FROM"] = " ".join(
+                        settings["LIVESTATUS_TCP"]["only_from"])
                 else:
-                    config["LIVESTATUS_TCP_ONLY_FROM"] = "0.0.0.0"
+                    settings["LIVESTATUS_TCP_ONLY_FROM"] = "0.0.0.0"
 
-                config["LIVESTATUS_TCP"] = "on"
+                settings["LIVESTATUS_TCP"] = "on"
             else:
-                config["LIVESTATUS_TCP"] = "off"
+                settings["LIVESTATUS_TCP"] = "off"
 
-        if "NSCA" in config:
-            if config["NSCA"] is not None:
-                config["NSCA_TCP_PORT"] = "%s" % config["NSCA"]
-                config["NSCA"] = "on"
+        if "NSCA" in settings:
+            if settings["NSCA"] is not None:
+                settings["NSCA_TCP_PORT"] = "%s" % settings["NSCA"]
+                settings["NSCA"] = "on"
             else:
-                config["NSCA"] = "off"
+                settings["NSCA"] = "off"
 
-        if "MKEVENTD" in config:
-            if config["MKEVENTD"] is not None:
+        if "MKEVENTD" in settings:
+            if settings["MKEVENTD"] is not None:
                 for proto in ["SNMPTRAP", "SYSLOG", "SYSLOG_TCP"]:
-                    config["MKEVENTD_%s" % proto] = proto in config["MKEVENTD"]
+                    settings["MKEVENTD_%s" % proto] = proto in settings["MKEVENTD"]
 
-                config["MKEVENTD"] = "on"
+                settings["MKEVENTD"] = "on"
 
             else:
-                config["MKEVENTD"] = "off"
+                settings["MKEVENTD"] = "off"
 
-        for key, value in config.items():
+        omd_config = {}
+        for key, value in settings.items():
             if isinstance(value, bool):
-                settings[key] = "on" if value else "off"
+                omd_config[key] = "on" if value else "off"
             else:
-                settings[key] = "%s" % value
+                omd_config[key] = "%s" % value
 
-        return settings
+        return omd_config

@@ -87,11 +87,11 @@ def get_sorted_host_attributes_by_topic(topic):
             return -1
         return 0
 
-    attributes = []
+    sorted_attributes = []
     for attr, atopic in sorted(all_host_attributes(), cmp=sort_host_attributes):
         if atopic == topic:
-            attributes.append(attr)
-    return attributes
+            sorted_attributes.append(attr)
+    return sorted_attributes
 
 
 def all_host_attributes():

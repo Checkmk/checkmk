@@ -38,7 +38,7 @@ import re
 import socket
 import sys
 import time
-from xml.dom import minidom
+from xml.dom import minidom  # type: ignore
 
 from dateutil import tz
 
@@ -895,7 +895,6 @@ opt_vm_piggyname = "alias"
 opt_spaces = "underscore"
 opt_no_cert = False
 
-win_agent_output = ""
 error = None
 error_exit = 1
 
@@ -980,33 +979,33 @@ else:
 vsphere_output = []
 
 
-def output(line):
-    vsphere_output.append(line)
+def output(ln):
+    vsphere_output.append(ln)
 
 
-def write_output(vsphere_output, opt_agent, host):
-    if opt_agent:
-        win_agent_output = get_agent_info_tcp(host)
+def write_output(lines, fetch_agent, address):
+    if fetch_agent:
+        win_agent_output = get_agent_info_tcp(address)
         sys.stdout.write(win_agent_output)
 
-    for line in vsphere_output:
-        sys.stdout.write((line.encode("utf-8") if isinstance(line, unicode) else line) + "\n")
+    for ln in lines:
+        sys.stdout.write((ln.encode("utf-8") if isinstance(ln, unicode) else ln) + "\n")
     sys.stdout.flush()
 
 
 socket.setdefaulttimeout(opt_timeout)
 
 
-def get_agent_info_tcp(hostname):
-    response = ""
+def get_agent_info_tcp(address):
+    raw_response = ""
     try:
         # TODO: gethostbyname() automatically detects IP addresses and does
         # *not* contact any nameserver in that case. So the following two
         # lines of code should not be neccessary:
-        if hostname[0] in "123456789":
-            ipaddress = hostname
+        if address[0] in "123456789":
+            ipaddress = address
         else:
-            ipaddress = socket.gethostbyname(hostname)
+            ipaddress = socket.gethostbyname(address)
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
             s.settimeout(opt_timeout)
@@ -1017,19 +1016,19 @@ def get_agent_info_tcp(hostname):
             s.setblocking(1)
         except:
             pass
-        response = ""
+        raw_response = ""
         while True:
-            out = s.recv(4096, socket.MSG_WAITALL)
-            if out and len(out) > 0:
-                response += out
+            received = s.recv(4096, socket.MSG_WAITALL)
+            if received and len(received) > 0:
+                raw_response += received
             else:
                 break
         s.close()
-        return response
+        return raw_response
     except Exception:
         if opt_debug:
             raise
-    return response
+    return raw_response
 
 
 # Globals of ESX System. These settings are available after the first "systeminfo" query

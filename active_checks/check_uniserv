@@ -45,8 +45,8 @@ except:
     sys.exit(3)
 
 
-def parse_response(data):
-    info = dict([x.split('=') for x in data.split(";")][:-1])
+def parse_response(_data):
+    info = dict([x.split('=') for x in _data.split(";")][:-1])
     if info['type'] == '1':
         sys.stdout.write("Invalid response: %s\n" % info)
         sys.exit(3)

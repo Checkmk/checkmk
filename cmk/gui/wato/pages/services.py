@@ -520,8 +520,6 @@ class ModeAjaxServiceDiscovery(WatoWebApiMode):
 
     def _get_status_message(self, discovery_result):
         # type: (DiscoveryResult) -> Optional[Text]
-        import cmk.gui.log
-
         if discovery_result.job_status[
                 "state"] == JobStatus.state_initialized and discovery_result.job_status[
                     "is_running"]:

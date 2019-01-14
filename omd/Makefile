@@ -349,10 +349,7 @@ $(CMA_PACKAGE): $(CMA-INSTALL) $(DESTDIR)$(OMD_ROOT)/share/omd/skel.permissions 
 	    $(OMD_VERSION)
 
 clean: $(addsuffix -clean,$(PACKAGES))
-	@if [ -d $(DESTDIR) ]; then \
-	    rm -rf $(DESTDIR) ; \
-	fi
-	env
+	rm -rf $(DESTDIR)
 	@for p in packages/* ; do \
 	    if [ -d $$p ] && [ -f $$p/Makefile ]; then \
 		$(MAKE) -C $$p clean ; \

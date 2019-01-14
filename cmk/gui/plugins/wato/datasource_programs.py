@@ -1483,6 +1483,7 @@ register_rule(
                      ("eu-west-1", _("EU (Ireland)")),
                      ("eu-west-2", _("EU (London)")),
                      ("eu-west-3", _("EU (Paris)")),
+                     ("eu-north-1", _("EU (Stockholm)")),
                      ("sa-east-1", _("South America (Sao Paulo)")),
                      ("us-east-2", _("US East (Ohio)")),
                      ("us-east-1", _("US East (N. Virginia)")),

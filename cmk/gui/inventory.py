@@ -430,8 +430,7 @@ def _inventory_of_host(host_name, request):
     if "paths" in request:
         parsed_paths = []
         for path in request["paths"]:
-            parsed_path, _key = parse_tree_path(path)
-            parsed_paths.append(parsed_path)
+            parsed_paths.append(parse_tree_path(path))
         merged_tree = merged_tree.get_filtered_tree(parsed_paths)
 
     return merged_tree.get_raw_tree()

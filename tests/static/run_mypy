@@ -2,4 +2,4 @@
 # mypy_path in mypy.ini doesn't support relative paths, so we need this wrapper... :-/
 cd $(dirname $0)
 REPO_PATH=$(realpath ../..)
-MYPYPATH=$REPO_PATH:$REPO_PATH/livestatus/api/python:$REPO_PATH/omd/packages/omd:$(realpath typeshed) exec ./.venv/bin/mypy "$@"
+MYPYPATH=$REPO_PATH:$REPO_PATH/livestatus/api/python:$REPO_PATH/omd/packages/omd:$REPO_PATH/tests:$(realpath typeshed) exec ./.venv/bin/mypy "$@"

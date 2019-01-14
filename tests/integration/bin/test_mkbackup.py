@@ -3,19 +3,26 @@
 import subprocess
 import re
 import os
+import tarfile
+import fnmatch
 import lockfile  # type: ignore
 import pytest  # type: ignore
 
 from testlib import web  # pylint: disable=unused-import
 
 
-@pytest.fixture(scope="function")
-def test_cfg(web, site, tmpdir):
+@pytest.fixture()
+def backup_path(tmpdir):
     backup_path = '%s/backup' % tmpdir
 
     if not os.path.exists(backup_path):
         os.makedirs(backup_path)
 
+    return backup_path
+
+
+@pytest.fixture(scope="function")
+def test_cfg(web, site, backup_path):
     cfg = {
         'jobs': {
             'testjob': {
@@ -24,6 +31,14 @@ def test_cfg(web, site, tmpdir):
                 'schedule': None,
                 'target': 'test-target',
                 'title': u'T\xe4stjob',
+            },
+            'testjob-no-history': {
+                'no_history': True,
+                'compress': False,
+                'encrypt': None,
+                'schedule': None,
+                'target': 'test-target',
+                'title': u'T\xe4stjob no history',
             },
             'testjob-compressed': {
                 'compress': True,
@@ -214,4 +229,21 @@ def test_mkbackup_encrypted_backup_and_restore(site, test_cfg):
 
 def test_mkbackup_compressed_backup_and_restore(site, test_cfg):
     backup_id = _execute_backup(site, job_id="testjob-compressed")
+    _execute_restore(site, backup_id)
+
+
+def test_mkbackup_no_history_backup_and_restore(site, test_cfg, backup_path):
+    backup_id = _execute_backup(site, job_id="testjob-no-history")
+
+    tar_path = os.path.join(backup_path, backup_id, "site-%s.tar" % site.id)
+
+    member_names = [m.name for m in tarfile.open(tar_path).getmembers()]
+    history = [n for n in member_names if fnmatch.fnmatch(n, "*/var/check_mk/core/archive/*")]
+    logs = [n for n in member_names if fnmatch.fnmatch(n, "*/var/log/*.log")]
+    rrds = [n for n in member_names if n.endswith(".rrd")]
+
+    assert not history, history
+    assert not rrds, rrds
+    assert not logs, logs
+
     _execute_restore(site, backup_id)

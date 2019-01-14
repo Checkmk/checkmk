@@ -33,6 +33,7 @@ import json
 import re
 import subprocess
 import time
+from typing import Dict  # pylint: disable=unused-import
 
 import six
 
@@ -1922,7 +1923,7 @@ def register_hook(name, func):
     hooks.register_from_plugin(name, func)
 
 
-_notification_parameters = {}
+_notification_parameters = {}  # type: Dict[str, Dict]
 
 
 def get_notification_parameters():

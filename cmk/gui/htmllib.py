@@ -1922,6 +1922,8 @@ class html(HTMLGenerator):
     # the form a second time while showing value typed in at the first
     # time and complaining about invalid user input)
     def form_submitted(self, form_name=None):
+        if form_name is None:
+            return self.request.has_var("filled_in")
         return self.request.var("filled_in") == form_name
 
     # Get value of checkbox. Return True, False or None. None means

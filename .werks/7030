@@ -1,0 +1,14 @@
+Title: Fixed baking of solaris packages with custom package names containing "_"
+Level: 1
+Component: agents
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.6.0i1
+Date: 1547560141
+
+The ruleset "Name of agent packages (Linux/UNIX)" allows customizing the name of the
+RPM, DEB, PKG packages. Previous versions allowed to use underscores as parts of the
+package names which broke building Solaris PKGs. Underscores are now disallowed by
+the ruleset.

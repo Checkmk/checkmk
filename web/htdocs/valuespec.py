@@ -1902,7 +1902,7 @@ class CascadingDropdown(ValueSpec):
 
     def validate_value(self, value, varprefix):
         if self._no_preselect and value == self._no_preselect_value:
-            raise MKUserError(varprefix, self._no_preselect_error)
+            raise MKUserError(varprefix + "_sel", self._no_preselect_error)
 
         choices = self.choices()
         for nr, (val, title, vs) in enumerate(choices):
@@ -1912,7 +1912,7 @@ class CascadingDropdown(ValueSpec):
                     vs.validate_value(value[1], varprefix + "_%d" % nr)
                 ValueSpec.custom_validate(self, value, varprefix)
                 return
-        raise MKUserError(varprefix, _("Value %r is not allowed here.") % (value, ))
+        raise MKUserError(varprefix + "_sel", _("Value %r is not allowed here.") % (value, ))
 
 
 

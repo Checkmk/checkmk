@@ -98,6 +98,8 @@ import cmk.defines as _defines
 import cmk_base.snmp as _snmp
 import cmk_base.item_state as _item_state
 import cmk_base.prediction as _prediction
+import functools as _functools
+
 
 def _get_check_context():
     """This is called from cmk_base code to get the Check API things. Don't
@@ -494,6 +496,33 @@ def _agent_cache_file_age(hostname, check_plugin_name):
         return _utils.cachefile_age(cachefile)
     else:
         return None
+
+
+def get_parsed_item_data(check_function):
+    """Use this decorator to determine the parsed item data outside
+    of the respective check function.
+
+    The check function can hence be defined as follows:
+
+    @get_parsed_item_data
+    def check_<check_name>(item, params, data):
+        ...
+
+    In case of parsed not being a dict the decorator returns 3
+    (UNKN state) with a wrong usage message.
+    In case of item not existing as a key in parsed or parsed[item]
+    not existing the decorator gives an empty return leading to
+    cmk_base returning 3 (UNKN state) with an item not found message
+    (see cmk_base/checking.py).
+    """
+    @_functools.wraps(check_function)
+    def wrapped_check_function(item, params, parsed):
+        if not isinstance(parsed, dict):
+            return 3, "Wrong usage of decorator function 'get_parsed_item_data': parsed is not a dict"
+        if item not in parsed or not parsed[item]:
+            return
+        return check_function(item, params, parsed[item])
+    return wrapped_check_function
 
 
 __all__ = dict(_get_check_context()).keys()

@@ -1,3 +1,6 @@
+# Needed to make the test load all webapi plugins (incl. CEE)
+import cmk.gui.webapi  # pylint: disable=unused-import
+
 from cmk.gui.plugins.webapi.utils import api_call_collection_registry
 
 
@@ -14,6 +17,7 @@ def test_registered_api_call_collections():
         'add_hosts',
         'add_servicegroup',
         'add_users',
+        'bake_agents',
         'delete_contactgroup',
         'delete_folder',
         'delete_host',
@@ -39,11 +43,13 @@ def test_registered_api_call_collections():
         'get_all_users',
         'get_bi_aggregations',
         'get_folder',
+        'get_graph',
         'get_host',
         'get_hosttags',
         'get_ruleset',
         'get_rulesets_info',
         'get_site',
+        'get_sla',
         'login_site',
         'logout_site',
         'set_all_sites',

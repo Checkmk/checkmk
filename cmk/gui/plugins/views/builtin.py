@@ -2029,7 +2029,7 @@ multisite_builtin_views.update({
         'description': _(
             'Services that have not been checked for too long according to their configured check intervals.'
         ),
-        'group_painters': [('host', 'host', '')],
+        'group_painters': [('host', 'host')],
         'hard_filters': [
             'service_staleness',
             'service_scheduled_downtime_depth',

@@ -1,0 +1,13 @@
+Title: Fixed missing form error highlighting for cascaded dropdown fields
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1547561948
+
+Some dropdown fields were not highlighted in case there are input validation
+errors detected during form submit. This made it hard for the user to find
+the field that needs to be corrected.

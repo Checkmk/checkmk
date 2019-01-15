@@ -2170,7 +2170,6 @@ multisite_builtin_views.update({
             ('log_icon', None),
             ('log_time', None),
             ('log_type', None),
-            ('service_description', 'svcevents'),
             ('log_state_type', None),
             ('log_plugin_output', None),
         ],

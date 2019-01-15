@@ -89,18 +89,6 @@ def check_hostname(hostname, should_exist=True):
                 (hostname, watolib.Host.host(hostname).folder().path()))
 
 
-def validate_request_keys(request, required_keys=None, optional_keys=None):
-    if required_keys:
-        missing = set(required_keys) - set(request.keys())
-        if missing:
-            raise MKUserError(None, _("Missing required key(s): %s") % ", ".join(missing))
-
-    all_keys = (required_keys or []) + (optional_keys or [])
-    for key in request.keys():
-        if key not in all_keys:
-            raise MKUserError(None, _("Invalid key: %s") % key)
-
-
 def validate_config_hash(hash_value, entity):
     entity_hash = compute_config_hash(entity)
     if hash_value != entity_hash:

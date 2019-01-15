@@ -110,62 +110,12 @@ def page_api():
             raise MKUserError(None, 'pretty_print must be "yes" or "no"')
         pretty_print = pretty_print_var == "yes"
 
-        if not config.user.get_attribute("automation_secret"):
-            raise MKAuthException("The WATO API is only available for automation users")
-
-        if not config.wato_enabled:
-            raise MKUserError(None, _("WATO is disabled on this site."))
-
         api_call = _get_api_call()
-
-        # Initialize host and site attributes
-        watolib.init_wato_datastructures()
-
-        # Prepare request_object
-        # Most of the time the request is given as json
-        # However, the plugin may have an own mechanism to interpret the request
-        request_object = {}
-        if api_call.get("dont_eval_request"):
-            if html.request.var("request"):
-                request_object = html.request.var("request")
-        else:
-            request_object = html.get_request(exclude_vars=["action", "pretty_print"])
-
-        # Check if the data was sent with the correct data format
-        # Some API calls only allow python code
-        # TODO: convert the api_action dict into an object which handles the validation
-        required_input_format = api_call.get("required_input_format")
-        if required_input_format:
-            if required_input_format != request_object["request_format"]:
-                raise MKUserError(
-                    None,
-                    "This API call requires a %s-encoded request parameter" % required_input_format)
-
-        required_output_format = api_call.get("required_output_format")
-        if required_output_format:
-            if required_output_format != html.output_format:
-                raise MKUserError(
-                    None, "This API call requires the parameter output_format=%s" %
-                    required_output_format)
-
-        # The request_format parameter is not forwarded into the API action
-        if "request_format" in request_object:
-            del request_object["request_format"]
-
-        def execute_action():
-            if cmk.gui.watolib.read_only.is_enabled(
-            ) and not cmk.gui.watolib.read_only.may_override():
-                raise MKUserError(None, cmk.gui.watolib.read_only.message())
-            return {
-                "result_code": 0,
-                "result": api_call["handler"](request_object),
-            }
-
-        if api_call.get("locking", True):
-            with watolib.exclusive_lock():
-                response = execute_action()
-        else:
-            response = execute_action()
+        _check_permissions(api_call)
+        watolib.init_wato_datastructures()  # Initialize host and site attributes
+        request_object = _get_request(api_call)
+        _check_formats(api_call, request_object)
+        response = _execute_action(api_call, request_object)
 
     except MKAuthException as e:
         response = {
@@ -186,13 +136,65 @@ def page_api():
     html.write(_FORMATTERS[html.output_format][1 if pretty_print else 0](response))
 
 
+# TODO: If the registered API calls were instance of a real class, all the code
+# below would be in methods of that class.
+
+
 def _get_api_call():
     action = html.request.var('action')
     for cls in api_call_collection_registry.values():
         api_call = cls().get_api_calls().get(action)
         if api_call:
-            for permission in ["wato.use", "wato.api_allowed"] + \
-                              api_call.get("required_permissions", []):
-                config.user.need_permission(permission)
             return api_call
     raise MKUserError(None, "Unknown API action %s" % html.attrencode(action))
+
+
+def _check_permissions(api_call):
+    if not config.user.get_attribute("automation_secret"):
+        raise MKAuthException("The WATO API is only available for automation users")
+
+    if not config.wato_enabled:
+        raise MKUserError(None, _("WATO is disabled on this site."))
+
+    for permission in ["wato.use", "wato.api_allowed"] + \
+                      api_call.get("required_permissions", []):
+        config.user.need_permission(permission)
+
+
+def _get_request(api_call):
+    if api_call.get("dont_eval_request"):
+        return html.request.var("request", {})
+    return html.get_request(exclude_vars=["action", "pretty_print"])
+
+
+def _check_formats(api_call, request_object):
+    required_input_format = api_call.get("required_input_format")
+    if required_input_format and required_input_format != request_object["request_format"]:
+        raise MKUserError(
+            None, "This API call requires a %s-encoded request parameter" % required_input_format)
+
+    required_output_format = api_call.get("required_output_format")
+    if required_output_format and required_output_format != html.output_format:
+        raise MKUserError(
+            None, "This API call requires the parameter output_format=%s" % required_output_format)
+
+    # The request_format parameter is not forwarded into the API action
+    if "request_format" in request_object:
+        del request_object["request_format"]
+
+
+def _execute_action(api_call, request_object):
+    if api_call.get("locking", True):
+        with watolib.exclusive_lock():
+            return _execute_action_no_lock(api_call, request_object)
+    return _execute_action_no_lock(api_call, request_object)
+
+
+def _execute_action_no_lock(api_call, request_object):
+    if cmk.gui.watolib.read_only.is_enabled() and \
+       not cmk.gui.watolib.read_only.may_override():
+        raise MKUserError(None, cmk.gui.watolib.read_only.message())
+    return {
+        "result_code": 0,
+        "result": api_call["handler"](request_object),
+    }

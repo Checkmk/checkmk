@@ -1317,7 +1317,7 @@ def general_userdb_job():
     # Create initial auth.serials file, same issue as auth.php above
     serials_file = '%s/auth.serials' % os.path.dirname(cmk.utils.paths.htpasswd_file)
     if not os.path.exists(serials_file) or os.path.getsize(serials_file) == 0:
-        save_users(load_users(lock=True))
+        rewrite_users()
 
 
 def execute_userdb_job():

@@ -56,7 +56,7 @@ if not cmk.is_raw_edition():
 # TODO: Kept for compatibility reasons with legacy plugins
 from cmk.gui.plugins.webapi.utils import (  # pylint: disable=unused-import
     add_configuration_hash, api_call_collection_registry, check_hostname, validate_config_hash,
-    validate_host_attributes, validate_request_keys,
+    validate_host_attributes,
 )
 
 loaded_with_language = False
@@ -115,6 +115,7 @@ def page_api():
         watolib.init_wato_datastructures()  # Initialize host and site attributes
         request_object = _get_request(api_call)
         _check_formats(api_call, request_object)
+        _check_request_keys(api_call, request_object)
         response = _execute_action(api_call, request_object)
 
     except MKAuthException as e:
@@ -181,6 +182,20 @@ def _check_formats(api_call, request_object):
     # The request_format parameter is not forwarded into the API action
     if "request_format" in request_object:
         del request_object["request_format"]
+
+
+def _check_request_keys(api_call, request_object):
+    required_keys = set(api_call.get("required_keys", []))
+    optional_keys = set(api_call.get("optional_keys", []))
+    actual_keys = set(request_object.keys())
+
+    missing_keys = required_keys - actual_keys
+    if missing_keys:
+        raise MKUserError(None, _("Missing required key(s): %s") % ", ".join(missing_keys))
+
+    invalid_keys = actual_keys - (required_keys | optional_keys)
+    if invalid_keys:
+        raise MKUserError(None, _("Invalid key(s): %s") % ", ".join(invalid_keys))
 
 
 def _execute_action(api_call, request_object):

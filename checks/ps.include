@@ -92,14 +92,14 @@ def inventory_ps_common(invdata, invrules, parsed):
         for line in parsed:
             # First entry in line is the node name or None for non-clusters
             process_line = line[1:]
-            matches, grabbed_user = process_matches_for_discovery(process_line, pattern, userspec)
-            if matches == False:
+            match_groups, grabbed_user = process_matches_for_discovery(process_line, pattern, userspec)
+            if match_groups == False:
                 continue # skip not matched lines
 
-            if len(matches) < num_perc_s:
+            if len(match_groups) < num_perc_s:
                 raise MKGeneralException("Invalid entry in inventory_processes: service description '%s' contains "
                         "%d times '%%s', but regular expression '%s' contains only %d subexpression(s)." % \
-                        (servicedesc, num_perc_s, pattern, len(matches)))
+                        (servicedesc, num_perc_s, pattern, len(match_groups)))
 
             if userspec == GRAB_USER:
                 i_userspec = grabbed_user
@@ -110,20 +110,17 @@ def inventory_ps_common(invdata, invrules, parsed):
 
             # New in 1.2.2b4: Alle %1, %2, etc. to be replaced with first, second, ...
             # group. This allows a reordering of the matched groups
-            for nr, group in enumerate(matches):
+            for nr, group in enumerate(match_groups):
                 i_servicedesc = i_servicedesc.replace("%%%d" % (nr+1), group)
 
             # It is allowed (1.1.4) that the pattern contains more subexpressions then the
             # service description. In that case only the first subexpressions are used as
             # item.
-            i_servicedesc = i_servicedesc % tuple(matches[:num_perc_s])
-
-            # Problem here: We need to instantiate all subexpressions
-            # with their actual values of the found process.
-            i_pattern = instantiate_regex_pattern(pattern, matches)
+            i_servicedesc = i_servicedesc % tuple(match_groups[:num_perc_s])
 
             inv_params = {
-                "process" : i_pattern,
+                "process" : pattern,
+                "match_groups" : match_groups,
                 "user"    : i_userspec,
             }
 
@@ -136,22 +133,13 @@ def inventory_ps_common(invdata, invrules, parsed):
             for key, value in default_params.items():
                 if key not in ( "descr", "match", "user", "perfdata" ):
                     inv_params.setdefault(key, value)
+
             inv = ( i_servicedesc, inv_params )
 
             if inv not in inventory:
                 inventory.append(inv)
 
     return inventory
-
-def instantiate_regex_pattern(pattern, matches):
-    for m in matches:
-        pattern = instantiate_regex_pattern_once(pattern, m)
-    return pattern
-
-def instantiate_regex_pattern_once(pattern, match):
-    from cmk.regex import escape_regex_chars
-    # this correctly handles \( and \) but not [^)] - sorry
-    return re.compile(r"(?<!\\)\(.*?(?<!\\)\)").sub(escape_regex_chars(match), pattern, 1)
 
 # FIXME: Merge logic of process_matches_for_* functions
 def process_matches_for_discovery(process_line, process_pattern, userspec):
@@ -186,7 +174,11 @@ def process_matches_for_discovery(process_line, process_pattern, userspec):
 
 
 # Returns True or False
-def process_matches_for_check(process_line, process_pattern, user_pattern):
+def process_matches_for_check(process_line, params):
+    process_pattern = params.get("process")
+    user_pattern = params.get("user")
+    match_groups = params.get('match_groups')
+
     user, command_line = process_line[0][0], process_line[1:]
 
     # Check process owner. Note: the first field with process information is
@@ -206,7 +198,12 @@ def process_matches_for_check(process_line, process_pattern, user_pattern):
     elif process_pattern.startswith("~"):
         # Regex for complete process command line
         reg = regex(process_pattern[1:]) # skip "~"
-        return reg.match(" ".join(command_line))
+        m = reg.match(" ".join(command_line))
+        if not m:
+            return False
+        if match_groups:
+            return m.groups() == tuple(match_groups)
+        return bool(m)
 
     else:
         # Exact match on name of executable
@@ -352,12 +349,13 @@ def check_ps_common(item, params, parsed, cpu_cores = 1, info_name = "processes"
     extended_perfdata = False
     processes = []
 
+
     running_on_nodes = set() # collect information about nodes the processes run on
     for line in parsed:
         node_name, process_line = line[0], line[1:]
         process_info, command_line = process_line[0], process_line[1:]
 
-        if process_matches_for_check(process_line, params.get("process"), params.get("user")):
+        if process_matches_for_check(process_line, params):
             process = []
             count += 1
 

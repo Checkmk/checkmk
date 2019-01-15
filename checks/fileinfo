@@ -370,7 +370,7 @@ check_info['fileinfo.groups'] = {
     "service_description"     : "File group %s",
     "has_perfdata"            : True,
     "group"                   : "fileinfo-groups",
-    "includes"                : [ "ps.include" ],
+    "includes"                : [ "eval_regex.include" ],
 }
 
 precompile_params['fileinfo.groups'] = fileinfo_groups_precompile

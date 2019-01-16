@@ -2,7 +2,7 @@ import java.text.SimpleDateFormat
 
 def DISTRO_LIST = ["ubuntu-18.04", "centos-6"]
 def PACKAGE_BUILDS = [:]
-def AGENT_BIT_LIST = ["64bit", "32bit"]
+def AGENT_LIST = ["linux-64bit", "linux-32bit", "windows" ]
 def AGENT_BUILDS= [:]
 
 def dateFormat = new SimpleDateFormat("yyyy.MM.dd")
@@ -27,26 +27,51 @@ node {
     }
 }
 
-AGENT_BIT_LIST.each { BIT ->
-    AGENT_BUILDS['build agent updater ' + BIT] = {
+AGENT_LIST.each { AGENT ->
+    AGENT_BUILDS['build agent ' + AGENT] = {
         node {
-            docker.image(BIT + '/ubuntu:feisty').inside('-u 0:0 --cap-add=SYS_ADMIN --network local-infra') {
-                stage('build agent updater ' + BIT) {
+            docker.image('agent-builder-' + AGENT).inside('-u 0:0 --cap-add=SYS_ADMIN --network local-infra') {
+                stage('build agent ' + AGENT) {
                     cleanWs()
-                    if (BIT == '64bit') {
-                        BIT = ''
+                    if (AGENT == 'linux-64bit') {
+                        AGENT = ''
+                    } else if (AGENT == 'linux-32bit') {
+                        AGENT = '-32'
                     } else {
-                        BIT = '-32'
+                        AGENT = '-windows'
                     }
-                    sh "mkdir agent-updater${BIT}-work agent-updater${BIT}-dest"
-                    sh "mount -t overlay overlay -o lowerdir=${DAILY_DATA}/git,upperdir=${WORKSPACE}/agent-updater${BIT}-dest,workdir=${WORKSPACE}/agent-updater${BIT}-work ${WORKSPACE}/agent-updater${BIT}-dest"
-                    sh 'echo $BITNESS_SUFFIX'
-                    sh script: """cd agent-updater${BIT}-dest/enterprise/agents/plugins \
-                        && CHROOT_BUILD_DIR=${WORKSPACE}/agent-updater${BIT}-dest \
-                            BITNESS_SUFFIX='${BIT}' \
-                            make"""
-                    sh "mkdir -p ${DAILY_DATA}/agent-updater${BIT}; cp agent-updater${BIT}-dest/enterprise/agents/plugins/cmk-update-agent${BIT} ${DAILY_DATA}/agent-updater"
-                    sh "until umount agent-updater${BIT}-dest; do sleep 1; done"
+
+                    sh "mkdir agent-updater${AGENT}-work agent-updater${AGENT}-dest"
+                    sh "mount -t overlay overlay -o lowerdir=${DAILY_DATA}/git,upperdir=${WORKSPACE}/agent-updater${AGENT}-dest,workdir=${WORKSPACE}/agent-updater${AGENT}-work ${WORKSPACE}/agent-updater${AGENT}-dest"
+                    if (AGENT == '-windows') {
+                        sh script: """
+                            cd agent-updater${AGENT}-dest/agents/windows/
+                            CHROOT_BUILD_DIR=${WORKSPACE}/agent-updater${AGENT}-dest \
+                                CHROOT_NAME="agent-builder-windows" \
+                                ./build-agent
+                        """
+                        sh script: """
+                            cd agent-updater${AGENT}-dest/enterprise/agents/windows/plugins
+                            CHROOT_BUILD_DIR=${WORKSPACE}/agent-updater${AGENT}-dest \
+                                make
+                        """
+                        sh """
+                            mkdir -p ${DAILY_DATA}/agent-updater
+                            cp agent-updater${AGENT}-dest/agents/windows/check_mk_agent.msi ${DAILY_DATA}/agent-updater
+                            cp agent-updater${AGENT}-dest/enterprise/agents/windows/plugins/cmk-update-agent.exe ${DAILY_DATA}/agent-updater
+                        """
+                    } else { // Linux Agents (64 and 32 bit)
+                        sh script: """cd agent-updater${AGENT}-dest/enterprise/agents/plugins \
+                            && CHROOT_BUILD_DIR=${WORKSPACE}/agent-updater${AGENT}-dest \
+                                BITNESS_SUFFIX='${AGENT}' \
+                                make
+                        """
+                        sh """
+                            mkdir -p ${DAILY_DATA}/agent-updater${AGENT}
+                            cp agent-updater${AGENT}-dest/enterprise/agents/plugins/cmk-update-agent${AGENT} ${DAILY_DATA}/agent-updater
+                        """
+                    }
+                    sh "until umount agent-updater${AGENT}-dest; do sleep 1; done"
                 }
             }
         }
@@ -58,10 +83,10 @@ node {
     docker.image('ubuntu-18.04-windows').inside('-u 0:0 --cap-add=SYS_ADMIN --network local-infra') {
         stage('create tarball') {
            dir("${DAILY_DATA}/git") {
-                sh "cp ${DAILY_DATA}/agent-updater/* enterprise/agents/plugins/"
-                // Workaround as long as Windows build does not exist:
-                // Create agent.exe -> Make won't try to build it
-                sh 'touch enterprise/agents/windows/plugins/cmk-update-agent.exe'
+                sh "cp ${DAILY_DATA}/agent-updater/cmk-update-agent enterprise/agents/plugins/"
+                sh "cp ${DAILY_DATA}/agent-updater/cmk-update-agent-32 enterprise/agents/plugins/"
+                sh "cp ${DAILY_DATA}/agent-updater/cmk-update-agent.exe enterprise/agents/windows/plugins/"
+                sh "cp ${DAILY_DATA}/agent-updater/check_mk_agent.msi agents/windows"
                 sh 'make dist'
             }
         }

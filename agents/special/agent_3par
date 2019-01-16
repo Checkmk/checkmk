@@ -29,8 +29,7 @@ import json
 import sys
 
 import requests
-from requests.packages.urllib3.exceptions import \
-    InsecureRequestWarning  # pylint: disable=import-error
+from requests.packages.urllib3.exceptions import InsecureRequestWarning  # pylint: disable=import-error
 
 
 #   .--Arguments-----------------------------------------------------------.

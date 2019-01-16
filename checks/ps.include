@@ -133,18 +133,17 @@ def inventory_ps_common(invdata, invrules, parsed):
 
             # Process capture
             if hasattr(matches, 'groups'):
-                matches = [g if g else "" for g in matches.groups()]
+                match_groups = [g if g else "" for g in matches.groups()]
             else:
-                matches = []
+                match_groups = []
 
-            i_servicedesc = replace_service_description(servicedesc, matches, pattern)
+            i_servicedesc = replace_service_description(servicedesc, match_groups, pattern)
 
             # Problem here: We need to instantiate all subexpressions
             # with their actual values of the found process.
-            i_pattern = instantiate_regex_pattern(pattern, matches)
-
             inv_params = {
-                "process": i_pattern,
+                "process": pattern,
+                "match_groups": match_groups,
                 "user": i_userspec,
             }
 
@@ -171,41 +170,30 @@ def inventory_ps_common(invdata, invrules, parsed):
     return inventory
 
 
-def replace_service_description(service_description, matches, pattern):
+def replace_service_description(service_description, match_groups, pattern):
 
     # New in 1.2.2b4: Alle %1, %2, etc. to be replaced with first, second, ...
     # group. This allows a reordering of the matched groups
     service_description = re.sub(r'%(\d+)', r'{\1}', service_description)
 
     # First argument is None, because format is zero indexed
-    service_description = service_description.format(None, *matches)
+    service_description = service_description.format(None, *match_groups)
 
     num_elements_replace = service_description.count('%s')
-    if len(matches) < num_elements_replace:
-        raise MKGeneralException("Invalid entry in inventory_processes: "
-                                 "service description '%s' contains "
-                                 "%d replaceable elements, but "
-                                 "regular expression '%s' contains only %d subexpression(s)." %
-                                 (service_description, num_elements_replace, pattern, len(matches)))
+    if len(match_groups) < num_elements_replace:
+        raise MKGeneralException(
+            "Invalid entry in inventory_processes: "
+            "service description '%s' contains "
+            "%d replaceable elements, but "
+            "regular expression '%s' contains only %d subexpression(s)." %
+            (service_description, num_elements_replace, pattern, len(match_groups)))
 
     # It is allowed (1.1.4) that the pattern contains more subexpressions
     # then the service description. In that case only the first
     # subexpressions are used as item.
-    service_description = service_description % tuple(matches[:num_elements_replace])
+    service_description = service_description % tuple(match_groups[:num_elements_replace])
 
     return service_description
-
-
-def instantiate_regex_pattern(pattern, matches):
-    for m in matches:
-        pattern = instantiate_regex_pattern_once(pattern, m)
-    return pattern
-
-
-def instantiate_regex_pattern_once(pattern, match):
-    from cmk.utils.regex import escape_regex_chars
-    # this correctly handles \( and \) but not [^)] - sorry
-    return regex(r"(?<!\\)\(.*?(?<!\\)\)").sub(escape_regex_chars(match), pattern, 1)
 
 
 def match_user(user, user_pattern):
@@ -219,7 +207,7 @@ def match_user(user, user_pattern):
     return None
 
 
-def process_matches(process_line, process_pattern, user_pattern):
+def process_matches(process_line, process_pattern, user_pattern, match_groups=None):
     user, command_line = process_line[0].user, process_line[1:]
 
     if match_user(user, user_pattern) is False:
@@ -232,7 +220,12 @@ def process_matches(process_line, process_pattern, user_pattern):
     elif process_pattern.startswith("~"):
         # Regex for complete process command line
         reg = regex(process_pattern[1:])  # skip "~"
-        return reg.match(" ".join(command_line))
+        m = reg.match(" ".join(command_line))
+        if not m:
+            return False
+        if match_groups:
+            return m.groups() == tuple(match_groups)
+        return m
 
     # Exact match on name of executable
     return command_line[0] == process_pattern
@@ -660,7 +653,8 @@ def check_ps_process_capture(parsed, params, cpu_cores):
         node_name, process_line = line[0], line[1:]
         process_info, command_line = process_line[0], process_line[1:]
 
-        if process_matches(process_line, params.get("process"), params.get("user")):
+        if process_matches(process_line, params.get("process"), params.get("user"),
+                           params.get('match_groups')):
             process = []
 
             if node_name is not None:

@@ -382,22 +382,26 @@ PS_DISCOVERED_ITEMS = [
         "process_info": "html",
         "virtual_levels": (1024**3, 2 * 1024**3),
         "resident_levels": (1024**3, 2 * 1024**3),
+        "match_groups": [],
     }),
     ("firefox is on fire", {
-        "process": "~.*firefox",
+        "process": "~.*(fire)fox",
         "process_info": "text",
         "user": None,
         'cpu_rescale_max': None,
+        'match_groups': ['fire'],
     }),
     ("sshd", {
         "process": "~.*sshd",
         "user": None,
         'cpu_rescale_max': None,
+        "match_groups": [],
     }),
     ("PS counter", {
         'cpu_rescale_max': None,
         'process': None,
-        'user': 'zombie'
+        'user': 'zombie',
+        "match_groups": [],
     }),
     ("svchost", {
         "cpulevels": (90.0, 98.0),
@@ -411,11 +415,13 @@ PS_DISCOVERED_ITEMS = [
         "user": None,
         "virtual_levels": (1073741824000, 2147483648000),
         'cpu_rescale_max': None,
+        "match_groups": [],
     }),
     ("smss", {
         "process": "~smss.exe",
         "user": None,
         'cpu_rescale_max': None,
+        "match_groups": [],
     }),
 ]
 
@@ -424,6 +430,10 @@ def test_inventory_common(check_manager):
     check = check_manager.get_check("ps")
     info = sum(generate_inputs(), [])
     parsed = check.run_parse(info)[1]
+
+    import pprint
+    pprint.pprint(check.context["inventory_ps_common"]([], PS_DISCOVERY_WATO_RULES, parsed))
+
     assert check.context["inventory_ps_common"]([], PS_DISCOVERY_WATO_RULES,
                                                 parsed) == PS_DISCOVERED_ITEMS
 
@@ -637,19 +647,22 @@ def test_subset_patterns(check_manager):
         ('main', {
             'cpu_rescale_max': True,
             'levels': (1, 1, 99999, 99999),
-            'process': '~main\\b',
+            'process': '~(main.*)\\b',
+            'match_groups': ['main'],
             'user': None,
         }),
         ('main_dev', {
             'cpu_rescale_max': True,
             'levels': (1, 1, 99999, 99999),
-            'process': '~main_dev\\b',
+            'process': '~(main.*)\\b',
+            'match_groups': ['main_dev'],
             'user': None,
         }),
         ('main_test', {
             'cpu_rescale_max': True,
             'levels': (1, 1, 99999, 99999),
-            'process': '~main_test\\b',
+            'process': '~(main.*)\\b',
+            'match_groups': ['main_test'],
             'user': None,
         }),
     ]

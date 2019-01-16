@@ -24,42 +24,40 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import cmk.gui.bi as bi
 import cmk.gui.watolib as watolib
-from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.i18n import _
+from cmk.gui.plugins.wato import (
+    IndividualOrStoredPassword,
+    RulespecGroup,
+    monitoring_macro_help,
+    register_rule,
+    rulespec_group_registry,
+)
 from cmk.gui.valuespec import (
-    HTTPUrl,
-    ListChoice,
-    Checkbox,
-    ListOf,
-    FixedValue,
-    Dictionary,
-    Integer,
-    TextAscii,
-    Password,
-    Alternative,
-    ListOfStrings,
-    DropdownChoice,
-    Transform,
-    TextUnicode,
-    Tuple,
     ID,
+    Alternative,
     CascadingDropdown,
+    Checkbox,
+    Dictionary,
+    DropdownChoice,
+    FixedValue,
     Float,
+    HTTPUrl,
+    Integer,
+    ListChoice,
+    ListOf,
+    ListOfStrings,
+    MonitoringState,
+    Password,
     RegExp,
     RegExpUnicode,
-    MonitoringState,
+    TextAscii,
+    TextUnicode,
+    Transform,
+    Tuple,
 )
-
-from cmk.gui.plugins.wato import (
-    rulespec_group_registry,
-    RulespecGroup,
-    register_rule,
-    monitoring_macro_help,
-    IndividualOrStoredPassword,
-)
-
-import cmk.gui.bi as bi
 
 
 @rulespec_group_registry.register
@@ -293,6 +291,7 @@ register_rule(
                 "timeout",
                 "vm_pwr_display",
                 "host_pwr_display",
+                "snapshot_display",
                 "vm_piggyname",
             ],
         ),

@@ -1949,6 +1949,7 @@ def in_binary_hostlist(hostname, conf):
         cache[cache_id] = result
     else:
         for entry in conf:
+            actual_host_tags = tags_of_host(hostname)
             entry, rule_options = get_rule_options(entry)
             if rule_options.get("disabled"):
                 continue
@@ -1973,7 +1974,7 @@ def in_binary_hostlist(hostname, conf):
                     else:
                         tags, hostlist = entry
 
-                if hosttags_match_taglist(tags_of_host(hostname), tags) and \
+                if hosttags_match_taglist(actual_host_tags, tags) and \
                        in_extraconf_hostlist(hostlist, hostname):
                     cache[cache_id] = not negate
                     break

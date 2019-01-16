@@ -30,6 +30,10 @@
 # | Joerg Linge 2009 <joerg.linge@pnp4nagios.org>     Copyright 2010 |
 # +------------------------------------------------------------------+
 
+# Legacy default params for services discovered before 1.6
+lparstat_default_levels = {}
+kernel_util_default_levels = {}
+
 
 def parse_lparstat_aix(info):
     if not info:

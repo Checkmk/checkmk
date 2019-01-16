@@ -27,151 +27,26 @@
 this mode is used."""
 
 import copy
-from collections import namedtuple
-
-import cmk.utils.paths
 
 import cmk.gui.config as config
 import cmk.gui.sites as sites
-import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
 from cmk.gui.log import logger
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
-import cmk.gui.gui_background_job as gui_background_job
+from cmk.gui.watolib.hosts_and_folders import Folder
+from cmk.gui.watolib.bulk_discovery import (
+    BulkDiscoveryBackgroundJob,
+    vs_bulk_discovery,
+    DiscoveryTask,
+)
 
 from cmk.gui.plugins.wato import (
     WatoMode,
-    WatoBackgroundJob,
     mode_registry,
     get_hostnames_from_checkboxes,
 )
-
-DiscoveryTask = namedtuple("DiscoveryTask", ["site_id", "folder_path", "host_names"])
-
-
-# TODO: This job should be executable multiple times at once
-@gui_background_job.job_registry.register
-class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
-    job_prefix = "bulk_discovery"
-    gui_title = _("Bulk Discovery")
-
-    def __init__(self):
-        kwargs = {}
-        kwargs["title"] = _("Bulk discovery")
-        kwargs["lock_wato"] = False
-        kwargs["deletable"] = False
-        kwargs["stoppable"] = False
-
-        super(BulkDiscoveryBackgroundJob, self).__init__(self.job_prefix, **kwargs)
-
-    def _back_url(self):
-        return watolib.Folder.current().url()
-
-    def do_execute(self, mode, use_cache, do_scan, error_handling, tasks, job_interface=None):
-        self._initialize_statistics()
-        job_interface.send_progress_update(_("Bulk discovery started..."))
-
-        for task in tasks:
-            self._bulk_discover_item(task, mode, use_cache, do_scan, error_handling, job_interface)
-
-        job_interface.send_progress_update(_("Bulk discovery finished."))
-
-        job_interface.send_progress_update(
-            _("Hosts: %d total, %d succeeded, %d skipped, %d failed") %
-            (self._num_hosts_total, self._num_hosts_succeeded, self._num_hosts_skipped,
-             self._num_hosts_failed))
-        job_interface.send_progress_update(
-            _("Services: %d total, %d added, %d removed, %d kept") %
-            (self._num_services_total, self._num_services_added, self._num_services_removed,
-             self._num_services_kept))
-
-        job_interface.send_result_message(_("Bulk discovery successful"))
-
-    def _initialize_statistics(self):
-        self._num_hosts_total = 0
-        self._num_hosts_succeeded = 0
-        self._num_hosts_skipped = 0
-        self._num_hosts_failed = 0
-        self._num_services_added = 0
-        self._num_services_removed = 0
-        self._num_services_kept = 0
-        self._num_services_total = 0
-
-    def _bulk_discover_item(self, task, mode, use_cache, do_scan, error_handling, job_interface):
-        self._num_hosts_total += len(task.host_names)
-
-        try:
-            counts, failed_hosts = self._execute_discovery(task, mode, use_cache, do_scan,
-                                                           error_handling)
-            self._process_discovery_results(task, job_interface, counts, failed_hosts)
-        except Exception:
-            self._num_hosts_failed += len(task.host_names)
-            if task.site_id:
-                msg = _("Error during discovery of %s on site %s") % \
-                    (", ".join(task.host_names), task.site_id)
-            else:
-                msg = _("Error during discovery of %s") % (", ".join(task.host_names))
-            self._logger.exception(msg)
-
-    def _execute_discovery(self, task, mode, use_cache, do_scan, error_handling):
-        arguments = [mode] + task.host_names
-
-        if use_cache:
-            arguments = ["@cache"] + arguments
-        if do_scan:
-            arguments = ["@scan"] + arguments
-        if not error_handling:
-            arguments = ["@raiseerrors"] + arguments
-
-        timeout = html.request.request_timeout - 2
-
-        counts, failed_hosts = watolib.check_mk_automation(
-            task.site_id, "inventory", arguments, timeout=timeout)
-
-        return counts, failed_hosts
-
-    def _process_discovery_results(self, task, job_interface, counts, failed_hosts):
-        # The following code updates the host config. The progress from loading the WATO folder
-        # until it has been saved needs to be locked.
-        with watolib.exclusive_lock():
-            watolib.Folder.invalidate_caches()
-            folder = watolib.Folder.folder(task.folder_path)
-            for hostname in task.host_names:
-                self._process_service_counts_for_host(counts[hostname])
-                msg = self._process_discovery_result_for_host(
-                    folder.host(hostname), failed_hosts.get(hostname, False), counts[hostname])
-                job_interface.send_progress_update("%s: %s" % (hostname, msg))
-
-    def _process_service_counts_for_host(self, host_counts):
-        self._num_services_added += host_counts[0]
-        self._num_services_removed += host_counts[1]
-        self._num_services_kept += host_counts[2]
-        self._num_services_total += host_counts[3]
-
-    def _process_discovery_result_for_host(self, host, failed_reason, host_counts):
-        if failed_reason is None:
-            self._num_hosts_skipped += 1
-            return _("discovery skipped: host not monitored")
-
-        if failed_reason is not False:
-            self._num_hosts_failed += 1
-            if not host.locked():
-                host.set_discovery_failed()
-            return _("discovery failed: %s") % failed_reason
-
-        self._num_hosts_succeeded += 1
-
-        watolib.add_service_change(
-            host, "bulk-discovery",
-            _("Did service discovery on host %s: %d added, %d removed, %d kept, "
-              "%d total services") % tuple([host.name()] + host_counts))
-
-        if not host.locked():
-            host.clear_discovery_failed()
-
-        return _("discovery successful")
 
 
 @mode_registry.register
@@ -196,10 +71,8 @@ class ModeBulkDiscovery(WatoMode):
 
         if self._start:
             # Only do this when the start form has been submitted
-            bulk_discover_params = cmk.gui.plugins.wato.vs_bulk_discovery().from_html_vars(
-                "bulkinventory")
-            cmk.gui.plugins.wato.vs_bulk_discovery().validate_value(bulk_discover_params,
-                                                                    "bulkinventory")
+            bulk_discover_params = vs_bulk_discovery().from_html_vars("bulkinventory")
+            vs_bulk_discovery().validate_value(bulk_discover_params, "bulkinventory")
             self._bulk_discovery_params.update(bulk_discover_params)
 
         self._recurse, self._only_failed, self._only_failed_invcheck, \
@@ -213,7 +86,7 @@ class ModeBulkDiscovery(WatoMode):
         return _("Bulk Service Discovery")
 
     def buttons(self):
-        html.context_button(_("Folder"), watolib.Folder.current().url(), "back")
+        html.context_button(_("Folder"), Folder.current().url(), "back")
 
     def action(self):
         config.user.need_permission("wato.services")
@@ -252,14 +125,14 @@ class ModeBulkDiscovery(WatoMode):
 
         msgs = []
         if self._all:
-            vs = cmk.gui.plugins.wato.vs_bulk_discovery(render_form=True)
+            vs = vs_bulk_discovery(render_form=True)
         else:
             # "Include subfolders" does not make sense for a selection of hosts
             # which is already given in the following situations:
             # - in the current folder below 'Selected hosts: Discovery'
             # - Below 'Bulk import' a automatic service discovery for
             #   imported/selected hosts can be executed
-            vs = cmk.gui.plugins.wato.vs_bulk_discovery(render_form=True, include_subfolders=False)
+            vs = vs_bulk_discovery(render_form=True, include_subfolders=False)
             msgs.append(
                 _("You have selected <b>%d</b> hosts for bulk discovery.") % len(
                     self._get_hosts_to_discover()))
@@ -303,7 +176,7 @@ class ModeBulkDiscovery(WatoMode):
                     continue
                 if host_name in skip_hosts:
                     continue
-                host = watolib.Folder.current().host(host_name)
+                host = Folder.current().host(host_name)
                 host.need_permission("write")
                 hosts_to_discover.append((host.site_id(), host.folder(), host_name))
 
@@ -311,7 +184,7 @@ class ModeBulkDiscovery(WatoMode):
             # all host in this folder, maybe recursively. New: we always group
             # a bunch of subsequent hosts of the same folder into one item.
             # That saves automation calls and speeds up mass inventories.
-            entries = self._recurse_hosts(watolib.Folder.current())
+            entries = self._recurse_hosts(Folder.current())
             for host_name, folder in entries:
                 if restrict_to_hosts is not None and host_name not in restrict_to_hosts:
                     continue

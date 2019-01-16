@@ -174,10 +174,13 @@ class Metadata(object):
 
 
 class Node(Metadata):
-    def __init__(self, node):
-        # type: (client.V1Node) -> None
+    def __init__(self, node, stats):
+        # type: (client.V1Node, str) -> None
         super(Node, self).__init__(node.metadata)
         self._status = node.status
+        # kubelet replies statistics for the last 2 minutes with 10s
+        # intervals. We only need the latest state.
+        self.stats = eval(stats)['stats'][-1]
 
     @property
     def conditions(self):
@@ -400,10 +403,16 @@ class NodeList(ListLike[Node]):
         # type: () -> Dict[str, Dict[str, Dict[str, Optional[float]]]]
         return {node.name: node.resources for node in self if node.name}
 
+    def stats(self):
+        return {node.name: node.stats for node in self if node.name}
+
     def cluster_resources(self):
-        initial = Node.zero_resources()
         merge = functools.partial(left_join_dicts, operation=operator.add)
-        return reduce(merge, self.resources().itervalues(), initial)
+        return reduce(merge, self.resources().itervalues())
+
+    def cluster_stats(self):
+        merge = functools.partial(left_join_dicts, operation=operator.add)
+        return reduce(merge, self.stats().itervalues())
 
 
 class ComponentStatusList(ListLike[ComponentStatus]):
@@ -638,6 +647,12 @@ class ApiData(object):
         cluster_roles = rbac_authorization_api.list_cluster_role()
         component_statuses = core_api.list_component_status()
         nodes = core_api.list_node()
+        # Try to make it a post, when client api support sending post data
+        # include {"num_stats": 1} to get the latest only and use less bandwidth
+        nodes_stats = [
+            core_api.connect_get_node_proxy_with_path(node.metadata.name, "stats")
+            for node in nodes.items
+        ]
         pvs = core_api.list_persistent_volume()
         pvcs = core_api.list_persistent_volume_claim_for_all_namespaces()
         pods = core_api.list_pod_for_all_namespaces()
@@ -649,7 +664,7 @@ class ApiData(object):
         self.cluster_roles = RoleList(map(Role, cluster_roles.items))
         self.component_statuses = ComponentStatusList(
             map(ComponentStatus, component_statuses.items))
-        self.nodes = NodeList(map(Node, nodes.items))
+        self.nodes = NodeList(map(Node, nodes.items, nodes_stats))
         self.persistent_volumes = PersistentVolumeList(map(PersistentVolume, pvs.items))
         self.persistent_volume_claims = PersistentVolumeClaimList(
             map(PersistentVolumeClaim, pvcs.items))
@@ -721,6 +736,7 @@ class ApiData(object):
         e.get('k8s_resources').insert(self.nodes.cluster_resources())
         e.get('k8s_resources').insert(self.pods.cluster_resources())
         e.get('k8s_resources').insert(self.pods.pods_in_cluster())
+        e.get('k8s_stats').insert(self.nodes.cluster_stats())
         return '\n'.join(e.output())
 
     def node_sections(self):
@@ -730,6 +746,7 @@ class ApiData(object):
         g.join('k8s_resources', self.nodes.resources())
         g.join('k8s_resources', self.pods.resources_per_node())
         g.join('k8s_resources', self.pods.pods_per_node())
+        g.join('k8s_stats', self.nodes.stats())
         g.join('k8s_conditions', self.nodes.conditions())
         return '\n'.join(g.output())
 

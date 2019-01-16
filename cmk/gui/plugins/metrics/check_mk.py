@@ -8164,10 +8164,19 @@ graph_info["total_and_open_slots"] = {
 graph_info["connections"] = {
     "title": _("Connections"),
     "metrics": [
+        ("connections", "area"),
         ("connections_async_writing", "area"),
         ("connections_async_keepalive", "stack"),
         ("connections_async_closing", "stack"),
-        ("connections", "line"),
+    ],
+    "optional_metrics": [
+        "connections_async_writing",
+        "connections_async_keepalive",
+        "connections_async_closing",
+    ],
+    "scalars": [
+        "connections:warn",
+        "connections:crit",
     ],
 }
 

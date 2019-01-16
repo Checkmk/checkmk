@@ -1,14 +1,15 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-import pytest
-import time
-import os
-import json
 import base64
 import copy
-from PIL import Image
+import json
+import os
 from StringIO import StringIO
+import time
+
+import pytest
+from PIL import Image
 
 import cmk
 from testlib import web, APIError  # pylint: disable=unused-import
@@ -31,16 +32,17 @@ def test_add_host(web):
 
 
 def test_add_host_folder_create(web):
-    web.add_host(
-        "test-host",
-        attributes={
-            "ipaddress": "127.0.0.1",
-        },
-        create_folders=True,
-        folder="asd/eee",
-    )
-
-    web.delete_host("test-host")
+    try:
+        web.add_host(
+            "test-host",
+            attributes={
+                "ipaddress": "127.0.0.1",
+            },
+            create_folders=True,
+            folder="asd/eee",
+        )
+    finally:
+        web.delete_host("test-host")
 
 
 def test_add_host_no_folder_create(web):
@@ -188,13 +190,17 @@ def test_get_all_sites(web, site):
     assert site.id in response["sites"]
 
 
-@pytest.mark.parametrize("sock_spec", [
-    "tcp:1.2.3.4:6557",
-    ("tcp", {
-        "address": ("1.2.3.4", 6557),
-        #"tls": ("plain_text", {}),
-    }),
-])
+@pytest.mark.parametrize(
+    "sock_spec",
+    [
+        "tcp:1.2.3.4:6557",
+        (
+            "tcp",
+            {
+                "address": ("1.2.3.4", 6557),
+                #"tls": ("plain_text", {}),
+            }),
+    ])
 def test_set_site(web, site, sock_spec):
     original_site = web.get_site(site.id)
     assert site.id == original_site["site_id"]
@@ -204,10 +210,12 @@ def test_set_site(web, site, sock_spec):
     new_site_config["socket"] = sock_spec
 
     expected_site_config = copy.deepcopy(original_site["site_config"])
-    expected_site_config["socket"] = ("tcp", {
-        "address": ("1.2.3.4", 6557),
-        #"tls": ("plain_text", {}),
-    })
+    expected_site_config["socket"] = (
+        "tcp",
+        {
+            "address": ("1.2.3.4", 6557),
+            #"tls": ("plain_text", {}),
+        })
 
     try:
         web.set_site(new_site_id, new_site_config)
@@ -223,13 +231,17 @@ def test_set_site(web, site, sock_spec):
         web.delete_site(new_site_id)
 
 
-@pytest.mark.parametrize("sock_spec", [
-    "tcp:1.2.3.4:6557",
-    ("tcp", {
-        "address": ("1.2.3.4", 6557),
-        #"tls": ("plain_text", {}),
-    }),
-])
+@pytest.mark.parametrize(
+    "sock_spec",
+    [
+        "tcp:1.2.3.4:6557",
+        (
+            "tcp",
+            {
+                "address": ("1.2.3.4", 6557),
+                #"tls": ("plain_text", {}),
+            }),
+    ])
 def test_set_all_sites(web, site, sock_spec):
     response = web.get_all_sites()
     del response["configuration_hash"]
@@ -240,10 +252,12 @@ def test_set_all_sites(web, site, sock_spec):
     new_site_config["socket"] = sock_spec
 
     expected_site_config = copy.deepcopy(copy.deepcopy(response["sites"][site.id]))
-    expected_site_config["socket"] = ("tcp", {
-        "address": ("1.2.3.4", 6557),
-        #"tls": ("plain_text", {}),
-    })
+    expected_site_config["socket"] = (
+        "tcp",
+        {
+            "address": ("1.2.3.4", 6557),
+            #"tls": ("plain_text", {}),
+        })
 
     response["sites"][new_site_id] = new_site_config
 
@@ -326,7 +340,7 @@ def test_add_group(web, group_type):
         assert group_alias == all_groups[group_id]["alias"]
 
         if cmk.is_managed_edition():
-            assert provider == all_groups[group_id]["provider"]
+            assert all_groups[group_id]["provider"] == "provider"
     finally:
         all_groups = web.get_all_groups(group_type)
         if group_id in all_groups:
@@ -355,7 +369,7 @@ def test_edit_group(web, group_type):
         assert group_alias2 == all_groups[group_id]["alias"]
 
         if cmk.is_managed_edition():
-            assert "provider" == all_groups[group_id]["customer"]
+            assert all_groups[group_id]["customer"] == "provider"
     finally:
         web.delete_group(group_type, group_id)
 
@@ -442,7 +456,7 @@ def test_get_all_users(web):
     }
     expected_users = set(["cmkadmin", "automation"] + users.keys())
     try:
-        response = web.add_htpasswd_users(users)
+        _response = web.add_htpasswd_users(users)
         all_users = web.get_all_users()
         assert not expected_users - set(all_users.keys())
     finally:
@@ -494,7 +508,6 @@ def test_edit_htpasswd_users(web):
         assert all_users["monroe"]["alias"] == "ms. monroe"
     finally:
         web.delete_htpasswd_users(users.keys())
-        pass
 
 
 def test_discover_servics(web):
@@ -532,33 +545,34 @@ def graph_test_config(web, site):
         web.get_regular_graph("test-host-get-graph", "Check_MK", 0, expect_error=True)
         assert "Cannot calculate graph recipes" in "%s" % e
 
-    # Now add the host
-    web.add_host(
-        "test-host-get-graph", attributes={
-            "ipaddress": "127.0.0.1",
-        })
-    web.discover_services("test-host-get-graph")
-    web.activate_changes()
-    site.schedule_check("test-host-get-graph", "Check_MK", 0)
+    try:
+        # Now add the host
+        web.add_host(
+            "test-host-get-graph", attributes={
+                "ipaddress": "127.0.0.1",
+            })
+        web.discover_services("test-host-get-graph")
+        web.activate_changes()
+        site.schedule_check("test-host-get-graph", "Check_MK", 0)
 
-    # Wait for RRD file creation
-    # Isn't this a bug that the graph is not instantly available?
-    timeout = 10
-    print "Checking for graph..."
-    while timeout and not site.file_exists("var/check_mk/rrd/test-host-get-graph/Check_MK.rrd"):
-        try:
-            web.get_regular_graph("test-host-get-graph", "Check_MK", 0, expect_error=True)
-        except Exception:
-            pass
-        timeout -= 1
-        time.sleep(1)
+        # Wait for RRD file creation
+        # Isn't this a bug that the graph is not instantly available?
+        timeout = 10
         print "Checking for graph..."
-    assert site.file_exists("var/check_mk/rrd/test-host-get-graph/Check_MK.rrd"), \
-                    "RRD %s is still missing" % "var/check_mk/rrd/test-host-get-graph/Check_MK.rrd"
+        while timeout and not site.file_exists("var/check_mk/rrd/test-host-get-graph/Check_MK.rrd"):
+            try:
+                web.get_regular_graph("test-host-get-graph", "Check_MK", 0, expect_error=True)
+            except Exception:
+                pass
+            timeout -= 1
+            time.sleep(1)
+            print "Checking for graph..."
+            assert site.file_exists("var/check_mk/rrd/test-host-get-graph/Check_MK.rrd"), \
+                "RRD %s is still missing" % "var/check_mk/rrd/test-host-get-graph/Check_MK.rrd"
 
-    yield
-
-    web.delete_host("test-host-get-graph")
+        yield
+    finally:
+        web.delete_host("test-host-get-graph")
     web.activate_changes()
 
 
@@ -605,7 +619,7 @@ def test_get_graph_notification_image(web, graph_test_config):
 
     # Provides a json list containing base64 encoded PNG images of the current 24h graphs
     encoded_graph_list = json.loads(result.text)
-    assert type(encoded_graph_list) == list
+    assert isinstance(encoded_graph_list, list)
     assert len(encoded_graph_list) > 0
 
     for encoded_graph_image in encoded_graph_list:

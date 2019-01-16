@@ -72,10 +72,11 @@ def current_branch_name():
 
 
 def get_cmk_download_credentials():
+    cred = "%s/.cmk-credentials" % os.environ["HOME"]
     try:
-        return tuple(file("%s/.cmk-credentials" % os.environ["HOME"]).read().strip().split(":"))
+        return tuple(file(cred).read().strip().split(":"))
     except IOError:
-        raise Exception("Missing ~/.cmk-credentials file (Create with content: USER:PASSWORD)")
+        raise Exception("Missing %s file (Create with content: USER:PASSWORD)" % cred)
 
 
 def wait_until(condition, timeout=1, interval=0.1):

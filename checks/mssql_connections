@@ -58,10 +58,16 @@ def check_mssql_connections(item, params, parsed):
 
     warn, crit = params['levels']
     if connection_count >= crit:
-        return 2, 'Connections: %d (warn/crit at %d/%d)' % (connection_count, warn, crit)
+        state = 2
     elif connection_count >= warn:
-        return 1, 'Connections: %d (warn/crit at %d/%d)' % (connection_count, warn, crit)
-    return 0, 'Connections: %d' % connection_count
+        state = 1
+    else:
+        state = 0
+
+    infotext = "Connections: %d" % connection_count
+    if state:
+        infotext += " (warn/crit at %d/%d)" % (warn, crit)
+    return state, infotext, [('connections', connection_count, warn, crit)]
 
 
 check_info['mssql_connections'] = {
@@ -71,4 +77,5 @@ check_info['mssql_connections'] = {
     'service_description': 'MSSQL Connections %s',
     'group': 'mssql_connections',
     'default_levels_variable': "mssql_connections_default_levels",
+    'has_perfdata': True,
 }

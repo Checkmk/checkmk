@@ -122,7 +122,6 @@ from cmk.gui.plugins.wato.utils import (
     user_script_choices,
     user_script_title,
     ValueSpecAttribute,
-    vs_bulk_discovery,
     WatoBackgroundJob,
     wato_confirm,
     wato_fileheader,

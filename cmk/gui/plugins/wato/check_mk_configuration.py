@@ -80,7 +80,6 @@ from cmk.gui.plugins.wato import (
     RulespecGroup,
     RulespecSubGroup,
     register_rule,
-    vs_bulk_discovery,
     PluginCommandLine,
     UserIconOrAction,
     SNMPCredentials,
@@ -95,6 +94,7 @@ from cmk.gui.plugins.wato import (
 
 from cmk.gui.plugins.wato.omd_configuration import ConfigVariableGroupSiteManagement
 from cmk.gui.plugins.views.icons import icon_and_action_registry
+from cmk.gui.watolib.bulk_discovery import vs_bulk_discovery
 
 #   .--Global Settings-----------------------------------------------------.
 #   |  ____ _       _           _   ____       _   _   _                   |

@@ -762,14 +762,31 @@ def test_get_graph_hover(web, graph_test_config):
 
 
 def test_get_inventory(web):
+    host_name = "test-host"
+    inventory_dir = "var/check_mk/inventory"
     try:
-        web.add_host(
-            "test-host", attributes={
-                "ipaddress": "127.0.0.1",
-            })
+        web.add_host(host_name, attributes={"ipaddress": "127.0.0.1"})
+        # NOTE: Deleting the host deletes the file, too.
+        web.site.makedirs(inventory_dir)
+        web.site.write_file(
+            os.path.join(inventory_dir, host_name),
+            "{'hardware': {'memory': {'ram': 10000, 'foo': 1}, 'blubb': 42}}")
 
-        inv = web.get_inventory(["test-host"])
+        inv = web.get_inventory([host_name])
+        assert inv[host_name] == {
+            u'hardware': {
+                u'memory': {
+                    u'foo': 1,
+                    u'ram': 10000
+                },
+                u'blubb': 42
+            }
+        }
 
-        assert inv["test-host"] == {}
+        inv = web.get_inventory([host_name], paths=['.hardware.memory.'])
+        assert inv[host_name] == {u'hardware': {u'memory': {u'foo': 1, u'ram': 10000}}}
+
+        inv = web.get_inventory([host_name], paths=['.hardware.mumpf.'])
+        assert inv[host_name] == {}
     finally:
-        web.delete_host("test-host")
+        web.delete_host(host_name)

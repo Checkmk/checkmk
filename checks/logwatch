@@ -483,7 +483,7 @@ check_info['logwatch.groups'] = {
     'service_description': "Log %s",
     'node_info': True,
     'group': 'logwatch',
-    'includes': ['ps.include']
+    'includes': ['eval_regex.include']
 }
 
 precompile_params['logwatch.groups'] = logwatch_group_precompile

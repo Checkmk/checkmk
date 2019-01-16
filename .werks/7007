@@ -1,0 +1,11 @@
+Title: ps: Fixed discovery of processes if backslashes are used in regex pattern
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1547563063
+
+

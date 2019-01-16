@@ -5554,6 +5554,7 @@ check_metrics["check_mk-storeonce_servicesets.capacity"] = df_translation
 check_metrics["check_mk-numble_volumes"] = df_translation
 check_metrics["check_mk-zpool"] = df_translation
 check_metrics["check_mk-vnx_quotas"] = df_translation
+check_metrics["check_mk-k8s_stats.fs"] = df_translation
 
 df_netapp_perfvarnames = list(df_basic_perfvarnames)
 for protocol in ["nfs", "cifs", "san", "fcp", "iscsi", "nfsv4", "nfsv4_1"]:
@@ -5690,6 +5691,7 @@ check_metrics["check_mk-emc_vplex_if"] = if_translation
 check_metrics["check_mk-huawei_osn_if"] = if_translation
 check_metrics["check_mk-if_fortigate"] = if_translation
 check_metrics["check_mk-aix_if"] = if_translation
+check_metrics["check_mk-k8s_stats.network"] = if_translation
 
 check_metrics["check_mk-brocade_fcport"] = {
     "in": {
@@ -8849,6 +8851,14 @@ graph_info["packets_2"] = {
         ("if_in_pkts", "area"),
         ("if_out_non_unicast", "-area"),
         ("if_out_unicast", "-stack"),
+    ],
+}
+
+graph_info["packets_3"] = {
+    "title": _("Packets"),
+    "metrics": [
+        ("if_in_pkts", "area"),
+        ("if_out_pkts", "-area"),
     ],
 }
 

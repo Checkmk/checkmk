@@ -113,8 +113,26 @@ register_rule(
                 title=_("Token"),
                 allow_empty=False,
             )),
-            ("port", Integer(title=_(u"Port"), default_value=443)),
-            ("url-prefix", HTTPUrl(title=_("Custom URL prefix"), allow_empty=False)),
+            ("port",
+             Integer(
+                 title=_(u"Port"),
+                 help=_("If no port is given a default value of 443 will be used."),
+                 default_value=443)),
+            ("url-prefix",
+             HTTPUrl(
+                 title=_("Custom URL prefix"),
+                 help=_("Defines the scheme (either HTTP or HTTPS) and host part "
+                        "of Kubernetes API calls like e.g. \"https://example.com\". "
+                        "If no prefix is specified HTTPS together with the IP of "
+                        "the host will be used."),
+                 allow_empty=False)),
+            ("path-prefix",
+             TextAscii(
+                 title=_("Custom path prefix"),
+                 help=_("Specifies a URL path prefix which is prepended to the path in calls "
+                        "to the Kubernetes API. This is e.g. useful if Rancher is used to "
+                        "manage Kubernetes clusters. If no prefix is given \"/\" will be used."),
+                 allow_empty=False)),
             ("no-cert-check",
              Alternative(
                  title=_("Disable certificate verification"),
@@ -124,7 +142,7 @@ register_rule(
                  ],
                  default_value=False)),
         ],
-        optional_keys=["port", "url-prefix", "no-cert-check"],
+        optional_keys=["port", "url-prefix", "path-prefix", "no-cert-check"],
     ),
     match="first",
     title=_(u"Kubernetes"),

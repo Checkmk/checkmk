@@ -54,6 +54,14 @@ import cmk.utils.profile
 import cmk.utils.password_store
 
 
+class PathPrefixAction(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        if not values:
+            return ''
+        path_prefix = '/' + values.strip('/')
+        setattr(namespace, self.dest, path_prefix)
+
+
 def parse(args):
     # type: (List[str]) -> argparse.Namespace
     p = argparse.ArgumentParser(description=__doc__)
@@ -68,6 +76,11 @@ def parse(args):
     p.add_argument('--port', type=int, default=443, help='Port to connect to')
     p.add_argument('--token', required=True, help='Token for that user')
     p.add_argument('--url-prefix', help='Custom URL prefix for Kubernetes API calls')
+    p.add_argument(
+        '--path-prefix',
+        default='',
+        action=PathPrefixAction,
+        help='Optional URL path prefix to prepend to Kubernetes API calls')
     p.add_argument('--no-cert-check', action='store_true', help='Disable certificate verification')
     p.add_argument(
         '--profile',
@@ -736,9 +749,10 @@ def get_api_client(arguments):
 
     config = client.Configuration()
     if arguments.url_prefix:
-        config.host = '%s:%s' % (arguments.url_prefix, arguments.port)
+        config.host = '%s:%s%s' % (arguments.url_prefix, arguments.port, arguments.path_prefix)
     else:
-        config.host = 'https://%s:%s' % (arguments.host, arguments.port)
+        config.host = 'https://%s:%s%s' % (arguments.host, arguments.port, arguments.path_prefix)
+
     config.api_key_prefix['authorization'] = 'Bearer'
     config.api_key['authorization'] = arguments.token
 

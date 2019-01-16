@@ -25,37 +25,36 @@
 # Boston, MA 02110-1301 USA.
 
 
+def _try_set(node, nkey, data, dkey):
+    if dkey in data:
+        node[nkey] = data[dkey]
+
+
 def inv_docker_node_info(parsed, inventory_tree, status_data_tree):
     if not parsed or not isinstance(parsed, dict):
         # String with error message in case the daemon is not running
         return
 
     node = inventory_tree.get_dict("software.applications.docker.")
-    node["version"] = parsed[u"ServerVersion"]
-    node["registry"] = parsed["IndexServerAddress"]
+    _try_set(node, "version", parsed, u"ServerVersion")
+    _try_set(node, "registry", parsed, "IndexServerAddress")
     # {"NodeID":"","NodeAddr":"","LocalNodeState":"inactive","ControlAvailable":false,"Error":"","RemoteManagers":null}
-    if parsed["Swarm"]["LocalNodeState"] == "inactive":
-        node["swarm_state"] = parsed["Swarm"]["LocalNodeState"]
-    else:
-        node.update({
-            "swarm_state": parsed["Swarm"]["LocalNodeState"],
-            "swarm_manager": parsed["Swarm"]["RemoteManagers"],
-            "swarm_node_id": parsed["Swarm"]["NodeID"],
-        })
+    swarm_data = parsed.get("Swarm", {})
+    _try_set(node, "swarm_state", swarm_data, "LocalNodeState")
+    _try_set(node, "swarm_manager", swarm_data, "RemoteManagers")
+    _try_set(node, "swarm_node_id", swarm_data, "NodeID")
 
-    labels = parsed[u"Labels"]
+    labels = parsed.get(u"Labels")
     if labels:
         node_labels = inventory_tree.get_list("software.applications.docker.node_labels:")
         node_labels += [{"label": label} for label in labels]
 
     status_node = status_data_tree.get_dict("software.applications.docker.")
-    status_node.update({
-        "num_containers_total": parsed["Containers"],
-        "num_containers_running": parsed["ContainersRunning"],
-        "num_containers_paused": parsed["ContainersPaused"],
-        "num_containers_stopped": parsed["ContainersStopped"],
-        "num_images": parsed["Images"],
-    })
+    _try_set(status_node, "num_containers_total", parsed, "Containers")
+    _try_set(status_node, "num_containers_running", parsed, "ContainersRunning")
+    _try_set(status_node, "num_containers_paused", parsed, "ContainersPaused")
+    _try_set(status_node, "num_containers_stopped", parsed, "ContainersStopped")
+    _try_set(status_node, "num_images", parsed, "Images")
 
 
 inv_info['docker_node_info'] = {

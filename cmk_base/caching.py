@@ -87,39 +87,41 @@ class Cache(object):
         self._populated = False
 
 
-# Just a small wrapper round a dict to get some caching specific functionality
-# for analysis etc.
 class DictCache(dict, Cache):
-    def __init__(self, *args, **kwargs):
-        super(DictCache, self).__init__(*args, **kwargs)
-        self._num_hits = 0
-        self._num_misses = 0
-        self._num_sets = 0
-
-    def __getitem__(self, y):
-        try:
-            result = super(DictCache, self).__getitem__(y)
-            self._num_hits += 1
-            return result
-        except KeyError:
-            self._num_misses += 1
-            raise
-
-    def __setitem__(self, i, y):
-        self._num_sets += 1
-        super(DictCache, self).__setitem__(i, y)
-
-    def get_stats(self):
-        return {
-            "sets": self._num_sets,
-            "hits": self._num_hits,
-            "misses": self._num_misses,
-            "items": len(self),
-        }
-
     def clear(self):
         super(DictCache, self).clear()
         self.set_not_populated()
+
+
+## Just a small wrapper round a dict to get some caching specific functionality
+## for analysis etc.
+#class DictCacheStats(DictCache):
+#    def __init__(self, *args, **kwargs):
+#        super(DictCacheStats, self).__init__(*args, **kwargs)
+#        self._num_hits = 0
+#        self._num_misses = 0
+#        self._num_sets = 0
+#
+#    def __getitem__(self, y):
+#        try:
+#            result = super(DictCacheStats, self).__getitem__(y)
+#            self._num_hits += 1
+#            return result
+#        except KeyError:
+#            self._num_misses += 1
+#            raise
+#
+#    def __setitem__(self, i, y):
+#        self._num_sets += 1
+#        super(DictCacheStats, self).__setitem__(i, y)
+#
+#    def get_stats(self):
+#        return {
+#            "sets": self._num_sets,
+#            "hits": self._num_hits,
+#            "misses": self._num_misses,
+#            "items": len(self),
+#        }
 
 
 class SetCache(set, Cache):

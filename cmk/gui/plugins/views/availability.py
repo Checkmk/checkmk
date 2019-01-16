@@ -418,7 +418,9 @@ def render_availability_timeline(what, av_entry, avoptions):
             table.cell(_("Until"), row["until_text"], css="nobr narrow")
             table.cell(_("Duration"), row["duration_text"], css="narrow number")
             table.cell(_("State"), row["state_name"], css=row["css"] + " state narrow")
-            table.cell(_("Last Known Plugin Output"), row.get("log_output", ""))
+
+            if "omit_timeline_plugin_output" not in avoptions["labelling"]:
+                table.cell(_("Last Known Plugin Output"), row.get("log_output", ""))
 
     # Legend for timeline
     if "display_timeline_legend" in avoptions["labelling"]:

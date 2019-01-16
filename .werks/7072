@@ -1,0 +1,11 @@
+Title: Availability: Plugin output can now be hidden from availability timeline
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1547647999
+Class: feature
+
+The last known plugin output column can now be hidden from the availability timeline
+view and report to make the report show a bit less detailed information.

@@ -165,6 +165,7 @@ def get_av_display_options(what):
                  ("show_alias", _("Display the host alias")),
                  ("use_display_name", _("Use alternative display name for services")),
                  ("omit_buttons", _("Do not display icons for history and timeline")),
+                 ("omit_timeline_plugin_output", _("Do not display plugin output in timeline")),
                  ("display_timeline_legend", _("Display legend for timeline")),
                  ("omit_av_levels", _("Do not display legend for availability levels")),
              ])),

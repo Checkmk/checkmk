@@ -270,10 +270,12 @@ def _create_nagios_servicedefs(cfg, hostname, host_attrs):
     #   ___) |
     #  |____/   3. Services
 
+    config_cache = config.get_config_cache()
+
     def do_omit_service(hostname, description):
         if config.service_ignored(hostname, None, description):
             return True
-        if hostname != config.host_of_clustered_service(hostname, description):
+        if hostname != config_cache.host_of_clustered_service(hostname, description):
             return True
         return False
 

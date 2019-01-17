@@ -875,6 +875,7 @@ def _get_host_services(hostname, ipaddress, sources, multi_host_sections, on_err
 def _get_node_services(hostname, ipaddress, sources, multi_host_sections, on_error):
     services = _get_discovered_services(hostname, ipaddress, sources, multi_host_sections, on_error)
 
+    config_cache = config.get_config_cache()
     # Identify clustered services
     for (check_plugin_name, item), (check_source, paramstring) in services.items():
         try:
@@ -887,7 +888,7 @@ def _get_node_services(hostname, ipaddress, sources, multi_host_sections, on_err
             else:
                 continue  # ignore
 
-        if hostname != config.host_of_clustered_service(hostname, descr):
+        if hostname != config_cache.host_of_clustered_service(hostname, descr):
             if check_source == "vanished":
                 del services[(check_plugin_name,
                               item)]  # do not show vanished clustered services here
@@ -935,19 +936,20 @@ def _merge_manual_services(services, hostname, on_error):
     for (check_plugin_name, item), (params, descr, _unused_deps) in manual_items.items():
         services[(check_plugin_name, item)] = ('manual', repr(params))
 
+    config_cache = config.get_config_cache()
     # Add legacy checks -> "legacy"
-    legchecks = config.host_extra_conf(hostname, config.legacy_checks)
+    legchecks = config_cache.host_extra_conf(hostname, config.legacy_checks)
     for _unused_cmd, descr, _unused_perf in legchecks:
         services[('legacy', descr)] = ('legacy', 'None')
 
     # Add custom checks -> "custom"
-    custchecks = config.host_extra_conf(hostname, config.custom_checks)
+    custchecks = config_cache.host_extra_conf(hostname, config.custom_checks)
     for entry in custchecks:
         services[('custom', entry['service_description'])] = ('custom', 'None')
 
     # Similar for 'active_checks', but here we have parameters
     for acttype, rules in config.active_checks.items():
-        entries = config.host_extra_conf(hostname, rules)
+        entries = config_cache.host_extra_conf(hostname, rules)
         for params in entries:
             descr = config.active_check_service_description(hostname, acttype, params)
             services[(acttype, descr)] = ('active', repr(params))
@@ -981,6 +983,8 @@ def _merge_manual_services(services, hostname, on_error):
 def _get_cluster_services(hostname, ipaddress, sources, multi_host_sections, on_error):
     nodes = config.nodes_of(hostname)
 
+    config_cache = config.get_config_cache()
+
     # Get setting from cluster SNMP data source
     do_snmp_scan = False
     for source in sources.get_data_sources():
@@ -1004,7 +1008,7 @@ def _get_cluster_services(hostname, ipaddress, sources, multi_host_sections, on_
                                             on_error)
         for (check_plugin_name, item), (check_source, paramstring) in services.items():
             descr = config.service_description(hostname, check_plugin_name, item)
-            if hostname == config.host_of_clustered_service(node, descr):
+            if hostname == config_cache.host_of_clustered_service(node, descr):
                 if (check_plugin_name, item) not in cluster_items:
                     cluster_items[(check_plugin_name, item)] = (check_source, paramstring)
                 else:
@@ -1291,13 +1295,14 @@ def set_autochecks_of(hostname, new_items):
     # All of its services are located in the nodes instead
     # So we cycle through all nodes remove all clustered service
     # and add the ones we've got from stdin
+    config_cache = config.get_config_cache()
     if config.is_cluster(hostname):
         for node in config.nodes_of(hostname):
             new_autochecks = []
             existing = parse_autochecks_file(node)
             for check_plugin_name, item, paramstring in existing:
                 descr = config.service_description(node, check_plugin_name, item)
-                if hostname != config.host_of_clustered_service(node, descr):
+                if hostname != config_cache.host_of_clustered_service(node, descr):
                     new_autochecks.append((check_plugin_name, item, paramstring))
 
             for (check_plugin_name, item), paramstring in new_items.items():
@@ -1344,9 +1349,10 @@ def _remove_autochecks_of_host(hostname):
     old_items = parse_autochecks_file(hostname)
     removed = 0
     new_items = []
+    config_cache = config.get_config_cache()
     for check_plugin_name, item, paramstring in old_items:
         descr = config.service_description(hostname, check_plugin_name, item)
-        if hostname != config.host_of_clustered_service(hostname, descr):
+        if hostname != config_cache.host_of_clustered_service(hostname, descr):
             new_items.append((check_plugin_name, item, paramstring))
         else:
             removed += 1

@@ -19,8 +19,8 @@ from cmk.gui.valuespec import (
     TextAscii,
     FixedValue,
 )
-from cmk.gui.plugins.wato.utils import register_check_parameters
 
+from cmk.gui.plugins.wato.utils import register_check_parameters
 
 def test_rulespec_sub_group():
     class TestGroup(RulespecGroup):

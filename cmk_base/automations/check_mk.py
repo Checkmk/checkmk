@@ -546,6 +546,7 @@ class AutomationAnalyseServices(Automation):
     # TODO: Was ist mit Clustern???
     # TODO: Klappt das mit automatischen verschatten von SNMP-Checks (bei dual Monitoring)
     def execute(self, args):
+        config_cache = config.get_config_cache()
         hostname = args[0]
         servicedesc = args[1].decode("utf-8")
         check_api_utils.set_hostname(hostname)
@@ -579,7 +580,7 @@ class AutomationAnalyseServices(Automation):
                     hostlist = entry[1]
                     taglist = []
 
-                if config.hosttags_match_taglist(config.tags_of_host(hostname), taglist) and \
+                if config.hosttags_match_taglist(config_cache.tags_of_host(hostname), taglist) and \
                    config.in_extraconf_hostlist(hostlist, hostname):
                     descr = config.service_description(hostname, checktype, item)
                     if descr == servicedesc:
@@ -600,7 +601,7 @@ class AutomationAnalyseServices(Automation):
                 for check_plugin_name, item, paramstring in cmk_base.autochecks.read_autochecks_of(
                         node):
                     descr = config.service_description(node, check_plugin_name, item)
-                    if hostname == config.host_of_clustered_service(node, descr):
+                    if hostname == config_cache.host_of_clustered_service(node, descr):
                         autochecks.append((check_plugin_name, item, paramstring))
         else:
             autochecks = cmk_base.autochecks.read_autochecks_of(hostname)
@@ -664,7 +665,7 @@ class AutomationAnalyseServices(Automation):
 
         # 4. Active checks
         for acttype, rules in config.active_checks.items():
-            entries = config.host_extra_conf(hostname, rules)
+            entries = config_cache.host_extra_conf(hostname, rules)
             if entries:
                 for params in entries:
                     description = config.active_check_service_description(hostname, acttype, params)
@@ -1285,8 +1286,10 @@ class AutomationActiveCheck(Automation):
     # here. We could read the Nagios resource.cfg file, but we do not
     # know for sure the place of that either.
     def _replace_core_macros(self, hostname, commandline):
+        config_cache = config.get_config_cache()
         macros = core_config.get_host_macros_from_attributes(
-            hostname, core_config.get_host_attributes(hostname, config.tags_of_host(hostname)))
+            hostname, core_config.get_host_attributes(hostname,
+                                                      config_cache.tags_of_host(hostname)))
         self._load_resource_file(macros)
         for varname, value in macros.items():
             commandline = commandline.replace(varname, "%s" % value)
@@ -1455,8 +1458,9 @@ class AutomationGetServiceConfigurations(Automation):
     def _get_active_checks(self, hostname):
         # legacy checks via active_checks
         actchecks = []
+        config_cache = config.get_config_cache()
         for acttype, rules in config.active_checks.iteritems():
-            entries = config.host_extra_conf(hostname, rules)
+            entries = config_cache.host_extra_conf(hostname, rules)
             for params in entries:
                 description = config.active_check_service_description(hostname, acttype, params)
                 actchecks.append((acttype, description, params))

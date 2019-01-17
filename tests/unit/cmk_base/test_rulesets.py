@@ -5,6 +5,7 @@ from cmk.utils.exceptions import MKGeneralException
 
 import cmk
 
+
 @pytest.fixture(autouse=True)
 def fake_version(monkeypatch):
     monkeypatch.setattr(cmk, "omd_version", lambda: "1.4.0i1.cee")
@@ -23,8 +24,9 @@ def clear_config_caches(monkeypatch):
 def test_service_extra_conf(monkeypatch):
     import cmk_base.config as config
     monkeypatch.setattr(config, "all_hosts", ["host1|tag1|tag2", "host2|tag1"])
+    monkeypatch.setattr(config, "host_paths", {"host1": "", "host2": ""})
     monkeypatch.setattr(config, "clusters", {})
-    config.collect_hosttags()
+    config.get_config_cache().initialize()
 
     ruleset = [
         ("1", [], config.ALL_HOSTS, config.ALL_SERVICES, {}),
@@ -65,9 +67,10 @@ def test_all_matching_hosts(monkeypatch):
 
     monkeypatch.setattr(config, "distributed_wato_site", "site1")
     monkeypatch.setattr(config, "all_hosts",
-        ["host1|tag1|tag2", "host2|tag1", "host3|tag1|site:site2"])
+                        ["host1|tag1|tag2", "host2|tag1", "host3|tag1|site:site2"])
+    monkeypatch.setattr(config, "host_paths", {"host1": "", "host2": "", "host3": ""})
     monkeypatch.setattr(config, "clusters", {})
-    config.collect_hosttags()
+    config.get_config_cache().initialize()
 
     assert config.all_matching_hosts(["tag1"], config.ALL_HOSTS, with_foreign_hosts=False) == \
             set(["host1", "host2"])
@@ -129,13 +132,13 @@ def test_in_extraconf_hostlist():
 
 def test_parse_host_rule():
     options = {'description': u'Put all hosts into the contact group "all"'}
-    entry = ( 'all', [], config.ALL_HOSTS, options)
+    entry = ('all', [], config.ALL_HOSTS, options)
     assert config.parse_host_rule(entry) == ('all', [], config.ALL_HOSTS, options)
 
 
 def test_parse_host_rule_without_tags():
     options = {'description': u'Put all hosts into the contact group "all"'}
-    entry = ( 'all', config.ALL_HOSTS, options)
+    entry = ('all', config.ALL_HOSTS, options)
     assert config.parse_host_rule(entry) == ('all', [], config.ALL_HOSTS, options)
 
 
@@ -148,18 +151,18 @@ def test_parse_host_rule_invalid_length():
 
 def test_get_rule_options_regular_rule():
     options = {'description': u'Put all hosts into the contact group "all"'}
-    entry = ( 'all', [], config.ALL_HOSTS, options)
+    entry = ('all', [], config.ALL_HOSTS, options)
     assert config.get_rule_options(entry) == (entry[:-1], options)
 
 
 def test_get_rule_options_empty_options():
     options = {}
-    entry = ( 'all', [], config.ALL_HOSTS, options)
+    entry = ('all', [], config.ALL_HOSTS, options)
     assert config.get_rule_options(entry) == (entry[:-1], options)
 
 
 def test_get_rule_options_missing_options():
-    entry = ( 'all', [], config.ALL_HOSTS)
+    entry = ('all', [], config.ALL_HOSTS)
     assert config.get_rule_options(entry) == (entry, {})
 
 

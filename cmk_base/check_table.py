@@ -51,35 +51,38 @@ def get_check_table(hostname,
                     skip_autochecks=False,
                     filter_mode=None,
                     skip_ignored=True):
-    if config.is_ping_host(hostname):
+
+    host_config = config.HostConfig(hostname)
+    config_cache = config.get_config_cache()
+
+    if host_config.is_ping_host:
         skip_autochecks = True
 
     # speed up multiple lookup of same host
-    check_table_cache = cmk_base.config_cache.get_dict("check_tables")
+    check_table_cache = config_cache.check_table_cache
     table_cache_id = hostname, filter_mode
 
     if not skip_autochecks and use_cache and table_cache_id in check_table_cache:
         # TODO: The whole is_dual_host handling needs to be cleaned up. The duplicate checking
         #       needs to be done in all cases since a host can now have a lot of different data
         #       sources.
-        if remove_duplicates and config.is_dual_host(hostname):
+        if remove_duplicates and host_config.is_dual_host:
             return _remove_duplicate_checks(check_table_cache[table_cache_id])
         return check_table_cache[table_cache_id]
 
     check_table = {}
 
-    single_host_checks = cmk_base.config_cache.get_dict("single_host_checks")
-    multi_host_checks = cmk_base.config_cache.get_list("multi_host_checks")
+    single_host_checks = config_cache.single_host_checks
+    multi_host_checks = config_cache.multi_host_checks
 
-    hosttags = config.tags_of_host(hostname)
+    hosttags = host_config.tags
 
     # Just a local cache and its function
     is_checkname_valid_cache = {}
 
     def is_checkname_valid(checkname):
-        the_id = (hostname, checkname)
-        if the_id in is_checkname_valid_cache:
-            return is_checkname_valid_cache[the_id]
+        if checkname in is_checkname_valid_cache:
+            return is_checkname_valid_cache[checkname]
 
         passed = True
         if checkname not in config.check_info:
@@ -87,14 +90,14 @@ def get_check_table(hostname,
 
         # Skip SNMP checks for non SNMP hosts (might have been discovered before with other
         # agent setting. Remove them without rediscovery). Same for agent based checks.
-        elif not config.is_snmp_host(hostname) and cmk_base.check_utils.is_snmp_check(checkname) and \
-           (not config.has_management_board(hostname) or config.management_protocol_of(hostname) != "snmp"):
+        elif not host_config.is_snmp_host and config_cache.is_snmp_check(checkname) and \
+           (not host_config.has_management_board or host_config.management_protocol != "snmp"):
             passed = False
 
-        elif not config.is_agent_host(hostname) and cmk_base.check_utils.is_tcp_check(checkname):
+        elif not host_config.is_agent_host and config_cache.is_tcp_check(checkname):
             passed = False
 
-        is_checkname_valid_cache[the_id] = passed
+        is_checkname_valid_cache[checkname] = passed
         return passed
 
     def handle_entry(entry):
@@ -142,7 +145,12 @@ def get_check_table(hostname,
             if skip_ignored and config.service_ignored(hostname, checkname, descr):
                 return
 
-            svc_is_mine = hostname == config.host_of_clustered_service(hostname, descr)
+            if not host_config.part_of_clusters:
+                svc_is_mine = True
+            else:
+                svc_is_mine = hostname == config_cache.host_of_clustered_service(
+                    hostname, descr, part_of_clusters=host_config.part_of_clusters)
+
             if filter_mode is None and not svc_is_mine:
                 return
 
@@ -155,7 +163,7 @@ def get_check_table(hostname,
     # Now process all entries that are specific to the host
     # in search (single host) or that might match the host.
     if not skip_autochecks:
-        for entry in cmk_base.autochecks.read_autochecks_of(hostname, world):
+        for entry in config_cache.get_autochecks_of(hostname, world):
             handle_entry(entry)
 
     for entry in single_host_checks.get(hostname, []):
@@ -165,26 +173,27 @@ def get_check_table(hostname,
         handle_entry(entry)
 
     # Now add checks a cluster might receive from its nodes
-    if config.is_cluster(hostname):
+    if host_config.is_cluster:
         single_host_checks = cmk_base.config_cache.get_dict("single_host_checks")
 
         for node in config.nodes_of(hostname):
             node_checks = single_host_checks.get(node, [])
             if not skip_autochecks:
-                node_checks = node_checks + cmk_base.autochecks.read_autochecks_of(node, world)
+                node_checks = node_checks + config_cache.get_autochecks_of(node, world)
             for entry in node_checks:
                 if len(entry) == 4:
                     entry = entry[1:]  # drop hostname from single_host_checks
                 checkname, item, params = entry
                 descr = config.service_description(node, checkname, item)
-                if hostname == config.host_of_clustered_service(node, descr):
+                if hostname == config_cache.host_of_clustered_service(node, descr):
                     cluster_params = config.compute_check_parameters(hostname, checkname, item,
                                                                      params)
                     handle_entry((hostname, checkname, item, cluster_params))
 
     # Remove dependencies to non-existing services
-    all_descr = set([descr for ((checkname, item), (params, descr, deps)) in check_table.items()])
-    for (checkname, item), (params, descr, deps) in check_table.items():
+    all_descr = set(
+        [descr for ((checkname, item), (params, descr, deps)) in check_table.iteritems()])
+    for (checkname, item), (params, descr, deps) in check_table.iteritems():
         deeps = deps[:]
         del deps[:]
         for d in deeps:
@@ -230,6 +239,7 @@ def get_precompiled_check_parameters(hostname, item, params, check_plugin_name):
 # TODO: Is this needed here? Investigate for what this is used for
 def service_deps(hostname, servicedesc):
     deps = []
+    config_cache = config.get_config_cache()
     for entry in config.service_dependencies:
         entry, rule_options = config.get_rule_options(entry)
         if rule_options.get("disabled"):
@@ -244,7 +254,7 @@ def service_deps(hostname, servicedesc):
             raise MKGeneralException("Invalid entry '%r' in service dependencies: "
                                      "must have 3 or 4 entries" % entry)
 
-        if config.hosttags_match_taglist(config.tags_of_host(hostname), tags) and \
+        if config.hosttags_match_taglist(config_cache.tags_of_host(hostname), tags) and \
            config.in_extraconf_hostlist(hostlist, hostname):
             for pattern in patternlist:
                 matchobject = regex(pattern).search(servicedesc)

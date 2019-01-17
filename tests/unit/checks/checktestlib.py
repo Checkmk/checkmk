@@ -80,9 +80,10 @@ def assertPerfValuesEqual(actual, expected):
     assert expected.value == actual.value, "expected %r, but value is %r" % (expected, actual.value)
     assert expected.warn == actual.warn, "expected %r, but warn is %r" % (expected, actual.warn)
     assert expected.crit == actual.crit, "expected %r, but crit is %r" % (expected, actual.crit)
-    assert expected.minimum == actual.minimum, "expected %r, but minimum is %r" % (expected, actual.minimum)
-    assert expected.maximum == actual.maximum, "expected %r, but maximum is %r" % (expected, actual.maximum)
-
+    assert expected.minimum == actual.minimum, "expected %r, but minimum is %r" % (expected,
+                                                                                   actual.minimum)
+    assert expected.maximum == actual.maximum, "expected %r, but maximum is %r" % (expected,
+                                                                                   actual.maximum)
 
 
 class BasicCheckResult(Tuploid):
@@ -144,12 +145,16 @@ def assertBasicCheckResultsEqual(actual, expected):
     """
     assert isinstance(actual, BasicCheckResult), "not a BasicCheckResult: %r" % actual
     assert isinstance(expected, BasicCheckResult), "not a BasicCheckResult: %r" % expected
-    assert expected.status == actual.status, "expected %r, but status is %r" % (expected, actual.status)
-    assert expected.infotext == actual.infotext, "expected %r, but infotext is %r" % (expected, actual.infotext)
-    assert len(expected.perfdata) == len(actual.perfdata), "expected %r, but got %d perfdata" % (expected, len(actual.perfdata))
+    assert expected.status == actual.status, "expected %r, but status is %r" % (expected,
+                                                                                actual.status)
+    assert expected.infotext == actual.infotext, "expected %r, but infotext is %r" % (
+        expected, actual.infotext)
+    assert len(expected.perfdata) == len(
+        actual.perfdata), "expected %r, but got %d perfdata" % (expected, len(actual.perfdata))
     for pact, pexp in zip(actual.perfdata, expected.perfdata):
         assertPerfValuesEqual(pact, pexp)
-    assert expected.multiline == actual.multiline, "expected %r, but multiline is %r" % (expected, actual.multiline)
+    assert expected.multiline == actual.multiline, "expected %r, but multiline is %r" % (
+        expected, actual.multiline)
 
 
 class CheckResult(object):
@@ -264,7 +269,6 @@ class DiscoveryEntry(Tuploid):
         return "DiscoveryEntry(%r, %r)" % self.tuple
 
 
-
 class DiscoveryResult(object):
     """
     The result of the discovery as a whole.
@@ -330,6 +334,7 @@ class BasicItemState(object):
     We assert that we have exactly two values,
     where the first one is either float or int.
     """
+
     def __init__(self, *args):
         if len(args) == 1:
             args = args[0]
@@ -397,16 +402,16 @@ class MockItemState(object):
         else:
             self.get_val_function = lambda key, default: mock_state
 
-
     def __call__(self, user_key, default=None):
         val = self.get_val_function(user_key, default)
         return val
 
     def __enter__(self):
         '''The default context: just mock get_item_state'''
-        self.context = mock.patch(MockItemState.TARGET,
-                                  # I'm the MockObj myself!
-                                  new_callable=lambda: self)
+        self.context = mock.patch(
+            MockItemState.TARGET,
+            # I'm the MockObj myself!
+            new_callable=lambda: self)
         return self.context.__enter__()
 
     def __exit__(self, *exc_info):
@@ -432,6 +437,7 @@ class assertMKCounterWrapped(object):
 
     See for example 'test_statgrab_cpu_check.py'.
     """
+
     def __init__(self, msg=None):
         self.msg = msg
 
@@ -479,27 +485,29 @@ class MockHostExtraConf(object):
     """
     TARGET = 'cmk_base.config.host_extra_conf'
 
-    def __init__(self, mock_config):
+    def __init__(self, check, mock_config):
         self.context = None
-        if isinstance(mock_config, dict):
-            self.config = [mock_config]
-        else:
-            self.config = mock_config
-        for cfg in self.config:
-            tc = type(cfg)
-            assert tc == dict, \
-               "MockHostExtraConf: config %r must be of type dict - not %r" \
-               % (cfg, tc)
+        self.check = check
+        self.config = mock_config
 
     def __call__(self, _hostname, _ruleset):
         # ensure the default value is sane
+        if callable(self.config):
+            return self.config(_hostname, _ruleset)
+
+        if isinstance(self.config, dict):
+            return [self.config]
         return self.config
 
     def __enter__(self):
         '''The default context: just mock get_item_state'''
-        self.context = mock.patch(MockHostExtraConf.TARGET,
-                                  # I'm the MockObj myself!
-                                  new_callable=lambda: self)
+        import cmk_base.config
+        config_cache = cmk_base.config.get_config_cache()
+        self.context = mock.patch.object(
+            config_cache,
+            "host_extra_conf",
+            # I'm the MockObj myself!
+            new_callable=lambda: self)
         return self.context.__enter__()
 
     def __exit__(self, *exc_info):
@@ -512,13 +520,14 @@ class ImmutablesChangedError(AssertionError):
 
 class Immutables(object):
     """Store some data and ensure it is not changed"""
+
     def __init__(self):
         self.refs = {}
         self.copies = {}
 
     def register(self, v, k=None):
         if k is None:
-           k = id(v)
+            k = id(v)
         self.refs.__setitem__(k, v)
         self.copies.__setitem__(k, copy.deepcopy(v))
 
@@ -554,5 +563,4 @@ def assertEqual(first, second, descr=''):
         for c in range(len(first)):
             assertEqual(first[c], second[c], descr + "[%d] " % c)
 
-    raise AssertionError("%snot equal (%r): %r != %r"
-                         % (descr, type(first), first, second))
+    raise AssertionError("%snot equal (%r): %r != %r" % (descr, type(first), first, second))

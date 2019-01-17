@@ -27,12 +27,43 @@
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
+    DropdownChoice,
+    ListOf,
+    ListOfStrings,
     MonitoringState,
     TextAscii,
 )
 from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersApplications,
+    RulespecGroupCheckParametersDiscovery,
     register_check_parameters,
+    register_rule,
+)
+
+register_rule(
+    RulespecGroupCheckParametersDiscovery,
+    varname="discovery_systemd_units_services_rules",
+    title=_("Systemd Service Discovery"),
+    valuespec=Dictionary(
+        elements=[
+            ('descriptions', ListOfStrings(title=_("Descriptions"))),
+            ('names', ListOfStrings(title=_("Service unit names"))),
+            ('states',
+             ListOf(
+                 DropdownChoice(
+                     choices=[
+                         ("active", "active"),
+                         ("inactive", "inactive"),
+                         ("failed", "failed"),
+                     ],),
+                 title=_("States"),
+             )),
+        ],
+        help=_('This rule can be used to configure the discovery of the Linux services check. '
+               'You can configure specific Linux services to be monitored by the Linux check by '
+               'selecting them by description, unit name, or current state during the discovery.'),
+    ),
+    match='all',
 )
 
 register_check_parameters(

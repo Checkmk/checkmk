@@ -27,14 +27,35 @@
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
+    DropdownChoice,
     Percentage,
     TextAscii,
     Tuple,
 )
 from cmk.gui.plugins.wato import (
+    RulespecGroupCheckParametersDiscovery,
     RulespecGroupCheckParametersEnvironment,
     register_check_parameters,
+    register_rule,
 )
+
+register_rule(
+    RulespecGroupCheckParametersDiscovery,
+    varname="ewon_discovery_rules",
+    title=_("eWON Discovery"),
+    help=_("The ewon vpn routers can rely data from a secondary device via snmp. "
+           "It doesn't however allow discovery of the device type relayed this way. "
+           "To allow interpretation of the data you need to pick the device manually."),
+    valuespec=DropdownChoice(
+        title=_("Device Type"),
+        label=_("Select device type"),
+        choices=[
+            (None, _("None selected")),
+            ("oxyreduct", _("Wagner OxyReduct")),
+        ],
+        default_value=None,
+    ),
+    match='first')
 
 register_check_parameters(
     RulespecGroupCheckParametersEnvironment,

@@ -26,8 +26,10 @@
 
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
+    Alternative,
     Dictionary,
     DropdownChoice,
+    FixedValue,
     ListOf,
     ListOfStrings,
     MonitoringState,
@@ -36,7 +38,52 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersApplications,
+    RulespecGroupCheckParametersDiscovery,
     register_check_parameters,
+    register_rule,
+)
+
+register_rule(
+    RulespecGroupCheckParametersDiscovery,
+    varname="inventory_solaris_services_rules",
+    title=_("Solaris Service Discovery"),
+    valuespec=Dictionary(
+        elements=[
+            ('descriptions', ListOfStrings(title=_("Descriptions"))),
+            ('categories', ListOfStrings(title=_("Categories"))),
+            ('names', ListOfStrings(title=_("Names"))),
+            ('instances', ListOfStrings(title=_("Instances"))),
+            ('states',
+             ListOf(
+                 DropdownChoice(
+                     choices=[
+                         ("online", _("online")),
+                         ("disabled", _("disabled")),
+                         ("maintenance", _("maintenance")),
+                         ("legacy_run", _("legacy run")),
+                     ],),
+                 title=_("States"),
+             )),
+            ('outcome',
+             Alternative(
+                 title=_("Service name"),
+                 style="dropdown",
+                 elements=[
+                     FixedValue("full_descr", title=_("Full Description"), totext=""),
+                     FixedValue(
+                         "descr_without_prefix",
+                         title=_("Description without type prefix"),
+                         totext=""),
+                 ],
+             )),
+        ],
+        help=_(
+            'This rule can be used to configure the discovery of the Solaris services check. '
+            'You can configure specific Solaris services to be monitored by the Solaris check by '
+            'selecting them by description, category, name, or current state during the discovery.'
+        ),
+    ),
+    match='all',
 )
 
 register_check_parameters(

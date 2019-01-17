@@ -24,55 +24,72 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+DEVICE_TYPE_MAP = {
+    "1": "Power",
+    "2": "Cooling",
+    "3": "Control",
+    "4": "Connectivity",
+    "5": "Robotics",
+    "6": "Media",
+    "7": "Drive",
+    "8": "Operator action request",
+}
 
-def inventory_quantum_libsmall_status(info):
-    if info:
+RAS_STATUS_MAP = {
+    "1": (0, "good"),
+    "2": (2, "failed"),
+    "3": (2, "degraded"),
+    "4": (1, "warning"),
+    "5": (0, "informational"),
+    "6": (3, "unknown"),
+    "7": (3, "invalid"),
+}
+
+OPNEED_STATUS_MAP = {
+    "0": (0, "no"),
+    "1": (2, "yes"),
+    "2": (0, "no"),
+}
+
+
+def parse_quantum_libsmall_status(info):
+    parsed = []
+    for line in info:
+        for oidend, dev_state in line:
+            dev_type = DEVICE_TYPE_MAP.get(oidend.split('.')[0])
+            if not (dev_type or dev_state):
+                continue
+            parsed.append((dev_type, dev_state))
+    return parsed
+
+
+def inventory_quantum_libsmall_status(parsed):
+    if parsed:
         return [(None, None)]
 
 
-def check_quantum_libsmall_status(_no_item, _no_params, info):
-
-    ras_status = {
-        1: (0, "good"),
-        2: (2, "failed"),
-        3: (2, "degraded"),
-        4: (1, "warning"),
-        5: (0, "informational"),
-        6: (3, "unknown"),
-        7: (3, "invalid"),
-    }
-
-    opneed_status = {
-        0: (0, "no"),
-        1: (2, "yes"),
-    }
-
-    oidtothing = {
-        "1": (ras_status, "Power"),
-        "2": (ras_status, "Cooling"),
-        "3": (ras_status, "Control"),
-        "4": (ras_status, "Connectivity"),
-        "5": (ras_status, "Robotics"),
-        "6": (ras_status, "Media"),
-        "7": (ras_status, "Drive"),
-        "8": (opneed_status, "Operator action request"),
-    }
-
-    for oidend, devstate in info:
-        stateint = int(devstate)
-        interpret, thing = oidtothing[oidend[0]]
-        status, statname = interpret[stateint]
-        yield status, thing + ": " + statname
+def check_quantum_libsmall_status(_no_item, _no_params, parsed):
+    for dev_type, dev_state in parsed:
+        if dev_type == "Operator action request":
+            state, state_readable = OPNEED_STATUS_MAP.get(dev_state, (3, 'unknown[%s]' % dev_state))
+        else:
+            state, state_readable = RAS_STATUS_MAP.get(dev_state, (3, 'unknown[%s]' % dev_state))
+        yield state, "%s: %s" % (dev_type, state_readable)
 
 
 check_info['quantum_libsmall_status'] = {
+    "parse_function"          : parse_quantum_libsmall_status,
     "check_function"          : check_quantum_libsmall_status,
     "inventory_function"      : inventory_quantum_libsmall_status,
     "service_description"     : "Tape library status",
-    "snmp_info"               : (".1.3.6.1.4.1.3697.1.10.10.1.15", [
+    "snmp_info"               : [(".1.3.6.1.4.1.3697.1.10.10.1.15", [
                                     OID_END,
                                     "10",
-                                ]),
+                                 ]),
+                                 (".1.3.6.1.4.1.3764.1.10.10", [
+                                    OID_END,
+                                    "12",
+                                ])],
     "snmp_scan_function"      : lambda oid: "linux" in oid(".1.3.6.1.2.1.1.1.0", "").lower() \
                                       and "library" in oid(".1.3.6.1.2.1.1.6.0", "").lower(),
 }

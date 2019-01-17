@@ -330,6 +330,19 @@ def test_process_matches(check_manager, ps_line, ps_pattern, user_pattern, resul
                                             ps_pattern, user_pattern) == result
 
 
+@pytest.mark.parametrize("ps_line, ps_pattern, user_pattern, match_groups, result", [
+    (["test", "ps"], "", None, None, True),
+    (["test", "123_foo"], "~.*/(.*)_foo", None, ['123'], False),
+    (["test", "/a/b/123_foo"], "~.*/(.*)_foo", None, ['123'], True),
+    (["test", "123_foo"], "~.*\\\\(.*)_foo", None, ['123'], False),
+    (["test", "c:\\a\\b\\123_foo"], "~.*\\\\(.*)_foo", None, ['123'], True),
+])
+def test_process_matches_match_groups(check_manager, ps_line, ps_pattern, user_pattern, match_groups, result):
+    check = check_manager.get_check("ps")
+    assert check.context["process_matches"]([check.context["ps_info"](ps_line[0])] + ps_line[1:],
+                                            ps_pattern, user_pattern, match_groups) == result
+
+
 @pytest.mark.parametrize("text, result", [
     ("12:17", 737),
     ("55:12:17", 198737),

@@ -1,0 +1,26 @@
+Title: logwatch: Optional shared log pointer for several ip addresses
+Level: 1
+Component: checks
+Compatible: comp
+Edition: cre
+Version: 1.6.0i1
+Date: 1547735561
+Class: feature
+
+Previous Check_MK versions potentially showed duplicate log file entries
+in case the monitoring setup used a failover cluster configuration (cluster
+consisting of at least 2 cluster nodes, each running a Check_MK instance
+and providing Check_MK via virtual host).
+
+This werk adds support for an optional shared log pointer between several
+requesting IP addresses. This prevents from potentially duplicate log file entries.
+
+The mapping of cluster node IP addresses to a cluster name may be configured
+either manually by editing the logwatch configuration file or via the agent bakery.
+
+Users of the configuration file logwatch.cfg and/or files logwatch.d/*.cfg may
+configure a mapping according to the syntax described in
+agents/cfg_examples/logwatch.cfg for configuration.
+
+Users of the agent bakery may use the ruleset "Text logfiles (Linux, Windows)"
+option "Specify a mapping of cluster node IPs to a cluster name (failover cluster)".

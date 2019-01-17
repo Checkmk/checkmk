@@ -1,0 +1,18 @@
+Title: Open Hardware Monitor update
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0p12
+Date: 1547743489
+Class: fix
+
+Open Hardware Monitor plugin is updated to correctly support 
+new Intel and AMD CPU's. 
+
+Previous Version of the plugin was not able to show some important 
+parameters( like power and temperature ) for some modern CPU's: Kabylake 
+and other.
+
+Also new plugin correctly supports newest Samsung's SSD.
+

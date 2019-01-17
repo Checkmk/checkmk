@@ -1,0 +1,15 @@
+Title: unknown
+Class: fix
+Level: 1
+Component: checks
+Ttle: mk_job: Allow monitoring of jobs of users without login shell
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p12
+Date: 1547738482
+
+Previously, no shell was specified when changing the user ID to read
+the users job files. This made it impossible to monitor jobs of users
+without login shell, such as "www-data".
+The environment variable SHELL is now passed to su.

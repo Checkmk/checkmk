@@ -430,10 +430,6 @@ def test_inventory_common(check_manager):
     check = check_manager.get_check("ps")
     info = sum(generate_inputs(), [])
     parsed = check.run_parse(info)[1]
-
-    import pprint
-    pprint.pprint(check.context["inventory_ps_common"]([], PS_DISCOVERY_WATO_RULES, parsed))
-
     assert check.context["inventory_ps_common"]([], PS_DISCOVERY_WATO_RULES,
                                                 parsed) == PS_DISCOVERED_ITEMS
 

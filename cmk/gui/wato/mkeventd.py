@@ -92,6 +92,10 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 from cmk.gui.exceptions import MKUserError, MKGeneralException
+from cmk.gui.permissions import (
+    Permission,
+    permission_registry,
+)
 from cmk.gui.wato.pages.global_settings import (
     GlobalSettingsMode,
     EditGlobalSettingMode,
@@ -2602,38 +2606,102 @@ class ModeEventConsoleMIBs(EventConsoleMode):
 #   | Declaration of Event Console specific permissions for Multisite      |
 #   '----------------------------------------------------------------------'
 
-config.declare_permission(
-    "mkeventd.config",
-    _("Configuration of Event Console "),
-    _("This permission allows to configure the global settings "
-      "of the event console."),
-    ["admin"],
-)
 
-config.declare_permission(
-    "mkeventd.edit",
-    _("Configuration of event rules"),
-    _("This permission allows the creation, modification and "
-      "deletion of event correlation rules."),
-    ["admin"],
-)
+@permission_registry.register
+class PermissionECConfig(Permission):
+    @property
+    def section(self):
+        return cmk.gui.mkeventd.PermissionSectionEventConsole
 
-config.declare_permission(
-    "mkeventd.activate",
-    _("Activate changes for event console"),
-    _("Activation of changes for the event console (rule modification, "
-      "global settings) is done separately from the monitoring configuration "
-      "and needs this permission."),
-    ["admin"],
-)
+    @property
+    def permission_name(self):
+        return "config"
 
-config.declare_permission(
-    "mkeventd.switchmode",
-    _("Switch slave replication mode"),
-    _("This permission is only useful if the Event Console is setup as a replication "
-      "slave. It allows a manual switch between sync and takeover mode."),
-    ["admin"],
-)
+    @property
+    def title(self):
+        return _("Configuration of Event Console")
+
+    @property
+    def description(self):
+        return _("This permission allows to configure the global settings " "of the event console.")
+
+    @property
+    def defaults(self):
+        return ["admin"]
+
+
+@permission_registry.register
+class PermissionECEdit(Permission):
+    @property
+    def section(self):
+        return cmk.gui.mkeventd.PermissionSectionEventConsole
+
+    @property
+    def permission_name(self):
+        return "edit"
+
+    @property
+    def title(self):
+        return _("Configuration of event rules")
+
+    @property
+    def description(self):
+        return _("This permission allows the creation, modification and "
+                 "deletion of event correlation rules.")
+
+    @property
+    def defaults(self):
+        return ["admin"]
+
+
+@permission_registry.register
+class PermissionECActivate(Permission):
+    @property
+    def section(self):
+        return cmk.gui.mkeventd.PermissionSectionEventConsole
+
+    @property
+    def permission_name(self):
+        return "activate"
+
+    @property
+    def title(self):
+        return _("Activate changes for event console")
+
+    @property
+    def description(self):
+        return _("Activation of changes for the event console (rule modification, "
+                 "global settings) is done separately from the monitoring configuration "
+                 "and needs this permission.")
+
+    @property
+    def defaults(self):
+        return ["admin"]
+
+
+@permission_registry.register
+class PermissionECSwitchMode(Permission):
+    @property
+    def section(self):
+        return cmk.gui.mkeventd.PermissionSectionEventConsole
+
+    @property
+    def permission_name(self):
+        return "switchmode"
+
+    @property
+    def title(self):
+        return _("Switch slave replication mode")
+
+    @property
+    def description(self):
+        return _("This permission is only useful if the Event Console is "
+                 "setup as a replication slave. It allows a manual switch "
+                 "between sync and takeover mode.")
+
+    @property
+    def defaults(self):
+        return ["admin"]
 
 
 @main_module_registry.register

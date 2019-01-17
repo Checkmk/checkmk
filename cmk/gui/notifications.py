@@ -39,6 +39,7 @@ from cmk.gui.globals import html
 from cmk.gui.permissions import (
     permission_section_registry,
     PermissionSection,
+    declare_permission,
 )
 
 g_acknowledgement_time = {}
@@ -69,8 +70,8 @@ def load_plugins(force):
         if name[0] == ".":
             continue
 
-        config.declare_permission("notification_plugin.%s" % name, _u(attrs["title"]), u"",
-                                  ["admin", "user"])
+        declare_permission("notification_plugin.%s" % name, _u(attrs["title"]), u"",
+                           ["admin", "user"])
 
 
 def acknowledge_failed_notifications(timestamp):

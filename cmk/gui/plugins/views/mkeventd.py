@@ -48,6 +48,11 @@ from cmk.gui.plugins.views import (
     query_data,
 )
 
+from cmk.gui.permissions import (
+    permission_registry,
+    Permission,
+)
+
 #   .--Datasources---------------------------------------------------------.
 #   |       ____        _                                                  |
 #   |      |  _ \  __ _| |_ __ _ ___  ___  _   _ _ __ ___ ___  ___         |
@@ -132,30 +137,79 @@ def _ec_filter_host_information_of_not_permitted_hosts(rows):
                 row[key] = u""
 
 
-config.declare_permission(
-    "mkeventd.seeall",
-    _("See all events"),
-    _("If a user lacks this permission then he/she can see only those events that "
-      "originate from a host that he/she is a contact for."),
-    ["user", "admin", "guest"],
-)
+@permission_registry.register
+class PermissionECSeeAll(Permission):
+    @property
+    def section(self):
+        return mkeventd.PermissionSectionEventConsole
 
-config.declare_permission(
-    "mkeventd.seeunrelated",
-    _("See events not related to a known host"),
-    _("If that user does not have the permission <i>See all events</i> then this permission "
-      "controls wether he/she can see events that are not related to a host in the monitoring "
-      "and that do not have been assigned specific contact groups to via the event rule."),
-    ["user", "admin", "guest"],
-)
+    @property
+    def permission_name(self):
+        return "seeall"
 
-config.declare_permission(
-    "mkeventd.see_in_tactical_overview",
-    _("See events in tactical overview snapin"),
-    _("Whether or not the user is permitted to see the number of open events in the "
-      "tactical overview snapin."),
-    ["user", "admin", "guest"],
-)
+    @property
+    def title(self):
+        return _("See all events")
+
+    @property
+    def description(self):
+        return _("If a user lacks this permission then he/she can see only those events that "
+                 "originate from a host that he/she is a contact for.")
+
+    @property
+    def defaults(self):
+        return config.builtin_role_ids
+
+
+@permission_registry.register
+class PermissionECSeeUnrelated(Permission):
+    @property
+    def section(self):
+        return mkeventd.PermissionSectionEventConsole
+
+    @property
+    def permission_name(self):
+        return "seeunrelated"
+
+    @property
+    def title(self):
+        return _("See events not related to a known host")
+
+    @property
+    def description(self):
+        return _(
+            "If that user does not have the permission <i>See all events</i> then this permission "
+            "controls wether he/she can see events that are not related to a host in the monitoring "
+            "and that do not have been assigned specific contact groups to via the event rule.")
+
+    @property
+    def defaults(self):
+        return config.builtin_role_ids
+
+
+@permission_registry.register
+class PermissionECSeeInTacticalOverview(Permission):
+    @property
+    def section(self):
+        return mkeventd.PermissionSectionEventConsole
+
+    @property
+    def permission_name(self):
+        return "see_in_tactical_overview"
+
+    @property
+    def title(self):
+        return _("See events in tactical overview snapin")
+
+    @property
+    def description(self):
+        return _("Whether or not the user is permitted to see the number of open events in the "
+                 "tactical overview snapin.")
+
+    @property
+    def defaults(self):
+        return config.builtin_role_ids
+
 
 multisite_datasources["mkeventd_events"] = {
     "title": _("Event Console: Current Events"),
@@ -567,27 +621,79 @@ def command_executor_mkeventd(command, site):
     mkeventd.execute_command(command, site=site)
 
 
-# Acknowledge and update comment and contact
-config.declare_permission(
-    "mkeventd.update",
-    _("Update an event"),
-    _("Needed for acknowledging and changing the comment and contact of an event"),
-    ["user", "admin"],
-)
+@permission_registry.register
+class PermissionECUpdateEvent(Permission):
+    """Acknowledge and update comment and contact"""
 
-# Sub-Permissions for Changing Comment, Contact and Acknowledgement
-config.declare_permission(
-    "mkeventd.update_comment",
-    _("Update an event: change comment"),
-    _("Needed for changing a comment when updating an event"),
-    ["user", "admin"],
-)
-config.declare_permission(
-    "mkeventd.update_contact",
-    _("Update an event: change contact"),
-    _("Needed for changing a contact when updating an event"),
-    ["user", "admin"],
-)
+    @property
+    def section(self):
+        return mkeventd.PermissionSectionEventConsole
+
+    @property
+    def permission_name(self):
+        return "update"
+
+    @property
+    def title(self):
+        return _("Update an event")
+
+    @property
+    def description(self):
+        return _("Needed for acknowledging and changing the comment and contact of an event"),
+
+    @property
+    def defaults(self):
+        return ["user", "admin"]
+
+
+@permission_registry.register
+class PermissionECUpdateComment(Permission):
+    """Sub-Permissions for Changing Comment, Contact and Acknowledgement"""
+
+    @property
+    def section(self):
+        return mkeventd.PermissionSectionEventConsole
+
+    @property
+    def permission_name(self):
+        return "update_comment"
+
+    @property
+    def title(self):
+        return _("Update an event: change comment")
+
+    @property
+    def description(self):
+        return _("Needed for changing a comment when updating an event")
+
+    @property
+    def defaults(self):
+        return ["user", "admin"]
+
+
+@permission_registry.register
+class PermissionECUpdateContact(Permission):
+    """Sub-Permissions for Changing Comment, Contact and Acknowledgement"""
+
+    @property
+    def section(self):
+        return mkeventd.PermissionSectionEventConsole
+
+    @property
+    def permission_name(self):
+        return "update_contact"
+
+    @property
+    def title(self):
+        return _("Update an event: change contact")
+
+    @property
+    def description(self):
+        return _("Needed for changing a contact when updating an event")
+
+    @property
+    def defaults(self):
+        return ["user", "admin"]
 
 
 def render_mkeventd_update():
@@ -644,14 +750,29 @@ multisite_commands.append({
     "executor": command_executor_mkeventd,
 })
 
-# Change event state
-config.declare_permission(
-    "mkeventd.changestate",
-    _("Change event state"),
-    _("This permission allows to change the state classification of an event "
-      "(e.g. from CRIT to WARN)."),
-    ["user", "admin"],
-)
+
+@permission_registry.register
+class PermissionECChangeEventState(Permission):
+    @property
+    def section(self):
+        return mkeventd.PermissionSectionEventConsole
+
+    @property
+    def permission_name(self):
+        return "changestate"
+
+    @property
+    def title(self):
+        return _("Change event state")
+
+    @property
+    def description(self):
+        return _("This permission allows to change the state classification of an event "
+                 "(e.g. from CRIT to WARN).")
+
+    @property
+    def defaults(self):
+        return ["user", "admin"]
 
 
 def render_mkeventd_changestate():
@@ -676,14 +797,29 @@ multisite_commands.append({
     "executor": command_executor_mkeventd,
 })
 
-# Perform custom actions
-config.declare_permission(
-    "mkeventd.actions",
-    _("Perform custom action"),
-    _("This permission is needed for performing the configured actions "
-      "(execution of scripts and sending emails)."),
-    ["user", "admin"],
-)
+
+@permission_registry.register
+class PermissionECCustomActions(Permission):
+    @property
+    def section(self):
+        return mkeventd.PermissionSectionEventConsole
+
+    @property
+    def permission_name(self):
+        return "actions"
+
+    @property
+    def title(self):
+        return _("Perform custom action")
+
+    @property
+    def description(self):
+        return _("This permission is needed for performing the configured actions "
+                 "(execution of scripts and sending emails).")
+
+    @property
+    def defaults(self):
+        return ["user", "admin"]
 
 
 def render_mkeventd_actions():
@@ -708,13 +844,28 @@ multisite_commands.append({
     "executor": command_executor_mkeventd,
 })
 
-# Delete events
-config.declare_permission(
-    "mkeventd.delete",
-    _("Archive an event"),
-    _("Finally archive an event without any further action"),
-    ["user", "admin"],
-)
+
+@permission_registry.register
+class PermissionECArchiveEvent(Permission):
+    @property
+    def section(self):
+        return mkeventd.PermissionSectionEventConsole
+
+    @property
+    def permission_name(self):
+        return "delete"
+
+    @property
+    def title(self):
+        return _("Archive an event")
+
+    @property
+    def description(self):
+        return _("Finally archive an event without any further action")
+
+    @property
+    def defaults(self):
+        return ["user", "admin"]
 
 
 def command_mkeventd_delete(cmdtag, spec, row):
@@ -733,12 +884,28 @@ multisite_commands.append({
     "executor": command_executor_mkeventd,
 })
 
-config.declare_permission(
-    "mkeventd.archive_events_of_hosts",
-    _("Archive events of hosts"),
-    _("Archive all open events of all hosts shown in host views"),
-    ["user", "admin"],
-)
+
+@permission_registry.register
+class PermissionECArchiveEventsOfHost(Permission):
+    @property
+    def section(self):
+        return mkeventd.PermissionSectionEventConsole
+
+    @property
+    def permission_name(self):
+        return "archive_events_of_hosts"
+
+    @property
+    def title(self):
+        return _("Archive events of hosts")
+
+    @property
+    def description(self):
+        return _("Archive all open events of all hosts shown in host views")
+
+    @property
+    def defaults(self):
+        return ["user", "admin"]
 
 
 def command_archive_events_of_hosts(cmdtag, spec, row):

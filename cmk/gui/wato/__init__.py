@@ -135,6 +135,10 @@ from cmk.gui.exceptions import (
     MKInternalError,
     MKException,
 )
+from cmk.gui.permissions import (
+    permission_registry,
+    Permission,
+)
 from cmk.gui.log import logger
 from cmk.gui.display_options import display_options
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode, WatoWebApiMode
@@ -895,396 +899,6 @@ def load_plugins(force):
     # This also loads the watolib plugins.
     watolib.load_watolib_plugins()
 
-    config.declare_permission(
-        "wato.use",
-        _("Use WATO"),
-        _("This permissions allows users to use WATO - Check_MK's "
-          "Web Administration Tool. Without this "
-          "permission all references to WATO (buttons, links, "
-          "snapins) will be invisible."),
-        ["admin", "user"],
-    )
-
-    config.declare_permission(
-        "wato.edit",
-        _("Make changes, perform actions"),
-        _("This permission is needed in order to make any "
-          "changes or perform any actions at all. "
-          "Without this permission, the user is only "
-          "able to view data, and that only in modules he "
-          "has explicit permissions for."),
-        ["admin", "user"],
-    )
-
-    config.declare_permission(
-        "wato.seeall",
-        _("Read access to all modules"),
-        _("When this permission is set then the user sees "
-          "also such modules he has no explicit "
-          "access to (see below)."),
-        ["admin"],
-    )
-
-    config.declare_permission(
-        "wato.activate",
-        _("Activate Configuration"),
-        _("This permission is needed for activating the "
-          "current configuration (and thus rewriting the "
-          "monitoring configuration and restart the monitoring daemon.)"),
-        ["admin", "user"],
-    )
-
-    config.declare_permission(
-        "wato.activateforeign",
-        _("Activate Foreign Changes"),
-        _("When several users work in parallel with WATO then "
-          "several pending changes of different users might pile up "
-          "before changes are activate. Only with this permission "
-          "a user will be allowed to activate the current configuration "
-          "if this situation appears."),
-        ["admin"],
-    )
-
-    config.declare_permission(
-        "wato.auditlog",
-        _("Audit Log"),
-        _("Access to the historic audit log. "
-          "The currently pending changes can be seen by all users "
-          "with access to WATO."),
-        ["admin"],
-    )
-
-    config.declare_permission(
-        "wato.clear_auditlog",
-        _("Clear audit Log"),
-        _("Clear the entries of the audit log. To be able to clear the audit log "
-          "a user needs the generic WATO permission \"Make changes, perform actions\", "
-          "the \"View audit log\" and this permission."),
-        ["admin"],
-    )
-
-    config.declare_permission(
-        "wato.hosts",
-        _("Host management"),
-        _("Access to the management of hosts and folders. This "
-          "module has some additional permissions (see below)."),
-        ["admin", "user"],
-    )
-
-    config.declare_permission(
-        "wato.edit_hosts",
-        _("Modify existing hosts"),
-        _("Modify the properties of existing hosts. Please note: "
-          "for the management of services (inventory) there is "
-          "a separate permission (see below)"),
-        ["admin", "user"],
-    )
-
-    config.declare_permission(
-        "wato.parentscan",
-        _("Perform network parent scan"),
-        _("This permission is neccessary for performing automatic "
-          "scans for network parents of hosts (making use of traceroute). "
-          "Please note, that for actually modifying the parents via the "
-          "scan and for the creation of gateway hosts proper permissions "
-          "for host and folders are also neccessary."),
-        ["admin", "user"],
-    )
-
-    config.declare_permission(
-        "wato.move_hosts",
-        _("Move existing hosts"),
-        _("Move existing hosts to other folders. Please also add the permission "
-          "<i>Modify existing hosts</i>."),
-        ["admin", "user"],
-    )
-
-    config.declare_permission(
-        "wato.rename_hosts",
-        _("Rename existing hosts"),
-        _("Rename existing hosts. Please also add the permission "
-          "<i>Modify existing hosts</i>."),
-        ["admin"],
-    )
-
-    config.declare_permission(
-        "wato.manage_hosts",
-        _("Add & remove hosts"),
-        _("Add hosts to the monitoring and remove hosts "
-          "from the monitoring. Please also add the permission "
-          "<i>Modify existing hosts</i>."),
-        ["admin", "user"],
-    )
-
-    config.declare_permission(
-        "wato.diag_host",
-        _("Host Diagnostic"),
-        _("Check whether or not the host is reachable, test the different methods "
-          "a host can be accessed, for example via agent, SNMPv1, SNMPv2 to find out "
-          "the correct monitoring configuration for that host."),
-        ["admin", "user"],
-    )
-
-    config.declare_permission(
-        "wato.clone_hosts",
-        _("Clone hosts"),
-        _("Clone existing hosts to create new ones from the existing one."
-          "Please also add the permission <i>Add & remove hosts</i>."),
-        ["admin", "user"],
-    )
-
-    config.declare_permission(
-        "wato.random_hosts",
-        _("Create random hosts"),
-        _("The creation of random hosts is a facility for test and development "
-          "and disabled by default. It allows you to create a number of random "
-          "hosts and thus simulate larger environments."),
-        [],
-    )
-
-    config.declare_permission(
-        "wato.update_dns_cache",
-        _("Update DNS Cache"),
-        _("Updating the DNS cache is neccessary in order to reflect IP address "
-          "changes in hosts that are configured without an explicit address."),
-        ["admin", "user"],
-    )
-
-    config.declare_permission(
-        "wato.services",
-        _("Manage services"),
-        _("Do inventory and service configuration on existing hosts."),
-        ["admin", "user"],
-    )
-
-    config.declare_permission(
-        "wato.edit_folders",
-        _("Modify existing folders"),
-        _("Modify the properties of existing folders."),
-        ["admin", "user"],
-    )
-
-    config.declare_permission(
-        "wato.manage_folders",
-        _("Add & remove folders"),
-        _("Add new folders and delete existing folders. If a folder to be deleted contains hosts then "
-          "the permission to delete hosts is also required."),
-        ["admin", "user"],
-    )
-
-    config.declare_permission(
-        "wato.passwords",
-        _("Password management"),
-        _("This permission is needed for the module <i>Passwords</i>."),
-        ["admin", "user"],
-    )
-
-    config.declare_permission(
-        "wato.edit_all_passwords",
-        _("Write access to all passwords"),
-        _("Without this permission, users can only edit passwords which are shared with a contact "
-          "group they are member of. This permission grants full access to all passwords."),
-        ["admin"],
-    )
-
-    config.declare_permission(
-        "wato.see_all_folders",
-        _("Read access to all hosts and folders"),
-        _("Users without this permissions can only see folders with a contact group they are in."),
-        ["admin"],
-    )
-
-    config.declare_permission(
-        "wato.all_folders",
-        _("Write access to all hosts and folders"),
-        _("Without this permission, operations on folders can only be done by users that are members of "
-          "one of the folders contact groups. This permission grants full access to all folders and hosts."
-         ),
-        ["admin"],
-    )
-
-    config.declare_permission(
-        "wato.hosttags",
-        _("Manage host tags"),
-        _("Create, remove and edit host tags. Removing host tags also might remove rules, "
-          "so this permission should not be available to normal users. "),
-        ["admin"],
-    )
-
-    config.declare_permission(
-        "wato.global",
-        _("Global settings"),
-        _("Access to the module <i>Global settings</i>"),
-        ["admin"],
-    )
-
-    config.declare_permission(
-        "wato.rulesets",
-        _("Rulesets"),
-        _("Access to the module for managing Check_MK rules. Please note that a user can only "
-          "manage rules in folders he has permissions to. "),
-        ["admin", "user"],
-    )
-
-    config.declare_permission(
-        "wato.groups",
-        _("Host & Service Groups"),
-        _("Access to the modules for managing host and service groups."),
-        ["admin"],
-    )
-
-    config.declare_permission(
-        "wato.timeperiods",
-        _("Timeperiods"),
-        _("Access to the module <i>Timeperiods</i>"),
-        ["admin"],
-    )
-
-    config.declare_permission(
-        "wato.sites",
-        _("Site management"),
-        _("Access to the module for managing connections to remote monitoring sites."),
-        ["admin"],
-    )
-
-    config.declare_permission(
-        "wato.automation",
-        _("Site remote automation"),
-        _("This permission is needed for a remote administration of the site "
-          "as a distributed WATO slave."),
-        ["admin"],
-    )
-
-    config.declare_permission(
-        "wato.users",
-        _("User management"),
-        _("This permission is needed for the modules <b>Users</b>, <b>Roles</b> and <b>Contact Groups</b>"
-         ),
-        ["admin"],
-    )
-
-    config.declare_permission(
-        "wato.notifications",
-        _("Notification configuration"),
-        _("This permission is needed for the new rule based notification configuration via the WATO module <i>Notifications</i>."
-         ),
-        ["admin"],
-    )
-
-    config.declare_permission(
-        "wato.snapshots",
-        _("Manage snapshots"),
-        _("Access to the module <i>Snaphsots</i>. Please note: a user with "
-          "write access to this module "
-          "can make arbitrary changes to the configuration by restoring uploaded snapshots."),
-        ["admin"],
-    )
-
-    config.declare_permission(
-        "wato.backups",
-        _("Backup & Restore"),
-        _("Access to the module <i>Site backup</i>. Please note: a user with "
-          "write access to this module "
-          "can make arbitrary changes to the configuration by restoring uploaded snapshots."),
-        ["admin"],
-    )
-
-    config.declare_permission(
-        "wato.pattern_editor",
-        _("Logfile Pattern Analyzer"),
-        _("Access to the module for analyzing and validating logfile patterns."),
-        ["admin", "user"],
-    )
-
-    config.declare_permission(
-        "wato.icons",
-        _("Manage Custom Icons"),
-        _("Upload or delete custom icons"),
-        ["admin"],
-    )
-
-    config.declare_permission(
-        "wato.custom_attributes",
-        _("Manage custom attributes"),
-        _("Manage custom host- and user attributes"),
-        ["admin"],
-    )
-
-    config.declare_permission(
-        "wato.download_agents",
-        _("Monitoring Agents"),
-        _("Download the default Check_MK monitoring agents for Linux, "
-          "Windows and other operating systems."),
-        ["admin", "user", "guest"],
-    )
-
-    config.declare_permission(
-        "wato.download_agent_output",
-        _("Download Agent Output / SNMP Walks"),
-        _("Allows to download the current agent output or SNMP walks of the monitored hosts."),
-        ["admin"],
-    )
-
-    config.declare_permission(
-        "wato.set_read_only",
-        _("Set WATO to read only mode for other users"),
-        _("Prevent other users from making modifications to WATO."),
-        ["admin"],
-    )
-
-    config.declare_permission(
-        "wato.analyze_config",
-        _("Access the best analyze configuration functionality provided by WATO"),
-        _("WATO has a module that gives you hints on how to tune your Check_MK installation."),
-        ["admin"],
-    )
-
-    config.declare_permission(
-        "wato.add_or_modify_executables",
-        _("Can add or modify executables"),
-        _("There are different places in Check_MK where an admin can use the GUI to add "
-          "executable code to Check_MK. For example when configuring "
-          "datasource programs, the user inserts a command line for gathering monitoring data. "
-          "This command line is then executed during monitoring by Check_MK. Another example is "
-          "the upload of extension packages (MKPs). All these functions have in "
-          "common that the user provides data that is executed by Check_MK. "
-          "If you want to ensure that your WATO users cannot \"inject\" arbitrary executables "
-          "into your Check_MK installation, you only need to remove this permission for them. "
-          "This permission is needed in addition to the other component related permissions. "
-          "For example you need the <tt>wato.rulesets</tt> permission together with this "
-          "permission to be able to configure rulesets where bare command lines are "
-          "configured."),
-        ["admin"],
-    )
-
-    config.declare_permission(
-        "wato.service_discovery_to_undecided",
-        _("Service discovery: Move to undecided services"),
-        _("Service discovery: Move to undecided services"),
-        ["admin", "user"],
-    )
-
-    config.declare_permission(
-        "wato.service_discovery_to_monitored",
-        _("Service discovery: Move to monitored services"),
-        _("Service discovery: Move to monitored services"),
-        ["admin", "user"],
-    )
-
-    config.declare_permission(
-        "wato.service_discovery_to_ignored",
-        _("Service discovery: Disabled services"),
-        _("Service discovery: Disabled services"),
-        ["admin", "user"],
-    )
-
-    config.declare_permission(
-        "wato.service_discovery_to_removed",
-        _("Service discovery: Remove services"),
-        _("Service discovery: Remove services"),
-        ["admin", "user"],
-    )
-
     utils.load_web_plugins("wato", globals())
 
     if modes:
@@ -1296,3 +910,1154 @@ def load_plugins(force):
     # exceptions all the time and not only the first time (when the plugins
     # are loaded).
     loaded_with_language = cmk.gui.i18n.get_current_language()
+
+
+@permission_registry.register
+class PermissionWATOUse(Permission):
+    @property
+    def section(self):
+        return cmk.gui.plugins.wato.utils.PermissionSectionWATO
+
+    @property
+    def permission_name(self):
+        return "use"
+
+    @property
+    def title(self):
+        return _("Use WATO")
+
+    @property
+    def description(self):
+        return _("This permissions allows users to use WATO - Check_MK's "
+                 "Web Administration Tool. Without this "
+                 "permission all references to WATO (buttons, links, "
+                 "snapins) will be invisible.")
+
+    @property
+    def defaults(self):
+        return ["admin", "user"]
+
+
+@permission_registry.register
+class PermissionWATOEdit(Permission):
+    @property
+    def section(self):
+        return cmk.gui.plugins.wato.utils.PermissionSectionWATO
+
+    @property
+    def permission_name(self):
+        return "edit"
+
+    @property
+    def title(self):
+        return _("Make changes, perform actions")
+
+    @property
+    def description(self):
+        return _("This permission is needed in order to make any "
+                 "changes or perform any actions at all. "
+                 "Without this permission, the user is only "
+                 "able to view data, and that only in modules he "
+                 "has explicit permissions for.")
+
+    @property
+    def defaults(self):
+        return ["admin", "user"]
+
+
+@permission_registry.register
+class PermissionWATOSeeAll(Permission):
+    @property
+    def section(self):
+        return cmk.gui.plugins.wato.utils.PermissionSectionWATO
+
+    @property
+    def permission_name(self):
+        return "seeall"
+
+    @property
+    def title(self):
+        return _("Read access to all modules")
+
+    @property
+    def description(self):
+        return _("When this permission is set then the user sees "
+                 "also such modules he has no explicit "
+                 "access to (see below).")
+
+    @property
+    def defaults(self):
+        return ["admin"]
+
+
+@permission_registry.register
+class PermissionWATOActivate(Permission):
+    @property
+    def section(self):
+        return cmk.gui.plugins.wato.utils.PermissionSectionWATO
+
+    @property
+    def permission_name(self):
+        return "activate"
+
+    @property
+    def title(self):
+        return _("Activate Configuration")
+
+    @property
+    def description(self):
+        return _("This permission is needed for activating the "
+                 "current configuration (and thus rewriting the "
+                 "monitoring configuration and restart the monitoring daemon.)")
+
+    @property
+    def defaults(self):
+        return ["admin", "user"]
+
+
+@permission_registry.register
+class PermissionWATOActivateForeignChanges(Permission):
+    @property
+    def section(self):
+        return cmk.gui.plugins.wato.utils.PermissionSectionWATO
+
+    @property
+    def permission_name(self):
+        return "activateforeign"
+
+    @property
+    def title(self):
+        return _("Activate Foreign Changes")
+
+    @property
+    def description(self):
+        return _("When several users work in parallel with WATO then "
+                 "several pending changes of different users might pile up "
+                 "before changes are activate. Only with this permission "
+                 "a user will be allowed to activate the current configuration "
+                 "if this situation appears.")
+
+    @property
+    def defaults(self):
+        return ["admin"]
+
+
+@permission_registry.register
+class PermissionWATOViewAuditLog(Permission):
+    @property
+    def section(self):
+        return cmk.gui.plugins.wato.utils.PermissionSectionWATO
+
+    @property
+    def permission_name(self):
+        return "auditlog"
+
+    @property
+    def title(self):
+        return _("Audit Log")
+
+    @property
+    def description(self):
+        return _("Access to the historic audit log. "
+                 "The currently pending changes can be seen by all users "
+                 "with access to WATO.")
+
+    @property
+    def defaults(self):
+        return ["admin"]
+
+
+@permission_registry.register
+class PermissionWATOClearAuditLog(Permission):
+    @property
+    def section(self):
+        return cmk.gui.plugins.wato.utils.PermissionSectionWATO
+
+    @property
+    def permission_name(self):
+        return "clear_auditlog"
+
+    @property
+    def title(self):
+        return _("Clear audit Log")
+
+    @property
+    def description(self):
+        return _("Clear the entries of the audit log. To be able to clear the audit log "
+                 "a user needs the generic WATO permission \"Make changes, perform actions\", "
+                 "the \"View audit log\" and this permission.")
+
+    @property
+    def defaults(self):
+        return ["admin"]
+
+
+@permission_registry.register
+class PermissionWATOHosts(Permission):
+    @property
+    def section(self):
+        return cmk.gui.plugins.wato.utils.PermissionSectionWATO
+
+    @property
+    def permission_name(self):
+        return "hosts"
+
+    @property
+    def title(self):
+        return _("Host management")
+
+    @property
+    def description(self):
+        return _("Access to the management of hosts and folders. This "
+                 "module has some additional permissions (see below).")
+
+    @property
+    def defaults(self):
+        return ["admin", "user"]
+
+
+@permission_registry.register
+class PermissionWATOEditHosts(Permission):
+    @property
+    def section(self):
+        return cmk.gui.plugins.wato.utils.PermissionSectionWATO
+
+    @property
+    def permission_name(self):
+        return "edit_hosts"
+
+    @property
+    def title(self):
+        return _("Modify existing hosts")
+
+    @property
+    def description(self):
+        return _("Modify the properties of existing hosts. Please note: "
+                 "for the management of services (inventory) there is "
+                 "a separate permission (see below)")
+
+    @property
+    def defaults(self):
+        return ["admin", "user"]
+
+
+@permission_registry.register
+class PermissionWATOParentScan(Permission):
+    @property
+    def section(self):
+        return cmk.gui.plugins.wato.utils.PermissionSectionWATO
+
+    @property
+    def permission_name(self):
+        return "parentscan"
+
+    @property
+    def title(self):
+        return _("Perform network parent scan")
+
+    @property
+    def description(self):
+        return _("This permission is neccessary for performing automatic "
+                 "scans for network parents of hosts (making use of traceroute). "
+                 "Please note, that for actually modifying the parents via the "
+                 "scan and for the creation of gateway hosts proper permissions "
+                 "for host and folders are also neccessary.")
+
+    @property
+    def defaults(self):
+        return ["admin", "user"]
+
+
+@permission_registry.register
+class PermissionWATOMoveHosts(Permission):
+    @property
+    def section(self):
+        return cmk.gui.plugins.wato.utils.PermissionSectionWATO
+
+    @property
+    def permission_name(self):
+        return "move_hosts"
+
+    @property
+    def title(self):
+        return _("Move existing hosts")
+
+    @property
+    def description(self):
+        return _("Move existing hosts to other folders. Please also add the permission "
+                 "<i>Modify existing hosts</i>.")
+
+    @property
+    def defaults(self):
+        return ["admin", "user"]
+
+
+@permission_registry.register
+class PermissionWATOManageHosts(Permission):
+    @property
+    def section(self):
+        return cmk.gui.plugins.wato.utils.PermissionSectionWATO
+
+    @property
+    def permission_name(self):
+        return "manage_hosts"
+
+    @property
+    def title(self):
+        return _("Add & remove hosts")
+
+    @property
+    def description(self):
+        return _("Add hosts to the monitoring and remove hosts "
+                 "from the monitoring. Please also add the permission "
+                 "<i>Modify existing hosts</i>.")
+
+    @property
+    def defaults(self):
+        return ["admin", "user"]
+
+
+@permission_registry.register
+class PermissionWATORenameHosts(Permission):
+    @property
+    def section(self):
+        return cmk.gui.plugins.wato.utils.PermissionSectionWATO
+
+    @property
+    def permission_name(self):
+        return "rename_hosts"
+
+    @property
+    def title(self):
+        return _("Rename existing hosts")
+
+    @property
+    def description(self):
+        return _("Rename existing hosts. Please also add the permission "
+                 "<i>Modify existing hosts</i>.")
+
+    @property
+    def defaults(self):
+        return ["admin", "user"]
+
+
+@permission_registry.register
+class PermissionWATODiagHost(Permission):
+    @property
+    def section(self):
+        return cmk.gui.plugins.wato.utils.PermissionSectionWATO
+
+    @property
+    def permission_name(self):
+        return "diag_host"
+
+    @property
+    def title(self):
+        return _("Host Diagnostic")
+
+    @property
+    def description(self):
+        return _("Check whether or not the host is reachable, test the different methods "
+                 "a host can be accessed, for example via agent, SNMPv1, SNMPv2 to find out "
+                 "the correct monitoring configuration for that host.")
+
+    @property
+    def defaults(self):
+        return ["admin", "user"]
+
+
+@permission_registry.register
+class PermissionWATOCloneHosts(Permission):
+    @property
+    def section(self):
+        return cmk.gui.plugins.wato.utils.PermissionSectionWATO
+
+    @property
+    def permission_name(self):
+        return "clone_hosts"
+
+    @property
+    def title(self):
+        return _("Clone hosts")
+
+    @property
+    def description(self):
+        return _("Clone existing hosts to create new ones from the existing one."
+                 "Please also add the permission <i>Add & remove hosts</i>.")
+
+    @property
+    def defaults(self):
+        return ["admin", "user"]
+
+
+@permission_registry.register
+class PermissionWATOCreateRandomHosts(Permission):
+    @property
+    def section(self):
+        return cmk.gui.plugins.wato.utils.PermissionSectionWATO
+
+    @property
+    def permission_name(self):
+        return "random_hosts"
+
+    @property
+    def title(self):
+        return _("Create random hosts")
+
+    @property
+    def description(self):
+        return _("The creation of random hosts is a facility for test and development "
+                 "and disabled by default. It allows you to create a number of random "
+                 "hosts and thus simulate larger environments.")
+
+    @property
+    def defaults(self):
+        return []
+
+
+@permission_registry.register
+class PermissionWATOUpdateDNSCache(Permission):
+    @property
+    def section(self):
+        return cmk.gui.plugins.wato.utils.PermissionSectionWATO
+
+    @property
+    def permission_name(self):
+        return "update_dns_cache"
+
+    @property
+    def title(self):
+        return _("Update DNS Cache")
+
+    @property
+    def description(self):
+        return _("Updating the DNS cache is neccessary in order to reflect IP address "
+                 "changes in hosts that are configured without an explicit address.")
+
+    @property
+    def defaults(self):
+        return ["admin", "user"]
+
+
+@permission_registry.register
+class PermissionWATOServices(Permission):
+    @property
+    def section(self):
+        return cmk.gui.plugins.wato.utils.PermissionSectionWATO
+
+    @property
+    def permission_name(self):
+        return "services"
+
+    @property
+    def title(self):
+        return _("Manage services")
+
+    @property
+    def description(self):
+        return _("Do inventory and service configuration on existing hosts.")
+
+    @property
+    def defaults(self):
+        return ["admin", "user"]
+
+
+@permission_registry.register
+class PermissionWATOEditFolders(Permission):
+    @property
+    def section(self):
+        return cmk.gui.plugins.wato.utils.PermissionSectionWATO
+
+    @property
+    def permission_name(self):
+        return "edit_folders"
+
+    @property
+    def title(self):
+        return _("Modify existing folders")
+
+    @property
+    def description(self):
+        return _("Modify the properties of existing folders.")
+
+    @property
+    def defaults(self):
+        return ["admin", "user"]
+
+
+@permission_registry.register
+class PermissionWATOManageFolders(Permission):
+    @property
+    def section(self):
+        return cmk.gui.plugins.wato.utils.PermissionSectionWATO
+
+    @property
+    def permission_name(self):
+        return "manage_folders"
+
+    @property
+    def title(self):
+        return _("Add & remove folders")
+
+    @property
+    def description(self):
+        return _(
+            "Add new folders and delete existing folders. If a folder to be deleted contains hosts then "
+            "the permission to delete hosts is also required.")
+
+    @property
+    def defaults(self):
+        return ["admin", "user"]
+
+
+@permission_registry.register
+class PermissionWATOPasswords(Permission):
+    @property
+    def section(self):
+        return cmk.gui.plugins.wato.utils.PermissionSectionWATO
+
+    @property
+    def permission_name(self):
+        return "passwords"
+
+    @property
+    def title(self):
+        return _("Password management")
+
+    @property
+    def description(self):
+        return _("This permission is needed for the module <i>Passwords</i>.")
+
+    @property
+    def defaults(self):
+        return ["admin", "user"]
+
+
+@permission_registry.register
+class PermissionWATOEditAllPasswords(Permission):
+    @property
+    def section(self):
+        return cmk.gui.plugins.wato.utils.PermissionSectionWATO
+
+    @property
+    def permission_name(self):
+        return "edit_all_passwords"
+
+    @property
+    def title(self):
+        return _("Write access to all passwords")
+
+    @property
+    def description(self):
+        return _(
+            "Without this permission, users can only edit passwords which are shared with a contact "
+            "group they are member of. This permission grants full access to all passwords.")
+
+    @property
+    def defaults(self):
+        return ["admin"]
+
+
+@permission_registry.register
+class PermissionWATOSeeAllFolders(Permission):
+    @property
+    def section(self):
+        return cmk.gui.plugins.wato.utils.PermissionSectionWATO
+
+    @property
+    def permission_name(self):
+        return "see_all_folders"
+
+    @property
+    def title(self):
+        return _("Read access to all hosts and folders")
+
+    @property
+    def description(self):
+        return _(
+            "Users without this permissions can only see folders with a contact group they are in.")
+
+    @property
+    def defaults(self):
+        return ["admin"]
+
+
+@permission_registry.register
+class PermissionWATOAllFolders(Permission):
+    @property
+    def section(self):
+        return cmk.gui.plugins.wato.utils.PermissionSectionWATO
+
+    @property
+    def permission_name(self):
+        return "all_folders"
+
+    @property
+    def title(self):
+        return _("Write access to all hosts and folders")
+
+    @property
+    def description(self):
+        return _(
+            "Without this permission, operations on folders can only be done by users that are members of "
+            "one of the folders contact groups. This permission grants full access to all folders and hosts."
+        )
+
+    @property
+    def defaults(self):
+        return ["admin"]
+
+
+@permission_registry.register
+class PermissionWATOHostTags(Permission):
+    @property
+    def section(self):
+        return cmk.gui.plugins.wato.utils.PermissionSectionWATO
+
+    @property
+    def permission_name(self):
+        return "hosttags"
+
+    @property
+    def title(self):
+        return _("Manage host tags")
+
+    @property
+    def description(self):
+        return _("Create, remove and edit host tags. Removing host tags also might remove rules, "
+                 "so this permission should not be available to normal users.")
+
+    @property
+    def defaults(self):
+        return ["admin"]
+
+
+@permission_registry.register
+class PermissionWATOGlobal(Permission):
+    @property
+    def section(self):
+        return cmk.gui.plugins.wato.utils.PermissionSectionWATO
+
+    @property
+    def permission_name(self):
+        return "global"
+
+    @property
+    def title(self):
+        return _("Global settings")
+
+    @property
+    def description(self):
+        return _("Access to the module <i>Global settings</i>")
+
+    @property
+    def defaults(self):
+        return ["admin"]
+
+
+@permission_registry.register
+class PermissionWATORulesets(Permission):
+    @property
+    def section(self):
+        return cmk.gui.plugins.wato.utils.PermissionSectionWATO
+
+    @property
+    def permission_name(self):
+        return "rulesets"
+
+    @property
+    def title(self):
+        return _("Rulesets")
+
+    @property
+    def description(self):
+        return _(
+            "Access to the module for managing Check_MK rules. Please note that a user can only "
+            "manage rules in folders he has permissions to. ")
+
+    @property
+    def defaults(self):
+        return ["admin", "user"]
+
+
+@permission_registry.register
+class PermissionWATOGroups(Permission):
+    @property
+    def section(self):
+        return cmk.gui.plugins.wato.utils.PermissionSectionWATO
+
+    @property
+    def permission_name(self):
+        return "groups"
+
+    @property
+    def title(self):
+        return _("Host & Service Groups")
+
+    @property
+    def description(self):
+        return _("Access to the modules for managing host and service groups.")
+
+    @property
+    def defaults(self):
+        return ["admin"]
+
+
+@permission_registry.register
+class PermissionWATOTimeperiods(Permission):
+    @property
+    def section(self):
+        return cmk.gui.plugins.wato.utils.PermissionSectionWATO
+
+    @property
+    def permission_name(self):
+        return "timeperiods"
+
+    @property
+    def title(self):
+        return _("Timeperiods")
+
+    @property
+    def description(self):
+        return _("Access to the module <i>Timeperiods</i>")
+
+    @property
+    def defaults(self):
+        return ["admin"]
+
+
+@permission_registry.register
+class PermissionWATOSites(Permission):
+    @property
+    def section(self):
+        return cmk.gui.plugins.wato.utils.PermissionSectionWATO
+
+    @property
+    def permission_name(self):
+        return "sites"
+
+    @property
+    def title(self):
+        return _("Site management")
+
+    @property
+    def description(self):
+        return _("Access to the module for managing connections to remote monitoring sites.")
+
+    @property
+    def defaults(self):
+        return ["admin"]
+
+
+@permission_registry.register
+class PermissionWATOAutomation(Permission):
+    @property
+    def section(self):
+        return cmk.gui.plugins.wato.utils.PermissionSectionWATO
+
+    @property
+    def permission_name(self):
+        return "automation"
+
+    @property
+    def title(self):
+        return _("Site remote automation")
+
+    @property
+    def description(self):
+        return _("This permission is needed for a remote administration of the site "
+                 "as a distributed WATO slave.")
+
+    @property
+    def defaults(self):
+        return ["admin"]
+
+
+@permission_registry.register
+class PermissionWATOUsers(Permission):
+    @property
+    def section(self):
+        return cmk.gui.plugins.wato.utils.PermissionSectionWATO
+
+    @property
+    def permission_name(self):
+        return "users"
+
+    @property
+    def title(self):
+        return _("User management")
+
+    @property
+    def description(self):
+        return _("This permission is needed for the modules <b>Users</b>, "
+                 "<b>Roles</b> and <b>Contact Groups</b>")
+
+    @property
+    def defaults(self):
+        return ["admin"]
+
+
+@permission_registry.register
+class PermissionWATONotifications(Permission):
+    @property
+    def section(self):
+        return cmk.gui.plugins.wato.utils.PermissionSectionWATO
+
+    @property
+    def permission_name(self):
+        return "notifications"
+
+    @property
+    def title(self):
+        return _("Notification configuration")
+
+    @property
+    def description(self):
+        return _(
+            "This permission is needed for the new rule based notification configuration via the WATO module <i>Notifications</i>."
+        )
+
+    @property
+    def defaults(self):
+        return ["admin"]
+
+
+@permission_registry.register
+class PermissionWATOSnapshots(Permission):
+    @property
+    def section(self):
+        return cmk.gui.plugins.wato.utils.PermissionSectionWATO
+
+    @property
+    def permission_name(self):
+        return "snapshots"
+
+    @property
+    def title(self):
+        return _("Manage snapshots")
+
+    @property
+    def description(self):
+        return _("Access to the module <i>Snaphsots</i>. Please note: a user with "
+                 "write access to this module "
+                 "can make arbitrary changes to the configuration by restoring uploaded snapshots.")
+
+    @property
+    def defaults(self):
+        return ["admin"]
+
+
+@permission_registry.register
+class PermissionWATOBackups(Permission):
+    @property
+    def section(self):
+        return cmk.gui.plugins.wato.utils.PermissionSectionWATO
+
+    @property
+    def permission_name(self):
+        return "backups"
+
+    @property
+    def title(self):
+        return _("Backup & Restore")
+
+    @property
+    def description(self):
+        return _("Access to the module <i>Site backup</i>. Please note: a user with "
+                 "write access to this module "
+                 "can make arbitrary changes to the configuration by restoring uploaded snapshots.")
+
+    @property
+    def defaults(self):
+        return ["admin"]
+
+
+@permission_registry.register
+class PermissionWATOPatternEditor(Permission):
+    @property
+    def section(self):
+        return cmk.gui.plugins.wato.utils.PermissionSectionWATO
+
+    @property
+    def permission_name(self):
+        return "pattern_editor"
+
+    @property
+    def title(self):
+        return _("Logfile Pattern Analyzer")
+
+    @property
+    def description(self):
+        return _("Access to the module for analyzing and validating logfile patterns.")
+
+    @property
+    def defaults(self):
+        return ["admin", "user"]
+
+
+@permission_registry.register
+class PermissionWATOIcons(Permission):
+    @property
+    def section(self):
+        return cmk.gui.plugins.wato.utils.PermissionSectionWATO
+
+    @property
+    def permission_name(self):
+        return "icons"
+
+    @property
+    def title(self):
+        return _("Manage Custom Icons")
+
+    @property
+    def description(self):
+        return _("Upload or delete custom icons")
+
+    @property
+    def defaults(self):
+        return ["admin"]
+
+
+@permission_registry.register
+class PermissionWATOManageCustomAttributes(Permission):
+    @property
+    def section(self):
+        return cmk.gui.plugins.wato.utils.PermissionSectionWATO
+
+    @property
+    def permission_name(self):
+        return "custom_attributes"
+
+    @property
+    def title(self):
+        return _("Manage custom attributes")
+
+    @property
+    def description(self):
+        return _("Manage custom host- and user attributes")
+
+    @property
+    def defaults(self):
+        return ["admin"]
+
+
+@permission_registry.register
+class PermissionWATOMonitoringAgents(Permission):
+    @property
+    def section(self):
+        return cmk.gui.plugins.wato.utils.PermissionSectionWATO
+
+    @property
+    def permission_name(self):
+        return "download_agents"
+
+    @property
+    def title(self):
+        return _("Monitoring Agents")
+
+    @property
+    def description(self):
+        return _("Download the default Check_MK monitoring agents for Linux, "
+                 "Windows and other operating systems.")
+
+    @property
+    def defaults(self):
+        return config.builtin_role_ids
+
+
+@permission_registry.register
+class PermissionWATODownloadAgentOutput(Permission):
+    @property
+    def section(self):
+        return cmk.gui.plugins.wato.utils.PermissionSectionWATO
+
+    @property
+    def permission_name(self):
+        return "download_agent_output"
+
+    @property
+    def title(self):
+        return _("Download Agent Output / SNMP Walks")
+
+    @property
+    def description(self):
+        return _(
+            "Allows to download the current agent output or SNMP walks of the monitored hosts.")
+
+    @property
+    def defaults(self):
+        return ["admin"]
+
+
+@permission_registry.register
+class PermissionWATOSetReadOnly(Permission):
+    @property
+    def section(self):
+        return cmk.gui.plugins.wato.utils.PermissionSectionWATO
+
+    @property
+    def permission_name(self):
+        return "set_read_only"
+
+    @property
+    def title(self):
+        return _("Set WATO to read only mode for other users")
+
+    @property
+    def description(self):
+        return _("Prevent other users from making modifications to WATO.")
+
+    @property
+    def defaults(self):
+        return ["admin"]
+
+
+@permission_registry.register
+class PermissionWATOAnalyzeConfig(Permission):
+    @property
+    def section(self):
+        return cmk.gui.plugins.wato.utils.PermissionSectionWATO
+
+    @property
+    def permission_name(self):
+        return "analyze_config"
+
+    @property
+    def title(self):
+        return _("Access the best analyze configuration functionality provided by WATO")
+
+    @property
+    def description(self):
+        return _(
+            "WATO has a module that gives you hints on how to tune your Check_MK installation.")
+
+    @property
+    def defaults(self):
+        return ["admin"]
+
+
+@permission_registry.register
+class PermissionWATOAddOrModifyExecutables(Permission):
+    @property
+    def section(self):
+        return cmk.gui.plugins.wato.utils.PermissionSectionWATO
+
+    @property
+    def permission_name(self):
+        return "add_or_modify_executables"
+
+    @property
+    def title(self):
+        return _("Can add or modify executables")
+
+    @property
+    def description(self):
+        return _(
+            "There are different places in Check_MK where an admin can use the GUI to add "
+            "executable code to Check_MK. For example when configuring "
+            "datasource programs, the user inserts a command line for gathering monitoring data. "
+            "This command line is then executed during monitoring by Check_MK. Another example is "
+            "the upload of extension packages (MKPs). All these functions have in "
+            "common that the user provides data that is executed by Check_MK. "
+            "If you want to ensure that your WATO users cannot \"inject\" arbitrary executables "
+            "into your Check_MK installation, you only need to remove this permission for them. "
+            "This permission is needed in addition to the other component related permissions. "
+            "For example you need the <tt>wato.rulesets</tt> permission together with this "
+            "permission to be able to configure rulesets where bare command lines are "
+            "configured.")
+
+    @property
+    def defaults(self):
+        return ["admin"]
+
+
+@permission_registry.register
+class PermissionWATOServiceDiscoveryToUndecided(Permission):
+    @property
+    def section(self):
+        return cmk.gui.plugins.wato.utils.PermissionSectionWATO
+
+    @property
+    def permission_name(self):
+        return "service_discovery_to_undecided"
+
+    @property
+    def title(self):
+        return _("Service discovery: Move to undecided services")
+
+    @property
+    def description(self):
+        return _("Service discovery: Move to undecided services")
+
+    @property
+    def defaults(self):
+        return ["admin", "user"]
+
+
+@permission_registry.register
+class PermissionWATOServiceDiscoveryToMonitored(Permission):
+    @property
+    def section(self):
+        return cmk.gui.plugins.wato.utils.PermissionSectionWATO
+
+    @property
+    def permission_name(self):
+        return "service_discovery_to_monitored"
+
+    @property
+    def title(self):
+        return _("Service discovery: Move to monitored services")
+
+    @property
+    def description(self):
+        return _("Service discovery: Move to monitored services")
+
+    @property
+    def defaults(self):
+        return ["admin", "user"]
+
+
+@permission_registry.register
+class PermissionWATOServiceDiscoveryToIgnored(Permission):
+    @property
+    def section(self):
+        return cmk.gui.plugins.wato.utils.PermissionSectionWATO
+
+    @property
+    def permission_name(self):
+        return "service_discovery_to_ignored"
+
+    @property
+    def title(self):
+        return _("Service discovery: Disabled services")
+
+    @property
+    def description(self):
+        return _("Service discovery: Disabled services")
+
+    @property
+    def defaults(self):
+        return ["admin", "user"]
+
+
+@permission_registry.register
+class PermissionWATOServiceDiscoveryToRemoved(Permission):
+    @property
+    def section(self):
+        return cmk.gui.plugins.wato.utils.PermissionSectionWATO
+
+    @property
+    def permission_name(self):
+        return "service_discovery_to_removed"
+
+    @property
+    def title(self):
+        return _("Service discovery: Remove services")
+
+    @property
+    def description(self):
+        return _("Service discovery: Remove services")
+
+    @property
+    def defaults(self):
+        return ["admin", "user"]

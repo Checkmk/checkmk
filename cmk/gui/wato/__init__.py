@@ -520,17 +520,6 @@ def _wato_page_handler(current_mode, mode_permissions, mode_class):
         # Show contexts buttons
         html.begin_context_buttons()
         mode.buttons()
-        for inmode, buttontext, target in extra_buttons:
-            if inmode == current_mode:
-                if hasattr(target, '__call__'):
-                    target = target()
-                    if not target:
-                        continue
-                if target[0] == '/' or target.startswith('../') or '://' in target:
-                    html.context_button(buttontext, target)
-                else:
-                    html.context_button(buttontext,
-                                        watolib.folder_preserving_link([("mode", target)]))
         html.end_context_buttons()
 
     if not html.is_transaction() or (cmk.gui.watolib.read_only.is_enabled() and
@@ -893,8 +882,6 @@ def save_network_scan_result(folder, result):
 #   '----------------------------------------------------------------------'
 
 modes = {}
-# TODO: Drop this and probably replace with a hook at button rendering?
-extra_buttons = []
 
 loaded_with_language = False
 
@@ -903,9 +890,6 @@ def load_plugins(force):
     global loaded_with_language
     if loaded_with_language == cmk.gui.i18n.get_current_language() and not force:
         return
-
-    # Reset global vars
-    del extra_buttons[:]
 
     # Initialize watolib things which are needed before loading the WATO plugins.
     # This also loads the watolib plugins.

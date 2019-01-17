@@ -166,14 +166,14 @@ if pushd $MK_VARDIR/job >/dev/null; then
     for username in *
     do
         if [ -d "$username" ] && cd "$username" ; then
-            count=$(su "$username" -c "ls -1 * | wc -l")
+            count=$(su -s "$SHELL" "$username" -c "ls -1 * | wc -l")
 
             if [ "$count" -eq "1" ]; then
-                filename=$(su "$username" -c "ls -1 *")
+                filename=$(su -s "$SHELL" "$username" -c "ls -1 *")
                 echo "==> $filename <=="
             fi
 
-            su "$username" -c "head -n1000 *"
+            su -s "$SHELL" "$username" -c "head -n1000 *"
             cd ..
         fi
     done

@@ -54,6 +54,8 @@ from cmk.gui.exceptions import MKConfigError, MKGeneralException
 from cmk.gui.permissions import (
     permission_section_registry,
     PermissionSection,
+    permission_registry,
+    Permission,
 )
 
 # Datastructures and functions needed before plugins can be loaded
@@ -72,23 +74,30 @@ class PermissionSectionBI(PermissionSection):
         return _("BI - Check_MK Business Intelligence")
 
 
-# Load all view plugins
-def load_plugins(force):
-    global loaded_with_language
-    if loaded_with_language == cmk.gui.i18n.get_current_language() and not force:
-        return
+@permission_registry.register
+class BISeeAllPermission(Permission):
+    @property
+    def section(self):
+        return PermissionSectionBI
 
-    config.declare_permission(
-        "bi.see_all", _("See all hosts and services"),
-        _("With this permission set, the BI aggregation rules are applied to all "
-          "hosts and services - not only those the user is a contact for. If you "
-          "remove this permissions then the user will see incomplete aggregation "
-          "trees with status based only on those items."), ["admin", "guest"])
+    @property
+    def permission_name(self):
+        return "see_all"
 
-    # This must be set after plugin loading to make broken plugins raise
-    # exceptions all the time and not only the first time (when the plugins
-    # are loaded).
-    loaded_with_language = cmk.gui.i18n.get_current_language()
+    @property
+    def title(self):
+        return _("See all hosts and services")
+
+    @property
+    def description(self):
+        return _("With this permission set, the BI aggregation rules are applied to all "
+                 "hosts and services - not only those the user is a contact for. If you "
+                 "remove this permissions then the user will see incomplete aggregation "
+                 "trees with status based only on those items.")
+
+    @property
+    def defaults(self):
+        return ["admin", "guest"]
 
 
 #      ____                _              _

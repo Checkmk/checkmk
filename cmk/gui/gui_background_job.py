@@ -40,9 +40,9 @@ from cmk.gui.htmllib import HTML
 from cmk.gui.permissions import (
     permission_section_registry,
     PermissionSection,
+    permission_registry,
+    Permission,
 )
-
-loaded_with_language = False
 
 
 @permission_section_registry.register
@@ -56,53 +56,145 @@ class PermissionSectionBackgroundJobs(PermissionSection):
         return _("Background jobs")
 
 
-def load_plugins(force):
-    global loaded_with_language
-    if loaded_with_language == cmk.gui.i18n.get_current_language() and not force:
-        return
+@permission_registry.register
+class PermissionBackgroundJobsManageJobs(Permission):
+    @property
+    def section(self):
+        return PermissionSectionBackgroundJobs
 
-    config.declare_permission(
-        "background_jobs.manage_jobs",
-        _("Manage background jobs"),
-        _("Allows you to see the job overview page."),
-        ["admin"],
-    )
-    config.declare_permission(
-        "background_jobs.stop_jobs",
-        _("Stop background jobs"),
-        _("Configures the permission to stop background jobs. Note: some jobs cannot be stopped."),
-        ["user", "admin"],
-    )
-    config.declare_permission(
-        "background_jobs.delete_jobs",
-        _("Delete background jobs"),
-        _("Configures the permission to delete background jobs. Note: some jobs cannot be deleted."
-         ),
-        ["user", "admin"],
-    )
-    config.declare_permission(
-        "background_jobs.see_foreign_jobs",
-        _("See foreign background jobs"),
-        _("Allows you to see jobs of other users."),
-        ["admin"],
-    )
-    config.declare_permission(
-        "background_jobs.stop_foreign_jobs",
-        _("Stop foreign background jobs"),
-        _("Allows you to stop jobs of other users. Note: some jobs cannot be stopped."),
-        ["admin"],
-    )
-    config.declare_permission(
-        "background_jobs.delete_foreign_jobs",
-        _("Delete foreign background jobs"),
-        _("Allows you to delete jobs of other users. Note: some jobs cannot be deleted"),
-        ["admin"],
-    )
+    @property
+    def permission_name(self):
+        return "manage_jobs"
 
-    # This must be set after plugin loading to make broken plugins raise
-    # exceptions all the time and not only the first time (when the plugins
-    # are loaded).
-    loaded_with_language = cmk.gui.i18n.get_current_language()
+    @property
+    def title(self):
+        return _("Manage background jobs")
+
+    @property
+    def description(self):
+        return _("Allows you to see the job overview page.")
+
+    @property
+    def defaults(self):
+        return ["admin"]
+
+
+@permission_registry.register
+class PermissionBackgroundJobsStopJobs(Permission):
+    @property
+    def section(self):
+        return PermissionSectionBackgroundJobs
+
+    @property
+    def permission_name(self):
+        return "stop_jobs"
+
+    @property
+    def title(self):
+        return _("Stop background jobs")
+
+    @property
+    def description(self):
+        return _(
+            "Configures the permission to stop background jobs. Note: some jobs cannot be stopped.")
+
+    @property
+    def defaults(self):
+        return ["user", "admin"]
+
+
+@permission_registry.register
+class PermissionBackgroundJobsDeleteJobs(Permission):
+    @property
+    def section(self):
+        return PermissionSectionBackgroundJobs
+
+    @property
+    def permission_name(self):
+        return "delete_jobs"
+
+    @property
+    def title(self):
+        return _("Delete background jobs")
+
+    @property
+    def description(self):
+        return _(
+            "Configures the permission to delete background jobs. Note: some jobs cannot be deleted."
+        )
+
+    @property
+    def defaults(self):
+        return ["user", "admin"]
+
+
+@permission_registry.register
+class PermissionBackgroundJobsSeeForeignJobs(Permission):
+    @property
+    def section(self):
+        return PermissionSectionBackgroundJobs
+
+    @property
+    def permission_name(self):
+        return "see_foreign_jobs"
+
+    @property
+    def title(self):
+        return _("See foreign background jobs")
+
+    @property
+    def description(self):
+        return _("Allows you to see jobs of other users.")
+
+    @property
+    def defaults(self):
+        return ["admin"]
+
+
+@permission_registry.register
+class PermissionBackgroundJobsStopForeignJobs(Permission):
+    @property
+    def section(self):
+        return PermissionSectionBackgroundJobs
+
+    @property
+    def permission_name(self):
+        return "stop_foreign_jobs"
+
+    @property
+    def title(self):
+        return _("Stop foreign background jobs")
+
+    @property
+    def description(self):
+        return _("Allows you to stop jobs of other users. Note: some jobs cannot be stopped.")
+
+    @property
+    def defaults(self):
+        return ["admin"]
+
+
+@permission_registry.register
+class PermissionBackgroundJobsDeleteForeignJobs(Permission):
+    @property
+    def section(self):
+        return PermissionSectionBackgroundJobs
+
+    @property
+    def permission_name(self):
+        return "delete_foreign_jobs"
+
+    @property
+    def title(self):
+        return _("Delete foreign background jobs")
+
+    @property
+    def description(self):
+        return _("Allows you to delete jobs of other users. Note: some jobs cannot be deleted")
+
+    @property
+    def defaults(self):
+        return ["admin"]
 
 
 class GUIBackgroundProcess(background_job.BackgroundProcess):

@@ -36,6 +36,7 @@ import cmk.gui.pages
 import cmk.gui.utils as utils
 from cmk.gui.log import logger
 from cmk.gui.exceptions import HTTPRedirect, MKGeneralException, MKAuthException, MKUserError
+from cmk.gui.permissions import declare_permission
 from cmk.gui.valuespec import (
     Dictionary,
     CascadingDropdown,
@@ -119,6 +120,60 @@ def load_plugins(force):
     utils.load_web_plugins('visuals', globals())
 
     loaded_with_language = cmk.gui.i18n.get_current_language()
+
+
+# TODO: This has been obsoleted by pagetypes.py
+def declare_visual_permissions(what, what_plural):
+    declare_permission(
+        "general.edit_" + what,
+        _("Customize %s and use them") % what_plural,
+        _("Allows to create own %s, customize builtin %s and use them.") % (what_plural,
+                                                                            what_plural),
+        ["admin", "user"],
+    )
+
+    declare_permission(
+        "general.publish_" + what,
+        _("Publish %s") % what_plural,
+        _("Make %s visible and usable for other users.") % what_plural,
+        ["admin", "user"],
+    )
+
+    declare_permission(
+        "general.publish_" + what + "_to_foreign_groups",
+        _("Publish %s to foreign contact groups") % what_plural,
+        _("Make %s visible and usable for users of contact groups the publishing user is not a member of."
+         ) % what_plural,
+        ["admin"],
+    )
+
+    declare_permission(
+        "general.see_user_" + what,
+        _("See user %s") % what_plural,
+        _("Is needed for seeing %s that other users have created.") % what_plural,
+        ["admin", "user", "guest"],
+    )
+
+    declare_permission(
+        "general.force_" + what,
+        _("Modify builtin %s") % what_plural,
+        _("Make own published %s override builtin %s for all users.") % (what_plural, what_plural),
+        ["admin"],
+    )
+
+    declare_permission(
+        "general.edit_foreign_" + what,
+        _("Edit foreign %s") % what_plural,
+        _("Allows to edit %s created by other users.") % what_plural,
+        ["admin"],
+    )
+
+    declare_permission(
+        "general.delete_foreign_" + what,
+        _("Delete foreign %s") % what_plural,
+        _("Allows to delete %s created by other users.") % what_plural,
+        ["admin"],
+    )
 
 
 #.
@@ -266,8 +321,8 @@ def load_visuals_of_a_user(what, builtin_visuals, skip_func, lock, path, user):
 def declare_visual_permission(what, name, visual):
     permname = "%s.%s" % (what[:-1], name)
     if visual["public"] and permname not in permission_registry:
-        config.declare_permission(permname, visual["title"], visual["description"],
-                                  ['admin', 'user', 'guest'])
+        declare_permission(permname, visual["title"], visual["description"],
+                           ['admin', 'user', 'guest'])
 
 
 # Load all users visuals just in order to declare permissions of custom visuals

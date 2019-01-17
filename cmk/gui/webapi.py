@@ -47,6 +47,11 @@ from cmk.gui.exceptions import (
     MKAuthException,
     MKException,
 )
+from cmk.gui.plugins.wato.utils import PermissionSectionWATO
+from cmk.gui.permissions import (
+    permission_registry,
+    Permission,
+)
 
 import cmk.gui.plugins.webapi
 
@@ -74,11 +79,30 @@ def load_plugins(force):
     # are loaded).
     loaded_with_language = cmk.gui.i18n.get_current_language()
 
-    config.declare_permission("wato.api_allowed", _("Access to Web-API"),
-                                                  _("This permissions specifies if the role "\
-                                                    "is able to use Web-API functions. It is only available "\
-                                                    "for automation users."),
-                              config.builtin_role_ids)
+
+@permission_registry.register
+class PermissionWATOAllowedAPI(Permission):
+    @property
+    def section(self):
+        return PermissionSectionWATO
+
+    @property
+    def permission_name(self):
+        return "api_allowed"
+
+    @property
+    def title(self):
+        return _("Access to Web-API")
+
+    @property
+    def description(self):
+        return _("This permissions specifies if the role "
+                 "is able to use Web-API functions. It is only available "
+                 "for automation users.")
+
+    @property
+    def defaults(self):
+        return config.builtin_role_ids
 
 
 _FORMATTERS = {

@@ -58,6 +58,7 @@ from cmk.gui.exceptions import (
     MKUserError,
 )
 from cmk.gui.permissions import (
+    declare_permission,
     permission_section_registry,
     PermissionSection,
 )
@@ -131,9 +132,11 @@ def load_plugins(force):
     # by other users, make them see these dashboards
     dashboards = {}
 
+    visuals.declare_visual_permissions('dashboards', _("dashboards"))
+
     # Declare permissions for all dashboards
     for name, board in builtin_dashboards.items():
-        config.declare_permission(
+        declare_permission(
             "dashboard.%s" % name,
             board["title"],
             board.get("description", ""),

@@ -42,6 +42,8 @@ from cmk.gui.valuespec import Age
 from cmk.gui.permissions import (
     permission_section_registry,
     PermissionSection,
+    permission_registry,
+    Permission,
 )
 
 from cmk.gui.plugins.views import (
@@ -109,12 +111,27 @@ def command_reschedule(cmdtag, spec, row, row_nr, total_rows):
         return command, text
 
 
-config.declare_permission(
-    "action.reschedule",
-    _("Reschedule checks"),
-    _("Reschedule host and service checks"),
-    ["user", "admin"],
-)
+@permission_registry.register
+class PermissionActionReschedule(Permission):
+    @property
+    def section(self):
+        return PermissionSectionAction
+
+    @property
+    def permission_name(self):
+        return "reschedule"
+
+    @property
+    def title(self):
+        return _("Reschedule checks")
+
+    @property
+    def description(self):
+        return _("Reschedule host and service checks")
+
+    @property
+    def defaults(self):
+        return ["user", "admin"]
 
 
 def render_reschedule():
@@ -149,12 +166,28 @@ multisite_commands.append({
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-config.declare_permission(
-    "action.notifications",
-    _("Enable/disable notifications"),
-    _("Enable and disable notifications on hosts and services"),
-    ["admin"],
-)
+
+@permission_registry.register
+class PermissionActionNotifications(Permission):
+    @property
+    def section(self):
+        return PermissionSectionAction
+
+    @property
+    def permission_name(self):
+        return "notifications"
+
+    @property
+    def title(self):
+        return _("Enable/disable notifications")
+
+    @property
+    def description(self):
+        return _("Enable and disable notifications on hosts and services")
+
+    @property
+    def defaults(self):
+        return ["admin"]
 
 
 def command_notifications(cmdtag, spec, row):
@@ -195,12 +228,28 @@ multisite_commands.append({
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-config.declare_permission(
-    "action.enablechecks",
-    _("Enable/disable checks"),
-    _("Enable and disable active or passive checks on hosts and services"),
-    ["admin"],
-)
+
+@permission_registry.register
+class PermissionActionEnableChecks(Permission):
+    @property
+    def section(self):
+        return PermissionSectionAction
+
+    @property
+    def permission_name(self):
+        return "enablechecks"
+
+    @property
+    def title(self):
+        return _("Enable/disable checks")
+
+    @property
+    def description(self):
+        return _("Enable and disable active or passive checks on hosts and services")
+
+    @property
+    def defaults(self):
+        return ["admin"]
 
 
 def command_enable_active(cmdtag, spec, row):
@@ -278,10 +327,30 @@ multisite_commands.append({
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-config.declare_permission(
-    "action.clearmodattr", _("Reset modified attributes"),
-    _("Reset all manually modified attributes of a host or service (like disabled notifications)"),
-    ["admin"])
+
+@permission_registry.register
+class PermissionActionClearModifiedAttributes(Permission):
+    @property
+    def section(self):
+        return PermissionSectionAction
+
+    @property
+    def permission_name(self):
+        return "clearmodattr"
+
+    @property
+    def title(self):
+        return _("Reset modified attributes")
+
+    @property
+    def description(self):
+        return _(
+            "Reset all manually modified attributes of a host or service (like disabled notifications)"
+        )
+
+    @property
+    def defaults(self):
+        return ["admin"]
 
 
 def render_clear_modified():
@@ -312,12 +381,28 @@ multisite_commands.append({
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-config.declare_permission(
-    "action.fakechecks",
-    _("Fake check results"),
-    _("Manually submit check results for host and service checks"),
-    ["admin"],
-)
+
+@permission_registry.register
+class PermissionActionFakeChecks(Permission):
+    @property
+    def section(self):
+        return PermissionSectionAction
+
+    @property
+    def permission_name(self):
+        return "fakechecks"
+
+    @property
+    def title(self):
+        return _("Fake check results")
+
+    @property
+    def description(self):
+        return _("Manually submit check results for host and service checks")
+
+    @property
+    def defaults(self):
+        return ["admin"]
 
 
 def command_fake_checks(cmdtag, spec, row):
@@ -419,13 +504,29 @@ multisite_commands.append({
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-config.declare_permission(
-    "action.customnotification",
-    _("Send custom notification"),
-    _("Manually let the core send a notification to a host or service in order "
-      "to test if notifications are setup correctly"),
-    ["user", "admin"],
-)
+
+@permission_registry.register
+class PermissionActionCustomNotification(Permission):
+    @property
+    def section(self):
+        return PermissionSectionAction
+
+    @property
+    def permission_name(self):
+        return "customnotification"
+
+    @property
+    def title(self):
+        return _("Send custom notification")
+
+    @property
+    def description(self):
+        return _("Manually let the core send a notification to a host or service in order "
+                 "to test if notifications are setup correctly")
+
+    @property
+    def defaults(self):
+        return ["user", "admin"]
 
 
 def command_custom_notification(cmdtag, spec, row):
@@ -472,12 +573,28 @@ multisite_commands.append({
 #   |                                                      |___/           |
 #   '----------------------------------------------------------------------'
 
-config.declare_permission(
-    "action.acknowledge",
-    _("Acknowledge"),
-    _("Acknowledge host and service problems and remove acknowledgements"),
-    ["user", "admin"],
-)
+
+@permission_registry.register
+class PermissionActionAcknowledge(Permission):
+    @property
+    def section(self):
+        return PermissionSectionAction
+
+    @property
+    def permission_name(self):
+        return "acknowledge"
+
+    @property
+    def title(self):
+        return _("Acknowledge")
+
+    @property
+    def description(self):
+        return _("Acknowledge host and service problems and remove acknowledgements")
+
+    @property
+    def defaults(self):
+        return ["user", "admin"]
 
 
 def command_acknowledgement(cmdtag, spec, row):
@@ -590,12 +707,28 @@ multisite_commands.append({
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-config.declare_permission(
-    "action.addcomment",
-    _("Add comments"),
-    _("Add comments to hosts or services, and remove comments"),
-    ["user", "admin"],
-)
+
+@permission_registry.register
+class PermissionActionAddComment(Permission):
+    @property
+    def section(self):
+        return PermissionSectionAction
+
+    @property
+    def permission_name(self):
+        return "addcomment"
+
+    @property
+    def title(self):
+        return _("Add comments")
+
+    @property
+    def description(self):
+        return _("Add comments to hosts or services, and remove comments")
+
+    @property
+    def defaults(self):
+        return ["user", "admin"]
 
 
 def command_comment(cmdtag, spec, row):
@@ -634,19 +767,51 @@ multisite_commands.append({
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-config.declare_permission(
-    "action.downtimes",
-    _("Set/Remove downtimes"),
-    _("Schedule and remove downtimes on hosts and services"),
-    ["user", "admin"],
-)
 
-config.declare_permission(
-    "action.remove_all_downtimes",
-    _("Remove all downtimes"),
-    _("Allow the user to use the action \"Remove all\" downtimes"),
-    ["user", "admin"],
-)
+@permission_registry.register
+class PermissionActionDowntimes(Permission):
+    @property
+    def section(self):
+        return PermissionSectionAction
+
+    @property
+    def permission_name(self):
+        return "downtimes"
+
+    @property
+    def title(self):
+        return _("Set/Remove downtimes")
+
+    @property
+    def description(self):
+        return _("Schedule and remove downtimes on hosts and services")
+
+    @property
+    def defaults(self):
+        return ["user", "admin"]
+
+
+@permission_registry.register
+class PermissionActionRemoveAllDowntimes(Permission):
+    @property
+    def section(self):
+        return PermissionSectionAction
+
+    @property
+    def permission_name(self):
+        return "remove_all_downtimes"
+
+    @property
+    def title(self):
+        return _("Remove all downtimes")
+
+    @property
+    def description(self):
+        return _("Allow the user to use the action \"Remove all\" downtimes")
+
+    @property
+    def defaults(self):
+        return ["user", "admin"]
 
 
 def get_duration_human_readable(secs):
@@ -999,6 +1164,31 @@ multisite_commands.append({
 #   '----------------------------------------------------------------------'
 
 
+@permission_registry.register
+class PermissionActionStar(Permission):
+    @property
+    def section(self):
+        return PermissionSectionAction
+
+    @property
+    def permission_name(self):
+        return "star"
+
+    @property
+    def title(self):
+        return _("Use favorites")
+
+    @property
+    def description(self):
+        return _("This permission allows a user to make certain host and services "
+                 "his personal favorites. Favorites can be used for a having a fast "
+                 "access to items that are needed on a regular base.")
+
+    @property
+    def defaults(self):
+        return ["user", "admin"]
+
+
 def command_star(cmdtag, spec, row):
     if html.request.var("_star") or html.request.var("_unstar"):
         star = 1 if html.request.var("_star") else 0
@@ -1023,12 +1213,6 @@ def render_star():
     html.button("_star", _("Add to Favorites"))
     html.button("_unstar", _("Remove from Favorites"))
 
-
-config.declare_permission(
-    "action.star", _("Use favorites"),
-    _("This permission allows a user to make certain host and services "
-      "his personal favorites. Favorites can be used for a having a fast "
-      "access to items that are needed on a regular base."), ["user", "admin"])
 
 multisite_commands.append({
     "tables": ["host", "service"],

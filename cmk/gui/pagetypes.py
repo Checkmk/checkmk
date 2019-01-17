@@ -62,7 +62,11 @@ from cmk.gui.exceptions import (
     MKGeneralException,
     MKAuthException,
 )
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import (
+    permission_registry,
+    declare_permission_section,
+    declare_permission,
+)
 
 #   .--Base----------------------------------------------------------------.
 #   |                        ____                                          |
@@ -579,9 +583,9 @@ class Overridable(Base):
 
     @classmethod
     def declare_overriding_permissions(cls):
-        config.declare_permission_section(cls.type_name(), cls.phrase("title_plural"), do_sort=True)
+        declare_permission_section(cls.type_name(), cls.phrase("title_plural"), do_sort=True)
 
-        config.declare_permission(
+        declare_permission(
             "general.edit_" + cls.type_name(),
             _("Customize %s and use them") % cls.phrase("title_plural"),
             _("Allows to create own %s, customize builtin %s and use them.") %
@@ -589,7 +593,7 @@ class Overridable(Base):
             ["admin", "user"],
         )
 
-        config.declare_permission(
+        declare_permission(
             "general.publish_" + cls.type_name(),
             _("Publish %s") % cls.phrase("title_plural"),
             _("Make %s visible and usable for other users.") % cls.phrase("title_plural"),
@@ -597,7 +601,7 @@ class Overridable(Base):
         )
 
         # TODO: Bug: This permission does not seem to be used
-        config.declare_permission(
+        declare_permission(
             "general.see_user_" + cls.type_name(),
             _("See user %s") % cls.phrase("title_plural"),
             _("Is needed for seeing %s that other users have created.") %
@@ -605,7 +609,7 @@ class Overridable(Base):
             ["admin", "user", "guest"],
         )
 
-        config.declare_permission(
+        declare_permission(
             "general.force_" + cls.type_name(),
             _("Modify builtin %s") % cls.phrase("title_plural"),
             _("Make own published %s override builtin %s for all users.") %
@@ -613,14 +617,14 @@ class Overridable(Base):
             ["admin"],
         )
 
-        config.declare_permission(
+        declare_permission(
             "general.edit_foreign_" + cls.type_name(),
             _("Edit foreign %s") % cls.phrase("title_plural"),
             _("Allows to edit %s created by other users.") % cls.phrase("title_plural"),
             ["admin"],
         )
 
-        config.declare_permission(
+        declare_permission(
             "general.delete_foreign_" + cls.type_name(),
             _("Delete foreign %s") % cls.phrase("title_plural"),
             _("Allows to delete %s created by other users.") % cls.phrase("title_plural"),
@@ -794,8 +798,8 @@ class Overridable(Base):
     def declare_permission(cls, page):
         permname = "%s.%s" % (cls.type_name(), page.name())
         if page.is_public() and permname not in permission_registry:
-            config.declare_permission(permname, page.title(), page.description(),
-                                      ['admin', 'user', 'guest'])
+            declare_permission(permname, page.title(), page.description(),
+                               ['admin', 'user', 'guest'])
 
     @classmethod
     def custom_list_buttons(cls, instance):

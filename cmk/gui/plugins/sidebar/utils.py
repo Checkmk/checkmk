@@ -38,6 +38,7 @@ from cmk.gui.globals import html
 from cmk.gui.permissions import (
     permission_section_registry,
     PermissionSection,
+    declare_permission,
 )
 
 # Constants to be used in snapins
@@ -154,7 +155,7 @@ class SnapinRegistry(cmk.utils.plugin_registry.ClassRegistry):
         return plugin_class.type_name()
 
     def registration_hook(self, plugin_class):
-        config.declare_permission(
+        declare_permission(
             "sidesnap.%s" % self.plugin_name(plugin_class),
             plugin_class.title(),
             plugin_class.description(),

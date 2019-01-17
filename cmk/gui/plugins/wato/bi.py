@@ -41,6 +41,10 @@ import cmk.gui.userdb as userdb
 from cmk.gui.table import table_element
 import cmk.gui.forms as forms
 import cmk.gui.watolib as watolib
+from cmk.gui.permissions import (
+    permission_registry,
+    Permission,
+)
 from cmk.gui.exceptions import MKUserError, MKGeneralException, MKAuthException
 from cmk.gui.valuespec import (
     Tuple,
@@ -79,6 +83,7 @@ from cmk.gui.plugins.wato import (
     add_change,
     wato_confirm,
     HostTagCondition,
+    PermissionSectionWATO,
 )
 
 #   .--Base class----------------------------------------------------------.
@@ -2298,15 +2303,53 @@ host_aggregations += [
 #   |  Integrate all that stuff into WATO                                  |
 #   '----------------------------------------------------------------------'
 
-config.declare_permission(
-    "wato.bi_rules", _("Business Intelligence Rules and Aggregations"),
-    _("User the WATO BI module, create, modify and delete BI rules and aggregations in packs that you are a contact of"
-     ), ["admin", "user"])
 
-config.declare_permission(
-    "wato.bi_admin", _("Business Intelligence Administration"),
-    _("Edit all rules and aggregations for Business Intelligence, create, modify and delete rule packs."
-     ), ["admin"])
+@permission_registry.register
+class BIRulesPermission(Permission):
+    @property
+    def section(self):
+        return PermissionSectionWATO
+
+    @property
+    def permission_name(self):
+        return "bi_rules"
+
+    @property
+    def title(self):
+        return _("Business Intelligence Rules and Aggregations")
+
+    @property
+    def description(self):
+        return _("User the WATO BI module, create, modify and delete BI rules and "
+                 "aggregations in packs that you are a contact of")
+
+    @property
+    def defaults(self):
+        return ["admin", "user"]
+
+
+@permission_registry.register
+class BIAdminPermission(Permission):
+    @property
+    def section(self):
+        return PermissionSectionWATO
+
+    @property
+    def permission_name(self):
+        return "bi_admin"
+
+    @property
+    def title(self):
+        return _("Business Intelligence Administration")
+
+    @property
+    def description(self):
+        return _("Edit all rules and aggregations for Business Intelligence, "
+                 "create, modify and delete rule packs.")
+
+    @property
+    def defaults(self):
+        return ["admin"]
 
 
 @main_module_registry.register

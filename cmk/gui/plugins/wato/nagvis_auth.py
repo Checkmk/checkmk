@@ -25,11 +25,12 @@
 # Boston, MA 02110-1301 USA.
 """Register general nagvis permissions"""
 
-import cmk.gui.config as config
 from cmk.gui.i18n import _
 from cmk.gui.permissions import (
     permission_section_registry,
     PermissionSection,
+    permission_registry,
+    Permission,
 )
 
 
@@ -44,58 +45,185 @@ class PermissionSectionNagVis(PermissionSection):
         return _('NagVis')
 
 
-config.declare_permission(
-    'nagvis.*_*_*',
-    _('Full access'),
-    _('This permission grants full access to NagVis.'),
-    ['admin'],
-)
+@permission_registry.register
+class PermissionNagVisFull(Permission):
+    @property
+    def section(self):
+        return PermissionSectionNagVis
 
-config.declare_permission(
-    'nagvis.Rotation_view_*',
-    _('Use all map rotations'),
-    _('Grants read access to all rotations.'),
-    ['guest'],
-)
+    @property
+    def permission_name(self):
+        return "*_*_*"
 
-config.declare_permission(
-    'nagvis.Map_view_*',
-    _('View all maps'),
-    _('Grants read access to all maps.'),
-    ['guest'],
-)
+    @property
+    def title(self):
+        return _('Full access')
 
-config.declare_permission(
-    'nagvis.Map_edit_*',
-    _('Edit all maps'),
-    _('Grants modify access to all maps.'),
-    [],
-)
+    @property
+    def description(self):
+        return _('This permission grants full access to NagVis.')
 
-config.declare_permission(
-    'nagvis.Map_delete_*',
-    _('Delete all maps'),
-    _('Permits to delete all maps.'),
-    [],
-)
+    @property
+    def defaults(self):
+        return ["admin"]
 
-config.declare_permission(
-    'nagvis.Map_view',
-    _('View permitted maps'),
-    _('Grants read access to all maps the user is a contact for.'),
-    ['user'],
-)
 
-config.declare_permission(
-    'nagvis.Map_edit',
-    _('Edit permitted maps'),
-    _('Grants modify access to all maps the user is contact for.'),
-    ['user'],
-)
+@permission_registry.register
+class PermissionNagVisRotations(Permission):
+    @property
+    def section(self):
+        return PermissionSectionNagVis
 
-config.declare_permission(
-    'nagvis.Map_delete',
-    _('Delete permitted maps'),
-    _('Permits to delete all maps the user is contact for.'),
-    ['user'],
-)
+    @property
+    def permission_name(self):
+        return "Rotation_view_*"
+
+    @property
+    def title(self):
+        return _('Use all map rotations')
+
+    @property
+    def description(self):
+        return _('Grants read access to all rotations.')
+
+    @property
+    def defaults(self):
+        return ["guest"]
+
+
+@permission_registry.register
+class PermissionNagVisMapsViewAll(Permission):
+    @property
+    def section(self):
+        return PermissionSectionNagVis
+
+    @property
+    def permission_name(self):
+        return "Map_view_*"
+
+    @property
+    def title(self):
+        return _('View all maps')
+
+    @property
+    def description(self):
+        return _('Grants read access to all maps.')
+
+    @property
+    def defaults(self):
+        return ["guest"]
+
+
+@permission_registry.register
+class PermissionNagVisMapsEditAll(Permission):
+    @property
+    def section(self):
+        return PermissionSectionNagVis
+
+    @property
+    def permission_name(self):
+        return "Map_edit_*"
+
+    @property
+    def title(self):
+        return _('Edit all maps')
+
+    @property
+    def description(self):
+        return _('Grants modify access to all maps.')
+
+    @property
+    def defaults(self):
+        return []
+
+
+@permission_registry.register
+class PermissionNagVisMapsDeleteAll(Permission):
+    @property
+    def section(self):
+        return PermissionSectionNagVis
+
+    @property
+    def permission_name(self):
+        return "Map_delete_*"
+
+    @property
+    def title(self):
+        return _('Delete all maps')
+
+    @property
+    def description(self):
+        return _('Permits to delete all maps.')
+
+    @property
+    def defaults(self):
+        return []
+
+
+@permission_registry.register
+class PermissionNagVisPermittedMapsView(Permission):
+    @property
+    def section(self):
+        return PermissionSectionNagVis
+
+    @property
+    def permission_name(self):
+        return "Map_view"
+
+    @property
+    def title(self):
+        return _('View permitted maps')
+
+    @property
+    def description(self):
+        return _('Grants read access to all maps the user is a contact for.')
+
+    @property
+    def defaults(self):
+        return ['user']
+
+
+@permission_registry.register
+class PermissionNagVisPermittedMapsEdit(Permission):
+    @property
+    def section(self):
+        return PermissionSectionNagVis
+
+    @property
+    def permission_name(self):
+        return "Map_edit"
+
+    @property
+    def title(self):
+        return _('Edit permitted maps')
+
+    @property
+    def description(self):
+        return _('Grants modify access to all maps the user is contact for.')
+
+    @property
+    def defaults(self):
+        return ['user']
+
+
+@permission_registry.register
+class PermissionNagVisPermittedMapsDelete(Permission):
+    @property
+    def section(self):
+        return PermissionSectionNagVis
+
+    @property
+    def permission_name(self):
+        return "Map_delete"
+
+    @property
+    def title(self):
+        return _('Delete permitted maps')
+
+    @property
+    def description(self):
+        return _('Permits to delete all maps the user is contact for.')
+
+    @property
+    def defaults(self):
+        return ['user']

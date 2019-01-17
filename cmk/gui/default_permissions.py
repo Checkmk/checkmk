@@ -25,14 +25,13 @@
 # Boston, MA 02110-1301 USA.
 
 import cmk.gui.config as config
-import cmk.gui.i18n
 from cmk.gui.i18n import _
 from cmk.gui.permissions import (
     permission_section_registry,
     PermissionSection,
+    permission_registry,
+    Permission,
 )
-
-loaded_with_language = False
 
 #   .----------------------------------------------------------------------.
 #   |        ____                     _         _                          |
@@ -61,249 +60,566 @@ class PermissionSectionGeneral(PermissionSection):
         return 10
 
 
-def load_plugins(force):
-    global loaded_with_language
-    if loaded_with_language == cmk.gui.i18n.get_current_language() and not force:
-        return
+@permission_registry.register
+class PermissionGeneralUse(Permission):
+    @property
+    def section(self):
+        return PermissionSectionGeneral
 
-    config.declare_permission(
-        "general.use",
-        _("Use Multisite at all"),
-        _("Users without this permission are not let in at all"),
-        ["admin", "user", "guest"],
-    )
+    @property
+    def permission_name(self):
+        return "use"
 
-    config.declare_permission(
-        "general.see_all",
-        _("See all host and services"),
-        _("See all objects regardless of contacts and contact groups. "
-          "If combined with 'perform commands' then commands may be done on all objects."),
-        ["admin", "guest"],
-    )
+    @property
+    def title(self):
+        return _("Use the GUI at all")
 
-    declare_visual_permissions('views', _("views"))
-    declare_visual_permissions('dashboards', _("dashboards"))
+    @property
+    def description(self):
+        return _("Users without this permission are not let in at all")
 
-    config.declare_permission(
-        "general.view_option_columns",
-        _("Change view display columns"),
-        _("Interactively change the number of columns being displayed by a view (does not edit or customize the view)"
-         ),
-        ["admin", "user", "guest"],
-    )
-
-    config.declare_permission(
-        "general.view_option_refresh",
-        _("Change view display refresh"),
-        _("Interactively change the automatic browser reload of a view being displayed (does not edit or customize the view)"
-         ),
-        ["admin", "user"],
-    )
-
-    config.declare_permission(
-        "general.painter_options",
-        _("Change column display options"),
-        _("Some of the display columns offer options for customizing their output. "
-          "For example time stamp columns can be displayed absolute, relative or "
-          "in a mixed style. This permission allows the user to modify display options"),
-        ["admin", "user", "guest"],
-    )
-
-    config.declare_permission(
-        "general.act",
-        _("Perform commands"),
-        _("Allows users to perform Nagios commands. If no further permissions "
-          "are granted, actions can only be done on objects one is a contact for"),
-        ["admin", "user"],
-    )
-
-    config.declare_permission(
-        "general.see_sidebar",
-        _("Use Check_MK sidebar"),
-        _("Without this permission the Check_MK sidebar will be invisible"),
-        ["admin", "user", "guest"],
-    )
-
-    config.declare_permission(
-        "general.configure_sidebar",
-        _("Configure sidebar"),
-        _("This allows the user to add, move and remove sidebar snapins."),
-        ["admin", "user"],
-    )
-
-    config.declare_permission(
-        'general.edit_profile',
-        _('Edit the user profile'),
-        _('Permits the user to change the user profile settings.'),
-        ['admin', 'user'],
-    )
-
-    config.declare_permission(
-        "general.see_availability",
-        _("See the availability"),
-        _("See the availability views of hosts and services"),
-        ["admin", "user", "guest"],
-    )
-
-    config.declare_permission(
-        "general.csv_export",
-        _("Use CSV export"),
-        _("Export data of views using the CSV export"),
-        ["admin", "user", "guest"],
-    )
-
-    config.declare_permission(
-        'general.edit_notifications',
-        _('Edit personal notification settings'),
-        _('This allows a user to edit his personal notification settings. You also need the permission '
-          '<i>Edit the user profile</i> in order to do this.'),
-        ['admin', 'user'],
-    )
-
-    config.declare_permission(
-        'general.disable_notifications',
-        _('Disable all personal notifications'),
-        _('This permissions provides a checkbox and timerange in the personal settings of the user that '
-          'allows him to completely disable all of his notifications. Use with caution.'),
-        ['admin'],
-    )
-
-    config.declare_permission(
-        'general.edit_user_attributes',
-        _('Edit personal user attributes'),
-        _('This allows a user to edit his personal user attributes. You also need the permission '
-          '<i>Edit the user profile</i> in order to do this.'),
-        ['admin', 'user'],
-    )
-
-    config.declare_permission(
-        'general.change_password',
-        _('Edit the user password'),
-        _('Permits the user to change the password.'),
-        ['admin', 'user'],
-    )
-
-    config.declare_permission(
-        'general.logout',
-        _('Logout'),
-        _('Permits the user to logout.'),
-        ['admin', 'user', 'guest'],
-    )
-
-    config.declare_permission(
-        "general.ignore_soft_limit",
-        _("Ignore soft query limit"),
-        _("Allows to ignore the soft query limit imposed upon the number of datasets returned by a query"
-         ),
-        ["admin", "user"],
-    )
-
-    config.declare_permission(
-        "general.ignore_hard_limit",
-        _("Ignore hard query limit"),
-        _("Allows to ignore the hard query limit imposed upon the number of datasets returned by a query"
-         ),
-        ["admin"],
-    )
-
-    config.declare_permission(
-        "general.acknowledge_werks",
-        _("Acknowledge Incompatible Werks"),
-        _("In the change log of the Check_MK software version the administrator can manage change log entries "
-          "(Werks) that requrire user interaction. These <i>incompatible Werks</i> can be acknowledged only "
-          "if the user has this permission."),
-        ["admin"],
-    )
-
-    config.declare_permission(
-        "general.see_failed_notifications_24h",
-        _("See failed Notifications (last 24 hours)"),
-        _("If Check_MK is unable to notify users about problems, the site will warn about this situation "
-          "very visibly inside the UI (both in the Tactical Overview and the Dashboard). This affects only "
-          "users with this permission. Users with this permission will only see failed notifications "
-          "that occured within the last 24 hours."),
-        ["user"],
-    )
-
-    config.declare_permission(
-        "general.see_failed_notifications",
-        _("See failed Notifications (all)"),
-        _("If Check_MK is unable to notify users about problems, the site will warn about this situation "
-          "very visibly inside the UI (both in the Tactical Overview and the Dashboard). This affects only "
-          "users with this permission. Users with this permission will see failed notifications between now "
-          "and the configured <a href=\"wato.py?mode=edit_configvar&varname=failed_notification_horizon\">Failed notification horizon</a>."
-         ),
-        ["admin"],
-    )
-
-    config.declare_permission(
-        "general.see_stales_in_tactical_overview",
-        _("See stale objects in tactical overview snapin"),
-        _("Show the column for stale host and service checks in the tactical overview snapin."),
-        ["guest", "user", "admin"],
-    )
-
-    config.declare_permission(
-        "general.see_crash_reports",
-        _("See crash reports"),
-        _("In case an exception happens while Check_MK is running it may produce crash reports that you can "
-          "use to track down the issues in the code or send it as report to the Check_MK team to fix this issue "
-          "Only users with this permission are able to see the reports in the GUI."),
-        ["admin"],
-    )
-
-    loaded_with_language = cmk.gui.i18n.get_current_language()
+    @property
+    def defaults(self):
+        return config.builtin_role_ids
 
 
-# TODO: This has been obsoleted by pagetypes.py
-def declare_visual_permissions(what, what_plural):
-    config.declare_permission(
-        "general.edit_" + what,
-        _("Customize %s and use them") % what_plural,
-        _("Allows to create own %s, customize builtin %s and use them.") % (what_plural,
-                                                                            what_plural),
-        ["admin", "user"],
-    )
+@permission_registry.register
+class PermissionGeneralSeeAll(Permission):
+    @property
+    def section(self):
+        return PermissionSectionGeneral
 
-    config.declare_permission(
-        "general.publish_" + what,
-        _("Publish %s") % what_plural,
-        _("Make %s visible and usable for other users.") % what_plural,
-        ["admin", "user"],
-    )
+    @property
+    def permission_name(self):
+        return "see_all"
 
-    config.declare_permission(
-        "general.publish_" + what + "_to_foreign_groups",
-        _("Publish %s to foreign contact groups") % what_plural,
-        _("Make %s visible and usable for users of contact groups the publishing user is not a member of."
-         ) % what_plural,
-        ["admin"],
-    )
+    @property
+    def title(self):
+        return _("See all host and services")
 
-    config.declare_permission(
-        "general.see_user_" + what,
-        _("See user %s") % what_plural,
-        _("Is needed for seeing %s that other users have created.") % what_plural,
-        ["admin", "user", "guest"],
-    )
+    @property
+    def description(self):
+        return _("See all objects regardless of contacts and contact groups. "
+                 "If combined with 'perform commands' then commands may be done on all objects.")
 
-    config.declare_permission(
-        "general.force_" + what,
-        _("Modify builtin %s") % what_plural,
-        _("Make own published %s override builtin %s for all users.") % (what_plural, what_plural),
-        ["admin"],
-    )
+    @property
+    def defaults(self):
+        return ["admin", "guest"]
 
-    config.declare_permission(
-        "general.edit_foreign_" + what,
-        _("Edit foreign %s") % what_plural,
-        _("Allows to edit %s created by other users.") % what_plural,
-        ["admin"],
-    )
 
-    config.declare_permission(
-        "general.delete_foreign_" + what,
-        _("Delete foreign %s") % what_plural,
-        _("Allows to delete %s created by other users.") % what_plural,
-        ["admin"],
-    )
+@permission_registry.register
+class PermissionGeneralChangeViewDisplayColumns(Permission):
+    @property
+    def section(self):
+        return PermissionSectionGeneral
+
+    @property
+    def permission_name(self):
+        return "view_option_columns"
+
+    @property
+    def title(self):
+        return _("Change view display columns")
+
+    @property
+    def description(self):
+        return _(
+            "Interactively change the number of columns being displayed by a view (does not edit or customize the view)"
+        )
+
+    @property
+    def defaults(self):
+        return config.builtin_role_ids
+
+
+@permission_registry.register
+class PermissionGeneralChangeViewColumns(Permission):
+    @property
+    def section(self):
+        return PermissionSectionGeneral
+
+    @property
+    def permission_name(self):
+        return "view_option_refresh"
+
+    @property
+    def title(self):
+        return _("Change view display refresh")
+
+    @property
+    def description(self):
+        return _(
+            "Interactively change the automatic browser reload of a view being displayed (does not edit or customize the view)"
+        )
+
+    @property
+    def defaults(self):
+        return ["admin", "user"]
+
+
+@permission_registry.register
+class PermissionGeneralChangeViewPainterOptions(Permission):
+    @property
+    def section(self):
+        return PermissionSectionGeneral
+
+    @property
+    def permission_name(self):
+        return "painter_options"
+
+    @property
+    def title(self):
+        return _("Change column display options")
+
+    @property
+    def description(self):
+        return _("Some of the display columns offer options for customizing their output. "
+                 "For example time stamp columns can be displayed absolute, relative or "
+                 "in a mixed style. This permission allows the user to modify display options")
+
+    @property
+    def defaults(self):
+        return config.builtin_role_ids
+
+
+@permission_registry.register
+class PermissionGeneralPerformCommands(Permission):
+    @property
+    def section(self):
+        return PermissionSectionGeneral
+
+    @property
+    def permission_name(self):
+        return "act"
+
+    @property
+    def title(self):
+        return _("Perform commands in views")
+
+    @property
+    def description(self):
+        return _(
+            "Allows users to perform commands on hosts and services in the views. If "
+            "no further permissions are granted, actions can only be done on objects one is a contact for"
+        )
+
+    @property
+    def defaults(self):
+        return ["admin", "user"]
+
+
+@permission_registry.register
+class PermissionGeneralSeeSidebar(Permission):
+    @property
+    def section(self):
+        return PermissionSectionGeneral
+
+    @property
+    def permission_name(self):
+        return "see_sidebar"
+
+    @property
+    def title(self):
+        return _("Use Check_MK sidebar")
+
+    @property
+    def description(self):
+        return _("Without this permission the Check_MK sidebar will be invisible")
+
+    @property
+    def defaults(self):
+        return config.builtin_role_ids
+
+
+@permission_registry.register
+class PermissionGeneralConfigureSidebar(Permission):
+    @property
+    def section(self):
+        return PermissionSectionGeneral
+
+    @property
+    def permission_name(self):
+        return "configure_sidebar"
+
+    @property
+    def title(self):
+        return _("Configure sidebar")
+
+    @property
+    def description(self):
+        return _("This allows the user to add, move and remove sidebar snapins.")
+
+    @property
+    def defaults(self):
+        return ["admin", "user"]
+
+
+@permission_registry.register
+class PermissionGeneralEditProfile(Permission):
+    @property
+    def section(self):
+        return PermissionSectionGeneral
+
+    @property
+    def permission_name(self):
+        return "edit_profile"
+
+    @property
+    def title(self):
+        return _('Edit the user profile')
+
+    @property
+    def description(self):
+        return _('Permits the user to change the user profile settings.')
+
+    @property
+    def defaults(self):
+        return ["admin", "user"]
+
+
+@permission_registry.register
+class PermissionGeneralSeeAvailability(Permission):
+    @property
+    def section(self):
+        return PermissionSectionGeneral
+
+    @property
+    def permission_name(self):
+        return "see_availability"
+
+    @property
+    def title(self):
+        return _("See the availability")
+
+    @property
+    def description(self):
+        return _("See the availability views of hosts and services")
+
+    @property
+    def defaults(self):
+        return config.builtin_role_ids
+
+
+@permission_registry.register
+class PermissionGeneralCSVExport(Permission):
+    @property
+    def section(self):
+        return PermissionSectionGeneral
+
+    @property
+    def permission_name(self):
+        return "csv_export"
+
+    @property
+    def title(self):
+        return _("Use CSV export")
+
+    @property
+    def description(self):
+        return _("Export data of views using the CSV export")
+
+    @property
+    def defaults(self):
+        return config.builtin_role_ids
+
+
+@permission_registry.register
+class PermissionGeneralEditNotifications(Permission):
+    @property
+    def section(self):
+        return PermissionSectionGeneral
+
+    @property
+    def permission_name(self):
+        return "edit_notifications"
+
+    @property
+    def title(self):
+        return _('Edit personal notification settings')
+
+    @property
+    def description(self):
+        return _(
+            'This allows a user to edit his personal notification settings. You also need the permission '
+            '<i>Edit the user profile</i> in order to do this.')
+
+    @property
+    def defaults(self):
+        return ['admin', 'user']
+
+
+@permission_registry.register
+class PermissionGeneralDisableNotifications(Permission):
+    @property
+    def section(self):
+        return PermissionSectionGeneral
+
+    @property
+    def permission_name(self):
+        return "disable_notifications"
+
+    @property
+    def title(self):
+        return _('Disable all personal notifications')
+
+    @property
+    def description(self):
+        return _(
+            'This permissions provides a checkbox and timerange in the personal settings of the user that '
+            'allows him to completely disable all of his notifications. Use with caution.')
+
+    @property
+    def defaults(self):
+        return ['admin']
+
+
+@permission_registry.register
+class PermissionGeneralEditUserAttributes(Permission):
+    @property
+    def section(self):
+        return PermissionSectionGeneral
+
+    @property
+    def permission_name(self):
+        return "edit_user_attributes"
+
+    @property
+    def title(self):
+        return _('Edit personal user attributes')
+
+    @property
+    def description(self):
+        return _(
+            'This allows a user to edit his personal user attributes. You also need the permission '
+            '<i>Edit the user profile</i> in order to do this.')
+
+    @property
+    def defaults(self):
+        return ['admin', 'user']
+
+
+@permission_registry.register
+class PermissionGeneralChangePassword(Permission):
+    @property
+    def section(self):
+        return PermissionSectionGeneral
+
+    @property
+    def permission_name(self):
+        return "change_password"
+
+    @property
+    def title(self):
+        return _('Edit the user password')
+
+    @property
+    def description(self):
+        return _('Permits the user to change the password.')
+
+    @property
+    def defaults(self):
+        return ['admin', 'user']
+
+
+@permission_registry.register
+class PermissionGeneralLogout(Permission):
+    @property
+    def section(self):
+        return PermissionSectionGeneral
+
+    @property
+    def permission_name(self):
+        return "logout"
+
+    @property
+    def title(self):
+        return _('Logout')
+
+    @property
+    def description(self):
+        return _('Permits the user to logout.')
+
+    @property
+    def defaults(self):
+        return config.builtin_role_ids
+
+
+@permission_registry.register
+class PermissionGeneralIgnoreSoftLimit(Permission):
+    @property
+    def section(self):
+        return PermissionSectionGeneral
+
+    @property
+    def permission_name(self):
+        return "ignore_soft_limit"
+
+    @property
+    def title(self):
+        return _("Ignore soft query limit")
+
+    @property
+    def description(self):
+        return _(
+            "Allows to ignore the soft query limit imposed upon the number of datasets returned by a query"
+        )
+
+    @property
+    def defaults(self):
+        return ["admin", "user"]
+
+
+@permission_registry.register
+class PermissionGeneralIgnoreHardLimit(Permission):
+    @property
+    def section(self):
+        return PermissionSectionGeneral
+
+    @property
+    def permission_name(self):
+        return "ignore_hard_limit"
+
+    @property
+    def title(self):
+        return _("Ignore hard query limit")
+
+    @property
+    def description(self):
+        return _(
+            "Allows to ignore the hard query limit imposed upon the number of datasets returned by a query"
+        )
+
+    @property
+    def defaults(self):
+        return ["admin"]
+
+
+@permission_registry.register
+class PermissionGeneralAcknowledgeWerks(Permission):
+    @property
+    def section(self):
+        return PermissionSectionGeneral
+
+    @property
+    def permission_name(self):
+        return "acknowledge_werks"
+
+    @property
+    def title(self):
+        return _("Acknowledge Incompatible Werks")
+
+    @property
+    def description(self):
+        return _(
+            "In the change log of the Check_MK software version the administrator can manage change log entries "
+            "(Werks) that requrire user interaction. These <i>incompatible Werks</i> can be acknowledged only "
+            "if the user has this permission.")
+
+    @property
+    def defaults(self):
+        return ["admin"]
+
+
+@permission_registry.register
+class PermissionGeneralSeeFailedNotifications24h(Permission):
+    @property
+    def section(self):
+        return PermissionSectionGeneral
+
+    @property
+    def permission_name(self):
+        return "see_failed_notifications_24h"
+
+    @property
+    def title(self):
+        return _("See failed Notifications (last 24 hours)")
+
+    @property
+    def description(self):
+        return _(
+            "If Check_MK is unable to notify users about problems, the site will warn about this situation "
+            "very visibly inside the UI (both in the Tactical Overview and the Dashboard). This affects only "
+            "users with this permission. Users with this permission will only see failed notifications "
+            "that occured within the last 24 hours.")
+
+    @property
+    def defaults(self):
+        return ["user"]
+
+
+@permission_registry.register
+class PermissionGeneralSeeFailedNotifications(Permission):
+    @property
+    def section(self):
+        return PermissionSectionGeneral
+
+    @property
+    def permission_name(self):
+        return "see_failed_notifications"
+
+    @property
+    def title(self):
+        return _("See failed Notifications (all)")
+
+    @property
+    def description(self):
+        return _(
+            "If Check_MK is unable to notify users about problems, the site will warn about this situation "
+            "very visibly inside the UI (both in the Tactical Overview and the Dashboard). This affects only "
+            "users with this permission. Users with this permission will see failed notifications between now "
+            "and the configured <a href=\"wato.py?mode=edit_configvar&varname=failed_notification_horizon\">Failed notification horizon</a>."
+        )
+
+    @property
+    def defaults(self):
+        return ["admin"]
+
+
+@permission_registry.register
+class PermissionGeneralSeeStalesInTacticalOverview(Permission):
+    @property
+    def section(self):
+        return PermissionSectionGeneral
+
+    @property
+    def permission_name(self):
+        return "see_stales_in_tactical_overview"
+
+    @property
+    def title(self):
+        return _("See stale objects in tactical overview snapin")
+
+    @property
+    def description(self):
+        return _(
+            "Show the column for stale host and service checks in the tactical overview snapin.")
+
+    @property
+    def defaults(self):
+        return config.builtin_role_ids
+
+
+@permission_registry.register
+class PermissionGeneralSeeCrashReports(Permission):
+    @property
+    def section(self):
+        return PermissionSectionGeneral
+
+    @property
+    def permission_name(self):
+        return "see_crash_reports"
+
+    @property
+    def title(self):
+        return _("See crash reports")
+
+    @property
+    def description(self):
+        return _(
+            "In case an exception happens while Check_MK is running it may produce crash reports that you can "
+            "use to track down the issues in the code or send it as report to the Check_MK team to fix this issue "
+            "Only users with this permission are able to see the reports in the GUI.")
+
+    @property
+    def defaults(self):
+        return ["admin"]

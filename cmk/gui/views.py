@@ -71,6 +71,7 @@ from cmk.gui.exceptions import (
 from cmk.gui.permissions import (
     permission_section_registry,
     PermissionSection,
+    declare_permission,
 )
 from cmk.gui.plugins.views.icons.utils import (
     icon_and_action_registry,
@@ -162,10 +163,12 @@ def load_plugins(force):
     # are loaded).
     loaded_with_language = cmk.gui.i18n.get_current_language()
 
+    visuals.declare_visual_permissions('views', _("views"))
+
     # Declare permissions for builtin views
     for name, view in multisite_builtin_views.items():
-        config.declare_permission("view.%s" % name, format_view_title(
-            name, view), "%s - %s" % (name, _u(view["description"])), config.builtin_role_ids)
+        declare_permission("view.%s" % name, format_view_title(name, view),
+                           "%s - %s" % (name, _u(view["description"])), config.builtin_role_ids)
 
     # Make sure that custom views also have permissions
     config.declare_dynamic_permissions(lambda: visuals.declare_custom_permissions('views'))

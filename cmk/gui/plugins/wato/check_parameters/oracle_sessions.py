@@ -1,0 +1,96 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+from cmk.gui.i18n import _
+from cmk.gui.valuespec import (
+    Alternative,
+    Dictionary,
+    FixedValue,
+    Integer,
+    Percentage,
+    TextAscii,
+    Transform,
+    Tuple,
+)
+from cmk.gui.plugins.wato import (
+    RulespecGroupCheckParametersApplications,
+    register_check_parameters,
+)
+
+
+def convert_oracle_sessions(value):
+    if isinstance(value, tuple):
+        return {'sessions_abs': value}
+    if 'sessions_abs' not in value:
+        value['sessions_abs'] = (100, 200)
+    return value
+
+
+register_check_parameters(
+    RulespecGroupCheckParametersApplications,
+    "oracle_sessions",
+    _("Oracle Sessions"),
+    Transform(
+        Dictionary(
+            elements=[
+                ("sessions_abs",
+                 Alternative(
+                     title=_("Absolute levels of active sessions"),
+                     style="dropdown",
+                     help=_("This check monitors the current number of active sessions on Oracle"),
+                     elements=[
+                         FixedValue(None, title=_("Do not use absolute levels"), totext=""),
+                         Tuple(
+                             title=_("Number of active sessions"),
+                             elements=[
+                                 Integer(
+                                     title=_("Warning at"), unit=_("sessions"), default_value=100),
+                                 Integer(
+                                     title=_("Critical at"), unit=_("sessions"), default_value=200),
+                             ],
+                         ),
+                     ],
+                 )),
+                (
+                    "sessions_perc",
+                    Tuple(
+                        title=_("Relative levels of active sessions."),
+                        help=
+                        _("Set upper levels of active sessions relative to max. number of sessions. This is optional."
+                         ),
+                        elements=[
+                            Percentage(title=_("Warning at")),
+                            Percentage(title=_("Critical at")),
+                        ],
+                    ),
+                ),
+            ],
+            optional_keys=["sessions_perc"],
+        ),
+        forth=convert_oracle_sessions),
+    TextAscii(title=_("Database name"), allow_empty=False),
+    match_type="first",
+)

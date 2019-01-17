@@ -24,7 +24,12 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-from cmk.special_agents.agent_kubernetes import parse_frac_prefix
+
+def parse_frac_prefix(value):
+    # type: (str) -> float
+    if value.endswith('m'):
+        return 0.001 * float(value[:-1])
+    return float(value)
 
 
 def parse_mul_prefix(value):

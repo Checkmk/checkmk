@@ -1,0 +1,17 @@
+Title: tcp_conn_stat: resolve latency problems introduced by ss
+Level: 1
+Component: checks
+Class: fix
+Compatible: incomp
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1547736918
+
+On some systems the ss command used for the tcp_conn_stat check
+introduced latency problems. To resolve this issue by default
+now "cat /proc/net/tcp /proc/net/tcp6" is used again. ss is only
+used as a fallback if cat runs into a timeout.
+
+Additionally, the maximum waiting time for cat is reduced from
+10s to 5s and SIGTERM is sent by waitmax instead of SIGHUP.

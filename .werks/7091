@@ -1,0 +1,10 @@
+Title: brocade_optical: Fixed KeyError caused by incomplete agent data
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1547741966
+Class: fix
+
+

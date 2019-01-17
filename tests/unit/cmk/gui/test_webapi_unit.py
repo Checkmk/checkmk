@@ -18,6 +18,8 @@ def test_registered_api_call_collections():
         'add_servicegroup',
         'add_users',
         'bake_agents',
+        'bulk_discovery_start',
+        'bulk_discovery_status',
         'delete_contactgroup',
         'delete_folder',
         'delete_host',

@@ -12,7 +12,27 @@ import pytest
 from PIL import Image
 
 import cmk
-from testlib import web, APIError  # pylint: disable=unused-import
+from testlib import web, APIError, wait_until, repo_path  # pylint: disable=unused-import
+
+
+@pytest.fixture
+def local_test_host(web, site):
+    web.add_host(
+        "test-host", attributes={
+            "ipaddress": "127.0.0.1",
+        })
+
+    site.write_file(
+        "etc/check_mk/conf.d/test-host.mk",
+        "datasource_programs.append(('cat ~/var/check_mk/agent_output/<HOST>', [], ALL_HOSTS))\n")
+
+    site.makedirs("var/check_mk/agent_output/")
+    site.write_file(
+        "var/check_mk/agent_output/test-host",
+        file("%s/tests/integration/cmk_base/test-files/linux-agent-output" % repo_path()).read())
+
+    yield
+    web.delete_host("test-host")
 
 
 def test_global_settings(site, web):
@@ -510,7 +530,7 @@ def test_edit_htpasswd_users(web):
         web.delete_htpasswd_users(users.keys())
 
 
-def test_discover_servics(web):
+def test_discover_services(web):
     try:
         web.add_host(
             "test-host-discovery", attributes={
@@ -520,6 +540,63 @@ def test_discover_servics(web):
         web.discover_services("test-host-discovery")
     finally:
         web.delete_host("test-host-discovery")
+
+
+def test_bulk_discovery_start_with_empty_hosts(web):
+    with pytest.raises(APIError, match="specify some host"):
+        web.bulk_discovery_start({
+            "hostnames": [],
+        }, expect_error=True)
+
+
+def test_bulk_discovery_unknown_host(web):
+    with pytest.raises(APIError, match="does not exist"):
+        web.bulk_discovery_start({
+            "hostnames": ["nono"],
+        }, expect_error=True)
+
+
+def _wait_for_bulk_discovery_job(web):
+    def job_completed():
+        return web.bulk_discovery_status()["is_running"] is False
+
+    wait_until(job_completed, timeout=15, interval=1)
+
+
+def test_bulk_discovery_start_with_defaults(web, local_test_host):
+    result = web.bulk_discovery_start({
+        "hostnames": ["test-host"],
+    })
+    assert result["started"] is True
+
+    _wait_for_bulk_discovery_job(web)
+
+    status = web.bulk_discovery_status()
+    assert status["is_running"] is False
+    assert status["job"]["state"] == "finished"
+    assert "discovery successful" in status["job"]["result_msg"]
+    assert "discovery started" in status["job"]["output"]
+    assert "test-host: discovery successful" in status["job"]["output"]
+    assert "65 added" in status["job"]["output"]
+    assert "discovery successful" in status["job"]["output"]
+
+
+def test_bulk_discovery_start_with_parameters(web, local_test_host):
+    result = web.bulk_discovery_start({
+        "hostnames": ["test-host"],
+        "mode": "new",
+        "use_cache": True,
+        "do_scan": True,
+        "bulk_size": 5,
+        "ignore_single_check_errors": True,
+    })
+    assert result["started"] is True
+
+    _wait_for_bulk_discovery_job(web)
+
+    status = web.bulk_discovery_status()
+    assert status["is_running"] is False
+    assert status["job"]["state"] == "finished"
 
 
 def test_activate_changes(web, site):

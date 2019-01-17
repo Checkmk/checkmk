@@ -277,9 +277,9 @@ fi
 # Simulated Output of Linux /proc/cpu
 echo '<<<cpu>>>'
 load=$(uptime|sed -e 's;.*average: \([0-9]\{1,\}\.[0-9]\{1,\}\), \([0-9]\{1,\}\.[0-9]\{1,\}\), \([0-9]\{1,\}\.[0-9]\{1,\}\).*;\1 \2 \3;')
-ps=$(($(ps -o comm $pszone | wc -l)))
+nthreads=$(ps -AL --no-headers | wc -l)
 procs=$(($(psrinfo | wc -l)))
-echo $load 1/$ps $$ $procs
+echo $load 1/$nthreads $$ $procs
 
 
 # zpool status

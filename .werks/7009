@@ -1,0 +1,14 @@
+Title: cpu.threads: On Solaris the number of threads was calculated incorrectly
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p38
+Date: 1547725852
+
+In order to get the number of threads correctly we use 'ps -AL'
+instead of 'ps -o comm $ZONE'.
+
+Perhaps you have to adapt configured rules {{Number of threads}}.

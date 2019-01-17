@@ -24,17 +24,18 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-from collections import namedtuple
+from typing import NamedTuple, List  # pylint: disable=unused-import
 
+from cmk.gui.i18n import _
+from cmk.gui.globals import html
 from cmk.gui.valuespec import (
     Checkbox,
     Dictionary,
-    Integer,
     RadioChoice,
     Tuple,
+    Integer,
 )
-from cmk.gui.i18n import _
-from cmk.gui.globals import html
+
 from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.automations import check_mk_automation
 from cmk.gui.watolib.changes import add_service_change
@@ -42,7 +43,30 @@ from cmk.gui.watolib.utils import exclusive_lock
 import cmk.gui.gui_background_job as gui_background_job
 from cmk.gui.plugins.wato import WatoBackgroundJob
 
-DiscoveryTask = namedtuple("DiscoveryTask", ["site_id", "folder_path", "host_names"])
+DiscoveryHost = NamedTuple("DiscoveryTask", [("site_id", str), ("folder_path", str),
+                                             ("host_name", str)])
+DiscoveryTask = NamedTuple("DiscoveryHost", [("site_id", str), ("folder_path", str),
+                                             ("host_names", list)])
+
+
+def get_tasks(hosts_to_discover, bulk_size):
+    # type: (List[DiscoveryHost], int) -> List[DiscoveryTask]
+    """Create a list of tasks for the job
+
+    Each task groups the hosts together that are in the same folder and site. This is
+    mainly done to reduce the overhead of site communication and loading/saving of files
+    """
+    current_site_and_folder = None
+    tasks = []
+
+    for site_id, folder, host_name in sorted(hosts_to_discover):
+        if not tasks or (site_id, folder) != current_site_and_folder or \
+           len(tasks[-1].host_names) >= bulk_size:
+            tasks.append(DiscoveryTask(site_id, folder.path(), [host_name]))
+        else:
+            tasks[-1].host_names.append(host_name)
+        current_site_and_folder = site_id, folder
+    return tasks
 
 
 def vs_bulk_discovery(render_form=False, include_subfolders=True):

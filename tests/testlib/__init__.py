@@ -1607,6 +1607,20 @@ class CMKWebSession(WebSession):
         assert type(result) == unicode
         assert result.startswith("Service discovery successful"), "Failed to discover: %r" % result
 
+    def bulk_discovery_start(self, request, expect_error=False):
+        result = self._api_request(
+            "webapi.py?action=bulk_discovery_start", {
+                "request": json.dumps(request),
+            },
+            expect_error=expect_error)
+        assert isinstance(result, dict)
+        return result
+
+    def bulk_discovery_status(self):
+        result = self._api_request("webapi.py?action=bulk_discovery_status", {})
+        assert isinstance(result, dict)
+        return result
+
     def activate_changes(self, mode=None, allow_foreign_changes=None):
         request = {}
 

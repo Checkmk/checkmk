@@ -27,6 +27,7 @@
 this mode is used."""
 
 import copy
+from typing import List  # pylint: disable=unused-import
 
 import cmk.gui.config as config
 import cmk.gui.sites as sites
@@ -39,7 +40,8 @@ from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.bulk_discovery import (
     BulkDiscoveryBackgroundJob,
     vs_bulk_discovery,
-    DiscoveryTask,
+    DiscoveryHost,
+    get_tasks,
 )
 
 from cmk.gui.plugins.wato import (
@@ -91,7 +93,7 @@ class ModeBulkDiscovery(WatoMode):
     def action(self):
         config.user.need_permission("wato.services")
 
-        tasks = self._get_tasks(self._get_hosts_to_discover())
+        tasks = get_tasks(self._get_hosts_to_discover(), self._bulk_size)
 
         try:
             html.check_transaction()
@@ -152,6 +154,7 @@ class ModeBulkDiscovery(WatoMode):
         html.end_form()
 
     def _get_hosts_to_discover(self):
+        # type: () -> List[DiscoveryHost]
         if self._only_failed_invcheck:
             restrict_to_hosts = self._find_hosts_with_failed_discovery_check()
         else:
@@ -178,7 +181,7 @@ class ModeBulkDiscovery(WatoMode):
                     continue
                 host = Folder.current().host(host_name)
                 host.need_permission("write")
-                hosts_to_discover.append((host.site_id(), host.folder(), host_name))
+                hosts_to_discover.append(DiscoveryHost(host.site_id(), host.folder(), host_name))
 
         else:
             # all host in this folder, maybe recursively. New: we always group
@@ -192,27 +195,9 @@ class ModeBulkDiscovery(WatoMode):
                     continue
                 host = folder.host(host_name)
                 host.need_permission("write")
-                hosts_to_discover.append((host.site_id(), host.folder(), host_name))
+                hosts_to_discover.append(DiscoveryHost(host.site_id(), host.folder(), host_name))
 
-        return sorted(hosts_to_discover)
-
-    def _get_tasks(self, hosts_to_discover):
-        """Create a list of tasks for the job
-
-        Each task groups the hosts together that are in the same folder and site. This is
-        mainly done to reduce the overhead of site communication and loading/saving of files
-        """
-        current_site_and_folder = None
-        tasks = []
-
-        for site_id, folder, host_name in hosts_to_discover:
-            if not tasks or (site_id, folder) != current_site_and_folder or \
-               len(tasks[-1].host_names) >= self._bulk_size:
-                tasks.append(DiscoveryTask(site_id, folder.path(), [host_name]))
-            else:
-                tasks[-1].host_names.append(host_name)
-            current_site_and_folder = site_id, folder
-        return tasks
+        return hosts_to_discover
 
     def _recurse_hosts(self, folder):
         entries = []

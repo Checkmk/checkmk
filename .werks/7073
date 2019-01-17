@@ -1,0 +1,31 @@
+Title: New API call to control bulk discovery
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1547711289
+Class: feature
+
+Two new web API calls have been added for the bulk discovery. The call
+<tt>bulk_discovery_start</tt> has been added to start a bulk discovery for
+a collection of hosts which will be executed asynchronously. The call
+<tt>bulk_discovery_status</tt> can be used to get the status of such a
+job.
+
+The <tt>bulk_discovery_start</tt> call requires the <tt>hostnames</tt>
+parameter to be a list of host names to execute the discovery for. It
+accepts the following optional keys:
+
+<ul>
+<li>mode (default: "new")</li>
+<li>use_cache (default: True)</li>
+<li>do_scan (default: True)</li>
+<li>bulk_size (default: 10)</li>
+<li>ignore_single_check_errors (default: True)</li>
+</ul>
+
+The defaults may be customized using the global setting <i>Bulk discovery</i>.
+The global setting also describes the possible options in detail.
+
+The <tt>bulk_discovery_status</tt> call does not accept any parameter.

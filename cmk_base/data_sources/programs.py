@@ -151,7 +151,7 @@ class DSProgramDataSource(ProgramDataSource):
         return cmd.replace("<IP>", self._ipaddress or "").replace("<HOST>", self._hostname)
 
     def _translate_host_macros(self, cmd):
-        tags = config.tags_of_host(self._hostname)
+        tags = self._config_cache.tags_of_host(self._hostname)
         attrs = core_config.get_host_attributes(self._hostname, tags)
         if config.is_cluster(self._hostname):
             parents_list = core_config.get_cluster_nodes_for_config(self._hostname)

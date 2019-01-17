@@ -57,8 +57,12 @@ def test_is_no_ip_host(monkeypatch, hostname, tags, result):
 ])
 def test_is_ipv6_primary_host(monkeypatch, hostname, tags, result, ruleset):
     monkeypatch.setattr(config, "all_hosts", ["%s|%s" % (hostname, "|".join(tags))])
+    monkeypatch.setattr(config, "host_paths", {hostname: ""})
     monkeypatch.setattr(config, "tags_of_host", lambda h: {hostname: tags}[h])
     monkeypatch.setattr(config, "primary_address_family", ruleset)
+
+    config.get_config_cache().initialize()
+
     assert config.is_ipv6_primary(hostname) == result
 
 
@@ -91,8 +95,10 @@ def test_management_address_of(monkeypatch, attrs, result):
     ("testhost", ["ping"], False),
     ("testhost", ["no-agent", "no-snmp"], False),
 ])
+
 def test_is_tcp_host(monkeypatch, hostname, tags, result):
-    monkeypatch.setattr(config, "tags_of_host", lambda h: {hostname: tags}[h])
+    _setup_host(monkeypatch, hostname, tags)
+    config.get_config_cache().initialize()
     assert config.is_tcp_host(hostname) == result
 
 
@@ -103,7 +109,8 @@ def test_is_tcp_host(monkeypatch, hostname, tags, result):
     ("testhost", ["snmp"], True),
 ])
 def test_is_snmp_host(monkeypatch, hostname, tags, result):
-    monkeypatch.setattr(config, "tags_of_host", lambda h: {hostname: tags}[h])
+    _setup_host(monkeypatch, hostname, tags)
+    config.get_config_cache().initialize()
     assert config.is_snmp_host(hostname) == result
 
 
@@ -194,3 +201,8 @@ def test_http_proxy(http_proxy, result, monkeypatch):
         })
 
     assert config.get_http_proxy(http_proxy) == result
+
+def _setup_host(monkeypatch, hostname, tags):
+    monkeypatch.setattr(config, "all_hosts", ["%s|%s" % (hostname, "|".join(tags))])
+    monkeypatch.setattr(config, "host_paths", {hostname: ""})
+

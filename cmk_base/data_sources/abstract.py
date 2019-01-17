@@ -510,6 +510,7 @@ class CheckMKAgentDataSource(DataSource):
     def __init__(self, hostname, ipaddress):
         super(CheckMKAgentDataSource, self).__init__(hostname, ipaddress)
         self._is_main_agent_data_source = False
+        self._config_cache = config.get_config_cache()
 
     # TODO: We should cleanup these old directories one day. Then we can remove this special case
     def set_main_agent_data_source(self):

@@ -92,6 +92,7 @@ class MultiHostSections(object):
 
     def __init__(self):
         super(MultiHostSections, self).__init__()
+        self._config_cache = config.get_config_cache()
         self._multi_host_sections = {}
         self._section_content_cache = caching.DictCache()
 
@@ -192,7 +193,7 @@ class MultiHostSections(object):
             return section_content  # unknown check_plugin_name or does not want node info -> do nothing
 
         node_name = None
-        if not for_discovery and config.clusters_of(hostname):
+        if not for_discovery and self._config_cache.clusters_of(hostname):
             node_name = hostname
 
         return self._add_node_column(section_content, node_name)

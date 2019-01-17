@@ -142,6 +142,7 @@ class Modes(object):
             valid_hosts = valid_hosts.union(config.all_active_clusters())
 
         hostlist = []
+        config_cache = config.get_config_cache()
         for arg in args:
             if arg[0] != '@' and arg in valid_hosts:
                 hostlist.append(arg)
@@ -152,7 +153,7 @@ class Modes(object):
 
                 num_found = 0
                 for hostname in valid_hosts:
-                    if config.hosttags_match_taglist(config.tags_of_host(hostname), tagspec):
+                    if config.hosttags_match_taglist(config_cache.tags_of_host(hostname), tagspec):
                         hostlist.append(hostname)
                         num_found += 1
                 if num_found == 0:

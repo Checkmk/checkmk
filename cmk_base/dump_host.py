@@ -40,6 +40,9 @@ import cmk_base.checking as checking
 
 
 def dump_host(hostname):
+
+    config_cache = config.get_config_cache()
+
     console.output("\n")
     if config.is_cluster(hostname):
         color = tty.bgmagenta
@@ -74,7 +77,7 @@ def dump_host(hostname):
     console.output(tty.yellow + "Addresses:              " + tty.normal +
                    (addresses if addresses is not None else "No IP") + "\n")
 
-    tags = config.tags_of_host(hostname)
+    tags = config_cache.tags_of_host(hostname)
     console.output(tty.yellow + "Tags:                   " + tty.normal + ", ".join(tags) + "\n")
     if config.is_cluster(hostname):
         parents_list = config.nodes_of(hostname)

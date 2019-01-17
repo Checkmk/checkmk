@@ -53,6 +53,7 @@ import cmk_base.check_utils
 import cmk_base.utils
 import cmk_base.check_api_utils as check_api_utils
 import cmk_base.cleanup
+import cmk_base.piggyback as piggyback
 
 # TODO: Prefix helper functions with "_".
 
@@ -186,7 +187,7 @@ def _perform_post_config_loading_actions():
     # First cleanup things (needed for e.g. reloading the config)
     cmk_base.config_cache.clear_all()
 
-    initialize_config_caches()
+    get_config_cache().initialize()
 
     # In case the checks are not loaded yet it seems the current mode
     # is not working with the checks. In this case also don't load the
@@ -281,10 +282,6 @@ def _get_config_file_paths(with_conf_d):
             list_of_files.append(path)
 
     return list_of_files
-
-
-def initialize_config_caches():
-    collect_hosttags()
 
 
 def _initialize_derived_config_variables():
@@ -594,21 +591,7 @@ def strip_tags(tagged_hostlist):
 
 
 def tags_of_host(hostname):
-    """Returns the list of all configured tags of a host. In case
-    a host has no tags configured or is not known, it returns an
-    empty list."""
-    hosttags = cmk_base.config_cache.get_dict("hosttags")
-    try:
-        return hosttags[hostname]
-    except KeyError:
-        return []
-
-
-def collect_hosttags():
-    hosttags = cmk_base.config_cache.get_dict("hosttags")
-    for tagged_host in all_hosts + clusters.keys():
-        parts = tagged_host.split("|")
-        hosttags[parts[0]] = sorted(parts[1:])
+    return get_config_cache().tags_of_host(hostname)
 
 
 #.
@@ -823,15 +806,7 @@ def parents_of(hostname):
 # If host is node of one or more clusters, return a list of the cluster host names.
 # If not, return an empty list.
 def clusters_of(hostname):
-    cache = cmk_base.config_cache.get_dict("clusters_of")
-    if not cache.is_populated():
-        for cluster, hosts in clusters.items():
-            clustername = cluster.split('|', 1)[0]
-            for name in hosts:
-                cache.setdefault(name, []).append(clustername)
-        cache.set_populated()
-
-    return cache.get(hostname, [])
+    return get_config_cache().clusters_of(hostname)
 
 
 #
@@ -854,11 +829,10 @@ def is_ping_host(hostname):
 
 
 def is_agent_host(hostname):
-    import cmk_base.piggyback as piggyback
     import cmk_base.data_sources as data_sources
-    return (is_tcp_host(hostname) or
-            piggyback.has_piggyback_raw_data(piggyback_max_cachefile_age, hostname) or
-            data_sources.has_persisted_piggyback_agent_sections(hostname))
+    return is_tcp_host(hostname) or \
+            piggyback.has_piggyback_raw_data(piggyback_max_cachefile_age, hostname) or \
+            data_sources.has_persisted_piggyback_agent_sections(hostname)
 
 
 def is_dual_host(hostname):
@@ -1220,51 +1194,15 @@ def is_cluster(hostname):
 
 # Returns the nodes of a cluster, or None if hostname is not a cluster
 def nodes_of(hostname):
-    nodes_of_cache = cmk_base.config_cache.get_dict("nodes_of")
-    nodes = nodes_of_cache.get(hostname, False)
-    if nodes != False:
-        return nodes
-
-    for tagged_hostname, nodes in clusters.items():
-        if hostname == tagged_hostname.split("|")[0]:
-            nodes_of_cache[hostname] = nodes
-            return nodes
-
-    nodes_of_cache[hostname] = None
-    return None
+    return get_config_cache().nodes_of(hostname)
 
 
 # Determine weather a service (found on a physical host) is a clustered
 # service and - if yes - return the cluster host of the service. If
 # no, returns the hostname of the physical host.
-def host_of_clustered_service(hostname, servicedesc):
-    the_clusters = clusters_of(hostname)
-    if not the_clusters:
-        return hostname
-
-    cluster_mapping = service_extra_conf(hostname, servicedesc, clustered_services_mapping)
-    for cluster in cluster_mapping:
-        # Check if the host is in this cluster
-        if cluster in the_clusters:
-            return cluster
-
-    # 1. New style: explicitly assigned services
-    for cluster, conf in clustered_services_of.items():
-        nodes = nodes_of(cluster)
-        if not nodes:
-            raise MKGeneralException(
-                "Invalid entry clustered_services_of['%s']: %s is not a cluster." % (cluster,
-                                                                                     cluster))
-        if hostname in nodes and \
-            in_boolean_serviceconf_list(hostname, servicedesc, conf):
-            return cluster
-
-    # 1. Old style: clustered_services assumes that each host belong to
-    #    exactly on cluster
-    if in_boolean_serviceconf_list(hostname, servicedesc, clustered_services):
-        return the_clusters[0]
-
-    return hostname
+def host_of_clustered_service(hostname, servicedesc, part_of_clusters=None):
+    return get_config_cache().host_of_clustered_service(
+        hostname, servicedesc, part_of_clusters=part_of_clusters)
 
 
 #.
@@ -1452,11 +1390,14 @@ def get_final_service_description(hostname, description):
 def service_ignored(hostname, check_plugin_name, description):
     if check_plugin_name and check_plugin_name in ignored_checktypes:
         return True
+
+    if check_plugin_name and _checktype_ignored_for_host(hostname, check_plugin_name):
+        return True
+
     if description is not None \
        and in_boolean_serviceconf_list(hostname, description, ignored_services):
         return True
-    if check_plugin_name and _checktype_ignored_for_host(hostname, check_plugin_name):
-        return True
+
     return False
 
 
@@ -1633,117 +1574,12 @@ def get_http_proxy(http_proxy):
 
 
 def service_extra_conf(hostname, service, ruleset):
-    """Compute outcome of a service rule set that has an item."""
-    # When the requested host is part of the local sites configuration,
-    # then use only the sites hosts for processing the rules
-    with_foreign_hosts = hostname not in all_active_hosts()
-    cache_id = id(ruleset), with_foreign_hosts
-    ruleset_cache = cmk_base.config_cache.get_dict("converted_service_rulesets")
-    try:
-        ruleset = ruleset_cache[cache_id]
-    except KeyError:
-        ruleset = _convert_service_ruleset(ruleset, with_foreign_hosts)
-        ruleset_cache[cache_id] = ruleset
-
-    entries = []
-    cache = cmk_base.config_cache.get_dict("extraconf_servicelist")
-    for item, hosts, service_matchers in ruleset:
-        if hostname in hosts:
-            cache_id = service_matchers, service
-            try:
-                match = cache[cache_id]
-            except KeyError:
-                match = _in_servicematcher_list(service_matchers, service)
-                cache[cache_id] = match
-
-            if match:
-                entries.append(item)
-    return entries
-
-
-def _convert_service_ruleset(ruleset, with_foreign_hosts):
-    new_rules = []
-    for rule in ruleset:
-        rule, rule_options = get_rule_options(rule)
-        if rule_options.get("disabled"):
-            continue
-
-        num_elements = len(rule)
-        if num_elements == 3:
-            item, hostlist, servlist = rule
-            tags = []
-        elif num_elements == 4:
-            item, tags, hostlist, servlist = rule
-        else:
-            raise MKGeneralException("Invalid rule '%r' in service configuration "
-                                     "list: must have 3 or 4 elements" % (rule,))
-
-        # Directly compute set of all matching hosts here, this
-        # will avoid recomputation later
-        hosts = all_matching_hosts(tags, hostlist, with_foreign_hosts)
-
-        # And now preprocess the configured patterns in the servlist
-        new_rules.append((item, hosts, _convert_pattern_list(servlist)))
-
-    return new_rules
+    return get_config_cache().service_extra_conf(hostname, service, ruleset)
 
 
 # Compute outcome of a service rule set that just say yes/no
 def in_boolean_serviceconf_list(hostname, descr, ruleset):
-    # When the requested host is part of the local sites configuration,
-    # then use only the sites hosts for processing the rules
-    with_foreign_hosts = hostname not in all_active_hosts()
-    cache_id = id(ruleset), with_foreign_hosts
-    ruleset_cache = cmk_base.config_cache.get_dict("converted_service_rulesets")
-    try:
-        ruleset = ruleset_cache[cache_id]
-    except KeyError:
-        ruleset = _convert_boolean_service_ruleset(ruleset, with_foreign_hosts)
-        ruleset_cache[cache_id] = ruleset
-
-    cache = cmk_base.config_cache.get_dict("extraconf_servicelist")
-    for negate, hosts, service_matchers in ruleset:
-        if hostname in hosts:
-            cache_id = service_matchers, descr
-            try:
-                match = cache[cache_id]
-            except KeyError:
-                match = _in_servicematcher_list(service_matchers, descr)
-                cache[cache_id] = match
-
-            if match:
-                return not negate
-    return False  # no match. Do not ignore
-
-
-def _convert_boolean_service_ruleset(ruleset, with_foreign_hosts):
-    new_rules = []
-    for rule in ruleset:
-        entry, rule_options = get_rule_options(rule)
-        if rule_options.get("disabled"):
-            continue
-
-        if entry[0] == NEGATE:  # this entry is logically negated
-            negate = True
-            entry = entry[1:]
-        else:
-            negate = False
-
-        if len(entry) == 2:
-            hostlist, servlist = entry
-            tags = []
-        elif len(entry) == 3:
-            tags, hostlist, servlist = entry
-        else:
-            raise MKGeneralException("Invalid entry '%r' in configuration: "
-                                     "must have 2 or 3 elements" % (entry,))
-
-        # Directly compute set of all matching hosts here, this
-        # will avoid recomputation later
-        hosts = all_matching_hosts(tags, hostlist, with_foreign_hosts)
-        new_rules.append((negate, hosts, _convert_pattern_list(servlist)))
-
-    return new_rules
+    return get_config_cache().in_boolean_serviceconf_list(hostname, descr, ruleset)
 
 
 #.
@@ -1760,61 +1596,11 @@ def _convert_boolean_service_ruleset(ruleset, with_foreign_hosts):
 
 
 def host_extra_conf(hostname, ruleset):
-    # When the requested host is part of the local sites configuration,
-    # then use only the sites hosts for processing the rules
-    with_foreign_hosts = hostname not in all_active_hosts()
-
-    ruleset_cache = cmk_base.config_cache.get_dict("converted_host_rulesets")
-    cache_id = id(ruleset), with_foreign_hosts
-
-    conf_cache = cmk_base.config_cache.get_dict("host_extra_conf")
-
-    try:
-        ruleset = ruleset_cache[cache_id]
-    except KeyError:
-        ruleset = _convert_host_ruleset(ruleset, with_foreign_hosts)
-        ruleset_cache[cache_id] = ruleset
-
-        # TODO: LM: Why is this not on one indent level upper?
-        #           The regular case of the above exception handler
-        #           assigns "ruleset", but it is never used. Is this OK?
-        #           And if it is OK, why is it different to service_extra_conf()?
-
-        # Generate single match cache
-        conf_cache[cache_id] = {}
-        for item, hostname_list in ruleset:
-            for name in hostname_list:
-                conf_cache[cache_id].setdefault(name, []).append(item)
-
-    if hostname not in conf_cache[cache_id]:
-        return []
-
-    return conf_cache[cache_id][hostname]
-
-
-def _convert_host_ruleset(ruleset, with_foreign_hosts):
-    new_rules = []
-    if len(ruleset) == 1 and ruleset[0] == "":
-        console.warning('deprecated entry [ "" ] in host configuration list')
-
-    for rule in ruleset:
-        item, tags, hostlist, rule_options = parse_host_rule(rule)
-        if rule_options.get("disabled"):
-            continue
-
-        # Directly compute set of all matching hosts here, this
-        # will avoid recomputation later
-        new_rules.append((item, all_matching_hosts(tags, hostlist, with_foreign_hosts)))
-
-    return new_rules
+    return get_config_cache().host_extra_conf(hostname, ruleset)
 
 
 def host_extra_conf_merged(hostname, conf):
-    rule_dict = {}
-    for rule in host_extra_conf(hostname, conf):
-        for key, value in rule.items():
-            rule_dict.setdefault(key, value)
-    return rule_dict
+    return get_config_cache().host_extra_conf_merged(hostname, conf)
 
 
 #.
@@ -1830,51 +1616,8 @@ def host_extra_conf_merged(hostname, conf):
 #   '----------------------------------------------------------------------'
 
 
-# TODO: Can we make this private?
 def all_matching_hosts(tags, hostlist, with_foreign_hosts):
-    """Returns a set containing the names of hosts that match the given
-    tags and hostlist conditions."""
-    cache_id = tuple(tags), tuple(hostlist), with_foreign_hosts
-    cache = cmk_base.config_cache.get_dict("hostlist_match")
-
-    try:
-        return cache[cache_id]
-    except KeyError:
-        pass
-
-    if with_foreign_hosts:
-        valid_hosts = all_configured_hosts()
-    else:
-        valid_hosts = all_active_hosts()
-
-    # Contains matched hosts
-    matching = set([])
-
-    # Check if the rule has only specific hosts set
-    only_specific_hosts = not bool([x for x in hostlist if x[0] in ["@", "!", "~"]])
-
-    # If no tags are specified and there are only specific hosts we already have the matches
-    if not tags and only_specific_hosts:
-        matching = valid_hosts.intersection(hostlist)
-    # If no tags are specified and the hostlist only include @all (all hosts)
-    elif not tags and hostlist == ALL_HOSTS:
-        matching = valid_hosts
-    else:
-        # If the rule has only exact host restrictions, we can thin out the list of hosts to check
-        if only_specific_hosts:
-            hosts_to_check = valid_hosts.intersection(set(hostlist))
-        else:
-            hosts_to_check = valid_hosts
-
-        for hostname in hosts_to_check:
-            # When no tag matching is requested, do not filter by tags. Accept all hosts
-            # and filter only by hostlist
-            if in_extraconf_hostlist(hostlist, hostname) and \
-               (not tags or hosttags_match_taglist(tags_of_host(hostname), tags)):
-                matching.add(hostname)
-
-    cache[cache_id] = matching
-    return matching
+    return get_config_cache().all_matching_hosts(tags, hostlist, with_foreign_hosts)
 
 
 def in_extraconf_hostlist(hostlist, hostname):
@@ -1937,57 +1680,7 @@ def in_extraconf_hostlist(hostlist, hostname):
 
 
 def in_binary_hostlist(hostname, conf):
-    cache = cmk_base.config_cache.get_dict("in_binary_hostlist")
-    cache_id = id(conf), hostname
-
-    try:
-        return cache[cache_id]
-    except KeyError:
-        pass
-
-    # if we have just a list of strings just take it as list of hostnames
-    if conf and isinstance(conf[0], str):
-        result = hostname in conf
-        cache[cache_id] = result
-    else:
-        for entry in conf:
-            actual_host_tags = tags_of_host(hostname)
-            entry, rule_options = get_rule_options(entry)
-            if rule_options.get("disabled"):
-                continue
-
-            try:
-                # Negation via 'NEGATE'
-                if entry[0] == NEGATE:
-                    entry = entry[1:]
-                    negate = True
-                else:
-                    negate = False
-                # entry should be one-tuple or two-tuple. Tuple's elements are
-                # lists of strings. User might forget comma in one tuple. Then the
-                # entry is the list itself.
-                if isinstance(entry, list):
-                    hostlist = entry
-                    tags = []
-                else:
-                    if len(entry) == 1:  # 1-Tuple with list of hosts
-                        hostlist = entry[0]
-                        tags = []
-                    else:
-                        tags, hostlist = entry
-
-                if hosttags_match_taglist(actual_host_tags, tags) and \
-                       in_extraconf_hostlist(hostlist, hostname):
-                    cache[cache_id] = not negate
-                    break
-            except:
-                # TODO: Fix this too generic catching (+ bad error message)
-                raise MKGeneralException("Invalid entry '%r' in host configuration list: "
-                                         "must be tuple with 1 or 2 entries" % (entry,))
-        else:
-            cache[cache_id] = False
-
-    return cache[cache_id]
+    return get_config_cache().in_binary_hostlist(hostname, conf)
 
 
 def parse_host_rule(rule):
@@ -2023,7 +1716,6 @@ def hosttags_match_taglist(hosttags, required_tags):
     The host must have all tags in the list, except
     for those negated with '!'. Those the host must *not* have!
     A trailing + means a prefix match."""
-
     for tag in required_tags:
         negate, tag = _parse_negated(tag)
         if tag and tag[-1] == '+':
@@ -2566,7 +2258,7 @@ def get_check_variables():
     We assume a single variable has the same value in all relevant contexts, which means
     that it is enough to get the variable from the first context."""
     check_config = {}
-    for varname, context_ident_list in _check_variables.items():
+    for varname, context_ident_list in _check_variables.iteritems():
         check_config[varname] = _check_contexts[context_ident_list[0]][varname]
     return check_config
 
@@ -3006,3 +2698,627 @@ def _get_management_board_precedence(check_plugin_name, plugins_info):
 
 
 cmk_base.cleanup.register_cleanup(check_api_utils.reset_hostname)
+
+#.
+#   .--Host Configuration--------------------------------------------------.
+#   |                         _   _           _                            |
+#   |                        | | | | ___  ___| |_                          |
+#   |                        | |_| |/ _ \/ __| __|                         |
+#   |                        |  _  | (_) \__ \ |_                          |
+#   |                        |_| |_|\___/|___/\__|                         |
+#   |                                                                      |
+#   |    ____             __ _                       _   _                 |
+#   |   / ___|___  _ __  / _(_) __ _ _   _ _ __ __ _| |_(_) ___  _ __      |
+#   |  | |   / _ \| '_ \| |_| |/ _` | | | | '__/ _` | __| |/ _ \| '_ \     |
+#   |  | |__| (_) | | | |  _| | (_| | |_| | | | (_| | |_| | (_) | | | |    |
+#   |   \____\___/|_| |_|_| |_|\__, |\__,_|_|  \__,_|\__|_|\___/|_| |_|    |
+#   |                          |___/                                       |
+#   +----------------------------------------------------------------------+
+
+
+class HostConfig(object):
+    def __init__(self, hostname):
+        super(HostConfig, self).__init__()
+        self.hostname = hostname
+
+        self._config_cache = get_config_cache()
+
+        self.is_cluster = is_cluster(hostname)
+        self.part_of_clusters = self._config_cache.clusters_of(hostname)
+
+        tags = self._config_cache.tags_of_host(self.hostname)
+        self.tags = tags
+
+        # Basic types
+        self.is_tcp_host = self._config_cache.in_binary_hostlist(hostname, tcp_hosts)
+        self.is_snmp_host = self._config_cache.in_binary_hostlist(hostname, snmp_hosts)
+
+        # Agent types
+        self.management_protocol = management_protocol_of(hostname)
+        self.has_management_board = self.management_protocol is not None
+        self.is_ping_host = not self.is_snmp_host and not self.is_agent_host and not self.has_management_board
+
+        self.is_dual_host = self.is_tcp_host and self.is_snmp_host
+        self.is_all_agents_host = "all-agents" in self.tags
+        self.is_all_special_agents_host = "special-agents" in tags
+
+        # IP addresses
+        self.is_no_ip_host = "no-ip" in tags
+        self.is_ipv6_host = "ip-v6" in tags
+        self.is_ipv4_host = "ip-v4" in tags or (not self.is_ipv6_host and not self.is_no_ip_host)
+
+        self.is_ipv4v6_host = "ip-v6" in tags and "ip-v4" in tags
+
+        self.is_ipv6_primary = (not self.is_ipv4v6_host and self.is_ipv6_host) \
+                                or (self.is_ipv4v6_host and _primary_ip_address_family_of(hostname) == "ipv6")
+
+    @property
+    def is_agent_host(self):
+        import cmk_base.data_sources as data_sources
+        return self.is_tcp_host or \
+                piggyback.has_piggyback_raw_data(piggyback_max_cachefile_age, self.hostname) or \
+                data_sources.has_persisted_piggyback_agent_sections(self.hostname)
+
+
+#.
+#   .--Configuration Cache-------------------------------------------------.
+#   |    ____             __ _                       _   _                 |
+#   |   / ___|___  _ __  / _(_) __ _ _   _ _ __ __ _| |_(_) ___  _ __      |
+#   |  | |   / _ \| '_ \| |_| |/ _` | | | | '__/ _` | __| |/ _ \| '_ \     |
+#   |  | |__| (_) | | | |  _| | (_| | |_| | | | (_| | |_| | (_) | | | |    |
+#   |   \____\___/|_| |_|_| |_|\__, |\__,_|_|  \__,_|\__|_|\___/|_| |_|    |
+#   |                          |___/                                       |
+#   |                      ____           _                                |
+#   |                     / ___|__ _  ___| |__   ___                       |
+#   |                    | |   / _` |/ __| '_ \ / _ \                      |
+#   |                    | |__| (_| | (__| | | |  __/                      |
+#   |                     \____\__,_|\___|_| |_|\___|                      |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+
+
+class ConfigCache(object):
+    def __init__(self):
+        super(ConfigCache, self).__init__()
+        self._initialize_caches()
+
+    def initialize(self):
+        self._initialize_caches()
+        self._collect_hosttags()
+        self._setup_clusters_nodes_cache()
+
+        self._all_processed_hosts = all_active_hosts()
+        self._all_active_hosts = all_active_hosts()
+        self._all_configured_hosts = all_configured_hosts()
+        self._initialize_host_lookup()
+
+    def _initialize_caches(self):
+        self.single_host_checks = cmk_base.config_cache.get_dict("single_host_checks")
+        self.multi_host_checks = cmk_base.config_cache.get_list("multi_host_checks")
+        self.check_table_cache = cmk_base.config_cache.get_dict("check_tables")
+
+        self._cache_is_snmp_check = cmk_base.runtime_cache.get_dict("is_snmp_check")
+        self._cache_is_tcp_check = cmk_base.runtime_cache.get_dict("is_tcp_check")
+        self._cache_section_name_of = {}
+
+        # Host lookup
+
+        # Contains all hostnames which are currently relevant for this cache
+        # Most of the time all_processed hosts is similar to all_active_hosts
+        # Howewer, in a multiprocessing environment all_processed_hosts only
+        # may contain a reduced set of hosts, since each process handles a subset
+        self._all_processed_hosts = set()
+        self._all_configured_hosts = set()
+
+        # Reference hostname -> dirname including /
+        self._host_paths = {}
+        # Reference dirname -> hosts in this dir including subfolders
+        self._folder_host_lookup = {}
+        # All used folders used for various set intersection operations
+        self._folder_path_set = set()
+
+        # Host tags
+        self._hosttags = {}
+        self._hosttags_without_folder = {}
+
+        # Reference hosttags_without_folder -> list of hosts
+        # Provides a list of hosts with the same hosttags, excluding the folder
+        self._hosts_grouped_by_tags = {}
+        # Reference hostname -> tag group reference
+        self._host_grouped_ref = {}
+
+        # Autochecks cache
+        self._autochecks_cache = {}
+
+        # Cache for all_matching_host
+        self._all_matching_hosts_match_cache = {}
+
+        # Caches for host_extra_conf
+        self._host_extra_conf_ruleset_cache = {}
+        self._host_extra_conf_match_cache = {}
+
+        # Caches for service_extra_conf
+        self._service_extra_conf_ruleset_cache = {}
+        self._service_extra_conf_host_matched_ruleset_cache = {}
+        self._service_extra_conf_match_cache = {}
+
+        # Caches for in_boolean_serviceconf_list
+        self._in_boolean_service_conf_list_ruleset_cache = {}
+        self._in_boolean_service_conf_list_match_cache = {}
+
+        # Cache for in_binary_hostlist
+        self._in_binary_hostlist_cache = {}
+
+        # Caches for nodes and clusters
+        self._clusters_of_cache = {}
+        self._nodes_of_cache = {}
+
+        # A factor which indicates how much hosts share the same host tag configuration (excluding folders).
+        # len(all_processed_hosts) / len(different tag combinations)
+        # It is used to determine the best rule evualation method
+        self._all_processed_hosts_similarity = 1
+
+    def _collect_hosttags(self):
+        for tagged_host in all_hosts + clusters.keys():
+            parts = tagged_host.split("|")
+            self._hosttags[parts[0]] = set(parts[1:])
+
+    def tags_of_host(self, hostname):
+        """Returns the list of all configured tags of a host. In case
+        a host has no tags configured or is not known, it returns an
+        empty list."""
+        return self._hosttags.get(hostname, [])
+
+    def set_all_processed_hosts(self, all_processed_hosts):
+        self._all_processed_hosts = all_processed_hosts
+        self._adjust_processed_hosts_similarity()
+
+    def _adjust_processed_hosts_similarity(self):
+        """ This function computes the tag similarities between of the processed hosts
+        The result is a similarity factor, which helps finding the most perfomant operation
+        for the current hostset """
+        used_groups = set()
+        for hostname in self._all_processed_hosts:
+            used_groups.add(self._host_grouped_ref[hostname])
+        self._all_processed_hosts_similarity = (
+            1.0 * len(self._all_processed_hosts) / len(used_groups))
+
+    def _initialize_host_lookup(self):
+        dirnames = [
+            x[0][len(cmk.utils.paths.check_mk_config_dir):] + "/"
+            for x in os.walk(cmk.utils.paths.check_mk_config_dir)
+        ]
+
+        for hostname in self._all_configured_hosts:
+            self._host_paths[hostname] = os.path.dirname(host_paths[hostname]) + "/"
+
+        # Determine hosts within folders
+        for dirname in dirnames:
+            for hostname in self._all_configured_hosts:
+                if self._host_paths[hostname].startswith(dirname):
+                    self._folder_host_lookup.setdefault(dirname + "+", set()).add(hostname)
+
+        self._folder_path_set = set(self._folder_host_lookup.keys())
+
+        # Determine hosttags without folder tag
+        for hostname in self._all_configured_hosts:
+            tags_without_folder = set(self._hosttags[hostname])
+            try:
+                tags_without_folder.remove(self._host_paths[hostname])
+            except KeyError:
+                pass
+
+            self._hosttags_without_folder[hostname] = tags_without_folder
+
+        # Determine hosts with same tag setup (ignoring folder tag)
+        for hostname in self._all_configured_hosts:
+            group_ref = tuple(sorted(self._hosttags_without_folder[hostname]))
+            self._hosts_grouped_by_tags.setdefault(group_ref, set()).add(hostname)
+            self._host_grouped_ref[hostname] = group_ref
+
+    def get_autochecks_of(self, hostname, world):
+        try:
+            return self._autochecks_cache[world][hostname]
+        except KeyError:
+            self._autochecks_cache.setdefault(world, {})
+            result = cmk_base.autochecks.read_autochecks_of(hostname, world)
+            self._autochecks_cache[world][hostname] = result
+            return result
+
+    def section_name_of(self, section):
+        try:
+            return self._cache_section_name_of[section]
+        except KeyError:
+            section_name = cmk_base.check_utils.section_name_of(section)
+            self._cache_section_name_of[section] = section_name
+            return section_name
+
+    def is_snmp_check(self, check_plugin_name):
+        try:
+            return self._cache_is_snmp_check[check_plugin_name]
+        except KeyError:
+            snmp_checks = cmk_base.runtime_cache.get_set("check_type_snmp")
+            result = self.section_name_of(check_plugin_name) in snmp_checks
+            self._cache_is_snmp_check[check_plugin_name] = result
+            return result
+
+    def is_tcp_check(self, check_plugin_name):
+        try:
+            return self._cache_is_tcp_check[check_plugin_name]
+        except KeyError:
+            tcp_checks = cmk_base.runtime_cache.get_set("check_type_tcp")
+            result = self.section_name_of(check_plugin_name) in tcp_checks
+            self._cache_is_tcp_check[check_plugin_name] = result
+            return result
+
+    def filter_hosts_with_same_tags_as_host(self, hostname, hosts):
+        return self._hosts_grouped_by_tags[self._host_grouped_ref[hostname]].intersection(hosts)
+
+    def all_matching_hosts(self, tags, hostlist, with_foreign_hosts):
+        """Returns a set containing the names of hosts that match the given
+        tags and hostlist conditions."""
+        cache_id = tuple(tags), tuple(hostlist), with_foreign_hosts
+
+        try:
+            return self._all_matching_hosts_match_cache[cache_id]
+        except KeyError:
+            pass
+
+        if with_foreign_hosts:
+            valid_hosts = self._all_configured_hosts
+        else:
+            valid_hosts = self._all_active_hosts
+
+        tags_set = set(tags)
+        tags_set_without_folder = tags_set
+        rule_path_set = tags_set.intersection(self._folder_path_set)
+        tags_set_without_folder = tags_set - rule_path_set
+
+        if rule_path_set:
+            rule_path = list(rule_path_set)[0]
+        else:
+            rule_path = "/+"
+
+        # Thin out the valid hosts further. If the rule is located in a folder
+        # we only need the intersection of the folders hosts and the previously determined valid_hosts
+        if rule_path in self._folder_host_lookup:
+            valid_hosts = self._folder_host_lookup[rule_path].intersection(valid_hosts)
+
+        # Contains matched hosts
+
+        if tags_set_without_folder and hostlist == ALL_HOSTS:
+            return self._match_hosts_by_tags(cache_id, valid_hosts, tags_set_without_folder)
+
+        matching = set([])
+        only_specific_hosts = not bool([x for x in hostlist if x[0] in ["@", "!", "~"]])
+
+        # If no tags are specified and there are only specific hosts we already have the matches
+        if not tags_set_without_folder and only_specific_hosts:
+            matching = valid_hosts.intersection(hostlist)
+        # If no tags are specified and the hostlist only include @all (all hosts)
+        elif not tags_set_without_folder and hostlist == ALL_HOSTS:
+            matching = valid_hosts
+        else:
+            # If the rule has only exact host restrictions, we can thin out the list of hosts to check
+            if only_specific_hosts:
+                hosts_to_check = valid_hosts.intersection(set(hostlist))
+            else:
+                hosts_to_check = valid_hosts
+
+            for hostname in hosts_to_check:
+                # When no tag matching is requested, do not filter by tags. Accept all hosts
+                # and filter only by hostlist
+                if (not tags or
+                        hosttags_match_taglist(self._hosttags[hostname], tags_set_without_folder)):
+                    if in_extraconf_hostlist(hostlist, hostname):
+                        matching.add(hostname)
+
+        self._all_matching_hosts_match_cache[cache_id] = matching
+        return matching
+
+    def _match_hosts_by_tags(self, cache_id, valid_hosts, tags_set_without_folder):
+        matching = set([])
+        has_specific_folder_tag = sum([x[0] == "/" for x in tags_set_without_folder])
+        negative_match_tags = set()
+        positive_match_tags = set()
+        for tag in tags_set_without_folder:
+            if tag[0] == "!":
+                negative_match_tags.add(tag[1:])
+            else:
+                positive_match_tags.add(tag)
+
+        if has_specific_folder_tag or self._all_processed_hosts_similarity < 3:
+            # Without shared folders
+            for hostname in valid_hosts:
+                if not positive_match_tags - self._hosttags[hostname]:
+                    if not negative_match_tags.intersection(self._hosttags[hostname]):
+                        matching.add(hostname)
+
+            self._all_matching_hosts_match_cache[cache_id] = matching
+            return matching
+
+        # With shared folders
+        checked_hosts = set()
+        for hostname in valid_hosts:
+            if hostname in checked_hosts:
+                continue
+
+            hosts_with_same_tag = self.filter_hosts_with_same_tags_as_host(hostname, valid_hosts)
+            checked_hosts.update(hosts_with_same_tag)
+
+            if not positive_match_tags - self._hosttags[hostname]:
+                if not negative_match_tags.intersection(self._hosttags[hostname]):
+                    matching.update(hosts_with_same_tag)
+
+        self._all_matching_hosts_match_cache[cache_id] = matching
+        return matching
+
+    def host_extra_conf_merged(self, hostname, conf):
+        rule_dict = {}
+        for rule in self.host_extra_conf(hostname, conf):
+            for key, value in rule.items():
+                rule_dict.setdefault(key, value)
+        return rule_dict
+
+    def host_extra_conf(self, hostname, ruleset, include_foreign_hosts=False):
+        cache_id = id(ruleset), include_foreign_hosts
+        try:
+            return self._host_extra_conf_match_cache[cache_id][hostname]
+        except KeyError:
+            pass
+
+        try:
+            ruleset = self._host_extra_conf_ruleset_cache[cache_id]
+        except KeyError:
+            ruleset = self._convert_host_ruleset(ruleset, include_foreign_hosts)
+            self._host_extra_conf_ruleset_cache[cache_id] = ruleset
+            new_cache = {}
+            for value, hostname_list in ruleset:
+                for other_hostname in hostname_list:
+                    new_cache.setdefault(other_hostname, []).append(value)
+            self._host_extra_conf_match_cache[cache_id] = new_cache
+
+        if hostname not in self._host_extra_conf_match_cache[cache_id]:
+            return []
+
+        return self._host_extra_conf_match_cache[cache_id][hostname]
+
+    def _convert_host_ruleset(self, ruleset, with_foreign_hosts):
+        new_rules = []
+        if len(ruleset) == 1 and ruleset[0] == "":
+            console.warning('deprecated entry [ "" ] in host configuration list')
+
+        for rule in ruleset:
+            item, tags, hostlist, rule_options = parse_host_rule(rule)
+            if rule_options.get("disabled"):
+                continue
+
+            # Directly compute set of all matching hosts here, this
+            # will avoid recomputation later
+            new_rules.append((item, self.all_matching_hosts(tags, hostlist, with_foreign_hosts)))
+
+        return new_rules
+
+    def service_extra_conf(self, hostname, service, ruleset, with_foreign_hosts=False):
+        """Compute outcome of a service rule set that has an item."""
+        # When the requested host is part of the local sites configuration,
+        # then use only the sites hosts for processing the rules
+        cache_id = id(ruleset), with_foreign_hosts
+
+        cached_ruleset = self._service_extra_conf_ruleset_cache.get(cache_id)
+        if cached_ruleset is None:
+            cached_ruleset = self._convert_service_ruleset(
+                ruleset, with_foreign_hosts=with_foreign_hosts)
+            self._service_extra_conf_ruleset_cache[cache_id] = cached_ruleset
+
+        entries = []
+
+        for value, hosts, service_matchers in cached_ruleset:
+            if hostname not in hosts:
+                continue
+
+            descr_cache_id = service_matchers, service
+
+            # 20% faster without exception handling
+            #            self._profile_log("descr cache id %r" % (descr_cache_id))
+            match = self._service_extra_conf_match_cache.get(descr_cache_id)
+            if match is None:
+                match = _in_servicematcher_list(service_matchers, service)
+                self._service_extra_conf_match_cache[descr_cache_id] = match
+
+            if match:
+                entries.append(value)
+
+        return entries
+
+    def _convert_service_ruleset(self, ruleset, with_foreign_hosts):
+        new_rules = []
+        for rule in ruleset:
+            rule, rule_options = get_rule_options(rule)
+            if rule_options.get("disabled"):
+                continue
+
+            num_elements = len(rule)
+            if num_elements == 3:
+                item, hostlist, servlist = rule
+                tags = []
+            elif num_elements == 4:
+                item, tags, hostlist, servlist = rule
+            else:
+                raise MKGeneralException("Invalid rule '%r' in service configuration "
+                                         "list: must have 3 or 4 elements" % (rule,))
+
+            # Directly compute set of all matching hosts here, this
+            # will avoid recomputation later
+            hosts = self.all_matching_hosts(tags, hostlist, with_foreign_hosts)
+
+            # And now preprocess the configured patterns in the servlist
+            new_rules.append((item, hosts, _convert_pattern_list(servlist)))
+
+        return new_rules
+
+    # Compute outcome of a service rule set that just say yes/no
+    def in_boolean_serviceconf_list(self, hostname, descr, ruleset):
+        # When the requested host is part of the local sites configuration,
+        # then use only the sites hosts for processing the rules
+        with_foreign_hosts = hostname not in self._all_processed_hosts
+        cache_id = id(ruleset), with_foreign_hosts
+        try:
+            ruleset = self._in_boolean_service_conf_list_ruleset_cache[cache_id]
+        except KeyError:
+            ruleset = self._convert_boolean_service_ruleset(ruleset, with_foreign_hosts)
+            self._in_boolean_service_conf_list_ruleset_cache[cache_id] = ruleset
+
+        for negate, hosts, service_matchers in ruleset:
+            if hostname in hosts:
+                cache_id = service_matchers, descr
+                try:
+                    match = self._in_boolean_service_conf_list_match_cache[cache_id]
+                except KeyError:
+                    match = _in_servicematcher_list(service_matchers, descr)
+                    self._in_boolean_service_conf_list_match_cache[cache_id] = match
+
+                if match:
+                    return not negate
+        return False  # no match. Do not ignore
+
+    def _convert_boolean_service_ruleset(self, ruleset, with_foreign_hosts):
+        new_rules = []
+        for rule in ruleset:
+            entry, rule_options = get_rule_options(rule)
+            if rule_options.get("disabled"):
+                continue
+
+            if entry[0] == NEGATE:  # this entry is logically negated
+                negate = True
+                entry = entry[1:]
+            else:
+                negate = False
+
+            if len(entry) == 2:
+                hostlist, servlist = entry
+                tags = []
+            elif len(entry) == 3:
+                tags, hostlist, servlist = entry
+            else:
+                raise MKGeneralException("Invalid entry '%r' in configuration: "
+                                         "must have 2 or 3 elements" % (entry,))
+
+            # Directly compute set of all matching hosts here, this
+            # will avoid recomputation later
+            hosts = self.all_matching_hosts(tags, hostlist, with_foreign_hosts)
+            new_rules.append((negate, hosts, _convert_pattern_list(servlist)))
+
+        return new_rules
+
+    def _setup_clusters_nodes_cache(self):
+        for cluster, hosts in clusters.items():
+            clustername = cluster.split('|', 1)[0]
+            for name in hosts:
+                self._clusters_of_cache.setdefault(name, []).append(clustername)
+            self._nodes_of_cache[clustername] = hosts
+
+    # Return a list of the cluster host names.
+    def clusters_of(self, hostname):
+        return self._clusters_of_cache.get(hostname, [])
+
+    # TODO: cleanup none
+    # Returns the nodes of a cluster. Returns None if no match
+    def nodes_of(self, hostname):
+        return self._nodes_of_cache.get(hostname)
+
+    # Determine weather a service (found on a physical host) is a clustered
+    # service and - if yes - return the cluster host of the service. If
+    # no, returns the hostname of the physical host.
+    def host_of_clustered_service(self, hostname, servicedesc, part_of_clusters=None):
+        if part_of_clusters:
+            the_clusters = part_of_clusters
+        else:
+            the_clusters = self.clusters_of(hostname)
+
+        if not the_clusters:
+            return hostname
+
+        cluster_mapping = self.service_extra_conf(hostname, servicedesc, clustered_services_mapping)
+        for cluster in cluster_mapping:
+            # Check if the host is in this cluster
+            if cluster in the_clusters:
+                return cluster
+
+        # 1. New style: explicitly assigned services
+        for cluster, conf in clustered_services_of.iteritems():
+            nodes = nodes_of(cluster)
+            if not nodes:
+                raise MKGeneralException(
+                    "Invalid entry clustered_services_of['%s']: %s is not a cluster." % (cluster,
+                                                                                         cluster))
+            if hostname in nodes and \
+                self.in_boolean_serviceconf_list(hostname, servicedesc, conf):
+                return cluster
+
+        # 1. Old style: clustered_services assumes that each host belong to
+        #    exactly on cluster
+        if self.in_boolean_serviceconf_list(hostname, servicedesc, clustered_services):
+            return the_clusters[0]
+
+        return hostname
+
+    def in_binary_hostlist(self, hostname, conf):
+        cache = self._in_binary_hostlist_cache
+
+        cache_id = id(conf), hostname
+        try:
+            return cache[cache_id]
+        except KeyError:
+            pass
+
+        # if we have just a list of strings just take it as list of hostnames
+        if conf and isinstance(conf[0], str):
+            result = hostname in conf
+            cache[cache_id] = result
+        else:
+            for entry in conf:
+                actual_host_tags = self.tags_of_host(hostname)
+                entry, rule_options = get_rule_options(entry)
+                if rule_options.get("disabled"):
+                    continue
+
+                try:
+                    # Negation via 'NEGATE'
+                    if entry[0] == NEGATE:
+                        entry = entry[1:]
+                        negate = True
+                    else:
+                        negate = False
+                    # entry should be one-tuple or two-tuple. Tuple's elements are
+                    # lists of strings. User might forget comma in one tuple. Then the
+                    # entry is the list itself.
+                    if isinstance(entry, list):
+                        hostlist = entry
+                        tags = []
+                    else:
+                        if len(entry) == 1:  # 1-Tuple with list of hosts
+                            hostlist = entry[0]
+                            tags = []
+                        else:
+                            tags, hostlist = entry
+
+                    if hosttags_match_taglist(actual_host_tags, tags) and \
+                           in_extraconf_hostlist(hostlist, hostname):
+                        cache[cache_id] = not negate
+                        break
+                except:
+                    # TODO: Fix this too generic catching (+ bad error message)
+                    raise MKGeneralException("Invalid entry '%r' in host configuration list: "
+                                             "must be tuple with 1 or 2 entries" % (entry,))
+            else:
+                cache[cache_id] = False
+
+        return cache[cache_id]
+
+
+def get_config_cache():
+    config_cache = cmk_base.config_cache.get_dict("config_cache")
+    if not config_cache:
+        config_cache["cache"] = ConfigCache()
+    return config_cache["cache"]

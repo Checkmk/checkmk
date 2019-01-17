@@ -63,7 +63,7 @@ def get_merged_parameters(check, provided_p):
 def get_mock_values(dataset, subcheck):
     mock_is_d = getattr(dataset, 'mock_item_state', {})
     mock_hc_d = getattr(dataset, 'mock_host_conf', {})
-    return mock_is_d.get(subcheck, {}), mock_hc_d.get(subcheck, {})
+    return mock_is_d.get(subcheck, {}), mock_hc_d.get(subcheck, [])
 
 
 def parse(check_manager, dataset):
@@ -186,7 +186,7 @@ def run(check_manager, dataset, write=False):
 
         mock_is, mock_hec = get_mock_values(dataset, subcheck)
 
-        with MockItemState(mock_is), MockHostExtraConf(mock_hec):
+        with MockItemState(mock_is), MockHostExtraConf(check, mock_hec):
             # test discovery
             d_result = discovery(check, subcheck, dataset, info_arg, immu)
             if write:

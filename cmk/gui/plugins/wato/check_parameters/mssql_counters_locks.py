@@ -26,6 +26,7 @@
 
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
+    Checkbox,
     Dictionary,
     Float,
     TextAscii,
@@ -33,7 +34,21 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersApplications,
+    RulespecGroupCheckParametersDiscovery,
     register_check_parameters,
+    register_rule,
+)
+
+register_rule(
+    RulespecGroupCheckParametersDiscovery,
+    varname="inventory_mssql_counters_rules",
+    title=_("Include MSSQL Counters services"),
+    valuespec=Dictionary(
+        elements=[
+            ("add_zero_based_services", Checkbox(title=_("Include service with zero base."))),
+        ],
+        optional_keys=[]),
+    match="dict",
 )
 
 register_check_parameters(

@@ -27,6 +27,7 @@
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Alternative,
+    Checkbox,
     Dictionary,
     Integer,
     Percentage,
@@ -36,9 +37,26 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersApplications,
+    RulespecGroupCheckParametersDiscovery,
     register_check_parameters,
+    register_rule,
 )
 
+register_rule(
+    RulespecGroupCheckParametersDiscovery,
+    varname="discovery_win_dhcp_pools",
+    title=_("Discovery of Windows DHCP Pools"),
+    valuespec=Dictionary(elements=[
+        ("empty_pools",
+         Checkbox(
+             title=_("Discovery of empty DHCP pools"),
+             label=_("Include empty pools into the monitoring"),
+             help=_("You can activate the creation of services for "
+                    "DHCP pools, which contain no IP addresses."),
+         )),
+    ]),
+    match='dict',
+)
 
 register_check_parameters(
     RulespecGroupCheckParametersApplications,

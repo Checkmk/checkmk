@@ -26,18 +26,68 @@
 
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
+    CascadingDropdown,
     Dictionary,
     Float,
     ListOf,
     ListOfStrings,
     MonitoringState,
     TextAscii,
+    Transform,
     Tuple,
 )
 from cmk.gui.plugins.wato import (
+    RulespecGroupCheckParametersDiscovery,
     RulespecGroupCheckParametersEnvironment,
     register_check_parameters,
+    register_rule,
 )
+
+
+def transform_ipmi_inventory_rules(p):
+    if not isinstance(p, dict):
+        return p
+    if p.get("summarize", True):
+        return 'summarize'
+    if p.get('ignored_sensors', []):
+        return ('single', {'ignored_sensors': p["ignored_sensors"]})
+    return ('single', {})
+
+
+register_rule(
+    RulespecGroupCheckParametersDiscovery,
+    varname="inventory_ipmi_rules",
+    title=_("Discovery of IPMI sensors"),
+    valuespec=Transform(
+        CascadingDropdown(
+            orientation="vertical",
+            choices=
+            [("summarize", _("Summary")),
+             ("single", _("Single"),
+              Dictionary(
+                  show_titles=True,
+                  elements=[
+                      ("ignored_sensors",
+                       ListOfStrings(
+                           title=_("Ignore the following IPMI sensors"),
+                           help=_("Names of IPMI sensors that should be ignored during inventory "
+                                  "and when summarizing."
+                                  "The pattern specified here must match exactly the beginning of "
+                                  "the actual sensor name (case sensitive)."),
+                           orientation="horizontal")),
+                      ("ignored_sensorstates",
+                       ListOfStrings(
+                           title=_("Ignore the following IPMI sensor states"),
+                           help=_(
+                               "IPMI sensors with these states that should be ignored during inventory "
+                               "and when summarizing."
+                               "The pattern specified here must match exactly the beginning of "
+                               "the actual sensor name (case sensitive)."),
+                           orientation="horizontal",
+                       )),
+                  ]))]),
+        forth=transform_ipmi_inventory_rules),
+    match='first')
 
 register_check_parameters(
     RulespecGroupCheckParametersEnvironment,

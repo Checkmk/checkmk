@@ -26,14 +26,37 @@
 
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
+    Checkbox,
     Dictionary,
     TextAscii,
 )
 from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersApplications,
+    RulespecGroupCheckParametersDiscovery,
     register_check_parameters,
+    register_rule,
 )
 from cmk.gui.plugins.wato.check_parameters.mssql_datafiles import levels_absolute_or_dynamic
+
+register_rule(
+    RulespecGroupCheckParametersDiscovery,
+    varname="mssql_transactionlogs_discovery",
+    title=_("MSSQL Datafile and Transactionlog Discovery"),
+    valuespec=Dictionary(
+        elements=[
+            ("summarize_datafiles",
+             Checkbox(
+                 title=_("Display only a summary of all Datafiles"),
+                 label=_("Summarize Datafiles"),
+             )),
+            ("summarize_transactionlogs",
+             Checkbox(
+                 title=_("Display only a summary of all Transactionlogs"),
+                 label=_("Summarize Transactionlogs"),
+             )),
+        ],
+        optional_keys=[]),
+    match="first")
 
 register_check_parameters(
     RulespecGroupCheckParametersApplications, "mssql_transactionlogs",

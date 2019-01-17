@@ -1,1 +1,36 @@
 - Release von github als zip laden: https://github.com/openhardwaremonitor/openhardwaremonitor/releases
+- Important things in this folder
+    - folder "OpenHardwareMonitorCli"
+    - file "OpenHardwareMonitor.sln"
+    - latest zip
+    - this readme
+
+- version inside is 0.8.0.5.
+- name 0.8.0 is kept for build compatibility in all branches
+
+*****************************************************************************************************
+
+HOW TO Manually Build OpenHardwareMonitor in Windows Environment:
+
+1. Sources preparation
+- extract latest zip file into any folder, for example "c:\ohm"
+- check "c:\ohm\openhardwaremonitor-master" exists
+- check you are in "git\check_mk\omd\packages\openhardwaremonitor"
+- copy into folder "c:\ohm\openhardwaremonitor-master" 
+    folder "OpenHardwareMonitorCli"
+    file "OpenHardwareMonitor.sln"
+
+2. Building
+- You need Visual Studio 2017(or 2015)
+- Using Visual Studio 2017 open "c:\ohm\openhardwaremonitor-master\OpenHardwareMonitor.sln"
+- Set Release Target (!)
+- Rebuild Solution (!)
+- close Visual Studio
+
+3. Updating git
+- copy from folder "c:\ohm\openhardwaremonitor-master\bin" files 
+    "OpenHardwareMonitorCli.exe" and "OpenHardwareMonitorLib.dll" into "git\check_mk\agents\windows\bin\"
+- commit changes to git
+
+4. Cleanup
+- delete "c:\ohm"

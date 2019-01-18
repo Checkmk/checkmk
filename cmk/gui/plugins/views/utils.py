@@ -55,6 +55,7 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.display_options import display_options
+from cmk.gui.permissions import permission_registry
 
 
 # TODO: Better name it PainterOptions or DisplayOptions? There are options which only affect
@@ -372,13 +373,140 @@ class ViewLayoutRegistry(cmk.utils.plugin_registry.ClassRegistry):
 
 layout_registry = ViewLayoutRegistry()
 
+
+class CommandGroup(object):
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractproperty
+    def ident(self):
+        # type: () -> str
+        """The identity of a command group. One word, may contain alpha numeric characters"""
+        raise NotImplementedError()
+
+    @abc.abstractproperty
+    def title(self):
+        # type: () -> Text
+        raise NotImplementedError()
+
+    @abc.abstractproperty
+    def sort_index(self):
+        # type: () -> int
+        raise NotImplementedError()
+
+
+class CommandGroupRegistry(cmk.utils.plugin_registry.ClassRegistry):
+    def plugin_base_class(self):
+        return CommandGroup
+
+    def plugin_name(self, plugin_class):
+        return plugin_class().ident
+
+
+command_group_registry = CommandGroupRegistry()
+
+
+# TODO: Kept for pre 1.6 compatibility
+def register_command_group(ident, title, sort_index):
+    cls = type(
+        "LegacyCommandGroup%s" % ident.title(), (CommandGroup,), {
+            "_ident": ident,
+            "_title": title,
+            "_sort_index": sort_index,
+            "ident": property(lambda s: s._ident),
+            "title": property(lambda s: s._title),
+            "sort_index": property(lambda s: s._sort_index),
+        })
+    command_group_registry.register(cls)
+
+
+class Command(object):
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractproperty
+    def ident(self):
+        # type: () -> str
+        """The identity of a command. One word, may contain alpha numeric characters"""
+        raise NotImplementedError()
+
+    @abc.abstractproperty
+    def title(self):
+        # type: () -> Text
+        raise NotImplementedError()
+
+    @abc.abstractproperty
+    def permission(self):
+        # type: () -> Type[Permission]
+        raise NotImplementedError()
+
+    @abc.abstractproperty
+    def tables(self):
+        # type: () -> List[str]
+        """List of livestatus table identities the action may be used with"""
+        raise NotImplementedError()
+
+    def render(self, what):
+        # type: (str) -> None
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def action(self, cmdtag, spec, row, row_index, num_rows):
+        # type: (str, str, dict, int, int) -> Optional[Tuple[List[str], Text]]
+        raise NotImplementedError()
+
+    @property
+    def group(self):
+        # type: () -> Type[CommandGroup]
+        """The command group the commmand belongs to"""
+        return command_group_registry["various"]
+
+    @property
+    def only_view(self):
+        # type: () -> Optional[str]
+        """View name to show a view exclusive command for"""
+        return None
+
+    def executor(self, command, site):
+        # type: (str, str) -> Callable
+        """Function that is called to execute this action"""
+        sites.live().command("[%d] %s" % (int(time.time()), command), site)
+
+
+class CommandRegistry(cmk.utils.plugin_registry.ClassRegistry):
+    def plugin_base_class(self):
+        return Command
+
+    def plugin_name(self, plugin_class):
+        return plugin_class().ident
+
+
+command_registry = CommandRegistry()
+
+
+# TODO: Kept for pre 1.6 compatibility
+def register_legacy_command(spec):
+    ident = re.sub("[^a-zA-Z]", "", spec["title"]).lower()
+    cls = type(
+        "LegacyCommand%s" % ident.title(), (Command,), {
+            "_ident": ident,
+            "_spec": spec,
+            "ident": property(lambda s: s._ident),
+            "title": property(lambda s: s._spec["title"]),
+            "permission": property(lambda s: permission_registry[s._spec["permission"]]),
+            "tables": property(lambda s: s._spec["tables"]),
+            "render": lambda s: s._spec["render"](),
+            "action":
+                lambda s, cmdtag, spec, row, row_index, num_rows: s._spec["action"](cmdtag, spec, row),
+            "group": lambda s: command_group_registry[s._spec.get("group", "various")],
+            "only_view": lambda s: s._spec.get("only_view"),
+        })
+    command_registry.register(cls)
+
+
 # TODO: Refactor to plugin_registries
 multisite_datasources = {}
 multisite_painters = {}
 multisite_sorters = {}
 multisite_builtin_views = {}
-multisite_commands = []
-multisite_command_groups = {}
 view_hooks = {}
 inventory_displayhints = {}
 # For each view a function can be registered that has to return either True
@@ -393,13 +521,6 @@ def view_title(view):
 # TODO: Move this to view processing code. This must not be module global as
 # it contains request specific information
 painter_options = PainterOptions()
-
-
-def register_command_group(ident, title, sort_index):
-    multisite_command_groups[ident] = {
-        "title": title,
-        "sort_index": sort_index,
-    }
 
 
 def transform_action_url(url_spec):

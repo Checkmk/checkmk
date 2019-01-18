@@ -78,23 +78,25 @@ from cmk.gui.plugins.views.icons.utils import (
     Icon,
 )
 from cmk.gui.plugins.views.utils import (
-    layout_registry,)
+    command_registry,
+    layout_registry,
+)
 
 # Needed for legacy (pre 1.6) plugins
 from cmk.gui.htmllib import HTML  # pylint: disable=unused-import
 from cmk.gui.plugins.views.utils import (  # pylint: disable=unused-import
     load_all_views, get_permitted_views, view_title, multisite_datasources, multisite_painters,
-    multisite_sorters, multisite_builtin_views, multisite_commands, multisite_command_groups,
-    view_hooks, inventory_displayhints, register_command_group, transform_action_url, is_stale,
-    paint_stalified, paint_host_list, format_plugin_output, link_to_view, url_to_view,
-    get_host_tags, row_id, group_value, get_painter_columns, view_is_enabled, paint_age,
-    declare_1to1_sorter, declare_simple_sorter, cmp_simple_number, cmp_simple_string,
-    cmp_insensitive_string, cmp_num_split, cmp_custom_variable, cmp_service_name_equiv,
-    cmp_string_list, cmp_ip_address, get_custom_var, get_perfdata_nth_value, get_tag_group,
-    query_data, do_query_data, PainterOptions, join_row, get_view_infos, replace_action_url_macros,
-    Cell, JoinCell, get_cells, get_group_cells, get_sorter_name_of_painter, get_separated_sorters,
-    get_primary_sorter_order, get_painter_params_valuespec, parse_url_sorters, substract_sorters,
-    painter_options,
+    multisite_sorters, multisite_builtin_views, view_hooks, inventory_displayhints,
+    register_command_group, transform_action_url, is_stale, paint_stalified, paint_host_list,
+    format_plugin_output, link_to_view, url_to_view, get_host_tags, row_id, group_value,
+    get_painter_columns, view_is_enabled, paint_age, declare_1to1_sorter, declare_simple_sorter,
+    cmp_simple_number, cmp_simple_string, cmp_insensitive_string, cmp_num_split,
+    cmp_custom_variable, cmp_service_name_equiv, cmp_string_list, cmp_ip_address, get_custom_var,
+    get_perfdata_nth_value, get_tag_group, query_data, do_query_data, PainterOptions, join_row,
+    get_view_infos, replace_action_url_macros, Cell, JoinCell, get_cells, get_group_cells,
+    get_sorter_name_of_painter, get_separated_sorters, get_primary_sorter_order,
+    get_painter_params_valuespec, parse_url_sorters, substract_sorters, painter_options,
+    register_legacy_command,
 )
 
 # Needed for legacy (pre 1.6) plugins
@@ -119,6 +121,7 @@ loaded_with_language = False
 # will be displayed.
 multisite_painter_options = {}
 multisite_layouts = {}
+multisite_commands = {}
 
 
 @permission_section_registry.register
@@ -163,6 +166,10 @@ def load_plugins(force):
     if multisite_layouts:
         raise MKGeneralException("Found legacy layout plugins: %s. You will either have to "
                                  "remove or migrate them." % ", ".join(multisite_layouts.keys()))
+
+    # TODO: Kept for compatibility with pre 1.6 plugins
+    for cmd_spec in multisite_commands:
+        register_legacy_command(cmd_spec)
 
     # This must be set after plugin loading to make broken plugins raise
     # exceptions all the time and not only the first time (when the plugins
@@ -1845,8 +1852,9 @@ def should_show_command_form(datasource, ignore_display_option=False):
     # information) then the first info is the primary table. So 'what'
     # will be one of "host", "service", "command" or "downtime".
     what = datasource["infos"][0]
-    for command in multisite_commands:
-        if what in command["tables"] and config.user.may(command["permission"]):
+    for command_class in command_registry.values():
+        command = command_class()
+        if what in command.tables and config.user.may(command.permission().name):
             return True
 
     return False
@@ -1869,21 +1877,20 @@ def show_command_form(is_open, datasource):
 
     # Show command forms, grouped by (optional) command group
     by_group = {}
-    for command in multisite_commands:
-        if what in command["tables"] and config.user.may(command["permission"]):
+    for command_class in command_registry.values():
+        command = command_class()
+        if what in command.tables and config.user.may(command.permission().name):
             # Some special commands can be shown on special views using this option.
             # It is currently only used in custom views, not shipped with check_mk.
-            if command.get('only_view') and html.request.var('view_name') != command['only_view']:
+            if command.only_view and html.request.var('view_name') != command.only_view:
                 continue
-            group = command.get("group", "various")
-            by_group.setdefault(group, []).append(command)
+            by_group.setdefault(command.group, []).append(command)
 
-    for group_ident, group_commands in sorted(
-            by_group.items(), key=lambda x: multisite_command_groups[x[0]]["sort_index"]):
-        forms.header(multisite_command_groups[group_ident]["title"], narrow=True)
+    for group_class, group_commands in sorted(by_group.items(), key=lambda x: x[0]().sort_index):
+        forms.header(group_class().title, narrow=True)
         for command in group_commands:
-            forms.section(command["title"])
-            command["render"]()
+            forms.section(command.title)
+            command.render(what)
 
     forms.end()
     html.end_form()
@@ -1918,18 +1925,12 @@ def core_command(what, row, row_nr, total_rows):
     # itself to be executed (by examining the HTML variables)
     # will return a command to execute and a title for the
     # confirmation dialog.
-    for cmd in multisite_commands:
-        if config.user.may(cmd["permission"]):
-
-            # Does the command need information about the total number of rows
-            # and the number of the current row? Then specify that
-            if cmd.get("row_stats"):
-                result = cmd["action"](cmdtag, spec, row, row_nr, total_rows)
-            else:
-                result = cmd["action"](cmdtag, spec, row)
-
+    for cmd_class in command_registry.values():
+        cmd = cmd_class()
+        if config.user.may(cmd.permission().name):
+            result = cmd.action(cmdtag, spec, row, row_nr, total_rows)
             if result:
-                executor = cmd.get("executor", command_executor_livestatus)
+                executor = cmd.executor
                 commands, title = result
                 break
 
@@ -1945,18 +1946,6 @@ def core_command(what, row, row_nr, total_rows):
         commands = [commands]
 
     return commands, title, executor
-
-
-def command_executor_livestatus(command, site):
-    sites.live().command("[%d] %s" % (int(time.time()), command), site)
-
-
-# make gettext localize some magic texts
-_("services")
-_("hosts")
-_("commands")
-_("downtimes")
-_("aggregations")
 
 
 # Returns:

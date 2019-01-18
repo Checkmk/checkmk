@@ -34,9 +34,10 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html
 
 from cmk.gui.plugins.views import (
+    command_registry,
+    Command,
     multisite_datasources,
     multisite_painters,
-    multisite_commands,
     multisite_builtin_views,
     paint_age,
     paint_nagiosflag,
@@ -617,10 +618,6 @@ multisite_painters["history_addinfo"] = {
 #   '----------------------------------------------------------------------'
 
 
-def command_executor_mkeventd(command, site):
-    mkeventd.execute_command(command, site=site)
-
-
 @permission_registry.register
 class PermissionECUpdateEvent(Permission):
     """Acknowledge and update comment and contact"""
@@ -696,59 +693,71 @@ class PermissionECUpdateContact(Permission):
         return ["user", "admin"]
 
 
-def render_mkeventd_update():
-    html.open_table(border=0, cellpadding=0, cellspacing=3)
-    if config.user.may("mkeventd.update_comment"):
-        html.open_tr()
-        html.open_td()
-        html.write(_("Change comment:"))
-        html.close_td()
-        html.open_td()
-        html.text_input('_mkeventd_comment', size=50)
-        html.close_td()
-        html.close_tr()
-    if config.user.may("mkeventd.update_contact"):
-        html.open_tr()
-        html.open_td()
-        html.write(_("Change contact:"))
-        html.close_td()
-        html.open_td()
-        html.text_input('_mkeventd_contact', size=50)
-        html.close_td()
-        html.close_tr()
-    html.open_tr()
-    html.td('')
-    html.open_td()
-    html.checkbox('_mkeventd_acknowledge', True, label=_("Set event to acknowledged"))
-    html.close_td()
-    html.close_tr()
-    html.close_table()
-    html.button('_mkeventd_update', _("Update"))
+class ECCommand(Command):
+    @property
+    def tables(self):
+        return ["event"]
+
+    def executor(self, command, site):
+        mkeventd.execute_command(command, site=site)
 
 
-def command_mkeventd_update(cmdtag, spec, row):
-    if html.request.var('_mkeventd_update'):
+@command_registry.register
+class CommandECUpdateEvent(ECCommand):
+    @property
+    def ident(self):
+        return "ec_update_event"
+
+    @property
+    def title(self):
+        return _("Update & Acknowledge")
+
+    @property
+    def permission(self):
+        return PermissionECUpdateEvent
+
+    def render(self, what):
+        html.open_table(border=0, cellpadding=0, cellspacing=3)
         if config.user.may("mkeventd.update_comment"):
-            comment = html.get_unicode_input("_mkeventd_comment").strip().replace(";", ",")
-        else:
-            comment = ""
+            html.open_tr()
+            html.open_td()
+            html.write(_("Change comment:"))
+            html.close_td()
+            html.open_td()
+            html.text_input('_mkeventd_comment', size=50)
+            html.close_td()
+            html.close_tr()
         if config.user.may("mkeventd.update_contact"):
-            contact = html.get_unicode_input("_mkeventd_contact").strip().replace(":", ",")
-        else:
-            contact = ""
-        ack = html.get_checkbox("_mkeventd_acknowledge")
-        return "UPDATE;%s;%s;%s;%s;%s" % (row["event_id"], config.user.id, ack and 1 or 0, comment,
-                                          contact), _("update")
+            html.open_tr()
+            html.open_td()
+            html.write(_("Change contact:"))
+            html.close_td()
+            html.open_td()
+            html.text_input('_mkeventd_contact', size=50)
+            html.close_td()
+            html.close_tr()
+        html.open_tr()
+        html.td('')
+        html.open_td()
+        html.checkbox('_mkeventd_acknowledge', True, label=_("Set event to acknowledged"))
+        html.close_td()
+        html.close_tr()
+        html.close_table()
+        html.button('_mkeventd_update', _("Update"))
 
-
-multisite_commands.append({
-    "tables": ["event"],
-    "permission": "mkeventd.update",
-    "title": _("Update & Acknowledge"),
-    "render": render_mkeventd_update,
-    "action": command_mkeventd_update,
-    "executor": command_executor_mkeventd,
-})
+    def action(self, cmdtag, spec, row, row_index, num_rows):
+        if html.request.var('_mkeventd_update'):
+            if config.user.may("mkeventd.update_comment"):
+                comment = html.get_unicode_input("_mkeventd_comment").strip().replace(";", ",")
+            else:
+                comment = ""
+            if config.user.may("mkeventd.update_contact"):
+                contact = html.get_unicode_input("_mkeventd_contact").strip().replace(":", ",")
+            else:
+                contact = ""
+            ack = html.get_checkbox("_mkeventd_acknowledge")
+            return "UPDATE;%s;%s;%s;%s;%s" % (row["event_id"], config.user.id, ack and 1 or 0,
+                                              comment, contact), _("update")
 
 
 @permission_registry.register
@@ -775,27 +784,30 @@ class PermissionECChangeEventState(Permission):
         return ["user", "admin"]
 
 
-def render_mkeventd_changestate():
-    html.button('_mkeventd_changestate', _("Change Event state to:"))
-    html.nbsp()
-    MonitoringState().render_input("_mkeventd_state", 2)
+@command_registry.register
+class CommandECChangeState(ECCommand):
+    @property
+    def ident(self):
+        return "ec_change_state"
 
+    @property
+    def title(self):
+        return _("Change State")
 
-def command_mkeventd_changestate(cmdtag, spec, row):
-    if html.request.var('_mkeventd_changestate'):
-        state = MonitoringState().from_html_vars("_mkeventd_state")
-        return "CHANGESTATE;%s;%s;%s" % (row["event_id"], config.user.id,
-                                         state), _("change the state")
+    @property
+    def permission(self):
+        return PermissionECChangeEventState
 
+    def render(self, what):
+        html.button('_mkeventd_changestate', _("Change Event state to:"))
+        html.nbsp()
+        MonitoringState().render_input("_mkeventd_state", 2)
 
-multisite_commands.append({
-    "tables": ["event"],
-    "permission": "mkeventd.changestate",
-    "title": _("Change State"),
-    "render": render_mkeventd_changestate,
-    "action": command_mkeventd_changestate,
-    "executor": command_executor_mkeventd,
-})
+    def action(self, cmdtag, spec, row, row_index, num_rows):
+        if html.request.var('_mkeventd_changestate'):
+            state = MonitoringState().from_html_vars("_mkeventd_state")
+            return "CHANGESTATE;%s;%s;%s" % (row["event_id"], config.user.id,
+                                             state), _("change the state")
 
 
 @permission_registry.register
@@ -822,27 +834,30 @@ class PermissionECCustomActions(Permission):
         return ["user", "admin"]
 
 
-def render_mkeventd_actions():
-    for action_id, title in mkeventd.action_choices(omit_hidden=True):
-        html.button("_action_" + action_id, title)
-        html.br()
+@command_registry.register
+class CommandECCustomAction(ECCommand):
+    @property
+    def ident(self):
+        return "ec_custom_actions"
 
+    @property
+    def title(self):
+        return _("Custom Action")
 
-def command_mkeventd_action(cmdtag, spec, row):
-    for action_id, title in mkeventd.action_choices(omit_hidden=True):
-        if html.request.var("_action_" + action_id):
-            return "ACTION;%s;%s;%s" % (row["event_id"], config.user.id, action_id), (
-                _("execute the action \"%s\"") % title)
+    @property
+    def permission(self):
+        return PermissionECCustomActions
 
+    def render(self, what):
+        for action_id, title in mkeventd.action_choices(omit_hidden=True):
+            html.button("_action_" + action_id, title)
+            html.br()
 
-multisite_commands.append({
-    "tables": ["event"],
-    "permission": "mkeventd.actions",
-    "title": _("Custom Action"),
-    "render": render_mkeventd_actions,
-    "action": command_mkeventd_action,
-    "executor": command_executor_mkeventd,
-})
+    def action(self, cmdtag, spec, row, row_index, num_rows):
+        for action_id, title in mkeventd.action_choices(omit_hidden=True):
+            if html.request.var("_action_" + action_id):
+                return "ACTION;%s;%s;%s" % (row["event_id"], config.user.id, action_id), (
+                    _("execute the action \"%s\"") % title)
 
 
 @permission_registry.register
@@ -868,21 +883,28 @@ class PermissionECArchiveEvent(Permission):
         return ["user", "admin"]
 
 
-def command_mkeventd_delete(cmdtag, spec, row):
-    if html.request.var("_delete_event"):
-        command = "DELETE;%s;%s" % (row["event_id"], config.user.id)
-        title = _("<b>archive</b>")
-        return command, title
+@command_registry.register
+class CommandECArchiveEvent(ECCommand):
+    @property
+    def ident(self):
+        return "ec_archive_event"
 
+    @property
+    def title(self):
+        return _("Archive Event")
 
-multisite_commands.append({
-    "tables": ["event"],
-    "permission": "mkeventd.delete",
-    "title": _("Archive Event"),
-    "render": lambda: html.button("_delete_event", _("Archive Event")),
-    "action": command_mkeventd_delete,
-    "executor": command_executor_mkeventd,
-})
+    @property
+    def permission(self):
+        return PermissionECArchiveEvent
+
+    def render(self, what):
+        html.button("_delete_event", _("Archive Event"))
+
+    def action(self, cmdtag, spec, row, row_index, num_rows):
+        if html.request.var("_delete_event"):
+            command = "DELETE;%s;%s" % (row["event_id"], config.user.id)
+            title = _("<b>archive</b>")
+            return command, title
 
 
 @permission_registry.register
@@ -908,31 +930,43 @@ class PermissionECArchiveEventsOfHost(Permission):
         return ["user", "admin"]
 
 
-def command_archive_events_of_hosts(cmdtag, spec, row):
-    if html.request.var("_archive_events_of_hosts"):
-        if cmdtag == "HOST":
-            tag = "host"
-        elif cmdtag == "SVC":
-            tag = "service"
-        else:
-            tag = None
+@command_registry.register
+class CommandECArchiveEventsOfHost(ECCommand):
+    @property
+    def ident(self):
+        return "ec_archive_events_of_host"
 
-        commands = []
-        if tag and row.get('%s_check_command' % tag, "").startswith('check_mk_active-mkevents'):
-            data = sites.live().query("GET eventconsoleevents\n" + "Columns: event_id\n" +
-                                      "Filter: host_name = %s" % row['host_name'])
-            commands = ["DELETE;%s;%s" % (entry[0], config.user.id) for entry in data]
-        return commands, "<b>archive all events of all hosts</b> of"
+    @property
+    def title(self):
+        return _("Archive events of hosts")
 
+    @property
+    def permission(self):
+        return PermissionECArchiveEventsOfHost
 
-multisite_commands.append({
-    "tables": ["host", "service"],
-    "permission": "mkeventd.archive_events_of_hosts",
-    "title": _("Archive events of hosts"),
-    "render": lambda: html.button("_archive_events_of_hosts", _('Archive events')),
-    "action": command_archive_events_of_hosts,
-    "executor": command_executor_mkeventd,
-})
+    @property
+    def tables(self):
+        return ["host", "service"]
+
+    def render(self, what):
+        html.button("_archive_events_of_hosts", _('Archive events'))
+
+    def action(self, cmdtag, spec, row, row_index, num_rows):
+        if html.request.var("_archive_events_of_hosts"):
+            if cmdtag == "HOST":
+                tag = "host"
+            elif cmdtag == "SVC":
+                tag = "service"
+            else:
+                tag = None
+
+            commands = []
+            if tag and row.get('%s_check_command' % tag, "").startswith('check_mk_active-mkevents'):
+                data = sites.live().query("GET eventconsoleevents\n" + "Columns: event_id\n" +
+                                          "Filter: host_name = %s" % row['host_name'])
+                commands = ["DELETE;%s;%s" % (entry[0], config.user.id) for entry in data]
+            return commands, "<b>archive all events of all hosts</b> of"
+
 
 #.
 #   .--Sorters-------------------------------------------------------------.

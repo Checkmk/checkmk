@@ -4563,6 +4563,24 @@ metric_info["k8s_cpu_usage"] = {
     "color": "31/a",
 }
 
+metric_info["k8s_total_roles"] = {
+    "title": _("Total"),
+    "unit": "",
+    "color": "31/a",
+}
+
+metric_info["k8s_cluster_roles"] = {
+    "title": _("Cluster roles"),
+    "unit": "",
+    "color": "21/a",
+}
+
+metric_info["k8s_roles"] = {
+    "title": _("Roles"),
+    "unit": "",
+    "color": "21/b",
+}
+
 metric_info["active_vms"] = {
     "title": _("Active VMs"),
     "unit": "count",

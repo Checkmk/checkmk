@@ -1,3 +1,4 @@
+import six
 import pytest
 from pathlib2 import Path
 
@@ -487,6 +488,12 @@ def test_registered_permissions():
     ]
 
     assert sorted(expected_permissions) == sorted(permission_registry.keys())
+
+    for perm_class in permission_registry.values():
+        perm = perm_class()
+        assert isinstance(perm.description, six.string_types)
+        assert isinstance(perm.title, six.string_types)
+        assert isinstance(perm.defaults, list)
 
 
 def test_declare_permission_section(monkeypatch):

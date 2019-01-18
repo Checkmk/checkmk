@@ -639,7 +639,7 @@ class PermissionECUpdateEvent(Permission):
 
     @property
     def description(self):
-        return _("Needed for acknowledging and changing the comment and contact of an event"),
+        return _("Needed for acknowledging and changing the comment and contact of an event")
 
     @property
     def defaults(self):

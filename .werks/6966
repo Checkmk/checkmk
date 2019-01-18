@@ -1,0 +1,22 @@
+Title: Expose HW/SW inventory via HTTP API
+Level: 1
+Component: inv
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1547808070
+Class: feature
+
+Check_MK already has an API to retrieve the HW/SW inventory (see Werk
+#3585), but it is totally separate from the rest of our usual HTTP API.  Now
+a new <tt>get_inventory</tt> call has been added to the latter, and this is
+now the recommended way to retrieve the HW/SW inventory.
+
+The <tt>get_inventory</tt> call has one mandatory key <tt>hosts</tt>, which
+has to be a list of host names for which the inventory should be retrieved.
+In addtion, two optional keys are supported:
+
+<ul>
+<li><tt>paths</tt>: a list of inventory paths for filtering the inventory tree</li>
+<li><tt>site</tt>: the site to use</li>
+</ul>

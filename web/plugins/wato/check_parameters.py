@@ -1467,6 +1467,7 @@ register_rule(group + '/' + subgroup_inventory,
                               "A change there will immediately be active, while a change in this rule "
                               "requires a re-discovery of the services."),
                      elements = process_level_elements,
+                     ignored_keys=["match_groups"],
                 )),
             ],
             required_keys = [ "descr" ],
@@ -3969,7 +3970,8 @@ register_check_parameters(
                     title = _("Add custom icon or action"),
                     help = _("You can assign icons or actions to the found services in the status GUI."),
                 ))
-            ]
+            ],
+            ignored_keys=['match_groups'],
         ),
         forth = ps_convert_inventorized_from_singlekeys,
     ),
@@ -4050,6 +4052,7 @@ register_check_parameters(
                 )),
             ] + process_level_elements,
             # required_keys = [ "process" ],
+            ignored_keys=['match_groups'],
         ),
         forth = ps_convert_from_singlekeys,
     ),

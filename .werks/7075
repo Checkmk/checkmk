@@ -1,0 +1,12 @@
+Title: Fixed possible "omd backup" error when persisted sections change during backup
+Level: 1
+Component: omd
+Compatible: compat
+Edition: cre
+Version: 1.5.0p12
+Date: 1547802040
+Class: fix
+
+When persisted sections of Check_MK in <tt>var/check_mk/persisted/*</tt> and
+<tt>var/check_mk/persisted_sections/*</tt> vanished during the backup, the backup
+job could fail in previous versions.

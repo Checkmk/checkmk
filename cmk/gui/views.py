@@ -80,17 +80,17 @@ from cmk.gui.plugins.views.icons.utils import (
 # Needed for legacy (pre 1.6) plugins
 from cmk.gui.htmllib import HTML  # pylint: disable=unused-import
 from cmk.gui.plugins.views.utils import (  # pylint: disable=unused-import
-    load_all_views, get_permitted_views, view_title, multisite_painter_options,
-    multisite_datasources, multisite_layouts, multisite_painters, multisite_sorters,
-    multisite_builtin_views, multisite_commands, multisite_command_groups, view_hooks,
-    inventory_displayhints, register_command_group, transform_action_url, is_stale, paint_stalified,
-    paint_host_list, format_plugin_output, link_to_view, url_to_view, get_host_tags, row_id,
-    group_value, get_painter_columns, view_is_enabled, paint_age, declare_1to1_sorter,
-    declare_simple_sorter, cmp_simple_number, cmp_simple_string, cmp_insensitive_string,
-    cmp_num_split, cmp_custom_variable, cmp_service_name_equiv, cmp_string_list, cmp_ip_address,
-    get_custom_var, get_perfdata_nth_value, get_tag_group, query_data, do_query_data,
-    PainterOptions, join_row, get_view_infos, replace_action_url_macros, Cell, JoinCell, get_cells,
-    get_group_cells, get_sorter_name_of_painter, get_separated_sorters, get_primary_sorter_order,
+    load_all_views, get_permitted_views, view_title, multisite_datasources, multisite_layouts,
+    multisite_painters, multisite_sorters, multisite_builtin_views, multisite_commands,
+    multisite_command_groups, view_hooks, inventory_displayhints, register_command_group,
+    transform_action_url, is_stale, paint_stalified, paint_host_list, format_plugin_output,
+    link_to_view, url_to_view, get_host_tags, row_id, group_value, get_painter_columns,
+    view_is_enabled, paint_age, declare_1to1_sorter, declare_simple_sorter, cmp_simple_number,
+    cmp_simple_string, cmp_insensitive_string, cmp_num_split, cmp_custom_variable,
+    cmp_service_name_equiv, cmp_string_list, cmp_ip_address, get_custom_var, get_perfdata_nth_value,
+    get_tag_group, query_data, do_query_data, PainterOptions, join_row, get_view_infos,
+    replace_action_url_macros, Cell, JoinCell, get_cells, get_group_cells,
+    get_sorter_name_of_painter, get_separated_sorters, get_primary_sorter_order,
     get_painter_params_valuespec, parse_url_sorters, substract_sorters, painter_options,
 )
 
@@ -111,6 +111,10 @@ if cmk.is_managed_edition():
 
 # Datastructures and functions needed before plugins can be loaded
 loaded_with_language = False
+
+# TODO: Kept for compatibility with pre 1.6 plugins. Plugins will not be used anymore, but an error
+# will be displayed.
+multisite_painter_options = {}
 
 
 @permission_section_registry.register
@@ -145,6 +149,13 @@ def load_plugins(force):
     clear_alarm_sound_states()
 
     transform_old_dict_based_icons()
+
+    # TODO: Kept for compatibility with pre 1.6 plugins. Plugins will not be used anymore, but an error
+    # will be displayed.
+    if multisite_painter_options:
+        raise MKGeneralException(
+            "Found legacy multisite painter option plugins: %s. You will either have to "
+            "remove or migrate them." % ", ".join(multisite_painter_options.keys()))
 
     # This must be set after plugin loading to make broken plugins raise
     # exceptions all the time and not only the first time (when the plugins

@@ -32,11 +32,12 @@ from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 
-from . import (
+from cmk.gui.plugins.views import (
     painter_options,
     multisite_datasources,
     multisite_painters,
-    multisite_painter_options,
+    painter_option_registry,
+    PainterOption,
 )
 
 #     ____        _
@@ -219,46 +220,83 @@ multisite_painters["aggr_hosts_services"] = {
     "paint": lambda row: paint_aggr_hosts(row, "host"),
 }
 
-multisite_painter_options["aggr_expand"] = {
-    'valuespec': DropdownChoice(
-        title=_("Initial expansion of aggregations"),
-        default_value="0",
-        choices=[("0", _("collapsed")), ("1", _("first level")), ("2", _("two levels")),
-                 ("3", _("three levels")), ("999", _("complete"))])
-}
 
-multisite_painter_options["aggr_onlyproblems"] = {
-    'valuespec': DropdownChoice(
-        title=_("Show only problems"),
-        default_value="0",
-        choices=[("0", _("show all")), ("1", _("show only problems"))],
-    )
-}
+@painter_option_registry.register
+class PainterOptionAggrExpand(PainterOption):
+    @property
+    def ident(self):
+        return "aggr_expand"
 
-multisite_painter_options["aggr_treetype"] = {
-    'valuespec': DropdownChoice(
-        title=_("Type of tree layout"),
-        default_value="foldable",
-        choices=[
-            ("foldable", _("Foldable tree")),
-            ("boxes", _("Boxes")),
-            ("boxes-omit-root", _("Boxes (omit root)")),
-            ("bottom-up", _("Table: bottom up")),
-            ("top-down", _("Table: top down")),
-        ],
-    )
-}
+    @property
+    def valuespec(self):
+        return DropdownChoice(
+            title=_("Initial expansion of aggregations"),
+            default_value="0",
+            choices=[
+                ("0", _("collapsed")),
+                ("1", _("first level")),
+                ("2", _("two levels")),
+                ("3", _("three levels")),
+                ("999", _("complete")),
+            ],
+        )
 
-multisite_painter_options["aggr_wrap"] = {
-    'valuespec': DropdownChoice(
-        title=_("Handling of too long texts (affects only table)"),
-        default_value="wrap",
-        choices=[
-            ("wrap", _("wrap")),
-            ("nowrap", _("don't wrap")),
-        ],
-    )
-}
+
+@painter_option_registry.register
+class PainterOptionAggrOnlyProblems(PainterOption):
+    @property
+    def ident(self):
+        return "aggr_onlyproblems"
+
+    @property
+    def valuespec(self):
+        return DropdownChoice(
+            title=_("Show only problems"),
+            default_value="0",
+            choices=[
+                ("0", _("show all")),
+                ("1", _("show only problems")),
+            ],
+        )
+
+
+@painter_option_registry.register
+class PainterOptionAggrTreeType(PainterOption):
+    @property
+    def ident(self):
+        return "aggr_treetype"
+
+    @property
+    def valuespec(self):
+        return DropdownChoice(
+            title=_("Type of tree layout"),
+            default_value="foldable",
+            choices=[
+                ("foldable", _("Foldable tree")),
+                ("boxes", _("Boxes")),
+                ("boxes-omit-root", _("Boxes (omit root)")),
+                ("bottom-up", _("Table: bottom up")),
+                ("top-down", _("Table: top down")),
+            ],
+        )
+
+
+@painter_option_registry.register
+class PainterOptionAggrWrap(PainterOption):
+    @property
+    def ident(self):
+        return "aggr_wrap"
+
+    @property
+    def valuespec(self):
+        return DropdownChoice(
+            title=_("Handling of too long texts (affects only table)"),
+            default_value="wrap",
+            choices=[
+                ("wrap", _("wrap")),
+                ("nowrap", _("don't wrap")),
+            ],
+        )
 
 
 def paint_aggregated_tree_state(row, force_renderer_cls=None):

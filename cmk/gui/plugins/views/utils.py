@@ -27,6 +27,7 @@
 
 # TODO: More feature related splitting up would be better
 
+import abc
 import os
 import time
 import re
@@ -37,6 +38,7 @@ import types
 
 import livestatus
 
+import cmk.utils.plugin_registry
 import cmk.utils.render
 import cmk.utils.regex
 
@@ -46,6 +48,7 @@ import cmk.gui.visuals as visuals
 import cmk.gui.forms as forms
 import cmk.gui.utils
 import cmk.gui.view_utils
+from cmk.gui.valuespec import ValueSpec  # pylint: disable=unused-import
 from cmk.gui.log import logger
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
@@ -124,7 +127,7 @@ class PainterOptions(object):
             self._set_from_submitted_form(view_name)
 
     def _set_from_submitted_form(self, view_name):
-        # TODO: Remove all keys that are in multisite_painter_options
+        # TODO: Remove all keys that are in painter_option_registry
         # but not in self._used_option_names
 
         modified = False
@@ -144,7 +147,7 @@ class PainterOptions(object):
     def _clear_painter_options(self, view_name):
         # TODO: This never removes options that are not existant anymore
         modified = False
-        for name in multisite_painter_options:
+        for name in painter_option_registry.keys():
             try:
                 del self._options[name]
                 modified = True
@@ -161,10 +164,7 @@ class PainterOptions(object):
             html.request.del_var(varname)
 
     def get_valuespec_of(self, name):
-        opt = multisite_painter_options[name]
-        if callable(opt["valuespec"]):
-            return opt["valuespec"]()
-        return opt["valuespec"]
+        return painter_option_registry[name]().valuespec
 
     def _is_set(self, name):
         return name in self._options
@@ -274,8 +274,32 @@ def _create_dict_key(value):
     return value
 
 
+class PainterOption(object):
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractproperty
+    def ident(self):
+        # type: () -> str
+        """The identity of a painter option. One word, may contain alpha numeric characters"""
+        raise NotImplementedError()
+
+    @abc.abstractproperty
+    def valuespec(self):
+        # type: () -> ValueSpec
+        raise NotImplementedError()
+
+
+class ViewPainterOptionRegistry(cmk.utils.plugin_registry.ClassRegistry):
+    def plugin_base_class(self):
+        return PainterOption
+
+    def plugin_name(self, plugin_class):
+        return plugin_class().ident
+
+
+painter_option_registry = ViewPainterOptionRegistry()
+
 # TODO: Refactor to plugin_registries
-multisite_painter_options = {}
 multisite_datasources = {}
 multisite_layouts = {}
 multisite_painters = {}

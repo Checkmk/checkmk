@@ -24,7 +24,8 @@ def local_test_host(web, site):
 
     site.write_file(
         "etc/check_mk/conf.d/test-host.mk",
-        "datasource_programs.append(('cat ~/var/check_mk/agent_output/<HOST>', [], ALL_HOSTS))\n")
+        "datasource_programs.append(('cat ~/var/check_mk/agent_output/<HOST>', [], ['test-host']))\n"
+    )
 
     site.makedirs("var/check_mk/agent_output/")
     site.write_file(
@@ -33,6 +34,7 @@ def local_test_host(web, site):
 
     yield
     web.delete_host("test-host")
+    site.delete_file("etc/check_mk/conf.d/test-host.mk")
 
 
 def test_global_settings(site, web):

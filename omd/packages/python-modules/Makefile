@@ -184,6 +184,8 @@ MODULES += kubernetes-8.0.0.tar.gz
 
 .PHONY: build check-freetds install skel clean dump-Pipfile
 
+# NOTE: Cruel hack below! We need to have a recent GCC visible in the PATH
+# because the SSSE3 detection in pycryptodomex is slightly broken. :-/
 build: check-python check-freetds unpack
 	set -e ; cd dest && \
 	    mkdir -p $(PACKAGE_PYTHON_MODULES_PYTHONPATH) || true; \
@@ -192,6 +194,7 @@ build: check-python check-freetds unpack
 	    export CPATH="$(PACKAGE_FREETDS_DESTDIR)/include" ; \
 	    export LDFLAGS="$(PACKAGE_PYTHON_LDFLAGS) $(PACKAGE_FREETDS_LDFLAGS)" ; \
 	    export LD_LIBRARY_PATH="$(PACKAGE_PYTHON_LD_LIBRARY_PATH)" ; \
+	    PATH="$(abspath ../python/bin):$$PATH" ; \
 	    for M in $(MODULES); do \
 		echo "Building $$M..." ; \
 		PKG=$${M//.tar.gz/} ; \

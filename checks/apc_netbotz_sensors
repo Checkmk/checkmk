@@ -124,14 +124,15 @@ def parse_apc_netbotz_sensors(info):
         "3": "dewpoint",
     }
     parsed = {}
-    for oid_item, reading_str, plugged_in_state in info:
+    for oid_item, reading_str, label, plugged_in_state in info:
         if plugged_in_state:
             item_info = oid_item.split(".")
             item_type = map_sensors[item_info[0]]
             item_name = " ".join(item_info[2:])
-            parsed.setdefault(item_type, {})
-            parsed[item_type][item_name] = float(reading_str) / 10
-
+            parsed.setdefault(item_type, {}).setdefault(item_name, {
+                "reading": float(reading_str) / 10,
+                "label": label
+            })
     return parsed
 
 
@@ -141,9 +142,10 @@ def inventory_apc_netbotz_sensors_temp(parsed, what):
 
 def check_apc_netbotz_sensors_temp(item, params, parsed, what):
     if item in parsed.get(what, []):
-        return check_temperature(parsed[what][item], params,
-                                 "apc_netbotz_sensors_%s_%s" % (what, item))
-
+        data = parsed[what][item]
+        state, infotext, perf = check_temperature(data['reading'], params,
+                                                  "apc_netbotz_sensors_%s_%s" % (what, item))
+        return state, "[%s] %s" % (data['label'], infotext), perf
 
 check_info['apc_netbotz_sensors'] = {
     'parse_function'            : parse_apc_netbotz_sensors,
@@ -160,8 +162,8 @@ check_info['apc_netbotz_sensors'] = {
                                         ], [
                                         "1",    # NETBOTZV2-MIB::*SensorId
                                         "2",    # NETBOTZV2-MIB::*SensorValue
-                                        "7",    # NETBOTZV2-MIB::*ValueStr
-                                                # empty if sensor is not plugged in
+                                        "4",    # NETBOTZV2-MIB::*SensorLabel
+                                        "7",    # NETBOTZV2-MIB::*ValueStr; empty if sensor is not plugged in
                                   ]),
     'snmp_scan_function'        : lambda oid: \
         oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.5528.100.20.10"),
@@ -220,7 +222,9 @@ def inventory_apc_netbotz_sensors_humidity(parsed):
 
 def check_apc_netbotz_sensors_humidity(item, params, parsed):
     if item in parsed.get("humidity", []):
-        return check_humidity(parsed["humidity"][item], params)
+        data = parsed["humidity"][item]
+        state, infotext, perf = check_humidity(data['reading'], params)
+        return state, "[%s] %s" % (data['label'], infotext), perf
 
 
 check_info['apc_netbotz_sensors.humidity'] = {

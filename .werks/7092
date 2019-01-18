@@ -1,0 +1,10 @@
+Title: apc_netbotz_sensors: Shows sensor label in service details
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1547801784
+Class: feature
+
+

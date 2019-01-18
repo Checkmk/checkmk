@@ -43,7 +43,7 @@ class MKException(Exception):
     # have this variable set. self.args[0] seems to be the most portable
     # way at the moment.
     def __str__(self):
-        return self.args[0]
+        return self.args[0] if self.args else ''
 
 
 class MKGeneralException(MKException):

@@ -24,14 +24,14 @@
 
 include ../defines.make
 
-RPM_VERSION     = $(subst -,_,$(VERSION))
-NAME            = check-mk-agent
-DISTNAME       	= $(NAME)-$(VERSION)
-RPM_TOPDIR     	= $$(pwd)/.rpm.topdir
-RPM_BUILDROOT  	= $$(pwd)/.rpm.buildroot
-RPM_PACKAGE     = $(DISTNAME)-1.noarch.rpm
-DEB_PACKAGE     = check-mk-agent_$(VERSION)-1_all.deb
-
+RPM_VERSION := $(subst -,_,$(VERSION))
+NAME := check-mk-agent
+DISTNAME := $(NAME)-$(VERSION)
+RPM_TOPDIR := $$(pwd)/.rpm.topdir
+RPM_BUILDROOT := $$(pwd)/.rpm.buildroot
+RPM_PACKAGE := $(DISTNAME)-1.noarch.rpm
+DEB_PACKAGE := check-mk-agent_$(VERSION)-1_all.deb
+WIN_PACKAGE := windows/check_mk_agent.msi
 usage:
 	@echo "make waitmax  -- compile waitmax.c"
 	@echo "make build    -- create all files needed for \"make dist\" of Check_MK"
@@ -65,17 +65,22 @@ setversion:
 	sed -i "s/^AC_INIT.*/AC_INIT([$$package], [$(NEW_VERSION)], [$$mail])/" \
 	    windows/configure.ac
 
-build:
-	$(MAKE) packages
+build: $(DEB_PACKAGE) $(RPM_PACKAGE) $(WIN_PACKAGE)
+
+$(WIN_PACKAGE):
 	cd windows && sudo \
-			CHROOT_NAME=$$CHROOT_NAME \
-			CHROOT_BASE_PATH=$$CHROOT_BASE_PATH \
-			CHROOT_BUILD_DIR=$$CHROOT_BUILD_DIR \
-			./make-agent
+		CHROOT_NAME=$$CHROOT_NAME \
+		CHROOT_BASE_PATH=$$CHROOT_BASE_PATH \
+		CHROOT_BUILD_DIR=$$CHROOT_BUILD_DIR \
+		./make-agent
 
-packages: rpm deb
+packages: $(DEB_PACKAGE) $(RPM_PACKAGE)
 
-rpm $(RPM_PACKAGE): waitmax
+deb: $(DEB_PACKAGE)
+
+rpm: $(RPM_PACKAGE)
+
+$(RPM_PACKAGE): waitmax
 	rm -rf $(RPM_TOPDIR)
 	mkdir -p $(RPM_TOPDIR)/RPMS
 	mkdir -p $(RPM_TOPDIR)/SRPMS
@@ -104,7 +109,7 @@ rpm $(RPM_PACKAGE): waitmax
 # TODO: Replace alien usage. Debian packages should be created just like the bakery does
 #       Keep in mind that we still need to use gz compression by default for the agent
 #       packages.
-deb $(DEB_PACKAGE): $(RPM_PACKAGE)
+$(DEB_PACKAGE): $(RPM_PACKAGE)
 	@echo "Sorry. Debian packages currently via alien"
 	rm -f *.deb
 	fakeroot alien --scripts -k --to-deb $(RPM_PACKAGE)

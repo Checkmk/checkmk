@@ -1,4 +1,4 @@
-Ttle: mk_job: Allow monitoring of jobs of users without login shell
+Title: mk_job: Allow monitoring of jobs of users without login shell
 Level: 1
 Component: checks
 Compatible: compat

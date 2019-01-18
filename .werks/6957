@@ -1,8 +1,7 @@
-Title: unknown
+Title: mk_job: Allow monitoring of jobs of users without login shell
 Class: fix
 Level: 1
 Component: checks
-Ttle: mk_job: Allow monitoring of jobs of users without login shell
 Compatible: compat
 Edition: cre
 State: unknown

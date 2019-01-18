@@ -87,9 +87,9 @@ class PainterOptions(object):
             options.update(cell.painter_options())
 
         # Also layouts can register painter options
-        layout_name = view.get("layout")
-        if layout_name is not None:
-            options.update(multisite_layouts[layout_name].get("options", []))
+        layout_class = layout_registry.get(view.get("layout"))
+        if layout_class:
+            options.update(layout_class().painter_options)
 
         # TODO: Improve sorting. Add a sort index?
         self._used_option_names = sorted(options)
@@ -299,9 +299,81 @@ class ViewPainterOptionRegistry(cmk.utils.plugin_registry.ClassRegistry):
 
 painter_option_registry = ViewPainterOptionRegistry()
 
+
+class Layout(object):
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractproperty
+    def ident(self):
+        # type: () -> str
+        """The identity of a layout. One word, may contain alpha numeric characters"""
+        raise NotImplementedError()
+
+    @abc.abstractproperty
+    def title(self):
+        # type: () -> Text
+        """Short human readable title of the layout"""
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def render(self, rows, view, group_cells, cells, num_columns, show_checkboxes):
+        # type: (List, Dict, List[Cell], List[Cell], int, bool) -> None
+        """Render the given data in this layout"""
+        raise NotImplementedError()
+
+    @abc.abstractproperty
+    def can_display_checkboxes(self):
+        # type: () -> bool
+        """Whether this layout can display checkboxes for selecting rows"""
+        raise NotImplementedError()
+
+    @abc.abstractproperty
+    def is_hidden(self):
+        # type: () -> bool
+        """Whether this should be hidden from the user (e.g. in the view editor layout choice)"""
+        raise NotImplementedError()
+
+    @property
+    def painter_options(self):
+        # type: () -> List[str]
+        """Returns the painter option identities used by this layout"""
+        return []
+
+    @property
+    def has_individual_csv_export(self):
+        # type: () -> bool
+        """Whether this layout has an individual CSV export implementation"""
+        return False
+
+    def csv_export(self, rows, view, group_cells, cells):
+        # type: (List, Dict, List[Cell], List[Cell]) -> None
+        """Render the given data using this layout for CSV"""
+        pass
+
+
+class ViewLayoutRegistry(cmk.utils.plugin_registry.ClassRegistry):
+    def plugin_base_class(self):
+        return Layout
+
+    def plugin_name(self, plugin_class):
+        return plugin_class().ident
+
+    def get_choices(self):
+        choices = []
+        for plugin_class in self.values():
+            layout = plugin_class()
+            if layout.is_hidden:
+                continue
+
+            choices.append((layout.ident, layout.title))
+
+        return choices
+
+
+layout_registry = ViewLayoutRegistry()
+
 # TODO: Refactor to plugin_registries
 multisite_datasources = {}
-multisite_layouts = {}
 multisite_painters = {}
 multisite_sorters = {}
 multisite_builtin_views = {}

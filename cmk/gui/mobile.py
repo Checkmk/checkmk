@@ -357,8 +357,8 @@ def render_view(view, rows, datasource, group_painters, painters, show_heading, 
         else:
             try:
                 cmk.gui.view_utils.check_limit(rows, views.get_limit(), config.user)
-                layout["render"](rows, view, group_painters, painters, num_columns,
-                                 show_checkboxes and not html.do_actions())
+                layout.render(rows, view, group_painters, painters, num_columns, show_checkboxes and
+                              not html.do_actions())
             except Exception as e:
                 html.write(_("Error showing view: %s") % e)
         html.close_div()

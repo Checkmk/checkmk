@@ -77,22 +77,24 @@ from cmk.gui.plugins.views.icons.utils import (
     icon_and_action_registry,
     Icon,
 )
+from cmk.gui.plugins.views.utils import (
+    layout_registry,)
 
 # Needed for legacy (pre 1.6) plugins
 from cmk.gui.htmllib import HTML  # pylint: disable=unused-import
 from cmk.gui.plugins.views.utils import (  # pylint: disable=unused-import
-    load_all_views, get_permitted_views, view_title, multisite_datasources, multisite_layouts,
-    multisite_painters, multisite_sorters, multisite_builtin_views, multisite_commands,
-    multisite_command_groups, view_hooks, inventory_displayhints, register_command_group,
-    transform_action_url, is_stale, paint_stalified, paint_host_list, format_plugin_output,
-    link_to_view, url_to_view, get_host_tags, row_id, group_value, get_painter_columns,
-    view_is_enabled, paint_age, declare_1to1_sorter, declare_simple_sorter, cmp_simple_number,
-    cmp_simple_string, cmp_insensitive_string, cmp_num_split, cmp_custom_variable,
-    cmp_service_name_equiv, cmp_string_list, cmp_ip_address, get_custom_var, get_perfdata_nth_value,
-    get_tag_group, query_data, do_query_data, PainterOptions, join_row, get_view_infos,
-    replace_action_url_macros, Cell, JoinCell, get_cells, get_group_cells,
-    get_sorter_name_of_painter, get_separated_sorters, get_primary_sorter_order,
-    get_painter_params_valuespec, parse_url_sorters, substract_sorters, painter_options,
+    load_all_views, get_permitted_views, view_title, multisite_datasources, multisite_painters,
+    multisite_sorters, multisite_builtin_views, multisite_commands, multisite_command_groups,
+    view_hooks, inventory_displayhints, register_command_group, transform_action_url, is_stale,
+    paint_stalified, paint_host_list, format_plugin_output, link_to_view, url_to_view,
+    get_host_tags, row_id, group_value, get_painter_columns, view_is_enabled, paint_age,
+    declare_1to1_sorter, declare_simple_sorter, cmp_simple_number, cmp_simple_string,
+    cmp_insensitive_string, cmp_num_split, cmp_custom_variable, cmp_service_name_equiv,
+    cmp_string_list, cmp_ip_address, get_custom_var, get_perfdata_nth_value, get_tag_group,
+    query_data, do_query_data, PainterOptions, join_row, get_view_infos, replace_action_url_macros,
+    Cell, JoinCell, get_cells, get_group_cells, get_sorter_name_of_painter, get_separated_sorters,
+    get_primary_sorter_order, get_painter_params_valuespec, parse_url_sorters, substract_sorters,
+    painter_options,
 )
 
 # Needed for legacy (pre 1.6) plugins
@@ -116,6 +118,7 @@ loaded_with_language = False
 # TODO: Kept for compatibility with pre 1.6 plugins. Plugins will not be used anymore, but an error
 # will be displayed.
 multisite_painter_options = {}
+multisite_layouts = {}
 
 
 @permission_section_registry.register
@@ -155,8 +158,11 @@ def load_plugins(force):
     # will be displayed.
     if multisite_painter_options:
         raise MKGeneralException(
-            "Found legacy multisite painter option plugins: %s. You will either have to "
+            "Found legacy painter option plugins: %s. You will either have to "
             "remove or migrate them." % ", ".join(multisite_painter_options.keys()))
+    if multisite_layouts:
+        raise MKGeneralException("Found legacy layout plugins: %s. You will either have to "
+                                 "remove or migrate them." % ", ".join(multisite_layouts.keys()))
 
     # This must be set after plugin loading to make broken plugins raise
     # exceptions all the time and not only the first time (when the plugins
@@ -495,9 +501,7 @@ def view_editor_specs(ds_name, general_properties=True):
                               ('layout',
                                DropdownChoice(
                                    title=_('Basic Layout'),
-                                   choices=[(k, v["title"])
-                                            for k, v in multisite_layouts.items()
-                                            if not v.get("hide")],
+                                   choices=layout_registry.get_choices(),
                                    default_value='table',
                                    sorted=True,
                                )),
@@ -1081,21 +1085,23 @@ def show_view(view,
     # report itself.
     # TODO: CSV export should be handled by the layouts. It cannot
     # be done generic in most cases
-    if html.output_format == "html":
-        if "layout" in view:
-            layout = multisite_layouts[view["layout"]]
-        else:
-            layout = None
+    if "layout" in view:
+        layout = layout_registry[view["layout"]]()
     else:
-        if "layout" in view and "csv_export" in multisite_layouts[view["layout"]]:
-            multisite_layouts[view["layout"]]["csv_export"](rows, view, group_cells, cells)
+        layout = None
+
+    if html.output_format != "html":
+        if layout and layout.has_individual_csv_export:
+            layout.csv_export(rows, view, group_cells, cells)
             return
 
-        else:
-            # Generic layout of export
-            layout = multisite_layouts.get(html.output_format)
-            if not layout:
-                layout = multisite_layouts["json"]
+        # Generic layout of export
+        layout_class = layout_registry.get(html.output_format)
+        if not layout_class:
+            raise MKUserError("output_format",
+                              _("Output format '%s' not supported") % html.output_format)
+
+        layout = layout_class()
 
     # Set browser reload
     if browser_reload and display_options.enabled(display_options.R) and not only_count:
@@ -1225,8 +1231,6 @@ def render_view(view, rows, datasource, group_painters, painters, show_heading, 
     if command_form:
         weblib.init_selection()
 
-    # Is the layout able to display checkboxes?
-    can_display_checkboxes = layout.get('checkboxes', False)
     if show_buttons:
         show_combined_graphs_button  = \
             ("host" in datasource["infos"] or "service" in datasource["infos"]) and \
@@ -1239,7 +1243,7 @@ def render_view(view, rows, datasource, group_painters, painters, show_heading, 
             # Take into account: permissions, display_options
             row_count > 0 and command_form,
             # Take into account: layout capabilities
-            can_display_checkboxes and not view.get("force_checkboxes"),
+            layout.can_display_checkboxes and not view.get("force_checkboxes"),
             show_checkboxes,
             # Show link to availability
             datasource["table"] in ["hosts", "services"] or "aggr" in datasource["infos"],
@@ -1306,8 +1310,8 @@ def render_view(view, rows, datasource, group_painters, painters, show_heading, 
         # Limit exceeded? Show warning
         if display_options.enabled(display_options.W):
             cmk.gui.view_utils.check_limit(rows, get_limit(), config.user)
-        layout["render"](rows, view, group_painters, painters, num_columns, show_checkboxes and
-                         not html.do_actions())
+        layout.render(rows, view, group_painters, painters, num_columns, show_checkboxes and
+                      not html.do_actions())
         headinfo = "%d %s" % (row_count, _("row") if row_count == 1 else _("rows"))
         if show_checkboxes:
             selected = filter_selected_rows(view, rows,
@@ -1324,7 +1328,7 @@ def render_view(view, rows, datasource, group_painters, painters, show_heading, 
                     row_count > 0 and
                     should_show_command_form(datasource, ignore_display_option=True),
                     # and not html.do_actions(),
-                    can_display_checkboxes)
+                    layout.can_display_checkboxes)
 
         # Play alarm sounds, if critical events have been displayed
         if display_options.enabled(display_options.S) and view.get("play_sounds"):

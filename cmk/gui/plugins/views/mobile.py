@@ -28,9 +28,10 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 
-from . import (
+from cmk.gui.plugins.views import (
     multisite_builtin_views,
-    multisite_layouts,
+    layout_registry,
+    Layout,
     painter_options,
 )
 
@@ -772,12 +773,27 @@ def render_mobile_table(rows, view, group_cells, cells, num_columns, show_checkb
     html.javascript('$("table.mobile a").attr("data-ajax", "false");')
 
 
-multisite_layouts["mobiletable"] = {
-    "title": _("Mobile: Table"),
-    "render": render_mobile_table,
-    "group": False,
-    "checkboxes": False,
-}
+@layout_registry.register
+class LayoutMobileTable(Layout):
+    @property
+    def ident(self):
+        return "mobiletable"
+
+    @property
+    def title(self):
+        return _("Mobile: Table")
+
+    @property
+    def can_display_checkboxes(self):
+        return False
+
+    @property
+    def is_hidden(self):
+        return False
+
+    def render(self, rows, view, group_cells, cells, num_columns, show_checkboxes):
+        # TODO: Move to class
+        render_mobile_table(rows, view, group_cells, cells, num_columns, show_checkboxes)
 
 
 def render_mobile_list(rows, view, group_cells, cells, num_columns, show_checkboxes):
@@ -821,12 +837,27 @@ def render_mobile_list(rows, view, group_cells, cells, num_columns, show_checkbo
     html.javascript('$("ul.mobilelist a").attr("data-ajax", "false");')
 
 
-multisite_layouts["mobilelist"] = {
-    "title": _("Mobile: List"),
-    "render": render_mobile_list,
-    "group": False,
-    "checkboxes": False,
-}
+@layout_registry.register
+class LayoutMobileList(Layout):
+    @property
+    def ident(self):
+        return "mobilelist"
+
+    @property
+    def title(self):
+        return _("Mobile: List")
+
+    @property
+    def can_display_checkboxes(self):
+        return False
+
+    @property
+    def is_hidden(self):
+        return False
+
+    def render(self, rows, view, group_cells, cells, num_columns, show_checkboxes):
+        # TODO: Move to class
+        render_mobile_list(rows, view, group_cells, cells, num_columns, show_checkboxes)
 
 
 def render_mobile_dataset(rows, view, group_cells, cells, num_columns, show_checkboxes):
@@ -859,9 +890,24 @@ def render_mobile_dataset(rows, view, group_cells, cells, num_columns, show_chec
         '$("table.dataset > tbody > tr.data a").attr("data-ajax", "false");\n')
 
 
-multisite_layouts["mobiledataset"] = {
-    "title": _("Mobile: Dataset"),
-    "render": render_mobile_dataset,
-    "group": False,
-    "checkboxes": False,
-}
+@layout_registry.register
+class LayoutMobileDataset(Layout):
+    @property
+    def ident(self):
+        return "mobiledataset"
+
+    @property
+    def title(self):
+        return _("Mobile: Dataset")
+
+    @property
+    def can_display_checkboxes(self):
+        return False
+
+    @property
+    def is_hidden(self):
+        return False
+
+    def render(self, rows, view, group_cells, cells, num_columns, show_checkboxes):
+        # TODO: Move to class
+        render_mobile_dataset(rows, view, group_cells, cells, num_columns, show_checkboxes)

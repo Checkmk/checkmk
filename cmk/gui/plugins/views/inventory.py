@@ -57,12 +57,13 @@ from cmk.gui.plugins.visuals.inventory import (
     FilterInvtableText,
 )
 
-from . import (
+from cmk.gui.plugins.views import (
     painter_options,
     display_options,
     multisite_painters,
     multisite_sorters,
-    multisite_painter_options,
+    painter_option_registry,
+    PainterOption,
     inventory_displayhints,
     multisite_datasources,
     multisite_builtin_views,
@@ -208,12 +209,19 @@ def cmp_inventory_node(a, b, invpath):
     return cmp(val_a, val_b)
 
 
-multisite_painter_options["show_internal_tree_paths"] = {
-    'valuespec': Checkbox(
-        title=_("Show internal tree paths"),
-        default_value=False,
-    )
-}
+@painter_option_registry.register
+class PainterOptionShowInternalTreePaths(PainterOption):
+    @property
+    def ident(self):
+        return "show_internal_tree_paths"
+
+    @property
+    def valuespec(self):
+        return Checkbox(
+            title=_("Show internal tree paths"),
+            default_value=False,
+        )
+
 
 multisite_painters["inventory_tree"] = {
     "title": _("Hardware & Software Tree"),

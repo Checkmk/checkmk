@@ -88,8 +88,9 @@ from cmk.gui.plugins.views.icons import (
     iconpainter_columns,
 )
 
-from . import (
-    multisite_painter_options,
+from cmk.gui.plugins.views import (
+    painter_option_registry,
+    PainterOption,
     multisite_painters,
     painter_options,
     transform_action_url,
@@ -127,40 +128,69 @@ from . import (
 #   | options".                                                            |
 #   '----------------------------------------------------------------------'
 
-multisite_painter_options["pnp_timerange"] = {
-    'valuespec': Timerange(
-        title=_("Graph time range"),
-        default_value=None,
-        include_time=True,
-    )
-}
 
-multisite_painter_options["ts_format"] = {
-    'valuespec': DropdownChoice(
-        title=_("Time stamp format"),
-        default_value=config.default_ts_format,
-        choices=[
-            ("mixed", _("Mixed")),
-            ("abs", _("Absolute")),
-            ("rel", _("Relative")),
-            ("both", _("Both")),
-            ("epoch", _("Unix Timestamp (Epoch)")),
-        ],
-    )
-}
+@painter_option_registry.register
+class PainterOptionPNPTimerange(PainterOption):
+    @property
+    def ident(self):
+        return "pnp_timerange"
 
-multisite_painter_options["ts_date"] = {
-    'valuespec': DateFormat(),
-}
+    @property
+    def valuespec(self):
+        return Timerange(
+            title=_("Graph time range"),
+            default_value=None,
+            include_time=True,
+        )
 
-multisite_painter_options["matrix_omit_uniform"] = {
-    'valuespec': DropdownChoice(
-        title=_("Find differences..."),
-        choices=[
-            (False, _("Always show all rows")),
-            (True, _("Omit rows where all columns are identical")),
-        ])
-}
+
+@painter_option_registry.register
+class PainterOptionTimestampFormat(PainterOption):
+    @property
+    def ident(self):
+        return "ts_format"
+
+    @property
+    def valuespec(self):
+        return DropdownChoice(
+            title=_("Time stamp format"),
+            default_value=config.default_ts_format,
+            choices=[
+                ("mixed", _("Mixed")),
+                ("abs", _("Absolute")),
+                ("rel", _("Relative")),
+                ("both", _("Both")),
+                ("epoch", _("Unix Timestamp (Epoch)")),
+            ],
+        )
+
+
+@painter_option_registry.register
+class PainterOptionTimestampDate(PainterOption):
+    @property
+    def ident(self):
+        return "ts_date"
+
+    @property
+    def valuespec(self):
+        return DateFormat()
+
+
+@painter_option_registry.register
+class PainterOptionMatrixOmitUniform(PainterOption):
+    @property
+    def ident(self):
+        return "matrix_omit_uniform"
+
+    @property
+    def valuespec(self):
+        return DropdownChoice(
+            title=_("Find differences..."),
+            choices=[
+                (False, _("Always show all rows")),
+                (True, _("Omit rows where all columns are identical")),
+            ])
+
 
 #.
 #   .--Helpers-------------------------------------------------------------.

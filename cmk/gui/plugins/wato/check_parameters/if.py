@@ -108,6 +108,23 @@ def transform_if(v):
     return v
 
 
+def transform_if_groups_forth(params):
+    for param in params:
+        if param.get("name"):
+            param["group_name"] = param["name"]
+            del param["name"]
+        if param.get("include_items"):
+            param["items"] = param["include_items"]
+            del param["include_items"]
+        if param.get("single") is not None:
+            if param["single"]:
+                param["group_presence"] = "instead"
+            else:
+                param["group_presence"] = "separate"
+            del param["single"]
+    return params
+
+
 register_rule(
     RulespecGroupCheckParametersDiscovery,
     varname="inventory_if_rules",
@@ -229,6 +246,100 @@ register_rule(
     ),
     match='list',
 )
+
+vs_elements_if_groups_matches = [
+    ("iftype",
+     Transform(
+         DropdownChoice(
+             title=_("Select interface port type"),
+             choices=defines.interface_port_types(),
+             help=_("Only interfaces with the given port type are put into this group. "
+                    "For example 53 (propVirtual)."),
+         ),
+         forth=str,
+         back=int,
+     )),
+    ("items",
+     ListOfStrings(
+         title=_("Restrict interface items"),
+         help=_("Only interface with these item names are put into this group."),
+     )),
+]
+
+vs_elements_if_groups_group = [
+    ("group_name",
+     TextAscii(
+         title=_("Group name"),
+         help=_("Name of group in service description"),
+         allow_empty=False,
+     )),
+    ("group_presence",
+     DropdownChoice(
+         title=_("Group interface presence"),
+         help=_("Determine whether the group interface is created as an "
+                "separate service or not. In second case the choosen interface "
+                "services disapear."),
+         choices=[
+             ("separate", _("List grouped interfaces separately")),
+             ("instead", _("List grouped interfaces instead")),
+         ],
+         default_value="instead",
+     )),
+]
+
+register_rule(
+    RulespecGroupCheckParametersNetworking,
+    varname="if_groups",
+    title=_('Network interface groups'),
+    help=_(
+        'Normally the Interface checks create a single service for interface. '
+        'By defining if-group patterns multiple interfaces can be combined together. '
+        'A single service is created for this interface group showing the total traffic amount '
+        'of its members. You can configure if interfaces which are identified as group interfaces '
+        'should not show up as single service. You can restrict grouped interfaces by iftype and the '
+        'item name of the single interface.'),
+    valuespec=Transform(
+        Alternative(
+            style="dropdown",
+            elements=[
+                ListOf(
+                    title=_("Groups on single host"),
+                    add_label=_("Add pattern"),
+                    valuespec=Dictionary(
+                        elements=vs_elements_if_groups_group + vs_elements_if_groups_matches,
+                        required_keys=["group_name", "group_presence"]),
+                ),
+                ListOf(
+                    magic="@!!",
+                    title=_("Groups on cluster"),
+                    add_label=_("Add pattern"),
+                    valuespec=Dictionary(
+                        elements=vs_elements_if_groups_group +
+                        [("node_patterns",
+                          ListOf(
+                              title=_("Patterns for each node"),
+                              add_label=_("Add pattern"),
+                              valuespec=Dictionary(
+                                  elements=[("node_name", TextAscii(title=_("Node name")))] +
+                                  vs_elements_if_groups_matches,
+                                  required_keys=["node_name"]),
+                              allow_empty=False,
+                          ))],
+                        optional_keys=[])),
+            ],
+        ),
+        forth=transform_if_groups_forth),
+    match='all',
+)
+
+register_rule(
+    RulespecGroupCheckParametersNetworking,
+    "if_disable_if64_hosts",
+    title=_("Hosts forced to use <tt>if</tt> instead of <tt>if64</tt>"),
+    help=_("A couple of switches with broken firmware report that they "
+           "support 64 bit counters but do not output any actual data "
+           "in those counters. Listing those hosts in this rule forces "
+           "them to use the interface check with 32 bit counters instead."))
 
 register_check_parameters(
     RulespecGroupCheckParametersNetworking,

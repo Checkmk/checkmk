@@ -28,13 +28,16 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
     Integer,
+    ListOf,
     TextAscii,
     Transform,
     Tuple,
 )
 from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersApplications,
+    RulespecGroupCheckParametersDiscovery,
     register_check_parameters,
+    register_rule,
 )
 
 
@@ -43,6 +46,35 @@ def transform_msx_queues(params):
         return {"levels": (params[0], params[1])}
     return params
 
+
+register_rule(
+    RulespecGroupCheckParametersDiscovery,
+    varname="winperf_msx_queues_inventory",
+    title=_('MS Exchange Message Queues Discovery'),
+    help=_(
+        'Per default the offsets of all Windows performance counters are preconfigured in the check. '
+        'If the format of your counters object is not compatible then you can adapt the counter '
+        'offsets manually.'),
+    valuespec=ListOf(
+        Tuple(
+            orientation="horizontal",
+            elements=[
+                TextAscii(
+                    title=_("Name of Counter"),
+                    help=_("Name of the Counter to be monitored."),
+                    size=50,
+                    allow_empty=False,
+                ),
+                Integer(
+                    title=_("Offset"),
+                    help=_("The offset of the information relative to counter base"),
+                    allow_empty=False,
+                ),
+            ]),
+        movable=False,
+        add_label=_("Add Counter")),
+    match='all',
+)
 
 register_check_parameters(
     RulespecGroupCheckParametersApplications, "msx_queues", _("MS Exchange Message Queues"),

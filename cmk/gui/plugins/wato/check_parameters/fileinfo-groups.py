@@ -35,11 +35,69 @@ from cmk.gui.valuespec import (
     ListOfTimeRanges,
     MonitoringState,
     TextAscii,
+    Transform,
     Tuple,
 )
 from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersStorage,
     register_check_parameters,
+    register_rule,
+)
+
+register_rule(
+    RulespecGroupCheckParametersStorage,
+    varname="fileinfo_groups",
+    title=_('File Grouping Patterns'),
+    help=_('The check <tt>fileinfo</tt> monitors the age and size of '
+           'a single file. Each file information that is sent '
+           'by the agent will create one service. By defining grouping '
+           'patterns you can switch to the check <tt>fileinfo.groups</tt>. '
+           'That check monitors a list of files at once. You can set levels '
+           'not only for the total size and the age of the oldest/youngest '
+           'file but also on the count. You can define one or several '
+           'patterns for a group containing <tt>*</tt> and <tt>?</tt>, for example '
+           '<tt>/var/log/apache/*.log</tt>. Please see Python\'s fnmatch for more '
+           'information regarding globbing patterns and special characters. '
+           'If the pattern begins with a tilde then this pattern is interpreted as '
+           'a regular expression instead of as a filename globbing pattern and '
+           '<tt>*</tt> and <tt>?</tt> are treated differently. '
+           'For files contained in a group '
+           'the discovery will automatically create a group service instead '
+           'of single services for each file. This rule also applies when '
+           'you use manually configured checks instead of inventorized ones. '
+           'Furthermore, the current time/date in a configurable format '
+           'may be included in the include pattern. The syntax is as follows: '
+           '$DATE:format-spec$ or $YESTERDAY:format-spec$, where format-spec '
+           'is a list of time format directives of the unix date command. '
+           'Example: $DATE:%Y%m%d$ is todays date, e.g. 20140127. A pattern '
+           'of /var/tmp/backups/$DATE:%Y%m%d$.txt would search for .txt files '
+           'with todays date  as name in the directory /var/tmp/backups. '
+           'The YESTERDAY syntax simply subtracts one day from the reference time.'),
+    valuespec=ListOf(
+        Tuple(
+            help=_("This defines one file grouping pattern."),
+            show_titles=True,
+            orientation="horizontal",
+            elements=[
+                TextAscii(
+                    title=_("Name of group"),
+                    size=10,
+                ),
+                Transform(
+                    Tuple(
+                        show_titles=True,
+                        orientation="vertical",
+                        elements=[
+                            TextAscii(title=_("Include Pattern"), size=40),
+                            TextAscii(title=_("Exclude Pattern"), size=40),
+                        ],
+                    ),
+                    forth=lambda params: isinstance(params, str) and (params, '') or params),
+            ],
+        ),
+        add_label=_("Add pattern group"),
+    ),
+    match='all',
 )
 
 register_check_parameters(

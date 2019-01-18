@@ -25,12 +25,82 @@
 # Boston, MA 02110-1301 USA.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import TextAscii
+from cmk.gui.valuespec import (
+    Checkbox,
+    Dictionary,
+    ListChoice,
+    ListOf,
+    TextAscii,
+    TextUnicode,
+    Tuple,
+)
 from cmk.gui.plugins.wato import (
+    RulespecGroupCheckParametersDiscovery,
     RulespecGroupCheckParametersStorage,
     register_check_parameters,
+    register_rule,
 )
 from cmk.gui.plugins.wato.check_parameters.utils import vs_filesystem
+
+register_rule(
+    RulespecGroupCheckParametersDiscovery,
+    varname="inventory_df_rules",
+    title=_("Discovery parameters for filesystem checks"),
+    valuespec=Dictionary(
+        elements=[
+            ("include_volume_name", Checkbox(title=_("Include Volume name in item"))),
+            ("ignore_fs_types",
+             ListChoice(
+                 title=_("Filesystem types to ignore"),
+                 choices=[
+                     ("tmpfs", "tmpfs"),
+                     ("nfs", "nfs"),
+                     ("smbfs", "smbfs"),
+                     ("cifs", "cifs"),
+                     ("iso9660", "iso9660"),
+                 ],
+                 default_value=["tmpfs", "nfs", "smbfs", "cifs", "iso9660"])),
+            ("never_ignore_mountpoints",
+             ListOf(
+                 TextUnicode(),
+                 title=_(u"Mountpoints to never ignore"),
+                 help=_(
+                     u"Regardless of filesystem type, these mountpoints will always be discovered."
+                     u"Globbing or regular expressions are currently not supported."),
+             )),
+        ],),
+    match="dict",
+)
+
+register_rule(
+    RulespecGroupCheckParametersStorage,
+    varname="filesystem_groups",
+    title=_('Filesystem grouping patterns'),
+    help=_('Normally the filesystem checks (<tt>df</tt>, <tt>hr_fs</tt> and others) '
+           'will create a single service for each filesystem. '
+           'By defining grouping '
+           'patterns you can handle groups of filesystems like one filesystem. '
+           'For each group you can define one or several patterns. '
+           'The filesystems matching one of the patterns '
+           'will be monitored like one big filesystem in a single service.'),
+    valuespec=ListOf(
+        Tuple(
+            show_titles=True,
+            orientation="horizontal",
+            elements=[
+                TextAscii(title=_("Name of group"),),
+                TextAscii(
+                    title=_("Pattern for mount point (using * and ?)"),
+                    help=_("You can specify one or several patterns containing "
+                           "<tt>*</tt> and <tt>?</tt>, for example <tt>/spool/tmpspace*</tt>. "
+                           "The filesystems matching the patterns will be monitored "
+                           "like one big filesystem in a single service."),
+                ),
+            ]),
+        add_label=_("Add pattern"),
+    ),
+    match='all',
+)
 
 register_check_parameters(
     RulespecGroupCheckParametersStorage, "filesystem", _("Filesystems (used space and growth)"),

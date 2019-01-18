@@ -1,0 +1,10 @@
+Title: Check_MK Check: Don't crash upon keepalive timeout
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.5.0p12
+Date: 1547794513
+

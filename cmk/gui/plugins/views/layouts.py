@@ -39,7 +39,8 @@ from cmk.gui.plugins.views import (
     painter_options,
     is_stale,
     row_id,
-    multisite_layouts,
+    layout_registry,
+    Layout,
     group_value,
     EmptyCell,
     output_csv_headers,
@@ -132,12 +133,27 @@ def render_single_dataset(rows, view, group_cells, cells, num_columns, _ignore_s
     html.close_div()
 
 
-multisite_layouts["dataset"] = {
-    "title": _("Single dataset"),
-    "render": render_single_dataset,
-    "group": False,
-    "checkboxes": False,
-}
+@layout_registry.register
+class LayoutSingleDataset(Layout):
+    @property
+    def ident(self):
+        return "dataset"
+
+    @property
+    def title(self):
+        return _("Single dataset")
+
+    @property
+    def can_display_checkboxes(self):
+        return False
+
+    @property
+    def is_hidden(self):
+        return False
+
+    def render(self, rows, view, group_cells, cells, num_columns, show_checkboxes):
+        # TODO: Move to class
+        render_single_dataset(rows, view, group_cells, cells, num_columns, show_checkboxes)
 
 
 #.
@@ -400,12 +416,28 @@ def try_to_match_group(row):
     return None
 
 
-multisite_layouts["boxed"] = {
-    "title": _("Balanced boxes"),
-    "render": render_grouped_boxes,
-    "group": True,
-    "checkboxes": True,
-}
+@layout_registry.register
+class LayoutBalancedBoxes(Layout):
+    @property
+    def ident(self):
+        return "boxed"
+
+    @property
+    def title(self):
+        return _("Balanced boxes")
+
+    @property
+    def can_display_checkboxes(self):
+        return True
+
+    @property
+    def is_hidden(self):
+        return False
+
+    def render(self, rows, view, group_cells, cells, num_columns, show_checkboxes):
+        # TODO: Move to class
+        render_grouped_boxes(rows, view, group_cells, cells, num_columns, show_checkboxes)
+
 
 #.
 #   .--Graph Boxes---------------------------------------------------------.
@@ -415,21 +447,34 @@ multisite_layouts["boxed"] = {
 #   |      | |_| | | | (_| | |_) | | | | | |_) | (_) >  <  __/\__ \        |
 #   |       \____|_|  \__,_| .__/|_| |_| |____/ \___/_/\_\___||___/        |
 #   |                      |_|                                             |
-#   +----------------------------------------------------------------------+
-#   | Same as balanced boxes layout but adds a cs class graph to the box   |
 #   '----------------------------------------------------------------------'
 
 
-def render_grouped_boxed_graphs(*args):
-    return render_grouped_boxes(*args, css_class="graph")  # pylint: disable=no-value-for-parameter
+@layout_registry.register
+class LayoutBalancedGraphBoxes(Layout):
+    """Same as balanced boxes layout but adds a CSS class graph to the box"""
 
+    @property
+    def ident(self):
+        return "boxed_graph"
 
-multisite_layouts["boxed_graph"] = {
-    "title": _("Balanced graph boxes"),
-    "render": render_grouped_boxed_graphs,
-    "group": True,
-    "checkboxes": True,
-}
+    @property
+    def title(self):
+        return _("Balanced graph boxes")
+
+    @property
+    def can_display_checkboxes(self):
+        return True
+
+    @property
+    def is_hidden(self):
+        return False
+
+    def render(self, rows, view, group_cells, cells, num_columns, show_checkboxes):
+        # TODO: Move to class
+        render_grouped_boxes(
+            rows, view, group_cells, cells, num_columns, show_checkboxes, css_class="graph")
+
 
 #.
 #   .--Tiled---------------------------------------------------------------.
@@ -556,12 +601,28 @@ def render_tiled(rows, view, group_cells, cells, _ignore_num_columns, show_check
     init_rowselect(view)
 
 
-multisite_layouts["tiled"] = {
-    "title": _("Tiles"),
-    "render": render_tiled,
-    "group": True,
-    "checkboxes": True,
-}
+@layout_registry.register
+class LayoutTiled(Layout):
+    @property
+    def ident(self):
+        return "tiled"
+
+    @property
+    def title(self):
+        return _("Tiles")
+
+    @property
+    def can_display_checkboxes(self):
+        return True
+
+    @property
+    def is_hidden(self):
+        return False
+
+    def render(self, rows, view, group_cells, cells, num_columns, show_checkboxes):
+        # TODO: Move to class
+        render_tiled(rows, view, group_cells, cells, num_columns, show_checkboxes)
+
 
 #.
 #   .--Table---------------------------------------------------------------.
@@ -740,12 +801,28 @@ def render_grouped_list(rows, view, group_cells, cells, num_columns, show_checkb
     init_rowselect(view)
 
 
-multisite_layouts["table"] = {
-    "title": _("Table"),
-    "render": render_grouped_list,
-    "group": True,
-    "checkboxes": True,
-}
+@layout_registry.register
+class LayoutTable(Layout):
+    @property
+    def ident(self):
+        return "table"
+
+    @property
+    def title(self):
+        return _("Table")
+
+    @property
+    def can_display_checkboxes(self):
+        return True
+
+    @property
+    def is_hidden(self):
+        return False
+
+    def render(self, rows, view, group_cells, cells, num_columns, show_checkboxes):
+        # TODO: Move to class
+        render_grouped_list(rows, view, group_cells, cells, num_columns, show_checkboxes)
+
 
 #.
 #   .--Matrix--------------------------------------------------------------.
@@ -973,11 +1050,35 @@ def create_matrices(rows, group_cells, cells, num_columns):
         yield (groups, unique_row_ids, matrix_cells)
 
 
-multisite_layouts["matrix"] = {
-    "title": _("Matrix"),
-    "render": render_matrix,
-    "csv_export": csv_export_matrix,
-    "group": True,
-    "checkboxes": False,
-    "options": ["matrix_omit_uniform"],
-}
+@layout_registry.register
+class LayoutMatrix(Layout):
+    @property
+    def ident(self):
+        return "matrix"
+
+    @property
+    def title(self):
+        return _("Matrix")
+
+    @property
+    def can_display_checkboxes(self):
+        return False
+
+    @property
+    def is_hidden(self):
+        return False
+
+    def render(self, rows, view, group_cells, cells, num_columns, show_checkboxes):
+        # TODO: Move to class
+        render_matrix(rows, view, group_cells, cells, num_columns, show_checkboxes)
+
+    @property
+    def has_individual_csv_export(self):
+        return True
+
+    def csv_export(self, rows, view, group_cells, cells):
+        csv_export_matrix(rows, view, group_cells, cells)
+
+    @property
+    def painter_options(self):
+        return ["matrix_omit_uniform"]

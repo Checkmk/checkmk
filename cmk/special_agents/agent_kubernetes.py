@@ -498,12 +498,11 @@ class StorageClassList(ListLike[StorageClass]):
 
 class RoleList(ListLike[Role]):
     def list_roles(self):
-        return {
-            role.name: {
-                'namespace': role.namespace,
-                'creation_timestamp': role.creation_timestamp
-            } for role in self if role.name
-        }
+        return [{
+            'name': role.name,
+            'namespace': role.namespace,
+            'creation_timestamp': role.creation_timestamp
+        } for role in self if role.name]
 
 
 class Metric(object):
@@ -717,8 +716,8 @@ class ApiData(object):
         e.get('k8s_persistent_volume_claims').insert(
             self.persistent_volume_claims.list_volume_claims())
         e.get('k8s_storage_classes').insert(self.storage_classes.list_storage_classes())
-        e.get('k8s_roles').insert(self.roles.list_roles())
-        e.get('k8s_roles').insert(self.cluster_roles.list_roles())
+        e.get('k8s_roles').insert({'roles': self.roles.list_roles()})
+        e.get('k8s_roles').insert({'cluster_roles': self.cluster_roles.list_roles()})
         e.get('k8s_resources').insert(self.nodes.cluster_resources())
         e.get('k8s_resources').insert(self.pods.cluster_resources())
         e.get('k8s_resources').insert(self.pods.pods_in_cluster())

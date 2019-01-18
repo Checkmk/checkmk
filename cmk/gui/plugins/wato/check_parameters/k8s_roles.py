@@ -7,7 +7,7 @@
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
-# | Copyright Mathias Kettner 2018             mk@mathias-kettner.de |
+# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 #
 # This file is part of Check_MK.
@@ -24,45 +24,50 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+from cmk.gui.i18n import _
+from cmk.gui.valuespec import (
+    Dictionary,
+    Tuple,
+    Integer,
+)
+from cmk.gui.plugins.wato import (
+    RulespecGroupCheckParametersApplications,
+    register_check_parameters,
+)
 
-def inventory_k8s_roles(parsed):
-    if parsed:
-        return [(None, {})]
-
-
-def check_k8s_roles(item, params, parsed):
-    cluster_roles = len(parsed['cluster_roles'])
-    roles = len(parsed['roles'])
-
-    yield check_levels(
-        cluster_roles + roles,
-        'k8s_total_roles',
-        params.get('total'),
-        infoname='Total',
-        human_readable_func=int,
-    )
-    yield check_levels(
-        cluster_roles,
-        'k8s_cluster_roles',
-        params.get('cluster_roles'),
-        infoname='Cluster roles',
-        human_readable_func=int,
-    )
-    yield check_levels(
-        roles,
-        'k8s_roles',
-        params.get('roles'),
-        infoname='Roles',
-        human_readable_func=int,
-    )
-
-
-check_info['k8s_roles'] = {
-    'parse_function': parse_k8s,
-    'inventory_function': inventory_k8s_roles,
-    'check_function': check_k8s_roles,
-    'service_description': 'Roles',
-    'group': 'k8s_roles',
-    'has_perfdata': True,
-    'includes': ['k8s.include'],
-}
+register_check_parameters(
+    RulespecGroupCheckParametersApplications,
+    "k8s_roles",
+    _("Kubernetes roles"),
+    Dictionary(elements=[
+        ('total',
+         Tuple(
+             title=_('Total'),
+             default_value=(80.0, 90.0),
+             elements=[
+                 Integer(title=_("Warning above")),
+                 Integer(title=_("Critical above")),
+             ],
+         )),
+        ('cluster_roles',
+         Tuple(
+             title=_('Cluster roles'),
+             default_value=(80.0, 90.0),
+             elements=[
+                 Integer(title=_("Warning above")),
+                 Integer(title=_("Critical above")),
+             ],
+         )),
+        ('roles',
+         Tuple(
+             title=_('Roles'),
+             default_value=(80.0, 90.0),
+             elements=[
+                 Integer(title=_("Warning above")),
+                 Integer(title=_("Critical above")),
+             ],
+         )),
+    ]),
+    None,
+    match_type="dict",
+)

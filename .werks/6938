@@ -1,0 +1,25 @@
+Title: cmk-update-agent: Handle failing package manager
+Level: 1
+Component: agents
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.6.0i1
+Date: 1547826201
+
+This werk fixes two bugs that occur on Unix and Linux
+when the invoked package manager fails to install an
+agent package:
+
+The agent updater saved the agent hash to its state file
+immediately before the update takes place. As a result, an
+agent package got recognized as installed even if
+its installation failed.
+
+(Regression since Check_MK 1.5) Due to inproper handling
+of the stderr and stdout streams coming from the invoked
+package manager, the agent updater crashed on a package
+manager failure instead of forwarding the error messages
+to the user or log.
+

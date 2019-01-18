@@ -412,12 +412,13 @@ def show_command_form(view, datasource, rows):
 
     one_shown = False
     html.open_div(**{"data-role": "collapsible-set"})
-    for command in views.multisite_commands:
-        if what in command["tables"] and config.user.may(command["permission"]):
+    for command_class in cmk.gui.plugins.views.utils.command_registry.values():
+        command = command_class()
+        if what in command.tables and config.user.may(command.permission.name):
             html.open_div(class_=["command_group"], **{"data-role": "collapsible"})
-            html.h3(command["title"])
+            html.h3(command.title)
             html.open_p()
-            command["render"]()
+            command.render()
             html.close_p()
             html.close_div()
             one_shown = True

@@ -1,5 +1,5 @@
 import six
-import pytest
+import pytest  # type: ignore
 from pathlib2 import Path
 
 import cmk.gui.modules as modules

@@ -29,17 +29,33 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import MKGeneralException
 
-from . import (
-    multisite_painters,
+from cmk.gui.plugins.views import (
     multisite_sorters,
+    painter_registry,
+    Painter,
 )
 
-multisite_painters["host_filename"] = {
-    "title": _("Check_MK config filename"),
-    "short": _("Filename"),
-    "columns": ["host_filename"],
-    "paint": lambda row: ("tt", row["host_filename"]),
-}
+
+@painter_registry.register
+class PainterHostFilename(Painter):
+    @property
+    def ident(self):
+        return "host_filename"
+
+    @property
+    def title(self):
+        return _("Check_MK config filename")
+
+    @property
+    def short_title(self):
+        return _("Filename")
+
+    @property
+    def columns(self):
+        return ['host_filename']
+
+    def render(self, row, cell):
+        return ("tt", row["host_filename"])
 
 
 def get_wato_folder(row, how, with_links=True):
@@ -78,29 +94,82 @@ def paint_wato_folder(row, how):
     return "", get_wato_folder(row, how)
 
 
-multisite_painters["wato_folder_abs"] = {
-    "title": _("WATO folder - complete path"),
-    "short": _("WATO folder"),
-    "columns": ["host_filename"],
-    "paint": lambda row: paint_wato_folder(row, "abs"),
-    "sorter": 'wato_folder_abs',
-}
+@painter_registry.register
+class PainterWatoFolderAbs(Painter):
+    @property
+    def ident(self):
+        return "wato_folder_abs"
 
-multisite_painters["wato_folder_rel"] = {
-    "title": _("WATO folder - relative path"),
-    "short": _("WATO folder"),
-    "columns": ["host_filename"],
-    "paint": lambda row: paint_wato_folder(row, "rel"),
-    "sorter": 'wato_folder_rel',
-}
+    @property
+    def title(self):
+        return _("WATO folder - complete path")
 
-multisite_painters["wato_folder_plain"] = {
-    "title": _("WATO folder - just folder name"),
-    "short": _("WATO folder"),
-    "columns": ["host_filename"],
-    "paint": lambda row: paint_wato_folder(row, "plain"),
-    "sorter": 'wato_folder_plain',
-}
+    @property
+    def short_title(self):
+        return _("WATO folder")
+
+    @property
+    def columns(self):
+        return ['host_filename']
+
+    @property
+    def sorter(self):
+        return 'wato_folder_abs'
+
+    def render(self, row, cell):
+        return paint_wato_folder(row, "abs")
+
+
+@painter_registry.register
+class PainterWatoFolderRel(Painter):
+    @property
+    def ident(self):
+        return "wato_folder_rel"
+
+    @property
+    def title(self):
+        return _("WATO folder - relative path")
+
+    @property
+    def short_title(self):
+        return _("WATO folder")
+
+    @property
+    def columns(self):
+        return ['host_filename']
+
+    @property
+    def sorter(self):
+        return 'wato_folder_rel'
+
+    def render(self, row, cell):
+        return paint_wato_folder(row, "rel")
+
+
+@painter_registry.register
+class PainterWatoFolderPlain(Painter):
+    @property
+    def ident(self):
+        return "wato_folder_plain"
+
+    @property
+    def title(self):
+        return _("WATO folder - just folder name")
+
+    @property
+    def short_title(self):
+        return _("WATO folder")
+
+    @property
+    def columns(self):
+        return ['host_filename']
+
+    @property
+    def sorter(self):
+        return 'wato_folder_plain'
+
+    def render(self, row, cell):
+        return paint_wato_folder(row, "plain")
 
 
 def cmp_wato_folder(r1, r2, how):

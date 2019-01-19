@@ -31,10 +31,8 @@ import abc
 import os
 import time
 import re
-import inspect
 import hashlib
 import traceback
-import types
 
 import livestatus
 
@@ -239,12 +237,6 @@ def row_id(view, row):
     return hashlib.sha256(key.encode('utf-8')).hexdigest()
 
 
-def get_painter_columns(painter):
-    if callable(painter["columns"]):
-        return painter["columns"]()
-    return painter["columns"]
-
-
 # The Group-value of a row is used for deciding whether
 # two rows are in the same group or not
 def group_value(row, group_cells):
@@ -252,15 +244,12 @@ def group_value(row, group_cells):
     for cell in group_cells:
         painter = cell.painter()
 
-        groupvalfunc = painter.get("groupby")
-        if groupvalfunc:
-            if "args" in painter:
-                group.append(groupvalfunc(row, *painter["args"]))
-            else:
-                group.append(groupvalfunc(row))
+        group_by_val = painter.group_by(row)
+        if group_by_val is not None:
+            group.append(group_by_val)
 
         else:
-            for c in get_painter_columns(painter):
+            for c in painter.columns:
                 if c in row:
                     group.append(row[c])
 
@@ -651,8 +640,149 @@ class DataSourceRegistry(cmk.utils.plugin_registry.ClassRegistry):
 
 data_source_registry = DataSourceRegistry()
 
+
+# TODO: Return value of render() could be cleaned up e.g. to a named tuple with an
+# optional CSS class. A lot of painters don't specify CSS classes.
+# TODO: Since we have the reporting also working with the painters it could be useful
+# to make the render function return structured data which can then be rendered for
+# HTML and PDF.
+# TODO: A lot of painter classes simply display plain livestatus column values. These
+# could be replaced with some simpler generic definition.
+class Painter(object):
+    """A painter computes HTML code based on information from a data row and
+    creates a CSS class for one display column.
+
+    Please note, that there is no
+    1:1 relation between data columns and display columns. A painter can
+    make use of more than one data columns. One example is the current
+    service state. It uses the columns "service_state" and "has_been_checked".
+    """
+
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractproperty
+    def ident(self):
+        # type: () -> str
+        """The identity of a painter. One word, may contain alpha numeric characters"""
+        raise NotImplementedError()
+
+    @abc.abstractproperty
+    def title(self):
+        # type: () -> Text
+        """Used as display string for the painter in the GUI (e.g. view editor)"""
+        raise NotImplementedError()
+
+    @abc.abstractproperty
+    def columns(self):
+        # type: () -> List[str]
+        """Livestatus columns needed for this painter"""
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def render(self, row, cell):
+        # type: (dict, Cell) -> Tuple[str, str]
+        """Renders the painter for the given row
+        The paint function gets one argument: A data row, which is a python
+        dictionary representing one data object (host, service, ...). Its
+        keys are the column names, its values the actual values from livestatus
+        (typed: numbers are float or int, not string)
+
+        The paint function must return a pair of two strings: The HTML code
+        for painting the column and a CSS class for the TD of the column.
+        That class is optional and set to "" in most cases. Currently CSS
+        styles are not modular and all defined in check_mk.css. This will
+        change in future."""
+        raise NotImplementedError()
+
+    @property
+    def short_title(self):
+        # type: () -> Text
+        """Used as display string for the painter e.g. as table header
+        Falls back to the full title if no short title is given"""
+        return self.title
+
+    def group_by(self, row):
+        # type: (dict) -> Optional[Union[str, Tuple]]
+        """When a value is returned, this is used instead of the value produced by self.paint()"""
+        return None
+
+    @property
+    def parameters(self):
+        # type: () -> Optional[ValueSpec]
+        """Returns either the valuespec of the painter parameters or None"""
+        return None
+
+    @property
+    def painter_options(self):
+        # type: () -> List[str]
+        """Returns a list of painter option names that affect this painter"""
+        return []
+
+    @property
+    def printable(self):
+        # type: () -> Union[bool, str]
+        """
+        True       : Is printable in PDF
+        False      : Is not printable at all
+        "<string>" : ID of a painter_printer (Reporting module)
+        """
+        return True
+
+    @property
+    def sorter(self):
+        # type: () -> Optional[str]
+        """Returns the optional name of the sorter for this painter"""
+        return None
+
+    # TODO: Cleanup this hack
+    @property
+    def load_inv(self):
+        # type: () -> bool
+        """Whether or not to load the HW/SW inventory for this column"""
+        return False
+
+
+class PainterRegistry(cmk.utils.plugin_registry.ClassRegistry):
+    def plugin_base_class(self):
+        return Painter
+
+    def plugin_name(self, plugin_class):
+        return plugin_class().ident
+
+    ## TODO: Sort the datasources by (assumed) common usage
+    #def data_source_choices(self):
+    #    datasources = []
+    #    for ident, ds_class in self.items():
+    #        datasources.append((ident, ds_class().title))
+    #    return sorted(datasources, key=lambda x: x[1])
+
+
+painter_registry = PainterRegistry()
+
+
+# Kept for pre 1.6 compatibility. But also the inventory.py uses this to
+# register some painters dynamically
+def register_painter(ident, spec):
+    cls = type(
+        "LegacyPainter%s" % ident.title(), (Painter,), {
+            "_ident": ident,
+            "_spec": spec,
+            "ident": property(lambda s: s._ident),
+            "title": property(lambda s: s._spec["title"]),
+            "columns": property(lambda s: s._spec["columns"]),
+            "render": spec["paint"],
+            "short_title": property(lambda s: s._spec.get("short", s.title)),
+            "group_by": property(lambda s: s._spec.get("groupby")),
+            "parameters": property(lambda s: s._spec.get("params")),
+            "painter_options": property(lambda s: s._spec.get("options", [])),
+            "printable": property(lambda s: s._spec.get("printable", True)),
+            "sorter": property(lambda s: s._spec.get("sorter", None)),
+            "load_inv": property(lambda s: s._spec.get("load_inv", False)),
+        })
+    painter_registry.register(cls)
+
+
 # TODO: Refactor to plugin_registries
-multisite_painters = {}
 multisite_sorters = {}
 multisite_builtin_views = {}
 view_hooks = {}
@@ -837,16 +967,17 @@ def declare_simple_sorter(name, title, column, func):
 
 
 def declare_1to1_sorter(painter_name, func, col_num=0, reverse=False):
+    painter = painter_registry[painter_name]()
     multisite_sorters[painter_name] = {
-        "title": multisite_painters[painter_name]['title'],
-        "columns": multisite_painters[painter_name]['columns'],
+        "title": painter.title,
+        "columns": painter.columns,
     }
     if not reverse:
         multisite_sorters[painter_name]["cmp"] = \
-            lambda r1, r2: func(multisite_painters[painter_name]['columns'][col_num], r1, r2)
+            lambda r1, r2: func(painter.columns[col_num], r1, r2)
     else:
         multisite_sorters[painter_name]["cmp"] = \
-            lambda r1, r2: func(multisite_painters[painter_name]['columns'][col_num], r2, r1)
+            lambda r1, r2: func(painter.columns[col_num], r2, r1)
     return painter_name
 
 
@@ -1088,7 +1219,7 @@ def join_row(row, cell):
 def get_view_infos(view):
     """Return list of available datasources (used to render filters)"""
     ds_name = view.get('datasource', html.request.var('datasource'))
-    return data_source_registry[ds_name].infos
+    return data_source_registry[ds_name]().infos
 
 
 def replace_action_url_macros(url, what, row):
@@ -1344,7 +1475,7 @@ class Cell(object):
         else:
             painter_name = painter_spec[0]
 
-        return painter_name in multisite_painters
+        return painter_name in painter_registry
 
     # Wanted to have the "parse painter spec logic" in one place (The Cell() class)
     # but this should be cleaned up more. TODO: Move this to another place
@@ -1394,7 +1525,7 @@ class Cell(object):
 
     # Get a list of columns we need to fetch in order to render this cell
     def needed_columns(self):
-        columns = set(get_painter_columns(self.painter()))
+        columns = set(self.painter().columns)
 
         if self._link_view_name:
             if self._has_link():
@@ -1407,7 +1538,7 @@ class Cell(object):
                         columns.update(filt.link_columns)
 
         if self.has_tooltip():
-            columns.update(get_painter_columns(self.tooltip_painter()))
+            columns.update(self.tooltip_painter().columns)
 
         return columns
 
@@ -1427,7 +1558,7 @@ class Cell(object):
             return None
 
     def painter(self):
-        return multisite_painters[self._painter_name]
+        return painter_registry[self._painter_name]()
 
     def painter_name(self):
         return self._painter_name
@@ -1436,18 +1567,19 @@ class Cell(object):
         return self._painter_name
 
     def painter_options(self):
-        return self.painter().get("options", [])
+        return self.painter().painter_options
 
     # The parameters configured in the view for this painter. In case the
     # painter has params, it defaults to the valuespec default value and
     # in case the painter has no params, it returns None.
     def painter_parameters(self):
-        vs_painter_params = get_painter_params_valuespec(self.painter())
+        vs_painter_params = self.painter().parameters
         if not vs_painter_params:
             return
 
-        if vs_painter_params and self._painter_params is None:
+        if self._painter_params is None:
             return vs_painter_params.default_value()
+
         return self._painter_params
 
     def title(self, use_short=True):
@@ -1457,21 +1589,23 @@ class Cell(object):
         return self._get_long_title(painter)
 
     def _get_short_title(self, painter):
-        if isinstance(painter.get("short"), (types.FunctionType, types.MethodType)):
-            return painter["short"](self.painter_parameters())
-        return painter.get("short", self._get_long_title(painter))
+        # TODO: Hack for the SLA painters. Find a better way
+        if callable(painter.short_title):
+            return painter.short_title(self.painter_parameters())
+        return painter.short_title
 
     def _get_long_title(self, painter):
-        if isinstance(painter.get("title"), (types.FunctionType, types.MethodType)):
-            return painter["title"](self.painter_parameters())
-        return painter["title"]
+        # TODO: Hack for the SLA painters. Find a better way
+        if callable(painter.title):
+            return painter.title(self.painter_parameters())
+        return painter.title
 
     # Can either be:
     # True       : Is printable in PDF
     # False      : Is not printable at all
     # "<string>" : ID of a painter_printer (Reporting module)
     def printable(self):
-        return self.painter().get("printable", True)
+        return self.painter().printable
 
     def has_tooltip(self):
         return self._tooltip_painter_name is not None
@@ -1480,7 +1614,7 @@ class Cell(object):
         return self._tooltip_painter_name
 
     def tooltip_painter(self):
-        return multisite_painters[self._tooltip_painter_name]
+        return painter_registry[self._tooltip_painter_name]()
 
     def paint_as_header(self, is_last_column_header=False):
         # Optional: Sort link in title cell
@@ -1643,23 +1777,10 @@ class Cell(object):
             return "", ""  # nothing to paint
 
         painter = self.painter()
-        paint_func = painter["paint"]
-
-        # Painters can request to get the cell object handed over.
-        # Detect that and give the painter this argument.
-        arg_names = inspect.getargspec(paint_func)[0]
-        painter_args = []
-        for arg_name in arg_names:
-            if arg_name == "row":
-                painter_args.append(row)
-            elif arg_name == "cell":
-                painter_args.append(self)
-
-        # Add optional painter arguments from painter specification
-        if "args" in painter:
-            painter_args += painter["args"]
-
-        return painter["paint"](*painter_args)
+        result = painter.render(row, self)
+        if not isinstance(result, tuple) or len(result) != 2:
+            raise Exception(_("Painter %r returned invalid result: %r") % (painter.ident, result))
+        return result
 
     def paint(self, row, tdattrs="", is_last_cell=False):
         tdclass, content = self.render(row)
@@ -1679,7 +1800,6 @@ class Cell(object):
             html.write("<td %s>" % (tdattrs))
             html.write(content)
             html.close_td()
-        #html.guitest_record_output("view", ("cell", content))
 
         return has_content
 
@@ -1754,9 +1874,9 @@ def output_csv_headers(view):
 
 
 def get_sorter_name_of_painter(painter_name):
-    painter = multisite_painters[painter_name]
-    if 'sorter' in painter:
-        return painter['sorter']
+    painter = painter_registry[painter_name]()
+    if painter.sorter:
+        return painter.sorter
 
     elif painter_name in multisite_sorters:
         return painter_name
@@ -1765,7 +1885,7 @@ def get_sorter_name_of_painter(painter_name):
 def get_separated_sorters(view):
     group_sort = [(get_sorter_name_of_painter(p[0]), False)
                   for p in view['group_painters']
-                  if p[0] in multisite_painters and get_sorter_name_of_painter(p[0]) is not None]
+                  if p[0] in painter_registry and get_sorter_name_of_painter(p[0]) is not None]
     view_sort = [s for s in view['sorters'] if not s[0] in group_sort]
 
     # Get current url individual sorters. Parse the "sort" url parameter,
@@ -1811,13 +1931,3 @@ def substract_sorters(base, remove):
             base.remove(s)
         elif (s[0], not s[1]) in base:
             base.remove((s[0], not s[1]))
-
-
-def get_painter_params_valuespec(painter):
-    """Returns either the valuespec of the painter parameters or None"""
-    if "params" not in painter:
-        return
-
-    if isinstance(painter["params"], (types.FunctionType, types.MethodType)):
-        return painter["params"]()
-    return painter["params"]

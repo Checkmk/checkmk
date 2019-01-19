@@ -60,9 +60,11 @@ from cmk.gui.plugins.visuals.inventory import (
 from cmk.gui.plugins.views import (
     data_source_registry,
     DataSource,
+    painter_registry,
+    Painter,
+    register_painter,
     painter_options,
     display_options,
-    multisite_painters,
     multisite_sorters,
     painter_option_registry,
     PainterOption,
@@ -164,16 +166,17 @@ def declare_inv_column(invpath, datatype, title, short=None):
         name = "inv_" + invpath.replace(":", "_").replace(".", "_").strip("_")
 
     # Declare column painter
-    multisite_painters[name] = {
+    painter_spec = {
         "title": invpath == "." and _("Inventory Tree") or (_("Inventory") + ": " + title),
         "columns": ["host_inventory", "host_structured_status"],
         "options": ["show_internal_tree_paths"],
         "load_inv": True,
-        "paint": lambda row: paint_host_inventory_tree(row, invpath),
+        "paint": lambda self, row: paint_host_inventory_tree(row, invpath),
         "sorter": name,
     }
     if short:
-        multisite_painters[name]["short"] = short
+        painter_spec["short"] = short
+    register_painter(name, painter_spec)
 
     # Sorters and Filters only for leaf nodes
     if invpath[-1] not in ":.":
@@ -224,13 +227,31 @@ class PainterOptionShowInternalTreePaths(PainterOption):
         )
 
 
-multisite_painters["inventory_tree"] = {
-    "title": _("Hardware & Software Tree"),
-    "columns": ["host_inventory", "host_structured_status"],
-    "options": ["show_internal_tree_paths"],
-    "load_inv": True,
-    "paint": paint_host_inventory_tree,
-}
+@painter_registry.register
+class PainterInventoryTree(Painter):
+    @property
+    def ident(self):
+        return "inventory_tree"
+
+    @property
+    def title(self):
+        return _("Hardware & Software Tree")
+
+    @property
+    def columns(self):
+        return ['host_inventory', 'host_structured_status']
+
+    @property
+    def painter_options(self):
+        return ['show_internal_tree_paths']
+
+    @property
+    def load_inv(self):
+        return True
+
+    def render(self, row, cell):
+        return paint_host_inventory_tree(row)
+
 
 #.
 #   .--paint helper--------------------------------------------------------.
@@ -1447,13 +1468,14 @@ def declare_invtable_columns(infoname, invpath, topic):
 def declare_invtable_column(infoname, name, topic, title, short_title, sortfunc, paint_function,
                             filter_class):
     column = infoname + "_" + name
-    multisite_painters[column] = {
-        "title": topic + ": " + title,
-        "short": short_title,
-        "columns": [column],
-        "paint": lambda row: paint_function(row.get(column)),
-        "sorter": column,
-    }
+    register_painter(
+        column, {
+            "title": topic + ": " + title,
+            "short": short_title,
+            "columns": [column],
+            "paint": lambda row: paint_function(row.get(column)),
+            "sorter": column,
+        })
     multisite_sorters[column] = {
         "title": _("Inventory") + ": " + title,
         "columns": [column],
@@ -1937,20 +1959,48 @@ class DataSourceInventoryHistory(DataSource):
         return ["host_name", "invhist_time"]
 
 
-multisite_painters["invhist_time"] = {
-    "title": _("Inventory Date/Time"),
-    "short": _("Date/Time"),
-    "columns": ["invhist_time"],
-    "options": ["ts_format", "ts_date"],
-    "paint": lambda row: paint_age(row["invhist_time"], True, 60 * 10),
-}
+@painter_registry.register
+class PainterInvhistTime(Painter):
+    @property
+    def ident(self):
+        return "invhist_time"
 
-multisite_painters["invhist_delta"] = {
-    "title": _("Inventory changes"),
-    "columns": ["invhist_delta"
-                "invhist_time"],
-    "paint": lambda row: paint_host_inventory_tree(row, column="invhist_delta"),
-}
+    @property
+    def title(self):
+        return _("Inventory Date/Time")
+
+    @property
+    def short_title(self):
+        return _("Date/Time")
+
+    @property
+    def columns(self):
+        return ['invhist_time']
+
+    @property
+    def painter_options(self):
+        return ['ts_format', 'ts_date']
+
+    def render(self, row, cell):
+        return paint_age(row["invhist_time"], True, 60 * 10)
+
+
+@painter_registry.register
+class PainterInvhistDelta(Painter):
+    @property
+    def ident(self):
+        return "invhist_delta"
+
+    @property
+    def title(self):
+        return _("Inventory changes")
+
+    @property
+    def columns(self):
+        return ['invhist_deltainvhist_time']
+
+    def render(self, row, cell):
+        return paint_host_inventory_tree(row, column="invhist_delta")
 
 
 def paint_invhist_count(row, what):
@@ -1960,26 +2010,71 @@ def paint_invhist_count(row, what):
     return "narrow number unused", "0"
 
 
-multisite_painters["invhist_removed"] = {
-    "title": _("Removed entries"),
-    "short": _("Removed"),
-    "columns": ["invhist_removed"],
-    "paint": lambda row: paint_invhist_count(row, "removed"),
-}
+@painter_registry.register
+class PainterInvhistRemoved(Painter):
+    @property
+    def ident(self):
+        return "invhist_removed"
 
-multisite_painters["invhist_new"] = {
-    "title": _("new entries"),
-    "short": _("new"),
-    "columns": ["invhist_new"],
-    "paint": lambda row: paint_invhist_count(row, "new"),
-}
+    @property
+    def title(self):
+        return _("Removed entries")
 
-multisite_painters["invhist_changed"] = {
-    "title": _("changed entries"),
-    "short": _("changed"),
-    "columns": ["invhist_changed"],
-    "paint": lambda row: paint_invhist_count(row, "changed"),
-}
+    @property
+    def short_title(self):
+        return _("Removed")
+
+    @property
+    def columns(self):
+        return ['invhist_removed']
+
+    def render(self, row, cell):
+        return paint_invhist_count(row, "removed")
+
+
+@painter_registry.register
+class PainterInvhistNew(Painter):
+    @property
+    def ident(self):
+        return "invhist_new"
+
+    @property
+    def title(self):
+        return _("new entries")
+
+    @property
+    def short_title(self):
+        return _("new")
+
+    @property
+    def columns(self):
+        return ['invhist_new']
+
+    def render(self, row, cell):
+        return paint_invhist_count(row, "new")
+
+
+@painter_registry.register
+class PainterInvhistChanged(Painter):
+    @property
+    def ident(self):
+        return "invhist_changed"
+
+    @property
+    def title(self):
+        return _("changed entries")
+
+    @property
+    def short_title(self):
+        return _("changed")
+
+    @property
+    def columns(self):
+        return ['invhist_changed']
+
+    def render(self, row, cell):
+        return paint_invhist_count(row, "changed")
+
 
 # sorters
 declare_1to1_sorter("invhist_time", cmp_simple_number, reverse=True)

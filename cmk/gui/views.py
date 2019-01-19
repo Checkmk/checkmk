@@ -80,20 +80,21 @@ from cmk.gui.plugins.views.icons.utils import (
 from cmk.gui.plugins.views.utils import (
     command_registry,
     layout_registry,
+    data_source_registry,
 )
 
 # Needed for legacy (pre 1.6) plugins
 from cmk.gui.htmllib import HTML  # pylint: disable=unused-import
 from cmk.gui.plugins.views.utils import (  # pylint: disable=unused-import
-    load_all_views, get_permitted_views, view_title, multisite_datasources, multisite_painters,
-    multisite_sorters, multisite_builtin_views, view_hooks, inventory_displayhints,
-    register_command_group, transform_action_url, is_stale, paint_stalified, paint_host_list,
-    format_plugin_output, link_to_view, url_to_view, get_host_tags, row_id, group_value,
-    get_painter_columns, view_is_enabled, paint_age, declare_1to1_sorter, declare_simple_sorter,
-    cmp_simple_number, cmp_simple_string, cmp_insensitive_string, cmp_num_split,
-    cmp_custom_variable, cmp_service_name_equiv, cmp_string_list, cmp_ip_address, get_custom_var,
-    get_perfdata_nth_value, get_tag_group, query_data, do_query_data, PainterOptions, join_row,
-    get_view_infos, replace_action_url_macros, Cell, JoinCell, get_cells, get_group_cells,
+    load_all_views, get_permitted_views, view_title, multisite_painters, multisite_sorters,
+    multisite_builtin_views, view_hooks, inventory_displayhints, register_command_group,
+    transform_action_url, is_stale, paint_stalified, paint_host_list, format_plugin_output,
+    link_to_view, url_to_view, get_host_tags, row_id, group_value, get_painter_columns,
+    view_is_enabled, paint_age, declare_1to1_sorter, declare_simple_sorter, cmp_simple_number,
+    cmp_simple_string, cmp_insensitive_string, cmp_num_split, cmp_custom_variable,
+    cmp_service_name_equiv, cmp_string_list, cmp_ip_address, get_custom_var, get_perfdata_nth_value,
+    get_tag_group, query_data, do_query_data, PainterOptions, join_row, get_view_infos,
+    replace_action_url_macros, Cell, JoinCell, get_cells, get_group_cells,
     get_sorter_name_of_painter, get_separated_sorters, get_primary_sorter_order,
     get_painter_params_valuespec, parse_url_sorters, substract_sorters, painter_options,
     register_legacy_command,
@@ -122,6 +123,7 @@ loaded_with_language = False
 multisite_painter_options = {}
 multisite_layouts = {}
 multisite_commands = {}
+multisite_datasources = {}
 
 
 @permission_section_registry.register
@@ -166,6 +168,10 @@ def load_plugins(force):
     if multisite_layouts:
         raise MKGeneralException("Found legacy layout plugins: %s. You will either have to "
                                  "remove or migrate them." % ", ".join(multisite_layouts.keys()))
+    if multisite_datasources:
+        raise MKGeneralException(
+            "Found legacy data source plugins: %s. You will either have to "
+            "remove or migrate them." % ", ".join(multisite_datasources.keys()))
 
     # TODO: Kept for compatibility with pre 1.6 plugins
     for cmd_spec in multisite_commands:
@@ -307,7 +313,7 @@ def load_host_tag_painters():
 @cmk.gui.pages.register("edit_views")
 def page_edit_views():
     load_views()
-    cols = [(_('Datasource'), lambda v: multisite_datasources[v["datasource"]]['title'])]
+    cols = [(_('Datasource'), lambda v: data_source_registry[v["datasource"]]().title)]
     visuals.page_list('views', _("Edit Views"), multisite_views, cols)
 
 
@@ -326,19 +332,12 @@ def page_edit_views():
 # First step: Select the data source
 
 
-# Create datasource selection valuespec, also for other modules
-# FIXME: Sort the datasources by (assumed) common usage
 def DatasourceSelection():
-    # FIXME: Sort the datasources by (assumed) common usage
-    datasources = []
-    for ds_name, ds in multisite_datasources.items():
-        datasources.append((ds_name, ds['title']))
-
+    """Create datasource selection valuespec, also for other modules"""
     return DropdownChoice(
         title=_('Datasource'),
         help=_('The datasources define which type of objects should be displayed with this view.'),
-        choices=datasources,
-        sorted=True,
+        choices=data_source_registry.data_source_choices(),
         columns=1,
         default_value='services',
     )
@@ -389,12 +388,12 @@ def page_create_view(next_url=None):
 @cmk.gui.pages.register("create_view_infos")
 def page_create_view_infos():
     ds_name = html.request.var('datasource')
-    if ds_name not in multisite_datasources:
+    if ds_name not in data_source_registry:
         raise MKGeneralException(_('The given datasource is not supported'))
 
     visuals.page_create_visual(
         'views',
-        multisite_datasources[ds_name]['infos'],
+        data_source_registry[ds_name]().infos,
         next_url='edit_view.py?mode=create&datasource=%s&single_infos=%%s' % ds_name)
 
 
@@ -441,8 +440,8 @@ def format_view_title(name, view):
         title_parts.append(_('Mobile'))
 
     # Don't use the data source title because it does not really look good here
-    datasource = multisite_datasources[view["datasource"]]
-    infos = datasource["infos"]
+    datasource = data_source_registry[view["datasource"]]()
+    infos = datasource.infos
     if "event" in infos:
         title_parts.append(_("Event Console"))
     elif view["datasource"].startswith("inv"):
@@ -489,7 +488,7 @@ def view_editor_specs(ds_name, general_properties=True):
                                FixedValue(
                                    ds_name,
                                    title=_('Datasource'),
-                                   totext=multisite_datasources[ds_name]['title'],
+                                   totext=data_source_registry[ds_name]().title,
                                    help=_('The datasource of a view cannot be changed.'),
                                )),
                               ('options',
@@ -660,7 +659,7 @@ def render_view_config(view, general_properties=True):
     ds_name = view.get("datasource", html.request.var("datasource"))
     if not ds_name:
         raise MKInternalError(_("No datasource defined."))
-    if ds_name not in multisite_datasources:
+    if ds_name not in data_source_registry:
         raise MKInternalError(_('The given datasource is not supported.'))
 
     view['datasource'] = ds_name
@@ -857,8 +856,8 @@ def page_view():
 
     # Gather the page context which is needed for the "add to visual" popup menu
     # to add e.g. views to dashboards or reports
-    datasource = multisite_datasources[view['datasource']]
-    context = visuals.get_context_from_uri_vars(datasource['infos'])
+    datasource = data_source_registry[view['datasource']]()
+    context = visuals.get_context_from_uri_vars(datasource.infos)
     context.update(visuals.get_singlecontext_html_vars(view))
     html.set_page_context(context)
 
@@ -889,7 +888,7 @@ def show_view(view,
 
     # Get the datasource (i.e. the logical table)
     try:
-        datasource = multisite_datasources[view["datasource"]]
+        datasource = data_source_registry[view["datasource"]]()
     except KeyError:
         if view["datasource"].startswith("mkeventd_"):
             raise MKUserError(
@@ -902,15 +901,15 @@ def show_view(view,
                 _("The view '%s' using the datasource '%s' can not be rendered "
                   "because the datasource does not exist.") % (view["name"], view["datasource"]))
 
-    tablename = datasource["table"]
+    tablename = datasource.table
 
     # Always allow the users to specify all allowed filters using the URL
-    use_filters = visuals.filters_allowed_for_infos(datasource['infos']).values()
+    use_filters = visuals.filters_allowed_for_infos(datasource.infos).values()
 
     # Not all filters are really shown later in show_filter_form(), because filters which
     # have a hardcoded value are not changeable by the user
     show_filters = visuals.filters_of_visual(
-        view, datasource['infos'], link_filters=datasource.get('link_filters', {}))
+        view, datasource.infos, link_filters=datasource.link_filters)
     show_filters = visuals.visible_filters_of_visual(view, show_filters)
 
     # FIXME TODO HACK to make grouping single contextes possible on host/service infos
@@ -948,7 +947,7 @@ def show_view(view,
     visuals.add_context_to_uri_vars(view, only_count)
 
     # Check that all needed information for configured single contexts are available
-    visuals.verify_single_contexts('views', view, datasource.get('link_filters', {}))
+    visuals.verify_single_contexts('views', view, datasource.link_filters)
 
     # Prepare Filter headers for Livestatus
     # TODO: When this is used by the reporting then *all* filters are
@@ -977,15 +976,15 @@ def show_view(view,
     # lines of the log processed. This resulted in wrong stats.
     # For these datasources we ignore the query limits.
     if limit is None:  # Otherwise: specified as argument
-        if not datasource.get('ignore_limit', False):
+        if not datasource.ignore_limit:
             limit = get_limit()
 
     # Fork to availability view. We just need the filter headers, since we do not query the normal
     # hosts and service table, but "statehist". This is *not* true for BI availability, though (see later)
-    if html.request.var("mode") == "availability" and ("aggr" not in datasource["infos"] or
+    if html.request.var("mode") == "availability" and ("aggr" not in datasource.infos or
                                                        html.request.var("timeline_aggr")):
 
-        context = visuals.get_context_from_uri_vars(datasource['infos'])
+        context = visuals.get_context_from_uri_vars(datasource.infos)
         context.update(visuals.get_singlecontext_html_vars(view))
 
         return cmk.gui.plugins.views.availability.render_availability_page(
@@ -1021,14 +1020,14 @@ def show_view(view,
     # satisfy external references (filters) of views we link to. The last bit
     # is the trickiest. Also compute this list of view options use by the
     # painters
-    columns = get_needed_regular_columns(group_cells + cells, sorters, datasource)
-    join_columns = get_needed_join_columns(join_cells, sorters, datasource)
+    columns = _get_needed_regular_columns(group_cells + cells, sorters, datasource)
+    join_columns = _get_needed_join_columns(join_cells, sorters)
 
     # Fetch data. Some views show data only after pressing [Search]
     if (only_count or (not view.get("mustsearch")) or
             html.request.var("filled_in") in ["filter", 'actions', 'confirm', 'painteroptions']):
         # names for additional columns (through Stats: headers)
-        add_columns = datasource.get("add_columns", [])
+        add_columns = datasource.add_columns
 
         # tablename may be a function instead of a livestatus tablename
         # In that case that function is used to compute the result.
@@ -1046,7 +1045,7 @@ def show_view(view,
 
         # Now add join information, if there are join columns
         if join_cells:
-            do_table_join(datasource, rows, filterheaders, join_cells, join_columns, only_sites)
+            _do_table_join(datasource, rows, filterheaders, join_cells, join_columns, only_sites)
 
         # If any painter, sorter or filter needs the information about the host's
         # inventory, then we load it and attach it as column "host_inventory"
@@ -1136,10 +1135,10 @@ def get_regular_cells(cell_list):
     return [x for x in cell_list if isinstance(x, Cell)]
 
 
-def get_needed_regular_columns(cells, sorters, datasource):
+def _get_needed_regular_columns(cells, sorters, datasource):
     # BI availability needs aggr_tree
     # TODO: wtf? a full reset of the list? Move this far away to a special place!
-    if html.request.var("mode") == "availability" and "aggr" in datasource["infos"]:
+    if html.request.var("mode") == "availability" and "aggr" in datasource.infos:
         return ["aggr_tree", "aggr_name", "aggr_group"]
 
     columns = columns_of_cells(cells)
@@ -1151,10 +1150,10 @@ def get_needed_regular_columns(cells, sorters, datasource):
             columns.update(s[0]["columns"])
 
     # Add key columns, needed for executing commands
-    columns.update(datasource["keys"])
+    columns.update(datasource.keys)
 
     # Add idkey columns, needed for identifying the row
-    columns.update(datasource["idkeys"])
+    columns.update(datasource.id_keys)
 
     # Remove (implicit) site column
     try:
@@ -1165,7 +1164,7 @@ def get_needed_regular_columns(cells, sorters, datasource):
     return list(columns)
 
 
-def get_needed_join_columns(join_cells, sorters, datasource):
+def _get_needed_join_columns(join_cells, sorters):
     join_columns = columns_of_cells(join_cells)
 
     # Columns needed for sorters
@@ -1240,12 +1239,11 @@ def render_view(view, rows, datasource, group_painters, painters, show_heading, 
 
     if show_buttons:
         show_combined_graphs_button  = \
-            ("host" in datasource["infos"] or "service" in datasource["infos"]) and \
-            (isinstance(datasource["table"], str)) and \
-            ("host" in datasource["table"] or "service" in datasource["table"])
-        show_context_links(
+            ("host" in datasource.infos or "service" in datasource.infos) and \
+            (isinstance(datasource.table, str)) and \
+            ("host" in datasource.table or "service" in datasource.table)
+        _show_context_links(
             view,
-            datasource,
             show_filters,
             # Take into account: permissions, display_options
             row_count > 0 and command_form,
@@ -1253,7 +1251,7 @@ def render_view(view, rows, datasource, group_painters, painters, show_heading, 
             layout.can_display_checkboxes and not view.get("force_checkboxes"),
             show_checkboxes,
             # Show link to availability
-            datasource["table"] in ["hosts", "services"] or "aggr" in datasource["infos"],
+            datasource.table in ["hosts", "services"] or "aggr" in datasource.infos,
             # Show link to combined graphs
             show_combined_graphs_button,
         )
@@ -1281,7 +1279,7 @@ def render_view(view, rows, datasource, group_painters, painters, show_heading, 
             try:
                 # Create URI with all actions variables removed
                 backurl = html.makeuri([], delvars=['filled_in', 'actions'])
-                has_done_actions = do_actions(view, datasource["infos"][0], rows, backurl)
+                has_done_actions = do_actions(view, datasource.infos[0], rows, backurl)
             except MKUserError as e:
                 html.show_error(e)
                 html.add_user_error(e.varname, e)
@@ -1303,7 +1301,7 @@ def render_view(view, rows, datasource, group_painters, painters, show_heading, 
             rows = filter_by_row_id(view, rows)
 
         try:
-            do_actions(view, datasource["infos"][0], rows, '')
+            do_actions(view, datasource.infos[0], rows, '')
         except:
             pass  # currently no feed back on webservice
 
@@ -1373,10 +1371,10 @@ def render_view(view, rows, datasource, group_painters, painters, show_heading, 
             html.body_end()
 
 
-def do_table_join(master_ds, master_rows, master_filters, join_cells, join_columns, only_sites):
-    join_table, join_master_column = master_ds["join"]
-    slave_ds = multisite_datasources[join_table]
-    join_slave_column = slave_ds["joinkey"]
+def _do_table_join(master_ds, master_rows, master_filters, join_cells, join_columns, only_sites):
+    join_table, join_master_column = master_ds.join
+    slave_ds = data_source_registry[join_table]()
+    join_slave_column = slave_ds.join_key
 
     # Create additional filters
     join_filters = []
@@ -1509,8 +1507,8 @@ def ajax_set_viewoption():
     po.save_to_config(view_name)
 
 
-def show_context_links(thisview, datasource, show_filters, enable_commands, enable_checkboxes,
-                       show_checkboxes, show_availability, show_combined_graphs):
+def _show_context_links(thisview, show_filters, enable_commands, enable_checkboxes, show_checkboxes,
+                        show_availability, show_combined_graphs):
     if html.output_format != "html":
         return
 
@@ -1742,13 +1740,13 @@ def painters_of_datasource(ds_name):
 
 
 def join_painters_of_datasource(ds_name):
-    ds = multisite_datasources[ds_name]
-    if "join" not in ds:
+    datasource = data_source_registry[ds_name]()
+    if datasource.join is None:
         return {}  # no joining with this datasource
 
     # Get the painters allowed for the join "source" and "target"
     painters = painters_of_datasource(ds_name)
-    join_painters_unfiltered = allowed_for_datasource(multisite_painters, ds['join'][0])
+    join_painters_unfiltered = allowed_for_datasource(multisite_painters, datasource.join[0])
 
     # Filter out painters associated with the "join source" datasource
     join_painters = {}
@@ -1761,10 +1759,10 @@ def join_painters_of_datasource(ds_name):
 
 # Filters a list of sorters or painters and decides which of
 # those are available for a certain data source
-def allowed_for_datasource(collection, datasourcename):
-    datasource = multisite_datasources[datasourcename]
-    infos_available = set(datasource["infos"])
-    add_columns = datasource.get("add_columns", [])
+def allowed_for_datasource(collection, ds_name):
+    datasource = data_source_registry[ds_name]()
+    infos_available = set(datasource.infos)
+    add_columns = datasource.add_columns
 
     allowed = {}
     for name, item in collection.items():
@@ -1851,7 +1849,7 @@ def should_show_command_form(datasource, ignore_display_option=False):
     # than one table, (like services datasource also provide host
     # information) then the first info is the primary table. So 'what'
     # will be one of "host", "service", "command" or "downtime".
-    what = datasource["infos"][0]
+    what = datasource.infos[0]
     for command_class in command_registry.values():
         command = command_class()
         if what in command.tables and config.user.may(command.permission().name):
@@ -1866,7 +1864,7 @@ def show_command_form(is_open, datasource):
     # than one table, (like services datasource also provide host
     # information) then the first info is the primary table. So 'what'
     # will be one of "host", "service", "command" or "downtime".
-    what = datasource["infos"][0]
+    what = datasource.infos[0]
 
     html.open_div(
         id_="commands", class_=["view_form"], style="display:none;" if not is_open else None)

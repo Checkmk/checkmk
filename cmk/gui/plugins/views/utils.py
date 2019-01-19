@@ -234,7 +234,7 @@ class PainterOptions(object):
 # row accross different page loadings.
 def row_id(view, row):
     key = u''
-    for col in multisite_datasources[view['datasource']]['idkeys']:
+    for col in data_source_registry[view['datasource']]().id_keys:
         key += u'~%s' % row[col]
     return hashlib.sha256(key.encode('utf-8')).hexdigest()
 
@@ -502,8 +502,156 @@ def register_legacy_command(spec):
     command_registry.register(cls)
 
 
+class DataSource(object):
+    """Provider of rows for the views (basically tables of data) in the GUI"""
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractproperty
+    def ident(self):
+        # type: () -> str
+        """The identity of a data source. One word, may contain alpha numeric characters"""
+        raise NotImplementedError()
+
+    @abc.abstractproperty
+    def title(self):
+        # type: () -> Text
+        """Used as display-string for the datasource in the GUI (e.g. view editor)"""
+        raise NotImplementedError()
+
+    @abc.abstractproperty
+    def table(self):
+        # type: () -> Union[str, Callable]
+        """Might be a string which refers to a livestatus table or a function
+        which is called instead of the livestatus function query_data()"""
+        raise NotImplementedError()
+
+    @abc.abstractproperty
+    def infos(self):
+        # type: () -> List[str]
+        """Infos that are available with this data sources
+
+        A info is used to create groups out of single painters and filters.
+        e.g. 'host' groups all painters and filters which begin with "host_".
+        Out of this declaration multisite knows which filters or painters are
+        available for the single datasources."""
+        raise NotImplementedError()
+
+    @property
+    def merge_by(self):
+        # type: () -> Optional[str]
+        """
+        1. Results in fetching these columns from the datasource.
+        2. Rows from different sites are merged together. For example members
+           of hostgroups which exist on different sites are merged together to
+           show the user one big hostgroup.
+        """
+        return None
+
+    @property
+    def add_columns(self):
+        # type: () -> List[str]
+        """These columns are requested automatically in addition to the
+        other needed columns."""
+        return []
+
+    @property
+    def add_headers(self):
+        # type: () -> str
+        """additional livestatus headers to add to each call"""
+        return ""
+
+    @abc.abstractproperty
+    def keys(self):
+        # type: () -> List[str]
+        """columns which must be fetched in order to execute commands on
+        the items (= in order to identify the items and gather all information
+        needed for constructing Nagios commands)
+        those columns are always fetched from the datasource for each item"""
+        raise NotImplementedError()
+
+    @abc.abstractproperty
+    def id_keys(self):
+        # type: () -> List[str]
+        """These are used to generate a key which is unique for each data row
+        is used to identify an item between http requests"""
+        raise NotImplementedError()
+
+    @property
+    def join(self):
+        # type: () -> Optional[Tuple]
+        """A view can display e.g. host-rows and include information from e.g.
+        the service table to create a column which shows e.g. the state of one
+        service.
+        With this attibute it is configured which tables can be joined into
+        this table and by which attribute. It must be given as tuple, while
+        the first argument is the name of the table to be joined and the second
+        argument is the column in the master table (in this case hosts) which
+        is used to match the rows of the master and slave table."""
+        return None
+
+    @property
+    def join_key(self):
+        # type: () -> Optional[str]
+        """Each joined column in the view can have a 4th attribute which is
+        used as value for this column to filter the datasource query
+        to get the matching row of the slave table."""
+        return None
+
+    @property
+    def ignore_limit(self):
+        # type: () -> bool
+        """Ignore the soft/hard query limits in view.py/query_data(). This
+        fixes stats queries on e.g. the log table."""
+        return False
+
+    @property
+    def auth_domain(self):
+        # type: () -> str
+        """Querying a table might require to use another auth domain than
+        the default one (read). When this is set, the given auth domain
+        will be used while fetching the data for this datasource from
+        livestatus."""
+        return "read"
+
+    @property
+    def time_filters(self):
+        # type: () -> List[str]
+        return []
+
+    @property
+    def link_filters(self):
+        # type: () -> Dict[str, str]
+        """When the single info "hostgroup" is used, use the "opthostgroup" filter
+        to handle the data provided by the single_spec value of the "hostgroup"
+        info, which is in fact the name of the wanted hostgroup"""
+        return {}
+
+    # TODO: This can be cleaned up later
+    def post_process(self, rows):
+        # type: (List[Dict]) -> List[Dict]
+        """Optional function to postprocess the resulting data after executing
+        the regular data fetching"""
+        return rows
+
+
+class DataSourceRegistry(cmk.utils.plugin_registry.ClassRegistry):
+    def plugin_base_class(self):
+        return DataSource
+
+    def plugin_name(self, plugin_class):
+        return plugin_class().ident
+
+    # TODO: Sort the datasources by (assumed) common usage
+    def data_source_choices(self):
+        datasources = []
+        for ident, ds_class in self.items():
+            datasources.append((ident, ds_class().title))
+        return sorted(datasources, key=lambda x: x[1])
+
+
+data_source_registry = DataSourceRegistry()
+
 # TODO: Refactor to plugin_registries
-multisite_datasources = {}
 multisite_painters = {}
 multisite_sorters = {}
 multisite_builtin_views = {}
@@ -568,8 +716,8 @@ def url_to_view(row, view_name):
         # Get the context type of the view to link to, then get the parameters of this
         # context type and try to construct the context from the data of the row
         url_vars = []
-        datasource = multisite_datasources[view['datasource']]
-        for info_key in datasource['infos']:
+        datasource = data_source_registry[view['datasource']]()
+        for info_key in datasource.infos:
             if info_key in view['single_infos']:
                 # Determine which filters (their names) need to be set
                 # for specifying in order to select correct context for the
@@ -581,8 +729,8 @@ def url_to_view(row, view_name):
                     url_vars += new_vars
 
         # See get_link_filter_names() comment for details
-        for src_key, dst_key in visuals.get_link_filter_names(view, datasource['infos'],
-                                                              datasource.get('link_filters', {})):
+        for src_key, dst_key in visuals.get_link_filter_names(view, datasource.infos,
+                                                              datasource.link_filters):
             try:
                 url_vars += visuals.get_filter(src_key).variable_settings(row)
             except KeyError:
@@ -595,7 +743,7 @@ def url_to_view(row, view_name):
 
         add_site_hint = visuals.may_add_site_hint(
             view_name,
-            info_keys=datasource["infos"],
+            info_keys=datasource.infos,
             single_info_keys=view["single_infos"],
             filter_names=dict(url_vars).keys())
         if add_site_hint and row.get('site'):
@@ -819,10 +967,10 @@ def query_data(datasource,
         only_sites = []
 
     if tablename is None:
-        tablename = datasource["table"]
+        tablename = datasource.table
 
-    add_headers += datasource.get("add_headers", "")
-    merge_column = datasource.get("merge_by")
+    add_headers += datasource.add_headers
+    merge_column = datasource.merge_by
     if merge_column:
         columns = [merge_column] + columns
 
@@ -831,29 +979,23 @@ def query_data(datasource,
     # is selected. Make sure those columns are fetched. This
     # must not be done for the table 'log' as it cannot correctly
     # distinguish between service_state and host_state
-    if "log" not in datasource["infos"]:
+    if "log" not in datasource.infos:
         state_columns = []
-        if "service" in datasource["infos"]:
+        if "service" in datasource.infos:
             state_columns += ["service_has_been_checked", "service_state"]
-        if "host" in datasource["infos"]:
+        if "host" in datasource.infos:
             state_columns += ["host_has_been_checked", "host_state"]
         for c in state_columns:
             if c not in columns:
                 columns.append(c)
 
-    auth_domain = datasource.get("auth_domain", "read")
-
     # Remove columns which are implicitely added by the datasource
     columns = [c for c in columns if c not in add_columns]
     query = "GET %s\n" % tablename
     rows = do_query_data(query, columns, add_columns, merge_column, add_headers, only_sites, limit,
-                         auth_domain)
+                         datasource.auth_domain)
 
-    # Datasource may have optional post processing function to filter out rows
-    post_process_func = datasource.get("post_process")
-    if post_process_func:
-        return post_process_func(rows)
-    return rows
+    return datasource.post_process(rows)
 
 
 def do_query_data(query, columns, add_columns, merge_column, add_headers, only_sites, limit,
@@ -946,7 +1088,7 @@ def join_row(row, cell):
 def get_view_infos(view):
     """Return list of available datasources (used to render filters)"""
     ds_name = view.get('datasource', html.request.var('datasource'))
-    return multisite_datasources[ds_name]['infos']
+    return data_source_registry[ds_name].infos
 
 
 def replace_action_url_macros(url, what, row):
@@ -1012,7 +1154,7 @@ def load_all_views():
     all_views = visuals.load(
         'views',
         multisite_builtin_views,
-        skip_func=lambda v: v['datasource'] not in multisite_datasources)
+        skip_func=lambda v: v['datasource'] not in data_source_registry)
     return _transform_old_views(all_views)
 
 
@@ -1025,7 +1167,7 @@ def get_permitted_views(all_views):
 def _transform_old_views(all_views):
     for view in all_views.values():
         ds_name = view['datasource']
-        datasource = multisite_datasources[ds_name]
+        datasource = data_source_registry[ds_name]()
 
         if "context" not in view:  # legacy views did not have this explicitly
             view.setdefault("user_sortable", True)
@@ -1104,7 +1246,7 @@ def _transform_old_views(all_views):
                 for var in f.htmlvars:
                     # Check whether or not the filter is supported by the datasource,
                     # then either skip or use the filter vars
-                    if var in filtervars and f.info in datasource['infos']:
+                    if var in filtervars and f.info in datasource.infos:
                         value = filtervars[var]
                         all_vars[var] = value
                         context[filter_name][var] = value
@@ -1152,7 +1294,7 @@ def _transform_old_views(all_views):
                     },
                 }
 
-                if filter_name in changed_filter_vars and f.info in datasource['infos']:
+                if filter_name in changed_filter_vars and f.info in datasource.infos:
                     for old_var, new_var in changed_filter_vars[filter_name].items():
                         if old_var in filtervars:
                             value = filtervars[old_var]

@@ -36,7 +36,8 @@ from cmk.gui.globals import html
 from cmk.gui.plugins.views import (
     command_registry,
     Command,
-    multisite_datasources,
+    data_source_registry,
+    DataSource,
     multisite_painters,
     multisite_builtin_views,
     paint_age,
@@ -212,25 +213,75 @@ class PermissionECSeeInTacticalOverview(Permission):
         return config.builtin_role_ids
 
 
-multisite_datasources["mkeventd_events"] = {
-    "title": _("Event Console: Current Events"),
-    "table": (query_ec_table, ["eventconsoleevents"]),
-    "auth_domain": "ec",
-    "infos": ["event", "host"],
-    "keys": [],
-    "idkeys": ['site', 'host_name', 'event_id'],
-    "time_filters": ["event_first"],
-}
+@data_source_registry.register
+class DataSourceECEvents(DataSource):
+    @property
+    def ident(self):
+        return "mkeventd_events"
 
-multisite_datasources["mkeventd_history"] = {
-    "title": _("Event Console: Event History"),
-    "table": (query_ec_table, ["eventconsolehistory"]),
-    "auth_domain": "ec",
-    "infos": ["history", "event", "host"],
-    "keys": [],
-    "idkeys": ['site', 'host_name', 'event_id', 'history_line'],
-    "time_filters": ["history_time"],
-}
+    @property
+    def title(self):
+        return _("Event Console: Current Events")
+
+    @property
+    def table(self):
+        return (query_ec_table, ["eventconsoleevents"])
+
+    @property
+    def infos(self):
+        return ["event", "host"]
+
+    @property
+    def keys(self):
+        return []
+
+    @property
+    def id_keys(self):
+        return ['site', 'host_name', 'event_id']
+
+    @property
+    def auth_domain(self):
+        return "ec"
+
+    @property
+    def time_filters(self):
+        return ["event_first"]
+
+
+@data_source_registry.register
+class DataSourceECEventHistory(DataSource):
+    @property
+    def ident(self):
+        return "mkeventd_history"
+
+    @property
+    def title(self):
+        return _("Event Console: Event History")
+
+    @property
+    def table(self):
+        return (query_ec_table, ["eventconsolehistory"])
+
+    @property
+    def infos(self):
+        return ["history", "event", "host"]
+
+    @property
+    def keys(self):
+        return []
+
+    @property
+    def id_keys(self):
+        return ['site', 'host_name', 'event_id', 'history_line']
+
+    @property
+    def auth_domain(self):
+        return "ec"
+
+    @property
+    def time_filters(self):
+        return ["history_time"]
+
 
 #.
 #   .--Painters------------------------------------------------------------.

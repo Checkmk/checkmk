@@ -58,6 +58,8 @@ from cmk.gui.plugins.visuals.inventory import (
 )
 
 from cmk.gui.plugins.views import (
+    data_source_registry,
+    DataSource,
     painter_options,
     display_options,
     multisite_painters,
@@ -65,7 +67,6 @@ from cmk.gui.plugins.views import (
     painter_option_registry,
     PainterOption,
     inventory_displayhints,
-    multisite_datasources,
     multisite_builtin_views,
     view_is_enabled,
     paint_age,
@@ -1477,13 +1478,20 @@ def declare_invtable_view(infoname, invpath, title_singular, title_plural):
     })
 
     # Create the datasource (like a database view)
-    multisite_datasources[infoname] = {
-        "title": "%s: %s" % (_("Inventory"), title_plural),
-        "table": inv_table,
-        "infos": ["host", infoname],
-        "keys": [],
-        "idkeys": [],
-    }
+    ds_class = type(
+        "DataSourceInventory%s" % infoname.title(), (DataSource,), {
+            "_ident": infoname,
+            "_title": "%s: %s" % (_("Inventory"), title_plural),
+            "_table": inv_table,
+            "_infos": ["host", infoname],
+            "ident": property(lambda s: s._ident),
+            "title": property(lambda s: s._title),
+            "table": property(lambda s: s._table),
+            "infos": property(lambda s: s._infos),
+            "keys": property(lambda s: []),
+            "id_keys": property(lambda s: []),
+        })
+    data_source_registry.register(ds_class)
 
     # Declare a painter, sorter and filters for each path with display hint
     declare_invtable_columns(infoname, invpath, title_singular)
@@ -1902,13 +1910,32 @@ def _create_hist_rows(hostname, columns):
         yield newrow
 
 
-multisite_datasources["invhist"] = {
-    "title": _("Inventory: History"),
-    "table": inv_history_table,
-    "infos": ["host", "invhist"],
-    "keys": [],
-    "idkeys": ["host_name", "invhist_time"],
-}
+@data_source_registry.register
+class DataSourceInventoryHistory(DataSource):
+    @property
+    def ident(self):
+        return "invhist"
+
+    @property
+    def title(self):
+        return _("Inventory: History")
+
+    @property
+    def table(self):
+        return inv_history_table
+
+    @property
+    def infos(self):
+        return ["host", "invhist"]
+
+    @property
+    def keys(self):
+        return []
+
+    @property
+    def id_keys(self):
+        return ["host_name", "invhist_time"]
+
 
 multisite_painters["invhist_time"] = {
     "title": _("Inventory Date/Time"),

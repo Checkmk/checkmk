@@ -71,6 +71,7 @@ if not cmk.is_raw_edition():
 if cmk.is_managed_edition():
     import cmk.gui.cme.plugins.dashboard
 
+from cmk.gui.plugins.views.utils import data_source_registry
 from cmk.gui.plugins.dashboard.utils import (
     builtin_dashboards,
     GROW,
@@ -1059,15 +1060,14 @@ def page_create_view_dashlet():
 
 @cmk.gui.pages.register("create_view_dashlet_infos")
 def page_create_view_dashlet_infos():
-    import cmk.gui.views as views
     ds_name = html.request.var('datasource')
-    if ds_name not in views.multisite_datasources:
+    if ds_name not in data_source_registry:
         raise MKUserError("datasource", _('The given datasource is not supported'))
 
     # Create a new view by choosing the datasource and the single object types
     visuals.page_create_visual(
         'views',
-        views.multisite_datasources[ds_name]['infos'],
+        data_source_registry[ds_name]().infos,
         next_url=html.makeuri_contextless([
             ('name', html.request.var('name')),
             ('type', 'view'),

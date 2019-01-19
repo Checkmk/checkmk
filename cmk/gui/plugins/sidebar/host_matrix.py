@@ -141,11 +141,8 @@ class HostMatrixSnapin(CustomizableSidebarSnapin):
         html.close_table()
 
     def _get_hosts(self):
-        context_filters, only_sites = visuals.get_filter_headers({
-            "table": "hosts",
-            "infos": ["host"],
-        },
-                                                                 self.parameters()["context"])
+        context_filters, only_sites = visuals.get_filter_headers(
+            table="hosts", infos=["host"], context=self.parameters()["context"])
 
         return self._execute_host_query(self._get_host_query(context_filters), only_sites)
 

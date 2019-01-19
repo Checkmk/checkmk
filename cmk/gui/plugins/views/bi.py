@@ -33,8 +33,9 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html
 
 from cmk.gui.plugins.views import (
+    data_source_registry,
+    DataSource,
     painter_options,
-    multisite_datasources,
     multisite_painters,
     painter_option_registry,
     PainterOption,
@@ -47,43 +48,119 @@ from cmk.gui.plugins.views import (
 #    |____/ \__,_|\__\__,_|___/\___/ \__,_|_|  \___\___||___/
 #
 
-multisite_datasources["bi_aggregations"] = {
-    "title": _("BI Aggregations"),
-    "table": bi.table,
-    "infos": [
-        "aggr",
-        "aggr_group",
-    ],
-    "keys": [],
-    "idkeys": ['aggr_name'],
-}
 
-multisite_datasources["bi_host_aggregations"] = {
-    "title": _("BI Aggregations affected by one host"),
-    "table": bi.host_table,
-    "infos": ["aggr", "host", "aggr_group"],
-    "keys": [],
-    "idkeys": ['aggr_name'],
-}
+@data_source_registry.register
+class DataSourceBIAggregations(DataSource):
+    @property
+    def ident(self):
+        return "bi_aggregations"
 
-# Similar to host aggregations, but the name of the aggregation
-# is used to join the host table rather then the affected host
-multisite_datasources["bi_hostname_aggregations"] = {
-    "title": _("BI Hostname Aggregations"),
-    "table": bi.hostname_table,
-    "infos": ["aggr", "host", "aggr_group"],
-    "keys": [],
-    "idkeys": ['aggr_name'],
-}
+    @property
+    def title(self):
+        return _("BI Aggregations")
 
-# The same but with group information
-multisite_datasources["bi_hostnamebygroup_aggregations"] = {
-    "title": _("BI Aggregations for Hosts by Hostgroups"),
-    "table": bi.hostname_by_group_table,
-    "infos": ["aggr", "host", "hostgroup", "aggr_group"],
-    "keys": [],
-    "idkeys": ['aggr_name'],
-}
+    @property
+    def table(self):
+        return bi.table
+
+    @property
+    def infos(self):
+        return ["aggr", "aggr_group"]
+
+    @property
+    def keys(self):
+        return []
+
+    @property
+    def id_keys(self):
+        return ["aggr_name"]
+
+
+@data_source_registry.register
+class DataSourceBIHostAggregations(DataSource):
+    @property
+    def ident(self):
+        return "bi_host_aggregations"
+
+    @property
+    def title(self):
+        return _("BI Aggregations affected by one host")
+
+    @property
+    def table(self):
+        return bi.host_table
+
+    @property
+    def infos(self):
+        return ["aggr", "host", "aggr_group"]
+
+    @property
+    def keys(self):
+        return []
+
+    @property
+    def id_keys(self):
+        return ["aggr_name"]
+
+
+@data_source_registry.register
+class DataSourceBIHostnameAggregations(DataSource):
+    """Similar to host aggregations, but the name of the aggregation
+    is used to join the host table rather then the affected host"""
+
+    @property
+    def ident(self):
+        return "bi_hostname_aggregations"
+
+    @property
+    def title(self):
+        return _("BI Hostname Aggregations")
+
+    @property
+    def table(self):
+        return bi.hostname_table
+
+    @property
+    def infos(self):
+        return ["aggr", "host", "aggr_group"]
+
+    @property
+    def keys(self):
+        return []
+
+    @property
+    def id_keys(self):
+        return ["aggr_name"]
+
+
+@data_source_registry.register
+class DataSourceBIHostnameByGroupAggregations(DataSource):
+    """The same but with group information"""
+
+    @property
+    def ident(self):
+        return "bi_hostnamebygroup_aggregations"
+
+    @property
+    def title(self):
+        return _("BI Aggregations for Hosts by Hostgroups")
+
+    @property
+    def table(self):
+        return bi.hostname_by_group_table
+
+    @property
+    def infos(self):
+        return ["aggr", "host", "hostgroup", "aggr_group"]
+
+    @property
+    def keys(self):
+        return []
+
+    @property
+    def id_keys(self):
+        return ["aggr_name"]
+
 
 #     ____       _       _
 #    |  _ \ __ _(_)_ __ | |_ ___ _ __ ___

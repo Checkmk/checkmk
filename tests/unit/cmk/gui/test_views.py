@@ -322,3 +322,351 @@ def test_legacy_register_command(monkeypatch):
     assert cmd.ident == "blabla"
     assert cmd.title == "Bla Bla"
     assert cmd.permission == cmk.gui.default_permissions.PermissionGeneralUse
+
+
+def test_registered_datasources():
+    expected = {
+        'alert_stats': {
+            'add_columns': [
+                'log_alerts_ok', 'log_alerts_warn', 'log_alerts_crit', 'log_alerts_unknown',
+                'log_alerts_problem'
+            ],
+            'add_headers': 'Filter: class = 1\nStats: state = 0\nStats: state = 1\nStats: state = 2\nStats: state = 3\nStats: state != 0\n',
+            'idkeys': ['host_name', 'service_description'],
+            'ignore_limit': True,
+            'infos': ['log', 'host', 'service', 'contact', 'command'],
+            'keys': [],
+            'table': 'log',
+            'time_filters': ['logtime'],
+            'title': u'Alert Statistics'
+        },
+        'bi_aggregations': {
+            'idkeys': ['aggr_name'],
+            'infos': ['aggr', 'aggr_group'],
+            'keys': [],
+            'table': ('func', 'table'),
+            'title': u'BI Aggregations'
+        },
+        'bi_host_aggregations': {
+            'idkeys': ['aggr_name'],
+            'infos': ['aggr', 'host', 'aggr_group'],
+            'keys': [],
+            'table': ('func', 'host_table'),
+            'title': u'BI Aggregations affected by one host'
+        },
+        'bi_hostname_aggregations': {
+            'idkeys': ['aggr_name'],
+            'infos': ['aggr', 'host', 'aggr_group'],
+            'keys': [],
+            'table': ('func', 'hostname_table'),
+            'title': u'BI Hostname Aggregations'
+        },
+        'bi_hostnamebygroup_aggregations': {
+            'idkeys': ['aggr_name'],
+            'infos': ['aggr', 'host', 'hostgroup', 'aggr_group'],
+            'keys': [],
+            'table': ('func', 'hostname_by_group_table'),
+            'title': u'BI Aggregations for Hosts by Hostgroups'
+        },
+        'comments': {
+            'idkeys': ['comment_id'],
+            'infos': ['comment', 'host', 'service'],
+            'keys': ['comment_id', 'comment_type', 'host_name', 'service_description'],
+            'table': 'comments',
+            'title': u'Host- and Servicecomments'
+        },
+        'downtimes': {
+            'idkeys': ['downtime_id'],
+            'infos': ['downtime', 'host', 'service'],
+            'keys': ['downtime_id', 'service_description'],
+            'table': 'downtimes',
+            'title': u'Scheduled Downtimes'
+        },
+        'hostgroups': {
+            'idkeys': ['site', 'hostgroup_name'],
+            'infos': ['hostgroup'],
+            'keys': ['hostgroup_name'],
+            'table': 'hostgroups',
+            'title': u'Hostgroups'
+        },
+        'hosts': {
+            'description': u'Displays a list of hosts.',
+            'idkeys': ['site', 'host_name'],
+            'infos': ['host'],
+            'join': ('services', 'host_name'),
+            'keys': ['host_name', 'host_downtimes'],
+            'link_filters': {
+                'hostgroup': 'opthostgroup'
+            },
+            'table': 'hosts',
+            'title': u'All hosts'
+        },
+        'hostsbygroup': {
+            'description': u'This datasource has a separate row for each group membership that a host has.',
+            'idkeys': ['site', 'hostgroup_name', 'host_name'],
+            'infos': ['host', 'hostgroup'],
+            'join': ('services', 'host_name'),
+            'keys': ['host_name', 'host_downtimes'],
+            'table': 'hostsbygroup',
+            'title': u'Hosts grouped by host groups'
+        },
+        'invbackplane': {
+            'idkeys': [],
+            'infos': ['host', 'invbackplane'],
+            'keys': [],
+            'table': ('func', 'inv_table'),
+            'title': u'Inventory: Backplanes'
+        },
+        'invchassis': {
+            'idkeys': [],
+            'infos': ['host', 'invchassis'],
+            'keys': [],
+            'table': ('func', 'inv_table'),
+            'title': u'Inventory: Chassis'
+        },
+        'invcontainer': {
+            'idkeys': [],
+            'infos': ['host', 'invcontainer'],
+            'keys': [],
+            'table': ('func', 'inv_table'),
+            'title': u'Inventory: HW containers'
+        },
+        'invdockercontainers': {
+            'idkeys': [],
+            'infos': ['host', 'invdockercontainers'],
+            'keys': [],
+            'table': ('func', 'inv_table'),
+            'title': u'Inventory: Docker containers'
+        },
+        'invdockerimages': {
+            'idkeys': [],
+            'infos': ['host', 'invdockerimages'],
+            'keys': [],
+            'table': ('func', 'inv_table'),
+            'title': u'Inventory: Docker images'
+        },
+        'invfan': {
+            'idkeys': [],
+            'infos': ['host', 'invfan'],
+            'keys': [],
+            'table': ('func', 'inv_table'),
+            'title': u'Inventory: Fans'
+        },
+        'invhist': {
+            'idkeys': ['host_name', 'invhist_time'],
+            'infos': ['host', 'invhist'],
+            'keys': [],
+            'table': ('func', 'inv_history_table'),
+            'title': u'Inventory: History'
+        },
+        'invinterface': {
+            'idkeys': [],
+            'infos': ['host', 'invinterface'],
+            'keys': [],
+            'table': ('func', 'inv_table'),
+            'title': u'Inventory: Network interfaces'
+        },
+        'invmodule': {
+            'idkeys': [],
+            'infos': ['host', 'invmodule'],
+            'keys': [],
+            'table': ('func', 'inv_table'),
+            'title': u'Inventory: Modules'
+        },
+        'invoradataguardstats': {
+            'idkeys': [],
+            'infos': ['host', 'invoradataguardstats'],
+            'keys': [],
+            'table': ('func', 'inv_table'),
+            'title': u'Inventory: Oracle dataguard statistics'
+        },
+        'invorainstance': {
+            'idkeys': [],
+            'infos': ['host', 'invorainstance'],
+            'keys': [],
+            'table': ('func', 'inv_table'),
+            'title': u'Inventory: Oracle instances'
+        },
+        'invorarecoveryarea': {
+            'idkeys': [],
+            'infos': ['host', 'invorarecoveryarea'],
+            'keys': [],
+            'table': ('func', 'inv_table'),
+            'title': u'Inventory: Oracle recovery areas'
+        },
+        'invorasga': {
+            'idkeys': [],
+            'infos': ['host', 'invorasga'],
+            'keys': [],
+            'table': ('func', 'inv_table'),
+            'title': u'Inventory: Oracle performance'
+        },
+        'invoratablespace': {
+            'idkeys': [],
+            'infos': ['host', 'invoratablespace'],
+            'keys': [],
+            'table': ('func', 'inv_table'),
+            'title': u'Inventory: Oracle tablespaces'
+        },
+        'invother': {
+            'idkeys': [],
+            'infos': ['host', 'invother'],
+            'keys': [],
+            'table': ('func', 'inv_table'),
+            'title': u'Inventory: Other entities'
+        },
+        'invpsu': {
+            'idkeys': [],
+            'infos': ['host', 'invpsu'],
+            'keys': [],
+            'table': ('func', 'inv_table'),
+            'title': u'Inventory: Power supplies'
+        },
+        'invsensor': {
+            'idkeys': [],
+            'infos': ['host', 'invsensor'],
+            'keys': [],
+            'table': ('func', 'inv_table'),
+            'title': u'Inventory: Sensors'
+        },
+        'invstack': {
+            'idkeys': [],
+            'infos': ['host', 'invstack'],
+            'keys': [],
+            'table': ('func', 'inv_table'),
+            'title': u'Inventory: Stacks'
+        },
+        'invswpac': {
+            'idkeys': [],
+            'infos': ['host', 'invswpac'],
+            'keys': [],
+            'table': ('func', 'inv_table'),
+            'title': u'Inventory: Software packages'
+        },
+        'invunknown': {
+            'idkeys': [],
+            'infos': ['host', 'invunknown'],
+            'keys': [],
+            'table': ('func', 'inv_table'),
+            'title': u'Inventory: Unknown entities'
+        },
+        'log': {
+            'idkeys': ['log_lineno'],
+            'infos': ['log', 'host', 'service', 'contact', 'command'],
+            'keys': [],
+            'table': 'log',
+            'time_filters': ['logtime'],
+            'title': u'The Logfile'
+        },
+        'log_events': {
+            'add_headers': 'Filter: class = 1\nFilter: class = 3\nFilter: class = 8\nOr: 3\n',
+            'idkeys': ['log_lineno'],
+            'infos': ['log', 'host', 'service'],
+            'keys': [],
+            'table': 'log',
+            'time_filters': ['logtime'],
+            'title': u'Host and Service Events'
+        },
+        'log_host_events': {
+            'add_headers': 'Filter: class = 1\nFilter: class = 3\nFilter: class = 8\nOr: 3\nFilter: service_description = \n',
+            'idkeys': ['log_lineno'],
+            'infos': ['log', 'host'],
+            'keys': [],
+            'table': 'log',
+            'time_filters': ['logtime'],
+            'title': u'Host Events'
+        },
+        'merged_hostgroups': {
+            'idkeys': ['hostgroup_name'],
+            'infos': ['hostgroup'],
+            'keys': ['hostgroup_name'],
+            'merge_by': 'hostgroup_name',
+            'table': 'hostgroups',
+            'title': u'Hostgroups, merged'
+        },
+        'merged_servicegroups': {
+            'idkeys': ['servicegroup_name'],
+            'infos': ['servicegroup'],
+            'keys': ['servicegroup_name'],
+            'merge_by': 'servicegroup_name',
+            'table': 'servicegroups',
+            'title': u'Servicegroups, merged'
+        },
+        'mkeventd_events': {
+            'auth_domain': 'ec',
+            'idkeys': ['site', 'host_name', 'event_id'],
+            'infos': ['event', 'host'],
+            'keys': [],
+            'table': ('tuple', ('query_ec_table', ['eventconsoleevents'])),
+            'time_filters': ['event_first'],
+            'title': u'Event Console: Current Events'
+        },
+        'mkeventd_history': {
+            'auth_domain': 'ec',
+            'idkeys': ['site', 'host_name', 'event_id', 'history_line'],
+            'infos': ['history', 'event', 'host'],
+            'keys': [],
+            'table': ('tuple', ('query_ec_table', ['eventconsolehistory'])),
+            'time_filters': ['history_time'],
+            'title': u'Event Console: Event History'
+        },
+        'service_discovery': {
+            'add_columns': ['discovery_state', 'discovery_check', 'discovery_service'],
+            'idkeys': ['host_name'],
+            'infos': ['host', 'discovery'],
+            'keys': [],
+            'table': ('func', 'query_service_discovery'),
+            'title': u'Service discovery'
+        },
+        'servicegroups': {
+            'idkeys': ['site', 'servicegroup_name'],
+            'infos': ['servicegroup'],
+            'keys': ['servicegroup_name'],
+            'table': 'servicegroups',
+            'title': u'Servicegroups'
+        },
+        'services': {
+            'idkeys': ['site', 'host_name', 'service_description'],
+            'infos': ['service', 'host'],
+            'joinkey': 'service_description',
+            'keys': ['host_name', 'service_description', 'service_downtimes'],
+            'link_filters': {
+                'hostgroup': 'opthostgroup',
+                'servicegroup': 'optservicegroup'
+            },
+            'table': 'services',
+            'title': u'All services'
+        },
+        'servicesbygroup': {
+            'idkeys': ['site', 'servicegroup_name', 'host_name', 'service_description'],
+            'infos': ['service', 'host', 'servicegroup'],
+            'keys': ['host_name', 'service_description', 'service_downtimes'],
+            'table': 'servicesbygroup',
+            'title': u'Services grouped by service groups'
+        },
+        'servicesbyhostgroup': {
+            'idkeys': ['site', 'hostgroup_name', 'host_name', 'service_description'],
+            'infos': ['service', 'host', 'hostgroup'],
+            'keys': ['host_name', 'service_description', 'service_downtimes'],
+            'table': 'servicesbyhostgroup',
+            'title': u'Services grouped by host groups'
+        },
+    }
+
+    names = cmk.gui.plugins.views.data_source_registry.keys()
+    assert sorted(expected.keys()) == sorted(names)
+
+    for ds_class in cmk.gui.plugins.views.utils.data_source_registry.values():
+        ds = ds_class()
+        spec = expected[ds.ident]
+        assert ds.title == spec["title"]
+        if callable(ds.table):
+            assert ("func", ds.table.__name__) == spec["table"]
+        elif isinstance(ds.table, tuple):
+            assert spec["table"][0] == "tuple"
+            assert spec["table"][1][0] == ds.table[0].__name__
+        else:
+            assert ds.table == spec["table"]
+        assert ds.keys == spec["keys"]
+        assert ds.id_keys == spec["idkeys"]
+        assert ds.infos == spec["infos"]

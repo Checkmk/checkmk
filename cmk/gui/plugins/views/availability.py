@@ -172,9 +172,9 @@ def render_availability_page(view, datasource, context, filterheaders, only_site
         return
 
     # We make reports about hosts, services or BI aggregates
-    if "service" in datasource["infos"]:
+    if "service" in datasource.infos:
         what = "service"
-    elif "aggr_name" in datasource["infos"]:
+    elif "aggr_name" in datasource.infos:
         what = "bi"
     else:
         what = "host"

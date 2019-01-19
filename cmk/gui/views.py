@@ -28,7 +28,6 @@ import time
 import os
 import pprint
 import traceback
-import types
 import json
 from typing import Dict  # pylint: disable=unused-import
 
@@ -81,23 +80,24 @@ from cmk.gui.plugins.views.utils import (
     command_registry,
     layout_registry,
     data_source_registry,
+    painter_registry,
+    Painter,
 )
 
 # Needed for legacy (pre 1.6) plugins
 from cmk.gui.htmllib import HTML  # pylint: disable=unused-import
 from cmk.gui.plugins.views.utils import (  # pylint: disable=unused-import
-    load_all_views, get_permitted_views, view_title, multisite_painters, multisite_sorters,
-    multisite_builtin_views, view_hooks, inventory_displayhints, register_command_group,
-    transform_action_url, is_stale, paint_stalified, paint_host_list, format_plugin_output,
-    link_to_view, url_to_view, get_host_tags, row_id, group_value, get_painter_columns,
-    view_is_enabled, paint_age, declare_1to1_sorter, declare_simple_sorter, cmp_simple_number,
-    cmp_simple_string, cmp_insensitive_string, cmp_num_split, cmp_custom_variable,
-    cmp_service_name_equiv, cmp_string_list, cmp_ip_address, get_custom_var, get_perfdata_nth_value,
-    get_tag_group, query_data, do_query_data, PainterOptions, join_row, get_view_infos,
-    replace_action_url_macros, Cell, JoinCell, get_cells, get_group_cells,
-    get_sorter_name_of_painter, get_separated_sorters, get_primary_sorter_order,
-    get_painter_params_valuespec, parse_url_sorters, substract_sorters, painter_options,
-    register_legacy_command,
+    load_all_views, get_permitted_views, view_title, multisite_sorters, multisite_builtin_views,
+    view_hooks, inventory_displayhints, register_command_group, transform_action_url, is_stale,
+    paint_stalified, paint_host_list, format_plugin_output, link_to_view, url_to_view,
+    get_host_tags, row_id, group_value, view_is_enabled, paint_age, declare_1to1_sorter,
+    declare_simple_sorter, cmp_simple_number, cmp_simple_string, cmp_insensitive_string,
+    cmp_num_split, cmp_custom_variable, cmp_service_name_equiv, cmp_string_list, cmp_ip_address,
+    get_custom_var, get_perfdata_nth_value, get_tag_group, query_data, do_query_data,
+    PainterOptions, join_row, get_view_infos, replace_action_url_macros, Cell, JoinCell, get_cells,
+    get_group_cells, get_sorter_name_of_painter, get_separated_sorters, get_primary_sorter_order,
+    parse_url_sorters, substract_sorters, painter_options, register_legacy_command,
+    register_painter,
 )
 
 # Needed for legacy (pre 1.6) plugins
@@ -124,6 +124,7 @@ multisite_painter_options = {}
 multisite_layouts = {}
 multisite_commands = {}
 multisite_datasources = {}
+multisite_painters = {}
 
 
 @permission_section_registry.register
@@ -177,6 +178,12 @@ def load_plugins(force):
     for cmd_spec in multisite_commands:
         register_legacy_command(cmd_spec)
 
+    cmk.gui.plugins.views.inventory.declare_inventory_columns()
+
+    # TODO: Kept for compatibility with pre 1.6 plugins
+    for ident, spec in multisite_painters.items():
+        register_painter(ident, spec)
+
     # This must be set after plugin loading to make broken plugins raise
     # exceptions all the time and not only the first time (when the plugins
     # are loaded).
@@ -191,8 +198,6 @@ def load_plugins(force):
 
     # Make sure that custom views also have permissions
     config.declare_dynamic_permissions(lambda: visuals.declare_custom_permissions('views'))
-
-    cmk.gui.plugins.views.inventory.declare_inventory_columns()
 
 
 # Transform pre 1.6 icon plugins. Deprecate this one day.
@@ -260,19 +265,11 @@ def paint_host_tag(row, tgid):
     return "", _("N/A")
 
 
-# Use title of the tag value for grouping, not the complete
-# dictionary of custom variables!
-def groupby_host_tag(row, tgid):
-    _cssclass, title = paint_host_tag(row, tgid)
-    return title
-
-
 def load_host_tag_painters():
     # first remove all old painters to reflect delted painters during runtime
-    # FIXME: Do not modify the dict while iterating over it.
-    for key in list(multisite_painters.keys()):
+    for key in list(painter_registry.keys()):
         if key.startswith('host_tag_'):
-            del multisite_painters[key]
+            del painter_registry[key]
 
     for entry in config.host_tag_groups():
         tgid = entry[0]
@@ -286,15 +283,29 @@ def load_host_tag_painters():
             else:
                 long_tit = tit
 
-        multisite_painters["host_tag_" + tgid] = {
+        ident = "host_tag_" + tgid
+        spec = {
             "title": _("Host tag:") + ' ' + long_tit,
-            "name": "host_tag_" + tgid,
             "short": tit,
             "columns": ["host_custom_variables"],
-            "paint": paint_host_tag,
-            "groupby": groupby_host_tag,
-            "args": [tgid],
         }
+        cls = type(
+            "HostTagPainter%s" % tgid.title(),
+            (Painter,),
+            {
+                "_ident": ident,
+                "_spec": spec,
+                "_tag_id": tgid,
+                "ident": property(lambda self: self._ident),
+                "title": property(lambda self: self._spec["title"]),
+                "columns": property(lambda self: self._spec["columns"]),
+                "render": lambda self, row: paint_host_tag(row, self._tag_id),
+                "short_title": property(lambda self: self._spec["short"]),
+                # Use title of the tag value for grouping, not the complete
+                # dictionary of custom variables!
+                "group_by": property(lambda self, row: paint_host_tag(row, self._tag_id)[1]),
+            })
+        painter_registry.register(cls)
 
 
 #.
@@ -1191,7 +1202,7 @@ def is_inventory_data_needed(group_cells, cells, sorters, all_active_filters):
             return True
 
     for cell in group_cells + cells:
-        if cell.painter().get("load_inv"):
+        if cell.painter().load_inv:
             return True
 
     for filt in all_active_filters:
@@ -1732,11 +1743,11 @@ def sort_data(data, sorters):
 
 
 def sorters_of_datasource(ds_name):
-    return allowed_for_datasource(multisite_sorters, ds_name)
+    return _allowed_for_datasource(multisite_sorters, ds_name)
 
 
 def painters_of_datasource(ds_name):
-    return allowed_for_datasource(multisite_painters, ds_name)
+    return _allowed_for_datasource(painter_registry, ds_name)
 
 
 def join_painters_of_datasource(ds_name):
@@ -1746,7 +1757,7 @@ def join_painters_of_datasource(ds_name):
 
     # Get the painters allowed for the join "source" and "target"
     painters = painters_of_datasource(ds_name)
-    join_painters_unfiltered = allowed_for_datasource(multisite_painters, datasource.join[0])
+    join_painters_unfiltered = _allowed_for_datasource(painter_registry, datasource.join[0])
 
     # Filter out painters associated with the "join source" datasource
     join_painters = {}
@@ -1759,16 +1770,17 @@ def join_painters_of_datasource(ds_name):
 
 # Filters a list of sorters or painters and decides which of
 # those are available for a certain data source
-def allowed_for_datasource(collection, ds_name):
+def _allowed_for_datasource(collection, ds_name):
     datasource = data_source_registry[ds_name]()
     infos_available = set(datasource.infos)
     add_columns = datasource.add_columns
 
     allowed = {}
-    for name, item in collection.items():
-        infos_needed = infos_needed_by_painter(item, add_columns)
+    for name, plugin_class in collection.items():
+        plugin = plugin_class()
+        infos_needed = infos_needed_by_painter(plugin, add_columns)
         if len(infos_needed.difference(infos_available)) == 0:
-            allowed[name] = item
+            allowed[name] = plugin
     return allowed
 
 
@@ -1776,8 +1788,8 @@ def infos_needed_by_painter(painter, add_columns=None):
     if add_columns is None:
         add_columns = []
 
-    columns = get_painter_columns(painter)
-    return set([c.split("_", 1)[0] for c in columns if c != "site" and c not in add_columns])
+    return set(
+        [c.split("_", 1)[0] for c in painter.columns if c != "site" and c not in add_columns])
 
 
 def painter_choices(painters, add_params=False):
@@ -1787,9 +1799,8 @@ def painter_choices(painters, add_params=False):
         title = get_painter_title_for_choices(painter)
 
         # Add the optional valuespec for painter parameters
-        if add_params and "params" in painter:
-            vs_params = get_painter_params_valuespec(painter)
-            choices.append((name, title, vs_params))
+        if add_params and painter.parameters:
+            choices.append((name, title, painter.parameters))
         else:
             choices.append((name, title))
 
@@ -1803,13 +1814,13 @@ def get_painter_title_for_choices(painter):
     ])
 
     # TODO: Cleanup the special case for sites. How? Add an info for it?
-    if painter["columns"] == ["site"]:
+    if painter.columns == ["site"]:
         info_title = _("Site")
 
-    if isinstance(painter["title"], (types.FunctionType, types.MethodType)):
-        title = painter["title"]()
+    if callable(painter.title):
+        title = painter.title()
     else:
-        title = painter["title"]
+        title = painter.title
 
     return "%s: %s" % (info_title, title)
 

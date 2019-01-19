@@ -38,7 +38,8 @@ from cmk.gui.plugins.views import (
     Command,
     data_source_registry,
     DataSource,
-    multisite_painters,
+    painter_registry,
+    Painter,
     multisite_builtin_views,
     paint_age,
     paint_nagiosflag,
@@ -293,189 +294,482 @@ class DataSourceECEventHistory(DataSource):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-multisite_painters["event_id"] = {
-    "title": _("ID of the event"),
-    "short": _("ID"),
-    "columns": ["event_id"],
-    "paint": lambda row: ("number", str(row["event_id"])),
-}
 
-multisite_painters["event_count"] = {
-    "title": _("Count (number of recent occurrances)"),
-    "short": _("Cnt."),
-    "columns": ["event_count"],
-    "paint": lambda row: ("number", str(row["event_count"])),
-}
+@painter_registry.register
+class PainterEventId(Painter):
+    @property
+    def ident(self):
+        return "event_id"
 
-multisite_painters["event_text"] = {
-    "title": _("Text/Message of the event"),
-    "short": _("Message"),
-    "columns": ["event_text"],
-    "paint": lambda row: ("", html.attrencode(row["event_text"]).replace("\x01", "<br>")),
-}
+    @property
+    def title(self):
+        return _("ID of the event")
+
+    @property
+    def short_title(self):
+        return _("ID")
+
+    @property
+    def columns(self):
+        return ['event_id']
+
+    def render(self, row, cell):
+        return ("number", str(row["event_id"]))
 
 
-def paint_ec_match_groups(row):
-    groups = row["event_match_groups"]
-    if groups:
-        code = ""
-        for text in groups:
-            code += '<span>%s</span>' % text
-        return "matchgroups", code
+@painter_registry.register
+class PainterEventCount(Painter):
+    @property
+    def ident(self):
+        return "event_count"
+
+    @property
+    def title(self):
+        return _("Count (number of recent occurrances)")
+
+    @property
+    def short_title(self):
+        return _("Cnt.")
+
+    @property
+    def columns(self):
+        return ['event_count']
+
+    def render(self, row, cell):
+        return ("number", str(row["event_count"]))
+
+
+@painter_registry.register
+class PainterEventText(Painter):
+    @property
+    def ident(self):
+        return "event_text"
+
+    @property
+    def title(self):
+        return _("Text/Message of the event")
+
+    @property
+    def short_title(self):
+        return _("Message")
+
+    @property
+    def columns(self):
+        return ['event_text']
+
+    def render(self, row, cell):
+        return ("", html.attrencode(row["event_text"]).replace("\x01", "<br>"))
+
+
+@painter_registry.register
+class PainterEventMatchGroups(Painter):
+    @property
+    def ident(self):
+        return "event_match_groups"
+
+    @property
+    def title(self):
+        return _("Match Groups")
+
+    @property
+    def short_title(self):
+        return _("Match")
+
+    @property
+    def columns(self):
+        return ['event_match_groups']
+
+    def render(self, row, cell):
+        groups = row["event_match_groups"]
+        if groups:
+            code = ""
+            for text in groups:
+                code += '<span>%s</span>' % text
+            return "matchgroups", code
+        return "", ""
+
+
+@painter_registry.register
+class PainterEventFirst(Painter):
+    @property
+    def ident(self):
+        return "event_first"
+
+    @property
+    def title(self):
+        return _("Time of first occurrence of this serial")
+
+    @property
+    def short_title(self):
+        return _("First")
+
+    @property
+    def columns(self):
+        return ['event_first']
+
+    @property
+    def painter_options(self):
+        return ['ts_format', 'ts_date']
+
+    def render(self, row, cell):
+        return paint_age(row["event_first"], True, True)
+
+
+@painter_registry.register
+class PainterEventLast(Painter):
+    @property
+    def ident(self):
+        return "event_last"
+
+    @property
+    def title(self):
+        return _("Time of last occurrance")
+
+    @property
+    def short_title(self):
+        return _("Last")
+
+    @property
+    def columns(self):
+        return ['event_last']
+
+    @property
+    def painter_options(self):
+        return ['ts_format', 'ts_date']
+
+    def render(self, row, cell):
+        return paint_age(row["event_last"], True, True)
+
+
+@painter_registry.register
+class PainterEventComment(Painter):
+    @property
+    def ident(self):
+        return "event_comment"
+
+    @property
+    def title(self):
+        return _("Comment to the event")
+
+    @property
+    def short_title(self):
+        return _("Comment")
+
+    @property
+    def columns(self):
+        return ['event_comment']
+
+    def render(self, row, cell):
+        return ("", row["event_comment"])
+
+
+@painter_registry.register
+class PainterEventSl(Painter):
+    @property
+    def ident(self):
+        return "event_sl"
+
+    @property
+    def title(self):
+        return _("Service-Level")
+
+    @property
+    def short_title(self):
+        return _("Level")
+
+    @property
+    def columns(self):
+        return ['event_sl']
+
+    def render(self, row, cell):
+        sl_txt = dict(config.mkeventd_service_levels).get(row["event_sl"], str(row["event_sl"]))
+        return "", sl_txt
+
+
+@painter_registry.register
+class PainterEventHost(Painter):
+    @property
+    def ident(self):
+        return "event_host"
+
+    @property
+    def title(self):
+        return _("Hostname")
+
+    @property
+    def short_title(self):
+        return _("Host")
+
+    @property
+    def columns(self):
+        return ['event_host', 'host_name']
+
+    def render(self, row, cell):
+        if row["host_name"]:
+            return "", row["host_name"]
+        return "", row["event_host"]
+
+
+@painter_registry.register
+class PainterEventIpaddress(Painter):
+    @property
+    def ident(self):
+        return "event_ipaddress"
+
+    @property
+    def title(self):
+        return _("Original IP-Address")
+
+    @property
+    def short_title(self):
+        return _("Orig. IP")
+
+    @property
+    def columns(self):
+        return ['event_ipaddress']
+
+    def render(self, row, cell):
+        return ("", row["event_ipaddress"])
+
+
+@painter_registry.register
+class PainterEventHostInDowntime(Painter):
+    @property
+    def ident(self):
+        return "event_host_in_downtime"
+
+    @property
+    def title(self):
+        return _("Host in downtime during event creation")
+
+    @property
+    def short_title(self):
+        return _("Dt.")
+
+    @property
+    def columns(self):
+        return ['event_host_in_downtime']
+
+    def render(self, row, cell):
+        return paint_nagiosflag(row, "event_host_in_downtime", True)
+
+
+@painter_registry.register
+class PainterEventOwner(Painter):
+    @property
+    def ident(self):
+        return "event_owner"
+
+    @property
+    def title(self):
+        return _("Owner of event")
+
+    @property
+    def short_title(self):
+        return _("owner")
+
+    @property
+    def columns(self):
+        return ['event_owner']
+
+    def render(self, row, cell):
+        return ("", row["event_owner"])
+
+
+@painter_registry.register
+class PainterEventContact(Painter):
+    @property
+    def ident(self):
+        return "event_contact"
+
+    @property
+    def title(self):
+        return _("Contact Person")
+
+    @property
+    def short_title(self):
+        return _("Contact")
+
+    @property
+    def columns(self):
+        return ['event_contact']
+
+    def render(self, row, cell):
+        return ("", row["event_contact"])
+
+
+@painter_registry.register
+class PainterEventApplication(Painter):
+    @property
+    def ident(self):
+        return "event_application"
+
+    @property
+    def title(self):
+        return _("Application / Syslog-Tag")
+
+    @property
+    def short_title(self):
+        return _("Application")
+
+    @property
+    def columns(self):
+        return ['event_application']
+
+    def render(self, row, cell):
+        return ("", row["event_application"])
+
+
+@painter_registry.register
+class PainterEventPid(Painter):
+    @property
+    def ident(self):
+        return "event_pid"
+
+    @property
+    def title(self):
+        return _("Process ID")
+
+    @property
+    def short_title(self):
+        return _("PID")
+
+    @property
+    def columns(self):
+        return ['event_pid']
+
+    def render(self, row, cell):
+        return ("", "%s" % row["event_pid"])
+
+
+@painter_registry.register
+class PainterEventPriority(Painter):
+    @property
+    def ident(self):
+        return "event_priority"
+
+    @property
+    def title(self):
+        return _("Syslog-Priority")
+
+    @property
+    def short_title(self):
+        return _("Prio")
+
+    @property
+    def columns(self):
+        return ['event_priority']
+
+    def render(self, row, cell):
+        return ("", dict(mkeventd.syslog_priorities)[row["event_priority"]])
+
+
+@painter_registry.register
+class PainterEventFacility(Painter):
+    @property
+    def ident(self):
+        return "event_facility"
+
+    @property
+    def title(self):
+        return _("Syslog-Facility")
+
+    @property
+    def short_title(self):
+        return _("Facility")
+
+    @property
+    def columns(self):
+        return ['event_facility']
+
+    def render(self, row, cell):
+        return ("", dict(mkeventd.syslog_facilities)[row["event_facility"]])
+
+
+@painter_registry.register
+class PainterEventRuleId(Painter):
+    @property
+    def ident(self):
+        return "event_rule_id"
+
+    @property
+    def title(self):
+        return _("Rule-ID")
+
+    @property
+    def short_title(self):
+        return _("Rule")
+
+    @property
+    def columns(self):
+        return ['event_rule_id']
+
+    def render(self, row, cell):
+        rule_id = row["event_rule_id"]
+        if config.user.may("mkeventd.edit"):
+            urlvars = html.urlencode_vars([("mode", "mkeventd_edit_rule"), ("rule_id", rule_id)])
+            return "", html.render_a(rule_id, "wato.py?%s" % urlvars)
+        return "", rule_id
+
+
+@painter_registry.register
+class PainterEventState(Painter):
+    @property
+    def ident(self):
+        return "event_state"
+
+    @property
+    def title(self):
+        return _("State (severity) of event")
+
+    @property
+    def short_title(self):
+        return _("State")
+
+    @property
+    def columns(self):
+        return ['event_state']
+
+    def render(self, row, cell):
+        state = row["event_state"]
+        name = short_service_state_name(state, "")
+        return "state svcstate state%s" % state, name
+
+
+@painter_registry.register
+class PainterEventPhase(Painter):
+    @property
+    def ident(self):
+        return "event_phase"
+
+    @property
+    def title(self):
+        return _("Phase of event (open, counting, etc.)")
+
+    @property
+    def short_title(self):
+        return _("Phase")
+
+    @property
+    def columns(self):
+        return ['event_phase']
+
+    def render(self, row, cell):
+        return ("", mkeventd.phase_names.get(row["event_phase"], ''))
+
+
+def paint_event_icons(row, history=False):
+    htmlcode = render_event_phase_icons(row)
+
+    if not history:
+        htmlcode += render_delete_event_icons(row)
+
+    if row["event_host_in_downtime"]:
+        htmlcode += html.render_icon("downtime", _("Host in downtime during event creation"))
+
+    if htmlcode:
+        return "icons", htmlcode
     return "", ""
-
-
-multisite_painters["event_match_groups"] = {
-    "title": _("Match Groups"),
-    "short": _("Match"),
-    "columns": ["event_match_groups"],
-    "paint": paint_ec_match_groups,
-}
-
-multisite_painters["event_first"] = {
-    "title": _("Time of first occurrence of this serial"),
-    "short": _("First"),
-    "columns": ["event_first"],
-    "options": ["ts_format", "ts_date"],
-    "paint": lambda row: paint_age(row["event_first"], True, True),
-}
-
-multisite_painters["event_last"] = {
-    "title": _("Time of last occurrance"),
-    "short": _("Last"),
-    "columns": ["event_last"],
-    "options": ["ts_format", "ts_date"],
-    "paint": lambda row: paint_age(row["event_last"], True, True),
-}
-
-multisite_painters["event_comment"] = {
-    "title": _("Comment to the event"),
-    "short": _("Comment"),
-    "columns": ["event_comment"],
-    "paint": lambda row: ("", row["event_comment"]),
-}
-
-
-def mkeventd_paint_sl(row):
-    try:
-        return "", dict(config.mkeventd_service_levels)[row["event_sl"]]
-    except:
-        return "", str(row["event_sl"])
-
-
-multisite_painters["event_sl"] = {
-    "title": _("Service-Level"),
-    "short": _("Level"),
-    "columns": ["event_sl"],
-    "paint": mkeventd_paint_sl,
-}
-
-
-def paint_event_host(row):
-    if row["host_name"]:
-        return "", row["host_name"]
-    return "", row["event_host"]
-
-
-multisite_painters["event_host"] = {
-    "title": _("Hostname"),
-    "short": _("Host"),
-    "columns": ["event_host", "host_name"],
-    "paint": paint_event_host,
-}
-
-multisite_painters["event_ipaddress"] = {
-    "title": _("Original IP-Address"),
-    "short": _("Orig. IP"),
-    "columns": ["event_ipaddress"],
-    "paint": lambda row: ("", row["event_ipaddress"]),
-}
-
-multisite_painters["event_host_in_downtime"] = {
-    "title": _("Host in downtime during event creation"),
-    "short": _("Dt."),
-    "columns": ["event_host_in_downtime"],
-    "paint": lambda row: paint_nagiosflag(row, "event_host_in_downtime", True),
-}
-
-multisite_painters["event_owner"] = {
-    "title": _("Owner of event"),
-    "short": _("owner"),
-    "columns": ["event_owner"],
-    "paint": lambda row: ("", row["event_owner"]),
-}
-
-multisite_painters["event_contact"] = {
-    "title": _("Contact Person"),
-    "short": _("Contact"),
-    "columns": ["event_contact"],
-    "paint": lambda row: ("", row["event_contact"]),
-}
-
-multisite_painters["event_application"] = {
-    "title": _("Application / Syslog-Tag"),
-    "short": _("Application"),
-    "columns": ["event_application"],
-    "paint": lambda row: ("", row["event_application"]),
-}
-
-multisite_painters["event_pid"] = {
-    "title": _("Process ID"),
-    "short": _("PID"),
-    "columns": ["event_pid"],
-    "paint": lambda row: ("", "%s" % row["event_pid"]),
-}
-
-multisite_painters["event_priority"] = {
-    "title": _("Syslog-Priority"),
-    "short": _("Prio"),
-    "columns": ["event_priority"],
-    "paint": lambda row: ("", dict(mkeventd.syslog_priorities)[row["event_priority"]]),
-}
-
-multisite_painters["event_facility"] = {
-    "title": _("Syslog-Facility"),
-    "short": _("Facility"),
-    "columns": ["event_facility"],
-    "paint": lambda row: ("", dict(mkeventd.syslog_facilities)[row["event_facility"]]),
-}
-
-
-def paint_rule_id(row):
-    rule_id = row["event_rule_id"]
-    if config.user.may("mkeventd.edit"):
-        urlvars = html.urlencode_vars([("mode", "mkeventd_edit_rule"), ("rule_id", rule_id)])
-        return "", html.render_a(rule_id, "wato.py?%s" % urlvars)
-    return "", rule_id
-
-
-multisite_painters["event_rule_id"] = {
-    "title": _("Rule-ID"),
-    "short": _("Rule"),
-    "columns": ["event_rule_id"],
-    "paint": paint_rule_id,
-}
-
-
-def paint_event_state(row):
-    state = row["event_state"]
-    name = short_service_state_name(state, "")
-    return "state svcstate state%s" % state, name
-
-
-multisite_painters["event_state"] = {
-    "title": _("State (severity) of event"),
-    "short": _("State"),
-    "columns": ["event_state"],
-    "paint": paint_event_state,
-}
-
-multisite_painters["event_phase"] = {
-    "title": _("Phase of event (open, counting, etc.)"),
-    "short": _("Phase"),
-    "columns": ["event_phase"],
-    "paint": lambda row: ("", mkeventd.phase_names.get(row["event_phase"], ''))
-}
 
 
 def render_event_phase_icons(row):
@@ -536,127 +830,255 @@ def render_delete_event_icons(row):
         return ''
 
 
-def paint_event_icons(row, history=False):
-    htmlcode = render_event_phase_icons(row)
+@painter_registry.register
+class PainterEventIcons(Painter):
+    @property
+    def ident(self):
+        return "event_icons"
 
-    if not history:
-        htmlcode += render_delete_event_icons(row)
+    @property
+    def title(self):
+        return _("Event Icons")
 
-    if row["event_host_in_downtime"]:
-        htmlcode += html.render_icon("downtime", _("Host in downtime during event creation"))
+    @property
+    def short_title(self):
+        return _("Icons")
 
-    if htmlcode:
-        return "icons", htmlcode
-    return "", ""
+    @property
+    def columns(self):
+        return ['event_phase', 'event_host_in_downtime']
 
+    @property
+    def printable(self):
+        return False
 
-multisite_painters["event_icons"] = {
-    "title": _("Event Icons"),
-    "short": _("Icons"),
-    "printable": False,
-    "columns": ["event_phase", "event_host_in_downtime"],
-    "paint": paint_event_icons,
-}
-
-multisite_painters["event_history_icons"] = {
-    "title": _("Event Icons"),
-    "short": _("Icons"),
-    "printable": False,
-    "columns": ["event_phase", "event_host_in_downtime"],
-    "paint": lambda row: paint_event_icons(row, history=True),
-}
+    def render(self, row, cell):
+        return paint_event_icons(row)
 
 
-def paint_event_contact_groups(row):
-    cgs = row.get("event_contact_groups")
-    if cgs is None:
-        return "", ""
-    elif cgs:
-        return "", ", ".join(cgs)
-    return "", "<i>" + _("none") + "</i>"
+@painter_registry.register
+class PainterEventHistoryIcons(Painter):
+    @property
+    def ident(self):
+        return "event_history_icons"
+
+    @property
+    def title(self):
+        return _("Event Icons")
+
+    @property
+    def short_title(self):
+        return _("Icons")
+
+    @property
+    def columns(self):
+        return ['event_phase', 'event_host_in_downtime']
+
+    @property
+    def printable(self):
+        return False
+
+    def render(self, row, cell):
+        return paint_event_icons(row, history=True)
 
 
-multisite_painters["event_contact_groups"] = {
-    "title": _("Contact groups defined in rule"),
-    "short": _("Rule contact groups"),
-    "columns": ["event_contact_groups"],
-    "paint": paint_event_contact_groups,
-}
+@painter_registry.register
+class PainterEventContactGroups(Painter):
+    @property
+    def ident(self):
+        return "event_contact_groups"
+
+    @property
+    def title(self):
+        return _("Contact groups defined in rule")
+
+    @property
+    def short_title(self):
+        return _("Rule contact groups")
+
+    @property
+    def columns(self):
+        return ['event_contact_groups']
+
+    def render(self, row, cell):
+        cgs = row.get("event_contact_groups")
+        if cgs is None:
+            return "", ""
+        elif cgs:
+            return "", ", ".join(cgs)
+        return "", "<i>" + _("none") + "</i>"
 
 
-def paint_event_effective_contact_groups(row):
-    if row["event_contact_groups_precedence"] == "host":
-        cgs = row["host_contact_groups"]
-    else:
-        cgs = row["event_contact_groups"]
+@painter_registry.register
+class PainterEventEffectiveContactGroups(Painter):
+    @property
+    def ident(self):
+        return "event_effective_contact_groups"
 
-    if cgs is None:
-        return "", ""
-    elif cgs:
-        return "", ", ".join(sorted(cgs))
-    return "", "<i>" + _("none") + "</i>"
+    @property
+    def title(self):
+        return _("Contact groups effective (Host or rule contact groups)")
 
+    @property
+    def short_title(self):
+        return _("Contact groups")
 
-multisite_painters["event_effective_contact_groups"] = {
-    "title": _("Contact groups effective (Host or rule contact groups)"),
-    "short": _("Contact groups"),
-    "columns": [
-        "event_contact_groups",
-        "event_contact_groups_precedence",
-        "host_contact_groups",
-    ],
-    "paint": paint_event_effective_contact_groups,
-}
+    @property
+    def columns(self):
+        return [
+            'event_contact_groups',
+            'event_contact_groups_precedence',
+            'host_contact_groups',
+        ]
+
+    def render(self, row, cell):
+        if row["event_contact_groups_precedence"] == "host":
+            cgs = row["host_contact_groups"]
+        else:
+            cgs = row["event_contact_groups"]
+
+        if cgs is None:
+            return "", ""
+        elif cgs:
+            return "", ", ".join(sorted(cgs))
+        return "", "<i>" + _("none") + "</i>"
+
 
 # Event History
 
-multisite_painters["history_line"] = {
-    "title": _("Line number in log file"),
-    "short": _("Line"),
-    "columns": ["history_line"],
-    "paint": lambda row: ("number", "%s" % row["history_line"]),
-}
 
-multisite_painters["history_time"] = {
-    "title": _("Time of entry in logfile"),
-    "short": _("Time"),
-    "columns": ["history_time"],
-    "options": ["ts_format", "ts_date"],
-    "paint": lambda row: paint_age(row["history_time"], True, True),
-}
+@painter_registry.register
+class PainterHistoryLine(Painter):
+    @property
+    def ident(self):
+        return "history_line"
+
+    @property
+    def title(self):
+        return _("Line number in log file")
+
+    @property
+    def short_title(self):
+        return _("Line")
+
+    @property
+    def columns(self):
+        return ['history_line']
+
+    def render(self, row, cell):
+        return ("number", "%s" % row["history_line"])
 
 
-def paint_ec_history_what(row):
-    what = row["history_what"]
-    return "", '<span title="%s">%s</span>' % (mkeventd.action_whats[what], what)
+@painter_registry.register
+class PainterHistoryTime(Painter):
+    @property
+    def ident(self):
+        return "history_time"
+
+    @property
+    def title(self):
+        return _("Time of entry in logfile")
+
+    @property
+    def short_title(self):
+        return _("Time")
+
+    @property
+    def columns(self):
+        return ['history_time']
+
+    @property
+    def painter_options(self):
+        return ['ts_format', 'ts_date']
+
+    def render(self, row, cell):
+        return paint_age(row["history_time"], True, True)
 
 
-multisite_painters["history_what"] = {
-    "title": _("Type of event action"),
-    "short": _("Action"),
-    "columns": ["history_what"],
-    "paint": paint_ec_history_what,
-}
+@painter_registry.register
+class PainterHistoryWhat(Painter):
+    @property
+    def ident(self):
+        return "history_what"
 
-multisite_painters["history_what_explained"] = {
-    "title": _("Explanation for event action"),
-    "columns": ["history_what"],
-    "paint": lambda row: ("", mkeventd.action_whats[row["history_what"]]),
-}
+    @property
+    def title(self):
+        return _("Type of event action")
 
-multisite_painters["history_who"] = {
-    "title": _("User who performed action"),
-    "short": _("Who"),
-    "columns": ["history_who"],
-    "paint": lambda row: ("", row["history_who"]),
-}
+    @property
+    def short_title(self):
+        return _("Action")
 
-multisite_painters["history_addinfo"] = {
-    "title": _("Additional Information"),
-    "short": _("Info"),
-    "columns": ["history_addinfo"],
-    "paint": lambda row: ("", row["history_addinfo"]),
-}
+    @property
+    def columns(self):
+        return ['history_what']
+
+    def render(self, row, cell):
+        what = row["history_what"]
+        return "", '<span title="%s">%s</span>' % (mkeventd.action_whats[what], what)
+
+
+@painter_registry.register
+class PainterHistoryWhatExplained(Painter):
+    @property
+    def ident(self):
+        return "history_what_explained"
+
+    @property
+    def title(self):
+        return _("Explanation for event action")
+
+    @property
+    def columns(self):
+        return ['history_what']
+
+    def render(self, row, cell):
+        return ("", mkeventd.action_whats[row["history_what"]])
+
+
+@painter_registry.register
+class PainterHistoryWho(Painter):
+    @property
+    def ident(self):
+        return "history_who"
+
+    @property
+    def title(self):
+        return _("User who performed action")
+
+    @property
+    def short_title(self):
+        return _("Who")
+
+    @property
+    def columns(self):
+        return ['history_who']
+
+    def render(self, row, cell):
+        return ("", row["history_who"])
+
+
+@painter_registry.register
+class PainterHistoryAddinfo(Painter):
+    @property
+    def ident(self):
+        return "history_addinfo"
+
+    @property
+    def title(self):
+        return _("Additional Information")
+
+    @property
+    def short_title(self):
+        return _("Info")
+
+    @property
+    def columns(self):
+        return ['history_addinfo']
+
+    def render(self, row, cell):
+        return ("", row["history_addinfo"])
+
 
 #.
 #   .--Commands------------------------------------------------------------.

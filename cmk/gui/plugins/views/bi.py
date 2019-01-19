@@ -36,9 +36,10 @@ from cmk.gui.plugins.views import (
     data_source_registry,
     DataSource,
     painter_options,
-    multisite_painters,
     painter_option_registry,
     PainterOption,
+    painter_registry,
+    Painter,
 )
 
 #     ____        _
@@ -170,47 +171,82 @@ class DataSourceBIHostnameByGroupAggregations(DataSource):
 #
 
 
-def paint_bi_icons(row):
-    single_url = "view.py?" + html.urlencode_vars([("view_name", "aggr_single"),
-                                                   ("aggr_name", row["aggr_name"])])
-    avail_url = single_url + "&mode=availability"
+@painter_registry.register
+class PainterAggrIcons(Painter):
+    @property
+    def ident(self):
+        return "aggr_icons"
 
-    with html.plugged():
-        html.icon_button(single_url, _("Show only this aggregation"), "showbi")
-        html.icon_button(avail_url, _("Analyse availability of this aggregation"), "availability")
-        if row["aggr_effective_state"]["in_downtime"] != 0:
-            html.icon(
-                _("A service or host in this aggregation is in downtime."), "derived_downtime")
-        if row["aggr_effective_state"]["acknowledged"]:
-            html.icon(
-                _("The critical problems that make this aggregation non-OK have been acknowledged."
-                 ), "ack")
-        if not row["aggr_effective_state"]["in_service_period"]:
-            html.icon(
-                _("This aggregation is currently out of its service period."),
-                "outof_serviceperiod")
-        code = html.drain()
-    return "buttons", code
+    @property
+    def title(self):
+        return _("Links")
+
+    @property
+    def columns(self):
+        return ['aggr_group', 'aggr_name', 'aggr_effective_state']
+
+    @property
+    def printable(self):
+        return False
+
+    def render(self, row, cell):
+        single_url = "view.py?" + html.urlencode_vars([("view_name", "aggr_single"),
+                                                       ("aggr_name", row["aggr_name"])])
+        avail_url = single_url + "&mode=availability"
+
+        with html.plugged():
+            html.icon_button(single_url, _("Show only this aggregation"), "showbi")
+            html.icon_button(avail_url, _("Analyse availability of this aggregation"),
+                             "availability")
+            if row["aggr_effective_state"]["in_downtime"] != 0:
+                html.icon(
+                    _("A service or host in this aggregation is in downtime."), "derived_downtime")
+            if row["aggr_effective_state"]["acknowledged"]:
+                html.icon(
+                    _("The critical problems that make this aggregation non-OK have been acknowledged."
+                     ), "ack")
+            if not row["aggr_effective_state"]["in_service_period"]:
+                html.icon(
+                    _("This aggregation is currently out of its service period."),
+                    "outof_serviceperiod")
+            code = html.drain()
+        return "buttons", code
 
 
-multisite_painters["aggr_icons"] = {
-    "title": _("Links"),
-    "columns": ["aggr_group", "aggr_name", "aggr_effective_state"],
-    "printable": False,
-    "paint": paint_bi_icons,
-}
+@painter_registry.register
+class PainterAggrInDowntime(Painter):
+    @property
+    def ident(self):
+        return "aggr_in_downtime"
 
-multisite_painters["aggr_in_downtime"] = {
-    "title": _("In Downtime"),
-    "columns": ["aggr_effective_state"],
-    "paint": lambda row: ("", (row["aggr_effective_state"]["in_downtime"] and "1" or "0")),
-}
+    @property
+    def title(self):
+        return _("In Downtime")
 
-multisite_painters["aggr_acknowledged"] = {
-    "title": _("Acknowledged"),
-    "columns": ["aggr_effective_state"],
-    "paint": lambda row: ("", (row["aggr_effective_state"]["acknowledged"] and "1" or "0")),
-}
+    @property
+    def columns(self):
+        return ['aggr_effective_state']
+
+    def render(self, row, cell):
+        return ("", (row["aggr_effective_state"]["in_downtime"] and "1" or "0"))
+
+
+@painter_registry.register
+class PainterAggrAcknowledged(Painter):
+    @property
+    def ident(self):
+        return "aggr_acknowledged"
+
+    @property
+    def title(self):
+        return _("Acknowledged")
+
+    @property
+    def columns(self):
+        return ['aggr_effective_state']
+
+    def render(self, row, cell):
+        return ("", (row["aggr_effective_state"]["acknowledged"] and "1" or "0"))
 
 
 def paint_aggr_state_short(state, assumed=False):
@@ -224,55 +260,159 @@ def paint_aggr_state_short(state, assumed=False):
         return classes, name
 
 
-multisite_painters["aggr_state"] = {
-    "title": _("Aggregated state"),
-    "short": _("State"),
-    "columns": ["aggr_effective_state"],
-    "paint":
-        lambda row: paint_aggr_state_short(row["aggr_effective_state"], row["aggr_effective_state"] != row["aggr_state"])
-}
+@painter_registry.register
+class PainterAggrState(Painter):
+    @property
+    def ident(self):
+        return "aggr_state"
 
-multisite_painters["aggr_state_num"] = {
-    "title": _("Aggregated state (number)"),
-    "short": _("State"),
-    "columns": ["aggr_effective_state"],
-    "paint": lambda row: ("", str(row["aggr_effective_state"]['state']))
-}
+    @property
+    def title(self):
+        return _("Aggregated state")
 
-multisite_painters["aggr_real_state"] = {
-    "title": _("Aggregated real state (never assumed)"),
-    "short": _("R.State"),
-    "columns": ["aggr_state"],
-    "paint": lambda row: paint_aggr_state_short(row["aggr_state"])
-}
+    @property
+    def short_title(self):
+        return _("State")
 
-multisite_painters["aggr_assumed_state"] = {
-    "title": _("Aggregated assumed state"),
-    "short": _("Assumed"),
-    "columns": ["aggr_assumed_state"],
-    "paint": lambda row: paint_aggr_state_short(row["aggr_assumed_state"])
-}
+    @property
+    def columns(self):
+        return ['aggr_effective_state']
 
-multisite_painters["aggr_group"] = {
-    "title": _("Aggregation group"),
-    "short": _("Group"),
-    "columns": ["aggr_group"],
-    "paint": lambda row: ("", html.attrencode(row["aggr_group"]))
-}
+    def render(self, row, cell):
+        return paint_aggr_state_short(row["aggr_effective_state"],
+                                      row["aggr_effective_state"] != row["aggr_state"])
 
-multisite_painters["aggr_name"] = {
-    "title": _("Aggregation name"),
-    "short": _("Aggregation"),
-    "columns": ["aggr_name"],
-    "paint": lambda row: ("", html.attrencode(row["aggr_name"]))
-}
 
-multisite_painters["aggr_output"] = {
-    "title": _("Aggregation status output"),
-    "short": _("Output"),
-    "columns": ["aggr_output"],
-    "paint": lambda row: ("", row["aggr_output"])
-}
+@painter_registry.register
+class PainterAggrStateNum(Painter):
+    @property
+    def ident(self):
+        return "aggr_state_num"
+
+    @property
+    def title(self):
+        return _("Aggregated state (number)")
+
+    @property
+    def short_title(self):
+        return _("State")
+
+    @property
+    def columns(self):
+        return ['aggr_effective_state']
+
+    def render(self, row, cell):
+        return ("", str(row["aggr_effective_state"]['state']))
+
+
+@painter_registry.register
+class PainterAggrRealState(Painter):
+    @property
+    def ident(self):
+        return "aggr_real_state"
+
+    @property
+    def title(self):
+        return _("Aggregated real state (never assumed)")
+
+    @property
+    def short_title(self):
+        return _("R.State")
+
+    @property
+    def columns(self):
+        return ['aggr_state']
+
+    def render(self, row, cell):
+        return paint_aggr_state_short(row["aggr_state"])
+
+
+@painter_registry.register
+class PainterAggrAssumedState(Painter):
+    @property
+    def ident(self):
+        return "aggr_assumed_state"
+
+    @property
+    def title(self):
+        return _("Aggregated assumed state")
+
+    @property
+    def short_title(self):
+        return _("Assumed")
+
+    @property
+    def columns(self):
+        return ['aggr_assumed_state']
+
+    def render(self, row, cell):
+        return paint_aggr_state_short(row["aggr_assumed_state"])
+
+
+@painter_registry.register
+class PainterAggrGroup(Painter):
+    @property
+    def ident(self):
+        return "aggr_group"
+
+    @property
+    def title(self):
+        return _("Aggregation group")
+
+    @property
+    def short_title(self):
+        return _("Group")
+
+    @property
+    def columns(self):
+        return ['aggr_group']
+
+    def render(self, row, cell):
+        return ("", html.attrencode(row["aggr_group"]))
+
+
+@painter_registry.register
+class PainterAggrName(Painter):
+    @property
+    def ident(self):
+        return "aggr_name"
+
+    @property
+    def title(self):
+        return _("Aggregation name")
+
+    @property
+    def short_title(self):
+        return _("Aggregation")
+
+    @property
+    def columns(self):
+        return ['aggr_name']
+
+    def render(self, row, cell):
+        return ("", html.attrencode(row["aggr_name"]))
+
+
+@painter_registry.register
+class PainterAggrOutput(Painter):
+    @property
+    def ident(self):
+        return "aggr_output"
+
+    @property
+    def title(self):
+        return _("Aggregation status output")
+
+    @property
+    def short_title(self):
+        return _("Output")
+
+    @property
+    def columns(self):
+        return ['aggr_output']
+
+    def render(self, row, cell):
+        return ("", row["aggr_output"])
 
 
 def paint_aggr_hosts(row, link_to_view):
@@ -283,19 +423,48 @@ def paint_aggr_hosts(row, link_to_view):
     return "", HTML(" ").join(h)
 
 
-multisite_painters["aggr_hosts"] = {
-    "title": _("Aggregation: affected hosts"),
-    "short": _("Hosts"),
-    "columns": ["aggr_hosts"],
-    "paint": lambda row: paint_aggr_hosts(row, "aggr_host"),
-}
+@painter_registry.register
+class PainterAggrHosts(Painter):
+    @property
+    def ident(self):
+        return "aggr_hosts"
 
-multisite_painters["aggr_hosts_services"] = {
-    "title": _("Aggregation: affected hosts (link to host page)"),
-    "short": _("Hosts"),
-    "columns": ["aggr_hosts"],
-    "paint": lambda row: paint_aggr_hosts(row, "host"),
-}
+    @property
+    def title(self):
+        return _("Aggregation: affected hosts")
+
+    @property
+    def short_title(self):
+        return _("Hosts")
+
+    @property
+    def columns(self):
+        return ['aggr_hosts']
+
+    def render(self, row, cell):
+        return paint_aggr_hosts(row, "aggr_host")
+
+
+@painter_registry.register
+class PainterAggrHostsServices(Painter):
+    @property
+    def ident(self):
+        return "aggr_hosts_services"
+
+    @property
+    def title(self):
+        return _("Aggregation: affected hosts (link to host page)")
+
+    @property
+    def short_title(self):
+        return _("Hosts")
+
+    @property
+    def columns(self):
+        return ['aggr_hosts']
+
+    def render(self, row, cell):
+        return paint_aggr_hosts(row, "host")
 
 
 @painter_option_registry.register
@@ -408,17 +577,49 @@ def paint_aggregated_tree_state(row, force_renderer_cls=None):
     return renderer.css_class(), renderer.render()
 
 
-multisite_painters["aggr_treestate"] = {
-    "title": _("Aggregation: complete tree"),
-    "short": _("Tree"),
-    "columns": ["aggr_treestate", "aggr_hosts"],
-    "options": ["aggr_expand", "aggr_onlyproblems", "aggr_treetype", "aggr_wrap"],
-    "paint": paint_aggregated_tree_state,
-}
+@painter_registry.register
+class PainterAggrTreestate(Painter):
+    @property
+    def ident(self):
+        return "aggr_treestate"
 
-multisite_painters["aggr_treestate_boxed"] = {
-    "title"   : _("Aggregation: simplistic boxed layout"),
-    "short"   : _("Tree"),
-    "columns" : [ "aggr_treestate", "aggr_hosts" ],
-    "paint"   : lambda row: paint_aggregated_tree_state(row, force_renderer_cls=bi.FoldableTreeRendererBoxes),
-}
+    @property
+    def title(self):
+        return _("Aggregation: complete tree")
+
+    @property
+    def short_title(self):
+        return _("Tree")
+
+    @property
+    def columns(self):
+        return ['aggr_treestate', 'aggr_hosts']
+
+    @property
+    def painter_options(self):
+        return ['aggr_expand', 'aggr_onlyproblems', 'aggr_treetype', 'aggr_wrap']
+
+    def render(self, row, cell):
+        return paint_aggregated_tree_state(row)
+
+
+@painter_registry.register
+class PainterAggrTreestateBoxed(Painter):
+    @property
+    def ident(self):
+        return "aggr_treestate_boxed"
+
+    @property
+    def title(self):
+        return _("Aggregation: simplistic boxed layout")
+
+    @property
+    def short_title(self):
+        return _("Tree")
+
+    @property
+    def columns(self):
+        return ['aggr_treestate', 'aggr_hosts']
+
+    def render(self, row, cell):
+        return paint_aggregated_tree_state(row, force_renderer_cls=bi.FoldableTreeRendererBoxes)

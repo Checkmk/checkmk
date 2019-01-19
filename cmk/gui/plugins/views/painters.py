@@ -24,44 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# =================================================================== #
-
-#        _    ____ ___      ____                                      #
-#       / \  |  _ \_ _|    |  _ \  ___   ___ _   _                    #
-#      / _ \ | |_) | |_____| | | |/ _ \ / __| | | |                   #
-#     / ___ \|  __/| |_____| |_| | (_) | (__| |_| |                   #
-#    /_/   \_\_|  |___|    |____/ \___/ \___|\__,_|                   #
-#                                                                     #
-# =================================================================== #
-#
-# A painter computes from information from a data row HTML output and
-# a CSS class for one display column. Please note, that there is no
-# 1:1 relation between data columns and display columns. A painter can
-# make use of more than one data columns. One example is the current
-# service state. It uses the columns "service_state" and "has_been_checked".
-#
-# A painter is a python dictionary with the following keys:
-#
-# "title":   Title of the column to be displayed in the view editor
-#            *and* in views as column header
-# "short":   If the key is defined, it is used as column header in views
-#            instead of the the title
-# "columns": Livestatus columns this painter need. Multisite retrieves
-#            only data columns declared in the painters, so make sure
-#            you do not leave out something here.
-# "paint":   The actual paint function
-#
-# The paint function gets one argument: A data row, which is a python
-# dictionary representing one data object (host, service, ...). Its
-# keys are the column names, its values the actual values from livestatus
-# (typed: numbers are float or int, not string)
-#
-# The paint function must return a pair of two strings: The HTML code
-# for painting the column and a CSS class for the TD of the column.
-# That class is optional and set to "" in most cases. Currently CSS
-# styles are not modular and all defined in check_mk.css. This will
-# change in future.
-
 import os
 import time
 
@@ -89,9 +51,10 @@ from cmk.gui.plugins.views.icons import (
 )
 
 from cmk.gui.plugins.views import (
+    painter_registry,
+    Painter,
     painter_option_registry,
     PainterOption,
-    multisite_painters,
     painter_options,
     transform_action_url,
     is_stale,
@@ -292,23 +255,64 @@ def paint_icons(what, row):
     return "icons", output
 
 
-multisite_painters["service_icons"] = {
-    "title": _("Service icons"),
-    "short": _("Icons"),
-    "printable": False,  # does not contain printable text
-    "columns": lambda: iconpainter_columns("service", toplevel=None),
-    "groupby": lambda row: "",  # Do not account for in grouping
-    "paint": lambda row: paint_icons("service", row)
-}
+# TODO: Refactor to one icon base class
+@painter_registry.register
+class PainterServiceIcons(Painter):
+    @property
+    def ident(self):
+        return "service_icons"
 
-multisite_painters["host_icons"] = {
-    "title": _("Host icons"),
-    "short": _("Icons"),
-    "printable": False,  # does not contain printable text
-    "columns": lambda: iconpainter_columns("host", toplevel=None),
-    "groupby": lambda row: "",  # Do not account for in grouping
-    "paint": lambda row: paint_icons("host", row)
-}
+    @property
+    def title(self):
+        return _("Service icons")
+
+    @property
+    def short_title(self):
+        return _("Icons")
+
+    @property
+    def columns(self):
+        return iconpainter_columns("service", toplevel=None)
+
+    @property
+    def printable(self):
+        return False
+
+    def group_by(self, row):
+        return ("",)  # Do not account for in grouping
+
+    def render(self, row, cell):
+        return paint_icons("service", row)
+
+
+@painter_registry.register
+class PainterHostIcons(Painter):
+    @property
+    def ident(self):
+        return "host_icons"
+
+    @property
+    def title(self):
+        return _("Host icons")
+
+    @property
+    def short_title(self):
+        return _("Icons")
+
+    @property
+    def columns(self):
+        return iconpainter_columns("host", toplevel=None)
+
+    @property
+    def printable(self):
+        return False
+
+    def group_by(self, row):
+        return ("",)  # Do not account for in grouping
+
+    def render(self, row, cell):
+        return paint_icons("host", row)
+
 
 #.
 #   .--Site----------------------------------------------------------------.
@@ -323,33 +327,77 @@ multisite_painters["host_icons"] = {
 #   '----------------------------------------------------------------------'
 
 
-def paint_site_icon(row):
-    if row.get("site") and config.use_siteicons:
-        return None, "<img class=siteicon src=\"icons/site-%s-24.png\">" % row["site"]
-    return None, ""
+@painter_registry.register
+class PainterSiteIcon(Painter):
+    @property
+    def ident(self):
+        return "site_icon"
+
+    @property
+    def title(self):
+        return _("Site icon")
+
+    @property
+    def short_title(self):
+        return _("")
+
+    @property
+    def columns(self):
+        return ['site']
+
+    @property
+    def sorter(self):
+        return 'site'
+
+    def render(self, row, cell):
+        if row.get("site") and config.use_siteicons:
+            return None, "<img class=siteicon src=\"icons/site-%s-24.png\">" % row["site"]
+        return None, ""
 
 
-multisite_painters["site_icon"] = {
-    "title": _("Site icon"),
-    "short": "",
-    "columns": ["site"],
-    "paint": paint_site_icon,
-    "sorter": 'site',
-}
+@painter_registry.register
+class PainterSitenamePlain(Painter):
+    @property
+    def ident(self):
+        return "sitename_plain"
 
-multisite_painters["sitename_plain"] = {
-    "title": _("Site ID"),
-    "short": _("Site"),
-    "columns": ["site"],
-    "paint": lambda row: (None, row["site"]),
-    "sorter": 'site',
-}
+    @property
+    def title(self):
+        return _("Site ID")
 
-multisite_painters["sitealias"] = {
-    "title": _("Site alias"),
-    "columns": ["site"],
-    "paint": lambda row: (None, html.attrencode(config.site(row["site"])["alias"])),
-}
+    @property
+    def short_title(self):
+        return _("Site")
+
+    @property
+    def columns(self):
+        return ['site']
+
+    @property
+    def sorter(self):
+        return 'site'
+
+    def render(self, row, cell):
+        return (None, row["site"])
+
+
+@painter_registry.register
+class PainterSitealias(Painter):
+    @property
+    def ident(self):
+        return "sitealias"
+
+    @property
+    def title(self):
+        return _("Site alias")
+
+    @property
+    def columns(self):
+        return ['site']
+
+    def render(self, row, cell):
+        return (None, html.attrencode(config.site(row["site"])["alias"]))
+
 
 #.
 #   .--Services------------------------------------------------------------.
@@ -397,199 +445,403 @@ def paint_host_state_short(row, short=False):
     return "state hstate hstate%s" % state, name
 
 
-multisite_painters["service_nagios_link"] = {
-    "title": _("Icon with link to service in Nagios GUI"),
-    "short": "",
-    "columns": ["site", "host_name", "service_description"],
-    "paint": paint_nagios_link
-}
+@painter_registry.register
+class PainterServiceNagiosLink(Painter):
+    @property
+    def ident(self):
+        return "service_nagios_link"
 
-multisite_painters["service_state"] = {
-    "title": _("Service state"),
-    "short": _("State"),
-    "columns": ["service_has_been_checked", "service_state"],
-    "paint": paint_service_state_short,
-    "sorter": 'svcstate',
-}
+    @property
+    def title(self):
+        return _("Icon with link to service in Nagios GUI")
 
-multisite_painters["svc_plugin_output"] = {
-    "title": _("Output of check plugin"),
-    "short": _("Status detail"),
-    "columns": ["service_plugin_output", "service_custom_variables"],
-    "paint":
-        lambda row: paint_stalified(row, format_plugin_output(row["service_plugin_output"], row)),
-    "sorter": 'svcoutput',
-}
+    @property
+    def short_title(self):
+        return _("")
 
-multisite_painters["svc_long_plugin_output"] = {
-    "title"   : _("Long output of check plugin (multiline)"),
-    "short"   : _("Status detail"),
-    "columns" : ["service_long_plugin_output", "service_custom_variables"],
-    "paint"   : lambda row: paint_stalified(row, format_plugin_output(row["service_long_plugin_output"], row).replace('\\n', '<br>').replace('\n', '<br>')),
-}
+    @property
+    def columns(self):
+        return ['site', 'host_name', 'service_description']
 
-multisite_painters["svc_perf_data"] = {
-    "title": _("Service performance data (source code)"),
-    "short": _("Perfdata"),
-    "columns": ["service_perf_data"],
-    "paint": lambda row: paint_stalified(row, row["service_perf_data"])
-}
+    def render(self, row, cell):
+        return paint_nagios_link(row)
 
 
-def paint_service_metrics(row):
-    translated_metrics = metrics.translate_perf_data(row["service_perf_data"],
-                                                     row["service_check_command"])
+@painter_registry.register
+class PainterServiceState(Painter):
+    @property
+    def ident(self):
+        return "service_state"
 
-    if row["service_perf_data"] and not translated_metrics:
-        return "", _("Failed to parse performance data string: %s") % row["service_perf_data"]
+    @property
+    def title(self):
+        return _("Service state")
 
-    return "", metrics.render_metrics_table(translated_metrics, row["host_name"],
-                                            row["service_description"])
+    @property
+    def short_title(self):
+        return _("State")
+
+    @property
+    def columns(self):
+        return ['service_has_been_checked', 'service_state']
+
+    @property
+    def sorter(self):
+        return 'svcstate'
+
+    def render(self, row, cell):
+        return paint_service_state_short(row)
 
 
-multisite_painters["svc_metrics"] = {
-    "title": _("Service Metrics"),
-    "short": _("Metrics"),
-    "columns": ["service_check_command", "service_perf_data"],
-    "paint": paint_service_metrics,
-    "printable": False,
-}
+@painter_registry.register
+class PainterSvcPluginOutput(Painter):
+    @property
+    def ident(self):
+        return "svc_plugin_output"
+
+    @property
+    def title(self):
+        return _("Output of check plugin")
+
+    @property
+    def short_title(self):
+        return _("Status detail")
+
+    @property
+    def columns(self):
+        return ['service_plugin_output', 'service_custom_variables']
+
+    @property
+    def sorter(self):
+        return 'svcoutput'
+
+    def render(self, row, cell):
+        return paint_stalified(row, format_plugin_output(row["service_plugin_output"], row))
 
 
-def paint_perfdata_nth_value(row, n):
-    return paint_stalified(row, get_perfdata_nth_value(row, n))
+@painter_registry.register
+class PainterSvcLongPluginOutput(Painter):
+    @property
+    def ident(self):
+        return "svc_long_plugin_output"
+
+    @property
+    def title(self):
+        return _("Long output of check plugin (multiline)")
+
+    @property
+    def short_title(self):
+        return _("Status detail")
+
+    @property
+    def columns(self):
+        return ['service_long_plugin_output', 'service_custom_variables']
+
+    def render(self, row, cell):
+        return paint_stalified(
+            row,
+            format_plugin_output(row["service_long_plugin_output"],
+                                 row).replace('\\n', '<br>').replace('\n', '<br>'))
 
 
-multisite_painters["svc_perf_val01"] = {
-    "title": _("Service performance data - value number  1"),
-    "short": _("Val. 1"),
-    "columns": ["service_perf_data"],
-    "paint": lambda row: paint_perfdata_nth_value(row, 0)
-}
+@painter_registry.register
+class PainterSvcPerfData(Painter):
+    @property
+    def ident(self):
+        return "svc_perf_data"
 
-multisite_painters["svc_perf_val02"] = {
-    "title": _("Service performance data - value number  2"),
-    "short": _("Val. 2"),
-    "columns": ["service_perf_data"],
-    "paint": lambda row: paint_perfdata_nth_value(row, 1)
-}
+    @property
+    def title(self):
+        return _("Service performance data (source code)")
 
-multisite_painters["svc_perf_val03"] = {
-    "title": _("Service performance data - value number  3"),
-    "short": _("Val. 3"),
-    "columns": ["service_perf_data"],
-    "paint": lambda row: paint_perfdata_nth_value(row, 2)
-}
+    @property
+    def short_title(self):
+        return _("Perfdata")
 
-multisite_painters["svc_perf_val04"] = {
-    "title": _("Service performance data - value number  4"),
-    "short": _("Val. 4"),
-    "columns": ["service_perf_data"],
-    "paint": lambda row: paint_perfdata_nth_value(row, 3)
-}
+    @property
+    def columns(self):
+        return ['service_perf_data']
 
-multisite_painters["svc_perf_val05"] = {
-    "title": _("Service performance data - value number  5"),
-    "short": _("Val. 5"),
-    "columns": ["service_perf_data"],
-    "paint": lambda row: paint_perfdata_nth_value(row, 4)
-}
+    def render(self, row, cell):
+        return paint_stalified(row, row["service_perf_data"])
 
-multisite_painters["svc_perf_val06"] = {
-    "title": _("Service performance data - value number  6"),
-    "short": _("Val. 6"),
-    "columns": ["service_perf_data"],
-    "paint": lambda row: paint_perfdata_nth_value(row, 5)
-}
 
-multisite_painters["svc_perf_val07"] = {
-    "title": _("Service performance data - value number  7"),
-    "short": _("Val. 7"),
-    "columns": ["service_perf_data"],
-    "paint": lambda row: paint_perfdata_nth_value(row, 6)
-}
+@painter_registry.register
+class PainterSvcMetrics(Painter):
+    @property
+    def ident(self):
+        return "svc_metrics"
 
-multisite_painters["svc_perf_val08"] = {
-    "title": _("Service performance data - value number  8"),
-    "short": _("Val. 8"),
-    "columns": ["service_perf_data"],
-    "paint": lambda row: paint_perfdata_nth_value(row, 7)
-}
+    @property
+    def title(self):
+        return _("Service Metrics")
 
-multisite_painters["svc_perf_val09"] = {
-    "title": _("Service performance data - value number  9"),
-    "short": _("Val. 9"),
-    "columns": ["service_perf_data"],
-    "paint": lambda row: paint_perfdata_nth_value(row, 8)
-}
+    @property
+    def short_title(self):
+        return _("Metrics")
 
-multisite_painters["svc_perf_val10"] = {
-    "title": _("Service performance data - value number 10"),
-    "short": _("Val. 10"),
-    "columns": ["service_perf_data"],
-    "paint": lambda row: paint_perfdata_nth_value(row, 9)
-}
+    @property
+    def columns(self):
+        return ['service_check_command', 'service_perf_data']
 
-multisite_painters["svc_perf_firstval"] = {
-    "title": _("OBSOLETE - DO NOT USE THIS COLUMN"),
-    "short": _("Value"),
-    "columns": ["service_perf_data"],
-    "paint": lambda row: paint_perfdata_nth_value(row, 0)
-}
+    @property
+    def printable(self):
+        return False
 
-multisite_painters["svc_check_command"] = {
-    "title": _("Service check command"),
-    "short": _("Check command"),
-    "columns": ["service_check_command"],
-    "paint": lambda row: (None, html.attrencode(row["service_check_command"])),
-}
+    def render(self, row, cell):
+        translated_metrics = metrics.translate_perf_data(row["service_perf_data"],
+                                                         row["service_check_command"])
 
-multisite_painters["svc_check_command_expanded"] = {
-    "title": _("Service check command expanded"),
-    "short": _("Check command expanded"),
-    "columns": ["service_check_command_expanded"],
-    "paint": lambda row: (None, html.attrencode(row["service_check_command_expanded"])),
-}
+        if row["service_perf_data"] and not translated_metrics:
+            return "", _("Failed to parse performance data string: %s") % row["service_perf_data"]
 
-multisite_painters["svc_contacts"] = {
-    "title": _("Service contacts"),
-    "short": _("Contacts"),
-    "columns": ["service_contacts"],
-    "paint": lambda row: (None, ", ".join(row["service_contacts"])),
-}
+        return "", metrics.render_metrics_table(translated_metrics, row["host_name"],
+                                                row["service_description"])
 
-multisite_painters["svc_contact_groups"] = {
-    "title": _("Service contact groups"),
-    "short": _("Contact groups"),
-    "columns": ["service_contact_groups"],
-    "paint": lambda row: (None, ", ".join(row["service_contact_groups"])),
-}
 
-multisite_painters["service_description"] = {
-    "title": _("Service description"),
-    "short": _("Service"),
-    "columns": ["service_description"],
-    "paint": lambda row: (None, row["service_description"]),
-    "sorter": 'svcdescr',
-}
+# TODO: Use a parameterized painter for this instead of 10 painter classes
+class PainterSvcPerfVal(Painter):
+    _num = 0
 
-multisite_painters["service_display_name"] = {
-    "title": _("Service alternative display name"),
-    "short": _("Display name"),
-    "columns": ["service_display_name"],
-    "paint": lambda row: (None, row["service_display_name"]),
-    "sorter": 'svcdispname',
-}
+    @property
+    def ident(self):
+        return "svc_perf_val%02d" % self._num
 
-multisite_painters["svc_state_age"] = {
-    "title": _("The age of the current service state"),
-    "short": _("Age"),
-    "columns": ["service_has_been_checked", "service_last_state_change"],
-    "options": ["ts_format", "ts_date"],
-    "paint":
-        lambda row: paint_age(row["service_last_state_change"], row["service_has_been_checked"] == 1, 60 * 10),
-    "sorter": "stateage",
-}
+    @property
+    def title(self):
+        return _("Service performance data - value number %2d") % self._num
+
+    @property
+    def short_title(self):
+        return _("Val. %d") % self._num
+
+    @property
+    def columns(self):
+        return ['service_perf_data']
+
+    def render(self, row, cell):
+        return paint_stalified(row, get_perfdata_nth_value(row, self._num - 1))
+
+
+@painter_registry.register
+class PainterSvcPerfVal01(PainterSvcPerfVal):
+    _num = 1
+
+
+@painter_registry.register
+class PainterSvcPerfVal02(PainterSvcPerfVal):
+    _num = 2
+
+
+@painter_registry.register
+class PainterSvcPerfVal03(PainterSvcPerfVal):
+    _num = 3
+
+
+@painter_registry.register
+class PainterSvcPerfVal04(PainterSvcPerfVal):
+    _num = 4
+
+
+@painter_registry.register
+class PainterSvcPerfVal05(PainterSvcPerfVal):
+    _num = 5
+
+
+@painter_registry.register
+class PainterSvcPerfVal06(PainterSvcPerfVal):
+    _num = 6
+
+
+@painter_registry.register
+class PainterSvcPerfVal07(PainterSvcPerfVal):
+    _num = 7
+
+
+@painter_registry.register
+class PainterSvcPerfVal08(PainterSvcPerfVal):
+    _num = 8
+
+
+@painter_registry.register
+class PainterSvcPerfVal09(PainterSvcPerfVal):
+    _num = 9
+
+
+@painter_registry.register
+class PainterSvcPerfVal10(PainterSvcPerfVal):
+    _num = 10
+
+
+@painter_registry.register
+class PainterSvcCheckCommand(Painter):
+    @property
+    def ident(self):
+        return "svc_check_command"
+
+    @property
+    def title(self):
+        return _("Service check command")
+
+    @property
+    def short_title(self):
+        return _("Check command")
+
+    @property
+    def columns(self):
+        return ['service_check_command']
+
+    def render(self, row, cell):
+        return (None, html.attrencode(row["service_check_command"]))
+
+
+@painter_registry.register
+class PainterSvcCheckCommandExpanded(Painter):
+    @property
+    def ident(self):
+        return "svc_check_command_expanded"
+
+    @property
+    def title(self):
+        return _("Service check command expanded")
+
+    @property
+    def short_title(self):
+        return _("Check command expanded")
+
+    @property
+    def columns(self):
+        return ['service_check_command_expanded']
+
+    def render(self, row, cell):
+        return html.attrencode(row["service_check_command_expanded"])
+
+
+@painter_registry.register
+class PainterSvcContacts(Painter):
+    @property
+    def ident(self):
+        return "svc_contacts"
+
+    @property
+    def title(self):
+        return _("Service contacts")
+
+    @property
+    def short_title(self):
+        return _("Contacts")
+
+    @property
+    def columns(self):
+        return ['service_contacts']
+
+    def render(self, row, cell):
+        return (None, ", ".join(row["service_contacts"]))
+
+
+@painter_registry.register
+class PainterSvcContactGroups(Painter):
+    @property
+    def ident(self):
+        return "svc_contact_groups"
+
+    @property
+    def title(self):
+        return _("Service contact groups")
+
+    @property
+    def short_title(self):
+        return _("Contact groups")
+
+    @property
+    def columns(self):
+        return ['service_contact_groups']
+
+    def render(self, row, cell):
+        return (None, ", ".join(row["service_contact_groups"]))
+
+
+@painter_registry.register
+class PainterServiceDescription(Painter):
+    @property
+    def ident(self):
+        return "service_description"
+
+    @property
+    def title(self):
+        return _("Service description")
+
+    @property
+    def short_title(self):
+        return _("Service")
+
+    @property
+    def columns(self):
+        return ['service_description']
+
+    @property
+    def sorter(self):
+        return 'svcdescr'
+
+    def render(self, row, cell):
+        return (None, row["service_description"])
+
+
+@painter_registry.register
+class PainterServiceDisplayName(Painter):
+    @property
+    def ident(self):
+        return "service_display_name"
+
+    @property
+    def title(self):
+        return _("Service alternative display name")
+
+    @property
+    def short_title(self):
+        return _("Display name")
+
+    @property
+    def columns(self):
+        return ['service_display_name']
+
+    @property
+    def sorter(self):
+        return 'svcdispname'
+
+    def render(self, row, cell):
+        return (None, row["service_display_name"])
+
+
+@painter_registry.register
+class PainterSvcStateAge(Painter):
+    @property
+    def ident(self):
+        return "svc_state_age"
+
+    @property
+    def title(self):
+        return _("The age of the current service state")
+
+    @property
+    def short_title(self):
+        return _("Age")
+
+    @property
+    def columns(self):
+        return ['service_has_been_checked', 'service_last_state_change']
+
+    @property
+    def sorter(self):
+        return 'stateage'
+
+    @property
+    def painter_options(self):
+        return ['ts_format', 'ts_date']
+
+    def render(self, row, cell):
+        return paint_age(row["service_last_state_change"], row["service_has_been_checked"] == 1,
+                         60 * 10)
 
 
 def paint_checked(what, row):
@@ -605,50 +857,124 @@ def paint_checked(what, row):
     return css, td
 
 
-multisite_painters["svc_check_age"] = {
-    "title": _("The time since the last check of the service"),
-    "short": _("Checked"),
-    "columns": ["service_has_been_checked", "service_last_check", "service_cached_at"],
-    "options": ["ts_format", "ts_date"],
-    "paint": lambda row: paint_checked("service", row),
-}
+@painter_registry.register
+class PainterSvcCheckAge(Painter):
+    @property
+    def ident(self):
+        return "svc_check_age"
+
+    @property
+    def title(self):
+        return _("The time since the last check of the service")
+
+    @property
+    def short_title(self):
+        return _("Checked")
+
+    @property
+    def columns(self):
+        return ['service_has_been_checked', 'service_last_check', 'service_cached_at']
+
+    @property
+    def painter_options(self):
+        return ['ts_format', 'ts_date']
+
+    def render(self, row, cell):
+        return paint_checked("service", row)
 
 
-def paint_cache_info(row):
-    if not row["service_cached_at"]:
-        return "", ""
-    return "", render_cache_info("service", row)
+@painter_registry.register
+class PainterSvcCheckCacheInfo(Painter):
+    @property
+    def ident(self):
+        return "svc_check_cache_info"
+
+    @property
+    def title(self):
+        return _("Cached agent data")
+
+    @property
+    def short_title(self):
+        return _("Cached")
+
+    @property
+    def columns(self):
+        return ['service_last_check', 'service_cached_at', 'service_cache_interval']
+
+    @property
+    def painter_options(self):
+        return ['ts_format', 'ts_date']
+
+    def render(self, row, cell):
+        if not row["service_cached_at"]:
+            return "", ""
+        return "", render_cache_info("service", row)
 
 
-multisite_painters["svc_check_cache_info"] = {
-    "title": _("Cached agent data"),
-    "short": _("Cached"),
-    "columns": ["service_last_check", "service_cached_at", "service_cache_interval"],
-    "options": ["ts_format", "ts_date"],
-    "paint": paint_cache_info,
-}
+@painter_registry.register
+class PainterSvcNextCheck(Painter):
+    @property
+    def ident(self):
+        return "svc_next_check"
 
-multisite_painters["svc_next_check"] = {
-    "title": _("The time of the next scheduled service check"),
-    "short": _("Next check"),
-    "columns": ["service_next_check"],
-    "paint": lambda row: paint_future_time(row["service_next_check"]),
-}
+    @property
+    def title(self):
+        return _("The time of the next scheduled service check")
 
-multisite_painters["svc_last_time_ok"] = {
-    "title": _("The last time the service was OK"),
-    "short": _("Last OK"),
-    "columns": ["service_last_time_ok", "service_has_been_checked"],
-    "paint":
-        lambda row: paint_age(row["service_last_time_ok"], row["service_has_been_checked"] == 1, 60 * 10),
-}
+    @property
+    def short_title(self):
+        return _("Next check")
 
-multisite_painters["svc_next_notification"] = {
-    "title": _("The time of the next service notification"),
-    "short": _("Next notification"),
-    "columns": ["service_next_notification"],
-    "paint": lambda row: paint_future_time(row["service_next_notification"]),
-}
+    @property
+    def columns(self):
+        return ['service_next_check']
+
+    def render(self, row, cell):
+        return paint_future_time(row["service_next_check"])
+
+
+@painter_registry.register
+class PainterSvcLastTimeOk(Painter):
+    @property
+    def ident(self):
+        return "svc_last_time_ok"
+
+    @property
+    def title(self):
+        return _("The last time the service was OK")
+
+    @property
+    def short_title(self):
+        return _("Last OK")
+
+    @property
+    def columns(self):
+        return ['service_last_time_ok', 'service_has_been_checked']
+
+    def render(self, row, cell):
+        return paint_age(row["service_last_time_ok"], row["service_has_been_checked"] == 1, 60 * 10)
+
+
+@painter_registry.register
+class PainterSvcNextNotification(Painter):
+    @property
+    def ident(self):
+        return "svc_next_notification"
+
+    @property
+    def title(self):
+        return _("The time of the next service notification")
+
+    @property
+    def short_title(self):
+        return _("Next notification")
+
+    @property
+    def columns(self):
+        return ['service_next_notification']
+
+    def render(self, row, cell):
+        return paint_future_time(row["service_next_notification"])
 
 
 def paint_notification_postponement_reason(what, row):
@@ -671,150 +997,417 @@ def paint_notification_postponement_reason(what, row):
             _("Last service check is not recent enough"),
     }
 
-    return "", \
-        reasons.get(row[what + "_notification_postponement_reason"],
-                    row[what + "_notification_postponement_reason"])
+    return ("",
+            reasons.get(row[what + "_notification_postponement_reason"],
+                        row[what + "_notification_postponement_reason"]))
 
 
-multisite_painters["svc_notification_postponement_reason"] = {
-    "title": _("Notification postponement reason"),
-    "short": _("Notif. postponed"),
-    "columns": ["service_notification_postponement_reason"],
-    "paint": lambda row: paint_notification_postponement_reason("service", row),
-}
+@painter_registry.register
+class PainterSvcNotificationPostponementReason(Painter):
+    @property
+    def ident(self):
+        return "svc_notification_postponement_reason"
 
-multisite_painters["svc_last_notification"] = {
-    "title": _("The time of the last service notification"),
-    "short": _("last notification"),
-    "columns": ["service_last_notification"],
-    "options": ["ts_format", "ts_date"],
-    "paint":
-        lambda row: paint_age(row["service_last_notification"], row["service_last_notification"], 0),
-}
+    @property
+    def title(self):
+        return _("Notification postponement reason")
 
-multisite_painters['svc_notification_number'] = {
-    "title": _("Service notification number"),
-    "short": _("N#"),
-    "columns": ["service_current_notification_number"],
-    "paint": lambda row: ("", str(row["service_current_notification_number"])),
-}
+    @property
+    def short_title(self):
+        return _("Notif. postponed")
 
-multisite_painters["svc_check_latency"] = {
-    "title": _("Service check latency"),
-    "short": _("Latency"),
-    "columns": ["service_latency"],
-    "paint": lambda row: ("", cmk.utils.render.approx_age(row["service_latency"])),
-}
+    @property
+    def columns(self):
+        return ['service_notification_postponement_reason']
 
-multisite_painters["svc_check_duration"] = {
-    "title": _("Service check duration"),
-    "short": _("Duration"),
-    "columns": ["service_execution_time"],
-    "paint": lambda row: ("", cmk.utils.render.approx_age(row["service_execution_time"])),
-}
-
-multisite_painters["svc_attempt"] = {
-    "title": _("Current check attempt"),
-    "short": _("Att."),
-    "columns": ["service_current_attempt", "service_max_check_attempts"],
-    "paint":
-        lambda row: (None, "%d/%d" % (row["service_current_attempt"], row["service_max_check_attempts"])),
-}
-
-multisite_painters["svc_normal_interval"] = {
-    "title": _("Service normal check interval"),
-    "short": _("Check int."),
-    "columns": ["service_check_interval"],
-    "paint":
-        lambda row: ("number", cmk.utils.render.approx_age(row["service_check_interval"] * 60.0)),
-}
-multisite_painters["svc_retry_interval"] = {
-    "title": _("Service retry check interval"),
-    "short": _("Retry"),
-    "columns": ["service_retry_interval"],
-    "paint":
-        lambda row: ("number", cmk.utils.render.approx_age(row["service_retry_interval"] * 60.0)),
-}
-multisite_painters["svc_check_interval"] = {
-    "title"   : _("Service normal/retry check interval"),
-    "short"   : _("Interval"),
-    "columns" : [ "service_check_interval", "service_retry_interval" ],
-    "paint"   : lambda row: (None, "%s / %s" % (
-            cmk.utils.render.approx_age(row["service_check_interval"] * 60.0),
-            cmk.utils.render.approx_age(row["service_retry_interval"] * 60.0))),
-}
-
-multisite_painters["svc_check_type"] = {
-    "title": _("Service check type"),
-    "short": _("Type"),
-    "columns": ["service_check_type"],
-    "paint": lambda row: (None, _("ACTIVE") if row["service_check_type"] == 0 else _("PASSIVE")),
-}
-
-multisite_painters["svc_in_downtime"] = {
-    "title": _("Currently in downtime"),
-    "short": _("Dt."),
-    "columns": ["service_scheduled_downtime_depth"],
-    "paint": lambda row: paint_nagiosflag(row, "service_scheduled_downtime_depth", True),
-}
-
-multisite_painters["svc_in_notifper"] = {
-    "title": _("In notification period"),
-    "short": _("in notif. p."),
-    "columns": ["service_in_notification_period"],
-    "paint": lambda row: paint_nagiosflag(row, "service_in_notification_period", False),
-}
-
-multisite_painters["svc_notifper"] = {
-    "title": _("Service notification period"),
-    "short": _("notif."),
-    "columns": ["service_notification_period"],
-    "paint": lambda row: (None, row["service_notification_period"]),
-}
-
-multisite_painters["svc_check_period"] = {
-    "title": _("Service check period"),
-    "short": _("check."),
-    "columns": ["service_check_period"],
-    "paint": lambda row: (None, row["service_check_period"]),
-}
-
-multisite_painters["svc_flapping"] = {
-    "title": _("Service is flapping"),
-    "short": _("Flap"),
-    "columns": ["service_is_flapping"],
-    "paint": lambda row: paint_nagiosflag(row, "service_is_flapping", True),
-}
-
-multisite_painters["svc_notifications_enabled"] = {
-    "title": _("Service notifications enabled"),
-    "short": _("Notif."),
-    "columns": ["service_notifications_enabled"],
-    "paint": lambda row: paint_nagiosflag(row, "service_notifications_enabled", False),
-}
-
-multisite_painters["svc_is_active"] = {
-    "title": _("Service is active"),
-    "short": _("Active"),
-    "columns": ["service_active_checks_enabled"],
-    "paint": lambda row: paint_nagiosflag(row, "service_active_checks_enabled", None),
-}
+    def render(self, row, cell):
+        return paint_notification_postponement_reason("service", row)
 
 
-def paint_service_group_memberlist(row):
-    links = []
-    for group in row["service_groups"]:
-        link = "view.py?view_name=servicegroup&servicegroup=" + group
-        links.append(html.render_a(group, link))
-    return "", HTML(", ").join(links)
+@painter_registry.register
+class PainterSvcLastNotification(Painter):
+    @property
+    def ident(self):
+        return "svc_last_notification"
+
+    @property
+    def title(self):
+        return _("The time of the last service notification")
+
+    @property
+    def short_title(self):
+        return _("last notification")
+
+    @property
+    def columns(self):
+        return ['service_last_notification']
+
+    @property
+    def painter_options(self):
+        return ['ts_format', 'ts_date']
+
+    def render(self, row, cell):
+        return paint_age(row["service_last_notification"], row["service_last_notification"], 0)
 
 
-multisite_painters["svc_group_memberlist"] = {
-    "title": _("Service groups the service is member of"),
-    "short": _("Groups"),
-    "columns": ["service_groups"],
-    "paint": paint_service_group_memberlist,
-}
+@painter_registry.register
+class PainterSvcNotificationNumber(Painter):
+    @property
+    def ident(self):
+        return "svc_notification_number"
+
+    @property
+    def title(self):
+        return _("Service notification number")
+
+    @property
+    def short_title(self):
+        return _("N#")
+
+    @property
+    def columns(self):
+        return ['service_current_notification_number']
+
+    def render(self, row, cell):
+        return ("", str(row["service_current_notification_number"]))
+
+
+@painter_registry.register
+class PainterSvcCheckLatency(Painter):
+    @property
+    def ident(self):
+        return "svc_check_latency"
+
+    @property
+    def title(self):
+        return _("Service check latency")
+
+    @property
+    def short_title(self):
+        return _("Latency")
+
+    @property
+    def columns(self):
+        return ['service_latency']
+
+    def render(self, row, cell):
+        return ("", cmk.utils.render.approx_age(row["service_latency"]))
+
+
+@painter_registry.register
+class PainterSvcCheckDuration(Painter):
+    @property
+    def ident(self):
+        return "svc_check_duration"
+
+    @property
+    def title(self):
+        return _("Service check duration")
+
+    @property
+    def short_title(self):
+        return _("Duration")
+
+    @property
+    def columns(self):
+        return ['service_execution_time']
+
+    def render(self, row, cell):
+        return ("", cmk.utils.render.approx_age(row["service_execution_time"]))
+
+
+@painter_registry.register
+class PainterSvcAttempt(Painter):
+    @property
+    def ident(self):
+        return "svc_attempt"
+
+    @property
+    def title(self):
+        return _("Current check attempt")
+
+    @property
+    def short_title(self):
+        return _("Att.")
+
+    @property
+    def columns(self):
+        return ['service_current_attempt', 'service_max_check_attempts']
+
+    def render(self, row, cell):
+        return (None, "%d/%d" % (row["service_current_attempt"], row["service_max_check_attempts"]))
+
+
+@painter_registry.register
+class PainterSvcNormalInterval(Painter):
+    @property
+    def ident(self):
+        return "svc_normal_interval"
+
+    @property
+    def title(self):
+        return _("Service normal check interval")
+
+    @property
+    def short_title(self):
+        return _("Check int.")
+
+    @property
+    def columns(self):
+        return ['service_check_interval']
+
+    def render(self, row, cell):
+        return ("number", cmk.utils.render.approx_age(row["service_check_interval"] * 60.0))
+
+
+@painter_registry.register
+class PainterSvcRetryInterval(Painter):
+    @property
+    def ident(self):
+        return "svc_retry_interval"
+
+    @property
+    def title(self):
+        return _("Service retry check interval")
+
+    @property
+    def short_title(self):
+        return _("Retry")
+
+    @property
+    def columns(self):
+        return ['service_retry_interval']
+
+    def render(self, row, cell):
+        return ("number", cmk.utils.render.approx_age(row["service_retry_interval"] * 60.0))
+
+
+@painter_registry.register
+class PainterSvcCheckInterval(Painter):
+    @property
+    def ident(self):
+        return "svc_check_interval"
+
+    @property
+    def title(self):
+        return _("Service normal/retry check interval")
+
+    @property
+    def short_title(self):
+        return _("Interval")
+
+    @property
+    def columns(self):
+        return ['service_check_interval', 'service_retry_interval']
+
+    def render(self, row, cell):
+        return (
+            None,
+            "%s / %s" % (cmk.utils.render.approx_age(row["service_check_interval"] * 60.0),
+                         cmk.utils.render.approx_age(row["service_retry_interval"] * 60.0)),
+        )
+
+
+@painter_registry.register
+class PainterSvcCheckType(Painter):
+    @property
+    def ident(self):
+        return "svc_check_type"
+
+    @property
+    def title(self):
+        return _("Service check type")
+
+    @property
+    def short_title(self):
+        return _("Type")
+
+    @property
+    def columns(self):
+        return ['service_check_type']
+
+    def render(self, row, cell):
+        return (None, _("ACTIVE") if row["service_check_type"] == 0 else _("PASSIVE"))
+
+
+@painter_registry.register
+class PainterSvcInDowntime(Painter):
+    @property
+    def ident(self):
+        return "svc_in_downtime"
+
+    @property
+    def title(self):
+        return _("Currently in downtime")
+
+    @property
+    def short_title(self):
+        return _("Dt.")
+
+    @property
+    def columns(self):
+        return ['service_scheduled_downtime_depth']
+
+    def render(self, row, cell):
+        return paint_nagiosflag(row, "service_scheduled_downtime_depth", True)
+
+
+@painter_registry.register
+class PainterSvcInNotifper(Painter):
+    @property
+    def ident(self):
+        return "svc_in_notifper"
+
+    @property
+    def title(self):
+        return _("In notification period")
+
+    @property
+    def short_title(self):
+        return _("in notif. p.")
+
+    @property
+    def columns(self):
+        return ['service_in_notification_period']
+
+    def render(self, row, cell):
+        return paint_nagiosflag(row, "service_in_notification_period", False)
+
+
+@painter_registry.register
+class PainterSvcNotifper(Painter):
+    @property
+    def ident(self):
+        return "svc_notifper"
+
+    @property
+    def title(self):
+        return _("Service notification period")
+
+    @property
+    def short_title(self):
+        return _("notif.")
+
+    @property
+    def columns(self):
+        return ['service_notification_period']
+
+    def render(self, row, cell):
+        return (None, row["service_notification_period"])
+
+
+@painter_registry.register
+class PainterSvcCheckPeriod(Painter):
+    @property
+    def ident(self):
+        return "svc_check_period"
+
+    @property
+    def title(self):
+        return _("Service check period")
+
+    @property
+    def short_title(self):
+        return _("check.")
+
+    @property
+    def columns(self):
+        return ['service_check_period']
+
+    def render(self, row, cell):
+        return (None, row["service_check_period"])
+
+
+@painter_registry.register
+class PainterSvcFlapping(Painter):
+    @property
+    def ident(self):
+        return "svc_flapping"
+
+    @property
+    def title(self):
+        return _("Service is flapping")
+
+    @property
+    def short_title(self):
+        return _("Flap")
+
+    @property
+    def columns(self):
+        return ['service_is_flapping']
+
+    def render(self, row, cell):
+        return paint_nagiosflag(row, "service_is_flapping", True)
+
+
+@painter_registry.register
+class PainterSvcNotificationsEnabled(Painter):
+    @property
+    def ident(self):
+        return "svc_notifications_enabled"
+
+    @property
+    def title(self):
+        return _("Service notifications enabled")
+
+    @property
+    def short_title(self):
+        return _("Notif.")
+
+    @property
+    def columns(self):
+        return ['service_notifications_enabled']
+
+    def render(self, row, cell):
+        return paint_nagiosflag(row, "service_notifications_enabled", False)
+
+
+@painter_registry.register
+class PainterSvcIsActive(Painter):
+    @property
+    def ident(self):
+        return "svc_is_active"
+
+    @property
+    def title(self):
+        return _("Service is active")
+
+    @property
+    def short_title(self):
+        return _("Active")
+
+    @property
+    def columns(self):
+        return ['service_active_checks_enabled']
+
+    def render(self, row, cell):
+        return paint_nagiosflag(row, "service_active_checks_enabled", None)
+
+
+@painter_registry.register
+class PainterSvcGroupMemberlist(Painter):
+    @property
+    def ident(self):
+        return "svc_group_memberlist"
+
+    @property
+    def title(self):
+        return _("Service groups the service is member of")
+
+    @property
+    def short_title(self):
+        return _("Groups")
+
+    @property
+    def columns(self):
+        return ['service_groups']
+
+    def render(self, row, cell):
+        links = []
+        for group in row["service_groups"]:
+            link = "view.py?view_name=servicegroup&servicegroup=" + group
+            links.append(html.render_a(group, link))
+        return "", HTML(", ").join(links)
 
 
 def paint_time_graph(row, cell):
@@ -851,10 +1444,11 @@ def paint_time_graph_pnp(row):
     if pnp_theme == "classic":
         pnp_theme = "multisite"
 
-    return "pnpgraph", "<div id=\"%s\"></div>" \
-                       "<script>cmk.graph_integration.render_graphs('%s', '%s', '%s', '%s', '%s', '%s', '%s', %s, '%s', %s, %s, '%s')</script>" % \
-                          (container_id, container_id, sitename, host, service, pnpview,
-                           config.url_prefix() + "check_mk/", pnp_url, with_link, _('Add this graph to...'), from_ts, to_ts, pnp_theme)
+    return (
+        "pnpgraph", "<div id=\"%s\"></div>"
+        "<script>cmk.graph_integration.render_graphs('%s', '%s', '%s', '%s', '%s', '%s', '%s', %s, '%s', %s, %s, '%s')</script>"
+        % (container_id, container_id, sitename, host, service, pnpview, config.url_prefix() +
+           "check_mk/", pnp_url, with_link, _('Add this graph to...'), from_ts, to_ts, pnp_theme))
 
 
 def time_graph_params():
@@ -865,46 +1459,76 @@ def time_graph_params():
     return cmk.gui.cee.plugins.views.graphs.cmk_time_graph_params()
 
 
-multisite_painters["svc_pnpgraph"] = {
-    "title": _("Service Graphs"),
-    "columns": [
-        "host_name",
-        "service_description",
-        "service_perf_data",
-        "service_metrics",
-        "service_check_command",
-    ],
-    "options": ["pnp_timerange"],
-    "paint": paint_time_graph,
-    "printable": "time_graph",
-    "params": time_graph_params,
-}
+@painter_registry.register
+class PainterSvcPnpgraph(Painter):
+    @property
+    def ident(self):
+        return "svc_pnpgraph"
+
+    @property
+    def title(self):
+        return _("Service Graphs")
+
+    @property
+    def columns(self):
+        return [
+            'host_name',
+            'service_description',
+            'service_perf_data',
+            'service_metrics',
+            'service_check_command',
+        ]
+
+    @property
+    def printable(self):
+        return 'time_graph'
+
+    @property
+    def painter_options(self):
+        return ['pnp_timerange']
+
+    @property
+    def parameters(self):
+        return time_graph_params()
+
+    def render(self, row, cell):
+        return paint_time_graph(row, cell)
 
 
-def paint_check_man_page(row):
-    command = row["service_check_command"]
-    if not command.startswith("check_mk-"):
-        return "", ""
-    checktype = command[9:]
+@painter_registry.register
+class PainterCheckManpage(Painter):
+    @property
+    def ident(self):
+        return "check_manpage"
 
-    page = man_pages.load_man_page(checktype)
-    if page is None:
-        return "", _("Man page %s not found.") % checktype
+    @property
+    def title(self):
+        return _("Check manual (for Check_MK based checks)")
 
-    description = page["header"]["description"]
-    return "", description.replace("<", "&lt;") \
-                          .replace(">", "&gt;") \
-                          .replace("{", "<b>") \
-                          .replace("}", "</b>") \
-                          .replace("&lt;br&gt;", "<br>")
+    @property
+    def short_title(self):
+        return _("Manual")
 
+    @property
+    def columns(self):
+        return ['service_check_command']
 
-multisite_painters["check_manpage"] = {
-    "title": _("Check manual (for Check_MK based checks)"),
-    "short": _("Manual"),
-    "columns": ["service_check_command"],
-    "paint": paint_check_man_page,
-}
+    def render(self, row, cell):
+        command = row["service_check_command"]
+        if not command.startswith("check_mk-"):
+            return "", ""
+        checktype = command[9:]
+
+        page = man_pages.load_man_page(checktype)
+        if page is None:
+            return "", _("Man page %s not found.") % checktype
+
+        description = page["header"]["description"]
+        return "", description.replace("<", "&lt;") \
+                              .replace(">", "&gt;") \
+                              .replace("{", "<b>") \
+                              .replace("}", "</b>") \
+                              .replace("&lt;br&gt;", "<br>")
 
 
 def paint_comments(prefix, row):
@@ -913,19 +1537,48 @@ def paint_comments(prefix, row):
     return "", text
 
 
-multisite_painters["svc_comments"] = {
-    "title": _("Service Comments"),
-    "short": _("Comments"),
-    "columns": ["service_comments_with_info"],
-    "paint": lambda row: paint_comments("service_", row)
-}
+@painter_registry.register
+class PainterSvcComments(Painter):
+    @property
+    def ident(self):
+        return "svc_comments"
 
-multisite_painters["svc_acknowledged"] = {
-    "title": _("Service problem acknowledged"),
-    "short": _("Ack"),
-    "columns": ["service_acknowledged"],
-    "paint": lambda row: paint_nagiosflag(row, "service_acknowledged", False),
-}
+    @property
+    def title(self):
+        return _("Service Comments")
+
+    @property
+    def short_title(self):
+        return _("Comments")
+
+    @property
+    def columns(self):
+        return ['service_comments_with_info']
+
+    def render(self, row, cell):
+        return paint_comments("service_", row)
+
+
+@painter_registry.register
+class PainterSvcAcknowledged(Painter):
+    @property
+    def ident(self):
+        return "svc_acknowledged"
+
+    @property
+    def title(self):
+        return _("Service problem acknowledged")
+
+    @property
+    def short_title(self):
+        return _("Ack")
+
+    @property
+    def columns(self):
+        return ['service_acknowledged']
+
+    def render(self, row, cell):
+        return paint_nagiosflag(row, "service_acknowledged", False)
 
 
 def notes_matching_pattern_entries(dirs, item):
@@ -980,19 +1633,48 @@ def paint_custom_notes(what, row):
     return "", "<hr>".join(contents)
 
 
-multisite_painters["svc_custom_notes"] = {
-    "title": _("Custom services notes"),
-    "short": _("Notes"),
-    "columns": ["host_name", "host_address", "service_description", "service_plugin_output"],
-    "paint": lambda row: paint_custom_notes("service", row),
-}
+@painter_registry.register
+class PainterSvcCustomNotes(Painter):
+    @property
+    def ident(self):
+        return "svc_custom_notes"
 
-multisite_painters["svc_staleness"] = {
-    "title": _("Service staleness value"),
-    "short": _("Staleness"),
-    "columns": ["service_staleness"],
-    "paint": lambda row: ('', '%0.2f' % row.get('service_staleness', 0)),
-}
+    @property
+    def title(self):
+        return _("Custom services notes")
+
+    @property
+    def short_title(self):
+        return _("Notes")
+
+    @property
+    def columns(self):
+        return ['host_name', 'host_address', 'service_description', 'service_plugin_output']
+
+    def render(self, row, cell):
+        return paint_custom_notes("service", row)
+
+
+@painter_registry.register
+class PainterSvcStaleness(Painter):
+    @property
+    def ident(self):
+        return "svc_staleness"
+
+    @property
+    def title(self):
+        return _("Service staleness value")
+
+    @property
+    def short_title(self):
+        return _("Staleness")
+
+    @property
+    def columns(self):
+        return ['service_staleness']
+
+    def render(self, row, cell):
+        return ('', '%0.2f' % row.get('service_staleness', 0))
 
 
 def paint_is_stale(row):
@@ -1001,21 +1683,56 @@ def paint_is_stale(row):
     return "goodflag", _('no')
 
 
-multisite_painters["svc_is_stale"] = {
-    "title": _("Service is stale"),
-    "short": _("Stale"),
-    "columns": ["service_staleness"],
-    "paint": paint_is_stale,
-    "sorter": 'svc_staleness',
-}
+@painter_registry.register
+class PainterSvcIsStale(Painter):
+    @property
+    def ident(self):
+        return "svc_is_stale"
 
-multisite_painters["svc_servicelevel"] = {
-    "title": _("Service service level"),
-    "short": _("Service Level"),
-    "columns": ["service_custom_variable_names", "service_custom_variable_values"],
-    "paint": lambda row: paint_custom_var('service', 'EC_SL', row, config.mkeventd_service_levels),
-    "sorter": 'servicelevel',
-}
+    @property
+    def title(self):
+        return _("Service is stale")
+
+    @property
+    def short_title(self):
+        return _("Stale")
+
+    @property
+    def columns(self):
+        return ['service_staleness']
+
+    @property
+    def sorter(self):
+        return 'svc_staleness'
+
+    def render(self, row, cell):
+        return paint_is_stale(row)
+
+
+@painter_registry.register
+class PainterSvcServicelevel(Painter):
+    @property
+    def ident(self):
+        return "svc_servicelevel"
+
+    @property
+    def title(self):
+        return _("Service service level")
+
+    @property
+    def short_title(self):
+        return _("Service Level")
+
+    @property
+    def columns(self):
+        return ['service_custom_variable_names', 'service_custom_variable_values']
+
+    @property
+    def sorter(self):
+        return 'servicelevel'
+
+    def render(self, row, cell):
+        return paint_custom_var('service', 'EC_SL', row, config.mkeventd_service_levels)
 
 
 def paint_custom_vars(what, row, blacklist=None):
@@ -1031,12 +1748,26 @@ def paint_custom_vars(what, row, blacklist=None):
     return '', "%s" % html.render_table(HTML().join(rows))
 
 
-multisite_painters["svc_custom_vars"] = {
-    "title": _("Service custom variables"),
-    "columns": ["service_custom_variables"],
-    "groupby": lambda row: tuple(row["service_custom_variables"].items()),
-    "paint": lambda row: paint_custom_vars('service', row),
-}
+@painter_registry.register
+class PainterSvcCustomVars(Painter):
+    @property
+    def ident(self):
+        return "svc_custom_vars"
+
+    @property
+    def title(self):
+        return _("Service custom variables")
+
+    @property
+    def columns(self):
+        return ['service_custom_variables']
+
+    def group_by(self, row):
+        return tuple(row["service_custom_variables"].items())
+
+    def render(self, row, cell):
+        return paint_custom_vars('service', row)
+
 
 #.
 #   .--Hosts---------------------------------------------------------------.
@@ -1050,394 +1781,973 @@ multisite_painters["svc_custom_vars"] = {
 #   | Painters for hosts                                                   |
 #   '----------------------------------------------------------------------'
 
-multisite_painters["host_state"] = {
-    "title": _("Host state"),
-    "short": _("state"),
-    "columns": ["host_has_been_checked", "host_state"],
-    "paint": paint_host_state_short,
-    "sorter": 'hoststate',
-}
 
-multisite_painters["host_state_onechar"] = {
-    "title": _("Host state (first character)"),
-    "short": _("S."),
-    "columns": ["host_has_been_checked", "host_state"],
-    "paint": lambda row: paint_host_state_short(row, True),
-    "sorter": 'hoststate',
-}
+@painter_registry.register
+class PainterHostState(Painter):
+    @property
+    def ident(self):
+        return "host_state"
 
-multisite_painters["host_plugin_output"] = {
-    "title": _("Output of host check plugin"),
-    "short": _("Status detail"),
-    "columns": ["host_plugin_output", "host_custom_variables"],
-    "paint": lambda row: (None, format_plugin_output(row["host_plugin_output"], row)),
-}
+    @property
+    def title(self):
+        return _("Host state")
 
-multisite_painters["host_perf_data"] = {
-    "title": _("Host performance data"),
-    "short": _("Performance data"),
-    "columns": ["host_perf_data"],
-    "paint": lambda row: (None, row["host_perf_data"]),
-}
+    @property
+    def short_title(self):
+        return _("state")
 
-multisite_painters["host_check_command"] = {
-    "title": _("Host check command"),
-    "short": _("Check command"),
-    "columns": ["host_check_command"],
-    "paint": lambda row: (None, row["host_check_command"]),
-}
+    @property
+    def columns(self):
+        return ['host_has_been_checked', 'host_state']
 
-multisite_painters["host_check_command_expanded"] = {
-    "title": _("Host check command expanded"),
-    "short": _("Check command expanded"),
-    "columns": ["host_check_command_expanded"],
-    "paint": lambda row: (None, row["host_check_command_expanded"]),
-}
+    @property
+    def sorter(self):
+        return 'hoststate'
 
-multisite_painters["host_state_age"] = {
-    "title": _("The age of the current host state"),
-    "short": _("Age"),
-    "columns": ["host_has_been_checked", "host_last_state_change"],
-    "options": ["ts_format", "ts_date"],
-    "paint":
-        lambda row: paint_age(row["host_last_state_change"], row["host_has_been_checked"] == 1, 60 * 10),
-}
-
-multisite_painters["host_check_age"] = {
-    "title": _("The time since the last check of the host"),
-    "short": _("Checked"),
-    "columns": ["host_has_been_checked", "host_last_check"],
-    "options": ["ts_format", "ts_date"],
-    "paint": lambda row: paint_checked("host", row),
-}
-
-multisite_painters["host_next_check"] = {
-    "title": _("The time of the next scheduled host check"),
-    "short": _("Next check"),
-    "columns": ["host_next_check"],
-    "paint": lambda row: paint_future_time(row["host_next_check"]),
-}
-
-multisite_painters["host_next_notification"] = {
-    "title": _("The time of the next host notification"),
-    "short": _("Next notification"),
-    "columns": ["host_next_notification"],
-    "paint": lambda row: paint_future_time(row["host_next_notification"]),
-}
-
-multisite_painters["host_notification_postponement_reason"] = {
-    "title": _("Notification postponement reason"),
-    "short": _("Notif. postponed"),
-    "columns": ["host_notification_postponement_reason"],
-    "paint": lambda row: paint_notification_postponement_reason("host", row),
-}
-
-multisite_painters["host_last_notification"] = {
-    "title": _("The time of the last host notification"),
-    "short": _("last notification"),
-    "columns": ["host_last_notification"],
-    "options": ["ts_format", "ts_date"],
-    "paint": lambda row: paint_age(row["host_last_notification"], row["host_last_notification"], 0),
-}
-
-multisite_painters["host_check_latency"] = {
-    "title": _("Host check latency"),
-    "short": _("Latency"),
-    "columns": ["host_latency"],
-    "paint": lambda row: ("", cmk.utils.render.approx_age(row["host_latency"])),
-}
-
-multisite_painters["host_check_duration"] = {
-    "title": _("Host check duration"),
-    "short": _("Duration"),
-    "columns": ["host_execution_time"],
-    "paint": lambda row: ("", cmk.utils.render.approx_age(row["host_execution_time"])),
-}
-
-multisite_painters["host_attempt"] = {
-    "title": _("Current host check attempt"),
-    "short": _("Att."),
-    "columns": ["host_current_attempt", "host_max_check_attempts"],
-    "paint":
-        lambda row: (None, "%d/%d" % (row["host_current_attempt"], row["host_max_check_attempts"])),
-}
-
-multisite_painters["host_normal_interval"] = {
-    "title": _("Normal check interval"),
-    "short": _("Check int."),
-    "columns": ["host_check_interval"],
-    "paint": lambda row: (None, cmk.utils.render.approx_age(row["host_check_interval"] * 60.0)),
-}
-multisite_painters["host_retry_interval"] = {
-    "title": _("Retry check interval"),
-    "short": _("Retry"),
-    "columns": ["host_retry_interval"],
-    "paint": lambda row: (None, cmk.utils.render.approx_age(row["host_retry_interval"] * 60.0)),
-}
-multisite_painters["host_check_interval"] = {
-    "title"   : _("Normal/retry check interval"),
-    "short"   : _("Interval"),
-    "columns" : [ "host_check_interval", "host_retry_interval" ],
-    "paint"   : lambda row: (None, "%s / %s" % (
-            cmk.utils.render.approx_age(row["host_check_interval"] * 60.0),
-            cmk.utils.render.approx_age(row["host_retry_interval"] * 60.0))),
-}
-
-multisite_painters["host_check_type"] = {
-    "title": _("Host check type"),
-    "short": _("Type"),
-    "columns": ["host_check_type"],
-    "paint": lambda row: (None, row["host_check_type"] == 0 and "ACTIVE" or "PASSIVE"),
-}
-
-multisite_painters["host_in_notifper"] = {
-    "title": _("Host in notif. period"),
-    "short": _("in notif. p."),
-    "columns": ["host_in_notification_period"],
-    "paint": lambda row: paint_nagiosflag(row, "host_in_notification_period", False),
-}
-
-multisite_painters["host_notifper"] = {
-    "title": _("Host notification period"),
-    "short": _("notif."),
-    "columns": ["host_notification_period"],
-    "paint": lambda row: (None, row["host_notification_period"]),
-}
-
-multisite_painters['host_notification_number'] = {
-    "title": _("Host notification number"),
-    "short": _("N#"),
-    "columns": ["host_current_notification_number"],
-    "paint": lambda row: ("", str(row["host_current_notification_number"])),
-}
-
-multisite_painters["host_flapping"] = {
-    "title": _("Host is flapping"),
-    "short": _("Flap"),
-    "columns": ["host_is_flapping"],
-    "paint": lambda row: paint_nagiosflag(row, "host_is_flapping", True),
-}
-
-multisite_painters["host_is_active"] = {
-    "title": _("Host is active"),
-    "short": _("Active"),
-    "columns": ["host_active_checks_enabled"],
-    "paint": lambda row: paint_nagiosflag(row, "host_active_checks_enabled", None),
-}
-multisite_painters["host_notifications_enabled"] = {
-    "title": _("Host notifications enabled"),
-    "short": _("Notif."),
-    "columns": ["host_notifications_enabled"],
-    "paint": lambda row: paint_nagiosflag(row, "host_notifications_enabled", False),
-}
-
-multisite_painters["host_pnpgraph"] = {
-    "title": _("Host graph"),
-    "short": _("Graph"),
-    "columns": ["host_name", "host_perf_data", "host_metrics", "host_check_command"],
-    "options": ['pnp_timerange'],
-    "paint": paint_time_graph,
-    "printable": "time_graph",
-    "params": time_graph_params,
-}
+    def render(self, row, cell):
+        return paint_host_state_short(row)
 
 
-def paint_host_black(row):
-    state = row["host_state"]
-    if state != 0:
-        return "nobr", "<div class=hostdown>%s</div>" % row["host_name"]
-    return "nobr", row["host_name"]
+@painter_registry.register
+class PainterHostStateOnechar(Painter):
+    @property
+    def ident(self):
+        return "host_state_onechar"
+
+    @property
+    def title(self):
+        return _("Host state (first character)")
+
+    @property
+    def short_title(self):
+        return _("S.")
+
+    @property
+    def columns(self):
+        return ['host_has_been_checked', 'host_state']
+
+    @property
+    def sorter(self):
+        return 'hoststate'
+
+    def render(self, row, cell):
+        return paint_host_state_short(row, short=True)
 
 
-multisite_painters["host_black"] = {
-    "title": _("Hostname, red background if down or unreachable (Deprecated)"),
-    "short": _("Host"),
-    "columns": ["site", "host_name", "host_state"],
-    "paint": paint_host_black,
-    "sorter": 'site_host',
-}
+@painter_registry.register
+class PainterHostPluginOutput(Painter):
+    @property
+    def ident(self):
+        return "host_plugin_output"
+
+    @property
+    def title(self):
+        return _("Output of host check plugin")
+
+    @property
+    def short_title(self):
+        return _("Status detail")
+
+    @property
+    def columns(self):
+        return ['host_plugin_output', 'host_custom_variables']
+
+    def render(self, row, cell):
+        return (None, format_plugin_output(row["host_plugin_output"], row))
 
 
-def paint_host_black_with_link_to_old_nagios_services(row):
-    host = row["host_name"]
-    baseurl = config.site(row["site"])["url_prefix"] + "nagios/cgi-bin"
-    url = baseurl + "/status.cgi?host=" + html.urlencode(host)
-    state = row["host_state"]
-    if state != 0:
-        return None, html.render_div(html.render_a(host, url), class_="hostdown")
-    return None, html.render_a(host, url)
+@painter_registry.register
+class PainterHostPerfData(Painter):
+    @property
+    def ident(self):
+        return "host_perf_data"
+
+    @property
+    def title(self):
+        return _("Host performance data")
+
+    @property
+    def short_title(self):
+        return _("Performance data")
+
+    @property
+    def columns(self):
+        return ['host_perf_data']
+
+    def render(self, row, cell):
+        return (None, row["host_perf_data"])
 
 
-multisite_painters["host_black_nagios"] = {
-    "title": _("Hostname, red background if down, link to Nagios services"),
-    "short": _("Host"),
-    "columns": ["site", "host_name", "host_state"],
-    "paint": paint_host_black_with_link_to_old_nagios_services,
-    "sorter": 'site_host',
-}
+@painter_registry.register
+class PainterHostCheckCommand(Painter):
+    @property
+    def ident(self):
+        return "host_check_command"
 
-multisite_painters["host_nagios_link"] = {
-    "title": _("Icon with link to host to Nagios GUI"),
-    "short": "",
-    "columns": ["site", "host_name"],
-    "paint": paint_nagios_link,
-}
+    @property
+    def title(self):
+        return _("Host check command")
+
+    @property
+    def short_title(self):
+        return _("Check command")
+
+    @property
+    def columns(self):
+        return ['host_check_command']
+
+    def render(self, row, cell):
+        return (None, row["host_check_command"])
 
 
-def paint_host_with_state(row):
-    if row["host_has_been_checked"]:
+@painter_registry.register
+class PainterHostCheckCommandExpanded(Painter):
+    @property
+    def ident(self):
+        return "host_check_command_expanded"
+
+    @property
+    def title(self):
+        return _("Host check command expanded")
+
+    @property
+    def short_title(self):
+        return _("Check command expanded")
+
+    @property
+    def columns(self):
+        return ['host_check_command_expanded']
+
+    def render(self, row, cell):
+        return (None, row["host_check_command_expanded"])
+
+
+@painter_registry.register
+class PainterHostStateAge(Painter):
+    @property
+    def ident(self):
+        return "host_state_age"
+
+    @property
+    def title(self):
+        return _("The age of the current host state")
+
+    @property
+    def short_title(self):
+        return _("Age")
+
+    @property
+    def columns(self):
+        return ['host_has_been_checked', 'host_last_state_change']
+
+    @property
+    def painter_options(self):
+        return ['ts_format', 'ts_date']
+
+    def render(self, row, cell):
+        return paint_age(row["host_last_state_change"], row["host_has_been_checked"] == 1, 60 * 10)
+
+
+@painter_registry.register
+class PainterHostCheckAge(Painter):
+    @property
+    def ident(self):
+        return "host_check_age"
+
+    @property
+    def title(self):
+        return _("The time since the last check of the host")
+
+    @property
+    def short_title(self):
+        return _("Checked")
+
+    @property
+    def columns(self):
+        return ['host_has_been_checked', 'host_last_check']
+
+    @property
+    def painter_options(self):
+        return ['ts_format', 'ts_date']
+
+    def render(self, row, cell):
+        return paint_checked("host", row)
+
+
+@painter_registry.register
+class PainterHostNextCheck(Painter):
+    @property
+    def ident(self):
+        return "host_next_check"
+
+    @property
+    def title(self):
+        return _("The time of the next scheduled host check")
+
+    @property
+    def short_title(self):
+        return _("Next check")
+
+    @property
+    def columns(self):
+        return ['host_next_check']
+
+    def render(self, row, cell):
+        return paint_future_time(row["host_next_check"])
+
+
+@painter_registry.register
+class PainterHostNextNotification(Painter):
+    @property
+    def ident(self):
+        return "host_next_notification"
+
+    @property
+    def title(self):
+        return _("The time of the next host notification")
+
+    @property
+    def short_title(self):
+        return _("Next notification")
+
+    @property
+    def columns(self):
+        return ['host_next_notification']
+
+    def render(self, row, cell):
+        return paint_future_time(row["host_next_notification"])
+
+
+@painter_registry.register
+class PainterHostNotificationPostponementReason(Painter):
+    @property
+    def ident(self):
+        return "host_notification_postponement_reason"
+
+    @property
+    def title(self):
+        return _("Notification postponement reason")
+
+    @property
+    def short_title(self):
+        return _("Notif. postponed")
+
+    @property
+    def columns(self):
+        return ['host_notification_postponement_reason']
+
+    def render(self, row, cell):
+        return paint_notification_postponement_reason("host", row)
+
+
+@painter_registry.register
+class PainterHostLastNotification(Painter):
+    @property
+    def ident(self):
+        return "host_last_notification"
+
+    @property
+    def title(self):
+        return _("The time of the last host notification")
+
+    @property
+    def short_title(self):
+        return _("last notification")
+
+    @property
+    def columns(self):
+        return ['host_last_notification']
+
+    @property
+    def painter_options(self):
+        return ['ts_format', 'ts_date']
+
+    def render(self, row, cell):
+        return paint_age(row["host_last_notification"], row["host_last_notification"], 0)
+
+
+@painter_registry.register
+class PainterHostCheckLatency(Painter):
+    @property
+    def ident(self):
+        return "host_check_latency"
+
+    @property
+    def title(self):
+        return _("Host check latency")
+
+    @property
+    def short_title(self):
+        return _("Latency")
+
+    @property
+    def columns(self):
+        return ['host_latency']
+
+    def render(self, row, cell):
+        return ("", cmk.utils.render.approx_age(row["host_latency"]))
+
+
+@painter_registry.register
+class PainterHostCheckDuration(Painter):
+    @property
+    def ident(self):
+        return "host_check_duration"
+
+    @property
+    def title(self):
+        return _("Host check duration")
+
+    @property
+    def short_title(self):
+        return _("Duration")
+
+    @property
+    def columns(self):
+        return ['host_execution_time']
+
+    def render(self, row, cell):
+        return ("", cmk.utils.render.approx_age(row["host_execution_time"]))
+
+
+@painter_registry.register
+class PainterHostAttempt(Painter):
+    @property
+    def ident(self):
+        return "host_attempt"
+
+    @property
+    def title(self):
+        return _("Current host check attempt")
+
+    @property
+    def short_title(self):
+        return _("Att.")
+
+    @property
+    def columns(self):
+        return ['host_current_attempt', 'host_max_check_attempts']
+
+    def render(self, row, cell):
+        return (None, "%d/%d" % (row["host_current_attempt"], row["host_max_check_attempts"]))
+
+
+@painter_registry.register
+class PainterHostNormalInterval(Painter):
+    @property
+    def ident(self):
+        return "host_normal_interval"
+
+    @property
+    def title(self):
+        return _("Normal check interval")
+
+    @property
+    def short_title(self):
+        return _("Check int.")
+
+    @property
+    def columns(self):
+        return ['host_check_interval']
+
+    def render(self, row, cell):
+        return (None, cmk.utils.render.approx_age(row["host_check_interval"] * 60.0))
+
+
+@painter_registry.register
+class PainterHostRetryInterval(Painter):
+    @property
+    def ident(self):
+        return "host_retry_interval"
+
+    @property
+    def title(self):
+        return _("Retry check interval")
+
+    @property
+    def short_title(self):
+        return _("Retry")
+
+    @property
+    def columns(self):
+        return ['host_retry_interval']
+
+    def render(self, row, cell):
+        return (None, cmk.utils.render.approx_age(row["host_retry_interval"] * 60.0))
+
+
+@painter_registry.register
+class PainterHostCheckInterval(Painter):
+    @property
+    def ident(self):
+        return "host_check_interval"
+
+    @property
+    def title(self):
+        return _("Normal/retry check interval")
+
+    @property
+    def short_title(self):
+        return _("Interval")
+
+    @property
+    def columns(self):
+        return ['host_check_interval', 'host_retry_interval']
+
+    def render(self, row, cell):
+        return (
+            None,
+            "%s / %s" % (cmk.utils.render.approx_age(row["host_check_interval"] * 60.0),
+                         cmk.utils.render.approx_age(row["host_retry_interval"] * 60.0)),
+        )
+
+
+@painter_registry.register
+class PainterHostCheckType(Painter):
+    @property
+    def ident(self):
+        return "host_check_type"
+
+    @property
+    def title(self):
+        return _("Host check type")
+
+    @property
+    def short_title(self):
+        return _("Type")
+
+    @property
+    def columns(self):
+        return ['host_check_type']
+
+    def render(self, row, cell):
+        return (None, row["host_check_type"] == 0 and "ACTIVE" or "PASSIVE")
+
+
+@painter_registry.register
+class PainterHostInNotifper(Painter):
+    @property
+    def ident(self):
+        return "host_in_notifper"
+
+    @property
+    def title(self):
+        return _("Host in notif. period")
+
+    @property
+    def short_title(self):
+        return _("in notif. p.")
+
+    @property
+    def columns(self):
+        return ['host_in_notification_period']
+
+    def render(self, row, cell):
+        return paint_nagiosflag(row, "host_in_notification_period", False)
+
+
+@painter_registry.register
+class PainterHostNotifper(Painter):
+    @property
+    def ident(self):
+        return "host_notifper"
+
+    @property
+    def title(self):
+        return _("Host notification period")
+
+    @property
+    def short_title(self):
+        return _("notif.")
+
+    @property
+    def columns(self):
+        return ['host_notification_period']
+
+    def render(self, row, cell):
+        return (None, row["host_notification_period"])
+
+
+@painter_registry.register
+class PainterHostNotificationNumber(Painter):
+    @property
+    def ident(self):
+        return "host_notification_number"
+
+    @property
+    def title(self):
+        return _("Host notification number")
+
+    @property
+    def short_title(self):
+        return _("N#")
+
+    @property
+    def columns(self):
+        return ['host_current_notification_number']
+
+    def render(self, row, cell):
+        return ("", str(row["host_current_notification_number"]))
+
+
+@painter_registry.register
+class PainterHostFlapping(Painter):
+    @property
+    def ident(self):
+        return "host_flapping"
+
+    @property
+    def title(self):
+        return _("Host is flapping")
+
+    @property
+    def short_title(self):
+        return _("Flap")
+
+    @property
+    def columns(self):
+        return ['host_is_flapping']
+
+    def render(self, row, cell):
+        return paint_nagiosflag(row, "host_is_flapping", True)
+
+
+@painter_registry.register
+class PainterHostIsActive(Painter):
+    @property
+    def ident(self):
+        return "host_is_active"
+
+    @property
+    def title(self):
+        return _("Host is active")
+
+    @property
+    def short_title(self):
+        return _("Active")
+
+    @property
+    def columns(self):
+        return ['host_active_checks_enabled']
+
+    def render(self, row, cell):
+        return paint_nagiosflag(row, "host_active_checks_enabled", None)
+
+
+@painter_registry.register
+class PainterHostNotificationsEnabled(Painter):
+    @property
+    def ident(self):
+        return "host_notifications_enabled"
+
+    @property
+    def title(self):
+        return _("Host notifications enabled")
+
+    @property
+    def short_title(self):
+        return _("Notif.")
+
+    @property
+    def columns(self):
+        return ['host_notifications_enabled']
+
+    def render(self, row, cell):
+        return paint_nagiosflag(row, "host_notifications_enabled", False)
+
+
+@painter_registry.register
+class PainterHostPnpgraph(Painter):
+    @property
+    def ident(self):
+        return "host_pnpgraph"
+
+    @property
+    def title(self):
+        return _("Host graph")
+
+    @property
+    def short_title(self):
+        return _("Graph")
+
+    @property
+    def columns(self):
+        return ['host_name', 'host_perf_data', 'host_metrics', 'host_check_command']
+
+    @property
+    def printable(self):
+        return 'time_graph'
+
+    @property
+    def painter_options(self):
+        return ['pnp_timerange']
+
+    @property
+    def parameters(self):
+        return time_graph_params()
+
+    def render(self, row, cell):
+        return paint_time_graph(row, cell)
+
+
+@painter_registry.register
+class PainterHostBlack(Painter):
+    @property
+    def ident(self):
+        return "host_black"
+
+    @property
+    def title(self):
+        return _("Hostname, red background if down or unreachable (Deprecated)")
+
+    @property
+    def short_title(self):
+        return _("Host")
+
+    @property
+    def columns(self):
+        return ['site', 'host_name', 'host_state']
+
+    @property
+    def sorter(self):
+        return 'site_host'
+
+    def render(self, row, cell):
         state = row["host_state"]
-    else:
-        state = "p"
-    if state != 0:
-        return "state hstate hstate%s" % state, row["host_name"]
-    return "nobr", row["host_name"]
+        if state != 0:
+            return "nobr", "<div class=hostdown>%s</div>" % row["host_name"]
+        return "nobr", row["host_name"]
 
 
-multisite_painters["host_with_state"] = {
-    "title": _("Hostname, marked red if down (Deprecated)"),
-    "short": _("Host"),
-    "columns": ["site", "host_name", "host_state", "host_has_been_checked"],
-    "paint": paint_host_with_state,
-    "sorter": 'site_host',
-}
+@painter_registry.register
+class PainterHostBlackNagios(Painter):
+    @property
+    def ident(self):
+        return "host_black_nagios"
 
+    @property
+    def title(self):
+        return _("Hostname, red background if down, link to Nagios services")
 
-def paint_hostname_configurable(row, cell):
-    params = cell.painter_parameters()
-    color_choices = params["color_choices"]
+    @property
+    def short_title(self):
+        return _("Host")
 
-    if row["host_has_been_checked"]:
+    @property
+    def columns(self):
+        return ['site', 'host_name', 'host_state']
+
+    @property
+    def sorter(self):
+        return 'site_host'
+
+    def render(self, row, cell):
+        host = row["host_name"]
+        baseurl = config.site(row["site"])["url_prefix"] + "nagios/cgi-bin"
+        url = baseurl + "/status.cgi?host=" + html.urlencode(host)
         state = row["host_state"]
-    else:
-        state = "p"
-
-    css = ["nobr"]
-    if "colorize_downtime" in color_choices and row["host_scheduled_downtime_depth"] > 0:
-        css.extend(["hstate", "hstated"])
-
-    # Also apply other css classes, even if its already in downtime
-    for key, option_state in [
-        ("colorize_up", 0),
-        ("colorize_down", 1),
-        ("colorize_unreachable", 2),
-        ("colorize_pending", "p"),
-    ]:
-        if key in color_choices and state == option_state:
-            if "hstate" not in css:
-                css.append("hstate")
-            css.append("hstate%s" % option_state)
-            break
-
-    return " ".join(css), row["host_name"]
+        if state != 0:
+            return None, html.render_div(html.render_a(host, url), class_="hostdown")
+        return None, html.render_a(host, url)
 
 
-def params_hostname_configurable():
-    elements = [("color_choices",
-                 ListChoice(
-                     choices=[("colorize_up", _("Colorize background if host is up")),
-                              ("colorize_down", _("Colorize background if host is down")),
-                              ("colorize_unreachable",
-                               _("Colorize background if host unreachable")),
-                              ("colorize_pending", _("Colorize background if host is pending")),
-                              ("colorize_downtime", _("Colorize background if host is downtime"))],
-                     title=_("Coloring"),
-                     help=_("Here you can configure the background color for specific states. "
-                            "The coloring for host in dowtime overrules all other coloring.")))]
+@painter_registry.register
+class PainterHostNagiosLink(Painter):
+    @property
+    def ident(self):
+        return "host_nagios_link"
 
-    return Dictionary(elements=elements, title=_("Options"), optional_keys=[])
+    @property
+    def title(self):
+        return _("Icon with link to host to Nagios GUI")
 
+    @property
+    def short_title(self):
+        return _("")
 
-multisite_painters["host"] = {
-    "title": _("Hostname, with configurable colors"),
-    "short": _("Host"),
-    "columns": [
-        "host_name", "host_state", "host_has_been_checked", "host_scheduled_downtime_depth"
-    ],
-    "params": params_hostname_configurable,
-    "paint": paint_hostname_configurable,
-    "sorter": 'site_host',
-}
+    @property
+    def columns(self):
+        return ['site', 'host_name']
 
-multisite_painters["alias"] = {
-    "title": _("Host alias"),
-    "short": _("Alias"),
-    "columns": ["host_alias"],
-    "paint": lambda row: ("", html.attrencode(row["host_alias"])),
-}
-
-multisite_painters["host_address"] = {
-    "title": _("Host address (Primary)"),
-    "short": _("IP address"),
-    "columns": ["host_address"],
-    "paint": lambda row: ("", row["host_address"]),
-}
-
-multisite_painters["host_ipv4_address"] = {
-    "title": _("Host address (IPv4)"),
-    "short": _("IPv4 address"),
-    "columns": ["host_custom_variable_names", "host_custom_variable_values"],
-    "paint": lambda row: paint_custom_var('host', 'ADDRESS_4', row),
-}
-
-multisite_painters["host_ipv6_address"] = {
-    "title": _("Host address (IPv6)"),
-    "short": _("IPv6 address"),
-    "columns": ["host_custom_variable_names", "host_custom_variable_values"],
-    "paint": lambda row: paint_custom_var('host', 'ADDRESS_6', row),
-}
+    def render(self, row, cell):
+        return paint_nagios_link(row)
 
 
-def paint_host_addresses(row):
-    custom_vars = dict(zip(row["host_custom_variable_names"], row["host_custom_variable_values"]))
+@painter_registry.register
+class PainterHostWithState(Painter):
+    @property
+    def ident(self):
+        return "host_with_state"
 
-    if custom_vars.get("ADDRESS_FAMILY", "4") == "4":
-        primary = custom_vars.get("ADDRESS_4", "")
-        secondary = custom_vars.get("ADDRESS_6", "")
-    else:
-        primary = custom_vars.get("ADDRESS_6", "")
-        secondary = custom_vars.get("ADDRESS_4", "")
+    @property
+    def title(self):
+        return _("Hostname, marked red if down (Deprecated)")
 
-    if secondary:
-        secondary = " (%s)" % secondary
-    return "", primary + secondary
+    @property
+    def short_title(self):
+        return _("Host")
 
+    @property
+    def columns(self):
+        return ['site', 'host_name', 'host_state', 'host_has_been_checked']
 
-multisite_painters["host_addresses"] = {
-    "title": _("Host addresses"),
-    "short": _("IP addresses"),
-    "columns": ["host_address", "host_custom_variable_names", "host_custom_variable_values"],
-    "paint": paint_host_addresses,
-}
+    @property
+    def sorter(self):
+        return 'site_host'
 
-multisite_painters["host_address_family"] = {
-    "title": _("Host address family (Primary)"),
-    "short": _("Address family"),
-    "columns": ["host_custom_variable_names", "host_custom_variable_values"],
-    "paint": lambda row: paint_custom_var('host', 'ADDRESS_FAMILY', row),
-}
-
-
-def paint_host_address_families(row):
-    custom_vars = dict(zip(row["host_custom_variable_names"], row["host_custom_variable_values"]))
-
-    primary = custom_vars.get("ADDRESS_FAMILY", "4")
-
-    families = [primary]
-    if primary == "6" and custom_vars.get("ADDRESS_4"):
-        families.append("4")
-    elif primary == "4" and custom_vars.get("ADDRESS_6"):
-        families.append("6")
-
-    return "", ", ".join(families)
+    def render(self, row, cell):
+        if row["host_has_been_checked"]:
+            state = row["host_state"]
+        else:
+            state = "p"
+        if state != 0:
+            return "state hstate hstate%s" % state, row["host_name"]
+        return "nobr", row["host_name"]
 
 
-multisite_painters["host_address_families"] = {
-    "title": _("Host address families"),
-    "short": _("Address families"),
-    "columns": ["host_custom_variable_names", "host_custom_variable_values"],
-    "paint": paint_host_address_families,
-}
+@painter_registry.register
+class PainterHost(Painter):
+    @property
+    def ident(self):
+        return "host"
+
+    @property
+    def title(self):
+        return _("Hostname, with configurable colors")
+
+    @property
+    def short_title(self):
+        return _("Host")
+
+    @property
+    def columns(self):
+        return ['host_name', 'host_state', 'host_has_been_checked', 'host_scheduled_downtime_depth']
+
+    @property
+    def sorter(self):
+        return 'site_host'
+
+    @property
+    def parameters(self):
+        elements = [("color_choices",
+                     ListChoice(
+                         choices=[("colorize_up", _("Colorize background if host is up")),
+                                  ("colorize_down", _("Colorize background if host is down")),
+                                  ("colorize_unreachable",
+                                   _("Colorize background if host unreachable")),
+                                  ("colorize_pending", _("Colorize background if host is pending")),
+                                  ("colorize_downtime",
+                                   _("Colorize background if host is downtime"))],
+                         title=_("Coloring"),
+                         help=_("Here you can configure the background color for specific states. "
+                                "The coloring for host in dowtime overrules all other coloring.")))]
+
+        return Dictionary(elements=elements, title=_("Options"), optional_keys=[])
+
+    def render(self, row, cell):
+        params = cell.painter_parameters()
+        color_choices = params["color_choices"]
+
+        if row["host_has_been_checked"]:
+            state = row["host_state"]
+        else:
+            state = "p"
+
+        css = ["nobr"]
+        if "colorize_downtime" in color_choices and row["host_scheduled_downtime_depth"] > 0:
+            css.extend(["hstate", "hstated"])
+
+        # Also apply other css classes, even if its already in downtime
+        for key, option_state in [
+            ("colorize_up", 0),
+            ("colorize_down", 1),
+            ("colorize_unreachable", 2),
+            ("colorize_pending", "p"),
+        ]:
+            if key in color_choices and state == option_state:
+                if "hstate" not in css:
+                    css.append("hstate")
+                css.append("hstate%s" % option_state)
+                break
+
+        return " ".join(css), row["host_name"]
+
+
+@painter_registry.register
+class PainterAlias(Painter):
+    @property
+    def ident(self):
+        return "alias"
+
+    @property
+    def title(self):
+        return _("Host alias")
+
+    @property
+    def short_title(self):
+        return _("Alias")
+
+    @property
+    def columns(self):
+        return ['host_alias']
+
+    def render(self, row, cell):
+        return ("", html.attrencode(row["host_alias"]))
+
+
+@painter_registry.register
+class PainterHostAddress(Painter):
+    @property
+    def ident(self):
+        return "host_address"
+
+    @property
+    def title(self):
+        return _("Host address (Primary)")
+
+    @property
+    def short_title(self):
+        return _("IP address")
+
+    @property
+    def columns(self):
+        return ['host_address']
+
+    def render(self, row, cell):
+        return ("", row["host_address"])
+
+
+@painter_registry.register
+class PainterHostIpv4Address(Painter):
+    @property
+    def ident(self):
+        return "host_ipv4_address"
+
+    @property
+    def title(self):
+        return _("Host address (IPv4)")
+
+    @property
+    def short_title(self):
+        return _("IPv4 address")
+
+    @property
+    def columns(self):
+        return ['host_custom_variable_names', 'host_custom_variable_values']
+
+    def render(self, row, cell):
+        return paint_custom_var('host', 'ADDRESS_4', row)
+
+
+@painter_registry.register
+class PainterHostIpv6Address(Painter):
+    @property
+    def ident(self):
+        return "host_ipv6_address"
+
+    @property
+    def title(self):
+        return _("Host address (IPv6)")
+
+    @property
+    def short_title(self):
+        return _("IPv6 address")
+
+    @property
+    def columns(self):
+        return ['host_custom_variable_names', 'host_custom_variable_values']
+
+    def render(self, row, cell):
+        return paint_custom_var('host', 'ADDRESS_6', row)
+
+
+@painter_registry.register
+class PainterHostAddresses(Painter):
+    @property
+    def ident(self):
+        return "host_addresses"
+
+    @property
+    def title(self):
+        return _("Host addresses")
+
+    @property
+    def short_title(self):
+        return _("IP addresses")
+
+    @property
+    def columns(self):
+        return ['host_address', 'host_custom_variable_names', 'host_custom_variable_values']
+
+    def render(self, row, cell):
+        custom_vars = dict(
+            zip(row["host_custom_variable_names"], row["host_custom_variable_values"]))
+
+        if custom_vars.get("ADDRESS_FAMILY", "4") == "4":
+            primary = custom_vars.get("ADDRESS_4", "")
+            secondary = custom_vars.get("ADDRESS_6", "")
+        else:
+            primary = custom_vars.get("ADDRESS_6", "")
+            secondary = custom_vars.get("ADDRESS_4", "")
+
+        if secondary:
+            secondary = " (%s)" % secondary
+        return "", primary + secondary
+
+
+@painter_registry.register
+class PainterHostAddressFamily(Painter):
+    @property
+    def ident(self):
+        return "host_address_family"
+
+    @property
+    def title(self):
+        return _("Host address family (Primary)")
+
+    @property
+    def short_title(self):
+        return _("Address family")
+
+    @property
+    def columns(self):
+        return ['host_custom_variable_names', 'host_custom_variable_values']
+
+    def render(self, row, cell):
+        return paint_custom_var('host', 'ADDRESS_FAMILY', row)
+
+
+@painter_registry.register
+class PainterHostAddressFamilies(Painter):
+    @property
+    def ident(self):
+        return "host_address_families"
+
+    @property
+    def title(self):
+        return _("Host address families")
+
+    @property
+    def short_title(self):
+        return _("Address families")
+
+    @property
+    def columns(self):
+        return ['host_custom_variable_names', 'host_custom_variable_values']
+
+    def render(self, row, cell):
+        custom_vars = dict(
+            zip(row["host_custom_variable_names"], row["host_custom_variable_values"]))
+
+        primary = custom_vars.get("ADDRESS_FAMILY", "4")
+
+        families = [primary]
+        if primary == "6" and custom_vars.get("ADDRESS_4"):
+            families.append("4")
+        elif primary == "4" and custom_vars.get("ADDRESS_6"):
+            families.append("6")
+
+        return "", ", ".join(families)
 
 
 def paint_svc_count(id_, count):
@@ -1456,54 +2766,160 @@ def paint_host_count(id_, count):
     return "count hstate hstatex", "0"
 
 
-multisite_painters["num_services"] = {
-    "title": _("Number of services"),
-    "short": "",
-    "columns": ["host_num_services"],
-    "paint": lambda row: (None, str(row["host_num_services"])),
-}
+@painter_registry.register
+class PainterNumServices(Painter):
+    @property
+    def ident(self):
+        return "num_services"
 
-multisite_painters["num_services_ok"] = {
-    "title": _("Number of services in state OK"),
-    "short": _("OK"),
-    "columns": ["host_num_services_ok"],
-    "paint": lambda row: paint_svc_count(0, row["host_num_services_ok"]),
-}
+    @property
+    def title(self):
+        return _("Number of services")
 
-multisite_painters["num_problems"] = {
-    "title"   : _("Number of problems"),
-    "short"   : _("Pro."),
-    "columns" : [ "host_num_services", "host_num_services_ok", "host_num_services_pending" ],
-    "paint"   : lambda row: paint_svc_count('s', row["host_num_services"] - row["host_num_services_ok"] - row["host_num_services_pending"]),
-}
+    @property
+    def short_title(self):
+        return _("")
 
-multisite_painters["num_services_warn"] = {
-    "title": _("Number of services in state WARN"),
-    "short": _("Wa"),
-    "columns": ["host_num_services_warn"],
-    "paint": lambda row: paint_svc_count(1, row["host_num_services_warn"]),
-}
+    @property
+    def columns(self):
+        return ['host_num_services']
 
-multisite_painters["num_services_crit"] = {
-    "title": _("Number of services in state CRIT"),
-    "short": _("Cr"),
-    "columns": ["host_num_services_crit"],
-    "paint": lambda row: paint_svc_count(2, row["host_num_services_crit"]),
-}
+    def render(self, row, cell):
+        return (None, str(row["host_num_services"]))
 
-multisite_painters["num_services_unknown"] = {
-    "title": _("Number of services in state UNKNOWN"),
-    "short": _("Un"),
-    "columns": ["host_num_services_unknown"],
-    "paint": lambda row: paint_svc_count(3, row["host_num_services_unknown"]),
-}
 
-multisite_painters["num_services_pending"] = {
-    "title": _("Number of services in state PENDING"),
-    "short": _("Pd"),
-    "columns": ["host_num_services_pending"],
-    "paint": lambda row: paint_svc_count("p", row["host_num_services_pending"]),
-}
+@painter_registry.register
+class PainterNumServicesOk(Painter):
+    @property
+    def ident(self):
+        return "num_services_ok"
+
+    @property
+    def title(self):
+        return _("Number of services in state OK")
+
+    @property
+    def short_title(self):
+        return _("OK")
+
+    @property
+    def columns(self):
+        return ['host_num_services_ok']
+
+    def render(self, row, cell):
+        return paint_svc_count(0, row["host_num_services_ok"])
+
+
+@painter_registry.register
+class PainterNumProblems(Painter):
+    @property
+    def ident(self):
+        return "num_problems"
+
+    @property
+    def title(self):
+        return _("Number of problems")
+
+    @property
+    def short_title(self):
+        return _("Pro.")
+
+    @property
+    def columns(self):
+        return ['host_num_services', 'host_num_services_ok', 'host_num_services_pending']
+
+    def render(self, row, cell):
+        return paint_svc_count(
+            's', row["host_num_services"] - row["host_num_services_ok"] -
+            row["host_num_services_pending"])
+
+
+@painter_registry.register
+class PainterNumServicesWarn(Painter):
+    @property
+    def ident(self):
+        return "num_services_warn"
+
+    @property
+    def title(self):
+        return _("Number of services in state WARN")
+
+    @property
+    def short_title(self):
+        return _("Wa")
+
+    @property
+    def columns(self):
+        return ['host_num_services_warn']
+
+    def render(self, row, cell):
+        return paint_svc_count(1, row["host_num_services_warn"])
+
+
+@painter_registry.register
+class PainterNumServicesCrit(Painter):
+    @property
+    def ident(self):
+        return "num_services_crit"
+
+    @property
+    def title(self):
+        return _("Number of services in state CRIT")
+
+    @property
+    def short_title(self):
+        return _("Cr")
+
+    @property
+    def columns(self):
+        return ['host_num_services_crit']
+
+    def render(self, row, cell):
+        return paint_svc_count(2, row["host_num_services_crit"])
+
+
+@painter_registry.register
+class PainterNumServicesUnknown(Painter):
+    @property
+    def ident(self):
+        return "num_services_unknown"
+
+    @property
+    def title(self):
+        return _("Number of services in state UNKNOWN")
+
+    @property
+    def short_title(self):
+        return _("Un")
+
+    @property
+    def columns(self):
+        return ['host_num_services_unknown']
+
+    def render(self, row, cell):
+        return paint_svc_count(3, row["host_num_services_unknown"])
+
+
+@painter_registry.register
+class PainterNumServicesPending(Painter):
+    @property
+    def ident(self):
+        return "num_services_pending"
+
+    @property
+    def title(self):
+        return _("Number of services in state PENDING")
+
+    @property
+    def short_title(self):
+        return _("Pd")
+
+    @property
+    def columns(self):
+        return ['host_num_services_pending']
+
+    def render(self, row, cell):
+        return paint_svc_count("p", row["host_num_services_pending"])
 
 
 def paint_service_list(row, columnname):
@@ -1533,118 +2949,337 @@ def paint_service_list(row, columnname):
     return "", html.render_div(h, class_="objectlist")
 
 
-multisite_painters["host_services"] = {
-    "title": _("Services colored according to state"),
-    "short": _("Services"),
-    "columns": ["host_name", "host_services_with_state"],
-    "paint": lambda row: paint_service_list(row, "host_services_with_state"),
-}
+@painter_registry.register
+class PainterHostServices(Painter):
+    @property
+    def ident(self):
+        return "host_services"
 
-multisite_painters["host_parents"] = {
-    "title": _("Host's parents"),
-    "short": _("Parents"),
-    "columns": ["host_parents"],
-    "paint": lambda row: paint_host_list(row["site"], row["host_parents"]),
-}
+    @property
+    def title(self):
+        return _("Services colored according to state")
 
-multisite_painters["host_childs"] = {
-    "title": _("Host's children"),
-    "short": _("children"),
-    "columns": ["host_childs"],
-    "paint": lambda row: paint_host_list(row["site"], row["host_childs"]),
-}
+    @property
+    def short_title(self):
+        return _("Services")
 
+    @property
+    def columns(self):
+        return ['host_name', 'host_services_with_state']
 
-def paint_host_group_memberlist(row):
-    links = []
-    for group in row["host_groups"]:
-        link = "view.py?view_name=hostgroup&hostgroup=" + group
-        if html.request.var("display_options"):
-            link += "&display_options=%s" % html.attrencode(html.request.var("display_options"))
-        links.append(html.render_a(group, link))
-    return "", HTML(", ").join(links)
+    def render(self, row, cell):
+        return paint_service_list(row, "host_services_with_state")
 
 
-multisite_painters["host_group_memberlist"] = {
-    "title": _("Host groups the host is member of"),
-    "short": _("Groups"),
-    "columns": ["host_groups"],
-    "groupby": lambda row: tuple(row["host_groups"]),
-    "paint": paint_host_group_memberlist,
-}
+@painter_registry.register
+class PainterHostParents(Painter):
+    @property
+    def ident(self):
+        return "host_parents"
 
-multisite_painters["host_contacts"] = {
-    "title": _("Host contacts"),
-    "short": _("Contacts"),
-    "columns": ["host_contacts"],
-    "paint": lambda row: (None, ", ".join(row["host_contacts"])),
-}
+    @property
+    def title(self):
+        return _("Host's parents")
 
-multisite_painters["host_contact_groups"] = {
-    "title": _("Host contact groups"),
-    "short": _("Contact groups"),
-    "columns": ["host_contact_groups"],
-    "paint": lambda row: (None, ", ".join(row["host_contact_groups"])),
-}
+    @property
+    def short_title(self):
+        return _("Parents")
 
-multisite_painters["host_custom_notes"] = {
-    "title": _("Custom host notes"),
-    "short": _("Notes"),
-    "columns": ["host_name", "host_address", "host_plugin_output"],
-    "paint": lambda row: paint_custom_notes("hosts", row),
-}
+    @property
+    def columns(self):
+        return ['host_parents']
 
-multisite_painters["host_comments"] = {
-    "title": _("Host comments"),
-    "short": _("Comments"),
-    "columns": ["host_comments_with_info"],
-    "paint": lambda row: paint_comments("host_", row),
-}
+    def render(self, row, cell):
+        return paint_host_list(row["site"], row["host_parents"])
 
-multisite_painters["host_in_downtime"] = {
-    "title": _("Host in downtime"),
-    "short": _("Downtime"),
-    "columns": ["host_scheduled_downtime_depth"],
-    "paint": lambda row: paint_nagiosflag(row, "host_scheduled_downtime_depth", True),
-}
 
-multisite_painters["host_acknowledged"] = {
-    "title": _("Host problem acknowledged"),
-    "short": _("Ack"),
-    "columns": ["host_acknowledged"],
-    "paint": lambda row: paint_nagiosflag(row, "host_acknowledged", False),
-}
+@painter_registry.register
+class PainterHostChilds(Painter):
+    @property
+    def ident(self):
+        return "host_childs"
 
-multisite_painters["host_staleness"] = {
-    "title": _("Host staleness value"),
-    "short": _("Staleness"),
-    "columns": ["host_staleness"],
-    "paint": lambda row: ('', '%0.2f' % row.get('host_staleness', 0)),
-}
+    @property
+    def title(self):
+        return _("Host's children")
 
-multisite_painters["host_is_stale"] = {
-    "title": _("Host is stale"),
-    "short": _("Stale"),
-    "columns": ["host_staleness"],
-    "paint": paint_is_stale,
-    "sorter": 'svc_staleness',
-}
+    @property
+    def short_title(self):
+        return _("children")
 
-multisite_painters["host_servicelevel"] = {
-    "title": _("Host service level"),
-    "short": _("Service Level"),
-    "columns": ["host_custom_variable_names", "host_custom_variable_values"],
-    "paint": lambda row: paint_custom_var('host', 'EC_SL', row, config.mkeventd_service_levels),
-    "sorter": 'servicelevel',
-}
+    @property
+    def columns(self):
+        return ['host_childs']
 
-multisite_painters["host_custom_vars"] = {
-    "title"   : _("Host custom variables"),
-    "columns" : [ "host_custom_variables" ],
-    "groupby" : lambda row: tuple(row["host_custom_variables"].items()),
-    "paint"   : lambda row: paint_custom_vars('host', row, [ 'FILENAME', 'TAGS', 'ADDRESS_4', 'ADDRESS_6',
-                                                             'ADDRESS_FAMILY', 'NODEIPS', 'NODEIPS_4', 'NODEIPS_6' ]),
-}
+    def render(self, row, cell):
+        return paint_host_list(row["site"], row["host_childs"])
+
+
+@painter_registry.register
+class PainterHostGroupMemberlist(Painter):
+    @property
+    def ident(self):
+        return "host_group_memberlist"
+
+    @property
+    def title(self):
+        return _("Host groups the host is member of")
+
+    @property
+    def short_title(self):
+        return _("Groups")
+
+    @property
+    def columns(self):
+        return ['host_groups']
+
+    def group_by(self, row):
+        return tuple(row["host_groups"])
+
+    def render(self, row, cell):
+        links = []
+        for group in row["host_groups"]:
+            link = "view.py?view_name=hostgroup&hostgroup=" + group
+            if html.request.var("display_options"):
+                link += "&display_options=%s" % html.attrencode(html.request.var("display_options"))
+            links.append(html.render_a(group, link))
+        return "", HTML(", ").join(links)
+
+
+@painter_registry.register
+class PainterHostContacts(Painter):
+    @property
+    def ident(self):
+        return "host_contacts"
+
+    @property
+    def title(self):
+        return _("Host contacts")
+
+    @property
+    def short_title(self):
+        return _("Contacts")
+
+    @property
+    def columns(self):
+        return ['host_contacts']
+
+    def render(self, row, cell):
+        return (None, ", ".join(row["host_contacts"]))
+
+
+@painter_registry.register
+class PainterHostContactGroups(Painter):
+    @property
+    def ident(self):
+        return "host_contact_groups"
+
+    @property
+    def title(self):
+        return _("Host contact groups")
+
+    @property
+    def short_title(self):
+        return _("Contact groups")
+
+    @property
+    def columns(self):
+        return ['host_contact_groups']
+
+    def render(self, row, cell):
+        return (None, ", ".join(row["host_contact_groups"]))
+
+
+@painter_registry.register
+class PainterHostCustomNotes(Painter):
+    @property
+    def ident(self):
+        return "host_custom_notes"
+
+    @property
+    def title(self):
+        return _("Custom host notes")
+
+    @property
+    def short_title(self):
+        return _("Notes")
+
+    @property
+    def columns(self):
+        return ['host_name', 'host_address', 'host_plugin_output']
+
+    def render(self, row, cell):
+        return paint_custom_notes("hosts", row)
+
+
+@painter_registry.register
+class PainterHostComments(Painter):
+    @property
+    def ident(self):
+        return "host_comments"
+
+    @property
+    def title(self):
+        return _("Host comments")
+
+    @property
+    def short_title(self):
+        return _("Comments")
+
+    @property
+    def columns(self):
+        return ['host_comments_with_info']
+
+    def render(self, row, cell):
+        return paint_comments("host_", row)
+
+
+@painter_registry.register
+class PainterHostInDowntime(Painter):
+    @property
+    def ident(self):
+        return "host_in_downtime"
+
+    @property
+    def title(self):
+        return _("Host in downtime")
+
+    @property
+    def short_title(self):
+        return _("Downtime")
+
+    @property
+    def columns(self):
+        return ['host_scheduled_downtime_depth']
+
+    def render(self, row, cell):
+        return paint_nagiosflag(row, "host_scheduled_downtime_depth", True)
+
+
+@painter_registry.register
+class PainterHostAcknowledged(Painter):
+    @property
+    def ident(self):
+        return "host_acknowledged"
+
+    @property
+    def title(self):
+        return _("Host problem acknowledged")
+
+    @property
+    def short_title(self):
+        return _("Ack")
+
+    @property
+    def columns(self):
+        return ['host_acknowledged']
+
+    def render(self, row, cell):
+        return paint_nagiosflag(row, "host_acknowledged", False)
+
+
+@painter_registry.register
+class PainterHostStaleness(Painter):
+    @property
+    def ident(self):
+        return "host_staleness"
+
+    @property
+    def title(self):
+        return _("Host staleness value")
+
+    @property
+    def short_title(self):
+        return _("Staleness")
+
+    @property
+    def columns(self):
+        return ['host_staleness']
+
+    def render(self, row, cell):
+        return ('', '%0.2f' % row.get('host_staleness', 0))
+
+
+@painter_registry.register
+class PainterHostIsStale(Painter):
+    @property
+    def ident(self):
+        return "host_is_stale"
+
+    @property
+    def title(self):
+        return _("Host is stale")
+
+    @property
+    def short_title(self):
+        return _("Stale")
+
+    @property
+    def columns(self):
+        return ['host_staleness']
+
+    @property
+    def sorter(self):
+        return 'svc_staleness'
+
+    def render(self, row, cell):
+        return paint_is_stale(row)
+
+
+@painter_registry.register
+class PainterHostServicelevel(Painter):
+    @property
+    def ident(self):
+        return "host_servicelevel"
+
+    @property
+    def title(self):
+        return _("Host service level")
+
+    @property
+    def short_title(self):
+        return _("Service Level")
+
+    @property
+    def columns(self):
+        return ['host_custom_variable_names', 'host_custom_variable_values']
+
+    @property
+    def sorter(self):
+        return 'servicelevel'
+
+    def render(self, row, cell):
+        return paint_custom_var('host', 'EC_SL', row, config.mkeventd_service_levels)
+
+
+@painter_registry.register
+class PainterHostCustomVars(Painter):
+    @property
+    def ident(self):
+        return "host_custom_vars"
+
+    @property
+    def title(self):
+        return _("Host custom variables")
+
+    @property
+    def columns(self):
+        return ['host_custom_variables']
+
+    def group_by(self, row):
+        return tuple(row["host_custom_variables"].items())
+
+    def render(self, row, cell):
+        return paint_custom_vars('host', row, [
+            'FILENAME',
+            'TAGS',
+            'ADDRESS_4',
+            'ADDRESS_6',
+            'ADDRESS_FAMILY',
+            'NODEIPS',
+            'NODEIPS_4',
+            'NODEIPS_6',
+        ])
 
 
 def paint_discovery_output(field, row):
@@ -1669,26 +3304,70 @@ def paint_discovery_output(field, row):
     return None, value
 
 
-multisite_painters["service_discovery_state"] = {
-    "title": _("Service discovery: State"),
-    "short": _("State"),
-    "columns": ["discovery_state"],
-    "paint": lambda row: paint_discovery_output("discovery_state", row)
-}
+@painter_registry.register
+class PainterServiceDiscoveryState(Painter):
+    @property
+    def ident(self):
+        return "service_discovery_state"
 
-multisite_painters["service_discovery_check"] = {
-    "title": _("Service discovery: Check type"),
-    "short": _("Check type"),
-    "columns": ["discovery_state", "discovery_check", "discovery_service"],
-    "paint": lambda row: paint_discovery_output("discovery_check", row)
-}
+    @property
+    def title(self):
+        return _("Service discovery: State")
 
-multisite_painters["service_discovery_service"] = {
-    "title": _("Service discovery: Service description"),
-    "short": _("Service description"),
-    "columns": ["discovery_state", "discovery_check", "discovery_service"],
-    "paint": lambda row: paint_discovery_output("discovery_service", row)
-}
+    @property
+    def short_title(self):
+        return _("State")
+
+    @property
+    def columns(self):
+        return ['discovery_state']
+
+    def render(self, row, cell):
+        return paint_discovery_output("discovery_state", row)
+
+
+@painter_registry.register
+class PainterServiceDiscoveryCheck(Painter):
+    @property
+    def ident(self):
+        return "service_discovery_check"
+
+    @property
+    def title(self):
+        return _("Service discovery: Check type")
+
+    @property
+    def short_title(self):
+        return _("Check type")
+
+    @property
+    def columns(self):
+        return ['discovery_state', 'discovery_check', 'discovery_service']
+
+    def render(self, row, cell):
+        return paint_discovery_output("discovery_check", row)
+
+
+@painter_registry.register
+class PainterServiceDiscoveryService(Painter):
+    @property
+    def ident(self):
+        return "service_discovery_service"
+
+    @property
+    def title(self):
+        return _("Service discovery: Service description")
+
+    @property
+    def short_title(self):
+        return _("Service description")
+
+    @property
+    def columns(self):
+        return ['discovery_state', 'discovery_check', 'discovery_service']
+
+    def render(self, row, cell):
+        return paint_discovery_output("discovery_service", row)
 
 
 #    _   _           _
@@ -1698,109 +3377,300 @@ multisite_painters["service_discovery_service"] = {
 #   |_| |_|\___/|___/\__\__, |_|  \___/ \__,_| .__/|___/
 #                       |___/                |_|
 #
-def paint_hg_host_list(row):
-    h = ""
-    for host, state, checked in row["hostgroup_members_with_state"]:
-        link = "view.py?view_name=host&site=%s&host=%s" % (html.urlencode(row["site"]),
-                                                           html.urlencode(host))
-        if checked:
-            css = "hstate%d" % state
-        else:
-            css = "hstatep"
-        h += html.render_div(html.render_a(host, link), class_=css)
-    return "", html.render_div(h, class_="objectlist")
+@painter_registry.register
+class PainterHostgroupHosts(Painter):
+    @property
+    def ident(self):
+        return "hostgroup_hosts"
+
+    @property
+    def title(self):
+        return _("Hosts colored according to state (Host Group)")
+
+    @property
+    def short_title(self):
+        return _("Hosts")
+
+    @property
+    def columns(self):
+        return ['hostgroup_members_with_state']
+
+    def render(self, row, cell):
+        h = ""
+        for host, state, checked in row["hostgroup_members_with_state"]:
+            link = "view.py?view_name=host&site=%s&host=%s" % (html.urlencode(row["site"]),
+                                                               html.urlencode(host))
+            if checked:
+                css = "hstate%d" % state
+            else:
+                css = "hstatep"
+            h += html.render_div(html.render_a(host, link), class_=css)
+        return "", html.render_div(h, class_="objectlist")
 
 
-multisite_painters["hostgroup_hosts"] = {
-    "title": _("Hosts colored according to state (Host Group)"),
-    "short": _("Hosts"),
-    "columns": ["hostgroup_members_with_state"],
-    "paint": paint_hg_host_list,
-}
+@painter_registry.register
+class PainterHgNumServices(Painter):
+    @property
+    def ident(self):
+        return "hg_num_services"
 
-multisite_painters["hg_num_services"] = {
-    "title": _("Number of services (Host Group)"),
-    "short": "",
-    "columns": ["hostgroup_num_services"],
-    "paint": lambda row: (None, str(row["hostgroup_num_services"])),
-}
+    @property
+    def title(self):
+        return _("Number of services (Host Group)")
 
-multisite_painters["hg_num_services_ok"] = {
-    "title": _("Number of services in state OK (Host Group)"),
-    "short": _("O"),
-    "columns": ["hostgroup_num_services_ok"],
-    "paint": lambda row: paint_svc_count(0, row["hostgroup_num_services_ok"]),
-}
+    @property
+    def short_title(self):
+        return _("")
 
-multisite_painters["hg_num_services_warn"] = {
-    "title": _("Number of services in state WARN (Host Group)"),
-    "short": _("W"),
-    "columns": ["hostgroup_num_services_warn"],
-    "paint": lambda row: paint_svc_count(1, row["hostgroup_num_services_warn"]),
-}
+    @property
+    def columns(self):
+        return ['hostgroup_num_services']
 
-multisite_painters["hg_num_services_crit"] = {
-    "title": _("Number of services in state CRIT (Host Group)"),
-    "short": _("C"),
-    "columns": ["hostgroup_num_services_crit"],
-    "paint": lambda row: paint_svc_count(2, row["hostgroup_num_services_crit"]),
-}
+    def render(self, row, cell):
+        return (None, str(row["hostgroup_num_services"]))
 
-multisite_painters["hg_num_services_unknown"] = {
-    "title": _("Number of services in state UNKNOWN (Host Group)"),
-    "short": _("U"),
-    "columns": ["hostgroup_num_services_unknown"],
-    "paint": lambda row: paint_svc_count(3, row["hostgroup_num_services_unknown"]),
-}
 
-multisite_painters["hg_num_services_pending"] = {
-    "title": _("Number of services in state PENDING (Host Group)"),
-    "short": _("P"),
-    "columns": ["hostgroup_num_services_pending"],
-    "paint": lambda row: paint_svc_count("p", row["hostgroup_num_services_pending"]),
-}
+@painter_registry.register
+class PainterHgNumServicesOk(Painter):
+    @property
+    def ident(self):
+        return "hg_num_services_ok"
 
-multisite_painters["hg_num_hosts_up"] = {
-    "title": _("Number of hosts in state UP (Host Group)"),
-    "short": _("Up"),
-    "columns": ["hostgroup_num_hosts_up"],
-    "paint": lambda row: paint_host_count(0, row["hostgroup_num_hosts_up"]),
-}
+    @property
+    def title(self):
+        return _("Number of services in state OK (Host Group)")
 
-multisite_painters["hg_num_hosts_down"] = {
-    "title": _("Number of hosts in state DOWN (Host Group)"),
-    "short": _("Dw"),
-    "columns": ["hostgroup_num_hosts_down"],
-    "paint": lambda row: paint_host_count(1, row["hostgroup_num_hosts_down"]),
-}
+    @property
+    def short_title(self):
+        return _("O")
 
-multisite_painters["hg_num_hosts_unreach"] = {
-    "title": _("Number of hosts in state UNREACH (Host Group)"),
-    "short": _("Un"),
-    "columns": ["hostgroup_num_hosts_unreach"],
-    "paint": lambda row: paint_host_count(2, row["hostgroup_num_hosts_unreach"]),
-}
+    @property
+    def columns(self):
+        return ['hostgroup_num_services_ok']
 
-multisite_painters["hg_num_hosts_pending"] = {
-    "title": _("Number of hosts in state PENDING (Host Group)"),
-    "short": _("Pd"),
-    "columns": ["hostgroup_num_hosts_pending"],
-    "paint": lambda row: paint_host_count(None, row["hostgroup_num_hosts_pending"]),
-}
+    def render(self, row, cell):
+        return paint_svc_count(0, row["hostgroup_num_services_ok"])
 
-multisite_painters["hg_name"] = {
-    "title": _("Hostgroup name"),
-    "short": _("Name"),
-    "columns": ["hostgroup_name"],
-    "paint": lambda row: (None, row["hostgroup_name"]),
-}
 
-multisite_painters["hg_alias"] = {
-    "title": _("Hostgroup alias"),
-    "short": _("Alias"),
-    "columns": ["hostgroup_alias"],
-    "paint": lambda row: (None, html.attrencode(row["hostgroup_alias"])),
-}
+@painter_registry.register
+class PainterHgNumServicesWarn(Painter):
+    @property
+    def ident(self):
+        return "hg_num_services_warn"
+
+    @property
+    def title(self):
+        return _("Number of services in state WARN (Host Group)")
+
+    @property
+    def short_title(self):
+        return _("W")
+
+    @property
+    def columns(self):
+        return ['hostgroup_num_services_warn']
+
+    def render(self, row, cell):
+        return paint_svc_count(1, row["hostgroup_num_services_warn"])
+
+
+@painter_registry.register
+class PainterHgNumServicesCrit(Painter):
+    @property
+    def ident(self):
+        return "hg_num_services_crit"
+
+    @property
+    def title(self):
+        return _("Number of services in state CRIT (Host Group)")
+
+    @property
+    def short_title(self):
+        return _("C")
+
+    @property
+    def columns(self):
+        return ['hostgroup_num_services_crit']
+
+    def render(self, row, cell):
+        return paint_svc_count(2, row["hostgroup_num_services_crit"])
+
+
+@painter_registry.register
+class PainterHgNumServicesUnknown(Painter):
+    @property
+    def ident(self):
+        return "hg_num_services_unknown"
+
+    @property
+    def title(self):
+        return _("Number of services in state UNKNOWN (Host Group)")
+
+    @property
+    def short_title(self):
+        return _("U")
+
+    @property
+    def columns(self):
+        return ['hostgroup_num_services_unknown']
+
+    def render(self, row, cell):
+        return paint_svc_count(3, row["hostgroup_num_services_unknown"])
+
+
+@painter_registry.register
+class PainterHgNumServicesPending(Painter):
+    @property
+    def ident(self):
+        return "hg_num_services_pending"
+
+    @property
+    def title(self):
+        return _("Number of services in state PENDING (Host Group)")
+
+    @property
+    def short_title(self):
+        return _("P")
+
+    @property
+    def columns(self):
+        return ['hostgroup_num_services_pending']
+
+    def render(self, row, cell):
+        return paint_svc_count("p", row["hostgroup_num_services_pending"])
+
+
+@painter_registry.register
+class PainterHgNumHostsUp(Painter):
+    @property
+    def ident(self):
+        return "hg_num_hosts_up"
+
+    @property
+    def title(self):
+        return _("Number of hosts in state UP (Host Group)")
+
+    @property
+    def short_title(self):
+        return _("Up")
+
+    @property
+    def columns(self):
+        return ['hostgroup_num_hosts_up']
+
+    def render(self, row, cell):
+        return paint_host_count(0, row["hostgroup_num_hosts_up"])
+
+
+@painter_registry.register
+class PainterHgNumHostsDown(Painter):
+    @property
+    def ident(self):
+        return "hg_num_hosts_down"
+
+    @property
+    def title(self):
+        return _("Number of hosts in state DOWN (Host Group)")
+
+    @property
+    def short_title(self):
+        return _("Dw")
+
+    @property
+    def columns(self):
+        return ['hostgroup_num_hosts_down']
+
+    def render(self, row, cell):
+        return paint_host_count(1, row["hostgroup_num_hosts_down"])
+
+
+@painter_registry.register
+class PainterHgNumHostsUnreach(Painter):
+    @property
+    def ident(self):
+        return "hg_num_hosts_unreach"
+
+    @property
+    def title(self):
+        return _("Number of hosts in state UNREACH (Host Group)")
+
+    @property
+    def short_title(self):
+        return _("Un")
+
+    @property
+    def columns(self):
+        return ['hostgroup_num_hosts_unreach']
+
+    def render(self, row, cell):
+        return paint_host_count(2, row["hostgroup_num_hosts_unreach"])
+
+
+@painter_registry.register
+class PainterHgNumHostsPending(Painter):
+    @property
+    def ident(self):
+        return "hg_num_hosts_pending"
+
+    @property
+    def title(self):
+        return _("Number of hosts in state PENDING (Host Group)")
+
+    @property
+    def short_title(self):
+        return _("Pd")
+
+    @property
+    def columns(self):
+        return ['hostgroup_num_hosts_pending']
+
+    def render(self, row, cell):
+        return paint_host_count(None, row["hostgroup_num_hosts_pending"])
+
+
+@painter_registry.register
+class PainterHgName(Painter):
+    @property
+    def ident(self):
+        return "hg_name"
+
+    @property
+    def title(self):
+        return _("Hostgroup name")
+
+    @property
+    def short_title(self):
+        return _("Name")
+
+    @property
+    def columns(self):
+        return ['hostgroup_name']
+
+    def render(self, row, cell):
+        return (None, row["hostgroup_name"])
+
+
+@painter_registry.register
+class PainterHgAlias(Painter):
+    @property
+    def ident(self):
+        return "hg_alias"
+
+    @property
+    def title(self):
+        return _("Hostgroup alias")
+
+    @property
+    def short_title(self):
+        return _("Alias")
+
+    @property
+    def columns(self):
+        return ['hostgroup_alias']
+
+    def render(self, row, cell):
+        return (None, html.attrencode(row["hostgroup_alias"]))
+
 
 #    ____                  _
 #   / ___|  ___ _ ____   _(_) ___ ___  __ _ _ __ ___  _   _ _ __  ___
@@ -1809,73 +3679,204 @@ multisite_painters["hg_alias"] = {
 #   |____/ \___|_|    \_/ |_|\___\___|\__, |_|  \___/ \__,_| .__/|___/
 #                                     |___/                |_|
 
-multisite_painters["sg_services"] = {
-    "title": _("Services colored according to state (Service Group)"),
-    "short": _("Services"),
-    "columns": ["servicegroup_members_with_state"],
-    "paint": lambda row: paint_service_list(row, "servicegroup_members_with_state"),
-}
 
-multisite_painters["sg_num_services"] = {
-    "title": _("Number of services (Service Group)"),
-    "short": "",
-    "columns": ["servicegroup_num_services"],
-    "paint": lambda row: (None, str(row["servicegroup_num_services"])),
-}
+@painter_registry.register
+class PainterSgServices(Painter):
+    @property
+    def ident(self):
+        return "sg_services"
 
-multisite_painters["sg_num_services_ok"] = {
-    "title": _("Number of services in state OK (Service Group)"),
-    "short": _("O"),
-    "columns": ["servicegroup_num_services_ok"],
-    "paint": lambda row: paint_svc_count(0, row["servicegroup_num_services_ok"])
-}
+    @property
+    def title(self):
+        return _("Services colored according to state (Service Group)")
 
-multisite_painters["sg_num_services_warn"] = {
-    "title": _("Number of services in state WARN (Service Group)"),
-    "short": _("W"),
-    "columns": ["servicegroup_num_services_warn"],
-    "paint": lambda row: paint_svc_count(1, row["servicegroup_num_services_warn"])
-}
+    @property
+    def short_title(self):
+        return _("Services")
 
-multisite_painters["sg_num_services_crit"] = {
-    "title": _("Number of services in state CRIT (Service Group)"),
-    "short": _("C"),
-    "columns": ["servicegroup_num_services_crit"],
-    "paint": lambda row: paint_svc_count(2, row["servicegroup_num_services_crit"])
-}
+    @property
+    def columns(self):
+        return ['servicegroup_members_with_state']
 
-multisite_painters["sg_num_services_unknown"] = {
-    "title": _("Number of services in state UNKNOWN (Service Group)"),
-    "short": _("U"),
-    "columns": ["servicegroup_num_services_unknown"],
-    "paint": lambda row: paint_svc_count(3, row["servicegroup_num_services_unknown"])
-}
+    def render(self, row, cell):
+        return paint_service_list(row, "servicegroup_members_with_state")
 
-multisite_painters["sg_num_services_pending"] = {
-    "title": _("Number of services in state PENDING (Service Group)"),
-    "short": _("P"),
-    "columns": ["servicegroup_num_services_pending"],
-    "paint": lambda row: paint_svc_count("p", row["servicegroup_num_services_pending"])
-}
-multisite_painters["sg_name"] = {
-    "title": _("Servicegroup name"),
-    "short": _("Name"),
-    "columns": ["servicegroup_name"],
-    "paint": lambda row: (None, row["servicegroup_name"])
-}
-multisite_painters["sg_alias"] = {
-    "title": _("Servicegroup alias"),
-    "short": _("Alias"),
-    "columns": ["servicegroup_alias"],
-    "paint": lambda row: (None, html.attrencode(row["servicegroup_alias"]))
-}
 
-multisite_painters["link_to_pnp_service"] = {
-    "title": _("(obsolete) Link to PNP4Nagios"),
-    "short": _("PNP"),
-    "columns": ["site", "host_name", "service_description", "service_perf_data"],
-    "paint": lambda row: ("", "")
-}
+@painter_registry.register
+class PainterSgNumServices(Painter):
+    @property
+    def ident(self):
+        return "sg_num_services"
+
+    @property
+    def title(self):
+        return _("Number of services (Service Group)")
+
+    @property
+    def short_title(self):
+        return _("")
+
+    @property
+    def columns(self):
+        return ['servicegroup_num_services']
+
+    def render(self, row, cell):
+        return (None, str(row["servicegroup_num_services"]))
+
+
+@painter_registry.register
+class PainterSgNumServicesOk(Painter):
+    @property
+    def ident(self):
+        return "sg_num_services_ok"
+
+    @property
+    def title(self):
+        return _("Number of services in state OK (Service Group)")
+
+    @property
+    def short_title(self):
+        return _("O")
+
+    @property
+    def columns(self):
+        return ['servicegroup_num_services_ok']
+
+    def render(self, row, cell):
+        return paint_svc_count(0, row["servicegroup_num_services_ok"])
+
+
+@painter_registry.register
+class PainterSgNumServicesWarn(Painter):
+    @property
+    def ident(self):
+        return "sg_num_services_warn"
+
+    @property
+    def title(self):
+        return _("Number of services in state WARN (Service Group)")
+
+    @property
+    def short_title(self):
+        return _("W")
+
+    @property
+    def columns(self):
+        return ['servicegroup_num_services_warn']
+
+    def render(self, row, cell):
+        return paint_svc_count(1, row["servicegroup_num_services_warn"])
+
+
+@painter_registry.register
+class PainterSgNumServicesCrit(Painter):
+    @property
+    def ident(self):
+        return "sg_num_services_crit"
+
+    @property
+    def title(self):
+        return _("Number of services in state CRIT (Service Group)")
+
+    @property
+    def short_title(self):
+        return _("C")
+
+    @property
+    def columns(self):
+        return ['servicegroup_num_services_crit']
+
+    def render(self, row, cell):
+        return paint_svc_count(2, row["servicegroup_num_services_crit"])
+
+
+@painter_registry.register
+class PainterSgNumServicesUnknown(Painter):
+    @property
+    def ident(self):
+        return "sg_num_services_unknown"
+
+    @property
+    def title(self):
+        return _("Number of services in state UNKNOWN (Service Group)")
+
+    @property
+    def short_title(self):
+        return _("U")
+
+    @property
+    def columns(self):
+        return ['servicegroup_num_services_unknown']
+
+    def render(self, row, cell):
+        return paint_svc_count(3, row["servicegroup_num_services_unknown"])
+
+
+@painter_registry.register
+class PainterSgNumServicesPending(Painter):
+    @property
+    def ident(self):
+        return "sg_num_services_pending"
+
+    @property
+    def title(self):
+        return _("Number of services in state PENDING (Service Group)")
+
+    @property
+    def short_title(self):
+        return _("P")
+
+    @property
+    def columns(self):
+        return ['servicegroup_num_services_pending']
+
+    def render(self, row, cell):
+        return paint_svc_count("p", row["servicegroup_num_services_pending"])
+
+
+@painter_registry.register
+class PainterSgName(Painter):
+    @property
+    def ident(self):
+        return "sg_name"
+
+    @property
+    def title(self):
+        return _("Servicegroup name")
+
+    @property
+    def short_title(self):
+        return _("Name")
+
+    @property
+    def columns(self):
+        return ['servicegroup_name']
+
+    def render(self, row, cell):
+        return (None, row["servicegroup_name"])
+
+
+@painter_registry.register
+class PainterSgAlias(Painter):
+    @property
+    def ident(self):
+        return "sg_alias"
+
+    @property
+    def title(self):
+        return _("Servicegroup alias")
+
+    @property
+    def short_title(self):
+        return _("Alias")
+
+    @property
+    def columns(self):
+        return ['servicegroup_alias']
+
+    def render(self, row, cell):
+        return (None, html.attrencode(row["servicegroup_alias"]))
+
 
 #     ____                                     _
 #    / ___|___  _ __ ___  _ __ ___   ___ _ __ | |_ ___
@@ -1884,83 +3885,189 @@ multisite_painters["link_to_pnp_service"] = {
 #    \____\___/|_| |_| |_|_| |_| |_|\___|_| |_|\__|___/
 #
 
-multisite_painters["comment_id"] = {
-    "title": _("Comment id"),
-    "short": _("ID"),
-    "columns": ["comment_id"],
-    "paint": lambda row: (None, str(row["comment_id"])),
-}
-multisite_painters["comment_author"] = {
-    "title": _("Comment author"),
-    "short": _("Author"),
-    "columns": ["comment_author"],
-    "paint": lambda row: (None, row["comment_author"]),
-}
 
-multisite_painters["comment_comment"] = {
-    "title": _("Comment text"),
-    "columns": ["comment_comment"],
-    "paint": lambda row: (None, format_plugin_output(row["comment_comment"], row)),
-}
+@painter_registry.register
+class PainterCommentId(Painter):
+    @property
+    def ident(self):
+        return "comment_id"
 
-multisite_painters["comment_what"] = {
-    "title": _("Comment type (host/service)"),
-    "short": _("Type"),
-    "columns": ["comment_type"],
-    "paint": lambda row: (None, row["comment_type"] == 1 and _("Host") or _("Service")),
-}
+    @property
+    def title(self):
+        return _("Comment id")
 
-multisite_painters["comment_time"] = {
-    "title": _("Comment entry time"),
-    "short": _("Time"),
-    "columns": ["comment_entry_time"],
-    "options": ["ts_format", "ts_date"],
-    "paint": lambda row: paint_age(row["comment_entry_time"], True, 3600),
-}
+    @property
+    def short_title(self):
+        return _("ID")
 
-multisite_painters["comment_expires"] = {
-    "title"   : _("Comment expiry time"),
-    "short"   : _("Expires"),
-    "columns" : ["comment_expire_time"],
-    "options" : [ "ts_format", "ts_date" ],
-    "paint"   : lambda row: paint_age(row["comment_expire_time"], row["comment_expire_time"] != 0, 3600, what='future'),
-}
+    @property
+    def columns(self):
+        return ['comment_id']
+
+    def render(self, row, cell):
+        return (None, str(row["comment_id"]))
 
 
-def paint_comment_entry_type(row):
-    t = row["comment_entry_type"]
-    linkview = None
-    if t == 1:
-        icon = "comment"
-        help_txt = _("Comment")
-    elif t == 2:
-        icon = "downtime"
-        help_txt = _("Downtime")
-        if row["service_description"]:
-            linkview = "downtimes_of_service"
+@painter_registry.register
+class PainterCommentAuthor(Painter):
+    @property
+    def ident(self):
+        return "comment_author"
+
+    @property
+    def title(self):
+        return _("Comment author")
+
+    @property
+    def short_title(self):
+        return _("Author")
+
+    @property
+    def columns(self):
+        return ['comment_author']
+
+    def render(self, row, cell):
+        return (None, row["comment_author"])
+
+
+@painter_registry.register
+class PainterCommentComment(Painter):
+    @property
+    def ident(self):
+        return "comment_comment"
+
+    @property
+    def title(self):
+        return _("Comment text")
+
+    @property
+    def columns(self):
+        return ['comment_comment']
+
+    def render(self, row, cell):
+        return (None, format_plugin_output(row["comment_comment"], row))
+
+
+@painter_registry.register
+class PainterCommentWhat(Painter):
+    @property
+    def ident(self):
+        return "comment_what"
+
+    @property
+    def title(self):
+        return _("Comment type (host/service)")
+
+    @property
+    def short_title(self):
+        return _("Type")
+
+    @property
+    def columns(self):
+        return ['comment_type']
+
+    def render(self, row, cell):
+        return (None, row["comment_type"] == 1 and _("Host") or _("Service"))
+
+
+@painter_registry.register
+class PainterCommentTime(Painter):
+    @property
+    def ident(self):
+        return "comment_time"
+
+    @property
+    def title(self):
+        return _("Comment entry time")
+
+    @property
+    def short_title(self):
+        return _("Time")
+
+    @property
+    def columns(self):
+        return ['comment_entry_time']
+
+    @property
+    def painter_options(self):
+        return ['ts_format', 'ts_date']
+
+    def render(self, row, cell):
+        return paint_age(row["comment_entry_time"], True, 3600)
+
+
+@painter_registry.register
+class PainterCommentExpires(Painter):
+    @property
+    def ident(self):
+        return "comment_expires"
+
+    @property
+    def title(self):
+        return _("Comment expiry time")
+
+    @property
+    def short_title(self):
+        return _("Expires")
+
+    @property
+    def columns(self):
+        return ['comment_expire_time']
+
+    @property
+    def painter_options(self):
+        return ['ts_format', 'ts_date']
+
+    def render(self, row, cell):
+        return paint_age(
+            row["comment_expire_time"], row["comment_expire_time"] != 0, 3600, what='future')
+
+
+@painter_registry.register
+class PainterCommentEntryType(Painter):
+    @property
+    def ident(self):
+        return "comment_entry_type"
+
+    @property
+    def title(self):
+        return _("Comment entry type (user/downtime/flapping/ack)")
+
+    @property
+    def short_title(self):
+        return _("E.Type")
+
+    @property
+    def columns(self):
+        return ['comment_entry_type', 'host_name', 'service_description']
+
+    def render(self, row, cell):
+        t = row["comment_entry_type"]
+        linkview = None
+        if t == 1:
+            icon = "comment"
+            help_txt = _("Comment")
+        elif t == 2:
+            icon = "downtime"
+            help_txt = _("Downtime")
+            if row["service_description"]:
+                linkview = "downtimes_of_service"
+            else:
+                linkview = "downtimes_of_host"
+
+        elif t == 3:
+            icon = "flapping"
+            help_txt = _("Flapping")
+        elif t == 4:
+            icon = "ack"
+            help_txt = _("Acknowledgement")
         else:
-            linkview = "downtimes_of_host"
+            return "", ""
+        code = html.render_icon(icon, help_txt)
+        if linkview:
+            code = link_to_view(code, row, linkview)
+        return "icons", code
 
-    elif t == 3:
-        icon = "flapping"
-        help_txt = _("Flapping")
-    elif t == 4:
-        icon = "ack"
-        help_txt = _("Acknowledgement")
-    else:
-        return "", ""
-    code = html.render_icon(icon, help_txt)
-    if linkview:
-        code = link_to_view(code, row, linkview)
-    return "icons", code
-
-
-multisite_painters["comment_entry_type"] = {
-    "title": _("Comment entry type (user/downtime/flapping/ack)"),
-    "short": _("E.Type"),
-    "columns": ["comment_entry_type", "host_name", "service_description"],
-    "paint": paint_comment_entry_type,
-}
 
 #    ____                      _   _
 #   |  _ \  _____      ___ __ | |_(_)_ __ ___   ___  ___
@@ -1969,112 +4076,292 @@ multisite_painters["comment_entry_type"] = {
 #   |____/ \___/ \_/\_/ |_| |_|\__|_|_| |_| |_|\___||___/
 #
 
-multisite_painters["downtime_id"] = {
-    "title": _("Downtime id"),
-    "short": _("ID"),
-    "columns": ["downtime_id"],
-    "paint": lambda row: (None, "%d" % row["downtime_id"]),
-}
 
-multisite_painters["downtime_author"] = {
-    "title": _("Downtime author"),
-    "short": _("Author"),
-    "columns": ["downtime_author"],
-    "paint": lambda row: (None, row["downtime_author"]),
-}
+@painter_registry.register
+class PainterDowntimeId(Painter):
+    @property
+    def ident(self):
+        return "downtime_id"
 
-multisite_painters["downtime_comment"] = {
-    "title": _("Downtime comment"),
-    "short": _("Comment"),
-    "columns": ["downtime_comment"],
-    "paint": lambda row: (None, format_plugin_output(row["downtime_comment"], row)),
-}
+    @property
+    def title(self):
+        return _("Downtime id")
 
-multisite_painters["downtime_fixed"] = {
-    "title": _("Downtime start mode"),
-    "short": _("Mode"),
-    "columns": ["downtime_fixed"],
-    "paint": lambda row: (None, row["downtime_fixed"] == 0 and _("flexible") or _("fixed")),
-}
+    @property
+    def short_title(self):
+        return _("ID")
 
-multisite_painters["downtime_origin"] = {
-    "title": _("Downtime origin"),
-    "short": _("Origin"),
-    "columns": ["downtime_origin"],
-    "paint": lambda row: (None, row["downtime_origin"] == 1 and _("configuration") or _("command")),
-}
+    @property
+    def columns(self):
+        return ['downtime_id']
+
+    def render(self, row, cell):
+        return (None, "%d" % row["downtime_id"])
 
 
-def paint_downtime_recurring(row):
-    try:
-        from cmk.gui.cee.plugins.wato.cmc import recurring_downtimes_types
-    except ImportError:
-        return "", _("(not supported)")
+@painter_registry.register
+class PainterDowntimeAuthor(Painter):
+    @property
+    def ident(self):
+        return "downtime_author"
 
-    r = row["downtime_recurring"]
-    if not r:
-        return "", _("no")
-    return "", recurring_downtimes_types.get(r, _("(unknown: %d)") % r)
+    @property
+    def title(self):
+        return _("Downtime author")
 
+    @property
+    def short_title(self):
+        return _("Author")
 
-multisite_painters["downtime_recurring"] = {
-    "title": _("Downtime recurring interval"),
-    "short": _("Recurring"),
-    "columns": ["downtime_recurring"],
-    "paint": paint_downtime_recurring,
-}
+    @property
+    def columns(self):
+        return ['downtime_author']
 
-multisite_painters["downtime_what"] = {
-    "title": _("Downtime for host/service"),
-    "short": _("for"),
-    "columns": ["downtime_is_service"],
-    "paint": lambda row: (None, row["downtime_is_service"] and _("Service") or _("Host")),
-}
-
-multisite_painters["downtime_type"] = {
-    "title": _("Downtime active or pending"),
-    "short": _("act/pend"),
-    "columns": ["downtime_type"],
-    "paint": lambda row: (None, row["downtime_type"] == 0 and _("active") or _("pending")),
-}
-
-multisite_painters["downtime_entry_time"] = {
-    "title": _("Downtime entry time"),
-    "short": _("Entry"),
-    "columns": ["downtime_entry_time"],
-    "options": ["ts_format", "ts_date"],
-    "paint": lambda row: paint_age(row["downtime_entry_time"], True, 3600),
-}
-
-multisite_painters["downtime_start_time"] = {
-    "title": _("Downtime start time"),
-    "short": _("Start"),
-    "columns": ["downtime_start_time"],
-    "options": ["ts_format", "ts_date"],
-    "paint": lambda row: paint_age(row["downtime_start_time"], True, 3600, what="both"),
-}
-
-multisite_painters["downtime_end_time"] = {
-    "title": _("Downtime end time"),
-    "short": _("End"),
-    "columns": ["downtime_end_time"],
-    "options": ["ts_format", "ts_date"],
-    "paint": lambda row: paint_age(row["downtime_end_time"], True, 3600, what="both"),
-}
+    def render(self, row, cell):
+        return (None, row["downtime_author"])
 
 
-def paint_downtime_duration(row):
-    if row["downtime_fixed"] == 0:
-        return "number", "%02d:%02d:00" % divmod(row["downtime_duration"] / 60, 60)
-    return "", ""
+@painter_registry.register
+class PainterDowntimeComment(Painter):
+    @property
+    def ident(self):
+        return "downtime_comment"
+
+    @property
+    def title(self):
+        return _("Downtime comment")
+
+    @property
+    def short_title(self):
+        return _("Comment")
+
+    @property
+    def columns(self):
+        return ['downtime_comment']
+
+    def render(self, row, cell):
+        return (None, format_plugin_output(row["downtime_comment"], row))
 
 
-multisite_painters["downtime_duration"] = {
-    "title": _("Downtime duration (if flexible)"),
-    "short": _("Flex. Duration"),
-    "columns": ["downtime_duration", "downtime_fixed"],
-    "paint": paint_downtime_duration,
-}
+@painter_registry.register
+class PainterDowntimeFixed(Painter):
+    @property
+    def ident(self):
+        return "downtime_fixed"
+
+    @property
+    def title(self):
+        return _("Downtime start mode")
+
+    @property
+    def short_title(self):
+        return _("Mode")
+
+    @property
+    def columns(self):
+        return ['downtime_fixed']
+
+    def render(self, row, cell):
+        return (None, row["downtime_fixed"] == 0 and _("flexible") or _("fixed"))
+
+
+@painter_registry.register
+class PainterDowntimeOrigin(Painter):
+    @property
+    def ident(self):
+        return "downtime_origin"
+
+    @property
+    def title(self):
+        return _("Downtime origin")
+
+    @property
+    def short_title(self):
+        return _("Origin")
+
+    @property
+    def columns(self):
+        return ['downtime_origin']
+
+    def render(self, row, cell):
+        return (None, row["downtime_origin"] == 1 and _("configuration") or _("command"))
+
+
+@painter_registry.register
+class PainterDowntimeRecurring(Painter):
+    @property
+    def ident(self):
+        return "downtime_recurring"
+
+    @property
+    def title(self):
+        return _("Downtime recurring interval")
+
+    @property
+    def short_title(self):
+        return _("Recurring")
+
+    @property
+    def columns(self):
+        return ['downtime_recurring']
+
+    def render(self, row, cell):
+        try:
+            from cmk.gui.cee.plugins.wato.cmc import recurring_downtimes_types
+        except ImportError:
+            return "", _("(not supported)")
+
+        r = row["downtime_recurring"]
+        if not r:
+            return "", _("no")
+        return "", recurring_downtimes_types.get(r, _("(unknown: %d)") % r)
+
+
+@painter_registry.register
+class PainterDowntimeWhat(Painter):
+    @property
+    def ident(self):
+        return "downtime_what"
+
+    @property
+    def title(self):
+        return _("Downtime for host/service")
+
+    @property
+    def short_title(self):
+        return _("for")
+
+    @property
+    def columns(self):
+        return ['downtime_is_service']
+
+    def render(self, row, cell):
+        return (None, row["downtime_is_service"] and _("Service") or _("Host"))
+
+
+@painter_registry.register
+class PainterDowntimeType(Painter):
+    @property
+    def ident(self):
+        return "downtime_type"
+
+    @property
+    def title(self):
+        return _("Downtime active or pending")
+
+    @property
+    def short_title(self):
+        return _("act/pend")
+
+    @property
+    def columns(self):
+        return ['downtime_type']
+
+    def render(self, row, cell):
+        return (None, row["downtime_type"] == 0 and _("active") or _("pending"))
+
+
+@painter_registry.register
+class PainterDowntimeEntryTime(Painter):
+    @property
+    def ident(self):
+        return "downtime_entry_time"
+
+    @property
+    def title(self):
+        return _("Downtime entry time")
+
+    @property
+    def short_title(self):
+        return _("Entry")
+
+    @property
+    def columns(self):
+        return ['downtime_entry_time']
+
+    @property
+    def painter_options(self):
+        return ['ts_format', 'ts_date']
+
+    def render(self, row, cell):
+        return paint_age(row["downtime_entry_time"], True, 3600)
+
+
+@painter_registry.register
+class PainterDowntimeStartTime(Painter):
+    @property
+    def ident(self):
+        return "downtime_start_time"
+
+    @property
+    def title(self):
+        return _("Downtime start time")
+
+    @property
+    def short_title(self):
+        return _("Start")
+
+    @property
+    def columns(self):
+        return ['downtime_start_time']
+
+    @property
+    def painter_options(self):
+        return ['ts_format', 'ts_date']
+
+    def render(self, row, cell):
+        return paint_age(row["downtime_start_time"], True, 3600, what="both")
+
+
+@painter_registry.register
+class PainterDowntimeEndTime(Painter):
+    @property
+    def ident(self):
+        return "downtime_end_time"
+
+    @property
+    def title(self):
+        return _("Downtime end time")
+
+    @property
+    def short_title(self):
+        return _("End")
+
+    @property
+    def columns(self):
+        return ['downtime_end_time']
+
+    @property
+    def painter_options(self):
+        return ['ts_format', 'ts_date']
+
+    def render(self, row, cell):
+        return paint_age(row["downtime_end_time"], True, 3600, what="both")
+
+
+@painter_registry.register
+class PainterDowntimeDuration(Painter):
+    @property
+    def ident(self):
+        return "downtime_duration"
+
+    @property
+    def title(self):
+        return _("Downtime duration (if flexible)")
+
+    @property
+    def short_title(self):
+        return _("Flex. Duration")
+
+    @property
+    def columns(self):
+        return ['downtime_duration', 'downtime_fixed']
+
+    def render(self, row, cell):
+        if row["downtime_fixed"] == 0:
+            return "number", "%02d:%02d:00" % divmod(row["downtime_duration"] / 60, 60)
+        return "", ""
+
 
 #    _
 #   | |    ___   __ _
@@ -2083,334 +4370,650 @@ multisite_painters["downtime_duration"] = {
 #   |_____\___/ \__, |
 #               |___/
 
-multisite_painters["log_message"] = {
-    "title": _("Log: complete message"),
-    "short": _("Message"),
-    "columns": ["log_message"],
-    "paint": lambda row: ("", html.attrencode(row["log_message"])),
-}
+
+@painter_registry.register
+class PainterLogMessage(Painter):
+    @property
+    def ident(self):
+        return "log_message"
+
+    @property
+    def title(self):
+        return _("Log: complete message")
+
+    @property
+    def short_title(self):
+        return _("Message")
+
+    @property
+    def columns(self):
+        return ['log_message']
+
+    def render(self, row, cell):
+        return ("", html.attrencode(row["log_message"]))
 
 
-def paint_log_plugin_output(row):
-    output = row["log_plugin_output"]
-    comment = row["log_comment"]
+@painter_registry.register
+class PainterLogPluginOutput(Painter):
+    @property
+    def ident(self):
+        return "log_plugin_output"
 
-    if output:
-        return "", format_plugin_output(output, row)
+    @property
+    def title(self):
+        return _("Log: Output")
 
-    elif comment:
-        return "", html.attrencode(comment)
+    @property
+    def short_title(self):
+        return _("Output")
 
-    else:
-        log_type = row["log_type"]
-        lst = row["log_state_type"]
-        if "FLAPPING" in log_type:
-            if "HOST" in log_type:
-                what = _("host")
+    @property
+    def columns(self):
+        return [
+            'log_plugin_output', 'log_type', 'log_state_type', 'log_comment', 'custom_variables'
+        ]
+
+    def render(self, row, cell):
+        output = row["log_plugin_output"]
+        comment = row["log_comment"]
+
+        if output:
+            return "", format_plugin_output(output, row)
+
+        elif comment:
+            return "", html.attrencode(comment)
+
+        else:
+            log_type = row["log_type"]
+            lst = row["log_state_type"]
+            if "FLAPPING" in log_type:
+                if "HOST" in log_type:
+                    what = _("host")
+                else:
+                    what = _("service")
+                if lst == "STOPPED":
+                    return "", _("The %s stopped flapping") % what
+                return "", _("The %s started flapping") % what
+
+            elif lst:
+                return "", (lst + " - " + log_type)
             else:
-                what = _("service")
-            if lst == "STOPPED":
-                return "", _("The %s stopped flapping") % what
-            return "", _("The %s started flapping") % what
-
-        elif lst:
-            return "", (lst + " - " + log_type)
-        else:
-            return "", ""
+                return "", ""
 
 
-multisite_painters["log_plugin_output"] = {
-    "title": _("Log: Output"),
-    "short": _("Output"),
-    "columns": [
-        "log_plugin_output", "log_type", "log_state_type", "log_comment", "custom_variables"
-    ],
-    "paint": paint_log_plugin_output,
-}
+@painter_registry.register
+class PainterLogWhat(Painter):
+    @property
+    def ident(self):
+        return "log_what"
+
+    @property
+    def title(self):
+        return _("Log: host or service")
+
+    @property
+    def short_title(self):
+        return _("Host/Service")
+
+    @property
+    def columns(self):
+        return ['log_type']
+
+    def render(self, row, cell):
+        lt = row["log_type"]
+        if "HOST" in lt:
+            return "", _("Host")
+        elif "SERVICE" in lt or "SVC" in lt:
+            return "", _("Service")
+        return "", _("Program")
 
 
-def paint_log_type(row):
-    lt = row["log_type"]
-    if "HOST" in lt:
-        return "", _("Host")
-    elif "SERVICE" in lt or "SVC" in lt:
-        return "", _("Service")
-    return "", _("Program")
+@painter_registry.register
+class PainterLogAttempt(Painter):
+    @property
+    def ident(self):
+        return "log_attempt"
+
+    @property
+    def title(self):
+        return _("Log: number of check attempt")
+
+    @property
+    def short_title(self):
+        return _("Att.")
+
+    @property
+    def columns(self):
+        return ['log_attempt']
+
+    def render(self, row, cell):
+        return ("", str(row["log_attempt"]))
 
 
-multisite_painters["log_what"] = {
-    "title": _("Log: host or service"),
-    "short": _("Host/Service"),
-    "columns": ["log_type"],
-    "paint": paint_log_type,
-}
+@painter_registry.register
+class PainterLogStateType(Painter):
+    @property
+    def ident(self):
+        return "log_state_type"
 
-multisite_painters["log_attempt"] = {
-    "title": _("Log: number of check attempt"),
-    "short": _("Att."),
-    "columns": ["log_attempt"],
-    "paint": lambda row: ("", str(row["log_attempt"])),
-}
-multisite_painters["log_state_type"] = {
-    "title": _("Log: type of state (hard/soft/stopped/started)"),
-    "short": _("Type"),
-    "columns": ["log_state_type"],
-    "paint": lambda row: ("", row["log_state_type"]),
-}
-multisite_painters["log_type"] = {
-    "title": _("Log: event"),
-    "short": _("Event"),
-    "columns": ["log_type"],
-    "paint": lambda row: ("nowrap", row["log_type"]),
-}
-multisite_painters["log_contact_name"] = {
-    "title": _("Log: contact name"),
-    "short": _("Contact"),
-    "columns": ["log_contact_name"],
-    "paint": lambda row: ("nowrap", row["log_contact_name"]),
-}
-multisite_painters["log_command"] = {
-    "title": _("Log: command/plugin"),
-    "short": _("Command"),
-    "columns": ["log_command_name"],
-    "paint": lambda row: ("nowrap", row["log_command_name"]),
-}
+    @property
+    def title(self):
+        return _("Log: type of state (hard/soft/stopped/started)")
+
+    @property
+    def short_title(self):
+        return _("Type")
+
+    @property
+    def columns(self):
+        return ['log_state_type']
+
+    def render(self, row, cell):
+        return ("", row["log_state_type"])
 
 
-def paint_log_icon(row):
-    img = None
-    log_type = row["log_type"]
-    log_state = row["log_state"]
+@painter_registry.register
+class PainterLogType(Painter):
+    @property
+    def ident(self):
+        return "log_type"
 
-    if log_type == "SERVICE ALERT":
-        img = {0: "ok", 1: "warn", 2: "crit", 3: "unknown"}.get(row["log_state"])
-        title = _("Service Alert")
+    @property
+    def title(self):
+        return _("Log: event")
 
-    elif log_type == "HOST ALERT":
-        img = {0: "up", 1: "down", 2: "unreach"}.get(row["log_state"])
-        title = _("Host Alert")
+    @property
+    def short_title(self):
+        return _("Event")
 
-    elif log_type.endswith("ALERT HANDLER STARTED"):
-        img = "alert_handler_started"
-        title = _("Alert Handler Started")
+    @property
+    def columns(self):
+        return ['log_type']
 
-    elif log_type.endswith("ALERT HANDLER STOPPED"):
-        if log_state == 0:
-            img = "alert_handler_stopped"
-            title = _("Alert handler Stopped")
-        else:
-            img = "alert_handler_failed"
-            title = _("Alert handler failed")
-
-    elif "DOWNTIME" in log_type:
-        if row["log_state_type"] in ["END", "STOPPED"]:
-            img = "downtimestop"
-            title = _("Downtime stopped")
-        else:
-            img = "downtime"
-            title = _("Downtime")
-
-    elif log_type.endswith("NOTIFICATION"):
-        if row["log_command_name"] == "check-mk-notify":
-            img = "cmk_notify"
-            title = _("Core produced a notification")
-        else:
-            img = "notify"
-            title = _("User notification")
-
-    elif log_type.endswith("NOTIFICATION RESULT"):
-        img = "notify_result"
-        title = _("Final notification result")
-
-    elif log_type.endswith("NOTIFICATION PROGRESS"):
-        img = "notify_progress"
-        title = _("The notification is being processed")
-
-    elif log_type == "EXTERNAL COMMAND":
-        img = "command"
-        title = _("External command")
-
-    elif "restarting..." in log_type:
-        img = "restart"
-        title = _("Core restarted")
-
-    elif "Reloading configuration" in log_type:
-        img = "reload"
-        title = _("Core configuration reloaded")
-
-    elif "starting..." in log_type:
-        img = "start"
-        title = _("Core started")
-
-    elif "shutdown..." in log_type or "shutting down" in log_type:
-        img = "stop"
-        title = _("Core stopped")
-
-    elif " FLAPPING " in log_type:
-        img = "flapping"
-        title = _("Flapping")
-
-    elif "ACKNOWLEDGE ALERT" in log_type:
-        if row["log_state_type"] == "STARTED":
-            img = "ack"
-            title = _("Acknowledged")
-        else:
-            img = "ackstop"
-            title = _("Stopped acknowledgement")
-
-    if img:
-        return "icon", html.render_icon("alert_" + img, title=title)
-    return "icon", ""
+    def render(self, row, cell):
+        return ("nowrap", row["log_type"])
 
 
-multisite_painters["log_icon"] = {
-    "title": _("Log: event icon"),
-    "short": "",
-    "columns": ["log_type", "log_state", "log_state_type", "log_command_name"],
-    "paint": paint_log_icon,
-}
+@painter_registry.register
+class PainterLogContactName(Painter):
+    @property
+    def ident(self):
+        return "log_contact_name"
 
-multisite_painters["log_options"] = {
-    "title": _("Log: informational part of message"),
-    "short": _("Info"),
-    "columns": ["log_options"],
-    "paint": lambda row: ("", html.attrencode(row["log_options"])),
-}
+    @property
+    def title(self):
+        return _("Log: contact name")
 
+    @property
+    def short_title(self):
+        return _("Contact")
 
-def paint_log_comment(msg):
-    if ';' in msg:
-        parts = msg.split(';')
-        if len(parts) > 6:
-            return ("", html.attrencode(parts[-1]))
-    return ("", "")
+    @property
+    def columns(self):
+        return ['log_contact_name']
 
-
-multisite_painters["log_comment"] = {
-    "title": _("Log: comment"),
-    "short": _("Comment"),
-    "columns": ["log_options"],
-    "paint": lambda row: paint_log_comment(row['log_options']),
-}
-
-multisite_painters["log_time"] = {
-    "title": _("Log: entry time"),
-    "short": _("Time"),
-    "columns": ["log_time"],
-    "options": ["ts_format", "ts_date"],
-    "paint": lambda row: paint_age(row["log_time"], True, 3600 * 24),
-}
-
-multisite_painters["log_lineno"] = {
-    "title": _("Log: line number in log file"),
-    "short": _("Line"),
-    "columns": ["log_lineno"],
-    "paint": lambda row: ("number", str(row["log_lineno"])),
-}
-
-multisite_painters["log_date"] = {
-    "title": _("Log: day of entry"),
-    "short": _("Date"),
-    "columns": ["log_time"],
-    "groupby": lambda row: paint_day(row["log_time"])[1],
-    "paint": lambda row: paint_day(row["log_time"]),
-}
+    def render(self, row, cell):
+        return ("nowrap", row["log_contact_name"])
 
 
-def paint_log_state(row):
-    state = row["log_state"]
+@painter_registry.register
+class PainterLogCommand(Painter):
+    @property
+    def ident(self):
+        return "log_command"
 
-    # Notification result/progress lines don't hold real states. They hold notification plugin
-    # exit results (0: ok, 1: temp issue, 2: perm issue). We display them as service states.
-    if row["log_service_description"] \
-       or row["log_type"].endswith("NOTIFICATION RESULT") \
-       or row["log_type"].endswith("NOTIFICATION PROGRESS"):
-        return paint_service_state_short({"service_has_been_checked": 1, "service_state": state})
-    return paint_host_state_short({"host_has_been_checked": 1, "host_state": state})
+    @property
+    def title(self):
+        return _("Log: command/plugin")
+
+    @property
+    def short_title(self):
+        return _("Command")
+
+    @property
+    def columns(self):
+        return ['log_command_name']
+
+    def render(self, row, cell):
+        return ("nowrap", row["log_command_name"])
 
 
-multisite_painters["log_state"] = {
-    "title": _("Log: state of host/service at log time"),
-    "short": _("State"),
-    "columns": ["log_state", "log_state_type", "log_service_description", "log_type"],
-    "paint": paint_log_state,
-}
+@painter_registry.register
+class PainterLogIcon(Painter):
+    @property
+    def ident(self):
+        return "log_icon"
+
+    @property
+    def title(self):
+        return _("Log: event icon")
+
+    @property
+    def short_title(self):
+        return _("")
+
+    @property
+    def columns(self):
+        return ['log_type', 'log_state', 'log_state_type', 'log_command_name']
+
+    def render(self, row, cell):
+        img = None
+        log_type = row["log_type"]
+        log_state = row["log_state"]
+
+        if log_type == "SERVICE ALERT":
+            img = {0: "ok", 1: "warn", 2: "crit", 3: "unknown"}.get(row["log_state"])
+            title = _("Service Alert")
+
+        elif log_type == "HOST ALERT":
+            img = {0: "up", 1: "down", 2: "unreach"}.get(row["log_state"])
+            title = _("Host Alert")
+
+        elif log_type.endswith("ALERT HANDLER STARTED"):
+            img = "alert_handler_started"
+            title = _("Alert Handler Started")
+
+        elif log_type.endswith("ALERT HANDLER STOPPED"):
+            if log_state == 0:
+                img = "alert_handler_stopped"
+                title = _("Alert handler Stopped")
+            else:
+                img = "alert_handler_failed"
+                title = _("Alert handler failed")
+
+        elif "DOWNTIME" in log_type:
+            if row["log_state_type"] in ["END", "STOPPED"]:
+                img = "downtimestop"
+                title = _("Downtime stopped")
+            else:
+                img = "downtime"
+                title = _("Downtime")
+
+        elif log_type.endswith("NOTIFICATION"):
+            if row["log_command_name"] == "check-mk-notify":
+                img = "cmk_notify"
+                title = _("Core produced a notification")
+            else:
+                img = "notify"
+                title = _("User notification")
+
+        elif log_type.endswith("NOTIFICATION RESULT"):
+            img = "notify_result"
+            title = _("Final notification result")
+
+        elif log_type.endswith("NOTIFICATION PROGRESS"):
+            img = "notify_progress"
+            title = _("The notification is being processed")
+
+        elif log_type == "EXTERNAL COMMAND":
+            img = "command"
+            title = _("External command")
+
+        elif "restarting..." in log_type:
+            img = "restart"
+            title = _("Core restarted")
+
+        elif "Reloading configuration" in log_type:
+            img = "reload"
+            title = _("Core configuration reloaded")
+
+        elif "starting..." in log_type:
+            img = "start"
+            title = _("Core started")
+
+        elif "shutdown..." in log_type or "shutting down" in log_type:
+            img = "stop"
+            title = _("Core stopped")
+
+        elif " FLAPPING " in log_type:
+            img = "flapping"
+            title = _("Flapping")
+
+        elif "ACKNOWLEDGE ALERT" in log_type:
+            if row["log_state_type"] == "STARTED":
+                img = "ack"
+                title = _("Acknowledged")
+            else:
+                img = "ackstop"
+                title = _("Stopped acknowledgement")
+
+        if img:
+            return "icon", html.render_icon("alert_" + img, title=title)
+        return "icon", ""
+
+
+@painter_registry.register
+class PainterLogOptions(Painter):
+    @property
+    def ident(self):
+        return "log_options"
+
+    @property
+    def title(self):
+        return _("Log: informational part of message")
+
+    @property
+    def short_title(self):
+        return _("Info")
+
+    @property
+    def columns(self):
+        return ['log_options']
+
+    def render(self, row, cell):
+        return ("", html.attrencode(row["log_options"]))
+
+
+@painter_registry.register
+class PainterLogComment(Painter):
+    @property
+    def ident(self):
+        return "log_comment"
+
+    @property
+    def title(self):
+        return _("Log: comment")
+
+    @property
+    def short_title(self):
+        return _("Comment")
+
+    @property
+    def columns(self):
+        return ['log_options']
+
+    def render(self, row, cell):
+        msg = row['log_options']
+        if ';' in msg:
+            parts = msg.split(';')
+            if len(parts) > 6:
+                return ("", html.attrencode(parts[-1]))
+        return ("", "")
+
+
+@painter_registry.register
+class PainterLogTime(Painter):
+    @property
+    def ident(self):
+        return "log_time"
+
+    @property
+    def title(self):
+        return _("Log: entry time")
+
+    @property
+    def short_title(self):
+        return _("Time")
+
+    @property
+    def columns(self):
+        return ['log_time']
+
+    @property
+    def painter_options(self):
+        return ['ts_format', 'ts_date']
+
+    def render(self, row, cell):
+        return paint_age(row["log_time"], True, 3600 * 24)
+
+
+@painter_registry.register
+class PainterLogLineno(Painter):
+    @property
+    def ident(self):
+        return "log_lineno"
+
+    @property
+    def title(self):
+        return _("Log: line number in log file")
+
+    @property
+    def short_title(self):
+        return _("Line")
+
+    @property
+    def columns(self):
+        return ['log_lineno']
+
+    def render(self, row, cell):
+        return ("number", str(row["log_lineno"]))
+
+
+@painter_registry.register
+class PainterLogDate(Painter):
+    @property
+    def ident(self):
+        return "log_date"
+
+    @property
+    def title(self):
+        return _("Log: day of entry")
+
+    @property
+    def short_title(self):
+        return _("Date")
+
+    @property
+    def columns(self):
+        return ['log_time']
+
+    def group_by(self, row):
+        return paint_day(row["log_time"])[1]
+
+    def render(self, row, cell):
+        return paint_day(row["log_time"])
+
+
+@painter_registry.register
+class PainterLogState(Painter):
+    @property
+    def ident(self):
+        return "log_state"
+
+    @property
+    def title(self):
+        return _("Log: state of host/service at log time")
+
+    @property
+    def short_title(self):
+        return _("State")
+
+    @property
+    def columns(self):
+        return ['log_state', 'log_state_type', 'log_service_description', 'log_type']
+
+    def render(self, row, cell):
+        state = row["log_state"]
+
+        # Notification result/progress lines don't hold real states. They hold notification plugin
+        # exit results (0: ok, 1: temp issue, 2: perm issue). We display them as service states.
+        if row["log_service_description"] \
+           or row["log_type"].endswith("NOTIFICATION RESULT") \
+           or row["log_type"].endswith("NOTIFICATION PROGRESS"):
+            return paint_service_state_short({
+                "service_has_been_checked": 1,
+                "service_state": state
+            })
+        return paint_host_state_short({"host_has_been_checked": 1, "host_state": state})
+
 
 # Alert statistics
 
-multisite_painters["alert_stats_ok"] = {
-    "title": _("Alert Statistics: Number of recoveries"),
-    "short": _("OK"),
-    "columns": ["log_alerts_ok"],
-    "paint": lambda row: ("", str(row["log_alerts_ok"])),
-}
 
-multisite_painters["alert_stats_warn"] = {
-    "title": _("Alert Statistics: Number of warnings"),
-    "short": _("WARN"),
-    "columns": ["log_alerts_warn"],
-    "paint": lambda row: paint_svc_count(1, row["log_alerts_warn"]),
-}
+@painter_registry.register
+class PainterAlertStatsOk(Painter):
+    @property
+    def ident(self):
+        return "alert_stats_ok"
 
-multisite_painters["alert_stats_crit"] = {
-    "title": _("Alert Statistics: Number of critical alerts"),
-    "short": _("CRIT"),
-    "columns": ["log_alerts_crit"],
-    "paint": lambda row: paint_svc_count(2, row["log_alerts_crit"])
-}
+    @property
+    def title(self):
+        return _("Alert Statistics: Number of recoveries")
 
-multisite_painters["alert_stats_unknown"] = {
-    "title": _("Alert Statistics: Number of unknown alerts"),
-    "short": _("UNKN"),
-    "columns": ["log_alerts_unknown"],
-    "paint": lambda row: paint_svc_count(3, row["log_alerts_unknown"])
-}
+    @property
+    def short_title(self):
+        return _("OK")
 
-multisite_painters["alert_stats_problem"] = {
-    "title": _("Alert Statistics: Number of problem alerts"),
-    "short": _("PROB"),
-    "columns": ["log_alerts_problem"],
-    "paint": lambda row: paint_svc_count('s', row["log_alerts_problem"])
-}
+    @property
+    def columns(self):
+        return ['log_alerts_ok']
+
+    def render(self, row, cell):
+        return ("", str(row["log_alerts_ok"]))
+
+
+@painter_registry.register
+class PainterAlertStatsWarn(Painter):
+    @property
+    def ident(self):
+        return "alert_stats_warn"
+
+    @property
+    def title(self):
+        return _("Alert Statistics: Number of warnings")
+
+    @property
+    def short_title(self):
+        return _("WARN")
+
+    @property
+    def columns(self):
+        return ['log_alerts_warn']
+
+    def render(self, row, cell):
+        return paint_svc_count(1, row["log_alerts_warn"])
+
+
+@painter_registry.register
+class PainterAlertStatsCrit(Painter):
+    @property
+    def ident(self):
+        return "alert_stats_crit"
+
+    @property
+    def title(self):
+        return _("Alert Statistics: Number of critical alerts")
+
+    @property
+    def short_title(self):
+        return _("CRIT")
+
+    @property
+    def columns(self):
+        return ['log_alerts_crit']
+
+    def render(self, row, cell):
+        return paint_svc_count(2, row["log_alerts_crit"])
+
+
+@painter_registry.register
+class PainterAlertStatsUnknown(Painter):
+    @property
+    def ident(self):
+        return "alert_stats_unknown"
+
+    @property
+    def title(self):
+        return _("Alert Statistics: Number of unknown alerts")
+
+    @property
+    def short_title(self):
+        return _("UNKN")
+
+    @property
+    def columns(self):
+        return ['log_alerts_unknown']
+
+    def render(self, row, cell):
+        return paint_svc_count(3, row["log_alerts_unknown"])
+
+
+@painter_registry.register
+class PainterAlertStatsProblem(Painter):
+    @property
+    def ident(self):
+        return "alert_stats_problem"
+
+    @property
+    def title(self):
+        return _("Alert Statistics: Number of problem alerts")
+
+    @property
+    def short_title(self):
+        return _("PROB")
+
+    @property
+    def columns(self):
+        return ['log_alerts_problem']
+
+    def render(self, row, cell):
+        return paint_svc_count('s', row["log_alerts_problem"])
+
 
 #
 # HOSTTAGS
 #
 
 
-def paint_host_tags(row):
-    return "", get_host_tags(row)
+@painter_registry.register
+class PainterHostTags(Painter):
+    @property
+    def ident(self):
+        return "host_tags"
+
+    @property
+    def title(self):
+        return _("Host tags (raw)")
+
+    @property
+    def short_title(self):
+        return _("Tags")
+
+    @property
+    def columns(self):
+        return ['host_custom_variable_names', 'host_custom_variable_values']
+
+    @property
+    def sorter(self):
+        return 'host'
+
+    def render(self, row, cell):
+        return "", get_host_tags(row)
 
 
-multisite_painters["host_tags"] = {
-    "title": _("Host tags (raw)"),
-    "short": _("Tags"),
-    "columns": ["host_custom_variable_names", "host_custom_variable_values"],
-    "paint": paint_host_tags,
-    "sorter": 'host',
-}
+@painter_registry.register
+class PainterHostTagsWithTitles(Painter):
+    @property
+    def ident(self):
+        return "host_tags_with_titles"
 
+    @property
+    def title(self):
+        return _("Host tags (with titles)")
 
-def paint_host_tags_with_titles(row):
-    output = ''
-    misc_tags = []
-    for tag in get_host_tags(row).split():
-        group_title = config.tag_group_title(tag)
-        if group_title:
-            output += group_title + ': ' + (config.tag_alias(tag) or tag) + '<br />\n'
-        else:
-            misc_tags.append(tag)
+    @property
+    def short_title(self):
+        return _("Tags")
 
-    if misc_tags:
-        output += _('Misc:') + ' ' + ', '.join(misc_tags)
+    @property
+    def columns(self):
+        return ['host_custom_variable_names', 'host_custom_variable_values']
 
-    return "", output
+    @property
+    def sorter(self):
+        return 'host'
 
+    def render(self, row, cell):
+        output = ''
+        misc_tags = []
+        for tag in get_host_tags(row).split():
+            group_title = config.tag_group_title(tag)
+            if group_title:
+                output += group_title + ': ' + (config.tag_alias(tag) or tag) + '<br />\n'
+            else:
+                misc_tags.append(tag)
 
-multisite_painters["host_tags_with_titles"] = {
-    "title": _("Host tags (with titles)"),
-    "short": _("Tags"),
-    "columns": ["host_custom_variable_names", "host_custom_variable_values"],
-    "paint": paint_host_tags_with_titles,
-    "sorter": 'host',
-}
+        if misc_tags:
+            output += _('Misc:') + ' ' + ', '.join(misc_tags)
+
+        return "", output

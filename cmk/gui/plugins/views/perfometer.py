@@ -36,8 +36,9 @@ from cmk.gui.plugins.views.perfometers import (
     render_metricometer,
 )
 
-from . import (
-    multisite_painters,
+from cmk.gui.plugins.views import (
+    painter_registry,
+    Painter,
     multisite_sorters,
     is_stale,
     display_options,
@@ -208,57 +209,70 @@ class Perfometer(object):
 #   '----------------------------------------------------------------------'
 
 
-def paint_perfometer(row):
-    classes = ["perfometer"]
-    if is_stale(row):
-        classes.append("stale")
+@painter_registry.register
+class PainterPerfometer(Painter):
+    @property
+    def ident(self):
+        return "perfometer"
 
-    try:
-        title, h = Perfometer(row).render()
-        if title is None and h is None:
-            return "", ""
-    except Exception as e:
-        logger.exception()
-        if config.debug:
-            raise
-        return " ".join(classes), _("Exception: %s") % e
+    @property
+    def title(self):
+        return _("Service Perf-O-Meter")
 
-    content = html.render_div(HTML(h), class_=["content"]) \
-            + html.render_div(title, class_=["title"]) \
-            + html.render_img(src="images/perfometer-bg.png", class_=["glass"])
+    @property
+    def short_title(self):
+        return _("Perf-O-Meter")
 
-    # pnpgraph_present: -1 means unknown (path not configured), 0: no, 1: yes
-    if display_options.enabled(display_options.X) \
-       and row["service_pnpgraph_present"] != 0:
-        if metrics.cmk_graphs_possible():
-            import cmk.gui.cee.plugins.views.graphs
-            url = cmk.gui.cee.plugins.views.graphs.cmk_graph_url(row, "service")
+    @property
+    def columns(self):
+        return [
+            'service_staleness',
+            'service_perf_data',
+            'service_state',
+            'service_check_command',
+            'service_pnpgraph_present',
+            'service_plugin_output',
+        ]
+
+    @property
+    def printable(self):
+        return 'perfometer'
+
+    def render(self, row, cell):
+        classes = ["perfometer"]
+        if is_stale(row):
+            classes.append("stale")
+
+        try:
+            title, h = Perfometer(row).render()
+            if title is None and h is None:
+                return "", ""
+        except Exception as e:
+            logger.exception()
+            if config.debug:
+                raise
+            return " ".join(classes), _("Exception: %s") % e
+
+        content = html.render_div(HTML(h), class_=["content"]) \
+                + html.render_div(title, class_=["title"]) \
+                + html.render_img(src="images/perfometer-bg.png", class_=["glass"])
+
+        # pnpgraph_present: -1 means unknown (path not configured), 0: no, 1: yes
+        if display_options.enabled(display_options.X) \
+           and row["service_pnpgraph_present"] != 0:
+            if metrics.cmk_graphs_possible():
+                import cmk.gui.cee.plugins.views.graphs
+                url = cmk.gui.cee.plugins.views.graphs.cmk_graph_url(row, "service")
+            else:
+                url = pnp_url(row, "service")
+            disabled = False
         else:
-            url = pnp_url(row, "service")
-        disabled = False
-    else:
-        url = "javascript:void(0)"
-        disabled = True
+            url = "javascript:void(0)"
+            disabled = True
 
-    return " ".join(classes), \
-        html.render_a(content=content, href=url, title=html.strip_tags(title),
-                      class_=["disabled" if disabled else None])
-
-
-multisite_painters["perfometer"] = {
-    "title": _("Service Perf-O-Meter"),
-    "short": _("Perf-O-Meter"),
-    "columns": [
-        "service_staleness",
-        "service_perf_data",
-        "service_state",
-        "service_check_command",
-        "service_pnpgraph_present",
-        "service_plugin_output",
-    ],
-    "paint": paint_perfometer,
-    "printable": "perfometer",  # Special rendering in PDFs
-}
+        return " ".join(classes), \
+            html.render_a(content=content, href=url, title=html.strip_tags(title),
+                          class_=["disabled" if disabled else None])
 
 
 def cmp_perfometer(r1, r2):

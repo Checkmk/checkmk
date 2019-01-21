@@ -86,7 +86,8 @@ def inventory_lnx_thermal(parsed):
         yield item, {}
 
 
-def check_lnx_thermal(item, params, parsed):
+@get_parsed_item_data
+def check_lnx_thermal(item, params, data):
     """
     - Trip points hot and critical are considered for the device crit level. In case both trip
       points are given the lower value is considered for the device crit level.
@@ -95,10 +96,10 @@ def check_lnx_thermal(item, params, parsed):
       is considered for the device crit level.
     - Trip point temperatures are provided via performance data.
     """
-    temperature = parsed.get(item).get('temperature')
-    warn_level = parsed.get(item).get('passive')
-    hot_value = parsed.get(item).get('hot')
-    critical_value = parsed.get(item).get('critical')
+    temperature = data.get('temperature')
+    warn_level = data.get('passive')
+    hot_value = data.get('hot')
+    critical_value = data.get('critical')
 
     if temperature is None:
         return

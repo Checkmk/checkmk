@@ -40,7 +40,7 @@ def agent_azure_arguments(params, _no_hostname, _no_ipaddress):
 
     config = params['config']
     if "fetchall" in config:
-        return ' '.join(args)
+        return args
 
     explicit = config.get('explicit-config', [])
     if explicit:

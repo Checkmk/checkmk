@@ -24,46 +24,15 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# =================================================================== #
-#        _    ____ ___      ____                                      #
-#       / \  |  _ \_ _|    |  _ \  ___   ___ _   _                    #
-#      / _ \ | |_) | |_____| | | |/ _ \ / __| | | |                   #
-#     / ___ \|  __/| |_____| |_| | (_) | (__| |_| |                   #
-#    /_/   \_\_|  |___|    |____/ \___/ \___|\__,_|                   #
-#                                                                     #
-# =================================================================== #
-#
-# A sorter is used for allowing the user to sort the queried data
-# according to a certain logic. All sorters declare in plugins/views/*.py
-# are available for the user.
-#
-# Each sorter is a dictionary with the following keys:
-#
-# "title":    Name of the sorter to be displayed in view editor
-# "columns":  Livestatus-columns needed be the sort algorithm
-# "cmp":      Comparison function
-#
-# The function cmp does the actual sorting. During sorting it
-# will be called with two data rows as arguments and must
-# return -1, 0 or 1:
-#
-# -1: The first row is smaller than the second (should be output first)
-#  0: Both rows are equivalent
-#  1: The first row is greater than the second.
-#
-# The rows are dictionaries from column names to values. Each row
-# represents one item in the Livestatus table, for example one host,
-# one service, etc.
-# =================================================================== #
-
 import time
 
 import cmk.gui.config as config
 import cmk.gui.utils as utils
 from cmk.gui.i18n import _
 
-from . import (
-    multisite_sorters,
+from cmk.gui.plugins.views import (
+    sorter_registry,
+    Sorter,
     declare_simple_sorter,
     declare_1to1_sorter,
     cmp_num_split,
@@ -75,7 +44,6 @@ from . import (
     cmp_ip_address,
     get_host_tags,
     get_perfdata_nth_value,
-    get_tag_group,
 )
 
 
@@ -97,76 +65,130 @@ def cmp_host_state_equiv(r):
     return 2 - s  # swap down und unreachable
 
 
-def cmp_svc_states(r1, r2):
-    return cmp(cmp_state_equiv(r1), cmp_state_equiv(r2))
+@sorter_registry.register
+class SorterSvcstate(Sorter):
+    @property
+    def ident(self):
+        return "svcstate"
+
+    @property
+    def title(self):
+        return _("Service state")
+
+    @property
+    def columns(self):
+        return ['service_state', 'service_has_been_checked']
+
+    def cmp(self, r1, r2):
+        return cmp(cmp_state_equiv(r1), cmp_state_equiv(r2))
 
 
-def cmp_hst_states(r1, r2):
-    return cmp(cmp_host_state_equiv(r1), cmp_host_state_equiv(r2))
+@sorter_registry.register
+class SorterHoststate(Sorter):
+    @property
+    def ident(self):
+        return "hoststate"
+
+    @property
+    def title(self):
+        return _("Host state")
+
+    @property
+    def columns(self):
+        return ['host_state', 'host_has_been_checked']
+
+    def cmp(self, r1, r2):
+        return cmp(cmp_host_state_equiv(r1), cmp_host_state_equiv(r2))
 
 
-multisite_sorters["svcstate"] = {
-    "title": _("Service state"),
-    "columns": ["service_state", "service_has_been_checked"],
-    "cmp": cmp_svc_states
-}
+@sorter_registry.register
+class SorterSiteHost(Sorter):
+    @property
+    def ident(self):
+        return "site_host"
 
-multisite_sorters["hoststate"] = {
-    "title": _("Host state"),
-    "columns": ["host_state", "host_has_been_checked"],
-    "cmp": cmp_hst_states
-}
+    @property
+    def title(self):
+        return _("Host site and name")
 
+    @property
+    def columns(self):
+        return ['site', 'host_name']
 
-def cmp_site_host(r1, r2):
-    return cmp(r1["site"], r2["site"]) or \
-           cmp_num_split("host_name", r1, r2)
-
-
-multisite_sorters["site_host"] = {
-    "title": _("Host site and name"),
-    "columns": ["site", "host_name"],
-    "cmp": cmp_site_host
-}
+    def cmp(self, r1, r2):
+        return cmp(r1["site"], r2["site"]) or cmp_num_split("host_name", r1, r2)
 
 
-def cmp_host_name(r1, r2):
-    return cmp_num_split("host_name", r1, r2)
+@sorter_registry.register
+class SorterHostName(Sorter):
+    @property
+    def ident(self):
+        return "host_name"
+
+    @property
+    def title(self):
+        return _("Host name")
+
+    @property
+    def columns(self):
+        return ['host_name']
+
+    def cmp(self, r1, r2):
+        return cmp_num_split("host_name", r1, r2)
 
 
-multisite_sorters["host_name"] = {
-    "title": _("Host name"),
-    "columns": ["host_name"],
-    "cmp": cmp_host_name,
-}
+@sorter_registry.register
+class SorterSitealias(Sorter):
+    @property
+    def ident(self):
+        return "sitealias"
+
+    @property
+    def title(self):
+        return _("Site Alias")
+
+    @property
+    def columns(self):
+        return ['site']
+
+    def cmp(self, r1, r2):
+        return cmp(config.site(r1["site"])["alias"], config.site(r2["site"])["alias"])
 
 
-def cmp_site_alias(r1, r2):
-    return cmp(config.site(r1["site"])["alias"], config.site(r2["site"])["alias"])
+@sorter_registry.register
+class SorterHost(Sorter):
+    @property
+    def ident(self):
+        return "host"
+
+    @property
+    def title(self):
+        return _("Host Tags (raw)")
+
+    @property
+    def columns(self):
+        return ['host_custom_variable_names', 'host_custom_variable_values']
+
+    def cmp(self, r1, r2):
+        return cmp(get_host_tags(r1), get_host_tags(r2))
 
 
-multisite_sorters["sitealias"] = {
-    "title": _("Site Alias"),
-    "columns": ["site"],
-    "cmp": cmp_site_alias
-}
+@sorter_registry.register
+class SorterServicelevel(Sorter):
+    @property
+    def ident(self):
+        return "servicelevel"
 
+    @property
+    def title(self):
+        return _("Servicelevel")
 
-def cmp_host_tags(r1, r2):
-    return cmp(get_host_tags(r1), get_host_tags(r2))
+    @property
+    def columns(self):
+        return ['custom_variable_names', 'custom_variable_values']
 
-
-multisite_sorters["host"] = {
-    "title": _("Host Tags (raw)"),
-    "columns": ["host_custom_variable_names", "host_custom_variable_values"],
-    "cmp": cmp_host_tags,
-}
-
-multisite_sorters['servicelevel'] = {
-    'title': _("Servicelevel"),
-    'columns': ['custom_variable_names', 'custom_variable_values'],
-    'cmp': lambda r1, r2: cmp_custom_variable(r1, r2, 'EC_SL', cmp_simple_number)
-}
+    def cmp(self, r1, r2):
+        return cmp_custom_variable(r1, r2, 'EC_SL', cmp_simple_number)
 
 
 def cmp_service_name(column, r1, r2):
@@ -212,62 +234,76 @@ declare_1to1_sorter("svc_staleness", cmp_simple_number)
 declare_1to1_sorter("svc_servicelevel", cmp_simple_number)
 
 
-def cmp_perfdata_nth_value(r1, r2, n):
-    return cmp(
-        utils.savefloat(get_perfdata_nth_value(r1, n, True)),
-        utils.savefloat(get_perfdata_nth_value(r2, n, True)))
+class PerfValSorter(Sorter):
+    _num = 0
+
+    @property
+    def ident(self):
+        return "svc_perf_val%02d" % self._num
+
+    @property
+    def title(self):
+        return _("Service performance data - value number %02d") % self._num
+
+    @property
+    def columns(self):
+        return ['service_perf_data']
+
+    def cmp(self, r1, r2):
+        return cmp(
+            utils.savefloat(get_perfdata_nth_value(r1, self._num - 1, True)),
+            utils.savefloat(get_perfdata_nth_value(r2, self._num - 1, True)))
 
 
-multisite_sorters['svc_perf_val01'] = {
-    "title": _("Service performance data - value number %02d") % 1,
-    "columns": ['service_perf_data'],
-    "cmp": lambda r1, r2: cmp_perfdata_nth_value(r1, r2, 0),
-}
-multisite_sorters['svc_perf_val02'] = {
-    "title": _("Service performance data - value number %02d") % 2,
-    "columns": ['service_perf_data'],
-    "cmp": lambda r1, r2: cmp_perfdata_nth_value(r1, r2, 1),
-}
-multisite_sorters['svc_perf_val03'] = {
-    "title": _("Service performance data - value number %02d") % 3,
-    "columns": ['service_perf_data'],
-    "cmp": lambda r1, r2: cmp_perfdata_nth_value(r1, r2, 2),
-}
-multisite_sorters['svc_perf_val04'] = {
-    "title": _("Service performance data - value number %02d") % 4,
-    "columns": ['service_perf_data'],
-    "cmp": lambda r1, r2: cmp_perfdata_nth_value(r1, r2, 3),
-}
-multisite_sorters['svc_perf_val05'] = {
-    "title": _("Service performance data - value number %02d") % 5,
-    "columns": ['service_perf_data'],
-    "cmp": lambda r1, r2: cmp_perfdata_nth_value(r1, r2, 4),
-}
-multisite_sorters['svc_perf_val06'] = {
-    "title": _("Service performance data - value number %02d") % 6,
-    "columns": ['service_perf_data'],
-    "cmp": lambda r1, r2: cmp_perfdata_nth_value(r1, r2, 5),
-}
-multisite_sorters['svc_perf_val07'] = {
-    "title": _("Service performance data - value number %02d") % 7,
-    "columns": ['service_perf_data'],
-    "cmp": lambda r1, r2: cmp_perfdata_nth_value(r1, r2, 6),
-}
-multisite_sorters['svc_perf_val08'] = {
-    "title": _("Service performance data - value number %02d") % 8,
-    "columns": ['service_perf_data'],
-    "cmp": lambda r1, r2: cmp_perfdata_nth_value(r1, r2, 7),
-}
-multisite_sorters['svc_perf_val09'] = {
-    "title": _("Service performance data - value number %02d") % 9,
-    "columns": ['service_perf_data'],
-    "cmp": lambda r1, r2: cmp_perfdata_nth_value(r1, r2, 8),
-}
-multisite_sorters['svc_perf_val10'] = {
-    "title": _("Service performance data - value number %02d") % 10,
-    "columns": ['service_perf_data'],
-    "cmp": lambda r1, r2: cmp_perfdata_nth_value(r1, r2, 9),
-}
+@sorter_registry.register
+class SorterSvcPerfVal01(PerfValSorter):
+    _num = 1
+
+
+@sorter_registry.register
+class SorterSvcPerfVal02(PerfValSorter):
+    _num = 2
+
+
+@sorter_registry.register
+class SorterSvcPerfVal03(PerfValSorter):
+    _num = 3
+
+
+@sorter_registry.register
+class SorterSvcPerfVal04(PerfValSorter):
+    _num = 4
+
+
+@sorter_registry.register
+class SorterSvcPerfVal05(PerfValSorter):
+    _num = 5
+
+
+@sorter_registry.register
+class SorterSvcPerfVal06(PerfValSorter):
+    _num = 6
+
+
+@sorter_registry.register
+class SorterSvcPerfVal07(PerfValSorter):
+    _num = 7
+
+
+@sorter_registry.register
+class SorterSvcPerfVal08(PerfValSorter):
+    _num = 8
+
+
+@sorter_registry.register
+class SorterSvcPerfVal09(PerfValSorter):
+    _num = 9
+
+
+@sorter_registry.register
+class SorterSvcPerfVal10(PerfValSorter):
+    _num = 10
+
 
 # Host
 declare_1to1_sorter("alias", cmp_num_split)
@@ -305,40 +341,55 @@ declare_1to1_sorter("host_contact_groups", cmp_string_list)
 declare_1to1_sorter("host_servicelevel", cmp_simple_number)
 
 
-def cmp_host_ipv4_address(r1, r2):
-    def get_address(row):
-        custom_vars = dict(
-            zip(row["host_custom_variable_names"], row["host_custom_variable_values"]))
-        return custom_vars.get("ADDRESS_4", "")
+@sorter_registry.register
+class SorterHostIpv4Address(Sorter):
+    @property
+    def ident(self):
+        return "host_ipv4_address"
 
-    def split_ip(ip):
-        try:
-            return tuple(int(part) for part in ip.split('.'))
-        except:
-            return ip
+    @property
+    def title(self):
+        return _("Host IPv4 address")
 
-    v1, v2 = split_ip(get_address(r1)), split_ip(get_address(r2))
-    return cmp(v1, v2)
+    @property
+    def columns(self):
+        return ['host_custom_variable_names', 'host_custom_variable_values']
+
+    def cmp(self, r1, r2):
+        def get_address(row):
+            custom_vars = dict(
+                zip(row["host_custom_variable_names"], row["host_custom_variable_values"]))
+            return custom_vars.get("ADDRESS_4", "")
+
+        def split_ip(ip):
+            try:
+                return tuple(int(part) for part in ip.split('.'))
+            except:
+                return ip
+
+        v1, v2 = split_ip(get_address(r1)), split_ip(get_address(r2))
+        return cmp(v1, v2)
 
 
-multisite_sorters["host_ipv4_address"] = {
-    "title": _("Host IPv4 address"),
-    "cmp": cmp_host_ipv4_address,
-    "columns": ["host_custom_variable_names", "host_custom_variable_values"],
-}
+@sorter_registry.register
+class SorterNumProblems(Sorter):
+    @property
+    def ident(self):
+        return "num_problems"
 
+    @property
+    def title(self):
+        return _("Number of problems")
 
-def cmp_host_problems(r1, r2):
-    return cmp(
-        r1["host_num_services"] - r1["host_num_services_ok"] - r1["host_num_services_pending"],
-        r2["host_num_services"] - r2["host_num_services_ok"] - r2["host_num_services_pending"])
+    @property
+    def columns(self):
+        return ['host_num_services', 'host_num_services_ok', 'host_num_services_pending']
 
+    def cmp(self, r1, r2):
+        return cmp(
+            r1["host_num_services"] - r1["host_num_services_ok"] - r1["host_num_services_pending"],
+            r2["host_num_services"] - r2["host_num_services_ok"] - r2["host_num_services_pending"])
 
-multisite_sorters["num_problems"] = {
-    "title": _("Number of problems"),
-    "columns": ["host_num_services", "host_num_services_ok", "host_num_services_pending"],
-    "cmp": cmp_host_problems,
-}
 
 # Hostgroup
 declare_1to1_sorter("hg_num_services", cmp_simple_number)
@@ -443,37 +494,3 @@ declare_simple_sorter("alerts_problem", _("Number of problem alerts"), "log_aler
 # Aggregations
 declare_simple_sorter("aggr_name", _("Aggregation name"), "aggr_name", cmp_simple_string)
 declare_simple_sorter("aggr_group", _("Aggregation group"), "aggr_group", cmp_simple_string)
-
-#
-# SINGLE HOSTTAG FIELDS
-#
-
-
-def cmp_host_tag(r1, r2, tgid):
-    tags1 = get_host_tags(r1).split()
-    tags2 = get_host_tags(r2).split()
-
-    val1 = _('N/A')
-    val2 = _('N/A')
-    for t in get_tag_group(tgid)[1]:
-        if t[0] in tags1:
-            val1 = t[1]
-        if t[0] in tags2:
-            val2 = t[1]
-
-    return cmp(val1, val2)
-
-
-for _entry in config.host_tag_groups():
-    _tgid = _entry[0]
-    _tit = _entry[1]
-
-    declare_simple_sorter("host_tag_" + _tgid,
-                          _("Host tag:") + ' ' + _tit, "host_tag_" + _tgid, cmp_simple_string)
-
-    multisite_sorters["host_tag_" + _tgid] = {
-        "title": _("Host tag:") + ' ' + _tit,
-        "columns": ["host_custom_variable_names", "host_custom_variable_values"],
-        "cmp": cmp_host_tag,
-        "args": [_tgid],
-    }

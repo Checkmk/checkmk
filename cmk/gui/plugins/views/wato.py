@@ -30,7 +30,8 @@ from cmk.gui.globals import html
 from cmk.gui.exceptions import MKGeneralException
 
 from cmk.gui.plugins.views import (
-    multisite_sorters,
+    sorter_registry,
+    Sorter,
     painter_registry,
     Painter,
 )
@@ -176,20 +177,55 @@ def cmp_wato_folder(r1, r2, how):
     return cmp(get_wato_folder(r1, how, False), get_wato_folder(r2, how, False))
 
 
-multisite_sorters["wato_folder_abs"] = {
-    "title": _("WATO folder - complete path"),
-    "columns": ["host_filename"],
-    "cmp": lambda r1, r2: cmp_wato_folder(r1, r2, 'abs'),
-}
+@sorter_registry.register
+class SorterWatoFolderAbs(Sorter):
+    @property
+    def ident(self):
+        return "wato_folder_abs"
 
-multisite_sorters["wato_folder_rel"] = {
-    "title": _("WATO folder - relative path"),
-    "columns": ["host_filename"],
-    "cmp": lambda r1, r2: cmp_wato_folder(r1, r2, 'rel'),
-}
+    @property
+    def title(self):
+        return _("WATO folder - complete path")
 
-multisite_sorters["wato_folder_plain"] = {
-    "title": _("WATO folder - just folder name"),
-    "columns": ["host_filename"],
-    "cmp": lambda r1, r2: cmp_wato_folder(r1, r2, 'plain'),
-}
+    @property
+    def columns(self):
+        return ['host_filename']
+
+    def cmp(self, r1, r2):
+        return cmp_wato_folder(r1, r2, 'abs')
+
+
+@sorter_registry.register
+class SorterWatoFolderRel(Sorter):
+    @property
+    def ident(self):
+        return "wato_folder_rel"
+
+    @property
+    def title(self):
+        return _("WATO folder - relative path")
+
+    @property
+    def columns(self):
+        return ['host_filename']
+
+    def cmp(self, r1, r2):
+        return cmp_wato_folder(r1, r2, 'rel')
+
+
+@sorter_registry.register
+class SorterWatoFolderPlain(Sorter):
+    @property
+    def ident(self):
+        return "wato_folder_plain"
+
+    @property
+    def title(self):
+        return _("WATO folder - just folder name")
+
+    @property
+    def columns(self):
+        return ['host_filename']
+
+    def cmp(self, r1, r2):
+        return cmp_wato_folder(r1, r2, 'plain')

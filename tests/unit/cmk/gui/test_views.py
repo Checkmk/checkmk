@@ -4055,3 +4055,1645 @@ def test_legacy_register_painter(monkeypatch):
     assert painter.painter_options == ["opt1"]
     assert painter.printable is False
     assert painter.render(row={}, cell=None) == "xyz"
+
+
+def test_registered_sorters(load_view_plugins):
+    expected = {
+        'aggr_group': {
+            'columns': ['aggr_group'],
+            'title': u'Aggregation group'
+        },
+        'aggr_name': {
+            'columns': ['aggr_name'],
+            'title': u'Aggregation name'
+        },
+        'alerts_crit': {
+            'columns': ['log_alerts_crit'],
+            'title': u'Number of critical alerts'
+        },
+        'alerts_ok': {
+            'columns': ['log_alerts_ok'],
+            'title': u'Number of recoveries'
+        },
+        'alerts_problem': {
+            'columns': ['log_alerts_problem'],
+            'title': u'Number of problem alerts'
+        },
+        'alerts_unknown': {
+            'columns': ['log_alerts_unknown'],
+            'title': u'Number of unknown alerts'
+        },
+        'alerts_warn': {
+            'columns': ['log_alerts_warn'],
+            'title': u'Number of warnings'
+        },
+        'alias': {
+            'columns': ['host_alias'],
+            'title': u'Host alias'
+        },
+        'comment_author': {
+            'columns': ['comment_author'],
+            'title': u'Comment author'
+        },
+        'comment_comment': {
+            'columns': ['comment_comment'],
+            'title': u'Comment text'
+        },
+        'comment_expires': {
+            'columns': ['comment_expire_time'],
+            'title': u'Comment expiry time'
+        },
+        'comment_id': {
+            'columns': ['comment_id'],
+            'title': u'Comment id'
+        },
+        'comment_time': {
+            'columns': ['comment_entry_time'],
+            'title': u'Comment entry time'
+        },
+        'comment_type': {
+            'columns': ['comment_type'],
+            'title': u'Comment type'
+        },
+        'comment_what': {
+            'columns': ['comment_type'],
+            'title': u'Comment type (host/service)'
+        },
+        'downtime_author': {
+            'columns': ['downtime_author'],
+            'title': u'Downtime author'
+        },
+        'downtime_comment': {
+            'columns': ['downtime_comment'],
+            'title': u'Downtime comment'
+        },
+        'downtime_end_time': {
+            'columns': ['downtime_end_time'],
+            'title': u'Downtime end'
+        },
+        'downtime_entry_time': {
+            'columns': ['downtime_entry_time'],
+            'title': u'Downtime entry time'
+        },
+        'downtime_fixed': {
+            'columns': ['downtime_fixed'],
+            'title': u'Downtime start mode'
+        },
+        'downtime_id': {
+            'columns': ['downtime_id'],
+            'title': u'Downtime id'
+        },
+        'downtime_start_time': {
+            'columns': ['downtime_start_time'],
+            'title': u'Downtime start'
+        },
+        'downtime_type': {
+            'columns': ['downtime_type'],
+            'title': u'Downtime active or pending'
+        },
+        'downtime_what': {
+            'columns': ['downtime_is_service'],
+            'title': u'Downtime for host/service'
+        },
+        'event_application': {
+            'columns': ['event_application'],
+            'title': u'Application / Syslog-Tag'
+        },
+        'event_comment': {
+            'columns': ['event_comment'],
+            'title': u'Comment to the event'
+        },
+        'event_contact': {
+            'columns': ['event_contact'],
+            'title': u'Contact Person'
+        },
+        'event_count': {
+            'columns': ['event_count'],
+            'title': u'Count (number of recent occurrances)'
+        },
+        'event_facility': {
+            'columns': ['event_facility'],
+            'title': u'Syslog-Facility'
+        },
+        'event_first': {
+            'columns': ['event_first'],
+            'title': u'Time of first occurrence of this serial'
+        },
+        'event_host': {
+            'columns': ['event_host', 'host_name'],
+            'title': u'Hostname'
+        },
+        'event_id': {
+            'columns': ['event_id'],
+            'title': u'ID of the event'
+        },
+        'event_ipaddress': {
+            'columns': ['event_ipaddress'],
+            'title': u'Original IP-Address'
+        },
+        'event_last': {
+            'columns': ['event_last'],
+            'title': u'Time of last occurrance'
+        },
+        'event_owner': {
+            'columns': ['event_owner'],
+            'title': u'Owner of event'
+        },
+        'event_phase': {
+            'columns': ['event_phase'],
+            'title': u'Phase of event (open, counting, etc.)'
+        },
+        'event_pid': {
+            'columns': ['event_pid'],
+            'title': u'Process ID'
+        },
+        'event_priority': {
+            'columns': ['event_priority'],
+            'title': u'Syslog-Priority'
+        },
+        'event_rule_id': {
+            'columns': ['event_rule_id'],
+            'title': u'Rule-ID'
+        },
+        'event_sl': {
+            'columns': ['event_sl'],
+            'title': u'Service-Level'
+        },
+        'event_state': {
+            'columns': ['event_state'],
+            'title': u'State (severity) of event'
+        },
+        'event_text': {
+            'columns': ['event_text'],
+            'title': u'Text/Message of the event'
+        },
+        'hg_alias': {
+            'columns': ['hostgroup_alias'],
+            'title': u'Hostgroup alias'
+        },
+        'hg_name': {
+            'columns': ['hostgroup_name'],
+            'title': u'Hostgroup name'
+        },
+        'hg_num_hosts_down': {
+            'columns': ['hostgroup_num_hosts_down'],
+            'title': u'Number of hosts in state DOWN (Host Group)'
+        },
+        'hg_num_hosts_pending': {
+            'columns': ['hostgroup_num_hosts_pending'],
+            'title': u'Number of hosts in state PENDING (Host Group)'
+        },
+        'hg_num_hosts_unreach': {
+            'columns': ['hostgroup_num_hosts_unreach'],
+            'title': u'Number of hosts in state UNREACH (Host Group)'
+        },
+        'hg_num_hosts_up': {
+            'columns': ['hostgroup_num_hosts_up'],
+            'title': u'Number of hosts in state UP (Host Group)'
+        },
+        'hg_num_services': {
+            'columns': ['hostgroup_num_services'],
+            'title': u'Number of services (Host Group)'
+        },
+        'hg_num_services_crit': {
+            'columns': ['hostgroup_num_services_crit'],
+            'title': u'Number of services in state CRIT (Host Group)'
+        },
+        'hg_num_services_ok': {
+            'columns': ['hostgroup_num_services_ok'],
+            'title': u'Number of services in state OK (Host Group)'
+        },
+        'hg_num_services_pending': {
+            'columns': ['hostgroup_num_services_pending'],
+            'title': u'Number of services in state PENDING (Host Group)'
+        },
+        'hg_num_services_unknown': {
+            'columns': ['hostgroup_num_services_unknown'],
+            'title': u'Number of services in state UNKNOWN (Host Group)'
+        },
+        'hg_num_services_warn': {
+            'columns': ['hostgroup_num_services_warn'],
+            'title': u'Number of services in state WARN (Host Group)'
+        },
+        'history_addinfo': {
+            'columns': ['history_addinfo'],
+            'title': u'Additional Information'
+        },
+        'history_line': {
+            'columns': ['history_line'],
+            'title': u'Line number in log file'
+        },
+        'history_time': {
+            'columns': ['history_time'],
+            'title': u'Time of entry in logfile'
+        },
+        'history_what': {
+            'columns': ['history_what'],
+            'title': u'Type of event action'
+        },
+        'history_who': {
+            'columns': ['history_who'],
+            'title': u'User who performed action'
+        },
+        'host': {
+            'columns': ['host_custom_variable_names', 'host_custom_variable_values'],
+            'title': u'Host Tags (raw)'
+        },
+        'host_acknowledged': {
+            'columns': ['host_acknowledged'],
+            'title': u'Host problem acknowledged'
+        },
+        'host_address': {
+            'columns': ['host_address'],
+            'title': u'Host address (Primary)'
+        },
+        'host_address_family': {
+            'columns': ['host_custom_variable_names', 'host_custom_variable_values'],
+            'title': u'Host address family (Primary)'
+        },
+        'host_attempt': {
+            'columns': ['host_current_attempt', 'host_max_check_attempts'],
+            'title': u'Current host check attempt'
+        },
+        'host_check_age': {
+            'columns': ['host_has_been_checked', 'host_last_check'],
+            'title': u'The time since the last check of the host'
+        },
+        'host_check_command': {
+            'columns': ['host_check_command'],
+            'title': u'Host check command'
+        },
+        'host_check_duration': {
+            'columns': ['host_execution_time'],
+            'title': u'Host check duration'
+        },
+        'host_check_latency': {
+            'columns': ['host_latency'],
+            'title': u'Host check latency'
+        },
+        'host_check_type': {
+            'columns': ['host_check_type'],
+            'title': u'Host check type'
+        },
+        'host_childs': {
+            'columns': ['host_childs'],
+            'title': u"Host's children"
+        },
+        'host_contact_groups': {
+            'columns': ['host_contact_groups'],
+            'title': u'Host contact groups'
+        },
+        'host_contacts': {
+            'columns': ['host_contacts'],
+            'title': u'Host contacts'
+        },
+        'host_flapping': {
+            'columns': ['host_is_flapping'],
+            'title': u'Host is flapping'
+        },
+        'host_group_memberlist': {
+            'columns': ['host_groups'],
+            'title': u'Host groups the host is member of'
+        },
+        'host_in_downtime': {
+            'columns': ['host_scheduled_downtime_depth'],
+            'title': u'Host in downtime'
+        },
+        'host_in_notifper': {
+            'columns': ['host_in_notification_period'],
+            'title': u'Host in notif. period'
+        },
+        'host_ipv4_address': {
+            'columns': ['host_custom_variable_names', 'host_custom_variable_values'],
+            'title': u'Host IPv4 address'
+        },
+        'host_is_active': {
+            'columns': ['host_active_checks_enabled'],
+            'title': u'Host is active'
+        },
+        'host_last_notification': {
+            'columns': ['host_last_notification'],
+            'title': u'The time of the last host notification'
+        },
+        'host_name': {
+            'columns': ['host_name'],
+            'title': u'Host name'
+        },
+        'host_next_check': {
+            'columns': ['host_next_check'],
+            'title': u'The time of the next scheduled host check'
+        },
+        'host_next_notification': {
+            'columns': ['host_next_notification'],
+            'title': u'The time of the next host notification'
+        },
+        'host_notifper': {
+            'columns': ['host_notification_period'],
+            'title': u'Host notification period'
+        },
+        'host_parents': {
+            'columns': ['host_parents'],
+            'title': u"Host's parents"
+        },
+        'host_perf_data': {
+            'columns': ['host_perf_data'],
+            'title': u'Host performance data'
+        },
+        'host_plugin_output': {
+            'columns': ['host_plugin_output', 'host_custom_variables'],
+            'title': u'Output of host check plugin'
+        },
+        'host_servicelevel': {
+            'columns': ['host_custom_variable_names', 'host_custom_variable_values'],
+            'title': u'Host service level'
+        },
+        'host_state_age': {
+            'columns': ['host_has_been_checked', 'host_last_state_change'],
+            'title': u'The age of the current host state'
+        },
+        'host_tag_address_family': {
+            'columns': ['host_custom_variable_names', 'host_custom_variable_values'],
+            'title': u'Host tag: Address/IP Address Family '
+        },
+        'host_tag_agent': {
+            'columns': ['host_custom_variable_names', 'host_custom_variable_values'],
+            'title': u'Host tag: Data sources/Check_MK Agent'
+        },
+        'host_tag_snmp': {
+            'columns': ['host_custom_variable_names', 'host_custom_variable_values'],
+            'title': u'Host tag: Data sources/SNMP'
+        },
+        'hostgroup': {
+            'columns': ['hostgroup_alias'],
+            'title': u'Hostgroup'
+        },
+        'hoststate': {
+            'columns': ['host_state', 'host_has_been_checked'],
+            'title': u'Host state'
+        },
+        'inv_hardware_cpu_arch': {
+            'columns': ['host_inventory', 'host_structured_status'],
+            'load_inv': True,
+            'title': u'Inventory: Processor \u27a4 CPU Architecture'
+        },
+        'inv_hardware_cpu_bus_speed': {
+            'columns': ['host_inventory', 'host_structured_status'],
+            'load_inv': True,
+            'title': u'Inventory: Processor \u27a4 Bus Speed'
+        },
+        'inv_hardware_cpu_cache_size': {
+            'columns': ['host_inventory', 'host_structured_status'],
+            'load_inv': True,
+            'title': u'Inventory: Processor \u27a4 Cache Size'
+        },
+        'inv_hardware_cpu_cores': {
+            'columns': ['host_inventory', 'host_structured_status'],
+            'load_inv': True,
+            'title': u'Inventory: Processor \u27a4 Total Number of Cores'
+        },
+        'inv_hardware_cpu_cores_per_cpu': {
+            'columns': ['host_inventory', 'host_structured_status'],
+            'load_inv': True,
+            'title': u'Inventory: Processor \u27a4 Cores per CPU'
+        },
+        'inv_hardware_cpu_cpus': {
+            'columns': ['host_inventory', 'host_structured_status'],
+            'load_inv': True,
+            'title': u'Inventory: Processor \u27a4 Number of physical CPUs'
+        },
+        'inv_hardware_cpu_entitlement': {
+            'columns': ['host_inventory', 'host_structured_status'],
+            'load_inv': True,
+            'title': u'Inventory: Processor \u27a4 CPU Entitlement'
+        },
+        'inv_hardware_cpu_logical_cpus': {
+            'columns': ['host_inventory', 'host_structured_status'],
+            'load_inv': True,
+            'title': u'Inventory: Processor \u27a4 Number of logical CPUs'
+        },
+        'inv_hardware_cpu_max_speed': {
+            'columns': ['host_inventory', 'host_structured_status'],
+            'load_inv': True,
+            'title': u'Inventory: Processor \u27a4 Maximum Speed'
+        },
+        'inv_hardware_cpu_model': {
+            'columns': ['host_inventory', 'host_structured_status'],
+            'load_inv': True,
+            'title': u'Inventory: Processor \u27a4 Model'
+        },
+        'inv_hardware_cpu_sharing_mode': {
+            'columns': ['host_inventory', 'host_structured_status'],
+            'load_inv': True,
+            'title': u'Inventory: Processor \u27a4 CPU sharing mode'
+        },
+        'inv_hardware_cpu_smt_threads': {
+            'columns': ['host_inventory', 'host_structured_status'],
+            'load_inv': True,
+            'title': u'Inventory: Processor \u27a4 Simultaneous multithreading'
+        },
+        'inv_hardware_cpu_threads': {
+            'columns': ['host_inventory', 'host_structured_status'],
+            'load_inv': True,
+            'title': u'Inventory: Processor \u27a4 Total Number of Hyperthreads'
+        },
+        'inv_hardware_cpu_threads_per_cpu': {
+            'columns': ['host_inventory', 'host_structured_status'],
+            'load_inv': True,
+            'title': u'Inventory: Processor \u27a4 Hyperthreads per CPU'
+        },
+        'inv_hardware_cpu_voltage': {
+            'columns': ['host_inventory', 'host_structured_status'],
+            'load_inv': True,
+            'title': u'Inventory: Processor \u27a4 Voltage'
+        },
+        'inv_hardware_memory_total_ram_usable': {
+            'columns': ['host_inventory', 'host_structured_status'],
+            'load_inv': True,
+            'title': u'Inventory: Memory (RAM) \u27a4 Total usable RAM'
+        },
+        'inv_hardware_memory_total_swap': {
+            'columns': ['host_inventory', 'host_structured_status'],
+            'load_inv': True,
+            'title': u'Inventory: Memory (RAM) \u27a4 Total swap space'
+        },
+        'inv_hardware_memory_total_vmalloc': {
+            'columns': ['host_inventory', 'host_structured_status'],
+            'load_inv': True,
+            'title': u'Inventory: Memory (RAM) \u27a4 Virtual addresses for mapping'
+        },
+        'inv_hardware_storage_controller_version': {
+            'columns': ['host_inventory', 'host_structured_status'],
+            'load_inv': True,
+            'title': u'Inventory: Controller \u27a4 Version'
+        },
+        'inv_hardware_system_expresscode': {
+            'columns': ['host_inventory', 'host_structured_status'],
+            'load_inv': True,
+            'title': u'Inventory: System \u27a4 Express Servicecode'
+        },
+        'inv_hardware_system_manufacturer': {
+            'columns': ['host_inventory', 'host_structured_status'],
+            'load_inv': True,
+            'title': u'Inventory: System \u27a4 Manufacturer'
+        },
+        'inv_hardware_system_model': {
+            'columns': ['host_inventory', 'host_structured_status'],
+            'load_inv': True,
+            'title': u'Inventory: System \u27a4 Model Name'
+        },
+        'inv_hardware_system_model_name': {
+            'columns': ['host_inventory', 'host_structured_status'],
+            'load_inv': True,
+            'title': u"Inventory: System \u27a4 Model Name - LEGACY, don't use"
+        },
+        'inv_hardware_system_product': {
+            'columns': ['host_inventory', 'host_structured_status'],
+            'load_inv': True,
+            'title': u'Inventory: System \u27a4 Product'
+        },
+        'inv_hardware_system_serial': {
+            'columns': ['host_inventory', 'host_structured_status'],
+            'load_inv': True,
+            'title': u'Inventory: System \u27a4 Serial Number'
+        },
+        'inv_hardware_system_serial_number': {
+            'columns': ['host_inventory', 'host_structured_status'],
+            'load_inv': True,
+            'title': u"Inventory: System \u27a4 Serial Number - LEGACY, don't use"
+        },
+        'inv_networking_available_ethernet_ports': {
+            'columns': ['host_inventory', 'host_structured_status'],
+            'load_inv': True,
+            'title': u'Inventory: Networking \u27a4 Ports available'
+        },
+        'inv_networking_total_ethernet_ports': {
+            'columns': ['host_inventory', 'host_structured_status'],
+            'load_inv': True,
+            'title': u'Inventory: Networking \u27a4 Ports'
+        },
+        'inv_networking_total_interfaces': {
+            'columns': ['host_inventory', 'host_structured_status'],
+            'load_inv': True,
+            'title': u'Inventory: Networking \u27a4 Interfaces'
+        },
+        'inv_networking_wlan': {
+            'columns': ['host_inventory', 'host_structured_status'],
+            'load_inv': True,
+            'title': u'Inventory: Networking \u27a4 WLAN'
+        },
+        'inv_networking_wlan_controller': {
+            'columns': ['host_inventory', 'host_structured_status'],
+            'load_inv': True,
+            'title': u'Inventory: WLAN \u27a4 Controller'
+        },
+        'inv_software_applications_check_mk_cluster_is_cluster': {
+            'columns': ['host_inventory', 'host_structured_status'],
+            'load_inv': True,
+            'title': u'Inventory: Cluster \u27a4 Cluster host'
+        },
+        'inv_software_applications_citrix_controller_controller_version': {
+            'columns': ['host_inventory', 'host_structured_status'],
+            'load_inv': True,
+            'title': u'Inventory: Controller \u27a4 Controller Version'
+        },
+        'inv_software_applications_citrix_vm_agent_version': {
+            'columns': ['host_inventory', 'host_structured_status'],
+            'load_inv': True,
+            'title': u'Inventory: Virtual Machine \u27a4 Agent Version'
+        },
+        'inv_software_applications_citrix_vm_catalog': {
+            'columns': ['host_inventory', 'host_structured_status'],
+            'load_inv': True,
+            'title': u'Inventory: Virtual Machine \u27a4 Catalog'
+        },
+        'inv_software_applications_citrix_vm_desktop_group_name': {
+            'columns': ['host_inventory', 'host_structured_status'],
+            'load_inv': True,
+            'title': u'Inventory: Virtual Machine \u27a4 Desktop Group Name'
+        },
+        'inv_software_applications_docker_container_node_name': {
+            'columns': ['host_inventory', 'host_structured_status'],
+            'load_inv': True,
+            'title': u'Inventory: Container \u27a4 Node name'
+        },
+        'inv_software_applications_docker_num_containers_paused': {
+            'columns': ['host_inventory', 'host_structured_status'],
+            'load_inv': True,
+            'title': u'Inventory: Docker \u27a4 # Containers paused'
+        },
+        'inv_software_applications_docker_num_containers_running': {
+            'columns': ['host_inventory', 'host_structured_status'],
+            'load_inv': True,
+            'title': u'Inventory: Docker \u27a4 # Containers running'
+        },
+        'inv_software_applications_docker_num_containers_stopped': {
+            'columns': ['host_inventory', 'host_structured_status'],
+            'load_inv': True,
+            'title': u'Inventory: Docker \u27a4 # Containers stopped'
+        },
+        'inv_software_applications_docker_num_containers_total': {
+            'columns': ['host_inventory', 'host_structured_status'],
+            'load_inv': True,
+            'title': u'Inventory: Docker \u27a4 # Containers'
+        },
+        'inv_software_applications_docker_num_images': {
+            'columns': ['host_inventory', 'host_structured_status'],
+            'load_inv': True,
+            'title': u'Inventory: Docker \u27a4 # Images'
+        },
+        'inv_software_bios_date': {
+            'columns': ['host_inventory', 'host_structured_status'],
+            'load_inv': True,
+            'title': u'Inventory: BIOS \u27a4 Date'
+        },
+        'inv_software_bios_vendor': {
+            'columns': ['host_inventory', 'host_structured_status'],
+            'load_inv': True,
+            'title': u'Inventory: BIOS \u27a4 Vendor'
+        },
+        'inv_software_bios_version': {
+            'columns': ['host_inventory', 'host_structured_status'],
+            'load_inv': True,
+            'title': u'Inventory: BIOS \u27a4 Version'
+        },
+        'inv_software_configuration_snmp_info_contact': {
+            'columns': ['host_inventory', 'host_structured_status'],
+            'load_inv': True,
+            'title': u'Inventory: SNMP Information \u27a4 Contact'
+        },
+        'inv_software_configuration_snmp_info_location': {
+            'columns': ['host_inventory', 'host_structured_status'],
+            'load_inv': True,
+            'title': u'Inventory: SNMP Information \u27a4 Location'
+        },
+        'inv_software_configuration_snmp_info_name': {
+            'columns': ['host_inventory', 'host_structured_status'],
+            'load_inv': True,
+            'title': u'Inventory: SNMP Information \u27a4 System name'
+        },
+        'inv_software_firmware_platform_level': {
+            'columns': ['host_inventory', 'host_structured_status'],
+            'load_inv': True,
+            'title': u'Inventory: Firmware \u27a4 Platform Firmware level'
+        },
+        'inv_software_firmware_vendor': {
+            'columns': ['host_inventory', 'host_structured_status'],
+            'load_inv': True,
+            'title': u'Inventory: Firmware \u27a4 Vendor'
+        },
+        'inv_software_firmware_version': {
+            'columns': ['host_inventory', 'host_structured_status'],
+            'load_inv': True,
+            'title': u'Inventory: Firmware \u27a4 Version'
+        },
+        'inv_software_os_arch': {
+            'columns': ['host_inventory', 'host_structured_status'],
+            'load_inv': True,
+            'title': u'Inventory: Operating System \u27a4 Kernel Architecture'
+        },
+        'inv_software_os_install_date': {
+            'columns': ['host_inventory', 'host_structured_status'],
+            'load_inv': True,
+            'title': u'Inventory: Operating System \u27a4 Install Date'
+        },
+        'inv_software_os_kernel_version': {
+            'columns': ['host_inventory', 'host_structured_status'],
+            'load_inv': True,
+            'title': u'Inventory: Operating System \u27a4 Kernel Version'
+        },
+        'inv_software_os_name': {
+            'columns': ['host_inventory', 'host_structured_status'],
+            'load_inv': True,
+            'title': u'Inventory: Operating System \u27a4 Name'
+        },
+        'inv_software_os_service_pack': {
+            'columns': ['host_inventory', 'host_structured_status'],
+            'load_inv': True,
+            'title': u'Inventory: Operating System \u27a4 Latest Service Pack'
+        },
+        'inv_software_os_type': {
+            'columns': ['host_inventory', 'host_structured_status'],
+            'load_inv': True,
+            'title': u'Inventory: Operating System \u27a4 Type'
+        },
+        'inv_software_os_vendor': {
+            'columns': ['host_inventory', 'host_structured_status'],
+            'load_inv': True,
+            'title': u'Inventory: Operating System \u27a4 Vendor'
+        },
+        'inv_software_os_version': {
+            'columns': ['host_inventory', 'host_structured_status'],
+            'load_inv': True,
+            'title': u'Inventory: Operating System \u27a4 Version'
+        },
+        'invbackplane_description': {
+            'columns': ['invbackplane_description'],
+            'title': u'Inventory: Description'
+        },
+        'invbackplane_index': {
+            'columns': ['invbackplane_index'],
+            'title': u'Inventory: Index'
+        },
+        'invbackplane_location': {
+            'columns': ['invbackplane_location'],
+            'title': u'Inventory: Location'
+        },
+        'invbackplane_manufacturer': {
+            'columns': ['invbackplane_manufacturer'],
+            'title': u'Inventory: Manufacturer'
+        },
+        'invbackplane_model': {
+            'columns': ['invbackplane_model'],
+            'title': u'Inventory: Model Name'
+        },
+        'invbackplane_name': {
+            'columns': ['invbackplane_name'],
+            'title': u'Inventory: Name'
+        },
+        'invbackplane_serial': {
+            'columns': ['invbackplane_serial'],
+            'title': u'Inventory: Serial Number'
+        },
+        'invbackplane_software': {
+            'columns': ['invbackplane_software'],
+            'title': u'Inventory: Software'
+        },
+        'invchassis_description': {
+            'columns': ['invchassis_description'],
+            'title': u'Inventory: Description'
+        },
+        'invchassis_index': {
+            'columns': ['invchassis_index'],
+            'title': u'Inventory: Index'
+        },
+        'invchassis_location': {
+            'columns': ['invchassis_location'],
+            'title': u'Inventory: Location'
+        },
+        'invchassis_manufacturer': {
+            'columns': ['invchassis_manufacturer'],
+            'title': u'Inventory: Manufacturer'
+        },
+        'invchassis_model': {
+            'columns': ['invchassis_model'],
+            'title': u'Inventory: Model Name'
+        },
+        'invchassis_name': {
+            'columns': ['invchassis_name'],
+            'title': u'Inventory: Name'
+        },
+        'invchassis_serial': {
+            'columns': ['invchassis_serial'],
+            'title': u'Inventory: Serial Number'
+        },
+        'invchassis_software': {
+            'columns': ['invchassis_software'],
+            'title': u'Inventory: Software'
+        },
+        'invcontainer_description': {
+            'columns': ['invcontainer_description'],
+            'title': u'Inventory: Description'
+        },
+        'invcontainer_index': {
+            'columns': ['invcontainer_index'],
+            'title': u'Inventory: Index'
+        },
+        'invcontainer_location': {
+            'columns': ['invcontainer_location'],
+            'title': u'Inventory: Location'
+        },
+        'invcontainer_manufacturer': {
+            'columns': ['invcontainer_manufacturer'],
+            'title': u'Inventory: Manufacturer'
+        },
+        'invcontainer_model': {
+            'columns': ['invcontainer_model'],
+            'title': u'Inventory: Model Name'
+        },
+        'invcontainer_name': {
+            'columns': ['invcontainer_name'],
+            'title': u'Inventory: Name'
+        },
+        'invcontainer_serial': {
+            'columns': ['invcontainer_serial'],
+            'title': u'Inventory: Serial Number'
+        },
+        'invcontainer_software': {
+            'columns': ['invcontainer_software'],
+            'title': u'Inventory: Software'
+        },
+        'invdockercontainers_creation': {
+            'columns': ['invdockercontainers_creation'],
+            'title': u'Inventory: Creation'
+        },
+        'invdockercontainers_id': {
+            'columns': ['invdockercontainers_id'],
+            'title': u'Inventory: ID'
+        },
+        'invdockercontainers_labels': {
+            'columns': ['invdockercontainers_labels'],
+            'title': u'Inventory: Labels'
+        },
+        'invdockercontainers_name': {
+            'columns': ['invdockercontainers_name'],
+            'title': u'Inventory: Name'
+        },
+        'invdockercontainers_repository': {
+            'columns': ['invdockercontainers_repository'],
+            'title': u'Inventory: Repository'
+        },
+        'invdockercontainers_status': {
+            'columns': ['invdockercontainers_status'],
+            'title': u'Inventory: Status'
+        },
+        'invdockercontainers_tag': {
+            'columns': ['invdockercontainers_tag'],
+            'title': u'Inventory: Tag'
+        },
+        'invdockerimages_amount_containers': {
+            'columns': ['invdockerimages_amount_containers'],
+            'title': u'Inventory: # Containers'
+        },
+        'invdockerimages_creation': {
+            'columns': ['invdockerimages_creation'],
+            'title': u'Inventory: Creation'
+        },
+        'invdockerimages_id': {
+            'columns': ['invdockerimages_id'],
+            'title': u'Inventory: ID'
+        },
+        'invdockerimages_labels': {
+            'columns': ['invdockerimages_labels'],
+            'title': u'Inventory: Labels'
+        },
+        'invdockerimages_repository': {
+            'columns': ['invdockerimages_repository'],
+            'title': u'Inventory: Repository'
+        },
+        'invdockerimages_size': {
+            'columns': ['invdockerimages_size'],
+            'title': u'Inventory: Size'
+        },
+        'invdockerimages_tag': {
+            'columns': ['invdockerimages_tag'],
+            'title': u'Inventory: Tag'
+        },
+        'invfan_description': {
+            'columns': ['invfan_description'],
+            'title': u'Inventory: Description'
+        },
+        'invfan_index': {
+            'columns': ['invfan_index'],
+            'title': u'Inventory: Index'
+        },
+        'invfan_location': {
+            'columns': ['invfan_location'],
+            'title': u'Inventory: Location'
+        },
+        'invfan_manufacturer': {
+            'columns': ['invfan_manufacturer'],
+            'title': u'Inventory: Manufacturer'
+        },
+        'invfan_model': {
+            'columns': ['invfan_model'],
+            'title': u'Inventory: Model Name'
+        },
+        'invfan_name': {
+            'columns': ['invfan_name'],
+            'title': u'Inventory: Name'
+        },
+        'invfan_serial': {
+            'columns': ['invfan_serial'],
+            'title': u'Inventory: Serial Number'
+        },
+        'invfan_software': {
+            'columns': ['invfan_software'],
+            'title': u'Inventory: Software'
+        },
+        'invhist_changed': {
+            'columns': ['invhist_changed'],
+            'title': u'changed entries'
+        },
+        'invhist_new': {
+            'columns': ['invhist_new'],
+            'title': u'new entries'
+        },
+        'invhist_removed': {
+            'columns': ['invhist_removed'],
+            'title': u'Removed entries'
+        },
+        'invhist_time': {
+            'columns': ['invhist_time'],
+            'title': u'Inventory Date/Time'
+        },
+        'invinterface_admin_status': {
+            'columns': ['invinterface_admin_status'],
+            'title': u'Inventory: Administrative Status'
+        },
+        'invinterface_alias': {
+            'columns': ['invinterface_alias'],
+            'title': u'Inventory: Alias'
+        },
+        'invinterface_available': {
+            'columns': ['invinterface_available'],
+            'title': u'Inventory: Port Usage'
+        },
+        'invinterface_description': {
+            'columns': ['invinterface_description'],
+            'title': u'Inventory: Description'
+        },
+        'invinterface_index': {
+            'columns': ['invinterface_index'],
+            'title': u'Inventory: Index'
+        },
+        'invinterface_last_change': {
+            'columns': ['invinterface_last_change'],
+            'title': u'Inventory: Last Change'
+        },
+        'invinterface_oper_status': {
+            'columns': ['invinterface_oper_status'],
+            'title': u'Inventory: Operational Status'
+        },
+        'invinterface_phys_address': {
+            'columns': ['invinterface_phys_address'],
+            'title': u'Inventory: Physical Address (MAC)'
+        },
+        'invinterface_port_type': {
+            'columns': ['invinterface_port_type'],
+            'title': u'Inventory: Type'
+        },
+        'invinterface_speed': {
+            'columns': ['invinterface_speed'],
+            'title': u'Inventory: Speed'
+        },
+        'invinterface_vlans': {
+            'columns': ['invinterface_vlans'],
+            'title': u'Inventory: VLANs'
+        },
+        'invinterface_vlantype': {
+            'columns': ['invinterface_vlantype'],
+            'title': u'Inventory: VLAN type'
+        },
+        'invmodule_bootloader': {
+            'columns': ['invmodule_bootloader'],
+            'title': u'Inventory: Bootloader'
+        },
+        'invmodule_description': {
+            'columns': ['invmodule_description'],
+            'title': u'Inventory: Description'
+        },
+        'invmodule_firmware': {
+            'columns': ['invmodule_firmware'],
+            'title': u'Inventory: Firmware'
+        },
+        'invmodule_index': {
+            'columns': ['invmodule_index'],
+            'title': u'Inventory: Index'
+        },
+        'invmodule_location': {
+            'columns': ['invmodule_location'],
+            'title': u'Inventory: Location'
+        },
+        'invmodule_manufacturer': {
+            'columns': ['invmodule_manufacturer'],
+            'title': u'Inventory: Manufacturer'
+        },
+        'invmodule_model': {
+            'columns': ['invmodule_model'],
+            'title': u'Inventory: Model Name'
+        },
+        'invmodule_name': {
+            'columns': ['invmodule_name'],
+            'title': u'Inventory: Name'
+        },
+        'invmodule_serial': {
+            'columns': ['invmodule_serial'],
+            'title': u'Inventory: Serial Number'
+        },
+        'invmodule_software': {
+            'columns': ['invmodule_software'],
+            'title': u'Inventory: Software'
+        },
+        'invmodule_type': {
+            'columns': ['invmodule_type'],
+            'title': u'Inventory: Type'
+        },
+        'invoradataguardstats_db_unique': {
+            'columns': ['invoradataguardstats_db_unique'],
+            'title': u'Inventory: Name'
+        },
+        'invoradataguardstats_role': {
+            'columns': ['invoradataguardstats_role'],
+            'title': u'Inventory: Role'
+        },
+        'invoradataguardstats_sid': {
+            'columns': ['invoradataguardstats_sid'],
+            'title': u'Inventory: SID'
+        },
+        'invoradataguardstats_switchover': {
+            'columns': ['invoradataguardstats_switchover'],
+            'title': u'Inventory: Switchover'
+        },
+        'invorainstance_db_creation_time': {
+            'columns': ['invorainstance_db_creation_time'],
+            'title': u'Inventory: Creation time'
+        },
+        'invorainstance_db_uptime': {
+            'columns': ['invorainstance_db_uptime'],
+            'title': u'Inventory: Uptime'
+        },
+        'invorainstance_logins': {
+            'columns': ['invorainstance_logins'],
+            'title': u'Inventory: Logins'
+        },
+        'invorainstance_logmode': {
+            'columns': ['invorainstance_logmode'],
+            'title': u'Inventory: Log mode'
+        },
+        'invorainstance_openmode': {
+            'columns': ['invorainstance_openmode'],
+            'title': u'Inventory: Open mode'
+        },
+        'invorainstance_sid': {
+            'columns': ['invorainstance_sid'],
+            'title': u'Inventory: SID'
+        },
+        'invorainstance_version': {
+            'columns': ['invorainstance_version'],
+            'title': u'Inventory: Version'
+        },
+        'invorarecoveryarea_flashback': {
+            'columns': ['invorarecoveryarea_flashback'],
+            'title': u'Inventory: Flashback'
+        },
+        'invorarecoveryarea_sid': {
+            'columns': ['invorarecoveryarea_sid'],
+            'title': u'Inventory: SID'
+        },
+        'invorasga_buf_cache_size': {
+            'columns': ['invorasga_buf_cache_size'],
+            'title': u'Inventory: Buffer cache size'
+        },
+        'invorasga_data_trans_cache_size': {
+            'columns': ['invorasga_data_trans_cache_size'],
+            'title': u'Inventory: Data transfer cache size'
+        },
+        'invorasga_fixed_size': {
+            'columns': ['invorasga_fixed_size'],
+            'title': u'Inventory: Fixed size'
+        },
+        'invorasga_free_mem_avail': {
+            'columns': ['invorasga_free_mem_avail'],
+            'title': u'Inventory: Free SGA memory available'
+        },
+        'invorasga_granule_size': {
+            'columns': ['invorasga_granule_size'],
+            'title': u'Inventory: Granule size'
+        },
+        'invorasga_in_mem_area_size': {
+            'columns': ['invorasga_in_mem_area_size'],
+            'title': u'Inventory: In-memory area'
+        },
+        'invorasga_java_pool_size': {
+            'columns': ['invorasga_java_pool_size'],
+            'title': u'Inventory: Java pool size'
+        },
+        'invorasga_large_pool_size': {
+            'columns': ['invorasga_large_pool_size'],
+            'title': u'Inventory: Large pool size'
+        },
+        'invorasga_max_size': {
+            'columns': ['invorasga_max_size'],
+            'title': u'Inventory: Maximum size'
+        },
+        'invorasga_redo_buffer': {
+            'columns': ['invorasga_redo_buffer'],
+            'title': u'Inventory: Redo buffers'
+        },
+        'invorasga_shared_io_pool_size': {
+            'columns': ['invorasga_shared_io_pool_size'],
+            'title': u'Inventory: Shared pool size'
+        },
+        'invorasga_shared_pool_size': {
+            'columns': ['invorasga_shared_pool_size'],
+            'title': u'Inventory: Shared pool size'
+        },
+        'invorasga_sid': {
+            'columns': ['invorasga_sid'],
+            'title': u'Inventory: SID'
+        },
+        'invorasga_start_oh_shared_pool': {
+            'columns': ['invorasga_start_oh_shared_pool'],
+            'title': u'Inventory: Startup overhead in shared pool'
+        },
+        'invorasga_streams_pool_size': {
+            'columns': ['invorasga_streams_pool_size'],
+            'title': u'Inventory: Streams pool size'
+        },
+        'invoratablespace_autoextensible': {
+            'columns': ['invoratablespace_autoextensible'],
+            'title': u'Inventory: Autoextensible'
+        },
+        'invoratablespace_current_size': {
+            'columns': ['invoratablespace_current_size'],
+            'title': u'Inventory: Current size'
+        },
+        'invoratablespace_free_space': {
+            'columns': ['invoratablespace_free_space'],
+            'title': u'Inventory: Free space'
+        },
+        'invoratablespace_increment_size': {
+            'columns': ['invoratablespace_increment_size'],
+            'title': u'Inventory: Increment size'
+        },
+        'invoratablespace_max_size': {
+            'columns': ['invoratablespace_max_size'],
+            'title': u'Inventory: Max. size'
+        },
+        'invoratablespace_name': {
+            'columns': ['invoratablespace_name'],
+            'title': u'Inventory: Name'
+        },
+        'invoratablespace_num_increments': {
+            'columns': ['invoratablespace_num_increments'],
+            'title': u'Inventory: Number of increments'
+        },
+        'invoratablespace_sid': {
+            'columns': ['invoratablespace_sid'],
+            'title': u'Inventory: SID'
+        },
+        'invoratablespace_type': {
+            'columns': ['invoratablespace_type'],
+            'title': u'Inventory: Type'
+        },
+        'invoratablespace_used_size': {
+            'columns': ['invoratablespace_used_size'],
+            'title': u'Inventory: Used size'
+        },
+        'invoratablespace_version': {
+            'columns': ['invoratablespace_version'],
+            'title': u'Inventory: Version'
+        },
+        'invother_description': {
+            'columns': ['invother_description'],
+            'title': u'Inventory: Description'
+        },
+        'invother_index': {
+            'columns': ['invother_index'],
+            'title': u'Inventory: Index'
+        },
+        'invother_location': {
+            'columns': ['invother_location'],
+            'title': u'Inventory: Location'
+        },
+        'invother_manufacturer': {
+            'columns': ['invother_manufacturer'],
+            'title': u'Inventory: Manufacturer'
+        },
+        'invother_model': {
+            'columns': ['invother_model'],
+            'title': u'Inventory: Model Name'
+        },
+        'invother_name': {
+            'columns': ['invother_name'],
+            'title': u'Inventory: Name'
+        },
+        'invother_serial': {
+            'columns': ['invother_serial'],
+            'title': u'Inventory: Serial Number'
+        },
+        'invother_software': {
+            'columns': ['invother_software'],
+            'title': u'Inventory: Software'
+        },
+        'invpsu_description': {
+            'columns': ['invpsu_description'],
+            'title': u'Inventory: Description'
+        },
+        'invpsu_index': {
+            'columns': ['invpsu_index'],
+            'title': u'Inventory: Index'
+        },
+        'invpsu_location': {
+            'columns': ['invpsu_location'],
+            'title': u'Inventory: Location'
+        },
+        'invpsu_manufacturer': {
+            'columns': ['invpsu_manufacturer'],
+            'title': u'Inventory: Manufacturer'
+        },
+        'invpsu_model': {
+            'columns': ['invpsu_model'],
+            'title': u'Inventory: Model Name'
+        },
+        'invpsu_name': {
+            'columns': ['invpsu_name'],
+            'title': u'Inventory: Name'
+        },
+        'invpsu_serial': {
+            'columns': ['invpsu_serial'],
+            'title': u'Inventory: Serial Number'
+        },
+        'invpsu_software': {
+            'columns': ['invpsu_software'],
+            'title': u'Inventory: Software'
+        },
+        'invsensor_description': {
+            'columns': ['invsensor_description'],
+            'title': u'Inventory: Description'
+        },
+        'invsensor_index': {
+            'columns': ['invsensor_index'],
+            'title': u'Inventory: Index'
+        },
+        'invsensor_location': {
+            'columns': ['invsensor_location'],
+            'title': u'Inventory: Location'
+        },
+        'invsensor_manufacturer': {
+            'columns': ['invsensor_manufacturer'],
+            'title': u'Inventory: Manufacturer'
+        },
+        'invsensor_model': {
+            'columns': ['invsensor_model'],
+            'title': u'Inventory: Model Name'
+        },
+        'invsensor_name': {
+            'columns': ['invsensor_name'],
+            'title': u'Inventory: Name'
+        },
+        'invsensor_serial': {
+            'columns': ['invsensor_serial'],
+            'title': u'Inventory: Serial Number'
+        },
+        'invsensor_software': {
+            'columns': ['invsensor_software'],
+            'title': u'Inventory: Software'
+        },
+        'invstack_description': {
+            'columns': ['invstack_description'],
+            'title': u'Inventory: Description'
+        },
+        'invstack_index': {
+            'columns': ['invstack_index'],
+            'title': u'Inventory: Index'
+        },
+        'invstack_location': {
+            'columns': ['invstack_location'],
+            'title': u'Inventory: Location'
+        },
+        'invstack_manufacturer': {
+            'columns': ['invstack_manufacturer'],
+            'title': u'Inventory: Manufacturer'
+        },
+        'invstack_model': {
+            'columns': ['invstack_model'],
+            'title': u'Inventory: Model Name'
+        },
+        'invstack_name': {
+            'columns': ['invstack_name'],
+            'title': u'Inventory: Name'
+        },
+        'invstack_serial': {
+            'columns': ['invstack_serial'],
+            'title': u'Inventory: Serial Number'
+        },
+        'invstack_software': {
+            'columns': ['invstack_software'],
+            'title': u'Inventory: Software'
+        },
+        'invswpac_arch': {
+            'columns': ['invswpac_arch'],
+            'title': u'Inventory: Architecture'
+        },
+        'invswpac_install_date': {
+            'columns': ['invswpac_install_date'],
+            'title': u'Inventory: Install Date'
+        },
+        'invswpac_name': {
+            'columns': ['invswpac_name'],
+            'title': u'Inventory: Name'
+        },
+        'invswpac_package_type': {
+            'columns': ['invswpac_package_type'],
+            'title': u'Inventory: Type'
+        },
+        'invswpac_package_version': {
+            'columns': ['invswpac_package_version'],
+            'title': u'Inventory: Package Version'
+        },
+        'invswpac_path': {
+            'columns': ['invswpac_path'],
+            'title': u'Inventory: Path'
+        },
+        'invswpac_size': {
+            'columns': ['invswpac_size'],
+            'title': u'Inventory: Size'
+        },
+        'invswpac_summary': {
+            'columns': ['invswpac_summary'],
+            'title': u'Inventory: Description'
+        },
+        'invswpac_vendor': {
+            'columns': ['invswpac_vendor'],
+            'title': u'Inventory: Publisher'
+        },
+        'invswpac_version': {
+            'columns': ['invswpac_version'],
+            'title': u'Inventory: Version'
+        },
+        'invunknown_description': {
+            'columns': ['invunknown_description'],
+            'title': u'Inventory: Description'
+        },
+        'invunknown_index': {
+            'columns': ['invunknown_index'],
+            'title': u'Inventory: Index'
+        },
+        'invunknown_location': {
+            'columns': ['invunknown_location'],
+            'title': u'Inventory: Location'
+        },
+        'invunknown_manufacturer': {
+            'columns': ['invunknown_manufacturer'],
+            'title': u'Inventory: Manufacturer'
+        },
+        'invunknown_model': {
+            'columns': ['invunknown_model'],
+            'title': u'Inventory: Model Name'
+        },
+        'invunknown_name': {
+            'columns': ['invunknown_name'],
+            'title': u'Inventory: Name'
+        },
+        'invunknown_serial': {
+            'columns': ['invunknown_serial'],
+            'title': u'Inventory: Serial Number'
+        },
+        'invunknown_software': {
+            'columns': ['invunknown_software'],
+            'title': u'Inventory: Software'
+        },
+        'log_attempt': {
+            'columns': ['log_attempt'],
+            'title': u'Log: number of check attempt'
+        },
+        'log_contact_name': {
+            'columns': ['log_contact_name'],
+            'title': u'Log: contact name'
+        },
+        'log_date': {
+            'columns': ['log_time'],
+            'title': u'Log: day of entry'
+        },
+        'log_lineno': {
+            'columns': ['log_lineno'],
+            'title': u'Log: line number in log file'
+        },
+        'log_plugin_output': {
+            'columns': [
+                'log_plugin_output', 'log_type', 'log_state_type', 'log_comment', 'custom_variables'
+            ],
+            'title': u'Log: Output'
+        },
+        'log_state_type': {
+            'columns': ['log_state_type'],
+            'title': u'Log: type of state (hard/soft/stopped/started)'
+        },
+        'log_time': {
+            'columns': ['log_time'],
+            'title': u'Log: entry time'
+        },
+        'log_type': {
+            'columns': ['log_type'],
+            'title': u'Log: event'
+        },
+        'log_what': {
+            'columns': ['log_type'],
+            'title': u'Log: host or service'
+        },
+        'num_problems': {
+            'columns': ['host_num_services', 'host_num_services_ok', 'host_num_services_pending'],
+            'title': u'Number of problems'
+        },
+        'num_services': {
+            'columns': ['host_num_services'],
+            'title': u'Number of services'
+        },
+        'num_services_crit': {
+            'columns': ['host_num_services_crit'],
+            'title': u'Number of services in state CRIT'
+        },
+        'num_services_ok': {
+            'columns': ['host_num_services_ok'],
+            'title': u'Number of services in state OK'
+        },
+        'num_services_pending': {
+            'columns': ['host_num_services_pending'],
+            'title': u'Number of services in state PENDING'
+        },
+        'num_services_unknown': {
+            'columns': ['host_num_services_unknown'],
+            'title': u'Number of services in state UNKNOWN'
+        },
+        'num_services_warn': {
+            'columns': ['host_num_services_warn'],
+            'title': u'Number of services in state WARN'
+        },
+        'perfometer': {
+            'columns': [
+                'service_perf_data', 'service_state', 'service_check_command',
+                'service_pnpgraph_present', 'service_plugin_output'
+            ],
+            'title': u'Perf-O-Meter'
+        },
+        'servicegroup': {
+            'columns': ['servicegroup_alias'],
+            'title': u'Servicegroup'
+        },
+        'servicelevel': {
+            'columns': ['custom_variable_names', 'custom_variable_values'],
+            'title': u'Servicelevel'
+        },
+        'sg_alias': {
+            'columns': ['servicegroup_alias'],
+            'title': u'Servicegroup alias'
+        },
+        'sg_name': {
+            'columns': ['servicegroup_name'],
+            'title': u'Servicegroup name'
+        },
+        'sg_num_services': {
+            'columns': ['servicegroup_num_services'],
+            'title': u'Number of services (Service Group)'
+        },
+        'sg_num_services_crit': {
+            'columns': ['servicegroup_num_services_crit'],
+            'title': u'Number of services in state CRIT (Service Group)'
+        },
+        'sg_num_services_ok': {
+            'columns': ['servicegroup_num_services_ok'],
+            'title': u'Number of services in state OK (Service Group)'
+        },
+        'sg_num_services_pending': {
+            'columns': ['servicegroup_num_services_pending'],
+            'title': u'Number of services in state PENDING (Service Group)'
+        },
+        'sg_num_services_unknown': {
+            'columns': ['servicegroup_num_services_unknown'],
+            'title': u'Number of services in state UNKNOWN (Service Group)'
+        },
+        'sg_num_services_warn': {
+            'columns': ['servicegroup_num_services_warn'],
+            'title': u'Number of services in state WARN (Service Group)'
+        },
+        'site': {
+            'columns': ['site'],
+            'title': u'Site'
+        },
+        'site_host': {
+            'columns': ['site', 'host_name'],
+            'title': u'Host site and name'
+        },
+        'sitealias': {
+            'columns': ['site'],
+            'title': u'Site Alias'
+        },
+        'stateage': {
+            'columns': ['service_last_state_change'],
+            'title': u'Service state age'
+        },
+        'svc_acknowledged': {
+            'columns': ['service_acknowledged'],
+            'title': u'Service problem acknowledged'
+        },
+        'svc_attempt': {
+            'columns': ['service_current_attempt', 'service_max_check_attempts'],
+            'title': u'Current check attempt'
+        },
+        'svc_check_age': {
+            'columns': ['service_has_been_checked', 'service_last_check', 'service_cached_at'],
+            'title': u'The time since the last check of the service'
+        },
+        'svc_check_command': {
+            'columns': ['service_check_command'],
+            'title': u'Service check command'
+        },
+        'svc_check_duration': {
+            'columns': ['service_execution_time'],
+            'title': u'Service check duration'
+        },
+        'svc_check_latency': {
+            'columns': ['service_latency'],
+            'title': u'Service check latency'
+        },
+        'svc_check_type': {
+            'columns': ['service_check_type'],
+            'title': u'Service check type'
+        },
+        'svc_contact_groups': {
+            'columns': ['service_contact_groups'],
+            'title': u'Service contact groups'
+        },
+        'svc_contacts': {
+            'columns': ['service_contacts'],
+            'title': u'Service contacts'
+        },
+        'svc_flapping': {
+            'columns': ['service_is_flapping'],
+            'title': u'Service is flapping'
+        },
+        'svc_group_memberlist': {
+            'columns': ['service_groups'],
+            'title': u'Service groups the service is member of'
+        },
+        'svc_in_downtime': {
+            'columns': ['service_scheduled_downtime_depth'],
+            'title': u'Currently in downtime'
+        },
+        'svc_in_notifper': {
+            'columns': ['service_in_notification_period'],
+            'title': u'In notification period'
+        },
+        'svc_is_active': {
+            'columns': ['service_active_checks_enabled'],
+            'title': u'Service is active'
+        },
+        'svc_last_notification': {
+            'columns': ['service_last_notification'],
+            'title': u'The time of the last service notification'
+        },
+        'svc_long_plugin_output': {
+            'columns': ['service_long_plugin_output'],
+            'title': u'Long output of check plugin'
+        },
+        'svc_next_check': {
+            'columns': ['service_next_check'],
+            'title': u'The time of the next scheduled service check'
+        },
+        'svc_next_notification': {
+            'columns': ['service_next_notification'],
+            'title': u'The time of the next service notification'
+        },
+        'svc_notifications_enabled': {
+            'columns': ['service_notifications_enabled'],
+            'title': u'Service notifications enabled'
+        },
+        'svc_notifper': {
+            'columns': ['service_notification_period'],
+            'title': u'Service notification period'
+        },
+        'svc_perf_val01': {
+            'columns': ['service_perf_data'],
+            'title': u'Service performance data - value number 01'
+        },
+        'svc_perf_val02': {
+            'columns': ['service_perf_data'],
+            'title': u'Service performance data - value number 02'
+        },
+        'svc_perf_val03': {
+            'columns': ['service_perf_data'],
+            'title': u'Service performance data - value number 03'
+        },
+        'svc_perf_val04': {
+            'columns': ['service_perf_data'],
+            'title': u'Service performance data - value number 04'
+        },
+        'svc_perf_val05': {
+            'columns': ['service_perf_data'],
+            'title': u'Service performance data - value number 05'
+        },
+        'svc_perf_val06': {
+            'columns': ['service_perf_data'],
+            'title': u'Service performance data - value number 06'
+        },
+        'svc_perf_val07': {
+            'columns': ['service_perf_data'],
+            'title': u'Service performance data - value number 07'
+        },
+        'svc_perf_val08': {
+            'columns': ['service_perf_data'],
+            'title': u'Service performance data - value number 08'
+        },
+        'svc_perf_val09': {
+            'columns': ['service_perf_data'],
+            'title': u'Service performance data - value number 09'
+        },
+        'svc_perf_val10': {
+            'columns': ['service_perf_data'],
+            'title': u'Service performance data - value number 10'
+        },
+        'svc_servicelevel': {
+            'columns': ['service_custom_variable_names', 'service_custom_variable_values'],
+            'title': u'Service service level'
+        },
+        'svc_staleness': {
+            'columns': ['service_staleness'],
+            'title': u'Service staleness value'
+        },
+        'svcdescr': {
+            'columns': ['service_description'],
+            'title': u'Service description'
+        },
+        'svcdispname': {
+            'columns': ['service_display_name'],
+            'title': u'Service alternative display name'
+        },
+        'svcoutput': {
+            'columns': ['service_plugin_output'],
+            'title': u'Service plugin output'
+        },
+        'svcstate': {
+            'columns': ['service_state', 'service_has_been_checked'],
+            'title': u'Service state'
+        },
+        'wato_folder_abs': {
+            'columns': ['host_filename'],
+            'title': u'WATO folder - complete path'
+        },
+        'wato_folder_plain': {
+            'columns': ['host_filename'],
+            'title': u'WATO folder - just folder name'
+        },
+        'wato_folder_rel': {
+            'columns': ['host_filename'],
+            'title': u'WATO folder - relative path'
+        },
+    }
+
+    for sorter_class in cmk.gui.plugins.views.sorter_registry.values():
+        sorter = sorter_class()
+        spec = expected[sorter.ident]
+
+        if isinstance(spec["title"], tuple) and spec["title"][0] == "func":
+            assert callable(sorter.title)
+        else:
+            assert sorter.title == spec["title"]
+
+        if isinstance(spec["columns"], tuple) and spec["columns"][0] == "func":
+            assert callable(sorter.columns)
+        else:
+            assert sorter.columns == spec["columns"]
+
+        assert sorter.load_inv == spec.get("load_inv", False)
+
+
+def test_register_sorter(monkeypatch):
+    monkeypatch.setattr(cmk.gui.plugins.views.utils, "sorter_registry",
+                        cmk.gui.plugins.views.utils.SorterRegistry())
+
+    def cmpfunc():
+        pass
+
+    cmk.gui.plugins.views.utils.register_sorter("abc", {
+        "title": "A B C",
+        "columns": ["x"],
+        "cmp": cmpfunc,
+    })
+
+    sorter = cmk.gui.plugins.views.utils.sorter_registry["abc"]()
+    assert isinstance(sorter, cmk.gui.plugins.views.utils.Sorter)
+    assert sorter.ident == "abc"
+    assert sorter.title == "A B C"
+    assert sorter.columns == ["x"]
+    assert sorter.cmp.__name__ == cmpfunc.__name__

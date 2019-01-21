@@ -42,7 +42,7 @@ from cmk.gui.valuespec import Checkbox, Hostname
 from cmk.gui.exceptions import MKUserError
 
 import cmk.gui.plugins.visuals
-import cmk.gui.plugins.visuals.inventory
+from cmk.gui.plugins.visuals import filter_registry
 from cmk.gui.plugins.visuals.inventory import (
     FilterInvText,
     FilterInvBool,
@@ -189,23 +189,38 @@ def declare_inv_column(invpath, datatype, title, short=None):
                 "cmp": lambda a, b: cmp_inventory_node(a, b, invpath),
             })
 
+        filter_info = inv_filter_info.get(datatype, {})
+
         # Declare filter. Sync this with declare_invtable_columns()
-        if datatype == "str":
-            cmk.gui.plugins.visuals.inventory.declare_filter(800, FilterInvText(
-                name, invpath, title))
-        elif datatype == "bool":
-            cmk.gui.plugins.visuals.inventory.declare_filter(800, FilterInvBool(
-                name, invpath, title))
+        if datatype in ["str", "bool"]:
+            parent_class = FilterInvText if datatype == "str" else FilterInvBool
+            filter_class = type(
+                "FilterInv%s" % name.title(), (parent_class,), {
+                    "_ident": name,
+                    "_title": title,
+                    "_inv_path": invpath,
+                    "_invpath": property(lambda s: s._inv_path),
+                    "sort_index": property(lambda s: 800),
+                    "ident": property(lambda s: s._ident),
+                    "title": property(lambda s: s._title),
+                })
         else:
-            filter_info = inv_filter_info.get(datatype, {})
-            cmk.gui.plugins.visuals.inventory.declare_filter(
-                800,
-                FilterInvFloat(
-                    name,
-                    invpath,
-                    title,
-                    unit=filter_info.get("unit"),
-                    scale=filter_info.get("scale", 1.0)))
+            filter_class = type(
+                "FilterInv%s" % name.title(), (FilterInvFloat,), {
+                    "_ident": name,
+                    "_title": title,
+                    "_inv_path": invpath,
+                    "_unit_val": filter_info.get("unit"),
+                    "_scale_val": filter_info.get("scale", 1.0),
+                    "_unit": property(lambda s: s._unit_val),
+                    "_scale": property(lambda s: s._scale_val),
+                    "_invpath": property(lambda s: s._inv_path),
+                    "sort_index": property(lambda s: 800),
+                    "ident": property(lambda s: s._ident),
+                    "title": property(lambda s: s._title),
+                })
+
+        filter_registry.register(filter_class)
 
 
 def cmp_inventory_node(a, b, invpath):
@@ -1449,18 +1464,26 @@ def declare_invtable_columns(infoname, invpath, topic):
             paint_name = "str"
             paint_function = inv_paint_generic
 
-        # Sync this with declare_inv_column()
-        filter_class = hint.get("filter")
-        if not filter_class:
-            if paint_name == "str":
-                filter_class = FilterInvtableText
-            # TODO:
-            #elif paint_name == "bool":
-            #    filter_class = FilterInvtableBool
-            else:
-                filter_class = FilterInvtableIDRange
-
         title = inv_titleinfo(sub_invpath, None)[1]
+
+        # Sync this with declare_inv_column()
+        parent_class = hint.get("filter")
+        if not parent_class:
+            if paint_name == "str":
+                parent_class = FilterInvtableText
+            else:
+                parent_class = FilterInvtableIDRange
+
+        filter_class = type(
+            "FilterInv%s" % name.title(), (parent_class,), {
+                "_inv_info": infoname,
+                "_ident": infoname + "_" + name,
+                "_title": topic + ": " + title,
+                "_invinfo": property(lambda s: s._inv_info),
+                "sort_index": property(lambda s: 800),
+                "ident": property(lambda s: s._ident),
+                "title": property(lambda s: s._title),
+            })
 
         declare_invtable_column(infoname, name, topic, title, hint.get("short", title), sortfunc,
                                 paint_function, filter_class)
@@ -1484,8 +1507,7 @@ def declare_invtable_column(infoname, name, topic, title, short_title, sortfunc,
             "cmp": lambda a, b: sortfunc(a.get(column), b.get(column)),
         })
 
-    cmk.gui.plugins.visuals.inventory.declare_filter(
-        800, filter_class(infoname, name, topic + ": " + title))
+    filter_registry.register(filter_class)
 
 
 # One master function that does all

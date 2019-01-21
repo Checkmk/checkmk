@@ -35,7 +35,6 @@ import cmk.gui.config as config
 import cmk.gui.sites as sites
 import cmk.gui.bi as bi
 import cmk.gui.mkeventd as mkeventd
-from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.valuespec import (DualListChoice)
@@ -43,24 +42,24 @@ from cmk.gui.valuespec import (DualListChoice)
 if cmk.is_managed_edition():
     import cmk.gui.cme.plugins.visuals.managed
 
-from . import (
-    declare_filter,
+from cmk.gui.plugins.visuals import (
+    filter_registry,
     Filter,
     FilterUnicodeFilter,
     FilterTristate,
     FilterTime,
-    FilterSite,
+    FilterCRESite,
 )
 
 
 # Filters for substring search, displaying a text input field
 class FilterText(Filter):
-    def __init__(self, name, title, info, column, htmlvar, op, negateable=False, show_heading=True):
+    def __init__(self, info, column, htmlvar, op, negateable=False, show_heading=True):
         htmlvars = [htmlvar]
         if negateable:
             htmlvars.append("neg_" + htmlvar)
         link_columns = column if isinstance(column, list) else [column]
-        Filter.__init__(self, name, title, info, htmlvars, link_columns)
+        super(FilterText, self).__init__(info, htmlvars, link_columns)
         self.op = op
         self.column = column
         self.negateable = negateable
@@ -107,17 +106,184 @@ class FilterText(Filter):
 
 
 class FilterUnicode(FilterText):
-    def __init__(self, *args):
-        FilterText.__init__(self, *args)
-
     def _current_value(self):
         htmlvar = self.htmlvars[0]
         return html.get_unicode_input(htmlvar, "")
 
 
+@filter_registry.register
+class FilterHostregex(FilterText):
+    @property
+    def ident(self):
+        return "hostregex"
+
+    @property
+    def title(self):
+        return _("Hostname")
+
+    @property
+    def sort_index(self):
+        return 100
+
+    @property
+    def description(self):
+        return _("Search field allowing regular expressions and partial matches")
+
+    def __init__(self):
+        FilterText.__init__(self, "host", "host_name", "host_regex", "~~", True)
+
+
+@filter_registry.register
+class FilterHost(FilterText):
+    @property
+    def ident(self):
+        return "host"
+
+    @property
+    def title(self):
+        return _("Hostname (exact match)")
+
+    @property
+    def sort_index(self):
+        return 101
+
+    @property
+    def description(self):
+        return _("Exact match, used for linking")
+
+    def __init__(self):
+        FilterText.__init__(self, "host", "host_name", "host", "=", True)
+
+
+@filter_registry.register
+class FilterHostalias(FilterUnicode):
+    @property
+    def ident(self):
+        return "hostalias"
+
+    @property
+    def title(self):
+        return _("Hostalias")
+
+    @property
+    def sort_index(self):
+        return 102
+
+    @property
+    def description(self):
+        return _("Search field allowing regular expressions and partial matches")
+
+    def __init__(self):
+        FilterUnicode.__init__(self, "host", "host_alias", "hostalias", "~~", True)
+
+
+@filter_registry.register
+class FilterServiceregex(FilterUnicode):
+    @property
+    def ident(self):
+        return "serviceregex"
+
+    @property
+    def title(self):
+        return _("Service")
+
+    @property
+    def sort_index(self):
+        return 200
+
+    @property
+    def description(self):
+        return _("Search field allowing regular expressions and partial matches")
+
+    def __init__(self):
+        FilterUnicode.__init__(self, "service", "service_description", "service_regex", "~~", True)
+
+
+@filter_registry.register
+class FilterService(FilterUnicode):
+    @property
+    def ident(self):
+        return "service"
+
+    @property
+    def title(self):
+        return _("Service (exact match)")
+
+    @property
+    def sort_index(self):
+        return 201
+
+    @property
+    def description(self):
+        return _("Exact match, used for linking")
+
+    def __init__(self):
+        FilterUnicode.__init__(self, "service", "service_description", "service", "=")
+
+
+@filter_registry.register
+class FilterServiceDisplayName(FilterUnicode):
+    @property
+    def ident(self):
+        return "service_display_name"
+
+    @property
+    def title(self):
+        return _("Service alternative display name")
+
+    @property
+    def sort_index(self):
+        return 202
+
+    @property
+    def description(self):
+        return _("Alternative display name of the service, regex match")
+
+    def __init__(self):
+        FilterUnicode.__init__(self, "service", "service_display_name", "service_display_name",
+                               "~~")
+
+
+@filter_registry.register
+class FilterOutput(FilterUnicode):
+    @property
+    def ident(self):
+        return "output"
+
+    @property
+    def title(self):
+        return _("Status detail")
+
+    @property
+    def sort_index(self):
+        return 202
+
+    def __init__(self):
+        FilterUnicode.__init__(self, "service", "service_plugin_output", "service_output", "~~",
+                               True)
+
+
+@filter_registry.register
 class FilterHostnameOrAlias(FilterUnicode):
-    def __init__(self, *args):
-        FilterUnicode.__init__(self, *args)
+    @property
+    def ident(self):
+        return "hostnameoralias"
+
+    @property
+    def title(self):
+        return _("Hostname or Alias")
+
+    @property
+    def sort_index(self):
+        return 102
+
+    @property
+    def description(self):
+        return _("Search field allowing regular expressions and partial matches")
+
+    def __init__(self):
+        FilterUnicode.__init__(self, "host", ["host_alias", "host_name"], "hostnameoralias", "~~",
+                               False)
 
     def filter(self, infoname):
         current_value = self._current_value()
@@ -139,72 +305,8 @@ class FilterHostnameOrAlias(FilterUnicode):
             return ""
 
 
-#            filter          title          info     column      htmlvar
-declare_filter(
-    100,
-    FilterText("hostregex", _("Hostname"), "host", "host_name", "host_regex", "~~", True),
-    _("Search field allowing regular expressions and partial matches"),
-)
-declare_filter(
-    101,
-    FilterText("host", _("Hostname (exact match)"), "host", "host_name", "host", "=", True),
-    _("Exact match, used for linking"),
-)
-declare_filter(
-    102,
-    FilterUnicode("hostalias", _("Hostalias"), "host", "host_alias", "hostalias", "~~", True),
-    _("Search field allowing regular expressions and partial matches"),
-)
-declare_filter(
-    200,
-    FilterUnicode("serviceregex", _("Service"), "service", "service_description", "service_regex",
-                  "~~", True),
-    _("Search field allowing regular expressions and partial matches"),
-)
-declare_filter(
-    201,
-    FilterUnicode("service", _("Service (exact match)"), "service", "service_description",
-                  "service", "="),
-    _("Exact match, used for linking"),
-)
-declare_filter(
-    202,
-    FilterUnicode("service_display_name", _("Service alternative display name"), "service",
-                  "service_display_name", "service_display_name", "~~"),
-    _("Alternative display name of the service, regex match"),
-)
-declare_filter(
-    202,
-    FilterUnicode("output", _("Status detail"), "service", "service_plugin_output",
-                  "service_output", "~~", True),
-)
-declare_filter(
-    102,
-    FilterHostnameOrAlias("hostnameoralias", _("Hostname or Alias"), "host",
-                          ["host_alias", "host_name"], "hostnameoralias", "~~", False),
-    _("Search field allowing regular expressions and partial matches"),
-)
-
-
 class FilterIPAddress(Filter):
-    def __init__(self, what):
-        self._what = what
-
-        if what == "primary":
-            varname = "host_address"
-            title = _("Host address (Primary)")
-            link_columns = ["host_address"]
-        elif what == "ipv4":
-            varname = "host_ipv4_address"
-            title = _("Host address (IPv4)")
-            link_columns = []
-        else:
-            varname = "host_ipv6_address"
-            title = _("Host address (IPv6)")
-            link_columns = []
-
-        # name, title, info, htmlvars, link_columns
-        Filter.__init__(self, varname, title, "host", [varname, varname + "_prefix"], link_columns)
+    _what = None
 
     def display(self):
         html.text_input(self.htmlvars[0])
@@ -243,20 +345,85 @@ class FilterIPAddress(Filter):
         return html.request.var(self.htmlvars[0])
 
 
-declare_filter(102, FilterIPAddress(what="primary"))
-declare_filter(102, FilterIPAddress(what="ipv4"))
-declare_filter(102, FilterIPAddress(what="ipv6"))
+@filter_registry.register
+class FilterHostAddress(FilterIPAddress):
+    _what = "primary"
 
+    @property
+    def ident(self):
+        return "host_address"
 
-class FilterAddressFamily(Filter):
+    @property
+    def title(self):
+        return _("Host address (Primary)")
+
+    @property
+    def sort_index(self):
+        return 102
+
     def __init__(self):
-        Filter.__init__(
-            self,
-            name="address_family",
-            title=_("Host address family (Primary)"),
-            info="host",
-            htmlvars=["address_family"],
-            link_columns=[])
+        FilterIPAddress.__init__(
+            self, "host", ["host_address", "host_address_prefix"], link_columns=["host_address"])
+
+
+@filter_registry.register
+class FilterHostIpv4Address(FilterIPAddress):
+    _what = "ipv4"
+
+    @property
+    def ident(self):
+        return "host_ipv4_address"
+
+    @property
+    def title(self):
+        return _("Host address (IPv4)")
+
+    @property
+    def sort_index(self):
+        return 102
+
+    def __init__(self):
+        FilterIPAddress.__init__(
+            self, "host", ["host_ipv4_address", "host_ipv4_address_prefix"], link_columns=[])
+
+
+@filter_registry.register
+class FilterHostIpv6Address(FilterIPAddress):
+    _what = "ipv6"
+
+    @property
+    def ident(self):
+        return "host_ipv6_address"
+
+    @property
+    def title(self):
+        return _("Host address (IPv6)")
+
+    @property
+    def sort_index(self):
+        return 102
+
+    def __init__(self):
+        FilterIPAddress.__init__(
+            self, "host", ["host_ipv6_address", "host_ipv6_address_prefix"], link_columns=[])
+
+
+@filter_registry.register
+class FilterAddressFamily(Filter):
+    @property
+    def ident(self):
+        return "address_family"
+
+    @property
+    def title(self):
+        return _("Host address family (Primary)")
+
+    @property
+    def sort_index(self):
+        return 103
+
+    def __init__(self):
+        Filter.__init__(self, info="host", htmlvars=["address_family"], link_columns=[])
 
     def display(self):
         html.begin_radio_group()
@@ -272,20 +439,25 @@ class FilterAddressFamily(Filter):
         return "Filter: host_custom_variables = ADDRESS_FAMILY %s\n" % livestatus.lqencode(family)
 
 
-declare_filter(103, FilterAddressFamily())
-
-
+@filter_registry.register
 class FilterAddressFamilies(Filter):
+    @property
+    def ident(self):
+        return "address_families"
+
+    @property
+    def title(self):
+        return _("Host address families")
+
+    @property
+    def sort_index(self):
+        return 103
+
     def __init__(self):
         Filter.__init__(
-            self,
-            name="address_families",
-            title=_("Host address families"),
-            info="host",
-            htmlvars=[
+            self, info="host", htmlvars=[
                 "address_families",
-            ],
-            link_columns=[])
+            ], link_columns=[])
 
     def display(self):
         html.begin_radio_group()
@@ -324,23 +496,15 @@ class FilterAddressFamilies(Filter):
             return filt
 
 
-declare_filter(103, FilterAddressFamilies())
-
-
 class FilterMultigroup(Filter):
-    def __init__(self, what, title, negateable=False):
+    def __init__(self, what):
         self.htmlvar = what + "groups"
         htmlvars = [self.htmlvar]
-        self.negateable = negateable
+        # TODO: Is always negateable. Cleanup the class.
+        self.negateable = True
         if self.negateable:
             htmlvars.append("neg_" + self.htmlvar)
-        Filter.__init__(
-            self,
-            self.htmlvar,  # name
-            title,
-            what,  # info, e.g. "service"
-            htmlvars,
-            [])  # no link info needed
+        Filter.__init__(self, info=what, htmlvars=htmlvars, link_columns=[])
         self.what = what
 
     def double_height(self):
@@ -387,21 +551,60 @@ class FilterMultigroup(Filter):
         return filters
 
 
+@filter_registry.register
+class FilterHostgroups(FilterMultigroup):
+    @property
+    def ident(self):
+        return "hostgroups"
+
+    @property
+    def title(self):
+        return _("Several Host Groups")
+
+    @property
+    def sort_index(self):
+        return 105
+
+    @property
+    def description(self):
+        return _("Selection of multiple host groups")
+
+    def __init__(self):
+        FilterMultigroup.__init__(self, "host")
+
+
+@filter_registry.register
+class FilterServicegroups(FilterMultigroup):
+    @property
+    def ident(self):
+        return "servicegroups"
+
+    @property
+    def title(self):
+        return _("Several Service Groups")
+
+    @property
+    def sort_index(self):
+        return 205
+
+    @property
+    def description(self):
+        return _("Selection of multiple service groups")
+
+    def __init__(self):
+        FilterMultigroup.__init__(self, "service")
+
+
 # Selection of a host/service(-contact) group as an attribute of a host or service
 class FilterGroupCombo(Filter):
-    def __init__(self, what, title, enforce):
+    def __init__(self, what, enforce):
         self.enforce = enforce
         self.prefix = "opt" if not self.enforce else ""
         htmlvars = [self.prefix + what + "_group"]
         if not enforce:
             htmlvars.append("neg_" + htmlvars[0])
         Filter.__init__(
-            self,
-            self.prefix + what + "group",  # name, e.g. "hostgroup"
-            title,  # title, e.g. "Hostgroup"
-            what.split("_")[0],  # info, e.g. "host"
-            htmlvars,  # htmlvars, e.g. "host_group"
-            [what + "group_name"])  # rows needed to fetch for link information
+            self, info=what.split("_")[0], htmlvars=htmlvars, link_columns=[what + "group_name"])
         self.what = what
 
     def double_height(self):
@@ -469,69 +672,194 @@ class FilterGroupCombo(Filter):
             return alias
 
 
-declare_filter(
-    104,
-    FilterGroupCombo("host", _("Host is in Group"), False),
-    _("Optional selection of host group"),
-)
-declare_filter(
-    105,
-    FilterMultigroup("host", _("Several Host Groups"), True),
-    _("Selection of multiple host groups"),
-)
-declare_filter(
-    204,
-    FilterGroupCombo("service", _("Service is in Group"), False),
-    _("Optional selection of service group"),
-)
-declare_filter(
-    205,
-    FilterGroupCombo("service", _("Servicegroup (enforced)"), True),
-    _("Dropdown list, selection of service group is <b>enforced</b>"),
-)
-declare_filter(
-    205,
-    FilterMultigroup("service", _("Several Service Groups"), True),
-    _("Selection of multiple service groups"),
-)
+@filter_registry.register
+class FilterOpthostgroup(FilterGroupCombo):
+    @property
+    def ident(self):
+        return "opthostgroup"
 
-declare_filter(
-    106,
-    FilterGroupCombo("host_contact", _("Host Contact Group"), False),
-    _("Optional selection of host contact group"),
-)
-declare_filter(
-    206,
-    FilterGroupCombo("service_contact", _("Service Contact Group"), False),
-    _("Optional selection of service contact group"),
-)
+    @property
+    def title(self):
+        return _("Host is in Group")
 
-declare_filter(
-    107,
-    FilterText("host_ctc", _("Host Contact"), "host", "host_contacts", "host_ctc", ">="),
-)
-declare_filter(
-    107,
-    FilterText("host_ctc_regex", _("Host Contact (Regex)"), "host", "host_contacts",
-               "host_ctc_regex", "~~"),
-)
-declare_filter(
-    207,
-    FilterText("service_ctc", _("Service Contact"), "service", "service_contacts", "service_ctc",
-               ">="),
-)
-declare_filter(
-    207,
-    FilterText("service_ctc_regex", _("Service Contact (Regex)"), "service", "service_contacts",
-               "service_ctc_regex", "~~"),
-)
+    @property
+    def sort_index(self):
+        return 104
+
+    @property
+    def description(self):
+        return _("Optional selection of host group")
+
+    def __init__(self):
+        FilterGroupCombo.__init__(self, "host", False)
+
+
+@filter_registry.register
+class FilterOptservicegroup(FilterGroupCombo):
+    @property
+    def ident(self):
+        return "optservicegroup"
+
+    @property
+    def title(self):
+        return _("Service is in Group")
+
+    @property
+    def sort_index(self):
+        return 204
+
+    @property
+    def description(self):
+        return _("Optional selection of service group")
+
+    def __init__(self):
+        FilterGroupCombo.__init__(self, "service", False)
+
+
+# TODO: Had a name conflict with servicegroup filter for servicegroup info.
+# The other one was registered -> Investigate.
+#@filter_registry.register
+#class FilterServicegroup(FilterGroupCombo):
+#    @property
+#    def ident(self):
+#        return "servicegroup"
+#
+#    @property
+#    def title(self):
+#        return _("Servicegroup (enforced)")
+#
+#    @property
+#    def sort_index(self):
+#        return 205
+#
+#    @property
+#    def description(self):
+#        return _("Dropdown list, selection of service group is <b>enforced</b>")
+#
+#    def __init__(self):
+#        FilterGroupCombo.__init__(self, "service", _("Servicegroup (enforced)"), True)
+
+
+@filter_registry.register
+class FilterOpthostContactgroup(FilterGroupCombo):
+    @property
+    def ident(self):
+        return "opthost_contactgroup"
+
+    @property
+    def title(self):
+        return _("Host Contact Group")
+
+    @property
+    def sort_index(self):
+        return 106
+
+    @property
+    def description(self):
+        return _("Optional selection of host contact group")
+
+    def __init__(self):
+        FilterGroupCombo.__init__(self, "host_contact", False)
+
+
+@filter_registry.register
+class FilterOptserviceContactgroup(FilterGroupCombo):
+    @property
+    def ident(self):
+        return "optservice_contactgroup"
+
+    @property
+    def title(self):
+        return _("Service Contact Group")
+
+    @property
+    def sort_index(self):
+        return 206
+
+    @property
+    def description(self):
+        return _("Optional selection of service contact group")
+
+    def __init__(self):
+        FilterGroupCombo.__init__(self, "service_contact", False)
+
+
+@filter_registry.register
+class FilterHostCtc(FilterText):
+    @property
+    def ident(self):
+        return "host_ctc"
+
+    @property
+    def title(self):
+        return _("Host Contact")
+
+    @property
+    def sort_index(self):
+        return 107
+
+    def __init__(self):
+        FilterText.__init__(self, "host", "host_contacts", "host_ctc", ">=")
+
+
+@filter_registry.register
+class FilterHostCtcRegex(FilterText):
+    @property
+    def ident(self):
+        return "host_ctc_regex"
+
+    @property
+    def title(self):
+        return _("Host Contact (Regex)")
+
+    @property
+    def sort_index(self):
+        return 107
+
+    def __init__(self):
+        FilterText.__init__(self, "host", "host_contacts", "host_ctc_regex", "~~")
+
+
+@filter_registry.register
+class FilterServiceCtc(FilterText):
+    @property
+    def ident(self):
+        return "service_ctc"
+
+    @property
+    def title(self):
+        return _("Service Contact")
+
+    @property
+    def sort_index(self):
+        return 207
+
+    def __init__(self):
+        FilterText.__init__(self, "service", "service_contacts", "service_ctc", ">=")
+
+
+@filter_registry.register
+class FilterServiceCtcRegex(FilterText):
+    @property
+    def ident(self):
+        return "service_ctc_regex"
+
+    @property
+    def title(self):
+        return _("Service Contact (Regex)")
+
+    @property
+    def sort_index(self):
+        return 207
+
+    def __init__(self):
+        FilterText.__init__(self, "service", "service_contacts", "service_ctc_regex", "~~")
 
 
 # Selection of one group to be used in the info "hostgroup" or "servicegroup".
 class FilterGroupSelection(Filter):
-    def __init__(self, infoname, title):
-        Filter.__init__(
-            self, name=infoname, title=title, info=infoname, htmlvars=[infoname], link_columns=[])
+    def __init__(self, infoname):
+        Filter.__init__(self, info=infoname, htmlvars=[infoname], link_columns=[])
         self.what = infoname
 
     def display(self):
@@ -552,22 +880,94 @@ class FilterGroupSelection(Filter):
         return [(self.htmlvars[0], group_name)]
 
 
-# Filter for selecting one specific host group in the hostgroup views
-declare_filter(104, FilterGroupSelection("hostgroup", _("Host Group")),
-               _("Selection of the host group"))
-declare_filter(104, FilterGroupSelection("servicegroup", _("Service Group")),
-               _("Selection of the service group"))
+@filter_registry.register
+class FilterHostgroup(FilterGroupSelection):
+    @property
+    def ident(self):
+        return "hostgroup"
+
+    @property
+    def title(self):
+        return _("Host Group")
+
+    @property
+    def sort_index(self):
+        return 104
+
+    @property
+    def description(self):
+        return _("Selection of the host group")
+
+    def __init__(self):
+        FilterGroupSelection.__init__(self, "hostgroup")
 
 
+@filter_registry.register
+class FilterServicegroup(FilterGroupSelection):
+    @property
+    def ident(self):
+        return "servicegroup"
+
+    @property
+    def title(self):
+        return _("Service Group")
+
+    @property
+    def sort_index(self):
+        return 104
+
+    @property
+    def description(self):
+        return _("Selection of the service group")
+
+    def __init__(self):
+        FilterGroupSelection.__init__(self, "servicegroup")
+
+
+@filter_registry.register
+class FilterHostgroupnameregex(FilterText):
+    @property
+    def ident(self):
+        return "hostgroupnameregex"
+
+    @property
+    def title(self):
+        return _("Hostgroup (Regex)")
+
+    @property
+    def sort_index(self):
+        return 101
+
+    @property
+    def description(self):
+        return _(
+            "Search field allowing regular expressions and partial matches on the names of hostgroups"
+        )
+
+    def __init__(self):
+        FilterText.__init__(self, "hostgroup", "hostgroup_name", "hostgroup_regex", "~~")
+
+
+@filter_registry.register
 class FilterHostgroupVisibility(Filter):
-    def __init__(self, name, title):
-        Filter.__init__(
-            self,
-            name=name,
-            title=title,
-            info="hostgroup",
-            htmlvars=["hostgroupshowempty"],
-            link_columns=[])
+    @property
+    def ident(self):
+        return "hostgroupvisibility"
+
+    @property
+    def title(self):
+        return _("Empty Hostgroup Visibilitiy")
+
+    @property
+    def sort_index(self):
+        return 102
+
+    @property
+    def description(self):
+        return _("You can enable this checkbox to show empty hostgroups")
+
+    def __init__(self):
+        Filter.__init__(self, info="hostgroup", htmlvars=["hostgroupshowempty"], link_columns=[])
 
     def display(self):
         html.checkbox("hostgroupshowempty", False, label="Show empty groups")
@@ -578,64 +978,110 @@ class FilterHostgroupVisibility(Filter):
         return "Filter: hostgroup_num_hosts > 0\n"
 
 
-declare_filter(
-    101,
-    FilterText("hostgroupnameregex", _("Hostgroup (Regex)"), "hostgroup", "hostgroup_name",
-               "hostgroup_regex", "~~"),
-    _("Search field allowing regular expressions and partial matches on the names of hostgroups"),
-)
-declare_filter(
-    102,
-    FilterHostgroupVisibility("hostgroupvisibility", _("Empty Hostgroup Visibilitiy")),
-    _("You can enable this checkbox to show empty hostgroups"),
-)
-declare_filter(
-    101,
-    FilterText(
-        "servicegroupnameregex",
-        _("Servicegroup (Regex)"),
-        "servicegroup",
-        "servicegroup_name",
-        "servicegroup_regex",
-        "~~",
-        negateable=True),
-    _("Search field allowing regular expression and partial matches"),
-)
+@filter_registry.register
+class FilterServicegroupnameregex(FilterText):
+    @property
+    def ident(self):
+        return "servicegroupnameregex"
 
-declare_filter(
-    101,
-    FilterText("servicegroupname", _("Servicegroup (enforced)"), "servicegroup",
-               "servicegroup_name", "servicegroup_name", "="),
-    _("Exact match, used for linking"),
-)
+    @property
+    def title(self):
+        return _("Servicegroup (Regex)")
+
+    @property
+    def sort_index(self):
+        return 101
+
+    @property
+    def description(self):
+        return _("Search field allowing regular expression and partial matches")
+
+    def __init__(self):
+        FilterText.__init__(
+            self, "servicegroup", "servicegroup_name", "servicegroup_regex", "~~", negateable=True)
+
+
+@filter_registry.register
+class FilterServicegroupname(FilterText):
+    @property
+    def ident(self):
+        return "servicegroupname"
+
+    @property
+    def title(self):
+        return _("Servicegroup (enforced)")
+
+    @property
+    def sort_index(self):
+        return 101
+
+    @property
+    def description(self):
+        return _("Exact match, used for linking")
+
+    def __init__(self):
+        FilterText.__init__(self, "servicegroup", "servicegroup_name", "servicegroup_name", "=")
 
 
 class FilterQueryDropdown(Filter):
-    def __init__(self, name, title, info, query, filterline):
-        Filter.__init__(self, name, title, info, [name], [])
+    def __init__(self, info, query, filterline):
+        Filter.__init__(self, info, [self.ident], [])
         self.query = query
         self.filterline = filterline
 
     def display(self):
         selection = sites.live().query_column_unique(self.query)
-        html.dropdown(self.name, [("", "")] + [(x, x) for x in selection], ordered=True)
+        html.dropdown(self.ident, [("", "")] + [(x, x) for x in selection], ordered=True)
 
     def filter(self, infoname):
-        current = html.request.var(self.name)
+        current = html.request.var(self.ident)
         if current:
             return self.filterline % livestatus.lqencode(current)
         return ""
 
 
-declare_filter(110, FilterQueryDropdown("host_check_command", _("Host check command"), "host", \
-        "GET commands\nCache: reload\nColumns: name\n", "Filter: host_check_command ~ ^%s(!.*)?\n"))
-declare_filter(210, FilterQueryDropdown("check_command", _("Service check command"), "service", \
-        "GET commands\nCache: reload\nColumns: name\n", "Filter: service_check_command ~ ^%s(!.*)?$\n"))
+@filter_registry.register
+class FilterHostCheckCommand(FilterQueryDropdown):
+    @property
+    def ident(self):
+        return "host_check_command"
+
+    @property
+    def title(self):
+        return _("Host check command")
+
+    @property
+    def sort_index(self):
+        return 110
+
+    def __init__(self):
+        FilterQueryDropdown.__init__(self, "host", "GET commands\nCache: reload\nColumns: name\n",
+                                     "Filter: host_check_command ~ ^%s(!.*)?\n")
+
+
+@filter_registry.register
+class FilterCheckCommand(FilterQueryDropdown):
+    @property
+    def ident(self):
+        return "check_command"
+
+    @property
+    def title(self):
+        return _("Service check command")
+
+    @property
+    def sort_index(self):
+        return 210
+
+    def __init__(self):
+        FilterQueryDropdown.__init__(self, "service",
+                                     "GET commands\nCache: reload\nColumns: name\n",
+                                     "Filter: service_check_command ~ ^%s(!.*)?$\n")
 
 
 class FilterServiceState(Filter):
-    def __init__(self, name, title, prefix):
-        Filter.__init__(self, name, title, "service", [
+    def __init__(self, prefix):
+        Filter.__init__(self, "service", [
             prefix + "_filled",
             prefix + "st0",
             prefix + "st1",
@@ -686,16 +1132,59 @@ class FilterServiceState(Filter):
         return "".join(headers)
 
 
-declare_filter(215, FilterServiceState("svcstate", _("Service states"), ""))
-declare_filter(216, FilterServiceState("svchardstate", _("Service hard states"), "hd"))
+@filter_registry.register
+class FilterSvcstate(FilterServiceState):
+    @property
+    def ident(self):
+        return "svcstate"
+
+    @property
+    def title(self):
+        return _("Service states")
+
+    @property
+    def sort_index(self):
+        return 215
+
+    def __init__(self):
+        FilterServiceState.__init__(self, prefix="")
 
 
+@filter_registry.register
+class FilterSvchardstate(FilterServiceState):
+    @property
+    def ident(self):
+        return "svchardstate"
+
+    @property
+    def title(self):
+        return _("Service hard states")
+
+    @property
+    def sort_index(self):
+        return 216
+
+    def __init__(self):
+        FilterServiceState.__init__(self, prefix="hd")
+
+
+@filter_registry.register
 class FilterHostState(Filter):
+    @property
+    def ident(self):
+        return "hoststate"
+
+    @property
+    def title(self):
+        return _("Host states")
+
+    @property
+    def sort_index(self):
+        return 115
+
     def __init__(self):
         Filter.__init__(
             self,
-            "hoststate",
-            _("Host states"),
             "host",
             ["hoststate_filled", "hst0", "hst1", "hst2", "hstp"],
             [],
@@ -741,18 +1230,27 @@ class FilterHostState(Filter):
         return "".join(headers)
 
 
-declare_filter(115, FilterHostState())
-
-
+@filter_registry.register
 class FilterHostsHavingServiceProblems(Filter):
+    @property
+    def ident(self):
+        return "hosts_having_service_problems"
+
+    @property
+    def title(self):
+        return _("Hosts having certain service problems")
+
+    @property
+    def sort_index(self):
+        return 120
+
     def __init__(self):
-        Filter.__init__(self, "hosts_having_service_problems",
-                        _("Hosts having certain service problems"), "host", [
-                            "hosts_having_services_warn",
-                            "hosts_having_services_crit",
-                            "hosts_having_services_pending",
-                            "hosts_having_services_unknown",
-                        ], [])
+        Filter.__init__(self, "host", [
+            "hosts_having_services_warn",
+            "hosts_having_services_crit",
+            "hosts_having_services_pending",
+            "hosts_having_services_unknown",
+        ], [])
 
     def display(self):
         html.begin_checkbox_group()
@@ -778,12 +1276,9 @@ class FilterHostsHavingServiceProblems(Filter):
         return ""
 
 
-declare_filter(120, FilterHostsHavingServiceProblems())
-
-
 class FilterStateType(FilterTristate):
-    def __init__(self, info, column, title, deflt=-1):
-        FilterTristate.__init__(self, column, title, info, None, deflt)
+    def __init__(self, info):
+        FilterTristate.__init__(self, info, None, deflt=-1)
 
     def display(self):
         current = html.request.var(self.varname)
@@ -797,23 +1292,45 @@ class FilterStateType(FilterTristate):
         return "Filter: state_type = %d\n" % int(positive)
 
 
-declare_filter(116, FilterStateType("host", "host_state_type", _("Host state type")))
-declare_filter(217, FilterStateType("service", "service_state_type", _("Service state type")))
+@filter_registry.register
+class FilterHostStateType(FilterStateType):
+    @property
+    def ident(self):
+        return "host_state_type"
+
+    @property
+    def title(self):
+        return _("Host state type")
+
+    @property
+    def sort_index(self):
+        return 116
+
+    def __init__(self):
+        FilterStateType.__init__(self, "host")
 
 
-class FilterNagiosFlag(FilterTristate):
-    def __init__(self, info, column, title, deflt=-1):
-        FilterTristate.__init__(self, column, title, info, column, deflt)
+@filter_registry.register
+class FilterServiceStateType(FilterStateType):
+    @property
+    def ident(self):
+        return "service_state_type"
 
-    def filter_code(self, infoname, positive):
-        if positive:
-            return "Filter: %s != 0\n" % self.column
-        return "Filter: %s = 0\n" % self.column
+    @property
+    def title(self):
+        return _("Service state type")
+
+    @property
+    def sort_index(self):
+        return 217
+
+    def __init__(self):
+        FilterStateType.__init__(self, "service")
 
 
 class FilterNagiosExpression(FilterTristate):
-    def __init__(self, info, name, title, pos, neg, deflt=-1):
-        FilterTristate.__init__(self, name, title, info, None, deflt)
+    def __init__(self, info, pos, neg, deflt=-1):
+        FilterTristate.__init__(self, info, None, deflt)
         self.pos = pos
         self.neg = neg
 
@@ -821,84 +1338,406 @@ class FilterNagiosExpression(FilterTristate):
         return self.pos if positive else self.neg
 
 
-declare_filter(
-    250,
-    FilterNagiosFlag("service", "service_process_performance_data",
-                     _("Processes performance data")))
-declare_filter(
-    251,
-    FilterNagiosExpression("service", "has_performance_data", _("Has performance data"),
-                           "Filter: service_perf_data != \n", "Filter: service_perf_data = \n"))
+@filter_registry.register
+class FilterHasPerformanceData(FilterNagiosExpression):
+    @property
+    def ident(self):
+        return "has_performance_data"
 
-declare_filter(
-    130, FilterNagiosFlag("host", "host_in_notification_period", _("Host in notification period")))
-declare_filter(130, FilterNagiosFlag("host", "host_in_service_period", _("Host in service period")))
-declare_filter(
-    131, FilterNagiosFlag("host", "host_acknowledged", _("Host problem has been acknowledged")))
-declare_filter(
-    132, FilterNagiosFlag("host", "host_active_checks_enabled", _("Host active checks enabled")))
-declare_filter(
-    133, FilterNagiosFlag("host", "host_notifications_enabled", _("Host notifications enabled")))
-declare_filter(230, FilterNagiosFlag("service", "service_acknowledged", _("Problem acknowledged")))
-declare_filter(
-    231,
-    FilterNagiosFlag("service", "service_in_notification_period",
-                     _("Service in notification period")))
-declare_filter(
-    231, FilterNagiosFlag("service", "service_in_service_period", _("Service in service period")))
-declare_filter(
-    233, FilterNagiosFlag("service", "service_active_checks_enabled", _("Active checks enabled")))
-declare_filter(
-    234, FilterNagiosFlag("service", "service_notifications_enabled", _("Notifications enabled")))
-declare_filter(236, FilterNagiosFlag("service", "service_is_flapping", _("Flapping")))
-declare_filter(
-    231, FilterNagiosFlag("service", "service_scheduled_downtime_depth", _("Service in downtime")))
-declare_filter(132, FilterNagiosFlag("host", "host_scheduled_downtime_depth",
-                                     _("Host in downtime")))
-declare_filter(
-    232,
-    FilterNagiosExpression(
-        "service", "in_downtime", _("Host/service in downtime"),
-        "Filter: service_scheduled_downtime_depth > 0\nFilter: host_scheduled_downtime_depth > 0\nOr: 2\n",
-        "Filter: service_scheduled_downtime_depth = 0\nFilter: host_scheduled_downtime_depth = 0\nAnd: 2\n"
-    ))
+    @property
+    def title(self):
+        return _("Has performance data")
 
-declare_filter(
-    232,
-    FilterNagiosExpression("host", "host_staleness", _("Host is stale"),
-                           "Filter: host_staleness >= %0.2f\n" % config.staleness_threshold,
-                           "Filter: host_staleness < %0.2f\n" % config.staleness_threshold))
-declare_filter(
-    232,
-    FilterNagiosExpression("service", "service_staleness", _("Service is stale"),
-                           "Filter: service_staleness >= %0.2f\n" % config.staleness_threshold,
-                           "Filter: service_staleness < %0.2f\n" % config.staleness_threshold))
+    @property
+    def sort_index(self):
+        return 251
+
+    def __init__(self):
+        FilterNagiosExpression.__init__(self, "service", "Filter: service_perf_data != \n",
+                                        "Filter: service_perf_data = \n")
 
 
-def declare_site_filters():
-    # TODO: Refactor to factory
-    if cmk.is_managed_edition():
-        cls = cmk.gui.cme.plugins.visuals.managed.FilterCMESite
-    else:
-        cls = FilterSite
+@filter_registry.register
+class FilterInDowntime(FilterNagiosExpression):
+    @property
+    def ident(self):
+        return "in_downtime"
 
-    declare_filter(500, cls("siteopt", False), _("Optional selection of a site"))
-    declare_filter(501, cls("site", True),
-                   _("Selection of site is enforced, use this filter for joining"))
+    @property
+    def title(self):
+        return _("Host/service in downtime")
+
+    @property
+    def sort_index(self):
+        return 232
+
+    def __init__(self):
+        FilterNagiosExpression.__init__(
+            self, "service",
+            "Filter: service_scheduled_downtime_depth > 0\nFilter: host_scheduled_downtime_depth > 0\nOr: 2\n",
+            "Filter: service_scheduled_downtime_depth = 0\nFilter: host_scheduled_downtime_depth = 0\nAnd: 2\n"
+        )
 
 
-declare_site_filters()
+@filter_registry.register
+class FilterHostStaleness(FilterNagiosExpression):
+    @property
+    def ident(self):
+        return "host_staleness"
+
+    @property
+    def title(self):
+        return _("Host is stale")
+
+    @property
+    def sort_index(self):
+        return 232
+
+    def __init__(self):
+        FilterNagiosExpression.__init__(
+            self, "host", "Filter: host_staleness >= %0.2f\n" % config.staleness_threshold,
+            "Filter: host_staleness < %0.2f\n" % config.staleness_threshold)
 
 
-# name: internal id of filter
-# title: user displayed title of the filter
+@filter_registry.register
+class FilterServiceStaleness(FilterNagiosExpression):
+    @property
+    def ident(self):
+        return "service_staleness"
+
+    @property
+    def title(self):
+        return _("Service is stale")
+
+    @property
+    def sort_index(self):
+        return 232
+
+    def __init__(self):
+        FilterNagiosExpression.__init__(
+            self, "service", "Filter: service_staleness >= %0.2f\n" % config.staleness_threshold,
+            "Filter: service_staleness < %0.2f\n" % config.staleness_threshold)
+
+
+class FilterNagiosFlag(FilterTristate):
+    def __init__(self, info, deflt=-1):
+        FilterTristate.__init__(self, info=info, column=self.ident, deflt=deflt)
+
+    def filter_code(self, infoname, positive):
+        if positive:
+            return "Filter: %s != 0\n" % self.column
+        return "Filter: %s = 0\n" % self.column
+
+
+@filter_registry.register
+class FilterServiceProcessPerformanceData(FilterNagiosFlag):
+    @property
+    def ident(self):
+        return "service_process_performance_data"
+
+    @property
+    def title(self):
+        return _("Processes performance data")
+
+    @property
+    def sort_index(self):
+        return 250
+
+    def __init__(self):
+        FilterNagiosFlag.__init__(self, "service")
+
+
+@filter_registry.register
+class FilterHostInNotificationPeriod(FilterNagiosFlag):
+    @property
+    def ident(self):
+        return "host_in_notification_period"
+
+    @property
+    def title(self):
+        return _("Host in notification period")
+
+    @property
+    def sort_index(self):
+        return 130
+
+    def __init__(self):
+        FilterNagiosFlag.__init__(self, "host")
+
+
+@filter_registry.register
+class FilterHostInServicePeriod(FilterNagiosFlag):
+    @property
+    def ident(self):
+        return "host_in_service_period"
+
+    @property
+    def title(self):
+        return _("Host in service period")
+
+    @property
+    def sort_index(self):
+        return 130
+
+    def __init__(self):
+        FilterNagiosFlag.__init__(self, "host")
+
+
+@filter_registry.register
+class FilterHostAcknowledged(FilterNagiosFlag):
+    @property
+    def ident(self):
+        return "host_acknowledged"
+
+    @property
+    def title(self):
+        return _("Host problem has been acknowledged")
+
+    @property
+    def sort_index(self):
+        return 131
+
+    def __init__(self):
+        FilterNagiosFlag.__init__(self, "host")
+
+
+@filter_registry.register
+class FilterHostActiveChecksEnabled(FilterNagiosFlag):
+    @property
+    def ident(self):
+        return "host_active_checks_enabled"
+
+    @property
+    def title(self):
+        return _("Host active checks enabled")
+
+    @property
+    def sort_index(self):
+        return 132
+
+    def __init__(self):
+        FilterNagiosFlag.__init__(self, "host")
+
+
+@filter_registry.register
+class FilterHostNotificationsEnabled(FilterNagiosFlag):
+    @property
+    def ident(self):
+        return "host_notifications_enabled"
+
+    @property
+    def title(self):
+        return _("Host notifications enabled")
+
+    @property
+    def sort_index(self):
+        return 133
+
+    def __init__(self):
+        FilterNagiosFlag.__init__(self, "host")
+
+
+@filter_registry.register
+class FilterServiceAcknowledged(FilterNagiosFlag):
+    @property
+    def ident(self):
+        return "service_acknowledged"
+
+    @property
+    def title(self):
+        return _("Problem acknowledged")
+
+    @property
+    def sort_index(self):
+        return 230
+
+    def __init__(self):
+        FilterNagiosFlag.__init__(self, "service")
+
+
+@filter_registry.register
+class FilterServiceInNotificationPeriod(FilterNagiosFlag):
+    @property
+    def ident(self):
+        return "service_in_notification_period"
+
+    @property
+    def title(self):
+        return _("Service in notification period")
+
+    @property
+    def sort_index(self):
+        return 231
+
+    def __init__(self):
+        FilterNagiosFlag.__init__(self, "service")
+
+
+@filter_registry.register
+class FilterServiceInServicePeriod(FilterNagiosFlag):
+    @property
+    def ident(self):
+        return "service_in_service_period"
+
+    @property
+    def title(self):
+        return _("Service in service period")
+
+    @property
+    def sort_index(self):
+        return 231
+
+    def __init__(self):
+        FilterNagiosFlag.__init__(self, "service")
+
+
+@filter_registry.register
+class FilterServiceActiveChecksEnabled(FilterNagiosFlag):
+    @property
+    def ident(self):
+        return "service_active_checks_enabled"
+
+    @property
+    def title(self):
+        return _("Active checks enabled")
+
+    @property
+    def sort_index(self):
+        return 233
+
+    def __init__(self):
+        FilterNagiosFlag.__init__(self, "service")
+
+
+@filter_registry.register
+class FilterServiceNotificationsEnabled(FilterNagiosFlag):
+    @property
+    def ident(self):
+        return "service_notifications_enabled"
+
+    @property
+    def title(self):
+        return _("Notifications enabled")
+
+    @property
+    def sort_index(self):
+        return 234
+
+    def __init__(self):
+        FilterNagiosFlag.__init__(self, "service")
+
+
+@filter_registry.register
+class FilterServiceIsFlapping(FilterNagiosFlag):
+    @property
+    def ident(self):
+        return "service_is_flapping"
+
+    @property
+    def title(self):
+        return _("Flapping")
+
+    @property
+    def sort_index(self):
+        return 236
+
+    def __init__(self):
+        FilterNagiosFlag.__init__(self, "service")
+
+
+@filter_registry.register
+class FilterServiceScheduledDowntimeDepth(FilterNagiosFlag):
+    @property
+    def ident(self):
+        return "service_scheduled_downtime_depth"
+
+    @property
+    def title(self):
+        return _("Service in downtime")
+
+    @property
+    def sort_index(self):
+        return 231
+
+    def __init__(self):
+        FilterNagiosFlag.__init__(self, "service")
+
+
+@filter_registry.register
+class FilterHostScheduledDowntimeDepth(FilterNagiosFlag):
+    @property
+    def ident(self):
+        return "host_scheduled_downtime_depth"
+
+    @property
+    def title(self):
+        return _("Host in downtime")
+
+    @property
+    def sort_index(self):
+        return 132
+
+    def __init__(self):
+        FilterNagiosFlag.__init__(self, "host")
+
+
+if cmk.is_managed_edition():
+    SiteFilter = cmk.gui.cme.plugins.visuals.managed.FilterCMESite
+else:
+    SiteFilter = FilterCRESite
+
+
+@filter_registry.register
+class FilterSiteOpt(SiteFilter):
+    @property
+    def ident(self):
+        return "siteopt"
+
+    @property
+    def title(self):
+        return _("Site")
+
+    @property
+    def sort_index(self):
+        return 500
+
+    @property
+    def description(self):
+        return _("Optional selection of a site")
+
+    def __init__(self):
+        SiteFilter.__init__(self, enforce=False)
+
+
+@filter_registry.register
+class FilterSite(SiteFilter):
+    @property
+    def ident(self):
+        return "site"
+
+    @property
+    def title(self):
+        return _("Site (enforced)")
+
+    @property
+    def sort_index(self):
+        return 501
+
+    @property
+    def description(self):
+        return _("Selection of site is enforced, use this filter for joining")
+
+    def __init__(self):
+        SiteFilter.__init__(self, enforce=True)
+
+
 # info: usually either "host" or "service"
 # column: a livestatus column of type int or float
 class FilterNumberRange(Filter):  # type is int
-    def __init__(self, name, title, info, column):
+    def __init__(self, info, column):
         self.column = column
-        varnames = [name + "_from", name + "_until"]
-        Filter.__init__(self, name, title, info, varnames, [])
+        varnames = [self.ident + "_from", self.ident + "_until"]
+        Filter.__init__(self, info, varnames, [])
 
     def display(self):
         html.write_text(_("From:") + "&nbsp;")
@@ -918,68 +1757,275 @@ class FilterNumberRange(Filter):  # type is int
         return lql
 
 
-declare_filter(
-    232,
-    FilterNumberRange("host_notif_number", _("Current Host Notification Number"), "host",
-                      "current_notification_number"))
-declare_filter(
-    232,
-    FilterNumberRange("svc_notif_number", _("Current Service Notification Number"), "service",
-                      "current_notification_number"))
+@filter_registry.register
+class FilterHostNotifNumber(FilterNumberRange):
+    @property
+    def ident(self):
+        return "host_notif_number"
 
-declare_filter(
-    234,
-    FilterNumberRange("host_num_services", _("Number of Services of the Host"), "host",
-                      "num_services"))
+    @property
+    def title(self):
+        return _("Current Host Notification Number")
 
-declare_filter(
-    250,
-    FilterTime("service", "svc_last_state_change", _("Last service state change"),
-               "service_last_state_change"))
-declare_filter(
-    251, FilterTime("service", "svc_last_check", _("Last service check"), "service_last_check"))
+    @property
+    def sort_index(self):
+        return 232
 
-declare_filter(
-    250,
-    FilterTime("host", "host_last_state_change", _("Last host state change"),
-               "host_last_state_change"))
-declare_filter(251, FilterTime("host", "host_last_check", _("Last host check"), "host_last_check"))
-declare_filter(
-    253, FilterTime("comment", "comment_entry_time", _("Time of comment"), "comment_entry_time"))
+    def __init__(self):
+        FilterNumberRange.__init__(self, "host", "current_notification_number")
 
-declare_filter(
-    258,
-    FilterText("comment_comment", _("Comment"), "comment", "comment_comment", "comment_comment",
-               "~~", True))
-declare_filter(
-    259,
-    FilterText("comment_author", _("Author comment"), "comment", "comment_author", "comment_author",
-               "~~", True))
 
-declare_filter(
-    253,
-    FilterTime("downtime", "downtime_entry_time", _("Time when downtime was created"),
-               "downtime_entry_time"))
-declare_filter(
-    254,
-    FilterText("downtime_comment", _("Downtime comment"), "downtime", "downtime_comment",
-               "downtime_comment", "~"))
-declare_filter(
-    255, FilterTime("downtime", "downtime_start_time", _("Start of downtime"),
-                    "downtime_start_time"))
-declare_filter(
-    256,
-    FilterText("downtime_author", _("Downtime author"), "downtime", "downtime_author",
-               "downtime_author", "~"))
+@filter_registry.register
+class FilterSvcNotifNumber(FilterNumberRange):
+    @property
+    def ident(self):
+        return "svc_notif_number"
 
-#    _
-#   | |    ___   __ _
-#   | |   / _ \ / _` |
-#   | |__| (_) | (_| |
-#   |_____\___/ \__, |
-#               |___/
+    @property
+    def title(self):
+        return _("Current Service Notification Number")
 
-declare_filter(252, FilterTime("log", "logtime", _("Time of log entry"), "log_time"))
+    @property
+    def sort_index(self):
+        return 232
+
+    def __init__(self):
+        FilterNumberRange.__init__(self, "service", "current_notification_number")
+
+
+@filter_registry.register
+class FilterHostNumServices(FilterNumberRange):
+    @property
+    def ident(self):
+        return "host_num_services"
+
+    @property
+    def title(self):
+        return _("Number of Services of the Host")
+
+    @property
+    def sort_index(self):
+        return 234
+
+    def __init__(self):
+        FilterNumberRange.__init__(self, "host", "num_services")
+
+
+@filter_registry.register
+class FilterSvcLastStateChange(FilterTime):
+    @property
+    def ident(self):
+        return "svc_last_state_change"
+
+    @property
+    def title(self):
+        return _("Last service state change")
+
+    @property
+    def sort_index(self):
+        return 250
+
+    def __init__(self):
+        FilterTime.__init__(self, "service", "service_last_state_change")
+
+
+@filter_registry.register
+class FilterSvcLastCheck(FilterTime):
+    @property
+    def ident(self):
+        return "svc_last_check"
+
+    @property
+    def title(self):
+        return _("Last service check")
+
+    @property
+    def sort_index(self):
+        return 251
+
+    def __init__(self):
+        FilterTime.__init__(self, "service", "service_last_check")
+
+
+@filter_registry.register
+class FilterHostLastStateChange(FilterTime):
+    @property
+    def ident(self):
+        return "host_last_state_change"
+
+    @property
+    def title(self):
+        return _("Last host state change")
+
+    @property
+    def sort_index(self):
+        return 250
+
+    def __init__(self):
+        FilterTime.__init__(self, "host", "host_last_state_change")
+
+
+@filter_registry.register
+class FilterHostLastCheck(FilterTime):
+    @property
+    def ident(self):
+        return "host_last_check"
+
+    @property
+    def title(self):
+        return _("Last host check")
+
+    @property
+    def sort_index(self):
+        return 251
+
+    def __init__(self):
+        FilterTime.__init__(self, "host", "host_last_check")
+
+
+@filter_registry.register
+class FilterCommentEntryTime(FilterTime):
+    @property
+    def ident(self):
+        return "comment_entry_time"
+
+    @property
+    def title(self):
+        return _("Time of comment")
+
+    @property
+    def sort_index(self):
+        return 253
+
+    def __init__(self):
+        FilterTime.__init__(self, "comment", "comment_entry_time")
+
+
+@filter_registry.register
+class FilterCommentComment(FilterText):
+    @property
+    def ident(self):
+        return "comment_comment"
+
+    @property
+    def title(self):
+        return _("Comment")
+
+    @property
+    def sort_index(self):
+        return 258
+
+    def __init__(self):
+        FilterText.__init__(self, "comment", "comment_comment", "comment_comment", "~~", True)
+
+
+@filter_registry.register
+class FilterCommentAuthor(FilterText):
+    @property
+    def ident(self):
+        return "comment_author"
+
+    @property
+    def title(self):
+        return _("Author comment")
+
+    @property
+    def sort_index(self):
+        return 259
+
+    def __init__(self):
+        FilterText.__init__(self, "comment", "comment_author", "comment_author", "~~", True)
+
+
+@filter_registry.register
+class FilterDowntimeEntryTime(FilterTime):
+    @property
+    def ident(self):
+        return "downtime_entry_time"
+
+    @property
+    def title(self):
+        return _("Time when downtime was created")
+
+    @property
+    def sort_index(self):
+        return 253
+
+    def __init__(self):
+        FilterTime.__init__(self, "downtime", "downtime_entry_time")
+
+
+@filter_registry.register
+class FilterDowntimeComment(FilterText):
+    @property
+    def ident(self):
+        return "downtime_comment"
+
+    @property
+    def title(self):
+        return _("Downtime comment")
+
+    @property
+    def sort_index(self):
+        return 254
+
+    def __init__(self):
+        FilterText.__init__(self, "downtime", "downtime_comment", "downtime_comment", "~")
+
+
+@filter_registry.register
+class FilterDowntimeStartTime(FilterTime):
+    @property
+    def ident(self):
+        return "downtime_start_time"
+
+    @property
+    def title(self):
+        return _("Start of downtime")
+
+    @property
+    def sort_index(self):
+        return 255
+
+    def __init__(self):
+        FilterTime.__init__(self, "downtime", "downtime_start_time")
+
+
+@filter_registry.register
+class FilterDowntimeAuthor(FilterText):
+    @property
+    def ident(self):
+        return "downtime_author"
+
+    @property
+    def title(self):
+        return _("Downtime author")
+
+    @property
+    def sort_index(self):
+        return 256
+
+    def __init__(self):
+        FilterText.__init__(self, "downtime", "downtime_author", "downtime_author", "~")
+
+
+@filter_registry.register
+class FilterLogtime(FilterTime):
+    @property
+    def ident(self):
+        return "logtime"
+
+    @property
+    def title(self):
+        return _("Time of log entry")
+
+    @property
+    def sort_index(self):
+        return 252
+
+    def __init__(self):
+        FilterTime.__init__(self, "log", "log_time")
+
 
 # INFO          0 // all messages not in any other class
 # ALERT         1 // alerts: the change service/host state
@@ -991,7 +2037,20 @@ declare_filter(252, FilterTime("log", "logtime", _("Time of log entry"), "log_ti
 # ALERT HANDLERS 8
 
 
+@filter_registry.register
 class FilterLogClass(Filter):
+    @property
+    def ident(self):
+        return "log_class"
+
+    @property
+    def title(self):
+        return _("Logentry class")
+
+    @property
+    def sort_index(self):
+        return 255
+
     def __init__(self):
         self.log_classes = [
             (0, _("Informational")),
@@ -1006,8 +2065,6 @@ class FilterLogClass(Filter):
 
         Filter.__init__(
             self,
-            "log_class",
-            _("Logentry class"),
             "log",
             ["logclass_filled"] + ["logclass%d" % l for l, _c in self.log_classes],
             [],
@@ -1053,48 +2110,134 @@ class FilterLogClass(Filter):
         return "".join(headers) + ("Or: %d\n" % len(headers))
 
 
-declare_filter(255, FilterLogClass())
-#                       filter          title              info       column           htmlvar
-declare_filter(
-    202,
-    FilterUnicode("log_plugin_output", _("Log: plugin output"), "log", "log_plugin_output",
-                  "log_plugin_output", "~~"))
-declare_filter(
-    203,
-    FilterText(
-        "log_type", _("Log: message type"), "log", "log_type", "log_type", "~~",
-        show_heading=False))
-declare_filter(
-    204,
-    FilterText("log_state_type", _("Log: state type"), "log", "log_state_type", "log_state_type",
-               "~~"))
-declare_filter(
-    260,
-    FilterText("log_contact_name", _("Log: contact name (exact match)"), "log", "log_contact_name",
-               "log_contact_name", "="), _("Exact match, used for linking"))
-declare_filter(
-    261,
-    FilterText(
-        "log_contact_name_regex",
-        _("Log: contact name"),
-        "log",
-        "log_contact_name",
-        "log_contact_name_regex",
-        "~~",
-        negateable=True))
-declare_filter(
-    262,
-    FilterText(
-        "log_command_name_regex",
-        _("Log: command"),
-        "log",
-        "log_command_name",
-        "log_command_name_regex",
-        "~~",
-        negateable=True))
+@filter_registry.register
+class FilterLogPluginOutput(FilterUnicode):
+    @property
+    def ident(self):
+        return "log_plugin_output"
+
+    @property
+    def title(self):
+        return _("Log: plugin output")
+
+    @property
+    def sort_index(self):
+        return 202
+
+    def __init__(self):
+        FilterUnicode.__init__(self, "log", "log_plugin_output", "log_plugin_output", "~~")
 
 
+@filter_registry.register
+class FilterLogType(FilterText):
+    @property
+    def ident(self):
+        return "log_type"
+
+    @property
+    def title(self):
+        return _("Log: message type")
+
+    @property
+    def sort_index(self):
+        return 203
+
+    def __init__(self):
+        FilterText.__init__(self, "log", "log_type", "log_type", "~~", show_heading=False)
+
+
+@filter_registry.register
+class FilterLogStateType(FilterText):
+    @property
+    def ident(self):
+        return "log_state_type"
+
+    @property
+    def title(self):
+        return _("Log: state type")
+
+    @property
+    def sort_index(self):
+        return 204
+
+    def __init__(self):
+        FilterText.__init__(self, "log", "log_state_type", "log_state_type", "~~")
+
+
+@filter_registry.register
+class FilterLogContactName(FilterText):
+    @property
+    def ident(self):
+        return "log_contact_name"
+
+    @property
+    def title(self):
+        return _("Log: contact name (exact match)")
+
+    @property
+    def sort_index(self):
+        return 260
+
+    @property
+    def description(self):
+        return _("Exact match, used for linking")
+
+    def __init__(self):
+        FilterText.__init__(self, "log", "log_contact_name", "log_contact_name", "=")
+
+
+@filter_registry.register
+class FilterLogContactNameRegex(FilterText):
+    @property
+    def ident(self):
+        return "log_contact_name_regex"
+
+    @property
+    def title(self):
+        return _("Log: contact name")
+
+    @property
+    def sort_index(self):
+        return 261
+
+    def __init__(self):
+        FilterText.__init__(
+            self, "log", "log_contact_name", "log_contact_name_regex", "~~", negateable=True)
+
+
+@filter_registry.register
+class FilterLogCommandNameRegex(FilterText):
+    @property
+    def ident(self):
+        return "log_command_name_regex"
+
+    @property
+    def title(self):
+        return _("Log: command")
+
+    @property
+    def sort_index(self):
+        return 262
+
+    def __init__(self):
+        FilterText.__init__(
+            self, "log", "log_command_name", "log_command_name_regex", "~~", negateable=True)
+
+
+@filter_registry.register
 class FilterLogState(Filter):
+    @property
+    def ident(self):
+        return "log_state"
+
+    @property
+    def title(self):
+        return _("Type of alerts of hosts and services")
+
+    @property
+    def sort_index(self):
+        return 270
+
     def __init__(self):
         self._items = [
             ("h0", "host", 0, _("Up")),
@@ -1108,8 +2251,6 @@ class FilterLogState(Filter):
 
         Filter.__init__(
             self,
-            "log_state",
-            _("Type of alerts of hosts and services"),
             "log",
             ["logst_" + e[0] for e in self._items],
             [],
@@ -1155,15 +2296,23 @@ class FilterLogState(Filter):
         return "".join(headers) + ("Or: %d\n" % len(headers))
 
 
-declare_filter(270, FilterLogState())
+@filter_registry.register
+class FilterLogNotificationPhase(FilterTristate):
+    @property
+    def ident(self):
+        return "log_notification_phase"
 
+    @property
+    def title(self):
+        return _("Notification phase")
 
-class NotificationPhaseFilter(FilterTristate):
+    @property
+    def sort_index(self):
+        return 271
+
     def __init__(self):
         FilterTristate.__init__(
             self,
-            "log_notification_phase",
-            _("Notification phase"),
             "log",
             "log_command_name",
             -1,
@@ -1194,15 +2343,23 @@ class NotificationPhaseFilter(FilterTristate):
         return "Filter: %s != check-mk-notify\n" % self.column
 
 
-declare_filter(271, NotificationPhaseFilter())
+@filter_registry.register
+class FilterAggrServiceUsed(FilterTristate):
+    @property
+    def ident(self):
+        return "aggr_service_used"
 
+    @property
+    def title(self):
+        return _("Used in BI aggregate")
 
-class BIServiceIsUsedFilter(FilterTristate):
+    @property
+    def sort_index(self):
+        return 300
+
     def __init__(self):
         FilterTristate.__init__(
             self,
-            "aggr_service_used",
-            _("Used in BI aggregate"),
             "service",
             None,
         )
@@ -1227,26 +2384,45 @@ class BIServiceIsUsedFilter(FilterTristate):
         pass
 
 
-declare_filter(300, BIServiceIsUsedFilter())
+@filter_registry.register
+class FilterDowntimeId(FilterText):
+    @property
+    def ident(self):
+        return "downtime_id"
 
-declare_filter(
-    301, FilterText("downtime_id", _("Downtime ID"), "downtime", "downtime_id", "downtime_id", "="))
+    @property
+    def title(self):
+        return _("Downtime ID")
+
+    @property
+    def sort_index(self):
+        return 301
+
+    def __init__(self):
+        FilterText.__init__(self, "downtime", "downtime_id", "downtime_id", "=")
 
 
+@filter_registry.register
 class FilterHostTags(Filter):
+    @property
+    def ident(self):
+        return "host_tags"
+
+    @property
+    def title(self):
+        return _("Host Tags")
+
+    @property
+    def sort_index(self):
+        return 302
+
     def __init__(self):
         self.count = 3
         htmlvars = []
         for num in range(self.count):
             htmlvars += ['host_tag_%d_grp' % num, 'host_tag_%d_op' % num, 'host_tag_%d_val' % num]
 
-        Filter.__init__(
-            self,
-            name='host_tags',
-            title=_('Host Tags'),
-            info='host',
-            htmlvars=htmlvars,
-            link_columns=[])
+        Filter.__init__(self, info='host', htmlvars=htmlvars, link_columns=[])
 
     def display(self):
         groups = [(e[0], e[1].lstrip("/")) for e in config.host_tag_groups()]
@@ -1345,10 +2521,20 @@ class FilterHostTags(Filter):
         return True
 
 
-declare_filter(302, FilterHostTags())
-
-
+@filter_registry.register
 class FilterHostAuxTags(Filter):
+    @property
+    def ident(self):
+        return "host_auxtags"
+
+    @property
+    def title(self):
+        return _("Host Auxiliary Tags")
+
+    @property
+    def sort_index(self):
+        return 302
+
     def __init__(self):
         self.count = 3
         self.prefix = 'host_auxtags'
@@ -1357,13 +2543,7 @@ class FilterHostAuxTags(Filter):
             htmlvars.append("%s_%d" % (self.prefix, num))
             htmlvars.append("%s_%d_neg" % (self.prefix, num))
 
-        Filter.__init__(
-            self,
-            name='host_auxtags',
-            title=_('Host Auxiliary Tags'),
-            info='host',
-            htmlvars=htmlvars,
-            link_columns=[])
+        Filter.__init__(self, info='host', htmlvars=htmlvars, link_columns=[])
 
         self.auxtags = config.wato_aux_tags
 
@@ -1400,16 +2580,13 @@ class FilterHostAuxTags(Filter):
         return True
 
 
-declare_filter(302, FilterHostAuxTags())
-
-
 # choices = [ (value, "readable"), .. ]
 class FilterECServiceLevelRange(Filter):
-    def __init__(self, name, title, info):
-        self.lower_bound_varname = "%s_lower" % name
-        self.upper_bound_varname = "%s_upper" % name
+    def __init__(self, info):
+        self.lower_bound_varname = "%s_lower" % self.ident
+        self.upper_bound_varname = "%s_upper" % self.ident
 
-        Filter.__init__(self, name, title, info, [
+        Filter.__init__(self, info, [
             self.lower_bound_varname,
             self.upper_bound_varname,
         ], [])
@@ -1463,22 +2640,47 @@ class FilterECServiceLevelRange(Filter):
         return True
 
 
-declare_filter(
-    310, FilterECServiceLevelRange("svc_service_level", _("Service service level"), "service"))
+@filter_registry.register
+class FilterSvcServiceLevel(FilterECServiceLevelRange):
+    @property
+    def ident(self):
+        return "svc_service_level"
 
-declare_filter(310, FilterECServiceLevelRange("hst_service_level", _("Host service level"), "host"))
+    @property
+    def title(self):
+        return _("Service service level")
+
+    @property
+    def sort_index(self):
+        return 310
+
+    def __init__(self):
+        FilterECServiceLevelRange.__init__(self, "service")
+
+
+@filter_registry.register
+class FilterHstServiceLevel(FilterECServiceLevelRange):
+    @property
+    def ident(self):
+        return "hst_service_level"
+
+    @property
+    def title(self):
+        return _("Host service level")
+
+    @property
+    def sort_index(self):
+        return 310
+
+    def __init__(self):
+        FilterECServiceLevelRange.__init__(self, "host")
 
 
 class FilterStarred(FilterTristate):
     def __init__(self, what):
         self.what = what
-
-        title = _("Favorite Hosts") if what == "host" else _("Favorite Services")
-
         FilterTristate.__init__(
             self,
-            name=what + "_favorites",
-            title=HTML(title),
             info=what,
             column=what + "_favorite",  # Column, not used
             deflt=-1,
@@ -1527,11 +2729,56 @@ class FilterStarred(FilterTristate):
         pass
 
 
-declare_filter(501, FilterStarred("host"))
-declare_filter(501, FilterStarred("service"))
+@filter_registry.register
+class FilterHostFavorites(FilterStarred):
+    @property
+    def ident(self):
+        return "host_favorites"
+
+    @property
+    def title(self):
+        return _("Favorite Hosts")
+
+    @property
+    def sort_index(self):
+        return 501
+
+    def __init__(self):
+        FilterStarred.__init__(self, "host")
 
 
+@filter_registry.register
+class FilterServiceFavorites(FilterStarred):
+    @property
+    def ident(self):
+        return "service_favorites"
+
+    @property
+    def title(self):
+        return _("Favorite Services")
+
+    @property
+    def sort_index(self):
+        return 501
+
+    def __init__(self):
+        FilterStarred.__init__(self, "service")
+
+
+@filter_registry.register
 class FilterDiscoveryState(Filter):
+    @property
+    def ident(self):
+        return "discovery_state"
+
+    @property
+    def title(self):
+        return _("Discovery state")
+
+    @property
+    def sort_index(self):
+        return 601
+
     def __init__(self):
         self.__options = [
             ("discovery_state_ignored", _("Hidden")),
@@ -1540,8 +2787,6 @@ class FilterDiscoveryState(Filter):
         ]
         Filter.__init__(
             self,
-            "discovery_state",
-            _("Discovery state"),
             "discovery_state",
             [o[0] for o in self.__options],
             [],
@@ -1575,14 +2820,23 @@ class FilterDiscoveryState(Filter):
         return new_rows
 
 
-declare_filter(601, FilterDiscoveryState())
+@filter_registry.register
+class FilterAggrGroup(FilterUnicodeFilter):
+    @property
+    def ident(self):
+        return "aggr_group"
 
+    @property
+    def title(self):
+        return _("Aggregation group")
 
-class BIGroupFilter(FilterUnicodeFilter):
+    @property
+    def sort_index(self):
+        return 90
+
     def __init__(self):
         self.column = "aggr_group"
-        FilterUnicodeFilter.__init__(self, self.column, _("Aggregation group"), self.column,
-                                     [self.column], [self.column])
+        FilterUnicodeFilter.__init__(self, self.column, [self.column], [self.column])
 
     def variable_settings(self, row):
         return [(self.htmlvars[0], row[self.column])]
@@ -1605,14 +2859,23 @@ class BIGroupFilter(FilterUnicodeFilter):
         return html.get_unicode_input(self.htmlvars[0])
 
 
-declare_filter(90, BIGroupFilter())
+@filter_registry.register
+class FilterAggrGroupTree(FilterUnicodeFilter):
+    @property
+    def ident(self):
+        return "aggr_group_tree"
 
+    @property
+    def title(self):
+        return _("Aggregation group tree")
 
-class BIGroupTreeFilter(FilterUnicodeFilter):
+    @property
+    def sort_index(self):
+        return 91
+
     def __init__(self):
         self.column = "aggr_group_tree"
-        FilterUnicodeFilter.__init__(self, self.column, _("Aggregation group tree"), "aggr_group",
-                                     [self.column], [self.column])
+        FilterUnicodeFilter.__init__(self, "aggr_group", [self.column], [self.column])
 
     def variable_settings(self, row):
         return [(self.htmlvars[0], row[self.column])]
@@ -1664,23 +2927,13 @@ class BIGroupTreeFilter(FilterUnicodeFilter):
         return selection
 
 
-declare_filter(91, BIGroupTreeFilter())
-
-
 # how is either "regex" or "exact"
 class BITextFilter(FilterUnicodeFilter):
     def __init__(self, what, how="regex", suffix=""):
         self.how = how
         self.column = "aggr_" + what
-        label = ''
-        if what == 'name':
-            label = _('Aggregation name')
-        elif what == 'output':
-            label = _('Aggregation output')
-        if how == "exact":
-            label += _(" (exact match)")
-        FilterUnicodeFilter.__init__(self, self.column + suffix, label, "aggr",
-                                     [self.column + suffix], [self.column])
+        FilterUnicodeFilter.__init__(
+            self, info="aggr", htmlvars=[self.column + suffix], link_columns=[self.column])
 
     def variable_settings(self, row):
         return [(self.htmlvars[0], row[self.column])]
@@ -1706,18 +2959,83 @@ class BITextFilter(FilterUnicodeFilter):
         return [row for row in rows if row[self.column] == val]
 
 
-declare_filter(120, BITextFilter("name", suffix="_regex"))
-declare_filter(120, BITextFilter("name", how="exact"))
-declare_filter(121, BITextFilter("output"))
+@filter_registry.register
+class FilterAggrNameRegex(BITextFilter):
+    @property
+    def ident(self):
+        return "aggr_name_regex"
 
+    @property
+    def title(self):
+        return _("Aggregation name")
 
-class BIHostFilter(Filter):
+    @property
+    def sort_index(self):
+        return 120
+
     def __init__(self):
-        self.column = "aggr_hosts"
+        BITextFilter.__init__(self, "name", suffix="_regex")
+
+
+@filter_registry.register
+class FilterAggrName(BITextFilter):
+    @property
+    def ident(self):
+        return "aggr_name"
+
+    @property
+    def title(self):
+        return _("Aggregation name (exact match)")
+
+    @property
+    def sort_index(self):
+        return 120
+
+    def __init__(self):
+        BITextFilter.__init__(self, "name", how="exact")
+
+
+@filter_registry.register
+class FilterAggrOutput(BITextFilter):
+    @property
+    def ident(self):
+        return "aggr_output"
+
+    @property
+    def title(self):
+        return _("Aggregation output")
+
+    @property
+    def sort_index(self):
+        return 121
+
+    def __init__(self):
+        BITextFilter.__init__(self, "output")
+
+
+@filter_registry.register
+class FilterAggrHosts(Filter):
+    @property
+    def ident(self):
+        return "aggr_hosts"
+
+    @property
+    def title(self):
+        return _("Affected hosts contain")
+
+    @property
+    def sort_index(self):
+        return 130
+
+    @property
+    def description(self):
+        return _(
+            "Filter for all aggregations that base on status information of that host. Exact match (no regular expression)"
+        )
+
+    def __init__(self):
         Filter.__init__(
             self,
-            self.column,
-            _("Affected hosts contain"),
             "aggr",
             ["aggr_host_site", "aggr_host_host"],
             [],
@@ -1746,18 +3064,29 @@ class BIHostFilter(Filter):
         return [row for row in rows if self.find_host(val, row["aggr_hosts"])]
 
 
-declare_filter(
-    130, BIHostFilter(),
-    _("Filter for all aggregations that base on status information of that host. Exact match (no regular expression)"
-     ))
+@filter_registry.register
+class FilterAggrService(Filter):
+    @property
+    def ident(self):
+        return "aggr_service"
 
+    @property
+    def title(self):
+        return _("Affected by service")
 
-class BIServiceFilter(Filter):
+    @property
+    def sort_index(self):
+        return 131
+
+    @property
+    def description(self):
+        return _(
+            "Filter for all aggregations that are affected by one specific service on a specific host (no regular expression)"
+        )
+
     def __init__(self):
         Filter.__init__(
             self,
-            "aggr_service",
-            _("Affected by service"),
             "aggr",
             ["aggr_service_site", "aggr_service_host", "aggr_service_service"],
             [],
@@ -1787,15 +3116,8 @@ class BIServiceFilter(Filter):
                 ("service", row["service_description"])]
 
 
-declare_filter(
-    131, BIServiceFilter(),
-    _("Filter for all aggregations that are affected by one specific service on a specific host (no regular expression)"
-     ))
-
-
 class BIStatusFilter(Filter):
     def __init__(self, what):
-        title = (what.replace("_", " ") + " state").title()
         self.column = "aggr_" + what + "state"
         if what == "":
             self.code = 'r'
@@ -1805,7 +3127,7 @@ class BIStatusFilter(Filter):
         vars_ = [self.prefix + str(x) for x in [-1, 0, 1, 2, 3]]
         if self.code == 'a':
             vars_.append(self.prefix + "n")
-        Filter.__init__(self, self.column, title, "aggr", vars_, [])
+        Filter.__init__(self, info="aggr", htmlvars=vars_, link_columns=[])
 
     def filter(self, infoname):
         return ""
@@ -1858,231 +3180,625 @@ class BIStatusFilter(Filter):
         return newrows
 
 
-declare_filter(150, BIStatusFilter(""))
-declare_filter(151, BIStatusFilter("effective_"))
-declare_filter(152, BIStatusFilter("assumed_"))
+@filter_registry.register
+class FilterAggrState(BIStatusFilter):
+    @property
+    def ident(self):
+        return "aggr_state"
 
-if config.mkeventd_enabled:
-    declare_filter(200, FilterText("event_id", _("Event ID"), "event", "event_id", "event_id", "="))
-    declare_filter(
-        200,
-        FilterText("event_rule_id", _("ID of rule"), "event", "event_rule_id", "event_rule_id",
-                   "="))
-    declare_filter(
-        201,
-        FilterText("event_text", _("Message/Text of event"), "event", "event_text", "event_text",
-                   "~~"))
-    declare_filter(
-        201,
-        FilterText("event_application", _("Application / Syslog-Tag"), "event", "event_application",
-                   "event_application", "~~"))
-    declare_filter(
-        201,
-        FilterText("event_contact", _("Contact Person"), "event", "event_contact", "event_contact",
-                   "~~"))
-    declare_filter(
-        201,
-        FilterText("event_comment", _("Comment to the event"), "event", "event_comment",
-                   "event_comment", "~~"))
-    declare_filter(
-        201,
-        FilterText("event_host_regex", _("Hostname of original event"), "event", "event_host",
-                   "event_host", "~~"))
-    declare_filter(
-        201,
-        FilterText("event_host", _("Hostname of event, exact match"), "event", "event_host",
-                   "event_host", "="))
-    declare_filter(
-        201,
-        FilterText("event_ipaddress", _("Original IP Address of event"), "event", "event_ipaddress",
-                   "event_ipaddress", "~~"))
-    declare_filter(
-        201,
-        FilterText("event_owner", _("Owner of event"), "event", "event_owner", "event_owner", "~~"))
-    declare_filter(
-        221,
-        FilterText("history_who", _("User that performed action"), "history", "history_who",
-                   "history_who", "~~"))
-    declare_filter(
-        222,
-        FilterText("history_line", _("Line number in history logfile"), "history", "history_line",
-                   "history_line", "="))
-    declare_filter(
-        223,
-        FilterNagiosFlag("event", "event_host_in_downtime",
-                         _("Host in downtime during event creation")))
+    @property
+    def title(self):
+        return _(" State")
 
-    class EventFilterCount(Filter):
-        def __init__(self, name, title):
-            super(EventFilterCount, self).__init__(name, title, "event",
-                                                   [name + "_from", name + "_to"], [name])
-            self._name = name
+    @property
+    def sort_index(self):
+        return 150
 
-        def display(self):
-            html.write_text("from: ")
-            html.number_input(self._name + "_from", "")
-            html.write_text(" to: ")
-            html.number_input(self._name + "_to", "")
+    def __init__(self):
+        BIStatusFilter.__init__(self, "")
 
-        def filter(self, infoname):
-            f = ""
-            if html.request.var(self._name + "_from"):
-                f += "Filter: event_count >= %d\n" % int(html.request.var(self._name + "_from"))
-            if html.request.var(self._name + "_to"):
-                f += "Filter: event_count <= %d\n" % int(html.request.var(self._name + "_to"))
-            return f
 
-    declare_filter(205, EventFilterCount("event_count", _("Message count")))
+@filter_registry.register
+class FilterAggrEffectiveState(BIStatusFilter):
+    @property
+    def ident(self):
+        return "aggr_effective_state"
 
-    class EventFilterState(Filter):
-        def __init__(self, table, name, title, choices):
-            varnames = [name + "_" + str(c[0]) for c in choices]
-            super(EventFilterState, self).__init__(name, title, table, varnames, [name])
-            self._name = name
-            self._choices = choices
+    @property
+    def title(self):
+        return _("Effective  State")
 
-        def double_height(self):
-            return len(self._choices) >= 5
+    @property
+    def sort_index(self):
+        return 151
 
-        def display(self):
-            html.begin_checkbox_group()
-            chars = 0
-            for name, title in self._choices:
-                chars += len(title) + 2
-                html.checkbox(self._name + "_" + str(name), True, label=title)
-                if (title[0].isupper() and chars > 24) or \
-                    (title[0].islower() and chars > 36):
-                    html.br()
-                    chars = 0
-            html.end_checkbox_group()
+    def __init__(self):
+        BIStatusFilter.__init__(self, "effective_")
 
-        def filter(self, infoname):
-            selected = []
-            for name, _title in self._choices:
-                if html.get_checkbox(self._name + "_" + str(name)):
-                    selected.append(str(name))
 
-            if not selected:
-                return ""
+@filter_registry.register
+class FilterAggrAssumedState(BIStatusFilter):
+    @property
+    def ident(self):
+        return "aggr_assumed_state"
 
-            filters = []
-            for sel in selected:
-                filters.append("Filter: %s = %s" % (self._name, sel))
+    @property
+    def title(self):
+        return _("Assumed  State")
 
-            f = "\n".join(filters)
-            if len(filters) > 1:
-                f += "\nOr: %d" % len(filters)
+    @property
+    def sort_index(self):
+        return 152
 
-            return f + "\n"
+    def __init__(self):
+        BIStatusFilter.__init__(self, "assumed_")
 
-    declare_filter(
-        206,
-        EventFilterState("event", "event_state", _("State classification"), [(0, _("OK")),
-                                                                             (1, _("WARN")),
-                                                                             (2, _("CRIT")),
-                                                                             (3, _("UNKNOWN"))]))
-    declare_filter(
-        207, EventFilterState("event", "event_phase", _("Phase"), mkeventd.phase_names.items()))
-    declare_filter(
-        209,
-        EventFilterState("event", "event_priority", _("Syslog Priority"),
-                         mkeventd.syslog_priorities))
-    declare_filter(
-        225,
-        EventFilterState("history", "history_what", _("History action type"),
-                         [(k, k) for k in mkeventd.action_whats]))
 
-    declare_filter(
-        220, FilterTime("event", "event_first", _("First occurrence of event"), "event_first"))
-    declare_filter(221,
-                   FilterTime("event", "event_last", _("Last occurrance of event"), "event_last"))
-    declare_filter(
-        222,
-        FilterTime("history", "history_time", _("Time of entry in event history"), "history_time"))
+@filter_registry.register
+class FilterEventId(FilterText):
+    @property
+    def ident(self):
+        return "event_id"
 
-    class EventFilterDropdown(Filter):
-        def __init__(self, name, title, choices, operator='=', column=None):
-            if column is None:
-                column = name
-            self._varname = "event_" + name
-            Filter.__init__(self, "event_" + name, title, "event", [self._varname],
-                            ["event_" + column])
-            self._choices = choices
-            self._column = column
-            self._operator = operator
+    @property
+    def title(self):
+        return _("Event ID")
 
-        def display(self):
-            if isinstance(self._choices, list):
-                choices = self._choices
-            else:
-                choices = self._choices()
-            html.dropdown(self._varname, [("", "")] + [(str(n), t) for (n, t) in choices])
+    @property
+    def sort_index(self):
+        return 200
 
-        def filter(self, infoname):
-            val = html.request.var(self._varname)
-            if val:
-                return "Filter: event_%s %s %s\n" % (self._column, self._operator, val)
+    def __init__(self):
+        FilterText.__init__(self, "event", "event_id", "event_id", "=")
+
+
+@filter_registry.register
+class FilterEventRuleId(FilterText):
+    @property
+    def ident(self):
+        return "event_rule_id"
+
+    @property
+    def title(self):
+        return _("ID of rule")
+
+    @property
+    def sort_index(self):
+        return 200
+
+    def __init__(self):
+        FilterText.__init__(self, "event", "event_rule_id", "event_rule_id", "=")
+
+
+@filter_registry.register
+class FilterEventText(FilterText):
+    @property
+    def ident(self):
+        return "event_text"
+
+    @property
+    def title(self):
+        return _("Message/Text of event")
+
+    @property
+    def sort_index(self):
+        return 201
+
+    def __init__(self):
+        FilterText.__init__(self, "event", "event_text", "event_text", "~~")
+
+
+@filter_registry.register
+class FilterEventApplication(FilterText):
+    @property
+    def ident(self):
+        return "event_application"
+
+    @property
+    def title(self):
+        return _("Application / Syslog-Tag")
+
+    @property
+    def sort_index(self):
+        return 201
+
+    def __init__(self):
+        FilterText.__init__(self, "event", "event_application", "event_application", "~~")
+
+
+@filter_registry.register
+class FilterEventContact(FilterText):
+    @property
+    def ident(self):
+        return "event_contact"
+
+    @property
+    def title(self):
+        return _("Contact Person")
+
+    @property
+    def sort_index(self):
+        return 201
+
+    def __init__(self):
+        FilterText.__init__(self, "event", "event_contact", "event_contact", "~~")
+
+
+@filter_registry.register
+class FilterEventComment(FilterText):
+    @property
+    def ident(self):
+        return "event_comment"
+
+    @property
+    def title(self):
+        return _("Comment to the event")
+
+    @property
+    def sort_index(self):
+        return 201
+
+    def __init__(self):
+        FilterText.__init__(self, "event", "event_comment", "event_comment", "~~")
+
+
+@filter_registry.register
+class FilterEventHostRegex(FilterText):
+    @property
+    def ident(self):
+        return "event_host_regex"
+
+    @property
+    def title(self):
+        return _("Hostname of original event")
+
+    @property
+    def sort_index(self):
+        return 201
+
+    def __init__(self):
+        FilterText.__init__(self, "event", "event_host", "event_host", "~~")
+
+
+@filter_registry.register
+class FilterEventHost(FilterText):
+    @property
+    def ident(self):
+        return "event_host"
+
+    @property
+    def title(self):
+        return _("Hostname of event, exact match")
+
+    @property
+    def sort_index(self):
+        return 201
+
+    def __init__(self):
+        FilterText.__init__(self, "event", "event_host", "event_host", "=")
+
+
+@filter_registry.register
+class FilterEventIpaddress(FilterText):
+    @property
+    def ident(self):
+        return "event_ipaddress"
+
+    @property
+    def title(self):
+        return _("Original IP Address of event")
+
+    @property
+    def sort_index(self):
+        return 201
+
+    def __init__(self):
+        FilterText.__init__(self, "event", "event_ipaddress", "event_ipaddress", "~~")
+
+
+@filter_registry.register
+class FilterEventOwner(FilterText):
+    @property
+    def ident(self):
+        return "event_owner"
+
+    @property
+    def title(self):
+        return _("Owner of event")
+
+    @property
+    def sort_index(self):
+        return 201
+
+    def __init__(self):
+        FilterText.__init__(self, "event", "event_owner", "event_owner", "~~")
+
+
+@filter_registry.register
+class FilterHistoryWho(FilterText):
+    @property
+    def ident(self):
+        return "history_who"
+
+    @property
+    def title(self):
+        return _("User that performed action")
+
+    @property
+    def sort_index(self):
+        return 221
+
+    def __init__(self):
+        FilterText.__init__(self, "history", "history_who", "history_who", "~~")
+
+
+@filter_registry.register
+class FilterHistoryLine(FilterText):
+    @property
+    def ident(self):
+        return "history_line"
+
+    @property
+    def title(self):
+        return _("Line number in history logfile")
+
+    @property
+    def sort_index(self):
+        return 222
+
+    def __init__(self):
+        FilterText.__init__(self, "history", "history_line", "history_line", "=")
+
+
+@filter_registry.register
+class FilterEventHostInDowntime(FilterNagiosFlag):
+    @property
+    def ident(self):
+        return "event_host_in_downtime"
+
+    @property
+    def title(self):
+        return _("Host in downtime during event creation")
+
+    @property
+    def sort_index(self):
+        return 223
+
+    def __init__(self):
+        FilterNagiosFlag.__init__(self, "event")
+
+
+@filter_registry.register
+class FilterEventCount(Filter):
+    @property
+    def ident(self):
+        return "event_count"
+
+    @property
+    def title(self):
+        return _("Message count")
+
+    @property
+    def sort_index(self):
+        return 205
+
+    def __init__(self):
+        name = "event_count"
+        Filter.__init__(self, "event", [name + "_from", name + "_to"], [name])
+        self._name = name
+
+    def display(self):
+        html.write_text("from: ")
+        html.number_input(self._name + "_from", "")
+        html.write_text(" to: ")
+        html.number_input(self._name + "_to", "")
+
+    def filter(self, infoname):
+        f = ""
+        if html.request.var(self._name + "_from"):
+            f += "Filter: event_count >= %d\n" % int(html.request.var(self._name + "_from"))
+        if html.request.var(self._name + "_to"):
+            f += "Filter: event_count <= %d\n" % int(html.request.var(self._name + "_to"))
+        return f
+
+
+class EventFilterState(Filter):
+    def __init__(self, table, choices):
+        varnames = [self.ident + "_" + str(c[0]) for c in choices]
+        super(EventFilterState, self).__init__(table, varnames, [self.ident])
+        self._choices = choices
+
+    def double_height(self):
+        return len(self._choices) >= 5
+
+    def display(self):
+        html.begin_checkbox_group()
+        chars = 0
+        for name, title in self._choices:
+            chars += len(title) + 2
+            html.checkbox(self.ident + "_" + str(name), True, label=title)
+            if (title[0].isupper() and chars > 24) or \
+                (title[0].islower() and chars > 36):
+                html.br()
+                chars = 0
+        html.end_checkbox_group()
+
+    def filter(self, infoname):
+        selected = []
+        for name, _title in self._choices:
+            if html.get_checkbox(self.ident + "_" + str(name)):
+                selected.append(str(name))
+
+        if not selected:
             return ""
 
-    declare_filter(
-        210, EventFilterDropdown("facility", _("Syslog Facility"), mkeventd.syslog_facilities))
-    declare_filter(
-        211,
-        EventFilterDropdown(
-            "sl", _("Service Level at least"), mkeventd.service_levels, operator='>='))
-    declare_filter(
-        211,
-        EventFilterDropdown(
-            "sl_max",
-            _("Service Level at most"),
-            mkeventd.service_levels,
-            operator='<=',
-            column="sl"))
+        filters = []
+        for sel in selected:
+            filters.append("Filter: %s = %s" % (self.ident, sel))
 
-    class EventFilterEffectiveContactGroupCombo(FilterGroupCombo):
-        def __init__(self, enforce=False):
-            # TODO: Cleanup hierarchy here. The FilterGroupCombo constructor needs to be refactored
-            FilterGroupCombo.__init__(
-                self,
-                what="event_effective_contact",
-                title=_("Contact group (effective)"),
-                enforce=enforce,
-            )
-            self.what = "contact"
-            self.info = "event"
-            self.link_columns = [
-                "event_contact_groups", "event_contact_groups_precedence", "host_contact_groups"
-            ]
+        f = "\n".join(filters)
+        if len(filters) > 1:
+            f += "\nOr: %d" % len(filters)
 
-        def filter(self, infoname):
-            if not html.request.has_var(self.htmlvars[0]):
-                return ""  # Skip if filter is not being set at all
+        return f + "\n"
 
-            current_value = self.current_value()
-            if not current_value:
-                if not self.enforce:
-                    return ""
-                current_value = sites.live().query_value(
-                    "GET contactgroups\nCache: reload\nColumns: name\nLimit: 1\n", None)
 
-            if current_value is None:
-                return ""  # no {what}group exists!
+@filter_registry.register
+class FilterEventState(EventFilterState):
+    @property
+    def ident(self):
+        return "event_state"
 
-            if not self.enforce and html.request.var(self.htmlvars[1]):
-                negate = "!"
-            else:
-                negate = ""
+    @property
+    def title(self):
+        return _("State classification")
 
-            return "Filter: event_contact_groups_precedence = host\n" \
-                   "Filter: host_contact_groups %s>= %s\n" \
-                   "And: 2\n" \
-                   "Filter: event_contact_groups_precedence = rule\n" \
-                   "Filter: event_contact_groups %s>= %s\n" \
-                   "And: 2\n" \
-                   "Or: 2\n" % (negate, livestatus.lqencode(current_value),
-                                negate, livestatus.lqencode(current_value))
+    @property
+    def sort_index(self):
+        return 206
 
-        def variable_settings(self, row):
-            return []
+    def __init__(self):
+        EventFilterState.__init__(self, "event", [(0, _("OK")), (1, _("WARN")), (2, _("CRIT")),
+                                                  (3, _("UNKNOWN"))])
 
-    declare_filter(212, EventFilterEffectiveContactGroupCombo())
+
+@filter_registry.register
+class FilterEventPhase(EventFilterState):
+    @property
+    def ident(self):
+        return "event_phase"
+
+    @property
+    def title(self):
+        return _("Phase")
+
+    @property
+    def sort_index(self):
+        return 207
+
+    def __init__(self):
+        EventFilterState.__init__(self, "event", mkeventd.phase_names.items())
+
+
+@filter_registry.register
+class FilterEventPriority(EventFilterState):
+    @property
+    def ident(self):
+        return "event_priority"
+
+    @property
+    def title(self):
+        return _("Syslog Priority")
+
+    @property
+    def sort_index(self):
+        return 209
+
+    def __init__(self):
+        EventFilterState.__init__(self, "event", mkeventd.syslog_priorities)
+
+
+@filter_registry.register
+class FilterHistoryWhat(EventFilterState):
+    @property
+    def ident(self):
+        return "history_what"
+
+    @property
+    def title(self):
+        return _("History action type")
+
+    @property
+    def sort_index(self):
+        return 225
+
+    def __init__(self):
+        EventFilterState.__init__(self, "history", [(k, k) for k in mkeventd.action_whats])
+
+
+@filter_registry.register
+class FilterEventFirst(FilterTime):
+    @property
+    def ident(self):
+        return "event_first"
+
+    @property
+    def title(self):
+        return _("First occurrence of event")
+
+    @property
+    def sort_index(self):
+        return 220
+
+    def __init__(self):
+        FilterTime.__init__(self, "event", "event_first")
+
+
+@filter_registry.register
+class FilterEventLast(FilterTime):
+    @property
+    def ident(self):
+        return "event_last"
+
+    @property
+    def title(self):
+        return _("Last occurrance of event")
+
+    @property
+    def sort_index(self):
+        return 221
+
+    def __init__(self):
+        FilterTime.__init__(self, "event", "event_last")
+
+
+@filter_registry.register
+class FilterHistoryTime(FilterTime):
+    @property
+    def ident(self):
+        return "history_time"
+
+    @property
+    def title(self):
+        return _("Time of entry in event history")
+
+    @property
+    def sort_index(self):
+        return 222
+
+    def __init__(self):
+        FilterTime.__init__(self, "history", "history_time")
+
+
+class EventFilterDropdown(Filter):
+    def __init__(self, choices, operator='=', column=None):
+        Filter.__init__(self, "event", [self.ident], ["event_" + column])
+        self._choices = choices
+        self._column = column
+        self._operator = operator
+
+    def display(self):
+        if isinstance(self._choices, list):
+            choices = self._choices
+        else:
+            choices = self._choices()
+        html.dropdown(self.ident, [("", "")] + [(str(n), t) for (n, t) in choices])
+
+    def filter(self, infoname):
+        val = html.request.var(self.ident)
+        if val:
+            return "Filter: event_%s %s %s\n" % (self._column, self._operator, val)
+        return ""
+
+
+@filter_registry.register
+class FilterEventFacility(EventFilterDropdown):
+    @property
+    def ident(self):
+        return "event_facility"
+
+    @property
+    def title(self):
+        return _("Syslog Facility")
+
+    @property
+    def sort_index(self):
+        return 210
+
+    def __init__(self):
+        EventFilterDropdown.__init__(self, mkeventd.syslog_facilities, column="facility")
+
+
+@filter_registry.register
+class FilterEventSl(EventFilterDropdown):
+    @property
+    def ident(self):
+        return "event_sl"
+
+    @property
+    def title(self):
+        return _("Service Level at least")
+
+    @property
+    def sort_index(self):
+        return 211
+
+    def __init__(self):
+        EventFilterDropdown.__init__(self, mkeventd.service_levels, operator='>=', column="sl")
+
+
+@filter_registry.register
+class FilterEventSlMax(EventFilterDropdown):
+    @property
+    def ident(self):
+        return "event_sl_max"
+
+    @property
+    def title(self):
+        return _("Service Level at most")
+
+    @property
+    def sort_index(self):
+        return 211
+
+    def __init__(self):
+        EventFilterDropdown.__init__(self, mkeventd.service_levels, operator='<=', column="sl")
+
+
+@filter_registry.register
+class FilterOptEventEffectiveContactgroup(FilterGroupCombo):
+    @property
+    def ident(self):
+        return "optevent_effective_contactgroup"
+
+    @property
+    def title(self):
+        return _("Contact group (effective)")
+
+    @property
+    def sort_index(self):
+        return 212
+
+    def __init__(self):
+        # TODO: Cleanup hierarchy here. The FilterGroupCombo constructor needs to be refactored
+        FilterGroupCombo.__init__(
+            self,
+            what="event_effective_contact",
+            enforce=False,
+        )
+        self.what = "contact"
+        self.info = "event"
+        self.link_columns = [
+            "event_contact_groups", "event_contact_groups_precedence", "host_contact_groups"
+        ]
+
+    def filter(self, infoname):
+        if not html.request.has_var(self.htmlvars[0]):
+            return ""  # Skip if filter is not being set at all
+
+        current_value = self.current_value()
+        if not current_value:
+            if not self.enforce:
+                return ""
+            current_value = sites.live().query_value(
+                "GET contactgroups\nCache: reload\nColumns: name\nLimit: 1\n", None)
+
+        if current_value is None:
+            return ""  # no {what}group exists!
+
+        if not self.enforce and html.request.var(self.htmlvars[1]):
+            negate = "!"
+        else:
+            negate = ""
+
+        return "Filter: event_contact_groups_precedence = host\n" \
+               "Filter: host_contact_groups %s>= %s\n" \
+               "And: 2\n" \
+               "Filter: event_contact_groups_precedence = rule\n" \
+               "Filter: event_contact_groups %s>= %s\n" \
+               "And: 2\n" \
+               "Or: 2\n" % (negate, livestatus.lqencode(current_value),
+                            negate, livestatus.lqencode(current_value))
+
+    def variable_settings(self, row):
+        return []

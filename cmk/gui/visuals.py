@@ -60,10 +60,12 @@ import cmk.gui.i18n
 from cmk.gui.i18n import _u, _
 from cmk.gui.globals import html
 
+from cmk.gui.plugins.visuals.utils import (
+    filter_registry,)
+
 # Needed for legacy (pre 1.6) plugins
 from cmk.gui.plugins.visuals.utils import (  # pylint: disable=unused-import
-    declare_info, declare_filter, multisite_filters, visual_types, Filter, FilterTime,
-    FilterTristate, FilterUnicodeFilter, FilterSite,
+    declare_info, visual_types, Filter, FilterTime, FilterTristate, FilterUnicodeFilter,
 )
 from cmk.gui.plugins.visuals.utils import _infos as infos
 from cmk.gui.permissions import permission_registry
@@ -1063,14 +1065,15 @@ def get_filter(name):
     # type: (str) -> Type[Filter]
     """Returns the filter object identified by the given name
     Raises a KeyError in case a not existing filter is requested."""
-    return multisite_filters[name]
+    return filter_registry[name]()
 
 
 def filters_allowed_for_info(info):
     # type: (str) -> Dict[str, Type[Filter]]
     """Returns a map of filter names and filter objects that are registered for the given info"""
     allowed = {}
-    for fname, filt in multisite_filters.items():
+    for fname, filter_class in filter_registry.items():
+        filt = filter_class()
         if filt.info is None or info == filt.info:
             allowed[fname] = filt
     return allowed
@@ -1155,8 +1158,8 @@ def visible_filters_of_visual(visual, use_filters):
     single_keys = get_single_info_keys(visual)
 
     for f in use_filters:
-        if f.name not in single_keys or \
-           not visual['context'].get(f.name):
+        if f.ident not in single_keys or \
+           not visual['context'].get(f.ident):
             show_filters.append(f)
 
     return show_filters
@@ -1188,7 +1191,8 @@ def get_context_from_uri_vars(only_infos=None, single_infos=None):
         single_infos = []
 
     context = {}
-    for filter_name, filter_object in multisite_filters.items():
+    for filter_name, filter_class in filter_registry.items():
+        filter_object = filter_class()
         if only_infos is None or filter_object.info in only_infos:
             this_filter_vars = {}
             for varname in filter_object.htmlvars:
@@ -1219,7 +1223,8 @@ def get_filter_headers(table, infos, context):
                 html.request.set_var(filter_name, filter_vars)
 
         # Now compute filter headers for all infos of the used datasource
-        for filter_name, filter_object in multisite_filters.items():
+        for filter_name, filter_class in filter_registry.items():
+            filter_object = filter_class()
             if filter_object.info in infos:
                 header = filter_object.filter(table)
                 if header.startswith("Sites:"):
@@ -1283,7 +1288,7 @@ class VisualFilterList(ListOfMultiple):
 class VisualFilter(ValueSpec):
     def __init__(self, name, **kwargs):
         self._name = name
-        self._filter = multisite_filters[name]
+        self._filter = filter_registry[name]()
 
         ValueSpec.__init__(self, **kwargs)
 

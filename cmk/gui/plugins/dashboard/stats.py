@@ -32,6 +32,7 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 
+from cmk.gui.plugins.visuals.utils import FilterCRESite
 from cmk.gui.plugins.dashboard import (
     Dashlet,
     dashlet_registry,
@@ -84,7 +85,7 @@ class DashletStats(Dashlet):
             infos = ['host', 'service']
         use_filters = visuals.filters_of_visual(self._dashlet_spec, infos)
         for filt in use_filters:
-            if filt.available() and not isinstance(filt, visuals.FilterSite):
+            if filt.available() and not isinstance(filt, FilterCRESite):
                 filter_ += filt.filter(info)
 
         query = "GET %s\n" % what

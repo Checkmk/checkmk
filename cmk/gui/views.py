@@ -981,7 +981,7 @@ def show_view(view,
     if view["datasource"] in [ "mkeventd_events", "mkeventd_history" ] \
        and "host" in view["single_infos"] and view["name"] != "ec_events_of_monhost":
         # Remove the original host name filter
-        use_filters = [f for f in use_filters if f.name != "host"]
+        use_filters = [f for f in use_filters if f.ident != "host"]
 
         # Set the value for the event host filter
         if not html.request.has_var("event_host"):

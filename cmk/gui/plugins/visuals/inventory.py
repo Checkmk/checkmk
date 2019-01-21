@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import abc
 import re
 import time
 
@@ -35,18 +36,23 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import MKUserError
 
-from . import (
+from cmk.gui.plugins.visuals import (
+    filter_registry,
     Filter,
     FilterTristate,
-    declare_filter,
     declare_info,
 )
 
 
 class FilterInvtableText(Filter):
-    def __init__(self, infoname, name, title):
-        varname = infoname + "_" + name
-        super(FilterInvtableText, self).__init__(varname, title, infoname, [varname], [])
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractmethod
+    def _invinfo(self):
+        raise NotImplementedError()
+
+    def __init__(self):
+        super(FilterInvtableText, self).__init__(self._invinfo, [self.ident], [])
 
     def display(self):
         htmlvar = self.htmlvars[0]
@@ -75,11 +81,15 @@ class FilterInvtableText(Filter):
         return newrows
 
 
-# Filter for choosing a range in which an age lies
-class FilterInvtableAge(Filter):
-    def __init__(self, infoname, name, title, only_days=False):
-        name = infoname + "_" + name
-        Filter.__init__(self, name, title, infoname, [name + "_from", name + "_to"], [])
+class FilterInvtableTimestampAsAge(Filter):
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractmethod
+    def _invinfo(self):
+        raise NotImplementedError()
+
+    def __init__(self):
+        Filter.__init__(self, self._invinfo, [self.ident + "_from", self.ident + "_to"], [])
 
     def display(self):
         html.open_table()
@@ -87,14 +97,14 @@ class FilterInvtableAge(Filter):
         html.open_tr()
         html.td("%s:" % _("from"), style="vertical-align: middle;")
         html.open_td()
-        Age(display=["days"]).render_input(self.name + "_from", 0)
+        Age(display=["days"]).render_input(self.ident + "_from", 0)
         html.close_td()
         html.close_tr()
 
         html.open_tr()
         html.td("%s:" % _("to"), style="vertical-align: middle;")
         html.open_td()
-        Age(display=["days"]).render_input(self.name + "_to", 0)
+        Age(display=["days"]).render_input(self.ident + "_to", 0)
         html.close_td()
         html.close_tr()
 
@@ -103,19 +113,16 @@ class FilterInvtableAge(Filter):
     def double_height(self):
         return True
 
-    def filter_table(self, rows):
-        return self.filter_table_with_conversion(rows, lambda age: age)
-
     def filter_table_with_conversion(self, rows, conv):
-        from_value = Age().from_html_vars(self.name + "_from")
-        to_value = Age().from_html_vars(self.name + "_to")
+        from_value = Age().from_html_vars(self.ident + "_from")
+        to_value = Age().from_html_vars(self.ident + "_to")
 
         if not from_value and not to_value:
             return rows
 
         newrows = []
         for row in rows:
-            value = row.get(self.name, None)
+            value = row.get(self.ident, None)
             if value is not None:
                 age = conv(value)
                 if from_value and age < from_value:
@@ -126,11 +133,6 @@ class FilterInvtableAge(Filter):
                 newrows.append(row)
         return newrows
 
-
-class FilterInvtableTimestampAsAge(FilterInvtableAge):
-    def __init__(self, infoname, name, title, only_days=True):
-        FilterInvtableAge.__init__(self, infoname, name, title, only_days)
-
     def filter_table(self, rows):
         now = time.time()
         return self.filter_table_with_conversion(rows, lambda timestamp: now - timestamp)
@@ -138,26 +140,31 @@ class FilterInvtableTimestampAsAge(FilterInvtableAge):
 
 # Filter for choosing a range in which a certain integer lies
 class FilterInvtableIDRange(Filter):
-    def __init__(self, infoname, name, title):
-        name = infoname + "_" + name
-        Filter.__init__(self, name, title, infoname, [name + "_from", name + "_to"], [])
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractmethod
+    def _invinfo(self):
+        raise NotImplementedError()
+
+    def __init__(self):
+        Filter.__init__(self, self._invinfo, [self.ident + "_from", self.ident + "_to"], [])
 
     def display(self):
         html.write_text(_("from:") + " ")
-        html.number_input(self.name + "_from")
+        html.number_input(self.ident + "_from")
         html.write_text("&nbsp; %s: " % _("to"))
-        html.number_input(self.name + "_to")
+        html.number_input(self.ident + "_to")
 
     def filter_table(self, rows):
-        from_value = utils.saveint(html.request.var(self.name + "_from"))
-        to_value = utils.saveint(html.request.var(self.name + "_to"))
+        from_value = utils.saveint(html.request.var(self.ident + "_from"))
+        to_value = utils.saveint(html.request.var(self.ident + "_to"))
 
         if not from_value and not to_value:
             return rows
 
         newrows = []
         for row in rows:
-            value = row.get(self.name, None)
+            value = row.get(self.ident, None)
             if value is not None:
                 if from_value and value < from_value:
                     continue
@@ -169,17 +176,22 @@ class FilterInvtableIDRange(Filter):
 
 
 class FilterInvtableOperStatus(Filter):
-    def __init__(self, infoname, name, title):
-        varname = infoname + "_" + name
-        varnames = [varname + "_" + str(x) for x in defines.interface_oper_states()]
-        Filter.__init__(self, varname, title, infoname, varnames, [])
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractmethod
+    def _invinfo(self):
+        raise NotImplementedError()
+
+    def __init__(self):
+        varnames = [self.ident + "_" + str(x) for x in defines.interface_oper_states()]
+        Filter.__init__(self, self._invinfo, varnames, [])
 
     def display(self):
         html.begin_checkbox_group()
         for state, state_name in sorted(defines.interface_oper_states().items()):
             if state >= 8:
                 continue  # skip artificial state 8 (degraded) and 9 (admin down)
-            varname = self.name + "_" + str(state)
+            varname = self.ident + "_" + str(state)
             html.checkbox(varname, True, label=state_name)
             if state in (4, 7):
                 html.br()
@@ -200,25 +212,30 @@ class FilterInvtableOperStatus(Filter):
         new_rows = []
         for row in rows:
             oper_status = row["invinterface_oper_status"]
-            varname = "%s_%d" % (self.name, oper_status)
+            varname = "%s_%d" % (self.ident, oper_status)
             if html.get_checkbox(varname):
                 new_rows.append(row)
         return new_rows
 
 
 class FilterInvtableAdminStatus(Filter):
-    def __init__(self, infoname, name, title):
-        varname = infoname + "_" + name
-        Filter.__init__(self, varname, title, infoname, [varname], [])
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractmethod
+    def _invinfo(self):
+        raise NotImplementedError()
+
+    def __init__(self):
+        Filter.__init__(self, self._invinfo, [self.ident], [])
 
     def display(self):
         html.begin_radio_group(horizontal=True)
         for value, text in [("1", _("up")), ("2", _("down")), ("-1", _("(ignore)"))]:
-            html.radiobutton(self.name, value, value == "-1", text + " &nbsp; ")
+            html.radiobutton(self.ident, value, value == "-1", text + " &nbsp; ")
         html.end_radio_group()
 
     def filter_table(self, rows):
-        current = html.request.var(self.name)
+        current = html.request.var(self.ident)
         if current not in ("1", "2"):
             return rows
 
@@ -231,18 +248,23 @@ class FilterInvtableAdminStatus(Filter):
 
 
 class FilterInvtableAvailable(Filter):
-    def __init__(self, infoname, name, title):
-        varname = infoname + "_" + name
-        Filter.__init__(self, varname, title, infoname, [varname], [])
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractmethod
+    def _invinfo(self):
+        raise NotImplementedError()
+
+    def __init__(self):
+        Filter.__init__(self, self._invinfo, [self.ident], [])
 
     def display(self):
         html.begin_radio_group(horizontal=True)
         for value, text in [("no", _("used")), ("yes", _("free")), ("", _("(ignore)"))]:
-            html.radiobutton(self.name, value, value == "", text + " &nbsp; ")
+            html.radiobutton(self.ident, value, value == "", text + " &nbsp; ")
         html.end_radio_group()
 
     def filter_table(self, rows):
-        current = html.request.var(self.name)
+        current = html.request.var(self.ident)
         if current not in ("no", "yes"):
             return rows
 
@@ -257,9 +279,14 @@ class FilterInvtableAvailable(Filter):
 
 
 class FilterInvtableInterfaceType(Filter):
-    def __init__(self, infoname, name, title):
-        varname = infoname + "_" + name
-        Filter.__init__(self, varname, title, infoname, [varname], [])
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractmethod
+    def _invinfo(self):
+        raise NotImplementedError()
+
+    def __init__(self):
+        Filter.__init__(self, self._invinfo, [self.ident], [])
 
     def double_height(self):
         return True
@@ -273,14 +300,14 @@ class FilterInvtableInterfaceType(Filter):
         )
 
     def selection(self):
-        current = html.request.var(self.name, "").strip().split("|")
+        current = html.request.var(self.ident, "").strip().split("|")
         if current == ['']:
             return []
         return current
 
     def display(self):
         html.open_div(class_="multigroup")
-        self.valuespec().render_input(self.name, self.selection())
+        self.valuespec().render_input(self.ident, self.selection())
         html.close_div()
 
     def filter_table(self, rows):
@@ -289,15 +316,20 @@ class FilterInvtableInterfaceType(Filter):
             return rows  # No types selected, filter is unused
         new_rows = []
         for row in rows:
-            if str(row[self.name]) in current:
+            if str(row[self.ident]) in current:
                 new_rows.append(row)
         return new_rows
 
 
 class FilterInvtableVersion(Filter):
-    def __init__(self, infoname, name, title):
-        varname = infoname + "_" + name
-        Filter.__init__(self, varname, title, infoname, [varname + "_from", varname + "_to"], [])
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractmethod
+    def _invinfo(self):
+        raise NotImplementedError()
+
+    def __init__(self):
+        Filter.__init__(self, self._invinfo, [self.ident + "_from", self.ident + "_to"], [])
 
     def display(self):
         html.write_text(_("Min.&nbsp;Version:"))
@@ -314,7 +346,7 @@ class FilterInvtableVersion(Filter):
 
         new_rows = []
         for row in rows:
-            version = row.get(self.name, "")
+            version = row.get(self.ident, "")
             if from_version and utils.cmp_version(version, from_version) == -1:
                 continue
             if to_version and utils.cmp_version(version, to_version) == 1:
@@ -325,9 +357,14 @@ class FilterInvtableVersion(Filter):
 
 
 class FilterInvText(Filter):
-    def __init__(self, name, invpath, title):
-        self._invpath = invpath
-        Filter.__init__(self, name, title, "host", [name], [])
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractmethod
+    def _invpath(self):
+        raise NotImplementedError()
+
+    def __init__(self):
+        Filter.__init__(self, "host", [self.ident], [])
 
     def need_inventory(self):
         return True
@@ -363,11 +400,22 @@ class FilterInvText(Filter):
 
 
 class FilterInvFloat(Filter):
-    def __init__(self, name, invpath, title, unit="", scale=1.0):
-        self._invpath = invpath
-        self._unit = unit
-        self._scale = scale
-        Filter.__init__(self, name, title, "host", [name + "_from", name + "_to"], [])
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractmethod
+    def _invpath(self):
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def _unit(self):
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def _scale(self):
+        raise NotImplementedError()
+
+    def __init__(self):
+        Filter.__init__(self, "host", [self.ident + "_from", self.ident + "_to"], [])
 
     def need_inventory(self):
         return True
@@ -421,9 +469,14 @@ class FilterInvFloat(Filter):
 
 
 class FilterInvBool(FilterTristate):
-    def __init__(self, name, invpath, title):
-        self._invpath = invpath
-        super(FilterInvBool, self).__init__(name, title, "host", name)
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractmethod
+    def _invpath(self):
+        raise NotImplementedError()
+
+    def __init__(self):
+        FilterTristate.__init__(self, "host", self.ident)
 
     def need_inventory(self):
         return True
@@ -445,14 +498,22 @@ class FilterInvBool(FilterTristate):
         return newrows
 
 
-class FilterHasInventory(FilterTristate):
+@filter_registry.register
+class FilterHasInv(FilterTristate):
+    @property
+    def ident(self):
+        return "has_inv"
+
+    @property
+    def title(self):
+        return _("Has Inventory Data")
+
+    @property
+    def sort_index(self):
+        return 801
+
     def __init__(self):
-        super(FilterHasInventory, self).__init__(
-            "has_inv",
-            _("Has Inventory Data"),
-            "host",
-            "host_inventory",
-        )
+        FilterTristate.__init__(self, "host", "host_inventory")
 
     def need_inventory(self):
         return True
@@ -471,19 +532,28 @@ class FilterHasInventory(FilterTristate):
         return [row for row in rows if not row["host_inventory"]]
 
 
-declare_filter(801, FilterHasInventory())
-
-
+@filter_registry.register
 class FilterInvHasSoftwarePackage(Filter):
+    @property
+    def ident(self):
+        return "invswpac"
+
+    @property
+    def title(self):
+        return _("Host has software package")
+
+    @property
+    def sort_index(self):
+        return 801
+
     def __init__(self):
         self._varprefix = "invswpac_host_"
-        super(FilterInvHasSoftwarePackage, self).__init__("invswpac",
-                                                          _("Host has software package"), "host", [
-                                                              self._varprefix + "name",
-                                                              self._varprefix + "version_from",
-                                                              self._varprefix + "version_to",
-                                                              self._varprefix + "negate",
-                                                          ], [])
+        Filter.__init__(self, "host", [
+            self._varprefix + "name",
+            self._varprefix + "version_from",
+            self._varprefix + "version_to",
+            self._varprefix + "negate",
+        ], [])
 
     def double_height(self):
         return True
@@ -569,8 +639,6 @@ class FilterInvHasSoftwarePackage(Filter):
     def version_is_higher(self, a, b):
         return utils.cmp_version(a, b) == 1
 
-
-declare_filter(801, FilterInvHasSoftwarePackage())
 
 declare_info('invhist', {
     'title': _('Inventory History'),

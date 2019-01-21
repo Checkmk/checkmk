@@ -100,8 +100,8 @@ def check_lnx_thermal(item, params, parsed):
     hot_value = parsed.get(item).get('hot')
     critical_value = parsed.get(item).get('critical')
 
-    if not temperature:
-        return 3, "Item not found or invalid agent data."
+    if temperature is None:
+        return
 
     if hot_value and critical_value:
         crit_level = min(hot_value, critical_value)

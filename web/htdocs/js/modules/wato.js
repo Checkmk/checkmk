@@ -191,12 +191,27 @@ function get_effective_tags()
                     continue;
                 }
                 var oTdContent = oTr.childNodes[1];
-                /* If the Checkbox is unchecked try to get a value from the inherited_tags */
-                var oCheckbox = oTdLegend.getElementsByTagName("input")[0];
-                if (oCheckbox.checked == false ){
-                    var attrname = "attr_" + oCheckbox.name.replace(/.*_change_/, "");
-                    if (attrname in dialog_properties.inherited_tags && dialog_properties.inherited_tags[attrname] !== null){
-                        add_tag_id = dialog_properties.inherited_tags[attrname];
+
+                /*
+                 * If the Checkbox is unchecked try to get a value from the inherited_tags
+                 *
+                 * The checkbox may be disabled. In this case there is a hidden field with the original
+                 * name of the checkbox. Get that value instead of the checkbox checked state.
+                 */
+                var input_fields = oTdLegend.getElementsByTagName("input");
+                var checkbox = input_fields[0];
+                var attr_enabled = false;
+                if (checkbox.name.indexOf("ignored_") === 0) {
+                    var hidden_field = input_fields[input_fields.length - 1];
+                    attr_enabled = hidden_field.value == "on";
+                } else {
+                    attr_enabled = checkbox.checked;
+                }
+
+                if (attr_enabled == false ){
+                    var attr_ident = "attr_" + checkbox.name.replace(/.*_change_/, "");
+                    if (attr_ident in dialog_properties.inherited_tags && dialog_properties.inherited_tags[attr_ident] !== null){
+                        add_tag_id = dialog_properties.inherited_tags[attr_ident];
                     }
                 } else {
                     /* Find the <select>/<checkbox> object in this tr */

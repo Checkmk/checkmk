@@ -122,18 +122,16 @@ def kernel_check_cpu_utilization(item, params, info):
     params = transform_cpu_iowait(params)
 
     # Look for entry matching "cpu" (this is the combined load of all cores)
-    total = [transform_cpu_info(line) for line in info if line[0] == "cpu"]
+    total = [cpu_info(line) for line in info if line[0] == "cpu"]
 
     if len(total) != 1:
         return 3, "More than one line with CPU info found. This check is not cluster-enabled."
 
-    cores = [
-        transform_cpu_info(line) for line in info if line[0].startswith("cpu") and len(line[0]) > 3
-    ]
+    cores = [cpu_info(line) for line in info if line[0].startswith("cpu") and len(line[0]) > 3]
     # total contains now the following columns:
     # 'cpu' user nice system idle wait hw-int sw-int (steal ...)
     # convert number to int
-    return check_cpu_util_unix(total[0][1:], params, cores)
+    return check_cpu_util_unix(total[0], params, cores)
 
 
 check_info["kernel.util"] = {

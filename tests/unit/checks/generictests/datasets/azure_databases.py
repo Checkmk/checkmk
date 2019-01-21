@@ -60,7 +60,7 @@ checks = {
             'dtu_percent_levels': (85.0, 95.0)
         },
         [
-            (0, 'Database throughput units: 0.0%', [('dtu_percent', 0.0, 85., 95., 0, None)]),
+            (0, 'Database throughput units: 0%', [('dtu_percent', 0.0, 85., 95., 0, None)]),
         ],
     )],
     'cpu': [(
@@ -69,7 +69,7 @@ checks = {
             'cpu_percent_levels': (85.0, 95.0)
         },
         [
-            (0, 'total cpu: 0.0%', [('util', 0.0, 85., 95., 0, 100)]),
+            (0, 'total cpu: 0%', [('util', 0.0, 85., 95., 0, 100)]),
         ],
     )],
     'storage': [(u'hugo-server/Testdatabase', {

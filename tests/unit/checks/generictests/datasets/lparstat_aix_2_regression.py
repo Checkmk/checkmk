@@ -65,10 +65,10 @@ checks = {
     ],
     'cpu_util': [
         (None, None, [
-            (0, 'user: 0.20%', [('user', 0.2)]),
-            (0, 'system: 0.40%', [('system', 0.4)]),
-            (0, 'wait: 0.00%', [('wait', 0.0)]),
-            (0, 'total cpu: 0.60%', [('util', 0.6000000000000001, None, None, 0, None)]),
+            (0, 'user: 0.2%', [('user', 0.2)]),
+            (0, 'system: 0.4%', [('system', 0.4)]),
+            (0, 'wait: 0%', [('wait', 0.0)]),
+            (0, 'total cpu: 0.6%', [('util', 0.6000000000000001, None, None, 0, None)]),
             (0, '100% corresponding to entitled processing capacity: 1.00 CPUs', [
                 ('cpu_entitlement', 1.0)]),
             (0, "", [('cpu_entitlement_util', 0.006000000000000001)]),

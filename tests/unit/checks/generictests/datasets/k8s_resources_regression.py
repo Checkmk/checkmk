@@ -23,12 +23,12 @@ checks = {
         (0, 'Limit: n.a.', []),
         (0, 'Allocatable: 581.59 MB', [('k8s_memory_allocatable', 609845248.0)]),
         (0, 'Capacity: 581.59 MB', [('k8s_memory_capacity', 609845248.0)]),
-        (0, 'Usage: 0.0%', [('k8s_memory_usage', 0.0)]),
+        (0, 'Usage: 0%', [('k8s_memory_usage', 0.0)]),
     ])],
     'pods': [(None, {}, [
         (0, 'Request: 0', [('k8s_pods_request', 0)]),
         (0, 'Allocatable: 110', [('k8s_pods_allocatable', 110)]),
         (0, 'Capacity: 110', [('k8s_pods_capacity', 110)]),
-        (0, 'Usage: 0.0%', [('k8s_pods_usage', 0.0)]),
+        (0, 'Usage: 0%', [('k8s_pods_usage', 0.0)]),
     ])],
 }

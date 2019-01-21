@@ -30,7 +30,7 @@ def reference_result(deviation):
         (0, 'wait: 10.0%', [('wait', 10.0, None, None, None, None)]),
         (0, 'steal: 12.0%', [('steal', 12.0, None, None, None, None)]),
         (0, 'guest: 12.0%', [('guest', 12.0, None, None, None, None)]),
-        (0, 'total: 84.0%', [('util', 84.0, None, None, None, None)]),
+        (0, 'total cpu: 84.0%', [('util', 84.0, None, None, 0, None)]),
     ]
     if isinstance(deviation, tuple):
         reference[deviation[0]] = deviation[1]

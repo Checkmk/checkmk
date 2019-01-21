@@ -32,7 +32,7 @@ pytestmark = pytest.mark.checks
             'average_write_request_size': 0.0,
             'queue_length': 0.0,
         }
-    }, [(0, 'Utilization: 0.00%', [('disk_utilization', 0.0)]),
+    }, [(0, 'Utilization: 0%', [('disk_utilization', 0.0)]),
         (0, 'Read: 0.00 B/s', [('disk_read_throughput', 0.0)]),
         (0, 'Write: 0.00 B/s', [('disk_write_throughput', 0.0)]),
         (0, 'Average Wait: 0.00 ms', [('disk_average_wait', 0.0)]),
@@ -72,7 +72,7 @@ pytestmark = pytest.mark.checks
             'average_write_request_size': 0.0,
             'queue_length': 0.0,
         }
-    }, [(0, 'Utilization: 0.00%', [('disk_utilization', 0.0)]),
+    }, [(0, 'Utilization: 0%', [('disk_utilization', 0.0)]),
         (0, 'Read: 0.00 B/s', [('disk_read_throughput', 0.0)]),
         (0, 'Write: 0.00 B/s', [('disk_write_throughput', 0.0)]),
         (0, 'Average Wait: 0.00 ms', [('disk_average_wait', 0.0)]),

@@ -48,17 +48,13 @@ def mock_state_function(key, _default):
 expected_result_1 = CheckResult([(0, 'user: 40.0%', [('user', 40.0, None, None, None, None)]),
                                  (0, 'system: 20.0%', [('system', 20.0, None, None, None, None)]),
                                  (0, 'wait: 20.0%', [('wait', 20.0, None, None, None, None)]),
-                                 (0, 'steal: 0.0%', [('steal', 0.0, None, None, None, None)]),
-                                 (0, 'guest: 0.0%', [('guest', 0.0, None, None, None, None)]),
-                                 (0, 'total: 80.0%', [('util', 80.0, None, None, None, None)])])
+                                 (0, 'total cpu: 80.0%', [('util', 80.0, None, None, 0, None)])])
 
 expected_result_2 = CheckResult(
     [(0, 'user: 22.3%', [('user', 22.304832713754646, None, None, None, None)]),
      (0, 'system: 24.8%', [('system', 24.783147459727385, None, None, None, None)]),
      (0, 'wait: 31.0%', [('wait', 30.97893432465923, None, None, None, None)]),
-     (0, 'steal: 0.0%', [('steal', 0.0, None, None, None, None)]),
-     (0, 'guest: 0.0%', [('guest', 0.0, None, None, None, None)]),
-     (0, 'total: 78.1%', [('util', 78.06691449814126, None, None, None, None)])])
+     (0, 'total cpu: 78.1%', [('util', 78.06691449814126, None, None, 0, None)])])
 
 
 @pytest.mark.parametrize("info,mockstate,expected_result", [

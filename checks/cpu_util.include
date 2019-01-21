@@ -36,6 +36,72 @@
 #   }
 
 
+# This one can handle user, system and wait. values is a list of:
+# - 0 - name: name of core
+# - 1 - user: normal processes executing in user mode
+# - 2 - nice: niced processes executing in user mode
+# - 3 - system: processes executing in kernel mode
+# - 4 - idle: twiddling thumbs
+# - 5 - iowait: waiting for I/O to complete
+# - 6 - irq: servicing interrupts
+# - 7 - softirq: servicing softirqs
+# - 8 - steal: involuntary wait
+# - 9 - guest: time spent in guest OK, also counted in 0 (user)
+# -10 - guest_nice: time spent in niced guest OK, also counted in 1 (nice)
+class CpuInfo(
+        collections.namedtuple("CPU_utilization",
+                               ('name', 'user', 'nice', 'system', 'idle', 'iowait', 'irq',
+                                'softirq', 'steal', 'guest', 'guest_nice'))):
+    __slots__ = ()
+
+    @property
+    def util_total(self):
+        return self.user + self.nice + self.system + self.iowait + self.irq + self.softirq + self.steal
+
+    @property
+    def total_sum(self):
+        return self.util_total + self.idle
+
+    @property
+    def utils_perc(self):
+        # https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/kernel/sched/cputime.c
+        # see 'account_guest_time'
+        # if task_nice(p) <= 0:
+        #     cpustat[CPUTIME_USER] += cputime;
+        #     cpustat[CPUTIME_GUEST] += cputime;
+        guest = self.guest + self.guest_nice
+        user = self.user + self.nice - guest
+
+        system = self.system + self.irq + self.softirq
+        wait = self.iowait
+        steal = self.steal
+        total_sum = self.total_sum
+
+        perc = [
+            100.0 * float(x) / float(total_sum)
+            for x in [user, system, wait, steal, guest, self.util_total]
+        ]
+        return perc
+
+
+def cpu_info(elements, caster=int):
+    entries = [elements[0]] + map(caster, elements[1:])
+    entries.extend([0] * (11 - len(entries)))
+    return CpuInfo(*entries)
+
+
+def util_counter(stats, this_time):
+    # Compute jiffi-differences of all relevant counters
+    diff_values = []
+    for n, v in enumerate(stats[1:], start=1):
+        countername = "cpu.util.%d" % n
+        last_val = get_item_state(countername, (0, 0))[1]
+        diff_values.append(v - last_val)
+        set_item_state(countername, (this_time, v))
+
+    return cpu_info([stats.name] + diff_values)
+
+
 # normalize name of a cpu core so that the perfdata-template
 # recognizes it. If the input name doesn't end on a number, this
 # returns consecutive numbers per call so this function has to be
@@ -50,11 +116,6 @@ def cpu_util_core_name(orig, core_index):
         # consecutive numbers for each call
         num = core_index
     return "cpu_core_util_%s" % num
-
-
-def transform_cpu_info(element):
-    int_casted_entries = [element[0]] + map(int, element[1:])
-    return int_casted_entries + [0] * (11 - len(int_casted_entries))
 
 
 def check_cpu_util(util, params, this_time=None, cores=None, perf_max=100):
@@ -105,93 +166,47 @@ def check_cpu_util(util, params, this_time=None, cores=None, perf_max=100):
                 yield perfdata
 
 
-# This one can handle user, system and wait. values is a list of:
-# - 0 - user: normal processes executing in user mode
-# - 1 - nice: niced processes executing in user mode
-# - 2 - system: processes executing in kernel mode
-# - 3 - idle: twiddling thumbs
-# - 4 - iowait: waiting for I/O to complete
-# - 5 - irq: servicing interrupts
-# - 6 - softirq: servicing softirqs
-# - 7 - steal: involuntary wait
-# - 8 - guest: time spent in guest OK, also counted in 0 (user)
-# - 9 - guest_nice: time spent in niced guest OK, also counted in 1 (nice)
-def check_cpu_util_unix(values, params, cores=None):
+def check_cpu_util_unix(values, params, cores=None, values_counter=True):
     this_time = time.time()
-    # Compute jiffi-differences of all relevant counters
-    diff_values = []
-    for n, v in enumerate(values):
-        countername = "cpu.util.%d" % (n + 1)
-        last_val = get_item_state(countername, (0, 0))[1]
-        diff_values.append(v - last_val)
-        set_item_state(countername, (this_time, v))
+    if values_counter:
+        diff_values = util_counter(values, this_time)
+        sum_jiffies = diff_values.total_sum
+        if sum_jiffies == 0:
+            raise MKCounterWrapped("Too short time difference since last check")
+        user_perc, system_perc, wait_perc, steal_perc, guest_perc, util_total_perc = diff_values.utils_perc
+    else:
+        user_perc = values.user
+        system_perc = values.system
+        wait_perc = values.iowait
+        util_total_perc = values.util_total
 
-    sum_jiffies = sum(diff_values)
-    if sum_jiffies == 0:
-        raise MKCounterWrapped("Too short time difference since last check")
-
-    user = diff_values[0] + diff_values[1]  # add user + nice
-    # https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/kernel/sched/cputime.c
-    # see 'account_guest_time'
-    # if task_nice(p) <= 0:
-    #     cpustat[CPUTIME_USER] += cputime;
-    #     cpustat[CPUTIME_GUEST] += cputime;
-    subtrahend = diff_values[8] + diff_values[9]
-    user -= subtrahend
-    sum_jiffies -= subtrahend
-
-    user_perc = 100.0 * float(user) / float(sum_jiffies)
-    yield 0, "user: %.1f%%" % user_perc, [("user", user_perc)]
-
-    system = diff_values[2] + diff_values[5] + diff_values[6]
-    system_perc = 100.0 * float(system) / float(sum_jiffies)
-    yield 0, "system: %.1f%%" % system_perc, [("system", system_perc)]
-
-    # Handle level on iowait
-    wait = diff_values[4]
-    wait_perc = 100.0 * float(wait) / float(sum_jiffies)
-
-    yield check_levels(
-        wait_perc, 'wait', params.get('iowait'), human_readable_func=get_percent_human_readable)
+    yield check_levels(user_perc, 'user', None, "%")
+    yield check_levels(system_perc, 'system', None, "%")
+    yield check_levels(wait_perc, 'wait', params.get('iowait'), "%")
 
     # Compute values used in virtualized environments (Xen, etc.)
     # Only do this for counters that have counted at least one tick
     # since the system boot. This avoids silly output in systems
     # where these counters are not being used
-    steal = diff_values[7]
-    steal_perc = 100.0 * float(steal) / float(sum_jiffies)
-    yield check_levels(
-        steal_perc, "steal", params.get('steal'), human_readable_func=get_percent_human_readable)
+    if values.steal:
+        yield check_levels(steal_perc, "steal", params.get('steal'), "%")
 
-    guest = diff_values[8] + diff_values[9]
-    guest_perc = 100.0 * float(guest) / float(sum_jiffies)
-    yield 0, "guest: %.1f%%" % guest_perc, [("guest", guest_perc)]
+    if values.guest:
+        yield check_levels(guest_perc, 'guest', None, "%")
 
-    # Total utilization
-    util_total_perc = user_perc + system_perc + wait_perc + steal_perc + guest_perc
-    yield check_levels(
-        util_total_perc,
-        'util',
-        params.get('util'),
-        human_readable_func=get_percent_human_readable,
-        infoname='total')
+    summary_cores = []
+    if cores:
+        for core in cores:
+            prev_total = get_item_state("cpu.util.%s.total" % core.name, 0)
+            util_total = core.util_total
+            total_diff = util_total - prev_total
+            set_item_state("cpu.util.%s.total" % core.name, util_total)
+            total_perc = (100.0 * total_diff / sum_jiffies) * len(cores)
+            summary_cores.append((core.name, total_perc))
 
-    if "core_util_time_total" in params:
-        threshold, warn, crit = params["core_util_time_total"]
-        yield cpu_util_time(this_time, "total", util_total_perc, threshold, warn, crit)
-
-    if cores and any([x in params for x in ["core_util_graph", "core_util_time", "levels_single"]]):
-        for core_index, (core, user, nice, system, _idle, iowait, irq, softirq, steal, _guest,
-                         _guest_nice) in enumerate(cores):
-
-            total = user + nice + system + iowait + irq + softirq + steal
-            prev_total = get_item_state("cpu.util.%s.total" % core, 0)
-            total_diff = total - prev_total
-            set_item_state("cpu.util.%s.total" % core, total)
-            total_perc = ((100.0 * total_diff) / sum_jiffies) * len(cores)
-
-            for perfdata in util_perfdata(core, total_perc, core_index, this_time, params):
-                yield perfdata
+    for check_result in check_cpu_util(
+            util_total_perc, params, this_time, summary_cores, perf_max=None):
+        yield check_result
 
 
 def util_perfdata(core, total_perc, core_index, this_time, params):

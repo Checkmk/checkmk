@@ -1,0 +1,18 @@
+title: Microsoft Azure Virtual Network Gateways
+agents: azure
+catalog: cloud/azure
+license: GPL
+distribution: check_mk
+description:
+ This check monitors Microsoft Azures virtual network gateways.
+ Monitored metrics are the number of Point-to-site connections as well
+ as the Point-to-site and Site-to-site bandwidths.
+ You can configure levels for these metrics useíng the rule "Azure VNet Gateway".
+ In order to use this check, you need to onfigure the Azure special agent.
+
+item:
+ The name of the resource.
+
+inventory:
+ One service is created per virtual network gateway.
+

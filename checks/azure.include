@@ -1,0 +1,214 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2018             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+import json
+
+_AZURE_METRIC_FMT = {
+    "count": lambda n: "%d" % n,
+    "percent": get_percent_human_readable,
+    "bytes": get_bytes_human_readable,
+    "bytes_per_second": lambda b: "%s/s" % get_bytes_human_readable(b),
+    "seconds": lambda s: "%.2f s" % s,
+    "milli_seconds": lambda ms: "%d ms" % (ms * 1000),
+}
+
+
+def azure_iter_informative_attrs(resource, include_keys=('location',)):
+    def cap(string):  # not quite what str.title() does
+        return string[0].upper() + string[1:]
+
+    for key in include_keys:
+        if key in resource:
+            yield cap(key), resource[key]
+
+    for key, value in sorted(resource.get('tags', {}).iteritems()):
+        if not key.startswith("hidden-"):
+            yield cap(key), value
+
+
+def check_azure_metric(
+        resource,  # pylint: disable=too-many-locals
+        metric_key,
+        cmk_key,
+        display_name,
+        levels=None,
+        levels_lower=None,
+        minv=None,
+        maxv=None,
+        use_rate=False):
+    metric = resource.get('metrics', {}).get(metric_key)
+    if metric is None:
+        return None
+
+    if use_rate:
+        countername = "%s.%s" % (resource['id'], metric_key)
+        value = get_rate(countername, time.time(), metric.value)
+        unit = "%s_rate" % metric.unit
+    else:
+        value = metric.value
+        unit = metric.unit
+
+    if value is None:
+        return 3, "Metric %s is 'None'" % display_name, []
+
+    # convert to SI-unit
+    if unit == "milli_seconds":
+        value /= 1000.
+    elif unit == "seconds_rate":
+        # we got seconds, but we computed the rate -> seconds per second:
+        # how long happend something / time period = percent of the time
+        # e.g. CPU time: how much percent of of the time was the CPU busy.
+        value *= 100.
+        unit = "percent"
+
+    formatter = _AZURE_METRIC_FMT.get(unit, str)
+    text = "%s: %s" % (display_name, formatter(value))
+
+    l_state, u_state = 0, 0
+    warn_lower, crit_lower = levels_lower or (None, None)
+    if crit_lower is not None and value <= crit_lower:
+        l_state = 2
+    elif warn_lower is not None and value <= warn_lower:
+        l_state = 1
+    if l_state != 0:
+        text += " (warn/crit below %s/%s)" % (formatter(warn_lower), formatter(crit_lower))
+
+    warn, crit = levels or (None, None)
+    if crit is not None and value >= crit:
+        u_state = 2
+    elif warn is not None and value >= warn:
+        u_state = 1
+    if u_state != 0:
+        text += " (warn/crit at %s/%s)" % (formatter(warn), formatter(crit))
+
+    return max(l_state, u_state), text, [(cmk_key, value, warn, crit, minv, maxv)]
+
+
+#   .--Parse---------------------------------------------------------------.
+#   |                      ____                                            |
+#   |                     |  _ \ __ _ _ __ ___  ___                        |
+#   |                     | |_) / _` | '__/ __|/ _ \                       |
+#   |                     |  __/ (_| | |  \__ \  __/                       |
+#   |                     |_|   \__,_|_|  |___/\___|                       |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+_AZURE_AGENT_SEPARATOR = '|'
+
+Metric = collections.namedtuple(
+    "Metric", ["name", "aggregation", "value", "unit", "timestamp", "timegrain", "filters"])
+
+
+def _read(row, types, defaults=None):
+    if defaults is None:
+        defaults = [None for __ in types]
+    if len(defaults) != len(types):
+        raise ValueError("expected %d default values" % len(types))
+
+    for i, (tfunc, default) in enumerate(zip(types, defaults)):
+        try:
+            raw = row[i]
+            yield tfunc(raw)
+        except (IndexError, ValueError):
+            yield default
+
+
+def _parse_resource(info):
+    '''read resource json and parse metric lines
+
+    Metrics are stored in a dict. Key is name, prefixed by their aggregation,
+    spaces become underspcores:
+      Disk Read Bytes|average|0.0|...
+    is stored at
+      resource["metrics"]["average_Disk_Read_Bytes"]
+    '''
+    try:
+        resource = json.loads(_AZURE_AGENT_SEPARATOR.join(info[0]))
+    except (ValueError, IndexError):
+        return None
+
+    if len(info) < 4:
+        return resource
+
+    key, count = _read(info[1], (str, int), ("", 0))
+    if key != "metrics following":
+        return resource
+
+    # header = info[2]
+    for mline in info[3:3 + count]:
+        name, aggregation, value, unit, timestamp, timegrain, filters = _read(
+            mline, (str, str, float, str, str, str, str))
+        if unit in ('count', 'bytes') and value is not None:
+            # even integer values are formated '42.0', so we needed float(.)
+            value = int(value)
+
+        key = "%s_%s" % (aggregation, name.replace(" ", "_"))
+        metr = Metric(name, aggregation, value, unit, timestamp, timegrain, filters)
+        resource.setdefault('metrics', {})[key] = metr
+
+    return resource
+
+
+def parse_azure(info):
+    raw_resources = []
+
+    # create list of lines per resource
+    for row in info:
+        if row == ["Resource"]:
+            raw_resources.append([])
+            continue
+        if raw_resources:
+            raw_resources[-1].append(row)
+
+    parsed_resources = (_parse_resource(r) for r in raw_resources)
+
+    return {r['name']: r for r in parsed_resources if r}
+
+
+#.
+
+#   .--Discovery-----------------------------------------------------------.
+#   |              ____  _                                                 |
+#   |             |  _ \(_)___  ___ _____   _____ _ __ _   _               |
+#   |             | | | | / __|/ __/ _ \ \ / / _ \ '__| | | |              |
+#   |             | |_| | \__ \ (_| (_) \ V /  __/ |  | |_| |              |
+#   |             |____/|_|___/\___\___/ \_/ \___|_|   \__, |              |
+#   |                                                  |___/               |
+#   +----------------------------------------------------------------------+
+
+
+def discover_azure_by_metrics(*desired_metrics):
+    """Return a discovery function, that will discover if any of the metrics are found"""
+
+    def discovery_function(parsed):
+        for name, resource in parsed.iteritems():
+            metr = resource.get('metrics', {})
+            if set(desired_metrics) & set(metr.keys()):
+                yield name, {}
+
+    return discovery_function
+
+
+#.

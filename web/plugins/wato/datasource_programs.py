@@ -1184,3 +1184,129 @@ register_rule(
     help=_("This rule selects the special agent for Salesforce."),
     match="first",
 )
+
+
+def _azure_resource_config():
+    return Dictionary(
+        orientation="horizontal",
+        elements=[
+            ('resource', ListOfStrings(
+                title=_('Resource names'),
+                allow_empty=False,
+            )),
+        ],
+        optional_keys=False,
+    )
+
+
+def _azure_group_config():
+    return Dictionary(
+        elements=[
+            ('group_name', TextAscii(
+                title=_('Name of the resource group'),
+                allow_empty=False,
+            )),
+            ('group_config',
+             Alternative(
+                 title=_("Resources to monitor"),
+                 style="dropdown",
+                 elements=[
+                     ListOf(
+                         _azure_resource_config(),
+                         title=_("Explicitly specify resources"),
+                         allow_empty=False,
+                         magic="@-resources-@",
+                     ),
+                     FixedValue(
+                         'fetchall',
+                         title=_("Monitor all available resources"),
+                         totext="",
+                     ),
+                 ],
+             )),
+        ],
+        optional_keys=False,
+    )
+
+
+register_rule(
+    "datasource_programs",
+    "special_agents:azure",
+    Dictionary(
+        title=_("Agent Azure Configuration"),
+        help=_("To monitor Azure resources add this datasource to <b>one</b> host. "
+               "The data will be transported using the piggyback mechanism, so make "
+               "sure to create one host for every monitored resource group. You can "
+               "learn about the discovered groups in the <i>Agent Azure Info</i> "
+               "service of the host owning the datasource program."),
+        # element names starting with "--" will be passed do cmd line w/o parsing!
+        elements=[
+            ("--subscription-id", TextAscii(
+                title=_("Subscription ID"),
+                allow_empty=False,
+            )),
+            ("--tenant-id", TextAscii(
+                title=_("Tenant ID / Directory ID"),
+                allow_empty=False,
+            )),
+            ("--client-id", TextAscii(
+                title=_("Client ID / Application ID"),
+                allow_empty=False,
+            )),
+            ("--secret", Password(
+                title=_("Secret"),
+                allow_empty=False,
+            )),
+            (
+                "config",
+                Dictionary(
+                    title=_("Monitoring Settings"),
+                    # Since we introduced this, Microsoft has already reduced the number
+                    # of allowed API requests. At the time of this writing (11/2018)
+                    # you can find the number here:
+                    # https://docs.microsoft.com/de-de/azure/azure-resource-manager/resource-manager-request-limits
+                    help=_("You can choose to to monitor all resources known to "
+                           "the Azure API. However, be aware that Microsoft limits"
+                           " API calls to %s per hour (%s per minute).") % ("12000", "200"),
+                    elements=[
+                        ('explicit-config',
+                         ListOf(
+                             _azure_group_config(),
+                             title=_("Explicitly specify groups"),
+                             allow_empty=False,
+                             magic="@-groups-@",
+                         )),
+                        ('fetchall',
+                         FixedValue(
+                             "fetchall",
+                             title=
+                             _("Monitor all available resource groups (overrides previous settings)"
+                              ),
+                             totext="",
+                         )),
+                    ],
+                )),
+            ("--piggyback-vms",
+             DropdownChoice(
+                 title=_("Create piggyback VM data"),
+                 help=_("You can choose to <i>additionally</i> send data concerning VMs to"
+                        " the host that is associated with the special agent, to a piggyback"
+                        " host with name of the VM itself, or both. By default data is sent"
+                        " to the corresponding resource group only."),
+                 choices=[
+                     ("agenthost", _("Send data to agent host")),
+                     ("self", _("Send data to the VM itself")),
+                     ("all", _("Send data to both the agent host and the VM itself")),
+                 ],
+             )),
+            ("--sequential",
+             Checkbox(
+                 title=_("Run in single thread"),
+                 help=_("Check this to avoid multiprocessing. "
+                        "Recommended for debugging purposes only."),
+             )),
+        ],
+        optional_keys=["--piggyback-vms"],
+    ),
+    match='first',
+)

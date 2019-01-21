@@ -20,9 +20,9 @@ discovery = {
 
 checks = {
     '': [('Zone 0', {
-        'device_levels_handling': 'devdefault',
-        'levels': (70.0, 80.0)
-    }, [(0, u'57.0 \xb0C', [('temp', 57.0, 127.0, 127.0, None, None)])]),
+             'device_levels_handling': 'devdefault',
+             'levels': (70.0, 80.0)
+         }, [(0, u'57.0 \xb0C', [('temp', 57.0, 127.0, 127.0, None, None)])]),
          ('Zone 1', {
              'device_levels_handling': 'devdefault',
              'levels': (70.0, 80.0)

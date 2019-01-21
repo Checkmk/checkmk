@@ -47,7 +47,7 @@ def check_statgrab_cpu(_no_item, params, info):
         elif var == 'iowait':
             iowait = int(value)
 
-    values = transform_cpu_info([user, nice, system, idle, iowait])
+    values = cpu_info(['cpu', user, nice, system, idle, iowait])
 
     return check_cpu_util_unix(values, params)
 

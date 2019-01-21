@@ -110,11 +110,9 @@ def check_lparstat_aix_cpu(_no_item, params, parsed):
     # and legacy None defaults before 1.6
     params = transform_cpu_iowait(params)
 
-    yield check_levels(user, "user", None, "%")
-    yield check_levels(system, "system", None, "%")
-    yield check_levels(wait, "wait", params.get('iowait'), "%")
+    values = cpu_info(['', user, 0, system, cpu.get('idle', 0), wait], caster=None)
 
-    for util_result in check_cpu_util(util, params, perf_max=None):
+    for util_result in check_cpu_util_unix(values, params, values_counter=False):
         yield util_result
 
     config = parsed.get('system_config', {})

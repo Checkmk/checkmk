@@ -296,11 +296,9 @@ def get_percent_human_readable(perc, precision=2):
     """Format perc (0 <= perc <= 100 + x) so that precision
     digits are being displayed. This avoids a "0.00%" for
     very small numbers."""
-    if perc > 0:
-        perc_precision = max(1, 2 - int(round(math.log(perc, 10))))
-    else:
-        perc_precision = 1
-    return "%%.%df%%%%" % perc_precision % perc
+    if abs(perc) > 4:
+        return "%.1f%%" % perc
+    return "%.3g%%" % perc
 
 
 #
@@ -386,6 +384,8 @@ def check_levels(value,
     """
     if unit not in ('', '%'):
         unit = " " + unit  # Insert space before MB, GB, etc.
+    elif unit == "%" and not human_readable_func:
+        human_readable_func = get_percent_human_readable
 
     if human_readable_func is None:
         human_readable_func = lambda x: "%.2f%s" % (x / scale, unit)

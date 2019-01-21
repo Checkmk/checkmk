@@ -39,7 +39,8 @@ from cmk.gui.plugins.views.perfometers import (
 from cmk.gui.plugins.views import (
     painter_registry,
     Painter,
-    multisite_sorters,
+    sorter_registry,
+    Sorter,
     is_stale,
     display_options,
     pnp_url,
@@ -275,26 +276,30 @@ class PainterPerfometer(Painter):
                           class_=["disabled" if disabled else None])
 
 
-def cmp_perfometer(r1, r2):
-    try:
-        p1 = Perfometer(r1)
-        p2 = Perfometer(r2)
-        return cmp(p1.sort_value(), p2.sort_value())
-    except Exception:
-        logger.exception()
-        if config.debug:
-            raise
-        return 0
+@sorter_registry.register
+class SorterPerfometer(Sorter):
+    @property
+    def ident(self):
+        return "perfometer"
 
+    @property
+    def title(self):
+        return _("Perf-O-Meter")
 
-multisite_sorters["perfometer"] = {
-    "title": _("Perf-O-Meter"),
-    "columns": [
-        "service_perf_data",
-        "service_state",
-        "service_check_command",
-        "service_pnpgraph_present",
-        "service_plugin_output",
-    ],
-    "cmp": cmp_perfometer,
-}
+    @property
+    def columns(self):
+        return [
+            'service_perf_data', 'service_state', 'service_check_command',
+            'service_pnpgraph_present', 'service_plugin_output'
+        ]
+
+    def cmp(self, r1, r2):
+        try:
+            p1 = Perfometer(r1)
+            p2 = Perfometer(r2)
+            return cmp(p1.sort_value(), p2.sort_value())
+        except Exception:
+            logger.exception()
+            if config.debug:
+                raise
+            return 0

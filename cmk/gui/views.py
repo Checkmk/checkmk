@@ -29,6 +29,7 @@ import os
 import pprint
 import traceback
 import json
+from collections import namedtuple
 from typing import Dict  # pylint: disable=unused-import
 
 import livestatus
@@ -82,22 +83,22 @@ from cmk.gui.plugins.views.utils import (
     data_source_registry,
     painter_registry,
     Painter,
+    sorter_registry,
 )
 
 # Needed for legacy (pre 1.6) plugins
 from cmk.gui.htmllib import HTML  # pylint: disable=unused-import
 from cmk.gui.plugins.views.utils import (  # pylint: disable=unused-import
-    load_all_views, get_permitted_views, view_title, multisite_sorters, multisite_builtin_views,
-    view_hooks, inventory_displayhints, register_command_group, transform_action_url, is_stale,
-    paint_stalified, paint_host_list, format_plugin_output, link_to_view, url_to_view,
-    get_host_tags, row_id, group_value, view_is_enabled, paint_age, declare_1to1_sorter,
-    declare_simple_sorter, cmp_simple_number, cmp_simple_string, cmp_insensitive_string,
-    cmp_num_split, cmp_custom_variable, cmp_service_name_equiv, cmp_string_list, cmp_ip_address,
-    get_custom_var, get_perfdata_nth_value, get_tag_group, query_data, do_query_data,
-    PainterOptions, join_row, get_view_infos, replace_action_url_macros, Cell, JoinCell, get_cells,
-    get_group_cells, get_sorter_name_of_painter, get_separated_sorters, get_primary_sorter_order,
-    parse_url_sorters, substract_sorters, painter_options, register_legacy_command,
-    register_painter,
+    load_all_views, get_permitted_views, view_title, multisite_builtin_views, view_hooks,
+    inventory_displayhints, register_command_group, transform_action_url, is_stale, paint_stalified,
+    paint_host_list, format_plugin_output, link_to_view, url_to_view, get_host_tags, row_id,
+    group_value, view_is_enabled, paint_age, declare_1to1_sorter, declare_simple_sorter,
+    cmp_simple_number, cmp_simple_string, cmp_insensitive_string, cmp_num_split,
+    cmp_custom_variable, cmp_service_name_equiv, cmp_string_list, cmp_ip_address, get_custom_var,
+    get_perfdata_nth_value, get_tag_group, query_data, do_query_data, PainterOptions, join_row,
+    get_view_infos, replace_action_url_macros, Cell, JoinCell, get_cells, get_group_cells,
+    get_sorter_name_of_painter, get_separated_sorters, get_primary_sorter_order, parse_url_sorters,
+    substract_sorters, painter_options, register_legacy_command, register_painter, register_sorter,
 )
 
 # Needed for legacy (pre 1.6) plugins
@@ -125,6 +126,7 @@ multisite_layouts = {}
 multisite_commands = {}
 multisite_datasources = {}
 multisite_painters = {}
+multisite_sorters = {}
 
 
 @permission_section_registry.register
@@ -150,12 +152,14 @@ def load_plugins(force):
         # always reload the hosttag painters, because new hosttags might have been
         # added during runtime
         load_host_tag_painters()
+        load_host_tag_sorters()
         clear_alarm_sound_states()
         return
 
     utils.load_web_plugins("views", globals())
     utils.load_web_plugins('icons', globals())
     load_host_tag_painters()
+    load_host_tag_sorters()
     clear_alarm_sound_states()
 
     transform_old_dict_based_icons()
@@ -183,6 +187,10 @@ def load_plugins(force):
     # TODO: Kept for compatibility with pre 1.6 plugins
     for ident, spec in multisite_painters.items():
         register_painter(ident, spec)
+
+    # TODO: Kept for compatibility with pre 1.6 plugins
+    for ident, spec in multisite_sorters.items():
+        register_sorter(ident, spec)
 
     # This must be set after plugin loading to make broken plugins raise
     # exceptions all the time and not only the first time (when the plugins
@@ -306,6 +314,35 @@ def load_host_tag_painters():
                 "group_by": property(lambda self, row: paint_host_tag(row, self._tag_id)[1]),
             })
         painter_registry.register(cls)
+
+
+def load_host_tag_sorters():
+    for _entry in config.host_tag_groups():
+        _tgid = _entry[0]
+        _tit = _entry[1]
+
+        register_sorter(
+            "host_tag_" + _tgid, {
+                "_tag_id": _tgid,
+                "title": _("Host tag:") + ' ' + _tit,
+                "columns": ["host_custom_variable_names", "host_custom_variable_values"],
+                "cmp": lambda self, r1, r2: _cmp_host_tag(r1, r2, self._spec["_tag_id"]),
+            })
+
+
+def _cmp_host_tag(r1, r2, tgid):
+    tags1 = get_host_tags(r1).split()
+    tags2 = get_host_tags(r2).split()
+
+    val1 = _('N/A')
+    val2 = _('N/A')
+    for t in get_tag_group(tgid)[1]:
+        if t[0] in tags1:
+            val1 = t[1]
+        if t[0] in tags2:
+            val2 = t[1]
+
+    return cmp(val1, val2)
 
 
 #.
@@ -1011,9 +1048,7 @@ def show_view(view,
         else:
             sorter_list = view["sorters"]
 
-        sorters = [
-            (multisite_sorters[s[0]],) + s[1:] for s in sorter_list if s[0] in multisite_sorters
-        ]
+        sorters = _get_sorters(sorter_list)
     else:
         sorters = []
 
@@ -1138,6 +1173,23 @@ def show_view(view,
                     show_checkboxes, layout, num_columns, show_filters, show_footer, browser_reload)
 
 
+SorterEntry = namedtuple("SorterEntry", ["sorter", "negate", "join_key"])
+
+
+def _get_sorters(sorter_list):
+    sorters = []
+    for entry in sorter_list:
+        if entry[0] not in sorter_registry:
+            continue  # Skip removed sorters
+
+        # e.g. service description
+        join_key = entry[2] if len(entry) > 2 else None
+
+        sorters.append(
+            SorterEntry(sorter=sorter_registry[entry[0]](), negate=entry[1], join_key=join_key))
+    return sorters
+
+
 def get_join_cells(cell_list):
     return [x for x in cell_list if isinstance(x, JoinCell)]
 
@@ -1156,9 +1208,8 @@ def _get_needed_regular_columns(cells, sorters, datasource):
 
     # Columns needed for sorters
     # TODO: Move sorter parsing and logic to something like Cells()
-    for s in sorters:
-        if len(s) == 2:
-            columns.update(s[0]["columns"])
+    for entry in sorters:
+        columns.update(entry.sorter.columns)
 
     # Add key columns, needed for executing commands
     columns.update(datasource.keys)
@@ -1180,9 +1231,8 @@ def _get_needed_join_columns(join_cells, sorters):
 
     # Columns needed for sorters
     # TODO: Move sorter parsing and logic to something like Cells()
-    for s in sorters:
-        if len(s) != 2:
-            join_columns.update(s[0]["columns"])
+    for entry in sorters:
+        join_columns.update(entry.sorter.columns)
 
     return list(join_columns)
 
@@ -1197,8 +1247,8 @@ def is_inventory_data_needed(group_cells, cells, sorters, all_active_filters):
             if cell.tooltip_painter_name().startswith("inv_"):
                 return True
 
-    for s in sorters:
-        if s[0].get("load_inv"):
+    for entry in sorters:
+        if entry.sorter.load_inv:
             return True
 
     for cell in group_cells + cells:
@@ -1699,12 +1749,11 @@ def ajax_count_button():
 # for same objects (e.g. host_name in table services and
 # simply name in table hosts)
 def sort_data(data, sorters):
-
-    if len(sorters) == 0:
+    if not sorters:
         return
 
     # Handle case where join columns are not present for all rows
-    def save_compare(compfunc, row1, row2, args):
+    def save_compare(compfunc, row1, row2):
         if row1 is None and row2 is None:
             return 0
         elif row1 is None:
@@ -1712,29 +1761,18 @@ def sort_data(data, sorters):
         elif row2 is None:
             return 1
 
-        if args:
-            return compfunc(row1, row2, *args)
         return compfunc(row1, row2)
 
-    sort_cmps = []
-    for s in sorters:
-        cmpfunc = s[0]["cmp"]
-        negate = -1 if s[1] else 1
-        if len(s) > 2:
-            joinkey = s[2]  # e.g. service description
-        else:
-            joinkey = None
-        sort_cmps.append((cmpfunc, negate, joinkey, s[0].get('args')))
-
     def multisort(e1, e2):
-        for func, neg, joinkey, args in sort_cmps:
-            if joinkey:  # Sorter for join column, use JOIN info
-                c = neg * save_compare(func, e1["JOIN"].get(joinkey), e2["JOIN"].get(joinkey), args)
+        for entry in sorters:
+            neg = -1 if entry.negate else 1
+
+            if entry.join_key:  # Sorter for join column, use JOIN info
+                c = neg * save_compare(entry.sorter.cmp, e1["JOIN"].get(entry.sorter.join_key),
+                                       e2["JOIN"].get(entry.sorter.join_key))
             else:
-                if args:
-                    c = neg * func(e1, e2, *args)
-                else:
-                    c = neg * func(e1, e2)
+                c = neg * entry.sorter.cmp(e1, e2)
+
             if c != 0:
                 return c
         return 0  # equal
@@ -1743,7 +1781,7 @@ def sort_data(data, sorters):
 
 
 def sorters_of_datasource(ds_name):
-    return _allowed_for_datasource(multisite_sorters, ds_name)
+    return _allowed_for_datasource(sorter_registry, ds_name)
 
 
 def painters_of_datasource(ds_name):

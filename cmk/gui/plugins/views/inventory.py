@@ -63,9 +63,9 @@ from cmk.gui.plugins.views import (
     painter_registry,
     Painter,
     register_painter,
+    register_sorter,
     painter_options,
     display_options,
-    multisite_sorters,
     painter_option_registry,
     PainterOption,
     inventory_displayhints,
@@ -181,12 +181,13 @@ def declare_inv_column(invpath, datatype, title, short=None):
     # Sorters and Filters only for leaf nodes
     if invpath[-1] not in ":.":
         # Declare sorter. It will detect numbers automatically
-        multisite_sorters[name] = {
-            "title": _("Inventory") + ": " + title,
-            "columns": ["host_inventory", "host_structured_status"],
-            "load_inv": True,
-            "cmp": lambda a, b: cmp_inventory_node(a, b, invpath),
-        }
+        register_sorter(
+            name, {
+                "title": _("Inventory") + ": " + title,
+                "columns": ["host_inventory", "host_structured_status"],
+                "load_inv": True,
+                "cmp": lambda a, b: cmp_inventory_node(a, b, invpath),
+            })
 
         # Declare filter. Sync this with declare_invtable_columns()
         if datatype == "str":
@@ -1476,11 +1477,12 @@ def declare_invtable_column(infoname, name, topic, title, short_title, sortfunc,
             "paint": lambda row: paint_function(row.get(column)),
             "sorter": column,
         })
-    multisite_sorters[column] = {
-        "title": _("Inventory") + ": " + title,
-        "columns": [column],
-        "cmp": lambda a, b: sortfunc(a.get(column), b.get(column)),
-    }
+    register_sorter(
+        column, {
+            "title": _("Inventory") + ": " + title,
+            "columns": [column],
+            "cmp": lambda a, b: sortfunc(a.get(column), b.get(column)),
+        })
 
     cmk.gui.plugins.visuals.inventory.declare_filter(
         800, filter_class(infoname, name, topic + ": " + title))

@@ -749,13 +749,6 @@ class PainterRegistry(cmk.utils.plugin_registry.ClassRegistry):
     def plugin_name(self, plugin_class):
         return plugin_class().ident
 
-    ## TODO: Sort the datasources by (assumed) common usage
-    #def data_source_choices(self):
-    #    datasources = []
-    #    for ident, ds_class in self.items():
-    #        datasources.append((ident, ds_class().title))
-    #    return sorted(datasources, key=lambda x: x[1])
-
 
 painter_registry = PainterRegistry()
 
@@ -782,8 +775,88 @@ def register_painter(ident, spec):
     painter_registry.register(cls)
 
 
+class Sorter(object):
+    """A sorter is used for allowing the user to sort the queried data
+    according to a certain logic."""
+
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractproperty
+    def ident(self):
+        # type: () -> str
+        """The identity of a painter. One word, may contain alpha numeric characters"""
+        raise NotImplementedError()
+
+    @abc.abstractproperty
+    def title(self):
+        # type: () -> Text
+        """Used as display string for the painter in the GUI (e.g. view editor)"""
+        raise NotImplementedError()
+
+    @abc.abstractproperty
+    def columns(self):
+        # type: () -> List[str]
+        """Livestatus columns needed for this painter"""
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def cmp(self, r1, r2):
+        # type: (dict, dict) -> int
+        """The function cmp does the actual sorting. During sorting it
+        will be called with two data rows as arguments and must
+        return -1, 0 or 1:
+
+        -1: The first row is smaller than the second (should be output first)
+         0: Both rows are equivalent
+         1: The first row is greater than the second.
+
+        The rows are dictionaries from column names to values. Each row
+        represents one item in the Livestatus table, for example one host,
+        one service, etc."""
+        raise NotImplementedError()
+
+    @property
+    def _args(self):
+        # type: () -> Optional[List]
+        """Optional list of arguments for the cmp function"""
+        return None
+
+    # TODO: Cleanup this hack
+    @property
+    def load_inv(self):
+        # type: () -> bool
+        """Whether or not to load the HW/SW inventory for this column"""
+        return False
+
+
+class SorterRegistry(cmk.utils.plugin_registry.ClassRegistry):
+    def plugin_base_class(self):
+        return Sorter
+
+    def plugin_name(self, plugin_class):
+        return plugin_class().ident
+
+
+sorter_registry = SorterRegistry()
+
+
+# Kept for pre 1.6 compatibility. But also the inventory.py uses this to
+# register some painters dynamically
+def register_sorter(ident, spec):
+    cls = type(
+        "LegacySorter%s" % ident.title(), (Sorter,), {
+            "_ident": ident,
+            "_spec": spec,
+            "ident": property(lambda s: s._ident),
+            "title": property(lambda s: s._spec["title"]),
+            "columns": property(lambda s: s._spec["columns"]),
+            "load_inv": property(lambda s: s._spec.get("load_inv", False)),
+            "cmp": spec["cmp"],
+        })
+    sorter_registry.register(cls)
+
+
 # TODO: Refactor to plugin_registries
-multisite_sorters = {}
 multisite_builtin_views = {}
 view_hooks = {}
 inventory_displayhints = {}
@@ -959,25 +1032,26 @@ def paint_nagiosflag(row, field, bold_if_nonzero):
 
 
 def declare_simple_sorter(name, title, column, func):
-    multisite_sorters[name] = {
+    register_sorter(name, {
         "title": title,
         "columns": [column],
-        "cmp": lambda r1, r2: func(column, r1, r2)
-    }
+        "cmp": lambda self, r1, r2: func(column, r1, r2)
+    })
 
 
 def declare_1to1_sorter(painter_name, func, col_num=0, reverse=False):
     painter = painter_registry[painter_name]()
-    multisite_sorters[painter_name] = {
+
+    if not reverse:
+        cmp_func = lambda self, r1, r2: func(painter.columns[col_num], r1, r2)
+    else:
+        cmp_func = lambda self, r1, r2: func(painter.columns[col_num], r2, r1)
+
+    register_sorter(painter_name, {
         "title": painter.title,
         "columns": painter.columns,
-    }
-    if not reverse:
-        multisite_sorters[painter_name]["cmp"] = \
-            lambda r1, r2: func(painter.columns[col_num], r1, r2)
-    else:
-        multisite_sorters[painter_name]["cmp"] = \
-            lambda r1, r2: func(painter.columns[col_num], r2, r1)
+        "cmp": cmp_func,
+    })
     return painter_name
 
 
@@ -1878,8 +1952,9 @@ def get_sorter_name_of_painter(painter_name):
     if painter.sorter:
         return painter.sorter
 
-    elif painter_name in multisite_sorters:
+    elif painter_name in sorter_registry:
         return painter_name
+    return None
 
 
 def get_separated_sorters(view):

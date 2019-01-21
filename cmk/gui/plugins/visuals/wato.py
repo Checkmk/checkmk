@@ -32,21 +32,28 @@ import cmk.gui.config as config
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 
-from . import (
+from cmk.gui.plugins.visuals import (
+    filter_registry,
     Filter,
-    declare_filter,
 )
 
 
-class FilterWatoFile(Filter):
+@filter_registry.register
+class FilterWatoFolder(Filter):
+    @property
+    def ident(self):
+        return "wato_folder"
+
+    @property
+    def title(self):
+        return _("WATO Folder")
+
+    @property
+    def sort_index(self):
+        return 10
+
     def __init__(self):
-        super(FilterWatoFile, self).__init__(
-            "wato_folder",
-            _("WATO Folder"),
-            "host",
-            ["wato_folder"],
-            [],
-        )
+        Filter.__init__(self, "host", ["wato_folder"], [])
         self.last_wato_data_update = None
 
     def available(self):
@@ -86,12 +93,12 @@ class FilterWatoFile(Filter):
                 allowed_folders.add(subfolder)
 
         html.dropdown(
-            self.name,
+            self.ident,
             [("", "")] + [entry for entry in self.selection if entry[0] in allowed_folders])
 
     def filter(self, infoname):
         self.check_wato_data_update()
-        current = html.request.var(self.name)
+        current = html.request.var(self.ident)
         if current:
             path_regex = "^/wato/%s" % current.replace("\n", "")  # prevent insertions attack
             if current.endswith("/"):  # Hosts directly in this folder
@@ -138,9 +145,6 @@ class FilterWatoFile(Filter):
         # The call below needs to use some sort of indicator wether the cache needs
         # to be renewed or not.
         self.check_wato_data_update()
-        current = html.request.var(self.name)
+        current = html.request.var(self.ident)
         if current and current != "/":
             return self.path_to_tree.get(current)
-
-
-declare_filter(10, FilterWatoFile())

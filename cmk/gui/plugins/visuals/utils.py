@@ -30,13 +30,13 @@
 import abc
 import time
 
+import cmk.utils.plugin_registry
+
 import cmk.gui.config as config
 import cmk.gui.sites as sites
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 
-# TODO: Refactor to standard registry API
-multisite_filters = {}
 # TODO: Refactor to standard registry API
 _infos = {}
 # TODO: Refactor to standard registry API
@@ -47,95 +47,119 @@ def declare_info(infoname, info):
     _infos[infoname] = info
 
 
-def declare_filter(sort_index, f, comment=None):
-    multisite_filters[f.name] = f
-    f.comment = comment
-    f.sort_index = sort_index
-
-
-# Base class for all filters
-# name:          The unique id of that filter. This id is e.g. used in the
-#                persisted view configuration
-# title:         The title of the filter visible to the user. This text
-#                may be localized
-# info:          The datasource info this filter needs to work. If this
-#                is "service", the filter will also be available in tables
-#                showing service information. "host" is available in all
-#                service and host views. The log datasource provides both
-#                "host" and "service". Look into datasource.py for which
-#                datasource provides which information
-# htmlvars:      HTML variables this filter uses
-# link_columns:  If this filter is used for linking (state "hidden"), then
-#                these Livestatus columns are needed to fill the filter with
-#                the proper information. In most cases, this is just []. Only
-#                a few filters are useful for linking (such as the host_name and
-#                service_description filters with exact match)
 class Filter(object):
+    """Base class for all filters"""
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, name, title, info, htmlvars, link_columns):
+    @abc.abstractproperty
+    def ident(self):
+        # type: () -> str
+        """The identity of a filter. One word, may contain alpha numeric characters
+        This id is e.g. used in the persisted view configuration"""
+        raise NotImplementedError()
+
+    @abc.abstractproperty
+    def title(self):
+        # type: () -> Text
+        """Used as display string for the filter in the GUI (e.g. view editor)"""
+        raise NotImplementedError()
+
+    @abc.abstractproperty
+    def sort_index(self):
+        # type: () -> int
+        raise NotImplementedError()
+
+    def __init__(self, info, htmlvars, link_columns):
+        """
+        info:          The datasource info this filter needs to work. If this
+                       is "service", the filter will also be available in tables
+                       showing service information. "host" is available in all
+                       service and host views. The log datasource provides both
+                       "host" and "service". Look into datasource.py for which
+                       datasource provides which information
+        htmlvars:      HTML variables this filter uses
+        link_columns:  If this filter is used for linking (state "hidden"), then
+                       these Livestatus columns are needed to fill the filter with
+                       the proper information. In most cases, this is just []. Only
+                       a few filters are useful for linking (such as the host_name and
+                       service_description filters with exact match)
+        """
         super(Filter, self).__init__()
-        self.name = name
         self.info = info
-        self.title = title
         self.htmlvars = htmlvars
         self.link_columns = link_columns
 
-    # Some filters can be unavailable due to the configuration (e.g.
-    # the WATO Folder filter is only available if WATO is enabled.
+    @property
+    def description(self):
+        # type: () -> Optional[Text]
+        return None
+
     def available(self):
+        # type: () -> bool
+        """Some filters can be unavailable due to the configuration
+        (e.g. the WATO Folder filter is only available if WATO is enabled."""
         return True
 
-    # Some filters can be invisible. This is useful to hide filters which have always
-    # the same value but can not be removed using available() because the value needs
-    # to be set during runtime.
-    # A good example is the "site" filter which does not need to be available to the
-    # user in single site setups.
     def visible(self):
+        # type: () -> bool
+        """Some filters can be invisible. This is useful to hide filters which have always
+        the same value but can not be removed using available() because the value needs
+        to be set during runtime.
+        A good example is the "site" filter which does not need to be available to the
+        user in single site setups."""
         return True
 
-    # More complex filters need more height in the HTML layout
     def double_height(self):
+        # type: () -> bool
+        """More complex filters need more height in the HTML layout"""
         return False
 
     @abc.abstractmethod
     def display(self):
+        # type: (None) -> None
         raise NotImplementedError()
 
     def filter(self, infoname):
+        # type: (str) -> str
         return ""
 
-    # Whether this filter needs to load host inventory data
     def need_inventory(self):
+        # type: () -> bool
+        """Whether this filter needs to load host inventory data"""
         return False
 
-    # post-Livestatus filtering (e.g. for BI aggregations)
     def filter_table(self, rows):
+        # type: (List[dict]) -> List[dict]
+        """post-Livestatus filtering (e.g. for BI aggregations)"""
         return rows
 
     def variable_settings(self, row):
-        return []  # return pairs of htmlvar and name according to dataset in row
+        # type: (dict) -> List[tuple]
+        """return pairs of htmlvar and name according to dataset in row"""
+        return []
 
     def infoprefix(self, infoname):
+        # type: (str) -> str
         if self.info == infoname:
             return ""
         return self.info[:-1] + "_"
 
-    # Hidden filters may contribute to the pages headers of the views
     def heading_info(self):
+        # type: () -> Optional[Text]
+        """Hidden filters may contribute to the pages headers of the views"""
         return None
 
-    # Returns the current representation of the filter settings from the HTML
-    # var context. This can be used to persist the filter settings.
     def value(self):
+        """Returns the current representation of the filter settings from the HTML
+        var context. This can be used to persist the filter settings."""
         val = {}
         for varname in self.htmlvars:
             val[varname] = html.request.var(varname, '')
         return val
 
-    # Is used to populate a value, for example loaded from persistance, into
-    # the HTML context where it can be used by e.g. the display() method.
     def set_value(self, value):
+        """Is used to populate a value, for example loaded from persistance, into
+        the HTML context where it can be used by e.g. the display() method."""
         for varname in self.htmlvars:
             var_value = value.get(varname)
             if var_value is not None:
@@ -152,10 +176,10 @@ class FilterUnicodeFilter(Filter):
 
 
 class FilterTristate(Filter):
-    def __init__(self, name, title, info, column, deflt=-1):
+    def __init__(self, info, column, deflt=-1):
         self.column = column
-        self.varname = "is_" + name
-        super(FilterTristate, self).__init__(name, title, info, [self.varname], [])
+        self.varname = "is_" + self.ident
+        super(FilterTristate, self).__init__(info, [self.varname], [])
         self.deflt = deflt
 
     def display(self):
@@ -184,18 +208,20 @@ class FilterTristate(Filter):
 class FilterTime(Filter):
     """Filter for setting time ranges, e.g. on last_state_change and last_check"""
 
-    def __init__(self, info, name, title, column):
+    def __init__(self, info, column):
         self.column = column
-        self.name = name
         self.ranges = [
             (86400, _("days")),
             (3600, _("hours")),
             (60, _("min")),
             (1, _("sec")),
         ]
-        varnames = [name + "_from", name + "_from_range", name + "_until", name + "_until_range"]
+        varnames = [
+            self.ident + "_from", self.ident + "_from_range", self.ident + "_until",
+            self.ident + "_until_range"
+        ]
 
-        super(FilterTime, self).__init__(name, title, info, varnames, [column])
+        super(FilterTime, self).__init__(info, varnames, [column])
 
     def double_height(self):
         return True
@@ -207,7 +233,7 @@ class FilterTime(Filter):
 
         html.open_table(class_="filtertime")
         for what, whatname in [("from", _("From")), ("until", _("Until"))]:
-            varprefix = self.name + "_" + what
+            varprefix = self.ident + "_" + what
             html.open_tr()
             html.open_td()
             html.write("%s:" % whatname)
@@ -236,7 +262,7 @@ class FilterTime(Filter):
                self._get_time_range_of("until")
 
     def _get_time_range_of(self, what):
-        varprefix = self.name + "_" + what
+        varprefix = self.ident + "_" + what
 
         rangename = html.request.var(varprefix + "_range")
         if rangename == "abs":
@@ -258,11 +284,9 @@ class FilterTime(Filter):
             return None
 
 
-class FilterSite(Filter):
-    def __init__(self, name, enforce):
-        super(FilterSite, self).__init__(
-            name,
-            _("Site") + (enforce and _(" (enforced)") or ""),
+class FilterCRESite(Filter):
+    def __init__(self, enforce):
+        super(FilterCRESite, self).__init__(
             'host',
             ["site"],
             [],
@@ -292,3 +316,14 @@ class FilterSite(Filter):
 
     def variable_settings(self, row):
         return [("site", row["site"])]
+
+
+class FilterRegistry(cmk.utils.plugin_registry.ClassRegistry):
+    def plugin_base_class(self):
+        return Filter
+
+    def plugin_name(self, plugin_class):
+        return plugin_class().ident
+
+
+filter_registry = FilterRegistry()

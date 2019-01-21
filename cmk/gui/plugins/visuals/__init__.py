@@ -37,10 +37,10 @@ from cmk.utils.plugin_loader import load_plugins
 #   '----------------------------------------------------------------------'
 
 from cmk.gui.plugins.visuals.utils import (
-    declare_filter,
+    filter_registry,
     declare_info,
     Filter,
-    FilterSite,
+    FilterCRESite,
     FilterTime,
     FilterTristate,
     FilterUnicodeFilter,

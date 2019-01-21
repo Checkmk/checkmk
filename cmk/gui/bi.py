@@ -3233,17 +3233,17 @@ def table(columns, add_headers, only_sites, limit, filters):
     only_aggr_name = None
     group_prefix = None
     for filter_ in filters:
-        if filter_.name == "aggr_group":
+        if filter_.ident == "aggr_group":
             val = filter_.selected_group()
             if val:
                 only_group = val
-        elif filter_.name == "aggr_service":
+        elif filter_.ident == "aggr_service":
             only_service = filter_.service_spec()
-        elif filter_.name == "aggr_name":
+        elif filter_.ident == "aggr_name":
             only_aggr_name = filter_.value().get("aggr_name")
         # TODO: can be further improved by filtering aggr_name_regex
         #       See BITextFilter(Filter): filter_table(self, rows)
-        elif filter_.name == "aggr_group_tree":
+        elif filter_.ident == "aggr_group_tree":
             group_prefix = filter_.value().get("aggr_group_tree")
 
     if config.bi_precompile_on_demand and only_group:
@@ -3349,7 +3349,7 @@ def singlehost_table(columns, add_headers, only_sites, limit, filters, joinbynam
     # them later out again.
     only_groups = None
     for filt in filters:
-        if filt.name == "aggr_group":
+        if filt.ident == "aggr_group":
             val = filt.selected_group()
             if val:
                 only_groups = [filt.selected_group()]

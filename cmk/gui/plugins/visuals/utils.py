@@ -137,7 +137,9 @@ class Filter(object):
     # the HTML context where it can be used by e.g. the display() method.
     def set_value(self, value):
         for varname in self.htmlvars:
-            html.request.set_var(varname, value.get(varname))
+            var_value = value.get(varname)
+            if var_value is not None:
+                html.request.set_var(varname, var_value)
 
 
 # TODO: We should merge this with Filter() and make all vars unicode ...

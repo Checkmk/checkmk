@@ -1,0 +1,65 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2015             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+factory_settings['levels_azure_sites'] = {
+    # https://www.nngroup.com/articles/response-times-3-important-limits/
+    'avg_response_time_levels': (1.0, 10.0),
+    # https://www.unigma.com/2016/07/11/best-practices-for-monitoring-microsoft-azure/
+    'error_rate_levels': (0.01, 0.04),
+    'cpu_time_percent_levels': (85., 95.),
+}
+
+_AZURE_SITES_METRICS = (  # metric_key, cmk_key, display_name, use_rate_flag
+    ('total_CpuTime', 'cpu_time_percent', 'CPU time', True),
+    ('total_AverageResponseTime', 'avg_response_time', 'Average response time', False),
+    ('total_Http5xx', 'error_rate', 'Rate of server errors', True),
+)
+
+
+@get_parsed_item_data
+def check_azure_sites(_item, params, resource):
+
+    for key, cmk_key, displ, use_rate in _AZURE_SITES_METRICS:
+        levels = params.get("%s_levels" % cmk_key, (None, None))
+        mcheck = check_azure_metric(
+            resource, key, cmk_key, displ, levels=levels, minv=0, use_rate=use_rate)
+        if mcheck:
+            yield mcheck
+
+    for kv_pair in azure_iter_informative_attrs(resource):
+        yield 0, "%s: %s" % kv_pair
+
+
+check_info['azure_sites'] = {
+    'parse_function': parse_azure,
+    'inventory_function': discover(),
+    'check_function': check_azure_sites,
+    'has_perfdata': True,
+    'service_description': "Site %s",
+    'includes': ['azure.include'],
+    'default_levels_variable': 'levels_azure_sites',
+    'group': 'webserver',
+}

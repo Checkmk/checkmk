@@ -214,6 +214,9 @@ catalog_titles = {
         "misc"        : "Miscellaneous",
         "storage"     : "Filesystems, Disks and RAID",
 
+    "cloud"    : "Cloud Based Environments",
+        "azure"       : "Microsoft Azure",
+        "aws"         : "Amazon Web Services",
     "agentless" : "Networking checks without agent",
     "generic"  : "Generic check plugins",
     "unsorted" : "Uncategorized",

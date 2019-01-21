@@ -1,0 +1,23 @@
+Title: Azure Monitoring
+Level: 2
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0p12
+Date: 1548061897
+Class: feature
+
+A special agent is added to support monitoring of Azure resources.
+It can be configured using the rule "Agent Azure Configuration"
+in the section "Datasource Programs".
+The host which the rule for running the special agent is linked
+to will only show overview services.
+In particular the service "Azure Agent Info" will show you a list of
+currently monitored resource groups. You need to add one Check_MK host
+for all theses groups (with the host name being the group name), as
+the gathered data for each resource group is distributed via the
+piggyback mechanism.
+
+For a list of currently available services you can refer to the check
+plugins catalog either in your Check_MK installation or
+<a href="https://mathias-kettner.de/cms_check_plugins_catalog.html#Cloud%20Based%20Environments">online</a>.

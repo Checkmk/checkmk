@@ -407,7 +407,7 @@ class AzureMetric(object):  # pylint: disable=too-many-instance-attributes
                     self.timestamp = calendar.timegm(data.time_stamp.utctimetuple())
                     return
 
-        raise AzureMetricParseError('warning', "not found: %s %s", self.name, aggregation)
+        raise AzureMetricParseError('warning', "not found: %s (%s)" % (self.name, aggregation))
 
     @property
     def tuple(self):

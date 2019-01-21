@@ -838,8 +838,8 @@ def snmp_scan(access_data, on_error="ignore", for_inv=False, do_snmp_scan=True, 
     if default_found:
         _output_snmp_check_plugins("SNMP without scan function", default_found)
 
-    filtered = checks.filter_by_management_board(hostname, found_check_plugin_names,
-                                                 for_mgmt_board, for_inventory=for_inv)
+    filtered = checks.filter_by_management_board(hostname, found_check_plugin_names, for_mgmt_board,
+                                                 for_discovery=True, for_inventory=for_inv)
 
     _output_snmp_check_plugins("SNMP filtered check plugin names", filtered)
     snmp.write_single_oid_cache(access_data)

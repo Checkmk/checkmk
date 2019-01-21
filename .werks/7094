@@ -1,0 +1,15 @@
+Title: Hosts with SNMP management board discovered host only checks
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0p12
+Date: 1548079292
+Class: fix
+
+Example:
+A TCP host with a SNMP management board discovers two uptime services:
+{{Uptime}} and {{Management Interface: Uptime}}.
+With these incorrectly discovered host only services the {{Uptime}} graph got
+data from {{Management Interface: Uptime}} service. The graph displayed some
+peeks in arbitray intervals.

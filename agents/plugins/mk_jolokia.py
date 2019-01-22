@@ -375,9 +375,9 @@ def extract_item(key, itemspec):
 
 
 def fetch_metric(inst, path, title, itemspec, inst_add=None):
-    value = fetch_var(inst["protocol"], inst["server"], inst["port"], path, inst["suburi"],
-                      inst["service_url"], inst["service_user"], inst["service_password"])
-    item_list = make_item_list((), value, itemspec)
+    values = fetch_var(inst["protocol"], inst["server"], inst["port"], path, inst["suburi"],
+                       inst["service_url"], inst["service_user"], inst["service_password"])
+    item_list = make_item_list((), values, itemspec)
 
     for subinstance, value in item_list:
         if not subinstance and not title:
@@ -390,7 +390,7 @@ def fetch_metric(inst, path, title, itemspec, inst_add=None):
         if len(subinstance) > 1:
             item = ",".join((inst["instance"],) + subinstance[:-1])
         elif inst_add is not None:
-            item = inst["instance"] + "," + inst_add
+            item = ",".join((inst["instance"], inst_add))
         else:
             item = inst["instance"]
         if title:
@@ -446,12 +446,12 @@ def query_instance(inst):
         sys.stderr.write("ERROR: %s\n" % exc)
         raise SkipInstance()
 
-    shipped_vars = QUERY_SPECS_GENERIC + QUERY_SPECS_SPECIFIC.get(inst["product"], [])
-    custom_vars = inst.get("custom_vars")
-
     write_section('jolokia_info', generate_jolokia_info(inst))
+
+    shipped_vars = QUERY_SPECS_GENERIC + QUERY_SPECS_SPECIFIC.get(inst["product"], [])
     write_section('jolokia_metrics', generate_values(inst, shipped_vars))
-    write_section('jolokia_generic', generate_values(inst, custom_vars))
+
+    write_section('jolokia_generic', generate_values(inst, inst.get("custom_vars")))
 
 
 def prepare_http_opener(inst):

@@ -424,8 +424,7 @@ def _get_queries(do_search, inst, itemspec, title, path, mbean):
     except IndexError:
         return []
 
-    return [("%s/%s" % (urllib2.quote(mbean_exp), path), path, itemspec, mbean_exp)
-            for mbean_exp in paths]
+    return [("%s/%s" % (urllib2.quote(mbean_exp), path), path, itemspec) for mbean_exp in paths]
 
 
 def _process_queries(inst, queries):

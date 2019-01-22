@@ -140,7 +140,6 @@ class LayoutSingleDataset(Layout):
                 html.close_tr()
             rownum += num_columns
         html.close_table()
-        html.close_div()
 
 
 class GroupedBoxesLayout(Layout):

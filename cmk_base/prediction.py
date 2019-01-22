@@ -245,7 +245,7 @@ def _clean_predictions_dir(pred_dir, params):
         if f.endswith(".info"):
             info_file = os.path.join(pred_dir, f)
             info = cmk.utils.prediction.retrieve_data_for_prediction(info_file, '')
-            if info["params"]["period"] != params["period"]:
+            if info is None or info["params"]["period"] != params["period"]:
                 cmk.utils.prediction.clean_prediction_files(info_file[:-5], force=True)
 
 

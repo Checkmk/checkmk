@@ -1580,6 +1580,252 @@ sql_asm_diskgroup () {
 }
 
 #.
+#   .--custom SQL----------------------------------------------------------.
+#   |                       _                    ____   ___  _             |
+#   |         ___ _   _ ___| |_ ___  _ __ ___   / ___| / _ \| |            |
+#   |        / __| | | / __| __/ _ \| '_ ` _ \  \___ \| | | | |            |
+#   |       | (__| |_| \__ \ || (_) | | | | | |  ___) | |_| | |___         |
+#   |        \___|\__,_|___/\__\___/|_| |_| |_| |____/ \__\_\_____|        |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+# ==== Configuration of custom SQLs
+#   == Globals ==
+#     SQLS_SECTIONS=secA,secB,...           (comma separated)
+#
+#   == Globals and locals ==
+#     SQLS_SECTION_NAME=sec_name            (optional; if not stated, 'oracle_sql' is used)
+#     SQLS_SECTION_SEP=separator            (optional; only useful if SQLS_SECTION_NAME is stated;
+#                                            ASCII code, eg. '58' means ':')
+#     SQLS_SID=sid1,sid2,...                (comma separated)
+#     SQLS_DIR=/path/to/dir                 (no trailing '/')
+#     SQLS_SQL=name.sql                     ()
+#     SQLS_PARAMETERS=params                (parameters as string, double quotes are removed)
+#     SQLS_MAX_CACHE_AGE=X                  (x in seconds)
+#
+#   == Locals ==
+#     SQLS_ITEM_NAME=item_name              (optional, if not stated, sql name is used)
+#
+#   A section is a function which may contain some of above parameters, eg:
+#   my_sec () {
+#       SQLS_SID=sid1,sid2
+#       SQLS_SQL=name.sql
+#   }
+#   and is configure in mk_oracle.cfg
+#
+#   == SQLS_SECTION_NAME ==
+#     If specified then data has to be evaluated on
+#     Check_MK side by related check plugin.
+#     Otherwise "<<<oracle_sql:sep(58)>>>"-check plugin
+#     is used which process a fixed format, ie.
+#         [[[SID-1|SQL-A]]]
+#         details:DETAILS
+#         perfdata:NAME=VAL;WARN;CRIT;MIN;MAX NAME=VAL;WARN;CRIT;MIN;MAX ...
+#         long:LONG
+#         long:LONG
+#         ...
+#         exit:CODE
+#         [[[SID-2|SQL-B]]]
+#         details:DETAILS
+#         perfdata:
+#         long:LONG
+#         long:LONG
+#         ...
+#         exit:CODE
+#         ...
+
+
+unset_custom_sqls_vars () {
+    unset SQLS_SECTION_NAME SQLS_SECTION_SEP SQLS_SIDS SQLS_DIR SQLS_SQL SQLS_PARAMETERS SQLS_MAX_CACHE_AGE SQLS_ITEM_NAME MK_CUSTOM_SQLS_SECTION MK_CUSTOM_SQLS_SECTION_HEADER MK_CUSTOM_SQLS_ITEM MK_CUSTOM_SQLS_SECTION_QUERY
+}
+
+
+do_custom_sqls () {
+    for section in "${custom_sqls_sections_arr[@]}"; do
+        if [ "$(do_section "$section")" = "no" ]; then
+            logging -w "[${MK_SID}] [${section}] [custom_sql]"\
+                    "The option '--sections' does not include section '${section}'"
+            continue
+        fi
+
+        if ! type "$section" > /dev/null 2>&1; then
+            logging -w "[${MK_SID}] [${section}] [custom_sql]"\
+                    "Definition of '${section}' not found in configuration"
+            continue
+        fi
+
+        $section
+
+        local sids=${SQLS_SIDS:-$custom_sqls_sids}
+        sids=${sids//,/ }
+
+        # If SID is not part of sids we can skip the rest
+        if ! echo "$sids" | "${GREP}" -q "$MK_SID"; then
+            logging -w "[${MK_SID}] [${section}] [custom_sql]"\
+                    "SID '${MK_SID}' is not part of stated SIDs '$sids'"
+            unset_custom_sqls_vars
+            continue
+        fi
+
+        local section_name=${SQLS_SECTION_NAME:-$custom_sqls_section_name}
+        local sql_dir=${SQLS_DIR:-$custom_sqls_dir}
+        local sql=${SQLS_SQL:-$custom_sqls_sql}
+
+        # If no section name, SQL dir or file is stated or SQL file does not exist we skip the rest
+        if [ -z "$section_name" ]; then
+            logging -w "[${MK_SID}] [${section}] [custom_sql]" "Empty section name"
+            unset_custom_sqls_vars
+            continue
+        fi
+
+        if [ ! -d "$sql_dir" ] || [ ! -r "$sql_dir" ] ; then
+            logging -w "[${MK_SID}] [${section}] [custom_sql]"\
+                    "SQL folder '${sql_dir}' not found or not readable"
+            unset_custom_sqls_vars
+            continue
+        fi
+
+        if [ ! -f "${sql_dir}/$sql" ] || [ ! -r "${sql_dir}/$sql" ]; then
+            logging -w "[${MK_SID}] [${section}] [custom_sql]"\
+                    "SQL file '${sql_dir}/$sql' not found or not readable"
+            unset_custom_sqls_vars
+            continue
+        fi
+
+        if [ -n "$SQLS_SECTION_SEP" ]; then
+            local section_sep="$SQLS_SECTION_SEP"
+        elif [ -n "$custom_sqls_section_sep" ]; then
+            local section_sep="$custom_sqls_section_sep"
+        else
+            local section_sep=
+        fi
+
+        if [ "$section_name" == "oracle_sql" ]; then
+            local section_header="${section_name}:sep(58)"
+        elif [ -n "${section_sep}" ]; then
+            local section_header="${section_name}:sep(${section_sep})"
+        else
+            local section_header="$section_name"
+        fi
+
+        if [ "$section_name" = "oracle_sql" ]; then
+            if [ -n "$SQLS_ITEM_NAME" ]; then
+                local item="${MK_SID}|${SQLS_ITEM_NAME}"
+            else
+                local item="${MK_SID}|${sql}"
+            fi
+        else
+            local item=
+        fi
+
+        local parameters=${SQLS_PARAMETERS:-$custom_sqls_parameters}
+
+        if [ -n "${MK_ORA_SECTIONS[*]}" ]; then
+            local max_cache_age=
+        elif [ -n "$SQLS_MAX_CACHE_AGE" ]; then
+            local max_cache_age="$SQLS_MAX_CACHE_AGE"
+        else
+            local max_cache_age="$custom_sqls_max_cache_age"
+        fi
+
+        unset_custom_sqls_vars
+
+        MK_CUSTOM_SQLS_SECTION="$section"
+        MK_CUSTOM_SQLS_SECTION_QUERY=$(custom_sql_section "$sql_dir" "$sql" "$parameters")
+        export MK_CUSTOM_SQLS_SECTION_HEADER="$section_header"
+        export MK_CUSTOM_SQLS_ITEM="$item"
+        export MK_CUSTOM_SQLS_SECTION_QUERY
+
+        logging "[${MK_SID}] [${section}] [custom_sql]"\
+                "Section name: $MK_CUSTOM_SQLS_SECTION" "Section header: $MK_CUSTOM_SQLS_SECTION_HEADER"\
+                "Section item: $MK_CUSTOM_SQLS_ITEM" "Custom SQLS query: $MK_CUSTOM_SQLS_SECTION_QUERY"\
+                "Max cache age: $max_cache_age"
+
+        if [ -z "$max_cache_age" ]; then
+            local output=
+            output=$(echo -e "$MK_CUSTOM_SQLS_SECTION_QUERY" | mk_ora_sqlplus "do_custom_sqls" "yes")
+            logging "[${MK_SID}] [${section}] [custom_sql]" "Custom SQLS query output: $output"
+            handle_custom_sql_errors "$output"
+
+        else
+            run_cached "$max_cache_age" do_async_custom_sqls "_custom_sql_${MK_CUSTOM_SQLS_SECTION}"
+
+        fi
+    done
+}
+
+
+custom_sql_section () {
+    local sql_dir="$1"
+    local sql="$2"
+    local params="$3"
+    local sql_content=
+
+    echo "PROMPT <<<${MK_CUSTOM_SQLS_SECTION_HEADER}>>>"
+    if [ -n "$MK_CUSTOM_SQLS_ITEM" ]; then
+        echo "PROMPT [[[${MK_CUSTOM_SQLS_ITEM}]]]"
+    fi
+
+    echo -e "SET VERIFY OFF;"
+    echo -e "SET TERMOUT ON;"
+    echo -e "SET serveroutput ON;"
+
+    if [ -n "$params" ]; then
+        echo -e "$params"
+    fi
+
+    sql_content=$(cat "$sql_dir/$sql")
+    echo -e "$sql_content"
+}
+
+
+do_async_custom_sqls () {
+    local output=
+    output=$(echo -e "$MK_CUSTOM_SQLS_SECTION_QUERY" | mk_ora_sqlplus "do_async_custom_sqls" "yes")
+    logging "[${MK_SID}] [${MK_CUSTOM_SQLS_SECTION_QUERY}] [do_async_custom_sql]" "Output: $output"
+    handle_custom_sql_errors "$output"
+}
+
+
+handle_custom_sql_errors () {
+    local output="$1"
+    local errors=
+    errors=$(echo -e "$output" | ${GREP} -e "ERROR at line" -e "ORA-" -e "SP2-" | tr '\n' ' ')
+    if [ -n "$errors" ]; then
+        echo "<<<${MK_CUSTOM_SQLS_SECTION_HEADER}>>>"
+        if [ -n "$MK_CUSTOM_SQLS_ITEM" ]; then
+            echo "[[[${MK_CUSTOM_SQLS_ITEM}]]]"
+        fi
+        # connection error already returns '$SID|FAILURE|' in mk_ora_sqplplus
+        errors=${errors#*FAILURE|}
+        echo "$(echo "$MK_SID" | tr '[:lower:]' '[:upper:]')|FAILURE|$errors"
+    else
+        echo "$output"
+    fi
+}
+
+
+export -f unset_custom_sqls_vars
+export -f custom_sql_section
+export -f do_async_custom_sqls
+export -f handle_custom_sql_errors
+
+
+# globals
+custom_sqls_sections_arr=($(echo "$SQLS_SECTIONS" | tr ',' '\n'))
+
+# globals and locals
+custom_sqls_section_name="oracle_sql" # SQLS_SECTION_NAME
+custom_sqls_section_sep="$SQLS_SECTION_SEP"
+custom_sqls_sids="$SQLS_SIDS"
+custom_sqls_dir="$SQLS_DIR"
+custom_sqls_sql="$SQLS_SQL"
+custom_sqls_parameters="$SQLS_PARAMETERS"
+custom_sqls_max_cache_age="$SQLS_MAX_CACHE_AGE"
+unset_custom_sqls_vars
+
+
+#.
 #   .--helper--------------------------------------------------------------.
 #   |                    _          _                                      |
 #   |                   | |__   ___| |_ __   ___ _ __                      |
@@ -1709,7 +1955,7 @@ run_cached () {
     local maxage="$1"
     local cmd_name="$2"
 
-    local cache_file="$MK_VARDIR/cache/oracle_${MK_SID}.cache"
+    local cache_file="$MK_VARDIR/cache/oracle_${MK_SID}${3}.cache"
     local use_cache_file=
     local now=
     local cf_atime=
@@ -1903,6 +2149,7 @@ mk_ora_db_connect () {
 
 mk_ora_sqlplus () {
     local from_where="$1"
+    local print_elapsed_time="$2"
     local start_time=
     local elapsed_time=
     local loc_stdin=
@@ -1943,6 +2190,10 @@ mk_ora_sqlplus () {
     fi
 
     elapsed_time=$(bc <<<"$(perl -MTime::HiRes=time -wle 'print time')-$start_time")
+
+    if [ "$print_elapsed_time" = "yes" ]; then
+        echo "elapsed:$elapsed_time"
+    fi
 
     if [ -n "$MK_PIGGYBACK_HOST" ]; then
         echo "<<<<>>>>"
@@ -2181,6 +2432,7 @@ for sid in $SIDS; do
     export MK_DB_CONNECT=$db_connect
 
     do_checks
+    do_custom_sqls
 done
 
 #   ---remote---------------------------------------------------------------

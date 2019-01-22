@@ -1,0 +1,173 @@
+#!/bin/ash
+# Check_MK Agent for BusyBox
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Remove locale settings to eliminate localized outputs where possible
+#
+# Many thanks to Matthias Haehnel for providing this agent!
+export LC_ALL=C
+unset LANG
+
+export MK_LIBDIR="/usr/lib/check_mk_agent"
+export MK_CONFDIR="/etc/check_mk"
+export MK_VARDIR="/var/lib/check_mk_agent"
+
+# Provide information about the remote host. That helps when data
+# is being sent only once to each remote host.
+if [ "$REMOTE_HOST" ] ; then
+    export REMOTE=$REMOTE_HOST
+elif [ "$SSH_CLIENT" ] ; then
+    export REMOTE=${SSH_CLIENT%% *}
+fi
+
+# Make sure, locally installed binaries are found
+PATH=$PATH:/usr/local/bin
+
+# All executables in PLUGINSDIR will simply be executed and their
+# ouput appended to the output of the agent. Plugins define their own
+# sections and must output headers with '<<<' and '>>>'
+PLUGINSDIR=$MK_LIBDIR/plugins
+
+# All executables in LOCALDIR will by executabled and their
+# output inserted into the section <<<local>>>. Please
+# refer to online documentation for details about local checks.
+LOCALDIR=$MK_LIBDIR/local
+
+# All files in SPOOLDIR will simply appended to the agent
+# output if they are not outdated (see below)
+SPOOLDIR=$MK_VARDIR/spool
+
+# close standard input (for security reasons) and stderr
+if [ "$1" = -d ]
+then
+    set -xv
+else
+    exec </dev/null 2>/dev/null
+fi
+
+#
+# CHECK SECTIONS
+#
+
+section_mem()
+{
+    echo '<<<mem>>>'
+    egrep -v '^Swap:|^Mem:|total:' < /proc/meminfo
+}
+
+section_cpu()
+{
+    echo '<<<cpu>>>'
+    echo "$(cat /proc/loadavg) $(grep Processor < /proc/cpuinfo | wc -l)"
+}
+
+
+echo '<<<check_mk>>>'
+echo Version: 1.5.0p7
+echo AgentOS: busybox
+echo Hostname: $HOSTNAME
+echo AgentDirectory: $MK_CONFDIR
+echo DataDirectory: $MK_VARDIR
+echo SpoolDirectory: $SPOOLDIR
+echo PluginsDirectory: $PLUGINSDIR
+echo LocalDirectory: $LOCALDIR
+
+# If we are called via xinetd, try to find only_from configuration
+if [ -n "$REMOTE_HOST" ]
+then
+    echo -n 'OnlyFrom: '
+    echo $(sed -n '/^service[[:space:]]*check_mk/,/}/s/^[[:space:]]*only_from[[:space:]]*=[[:space:]]*\(.*\)/\1/p' /etc/xinetd.d/* | head -n1)
+fi
+
+# Print out Partitions / Filesystems. (-P gives non-wrapped POSIXed output)
+# Heads up: NFS-mounts are generally supressed to avoid agent hangs.
+# If hard NFS mounts are configured or you have too large nfs retry/timeout
+# settings, accessing those mounts from the agent would leave you with
+# thousands of agent processes and, ultimately, a dead monitored system.
+# These should generally be monitored on the NFS server, not on the clients.
+
+echo '<<<df>>>'
+# The exclusion list is getting a bit of a problem. -l should hide any remote FS but seems
+# to be all but working.
+df -k | sed 1d
+
+
+
+# Check mount options. Filesystems may switch to 'ro' in case
+# of a read error.
+echo '<<<mounts>>>'
+grep ^/dev < /proc/mounts
+
+# processes including username, without kernel processes
+echo '<<<ps>>>'
+ps|grep -v -e ']$'|awk '{print "("$2","$3",0,00:00/00:00,"$1") "$5""}'
+
+# Memory usage
+section_mem
+
+# Load and number of processes
+section_cpu
+
+# Uptime
+echo '<<<uptime>>>'
+cat /proc/uptime
+
+
+echo '<<<lnx_if:sep(58)>>>'
+sed 1,2d /proc/net/dev
+if type ethtool > /dev/null
+then
+    for eth in $(sed -e 1,2d /proc/net/dev | cut -d':' -f1 | sort)
+    do
+        echo "[$eth]"
+        ethtool "$eth" | grep -E '(Speed|Duplex|Link detected|Auto-negotiation):'
+        echo -e "\tAddress: $(cat "/sys/class/net/$eth/address")\n"
+    done
+fi
+
+
+# Number of TCP connections in the various states
+echo '<<<tcp_conn_stats>>>'
+cat /proc/net/tcp /proc/net/tcp6 2>/dev/null | awk ' /:/ { c[$4]++; } END { for (x in c) { print x, c[x]; } }'
+
+
+# Performancecounter Kernel
+echo '<<<kernel>>>'
+date +%s
+cat /proc/vmstat /proc/stat
+
+
+
+# Time synchronization with NTP
+if type ntpq > /dev/null 2>&1 ; then
+   echo '<<<ntp>>>'
+   # remove heading, make first column space separated
+   ntpq -np | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/' || true
+fi
+
+# Systemtime hack.. 
+echo '<<<systemtime>>>'
+date '+%s'
+

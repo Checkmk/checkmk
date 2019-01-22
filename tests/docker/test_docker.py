@@ -24,10 +24,11 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import pytest
-import docker
+import sys
 import os
 import subprocess
+import pytest
+import docker
 
 import testlib
 
@@ -64,14 +65,26 @@ def _prepare_build():
 def _build(request, client, version, add_args=None):
     _prepare_build()
 
-    image, build_logs = client.images.build(
-        path=build_path,
-        tag=_image_name(version),
-        buildargs={
-            "CMK_VERSION": version.version,
-            "CMK_EDITION": version.edition(),
-            "CMK_DL_CREDENTIALS": ":".join(testlib.get_cmk_download_credentials()),
-        })
+    try:
+        image, build_logs = client.images.build(
+            path=build_path,
+            tag=_image_name(version),
+            buildargs={
+                "CMK_VERSION": version.version,
+                "CMK_EDITION": version.edition(),
+                "CMK_DL_CREDENTIALS": ":".join(testlib.get_cmk_download_credentials()),
+            })
+    except docker.errors.BuildError as e:
+        sys.stdout.write("= Build log ==================\n")
+        for entry in e.build_log:
+            if "stream" in entry:
+                sys.stdout.write(entry["stream"])
+            elif "errorDetail" in entry:
+                continue  # Is already part of the exception message
+            else:
+                sys.stdout.write("UNEXPECTED FORMAT: %r\n" % entry)
+        sys.stdout.write("= Build log ==================\n")
+        raise
 
     # TODO: Enable this on CI system. Removing during development slows down testing
     #request.addfinalizer(lambda: client.images.remove(image.id, force=True))

@@ -607,6 +607,15 @@ def test_permission_sorting(do_sort, result):
                 "address": ("::1", 1234)
             })
         }),
+        ({
+            "socket": ("proxy", {
+                "socket": None,
+            })
+        }, {
+            "socket": ("proxy", {
+                "socket": ("local", None),
+            })
+        }),
         # Is allowed in 1.6 and should not be converted
         ({
             "socket": ("proxy", {

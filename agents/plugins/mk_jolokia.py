@@ -356,15 +356,14 @@ def make_item_list(path, value, itemspec):
 
 
 def extract_item(key, itemspec):
+    if not itemspec:
+        return ()
+
     path = key.split(":", 1)[-1]
     components = path.split(",")
+    comp_dict = dict(c.split('=') for c in components if c.count('=') == 1)
+
     item = ()
-    comp_dict = {}
-    for comp in components:
-        parts = comp.split("=")
-        if len(parts) == 2:
-            left, right = parts
-            comp_dict[left] = right
     for pathkey in itemspec:
         if pathkey in comp_dict:
             right = comp_dict[pathkey]

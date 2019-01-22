@@ -129,7 +129,7 @@ def _start(request, client, edition="enterprise", version=None, is_update=False,
 
         request.addfinalizer(lambda: c.remove(force=True))
 
-        testlib.wait_until(lambda: c.exec_run(["omd", "status"], user=site_id)[0] == 0, timeout=30)
+        testlib.wait_until(lambda: c.exec_run(["omd", "status"], user=site_id)[0] == 0, timeout=120)
         output = c.logs()
 
         if not is_update:
@@ -310,7 +310,7 @@ def test_update(request, client, version):
         volumes_from=c_orig.id,
     )
     request.addfinalizer(lambda: c_tmp.remove(force=True))
-    testlib.wait_until(lambda: "HI" in c_tmp.logs(), timeout=30)
+    testlib.wait_until(lambda: "HI" in c_tmp.logs(), timeout=120)
 
     # 4. Copy old version to intermediate container
     stream = c_orig.get_archive("/omd/versions/%s" % old_version.omd_version())[0]

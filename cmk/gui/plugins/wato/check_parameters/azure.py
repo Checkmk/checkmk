@@ -300,6 +300,7 @@ register_check_parameters(
                      ("stopping", _azure_vms_summary_levels("Stopping VMs")),
                      ("stopped", _azure_vms_summary_levels("Stopped VMs")),
                      ("deallocating", _azure_vms_summary_levels("Deallocating VMs")),
+                     ("deallocated", _azure_vms_summary_levels("Deallocated VMs")),
                      ("unknown", _azure_vms_summary_levels("VMs in unknown state", upper=(1, 1))),
                  ])),
         ],

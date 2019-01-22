@@ -4854,6 +4854,12 @@ metric_info['aws_backend_connection_errors_rate'] = {
     'color': '15/a',
 }
 
+metric_info["elapsed_time"] = {
+    "title": _("Elapsed time"),
+    "unit": "s",
+    "color": "11/a",
+}
+
 #.
 #   .--Checks--------------------------------------------------------------.
 #   |                    ____ _               _                            |
@@ -8186,6 +8192,14 @@ perfometer_info.append({
     "half_value": 100,
     "exponent": 2,
 })
+
+perfometer_info.append({
+    'type': 'logarithmic',
+    'metric': 'elapsed_time',
+    'half_value': 1.0,
+    'exponent': 2.0,
+})
+
 #.
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |

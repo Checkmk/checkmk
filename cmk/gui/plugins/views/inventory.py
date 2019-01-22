@@ -171,7 +171,7 @@ def declare_inv_column(invpath, datatype, title, short=None):
         "columns": ["host_inventory", "host_structured_status"],
         "options": ["show_internal_tree_paths"],
         "load_inv": True,
-        "paint": lambda self, row: paint_host_inventory_tree(row, invpath),
+        "paint": lambda row: paint_host_inventory_tree(row, invpath),
         "sorter": name,
     }
     if short:

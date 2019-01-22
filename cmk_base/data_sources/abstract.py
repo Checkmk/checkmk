@@ -463,7 +463,7 @@ class DataSource(object):
 
         if persisted_sections_from_raw and not is_cached_data:
             persisted_sections.update(persisted_sections_from_raw)
-            self._store_persisted_sections(host_sections.persisted_sections)
+            self._store_persisted_sections(persisted_sections)
 
         if not persisted_sections:
             return host_sections

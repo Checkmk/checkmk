@@ -367,7 +367,6 @@ def extract_item(key, itemspec):
     for pathkey in itemspec:
         if pathkey in comp_dict:
             right = comp_dict[pathkey]
-            right = right.replace(r'\/', '/')
             if '/' in right:
                 right = '/' + right.split('/')[-1]
             item = item + (right,)

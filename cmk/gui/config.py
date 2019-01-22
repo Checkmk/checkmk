@@ -795,6 +795,14 @@ def migrate_old_site_config(site_config):
             continue
 
         socket = site_cfg["socket"]
+
+        # Same as above for liveproxy configs
+        if isinstance(socket, tuple) and socket[0] == "proxy":
+            proxy_cfg = socket[1]
+            if proxy_cfg.get("socket") is None:
+                proxy_cfg["socket"] = ("local", None)
+                continue
+
         if socket == 'disabled':
             site_cfg['disabled'] = True
             site_cfg['socket'] = ("local", None)

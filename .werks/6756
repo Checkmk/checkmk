@@ -1,0 +1,13 @@
+Title: oracle_instance: Fixed false-positive if the output shows the creation time of instance
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1548155292
+Class: fix
+
+Previously the categorized as stopped or login failed or invalid data if
+the output showed 12 elements per instance. The last element has been the
+creation time of the database, which is currently not used in the created
+service. This problem is solved know.

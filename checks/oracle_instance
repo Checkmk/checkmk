@@ -113,6 +113,10 @@ def check_oracle_instance(item, params, info):
                 sid, version, openmode, logins, archiver, up_seconds, _dbid, \
                     log_mode, database_role, force_logging, name = line
 
+            elif len(line) == 12:
+                sid, version, openmode, logins, archiver, up_seconds, _dbid, \
+                    log_mode, database_role, force_logging, name, _dbcreated = line
+
             elif len(line) == 22:
                 sid, version, openmode, logins, archiver, up_seconds, _dbid, \
                     log_mode, database_role, force_logging, name, _dbcreated, pluggable, \

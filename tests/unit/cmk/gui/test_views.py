@@ -4031,8 +4031,8 @@ def test_legacy_register_painter(monkeypatch):
     monkeypatch.setattr(cmk.gui.plugins.views.utils, "painter_registry",
                         cmk.gui.plugins.views.utils.PainterRegistry())
 
-    def rendr():
-        pass
+    def rendr(row):
+        return "xyz"
 
     cmk.gui.plugins.views.utils.register_painter(
         "abc", {
@@ -4054,4 +4054,4 @@ def test_legacy_register_painter(monkeypatch):
     assert painter.sorter == "aaaa"
     assert painter.painter_options == ["opt1"]
     assert painter.printable is False
-    assert painter.render.__name__ == rendr.__name__
+    assert painter.render(row={}, cell=None) == "xyz"

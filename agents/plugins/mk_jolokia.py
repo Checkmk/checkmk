@@ -240,10 +240,11 @@ def cached(function):
     cache = {}
 
     def cached_function(*args):
+        key = repr(args)
         try:
-            return cache[args]
+            return cache[key]
         except KeyError:
-            return cache.setdefault(args, function(*args))
+            return cache.setdefault(key, function(*args))
 
     return cached_function
 

@@ -190,9 +190,32 @@ def cached(function):
 
 def sanitize_config(config):
 
-    if not config["instance"]:
+    instance = config.get("instance")
+    err_msg = "%s in configuration"
+    if instance:
+        err_msg += " for %s" % instance
+
+    required_keys = {"protocol", "server", "port", "suburi"}
+    auth_mode = config.get("mode")
+    if auth_mode in ("digest", "basic", "basic_preemtive"):
+        required_keys |= {"user", "password"}
+    elif auth_mode == "https":
+        required_keys |= {"client_cert", "client_key"}
+    if config.get("service_url") is not None and config.get("service_user") is not None:
+        required_keys.add("service_password")
+    missing_keys = required_keys - set(config.keys())
+    if missing_keys:
+        raise ValueError(err_msg % ("Missing keys " % ", ".join(missing_keys)))
+
+    if not instance:
         config["instance"] = str(config["port"])
     config["instance"] = config["instance"].replace(" ", "_")
+
+    # port must be (or look like) an integer
+    try:
+        config["port"] = int(config["port"])
+    except ValueError:
+        raise ValueError(err_msg % ("Invalid port %r" % config["port"]))
 
     if config.get("server") == "use fqdn":
         config["server"] = socket.getfqdn()

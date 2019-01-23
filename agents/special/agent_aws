@@ -881,19 +881,15 @@ class CloudTrail(AWSSection):
 
 
 class AWSSectionsTmpl(object):
-    def __init__(self, hostname, access_key_id, secret_access_key, services, region):
+    __metaclass__ = abc.ABCMeta
+
+    def __init__(self, hostname, session, services):
         self._hostname = hostname
-        self._session = self._init_session(access_key_id, secret_access_key, region)
+        self._session = session
         self._services = services
         self._sections = []
         self._results = {}
         self._exceptions = []
-
-    def _init_session(self, access_key_id, secret_access_key, region):
-        return boto3.session.Session(
-            aws_access_key_id=access_key_id,
-            aws_secret_access_key=secret_access_key,
-            region_name=region)
 
     def _init_client(self, client_key):
         try:
@@ -1004,9 +1000,8 @@ class AWSSectionsUSEast(AWSSectionsTmpl):
     https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/ce-api.html
     """
 
-    def __init__(self, hostname, access_key_id, secret_access_key, services):
-        super(AWSSectionsUSEast, self).__init__(hostname, access_key_id, secret_access_key,
-                                                services, "us-east-1")
+    def __init__(self, hostname, session, services):
+        super(AWSSectionsUSEast, self).__init__(hostname, session, services)
 
         #---clients---------------------------------------------------------
         ce_client = self._init_client('ce')
@@ -1020,9 +1015,8 @@ class AWSSectionsUSEast(AWSSectionsTmpl):
 
 
 class AWSSections(AWSSectionsTmpl):
-    def __init__(self, hostname, access_key_id, secret_access_key, services, region):
-        super(AWSSections, self).__init__(hostname, access_key_id, secret_access_key, services,
-                                          region)
+    def __init__(self, hostname, session, services):
+        super(AWSSections, self).__init__(hostname, session, services)
 
         #---clients---------------------------------------------------------
         ec2_client = self._init_client('ec2')
@@ -1177,6 +1171,13 @@ def setup_logging(opt_debug):
     logging.basicConfig(level=lvl, format=fmt)
 
 
+def create_session(access_key_id, secret_access_key, region):
+    return boto3.session.Session(
+        aws_access_key_id=access_key_id,
+        aws_secret_access_key=secret_access_key,
+        region_name=region)
+
+
 def main(args=None):
     if args is None:
         cmk.utils.password_store.replace_passwords()
@@ -1189,12 +1190,12 @@ def main(args=None):
     access_key_id = args.aws_access_key_id
     secret_access_key = args.aws_secret_access_key
     use_cache = not args.no_cache
-    services = args.services[:]
+    services = args.services
 
     exceptions = []
     try:
-        aws_sections_us_east = AWSSectionsUSEast(hostname, access_key_id, secret_access_key,
-                                                 services)
+        session = create_session(access_key_id, secret_access_key, "us-east-1")
+        aws_sections_us_east = AWSSectionsUSEast(hostname, session, services)
         aws_sections_us_east.run(use_cache=use_cache)
     except Exception as e:
         if args.debug:
@@ -1203,7 +1204,8 @@ def main(args=None):
 
     for region in args.regions:
         try:
-            aws_sections = AWSSections(hostname, access_key_id, secret_access_key, services, region)
+            session = create_session(access_key_id, secret_access_key, region)
+            aws_sections = AWSSections(hostname, session, services)
             aws_sections.run(use_cache=use_cache)
         except Exception as e:
             if args.debug:

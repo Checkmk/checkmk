@@ -685,11 +685,15 @@ def register_check_parameters(subgroup,
 
         # There is never a RulespecSubGroup declaration for the static checks.
         # Create some based on the regular check groups which should have a definition
-        main_group_static_class = rulespec_group_registry["static"]
-        checkparams_static_sub_group_class = type("%sStatic" % subgroup.__name__, (subgroup,), {
-            "main_group": main_group_static_class,
-        })
-        rulespec_group_registry.register(checkparams_static_sub_group_class)
+        try:
+            subgroup_key = "static/" + subgroup().sub_group_name
+            checkparams_static_sub_group_class = rulespec_group_registry[subgroup_key]
+        except KeyError:
+            main_group_static_class = rulespec_group_registry["static"]
+            checkparams_static_sub_group_class = type("%sStatic" % subgroup.__name__, (subgroup,), {
+                "main_group": main_group_static_class,
+            })
+            rulespec_group_registry.register(checkparams_static_sub_group_class)
 
         register_rule(
             checkparams_static_sub_group_class,

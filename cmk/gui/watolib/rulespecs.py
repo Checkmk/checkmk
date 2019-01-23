@@ -27,11 +27,12 @@
 
 import abc
 import re
-from typing import Text, List, Type  # pylint: disable=unused-import
+from typing import Text, List, Type, Optional, Any  # pylint: disable=unused-import
 import six
 
 import cmk.utils.plugin_registry
 
+from cmk.gui.valuespec import ValueSpec  # pylint: disable=unused-import
 from cmk.gui.i18n import _
 
 
@@ -257,86 +258,103 @@ def _get_legacy_rulespec_group_class(group_name, group_title, help_text):
     })
 
 
-class Rulespecs(object):
-    def __init__(self):
-        super(Rulespecs, self).__init__()
-        self._rulespecs = {}
-        self._by_group = {}  # for conveniant lookup
-        self._sorted_groups = []  # for keeping original order
-
-    def clear(self):
-        self._rulespecs.clear()
-        self._by_group.clear()
-        del self._sorted_groups[:]
-
-    def register(self, rulespec):
-        group = rulespec.group_name
-        name = rulespec.name
-
-        if group not in self._by_group:
-            self._sorted_groups.append(group)
-            self._by_group[group] = [rulespec]
-
-        else:
-            for nr, this_rulespec in enumerate(self._by_group[group]):
-                if this_rulespec.name == name:
-                    del self._by_group[group][nr]
-                    break  # There cannot be two duplicates!
-
-            self._by_group[group].append(rulespec)
-
-        self._rulespecs[name] = rulespec
-
-    def get(self, name):
-        return self._rulespecs[name]
-
-    def exists(self, name):
-        return name in self._rulespecs
-
-    def get_rulespecs(self):
-        return self._rulespecs
-
-    def get_by_group(self, group_name):
-        return self._by_group[group_name]
-
-    def get_all_groups(self):
-        return self._sorted_groups
-
-
 class Rulespec(object):
+    __metaclass__ = abc.ABCMeta
+
     # needed for unique ID
     NO_FACTORY_DEFAULT = []  # type: list
     # means this ruleset is not used if no rule is entered
     FACTORY_DEFAULT_UNUSED = []  # type: list
 
-    def __init__(self, name, group_name, valuespec, item_spec, item_type, item_name, item_help,
-                 item_enum, match_type, title, help_txt, is_optional, factory_default,
-                 is_deprecated):
-        super(Rulespec, self).__init__()
+    @abc.abstractproperty
+    def name(self):
+        # type: () -> str
+        raise NotImplementedError()
 
-        self.name = name
-        self.group_name = group_name
-        self.main_group_name = group_name.split("/")[0]
-        self.sub_group_name = group_name.split("/")[1] if "/" in group_name else ""
-        self.valuespec = valuespec
-        self.item_spec = item_spec  # original item spec, e.g. if validation is needed
-        self.item_type = item_type  # None, "service", "checktype" or "checkitem"
+    # TODO: Refactor to group object access
+    @abc.abstractproperty
+    def group_name(self):
+        # type: () -> str
+        raise NotImplementedError()
 
-        if not item_name and item_type == "service":
-            self.item_name = _("Service")
-        else:
-            self.item_name = item_name  # e.g. "mount point"
+    @property
+    def main_group_name(self):
+        # type: () -> str
+        return self.group_name.split("/")[0]
 
-        self.item_help = item_help  # a description of the item, only rarely used
-        self.item_enum = item_enum  # possible fixed values for items
-        self.match_type = match_type  # used by WATO rule analyzer (green and grey balls)
-        self.title = title or valuespec.title()
-        self.help = help_txt or valuespec.help()
-        self.factory_default = factory_default
-        self.is_optional = is_optional  # rule may be None (like only_hosts)
-        self.is_deprecated = is_deprecated
+    @property
+    def sub_group_name(self):
+        # type: () -> str
+        return self.group_name.split("/")[1] if "/" in self.group_name else ""
+
+    @property
+    def item_name(self):
+        if not self._item_name and self.item_type == "service":
+            return _("Service")
+        return self._item_name
+
+    @property
+    def title(self):
+        return self.valuespec.title()
+
+    @property
+    def help(self):
+        return self.valuespec.help()
+
+    # TODO: Which cases need this this to be optional? clarify this
+    @property
+    def valuespec(self):
+        # type: () -> Optional[ValueSpec]
+        return None
+
+    # TODO: Move these item attributes e.g. to a subclass or a helper class
+    @property
+    def item_spec(self):
+        # type: () -> Optional[ValueSpec]
+        return None
+
+    @property
+    def item_type(self):
+        # type: () -> Optional[str]
+        return None
+
+    @property
+    def _item_name(self):
+        # type: () -> Optional[Text]
+        return None
+
+    @property
+    def item_help(self):
+        # type: () -> Optional[Text]
+        return None
+
+    @property
+    def item_enum(self):
+        # type: () -> Optional[Text]
+        return None
+
+    @property
+    def match_type(self):
+        # type: () -> str
+        return "first"
+
+    @property
+    def factory_default(self):
+        # type: () -> Any
+        return self.NO_FACTORY_DEFAULT
+
+    @property
+    def is_optional(self):
+        # type: () -> bool
+        return False
+
+    @property
+    def is_deprecated(self):
+        # type: () -> bool
+        return False
 
 
+# Pre 1.6 rule registering logic. Need to be kept for some time
 def register_rule(
         group,
         varname,
@@ -359,35 +377,67 @@ def register_rule(
     if not isinstance(group, six.string_types) and issubclass(group, RulespecBaseGroup):
         group = group().name
 
-    rulespec = Rulespec(
-        name=varname,
-        group_name=group,
-        valuespec=valuespec,
-        item_spec=itemspec,
-        item_type=itemtype,
-        item_name=itemname,
-        item_help=itemhelp,
-        item_enum=itemenum,
-        match_type=match,
-        title=title,
-        help_txt=help,
-        is_optional=optional,
-        factory_default=factory_default,
-        is_deprecated=deprecated,
-    )
+    class_attrs = {
+        "name": varname,
+        "group_name": group,
+        "valuespec": valuespec,
+        "item_spec": itemspec,
+        "item_type": itemtype,
+        "_item_name": itemname,
+        "item_help": itemhelp,
+        "item_enum": itemenum,
+        "match_type": match,
+        "factory_default": factory_default,
+        "is_optional": optional,
+        "is_deprecated": deprecated,
+    }
 
-    g_rulespecs.register(rulespec)
+    if title:
+        class_attrs.update({
+            "_title": title,
+            "title": property(lambda self: self._title),
+        })
 
+    if help:
+        class_attrs.update({
+            "_help": help,
+            "help": property(lambda self: self._help),
+        })
 
-g_rulespecs = Rulespecs()
+    rulespec_class = type("LegacyRulespec%s" % varname, (Rulespec,), class_attrs)
+    rulespec_registry.register(rulespec_class)
 
 
 class RulespecRegistry(cmk.utils.plugin_registry.ClassRegistry):
+    def __init__(self, group_registry):
+        super(RulespecRegistry, self).__init__()
+        self._group_registry = group_registry
+
     def plugin_base_class(self):
         return Rulespec
 
     def plugin_name(self, plugin_class):
         return plugin_class().name
 
+    def get_by_group(self, group_name):
+        # type: (str) -> List[Rulespec]
+        rulespecs = []
 
-rulespec_registry = RulespecRegistry()
+        if group_name not in self._group_registry:
+            raise KeyError()
+
+        for rulespec_class in self.values():
+            rulespec = rulespec_class()
+            if rulespec.group_name == group_name:
+                rulespecs.append(rulespec)
+        return rulespecs
+
+    def get_all_groups(self):
+        """Returns a list of all rulespec groups that have rules registered for
+
+        Can not use direct rulespec_group_registry access for this, because the
+        group registry does not know whether a group is registered for it"""
+        return list(set(gc().group_name for gc in self.values()))
+
+
+rulespec_registry = RulespecRegistry(rulespec_group_registry)

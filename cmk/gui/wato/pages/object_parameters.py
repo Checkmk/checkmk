@@ -35,7 +35,10 @@ import cmk.gui.forms as forms
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.watolib.rulespecs import rulespec_group_registry
+from cmk.gui.watolib.rulespecs import (
+    rulespec_group_registry,
+    rulespec_registry,
+)
 
 from cmk.gui.plugins.wato import (
     WatoMode,
@@ -115,7 +118,7 @@ class ModeObjectParameters(WatoMode):
         for groupname in sorted(rulespec_group_registry.get_host_rulespec_group_names()):
             maingroup = groupname.split("/")[0]
             for rulespec in sorted(
-                    watolib.g_rulespecs.get_by_group(groupname), key=lambda x: x.title):
+                    rulespec_registry.get_by_group(groupname), key=lambda x: x.title):
                 if (rulespec.item_type == 'service') == (not self._service):
                     continue  # This rule is not for hosts/services
 
@@ -163,7 +166,7 @@ class ModeObjectParameters(WatoMode):
             # via checkgroup_parameters but via "logwatch_rules" in a special
             # WATO module.
             elif checkgroup == "logwatch":
-                rulespec = watolib.g_rulespecs.get("logwatch_rules")
+                rulespec = rulespec_registry["logwatch_rules"]()
                 self._output_analysed_ruleset(all_rulesets, rulespec, serviceinfo["item"],
                                               serviceinfo["parameters"])
 
@@ -175,9 +178,9 @@ class ModeObjectParameters(WatoMode):
                 # by the inventory. This will be changed in a later version,
                 # but we need to address it anyway.
                 grouprule = "checkgroup_parameters:" + checkgroup
-                if not watolib.g_rulespecs.exists(grouprule):
+                if grouprule not in rulespec_registry:
                     try:
-                        rulespec = watolib.g_rulespecs.get("static_checks:" + checkgroup)
+                        rulespec = rulespec_registry["static_checks:" + checkgroup]()
                     except KeyError:
                         rulespec = None
 
@@ -196,7 +199,7 @@ class ModeObjectParameters(WatoMode):
                             _("This check is not configurable via WATO"))
 
                 else:
-                    rulespec = watolib.g_rulespecs.get(grouprule)
+                    rulespec = rulespec_registry[grouprule]()
                     self._output_analysed_ruleset(all_rulesets, rulespec, serviceinfo["item"],
                                                   serviceinfo["parameters"])
 
@@ -206,7 +209,7 @@ class ModeObjectParameters(WatoMode):
             if not checkgroup:
                 html.write_text(_("This check is not configurable via WATO"))
             else:
-                rulespec = watolib.g_rulespecs.get("static_checks:" + checkgroup)
+                rulespec = rulespec_registry["static_checks:" + checkgroup]()
                 itemspec = rulespec.item_spec
                 if itemspec:
                     item_text = itemspec.value_to_text(serviceinfo["item"])
@@ -224,7 +227,7 @@ class ModeObjectParameters(WatoMode):
 
         elif origin == "active":
             checktype = serviceinfo["checktype"]
-            rulespec = watolib.g_rulespecs.get("active_checks:" + checktype)
+            rulespec = rulespec_registry["active_checks:" + checktype]()
             self._output_analysed_ruleset(all_rulesets, rulespec, None, serviceinfo["parameters"])
 
         elif origin == "classic":

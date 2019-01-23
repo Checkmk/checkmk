@@ -57,6 +57,7 @@ from cmk.gui.watolib.automations import (
     sync_changes_before_remote_automation,
     check_mk_automation,
 )
+from cmk.gui.watolib.rulespecs import rulespec_registry
 
 from cmk.gui.plugins.wato import (
     host_status_button,
@@ -1142,29 +1143,31 @@ class DiscoveryPageRenderer(object):
 
     def _show_check_parameters(self, table_source, check_type, checkgroup, params):
         varname = self._get_ruleset_name(table_source, check_type, checkgroup)
-        if varname and watolib.g_rulespecs.exists(varname):
-            rulespec = watolib.g_rulespecs.get(varname)
-            try:
-                if isinstance(params, dict) and "tp_computed_params" in params:
-                    html.write_text(
-                        _("Timespecific parameters computed at %s") %
-                        cmk.utils.render.date_and_time(params["tp_computed_params"]["computed_at"]))
-                    html.br()
-                    params = params["tp_computed_params"]["params"]
-                rulespec.valuespec.validate_datatype(params, "")
-                rulespec.valuespec.validate_value(params, "")
-                paramtext = rulespec.valuespec.value_to_text(params)
-                html.write_html(paramtext)
-            except Exception as e:
-                if config.debug:
-                    err = traceback.format_exc()
-                else:
-                    err = e
-                paramtext = "<b>%s</b>: %s<br>" % (_("Invalid check parameter"), err)
-                paramtext += "%s: <tt>%s</tt><br>" % (_("Variable"), varname)
-                paramtext += _("Parameters:")
-                paramtext += "<pre>%s</pre>" % (pprint.pformat(params))
-                html.write_text(paramtext)
+        if not varname or varname not in rulespec_registry:
+            return
+
+        rulespec = rulespec_registry[varname]()
+        try:
+            if isinstance(params, dict) and "tp_computed_params" in params:
+                html.write_text(
+                    _("Timespecific parameters computed at %s") % cmk.utils.render.date_and_time(
+                        params["tp_computed_params"]["computed_at"]))
+                html.br()
+                params = params["tp_computed_params"]["params"]
+            rulespec.valuespec.validate_datatype(params, "")
+            rulespec.valuespec.validate_value(params, "")
+            paramtext = rulespec.valuespec.value_to_text(params)
+            html.write_html(paramtext)
+        except Exception as e:
+            if config.debug:
+                err = traceback.format_exc()
+            else:
+                err = e
+            paramtext = "<b>%s</b>: %s<br>" % (_("Invalid check parameter"), err)
+            paramtext += "%s: <tt>%s</tt><br>" % (_("Variable"), varname)
+            paramtext += _("Parameters:")
+            paramtext += "<pre>%s</pre>" % (pprint.pformat(params))
+            html.write_text(paramtext)
 
     def _show_bulk_checkbox(self, table, discovery_result, request, check_type, item,
                             show_bulk_actions):

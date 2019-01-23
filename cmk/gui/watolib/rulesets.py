@@ -37,7 +37,7 @@ from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.watolib.utils import has_agent_bakery
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.rulespecs import (
-    g_rulespecs,
+    rulespec_registry,
     rulespec_group_registry,
 )
 from cmk.gui.watolib.hosts_and_folders import (
@@ -82,7 +82,7 @@ class RulesetCollection(object):
         # Prepare empty rulesets so that rules.mk has something to
         # append to. We need to initialize all variables here, even
         # when only loading with only_varname.
-        for varname in g_rulespecs.get_rulespecs():
+        for varname in rulespec_registry.keys():
             if ':' in varname:
                 dictname, _subkey = varname.split(":")
                 config[dictname] = {}
@@ -92,7 +92,7 @@ class RulesetCollection(object):
         self.from_config(folder, store.load_mk_file(path, config), only_varname)
 
     def from_config(self, folder, rulesets_config, only_varname=None):
-        for varname in g_rulespecs.get_rulespecs():
+        for varname in rulespec_registry.keys():
             if only_varname and varname != only_varname:
                 continue  # skip unwanted options
 
@@ -117,7 +117,7 @@ class RulesetCollection(object):
 
         content = ""
         for varname, ruleset in sorted(self._rulesets.items(), key=lambda x: x[0]):
-            if not g_rulespecs.exists(varname):
+            if varname not in rulespec_registry:
                 continue  # don't save unknown rulesets
 
             if ruleset.is_empty_in_folder(folder):
@@ -255,7 +255,7 @@ class Ruleset(object):
     def __init__(self, name):
         super(Ruleset, self).__init__()
         self.name = name
-        self.rulespec = g_rulespecs.get(name)
+        self.rulespec = rulespec_registry[name]()
         # Holds list of the rules. Using the folder paths as keys.
         self._rules = {}
 

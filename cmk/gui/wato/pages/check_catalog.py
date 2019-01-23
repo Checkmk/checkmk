@@ -34,6 +34,7 @@ from cmk.gui.htmllib import HTML
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
+from cmk.gui.watolib.rulespecs import rulespec_registry
 
 from cmk.gui.valuespec import (
     ID,)
@@ -402,27 +403,6 @@ class ModeCheckManPage(WatoMode):
         html.td(self._manpage_text(self._manpage["header"]["description"]))
         html.close_tr()
 
-        def show_ruleset(varname):
-            if watolib.g_rulespecs.exists(varname):
-                rulespec = watolib.g_rulespecs.get(varname)
-                url = html.makeuri_contextless([("mode", "edit_ruleset"), ("varname", varname)])
-                param_ruleset = html.render_a(rulespec.title, url)
-                html.open_tr()
-                html.th(_("Parameter rule set"))
-                html.open_td()
-                html.icon_button(url, _("Edit parameter rule set for this check type"),
-                                 "check_parameters")
-                html.write(param_ruleset)
-                html.close_td()
-                html.close_tr()
-                html.open_tr()
-                html.th(_("Example for Parameters"))
-                html.open_td()
-                vs = rulespec.valuespec
-                vs.render_input("dummy", vs.default_value())
-                html.close_td()
-                html.close_tr()
-
         if self._manpage["type"] == "check_mk":
             html.open_tr()
             html.th(_("Service name"))
@@ -432,11 +412,11 @@ class ModeCheckManPage(WatoMode):
             if self._manpage.get("group"):
                 group = self._manpage["group"]
                 varname = "checkgroup_parameters:" + group
-                show_ruleset(varname)
+                self._show_ruleset(varname)
 
         else:
             varname = "active_checks:" + self._check_type[6:]
-            show_ruleset(varname)
+            self._show_ruleset(varname)
 
         html.close_table()
 
@@ -447,3 +427,25 @@ class ModeCheckManPage(WatoMode):
         html_code = re.sub("{(.*?)}", "<tt>\\1</tt>", html_code)
         html_code = re.sub("\n\n+", "<p>", html_code)
         return html_code
+
+    def _show_ruleset(self, varname):
+        if varname not in rulespec_registry:
+            return
+
+        rulespec = rulespec_registry[varname]()
+        url = html.makeuri_contextless([("mode", "edit_ruleset"), ("varname", varname)])
+        param_ruleset = html.render_a(rulespec.title, url)
+        html.open_tr()
+        html.th(_("Parameter rule set"))
+        html.open_td()
+        html.icon_button(url, _("Edit parameter rule set for this check type"), "check_parameters")
+        html.write(param_ruleset)
+        html.close_td()
+        html.close_tr()
+        html.open_tr()
+        html.th(_("Example for Parameters"))
+        html.open_td()
+        vs = rulespec.valuespec
+        vs.render_input("dummy", vs.default_value())
+        html.close_td()
+        html.close_tr()

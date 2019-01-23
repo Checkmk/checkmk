@@ -9,6 +9,9 @@ from cmk.gui.watolib.rulespecs import (
     RulespecGroupRegistry,
     RulespecGroup,
     RulespecSubGroup,
+    RulespecRegistry,
+    Rulespec,
+    rulespec_registry,
 )
 from cmk.gui.valuespec import (
     Dictionary,
@@ -1201,10 +1204,8 @@ def test_grouped_rulespecs():
             'extra_service_conf:_ec_sl',
         ],
     }
-    for group_name in watolib.g_rulespecs.get_all_groups():
-        rulespec_names = [
-            rulespec.name for rulespec in watolib.g_rulespecs.get_by_group(group_name)
-        ]
+    for group_name in rulespec_registry.get_all_groups():
+        rulespec_names = [rulespec.name for rulespec in rulespec_registry.get_by_group(group_name)]
         assert sorted(by_group[group_name]) == sorted(rulespec_names)
 
 
@@ -1304,7 +1305,7 @@ def test_rulespec_get_main_groups():
 
 
 def test_rulespec_get_all_groups():
-    assert sorted(watolib.g_rulespecs.get_all_groups()) == sorted([
+    assert sorted(rulespec_registry.get_all_groups()) == sorted([
         'activechecks',
         'grouping',
         'monconf/service_checks',
@@ -1367,9 +1368,10 @@ def test_rulespec_get_host_groups():
 
 
 def test_legacy_register_rule(monkeypatch):
-    monkeypatch.setattr(cmk.gui.watolib.rulespecs, "g_rulespecs", watolib.Rulespecs())
-    monkeypatch.setattr(cmk.gui.watolib.rulespecs, "rulespec_group_registry",
-                        watolib.RulespecGroupRegistry())
+    group_registry = watolib.RulespecGroupRegistry()
+    monkeypatch.setattr(cmk.gui.watolib.rulespecs, "rulespec_group_registry", group_registry)
+    monkeypatch.setattr(cmk.gui.watolib.rulespecs, "rulespec_registry",
+                        RulespecRegistry(group_registry))
 
     watolib.register_rule(
         "grouping",
@@ -1386,13 +1388,13 @@ def test_legacy_register_rule(monkeypatch):
     assert group.title == "grouping"
 
     rulespec_names = [
-        r.name for r in cmk.gui.watolib.rulespecs.g_rulespecs.get_by_group("grouping")
+        r.name for r in cmk.gui.watolib.rulespecs.rulespec_registry.get_by_group("grouping")
     ]
     assert "dingdong_group" in rulespec_names
     assert len(rulespec_names) == 1
 
     # Check some default values
-    spec = cmk.gui.watolib.rulespecs.g_rulespecs.get("dingdong_group")
+    spec = cmk.gui.watolib.rulespecs.rulespec_registry["dingdong_group"]()
 
     assert spec.name == "dingdong_group"
     assert spec.group_name == "grouping"
@@ -1411,7 +1413,6 @@ def test_legacy_register_rule(monkeypatch):
 
 
 def test_legacy_register_rule_attributes(monkeypatch):
-    monkeypatch.setattr(cmk.gui.watolib.rulespecs, "g_rulespecs", watolib.Rulespecs())
     monkeypatch.setattr(cmk.gui.watolib.rulespecs, "rulespec_group_registry",
                         watolib.RulespecGroupRegistry())
 
@@ -1435,7 +1436,7 @@ def test_legacy_register_rule_attributes(monkeypatch):
         factory_default="humpf",
     )
 
-    spec = cmk.gui.watolib.rulespecs.g_rulespecs.get("rule_name")
+    spec = rulespec_registry["rule_name"]()
     assert spec.name == "rule_name"
     assert spec.group_name == "dingdong_group"
     assert isinstance(spec.valuespec, Dictionary)
@@ -1453,9 +1454,10 @@ def test_legacy_register_rule_attributes(monkeypatch):
 
 
 def test_register_check_parameters(monkeypatch):
-    monkeypatch.setattr(cmk.gui.watolib.rulespecs, "g_rulespecs", watolib.Rulespecs())
-    monkeypatch.setattr(cmk.gui.watolib.rulespecs, "rulespec_group_registry",
-                        watolib.RulespecGroupRegistry())
+    group_registry = watolib.RulespecGroupRegistry()
+    monkeypatch.setattr(cmk.gui.watolib.rulespecs, "rulespec_group_registry", group_registry)
+    monkeypatch.setattr(cmk.gui.watolib.rulespecs, "rulespec_registry",
+                        RulespecRegistry(group_registry))
 
     register_check_parameters(
         "netblabla",
@@ -1472,7 +1474,8 @@ def test_register_check_parameters(monkeypatch):
     assert group.title == "netblabla"
 
     rulespec_names = [
-        r.name for r in cmk.gui.watolib.rulespecs.g_rulespecs.get_by_group("checkparams/netblabla")
+        r.name
+        for r in cmk.gui.watolib.rulespecs.rulespec_registry.get_by_group("checkparams/netblabla")
     ]
     assert "checkgroup_parameters:check_group_name" in rulespec_names
     assert len(rulespec_names) == 1
@@ -1483,71 +1486,55 @@ def test_register_check_parameters(monkeypatch):
     assert group.title == "netblabla"
 
     rulespec_names = [
-        r.name for r in cmk.gui.watolib.rulespecs.g_rulespecs.get_by_group("static/netblabla")
+        r.name for r in cmk.gui.watolib.rulespecs.rulespec_registry.get_by_group("static/netblabla")
     ]
     assert "static_checks:check_group_name" in rulespec_names
     assert len(rulespec_names) == 1
 
 
-def dummy_rulespec():
-    return cmk.gui.watolib.rulespecs.Rulespec(
-        name="name",
-        group_name="group",
-        valuespec=FixedValue(None),
-        item_spec=None,
-        item_type=None,
-        item_name=None,
-        item_help=None,
-        item_enum=None,
-        match_type="first",
-        title="bla",
-        help_txt=None,
-        is_optional=False,
-        factory_default=cmk.gui.watolib.rulespecs.Rulespec.NO_FACTORY_DEFAULT,
-        is_deprecated=False,
-    )
+class DummyGroup(RulespecGroup):
+    @property
+    def name(self):
+        return "group"
+
+    @property
+    def title(self):
+        return "Group title"
+
+    @property
+    def help(self):
+        return "help text"
 
 
-def test_rulespecs_clear():
-    rulespecs = cmk.gui.watolib.rulespecs.Rulespecs()
-    spec = dummy_rulespec()
-    rulespecs.register(spec)
-    assert rulespecs.exists("name")
-    assert rulespecs.get_all_groups() == ["group"]
-    assert rulespecs.get_by_group("group") == [spec]
+class DummyRulespec(Rulespec):
+    name = "name"
+    group_name = "group"
+    valuespec = FixedValue(None)
+    item_spec = None
+    item_type = None
+    _item_name = None
+    item_help = None
+    item_enum = None
+    match_type = "first"
+    title = "bla"
+    help = None
+    factory_default = Rulespec.NO_FACTORY_DEFAULT
+    is_optional = False
+    is_deprecated = False
 
-    rulespecs.clear()
 
-    assert not rulespecs.exists("name")
-    assert rulespecs.get_all_groups() == []
-
-    with pytest.raises(KeyError):
-        rulespecs.get_by_group("group")
-
-
-def test_rulespecs_get():
-    rulespecs = cmk.gui.watolib.rulespecs.Rulespecs()
+def test_rulespecs_get_by_group():
+    group_registry = RulespecGroupRegistry()
+    registry = RulespecRegistry(group_registry)
 
     with pytest.raises(KeyError):
-        rulespecs.get("name")
+        registry.get_by_group("group")
 
-    spec = dummy_rulespec()
-    rulespecs.register(spec)
-    assert rulespecs.get("name") == spec
+    group_registry.register(DummyGroup)
+    result = registry.get_by_group("group")
+    assert len(result) == 0
 
-
-def test_rulespecs_exists():
-    rulespecs = cmk.gui.watolib.rulespecs.Rulespecs()
-    assert not rulespecs.exists("name")
-    rulespecs.register(dummy_rulespec())
-    assert rulespecs.exists("name")
-
-
-def test_rulespecs_get_rulespecs():
-    rulespecs = cmk.gui.watolib.rulespecs.Rulespecs()
-    assert rulespecs.get_rulespecs() == {}
-
-    spec = dummy_rulespec()
-    rulespecs.register(spec)
-
-    assert rulespecs.get_rulespecs() == {"name": spec}
+    registry.register(DummyRulespec)
+    result = registry.get_by_group("group")
+    assert len(result) == 1
+    assert isinstance(result[0], DummyRulespec)

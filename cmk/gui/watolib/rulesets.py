@@ -36,7 +36,10 @@ from cmk.gui.exceptions import MKGeneralException
 
 from cmk.gui.watolib.utils import has_agent_bakery
 from cmk.gui.watolib.changes import add_change
-from cmk.gui.watolib.rulespecs import g_rulespecs
+from cmk.gui.watolib.rulespecs import (
+    g_rulespecs,
+    rulespec_group_registry,
+)
 from cmk.gui.watolib.hosts_and_folders import (
     Folder,
     Host,
@@ -383,7 +386,7 @@ class Ruleset(object):
             return False
 
         if "ruleset_group" in search_options \
-           and self.rulespec.group_name not in g_rulespecs.get_matching_groups(search_options["ruleset_group"]):
+           and self.rulespec.group_name not in rulespec_group_registry.get_matching_group_names(search_options["ruleset_group"]):
             return False
 
         if not _match_search_expression(search_options, "ruleset_name", self.name):

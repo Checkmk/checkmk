@@ -4,6 +4,12 @@ import pytest  # type: ignore
 import cmk.gui.wato  # pylint: disable=unused-import
 import cmk.gui.watolib as watolib
 import cmk.gui.watolib.rulespecs
+from cmk.gui.watolib.rulespecs import (
+    rulespec_group_registry,
+    RulespecGroupRegistry,
+    RulespecGroup,
+    RulespecSubGroup,
+)
 from cmk.gui.valuespec import (
     Dictionary,
     TextAscii,
@@ -13,7 +19,7 @@ from cmk.gui.plugins.wato.utils import register_check_parameters
 
 
 def test_rulespec_sub_group():
-    class TestGroup(watolib.RulespecGroup):
+    class TestGroup(RulespecGroup):
         @property
         def name(self):
             return "main_group"
@@ -26,7 +32,7 @@ def test_rulespec_sub_group():
         def help(self):
             return "help text"
 
-    class TestSubGroup(watolib.RulespecSubGroup):
+    class TestSubGroup(RulespecSubGroup):
         @property
         def main_group(self):
             return TestGroup
@@ -45,31 +51,34 @@ def test_rulespec_sub_group():
 
 
 def test_legacy_register_rulegroup(monkeypatch):
-    monkeypatch.setattr(watolib, "rulespec_group_registry", watolib.RulespecGroupRegistry())
+    monkeypatch.setattr(cmk.gui.watolib.rulespecs, "rulespec_group_registry",
+                        RulespecGroupRegistry())
     watolib.register_rulegroup("abc", "A B C", "abc 123")
 
     group = watolib.get_rulegroup("abc")
-    assert isinstance(group, watolib.RulespecGroup)
+    assert isinstance(group, RulespecGroup)
     assert group.name == "abc"
     assert group.title == "A B C"
     assert group.help == "abc 123"
 
 
 def test_legacy_get_not_existing_rulegroup(monkeypatch):
-    monkeypatch.setattr(watolib, "rulespec_group_registry", watolib.RulespecGroupRegistry())
+    monkeypatch.setattr(cmk.gui.watolib.rulespecs, "rulespec_group_registry",
+                        RulespecGroupRegistry())
 
     group = watolib.get_rulegroup("xyz")
-    assert isinstance(group, watolib.RulespecGroup)
+    assert isinstance(group, cmk.gui.watolib.rulespecs.RulespecGroup)
     assert group.name == "xyz"
     assert group.title == "xyz"
     assert group.help is None
 
 
 def test_legacy_get_not_existing_rule_sub_group(monkeypatch):
-    monkeypatch.setattr(watolib, "rulespec_group_registry", watolib.RulespecGroupRegistry())
+    monkeypatch.setattr(cmk.gui.watolib.rulespecs, "rulespec_group_registry",
+                        RulespecGroupRegistry())
 
     group = watolib.get_rulegroup("xyz/Abc, xxx ding./aaa")
-    assert isinstance(group, watolib.RulespecSubGroup)
+    assert isinstance(group, RulespecSubGroup)
     assert group.name == "xyz/abcxxxdingaaa"
     assert group.title == "Abc, xxx ding./aaa"
     assert group.help is None
@@ -1221,6 +1230,8 @@ def test_grouped_rulespecs():
         ('checkparams/storage', u'&nbsp;&nbsp;\u2319 Storage, Filesystems and Files'),
         ('checkparams/environment',
          u'&nbsp;&nbsp;\u2319 Temperature, Humidity, Electrical Parameters, etc.'),
+        ('checkparams/hardware', u'&nbsp;&nbsp;\u2319 Hardware, BIOS'),
+        ('checkparams/virtualization', u'&nbsp;&nbsp;\u2319 Virtualization'),
         ('datasource_programs', u'Datasource Programs'),
         ('eventconsole', u'Event Console'),
         ('grouping', u'Grouping'),
@@ -1248,11 +1259,36 @@ def test_grouped_rulespecs():
     ]),
 ])
 def test_rulespec_group_choices(mode, result):
-    assert sorted(watolib.g_rulespecs.get_group_choices(mode=mode)) == sorted(result)
+    assert sorted(rulespec_group_registry.get_group_choices(mode=mode)) == sorted(result)
+
+
+@pytest.mark.parametrize("term,result", [
+    ("monconf", [
+        'monconf',
+        'monconf/host_checks',
+        'monconf/inventory_and_check_mk_settings',
+        'monconf/notifications',
+        'monconf/service_checks',
+        'monconf/various',
+    ]),
+    ("monconf/various", ["monconf/various"]),
+    ("user_interface", ["user_interface"]),
+    ("agent", [
+        'agent',
+        'agent/check_mk_agent',
+        'agent/general_settings',
+        'agent/snmp',
+    ]),
+])
+def test_rulespec_get_matching_group_names(term, result):
+    assert sorted(watolib.rulespec_group_registry.get_matching_group_names(term)) == sorted(result)
 
 
 def test_rulespec_get_main_groups():
-    assert sorted(watolib.g_rulespecs.get_main_groups()) == sorted([
+    main_group_names = [
+        g_class().name for g_class in watolib.rulespec_group_registry.get_main_groups()
+    ]
+    assert sorted(main_group_names) == sorted([
         'activechecks',
         'grouping',
         'monconf',
@@ -1307,7 +1343,8 @@ def test_rulespec_get_all_groups():
 
 
 def test_rulespec_get_host_groups():
-    assert sorted(watolib.g_rulespecs.get_host_groups()) == sorted([
+    group_names = watolib.rulespec_group_registry.get_host_rulespec_group_names()
+    assert sorted(group_names) == sorted([
         'grouping',
         'monconf/service_checks',
         'monconf/host_checks',

@@ -583,3 +583,50 @@ register_check_parameters(
     TextAscii(title=_("port specification"), allow_empty=False),
     "dict",
 )
+
+register_check_parameters(
+    RulespecGroupCheckParametersNetworking,
+    "k8s_if",
+    _("Kubernetes Network interfaces"),
+    Dictionary(elements=[
+        ("errors",
+         Alternative(
+             title=_("Levels for error rates"),
+             help=
+             _("These levels make the check go warning or critical whenever the "
+               "<b>percentual error rate</b> or the <b>absolute error rate</b> of the monitored interface reaches "
+               "the given bounds. The percentual error rate is computed by dividing number of "
+               "errors by the total number of packets (successful plus errors)."),
+             elements=[
+                 Tuple(
+                     title=_("Percentual levels for error rates"),
+                     elements=[
+                         Percentage(
+                             title=_("Warning at"),
+                             unit=_("percent errors"),
+                             default_value=0.01,
+                             display_format='%.3f'),
+                         Percentage(
+                             title=_("Critical at"),
+                             unit=_("percent errors"),
+                             default_value=0.1,
+                             display_format='%.3f')
+                     ]),
+                 Tuple(
+                     title=_("Absolute levels for error rates"),
+                     elements=[
+                         Integer(title=_("Warning at"), unit=_("errors")),
+                         Integer(title=_("Critical at"), unit=_("errors"))
+                     ])
+             ])),
+        ("discards",
+         Tuple(
+             title=_("Absolute levels for discards rates"),
+             elements=[
+                 Integer(title=_("Warning at"), unit=_("discards")),
+                 Integer(title=_("Critical at"), unit=_("discards"))
+             ])),
+    ]),
+    TextAscii(title=_("port specification"), allow_empty=False),
+    "dict",
+)

@@ -975,8 +975,7 @@ def check_if_common_single(item,
                     raise MKCounterWrapped("Counter wrap, skipping checks this time")
                 perfdata = []
             else:
-                perfdata.append(("outqlen", saveint(ifOutQLen), "", "", unit == "Bit" and "0.0" or
-                                 "0"))
+                perfdata.append(("outqlen", saveint(ifOutQLen)))
 
                 def format_value(value):
                     if unit == "Bit":
@@ -988,8 +987,6 @@ def check_if_common_single(item,
                    [ ("in",  rates[0], rates[1], rates[2], rates[3], rates[4], speed_b_in),
                      ("out", rates[5], rates[6], rates[7], rates[8], rates[9], speed_b_out) ]:
 
-                    infotext += ", %s: %s" % (what, format_value(traffic))
-
                     if (what, 'predictive') in traffic_levels:
                         params = traffic_levels[(what, 'predictive')]
                         bw_warn, bw_crit = None, None
@@ -999,14 +996,6 @@ def check_if_common_single(item,
                         bw_warn_min = traffic_levels[(what, 'lower', 'warn')]
                         bw_crit_min = traffic_levels[(what, 'lower', 'crit')]
                         params = (bw_warn, bw_crit, bw_warn_min, bw_crit_min)
-
-                    if speed:
-                        perc_used = 100.0 * traffic / speed
-
-                        assumed_info = ""
-                        if assumed_speed_in or assumed_speed_out:
-                            assumed_info = "/" + format_value(speed)
-                        infotext += "(%.1f%%%s)" % (perc_used, assumed_info)
 
                     # handle computation of average
                     if average:
@@ -1020,10 +1009,23 @@ def check_if_common_single(item,
                         dsname = what
 
                     # Check bandwidth thresholds incl. prediction
-                    result = check_levels(traffic, dsname, params, statemarkers=True)
+                    result = check_levels(
+                        traffic,
+                        dsname,
+                        params,
+                        statemarkers=True,
+                        human_readable_func=format_value)
                     state = max(state, result[0])
-                    infotext += result[1]
+                    infotext += ", " + result[1]
                     perfdata += result[2]
+
+                    if speed:
+                        perc_used = 100.0 * traffic / speed
+
+                        assumed_info = ""
+                        if assumed_speed_in or assumed_speed_out:
+                            assumed_info = "/" + format_value(speed)
+                        infotext += " (%.1f%%%s)" % (perc_used, assumed_info)
 
                     # check percentage of error packets
                     pacrate = urate + nurate + errorrate

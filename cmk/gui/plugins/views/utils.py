@@ -784,19 +784,19 @@ class Sorter(object):
     @abc.abstractproperty
     def ident(self):
         # type: () -> str
-        """The identity of a painter. One word, may contain alpha numeric characters"""
+        """The identity of a sorter. One word, may contain alpha numeric characters"""
         raise NotImplementedError()
 
     @abc.abstractproperty
     def title(self):
         # type: () -> Text
-        """Used as display string for the painter in the GUI (e.g. view editor)"""
+        """Used as display string for the sorter in the GUI (e.g. view editor)"""
         raise NotImplementedError()
 
     @abc.abstractproperty
     def columns(self):
         # type: () -> List[str]
-        """Livestatus columns needed for this painter"""
+        """Livestatus columns needed for this sorter"""
         raise NotImplementedError()
 
     @abc.abstractmethod

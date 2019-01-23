@@ -91,6 +91,13 @@ def _in_keepalive_mode():
 #   '----------------------------------------------------------------------'
 
 
+def has_persisted_piggyback_agent_sections(hostname):
+    for source in DataSources(hostname, None).get_data_sources():
+        if isinstance(source, PiggyBackDataSource) and source.has_persisted_agent_sections():
+            return True
+    return False
+
+
 class DataSources(object):
     def __init__(self, hostname, ipaddress):
         super(DataSources, self).__init__()

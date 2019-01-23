@@ -408,12 +408,14 @@ class DataSource(object):
     #   | of sections that are not provided on each query.                     |
     #   '----------------------------------------------------------------------'
 
+    def has_persisted_agent_sections(self):
+        return os.path.exists(self._persisted_sections_file_path())
+
     def _store_persisted_sections(self, persisted_sections):
         if not persisted_sections:
             return
 
         file_path = self._persisted_sections_file_path()
-
         try:
             os.makedirs(os.path.dirname(file_path))
         except OSError as e:

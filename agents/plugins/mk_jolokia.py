@@ -549,12 +549,12 @@ def yield_configured_instances():
     if os.path.exists(conffile):
         execfile(conffile, {}, custom_config)
 
-    # Compute list of instances to monitor. If the user has defined
-    # instances in his configuration, we will use this (a list
-    # of dicts).
-    instances = custom_config.pop("instances", [{}])
-    for inst in instances:
-        yield {k: inst.get(k, custom_config[k]) for k in custom_config}
+    # Generate list of instances to monitor. If the user has defined
+    # instances in his configuration, we will use this (a list of dicts).
+    individual_configs = custom_config.pop("instances", [{}])
+    for cfg in individual_configs:
+        keys = set(cfg.keys() + custom_config.keys())
+        yield {k: cfg.get(k, custom_config[k]) for k in keys}
 
 
 def main(configs_iterable=None):

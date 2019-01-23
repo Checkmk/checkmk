@@ -532,6 +532,24 @@ def check_mem_windows(_no_item, params, info):
     meminfo = parse_proc_meminfo(info)
     now = time.time()
 
+    def _get_levels_on_used_mb(param_key, total_mb):
+        levels = params.get(param_key)
+        if not isinstance(levels, tuple):
+            # Predictive levels have no level information in the performance data
+            return None, None
+
+        if isinstance(levels[0], float):
+            # float type means percent
+            warn = total_mb * levels[0] / 100
+        else:
+            # int means levels on *free* space
+            warn = total_mb - levels[0]
+        if isinstance(levels[1], float):
+            crit = total_mb * levels[1] / 100
+        else:
+            crit = total_mb - levels[1]
+        return warn, crit
+
     for title, prefix, paramname in [("Memory usage", "Mem", "memory"),
                                      ("Commit Charge", "Page", "pagefile")]:
 
@@ -546,27 +564,13 @@ def check_mem_windows(_no_item, params, info):
         used_mb = total_mb - free_mb
         perc = 100.0 * used_kb / total_kb
 
+        warn, crit = _get_levels_on_used_mb(paramname, total_mb)
+
         infotext = "%s: %s (%s/%s)" % (title, get_percent_human_readable(perc),
                                        get_bytes_human_readable(used_kb * 1024),
                                        get_bytes_human_readable(total_kb * 1024))
 
-        if isinstance(params[paramname], tuple):
-            warn, crit = params[paramname]
-
-            # In perfdata show warn/crit as absolute values
-            # Absolute thresholds are in MB -> transform to MB
-            if isinstance(warn, float):
-                warn = total_mb * warn / 100
-
-            if isinstance(crit, float):
-                crit = total_mb * crit / 100
-
-            perfdata = [(paramname, used_mb, warn, crit, 0, total_mb)]
-
-        # Predictive levels have no level information in the performance data
-        else:
-            perfdata = [(paramname, used_mb, None, None, 0, total_mb)]
-
+        perfdata = [(paramname, used_mb, warn, crit, 0, total_mb)]
         if prefix == "Mem":
             perfdata.append(("mem_total", total_mb))
         elif prefix == "Page":
@@ -586,15 +590,12 @@ def check_mem_windows(_no_item, params, info):
             perfdata.append((paramname + "_avg", used_mb))
 
         # Now check the levels
-        if isinstance(params[paramname], tuple):
-            if (isinstance(crit, int) and free_mb <= crit) or \
-                (isinstance(crit, float) and perc >= crit):
+        if (warn, crit) != (None, None):
+            state = 0
+            if used_mb >= crit:
                 state = 2
-            elif (isinstance(warn, int) and free_mb <= warn) or \
-                (isinstance(warn, float) and perc >= warn):
+            elif used_mb >= warn:
                 state = 1
-            else:
-                state = 0
 
         # Predictive levels
         else:

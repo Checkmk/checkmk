@@ -464,7 +464,13 @@ check_info["mem.linux"] = {
 
 
 def parse_proc_meminfo(info):
-    return dict([(i[0][:-1], int(i[1])) for i in info])
+    parsed = {}
+    for line in info:
+        try:
+            parsed[line[0][:-1]] = int(line[1])
+        except (ValueError, IndexError) as _exc:
+            pass
+    return parsed
 
 
 # The following variable is obsolete. It is kept here so that Check_MK
@@ -519,58 +525,52 @@ factory_settings["memory_win_default_levels"] = {
 def inventory_mem_win(info):
     meminfo = parse_proc_meminfo(info)
     if "MemTotal" in meminfo and "PageTotal" in meminfo:
-        return [(None, {})]
+        yield None, {}
 
 
-def check_mem_windows(item, params, info):
+def check_mem_windows(_no_item, params, info):
     meminfo = parse_proc_meminfo(info)
-    MB = 1024.0 * 1024
     now = time.time()
 
-    for title, what, paramname in [("Memory usage", "Mem", "memory"),
-                                   ("Commit Charge", "Page", "pagefile")]:
+    for title, prefix, paramname in [("Memory usage", "Mem", "memory"),
+                                     ("Commit Charge", "Page", "pagefile")]:
 
-        key_total = what + "Total"
-        key_free = what + "Free"
-        if not (key_total in meminfo and key_free in meminfo):
+        total_kb = meminfo.get("%sTotal" % prefix)
+        free_kb = meminfo.get("%sFree" % prefix)
+        if None in (total_kb, free_kb):
             continue
 
-        total_kb = meminfo[key_total]
-        free_kb = meminfo[key_free]
-        used_kb = total_kb - free_kb
-        used_mb = used_kb / 1024.0
+        total_mb = total_kb / 1024.0
         free_mb = free_kb / 1024.0
+        used_kb = total_kb - free_kb
+        used_mb = total_mb - free_mb
         perc = 100.0 * used_kb / total_kb
 
-        infotext = "%s: %.1f%% (%.1f/%.1f GB)" % \
-                (title, perc, used_kb / MB, total_kb / MB)
+        infotext = "%s: %s (%s/%s)" % (title, get_percent_human_readable(perc),
+                                       get_bytes_human_readable(used_kb * 1024),
+                                       get_bytes_human_readable(total_kb * 1024))
 
         if isinstance(params[paramname], tuple):
             warn, crit = params[paramname]
 
             # In perfdata show warn/crit as absolute values
-            # Absolute thresholds are in MB -> transform to KB
+            # Absolute thresholds are in MB -> transform to MB
             if isinstance(warn, float):
-                warn_kb = total_kb * warn / 100
-            else:
-                warn_kb = warn * 1024
+                warn = total_mb * warn / 100
 
             if isinstance(crit, float):
-                crit_kb = total_kb * crit / 100
-            else:
-                crit_kb = crit * 1024
+                crit = total_mb * crit / 100
 
-            perfdata = [(paramname, used_kb / 1024.0, warn_kb / 1024.0, crit_kb / 1024.0, 0,
-                         total_kb / 1024.0)]
+            perfdata = [(paramname, used_mb, warn, crit, 0, total_mb)]
 
         # Predictive levels have no level information in the performance data
         else:
-            perfdata = [(paramname, used_kb / 1024.0, None, None, 0, total_kb / 1024.0)]
+            perfdata = [(paramname, used_mb, None, None, 0, total_mb)]
 
-        if what == "Mem":
-            perfdata.append(("mem_total", total_kb / 1024.0))
-        elif what == "Page":
-            perfdata.append(("pagefile_total", total_kb / 1024.0))
+        if prefix == "Mem":
+            perfdata.append(("mem_total", total_mb))
+        elif prefix == "Page":
+            perfdata.append(("pagefile_total", total_mb))
 
         # Do averaging, if configured, just for matching the levels
         if "average" in params:
@@ -578,10 +578,12 @@ def check_mem_windows(item, params, info):
             used_kb = get_average(
                 "mem.win.%s" % paramname, now, used_kb, average_min, initialize_zero=False)
             used_mb = used_kb / 1024.0
-            free_mb = (total_kb / 1024.0) - used_mb
+            free_mb = total_mb - used_mb
             perc = 100.0 * used_kb / total_kb
-            infotext += ", %d min average: %.1f%% (%.1f GB)" % (average_min, perc, used_kb / MB)
-            perfdata.append((paramname + "_avg", used_kb / 1024.0))
+            infotext += ", %d min average: %s (%s)" % (average_min,
+                                                       get_percent_human_readable(perc),
+                                                       get_bytes_human_readable(used_kb * 1024))
+            perfdata.append((paramname + "_avg", used_mb))
 
         # Now check the levels
         if isinstance(params[paramname], tuple):
@@ -597,7 +599,7 @@ def check_mem_windows(item, params, info):
         # Predictive levels
         else:
             state, infoadd, perfadd = check_levels(
-                used_kb / 1024.0,  # Current value stored in MB in RRDs
+                used_mb,  # Current value stored in MB in RRDs
                 "average" in params and paramname + "_avg" or paramname,  # Name of RRD variable
                 params[paramname],
                 unit="GB",  # Levels are specified in GB...

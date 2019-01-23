@@ -63,7 +63,7 @@ def log(text):
     print "%s: %s" % (g_current_host, text)
 
 def get_wato_folder(hostname):
-    process = os.popen("cmk -D " + hostname, "r")
+    process = os.popen("cmk -D " + hostname, "r")  # nosec
     output  = process.read().split("\n")
     for line in output:
         if line.startswith("Tags:"):
@@ -104,7 +104,7 @@ for hostname in sys.argv[1:]:
                                    "hostname": hostname,
                                    "wato_folder": wato_folder }
 
-    os.system(command)
+    os.system(command)  # nosec
 
 # Generate monitoring configuration and restart core
 if wato_config_changed:
@@ -112,7 +112,7 @@ if wato_config_changed:
 
 # Flushing counters, cache files, piggy files, logfiles and autochecks
 print "Flushing data"
-os.system("cmk --flush %s" % " ".join(sys.argv[1:]))
+os.system("cmk --flush %s" % " ".join(sys.argv[1:]))  # nosec
 for hostname in sys.argv[1:]:
     if not hostname.strip():
         continue

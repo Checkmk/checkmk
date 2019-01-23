@@ -109,7 +109,8 @@ try:
     # Export required idt files into work dir
     for entry in [ "File", "Property", "Component" ]:
         verbose("Export table %s from file %s" % (entry, msi_file))
-        if os.system((path_prefix + "msiinfo export %(msi_file)s %(property)s > %(work_dir)s/%(property)s.idt") % \
+        if os.system(  # nosec
+                (path_prefix + "msiinfo export %(msi_file)s %(property)s > %(work_dir)s/%(property)s.idt") % \
                  { "work_dir" : work_dir, "msi_file": msi_file, "property": entry }) != 0:
             bail_out('Failed to unpack msi table %s from %s' % (entry, msi_file))
 
@@ -188,7 +189,7 @@ try:
     verbose("Creating copy of original file %s -> %s" % (msi_file, new_msi_file))
 
     # Make a copy
-    if os.system("cp %(msi_file)s %(new_msi_file)s" % { "msi_file": msi_file, "new_msi_file": new_msi_file}) != 0:
+    if os.system("cp %(msi_file)s %(new_msi_file)s" % { "msi_file": msi_file, "new_msi_file": new_msi_file}) != 0:  # nosec
         bail_out('Fehler!')
 
     # Rename modified tables
@@ -196,7 +197,8 @@ try:
         os.rename(work_dir + "/%s.idt.new" % entry , work_dir + "/%s.idt" % entry)
 
     for entry in [ "Property", "File", "Component" ]:
-        if os.system((path_prefix + "msibuild %(new_msi_file)s -i %(work_dir)s/%(file)s.idt") % \
+        if os.system(  # nosec
+                (path_prefix + "msibuild %(new_msi_file)s -i %(work_dir)s/%(file)s.idt") % \
              { "work_dir" : work_dir, "new_msi_file": new_msi_file, "file": entry }) != 0:
             bail_out('Fehler!')
 
@@ -212,13 +214,15 @@ try:
             "baked_container.msi"  : { "dftl_start": "{47ED1918-CEDF-4", "dftl_end": "D37-943C-B4DBC3F58E6C}"}
     }
     summary_info.update(default_package_codes[os.path.basename(msi_file)])
-    if os.system("sed -i -e 's/%(dftl_start)s/%(start)s/' "
+    if os.system(  # nosec
+            "sed -i -e 's/%(dftl_start)s/%(start)s/' "
                  "-e 's/%(dftl_end)s/%(end)s/' %(new_msi_file)s" % summary_info) != 0:
         bail_out('Fehler!')
 
     # Remove original product.cab from stream
     verbose("Removing product.cab from %s" % new_msi_file)
-    if os.system((path_prefix + "msibuild %(new_msi_file)s -q \"DELETE FROM _Streams "
+    if os.system(  # nosec
+            (path_prefix + "msibuild %(new_msi_file)s -q \"DELETE FROM _Streams "
                  "where Name = 'product.cab'\"") % { "new_msi_file": new_msi_file } ) != 0:
         bail_out('Fehler!')
 
@@ -228,12 +232,13 @@ try:
     lcab_files = ""
     for index, lcab_file in sorted(cabinet_files):
         lcab_files += "%(source_dir)s/%(lcab_file)s " % globals()
-    if os.system("lcab -n %(lcab_files)s %(work_dir)s/product.cab" % globals()) != 0:
+    if os.system("lcab -n %(lcab_files)s %(work_dir)s/product.cab" % globals()) != 0:  # nosec
         bail_out('Fehler!')
 
     # Add modified product.cab
     verbose("Add modified product.cab")
-    if os.system((path_prefix + "msibuild %(new_msi_file)s -a product.cab %(work_dir)s/product.cab") % \
+    if os.system(  # nosec
+            (path_prefix + "msibuild %(new_msi_file)s -a product.cab %(work_dir)s/product.cab") % \
             { "work_dir" : work_dir, "new_msi_file": new_msi_file }) != 0:
         bail_out('Fehler!')
 

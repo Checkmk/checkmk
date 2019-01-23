@@ -151,7 +151,7 @@ def create_pipe():
 
     if not os.path.exists(g_pipe_path):
         os.mkfifo(g_pipe_path)
-    os.chmod(g_pipe_path, 0666)
+    os.chmod(g_pipe_path, 0666)  # nosec
     log("Created pipe '%s' for receiving commands from nsca" % g_pipe_path)
 
 # Incoming lines:

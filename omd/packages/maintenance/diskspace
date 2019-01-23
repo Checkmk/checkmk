@@ -135,7 +135,7 @@ def fmt_bytes(b):
 
 def get_free_space():
     # FIXME: Take eventual root reserved space into account
-    for l in os.popen('df -P -B1 ' + omd_root).readlines():
+    for l in os.popen('df -P -B1 ' + omd_root).readlines():  # nosec
         if l[0] == '/':
             vol, size_bytes, used_bytes, free_bytes, used_perc, mp = l.split()
             return int(free_bytes)

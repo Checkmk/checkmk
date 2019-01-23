@@ -1,0 +1,16 @@
+Title: Improve agent updater start script compatibility on Solaris
+Level: 1
+Component: agents
+Compatible: compat
+Edition: cee
+Version: 1.6.0i1
+Date: 1548240334
+Class: fix
+
+The agent updater start script (located at /usr/bin/cmk-update-agent)
+is now compatible to older shells like the default sh on Solaris 10.
+
+Please note that you still need a python 2.7 installation and corresponding
+packages "requests" and "pyOpenSSL" in order to run the agent updater
+on Solaris. You can obtain these software packages e.g. via the
+"OpenCSW" project using the "pkutil" tool.

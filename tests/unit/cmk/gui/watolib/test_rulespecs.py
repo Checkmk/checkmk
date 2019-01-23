@@ -4,7 +4,11 @@ import pytest  # type: ignore
 import cmk.gui.wato  # pylint: disable=unused-import
 import cmk.gui.watolib as watolib
 import cmk.gui.watolib.rulespecs
-from cmk.gui.valuespec import Dictionary
+from cmk.gui.valuespec import (
+    Dictionary,
+    TextAscii,
+    FixedValue,
+)
 from cmk.gui.plugins.wato.utils import register_check_parameters
 
 
@@ -1325,7 +1329,7 @@ def test_rulespec_get_host_groups():
     ])
 
 
-def test_register_rule(monkeypatch):
+def test_legacy_register_rule(monkeypatch):
     monkeypatch.setattr(cmk.gui.watolib.rulespecs, "g_rulespecs", watolib.Rulespecs())
     monkeypatch.setattr(cmk.gui.watolib.rulespecs, "rulespec_group_registry",
                         watolib.RulespecGroupRegistry())
@@ -1335,9 +1339,9 @@ def test_register_rule(monkeypatch):
         "dingdong_group",
         Dictionary(
             title="DING",
+            help="s-o-s",
             elements=[],
         ),
-        match="dict",
     )
 
     group = cmk.gui.watolib.rulespecs.get_rulegroup("grouping")
@@ -1349,6 +1353,66 @@ def test_register_rule(monkeypatch):
     ]
     assert "dingdong_group" in rulespec_names
     assert len(rulespec_names) == 1
+
+    # Check some default values
+    spec = cmk.gui.watolib.rulespecs.g_rulespecs.get("dingdong_group")
+
+    assert spec.name == "dingdong_group"
+    assert spec.group_name == "grouping"
+    assert isinstance(spec.valuespec, Dictionary)
+    assert spec.match_type == "first"
+    assert spec.title == "DING"
+    assert spec.help == "s-o-s"
+    assert spec.item_spec is None
+    assert spec.item_type is None
+    assert spec.item_name is None
+    assert spec.item_help is None
+    assert spec.item_enum is None
+    assert spec.is_optional is False
+    assert spec.is_deprecated is False
+    assert spec.factory_default == watolib.Rulespec.NO_FACTORY_DEFAULT
+
+
+def test_legacy_register_rule_attributes(monkeypatch):
+    monkeypatch.setattr(cmk.gui.watolib.rulespecs, "g_rulespecs", watolib.Rulespecs())
+    monkeypatch.setattr(cmk.gui.watolib.rulespecs, "rulespec_group_registry",
+                        watolib.RulespecGroupRegistry())
+
+    watolib.register_rule(
+        "dingdong_group",
+        "rule_name",
+        Dictionary(
+            title="DING",
+            elements=[],
+        ),
+        title="title",
+        help="help me!",
+        itemspec=TextAscii(title="blub"),
+        itemtype="service",
+        itemname=u"Blub",
+        itemhelp=u"Item help",
+        itemenum="itemenum",
+        match="dict",
+        optional=True,
+        deprecated=True,
+        factory_default="humpf",
+    )
+
+    spec = cmk.gui.watolib.rulespecs.g_rulespecs.get("rule_name")
+    assert spec.name == "rule_name"
+    assert spec.group_name == "dingdong_group"
+    assert isinstance(spec.valuespec, Dictionary)
+    assert spec.match_type == "dict"
+    assert spec.title == "title"
+    assert spec.help == "help me!"
+    assert isinstance(spec.item_spec, TextAscii)
+    assert spec.item_type == "service"
+    assert spec.item_name == u"Blub"
+    assert spec.item_help == u"Item help"
+    assert spec.item_enum == "itemenum"
+    assert spec.is_optional is True
+    assert spec.is_deprecated is True
+    assert spec.factory_default == "humpf"
 
 
 def test_register_check_parameters(monkeypatch):
@@ -1386,3 +1450,67 @@ def test_register_check_parameters(monkeypatch):
     ]
     assert "static_checks:check_group_name" in rulespec_names
     assert len(rulespec_names) == 1
+
+
+def dummy_rulespec():
+    return cmk.gui.watolib.rulespecs.Rulespec(
+        name="name",
+        group_name="group",
+        valuespec=FixedValue(None),
+        item_spec=None,
+        item_type=None,
+        item_name=None,
+        item_help=None,
+        item_enum=None,
+        match_type="first",
+        title="bla",
+        help_txt=None,
+        is_optional=False,
+        factory_default=cmk.gui.watolib.rulespecs.Rulespec.NO_FACTORY_DEFAULT,
+        is_deprecated=False,
+    )
+
+
+def test_rulespecs_clear():
+    rulespecs = cmk.gui.watolib.rulespecs.Rulespecs()
+    spec = dummy_rulespec()
+    rulespecs.register(spec)
+    assert rulespecs.exists("name")
+    assert rulespecs.get_all_groups() == ["group"]
+    assert rulespecs.get_by_group("group") == [spec]
+
+    rulespecs.clear()
+
+    assert not rulespecs.exists("name")
+    assert rulespecs.get_all_groups() == []
+
+    with pytest.raises(KeyError):
+        rulespecs.get_by_group("group")
+
+
+def test_rulespecs_get():
+    rulespecs = cmk.gui.watolib.rulespecs.Rulespecs()
+
+    with pytest.raises(KeyError):
+        rulespecs.get("name")
+
+    spec = dummy_rulespec()
+    rulespecs.register(spec)
+    assert rulespecs.get("name") == spec
+
+
+def test_rulespecs_exists():
+    rulespecs = cmk.gui.watolib.rulespecs.Rulespecs()
+    assert not rulespecs.exists("name")
+    rulespecs.register(dummy_rulespec())
+    assert rulespecs.exists("name")
+
+
+def test_rulespecs_get_rulespecs():
+    rulespecs = cmk.gui.watolib.rulespecs.Rulespecs()
+    assert rulespecs.get_rulespecs() == {}
+
+    spec = dummy_rulespec()
+    rulespecs.register(spec)
+
+    assert rulespecs.get_rulespecs() == {"name": spec}

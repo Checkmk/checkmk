@@ -891,6 +891,10 @@ class AWSSectionsTmpl(object):
         self._results = {}
         self._exceptions = []
 
+    @abc.abstractmethod
+    def init_sections(self, **kwargs):
+        pass
+
     def _init_client(self, client_key):
         try:
             return self._session.client(client_key)
@@ -1000,9 +1004,7 @@ class AWSSectionsUSEast(AWSSectionsTmpl):
     https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/ce-api.html
     """
 
-    def __init__(self, hostname, session, services):
-        super(AWSSectionsUSEast, self).__init__(hostname, session, services)
-
+    def init_sections(self, **kwargs):
         #---clients---------------------------------------------------------
         ce_client = self._init_client('ce')
 
@@ -1015,9 +1017,7 @@ class AWSSectionsUSEast(AWSSectionsTmpl):
 
 
 class AWSSections(AWSSectionsTmpl):
-    def __init__(self, hostname, session, services):
-        super(AWSSections, self).__init__(hostname, session, services)
-
+    def init_sections(self, **kwargs):
         #---clients---------------------------------------------------------
         ec2_client = self._init_client('ec2')
         s3_client = self._init_client('s3')
@@ -1196,6 +1196,7 @@ def main(args=None):
     try:
         session = create_session(access_key_id, secret_access_key, "us-east-1")
         aws_sections_us_east = AWSSectionsUSEast(hostname, session, services)
+        aws_sections_us_east.init_sections()
         aws_sections_us_east.run(use_cache=use_cache)
     except Exception as e:
         if args.debug:
@@ -1206,6 +1207,7 @@ def main(args=None):
         try:
             session = create_session(access_key_id, secret_access_key, region)
             aws_sections = AWSSections(hostname, session, services)
+            aws_sections.init_sections()
             aws_sections.run(use_cache=use_cache)
         except Exception as e:
             if args.debug:

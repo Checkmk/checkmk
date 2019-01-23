@@ -48,6 +48,7 @@ from cmk.gui.valuespec import (
     RegExpUnicode,
     DropdownChoice,
 )
+from cmk.gui.watolib.rulespecs import rulespec_group_registry
 
 from cmk.gui.plugins.wato.utils.main_menu import (
     MainMenu,
@@ -130,18 +131,19 @@ class ModeRuleEditor(WatoMode):
         search_form(mode="rulesets")
 
         menu = MainMenu()
-        for groupname in watolib.g_rulespecs.get_main_groups():
+        main_groups = [g_class() for g_class in rulespec_group_registry.get_main_groups()]
+        for group in sorted(main_groups, key=lambda g: g.title):
             url_vars = [
                 ("mode", "rulesets"),
-                ("group", groupname),
+                ("group", group.name),
             ]
             if self._only_host:
                 url_vars.append(("host", self._only_host))
             url = watolib.folder_preserving_link(url_vars)
-            if groupname == "static":  # these have moved into their own WATO module
+            if group.name == "static":  # these have moved into their own WATO module
                 continue
 
-            rulegroup = watolib.get_rulegroup(groupname)
+            rulegroup = watolib.get_rulegroup(group.name)
             icon = "rulesets"
 
             if rulegroup.help:
@@ -1076,7 +1078,7 @@ class ModeRuleSearch(WatoMode):
                 ("ruleset_group",
                  DropdownChoice(
                      title=_("Group"),
-                     choices=lambda: watolib.g_rulespecs.get_group_choices(self.back_mode),
+                     choices=lambda: rulespec_group_registry.get_group_choices(self.back_mode),
                  )),
                 ("ruleset_name", RegExpUnicode(
                     title=_("Name"),

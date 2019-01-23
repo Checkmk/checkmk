@@ -35,6 +35,7 @@ import cmk.gui.forms as forms
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.watolib.rulespecs import rulespec_group_registry
 
 from cmk.gui.plugins.wato import (
     WatoMode,
@@ -111,7 +112,7 @@ class ModeObjectParameters(WatoMode):
             self._show_service_rules(all_rulesets)
 
         last_maingroup = None
-        for groupname in sorted(watolib.g_rulespecs.get_host_groups()):
+        for groupname in sorted(rulespec_group_registry.get_host_rulespec_group_names()):
             maingroup = groupname.split("/")[0]
             for rulespec in sorted(
                     watolib.g_rulespecs.get_by_group(groupname), key=lambda x: x.title):

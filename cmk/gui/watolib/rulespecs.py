@@ -27,7 +27,7 @@
 
 import abc
 import re
-from typing import Text  # pylint: disable=unused-import
+from typing import Text, List, Type  # pylint: disable=unused-import
 import six
 
 import cmk.utils.plugin_registry
@@ -127,11 +127,77 @@ class RulespecSubGroup(RulespecBaseGroup):
 
 
 class RulespecGroupRegistry(cmk.utils.plugin_registry.ClassRegistry):
+    def __init__(self):
+        super(RulespecGroupRegistry, self).__init__()
+        self._main_groups = []  # type: List[Type[RulespecGroup]]
+        self._sub_groups_by_main_group = {
+        }  # type: Dict[Type[RulespecGroup], Type[RulespecSubGroup]]
+
     def plugin_base_class(self):
         return RulespecBaseGroup
 
     def plugin_name(self, plugin_class):
         return plugin_class().name
+
+    def registration_hook(self, plugin_class):
+        group = plugin_class()
+        if not group.is_sub_group:
+            self._main_groups.append(plugin_class)
+        else:
+            self._sub_groups_by_main_group.setdefault(group.main_group, []).append(plugin_class)
+
+    def get_group_choices(self, mode):
+        """Returns all available ruleset groups to be used in dropdown choices"""
+        choices = []
+
+        main_groups = [g_class() for g_class in self.get_main_groups()]
+        for main_group in sorted(main_groups, key=lambda g: g.title):
+            if mode == "static_checks" and main_group.name != "static":
+                continue
+            elif mode != "static_checks" and main_group.name == "static":
+                continue
+
+            choices.append((main_group.name, main_group.choice_title))
+
+            sub_groups = [g_class() for g_class in self._get_sub_groups_of(main_group.__class__)]
+            for sub_group in sorted(sub_groups, key=lambda g: g.title):
+                choices.append((sub_group.name, sub_group.choice_title))
+
+        return choices
+
+    def get_main_groups(self):
+        # type: () -> List[Type[RulespecGroup]]
+        return self._main_groups
+
+    def _get_sub_groups_of(self, main_group):
+        # type: (Type[RulespecGroup]) -> List[Type[RulespecSubGroup]]
+        return self._sub_groups_by_main_group.get(main_group, [])
+
+    def get_matching_group_names(self, group_name):
+        # type: (str) -> List[str]
+        """Get either the main group and all sub groups of a matching main group or the matching sub group"""
+        for group_class in self._main_groups:
+            if group_class().name == group_name:
+                return [group_name
+                       ] + [g_class().name for g_class in self._get_sub_groups_of(group_class)]
+
+        return [name for name in self._entries if name == group_name]
+
+    def get_host_rulespec_group_names(self):
+        """Collect all rulesets that apply to hosts, except those specifying new active or static checks"""
+        names = []
+        hidden_groups = ("static", "checkparams", "activechecks")
+        hidden_main_groups = ("monconf", "agents", "agent")
+        for g_class in self.values():
+            group = g_class()
+            if group.is_sub_group and group.main_group().name in hidden_groups:
+                continue
+
+            if not group.is_sub_group and group.name in hidden_groups or group.name in hidden_main_groups:
+                continue
+
+            names.append(group.name)
+        return names
 
 
 rulespec_group_registry = RulespecGroupRegistry()
@@ -233,70 +299,8 @@ class Rulespecs(object):
     def get_by_group(self, group_name):
         return self._by_group[group_name]
 
-    # Returns all available ruleset groups to be used in dropdown choices
-    # TODO: Move the group logic to RulespecGroup / RulespecSubGroup classes
-    def get_group_choices(self, mode):
-        choices = []
-
-        for main_group_name in self.get_main_groups():
-            main_group = get_rulegroup(main_group_name)
-
-            if mode == "static_checks" and main_group_name != "static":
-                continue
-            elif mode != "static_checks" and main_group_name == "static":
-                continue
-
-            choices.append((main_group_name, main_group.title))
-
-            for group_name in self._by_group:
-                if group_name.startswith(main_group_name + "/"):
-                    sub_group = get_rulegroup(group_name)
-                    choices.append((group_name, sub_group.choice_title))
-
-        return choices
-
-    # Now we collect all rulesets that apply to hosts, except those specifying
-    # new active or static checks
-    # TODO: Move the group logic to RulespecGroup / RulespecSubGroup classes
     def get_all_groups(self):
-        seen = set()
-        return [gn for gn in self._sorted_groups if not (gn in seen or seen.add(gn))]
-
-    # Group names are separated with "/" into main group and optional subgroup.
-    # Do not lose carefully manually crafted order of groups!
-    # TODO: Move the group logic to RulespecGroup / RulespecSubGroup classes
-    def get_main_groups(self):
-        seen = set()
-        group_names = []
-
-        for group_name in self._sorted_groups:
-            main_group = cmk.utils.make_utf8(group_name.split('/')[0])
-            if main_group not in seen:
-                group_names.append(main_group)
-                seen.add(main_group)
-
-        return group_names
-
-    # Now we collect all rulesets that apply to hosts, except those specifying
-    # new active or static checks
-    # TODO: Move the group logic to RulespecGroup / RulespecSubGroup classes
-    def get_host_groups(self):
-        seen = set()
-        return [
-            gn for gn in self._sorted_groups
-            if not gn.startswith("static/") and not gn.startswith("checkparams/") and
-            gn != "activechecks" and not (gn in seen or seen.add(gn))
-        ]
-
-    # Get the exactly matching main groups and all matching sub group names
-    # TODO: Move the group logic to RulespecGroup / RulespecSubGroup classes
-    def get_matching_groups(self, group_name):
-        seen = set()
-        return [
-            gn for gn in self._sorted_groups
-            if (gn == group_name or (group_name and gn.startswith(group_name + "/"))) and
-            not (gn in seen or seen.add(gn))
-        ]
+        return self._sorted_groups
 
 
 class Rulespec(object):
@@ -376,3 +380,14 @@ def register_rule(
 
 
 g_rulespecs = Rulespecs()
+
+
+class RulespecRegistry(cmk.utils.plugin_registry.ClassRegistry):
+    def plugin_base_class(self):
+        return Rulespec
+
+    def plugin_name(self, plugin_class):
+        return plugin_class().name
+
+
+rulespec_registry = RulespecRegistry()

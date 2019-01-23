@@ -27,6 +27,7 @@
 
 import abc
 import re
+from typing import Text  # pylint: disable=unused-import
 import six
 
 import cmk.utils.plugin_registry
@@ -34,7 +35,8 @@ import cmk.utils.plugin_registry
 from cmk.gui.i18n import _
 
 
-class RulespecGroup(object):
+class RulespecBaseGroup(object):
+    """Base class for all rulespec group types"""
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractproperty
@@ -55,8 +57,46 @@ class RulespecGroup(object):
         """Helpful description of this group"""
         raise NotImplementedError()
 
+    @abc.abstractproperty
+    def is_sub_group(self):
+        # type: () -> bool
+        raise NotImplementedError()
 
-class RulespecSubGroup(RulespecGroup):
+    @abc.abstractproperty
+    def choice_title(self):
+        # type: () -> Text
+        raise NotImplementedError()
+
+
+class RulespecGroup(RulespecBaseGroup):
+    @abc.abstractproperty
+    def name(self):
+        # type: () -> Text
+        """Unique internal key of this group"""
+        raise NotImplementedError()
+
+    @abc.abstractproperty
+    def title(self):
+        # type: () -> Text
+        """Human readable title of this group"""
+        raise NotImplementedError()
+
+    @abc.abstractproperty
+    def help(self):
+        # type: () -> Text
+        """Helpful description of this group"""
+        raise NotImplementedError()
+
+    @property
+    def is_sub_group(self):
+        return False
+
+    @property
+    def choice_title(self):
+        return self.title
+
+
+class RulespecSubGroup(RulespecBaseGroup):
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractproperty
@@ -81,10 +121,14 @@ class RulespecSubGroup(RulespecGroup):
     def help(self):
         return None  # Sub groups currently have no help text
 
+    @property
+    def is_sub_group(self):
+        return True
+
 
 class RulespecGroupRegistry(cmk.utils.plugin_registry.ClassRegistry):
     def plugin_base_class(self):
-        return RulespecGroup
+        return RulespecBaseGroup
 
     def plugin_name(self, plugin_class):
         return plugin_class().name
@@ -256,8 +300,10 @@ class Rulespecs(object):
 
 
 class Rulespec(object):
-    NO_FACTORY_DEFAULT = []  # needed for unique ID
-    FACTORY_DEFAULT_UNUSED = []  # means this ruleset is not used if no rule is entered
+    # needed for unique ID
+    NO_FACTORY_DEFAULT = []  # type: list
+    # means this ruleset is not used if no rule is entered
+    FACTORY_DEFAULT_UNUSED = []  # type: list
 
     def __init__(self, name, group_name, valuespec, item_spec, item_type, item_name, item_help,
                  item_enum, match_type, title, help_txt, is_optional, factory_default,
@@ -306,7 +352,7 @@ def register_rule(
 
     # Added during 1.6 development for easier transition. Is not needed for
     # pre 1.6 compatibility
-    if not isinstance(group, six.string_types) and issubclass(group, RulespecGroup):
+    if not isinstance(group, six.string_types) and issubclass(group, RulespecBaseGroup):
         group = group().name
 
     rulespec = Rulespec(

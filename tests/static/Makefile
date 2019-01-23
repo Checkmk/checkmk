@@ -8,6 +8,7 @@ FILES_TO_CHECK := $(realpath $(addprefix ../../cmk/ec/,defaults.py export.py mai
 		  $(realpath $(wildcard ../../cmk_base/*.py)) \
 		  $(realpath $(addprefix ../../cmk/gui/,dashboard.py exceptions.py globals.py htmllib.py \
 		                                        i18n.py sidebar.py sites.py table.py visuals.py permissions.py)) \
+		  $(realpath $(addprefix ../../cmk/gui/watolib/,rulespecs.py)) \
 		  $(realpath $(addprefix ../../cmk/gui/plugins/userdb/,htpasswd.py utils.py)) \
 		  $(realpath $(wildcard ../../cmk/gui/plugins/wato/utils/*.py))
 MYPYPATH       := $(realpath typeshed)

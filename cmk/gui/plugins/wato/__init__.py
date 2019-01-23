@@ -97,6 +97,8 @@ from cmk.gui.plugins.wato.utils import (
     register_modules,
     register_notification_parameters,
     register_rule,
+    rulespec_registry,
+    Rulespec,
     rulespec_group_registry,
     RulespecGroup,
     RulespecSubGroup,

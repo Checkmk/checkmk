@@ -271,20 +271,24 @@ class Rulespec(object):
         # type: () -> str
         raise NotImplementedError()
 
-    # TODO: Refactor to group object access
     @abc.abstractproperty
-    def group_name(self):
-        # type: () -> str
+    def group(self):
+        # type: () -> Type[RulespecGroup]
         raise NotImplementedError()
 
     @property
+    def group_name(self):
+        # type: () -> Text
+        return self.group().name
+
+    @property
     def main_group_name(self):
-        # type: () -> str
+        # type: () -> Text
         return self.group_name.split("/")[0]
 
     @property
     def sub_group_name(self):
-        # type: () -> str
+        # type: () -> Text
         return self.group_name.split("/")[1] if "/" in self.group_name else ""
 
     @property
@@ -372,14 +376,12 @@ def register_rule(
         **kwargs):
     factory_default = kwargs.get("factory_default", Rulespec.NO_FACTORY_DEFAULT)
 
-    # Added during 1.6 development for easier transition. Is not needed for
-    # pre 1.6 compatibility
-    if not isinstance(group, six.string_types) and issubclass(group, RulespecBaseGroup):
-        group = group().name
+    if isinstance(group, six.string_types):
+        group = get_rulegroup(group).__class__
 
     class_attrs = {
         "name": varname,
-        "group_name": group,
+        "group": group,
         "valuespec": valuespec,
         "item_spec": itemspec,
         "item_type": itemtype,
@@ -393,16 +395,10 @@ def register_rule(
     }
 
     if title:
-        class_attrs.update({
-            "_title": title,
-            "title": property(lambda self: self._title),
-        })
+        class_attrs["title"] = title
 
     if help:
-        class_attrs.update({
-            "_help": help,
-            "help": property(lambda self: self._help),
-        })
+        class_attrs["help"] = help
 
     rulespec_class = type("LegacyRulespec%s" % varname, (Rulespec,), class_attrs)
     rulespec_registry.register(rulespec_class)

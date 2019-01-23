@@ -1508,7 +1508,7 @@ class DummyGroup(RulespecGroup):
 
 class DummyRulespec(Rulespec):
     name = "name"
-    group_name = "group"
+    group = DummyGroup
     valuespec = FixedValue(None)
     item_spec = None
     item_type = None

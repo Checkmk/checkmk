@@ -116,6 +116,13 @@ from cmk.gui.watolib.password_store import PasswordStore
 from cmk.gui.watolib.host_tags import group_hosttags_by_topic
 from cmk.gui.watolib.timeperiods import TimeperiodSelection
 from cmk.gui.watolib.users import notification_script_title
+from cmk.gui.watolib.rulespecs import (
+    rulespec_registry,
+    Rulespec,
+    rulespec_group_registry,
+    RulespecGroup,
+    RulespecSubGroup,
+)
 from cmk.gui.watolib import (
     multisite_dir,
     wato_root_dir,
@@ -125,9 +132,6 @@ from cmk.gui.watolib import (
     wato_fileheader,
     add_change,
     log_audit,
-    rulespec_group_registry,
-    RulespecGroup,
-    RulespecSubGroup,
     get_rulegroup,
     register_rule,
     declare_host_attribute,

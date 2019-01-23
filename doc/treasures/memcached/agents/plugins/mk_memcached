@@ -47,5 +47,5 @@ if 'instances' in settings:
 
     for instance in settings['instances']:
         print("[%s:%s]" % (instance[0], instance[1]))
-        for line in os.popen(cmdline % instance):
+        for line in os.popen(cmdline % instance):  # nosec
             print(line.strip())

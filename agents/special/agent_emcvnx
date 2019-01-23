@@ -214,7 +214,7 @@ if opt_debug:
     sys.stderr.write("executing external command: %s\n" % cmd)
 
 # Now read the whole output of the command
-cmdout = [l.strip() for l in os.popen(cmd + " 2>&1").readlines()]
+cmdout = [l.strip() for l in os.popen(cmd + " 2>&1").readlines()]  # nosec
 
 if cmdout:
     if "naviseccli: not found" in cmdout[0]:
@@ -238,7 +238,7 @@ if fetch_agent_info:
     if opt_debug:
         sys.stderr.write("executing external command: %s\n" % cmd)
 
-    for line in os.popen(cmd).readlines():
+    for line in os.popen(cmd).readlines():  # nosec
         print line,
 
 #
@@ -258,7 +258,7 @@ for module, module_options in naviseccli_options.items():
             cmd = basecmd + cmd_option
             if opt_debug:
                 sys.stderr.write("executing external command: %s\n" % cmd)
-            for line in os.popen(cmd).readlines():
+            for line in os.popen(cmd).readlines():  # nosec
                 print line,
 
 

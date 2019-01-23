@@ -111,8 +111,13 @@ try:
     # Export required idt files into work dir
     for entry in ["File", "Property", "Component"]:
         verbose("Export table %s from file %s" % (entry, msi_file))
-        if os.system((path_prefix + "msiinfo export %(msi_file)s %(property)s > %(work_dir)s/%(property)s.idt") % \
-                 { "work_dir" : work_dir, "msi_file": msi_file, "property": entry }) != 0:
+        if os.system(  # nosec
+            (path_prefix +
+             "msiinfo export %(msi_file)s %(property)s > %(work_dir)s/%(property)s.idt") % {
+                 "work_dir": work_dir,
+                 "msi_file": msi_file,
+                 "property": entry
+             }) != 0:
             bail_out('Failed to unpack msi table %s from %s' % (entry, msi_file))
 
     verbose("Modify extracted files..")
@@ -185,7 +190,7 @@ try:
     verbose("Creating copy of original file %s -> %s" % (msi_file, new_msi_file))
 
     # Make a copy
-    if os.system("cp %(msi_file)s %(new_msi_file)s" % {
+    if os.system("cp %(msi_file)s %(new_msi_file)s" % {  # nosec
             "msi_file": msi_file,
             "new_msi_file": new_msi_file
     }) != 0:
@@ -196,8 +201,12 @@ try:
         os.rename(work_dir + "/%s.idt.new" % entry, work_dir + "/%s.idt" % entry)
 
     for entry in ["Property", "File", "Component"]:
-        if os.system((path_prefix + "msibuild %(new_msi_file)s -i %(work_dir)s/%(file)s.idt") % \
-             { "work_dir" : work_dir, "new_msi_file": new_msi_file, "file": entry }) != 0:
+        if os.system(  # nosec
+            (path_prefix + "msibuild %(new_msi_file)s -i %(work_dir)s/%(file)s.idt") % {
+                "work_dir": work_dir,
+                "new_msi_file": new_msi_file,
+                "file": entry
+            }) != 0:
             bail_out('Fehler!')
 
     # Update summary info with new uuid (HACK! - the msibuild tool is not able to do this on all systems)
@@ -222,14 +231,17 @@ try:
         }
     }
     summary_info.update(default_package_codes[os.path.basename(msi_file)])
-    if os.system("sed -i -e 's/%(dftl_start)s/%(start)s/' "
-                 "-e 's/%(dftl_end)s/%(end)s/' %(new_msi_file)s" % summary_info) != 0:
+    if os.system(  # nosec
+            "sed -i -e 's/%(dftl_start)s/%(start)s/' -e 's/%(dftl_end)s/%(end)s/' %(new_msi_file)s"
+            % summary_info) != 0:
         bail_out('Fehler!')
 
     # Remove original product.cab from stream
     verbose("Removing product.cab from %s" % new_msi_file)
-    if os.system((path_prefix + "msibuild %(new_msi_file)s -q \"DELETE FROM _Streams "
-                  "where Name = 'product.cab'\"") % {"new_msi_file": new_msi_file}) != 0:
+    if os.system(  # nosec
+        (path_prefix +
+         "msibuild %(new_msi_file)s -q \"DELETE FROM _Streams where Name = 'product.cab'\"") %
+        {"new_msi_file": new_msi_file}) != 0:
         bail_out('Fehler!')
 
     # Prepare product.cab file
@@ -241,16 +253,20 @@ try:
             "source_dir": source_dir,
             "lcab_file": lcab_file
         }
-    if os.system("lcab -n %(lcab_files)s %(work_dir)s/product.cab" % {
-            "lcab_files": lcab_files,
-            "work_dir": work_dir
-    }) != 0:
+    if os.system(  # nosec
+            "lcab -n %(lcab_files)s %(work_dir)s/product.cab" % {
+                "lcab_files": lcab_files,
+                "work_dir": work_dir
+            }) != 0:
         bail_out('Fehler!')
 
     # Add modified product.cab
     verbose("Add modified product.cab")
-    if os.system((path_prefix + "msibuild %(new_msi_file)s -a product.cab %(work_dir)s/product.cab") % \
-            { "work_dir" : work_dir, "new_msi_file": new_msi_file }) != 0:
+    if os.system(  # nosec
+        (path_prefix + "msibuild %(new_msi_file)s -a product.cab %(work_dir)s/product.cab") % {
+            "work_dir": work_dir,
+            "new_msi_file": new_msi_file
+        }) != 0:
         bail_out('Fehler!')
 
     shutil.rmtree(work_dir)

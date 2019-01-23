@@ -31,7 +31,7 @@
 # <domain> <age-of-newest-file> <size-of-newest-file> <total-size>
 
 import MySQLdb, sys, datetime, time, os
-from ftplib import FTP
+from ftplib import FTP  # nosec
 
 def connect():
     # Fix pylint issues in case MySQLdb is not present

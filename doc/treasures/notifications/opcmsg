@@ -61,7 +61,7 @@ def main():
 
         # Execute the command
         print "executing command" , command
-        os.system(command)
+        os.system(command)  # nosec
     except Exception, e:
         sys.stdout.write("ERROR %r" % e)
         sys.exit(1)

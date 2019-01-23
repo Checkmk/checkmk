@@ -1,0 +1,10 @@
+Title: mkbench: fixed searched command in processes
+Level: 1
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1548259583
+Class: fix
+
+In script ~/bin/mkbench the helper processes where still searched for old commands. Because of this the script never run successfully. This has been fixed now.

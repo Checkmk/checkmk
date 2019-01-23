@@ -2854,8 +2854,7 @@ class TestAgentBasedStandardHosts(TestCase):
 
             try:
                 matched_pids = subprocess.check_output(
-                    ["pgrep", "-u",
-                     site_id(), "-f", "python.*check_mk.py --keepalive$"]).split("\n")
+                    ["pgrep", "-u", site_id(), "-f", "python.*cmk --keepalive$"]).split("\n")
             except subprocess.CalledProcessError, e:
                 self._test.error("  Found no helper yet (%s)" % e.returncode)
                 continue

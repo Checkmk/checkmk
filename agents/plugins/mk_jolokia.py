@@ -169,67 +169,6 @@ class SkipInstance(RuntimeError):
     pass
 
 
-class PreemptiveBasicAuthHandler(urllib2.HTTPBasicAuthHandler):
-    """
-    sends basic authentication with the first request,
-    before the server even asks for it
-    """
-
-    def http_request(self, req):
-        url = req.get_full_url()
-        realm = None
-        user, pwd = self.passwd.find_user_password(realm, url)
-        if pwd:
-            raw = "%s:%s" % (user, pwd)
-            auth = 'Basic %s' % base64.b64encode(raw).strip()
-            req.add_unredirected_header(self.auth_header, auth)
-        return req
-
-    https_request = http_request
-
-
-class HTTPSValidatingConnection(HTTPSConnection):
-    def __init__(self, host, ca_file, key_file, cert_file):
-        HTTPSConnection.__init__(self, host, key_file=key_file, cert_file=cert_file)
-        self.__ca_file = ca_file
-        self.__key_file = key_file
-        self.__cert_file = cert_file
-
-    def connect(self):
-        HTTPConnection.connect(self)
-        if self.__ca_file:
-            self.sock = ssl.wrap_socket(
-                self.sock,
-                keyfile=self.key_file,
-                certfile=self.cert_file,
-                ca_certs=self.__ca_file,
-                cert_reqs=ssl.CERT_REQUIRED)
-        else:
-            self.sock = ssl.wrap_socket(
-                self.sock,
-                keyfile=self.key_file,
-                certfile=self.cert_file,
-                ca_certs=self.__ca_file,
-                cert_reqs=ssl.CERT_NONE)
-
-
-class HTTPSAuthHandler(urllib2.HTTPSHandler):
-    def __init__(self, ca_file, key, cert):
-        urllib2.HTTPSHandler.__init__(self)
-        self.__ca_file = ca_file
-        self.__key = key
-        self.__cert = cert
-
-    def https_open(self, req):
-        # do_open expects a class as the first parameter but getConnection will act
-        # as a facotry function
-        return self.do_open(self.get_connection, req)
-
-    def get_connection(self, host, _timeout):
-        return HTTPSValidatingConnection(
-            host, ca_file=self.__ca_file, key_file=self.__key, cert_file=self.__cert)
-
-
 def write_section(name, iterable):
     sys.stdout.write('<<<%s:sep(0)>>>\n' % name)
     for line in iterable:
@@ -249,24 +188,16 @@ def cached(function):
     return cached_function
 
 
-def _get_post_data(path, service_url, service_user, service_password, function):
-    segments = path.split("/")
+def sanitize_config(config):
 
-    data = {
-        "type": function.upper(),
-        "mbean": segments[0],
-        "attribute": segments[1],
-        "target": {
-            "url": service_url,
-        },
-    }
-    if len(segments) > 2:
-        data["path"] = segments[2]
-    if service_user:
-        data["target"]["user"] = service_user
-        data["target"]["password"] = service_password
+    if not config["instance"]:
+        config["instance"] = str(config["port"])
+    config["instance"] = config["instance"].replace(" ", "_")
 
-    return json.dumps(data)
+    if config.get("server") == "use fqdn":
+        config["server"] = socket.getfqdn()
+
+    return config
 
 
 def fetch_url(request_url, post_data=None):
@@ -280,6 +211,21 @@ def fetch_url(request_url, post_data=None):
         sys.stderr.write("ERROR: %s\n\n" % exc)
         return []
     return json_data
+
+
+def _get_post_data(path, service_url, service_user, service_password, function):
+    segments = path.strip("/").split("/")
+    data = {"mbean": segments[0], "attribute": segments[1]}
+    if len(segments) > 2:
+        data["path"] = segments[2]
+    data["type"] = function
+
+    data["target"] = {"url": service_url}
+    if service_user:
+        data["target"]["user"] = service_user
+        data["target"]["password"] = service_password
+
+    return json.dumps(data)
 
 
 def fetch_var(protocol,
@@ -452,6 +398,67 @@ def query_instance(inst):
     write_section('jolokia_generic', generate_values(inst, inst.get("custom_vars")))
 
 
+class PreemptiveBasicAuthHandler(urllib2.HTTPBasicAuthHandler):
+    """
+    sends basic authentication with the first request,
+    before the server even asks for it
+    """
+
+    def http_request(self, req):
+        url = req.get_full_url()
+        realm = None
+        user, pwd = self.passwd.find_user_password(realm, url)
+        if pwd:
+            raw = "%s:%s" % (user, pwd)
+            auth = 'Basic %s' % base64.b64encode(raw).strip()
+            req.add_unredirected_header(self.auth_header, auth)
+        return req
+
+    https_request = http_request
+
+
+class HTTPSValidatingConnection(HTTPSConnection):
+    def __init__(self, host, ca_file, key_file, cert_file):
+        HTTPSConnection.__init__(self, host, key_file=key_file, cert_file=cert_file)
+        self.__ca_file = ca_file
+        self.__key_file = key_file
+        self.__cert_file = cert_file
+
+    def connect(self):
+        HTTPConnection.connect(self)
+        if self.__ca_file:
+            self.sock = ssl.wrap_socket(
+                self.sock,
+                keyfile=self.key_file,
+                certfile=self.cert_file,
+                ca_certs=self.__ca_file,
+                cert_reqs=ssl.CERT_REQUIRED)
+        else:
+            self.sock = ssl.wrap_socket(
+                self.sock,
+                keyfile=self.key_file,
+                certfile=self.cert_file,
+                ca_certs=self.__ca_file,
+                cert_reqs=ssl.CERT_NONE)
+
+
+class HTTPSAuthHandler(urllib2.HTTPSHandler):
+    def __init__(self, ca_file, key, cert):
+        urllib2.HTTPSHandler.__init__(self)
+        self.__ca_file = ca_file
+        self.__key = key
+        self.__cert = cert
+
+    def https_open(self, req):
+        # do_open expects a class as the first parameter but getConnection will act
+        # as a facotry function
+        return self.do_open(self.get_connection, req)
+
+    def get_connection(self, host, _timeout):
+        return HTTPSValidatingConnection(
+            host, ca_file=self.__ca_file, key_file=self.__key, cert_file=self.__cert)
+
+
 def prepare_http_opener(inst):
     # Prepare user/password authentication via HTTP Auth
     password_mngr = urllib2.HTTPPasswordMgrWithDefaultRealm()
@@ -525,18 +532,6 @@ def yield_configured_instances():
     instances = custom_config.pop("instances", [{}])
     for inst in instances:
         yield {k: inst.get(k, custom_config[k]) for k in custom_config}
-
-
-def sanitize_config(config):
-
-    if not config["instance"]:
-        config["instance"] = str(config["port"])
-    config["instance"] = config["instance"].replace(" ", "_")
-
-    if config.get("server") == "use fqdn":
-        config["server"] = socket.getfqdn()
-
-    return config
 
 
 def main(configs_iterable=None):

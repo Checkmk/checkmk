@@ -31,7 +31,6 @@ from cmk.gui.plugins.wato.utils import (
 )
 
 
-
 def test_rulespec_sub_group():
     class TestGroup(RulespecGroup):
         @property
@@ -143,6 +142,7 @@ def test_grouped_rulespecs():
             'static_checks:bluecat_dns',
             'static_checks:bluecat_ha',
             'static_checks:steelhead_connections',
+            'static_checks:k8s_if',
         ],
         'eventconsole': [
             'extra_host_conf:_ec_event_limit',
@@ -242,6 +242,7 @@ def test_grouped_rulespecs():
             'checkgroup_parameters:cisco_qos',
             'if_groups',
             'if_disable_if64_hosts',
+            'checkgroup_parameters:k8s_if',
             'checkgroup_parameters:adva_ifs',
             'checkgroup_parameters:bluecat_ntp',
             'checkgroup_parameters:bluecat_dhcp',
@@ -6077,6 +6078,21 @@ expected_rulespecs = {
         'item_type': 'item',
         'match_type': 'dict',
         'title': u'JVM uptime (since last reboot)',
+        'valuespec_class_name': 'TimeperiodValuespec'
+    },
+    'checkgroup_parameters:k8s_if': {
+        'factory_default': [],
+        'group_name': 'checkparams/networking',
+        'help': None,
+        'is_deprecated': False,
+        'is_optional': False,
+        'item_enum': None,
+        'item_help': None,
+        'item_name': u'port specification',
+        'item_spec_class_name': 'TextAscii',
+        'item_type': 'item',
+        'match_type': 'dict',
+        'title': u'Kubernetes Network interfaces',
         'valuespec_class_name': 'TimeperiodValuespec'
     },
     'checkgroup_parameters:k8s_pods_cpu': {
@@ -14152,6 +14168,21 @@ expected_rulespecs = {
         'item_type': None,
         'match_type': 'all',
         'title': u'JVM uptime (since last reboot)',
+        'valuespec_class_name': 'Tuple'
+    },
+    'static_checks:k8s_if': {
+        'factory_default': [],
+        'group_name': 'static/networking',
+        'help': None,
+        'is_deprecated': False,
+        'is_optional': False,
+        'item_enum': None,
+        'item_help': None,
+        'item_name': None,
+        'item_spec_class_name': 'TextAscii',
+        'item_type': None,
+        'match_type': 'all',
+        'title': u'Kubernetes Network interfaces',
         'valuespec_class_name': 'Tuple'
     },
     'static_checks:k8s_pods_cpu': {

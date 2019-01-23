@@ -39,6 +39,29 @@ def discover_k8s_stats_fs(key, value):
         return [x for x in devices if x not in ignore_fs]
 
 
+def k8s_network_err_pac(device, params, now):
+    for name, mway, pway in [('Input', 'rx', 'in'), ('Output', 'tx', 'out')]:
+        pac_rate = get_rate('if.%s.if_%s_pkts' % (device['name'], pway), now,
+                            device['%s_packets' % mway])
+        err_rate = get_rate('if.%s.if_%s_errors' % (device['name'], pway), now,
+                            device['%s_errors' % mway])
+        warn, crit = params.get('errors', (None, None))
+        perf_data = [('if_%s_pkts' % pway, pac_rate), ('if_%s_errors' % pway, err_rate)]
+        if isinstance(warn, float):
+            try:
+                err_perc = 100.0 * err_rate / (err_rate + pac_rate)
+            except ZeroDivisionError:
+                err_perc = 0
+
+            status, infotext, _perf = check_levels(
+                err_perc, 'err_perc', (warn, crit), unit='%', infoname=name + " errors percentage")
+        else:  # absolute levels or no levels
+            status, infotext, _perf = check_levels(
+                err_rate, 'if_errors', (warn, crit), unit='/s', infoname=name + " error rate")
+
+        yield status, infotext, perf_data
+
+
 def check_k8s_stats_network(item, params, metrics):
     def get_if():
         for device in metrics['network']['interfaces']:
@@ -46,21 +69,31 @@ def check_k8s_stats_network(item, params, metrics):
                 return device
 
     device = get_if()
+    now = time.strptime(metrics['timestamp'][:-4], "%Y-%m-%dT%H:%M:%S.%f")
+    now = time.mktime(now) - time.timezone
 
-    perf_names = [
-        ('In', 'rx_bytes', 'in', lambda x: "%s/s" % get_bytes_human_readable(x)),
-        ('Out', 'tx_bytes', 'out', lambda x: "%s/s" % get_bytes_human_readable(x)),
-        ('Input Packets', 'rx_packets', 'if_in_pkts', None),
-        ('Output Packets', 'tx_packets', 'if_out_pkts', None),
-        ('Input Errors', 'rx_errors', 'if_in_errors', None),
-        ('Output Errors', 'tx_errors', 'if_out_errors', None),
-        ('Input Discards', 'rx_dropped', 'if_in_discards', None),
-        ('Output Discards', 'tx_dropped', 'if_out_discards', None),
-    ]
+    # Bandwidth
+    for name, met, dsname in [('In', 'rx_bytes', 'in'), ('Out', 'tx_bytes', 'out')]:
+        rate = get_rate('if.%s.%s' % (item, dsname), now, device[met])
+        yield check_levels(
+            rate,
+            dsname,
+            None,
+            unit='/s',
+            human_readable_func=lambda x: "%s/s" % get_bytes_human_readable(x),
+            infoname=name)
 
-    for name, met, dsname, hrf in perf_names:
-        rate = get_rate('if.%s.%s' % (item, dsname), time.time(), device[met])
-        yield check_levels(rate, dsname, params, unit='/s', human_readable_func=hrf, infoname=name)
+    # Errors / Packets
+    for check_result in k8s_network_err_pac(device, params, now):
+        yield check_result
+
+    # Discards
+    for name, met, dsname in [
+        ('Input Discards', 'rx_dropped', 'if_in_discards'),
+        ('Output Discards', 'tx_dropped', 'if_out_discards'),
+    ]:
+        rate = get_rate('if.%s.%s' % (item, dsname), now, device[met])
+        yield check_levels(rate, dsname, params.get('discards'), unit='/s', infoname=name)
 
 
 def check_k8s_stats_fs(item, params, metrics):
@@ -91,6 +124,7 @@ check_info['k8s_stats.network'] = {
     'check_function': check_k8s_stats_network,
     'service_description': 'Interface %s',
     "has_perfdata": True,
+    "group": "k8s_if",
     'includes': ['k8s.include'],
 }
 

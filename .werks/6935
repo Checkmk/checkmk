@@ -1,0 +1,19 @@
+Title: Improvements in Solaris Agent packages
+Level: 1
+Component: agents
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.6.0i1
+Date: 1544712266
+
+This werk introduces some improvements in the postinstall- and postuninstall-routines
+for Solaris agent packages that come from the agent bakery:
+<ul>
+<li>Properly remove the installed inetd service. This has been done incompletely
+before, which could lead to problems on reinstallation.</li>
+<li>simplified syntax in order to avoid errors like <code>/var/sadm/pkg/check-mk-agent/install/postinstall: !: not found</code>
+on some Solaris systems.</li>
+<li>some improvements in timing and robustness.</li>
+</ul>

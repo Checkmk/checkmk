@@ -36,7 +36,7 @@ import tempfile
 
 send_path = None
 for binary in ['sendsms', 'smssend']:
-    if os.system('which %s >/dev/null 2>/dev/null' % binary) == 0:
+    if os.system('which %s >/dev/null 2>/dev/null' % binary) == 0:  # nosec
         send_path = binary
 
 smsd_user = 'smsd'
@@ -99,7 +99,8 @@ def quote_message(msg, max_length=None):
 
 
 if send_path:
-    if os.system("%s %s %s" % (send_path, recipient, quote_message(message, 160))) >> 8 != 0:
+    if os.system(  # nosec
+            "%s %s %s" % (send_path, recipient, quote_message(message, 160))) >> 8 != 0:
         sys.exit(1)
 elif spool_dir:
     # On some distros, like debian, smstools does not ship with the sendsms/smssend helper

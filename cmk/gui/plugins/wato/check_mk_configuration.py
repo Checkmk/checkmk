@@ -76,10 +76,11 @@ from cmk.gui.plugins.wato import (
     ConfigDomainCore,
     ConfigDomainCACertificates,
     site_neutral_path,
+    rulespec_registry,
+    Rulespec,
     rulespec_group_registry,
     RulespecGroup,
     RulespecSubGroup,
-    register_rule,
     PluginCommandLine,
     UserIconOrAction,
     SNMPCredentials,
@@ -2507,36 +2508,103 @@ class RulespecGroupGrouping(RulespecGroup):
         return _("Assignment of host & services to host, service and contacts groups.")
 
 
-register_rule(
-    RulespecGroupGrouping,
-    "host_groups",
-    GroupSelection(
-        "host",
-        title=_("Assignment of hosts to host groups"),
-        help=_("Hosts can be grouped together into host groups. The most common use case "
-               "is to put hosts which belong together in a host group to make it possible "
-               "to get them listed together in the status GUI.")),
-    match="all")
+@rulespec_registry.register
+class RulespecHostGroups(Rulespec):
+    @property
+    def group(self):
+        return RulespecGroupGrouping
 
-register_rule(
-    RulespecGroupGrouping,
-    "service_groups",
-    GroupSelection("service", title=_("Assignment of services to service groups")),
-    match="all",
-    itemtype="service")
+    @property
+    def name(self):
+        return "host_groups"
 
-register_rule(
-    RulespecGroupGrouping,
-    "host_contactgroups",
-    GroupSelection("contact", title=_("Assignment of hosts to contact groups")),
-    match="all")
+    @property
+    def match_type(self):
+        return "all"
 
-register_rule(
-    RulespecGroupGrouping,
-    "service_contactgroups",
-    GroupSelection("contact", title=_("Assignment of services to contact groups")),
-    match="all",
-    itemtype="service")
+    @property
+    def valuespec(self):
+        return GroupSelection(
+            "host",
+            title=_("Assignment of hosts to host groups"),
+            help=_("Hosts can be grouped together into host groups. The most common use case "
+                   "is to put hosts which belong together in a host group to make it possible "
+                   "to get them listed together in the status GUI."),
+        )
+
+
+@rulespec_registry.register
+class RulespecServiceGroups(Rulespec):
+    @property
+    def group(self):
+        return RulespecGroupGrouping
+
+    @property
+    def name(self):
+        return "service_groups"
+
+    @property
+    def match_type(self):
+        return "all"
+
+    @property
+    def item_type(self):
+        return "service"
+
+    @property
+    def valuespec(self):
+        return GroupSelection(
+            "service",
+            title=_("Assignment of services to service groups"),
+        )
+
+
+@rulespec_registry.register
+class RulespecHostContactgroups(Rulespec):
+    @property
+    def group(self):
+        return RulespecGroupGrouping
+
+    @property
+    def name(self):
+        return "host_contactgroups"
+
+    @property
+    def match_type(self):
+        return "all"
+
+    @property
+    def valuespec(self):
+        return GroupSelection(
+            "contact",
+            title=_("Assignment of hosts to contact groups"),
+        )
+
+
+@rulespec_registry.register
+class RulespecServiceContactgroups(Rulespec):
+    @property
+    def group(self):
+        return RulespecGroupGrouping
+
+    @property
+    def name(self):
+        return "service_contactgroups"
+
+    @property
+    def match_type(self):
+        return "all"
+
+    @property
+    def item_type(self):
+        return "service"
+
+    @property
+    def valuespec(self):
+        return GroupSelection(
+            "contact",
+            title=_("Assignment of services to contact groups"),
+        )
 
 
 @rulespec_group_registry.register
@@ -2570,103 +2638,211 @@ class RulespecGroupMonitoringConfigurationServiceChecks(RulespecSubGroup):
         return _("Service Checks")
 
 
-register_rule(
-    RulespecGroupMonitoringConfigurationServiceChecks,
-    "extra_service_conf:max_check_attempts",
-    Integer(
-        title=_("Maximum number of check attempts for service"),
-        help=_("The maximum number of failed checks until a service problem state will "
-               "be considered as <u>hard</u>. Only hard state trigger notifications. "),
-        minvalue=1),
-    itemtype="service")
+@rulespec_registry.register
+class RulespecExtraServiceConfMaxCheckAttempts(Rulespec):
+    @property
+    def group(self):
+        return RulespecGroupMonitoringConfigurationServiceChecks
 
-register_rule(
-    RulespecGroupMonitoringConfigurationServiceChecks,
-    "extra_service_conf:check_interval",
-    Transform(
-        Age(minvalue=1, default_value=60),
-        forth=lambda v: int(v * 60),
-        back=lambda v: float(v) / 60.0,
-        title=_("Normal check interval for service checks"),
-        help=_("Check_MK usually uses an interval of one minute for the active Check_MK "
-               "check and for legacy checks. Here you can specify a larger interval. Please "
-               "note, that this setting only applies to active checks (those with the "
-               "reschedule button). If you want to change the check interval of "
-               "the Check_MK service only, specify <tt><b>Check_MK$</b></tt> in the list "
-               "of services."),
-    ),
-    itemtype="service")
+    @property
+    def name(self):
+        return "extra_service_conf:max_check_attempts"
 
-register_rule(
-    RulespecGroupMonitoringConfigurationServiceChecks,
-    "extra_service_conf:retry_interval",
-    Transform(
-        Age(minvalue=1, default_value=60),
-        forth=lambda v: int(v * 60),
-        back=lambda v: float(v) / 60.0,
-        title=_("Retry check interval for service checks"),
-        help=_("This setting is relevant if you have set the maximum number of check "
-               "attempts to a number greater than one. In case a service check is not OK "
-               "and the maximum number of check attempts is not yet reached, it will be "
-               "rescheduled with this interval. The retry interval is usually set to a smaller "
-               "value than the normal interval.<br><br>This setting only applies to "
-               "active checks.")),
-    itemtype="service")
+    @property
+    def item_type(self):
+        return "service"
 
-register_rule(
-    RulespecGroupMonitoringConfigurationServiceChecks,
-    "extra_service_conf:check_period",
-    TimeperiodSelection(
-        title=_("Check period for active services"),
-        help=_("If you specify a notification period for a service then active checks "
-               "of that service will only be done in that period. Please note, that the "
-               "checks driven by Check_MK are passive checks and are not affected by this "
-               "rule. You can use the rule for the active Check_MK check, however.")),
-    itemtype="service")
+    @property
+    def valuespec(self):
+        return Integer(
+            title=_("Maximum number of check attempts for service"),
+            help=_("The maximum number of failed checks until a service problem state will "
+                   "be considered as <u>hard</u>. Only hard state trigger notifications. "),
+            minvalue=1,
+        )
 
-register_rule(
-    RulespecGroupMonitoringConfigurationServiceChecks,
-    "check_periods",
-    TimeperiodSelection(
-        title=_("Check period for passive Check_MK services"),
-        help=_("If you specify a notification period for a Check_MK service then "
-               "results will be processed only within this period.")),
-    itemtype="service")
 
-register_rule(
-    RulespecGroupMonitoringConfigurationServiceChecks,
-    "extra_service_conf:process_perf_data",
-    DropdownChoice(
-        title=_("Enable/disable processing of perfdata for services"),
-        help=_("This setting allows you to disable the processing of perfdata for a "
-               "service completely."),
-        choices=[("1", _("Enable processing of perfdata")),
-                 ("0", _("Disable processing of perfdata"))],
-    ),
-    itemtype="service")
+@rulespec_registry.register
+class RulespecExtraServiceConfCheckInterval(Rulespec):
+    @property
+    def group(self):
+        return RulespecGroupMonitoringConfigurationServiceChecks
 
-register_rule(
-    RulespecGroupMonitoringConfigurationServiceChecks,
-    "extra_service_conf:passive_checks_enabled",
-    DropdownChoice(
-        title=_("Enable/disable passive checks for services"),
-        help=_("This setting allows you to disable the processing of passiv check results for a "
-               "service."),
-        choices=[("1", _("Enable processing of passive check results")),
-                 ("0", _("Disable processing of passive check results"))],
-    ),
-    itemtype="service")
+    @property
+    def name(self):
+        return "extra_service_conf:check_interval"
 
-register_rule(
-    RulespecGroupMonitoringConfigurationServiceChecks,
-    "extra_service_conf:active_checks_enabled",
-    DropdownChoice(
-        title=_("Enable/disable active checks for services"),
-        help=_("This setting allows you to disable or enable "
-               "active checks for a service."),
-        choices=[("1", _("Enable active checks")), ("0", _("Disable active checks"))],
-    ),
-    itemtype="service")
+    @property
+    def item_type(self):
+        return "service"
+
+    @property
+    def valuespec(self):
+        return Transform(
+            Age(minvalue=1, default_value=60),
+            forth=lambda v: int(v * 60),
+            back=lambda v: float(v) / 60.0,
+            title=_("Normal check interval for service checks"),
+            help=_("Check_MK usually uses an interval of one minute for the active Check_MK "
+                   "check and for legacy checks. Here you can specify a larger interval. Please "
+                   "note, that this setting only applies to active checks (those with the "
+                   "reschedule button). If you want to change the check interval of "
+                   "the Check_MK service only, specify <tt><b>Check_MK$</b></tt> in the list "
+                   "of services."),
+        )
+
+
+@rulespec_registry.register
+class RulespecExtraServiceConfRetryInterval(Rulespec):
+    @property
+    def group(self):
+        return RulespecGroupMonitoringConfigurationServiceChecks
+
+    @property
+    def name(self):
+        return "extra_service_conf:retry_interval"
+
+    @property
+    def item_type(self):
+        return "service"
+
+    @property
+    def valuespec(self):
+        return Transform(
+            Age(minvalue=1, default_value=60),
+            forth=lambda v: int(v * 60),
+            back=lambda v: float(v) / 60.0,
+            title=_("Retry check interval for service checks"),
+            help=_("This setting is relevant if you have set the maximum number of check "
+                   "attempts to a number greater than one. In case a service check is not OK "
+                   "and the maximum number of check attempts is not yet reached, it will be "
+                   "rescheduled with this interval. The retry interval is usually set to a smaller "
+                   "value than the normal interval.<br><br>This setting only applies to "
+                   "active checks."),
+        )
+
+
+@rulespec_registry.register
+class RulespecExtraServiceConfCheckPeriod(Rulespec):
+    @property
+    def group(self):
+        return RulespecGroupMonitoringConfigurationServiceChecks
+
+    @property
+    def name(self):
+        return "extra_service_conf:check_period"
+
+    @property
+    def item_type(self):
+        return "service"
+
+    @property
+    def valuespec(self):
+        return TimeperiodSelection(
+            title=_("Check period for active services"),
+            help=_("If you specify a notification period for a service then active checks "
+                   "of that service will only be done in that period. Please note, that the "
+                   "checks driven by Check_MK are passive checks and are not affected by this "
+                   "rule. You can use the rule for the active Check_MK check, however."),
+        )
+
+
+@rulespec_registry.register
+class RulespecCheckPeriods(Rulespec):
+    @property
+    def group(self):
+        return RulespecGroupMonitoringConfigurationServiceChecks
+
+    @property
+    def name(self):
+        return "check_periods"
+
+    @property
+    def item_type(self):
+        return "service"
+
+    @property
+    def valuespec(self):
+        return TimeperiodSelection(
+            title=_("Check period for passive Check_MK services"),
+            help=_("If you specify a notification period for a Check_MK service then "
+                   "results will be processed only within this period."),
+        )
+
+
+@rulespec_registry.register
+class RulespecExtraServiceConfProcessPerfData(Rulespec):
+    @property
+    def group(self):
+        return RulespecGroupMonitoringConfigurationServiceChecks
+
+    @property
+    def name(self):
+        return "extra_service_conf:process_perf_data"
+
+    @property
+    def item_type(self):
+        return "service"
+
+    @property
+    def valuespec(self):
+        return DropdownChoice(
+            title=_("Enable/disable processing of perfdata for services"),
+            help=_("This setting allows you to disable the processing of perfdata for a "
+                   "service completely."),
+            choices=[("1", _("Enable processing of perfdata")),
+                     ("0", _("Disable processing of perfdata"))],
+        )
+
+
+@rulespec_registry.register
+class RulespecExtraServiceConfPassiveChecksEnabled(Rulespec):
+    @property
+    def group(self):
+        return RulespecGroupMonitoringConfigurationServiceChecks
+
+    @property
+    def name(self):
+        return "extra_service_conf:passive_checks_enabled"
+
+    @property
+    def item_type(self):
+        return "service"
+
+    @property
+    def valuespec(self):
+        return DropdownChoice(
+            title=_("Enable/disable passive checks for services"),
+            help=_(
+                "This setting allows you to disable the processing of passiv check results for a "
+                "service."),
+            choices=[("1", _("Enable processing of passive check results")),
+                     ("0", _("Disable processing of passive check results"))],
+        )
+
+
+@rulespec_registry.register
+class RulespecExtraServiceConfActiveChecksEnabled(Rulespec):
+    @property
+    def group(self):
+        return RulespecGroupMonitoringConfigurationServiceChecks
+
+    @property
+    def name(self):
+        return "extra_service_conf:active_checks_enabled"
+
+    @property
+    def item_type(self):
+        return "service"
+
+    @property
+    def valuespec(self):
+        return DropdownChoice(
+            title=_("Enable/disable active checks for services"),
+            help=_("This setting allows you to disable or enable "
+                   "active checks for a service."),
+            choices=[("1", _("Enable active checks")), ("0", _("Disable active checks"))],
+        )
 
 
 @rulespec_group_registry.register
@@ -2684,93 +2860,145 @@ class RulespecGroupMonitoringConfigurationHostChecks(RulespecSubGroup):
         return _("Host Checks")
 
 
-register_rule(
-    RulespecGroupMonitoringConfigurationHostChecks, "extra_host_conf:max_check_attempts",
-    Integer(
-        title=_("Maximum number of check attempts for host"),
-        help=_("The maximum number of failed host checks until the host will be considered "
-               "in a hard down state"),
-        minvalue=1))
+@rulespec_registry.register
+class RulespecExtraHostConfMaxCheckAttempts(Rulespec):
+    @property
+    def group(self):
+        return RulespecGroupMonitoringConfigurationHostChecks
 
-register_rule(
-    RulespecGroupMonitoringConfigurationHostChecks, "extra_host_conf:check_interval",
-    Transform(
-        Age(minvalue=1, default_value=60),
-        forth=lambda v: int(v * 60),
-        back=lambda v: float(v) / 60.0,
-        title=_("Normal check interval for host checks"),
-        help=_(
-            "The default interval is set to 6 seconds for smart ping and one minute for all other. Here you can specify a larger "
-            "interval. The host is contacted in this interval on a regular base. The host "
-            "check is also being executed when a problematic service state is detected to check "
-            "wether or not the service problem is resulting from a host problem.")))
+    @property
+    def name(self):
+        return "extra_host_conf:max_check_attempts"
 
-register_rule(
-    RulespecGroupMonitoringConfigurationHostChecks, "extra_host_conf:retry_interval",
-    Transform(
-        Age(minvalue=1, default_value=60),
-        forth=lambda v: int(v * 60),
-        back=lambda v: float(v) / 60.0,
-        title=_("Retry check interval for host checks"),
-        help=_(
-            "This setting is relevant if you have set the maximum number of check "
-            "attempts to a number greater than one. In case a host check is not UP "
-            "and the maximum number of check attempts is not yet reached, it will be "
-            "rescheduled with this interval. The retry interval is usually set to a smaller "
-            "value than the normal interval. The default is 6 seconds for smart ping and 60 seconds for all other."
-        ),
-    ))
-
-register_rule(
-    RulespecGroupMonitoringConfigurationHostChecks,
-    "extra_host_conf:check_period",
-    TimeperiodSelection(
-        title=_("Check period for hosts"),
-        help=_("If you specify a check period for a host then active checks of that "
-               "host will only take place within that period. In the rest of the time "
-               "the state of the host will stay at its last status.")),
-)
+    @property
+    def valuespec(self):
+        return Integer(
+            title=_("Maximum number of check attempts for host"),
+            help=_("The maximum number of failed host checks until the host will be considered "
+                   "in a hard down state"),
+            minvalue=1,
+        )
 
 
-def _host_check_command_choices():
-    if config.user.may('wato.add_or_modify_executables'):
-        custom_choice = [
-            ("custom", _("Use a custom check plugin..."), PluginCommandLine()),
-        ]
-    else:
-        custom_choice = []
+@rulespec_registry.register
+class RulespecExtraHostConfCheckInterval(Rulespec):
+    @property
+    def group(self):
+        return RulespecGroupMonitoringConfigurationHostChecks
 
-    return [
-        ("ping", _("PING (active check with ICMP echo request)")),
-        ("smart", _("Smart PING (only with Check_MK Micro Core)")),
-        ("tcp", _("TCP Connect"),
-         Integer(label=_("to port:"), minvalue=1, maxvalue=65535, default_value=80)),
-        ("ok", _("Always assume host to be up")),
-        ("agent", _("Use the status of the Check_MK Agent")),
-        ("service", _("Use the status of the service..."),
-         TextUnicode(
-             size=45,
-             allow_empty=False,
-             attrencode=True,
-             help=_("You can use the macro <tt>$HOSTNAME$</tt> here. It will be replaced "
-                    "with the name of the current host."),
-         )),
-    ] + custom_choice
+    @property
+    def name(self):
+        return "extra_host_conf:check_interval"
+
+    @property
+    def valuespec(self):
+        return Transform(
+            Age(minvalue=1, default_value=60),
+            forth=lambda v: int(v * 60),
+            back=lambda v: float(v) / 60.0,
+            title=_("Normal check interval for host checks"),
+            help=
+            _("The default interval is set to 6 seconds for smart ping and one minute for all other. Here you can specify a larger "
+              "interval. The host is contacted in this interval on a regular base. The host "
+              "check is also being executed when a problematic service state is detected to check "
+              "wether or not the service problem is resulting from a host problem."),
+        )
 
 
-register_rule(
-    RulespecGroupMonitoringConfigurationHostChecks,
-    "host_check_commands",
-    CascadingDropdown(
-        title=_("Host Check Command"),
-        help=_("Usually Check_MK uses a series of PING (ICMP echo request) in order to determine "
-               "whether a host is up. In some cases this is not possible, however. With this rule "
-               "you can specify an alternative way of determining the host's state."),
-        choices=_host_check_command_choices,
-        default_value="ping",
-        orientation="horizontal",
-    ),
-    match='first')
+@rulespec_registry.register
+class RulespecExtraHostConfRetryInterval(Rulespec):
+    @property
+    def group(self):
+        return RulespecGroupMonitoringConfigurationHostChecks
+
+    @property
+    def name(self):
+        return "extra_host_conf:retry_interval"
+
+    @property
+    def valuespec(self):
+        return Transform(
+            Age(minvalue=1, default_value=60),
+            forth=lambda v: int(v * 60),
+            back=lambda v: float(v) / 60.0,
+            title=_("Retry check interval for host checks"),
+            help=_(
+                "This setting is relevant if you have set the maximum number of check "
+                "attempts to a number greater than one. In case a host check is not UP "
+                "and the maximum number of check attempts is not yet reached, it will be "
+                "rescheduled with this interval. The retry interval is usually set to a smaller "
+                "value than the normal interval. The default is 6 seconds for smart ping and 60 seconds for all other."
+            ),
+        )
+
+
+@rulespec_registry.register
+class RulespecExtraHostConfCheckPeriod(Rulespec):
+    @property
+    def group(self):
+        return RulespecGroupMonitoringConfigurationHostChecks
+
+    @property
+    def name(self):
+        return "extra_host_conf:check_period"
+
+    @property
+    def valuespec(self):
+        return TimeperiodSelection(
+            title=_("Check period for hosts"),
+            help=_("If you specify a check period for a host then active checks of that "
+                   "host will only take place within that period. In the rest of the time "
+                   "the state of the host will stay at its last status."),
+        )
+
+
+@rulespec_registry.register
+class RulespecHostCheckCommands(Rulespec):
+    @property
+    def group(self):
+        return RulespecGroupMonitoringConfigurationHostChecks
+
+    @property
+    def name(self):
+        return "host_check_commands"
+
+    @property
+    def valuespec(self):
+        return CascadingDropdown(
+            title=_("Host Check Command"),
+            help=_(
+                "Usually Check_MK uses a series of PING (ICMP echo request) in order to determine "
+                "whether a host is up. In some cases this is not possible, however. With this rule "
+                "you can specify an alternative way of determining the host's state."),
+            choices=self._host_check_command_choices,
+            default_value="ping",
+            orientation="horizontal",
+        )
+
+    def _host_check_command_choices(self):
+        if config.user.may('wato.add_or_modify_executables'):
+            custom_choice = [
+                ("custom", _("Use a custom check plugin..."), PluginCommandLine()),
+            ]
+        else:
+            custom_choice = []
+
+        return [
+            ("ping", _("PING (active check with ICMP echo request)")),
+            ("smart", _("Smart PING (only with Check_MK Micro Core)")),
+            ("tcp", _("TCP Connect"),
+             Integer(label=_("to port:"), minvalue=1, maxvalue=65535, default_value=80)),
+            ("ok", _("Always assume host to be up")),
+            ("agent", _("Use the status of the Check_MK Agent")),
+            ("service", _("Use the status of the service..."),
+             TextUnicode(
+                 size=45,
+                 allow_empty=False,
+                 attrencode=True,
+                 help=_("You can use the macro <tt>$HOSTNAME$</tt> here. It will be replaced "
+                        "with the name of the current host."),
+             )),
+        ] + custom_choice
 
 
 @rulespec_group_registry.register
@@ -2788,110 +3016,187 @@ class RulespecGroupMonitoringConfigurationNotifications(RulespecSubGroup):
         return _("Notifications")
 
 
-register_rule(
-    RulespecGroupMonitoringConfigurationNotifications, "extra_host_conf:notifications_enabled",
-    DropdownChoice(
-        title=_("Enable/disable notifications for hosts"),
-        help=_("This setting allows you to disable notifications about problems of a "
-               "host completely. Per default all notifications are enabled. Sometimes "
-               "it is more convenient to just disable notifications then to remove a "
-               "host completely from the monitoring. Note: this setting has no effect "
-               "on the notifications of service problems of a host."),
-        choices=[("1", _("Enable host notifications")), ("0", _("Disable host notifications"))],
-    ))
+@rulespec_registry.register
+class RulespecExtraHostConfNotificationsEnabled(Rulespec):
+    @property
+    def group(self):
+        return RulespecGroupMonitoringConfigurationNotifications
 
-register_rule(
-    RulespecGroupMonitoringConfigurationNotifications,
-    "extra_service_conf:notifications_enabled",
-    DropdownChoice(
-        title=_("Enable/disable notifications for services"),
-        help=_("This setting allows you to disable notifications about problems of a "
-               "service completely. Per default all notifications are enabled."),
-        choices=[("1", _("Enable service notifications")), ("0",
-                                                            _("Disable service notifications"))],
-    ),
-    itemtype="service")
+    @property
+    def name(self):
+        return "extra_host_conf:notifications_enabled"
 
-register_rule(
-    RulespecGroupMonitoringConfigurationNotifications,
-    "extra_host_conf:notification_options",
-    Transform(
-        ListChoice(
+    @property
+    def valuespec(self):
+        return DropdownChoice(
+            title=_("Enable/disable notifications for hosts"),
+            help=_("This setting allows you to disable notifications about problems of a "
+                   "host completely. Per default all notifications are enabled. Sometimes "
+                   "it is more convenient to just disable notifications then to remove a "
+                   "host completely from the monitoring. Note: this setting has no effect "
+                   "on the notifications of service problems of a host."),
             choices=[
-                ("d", _("Host goes down")),
-                ("u", _("Host gets unreachble")),
-                ("r", _("Host goes up again")),
-                ("f", _("Start or end of flapping state")),
-                ("s", _("Start or end of a scheduled downtime")),
+                ("1", _("Enable host notifications")),
+                ("0", _("Disable host notifications")),
             ],
-            default_value=["d", "r", "f", "s"],
-        ),
-        title=_("Notified events for hosts"),
-        help=_("This ruleset allows you to restrict notifications of host problems to certain "
-               "states, e.g. only notify on DOWN, but not on UNREACHABLE. Please select the types "
-               "of events that should initiate notifications. Please note that several other "
-               "filters must also be passed in order for notifications to finally being sent out."
-               "<br><br>"
-               "Please note: There is a difference between the Microcore and Nagios when you have "
-               "a host that has no matching rule in this ruleset. In this case the Microcore will "
-               "not send out UNREACHABLE notifications while the Nagios core would send out "
-               "UNREACHABLE notifications. To align this behaviour, create a rule matching "
-               "all your hosts and configure it to either send UNREACHABLE notifications or not."),
-        forth=lambda x: x != 'n' and x.split(",") or [],
-        back=lambda x: ",".join(x) or "n",
-    ),
-)
+        )
 
-register_rule(
-    RulespecGroupMonitoringConfigurationNotifications,
-    "extra_service_conf:notification_options",
-    Transform(
-        ListChoice(
+
+@rulespec_registry.register
+class RulespecExtraServiceConfNotificationsEnabled(Rulespec):
+    @property
+    def group(self):
+        return RulespecGroupMonitoringConfigurationNotifications
+
+    @property
+    def name(self):
+        return "extra_service_conf:notifications_enabled"
+
+    @property
+    def item_type(self):
+        return "service"
+
+    @property
+    def valuespec(self):
+        return DropdownChoice(
+            title=_("Enable/disable notifications for services"),
+            help=_("This setting allows you to disable notifications about problems of a "
+                   "service completely. Per default all notifications are enabled."),
             choices=[
-                ("w", _("Service goes into warning state")),
-                ("u", _("Service goes into unknown state")),
-                ("c", _("Service goes into critical state")),
-                ("r", _("Service recovers to OK")),
-                ("f", _("Start or end of flapping state")),
-                ("s", _("Start or end of a scheduled downtime")),
+                ("1", _("Enable service notifications")),
+                ("0", _("Disable service notifications")),
             ],
-            default_value=["w", "u", "c", "r", "f", "s"],
-        ),
-        title=_("Notified events for services"),
-        help=_("This ruleset allows you to restrict notifications of service problems to certain "
-               "states, e.g. only notify on CRIT, but not on WARN. Please select the types "
-               "of events that should initiate notifications. Please note that several other "
-               "filters must also be passed in order for notifications to finally being sent out."),
-        forth=lambda x: x != 'n' and x.split(",") or [],
-        back=lambda x: ",".join(x) or "n",
-    ),
-    itemtype="service")
+        )
 
-register_rule(
-    RulespecGroupMonitoringConfigurationNotifications,
-    "extra_host_conf:notification_period",
-    TimeperiodSelection(
-        title=_("Notification period for hosts"),
-        help=_("If you specify a notification period for a host then notifications "
-               "about problems of that host (not of its services!) will only be sent "
-               "if those problems occur within the notification period. Also you can "
-               "filter out problems in the problems views for objects not being in "
-               "their notification period (you can think of the notification period "
-               "as the 'service time').")),
-)
 
-register_rule(
-    RulespecGroupMonitoringConfigurationNotifications,
-    "extra_service_conf:notification_period",
-    TimeperiodSelection(
-        title=_("Notification period for services"),
-        help=_("If you specify a notification period for a service then notifications "
-               "about that service will only be sent "
-               "if those problems occur within the notification period. Also you can "
-               "filter out problems in the problems views for objects not being in "
-               "their notification period (you can think of the notification period "
-               "as the 'service time').")),
-    itemtype="service")
+@rulespec_registry.register
+class RulespecExtraHostConfNotificationOptions(Rulespec):
+    @property
+    def group(self):
+        return RulespecGroupMonitoringConfigurationNotifications
+
+    @property
+    def name(self):
+        return "extra_host_conf:notification_options"
+
+    @property
+    def valuespec(self):
+        return Transform(
+            ListChoice(
+                choices=[
+                    ("d", _("Host goes down")),
+                    ("u", _("Host gets unreachble")),
+                    ("r", _("Host goes up again")),
+                    ("f", _("Start or end of flapping state")),
+                    ("s", _("Start or end of a scheduled downtime")),
+                ],
+                default_value=["d", "r", "f", "s"],
+            ),
+            title=_("Notified events for hosts"),
+            help=_(
+                "This ruleset allows you to restrict notifications of host problems to certain "
+                "states, e.g. only notify on DOWN, but not on UNREACHABLE. Please select the types "
+                "of events that should initiate notifications. Please note that several other "
+                "filters must also be passed in order for notifications to finally being sent out."
+                "<br><br>"
+                "Please note: There is a difference between the Microcore and Nagios when you have "
+                "a host that has no matching rule in this ruleset. In this case the Microcore will "
+                "not send out UNREACHABLE notifications while the Nagios core would send out "
+                "UNREACHABLE notifications. To align this behaviour, create a rule matching "
+                "all your hosts and configure it to either send UNREACHABLE notifications or not."),
+            forth=lambda x: x != 'n' and x.split(",") or [],
+            back=lambda x: ",".join(x) or "n",
+        )
+
+
+@rulespec_registry.register
+class RulespecExtraServiceConfNotificationOptions(Rulespec):
+    @property
+    def group(self):
+        return RulespecGroupMonitoringConfigurationNotifications
+
+    @property
+    def name(self):
+        return "extra_service_conf:notification_options"
+
+    @property
+    def item_type(self):
+        return "service"
+
+    @property
+    def valuespec(self):
+        return Transform(
+            ListChoice(
+                choices=[
+                    ("w", _("Service goes into warning state")),
+                    ("u", _("Service goes into unknown state")),
+                    ("c", _("Service goes into critical state")),
+                    ("r", _("Service recovers to OK")),
+                    ("f", _("Start or end of flapping state")),
+                    ("s", _("Start or end of a scheduled downtime")),
+                ],
+                default_value=["w", "u", "c", "r", "f", "s"],
+            ),
+            title=_("Notified events for services"),
+            help=_(
+                "This ruleset allows you to restrict notifications of service problems to certain "
+                "states, e.g. only notify on CRIT, but not on WARN. Please select the types "
+                "of events that should initiate notifications. Please note that several other "
+                "filters must also be passed in order for notifications to finally being sent out."
+            ),
+            forth=lambda x: x != 'n' and x.split(",") or [],
+            back=lambda x: ",".join(x) or "n",
+        )
+
+
+@rulespec_registry.register
+class RulespecExtraHostConfNotificationPeriod(Rulespec):
+    @property
+    def group(self):
+        return RulespecGroupMonitoringConfigurationNotifications
+
+    @property
+    def name(self):
+        return "extra_host_conf:notification_period"
+
+    @property
+    def valuespec(self):
+        return TimeperiodSelection(
+            title=_("Notification period for hosts"),
+            help=_("If you specify a notification period for a host then notifications "
+                   "about problems of that host (not of its services!) will only be sent "
+                   "if those problems occur within the notification period. Also you can "
+                   "filter out problems in the problems views for objects not being in "
+                   "their notification period (you can think of the notification period "
+                   "as the 'service time')."),
+        )
+
+
+@rulespec_registry.register
+class RulespecExtraServiceConfNotificationPeriod(Rulespec):
+    @property
+    def group(self):
+        return RulespecGroupMonitoringConfigurationNotifications
+
+    @property
+    def name(self):
+        return "extra_service_conf:notification_period"
+
+    @property
+    def item_type(self):
+        return "service"
+
+    @property
+    def valuespec(self):
+        return TimeperiodSelection(
+            title=_("Notification period for services"),
+            help=_("If you specify a notification period for a service then notifications "
+                   "about that service will only be sent "
+                   "if those problems occur within the notification period. Also you can "
+                   "filter out problems in the problems views for objects not being in "
+                   "their notification period (you can think of the notification period "
+                   "as the 'service time')."),
+        )
 
 
 def transform_float_minutes_to_age(float_minutes):
@@ -2902,141 +3207,262 @@ def transform_age_to_float_minutes(age):
     return float(age) / 60.0
 
 
-register_rule(
-    RulespecGroupMonitoringConfigurationNotifications,
-    "extra_host_conf:first_notification_delay",
-    Transform(
-        Age(
-            minvalue=0,
-            default_value=300,
-            label=_("Delay:"),
-            title=_("Delay host notifications"),
-            help=_("This setting delays notifications about host problems by the "
-                   "specified amount of time. If the host is up again within that "
-                   "time, no notification will be sent out."),
-        ),
-        forth=transform_float_minutes_to_age,
-        back=transform_age_to_float_minutes,
-    ),
-    factory_default=0.0,
-)
+@rulespec_registry.register
+class RulespecExtraHostConfFirstNotificationDelay(Rulespec):
+    @property
+    def group(self):
+        return RulespecGroupMonitoringConfigurationNotifications
 
-register_rule(
-    RulespecGroupMonitoringConfigurationNotifications,
-    "extra_service_conf:first_notification_delay",
-    Transform(
-        Age(
-            minvalue=0,
-            default_value=300,
-            label=_("Delay:"),
-            unit=_("minutes"),
-            title=_("Delay service notifications"),
-            help=_("This setting delays notifications about service problems by the "
-                   "specified amount of time. If the service is OK again within that "
-                   "time, no notification will be sent out."),
-        ),
-        forth=transform_float_minutes_to_age,
-        back=transform_age_to_float_minutes,
-    ),
-    factory_default=0.0,
-    itemtype="service")
+    @property
+    def name(self):
+        return "extra_host_conf:first_notification_delay"
 
-register_rule(
-    RulespecGroupMonitoringConfigurationNotifications, "extra_host_conf:notification_interval",
-    Optional(
-        Transform(
-            Float(minvalue=0.05, default_value=120.0, label=_("Interval:"), unit=_("minutes")),
-            forth=float,
-        ),
-        title=_("Periodic notifications during host problems"),
-        help=_("If you enable periodic notifications, then during a problem state "
-               "of the host notifications will be sent out in regular intervals "
-               "until the problem is acknowledged."),
-        label=_("Enable periodic notifications"),
-        none_label=_("disabled"),
-        none_value=0.0,
-    ))
+    @property
+    def factory_default(self):
+        return 0.0
 
-register_rule(
-    RulespecGroupMonitoringConfigurationNotifications,
-    "extra_service_conf:notification_interval",
-    Optional(
-        Transform(
-            Float(minvalue=0.05, default_value=120.0, label=_("Interval:"), unit=_("minutes")),
-            forth=float,
-        ),
-        title=_("Periodic notifications during service problems"),
-        help=_("If you enable periodic notifications, then during a problem state "
-               "of the service notifications will be sent out in regular intervals "
-               "until the problem is acknowledged."),
-        label=_("Enable periodic notifications"),
-        none_label=_("disabled"),
-        none_value=0.0,
-    ),
-    itemtype="service")
+    @property
+    def valuespec(self):
+        return Transform(
+            Age(
+                minvalue=0,
+                default_value=300,
+                label=_("Delay:"),
+                title=_("Delay host notifications"),
+                help=_("This setting delays notifications about host problems by the "
+                       "specified amount of time. If the host is up again within that "
+                       "time, no notification will be sent out."),
+            ),
+            forth=transform_float_minutes_to_age,
+            back=transform_age_to_float_minutes,
+        )
 
-register_rule(
-    RulespecGroupMonitoringConfigurationNotifications, "extra_host_conf:flap_detection_enabled",
-    DropdownChoice(
-        title=_("Enable/disable flapping detection for hosts"),
-        help=_("This setting allows you to disable the flapping detection for a "
-               "host completely."),
-        choices=[("1", _("Enable flap detection")), ("0", _("Disable flap detection"))],
-    ))
 
-register_rule(
-    RulespecGroupMonitoringConfigurationNotifications,
-    "extra_service_conf:flap_detection_enabled",
-    DropdownChoice(
-        title=_("Enable/disable flapping detection for services"),
-        help=_("This setting allows you to disable the flapping detection for a "
-               "service completely."),
-        choices=[("1", _("Enable flap detection")), ("0", _("Disable flap detection"))],
-    ),
-    itemtype="service")
+@rulespec_registry.register
+class RulespecExtraServiceConfFirstNotificationDelay(Rulespec):
+    @property
+    def group(self):
+        return RulespecGroupMonitoringConfigurationNotifications
 
-register_rule(
-    RulespecGroupMonitoringConfigurationNotifications,
-    "extra_service_conf:notes_url",
-    TextAscii(
-        label=_("URL:"),
-        title=_("Notes URL for Services"),
-        help=_("With this setting you can set links to documentations "
-               "for each service"),
-        attrencode=True,
-    ),
-    itemtype="service")
+    @property
+    def name(self):
+        return "extra_service_conf:first_notification_delay"
 
-register_rule(
-    RulespecGroupMonitoringConfigurationNotifications,
-    "extra_host_conf:notes_url",
-    TextAscii(
-        label=_("URL:"),
-        title=_("Notes URL for Hosts"),
-        help=_("With this setting you can set links to documentations "
-               "for Hosts"),
-        attrencode=True,
-    ),
-)
+    @property
+    def item_type(self):
+        return "service"
 
-register_rule(
-    RulespecGroupMonitoringConfigurationNotifications,
-    "extra_service_conf:display_name",
-    TextUnicode(
-        title=_("Alternative display name for Services"),
-        help=_("This rule set allows you to specify an alternative name "
-               "to be displayed for certain services. This name is available as "
-               "a column when creating new views or modifying existing ones. "
-               "It is always visible in the details view of a service. In the "
-               "availability reporting there is an option for using that name "
-               "instead of the normal service description. It does <b>not</b> automatically "
-               "replace the normal service name in all views.<br><br><b>Note</b>: The "
-               "purpose of this rule set is to define unique names for several well-known "
-               "services. It cannot rename services in general."),
-        size=64,
-        attrencode=True,
-    ),
-    itemtype="service")
+    @property
+    def factory_default(self):
+        return 0.0
+
+    @property
+    def valuespec(self):
+        return Transform(
+            Age(
+                minvalue=0,
+                default_value=300,
+                label=_("Delay:"),
+                unit=_("minutes"),
+                title=_("Delay service notifications"),
+                help=_("This setting delays notifications about service problems by the "
+                       "specified amount of time. If the service is OK again within that "
+                       "time, no notification will be sent out."),
+            ),
+            forth=transform_float_minutes_to_age,
+            back=transform_age_to_float_minutes,
+        )
+
+
+@rulespec_registry.register
+class RulespecExtraHostConfNotificationInterval(Rulespec):
+    @property
+    def group(self):
+        return RulespecGroupMonitoringConfigurationNotifications
+
+    @property
+    def name(self):
+        return "extra_host_conf:notification_interval"
+
+    @property
+    def valuespec(self):
+        return Optional(
+            Transform(
+                Float(
+                    minvalue=0.05,
+                    default_value=120.0,
+                    label=_("Interval:"),
+                    unit=_("minutes"),
+                ),
+                forth=float,
+            ),
+            title=_("Periodic notifications during host problems"),
+            help=_("If you enable periodic notifications, then during a problem state "
+                   "of the host notifications will be sent out in regular intervals "
+                   "until the problem is acknowledged."),
+            label=_("Enable periodic notifications"),
+            none_label=_("disabled"),
+            none_value=0.0,
+        )
+
+
+@rulespec_registry.register
+class RulespecExtraServiceConfNotificationInterval(Rulespec):
+    @property
+    def group(self):
+        return RulespecGroupMonitoringConfigurationNotifications
+
+    @property
+    def name(self):
+        return "extra_service_conf:notification_interval"
+
+    @property
+    def item_type(self):
+        return "service"
+
+    @property
+    def valuespec(self):
+        return Optional(
+            Transform(
+                Float(minvalue=0.05, default_value=120.0, label=_("Interval:"), unit=_("minutes")),
+                forth=float,
+            ),
+            title=_("Periodic notifications during service problems"),
+            help=_("If you enable periodic notifications, then during a problem state "
+                   "of the service notifications will be sent out in regular intervals "
+                   "until the problem is acknowledged."),
+            label=_("Enable periodic notifications"),
+            none_label=_("disabled"),
+            none_value=0.0,
+        )
+
+
+@rulespec_registry.register
+class RulespecExtraHostConfFlapDetectionEnabled(Rulespec):
+    @property
+    def group(self):
+        return RulespecGroupMonitoringConfigurationNotifications
+
+    @property
+    def name(self):
+        return "extra_host_conf:flap_detection_enabled"
+
+    @property
+    def valuespec(self):
+        return DropdownChoice(
+            title=_("Enable/disable flapping detection for hosts"),
+            help=_("This setting allows you to disable the flapping detection for a "
+                   "host completely."),
+            choices=[
+                ("1", _("Enable flap detection")),
+                ("0", _("Disable flap detection")),
+            ],
+        )
+
+
+@rulespec_registry.register
+class RulespecExtraServiceConfFlapDetectionEnabled(Rulespec):
+    @property
+    def group(self):
+        return RulespecGroupMonitoringConfigurationNotifications
+
+    @property
+    def name(self):
+        return "extra_service_conf:flap_detection_enabled"
+
+    @property
+    def item_type(self):
+        return "service"
+
+    @property
+    def valuespec(self):
+        return DropdownChoice(
+            title=_("Enable/disable flapping detection for services"),
+            help=_("This setting allows you to disable the flapping detection for a "
+                   "service completely."),
+            choices=[
+                ("1", _("Enable flap detection")),
+                ("0", _("Disable flap detection")),
+            ],
+        )
+
+
+@rulespec_registry.register
+class RulespecExtraServiceConfNotesUrl(Rulespec):
+    @property
+    def group(self):
+        return RulespecGroupMonitoringConfigurationNotifications
+
+    @property
+    def name(self):
+        return "extra_service_conf:notes_url"
+
+    @property
+    def item_type(self):
+        return "service"
+
+    @property
+    def valuespec(self):
+        return TextAscii(
+            label=_("URL:"),
+            title=_("Notes URL for Services"),
+            help=_("With this setting you can set links to documentations "
+                   "for each service"),
+            attrencode=True,
+        )
+
+
+@rulespec_registry.register
+class RulespecExtraHostConfNotesUrl(Rulespec):
+    @property
+    def group(self):
+        return RulespecGroupMonitoringConfigurationNotifications
+
+    @property
+    def name(self):
+        return "extra_host_conf:notes_url"
+
+    @property
+    def valuespec(self):
+        return TextAscii(
+            label=_("URL:"),
+            title=_("Notes URL for Hosts"),
+            help=_("With this setting you can set links to documentations "
+                   "for Hosts"),
+            attrencode=True,
+        )
+
+
+@rulespec_registry.register
+class RulespecExtraServiceConfDisplayName(Rulespec):
+    @property
+    def group(self):
+        return RulespecGroupMonitoringConfigurationNotifications
+
+    @property
+    def name(self):
+        return "extra_service_conf:display_name"
+
+    @property
+    def item_type(self):
+        return "service"
+
+    @property
+    def valuespec(self):
+        return TextUnicode(
+            title=_("Alternative display name for Services"),
+            help=_("This rule set allows you to specify an alternative name "
+                   "to be displayed for certain services. This name is available as "
+                   "a column when creating new views or modifying existing ones. "
+                   "It is always visible in the details view of a service. In the "
+                   "availability reporting there is an option for using that name "
+                   "instead of the normal service description. It does <b>not</b> automatically "
+                   "replace the normal service name in all views.<br><br><b>Note</b>: The "
+                   "purpose of this rule set is to define unique names for several well-known "
+                   "services. It cannot rename services in general."),
+            size=64,
+            attrencode=True,
+        )
 
 
 @rulespec_group_registry.register
@@ -3054,187 +3480,256 @@ class RulespecGroupMonitoringConfigurationInventoryAndCMK(RulespecSubGroup):
         return _("Inventory and Check_MK settings")
 
 
-register_rule(
-    RulespecGroupMonitoringConfigurationInventoryAndCMK,
-    "only_hosts",
-    title=_("Hosts to be monitored"),
-    help=_("By adding rules to this ruleset you can define a subset of your hosts "
-           "to be actually monitored. As long as the rule set is empty "
-           "all configured hosts will be monitored. As soon as you add at least one "
-           "rule, only hosts with a matching rule will be monitored."),
-    optional=True,  # only_hosts is None per default
-)
+@rulespec_registry.register
+class RulespecOnlyHosts(Rulespec):
+    @property
+    def group(self):
+        return RulespecGroupMonitoringConfigurationInventoryAndCMK
 
-register_rule(
-    RulespecGroupMonitoringConfigurationInventoryAndCMK,
-    "ignored_services",
-    title=_("Disabled services"),
-    help=_("Services that are declared as <u>disabled</u> by this rule set will not be added "
-           "to a host during discovery (automatic service detection). Services that already "
-           "exist will continued to be monitored but be marked as obsolete in the service "
-           "list of a host."),
-    itemtype="service")
+    @property
+    def name(self):
+        return "only_hosts"
 
-register_rule(
-    RulespecGroupMonitoringConfigurationInventoryAndCMK, "ignored_checks",
-    CheckTypeSelection(
-        title=_("Disabled checks"),
-        help=_("This ruleset is similar to 'Disabled services', but selects checks to be disabled "
-               "by their <b>type</b>. This allows you to disable certain technical implementations "
-               "such as filesystem checks via SNMP on hosts that also have the Check_MK agent "
-               "installed."),
-    ))
+    @property
+    def title(self):
+        return _("Hosts to be monitored")
 
-register_rule(
-    RulespecGroupMonitoringConfigurationInventoryAndCMK,
-    "clustered_services",
-    title=_("Clustered services"),
-    help=_("When you define HA clusters in WATO then you also have to specify "
-           "which services of a node should be assigned to the cluster and "
-           "which services to the physical node. This is done by this ruleset. "
-           "Please note that the rule will be applied to the <i>nodes</i>, not "
-           "to the cluster.<br><br>Please make sure that you re-inventorize the "
-           "cluster and the physical nodes after changing this ruleset."),
-    itemtype="service")
+    @property
+    def help(self):
+        return _("By adding rules to this ruleset you can define a subset of your hosts "
+                 "to be actually monitored. As long as the rule set is empty "
+                 "all configured hosts will be monitored. As soon as you add at least one "
+                 "rule, only hosts with a matching rule will be monitored.")
 
-register_rule(
-    RulespecGroupMonitoringConfigurationInventoryAndCMK, "periodic_discovery",
-    Alternative(
-        title=_("Periodic service discovery"),
-        style="dropdown",
-        default_value={
-            "check_interval": 2 * 60,
-            "severity_unmonitored": 1,
-            "severity_vanished": 0,
-            "inventory_check_do_scan": True,
-        },
-        elements=[
-            FixedValue(
-                None,
-                title=_("Do not perform periodic service discovery check"),
-                totext=_("no discovery check"),
-            ),
-            Dictionary(
-                title=_("Perform periodic service discovery check"),
-                help=_(
-                    "If enabled, Check_MK will create one additional service per host "
-                    "that does a periodic check, if the service discovery would find new services "
-                    "that are currently not monitored."),
-                elements=[
-                    ("check_interval",
-                     Transform(
-                         Age(minvalue=1, display=["days", "hours", "minutes"]),
-                         forth=lambda v: int(v * 60),
-                         back=lambda v: float(v) / 60.0,
-                         title=_("Perform service discovery every"),
-                     )),
-                    ("severity_unmonitored",
-                     DropdownChoice(
-                         title=_("Severity of unmonitored services"),
-                         help=_(
-                             "Please select which alarm state the service discovery check services "
-                             "shall assume in case that un-monitored services are found."),
-                         choices=[
-                             (0, _("OK - do not alert, just display")),
-                             (1, _("Warning")),
-                             (2, _("Critical")),
-                             (3, _("Unknown")),
-                         ],
-                     )),
-                    ("severity_vanished",
-                     DropdownChoice(
-                         title=_("Severity of vanished services"),
-                         help=_(
-                             "Please select which alarm state the service discovery check services "
-                             "shall assume in case that non-existing services are being monitored."
-                         ),
-                         choices=[
-                             (0, _("OK - do not alert, just display")),
-                             (1, _("Warning")),
-                             (2, _("Critical")),
-                             (3, _("Unknown")),
-                         ],
-                     )),
-                    ("inventory_check_do_scan",
-                     DropdownChoice(
-                         title=_("Service discovery check for SNMP devices"),
-                         choices=[
-                             (True, _("Perform full SNMP scan always, detect new check types")),
-                             (False, _("Just rely on existing check files, detect new items only"))
-                         ])),
-                    ("inventory_rediscovery",
-                     Dictionary(
-                         title=_("Automatically update service configuration"),
-                         help=_(
-                             "If active the check will not only notify about un-monitored services, "
-                             "it will also automatically add/remove them as neccessary."),
-                         elements=[
-                             ("mode",
-                              DropdownChoice(
-                                  title=_("Mode"),
-                                  choices=[(0, _("Add unmonitored services")),
-                                           (1, _("Remove vanished services")),
-                                           (2, _("Add unmonitored & remove vanished services")),
-                                           (3, _("Refresh all services (tabula rasa)"))],
-                                  orientation="vertical",
-                                  default_value=0,
-                              )),
-                             ("group_time",
-                              Age(title=_("Group discovery and activation for up to"),
-                                  help=_(
-                                      "A delay can be configured here so that multiple "
-                                      "discoveries can be activated in one go. This avoids frequent core "
-                                      "restarts in situations with frequent services changes."),
-                                  default_value=15 * 60,
-                                  display=["hours", "minutes"])),
-                             ("excluded_time",
-                              ListOfTimeRanges(
-                                  title=
-                                  _("Never do discovery or activate changes in the following time ranges"
-                                   ),
-                                  help=_("This avoids automatic changes during these times so "
-                                         "that the automatic system doesn't interfere with "
-                                         "user activity."),
-                              )),
-                             ("activation",
-                              DropdownChoice(
-                                  title=_("Automatic activation"),
-                                  choices=[
-                                      (True, _("Automatically activate changes")),
-                                      (False, _("Do not activate changes")),
-                                  ],
-                                  default_value=True,
-                                  help=_(
-                                      "Here you can have the changes activated whenever services "
-                                      "have been added or removed."),
-                              )),
-                             ("service_whitelist",
-                              ListOfStrings(
-                                  title=_("Activate only services matching"),
-                                  allow_empty=False,
-                                  help=_(
-                                      "Set service names or regular expression patterns here to "
-                                      "allow only matching services to be activated automatically. "
-                                      "If you set both this and \'Don't activate services matching\', "
-                                      "both rules have to apply for a service to be activated."),
-                              )),
-                             ("service_blacklist",
-                              ListOfStrings(
-                                  title=_("Don't activate services matching"),
-                                  allow_empty=False,
-                                  help=
-                                  _("Set service names or regular expression patterns here to "
-                                    "prevent matching services from being activated automatically. "
-                                    "If you set both this and \'Activate only services matching\', "
-                                    "both rules have to apply for a service to be activated."),
-                              )),
-                         ],
-                         optional_keys=["service_whitelist", "service_blacklist"],
-                     )),
-                ],
-                optional_keys=["inventory_rediscovery"],
-            )
-        ]))
+    @property
+    def is_optional(self):
+        return True
+
+
+@rulespec_registry.register
+class RulespecIgnoredServices(Rulespec):
+    @property
+    def group(self):
+        return RulespecGroupMonitoringConfigurationInventoryAndCMK
+
+    @property
+    def name(self):
+        return "ignored_services"
+
+    @property
+    def title(self):
+        return _("Disabled services")
+
+    @property
+    def help(self):
+        return _("Services that are declared as <u>disabled</u> by this rule set will not be added "
+                 "to a host during discovery (automatic service detection). Services that already "
+                 "exist will continued to be monitored but be marked as obsolete in the service "
+                 "list of a host.")
+
+    @property
+    def item_type(self):
+        return "service"
+
+
+@rulespec_registry.register
+class RulespecIgnoredChecks(Rulespec):
+    @property
+    def group(self):
+        return RulespecGroupMonitoringConfigurationInventoryAndCMK
+
+    @property
+    def name(self):
+        return "ignored_checks"
+
+    @property
+    def valuespec(self):
+        return CheckTypeSelection(
+            title=_("Disabled checks"),
+            help=_(
+                "This ruleset is similar to 'Disabled services', but selects checks to be disabled "
+                "by their <b>type</b>. This allows you to disable certain technical implementations "
+                "such as filesystem checks via SNMP on hosts that also have the Check_MK agent "
+                "installed."),
+        )
+
+
+@rulespec_registry.register
+class RulespecClusteredServices(Rulespec):
+    @property
+    def group(self):
+        return RulespecGroupMonitoringConfigurationInventoryAndCMK
+
+    @property
+    def name(self):
+        return "clustered_services"
+
+    @property
+    def title(self):
+        return _("Clustered services")
+
+    @property
+    def help(self):
+        return _("When you define HA clusters in WATO then you also have to specify which services "
+                 "of a node should be assigned to the cluster and which services to the physical "
+                 "node. This is done by this ruleset. Please note that the rule will be applied to "
+                 "the <i>nodes</i>, not to the cluster.<br><br>Please make sure that you re-"
+                 "inventorize the cluster and the physical nodes after changing this ruleset.")
+
+    @property
+    def item_type(self):
+        return "service"
+
+
+@rulespec_registry.register
+class RulespecPeriodicDiscovery(Rulespec):
+    @property
+    def group(self):
+        return RulespecGroupMonitoringConfigurationInventoryAndCMK
+
+    @property
+    def name(self):
+        return "periodic_discovery"
+
+    @property
+    def valuespec(self):
+        return Alternative(
+            title=_("Periodic service discovery"),
+            style="dropdown",
+            default_value={
+                "check_interval": 2 * 60,
+                "severity_unmonitored": 1,
+                "severity_vanished": 0,
+                "inventory_check_do_scan": True,
+            },
+            elements=[
+                FixedValue(
+                    None,
+                    title=_("Do not perform periodic service discovery check"),
+                    totext=_("no discovery check"),
+                ),
+                Dictionary(
+                    title=_("Perform periodic service discovery check"),
+                    help=_(
+                        "If enabled, Check_MK will create one additional service per host "
+                        "that does a periodic check, if the service discovery would find new services "
+                        "that are currently not monitored."),
+                    elements=[
+                        ("check_interval",
+                         Transform(
+                             Age(minvalue=1, display=["days", "hours", "minutes"]),
+                             forth=lambda v: int(v * 60),
+                             back=lambda v: float(v) / 60.0,
+                             title=_("Perform service discovery every"),
+                         )),
+                        ("severity_unmonitored",
+                         DropdownChoice(
+                             title=_("Severity of unmonitored services"),
+                             help=_(
+                                 "Please select which alarm state the service discovery check services "
+                                 "shall assume in case that un-monitored services are found."),
+                             choices=[
+                                 (0, _("OK - do not alert, just display")),
+                                 (1, _("Warning")),
+                                 (2, _("Critical")),
+                                 (3, _("Unknown")),
+                             ],
+                         )),
+                        ("severity_vanished",
+                         DropdownChoice(
+                             title=_("Severity of vanished services"),
+                             help=
+                             _("Please select which alarm state the service discovery check services "
+                               "shall assume in case that non-existing services are being monitored."
+                              ),
+                             choices=[
+                                 (0, _("OK - do not alert, just display")),
+                                 (1, _("Warning")),
+                                 (2, _("Critical")),
+                                 (3, _("Unknown")),
+                             ],
+                         )),
+                        ("inventory_check_do_scan",
+                         DropdownChoice(
+                             title=_("Service discovery check for SNMP devices"),
+                             choices=[
+                                 (True, _("Perform full SNMP scan always, detect new check types")),
+                                 (False,
+                                  _("Just rely on existing check files, detect new items only"))
+                             ])),
+                        ("inventory_rediscovery",
+                         Dictionary(
+                             title=_("Automatically update service configuration"),
+                             help=_(
+                                 "If active the check will not only notify about un-monitored services, "
+                                 "it will also automatically add/remove them as neccessary."),
+                             elements=[
+                                 ("mode",
+                                  DropdownChoice(
+                                      title=_("Mode"),
+                                      choices=[(0, _("Add unmonitored services")),
+                                               (1, _("Remove vanished services")),
+                                               (2, _("Add unmonitored & remove vanished services")),
+                                               (3, _("Refresh all services (tabula rasa)"))],
+                                      orientation="vertical",
+                                      default_value=0,
+                                  )),
+                                 ("group_time",
+                                  Age(title=_("Group discovery and activation for up to"),
+                                      help=_(
+                                          "A delay can be configured here so that multiple "
+                                          "discoveries can be activated in one go. This avoids frequent core "
+                                          "restarts in situations with frequent services changes."),
+                                      default_value=15 * 60,
+                                      display=["hours", "minutes"])),
+                                 ("excluded_time",
+                                  ListOfTimeRanges(
+                                      title=
+                                      _("Never do discovery or activate changes in the following time ranges"
+                                       ),
+                                      help=_("This avoids automatic changes during these times so "
+                                             "that the automatic system doesn't interfere with "
+                                             "user activity."),
+                                  )),
+                                 ("activation",
+                                  DropdownChoice(
+                                      title=_("Automatic activation"),
+                                      choices=[
+                                          (True, _("Automatically activate changes")),
+                                          (False, _("Do not activate changes")),
+                                      ],
+                                      default_value=True,
+                                      help=_(
+                                          "Here you can have the changes activated whenever services "
+                                          "have been added or removed."),
+                                  )),
+                                 ("service_whitelist",
+                                  ListOfStrings(
+                                      title=_("Activate only services matching"),
+                                      allow_empty=False,
+                                      help=
+                                      _("Set service names or regular expression patterns here to "
+                                        "allow only matching services to be activated automatically. "
+                                        "If you set both this and \'Don't activate services matching\', "
+                                        "both rules have to apply for a service to be activated."),
+                                  )),
+                                 ("service_blacklist",
+                                  ListOfStrings(
+                                      title=_("Don't activate services matching"),
+                                      allow_empty=False,
+                                      help=
+                                      _("Set service names or regular expression patterns here to "
+                                        "prevent matching services from being activated automatically. "
+                                        "If you set both this and \'Activate only services matching\', "
+                                        "both rules have to apply for a service to be activated."),
+                                  )),
+                             ],
+                             optional_keys=["service_whitelist", "service_blacklist"],
+                         )),
+                    ],
+                    optional_keys=["inventory_rediscovery"],
+                )
+            ])
 
 
 @rulespec_group_registry.register
@@ -3252,55 +3747,91 @@ class RulespecGroupMonitoringConfigurationVarious(RulespecSubGroup):
         return _("Various")
 
 
-register_rule(
-    RulespecGroupMonitoringConfigurationVarious,
-    "clustered_services_mapping",
-    TextAscii(
-        title=_("Clustered services for overlapping clusters"),
-        label=_("Assign services to the following cluster:"),
-        help=_("It's possible to have clusters that share nodes. You could say that "
-               "such clusters &quot;overlap&quot;. In such a case using the ruleset "
-               "<i>Clustered services</i> is not sufficient since it would not be clear "
-               "to which of the several possible clusters a service found on such a shared "
-               "node should be assigned to. With this ruleset you can assign services and "
-               "explicitely specify which cluster assign them to."),
-    ),
-    itemtype="service",
-)
+@rulespec_registry.register
+class RulespecClusteredServicesMapping(Rulespec):
+    @property
+    def group(self):
+        return RulespecGroupMonitoringConfigurationVarious
 
-register_rule(
-    RulespecGroupMonitoringConfigurationVarious,
-    "extra_host_conf:service_period",
-    TimeperiodSelection(
-        title=_("Service period for hosts"),
-        help=_(
-            "When it comes to availability reporting, you might want the report "
-            "to cover only certain time periods, e.g. only Monday to Friday "
-            "from 8:00 to 17:00. You can do this by specifying a service period "
-            "for hosts or services. In the reporting you can then decide to "
-            "include, exclude or ignore such periods und thus e.g. create a report "
-            "of the availability just within or without these times. <b>Note</b>: Changes in the "
-            "actual <i>definition</i> of a time period will only be reflected in "
-            "times <i>after</i> that change. Selecting a different service period "
-            "will also be reflected in the past.")),
-)
+    @property
+    def name(self):
+        return "clustered_services_mapping"
 
-register_rule(
-    RulespecGroupMonitoringConfigurationVarious,
-    "extra_service_conf:service_period",
-    TimeperiodSelection(
-        title=_("Service period for services"),
-        help=_(
-            "When it comes to availability reporting, you might want the report "
-            "to cover only certain time periods, e.g. only Monday to Friday "
-            "from 8:00 to 17:00. You can do this by specifying a service period "
-            "for hosts or services. In the reporting you can then decide to "
-            "include, exclude or ignore such periods und thus e.g. create a report "
-            "of the availability just within or without these times. <b>Note</b>: Changes in the "
-            "actual <i>definition</i> of a time period will only be reflected in "
-            "times <i>after</i> that change. Selecting a different service period "
-            "will also be reflected in the past.")),
-    itemtype="service")
+    @property
+    def item_type(self):
+        return "service"
+
+    @property
+    def valuespec(self):
+        return TextAscii(
+            title=_("Clustered services for overlapping clusters"),
+            label=_("Assign services to the following cluster:"),
+            help=_("It's possible to have clusters that share nodes. You could say that "
+                   "such clusters &quot;overlap&quot;. In such a case using the ruleset "
+                   "<i>Clustered services</i> is not sufficient since it would not be clear "
+                   "to which of the several possible clusters a service found on such a shared "
+                   "node should be assigned to. With this ruleset you can assign services and "
+                   "explicitely specify which cluster assign them to."),
+        )
+
+
+@rulespec_registry.register
+class RulespecExtraHostConfServicePeriod(Rulespec):
+    @property
+    def group(self):
+        return RulespecGroupMonitoringConfigurationVarious
+
+    @property
+    def name(self):
+        return "extra_host_conf:service_period"
+
+    @property
+    def valuespec(self):
+        return TimeperiodSelection(
+            title=_("Service period for hosts"),
+            help=_(
+                "When it comes to availability reporting, you might want the report "
+                "to cover only certain time periods, e.g. only Monday to Friday "
+                "from 8:00 to 17:00. You can do this by specifying a service period "
+                "for hosts or services. In the reporting you can then decide to "
+                "include, exclude or ignore such periods und thus e.g. create a report "
+                "of the availability just within or without these times. <b>Note</b>: Changes in the "
+                "actual <i>definition</i> of a time period will only be reflected in "
+                "times <i>after</i> that change. Selecting a different service period "
+                "will also be reflected in the past."),
+        )
+
+
+@rulespec_registry.register
+class RulespecExtraServiceConfServicePeriod(Rulespec):
+    @property
+    def group(self):
+        return RulespecGroupMonitoringConfigurationVarious
+
+    @property
+    def name(self):
+        return "extra_service_conf:service_period"
+
+    @property
+    def item_type(self):
+        return "service"
+
+    @property
+    def valuespec(self):
+        return TimeperiodSelection(
+            title=_("Service period for services"),
+            help=_(
+                "When it comes to availability reporting, you might want the report "
+                "to cover only certain time periods, e.g. only Monday to Friday "
+                "from 8:00 to 17:00. You can do this by specifying a service period "
+                "for hosts or services. In the reporting you can then decide to "
+                "include, exclude or ignore such periods und thus e.g. create a report "
+                "of the availability just within or without these times. <b>Note</b>: Changes in the "
+                "actual <i>definition</i> of a time period will only be reflected in "
+                "times <i>after</i> that change. Selecting a different service period "
+                "will also be reflected in the past."),
+        )
+
 
 #.
 #   .--User Interface------------------------------------------------------.
@@ -3330,90 +3861,164 @@ class RulespecGroupUserInterface(RulespecGroup):
         return _("Settings concerning the user interface of Check_MK")
 
 
-register_rule(
-    RulespecGroupUserInterface, "extra_host_conf:icon_image",
-    Transform(
-        IconSelector(
-            title=_("Icon image for hosts in status GUI"),
-            help=_("You can assign icons to hosts for the status GUI. "
-                   "Put your images into <tt>%s</tt>. ") %
-            (cmk.utils.paths.omd_root + "/local/share/check_mk/web/htdocs/images/icons"),
-        ),
-        forth=lambda v: v and (v.endswith('.png') and v[:-4]) or v,
-    ))
+@rulespec_registry.register
+class RulespecExtraHostConfIconImage(Rulespec):
+    @property
+    def group(self):
+        return RulespecGroupUserInterface
 
-register_rule(
-    RulespecGroupUserInterface,
-    "extra_service_conf:icon_image",
-    Transform(
-        IconSelector(
-            title=_("Icon image for services in status GUI"),
-            help=_("You can assign icons to services for the status GUI. "
-                   "Put your images into <tt>%s</tt>. ") %
-            (cmk.utils.paths.omd_root + "/local/share/check_mk/web/htdocs/images/icons"),
-        ),
-        forth=lambda v: v and (v.endswith('.png') and v[:-4]) or v,
-    ),
-    itemtype="service")
+    @property
+    def name(self):
+        return "extra_host_conf:icon_image"
 
-register_rule(
-    RulespecGroupUserInterface,
-    "host_icons_and_actions",
-    UserIconOrAction(
-        title=_("Custom icons or actions for hosts in status GUI"),
-        help=_("You can assign icons or actions to hosts for the status GUI.")),
-    match="all",
-)
+    @property
+    def valuespec(self):
+        return Transform(
+            IconSelector(
+                title=_("Icon image for hosts in status GUI"),
+                help=_("You can assign icons to hosts for the status GUI. "
+                       "Put your images into <tt>%s</tt>. ") %
+                (cmk.utils.paths.omd_root + "/local/share/check_mk/web/htdocs/images/icons"),
+            ),
+            forth=lambda v: v and (v.endswith('.png') and v[:-4]) or v,
+        )
 
-register_rule(
-    RulespecGroupUserInterface,
-    "service_icons_and_actions",
-    UserIconOrAction(
-        title=_("Custom icons or actions for services in status GUI"),
-        help=_("You can assign icons or actions to services for the status GUI."),
-    ),
-    match="all",
-    itemtype="service",
-)
 
-register_rule(
-    RulespecGroupUserInterface, "extra_host_conf:_ESCAPE_PLUGIN_OUTPUT",
-    DropdownChoice(
-        title=_("Escape HTML codes in host output"),
-        help=_("By default, for security reasons, the GUI does not interpret any HTML "
-               "code received from external sources, like plugin output or log messages. "
-               "If you are really sure what you are doing and need to have HTML codes, like "
-               "links rendered, disable this option. Be aware, you might open the way "
-               "for several injection attacks.") + _(
-                   "This setting can either be set globally or individually for selected hosts "
-                   "or services using the host or service rulesets."),
-        choices=[
-            ("1", _("Escape HTML codes")),
-            ("0", _("Don't escape HTML codes (insecure)")),
-        ],
-        default_value="1",
-    ))
+@rulespec_registry.register
+class RulespecExtraServiceConfIconImage(Rulespec):
+    @property
+    def group(self):
+        return RulespecGroupUserInterface
 
-register_rule(
-    RulespecGroupUserInterface,
-    "extra_service_conf:_ESCAPE_PLUGIN_OUTPUT",
-    DropdownChoice(
-        title=_("Escape HTML codes in service output"),
-        help=_("By default, for security reasons, the GUI does not interpret any HTML "
-               "code received from external sources, like plugin output or log messages. "
-               "If you are really sure what you are doing and need to have HTML codes, like "
-               "links rendered, disable this option. Be aware, you might open the way "
-               "for several injection attacks.") + _(
-                   "This setting can either be set globally or individually for selected hosts "
-                   "or services using the host or service rulesets."),
-        choices=[
-            ("1", _("Escape HTML codes")),
-            ("0", _("Don't escape HTML codes (insecure)")),
-        ],
-        default_value="1",
-    ),
-    itemtype="service",
-)
+    @property
+    def name(self):
+        return "extra_service_conf:icon_image"
+
+    @property
+    def item_type(self):
+        return "service"
+
+    @property
+    def valuespec(self):
+        return Transform(
+            IconSelector(
+                title=_("Icon image for services in status GUI"),
+                help=_("You can assign icons to services for the status GUI. "
+                       "Put your images into <tt>%s</tt>. ") %
+                (cmk.utils.paths.omd_root + "/local/share/check_mk/web/htdocs/images/icons"),
+            ),
+            forth=lambda v: v and (v.endswith('.png') and v[:-4]) or v,
+        )
+
+
+@rulespec_registry.register
+class RulespecHostIconsAndActions(Rulespec):
+    @property
+    def group(self):
+        return RulespecGroupUserInterface
+
+    @property
+    def name(self):
+        return "host_icons_and_actions"
+
+    @property
+    def match_type(self):
+        return "all"
+
+    @property
+    def valuespec(self):
+        return UserIconOrAction(
+            title=_("Custom icons or actions for hosts in status GUI"),
+            help=_("You can assign icons or actions to hosts for the status GUI."),
+        )
+
+
+@rulespec_registry.register
+class RulespecServiceIconsAndActions(Rulespec):
+    @property
+    def group(self):
+        return RulespecGroupUserInterface
+
+    @property
+    def name(self):
+        return "service_icons_and_actions"
+
+    @property
+    def match_type(self):
+        return "all"
+
+    @property
+    def item_type(self):
+        return "service"
+
+    @property
+    def valuespec(self):
+        return UserIconOrAction(
+            title=_("Custom icons or actions for services in status GUI"),
+            help=_("You can assign icons or actions to services for the status GUI."),
+        )
+
+
+@rulespec_registry.register
+class RulespecExtraHostConfEscapePluginOutput(Rulespec):
+    @property
+    def group(self):
+        return RulespecGroupUserInterface
+
+    @property
+    def name(self):
+        return "extra_host_conf:_ESCAPE_PLUGIN_OUTPUT"
+
+    @property
+    def valuespec(self):
+        return DropdownChoice(
+            title=_("Escape HTML codes in host output"),
+            help=_("By default, for security reasons, the GUI does not interpret any HTML "
+                   "code received from external sources, like plugin output or log messages. "
+                   "If you are really sure what you are doing and need to have HTML codes, like "
+                   "links rendered, disable this option. Be aware, you might open the way "
+                   "for several injection attacks.") + _(
+                       "This setting can either be set globally or individually for selected hosts "
+                       "or services using the host or service rulesets."),
+            choices=[
+                ("1", _("Escape HTML codes")),
+                ("0", _("Don't escape HTML codes (insecure)")),
+            ],
+            default_value="1",
+        )
+
+
+@rulespec_registry.register
+class RulespecExtraServiceConfEscapePluginOutput(Rulespec):
+    @property
+    def group(self):
+        return RulespecGroupUserInterface
+
+    @property
+    def name(self):
+        return "extra_service_conf:_ESCAPE_PLUGIN_OUTPUT"
+
+    @property
+    def item_type(self):
+        return "service"
+
+    @property
+    def valuespec(self):
+        return DropdownChoice(
+            title=_("Escape HTML codes in service output"),
+            help=_("By default, for security reasons, the GUI does not interpret any HTML "
+                   "code received from external sources, like plugin output or log messages. "
+                   "If you are really sure what you are doing and need to have HTML codes, like "
+                   "links rendered, disable this option. Be aware, you might open the way "
+                   "for several injection attacks.") + _(
+                       "This setting can either be set globally or individually for selected hosts "
+                       "or services using the host or service rulesets."),
+            choices=[
+                ("1", _("Escape HTML codes")),
+                ("0", _("Don't escape HTML codes (insecure)")),
+            ],
+            default_value="1",
+        )
 
 
 @rulespec_group_registry.register
@@ -3446,28 +4051,51 @@ class RulespecGroupAgentGeneralSettings(RulespecSubGroup):
         return _("General Settings")
 
 
-register_rule(
-    RulespecGroupAgentGeneralSettings,
-    "dyndns_hosts",
-    title=_("Hosts with dynamic DNS lookup during monitoring"),
-    help=_("This ruleset selects host for dynamic DNS lookup during monitoring. Normally "
-           "the IP addresses of hosts are statically configured or looked up when you "
-           "activate the changes. In some rare cases DNS lookups must be done each time "
-           "a host is connected to, e.g. when the IP address of the host is dynamic "
-           "and can change."))
+@rulespec_registry.register
+class RulespecDyndnsHosts(Rulespec):
+    @property
+    def group(self):
+        return RulespecGroupAgentGeneralSettings
 
-register_rule(
-    RulespecGroupAgentGeneralSettings, "primary_address_family",
-    DropdownChoice(
-        choices=[
-            ("ipv4", _("IPv4")),
-            ("ipv6", _("IPv6")),
-        ],
-        title=_("Primary IP address family of dual-stack hosts"),
-        help=_("When you configure dual-stack host (IPv4 + IPv6) monitoring in Check_MK, "
-               "normally IPv4 is used as primary address family to communicate with this "
-               "host. The other family, IPv6, is just being pinged. You can use this rule "
-               "to invert this behaviour to use IPv6 as primary address family.")))
+    @property
+    def name(self):
+        return "dyndns_hosts"
+
+    @property
+    def title(self):
+        return _("Hosts with dynamic DNS lookup during monitoring")
+
+    @property
+    def help(self):
+        return _("This ruleset selects host for dynamic DNS lookup during monitoring. Normally the "
+                 "IP addresses of hosts are statically configured or looked up when you activate "
+                 "the changes. In some rare cases DNS lookups must be done each time a host is "
+                 "connected to, e.g. when the IP address of the host is dynamic and can change.")
+
+
+@rulespec_registry.register
+class RulespecPrimaryAddressFamily(Rulespec):
+    @property
+    def group(self):
+        return RulespecGroupAgentGeneralSettings
+
+    @property
+    def name(self):
+        return "primary_address_family"
+
+    @property
+    def valuespec(self):
+        return DropdownChoice(
+            choices=[
+                ("ipv4", _("IPv4")),
+                ("ipv6", _("IPv6")),
+            ],
+            title=_("Primary IP address family of dual-stack hosts"),
+            help=_("When you configure dual-stack host (IPv4 + IPv6) monitoring in Check_MK, "
+                   "normally IPv4 is used as primary address family to communicate with this "
+                   "host. The other family, IPv6, is just being pinged. You can use this rule "
+                   "to invert this behaviour to use IPv6 as primary address family."),
+        )
 
 
 @rulespec_group_registry.register
@@ -3485,157 +4113,290 @@ class RulespecGroupAgentSNMP(RulespecSubGroup):
         return _("SNMP")
 
 
-register_rule(
-    RulespecGroupAgentSNMP, "snmp_communities",
-    SNMPCredentials(
-        title=_("SNMP credentials of monitored hosts"),
-        help=
-        _("By default Check_MK uses the community \"public\" to contact hosts via SNMP v1/v2. This rule "
-          "can be used to customize the the credentials to be used when contacting hosts via SNMP."
-         ),
-    ))
+@rulespec_registry.register
+class RulespecSnmpCommunities(Rulespec):
+    @property
+    def group(self):
+        return RulespecGroupAgentSNMP
 
-register_rule(
-    RulespecGroupAgentSNMP,
-    "management_board_config",
-    CascadingDropdown(
-        title=_("Management board config"),
-        choices=[
-            ("snmp", _("SNMP"), SNMPCredentials()),
-            ("ipmi", _("IPMI"), IPMIParameters()),
-        ],
-    ),
-)
+    @property
+    def name(self):
+        return "snmp_communities"
 
-register_rule(
-    RulespecGroupAgentSNMP, "snmp_character_encodings",
-    DropdownChoice(
-        title=_("Output text encoding settings for SNMP devices"),
-        help=_("Some devices send texts in non-ASCII characters. Check_MK"
-               " always assumes UTF-8 encoding. You can declare other "
-               " other encodings here"),
-        choices=[
-            ("utf-8", _("UTF-8")),
-            ("latin1", _("latin1")),
-            ("cp437", _("cp437")),
-        ]))
+    @property
+    def valuespec(self):
+        return SNMPCredentials(
+            title=_("SNMP credentials of monitored hosts"),
+            help=
+            _("By default Check_MK uses the community \"public\" to contact hosts via SNMP v1/v2. This rule "
+              "can be used to customize the the credentials to be used when contacting hosts via SNMP."
+             ),
+        )
 
-register_rule(
-    RulespecGroupAgentSNMP,
-    "bulkwalk_hosts",
-    title=_("Bulk walk: Hosts using bulk walk (enforces SNMP v2c)"),
-    help=_(
-        "Most SNMP hosts support SNMP version 2c. However, Check_MK defaults to version 1, "
-        "in order to support as many devices as possible. Please use this ruleset in order "
-        "to configure SNMP v2c for as many hosts as possible. That version has two advantages: "
-        "it supports 64 bit counters, which avoids problems with wrapping counters at too "
-        "much traffic. And it supports bulk walk, which saves much CPU and network resources. "
-        "Please be aware, however, that there are some broken devices out there, that support "
-        "bulk walk but behave very bad when it is used. When you want to enable v2c while not using "
-        "bulk walk, please use the rule set snmpv2c_hosts instead."))
 
-register_rule(
-    RulespecGroupAgentSNMP,
-    "snmp_bulk_size",
-    Integer(
-        title=_("Bulk walk: Number of OIDs per bulk"),
-        label=_("Number of OIDs to request per bulk: "),
-        minvalue=1,
-        maxvalue=100,
-        default_value=10,
-    ),
-    help=_("This variable allows you to configure the numbr of OIDs Check_MK should request "
-           "at once. This rule only applies to SNMP hosts that are configured to be bulk walk "
-           "hosts."
-           "You may want to use this rule to tune SNMP performance. Be aware: A higher value "
-           "is not always better. It may decrease the transactions between Check_MK and the "
-           "target system, but may increase the OID overhead in case you only need a small "
-           "amount of OIDs."),
-)
+@rulespec_registry.register
+class RulespecManagementBoardConfig(Rulespec):
+    @property
+    def group(self):
+        return RulespecGroupAgentSNMP
 
-register_rule(
-    RulespecGroupAgentSNMP,
-    "snmp_without_sys_descr",
-    title=_("Hosts without system description OID"),
-    help=_("Devices which do not publish the system description OID "
-           ".1.3.6.1.2.1.1.1.0 are normally ignored by the SNMP inventory. "
-           "Use this ruleset to select hosts which should nevertheless "
-           "be checked."))
+    @property
+    def name(self):
+        return "management_board_config"
 
-register_rule(
-    RulespecGroupAgentSNMP,
-    "snmpv2c_hosts",
-    title=_("Legacy SNMP devices using SNMP v2c"),
-    help=
-    _("There exist a few devices out there that behave very badly when using SNMP v2c and bulk walk. "
-      "If you want to use SNMP v2c on those devices, nevertheless, you need to configure this device as "
-      "legacy snmp device and upgrade it to SNMP v2c (without bulk walk) with this rule set. One reason is enabling 64 bit counters. "
-      "Note: This rule won't apply if the device is already configured as SNMP v2c device."))
+    @property
+    def valuespec(self):
+        return CascadingDropdown(
+            title=_("Management board config"),
+            choices=[
+                ("snmp", _("SNMP"), SNMPCredentials()),
+                ("ipmi", _("IPMI"), IPMIParameters()),
+            ],
+        )
 
-register_rule(
-    RulespecGroupAgentSNMP,
-    "snmp_timing",
-    Dictionary(
-        title=_("Timing settings for SNMP access"),
-        help=_("This rule decides about the number of retries and timeout values "
-               "for the SNMP access to devices."),
-        elements=[
-            (
-                "timeout",
-                Float(
-                    title=_("Response timeout for a single query"),
-                    help=_(
-                        "After a request is sent to the remote SNMP agent we will wait up to this "
-                        "number of seconds until assuming the answer get lost and retrying."),
-                    default_value=1,
-                    minvalue=0.1,
-                    maxvalue=60,
-                    allow_int=True,
-                    unit=_("sec"),
-                    size=6,
+
+@rulespec_registry.register
+class RulespecSnmpCharacterEncodings(Rulespec):
+    @property
+    def group(self):
+        return RulespecGroupAgentSNMP
+
+    @property
+    def name(self):
+        return "snmp_character_encodings"
+
+    @property
+    def valuespec(self):
+        return DropdownChoice(
+            title=_("Output text encoding settings for SNMP devices"),
+            help=_("Some devices send texts in non-ASCII characters. Check_MK"
+                   " always assumes UTF-8 encoding. You can declare other "
+                   " other encodings here"),
+            choices=[
+                ("utf-8", _("UTF-8")),
+                ("latin1", _("latin1")),
+                ("cp437", _("cp437")),
+            ],
+        )
+
+
+@rulespec_registry.register
+class RulespecBulkwalkHosts(Rulespec):
+    @property
+    def group(self):
+        return RulespecGroupAgentSNMP
+
+    @property
+    def name(self):
+        return "bulkwalk_hosts"
+
+    @property
+    def title(self):
+        return _("Bulk walk: Hosts using bulk walk (enforces SNMP v2c)")
+
+    @property
+    def help(self):
+        return _("Most SNMP hosts support SNMP version 2c. However, Check_MK defaults to version "
+                 "1, in order to support as many devices as possible. Please use this ruleset in "
+                 "order to configure SNMP v2c for as many hosts as possible. That version has two "
+                 "advantages: it supports 64 bit counters, which avoids problems with wrapping "
+                 "counters at too much traffic. And it supports bulk walk, which saves much CPU "
+                 "and network resources. Please be aware, however, that there are some broken "
+                 "devices out there, that support bulk walk but behave very bad when it is used. "
+                 "When you want to enable v2c while not using bulk walk, please use the rule set "
+                 "snmpv2c_hosts instead.")
+
+
+@rulespec_registry.register
+class RulespecSnmpBulkSize(Rulespec):
+    @property
+    def group(self):
+        return RulespecGroupAgentSNMP
+
+    @property
+    def name(self):
+        return "snmp_bulk_size"
+
+    @property
+    def valuespec(self):
+        return Integer(
+            title=_("Bulk walk: Number of OIDs per bulk"),
+            label=_("Number of OIDs to request per bulk: "),
+            minvalue=1,
+            maxvalue=100,
+            default_value=10,
+            help=_(
+                "This variable allows you to configure the numbr of OIDs Check_MK should request "
+                "at once. This rule only applies to SNMP hosts that are configured to be bulk "
+                "walk hosts.You may want to use this rule to tune SNMP performance. Be aware: A "
+                "higher value is not always better. It may decrease the transactions between "
+                "Check_MK and the target system, but may increase the OID overhead in case you "
+                "only need a small amount of OIDs."),
+        )
+
+
+@rulespec_registry.register
+class RulespecSnmpWithoutSysDescr(Rulespec):
+    @property
+    def group(self):
+        return RulespecGroupAgentSNMP
+
+    @property
+    def name(self):
+        return "snmp_without_sys_descr"
+
+    @property
+    def title(self):
+        return _("Hosts without system description OID")
+
+    @property
+    def help(self):
+        return _("Devices which do not publish the system description OID .1.3.6.1.2.1.1.1.0 are "
+                 "normally ignored by the SNMP inventory. Use this ruleset to select hosts which "
+                 "should nevertheless be checked.")
+
+
+@rulespec_registry.register
+class RulespecSnmpv2CHosts(Rulespec):
+    @property
+    def group(self):
+        return RulespecGroupAgentSNMP
+
+    @property
+    def name(self):
+        return "snmpv2c_hosts"
+
+    @property
+    def title(self):
+        return _("Legacy SNMP devices using SNMP v2c")
+
+    @property
+    def help(self):
+        return _("There exist a few devices out there that behave very badly when using SNMP v2c "
+                 "and bulk walk. If you want to use SNMP v2c on those devices, nevertheless, you "
+                 "need to configure this device as legacy snmp device and upgrade it to SNMP v2c "
+                 "(without bulk walk) with this rule set. One reason is enabling 64 bit counters. "
+                 "Note: This rule won't apply if the device is already configured as SNMP v2c "
+                 "device.")
+
+
+@rulespec_registry.register
+class RulespecSnmpTiming(Rulespec):
+    @property
+    def group(self):
+        return RulespecGroupAgentSNMP
+
+    @property
+    def name(self):
+        return "snmp_timing"
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def factory_default(self):
+        return {'retries': 5, 'timeout': 1}
+
+    @property
+    def valuespec(self):
+        return Dictionary(
+            title=_("Timing settings for SNMP access"),
+            help=_("This rule decides about the number of retries and timeout values "
+                   "for the SNMP access to devices."),
+            elements=[
+                (
+                    "timeout",
+                    Float(
+                        title=_("Response timeout for a single query"),
+                        help=_(
+                            "After a request is sent to the remote SNMP agent we will wait up to this "
+                            "number of seconds until assuming the answer get lost and retrying."),
+                        default_value=1,
+                        minvalue=0.1,
+                        maxvalue=60,
+                        allow_int=True,
+                        unit=_("sec"),
+                        size=6,
+                    ),
                 ),
-            ),
-            ("retries",
-             Integer(
-                 title=_("Number of retries"),
-                 default_value=5,
-                 minvalue=0,
-                 maxvalue=50,
-             )),
-        ]),
-    factory_default={
-        "timeout": 1,
-        "retries": 5
-    },
-    match="dict")
+                ("retries",
+                 Integer(
+                     title=_("Number of retries"),
+                     default_value=5,
+                     minvalue=0,
+                     maxvalue=50,
+                 )),
+            ],
+        )
 
-register_rule(
-    RulespecGroupAgentSNMP,
-    "non_inline_snmp_hosts",
-    title=_("Hosts not using Inline-SNMP"),
-    help=_("Check_MK has an efficient SNMP implementation called Inline SNMP which reduces the "
-           "load produced by SNMP monitoring on the monitoring host significantly. This option is "
-           "enabled by default for all SNMP hosts and it is a good idea to keep this default "
-           "setting. However, there are SNMP devices which have problems with this SNMP "
-           "implementation. You can use this rule to disable Inline SNMP for these hosts."))
 
-register_rule(
-    RulespecGroupAgentSNMP,
-    "usewalk_hosts",
-    title=_("Simulating SNMP by using a stored SNMP walk"),
-    help=_("This ruleset helps in test and development. You can create stored SNMP "
-           "walks on the command line with cmk --snmpwalk HOSTNAME. A host that "
-           "is configured with this ruleset will then use the information from that "
-           "file instead of using real SNMP. "))
+@rulespec_registry.register
+class RulespecNonInlineSnmpHosts(Rulespec):
+    @property
+    def group(self):
+        return RulespecGroupAgentSNMP
 
-register_rule(
-    RulespecGroupAgentSNMP,
-    "snmp_ports",
-    Integer(minvalue=1, maxvalue=65535, default_value=161),
-    title=_("UDP port used for SNMP"),
-    help=_("This variable allows you to customize the UDP port to "
-           "be used to communicate via SNMP on a per-host-basis."),
-)
+    @property
+    def name(self):
+        return "non_inline_snmp_hosts"
+
+    @property
+    def title(self):
+        return _("Hosts not using Inline-SNMP")
+
+    @property
+    def help(self):
+        return _("Check_MK has an efficient SNMP implementation called Inline SNMP which reduces "
+                 "the load produced by SNMP monitoring on the monitoring host significantly. This "
+                 "option is enabled by default for all SNMP hosts and it is a good idea to keep "
+                 "this default setting. However, there are SNMP devices which have problems with "
+                 "this SNMP implementation. You can use this rule to disable Inline SNMP for these "
+                 "hosts.")
+
+
+@rulespec_registry.register
+class RulespecUsewalkHosts(Rulespec):
+    @property
+    def group(self):
+        return RulespecGroupAgentSNMP
+
+    @property
+    def name(self):
+        return "usewalk_hosts"
+
+    @property
+    def title(self):
+        return _("Simulating SNMP by using a stored SNMP walk")
+
+    @property
+    def help(self):
+        return _("This ruleset helps in test and development. You can create stored SNMP walks on "
+                 "the command line with cmk --snmpwalk HOSTNAME. A host that is configured with "
+                 "this ruleset will then use the information from that file instead of using real "
+                 "SNMP.")
+
+
+@rulespec_registry.register
+class RulespecSnmpPorts(Rulespec):
+    @property
+    def group(self):
+        return RulespecGroupAgentSNMP
+
+    @property
+    def name(self):
+        return "snmp_ports"
+
+    @property
+    def valuespec(self):
+        return Integer(
+            minvalue=1,
+            maxvalue=65535,
+            default_value=161,
+            title=_("UDP port used for SNMP"),
+            help=_("This variable allows you to customize the UDP port to be used to "
+                   "communicate via SNMP on a per-host-basis."),
+        )
 
 
 @rulespec_group_registry.register
@@ -3653,65 +4414,96 @@ class RulespecGroupAgentCMKAgent(RulespecSubGroup):
         return _("Check_MK Agent")
 
 
-register_rule(
-    RulespecGroupAgentCMKAgent,
-    "agent_ports",
-    Integer(minvalue=1, maxvalue=65535, default_value=6556),
-    title=_("TCP port for connection to Check_MK agent"),
-    help=_("This variable allows to specify the TCP port to "
-           "be used to connect to the agent on a per-host-basis. "),
-)
+@rulespec_registry.register
+class RulespecAgentPorts(Rulespec):
+    @property
+    def group(self):
+        return RulespecGroupAgentCMKAgent
 
-register_rule(
-    RulespecGroupAgentCMKAgent,
-    "tcp_connect_timeouts",
-    Float(
-        minvalue=1.0,
-        default_value=5.0,
-        unit="sec",
-    ),
-    title=_("Agent TCP connect timeout"),
-    help=_(
-        "Timeout for TCP connect to the Check_MK agent in seconds. If the connection "
-        "to the agent cannot be established within this time, it is considered to be unreachable. "
-        "Note: This does <b>not</b> limit the time the agent needs to "
-        "generate its output. "
-        "This rule can be used to specify a timeout on a per-host-basis."),
-)
+    @property
+    def name(self):
+        return "agent_ports"
 
-register_rule(
-    RulespecGroupAgentCMKAgent,
-    "agent_encryption",
-    Dictionary(
-        elements=[
-            ("passphrase", PasswordSpec(title=_("Encryption secret"), allow_empty=False)),
-            ("use_regular",
-             DropdownChoice(
-                 title=_("Encryption for Agent"),
-                 help=_("Choose if the agent agents encrypt packages. This controls whether "
-                        "baked agents encrypt their output and whether check_mk expects "
-                        "encrypted output. "
-                        "Please note: If you opt to enforce encryption, "
-                        "agents that don't support encryption will not work any more. "
-                        "Further note: This only affects regular agents, not special agents "
-                        "aka datasource programs."),
-                 default_value="disable",
-                 choices=[("enforce", _("Enforce (drop unencrypted data)")),
-                          ("allow", _("Enable  (accept encrypted and unencrypted data)")),
-                          ("disable", _("Disable (drop encrypted data)"))])),
-            ("use_realtime",
-             DropdownChoice(
-                 title=_("Encryption for Realtime Updates"),
-                 help=_("Choose if realtime updates are sent/expected encrypted"),
-                 default_value="enforce",
-                 choices=[("enforce", _("Enforce (drop unencrypted data)")),
-                          ("allow", _("Enable  (accept encrypted and unencrypted data)")),
-                          ("disable", _("Disable (drop encrypted data)"))])),
-        ],
-        optional_keys=[]),
-    title=_("Encryption"),
-    help=_("Control encryption of data sent from agent to host."),
-)
+    @property
+    def valuespec(self):
+        return Integer(
+            minvalue=1,
+            maxvalue=65535,
+            default_value=6556,
+            title=_("TCP port for connection to Check_MK agent"),
+            help=_("This variable allows to specify the TCP port to "
+                   "be used to connect to the agent on a per-host-basis. "),
+        )
+
+
+@rulespec_registry.register
+class RulespecTcpConnectTimeouts(Rulespec):
+    @property
+    def group(self):
+        return RulespecGroupAgentCMKAgent
+
+    @property
+    def name(self):
+        return "tcp_connect_timeouts"
+
+    @property
+    def valuespec(self):
+        return Float(
+            minvalue=1.0,
+            default_value=5.0,
+            unit="sec",
+            title=_("Agent TCP connect timeout"),
+            help=_(
+                "Timeout for TCP connect to the Check_MK agent in seconds. If the connection "
+                "to the agent cannot be established within this time, it is considered to be unreachable. "
+                "Note: This does <b>not</b> limit the time the agent needs to "
+                "generate its output. "
+                "This rule can be used to specify a timeout on a per-host-basis."),
+        )
+
+
+@rulespec_registry.register
+class RulespecAgentEncryption(Rulespec):
+    @property
+    def group(self):
+        return RulespecGroupAgentCMKAgent
+
+    @property
+    def name(self):
+        return "agent_encryption"
+
+    @property
+    def valuespec(self):
+        return Dictionary(
+            elements=[
+                ("passphrase", PasswordSpec(title=_("Encryption secret"), allow_empty=False)),
+                ("use_regular",
+                 DropdownChoice(
+                     title=_("Encryption for Agent"),
+                     help=_("Choose if the agent agents encrypt packages. This controls whether "
+                            "baked agents encrypt their output and whether check_mk expects "
+                            "encrypted output. "
+                            "Please note: If you opt to enforce encryption, "
+                            "agents that don't support encryption will not work any more. "
+                            "Further note: This only affects regular agents, not special agents "
+                            "aka datasource programs."),
+                     default_value="disable",
+                     choices=[("enforce", _("Enforce (drop unencrypted data)")),
+                              ("allow", _("Enable  (accept encrypted and unencrypted data)")),
+                              ("disable", _("Disable (drop encrypted data)"))])),
+                ("use_realtime",
+                 DropdownChoice(
+                     title=_("Encryption for Realtime Updates"),
+                     help=_("Choose if realtime updates are sent/expected encrypted"),
+                     default_value="enforce",
+                     choices=[("enforce", _("Enforce (drop unencrypted data)")),
+                              ("allow", _("Enable  (accept encrypted and unencrypted data)")),
+                              ("disable", _("Disable (drop encrypted data)"))])),
+            ],
+            optional_keys=[],
+            title=_("Encryption"),
+            help=_("Control encryption of data sent from agent to host."),
+        )
 
 
 def _common_check_mk_exit_status_elements():
@@ -3741,136 +4533,180 @@ def transform_exit_code_spec(p):
     return {"overall": p}
 
 
-register_rule(
-    RulespecGroupAgentCMKAgent,
-    "check_mk_exit_status",
-    Transform(
-        Dictionary(
-            elements=[
-                ("overall",
-                 Dictionary(
-                     title=_("Overall status"),
-                     elements=_common_check_mk_exit_status_elements() + [
-                         (
-                             "wrong_version",
-                             MonitoringState(
-                                 default_value=1, title=_("State in case of wrong agent version")),
-                         ),
-                         (
-                             "missing_sections",
-                             MonitoringState(
-                                 default_value=1,
-                                 title=_("State if just <i>some</i> agent sections are missing")),
-                         ),
-                         (
-                             "specific_missing_sections",
-                             ListOf(
-                                 Tuple(
-                                     elements=[
-                                         RegExpUnicode(
-                                             help=
-                                             _('Beside of setting the generic "Missing sections" state above '
-                                               'you can specify a regex pattern to match specific section names and '
-                                               'give them an individual state in case they are missing. '
-                                               'Note that the first match is used.'),
-                                             mode=RegExpUnicode.prefix),
-                                         MonitoringState(),
-                                     ],
-                                     orientation="horizontal"),
-                                 title=_("State if specific sections are missing"),
-                             ),
-                         ),
-                     ])),
-                ("individual",
-                 Dictionary(
-                     title=_("Individual states per data source"),
-                     elements=[
-                         ("agent",
-                          Dictionary(
-                              title=_("Agent"),
-                              elements=_common_check_mk_exit_status_elements() + [
-                                  (
-                                      "wrong_version",
-                                      MonitoringState(
-                                          default_value=1,
-                                          title=_("State in case of wrong agent version")),
-                                  ),
-                              ])),
-                         ("programs",
-                          Dictionary(
-                              title=_("Programs"),
-                              elements=_common_check_mk_exit_status_elements())),
-                         ("special",
-                          Dictionary(
-                              title=_("Programs"),
-                              elements=_common_check_mk_exit_status_elements())),
-                         ("snmp",
-                          Dictionary(
-                              title=_("SNMP"), elements=_common_check_mk_exit_status_elements())),
-                         ("mgmt_snmp",
-                          Dictionary(
-                              title=_("SNMP Management Board"),
-                              elements=_common_check_mk_exit_status_elements())),
-                         ("mgmt_ipmi",
-                          Dictionary(
-                              title=_("IPMI Management Board"),
-                              elements=_common_check_mk_exit_status_elements())),
-                         ("piggyback",
-                          Dictionary(
-                              title=_("Piggyback"),
-                              elements=_common_check_mk_exit_status_elements())),
-                     ])),
-            ],
-            optional_keys=["individual"],
-        ),
-        forth=transform_exit_code_spec),
-    factory_default={
-        "connection": 2,
-        "missing_sections": 1,
-        "empty_output": 2,
-        "wrong_version": 1,
-        "exception": 3
-    },
-    title=_("Status of the Check_MK services"),
-    help=_("This ruleset specifies the total status of the Check_MK services <i>Check_MK</i>, "
-           "<i>Check_MK Discovery</i> and <i>Check_MK HW/SW Inventory</i> in case of various "
-           "error situations. One use case is the monitoring of hosts that are not always up. "
-           "You can have Check_MK an OK status here if the host is not reachable. Note: the "
-           "<i>Timeout</i> setting only works when using the Check_MK Micro Core."),
-    match="dict",
-)
+@rulespec_registry.register
+class RulespecCheckMkExitStatus(Rulespec):
+    @property
+    def group(self):
+        return RulespecGroupAgentCMKAgent
 
-register_rule(
-    RulespecGroupAgentCMKAgent,
-    "check_mk_agent_target_versions",
-    Transform(
-        CascadingDropdown(
-            title=_("Check for correct version of Check_MK agent"),
-            help=_("Here you can make sure that all of your Check_MK agents are running"
-                   " one specific version. Agents running "
-                   " a different version return a non-OK state."),
-            choices=[
-                ("ignore", _("Ignore the version")),
-                ("site", _("Same version as the monitoring site")),
-                ("specific", _("Specific version"), TextAscii(allow_empty=False,)),
-                ("at_least", _("At least"),
-                 Dictionary(elements=[
-                     ('release', TextAscii(
-                         title=_('Official Release version'),
-                         allow_empty=False,
-                     )),
-                     ('daily_build', TextAscii(
-                         title=_('Daily build'),
-                         allow_empty=False,
-                     )),
-                 ])),
-            ],
-            default_value="ignore",
-        ),
-        # In the past, this was a OptionalDropdownChoice() which values could be strings:
-        # ignore, site or a custom string representing a version number.
-        forth=lambda x: isinstance(x, str) and x not in ["ignore", "site"] and ("specific", x) or x,
-    ))
+    @property
+    def name(self):
+        return "check_mk_exit_status"
+
+    @property
+    def title(self):
+        return _("Status of the Check_MK services")
+
+    @property
+    def help(self):
+        return _("This ruleset specifies the total status of the Check_MK services "
+                 "<i>Check_MK</i>, <i>Check_MK Discovery</i> and <i>Check_MK HW/SW Inventory</i> "
+                 "in case of various error situations. One use case is the monitoring of hosts "
+                 "that are not always up. You can have Check_MK an OK status here if the host is "
+                 "not reachable. Note: the <i>Timeout</i> setting only works when using the "
+                 "Check_MK Micro Core.")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def factory_default(self):
+        return {
+            'connection': 2,
+            'wrong_version': 1,
+            'exception': 3,
+            'empty_output': 2,
+            'missing_sections': 1
+        }
+
+    @property
+    def valuespec(self):
+        return Transform(
+            Dictionary(
+                elements=[
+                    ("overall",
+                     Dictionary(
+                         title=_("Overall status"),
+                         elements=_common_check_mk_exit_status_elements() + [
+                             (
+                                 "wrong_version",
+                                 MonitoringState(
+                                     default_value=1,
+                                     title=_("State in case of wrong agent version")),
+                             ),
+                             (
+                                 "missing_sections",
+                                 MonitoringState(
+                                     default_value=1,
+                                     title=_(
+                                         "State if just <i>some</i> agent sections are missing")),
+                             ),
+                             (
+                                 "specific_missing_sections",
+                                 ListOf(
+                                     Tuple(
+                                         elements=[
+                                             RegExpUnicode(
+                                                 help=
+                                                 _('Beside of setting the generic "Missing sections" state above '
+                                                   'you can specify a regex pattern to match specific section names and '
+                                                   'give them an individual state in case they are missing. '
+                                                   'Note that the first match is used.'),
+                                                 mode=RegExpUnicode.prefix),
+                                             MonitoringState(),
+                                         ],
+                                         orientation="horizontal"),
+                                     title=_("State if specific sections are missing"),
+                                 ),
+                             ),
+                         ])),
+                    ("individual",
+                     Dictionary(
+                         title=_("Individual states per data source"),
+                         elements=[
+                             ("agent",
+                              Dictionary(
+                                  title=_("Agent"),
+                                  elements=_common_check_mk_exit_status_elements() + [
+                                      (
+                                          "wrong_version",
+                                          MonitoringState(
+                                              default_value=1,
+                                              title=_("State in case of wrong agent version")),
+                                      ),
+                                  ])),
+                             ("programs",
+                              Dictionary(
+                                  title=_("Programs"),
+                                  elements=_common_check_mk_exit_status_elements())),
+                             ("special",
+                              Dictionary(
+                                  title=_("Programs"),
+                                  elements=_common_check_mk_exit_status_elements())),
+                             ("snmp",
+                              Dictionary(
+                                  title=_("SNMP"),
+                                  elements=_common_check_mk_exit_status_elements())),
+                             ("mgmt_snmp",
+                              Dictionary(
+                                  title=_("SNMP Management Board"),
+                                  elements=_common_check_mk_exit_status_elements())),
+                             ("mgmt_ipmi",
+                              Dictionary(
+                                  title=_("IPMI Management Board"),
+                                  elements=_common_check_mk_exit_status_elements())),
+                             ("piggyback",
+                              Dictionary(
+                                  title=_("Piggyback"),
+                                  elements=_common_check_mk_exit_status_elements())),
+                         ])),
+                ],
+                optional_keys=["individual"],
+            ),
+            forth=transform_exit_code_spec,
+            title=_("Status of the Check_MK services"),
+            help=_(
+                "This ruleset specifies the total status of the Check_MK services <i>Check_MK</i>, "
+                "<i>Check_MK Discovery</i> and <i>Check_MK HW/SW Inventory</i> in case of various "
+                "error situations. One use case is the monitoring of hosts that are not always up. "
+                "You can have Check_MK an OK status here if the host is not reachable. Note: the "
+                "<i>Timeout</i> setting only works when using the Check_MK Micro Core."),
+        )
+
+
+@rulespec_registry.register
+class RulespecCheckMkAgentTargetVersions(Rulespec):
+    @property
+    def group(self):
+        return RulespecGroupAgentCMKAgent
+
+    @property
+    def name(self):
+        return "check_mk_agent_target_versions"
+
+    @property
+    def valuespec(self):
+        return Transform(
+            CascadingDropdown(
+                title=_("Check for correct version of Check_MK agent"),
+                help=_("Here you can make sure that all of your Check_MK agents are running"
+                       " one specific version. Agents running "
+                       " a different version return a non-OK state."),
+                choices=[
+                    ("ignore", _("Ignore the version")),
+                    ("site", _("Same version as the monitoring site")),
+                    ("specific", _("Specific version"), TextAscii(allow_empty=False,)),
+                    ("at_least", _("At least"),
+                     Dictionary(elements=[
+                         ('release',
+                          TextAscii(
+                              title=_('Official Release version'),
+                              allow_empty=False,
+                          )),
+                         ('daily_build', TextAscii(
+                             title=_('Daily build'),
+                             allow_empty=False,
+                         )),
+                     ])),
+                ],
+                default_value="ignore",
+            ),
+            # In the past, this was a OptionalDropdownChoice() which values could be strings:
+            # ignore, site or a custom string representing a version number.
+            forth=
+            lambda x: isinstance(x, str) and x not in ["ignore", "site"] and ("specific", x) or x,
+        )
 
 
 @rulespec_group_registry.register
@@ -3903,61 +4739,91 @@ class RulespecGroupMonitoringAgentsGenericOptions(RulespecSubGroup):
         return _("Generic Options")
 
 
-register_rule(
-    RulespecGroupMonitoringAgentsGenericOptions,
-    "agent_config:only_from",
-    ListOfStrings(
-        valuespec=IPNetwork(),
-        title=_("Allowed agent access via IP address"),
-        help=_("This rule allows you to restrict the access to the "
-               "Check_MK agent to certain IP addresses and networks. "
-               "Usually you configure just the IP addresses of your "
-               "Check_MK servers here. You can enter either IP addresses "
-               "in the form <tt>1.2.3.4</tt> or networks in the style "
-               "<tt>1.2.0.0/16</tt>. If you leave this configuration empty "
-               "or create no rule then <b>all</b> addresses are allowed to "
-               "access the agent. IPv6 addresses and networks are also allowed."),
-    ),
-    match="first")
+@rulespec_registry.register
+class RulespecAgentConfigOnlyFrom(Rulespec):
+    @property
+    def group(self):
+        return RulespecGroupMonitoringAgentsGenericOptions
 
-register_rule(
-    RulespecGroupAgentGeneralSettings,
-    "piggyback_translation",
-    HostnameTranslation(
-        title=_("Hostname translation for piggybacked hosts"),
-        help=_(
-            "Some agents or agent plugins send data not only for the queried host but also "
-            "for other hosts &quot;piggyback&quot; with their own data. This is the case "
-            "for the vSphere special agent and the SAP R/3 plugin, for example. The hostnames "
-            "that these agents send must match your hostnames in your monitoring configuration. "
-            "If that is not the case, then with this rule you can define a hostname translation. "
-            "Note: This rule must be configured for the &quot;pig&quot; - i.e. the host that the "
-            "agent is running on. It is not applied to the translated piggybacked hosts."),
-    ),
-    match="dict")
+    @property
+    def name(self):
+        return "agent_config:only_from"
 
-register_rule(
-    RulespecGroupAgentGeneralSettings,
-    "service_description_translation",
-    ServiceDescriptionTranslation(
-        title=_("Translation of service descriptions"),
-        help=_(
-            "Within this ruleset service descriptions can be translated similar to the ruleset "
-            "<tt>Hostname translation for piggybacked hosts</tt>. Services such as "
-            "<tt>Check_MK</tt>, <tt>Check_MK Agent</tt>, <tt>Check_MK Discovery</tt>, "
-            "<tt>Check_MK inventory</tt>, and <tt>Check_MK HW/SW Inventory</tt> are excluded. "
-            "<b>Attention:</b><ul>"
-            "<li>Downtimes and other configured rules which match these "
-            "services have to be adapted.</li>"
-            "<li>Performance data and graphs will begin from scratch for translated services.</li>"
-            "<li>Especially configured check parameters keep their functionality further on.</li>"
-            "<li>This new ruleset translates also the item part of a service description. "
-            "This means that after such a translation the item may be gone but is used in the "
-            "conditions of the parameters further on if any parameters are configured. "
-            "This might be confusing.</li></ul>"
-            "This rule should only be configured in the early stages."),
-    ),
-    match_type="all")
+    @property
+    def valuespec(self):
+        return ListOfStrings(
+            valuespec=IPNetwork(),
+            title=_("Allowed agent access via IP address"),
+            help=_("This rule allows you to restrict the access to the "
+                   "Check_MK agent to certain IP addresses and networks. "
+                   "Usually you configure just the IP addresses of your "
+                   "Check_MK servers here. You can enter either IP addresses "
+                   "in the form <tt>1.2.3.4</tt> or networks in the style "
+                   "<tt>1.2.0.0/16</tt>. If you leave this configuration empty "
+                   "or create no rule then <b>all</b> addresses are allowed to "
+                   "access the agent. IPv6 addresses and networks are also allowed."),
+        )
+
+
+@rulespec_registry.register
+class RulespecPiggybackTranslation(Rulespec):
+    @property
+    def group(self):
+        return RulespecGroupAgentGeneralSettings
+
+    @property
+    def name(self):
+        return "piggyback_translation"
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def valuespec(self):
+        return HostnameTranslation(
+            title=_("Hostname translation for piggybacked hosts"),
+            help=
+            _("Some agents or agent plugins send data not only for the queried host but also "
+              "for other hosts &quot;piggyback&quot; with their own data. This is the case "
+              "for the vSphere special agent and the SAP R/3 plugin, for example. The hostnames "
+              "that these agents send must match your hostnames in your monitoring configuration. "
+              "If that is not the case, then with this rule you can define a hostname translation. "
+              "Note: This rule must be configured for the &quot;pig&quot; - i.e. the host that the "
+              "agent is running on. It is not applied to the translated piggybacked hosts."),
+        )
+
+
+@rulespec_registry.register
+class RulespecServiceDescriptionTranslation(Rulespec):
+    @property
+    def group(self):
+        return RulespecGroupAgentGeneralSettings
+
+    @property
+    def name(self):
+        return "service_description_translation"
+
+    @property
+    def valuespec(self):
+        return ServiceDescriptionTranslation(
+            title=_("Translation of service descriptions"),
+            help=
+            _("Within this ruleset service descriptions can be translated similar to the ruleset "
+              "<tt>Hostname translation for piggybacked hosts</tt>. Services such as "
+              "<tt>Check_MK</tt>, <tt>Check_MK Agent</tt>, <tt>Check_MK Discovery</tt>, "
+              "<tt>Check_MK inventory</tt>, and <tt>Check_MK HW/SW Inventory</tt> are excluded. "
+              "<b>Attention:</b><ul>"
+              "<li>Downtimes and other configured rules which match these "
+              "services have to be adapted.</li>"
+              "<li>Performance data and graphs will begin from scratch for translated services.</li>"
+              "<li>Especially configured check parameters keep their functionality further on.</li>"
+              "<li>This new ruleset translates also the item part of a service description. "
+              "This means that after such a translation the item may be gone but is used in the "
+              "conditions of the parameters further on if any parameters are configured. "
+              "This might be confusing.</li></ul>"
+              "This rule should only be configured in the early stages."),
+        )
 
 
 def get_snmp_checktypes():
@@ -3975,53 +4841,75 @@ def get_snmp_section_names():
         [(cn, cn) for (cn, c) in checks.items() if c['snmp']])
 
 
-register_rule(
-    RulespecGroupAgentSNMP,
-    "snmp_check_interval",
-    Tuple(
-        title=_('Check intervals for SNMP checks'),
-        help=_('This rule can be used to customize the check interval of each SNMP based check. '
-               'With this option it is possible to configure a longer check interval for specific '
-               'checks, than then normal check interval.'),
-        elements=[
-            Transform(
-                DropdownChoice(
-                    title=_("Check"),
-                    help=_("You can only configure \"section names\" here and not choose all "
-                           "individual SNMP based checks here. It is only possible to define "
-                           "SNMP check intervals for main checks and all the related sub "
-                           "checks together. The reason for this is that the data of the "
-                           "main check and it's sub checks is defined for the whole group "
-                           "of checks in the main check and also fetched for all these "
-                           "checks together."),
-                    choices=get_snmp_section_names,
-                ),
-                # Transform check types to section names
-                forth=lambda e: e.split(".")[0] if e is not None else None,
-            ),
-            Integer(
-                title=_("Do check every"),
-                unit=_("minutes"),
-                min_value=1,
-                default_value=1,
-            ),
-        ]))
+@rulespec_registry.register
+class RulespecSnmpCheckInterval(Rulespec):
+    @property
+    def group(self):
+        return RulespecGroupAgentSNMP
 
-register_rule(
-    RulespecGroupAgentSNMP, "snmpv3_contexts",
-    Tuple(
-        title=_('SNMPv3 contexts to use in requests'),
-        help=_('By default Check_MK does not use a specific context during SNMPv3 queries, '
-               'but some devices are offering their information in different SNMPv3 contexts. '
-               'This rule can be used to configure, based on hosts and check type, which SNMPv3 '
-               'contexts Check_MK should ask for when getting information via SNMPv3.'),
-        elements=[
-            DropdownChoice(
-                title=_("Checktype"),
-                choices=get_snmp_checktypes,
-            ),
-            ListOfStrings(
-                title=_("SNMP Context IDs"),
-                allow_empty=False,
-            ),
-        ]))
+    @property
+    def name(self):
+        return "snmp_check_interval"
+
+    @property
+    def valuespec(self):
+        return Tuple(
+            title=_('Check intervals for SNMP checks'),
+            help=_(
+                'This rule can be used to customize the check interval of each SNMP based check. '
+                'With this option it is possible to configure a longer check interval for specific '
+                'checks, than then normal check interval.'),
+            elements=[
+                Transform(
+                    DropdownChoice(
+                        title=_("Check"),
+                        help=_("You can only configure \"section names\" here and not choose all "
+                               "individual SNMP based checks here. It is only possible to define "
+                               "SNMP check intervals for main checks and all the related sub "
+                               "checks together. The reason for this is that the data of the "
+                               "main check and it's sub checks is defined for the whole group "
+                               "of checks in the main check and also fetched for all these "
+                               "checks together."),
+                        choices=get_snmp_section_names,
+                    ),
+                    # Transform check types to section names
+                    forth=lambda e: e.split(".")[0] if e is not None else None,
+                ),
+                Integer(
+                    title=_("Do check every"),
+                    unit=_("minutes"),
+                    min_value=1,
+                    default_value=1,
+                ),
+            ])
+
+
+@rulespec_registry.register
+class RulespecSNMPv3Contexts(Rulespec):
+    @property
+    def group(self):
+        return RulespecGroupAgentSNMP
+
+    @property
+    def name(self):
+        return "snmpv3_contexts"
+
+    @property
+    def valuespec(self):
+        return Tuple(
+            title=_('SNMPv3 contexts to use in requests'),
+            help=_(
+                'By default Check_MK does not use a specific context during SNMPv3 queries, '
+                'but some devices are offering their information in different SNMPv3 contexts. '
+                'This rule can be used to configure, based on hosts and check type, which SNMPv3 '
+                'contexts Check_MK should ask for when getting information via SNMPv3.'),
+            elements=[
+                DropdownChoice(
+                    title=_("Checktype"),
+                    choices=get_snmp_checktypes,
+                ),
+                ListOfStrings(
+                    title=_("SNMP Context IDs"),
+                    allow_empty=False,
+                ),
+            ])

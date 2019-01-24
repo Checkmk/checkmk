@@ -438,7 +438,6 @@ class PackedConfig(object):
         "service_groups",
         "host_groups",
         "contacts",
-        "host_paths",
         "timeperiods",
         "extra_service_conf",
         "extra_nagios_conf",
@@ -2892,16 +2891,10 @@ class ConfigCache(object):
 
         # Determine hosts within folders
         dirnames = [
-            x[0][len(cmk.utils.paths.check_mk_config_dir):] + "/"
+            x[0][len(cmk.utils.paths.check_mk_config_dir):] + "/+"
             for x in os.walk(cmk.utils.paths.check_mk_config_dir)
         ]
-
-        for dirname in dirnames:
-            for hostname in self._all_configured_hosts:
-                if self._host_paths[hostname].startswith(dirname):
-                    self._folder_host_lookup.setdefault(dirname + "+", set()).add(hostname)
-
-        self._folder_path_set = set(self._folder_host_lookup.keys())
+        self._folder_path_set = set(dirnames)
 
         # Determine hosttags without folder tag
         for hostname in self._all_configured_hosts:
@@ -2918,6 +2911,18 @@ class ConfigCache(object):
             group_ref = tuple(sorted(self._hosttags_without_folder[hostname]))
             self._hosts_grouped_by_tags.setdefault(group_ref, set()).add(hostname)
             self._host_grouped_ref[hostname] = group_ref
+
+    def get_hosts_within_folder(self, folder_path):
+        if folder_path not in self._folder_host_lookup:
+            hosts_in_folder = set()
+            # Strip off "+"
+            folder_path_tmp = folder_path[:-1]
+            for hostname in self._all_configured_hosts:
+                if self._host_paths[hostname].startswith(folder_path_tmp):
+                    hosts_in_folder.add(hostname)
+            self._folder_host_lookup[folder_path] = hosts_in_folder
+            return hosts_in_folder
+        return self._folder_host_lookup[folder_path]
 
     def get_autochecks_of(self, hostname, world):
         try:
@@ -2985,8 +2990,7 @@ class ConfigCache(object):
 
         # Thin out the valid hosts further. If the rule is located in a folder
         # we only need the intersection of the folders hosts and the previously determined valid_hosts
-        if rule_path in self._folder_host_lookup:
-            valid_hosts = self._folder_host_lookup[rule_path].intersection(valid_hosts)
+        valid_hosts = self.get_hosts_within_folder(rule_path).intersection(valid_hosts)
 
         # Contains matched hosts
 

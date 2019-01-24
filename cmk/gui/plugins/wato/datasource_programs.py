@@ -32,8 +32,9 @@ from cmk.gui.plugins.wato import (
     IndividualOrStoredPassword,
     RulespecGroup,
     monitoring_macro_help,
-    register_rule,
     rulespec_group_registry,
+    rulespec_registry,
+    HostRulespec,
 )
 from cmk.gui.valuespec import (
     ID,
@@ -75,83 +76,127 @@ class RulespecGroupDatasourcePrograms(RulespecGroup):
         return _("Specialized agents, e.g. check via SSH, ESX vSphere, SAP R/3")
 
 
-register_rule(
-    RulespecGroupDatasourcePrograms, "datasource_programs",
-    TextAscii(
-        title=_("Individual program call instead of agent access"),
-        help=_("For agent based checks Check_MK allows you to specify an alternative "
-               "program that should be called by Check_MK instead of connecting the agent "
-               "via TCP. That program must output the agent's data on standard output in "
-               "the same format the agent would do. This is for example useful for monitoring "
-               "via SSH.") + monitoring_macro_help(),
-        label=_("Command line to execute"),
-        empty_text=_("Access Check_MK Agent via TCP"),
-        size=80,
-        attrencode=True))
+@rulespec_registry.register
+class RulespecDatasourcePrograms(HostRulespec):
+    @property
+    def group(self):
+        return RulespecGroupDatasourcePrograms
 
-register_rule(
-    RulespecGroupDatasourcePrograms,
-    "special_agents:ddn_s2a",
-    Dictionary(
-        elements=[
-            ("username", TextAscii(title=_(u"Username"), allow_empty=False)),
-            ("password", Password(title=_(u"Password"), allow_empty=False)),
-            ("port", Integer(title=_(u"Port"), default_value=8008)),
-        ],
-        optional_keys=["port"],
-    ),
-    match="first",
-    title=_(u"DDN S2A"),
-)
+    @property
+    def name(self):
+        return "datasource_programs"
 
-register_rule(
-    RulespecGroupDatasourcePrograms,
-    "special_agents:kubernetes",
-    Dictionary(
-        elements=[
-            ("token", IndividualOrStoredPassword(
-                title=_("Token"),
-                allow_empty=False,
-            )),
-            ("port",
-             Integer(
-                 title=_(u"Port"),
-                 help=_("If no port is given a default value of 443 will be used."),
-                 default_value=443)),
-            ("url-prefix",
-             HTTPUrl(
-                 title=_("Custom URL prefix"),
-                 help=_("Defines the scheme (either HTTP or HTTPS) and host part "
-                        "of Kubernetes API calls like e.g. \"https://example.com\". "
-                        "If no prefix is specified HTTPS together with the IP of "
-                        "the host will be used."),
-                 allow_empty=False)),
-            ("path-prefix",
-             TextAscii(
-                 title=_("Custom path prefix"),
-                 help=_("Specifies a URL path prefix which is prepended to the path in calls "
-                        "to the Kubernetes API. This is e.g. useful if Rancher is used to "
-                        "manage Kubernetes clusters. If no prefix is given \"/\" will be used."),
-                 allow_empty=False)),
-            ("no-cert-check",
-             Alternative(
-                 title=_("Disable certificate verification"),
-                 elements=[
-                     FixedValue(False, title=_("Deactivated"), totext=""),
-                     FixedValue(True, title=_("Activated"), totext=""),
-                 ],
-                 default_value=False)),
-        ],
-        optional_keys=["port", "url-prefix", "path-prefix", "no-cert-check"],
-    ),
-    match="first",
-    title=_(u"Kubernetes"),
-)
+    @property
+    def valuespec(self):
+        return TextAscii(
+            title=_("Individual program call instead of agent access"),
+            help=_("For agent based checks Check_MK allows you to specify an alternative "
+                   "program that should be called by Check_MK instead of connecting the agent "
+                   "via TCP. That program must output the agent's data on standard output in "
+                   "the same format the agent would do. This is for example useful for monitoring "
+                   "via SSH.") + monitoring_macro_help(),
+            label=_("Command line to execute"),
+            empty_text=_("Access Check_MK Agent via TCP"),
+            size=80,
+            attrencode=True,
+        )
 
-register_rule(
-    RulespecGroupDatasourcePrograms,
-    "special_agents:vsphere",
-    Transform(
+
+@rulespec_registry.register
+class RulespecSpecialAgentsDdnS2A(HostRulespec):
+    @property
+    def group(self):
+        return RulespecGroupDatasourcePrograms
+
+    @property
+    def name(self):
+        return "special_agents:ddn_s2a"
+
+    @property
+    def valuespec(self):
+        return Dictionary(
+            elements=[
+                ("username", TextAscii(title=_(u"Username"), allow_empty=False)),
+                ("password", Password(title=_(u"Password"), allow_empty=False)),
+                ("port", Integer(title=_(u"Port"), default_value=8008)),
+            ],
+            optional_keys=["port"],
+            title=_(u"DDN S2A"),
+        )
+
+
+@rulespec_registry.register
+class RulespecSpecialAgentsKubernetes(HostRulespec):
+    @property
+    def group(self):
+        return RulespecGroupDatasourcePrograms
+
+    @property
+    def name(self):
+        return "special_agents:kubernetes"
+
+    @property
+    def valuespec(self):
+        return Dictionary(
+            elements=[
+                ("token", IndividualOrStoredPassword(
+                    title=_("Token"),
+                    allow_empty=False,
+                )),
+                ("port",
+                 Integer(
+                     title=_(u"Port"),
+                     help=_("If no port is given a default value of 443 will be used."),
+                     default_value=443)),
+                ("url-prefix",
+                 HTTPUrl(
+                     title=_("Custom URL prefix"),
+                     help=_("Defines the scheme (either HTTP or HTTPS) and host part "
+                            "of Kubernetes API calls like e.g. \"https://example.com\". "
+                            "If no prefix is specified HTTPS together with the IP of "
+                            "the host will be used."),
+                     allow_empty=False)),
+                ("path-prefix",
+                 TextAscii(
+                     title=_("Custom path prefix"),
+                     help=_(
+                         "Specifies a URL path prefix which is prepended to the path in calls "
+                         "to the Kubernetes API. This is e.g. useful if Rancher is used to "
+                         "manage Kubernetes clusters. If no prefix is given \"/\" will be used."),
+                     allow_empty=False)),
+                ("no-cert-check",
+                 Alternative(
+                     title=_("Disable certificate verification"),
+                     elements=[
+                         FixedValue(False, title=_("Deactivated"), totext=""),
+                         FixedValue(True, title=_("Activated"), totext=""),
+                     ],
+                     default_value=False)),
+            ],
+            optional_keys=["port", "url-prefix", "path-prefix", "no-cert-check"],
+            title=_(u"Kubernetes"),
+        )
+
+
+@rulespec_registry.register
+class RulespecSpecialAgentsVsphere(HostRulespec):
+    @property
+    def group(self):
+        return RulespecGroupDatasourcePrograms
+
+    @property
+    def name(self):
+        return "special_agents:vsphere"
+
+    # TODO: Investigate what exactly this means
+    @property
+    def factory_default(self):
+        # No default, do not use setting if no rule matches
+        return watolib.Rulespec.FACTORY_DEFAULT_UNUSED
+
+    @property
+    def valuespec(self):
+        return Transform(
         valuespec=Dictionary(
             elements=[
                 ("user", TextAscii(
@@ -318,106 +363,22 @@ register_rule(
                "and allows monitoring of VMWare ESX via the vSphere API. You can configure "
                "your connection settings here."),
         forth=lambda a: dict([("skip_placeholder_vms", True), ("ssl", False), ("use_pysphere" , False), ("spaces", "underscore")] + a.items())
-    ),
-    factory_default=watolib.Rulespec.
-    FACTORY_DEFAULT_UNUSED,  # No default, do not use setting if no rule matches
-    match='first')
-
-register_rule(
-    RulespecGroupDatasourcePrograms,
-    "special_agents:hp_msa",
-    Dictionary(
-        elements=[
-            ("username", TextAscii(
-                title=_("Username"),
-                allow_empty=False,
-            )),
-            ("password", Password(
-                title=_("Password"),
-                allow_empty=False,
-            )),
-        ],
-        optional_keys=False),
-    title=_("Check HP MSA via Web Interface"),
-    help=_("This rule selects the Agent HP MSA instead of the normal Check_MK Agent "
-           "which collects the data through the HP MSA web interface"),
-    match='first')
-
-vs_ipmi_common_elements = [
-    ("username", TextAscii(
-        title=_("Username"),
-        allow_empty=False,
-    )),
-    ("password", Password(
-        title=_("Password"),
-        allow_empty=False,
-    )),
-    ("privilege_lvl",
-     TextAscii(
-         title=_("Privilege Level"),
-         help=_("Possible are 'user', 'operator', 'admin'"),
-         allow_empty=False,
-     )),
-]
-
-vs_freeipmi = Dictionary(
-    elements=vs_ipmi_common_elements + [
-        ("ipmi_driver", TextAscii(title=_("IPMI driver"))),
-        ("driver_type", TextAscii(title=_("IPMI driver type"))),
-        ("BMC_key", TextAscii(title=_("BMC key"))),
-        ("quiet_cache", Checkbox(title=_("Quiet cache"), label=_("Enable"))),
-        ("sdr_cache_recreate", Checkbox(title=_("SDR cache recreate"), label=_("Enable"))),
-        ("interpret_oem_data", Checkbox(title=_("OEM data interpretation"), label=_("Enable"))),
-        ("output_sensor_state", Checkbox(title=_("Sensor state"), label=_("Enable"))),
-        ("output_sensor_thresholds", Checkbox(title=_("Sensor threshold"), label=_("Enable"))),
-        ("ignore_not_available_sensors",
-         Checkbox(title=_("Suppress not available sensors"), label=_("Enable"))),
-    ],
-    optional_keys=[
-        "ipmi_driver",
-        "driver_type",
-        "quiet_cache",
-        "sdr_cache_recreate",
-        "interpret_oem_data",
-        "output_sensor_state",
-        "output_sensor_thresholds",
-        "ignore_not_available_sensors",
-        "BMC_key",
-    ])
-
-vs_ipmitool = Dictionary(elements=vs_ipmi_common_elements, optional_keys=[])
+        )
 
 
-def transform_ipmi_sensors(params):
-    if isinstance(params, dict):
-        return ("freeipmi", params)
-    return params
+@rulespec_registry.register
+class RulespecSpecialAgentsHpMsa(HostRulespec):
+    @property
+    def group(self):
+        return RulespecGroupDatasourcePrograms
 
+    @property
+    def name(self):
+        return "special_agents:hp_msa"
 
-register_rule(
-    RulespecGroupDatasourcePrograms,
-    "special_agents:ipmi_sensors",
-    Transform(
-        CascadingDropdown(
-            title=_("IPMI"),
-            choices=[
-                ("freeipmi", _("Use FreeIPMI"), vs_freeipmi),
-                ("ipmitool", _("Use IPMItool"), vs_ipmitool),
-            ],
-            required_keys=["username", "password", "privilege_lvl"],
-        ),
-        forth=transform_ipmi_sensors),
-    title=_("Check IPMI Sensors via Freeipmi or IPMItool"),
-    help=_("This rule selects the Agent IPMI Sensors instead of the normal Check_MK Agent "
-           "which collects the data through the FreeIPMI resp. IPMItool command"),
-    match='first')
-
-register_rule(
-    RulespecGroupDatasourcePrograms,
-    "special_agents:netapp",
-    Transform(
-        Dictionary(
-            title=_("Username and password for the NetApp Filer."),
+    @property
+    def valuespec(self):
+        return Dictionary(
             elements=[
                 ("username", TextAscii(
                     title=_("Username"),
@@ -427,337 +388,82 @@ register_rule(
                     title=_("Password"),
                     allow_empty=False,
                 )),
-                ("skip_elements",
-                 ListChoice(
-                     choices=[
-                         ("ctr_volumes", _("Do not query volume performance counters")),
-                     ],
-                     title=_("Performance improvements"),
-                     help=_(
-                         "Here you can configure whether the performance counters should get queried. "
-                         "This can save quite a lot of CPU load on larger systems."),
-                 )),
             ],
-            optional_keys=False),
-        forth=lambda x: dict([("skip_elements", [])] + x.items())),
-    title=_("Check NetApp via WebAPI"),
-    help=_(
-        "This rule set selects the NetApp special agent instead of the normal Check_MK Agent "
-        "and allows monitoring via the NetApp Web API. To access the data the "
-        "user requires permissions to several API classes. They are shown when you call the agent with "
-        "<tt>agent_netapp --help</tt>. The agent itself is located in the site directory under "
-        "<tt>~/share/check_mk/agents/special</tt>."),
-    match='first')
+            optional_keys=False,
+            title=_("Check HP MSA via Web Interface"),
+            help=_("This rule selects the Agent HP MSA instead of the normal Check_MK Agent "
+                   "which collects the data through the HP MSA web interface"),
+        )
 
 
-def transform_activemq(value):
-    if not isinstance(value, tuple):
-        return value
+@rulespec_registry.register
+class RulespecSpecialAgentsIpmiSensors(HostRulespec):
+    @property
+    def group(self):
+        return RulespecGroupDatasourcePrograms
 
-    new_value = {}
-    new_value["servername"] = value[0]
-    new_value["port"] = value[1]
-    new_value["use_piggyback"] = "piggybag" in value[2]  # piggybag...
-    return new_value
+    @property
+    def name(self):
+        return "special_agents:ipmi_sensors"
 
-
-register_rule(
-    RulespecGroupDatasourcePrograms,
-    "special_agents:activemq",
-    Transform(
-        Dictionary(
-            elements=[("servername", TextAscii(title=_("Server Name"))),
-                      ("port", Integer(title=_("Port Number"), default_value=8161)),
-                      ("use_piggyback", Checkbox(title=_("Use Piggyback"), label=_("Enable"))),
-                      ("basicauth",
-                       Tuple(
-                           title=_("BasicAuth settings (optional)"),
-                           elements=[TextAscii(title=_("Username")),
-                                     Password(title=_("Password"))]))],
-            optional_keys=["basicauth"]),
-        title=_("Apache ActiveMQ queues"),
-        forth=transform_activemq),
-    factory_default=watolib.Rulespec.
-    FACTORY_DEFAULT_UNUSED,  # No default, do not use setting if no rule matches
-    match="first")
-
-register_rule(
-    RulespecGroupDatasourcePrograms,
-    "special_agents:emcvnx",
-    Dictionary(
-        title=_("Check state of EMC VNX storage systems"),
-        help=_("This rule selects the EMC VNX agent instead of the normal Check_MK Agent "
-               "and allows monitoring of EMC VNX storage systems by calling naviseccli "
-               "commandline tool locally on the monitoring system. Make sure it is installed "
-               "and working. You can configure your connection settings here."),
-        elements=[
-            ("user",
-             TextAscii(
-                 title=_("EMC VNX admin user name"),
-                 allow_empty=True,
-                 help=_(
-                     "If you leave user name and password empty, the special agent tries to "
-                     "authenticate against the EMC VNX device by Security Files. "
-                     "These need to be created manually before using. Therefor run as "
-                     "instance user (if using OMD) or Nagios user (if not using OMD) "
-                     "a command like "
-                     "<tt>naviseccli -AddUserSecurity -scope 0 -password PASSWORD -user USER</tt> "
-                     "This creates <tt>SecuredCLISecurityFile.xml</tt> and "
-                     "<tt>SecuredCLIXMLEncrypted.key</tt> in the home directory of the user "
-                     "and these files are used then."),
-             )),
-            ("password", Password(
-                title=_("EMC VNX admin user password"),
-                allow_empty=True,
-            )),
-            ("infos",
-             Transform(
-                 ListChoice(
-                     choices=[
-                         ("disks", _("Disks")),
-                         ("hba", _("iSCSI HBAs")),
-                         ("hwstatus", _("Hardware status")),
-                         ("raidgroups", _("RAID groups")),
-                         ("agent", _("Model and revsion")),
-                         ("sp_util", _("Storage processor utilization")),
-                         ("writecache", _("Write cache state")),
-                         ("mirrorview", _("Mirror views")),
-                         ("storage_pools", _("Storage pools")),
-                     ],
-                     default_value=[
-                         "disks",
-                         "hba",
-                         "hwstatus",
-                     ],
-                     allow_empty=False,
-                 ),
-                 title=_("Retrieve information about..."),
-             )),
-        ],
-        optional_keys=[],
-    ),
-    factory_default=watolib.Rulespec.
-    FACTORY_DEFAULT_UNUSED,  # No default, do not use setting if no rule matches
-    match='first')
-
-register_rule(
-    RulespecGroupDatasourcePrograms,
-    "special_agents:ibmsvc",
-    Dictionary(
-        title=_("Check state of IBM SVC / V7000 storage systems"),
-        help=_(
-            "This rule set selects the <tt>ibmsvc</tt> agent instead of the normal Check_MK Agent "
-            "and allows monitoring of IBM SVC / V7000 storage systems by calling "
-            "ls* commands there over SSH. "
-            "Make sure you have SSH key authentication enabled for your monitoring user. "
-            "That means: The user your monitoring is running under on the monitoring "
-            "system must be able to ssh to the storage system as the user you gave below "
-            "without password."),
-        elements=[
-            ("user",
-             TextAscii(
-                 title=_("IBM SVC / V7000 user name"),
-                 allow_empty=True,
-                 help=_("User name on the storage system. Read only permissions are sufficient."),
-             )),
-            ("accept-any-hostkey",
-             Checkbox(
-                 title=_("Accept any SSH Host Key"),
-                 label=_("Accept any SSH Host Key"),
-                 default_value=False,
-                 help=_(
-                     "Accepts any SSH Host Key presented by the storage device. "
-                     "Please note: This might be a security issue because man-in-the-middle "
-                     "attacks are not recognized! Better solution would be to add the "
-                     "SSH Host Key of the monitored storage devices to the .ssh/known_hosts "
-                     "file for the user your monitoring is running under (on OMD: the site user)"))
+    @property
+    def valuespec(self):
+        return Transform(
+            CascadingDropdown(
+                choices=[
+                    ("freeipmi", _("Use FreeIPMI"), self._vs_freeipmi()),
+                    ("ipmitool", _("Use IPMItool"), self._vs_ipmitool()),
+                ],
+                required_keys=["username", "password", "privilege_lvl"],
+                title=_("Check IPMI Sensors via Freeipmi or IPMItool"),
+                help=_(
+                    "This rule selects the Agent IPMI Sensors instead of the normal Check_MK Agent "
+                    "which collects the data through the FreeIPMI resp. IPMItool command"),
             ),
-            ("infos",
-             Transform(
-                 ListChoice(
-                     choices=[
-                         ("lshost", _("Hosts Connected")),
-                         ("lslicense", _("Licensing Status")),
-                         ("lsmdisk", _("MDisks")),
-                         ("lsmdiskgrp", _("MDisksGrps")),
-                         ("lsnode", _("IO Groups")),
-                         ("lsnodestats", _("Node Stats")),
-                         ("lssystem", _("System Info")),
-                         ("lssystemstats", _("System Stats")),
-                         ("lseventlog", _("Event Log")),
-                         ("lsportfc", _("FC Ports")),
-                         ("lsportsas", _("SAS Ports")),
-                         ("lsenclosure", _("Enclosures")),
-                         ("lsenclosurestats", _("Enclosure Stats")),
-                         ("lsarray", _("RAID Arrays")),
-                         ("disks", _("Physical Disks")),
-                     ],
-                     default_value=[
-                         "lshost", "lslicense", "lsmdisk", "lsmdiskgrp", "lsnode", "lsnodestats",
-                         "lssystem", "lssystemstats", "lsportfc", "lsenclosure", "lsenclosurestats",
-                         "lsarray", "disks"
-                     ],
-                     allow_empty=False,
-                 ),
-                 title=_("Retrieve information about..."),
-             )),
-        ],
-        optional_keys=[],
-    ),
-    factory_default=watolib.Rulespec.
-    FACTORY_DEFAULT_UNUSED,  # No default, do not use setting if no rule matches
-    match='first')
+            forth=self._transform_ipmi_sensors)
 
-register_rule(
-    RulespecGroupDatasourcePrograms,
-    "special_agents:random",
-    FixedValue(
-        {},
-        title=_("Create random monitoring data"),
-        help=_("By configuring this rule for a host - instead of the normal "
-               "Check_MK agent random monitoring data will be created."),
-        totext=_("Create random monitoring data"),
-    ),
-    factory_default=watolib.Rulespec.
-    FACTORY_DEFAULT_UNUSED,  # No default, do not use setting if no rule matches
-    match='first')
+    def _transform_ipmi_sensors(self, params):
+        if isinstance(params, dict):
+            return ("freeipmi", params)
+        return params
 
-register_rule(
-    RulespecGroupDatasourcePrograms,
-    "special_agents:acme_sbc",
-    FixedValue(
-        {},
-        title=_("Check ACME Session Border Controller"),
-        help=_("This rule activates an agent which connects "
-               "to an ACME Session Border Controller (SBC). This agent uses SSH, so "
-               "you have to exchange an SSH key to make a passwordless connect possible."),
-        totext=_("Connect to ACME SBC"),
-    ),
-    factory_default=watolib.Rulespec.
-    FACTORY_DEFAULT_UNUSED,  # No default, do not use setting if no rule matches
-    match='first')
+    def _vs_freeipmi(self):
+        return Dictionary(
+            elements=self._vs_ipmi_common_elements() + [
+                ("ipmi_driver", TextAscii(title=_("IPMI driver"))),
+                ("driver_type", TextAscii(title=_("IPMI driver type"))),
+                ("BMC_key", TextAscii(title=_("BMC key"))),
+                ("quiet_cache", Checkbox(title=_("Quiet cache"), label=_("Enable"))),
+                ("sdr_cache_recreate", Checkbox(title=_("SDR cache recreate"), label=_("Enable"))),
+                ("interpret_oem_data",
+                 Checkbox(title=_("OEM data interpretation"), label=_("Enable"))),
+                ("output_sensor_state", Checkbox(title=_("Sensor state"), label=_("Enable"))),
+                ("output_sensor_thresholds", Checkbox(
+                    title=_("Sensor threshold"), label=_("Enable"))),
+                ("ignore_not_available_sensors",
+                 Checkbox(title=_("Suppress not available sensors"), label=_("Enable"))),
+            ],
+            optional_keys=[
+                "ipmi_driver",
+                "driver_type",
+                "quiet_cache",
+                "sdr_cache_recreate",
+                "interpret_oem_data",
+                "output_sensor_state",
+                "output_sensor_thresholds",
+                "ignore_not_available_sensors",
+                "BMC_key",
+            ],
+        )
 
-register_rule(
-    RulespecGroupDatasourcePrograms,
-    "special_agents:fritzbox",
-    Dictionary(
-        title=_("Check state of Fritz!Box Devices"),
-        help=_("This rule selects the Fritz!Box agent, which uses UPNP to gather information "
-               "about configuration and connection status information."),
-        elements=[
-            ("timeout",
-             Integer(
-                 title=_("Connect Timeout"),
-                 help=_("The network timeout in seconds when communicating via UPNP. "
-                        "The default is 10 seconds. Please note that this "
-                        "is not a total timeout, instead it is applied to each API call."),
-                 default_value=10,
-                 minvalue=1,
-                 unit=_("seconds"),
-             )),
-        ],
-        optional_keys=["timeout"],
-    ),
-    factory_default=watolib.Rulespec.
-    FACTORY_DEFAULT_UNUSED,  # No default, do not use setting if no rule matches
-    match='first')
+    def _vs_ipmitool(self):
+        return Dictionary(
+            elements=self._vs_ipmi_common_elements(),
+            optional_keys=[],
+        )
 
-register_rule(
-    RulespecGroupDatasourcePrograms,
-    "special_agents:innovaphone",
-    Tuple(
-        title=_("Innovaphone Gateways"),
-        help=_("Please specify the user and password needed to access the xml interface"),
-        elements=[
-            TextAscii(title=_("Username")),
-            Password(title=_("Password")),
-        ]),
-    factory_default=watolib.Rulespec.FACTORY_DEFAULT_UNUSED,
-    match="first")
-
-register_rule(
-    RulespecGroupDatasourcePrograms,
-    "special_agents:hivemanager",
-    Tuple(
-        title=_("Aerohive HiveManager"),
-        help=_("Activate monitoring of host via a HTTP connect to the HiveManager"),
-        elements=[
-            TextAscii(title=_("Username")),
-            Password(title=_("Password")),
-        ]),
-    factory_default=watolib.Rulespec.FACTORY_DEFAULT_UNUSED,
-    match="first")
-
-register_rule(
-    RulespecGroupDatasourcePrograms,
-    "special_agents:hivemanager_ng",
-    Dictionary(
-        title=_("Aerohive HiveManager NG"),
-        help=_("Activate monitoring of the HiveManagerNG cloud."),
-        elements=[
-            ("url",
-             HTTPUrl(
-                 title=_("URL to HiveManagerNG, e.g. https://cloud.aerohive.com"),
-                 allow_empty=False,
-             )),
-            ("vhm_id", TextAscii(
-                title=_("Numerical ID of the VHM, e.g. 102"),
-                allow_empty=False,
-            )),
-            ("api_token", TextAscii(
-                title=_("API Access Token"),
-                size=64,
-                allow_empty=False,
-            )),
-            ("client_id", TextAscii(
-                title=_("Client ID"),
-                allow_empty=False,
-            )),
-            ("client_secret", Password(
-                title=_("Client secret"),
-                allow_empty=False,
-            )),
-            ("redirect_url", HTTPUrl(
-                title=_("Redirect URL (has to be https)"),
-                allow_empty=False,
-            )),
-        ],
-        optional_keys=None,
-    ),
-    factory_default=watolib.Rulespec.FACTORY_DEFAULT_UNUSED,
-    match="first",
-)
-
-register_rule(
-    RulespecGroupDatasourcePrograms,
-    "special_agents:allnet_ip_sensoric",
-    Dictionary(
-        title=_("Check state of ALLNET IP Sensoric Devices"),
-        help=_("This rule selects the ALLNET IP Sensoric agent, which fetches "
-               "/xml/sensordata.xml from the device by HTTP and extracts the "
-               "needed monitoring information from this file."),
-        elements=[
-            ("timeout",
-             Integer(
-                 title=_("Connect Timeout"),
-                 help=_("The network timeout in seconds when communicating via HTTP. "
-                        "The default is 10 seconds."),
-                 default_value=10,
-                 minvalue=1,
-                 unit=_("seconds"),
-             )),
-        ],
-        optional_keys=["timeout"],
-    ),
-    factory_default=watolib.Rulespec.
-    FACTORY_DEFAULT_UNUSED,  # No default, do not use setting if no rule matches
-    match='first')
-
-register_rule(
-    RulespecGroupDatasourcePrograms,
-    "special_agents:ucs_bladecenter",
-    Dictionary(
-        elements=[
+    def _vs_ipmi_common_elements(self):
+        return [
             ("username", TextAscii(
                 title=_("Username"),
                 allow_empty=False,
@@ -766,587 +472,1213 @@ register_rule(
                 title=_("Password"),
                 allow_empty=False,
             )),
-            ("no_cert_check",
-             FixedValue(
-                 True,
-                 title=_("Disable SSL certificate validation"),
-                 totext=_("SSL certificate validation is disabled"),
-             )),
-        ],
-        optional_keys=['no_cert_check']),
-    title=_("Check state of UCS Bladecenter"),
-    help=_("This rule selects the UCS Bladecenter agent instead of the normal Check_MK Agent "
-           "which collects the data through the UCS Bladecenter Web API"),
-    match='first')
-
-
-def validate_siemens_plc_values(value, varprefix):
-    valuetypes = {}
-    for index, (_db_number, _address, _datatype, valuetype, ident) in enumerate(value):
-        valuetypes.setdefault(valuetype, [])
-        if ident in valuetypes[valuetype]:
-            raise MKUserError("%s_%d_%d" % (varprefix, index + 1, 4),
-                              _("The ident of a value needs to be unique per valuetype."))
-        valuetypes[valuetype].append(ident)
-
-
-_siemens_plc_value = [
-    Transform(
-        CascadingDropdown(
-            title=_("The Area"),
-            choices=[
-                ("db", _("Datenbaustein"),
-                 Integer(
-                     title="<nobr>%s</nobr>" % _("DB Number"),
-                     minvalue=1,
-                 )),
-                ("input", _("Input")),
-                ("output", _("Output")),
-                ("merker", _("Merker")),
-                ("timer", _("Timer")),
-                ("counter", _("Counter")),
-            ],
-            orientation="horizontal",
-            sorted=True,
-        ),
-        # Transform old Integer() value spec to new cascading dropdown value
-        forth=lambda x: isinstance(x, int) and ("db", x) or x,
-    ),
-    Float(
-        title=_("Address"),
-        display_format="%.1f",
-        help=_("Addresses are specified with a dot notation, where number "
-               "before the dot specify the byte to fetch and the number after the "
-               "dot specifies the bit to fetch. The number of the bit is always "
-               "between 0 and 7."),
-    ),
-    CascadingDropdown(
-        title=_("Datatype"),
-        choices=[
-            ("dint", _("Double Integer (DINT)")),
-            ("real", _("Real Number (REAL)")),
-            ("bit", _("Single Bit (BOOL)")),
-            ("str", _("String (STR)"), Integer(
-                minvalue=1,
-                title=_("Size"),
-                unit=_("Bytes"),
-            )),
-            ("raw", _("Raw Bytes (HEXSTR)"), Integer(
-                minvalue=1,
-                title=_("Size"),
-                unit=_("Bytes"),
-            )),
-        ],
-        orientation="horizontal",
-        sorted=True,
-    ),
-    DropdownChoice(
-        title=_("Type of the value"),
-        choices=[
-            (None, _("Unclassified")),
-            ("temp", _("Temperature")),
-            ("hours_operation", _("Hours of operation")),
-            ("hours_since_service", _("Hours since service")),
-            ("hours", _("Hours")),
-            ("seconds_operation", _("Seconds of operation")),
-            ("seconds_since_service", _("Seconds since service")),
-            ("seconds", _("Seconds")),
-            ("counter", _("Increasing counter")),
-            ("flag", _("State flag (on/off)")),
-            ("text", _("Text")),
-        ],
-        sorted=True,
-    ),
-    ID(
-        title=_("Ident of the value"),
-        help=_(" An identifier of your choice. This identifier "
-               "is used by the Check_MK checks to access "
-               "and identify the single values. The identifier "
-               "needs to be unique within a group of VALUETYPES."),
-    ),
-]
-
-register_rule(
-    RulespecGroupDatasourcePrograms,
-    "special_agents:siemens_plc",
-    Dictionary(
-        elements=[
-            ("devices",
-             ListOf(
-                 Dictionary(
-                     elements=[
-                         ('host_name',
-                          TextAscii(
-                              title=_('Name of the PLC'),
-                              allow_empty=False,
-                              help=_(
-                                  'Specify the logical name, e.g. the hostname, of the PLC. This name '
-                                  'is used to name the resulting services.'))),
-                         ('host_address',
-                          TextAscii(
-                              title=_('Network Address'),
-                              allow_empty=False,
-                              help=
-                              _('Specify the hostname or IP address of the PLC to communicate with.'
-                               ))),
-                         ("rack", Integer(
-                             title=_("Number of the Rack"),
-                             minvalue=0,
-                         )),
-                         ("slot", Integer(
-                             title=_("Number of the Slot"),
-                             minvalue=0,
-                         )),
-                         ("tcp_port",
-                          Integer(
-                              title=_("TCP Port number"),
-                              help=_("Port number for communicating with the PLC"),
-                              default_value=102,
-                              minvalue=1,
-                              maxvalue=65535,
-                          )),
-                         ("timeout",
-                          Integer(
-                              title=_("Connect Timeout"),
-                              help=_(
-                                  "The connect timeout in seconds when establishing a connection "
-                                  "with the PLC."),
-                              default_value=60,
-                              minvalue=1,
-                              unit=_("seconds"),
-                          )),
-                         ("values",
-                          ListOf(
-                              Tuple(
-                                  elements=_siemens_plc_value,
-                                  orientation="horizontal",
-                              ),
-                              title=_("Values to fetch from this device"),
-                              validate=validate_siemens_plc_values,
-                              magic='@;@',
-                          )),
-                     ],
-                     optional_keys=["timeout"],
-                 ),
-                 title=_("Devices to fetch information from"),
-             )),
-            ("values",
-             ListOf(
-                 Tuple(
-                     elements=_siemens_plc_value,
-                     orientation="horizontal",
-                 ),
-                 title=_("Values to fetch from all devices"),
-                 validate=validate_siemens_plc_values,
-             )),
-        ],
-        optional_keys=["timeout"],
-        title=_("Siemens PLC (SPS)"),
-        help=_("This rule selects the Siemens PLC agent instead of the normal Check_MK Agent "
-               "and allows monitoring of Siemens PLC using the Snap7 API. You can configure "
-               "your connection settings and values to fetch here."),
-    ),
-    factory_default=watolib.Rulespec.
-    FACTORY_DEFAULT_UNUSED,  # No default, do not use setting if no rule matches
-    match='first')
-
-register_rule(
-    RulespecGroupDatasourcePrograms,
-    "special_agents:ruckus_spot",
-    Dictionary(
-        elements=[
-            ("address",
-             Alternative(
-                 title=_("Server Address"),
-                 help=_("Here you can set a manual address if the server differs from the host"),
-                 elements=[
-                     FixedValue(True, title=_("Use host address"), totext=""),
-                     TextAscii(title=_("Enter address"))
-                 ],
-                 default_value=True)),
-            ("port", Integer(title=_("Port"), allow_empty=False, default_value=8443)),
-            ("venueid", TextAscii(
-                title=_("Venue ID"),
-                allow_empty=False,
-            )),
-            ("api_key", TextAscii(title=_("API key"), allow_empty=False, size=70)),
-            ("cmk_agent",
-             Dictionary(
-                 title=_("Also contact Check_MK agent"),
-                 help=_("With this setting, the special agent will also contact the "
-                        "Check_MK agent on the same system at the specified port."),
-                 elements=[("port", Integer(
-                     title=_("Port"),
-                     default_value=6556,
-                     allow_empty=False,
-                 ))],
-                 optional_keys=[])),
-        ],
-        optional_keys=["cmk_agent"]),
-    title=_("Agent for Ruckus Spot"),
-    help=_("This rule selects the Agent Ruckus Spot agent instead of the normal Check_MK Agent "
-           "which collects the data through the Ruckus Spot web interface"),
-    match='first')
-
-register_rule(
-    RulespecGroupDatasourcePrograms,
-    'special_agents:appdynamics',
-    Dictionary(
-        elements=[
-            ('username', TextAscii(
-                title=_('AppDynamics login username'),
-                allow_empty=False,
-            )),
-            ('password', Password(
-                title=_('AppDynamics login password'),
-                allow_empty=False,
-            )),
-            ('application',
+            ("privilege_lvl",
              TextAscii(
-                 title=_('AppDynamics application name'),
-                 help=
-                 _('This is the application name used in the URL. If you enter for example the application '
-                   'name <tt>foobar</tt>, this would result in the URL being used to contact the REST API: '
-                   '<tt>/controller/rest/applications/foobar/metric-data</tt>'),
+                 title=_("Privilege Level"),
+                 help=_("Possible are 'user', 'operator', 'admin'"),
                  allow_empty=False,
-                 size=40,
              )),
-            ('port',
-             Integer(
-                 title=_('TCP port number'),
-                 help=_('Port number that AppDynamics is listening on. The default is 8090.'),
-                 default_value=8090,
-                 minvalue=1,
-                 maxvalue=65535,
-             )),
-            ('timeout',
-             Integer(
-                 title=_('Connection timeout'),
-                 help=_('The network timeout in seconds when communicating with AppDynamics.'
-                        'The default is 30 seconds.'),
-                 default_value=30,
-                 minvalue=1,
-                 unit=_('seconds'),
-             )),
-        ],
-        optional_keys=['port', 'timeout'],
-    ),
-    title=_('AppDynamics via REST API'),
-    help=_('This rule allows querying an AppDynamics server for information about Java applications'
-           'via the AppDynamics REST API. You can configure your connection settings here.'),
-    factory_default=watolib.Rulespec.
-    FACTORY_DEFAULT_UNUSED,  # No default, do not use setting if no rule matches
-    match='first')
-
-mk_jolokia_elements = [
-    ("port",
-     Integer(
-         title=_("TCP port for connection"),
-         default_value=8080,
-         minvalue=1,
-         maxvalue=65535,
-     )),
-    ("login",
-     Tuple(
-         title=_("Optional login (if required)"),
-         elements=[
-             TextAscii(
-                 title=_("User ID for web login (if login required)"),
-                 default_value="monitoring",
-             ),
-             Password(title=_("Password for this user")),
-             DropdownChoice(
-                 title=_("Login mode"),
-                 choices=[
-                     ("basic", _("HTTP Basic Authentication")),
-                     ("digest", _("HTTP Digest")),
-                 ])
-         ])),
-    ("suburi",
-     TextAscii(
-         title=_("relative URI under which Jolokia is visible"),
-         default_value="jolokia",
-         size=30,
-     )),
-    ("instance",
-     TextUnicode(
-         title=_("Name of the instance in the monitoring"),
-         help=_("If you do not specify a name here, then the TCP port number "
-                "will be used as an instance name."))),
-    ("protocol", DropdownChoice(
-        title=_("Protocol"), choices=[
-            ("http", "HTTP"),
-            ("https", "HTTPS"),
-        ])),
-]
-
-register_rule(
-    RulespecGroupDatasourcePrograms,
-    'special_agents:jolokia',
-    Dictionary(elements=mk_jolokia_elements,),
-    title=_('Jolokia'),
-    help=_('This rule allows querying the Jolokia web API.'),
-    factory_default=watolib.Rulespec.
-    FACTORY_DEFAULT_UNUSED,  # No default, do not use setting if no rule matches
-    match='first')
-
-register_rule(
-    RulespecGroupDatasourcePrograms,
-    "special_agents:tinkerforge",
-    Dictionary(
-        title=_("Settings for Tinkerforge agent"),
-        elements=[
-            ("port",
-             Integer(
-                 title=_('TCP port number'),
-                 help=_('Port number that AppDynamics is listening on. The default is 8090.'),
-                 default_value=4223,
-                 minvalue=1,
-                 maxvalue=65535)),
-            ("segment_display_uid",
-             TextAscii(
-                 title=_("7-segment display uid"),
-                 help=_(
-                     "This is the uid of the sensor you want to display in the 7-segment display, "
-                     "not the uid of the display itself. There is currently no support for "
-                     "controling multiple displays."))),
-            ("segment_display_brightness",
-             Integer(title=_("7-segment display brightness"), minvalue=0, maxvalue=7))
-        ],
-    ),
-    title=_("Tinkerforge"),
-    match='first')
-
-register_rule(
-    RulespecGroupDatasourcePrograms,
-    'special_agents:prism',
-    Dictionary(
-        elements=[
-            ("port",
-             Integer(
-                 title=_("TCP port for connection"), default_value=9440, minvalue=1,
-                 maxvalue=65535)),
-            ("username", TextAscii(title=_("User ID for web login"),)),
-            ("password", Password(title=_("Password for this user"))),
-        ],
-        optional_keys=["port"]),
-    title=_("Nutanix Prism"),
-    match='first')
+        ]
 
 
-def _transform_3par_add_verify_cert(v):
-    v.setdefault("verify_cert", False)
-    return v
+@rulespec_registry.register
+class RulespecSpecialAgentsNetapp(HostRulespec):
+    @property
+    def group(self):
+        return RulespecGroupDatasourcePrograms
+
+    @property
+    def name(self):
+        return "special_agents:netapp"
+
+    @property
+    def valuespec(self):
+        return Transform(
+            Dictionary(
+                elements=[
+                    ("username", TextAscii(
+                        title=_("Username"),
+                        allow_empty=False,
+                    )),
+                    ("password", Password(
+                        title=_("Password"),
+                        allow_empty=False,
+                    )),
+                    ("skip_elements",
+                     ListChoice(
+                         choices=[
+                             ("ctr_volumes", _("Do not query volume performance counters")),
+                         ],
+                         title=_("Performance improvements"),
+                         help=_(
+                             "Here you can configure whether the performance counters should get queried. "
+                             "This can save quite a lot of CPU load on larger systems."),
+                     )),
+                ],
+                title=_("Check NetApp via WebAPI"),
+                help=
+                _("This rule set selects the NetApp special agent instead of the normal Check_MK Agent "
+                  "and allows monitoring via the NetApp Web API. To access the data the "
+                  "user requires permissions to several API classes. They are shown when you call the agent with "
+                  "<tt>agent_netapp --help</tt>. The agent itself is located in the site directory under "
+                  "<tt>~/share/check_mk/agents/special</tt>."),
+                optional_keys=False,
+            ),
+            forth=lambda x: dict([("skip_elements", [])] + x.items()))
 
 
-register_rule(
-    RulespecGroupDatasourcePrograms,
-    "special_agents:3par",
-    Transform(
-        Dictionary(
+@rulespec_registry.register
+class RulespecSpecialAgentsActivemq(HostRulespec):
+    @property
+    def group(self):
+        return RulespecGroupDatasourcePrograms
+
+    @property
+    def name(self):
+        return "special_agents:activemq"
+
+    @property
+    def factory_default(self):
+        # No default, do not use setting if no rule matches
+        return watolib.Rulespec.FACTORY_DEFAULT_UNUSED
+
+    @property
+    def valuespec(self):
+        return Transform(
+            Dictionary(
+                elements=[("servername", TextAscii(title=_("Server Name"))),
+                          ("port", Integer(title=_("Port Number"), default_value=8161)),
+                          ("use_piggyback", Checkbox(title=_("Use Piggyback"), label=_("Enable"))),
+                          ("basicauth",
+                           Tuple(
+                               title=_("BasicAuth settings (optional)"),
+                               elements=[
+                                   TextAscii(title=_("Username")),
+                                   Password(title=_("Password"))
+                               ]))],
+                optional_keys=["basicauth"]),
+            title=_("Apache ActiveMQ queues"),
+            forth=self._transform_activemq,
+        )
+
+    def _transform_activemq(self, value):
+        if not isinstance(value, tuple):
+            return value
+
+        new_value = {}
+        new_value["servername"] = value[0]
+        new_value["port"] = value[1]
+        new_value["use_piggyback"] = "piggybag" in value[2]  # piggybag...
+        return new_value
+
+
+@rulespec_registry.register
+class RulespecSpecialAgentsEmcvnx(HostRulespec):
+    @property
+    def group(self):
+        return RulespecGroupDatasourcePrograms
+
+    @property
+    def name(self):
+        return "special_agents:emcvnx"
+
+    @property
+    def factory_default(self):
+        # No default, do not use setting if no rule matches
+        return watolib.Rulespec.FACTORY_DEFAULT_UNUSED
+
+    @property
+    def valuespec(self):
+        return Dictionary(
+            title=_("Check state of EMC VNX storage systems"),
+            help=_("This rule selects the EMC VNX agent instead of the normal Check_MK Agent "
+                   "and allows monitoring of EMC VNX storage systems by calling naviseccli "
+                   "commandline tool locally on the monitoring system. Make sure it is installed "
+                   "and working. You can configure your connection settings here."),
             elements=[
-                ("user", TextAscii(
+                ("user",
+                 TextAscii(
+                     title=_("EMC VNX admin user name"),
+                     allow_empty=True,
+                     help=_(
+                         "If you leave user name and password empty, the special agent tries to "
+                         "authenticate against the EMC VNX device by Security Files. "
+                         "These need to be created manually before using. Therefor run as "
+                         "instance user (if using OMD) or Nagios user (if not using OMD) "
+                         "a command like "
+                         "<tt>naviseccli -AddUserSecurity -scope 0 -password PASSWORD -user USER</tt> "
+                         "This creates <tt>SecuredCLISecurityFile.xml</tt> and "
+                         "<tt>SecuredCLIXMLEncrypted.key</tt> in the home directory of the user "
+                         "and these files are used then."),
+                 )),
+                ("password", Password(
+                    title=_("EMC VNX admin user password"),
+                    allow_empty=True,
+                )),
+                ("infos",
+                 Transform(
+                     ListChoice(
+                         choices=[
+                             ("disks", _("Disks")),
+                             ("hba", _("iSCSI HBAs")),
+                             ("hwstatus", _("Hardware status")),
+                             ("raidgroups", _("RAID groups")),
+                             ("agent", _("Model and revsion")),
+                             ("sp_util", _("Storage processor utilization")),
+                             ("writecache", _("Write cache state")),
+                             ("mirrorview", _("Mirror views")),
+                             ("storage_pools", _("Storage pools")),
+                         ],
+                         default_value=[
+                             "disks",
+                             "hba",
+                             "hwstatus",
+                         ],
+                         allow_empty=False,
+                     ),
+                     title=_("Retrieve information about..."),
+                 )),
+            ],
+            optional_keys=[],
+        )
+
+
+@rulespec_registry.register
+class RulespecSpecialAgentsIbmsvc(HostRulespec):
+    @property
+    def group(self):
+        return RulespecGroupDatasourcePrograms
+
+    @property
+    def name(self):
+        return "special_agents:ibmsvc"
+
+    @property
+    def factory_default(self):
+        # No default, do not use setting if no rule matches
+        return watolib.Rulespec.FACTORY_DEFAULT_UNUSED
+
+    @property
+    def valuespec(self):
+        return Dictionary(
+            title=_("Check state of IBM SVC / V7000 storage systems"),
+            help=_(
+                "This rule set selects the <tt>ibmsvc</tt> agent instead of the normal Check_MK Agent "
+                "and allows monitoring of IBM SVC / V7000 storage systems by calling "
+                "ls* commands there over SSH. "
+                "Make sure you have SSH key authentication enabled for your monitoring user. "
+                "That means: The user your monitoring is running under on the monitoring "
+                "system must be able to ssh to the storage system as the user you gave below "
+                "without password."),
+            elements=[
+                ("user",
+                 TextAscii(
+                     title=_("IBM SVC / V7000 user name"),
+                     allow_empty=True,
+                     help=_(
+                         "User name on the storage system. Read only permissions are sufficient."),
+                 )),
+                ("accept-any-hostkey",
+                 Checkbox(
+                     title=_("Accept any SSH Host Key"),
+                     label=_("Accept any SSH Host Key"),
+                     default_value=False,
+                     help=_(
+                         "Accepts any SSH Host Key presented by the storage device. "
+                         "Please note: This might be a security issue because man-in-the-middle "
+                         "attacks are not recognized! Better solution would be to add the "
+                         "SSH Host Key of the monitored storage devices to the .ssh/known_hosts "
+                         "file for the user your monitoring is running under (on OMD: the site user)"
+                     ))),
+                ("infos",
+                 Transform(
+                     ListChoice(
+                         choices=[
+                             ("lshost", _("Hosts Connected")),
+                             ("lslicense", _("Licensing Status")),
+                             ("lsmdisk", _("MDisks")),
+                             ("lsmdiskgrp", _("MDisksGrps")),
+                             ("lsnode", _("IO Groups")),
+                             ("lsnodestats", _("Node Stats")),
+                             ("lssystem", _("System Info")),
+                             ("lssystemstats", _("System Stats")),
+                             ("lseventlog", _("Event Log")),
+                             ("lsportfc", _("FC Ports")),
+                             ("lsportsas", _("SAS Ports")),
+                             ("lsenclosure", _("Enclosures")),
+                             ("lsenclosurestats", _("Enclosure Stats")),
+                             ("lsarray", _("RAID Arrays")),
+                             ("disks", _("Physical Disks")),
+                         ],
+                         default_value=[
+                             "lshost", "lslicense", "lsmdisk", "lsmdiskgrp", "lsnode",
+                             "lsnodestats", "lssystem", "lssystemstats", "lsportfc", "lsenclosure",
+                             "lsenclosurestats", "lsarray", "disks"
+                         ],
+                         allow_empty=False,
+                     ),
+                     title=_("Retrieve information about..."),
+                 )),
+            ],
+            optional_keys=[],
+        )
+
+
+@rulespec_registry.register
+class RulespecSpecialAgentsRandom(HostRulespec):
+    @property
+    def group(self):
+        return RulespecGroupDatasourcePrograms
+
+    @property
+    def name(self):
+        return "special_agents:random"
+
+    @property
+    def factory_default(self):
+        # No default, do not use setting if no rule matches
+        return watolib.Rulespec.FACTORY_DEFAULT_UNUSED
+
+    @property
+    def valuespec(self):
+        return FixedValue(
+            {},
+            title=_("Create random monitoring data"),
+            help=_("By configuring this rule for a host - instead of the normal "
+                   "Check_MK agent random monitoring data will be created."),
+            totext=_("Create random monitoring data"),
+        )
+
+
+@rulespec_registry.register
+class RulespecSpecialAgentsAcmeSbc(HostRulespec):
+    @property
+    def group(self):
+        return RulespecGroupDatasourcePrograms
+
+    @property
+    def name(self):
+        return "special_agents:acme_sbc"
+
+    @property
+    def factory_default(self):
+        # No default, do not use setting if no rule matches
+        return watolib.Rulespec.FACTORY_DEFAULT_UNUSED
+
+    @property
+    def valuespec(self):
+        return FixedValue(
+            {},
+            title=_("Check ACME Session Border Controller"),
+            help=_("This rule activates an agent which connects "
+                   "to an ACME Session Border Controller (SBC). This agent uses SSH, so "
+                   "you have to exchange an SSH key to make a passwordless connect possible."),
+            totext=_("Connect to ACME SBC"),
+        )
+
+
+@rulespec_registry.register
+class RulespecSpecialAgentsFritzbox(HostRulespec):
+    @property
+    def group(self):
+        return RulespecGroupDatasourcePrograms
+
+    @property
+    def name(self):
+        return "special_agents:fritzbox"
+
+    @property
+    def factory_default(self):
+        # No default, do not use setting if no rule matches
+        return watolib.Rulespec.FACTORY_DEFAULT_UNUSED
+
+    @property
+    def valuespec(self):
+        return Dictionary(
+            title=_("Check state of Fritz!Box Devices"),
+            help=_("This rule selects the Fritz!Box agent, which uses UPNP to gather information "
+                   "about configuration and connection status information."),
+            elements=[
+                ("timeout",
+                 Integer(
+                     title=_("Connect Timeout"),
+                     help=_("The network timeout in seconds when communicating via UPNP. "
+                            "The default is 10 seconds. Please note that this "
+                            "is not a total timeout, instead it is applied to each API call."),
+                     default_value=10,
+                     minvalue=1,
+                     unit=_("seconds"),
+                 )),
+            ],
+            optional_keys=["timeout"],
+        )
+
+
+@rulespec_registry.register
+class RulespecSpecialAgentsInnovaphone(HostRulespec):
+    @property
+    def group(self):
+        return RulespecGroupDatasourcePrograms
+
+    @property
+    def name(self):
+        return "special_agents:innovaphone"
+
+    @property
+    def factory_default(self):
+        # No default, do not use setting if no rule matches
+        return watolib.Rulespec.FACTORY_DEFAULT_UNUSED
+
+    @property
+    def valuespec(self):
+        return Tuple(
+            title=_("Innovaphone Gateways"),
+            help=_("Please specify the user and password needed to access the xml interface"),
+            elements=[
+                TextAscii(title=_("Username")),
+                Password(title=_("Password")),
+            ],
+        )
+
+
+@rulespec_registry.register
+class RulespecSpecialAgentsHivemanager(HostRulespec):
+    @property
+    def group(self):
+        return RulespecGroupDatasourcePrograms
+
+    @property
+    def name(self):
+        return "special_agents:hivemanager"
+
+    @property
+    def factory_default(self):
+        # No default, do not use setting if no rule matches
+        return watolib.Rulespec.FACTORY_DEFAULT_UNUSED
+
+    @property
+    def valuespec(self):
+        return Tuple(
+            title=_("Aerohive HiveManager"),
+            help=_("Activate monitoring of host via a HTTP connect to the HiveManager"),
+            elements=[
+                TextAscii(title=_("Username")),
+                Password(title=_("Password")),
+            ])
+
+
+@rulespec_registry.register
+class RulespecSpecialAgentsHivemanagerNg(HostRulespec):
+    @property
+    def group(self):
+        return RulespecGroupDatasourcePrograms
+
+    @property
+    def name(self):
+        return "special_agents:hivemanager_ng"
+
+    @property
+    def factory_default(self):
+        # No default, do not use setting if no rule matches
+        return watolib.Rulespec.FACTORY_DEFAULT_UNUSED
+
+    @property
+    def valuespec(self):
+        return Dictionary(
+            title=_("Aerohive HiveManager NG"),
+            help=_("Activate monitoring of the HiveManagerNG cloud."),
+            elements=[
+                ("url",
+                 HTTPUrl(
+                     title=_("URL to HiveManagerNG, e.g. https://cloud.aerohive.com"),
+                     allow_empty=False,
+                 )),
+                ("vhm_id",
+                 TextAscii(
+                     title=_("Numerical ID of the VHM, e.g. 102"),
+                     allow_empty=False,
+                 )),
+                ("api_token", TextAscii(
+                    title=_("API Access Token"),
+                    size=64,
+                    allow_empty=False,
+                )),
+                ("client_id", TextAscii(
+                    title=_("Client ID"),
+                    allow_empty=False,
+                )),
+                ("client_secret", Password(
+                    title=_("Client secret"),
+                    allow_empty=False,
+                )),
+                ("redirect_url",
+                 HTTPUrl(
+                     title=_("Redirect URL (has to be https)"),
+                     allow_empty=False,
+                 )),
+            ],
+            optional_keys=None,
+        )
+
+
+@rulespec_registry.register
+class RulespecSpecialAgentsAllnetIpSensoric(HostRulespec):
+    @property
+    def group(self):
+        return RulespecGroupDatasourcePrograms
+
+    @property
+    def name(self):
+        return "special_agents:allnet_ip_sensoric"
+
+    @property
+    def factory_default(self):
+        # No default, do not use setting if no rule matches
+        return watolib.Rulespec.FACTORY_DEFAULT_UNUSED
+
+    @property
+    def valuespec(self):
+        return Dictionary(
+            title=_("Check state of ALLNET IP Sensoric Devices"),
+            help=_("This rule selects the ALLNET IP Sensoric agent, which fetches "
+                   "/xml/sensordata.xml from the device by HTTP and extracts the "
+                   "needed monitoring information from this file."),
+            elements=[
+                ("timeout",
+                 Integer(
+                     title=_("Connect Timeout"),
+                     help=_("The network timeout in seconds when communicating via HTTP. "
+                            "The default is 10 seconds."),
+                     default_value=10,
+                     minvalue=1,
+                     unit=_("seconds"),
+                 )),
+            ],
+            optional_keys=["timeout"],
+        )
+
+
+@rulespec_registry.register
+class RulespecSpecialAgentsUcsBladecenter(HostRulespec):
+    @property
+    def group(self):
+        return RulespecGroupDatasourcePrograms
+
+    @property
+    def name(self):
+        return "special_agents:ucs_bladecenter"
+
+    @property
+    def valuespec(self):
+        return Dictionary(
+            title=_("Check state of UCS Bladecenter"),
+            help=_(
+                "This rule selects the UCS Bladecenter agent instead of the normal Check_MK Agent "
+                "which collects the data through the UCS Bladecenter Web API"),
+            elements=[
+                ("username", TextAscii(
                     title=_("Username"),
                     allow_empty=False,
                 )),
-                ("password", IndividualOrStoredPassword(
+                ("password", Password(
                     title=_("Password"),
                     allow_empty=False,
                 )),
-                ("verify_cert",
+                ("no_cert_check",
+                 FixedValue(
+                     True,
+                     title=_("Disable SSL certificate validation"),
+                     totext=_("SSL certificate validation is disabled"),
+                 )),
+            ],
+            optional_keys=['no_cert_check'],
+        )
+
+
+@rulespec_registry.register
+class RulespecSpecialAgentsSiemensPlc(HostRulespec):
+    @property
+    def group(self):
+        return RulespecGroupDatasourcePrograms
+
+    @property
+    def name(self):
+        return "special_agents:siemens_plc"
+
+    @property
+    def factory_default(self):
+        # No default, do not use setting if no rule matches
+        return watolib.Rulespec.FACTORY_DEFAULT_UNUSED
+
+    @property
+    def valuespec(self):
+        return Dictionary(
+            elements=[
+                ("devices",
+                 ListOf(
+                     Dictionary(
+                         elements=[
+                             ('host_name',
+                              TextAscii(
+                                  title=_('Name of the PLC'),
+                                  allow_empty=False,
+                                  help=_(
+                                      'Specify the logical name, e.g. the hostname, of the PLC. This name '
+                                      'is used to name the resulting services.'))),
+                             ('host_address',
+                              TextAscii(
+                                  title=_('Network Address'),
+                                  allow_empty=False,
+                                  help=
+                                  _('Specify the hostname or IP address of the PLC to communicate with.'
+                                   ))),
+                             ("rack", Integer(
+                                 title=_("Number of the Rack"),
+                                 minvalue=0,
+                             )),
+                             ("slot", Integer(
+                                 title=_("Number of the Slot"),
+                                 minvalue=0,
+                             )),
+                             ("tcp_port",
+                              Integer(
+                                  title=_("TCP Port number"),
+                                  help=_("Port number for communicating with the PLC"),
+                                  default_value=102,
+                                  minvalue=1,
+                                  maxvalue=65535,
+                              )),
+                             ("timeout",
+                              Integer(
+                                  title=_("Connect Timeout"),
+                                  help=_(
+                                      "The connect timeout in seconds when establishing a connection "
+                                      "with the PLC."),
+                                  default_value=60,
+                                  minvalue=1,
+                                  unit=_("seconds"),
+                              )),
+                             ("values",
+                              ListOf(
+                                  Tuple(
+                                      elements=self._siemens_plc_value(),
+                                      orientation="horizontal",
+                                  ),
+                                  title=_("Values to fetch from this device"),
+                                  validate=self._validate_siemens_plc_values,
+                                  magic='@;@',
+                              )),
+                         ],
+                         optional_keys=["timeout"],
+                     ),
+                     title=_("Devices to fetch information from"),
+                 )),
+                ("values",
+                 ListOf(
+                     Tuple(
+                         elements=self._siemens_plc_value(),
+                         orientation="horizontal",
+                     ),
+                     title=_("Values to fetch from all devices"),
+                     validate=self._validate_siemens_plc_values,
+                 )),
+            ],
+            optional_keys=["timeout"],
+            title=_("Siemens PLC (SPS)"),
+            help=_("This rule selects the Siemens PLC agent instead of the normal Check_MK Agent "
+                   "and allows monitoring of Siemens PLC using the Snap7 API. You can configure "
+                   "your connection settings and values to fetch here."),
+        )
+
+    def _validate_siemens_plc_values(self, value, varprefix):
+        valuetypes = {}
+        for index, (_db_number, _address, _datatype, valuetype, ident) in enumerate(value):
+            valuetypes.setdefault(valuetype, [])
+            if ident in valuetypes[valuetype]:
+                raise MKUserError("%s_%d_%d" % (varprefix, index + 1, 4),
+                                  _("The ident of a value needs to be unique per valuetype."))
+            valuetypes[valuetype].append(ident)
+
+    def _siemens_plc_value(self):
+        return [
+            Transform(
+                CascadingDropdown(
+                    title=_("The Area"),
+                    choices=[
+                        ("db", _("Datenbaustein"),
+                         Integer(
+                             title="<nobr>%s</nobr>" % _("DB Number"),
+                             minvalue=1,
+                         )),
+                        ("input", _("Input")),
+                        ("output", _("Output")),
+                        ("merker", _("Merker")),
+                        ("timer", _("Timer")),
+                        ("counter", _("Counter")),
+                    ],
+                    orientation="horizontal",
+                    sorted=True,
+                ),
+                # Transform old Integer() value spec to new cascading dropdown value
+                forth=lambda x: isinstance(x, int) and ("db", x) or x,
+            ),
+            Float(
+                title=_("Address"),
+                display_format="%.1f",
+                help=_("Addresses are specified with a dot notation, where number "
+                       "before the dot specify the byte to fetch and the number after the "
+                       "dot specifies the bit to fetch. The number of the bit is always "
+                       "between 0 and 7."),
+            ),
+            CascadingDropdown(
+                title=_("Datatype"),
+                choices=[
+                    ("dint", _("Double Integer (DINT)")),
+                    ("real", _("Real Number (REAL)")),
+                    ("bit", _("Single Bit (BOOL)")),
+                    ("str", _("String (STR)"), Integer(
+                        minvalue=1,
+                        title=_("Size"),
+                        unit=_("Bytes"),
+                    )),
+                    ("raw", _("Raw Bytes (HEXSTR)"),
+                     Integer(
+                         minvalue=1,
+                         title=_("Size"),
+                         unit=_("Bytes"),
+                     )),
+                ],
+                orientation="horizontal",
+                sorted=True,
+            ),
+            DropdownChoice(
+                title=_("Type of the value"),
+                choices=[
+                    (None, _("Unclassified")),
+                    ("temp", _("Temperature")),
+                    ("hours_operation", _("Hours of operation")),
+                    ("hours_since_service", _("Hours since service")),
+                    ("hours", _("Hours")),
+                    ("seconds_operation", _("Seconds of operation")),
+                    ("seconds_since_service", _("Seconds since service")),
+                    ("seconds", _("Seconds")),
+                    ("counter", _("Increasing counter")),
+                    ("flag", _("State flag (on/off)")),
+                    ("text", _("Text")),
+                ],
+                sorted=True,
+            ),
+            ID(
+                title=_("Ident of the value"),
+                help=_(" An identifier of your choice. This identifier "
+                       "is used by the Check_MK checks to access "
+                       "and identify the single values. The identifier "
+                       "needs to be unique within a group of VALUETYPES."),
+            ),
+        ]
+
+
+@rulespec_registry.register
+class RulespecSpecialAgentsRuckusSpot(HostRulespec):
+    @property
+    def group(self):
+        return RulespecGroupDatasourcePrograms
+
+    @property
+    def name(self):
+        return "special_agents:ruckus_spot"
+
+    @property
+    def valuespec(self):
+        return Dictionary(
+            elements=[
+                ("address",
+                 Alternative(
+                     title=_("Server Address"),
+                     help=_(
+                         "Here you can set a manual address if the server differs from the host"),
+                     elements=[
+                         FixedValue(True, title=_("Use host address"), totext=""),
+                         TextAscii(title=_("Enter address"))
+                     ],
+                     default_value=True)),
+                ("port", Integer(title=_("Port"), allow_empty=False, default_value=8443)),
+                ("venueid", TextAscii(
+                    title=_("Venue ID"),
+                    allow_empty=False,
+                )),
+                ("api_key", TextAscii(title=_("API key"), allow_empty=False, size=70)),
+                ("cmk_agent",
+                 Dictionary(
+                     title=_("Also contact Check_MK agent"),
+                     help=_("With this setting, the special agent will also contact the "
+                            "Check_MK agent on the same system at the specified port."),
+                     elements=[("port",
+                                Integer(
+                                    title=_("Port"),
+                                    default_value=6556,
+                                    allow_empty=False,
+                                ))],
+                     optional_keys=[])),
+            ],
+            title=_("Agent for Ruckus Spot"),
+            help=_(
+                "This rule selects the Agent Ruckus Spot agent instead of the normal Check_MK Agent "
+                "which collects the data through the Ruckus Spot web interface"),
+            optional_keys=["cmk_agent"])
+
+
+@rulespec_registry.register
+class RulespecSpecialAgentsAppdynamics(HostRulespec):
+    @property
+    def group(self):
+        return RulespecGroupDatasourcePrograms
+
+    @property
+    def name(self):
+        return "special_agents:appdynamics"
+
+    @property
+    def factory_default(self):
+        # No default, do not use setting if no rule matches
+        return watolib.Rulespec.FACTORY_DEFAULT_UNUSED
+
+    @property
+    def valuespec(self):
+        return Dictionary(
+            title=_('AppDynamics via REST API'),
+            help=_(
+                'This rule allows querying an AppDynamics server for information about Java applications'
+                'via the AppDynamics REST API. You can configure your connection settings here.'),
+            elements=[
+                ('username', TextAscii(
+                    title=_('AppDynamics login username'),
+                    allow_empty=False,
+                )),
+                ('password', Password(
+                    title=_('AppDynamics login password'),
+                    allow_empty=False,
+                )),
+                ('application',
+                 TextAscii(
+                     title=_('AppDynamics application name'),
+                     help=
+                     _('This is the application name used in the URL. If you enter for example the application '
+                       'name <tt>foobar</tt>, this would result in the URL being used to contact the REST API: '
+                       '<tt>/controller/rest/applications/foobar/metric-data</tt>'),
+                     allow_empty=False,
+                     size=40,
+                 )),
+                ('port',
+                 Integer(
+                     title=_('TCP port number'),
+                     help=_('Port number that AppDynamics is listening on. The default is 8090.'),
+                     default_value=8090,
+                     minvalue=1,
+                     maxvalue=65535,
+                 )),
+                ('timeout',
+                 Integer(
+                     title=_('Connection timeout'),
+                     help=_('The network timeout in seconds when communicating with AppDynamics.'
+                            'The default is 30 seconds.'),
+                     default_value=30,
+                     minvalue=1,
+                     unit=_('seconds'),
+                 )),
+            ],
+            optional_keys=['port', 'timeout'],
+        )
+
+
+@rulespec_registry.register
+class RulespecSpecialAgentsJolokia(HostRulespec):
+    @property
+    def group(self):
+        return RulespecGroupDatasourcePrograms
+
+    @property
+    def name(self):
+        return "special_agents:jolokia"
+
+    @property
+    def factory_default(self):
+        # No default, do not use setting if no rule matches
+        return watolib.Rulespec.FACTORY_DEFAULT_UNUSED
+
+    @property
+    def valuespec(self):
+        return Dictionary(
+            title=_('Jolokia'),
+            help=_('This rule allows querying the Jolokia web API.'),
+            elements=self._mk_jolokia_elements(),
+        )
+
+    def _mk_jolokia_elements(self):
+        return [
+            ("port",
+             Integer(
+                 title=_("TCP port for connection"),
+                 default_value=8080,
+                 minvalue=1,
+                 maxvalue=65535,
+             )),
+            ("login",
+             Tuple(
+                 title=_("Optional login (if required)"),
+                 elements=[
+                     TextAscii(
+                         title=_("User ID for web login (if login required)"),
+                         default_value="monitoring",
+                     ),
+                     Password(title=_("Password for this user")),
+                     DropdownChoice(
+                         title=_("Login mode"),
+                         choices=[
+                             ("basic", _("HTTP Basic Authentication")),
+                             ("digest", _("HTTP Digest")),
+                         ])
+                 ])),
+            ("suburi",
+             TextAscii(
+                 title=_("relative URI under which Jolokia is visible"),
+                 default_value="jolokia",
+                 size=30,
+             )),
+            ("instance",
+             TextUnicode(
+                 title=_("Name of the instance in the monitoring"),
+                 help=_("If you do not specify a name here, then the TCP port number "
+                        "will be used as an instance name."))),
+            ("protocol",
+             DropdownChoice(title=_("Protocol"), choices=[
+                 ("http", "HTTP"),
+                 ("https", "HTTPS"),
+             ])),
+        ]
+
+
+@rulespec_registry.register
+class RulespecSpecialAgentsTinkerforge(HostRulespec):
+    @property
+    def group(self):
+        return RulespecGroupDatasourcePrograms
+
+    @property
+    def name(self):
+        return "special_agents:tinkerforge"
+
+    @property
+    def valuespec(self):
+        return Dictionary(
+            title=_("Tinkerforge"),
+            elements=
+            [("port",
+              Integer(
+                  title=_('TCP port number'),
+                  help=_('Port number that AppDynamics is listening on. The default is 8090.'),
+                  default_value=4223,
+                  minvalue=1,
+                  maxvalue=65535)),
+             ("segment_display_uid",
+              TextAscii(
+                  title=_("7-segment display uid"),
+                  help=_(
+                      "This is the uid of the sensor you want to display in the 7-segment display, "
+                      "not the uid of the display itself. There is currently no support for "
+                      "controling multiple displays."))),
+             ("segment_display_brightness",
+              Integer(title=_("7-segment display brightness"), minvalue=0, maxvalue=7))],
+        )
+
+
+@rulespec_registry.register
+class RulespecSpecialAgentsPrism(HostRulespec):
+    @property
+    def group(self):
+        return RulespecGroupDatasourcePrograms
+
+    @property
+    def name(self):
+        return "special_agents:prism"
+
+    @property
+    def valuespec(self):
+        return Dictionary(
+            title=_("Nutanix Prism"),
+            elements=[
+                ("port",
+                 Integer(
+                     title=_("TCP port for connection"),
+                     default_value=9440,
+                     minvalue=1,
+                     maxvalue=65535)),
+                ("username", TextAscii(title=_("User ID for web login"),)),
+                ("password", Password(title=_("Password for this user"))),
+            ],
+            optional_keys=["port"],
+        )
+
+
+@rulespec_registry.register
+class RulespecSpecialAgents3Par(HostRulespec):
+    @property
+    def group(self):
+        return RulespecGroupDatasourcePrograms
+
+    @property
+    def name(self):
+        return "special_agents:3par"
+
+    @property
+    def title(self):
+        return _("Agent 3PAR Configuration")
+
+    @property
+    def valuespec(self):
+        return Transform(
+            Dictionary(
+                title=_("Agent 3PAR Configuration"),
+                elements=[
+                    ("user", TextAscii(
+                        title=_("Username"),
+                        allow_empty=False,
+                    )),
+                    ("password", IndividualOrStoredPassword(
+                        title=_("Password"),
+                        allow_empty=False,
+                    )),
+                    ("verify_cert",
+                     DropdownChoice(
+                         title=_("SSL certificate verification"),
+                         choices=[
+                             (True, _("Activate")),
+                             (False, _("Deactivate")),
+                         ],
+                     )),
+                    ("values",
+                     ListOfStrings(
+                         title=_("Values to fetch"),
+                         orientation="horizontal",
+                         help=_(
+                             "Possible values are the following: cpgs, volumes, hosts, capacity, "
+                             "system, ports, remotecopy, hostsets, volumesets, vluns, flashcache, "
+                             "users, roles, qos.\n"
+                             "If you do not specify any value the first seven are used as default."
+                         ),
+                     )),
+                ],
+                optional_keys=["values"],
+            ),
+            forth=self._transform_3par_add_verify_cert,
+        )
+
+    # verify_cert was added with 1.5.0p1
+    def _transform_3par_add_verify_cert(self, v):
+        v.setdefault("verify_cert", False)
+        return v
+
+
+@rulespec_registry.register
+class RulespecSpecialAgentsStoreonce(HostRulespec):
+    @property
+    def group(self):
+        return RulespecGroupDatasourcePrograms
+
+    @property
+    def name(self):
+        return "special_agents:storeonce"
+
+    @property
+    def valuespec(self):
+        return Dictionary(
+            title=_("Check HPE StoreOnce"),
+            help=_("This rule set selects the special agent for HPE StoreOnce Applainces "
+                   "instead of the normal Check_MK agent and allows monitoring via Web API. "),
+            optional_keys=["cert"],
+            elements=[
+                ("user", TextAscii(title=_("Username"), allow_empty=False)),
+                ("password", Password(title=_("Password"), allow_empty=False)),
+                ("cert",
                  DropdownChoice(
                      title=_("SSL certificate verification"),
                      choices=[
                          (True, _("Activate")),
                          (False, _("Deactivate")),
+                     ])),
+            ],
+        )
+
+
+@rulespec_registry.register
+class RulespecSpecialAgentsSalesforce(HostRulespec):
+    @property
+    def group(self):
+        return RulespecGroupDatasourcePrograms
+
+    @property
+    def name(self):
+        return "special_agents:salesforce"
+
+    @property
+    def title(self):
+        return _("Check Salesforce")
+
+    @property
+    def help(self):
+        return _("This rule selects the special agent for Salesforce.")
+
+    @property
+    def valuespec(self):
+        return Dictionary(
+            title=_("Check Salesforce"),
+            help=_("This rule selects the special agent for Salesforce."),
+            elements=[
+                ("instances", ListOfStrings(
+                    title=_("Instances"),
+                    allow_empty=False,
+                )),
+            ],
+            optional_keys=[],
+        )
+
+
+@rulespec_registry.register
+class RulespecSpecialAgentsAzure(HostRulespec):
+    @property
+    def group(self):
+        return RulespecGroupDatasourcePrograms
+
+    @property
+    def name(self):
+        return "special_agents:azure"
+
+    @property
+    def valuespec(self):
+        return Dictionary(
+            title=_("Agent Azure Configuration"),
+            help=_("To monitor Azure resources add this datasource to <b>one</b> host. "
+                   "The data will be transported using the piggyback mechanism, so make "
+                   "sure to create one host for every monitored resource group. You can "
+                   "learn about the discovered groups in the <i>Agent Azure Info</i> "
+                   "service of the host owning the datasource program."),
+            # element names starting with "--" will be passed do cmd line w/o parsing!
+            elements=[
+                ("--subscription-id",
+                 TextAscii(
+                     title=_("Subscription ID"),
+                     allow_empty=False,
+                     size=45,
+                 )),
+                ("--tenant-id",
+                 TextAscii(
+                     title=_("Tenant ID / Directory ID"),
+                     allow_empty=False,
+                     size=45,
+                 )),
+                ("--client-id",
+                 TextAscii(
+                     title=_("Client ID / Application ID"),
+                     allow_empty=False,
+                     size=45,
+                 )),
+                ("--secret", Password(
+                    title=_("Secret"),
+                    allow_empty=False,
+                    size=45,
+                )),
+                (
+                    "config",
+                    Dictionary(
+                        title=_("Monitoring Settings"),
+                        # Since we introduced this, Microsoft has already reduced the number
+                        # of allowed API requests. At the time of this writing (11/2018)
+                        # you can find the number here:
+                        # https://docs.microsoft.com/de-de/azure/azure-resource-manager/resource-manager-request-limits
+                        help=_("You can choose to to monitor all resources known to "
+                               "the Azure API. However, be aware that Microsoft limits"
+                               " API calls to %s per hour (%s per minute).") % ("12000", "200"),
+                        elements=[
+                            ('explicit-config',
+                             ListOf(
+                                 self._azure_group_config(),
+                                 title=_("Explicitly specify groups"),
+                                 allow_empty=False,
+                                 magic="@-groups-@",
+                             )),
+                            ('fetchall',
+                             FixedValue(
+                                 "fetchall",
+                                 title=
+                                 _("Monitor all available resource groups (overrides previous settings)"
+                                  ),
+                                 totext="",
+                             )),
+                        ],
+                    )),
+                ("--piggyback-vms",
+                 DropdownChoice(
+                     title=_("Create piggyback VM data"),
+                     help=_("You can choose to <i>additionally</i> send data concerning VMs to"
+                            " the host that is associated with the special agent, to a piggyback"
+                            " host with name of the VM itself, or both. By default data is sent"
+                            " to the corresponding resource group only."),
+                     choices=[
+                         ("agenthost", _("Send data to agent host")),
+                         ("self", _("Send data to the VM itself")),
+                         ("all", _("Send data to both the agent host and the VM itself")),
                      ],
                  )),
-                ("values",
-                 ListOfStrings(
-                     title=_("Values to fetch"),
-                     orientation="horizontal",
-                     help=_("Possible values are the following: cpgs, volumes, hosts, capacity, "
-                            "system, ports, remotecopy, hostsets, volumesets, vluns, flashcache, "
-                            "users, roles, qos.\n"
-                            "If you do not specify any value the first seven are used as default."),
+                ("--sequential",
+                 Checkbox(
+                     title=_("Run in single thread"),
+                     help=_("Check this to avoid multiprocessing. "
+                            "Recommended for debugging purposes only."),
                  )),
             ],
-            optional_keys=["values"],
-        ),
-        # verify_cert was added with 1.5.0p1
-        forth=_transform_3par_add_verify_cert,
-    ),
-    title=_("Agent 3PAR Configuration"),
-    match='first',
-)
+            optional_keys=["--piggyback-vms"],
+        )
 
-register_rule(
-    RulespecGroupDatasourcePrograms,
-    "special_agents:storeonce",
-    Dictionary(
-        optional_keys=["cert"],
-        elements=[
-            ("user", TextAscii(title=_("Username"), allow_empty=False)),
-            ("password", Password(title=_("Password"), allow_empty=False)),
-            ("cert",
-             DropdownChoice(
-                 title=_("SSL certificate verification"),
-                 choices=[
-                     (True, _("Activate")),
-                     (False, _("Deactivate")),
-                 ])),
-        ],
-    ),
-    title=_("Check HPE StoreOnce"),
-    help=_("This rule set selects the special agent for HPE StoreOnce Applainces "
-           "instead of the normal Check_MK agent and allows monitoring via Web API. "),
-    match="first",
-)
-
-register_rule(
-    RulespecGroupDatasourcePrograms,
-    "special_agents:salesforce",
-    Dictionary(
-        elements=[
-            ("instances", ListOfStrings(title=_("Instances"), allow_empty=False)),
-        ],
-        optional_keys=[]),
-    title=_("Check Salesforce"),
-    help=_("This rule selects the special agent for Salesforce."),
-    match="first",
-)
-
-
-def _azure_resource_config():
-    return Dictionary(
-        orientation="horizontal",
-        elements=[
-            ('resource', ListOfStrings(
-                title=_('Resource names'),
-                allow_empty=False,
-            )),
-        ],
-        optional_keys=False,
-    )
-
-
-def _azure_group_config():
-    return Dictionary(
-        elements=[
-            ('group_name', TextAscii(
-                title=_('Name of the resource group'),
-                allow_empty=False,
-            )),
-            ('group_config',
-             Alternative(
-                 title=_("Resources to monitor"),
-                 style="dropdown",
-                 elements=[
-                     ListOf(
-                         _azure_resource_config(),
-                         title=_("Explicitly specify resources"),
-                         allow_empty=False,
-                         magic="@-resources-@",
-                     ),
-                     FixedValue(
-                         'fetchall',
-                         title=_("Monitor all available resources"),
-                         totext="",
-                     ),
-                 ],
-             )),
-        ],
-        optional_keys=False,
-    )
-
-
-register_rule(
-    RulespecGroupDatasourcePrograms,
-    "special_agents:azure",
-    Dictionary(
-        title=_("Agent Azure Configuration"),
-        help=_("To monitor Azure resources add this datasource to <b>one</b> host. "
-               "The data will be transported using the piggyback mechanism, so make "
-               "sure to create one host for every monitored resource group. You can "
-               "learn about the discovered groups in the <i>Agent Azure Info</i> "
-               "service of the host owning the datasource program."),
-        # element names starting with "--" will be passed do cmd line w/o parsing!
-        elements=[
-            ("--subscription-id", TextAscii(
-                title=_("Subscription ID"),
-                allow_empty=False,
-                size=45,
-            )),
-            ("--tenant-id",
-             TextAscii(
-                 title=_("Tenant ID / Directory ID"),
-                 allow_empty=False,
-                 size=45,
-             )),
-            ("--client-id",
-             TextAscii(
-                 title=_("Client ID / Application ID"),
-                 allow_empty=False,
-                 size=45,
-             )),
-            ("--secret", Password(
-                title=_("Secret"),
-                allow_empty=False,
-                size=45,
-            )),
-            (
-                "config",
-                Dictionary(
-                    title=_("Monitoring Settings"),
-                    # Since we introduced this, Microsoft has already reduced the number
-                    # of allowed API requests. At the time of this writing (11/2018)
-                    # you can find the number here:
-                    # https://docs.microsoft.com/de-de/azure/azure-resource-manager/resource-manager-request-limits
-                    help=_("You can choose to to monitor all resources known to "
-                           "the Azure API. However, be aware that Microsoft limits"
-                           " API calls to %s per hour (%s per minute).") % ("12000", "200"),
-                    elements=[
-                        ('explicit-config',
-                         ListOf(
-                             _azure_group_config(),
-                             title=_("Explicitly specify groups"),
-                             allow_empty=False,
-                             magic="@-groups-@",
-                         )),
-                        ('fetchall',
-                         FixedValue(
-                             "fetchall",
-                             title=
-                             _("Monitor all available resource groups (overrides previous settings)"
-                              ),
-                             totext="",
-                         )),
-                    ],
+    def _azure_group_config(self):
+        return Dictionary(
+            elements=[
+                ('group_name', TextAscii(
+                    title=_('Name of the resource group'),
+                    allow_empty=False,
                 )),
-            ("--piggyback-vms",
-             DropdownChoice(
-                 title=_("Create piggyback VM data"),
-                 help=_("You can choose to <i>additionally</i> send data concerning VMs to"
-                        " the host that is associated with the special agent, to a piggyback"
-                        " host with name of the VM itself, or both. By default data is sent"
-                        " to the corresponding resource group only."),
-                 choices=[
-                     ("agenthost", _("Send data to agent host")),
-                     ("self", _("Send data to the VM itself")),
-                     ("all", _("Send data to both the agent host and the VM itself")),
-                 ],
-             )),
-            ("--sequential",
-             Checkbox(
-                 title=_("Run in single thread"),
-                 help=_("Check this to avoid multiprocessing. "
-                        "Recommended for debugging purposes only."),
-             )),
-        ],
-        optional_keys=["--piggyback-vms"],
-    ),
-    match='first',
-)
+                ('group_config',
+                 Alternative(
+                     title=_("Resources to monitor"),
+                     style="dropdown",
+                     elements=[
+                         ListOf(
+                             self._azure_resource_config(),
+                             title=_("Explicitly specify resources"),
+                             allow_empty=False,
+                             magic="@-resources-@",
+                         ),
+                         FixedValue(
+                             'fetchall',
+                             title=_("Monitor all available resources"),
+                             totext="",
+                         ),
+                     ],
+                 )),
+            ],
+            optional_keys=False,
+        )
+
+    def _azure_resource_config(self):
+        return Dictionary(
+            orientation="horizontal",
+            elements=[
+                ('resource', ListOfStrings(
+                    title=_('Resource names'),
+                    allow_empty=False,
+                )),
+            ],
+            optional_keys=False,
+        )
 
 
 class MultisiteBiDatasource(object):
@@ -1465,89 +1797,125 @@ class MultisiteBiDatasource(object):
         )
 
 
-register_rule(
-    RulespecGroupDatasourcePrograms,
-    "special_agents:bi",
-    ListOf(MultisiteBiDatasource().get_valuespec()),
-    title=_("Check state of BI Aggregations"),
-    help=_("This rule allows you to check multiple BI aggregations from multiple sites at once. "
-           "You can also assign aggregations to specific hosts through the piggyback mechanism."),
-    match='first')
+@rulespec_registry.register
+class RulespecSpecialAgentsBi(HostRulespec):
+    @property
+    def group(self):
+        return RulespecGroupDatasourcePrograms
 
-register_rule(
-    RulespecGroupDatasourcePrograms,
-    'special_agents:aws',
-    Dictionary(
-        elements=[
-            ("--aws-access-key-id",
-             TextAscii(
-                 title=_("The access key for your AWS account"),
-                 allow_empty=False,
-             )),
-            ("--aws-secret-access-key",
-             IndividualOrStoredPassword(
-                 title=_("The secret key for your AWS account"),
-                 allow_empty=False,
-             )),
-            ("--regions",
-             ListChoice(
-                 title=_("Regions to use"),
-                 choices=sorted([
-                     ("ap-south-1", _("Asia Pacific (Mumbai)")),
-                     ("ap-northeast-3", _("Asia Pacific (Osaka-Local)")),
-                     ("ap-northeast-2", _("Asia Pacific (Seoul)")),
-                     ("ap-southeast-1", _("Asia Pacific (Singapore)")),
-                     ("ap-southeast-2", _("Asia Pacific (Sydney)")),
-                     ("ap-northeast-1", _("Asia Pacific (Tokyo)")),
-                     ("ca-central-1", _("Canada (Central)")),
-                     ("cn-north-1", _("China (Beijing)")),
-                     ("cn-northwest-1", _("China (Ningxia)")),
-                     ("eu-central-1", _("EU (Frankfurt)")),
-                     ("eu-west-1", _("EU (Ireland)")),
-                     ("eu-west-2", _("EU (London)")),
-                     ("eu-west-3", _("EU (Paris)")),
-                     ("eu-north-1", _("EU (Stockholm)")),
-                     ("sa-east-1", _("South America (Sao Paulo)")),
-                     ("us-east-2", _("US East (Ohio)")),
-                     ("us-east-1", _("US East (N. Virginia)")),
-                     ("us-west-1", _("US West (N. California)")),
-                     ("us-west-2", _("US West (Oregon)")),
-                 ],
-                                key=lambda x: x[1]),
-             )),
-            (
-                "--services",
-                ListChoice(
-                    title=_("Services to monitor"),
-                    choices=[
-                        ("ce", _("Costs and usage")),
-                        ("ec2", _("Elastic Compute Cloud (EC2)")),
-                        ("ebs", _("Elastic Block Storage (EBS)")),
-                        ("s3", _("Simple Storage Service (S3)")),
-                        #("elb", _("Elastic Load Balancing (ELB)")),
-                        #("cloudtrail", _("")),
-                        #("glacier", _("")),
-                    ],
-                )),
-        ],
-        optional_keys=[],
-    ),
-    title=_('Amazon Web Services (AWS)'),
-    match='first')
+    @property
+    def name(self):
+        return "special_agents:bi"
 
-register_rule(
-    RulespecGroupDatasourcePrograms,
-    "special_agents:vnx_quotas",
-    Dictionary(
-        title=_("Check VNX quotas and filesystems"),
-        elements=[
-            ("user", TextAscii(title=_("NAS DB user name"))),
-            ("password", Password(title=_("Password"))),
-            ("nas_db", TextAscii(title=_("NAS DB path"))),
-        ],
-        optional_keys=[],
-    ),
-    factory_default=watolib.Rulespec.
-    FACTORY_DEFAULT_UNUSED,  # No default, do not use setting if no rule matches
-    match='first',
-)
+    @property
+    def valuespec(self):
+        return ListOf(
+            MultisiteBiDatasource().get_valuespec(),
+            title=_("Check state of BI Aggregations"),
+            help=
+            _("This rule allows you to check multiple BI aggregations from multiple sites at once. "
+              "You can also assign aggregations to specific hosts through the piggyback mechanism."
+             ),
+        )
+
+
+@rulespec_registry.register
+class RulespecSpecialAgentsAws(HostRulespec):
+    @property
+    def group(self):
+        return RulespecGroupDatasourcePrograms
+
+    @property
+    def name(self):
+        return "special_agents:aws"
+
+    @property
+    def title(self):
+        return _("Amazon Web Services (AWS)")
+
+    @property
+    def valuespec(self):
+        return Dictionary(
+            title=_('Amazon Web Services (AWS)'),
+            elements=[
+                ("--aws-access-key-id",
+                 TextAscii(
+                     title=_("The access key for your AWS account"),
+                     allow_empty=False,
+                 )),
+                ("--aws-secret-access-key",
+                 IndividualOrStoredPassword(
+                     title=_("The secret key for your AWS account"),
+                     allow_empty=False,
+                 )),
+                ("--regions",
+                 ListChoice(
+                     title=_("Regions to use"),
+                     choices=sorted([
+                         ("ap-south-1", _("Asia Pacific (Mumbai)")),
+                         ("ap-northeast-3", _("Asia Pacific (Osaka-Local)")),
+                         ("ap-northeast-2", _("Asia Pacific (Seoul)")),
+                         ("ap-southeast-1", _("Asia Pacific (Singapore)")),
+                         ("ap-southeast-2", _("Asia Pacific (Sydney)")),
+                         ("ap-northeast-1", _("Asia Pacific (Tokyo)")),
+                         ("ca-central-1", _("Canada (Central)")),
+                         ("cn-north-1", _("China (Beijing)")),
+                         ("cn-northwest-1", _("China (Ningxia)")),
+                         ("eu-central-1", _("EU (Frankfurt)")),
+                         ("eu-west-1", _("EU (Ireland)")),
+                         ("eu-west-2", _("EU (London)")),
+                         ("eu-west-3", _("EU (Paris)")),
+                         ("eu-north-1", _("EU (Stockholm)")),
+                         ("sa-east-1", _("South America (Sao Paulo)")),
+                         ("us-east-2", _("US East (Ohio)")),
+                         ("us-east-1", _("US East (N. Virginia)")),
+                         ("us-west-1", _("US West (N. California)")),
+                         ("us-west-2", _("US West (Oregon)")),
+                     ],
+                                    key=lambda x: x[1]),
+                 )),
+                (
+                    "--services",
+                    ListChoice(
+                        title=_("Services to monitor"),
+                        choices=[
+                            ("ce", _("Costs and usage")),
+                            ("ec2", _("Elastic Compute Cloud (EC2)")),
+                            ("ebs", _("Elastic Block Storage (EBS)")),
+                            ("s3", _("Simple Storage Service (S3)")),
+                            #("elb", _("Elastic Load Balancing (ELB)")),
+                            #("cloudtrail", _("")),
+                            #("glacier", _("")),
+                        ],
+                    )),
+            ],
+            optional_keys=[],
+        )
+
+
+@rulespec_registry.register
+class RulespecSpecialAgentsVnxQuotas(HostRulespec):
+    @property
+    def group(self):
+        return RulespecGroupDatasourcePrograms
+
+    @property
+    def name(self):
+        return "special_agents:vnx_quotas"
+
+    @property
+    def factory_default(self):
+        # No default, do not use setting if no rule matches
+        return watolib.Rulespec.FACTORY_DEFAULT_UNUSED
+
+    @property
+    def valuespec(self):
+        return Dictionary(
+            title=_("Check VNX quotas and filesystems"),
+            elements=[
+                ("user", TextAscii(title=_("NAS DB user name"))),
+                ("password", Password(title=_("Password"))),
+                ("nas_db", TextAscii(title=_("NAS DB path"))),
+            ],
+            optional_keys=[],
+        )

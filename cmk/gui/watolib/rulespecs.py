@@ -276,6 +276,51 @@ class Rulespec(object):
         # type: () -> Type[RulespecGroup]
         raise NotImplementedError()
 
+    @abc.abstractproperty
+    def valuespec(self):
+        # type: () -> Optional[ValueSpec]
+        raise NotImplementedError()
+
+    @abc.abstractproperty
+    def title(self):
+        # type: () -> Text
+        raise NotImplementedError()
+
+    @abc.abstractproperty
+    def help(self):
+        # type: () -> Text
+        raise NotImplementedError()
+
+    @abc.abstractproperty
+    def is_for_services(self):
+        # type: () -> bool
+        raise NotImplementedError()
+
+    @abc.abstractproperty
+    def item_type(self):
+        # type: () -> Optional[str]
+        raise NotImplementedError()
+
+    @abc.abstractproperty
+    def item_name(self):
+        # type: () -> Optional[Text]
+        raise NotImplementedError()
+
+    @abc.abstractproperty
+    def item_spec(self):
+        # type: () -> Optional[ValueSpec]
+        raise NotImplementedError()
+
+    @abc.abstractproperty
+    def item_help(self):
+        # type: () -> Optional[Text]
+        raise NotImplementedError()
+
+    @abc.abstractproperty
+    def item_enum(self):
+        # type: () -> Optional[List]
+        raise NotImplementedError()
+
     @property
     def group_name(self):
         # type: () -> Text
@@ -290,52 +335,6 @@ class Rulespec(object):
     def sub_group_name(self):
         # type: () -> Text
         return self.group_name.split("/")[1] if "/" in self.group_name else ""
-
-    @property
-    def item_name(self):
-        if not self._item_name and self.item_type == "service":
-            return _("Service")
-        return self._item_name
-
-    @property
-    def title(self):
-        return self.valuespec.title()
-
-    @property
-    def help(self):
-        return self.valuespec.help()
-
-    # TODO: Which cases need this this to be optional? clarify this
-    @property
-    def valuespec(self):
-        # type: () -> Optional[ValueSpec]
-        return None
-
-    # TODO: Move these item attributes e.g. to a subclass or a helper class
-    @property
-    def item_spec(self):
-        # type: () -> Optional[ValueSpec]
-        return None
-
-    @property
-    def item_type(self):
-        # type: () -> Optional[str]
-        return None
-
-    @property
-    def _item_name(self):
-        # type: () -> Optional[Text]
-        return None
-
-    @property
-    def item_help(self):
-        # type: () -> Optional[Text]
-        return None
-
-    @property
-    def item_enum(self):
-        # type: () -> Optional[Text]
-        return None
 
     @property
     def match_type(self):
@@ -356,6 +355,131 @@ class Rulespec(object):
     def is_deprecated(self):
         # type: () -> bool
         return False
+
+
+class ABCHostRulespec(object):
+    """Base class for all rulespecs managing host rule sets"""
+
+    def is_for_services(self):
+        return False
+
+    @property
+    def item_type(self):
+        # type: () -> None
+        return None
+
+    @property
+    def item_name(self):
+        # type: () -> None
+        return None
+
+    @property
+    def item_spec(self):
+        # type: () -> None
+        return None
+
+    @property
+    def item_help(self):
+        # type: () -> None
+        return None
+
+    @property
+    def item_enum(self):
+        # type: () -> None
+        return None
+
+
+class ABCServiceRulespec(object):
+    """Base class for all rulespecs managing service rule sets"""
+
+    def is_for_services(self):
+        return True
+
+    # TODO: Is this always service?
+    @property
+    def item_type(self):
+        # type: () -> Optional[str]
+        return "service"
+
+    @property
+    def item_name(self):
+        # type: () -> Optional[Text]
+        if self.item_type == "service":
+            return _("Service")
+        return None
+
+    @property
+    def item_spec(self):
+        # type: () -> Optional[ValueSpec]
+        return None
+
+    @property
+    def item_help(self):
+        # type: () -> Optional[Text]
+        return None
+
+    @property
+    def item_enum(self):
+        # type: () -> Optional[List]
+        """List of choices to select using a ListChoice() when editing a rule
+        In case this is set this replaces the regular service condition input (see EditRuleMode._get_rule_conditions())
+        """
+        return None
+
+
+class ABCBinaryRulespec(Rulespec):
+    """Base class for all rulespecs that create a binary host/service rule list"""
+
+    @property
+    def valuespec(self):
+        return None
+
+    @abc.abstractproperty
+    def title(self):
+        # type: () -> Text
+        raise NotImplementedError()
+
+    @abc.abstractproperty
+    def help(self):
+        # type: () -> Text
+        raise NotImplementedError()
+
+
+class BinaryHostRulespec(ABCHostRulespec, ABCBinaryRulespec):
+    pass
+
+
+class BinaryServiceRulespec(ABCServiceRulespec, ABCBinaryRulespec):
+    pass
+
+
+class ABCValueRulespec(Rulespec):
+    """Base class for all rulespecs that create a host/service list with values"""
+
+    @abc.abstractproperty
+    def valuespec(self):
+        # type: () -> ValueSpec
+        raise NotImplementedError()
+
+    @property
+    def title(self):
+        # type: () -> Text
+        return self.valuespec.title()
+
+    @property
+    def help(self):
+        # type: () -> Text
+        return self.valuespec.help()
+
+
+class HostRulespec(ABCHostRulespec, ABCValueRulespec):
+    """Base class for all rulespecs managing host rule sets with values"""
+    pass
+
+
+class ServiceRulespec(ABCServiceRulespec, ABCValueRulespec):
+    """Base class for all rulespecs managing service rule sets with values"""
+    pass
 
 
 # Pre 1.6 rule registering logic. Need to be kept for some time
@@ -382,25 +506,37 @@ def register_rule(
     class_attrs = {
         "name": varname,
         "group": group,
-        "valuespec": valuespec,
-        "item_spec": itemspec,
-        "item_type": itemtype,
-        "_item_name": itemname,
-        "item_help": itemhelp,
-        "item_enum": itemenum,
         "match_type": match,
         "factory_default": factory_default,
         "is_optional": optional,
         "is_deprecated": deprecated,
     }
 
-    if title:
+    if valuespec is None:
+        base_class = BinaryServiceRulespec if itemtype is not None else BinaryHostRulespec
+    else:
+        class_attrs["valuespec"] = valuespec
+        base_class = ServiceRulespec if itemtype is not None else HostRulespec
+
+    if title is not None:
         class_attrs["title"] = title
 
-    if help:
+    if help is not None:
         class_attrs["help"] = help
 
-    rulespec_class = type("LegacyRulespec%s" % varname, (Rulespec,), class_attrs)
+    class_attrs.update({
+        "item_spec": itemspec,
+        "item_help": itemhelp,
+        "item_enum": itemenum,
+        "item_type": itemtype,
+    })
+
+    if not itemname and itemtype == "service":
+        class_attrs["item_name"] = _("Service")
+    else:
+        class_attrs["item_name"] = itemname
+
+    rulespec_class = type("LegacyRulespec%s" % varname, (base_class,), class_attrs)
     rulespec_registry.register(rulespec_class)
 
 

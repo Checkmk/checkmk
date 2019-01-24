@@ -225,7 +225,7 @@ PS_DISCOVERY_WATO_RULES = [
             "resident_levels": (1024**3, 2 * 1024**3),
             "icon": "emacs.png",
         },
-        "descr": "emacs",
+        "descr": "emacs %u",
         "match": "emacs",
         "user": False
     }, [], ["@all"], {
@@ -285,7 +285,7 @@ PS_DISCOVERY_SPECS = [
         "process_info": "text",
         'cpu_rescale_max': None,
     }),
-    ("emacs", "emacs", False, {
+    ("emacs %u", "emacs", False, {
         "cpu_average": 15,
         'cpu_rescale_max': True,
         "process_info": "html",
@@ -400,7 +400,7 @@ def test_cleanup_params(check_manager, params, result):
 
 
 PS_DISCOVERED_ITEMS = [
-    ("emacs", {
+    ("emacs on", {
         "cpu_average": 15,
         'cpu_rescale_max': True,
         "resident_levels_perc": (25.0, 50.0),
@@ -544,7 +544,7 @@ check_results = [
 def test_check_ps_common(check_manager, monkeypatch, inv_item, reference):
     check = check_manager.get_check("ps")
     parsed = sum([check.run_parse(info)[1] for info in generate_inputs()], [])
-    total_ram = 1024**3 if inv_item[0] == "emacs" else None
+    total_ram = 1024**3 if "emacs" in inv_item[0] else None
     monkeypatch.setattr('time.time', lambda: 1540375342)
     factory_defaults = {"levels": (1, 1, 99999, 99999)}
     factory_defaults.update(inv_item[1])

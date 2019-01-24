@@ -1,0 +1,16 @@
+Title: jolokia_generic: remove duplicate MBean in item
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.5.0p12
+Date: 1548350120
+Class: fix
+
+Werk 6901 introduced an additional word "MBean" in the item of
+jolokia_generic checks. This changed the service description
+to "MBean text1 MBean text2". This werk reintroduces the old
+service description "MBean text1 text2".
+
+If you have services that contain two times the word "MBean"
+a service rediscovery is necessary to obtain the old format.

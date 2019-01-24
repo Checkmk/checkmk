@@ -2884,15 +2884,18 @@ class ConfigCache(object):
             1.0 * len(self._all_processed_hosts) / len(used_groups))
 
     def _initialize_host_lookup(self):
+        for hostname in self._all_configured_hosts:
+            dirname_of_host = os.path.dirname(host_paths[hostname])
+            if dirname_of_host[-1] != "/":
+                dirname_of_host += "/"
+            self._host_paths[hostname] = dirname_of_host
+
+        # Determine hosts within folders
         dirnames = [
             x[0][len(cmk.utils.paths.check_mk_config_dir):] + "/"
             for x in os.walk(cmk.utils.paths.check_mk_config_dir)
         ]
 
-        for hostname in self._all_configured_hosts:
-            self._host_paths[hostname] = os.path.dirname(host_paths[hostname]) + "/"
-
-        # Determine hosts within folders
         for dirname in dirnames:
             for hostname in self._all_configured_hosts:
                 if self._host_paths[hostname].startswith(dirname):
@@ -2975,6 +2978,7 @@ class ConfigCache(object):
         tags_set_without_folder = tags_set - rule_path_set
 
         if rule_path_set:
+            # More than one dynamic folder in one rule is simply wrong..
             rule_path = list(rule_path_set)[0]
         else:
             rule_path = "/+"

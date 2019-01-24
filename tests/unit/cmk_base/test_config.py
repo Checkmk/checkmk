@@ -57,7 +57,7 @@ def test_is_no_ip_host(monkeypatch, hostname, tags, result):
 ])
 def test_is_ipv6_primary_host(monkeypatch, hostname, tags, result, ruleset):
     monkeypatch.setattr(config, "all_hosts", ["%s|%s" % (hostname, "|".join(tags))])
-    monkeypatch.setattr(config, "host_paths", {hostname: ""})
+    monkeypatch.setattr(config, "host_paths", {hostname: "/"})
     monkeypatch.setattr(config, "tags_of_host", lambda h: {hostname: tags}[h])
     monkeypatch.setattr(config, "primary_address_family", ruleset)
 
@@ -204,5 +204,5 @@ def test_http_proxy(http_proxy, result, monkeypatch):
 
 def _setup_host(monkeypatch, hostname, tags):
     monkeypatch.setattr(config, "all_hosts", ["%s|%s" % (hostname, "|".join(tags))])
-    monkeypatch.setattr(config, "host_paths", {hostname: ""})
+    monkeypatch.setattr(config, "host_paths", {hostname: "/"})
 

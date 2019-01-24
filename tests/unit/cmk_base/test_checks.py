@@ -63,7 +63,7 @@ def test_do_status_data_inventory_for(monkeypatch, result, ruleset):
     config.load_default_config()
 
     monkeypatch.setattr(config, "all_hosts", ["abc"])
-    monkeypatch.setattr(config, "host_paths", {"abc": ""})
+    monkeypatch.setattr(config, "host_paths", {"abc": "/"})
     monkeypatch.setattr(config, "active_checks", {
         "cmk_inv": ruleset,
     })

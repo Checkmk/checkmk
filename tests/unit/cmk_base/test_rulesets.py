@@ -24,7 +24,7 @@ def clear_config_caches(monkeypatch):
 def test_service_extra_conf(monkeypatch):
     import cmk_base.config as config
     monkeypatch.setattr(config, "all_hosts", ["host1|tag1|tag2", "host2|tag1"])
-    monkeypatch.setattr(config, "host_paths", {"host1": "", "host2": ""})
+    monkeypatch.setattr(config, "host_paths", {"host1": "/", "host2": "/"})
     monkeypatch.setattr(config, "clusters", {})
     config.get_config_cache().initialize()
 
@@ -68,7 +68,7 @@ def test_all_matching_hosts(monkeypatch):
     monkeypatch.setattr(config, "distributed_wato_site", "site1")
     monkeypatch.setattr(config, "all_hosts",
                         ["host1|tag1|tag2", "host2|tag1", "host3|tag1|site:site2"])
-    monkeypatch.setattr(config, "host_paths", {"host1": "", "host2": "", "host3": ""})
+    monkeypatch.setattr(config, "host_paths", {"host1": "/", "host2": "/", "host3": "/"})
     monkeypatch.setattr(config, "clusters", {})
     config.get_config_cache().initialize()
 

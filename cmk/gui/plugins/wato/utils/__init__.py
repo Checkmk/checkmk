@@ -119,6 +119,10 @@ from cmk.gui.watolib.users import notification_script_title
 from cmk.gui.watolib.rulespecs import (
     rulespec_registry,
     Rulespec,
+    HostRulespec,
+    ServiceRulespec,
+    BinaryHostRulespec,
+    BinaryServiceRulespec,
     rulespec_group_registry,
     RulespecGroup,
     RulespecSubGroup,
@@ -658,6 +662,7 @@ def register_check_parameters(subgroup,
             match=match_type,
             deprecated=deprecated)
 
+    # Static checks are always host rulespecs
     if register_static_check:
         # Register rule for static checks
         elements = [

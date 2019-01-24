@@ -11,6 +11,7 @@ from cmk.gui.watolib.rulespecs import (
     RulespecSubGroup,
     RulespecRegistry,
     Rulespec,
+    HostRulespec,
     rulespec_registry,
 )
 from cmk.gui.valuespec import (
@@ -1413,8 +1414,10 @@ def test_legacy_register_rule(monkeypatch):
 
 
 def test_legacy_register_rule_attributes(monkeypatch):
-    monkeypatch.setattr(cmk.gui.watolib.rulespecs, "rulespec_group_registry",
-                        watolib.RulespecGroupRegistry())
+    group_registry = watolib.RulespecGroupRegistry()
+    monkeypatch.setattr(cmk.gui.watolib.rulespecs, "rulespec_group_registry", group_registry)
+    monkeypatch.setattr(cmk.gui.watolib.rulespecs, "rulespec_registry",
+                        RulespecRegistry(group_registry))
 
     watolib.register_rule(
         "dingdong_group",
@@ -1436,7 +1439,7 @@ def test_legacy_register_rule_attributes(monkeypatch):
         factory_default="humpf",
     )
 
-    spec = rulespec_registry["rule_name"]()
+    spec = cmk.gui.watolib.rulespecs.rulespec_registry["rule_name"]()
     assert spec.name == "rule_name"
     assert spec.group_name == "dingdong_group"
     assert isinstance(spec.valuespec, Dictionary)
@@ -1506,7 +1509,7 @@ class DummyGroup(RulespecGroup):
         return "help text"
 
 
-class DummyRulespec(Rulespec):
+class DummyRulespec(HostRulespec):
     name = "name"
     group = DummyGroup
     valuespec = FixedValue(None)
@@ -10630,21 +10633,6 @@ expected_rulespecs = {
         'title': u'Primary IP address family of dual-stack hosts',
         'valuespec_class_name': 'DropdownChoice'
     },
-    'rule_name': {
-        'factory_default': 'humpf',
-        'group_name': 'dingdong_group',
-        'help': 'help me!',
-        'is_deprecated': True,
-        'is_optional': True,
-        'item_enum': 'itemenum',
-        'item_help': u'Item help',
-        'item_name': u'Blub',
-        'item_spec_class_name': 'TextAscii',
-        'item_type': 'service',
-        'match_type': 'dict',
-        'title': 'title',
-        'valuespec_class_name': 'Dictionary'
-    },
     'sap_value_groups': {
         'factory_default': [],
         'group_name': 'checkparams/discovery',
@@ -17391,7 +17379,18 @@ def test_registered_rulespecs():
         assert rulespec.help == spec["help"]
         assert rulespec.group_name == spec["group_name"]
         assert rulespec.valuespec.__class__.__name__ == spec["valuespec_class_name"]
-        assert rulespec.item_name == spec["item_name"]
+
+        if isinstance(rulespec, cmk.gui.watolib.rulespecs.ABCHostRulespec):
+            assert rulespec.item_name is None
+            # Static checks rulespecs are always host rulespecs, but have an item_spec for rendering
+            # the item configured in the value oO. A little bit surprising. Needs to be cleaned up
+            if not rulespec.name.startswith("static_checks:"):
+                assert rulespec.item_spec is None
+            assert rulespec.item_type is None
+            assert rulespec.item_help is None
+            assert rulespec.item_enum is None
+
+        assert rulespec.item_name == spec["item_name"], rulespec.title
         assert rulespec.item_spec.__class__.__name__ == spec["item_spec_class_name"]
         assert rulespec.item_type == spec["item_type"]
         assert rulespec.item_help == spec["item_help"]

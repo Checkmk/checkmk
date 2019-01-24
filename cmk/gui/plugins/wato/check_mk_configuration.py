@@ -77,7 +77,10 @@ from cmk.gui.plugins.wato import (
     ConfigDomainCACertificates,
     site_neutral_path,
     rulespec_registry,
-    Rulespec,
+    HostRulespec,
+    ServiceRulespec,
+    BinaryHostRulespec,
+    BinaryServiceRulespec,
     rulespec_group_registry,
     RulespecGroup,
     RulespecSubGroup,
@@ -2509,7 +2512,7 @@ class RulespecGroupGrouping(RulespecGroup):
 
 
 @rulespec_registry.register
-class RulespecHostGroups(Rulespec):
+class RulespecHostGroups(HostRulespec):
     @property
     def group(self):
         return RulespecGroupGrouping
@@ -2534,7 +2537,7 @@ class RulespecHostGroups(Rulespec):
 
 
 @rulespec_registry.register
-class RulespecServiceGroups(Rulespec):
+class RulespecServiceGroups(ServiceRulespec):
     @property
     def group(self):
         return RulespecGroupGrouping
@@ -2560,7 +2563,7 @@ class RulespecServiceGroups(Rulespec):
 
 
 @rulespec_registry.register
-class RulespecHostContactgroups(Rulespec):
+class RulespecHostContactgroups(HostRulespec):
     @property
     def group(self):
         return RulespecGroupGrouping
@@ -2582,7 +2585,7 @@ class RulespecHostContactgroups(Rulespec):
 
 
 @rulespec_registry.register
-class RulespecServiceContactgroups(Rulespec):
+class RulespecServiceContactgroups(ServiceRulespec):
     @property
     def group(self):
         return RulespecGroupGrouping
@@ -2639,7 +2642,7 @@ class RulespecGroupMonitoringConfigurationServiceChecks(RulespecSubGroup):
 
 
 @rulespec_registry.register
-class RulespecExtraServiceConfMaxCheckAttempts(Rulespec):
+class RulespecExtraServiceConfMaxCheckAttempts(ServiceRulespec):
     @property
     def group(self):
         return RulespecGroupMonitoringConfigurationServiceChecks
@@ -2663,7 +2666,7 @@ class RulespecExtraServiceConfMaxCheckAttempts(Rulespec):
 
 
 @rulespec_registry.register
-class RulespecExtraServiceConfCheckInterval(Rulespec):
+class RulespecExtraServiceConfCheckInterval(ServiceRulespec):
     @property
     def group(self):
         return RulespecGroupMonitoringConfigurationServiceChecks
@@ -2693,7 +2696,7 @@ class RulespecExtraServiceConfCheckInterval(Rulespec):
 
 
 @rulespec_registry.register
-class RulespecExtraServiceConfRetryInterval(Rulespec):
+class RulespecExtraServiceConfRetryInterval(ServiceRulespec):
     @property
     def group(self):
         return RulespecGroupMonitoringConfigurationServiceChecks
@@ -2723,7 +2726,7 @@ class RulespecExtraServiceConfRetryInterval(Rulespec):
 
 
 @rulespec_registry.register
-class RulespecExtraServiceConfCheckPeriod(Rulespec):
+class RulespecExtraServiceConfCheckPeriod(ServiceRulespec):
     @property
     def group(self):
         return RulespecGroupMonitoringConfigurationServiceChecks
@@ -2748,7 +2751,7 @@ class RulespecExtraServiceConfCheckPeriod(Rulespec):
 
 
 @rulespec_registry.register
-class RulespecCheckPeriods(Rulespec):
+class RulespecCheckPeriods(ServiceRulespec):
     @property
     def group(self):
         return RulespecGroupMonitoringConfigurationServiceChecks
@@ -2771,7 +2774,7 @@ class RulespecCheckPeriods(Rulespec):
 
 
 @rulespec_registry.register
-class RulespecExtraServiceConfProcessPerfData(Rulespec):
+class RulespecExtraServiceConfProcessPerfData(ServiceRulespec):
     @property
     def group(self):
         return RulespecGroupMonitoringConfigurationServiceChecks
@@ -2796,7 +2799,7 @@ class RulespecExtraServiceConfProcessPerfData(Rulespec):
 
 
 @rulespec_registry.register
-class RulespecExtraServiceConfPassiveChecksEnabled(Rulespec):
+class RulespecExtraServiceConfPassiveChecksEnabled(ServiceRulespec):
     @property
     def group(self):
         return RulespecGroupMonitoringConfigurationServiceChecks
@@ -2822,7 +2825,7 @@ class RulespecExtraServiceConfPassiveChecksEnabled(Rulespec):
 
 
 @rulespec_registry.register
-class RulespecExtraServiceConfActiveChecksEnabled(Rulespec):
+class RulespecExtraServiceConfActiveChecksEnabled(ServiceRulespec):
     @property
     def group(self):
         return RulespecGroupMonitoringConfigurationServiceChecks
@@ -2861,7 +2864,7 @@ class RulespecGroupMonitoringConfigurationHostChecks(RulespecSubGroup):
 
 
 @rulespec_registry.register
-class RulespecExtraHostConfMaxCheckAttempts(Rulespec):
+class RulespecExtraHostConfMaxCheckAttempts(HostRulespec):
     @property
     def group(self):
         return RulespecGroupMonitoringConfigurationHostChecks
@@ -2881,7 +2884,7 @@ class RulespecExtraHostConfMaxCheckAttempts(Rulespec):
 
 
 @rulespec_registry.register
-class RulespecExtraHostConfCheckInterval(Rulespec):
+class RulespecExtraHostConfCheckInterval(HostRulespec):
     @property
     def group(self):
         return RulespecGroupMonitoringConfigurationHostChecks
@@ -2906,7 +2909,7 @@ class RulespecExtraHostConfCheckInterval(Rulespec):
 
 
 @rulespec_registry.register
-class RulespecExtraHostConfRetryInterval(Rulespec):
+class RulespecExtraHostConfRetryInterval(HostRulespec):
     @property
     def group(self):
         return RulespecGroupMonitoringConfigurationHostChecks
@@ -2933,7 +2936,7 @@ class RulespecExtraHostConfRetryInterval(Rulespec):
 
 
 @rulespec_registry.register
-class RulespecExtraHostConfCheckPeriod(Rulespec):
+class RulespecExtraHostConfCheckPeriod(HostRulespec):
     @property
     def group(self):
         return RulespecGroupMonitoringConfigurationHostChecks
@@ -2953,7 +2956,7 @@ class RulespecExtraHostConfCheckPeriod(Rulespec):
 
 
 @rulespec_registry.register
-class RulespecHostCheckCommands(Rulespec):
+class RulespecHostCheckCommands(HostRulespec):
     @property
     def group(self):
         return RulespecGroupMonitoringConfigurationHostChecks
@@ -3017,7 +3020,7 @@ class RulespecGroupMonitoringConfigurationNotifications(RulespecSubGroup):
 
 
 @rulespec_registry.register
-class RulespecExtraHostConfNotificationsEnabled(Rulespec):
+class RulespecExtraHostConfNotificationsEnabled(HostRulespec):
     @property
     def group(self):
         return RulespecGroupMonitoringConfigurationNotifications
@@ -3043,7 +3046,7 @@ class RulespecExtraHostConfNotificationsEnabled(Rulespec):
 
 
 @rulespec_registry.register
-class RulespecExtraServiceConfNotificationsEnabled(Rulespec):
+class RulespecExtraServiceConfNotificationsEnabled(ServiceRulespec):
     @property
     def group(self):
         return RulespecGroupMonitoringConfigurationNotifications
@@ -3070,7 +3073,7 @@ class RulespecExtraServiceConfNotificationsEnabled(Rulespec):
 
 
 @rulespec_registry.register
-class RulespecExtraHostConfNotificationOptions(Rulespec):
+class RulespecExtraHostConfNotificationOptions(HostRulespec):
     @property
     def group(self):
         return RulespecGroupMonitoringConfigurationNotifications
@@ -3110,7 +3113,7 @@ class RulespecExtraHostConfNotificationOptions(Rulespec):
 
 
 @rulespec_registry.register
-class RulespecExtraServiceConfNotificationOptions(Rulespec):
+class RulespecExtraServiceConfNotificationOptions(ServiceRulespec):
     @property
     def group(self):
         return RulespecGroupMonitoringConfigurationNotifications
@@ -3150,7 +3153,7 @@ class RulespecExtraServiceConfNotificationOptions(Rulespec):
 
 
 @rulespec_registry.register
-class RulespecExtraHostConfNotificationPeriod(Rulespec):
+class RulespecExtraHostConfNotificationPeriod(HostRulespec):
     @property
     def group(self):
         return RulespecGroupMonitoringConfigurationNotifications
@@ -3173,7 +3176,7 @@ class RulespecExtraHostConfNotificationPeriod(Rulespec):
 
 
 @rulespec_registry.register
-class RulespecExtraServiceConfNotificationPeriod(Rulespec):
+class RulespecExtraServiceConfNotificationPeriod(ServiceRulespec):
     @property
     def group(self):
         return RulespecGroupMonitoringConfigurationNotifications
@@ -3208,7 +3211,7 @@ def transform_age_to_float_minutes(age):
 
 
 @rulespec_registry.register
-class RulespecExtraHostConfFirstNotificationDelay(Rulespec):
+class RulespecExtraHostConfFirstNotificationDelay(HostRulespec):
     @property
     def group(self):
         return RulespecGroupMonitoringConfigurationNotifications
@@ -3239,7 +3242,7 @@ class RulespecExtraHostConfFirstNotificationDelay(Rulespec):
 
 
 @rulespec_registry.register
-class RulespecExtraServiceConfFirstNotificationDelay(Rulespec):
+class RulespecExtraServiceConfFirstNotificationDelay(ServiceRulespec):
     @property
     def group(self):
         return RulespecGroupMonitoringConfigurationNotifications
@@ -3275,7 +3278,7 @@ class RulespecExtraServiceConfFirstNotificationDelay(Rulespec):
 
 
 @rulespec_registry.register
-class RulespecExtraHostConfNotificationInterval(Rulespec):
+class RulespecExtraHostConfNotificationInterval(HostRulespec):
     @property
     def group(self):
         return RulespecGroupMonitoringConfigurationNotifications
@@ -3307,7 +3310,7 @@ class RulespecExtraHostConfNotificationInterval(Rulespec):
 
 
 @rulespec_registry.register
-class RulespecExtraServiceConfNotificationInterval(Rulespec):
+class RulespecExtraServiceConfNotificationInterval(ServiceRulespec):
     @property
     def group(self):
         return RulespecGroupMonitoringConfigurationNotifications
@@ -3338,7 +3341,7 @@ class RulespecExtraServiceConfNotificationInterval(Rulespec):
 
 
 @rulespec_registry.register
-class RulespecExtraHostConfFlapDetectionEnabled(Rulespec):
+class RulespecExtraHostConfFlapDetectionEnabled(HostRulespec):
     @property
     def group(self):
         return RulespecGroupMonitoringConfigurationNotifications
@@ -3361,7 +3364,7 @@ class RulespecExtraHostConfFlapDetectionEnabled(Rulespec):
 
 
 @rulespec_registry.register
-class RulespecExtraServiceConfFlapDetectionEnabled(Rulespec):
+class RulespecExtraServiceConfFlapDetectionEnabled(ServiceRulespec):
     @property
     def group(self):
         return RulespecGroupMonitoringConfigurationNotifications
@@ -3388,7 +3391,7 @@ class RulespecExtraServiceConfFlapDetectionEnabled(Rulespec):
 
 
 @rulespec_registry.register
-class RulespecExtraServiceConfNotesUrl(Rulespec):
+class RulespecExtraServiceConfNotesUrl(ServiceRulespec):
     @property
     def group(self):
         return RulespecGroupMonitoringConfigurationNotifications
@@ -3413,7 +3416,7 @@ class RulespecExtraServiceConfNotesUrl(Rulespec):
 
 
 @rulespec_registry.register
-class RulespecExtraHostConfNotesUrl(Rulespec):
+class RulespecExtraHostConfNotesUrl(HostRulespec):
     @property
     def group(self):
         return RulespecGroupMonitoringConfigurationNotifications
@@ -3434,7 +3437,7 @@ class RulespecExtraHostConfNotesUrl(Rulespec):
 
 
 @rulespec_registry.register
-class RulespecExtraServiceConfDisplayName(Rulespec):
+class RulespecExtraServiceConfDisplayName(ServiceRulespec):
     @property
     def group(self):
         return RulespecGroupMonitoringConfigurationNotifications
@@ -3481,7 +3484,7 @@ class RulespecGroupMonitoringConfigurationInventoryAndCMK(RulespecSubGroup):
 
 
 @rulespec_registry.register
-class RulespecOnlyHosts(Rulespec):
+class RulespecOnlyHosts(BinaryHostRulespec):
     @property
     def group(self):
         return RulespecGroupMonitoringConfigurationInventoryAndCMK
@@ -3507,7 +3510,7 @@ class RulespecOnlyHosts(Rulespec):
 
 
 @rulespec_registry.register
-class RulespecIgnoredServices(Rulespec):
+class RulespecIgnoredServices(BinaryServiceRulespec):
     @property
     def group(self):
         return RulespecGroupMonitoringConfigurationInventoryAndCMK
@@ -3533,7 +3536,7 @@ class RulespecIgnoredServices(Rulespec):
 
 
 @rulespec_registry.register
-class RulespecIgnoredChecks(Rulespec):
+class RulespecIgnoredChecks(HostRulespec):
     @property
     def group(self):
         return RulespecGroupMonitoringConfigurationInventoryAndCMK
@@ -3555,7 +3558,7 @@ class RulespecIgnoredChecks(Rulespec):
 
 
 @rulespec_registry.register
-class RulespecClusteredServices(Rulespec):
+class RulespecClusteredServices(BinaryServiceRulespec):
     @property
     def group(self):
         return RulespecGroupMonitoringConfigurationInventoryAndCMK
@@ -3582,7 +3585,7 @@ class RulespecClusteredServices(Rulespec):
 
 
 @rulespec_registry.register
-class RulespecPeriodicDiscovery(Rulespec):
+class RulespecPeriodicDiscovery(HostRulespec):
     @property
     def group(self):
         return RulespecGroupMonitoringConfigurationInventoryAndCMK
@@ -3748,7 +3751,7 @@ class RulespecGroupMonitoringConfigurationVarious(RulespecSubGroup):
 
 
 @rulespec_registry.register
-class RulespecClusteredServicesMapping(Rulespec):
+class RulespecClusteredServicesMapping(ServiceRulespec):
     @property
     def group(self):
         return RulespecGroupMonitoringConfigurationVarious
@@ -3776,7 +3779,7 @@ class RulespecClusteredServicesMapping(Rulespec):
 
 
 @rulespec_registry.register
-class RulespecExtraHostConfServicePeriod(Rulespec):
+class RulespecExtraHostConfServicePeriod(HostRulespec):
     @property
     def group(self):
         return RulespecGroupMonitoringConfigurationVarious
@@ -3803,7 +3806,7 @@ class RulespecExtraHostConfServicePeriod(Rulespec):
 
 
 @rulespec_registry.register
-class RulespecExtraServiceConfServicePeriod(Rulespec):
+class RulespecExtraServiceConfServicePeriod(ServiceRulespec):
     @property
     def group(self):
         return RulespecGroupMonitoringConfigurationVarious
@@ -3862,7 +3865,7 @@ class RulespecGroupUserInterface(RulespecGroup):
 
 
 @rulespec_registry.register
-class RulespecExtraHostConfIconImage(Rulespec):
+class RulespecExtraHostConfIconImage(HostRulespec):
     @property
     def group(self):
         return RulespecGroupUserInterface
@@ -3885,7 +3888,7 @@ class RulespecExtraHostConfIconImage(Rulespec):
 
 
 @rulespec_registry.register
-class RulespecExtraServiceConfIconImage(Rulespec):
+class RulespecExtraServiceConfIconImage(ServiceRulespec):
     @property
     def group(self):
         return RulespecGroupUserInterface
@@ -3912,7 +3915,7 @@ class RulespecExtraServiceConfIconImage(Rulespec):
 
 
 @rulespec_registry.register
-class RulespecHostIconsAndActions(Rulespec):
+class RulespecHostIconsAndActions(HostRulespec):
     @property
     def group(self):
         return RulespecGroupUserInterface
@@ -3934,7 +3937,7 @@ class RulespecHostIconsAndActions(Rulespec):
 
 
 @rulespec_registry.register
-class RulespecServiceIconsAndActions(Rulespec):
+class RulespecServiceIconsAndActions(ServiceRulespec):
     @property
     def group(self):
         return RulespecGroupUserInterface
@@ -3960,7 +3963,7 @@ class RulespecServiceIconsAndActions(Rulespec):
 
 
 @rulespec_registry.register
-class RulespecExtraHostConfEscapePluginOutput(Rulespec):
+class RulespecExtraHostConfEscapePluginOutput(HostRulespec):
     @property
     def group(self):
         return RulespecGroupUserInterface
@@ -3989,7 +3992,7 @@ class RulespecExtraHostConfEscapePluginOutput(Rulespec):
 
 
 @rulespec_registry.register
-class RulespecExtraServiceConfEscapePluginOutput(Rulespec):
+class RulespecExtraServiceConfEscapePluginOutput(ServiceRulespec):
     @property
     def group(self):
         return RulespecGroupUserInterface
@@ -4052,7 +4055,7 @@ class RulespecGroupAgentGeneralSettings(RulespecSubGroup):
 
 
 @rulespec_registry.register
-class RulespecDyndnsHosts(Rulespec):
+class RulespecDyndnsHosts(BinaryHostRulespec):
     @property
     def group(self):
         return RulespecGroupAgentGeneralSettings
@@ -4074,7 +4077,7 @@ class RulespecDyndnsHosts(Rulespec):
 
 
 @rulespec_registry.register
-class RulespecPrimaryAddressFamily(Rulespec):
+class RulespecPrimaryAddressFamily(HostRulespec):
     @property
     def group(self):
         return RulespecGroupAgentGeneralSettings
@@ -4114,7 +4117,7 @@ class RulespecGroupAgentSNMP(RulespecSubGroup):
 
 
 @rulespec_registry.register
-class RulespecSnmpCommunities(Rulespec):
+class RulespecSnmpCommunities(HostRulespec):
     @property
     def group(self):
         return RulespecGroupAgentSNMP
@@ -4135,7 +4138,7 @@ class RulespecSnmpCommunities(Rulespec):
 
 
 @rulespec_registry.register
-class RulespecManagementBoardConfig(Rulespec):
+class RulespecManagementBoardConfig(HostRulespec):
     @property
     def group(self):
         return RulespecGroupAgentSNMP
@@ -4156,7 +4159,7 @@ class RulespecManagementBoardConfig(Rulespec):
 
 
 @rulespec_registry.register
-class RulespecSnmpCharacterEncodings(Rulespec):
+class RulespecSnmpCharacterEncodings(HostRulespec):
     @property
     def group(self):
         return RulespecGroupAgentSNMP
@@ -4181,7 +4184,7 @@ class RulespecSnmpCharacterEncodings(Rulespec):
 
 
 @rulespec_registry.register
-class RulespecBulkwalkHosts(Rulespec):
+class RulespecBulkwalkHosts(BinaryHostRulespec):
     @property
     def group(self):
         return RulespecGroupAgentSNMP
@@ -4208,7 +4211,7 @@ class RulespecBulkwalkHosts(Rulespec):
 
 
 @rulespec_registry.register
-class RulespecSnmpBulkSize(Rulespec):
+class RulespecSnmpBulkSize(HostRulespec):
     @property
     def group(self):
         return RulespecGroupAgentSNMP
@@ -4236,7 +4239,7 @@ class RulespecSnmpBulkSize(Rulespec):
 
 
 @rulespec_registry.register
-class RulespecSnmpWithoutSysDescr(Rulespec):
+class RulespecSnmpWithoutSysDescr(BinaryHostRulespec):
     @property
     def group(self):
         return RulespecGroupAgentSNMP
@@ -4257,7 +4260,7 @@ class RulespecSnmpWithoutSysDescr(Rulespec):
 
 
 @rulespec_registry.register
-class RulespecSnmpv2CHosts(Rulespec):
+class RulespecSnmpv2CHosts(BinaryHostRulespec):
     @property
     def group(self):
         return RulespecGroupAgentSNMP
@@ -4281,7 +4284,7 @@ class RulespecSnmpv2CHosts(Rulespec):
 
 
 @rulespec_registry.register
-class RulespecSnmpTiming(Rulespec):
+class RulespecSnmpTiming(HostRulespec):
     @property
     def group(self):
         return RulespecGroupAgentSNMP
@@ -4332,7 +4335,7 @@ class RulespecSnmpTiming(Rulespec):
 
 
 @rulespec_registry.register
-class RulespecNonInlineSnmpHosts(Rulespec):
+class RulespecNonInlineSnmpHosts(BinaryHostRulespec):
     @property
     def group(self):
         return RulespecGroupAgentSNMP
@@ -4356,7 +4359,7 @@ class RulespecNonInlineSnmpHosts(Rulespec):
 
 
 @rulespec_registry.register
-class RulespecUsewalkHosts(Rulespec):
+class RulespecUsewalkHosts(BinaryHostRulespec):
     @property
     def group(self):
         return RulespecGroupAgentSNMP
@@ -4378,7 +4381,7 @@ class RulespecUsewalkHosts(Rulespec):
 
 
 @rulespec_registry.register
-class RulespecSnmpPorts(Rulespec):
+class RulespecSnmpPorts(HostRulespec):
     @property
     def group(self):
         return RulespecGroupAgentSNMP
@@ -4415,7 +4418,7 @@ class RulespecGroupAgentCMKAgent(RulespecSubGroup):
 
 
 @rulespec_registry.register
-class RulespecAgentPorts(Rulespec):
+class RulespecAgentPorts(HostRulespec):
     @property
     def group(self):
         return RulespecGroupAgentCMKAgent
@@ -4437,7 +4440,7 @@ class RulespecAgentPorts(Rulespec):
 
 
 @rulespec_registry.register
-class RulespecTcpConnectTimeouts(Rulespec):
+class RulespecTcpConnectTimeouts(HostRulespec):
     @property
     def group(self):
         return RulespecGroupAgentCMKAgent
@@ -4463,7 +4466,7 @@ class RulespecTcpConnectTimeouts(Rulespec):
 
 
 @rulespec_registry.register
-class RulespecAgentEncryption(Rulespec):
+class RulespecAgentEncryption(HostRulespec):
     @property
     def group(self):
         return RulespecGroupAgentCMKAgent
@@ -4534,7 +4537,7 @@ def transform_exit_code_spec(p):
 
 
 @rulespec_registry.register
-class RulespecCheckMkExitStatus(Rulespec):
+class RulespecCheckMkExitStatus(HostRulespec):
     @property
     def group(self):
         return RulespecGroupAgentCMKAgent
@@ -4542,19 +4545,6 @@ class RulespecCheckMkExitStatus(Rulespec):
     @property
     def name(self):
         return "check_mk_exit_status"
-
-    @property
-    def title(self):
-        return _("Status of the Check_MK services")
-
-    @property
-    def help(self):
-        return _("This ruleset specifies the total status of the Check_MK services "
-                 "<i>Check_MK</i>, <i>Check_MK Discovery</i> and <i>Check_MK HW/SW Inventory</i> "
-                 "in case of various error situations. One use case is the monitoring of hosts "
-                 "that are not always up. You can have Check_MK an OK status here if the host is "
-                 "not reachable. Note: the <i>Timeout</i> setting only works when using the "
-                 "Check_MK Micro Core.")
 
     @property
     def match_type(self):
@@ -4666,7 +4656,7 @@ class RulespecCheckMkExitStatus(Rulespec):
 
 
 @rulespec_registry.register
-class RulespecCheckMkAgentTargetVersions(Rulespec):
+class RulespecCheckMkAgentTargetVersions(HostRulespec):
     @property
     def group(self):
         return RulespecGroupAgentCMKAgent
@@ -4740,7 +4730,7 @@ class RulespecGroupMonitoringAgentsGenericOptions(RulespecSubGroup):
 
 
 @rulespec_registry.register
-class RulespecAgentConfigOnlyFrom(Rulespec):
+class RulespecAgentConfigOnlyFrom(HostRulespec):
     @property
     def group(self):
         return RulespecGroupMonitoringAgentsGenericOptions
@@ -4766,7 +4756,7 @@ class RulespecAgentConfigOnlyFrom(Rulespec):
 
 
 @rulespec_registry.register
-class RulespecPiggybackTranslation(Rulespec):
+class RulespecPiggybackTranslation(HostRulespec):
     @property
     def group(self):
         return RulespecGroupAgentGeneralSettings
@@ -4795,7 +4785,7 @@ class RulespecPiggybackTranslation(Rulespec):
 
 
 @rulespec_registry.register
-class RulespecServiceDescriptionTranslation(Rulespec):
+class RulespecServiceDescriptionTranslation(HostRulespec):
     @property
     def group(self):
         return RulespecGroupAgentGeneralSettings
@@ -4842,7 +4832,7 @@ def get_snmp_section_names():
 
 
 @rulespec_registry.register
-class RulespecSnmpCheckInterval(Rulespec):
+class RulespecSnmpCheckInterval(HostRulespec):
     @property
     def group(self):
         return RulespecGroupAgentSNMP
@@ -4885,7 +4875,7 @@ class RulespecSnmpCheckInterval(Rulespec):
 
 
 @rulespec_registry.register
-class RulespecSNMPv3Contexts(Rulespec):
+class RulespecSNMPv3Contexts(HostRulespec):
     @property
     def group(self):
         return RulespecGroupAgentSNMP

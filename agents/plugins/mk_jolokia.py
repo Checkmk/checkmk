@@ -349,8 +349,8 @@ def extract_item(key, itemspec):
 
 
 def fetch_metric(inst, path, title, itemspec, inst_add=None):
-    values = fetch_var(inst, path, inst["service_url"], inst["service_user"],
-                       inst["service_password"])
+    values = fetch_var(inst.config, path, inst.config["service_url"], inst.config["service_user"],
+                       inst.config["service_password"])
     item_list = make_item_list((), values, itemspec)
 
     for subinstance, value in item_list:
@@ -362,11 +362,11 @@ def fetch_metric(inst, path, title, itemspec, inst_add=None):
             continue
 
         if len(subinstance) > 1:
-            item = ",".join((inst["instance"],) + subinstance[:-1])
+            item = ",".join((inst.config["instance"],) + subinstance[:-1])
         elif inst_add is not None:
-            item = ",".join((inst["instance"], inst_add))
+            item = ",".join((inst.config["instance"], inst_add))
         else:
-            item = inst["instance"]
+            item = inst.config["instance"]
         if title:
             if subinstance:
                 tit = title + "." + subinstance[-1]
@@ -383,7 +383,7 @@ def _get_queries(do_search, inst, itemspec, title, path, mbean):
     if not do_search:
         return [(mbean + "/" + path, title, itemspec)]
 
-    value = fetch_var(inst, mbean, None, None, None, function="search")
+    value = fetch_var(inst.config, mbean, None, None, None, function="search")
     try:
         paths = make_item_list((), value, "")[0][1]
     except IndexError:
@@ -528,9 +528,9 @@ def generate_values(inst, var_list):
         mbean, path, title, itemspec, do_search = var[:5]
         value_type = var[5] if len(var) >= 6 else None
 
-        queries = _get_queries(do_search, inst.config, itemspec, title, path, mbean)
+        queries = _get_queries(do_search, inst, itemspec, title, path, mbean)
 
-        for item, title, value in _process_queries(inst.config, queries):
+        for item, title, value in _process_queries(inst, queries):
             if value_type:
                 yield item, title, value, value_type
             else:

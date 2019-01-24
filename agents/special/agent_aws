@@ -242,6 +242,47 @@ class CostsAndUsage(AWSSection):
 
 
 #.
+#   .--security groups-----------------------------------------------------.
+#   |                                         _ _                          |
+#   |                ___  ___  ___ _   _ _ __(_) |_ _   _                  |
+#   |               / __|/ _ \/ __| | | | '__| | __| | | |                 |
+#   |               \__ \  __/ (__| |_| | |  | | |_| |_| |                 |
+#   |               |___/\___|\___|\__,_|_|  |_|\__|\__, |                 |
+#   |                                               |___/                  |
+#   |                                                                      |
+#   |                    __ _ _ __ ___  _   _ _ __  ___                    |
+#   |                   / _` | '__/ _ \| | | | '_ \/ __|                   |
+#   |                  | (_| | | | (_) | |_| | |_) \__ \                   |
+#   |                   \__, |_|  \___/ \__,_| .__/|___/                   |
+#   |                   |___/                |_|                           |
+#   '----------------------------------------------------------------------'
+
+
+class SecurityGroups(AWSSection):
+    @property
+    def name(self):
+        return "security_groups"
+
+    @property
+    def interval(self):
+        return 300
+
+    def _get_raw_result(self):
+        return self._client.describe_security_groups()
+
+    def _extract_content_from(self, raw_result):
+        try:
+            return raw_result['SecurityGroups']
+        except KeyError, e:
+            logging.info("%s: KeyError %s; Available are %s", self.name, e, raw_result.keys())
+            return []
+
+    def _format_content(self, content):
+        #return [AWSSectionResult("", content)]
+        return
+
+
+#.
 #   .--EC2-----------------------------------------------------------------.
 #   |                          _____ ____ ____                             |
 #   |                         | ____/ ___|___ \                            |
@@ -270,6 +311,11 @@ class EC2Summary(AWSSection):
         except KeyError, e:
             logging.info("%s: KeyError %s; Available are %s", self.name, e, raw_result.keys())
             return {}
+
+        for group in self._received_results.get('security_groups'):
+            for reservation in reservations:
+                if group['OwnerId'] == reservation['OwnerId']:
+                    reservation['SecurityGroup'] = group
         return {
             "Reservations": reservations,
             "mapping": self._map_instance_id_to_name(reservations),
@@ -1027,11 +1073,13 @@ class AWSSections(AWSSectionsTmpl):
         cloudwatch_client = self._init_client('cloudwatch')
 
         #---distributors----------------------------------------------------
+        security_groups_distributor = ResultDistributor()
         ec2_summary_distributor = ResultDistributor()
         elb_summary_distributor = ResultDistributor()
         ebs_summary_distributor = ResultDistributor()
 
         #---sections with distributors--------------------------------------
+        security_groups = SecurityGroups(ec2_client, security_groups_distributor)
         ec2_summary = EC2Summary(ec2_client, ec2_summary_distributor)
         ebs_summary = EBSSummary(ec2_client, ebs_summary_distributor)
         elb_summary = ELBSummary(elb_client, elb_summary_distributor)
@@ -1046,6 +1094,7 @@ class AWSSections(AWSSectionsTmpl):
         elb = ELB(cloudwatch_client)
 
         #---register sections to distributors-------------------------------
+        security_groups_distributor.add(ec2_summary)
         ec2_summary_distributor.add(ec2)
         ec2_summary_distributor.add(ebs_summary)
         ec2_summary_distributor.add(ebs)
@@ -1071,6 +1120,7 @@ class AWSSections(AWSSectionsTmpl):
         #    |
         #    |-- elb
         if 'ec2' in self._services:
+            self._sections.append(security_groups)
             self._sections.append(ec2_summary)
             self._sections.append(ec2)
 

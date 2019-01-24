@@ -2787,7 +2787,6 @@ class ConfigCache(object):
         self._setup_clusters_nodes_cache()
 
         self._all_processed_hosts = all_active_hosts()
-        self._all_active_hosts = all_active_hosts()
         self._all_configured_hosts = all_configured_hosts()
         self._initialize_host_lookup()
 
@@ -2990,7 +2989,7 @@ class ConfigCache(object):
         if with_foreign_hosts:
             valid_hosts = self._all_configured_hosts
         else:
-            valid_hosts = self._all_active_hosts
+            valid_hosts = self._all_processed_hosts
 
         tags_set = set(tags)
         tags_set_without_folder = tags_set

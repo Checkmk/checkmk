@@ -1,4 +1,4 @@
-FROM ubuntu:18.04
+FROM ubuntu:14.04
 
 SHELL ["/bin/bash", "-c"]
 ENV DEBIAN_FRONTEND=noninteractive
@@ -6,10 +6,9 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \
     && apt-get install -y \
     apache2 \
-    apache2-dev \
-    autoconf \
+    apache2-threaded-dev \
     build-essential \
-    devscripts \
+    dietlibc-dev \
     dnsutils \
     dpatch \
     flex \
@@ -20,47 +19,33 @@ RUN apt-get update \
     libcurl4-openssl-dev \
     libevent-dev \
     libffi-dev \
-    libfreeradius-dev \
-    libgd-dev \
+    libgd2-xpm-dev \
     libglib2.0-dev \
-    libgnutls28-dev \
+    libgnutls-dev \
     libgsf-1-dev \
-    libkrb5-dev \
     libldap2-dev \
     libltdl-dev \
     libmcrypt-dev \
-    libmysqlclient-dev \
+    libmysqlclient15-dev \
     libncurses5-dev \
     libpango1.0-dev \
     libpcap-dev \
     libperl-dev \
     libpq-dev \
+    libradiusclient-ng-dev \
     libreadline-dev \
     librrd-dev \
     libsqlite3-dev \
     libssl-dev \
-    libtool \
     libxml2-dev \
     openssh-client \
     patch \
     rpcbind \
-    rsync \
     smbclient \
     texinfo \
     tk-dev \
     uuid-dev \
     && rm -rf /var/lib/apt/lists/*
-
-# For the common part, split later
-#RUN pip install pathlib2 \
-#    typing
-
-#RUN apt-get update \
-#    && apt-get install -y \
-#    rpm \
-#    alien \
-#    mono-xbuild \
-#    && rm -rf /var/lib/apt/lists/*
 
 COPY bw-build-gnu-toolchain.sh /usr/sbin
 RUN bw-build-gnu-toolchain.sh -b

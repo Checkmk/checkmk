@@ -137,7 +137,7 @@ def inventory_ps_common(invdata, invrules, parsed):
             else:
                 match_groups = []
 
-            i_servicedesc = replace_service_description(servicedesc, match_groups, pattern)
+            i_servicedesc = replace_service_description(i_servicedesc, match_groups, pattern)
 
             # Problem here: We need to instantiate all subexpressions
             # with their actual values of the found process.

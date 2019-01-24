@@ -40,7 +40,8 @@ from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersApplications,
     RulespecGroupCheckParametersDiscovery,
     register_check_parameters,
-    register_rule,
+    rulespec_registry,
+    HostRulespec,
 )
 
 
@@ -64,22 +65,34 @@ def _vs_mssql_backup_age(title):
         ])
 
 
-register_rule(
-    RulespecGroupCheckParametersDiscovery,
-    varname="discovery_mssql_backup",
-    title=_("Discovery of MSSQL backup"),
-    valuespec=Dictionary(
-        elements=[
-            ("mode",
-             DropdownChoice(
-                 title=_("Backup modes"),
-                 choices=[
-                     ("summary", _("Create a service for each instance")),
-                     ("per_type", _("Create a service for each instance and backup type")),
-                 ])),
-        ],),
-    match="dict",
-)
+@rulespec_registry.register
+class RulespecDiscoveryMssqlBackup(HostRulespec):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersDiscovery
+
+    @property
+    def name(self):
+        return "discovery_mssql_backup"
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def valuespec(self):
+        return Dictionary(
+            title=_("Discovery of MSSQL backup"),
+            elements=[
+                ("mode",
+                 DropdownChoice(
+                     title=_("Backup modes"),
+                     choices=[
+                         ("summary", _("Create a service for each instance")),
+                         ("per_type", _("Create a service for each instance and backup type")),
+                     ])),
+            ],
+        )
 
 register_check_parameters(
     RulespecGroupCheckParametersApplications,

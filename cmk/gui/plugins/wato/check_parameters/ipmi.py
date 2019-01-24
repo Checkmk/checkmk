@@ -40,7 +40,8 @@ from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersDiscovery,
     RulespecGroupCheckParametersEnvironment,
     register_check_parameters,
-    register_rule,
+    rulespec_registry,
+    HostRulespec,
 )
 
 
@@ -54,40 +55,51 @@ def transform_ipmi_inventory_rules(p):
     return ('single', {})
 
 
-register_rule(
-    RulespecGroupCheckParametersDiscovery,
-    varname="inventory_ipmi_rules",
-    title=_("Discovery of IPMI sensors"),
-    valuespec=Transform(
-        CascadingDropdown(
-            orientation="vertical",
-            choices=
-            [("summarize", _("Summary")),
-             ("single", _("Single"),
-              Dictionary(
-                  show_titles=True,
-                  elements=[
-                      ("ignored_sensors",
-                       ListOfStrings(
-                           title=_("Ignore the following IPMI sensors"),
-                           help=_("Names of IPMI sensors that should be ignored during inventory "
-                                  "and when summarizing."
-                                  "The pattern specified here must match exactly the beginning of "
-                                  "the actual sensor name (case sensitive)."),
-                           orientation="horizontal")),
-                      ("ignored_sensorstates",
-                       ListOfStrings(
-                           title=_("Ignore the following IPMI sensor states"),
-                           help=_(
-                               "IPMI sensors with these states that should be ignored during inventory "
-                               "and when summarizing."
-                               "The pattern specified here must match exactly the beginning of "
-                               "the actual sensor name (case sensitive)."),
-                           orientation="horizontal",
-                       )),
-                  ]))]),
-        forth=transform_ipmi_inventory_rules),
-    match='first')
+@rulespec_registry.register
+class RulespecInventoryIpmiRules(HostRulespec):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersDiscovery
+
+    @property
+    def name(self):
+        return "inventory_ipmi_rules"
+
+    @property
+    def valuespec(self):
+        return Transform(
+            CascadingDropdown(
+                title=_("Discovery of IPMI sensors"),
+                orientation="vertical",
+                choices=
+                [("summarize", _("Summary")),
+                 ("single", _("Single"),
+                  Dictionary(
+                      show_titles=True,
+                      elements=[
+                          ("ignored_sensors",
+                           ListOfStrings(
+                               title=_("Ignore the following IPMI sensors"),
+                               help=_(
+                                   "Names of IPMI sensors that should be ignored during inventory "
+                                   "and when summarizing."
+                                   "The pattern specified here must match exactly the beginning of "
+                                   "the actual sensor name (case sensitive)."),
+                               orientation="horizontal")),
+                          ("ignored_sensorstates",
+                           ListOfStrings(
+                               title=_("Ignore the following IPMI sensor states"),
+                               help=_(
+                                   "IPMI sensors with these states that should be ignored during inventory "
+                                   "and when summarizing."
+                                   "The pattern specified here must match exactly the beginning of "
+                                   "the actual sensor name (case sensitive)."),
+                               orientation="horizontal",
+                           )),
+                      ]))]),
+            forth=transform_ipmi_inventory_rules,
+        )
+
 
 register_check_parameters(
     RulespecGroupCheckParametersEnvironment,

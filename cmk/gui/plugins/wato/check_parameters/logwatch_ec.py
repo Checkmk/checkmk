@@ -48,158 +48,195 @@ from cmk.gui.valuespec import (
 from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersApplications,
     register_check_parameters,
-    register_rule,
+    rulespec_registry,
+    HostRulespec,
+    ServiceRulespec,
 )
 
-register_rule(
-    RulespecGroupCheckParametersApplications,
-    varname="logwatch_rules",
-    title=_('Logwatch Patterns'),
-    valuespec=Transform(
-        Dictionary(
-            elements=[
-                ("reclassify_patterns",
-                 ListOf(
-                     Tuple(
-                         help=_("This defines one logfile pattern rule"),
-                         show_titles=True,
-                         orientation="horizontal",
+
+@rulespec_registry.register
+class RulespecLogwatchRules(ServiceRulespec):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def name(self):
+        return "logwatch_rules"
+
+    @property
+    def match_type(self):
+        return "all"
+
+    @property
+    def item_type(self):
+        return "item"
+
+    @property
+    def item_name(self):
+        return _("Logfile")
+
+    @property
+    def item_help(self):
+        return _("Put the item names of the logfiles here. For example \"System$\" "
+                 "to select the service \"LOG System\". You can use regular "
+                 "expressions which must match the beginning of the logfile name.")
+
+    @property
+    def valuespec(self):
+        return Transform(
+            Dictionary(
+                title=_('Logwatch Patterns'),
+                elements=[
+                    ("reclassify_patterns",
+                     ListOf(
+                         Tuple(
+                             help=_("This defines one logfile pattern rule"),
+                             show_titles=True,
+                             orientation="horizontal",
+                             elements=[
+                                 DropdownChoice(
+                                     title=_("State"),
+                                     choices=[
+                                         ('C', _('CRITICAL')),
+                                         ('W', _('WARNING')),
+                                         ('O', _('OK')),
+                                         ('I', _('IGNORE')),
+                                     ],
+                                 ),
+                                 RegExpUnicode(
+                                     title=_("Pattern (Regex)"),
+                                     size=40,
+                                     mode=RegExp.infix,
+                                 ),
+                                 TextUnicode(
+                                     title=_("Comment"),
+                                     size=40,
+                                 ),
+                             ]),
+                         title=_("Reclassify state matching regex pattern"),
+                         help=
+                         _('<p>You can define one or several patterns (regular expressions) in each logfile pattern rule. '
+                           'These patterns are applied to the selected logfiles to reclassify the '
+                           'matching log messages. The first pattern which matches a line will '
+                           'be used for reclassifying a message. You can use the '
+                           '<a href="wato.py?mode=pattern_editor">Logfile Pattern Analyzer</a> '
+                           'to test the rules you defined here.</p>'
+                           '<p>Select "Ignore" as state to get the matching logs deleted. Other states will keep the '
+                           'log entries but reclassify the state of them.</p>'),
+                         add_label=_("Add pattern"),
+                     )),
+                    ("reclassify_states",
+                     Dictionary(
+                         title=_("Reclassify complete state"),
+                         help=
+                         _("This setting allows you to convert all incoming states to another state. "
+                           "The option is applied before the state conversion via regexes. So the regex values can "
+                           "modify the state even further."),
                          elements=[
-                             DropdownChoice(
-                                 title=_("State"),
-                                 choices=[
-                                     ('C', _('CRITICAL')),
-                                     ('W', _('WARNING')),
-                                     ('O', _('OK')),
-                                     ('I', _('IGNORE')),
-                                 ],
-                             ),
-                             RegExpUnicode(
-                                 title=_("Pattern (Regex)"),
-                                 size=40,
-                                 mode=RegExp.infix,
-                             ),
-                             TextUnicode(
-                                 title=_("Comment"),
-                                 size=40,
-                             ),
-                         ]),
-                     title=_("Reclassify state matching regex pattern"),
-                     help=
-                     _('<p>You can define one or several patterns (regular expressions) in each logfile pattern rule. '
-                       'These patterns are applied to the selected logfiles to reclassify the '
-                       'matching log messages. The first pattern which matches a line will '
-                       'be used for reclassifying a message. You can use the '
-                       '<a href="wato.py?mode=pattern_editor">Logfile Pattern Analyzer</a> '
-                       'to test the rules you defined here.</p>'
-                       '<p>Select "Ignore" as state to get the matching logs deleted. Other states will keep the '
-                       'log entries but reclassify the state of them.</p>'),
-                     add_label=_("Add pattern"),
-                 )),
-                ("reclassify_states",
-                 Dictionary(
-                     title=_("Reclassify complete state"),
-                     help=_(
-                         "This setting allows you to convert all incoming states to another state. "
-                         "The option is applied before the state conversion via regexes. So the regex values can "
-                         "modify the state even further."),
-                     elements=[
-                         ("c_to",
-                          DropdownChoice(
-                              title=_("Change CRITICAL State to"),
-                              choices=[
-                                  ('C', _('CRITICAL')),
-                                  ('W', _('WARNING')),
-                                  ('O', _('OK')),
-                                  ('I', _('IGNORE')),
-                                  ('.', _('Context Info')),
-                              ],
-                              default_value="C",
-                          )),
-                         ("w_to",
-                          DropdownChoice(
-                              title=_("Change WARNING State to"),
-                              choices=[
-                                  ('C', _('CRITICAL')),
-                                  ('W', _('WARNING')),
-                                  ('O', _('OK')),
-                                  ('I', _('IGNORE')),
-                                  ('.', _('Context Info')),
-                              ],
-                              default_value="W",
-                          )),
-                         ("o_to",
-                          DropdownChoice(
-                              title=_("Change OK State to"),
-                              choices=[
-                                  ('C', _('CRITICAL')),
-                                  ('W', _('WARNING')),
-                                  ('O', _('OK')),
-                                  ('I', _('IGNORE')),
-                                  ('.', _('Context Info')),
-                              ],
-                              default_value="O",
-                          )),
-                         ("._to",
-                          DropdownChoice(
-                              title=_("Change Context Info to"),
-                              choices=[
-                                  ('C', _('CRITICAL')),
-                                  ('W', _('WARNING')),
-                                  ('O', _('OK')),
-                                  ('I', _('IGNORE')),
-                                  ('.', _('Context Info')),
-                              ],
-                              default_value=".",
-                          )),
-                     ],
-                     optional_keys=False,
-                 )),
-            ],
-            optional_keys=["reclassify_states"],
-        ),
-        forth=lambda x: isinstance(x, dict) and x or {"reclassify_patterns": x}),
-    itemtype='item',
-    itemname='Logfile',
-    itemhelp=_("Put the item names of the logfiles here. For example \"System$\" "
-               "to select the service \"LOG System\". You can use regular "
-               "expressions which must match the beginning of the logfile name."),
-    match='all',
-)
+                             ("c_to",
+                              DropdownChoice(
+                                  title=_("Change CRITICAL State to"),
+                                  choices=[
+                                      ('C', _('CRITICAL')),
+                                      ('W', _('WARNING')),
+                                      ('O', _('OK')),
+                                      ('I', _('IGNORE')),
+                                      ('.', _('Context Info')),
+                                  ],
+                                  default_value="C",
+                              )),
+                             ("w_to",
+                              DropdownChoice(
+                                  title=_("Change WARNING State to"),
+                                  choices=[
+                                      ('C', _('CRITICAL')),
+                                      ('W', _('WARNING')),
+                                      ('O', _('OK')),
+                                      ('I', _('IGNORE')),
+                                      ('.', _('Context Info')),
+                                  ],
+                                  default_value="W",
+                              )),
+                             ("o_to",
+                              DropdownChoice(
+                                  title=_("Change OK State to"),
+                                  choices=[
+                                      ('C', _('CRITICAL')),
+                                      ('W', _('WARNING')),
+                                      ('O', _('OK')),
+                                      ('I', _('IGNORE')),
+                                      ('.', _('Context Info')),
+                                  ],
+                                  default_value="O",
+                              )),
+                             ("._to",
+                              DropdownChoice(
+                                  title=_("Change Context Info to"),
+                                  choices=[
+                                      ('C', _('CRITICAL')),
+                                      ('W', _('WARNING')),
+                                      ('O', _('OK')),
+                                      ('I', _('IGNORE')),
+                                      ('.', _('Context Info')),
+                                  ],
+                                  default_value=".",
+                              )),
+                         ],
+                         optional_keys=False,
+                     )),
+                ],
+                optional_keys=["reclassify_states"],
+            ),
+            forth=lambda x: isinstance(x, dict) and x or {"reclassify_patterns": x},
+        )
 
-register_rule(
-    RulespecGroupCheckParametersApplications,
-    varname="logwatch_groups",
-    title=_('Logfile Grouping Patterns'),
-    help=_('The check <tt>logwatch</tt> normally creates one service for each logfile. '
-           'By defining grouping patterns you can switch to the check <tt>logwatch.groups</tt>. '
-           'If the pattern begins with a tilde then this pattern is interpreted as a regular '
-           'expression instead of as a filename globbing pattern and  <tt>*</tt> and <tt>?</tt> '
-           'are treated differently. '
-           'That check monitors a list of logfiles at once. This is useful if you have '
-           'e.g. a folder with rotated logfiles where the name of the current logfile'
-           'also changes with each rotation'),
-    valuespec=ListOf(
-        Tuple(
-            help=_("This defines one logfile grouping pattern"),
-            show_titles=True,
-            orientation="horizontal",
-            elements=[
-                TextAscii(title=_("Name of group"),),
-                Tuple(
-                    show_titles=True,
-                    orientation="vertical",
-                    elements=[
-                        TextAscii(title=_("Include Pattern")),
-                        TextAscii(title=_("Exclude Pattern"))
-                    ],
-                ),
-            ],
-        ),
-        add_label=_("Add pattern group"),
-    ),
-    match='all',
-)
+
+@rulespec_registry.register
+class RulespecLogwatchGroups(HostRulespec):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def name(self):
+        return "logwatch_groups"
+
+    @property
+    def match_type(self):
+        return "all"
+
+    @property
+    def valuespec(self):
+        return ListOf(
+            Tuple(
+                help=_("This defines one logfile grouping pattern"),
+                show_titles=True,
+                orientation="horizontal",
+                elements=[
+                    TextAscii(title=_("Name of group"),),
+                    Tuple(
+                        show_titles=True,
+                        orientation="vertical",
+                        elements=[
+                            TextAscii(title=_("Include Pattern")),
+                            TextAscii(title=_("Exclude Pattern"))
+                        ],
+                    ),
+                ],
+            ),
+            title=_('Logfile Grouping Patterns'),
+            help=
+            _('The check <tt>logwatch</tt> normally creates one service for each logfile. '
+              'By defining grouping patterns you can switch to the check <tt>logwatch.groups</tt>. '
+              'If the pattern begins with a tilde then this pattern is interpreted as a regular '
+              'expression instead of as a filename globbing pattern and  <tt>*</tt> and <tt>?</tt> '
+              'are treated differently. '
+              'That check monitors a list of logfiles at once. This is useful if you have '
+              'e.g. a folder with rotated logfiles where the name of the current logfile'
+              'also changes with each rotation'),
+            add_label=_("Add pattern group"),
+        )
 
 register_check_parameters(RulespecGroupCheckParametersApplications,
     "logwatch_ec",

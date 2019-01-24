@@ -48,7 +48,8 @@ from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersDiscovery,
     UserIconOrAction,
     register_check_parameters,
-    register_rule,
+    rulespec_registry,
+    HostRulespec,
 )
 
 process_level_elements = [
@@ -419,74 +420,85 @@ def convert_inventory_processes(old_dict):
     return new_dict
 
 
-register_rule(
-    RulespecGroupCheckParametersDiscovery,
-    varname="inventory_processes_rules",
-    title=_('Process Discovery'),
-    help=_("This ruleset defines criteria for automatically creating checks for running"
-           "processes based upon what is running when the service discovery is"
-           "done. These services will be created with default parameters. They will get"
-           "critical when no process is running and OK otherwise. You can parameterize"
-           "the check with the ruleset <i>State and count of processes</i>."),
-    valuespec=Transform(
-        Dictionary(
-            elements=[
-                ('descr',
-                 TextAscii(
-                     title=_('Process Name'),
-                     style="dropdown",
-                     allow_empty=False,
-                     help=
-                     _("<p>The process name may contain one or more occurances of <tt>%s</tt>. If "
-                       "you do this, then the pattern must be a regular expression and be prefixed "
-                       "with ~. For each <tt>%s</tt> in the description, the expression has to "
-                       "contain one \"group\". A group is a subexpression enclosed in brackets, "
-                       "for example <tt>(.*)</tt> or <tt>([a-zA-Z]+)</tt> or <tt>(...)</tt>. "
-                       "When the inventory finds a process matching the pattern, it will "
-                       "substitute all such groups with the actual values when creating the "
-                       "check. That way one rule can create several checks on a host.</p>"
-                       "<p>If the pattern contains more groups then occurrances of <tt>%s</tt> in "
-                       "the service description then only the first matching subexpressions are "
-                       "used for the service descriptions. The matched substrings corresponding to "
-                       "the remaining groups are copied into the regular expression, "
-                       "nevertheless.</p>"
-                       "<p>As an alternative to <tt>%s</tt> you may also use <tt>%1</tt>, "
-                       "<tt>%2</tt>, etc.  These will be replaced by the first, second, "
-                       "... matching group. This allows you to reorder thing"),
-                 )),
-                ('match', process_match_options),
-                ('user',
-                 user_match_options([
-                     FixedValue(
-                         False,
-                         title=_('Grab user from found processess'),
-                         totext='',
-                         help=_(
-                             'Specifying "grab user" makes the created check expect the process to '
-                             'run as the same user as during inventory: the user name will be '
-                             'hardcoded into the check. In that case if you put %u into the service '
-                             'description, that will be replaced by the actual user name during '
-                             'inventory. You need that if your rule might match for more than one '
-                             'user - your would create duplicate services with the same description '
-                             'otherwise.'))
-                 ])),
-                ('default_params',
-                 Dictionary(
-                     title=_("Default parameters for detected services"),
-                     help=
-                     _("Here you can select default parameters that are being set "
-                       "for detected services. Note: the preferred way for setting parameters is to use "
-                       "the rule set <a href='wato.py?varname=checkgroup_parameters%3Apsmode=edit_ruleset'> "
-                       "State and Count of Processes</a> instead. "
-                       "A change there will immediately be active, while a change in this rule "
-                       "requires a re-discovery of the services."),
-                     elements=process_level_elements,
-                     ignored_keys=["match_groups"],
-                     required_keys=["cpu_rescale_max"])),
-            ],
-            required_keys=["descr", "default_params"],
-        ),
-        forth=convert_inventory_processes,
-    ),
-    match='all',
-)
+@rulespec_registry.register
+class RulespecInventoryProcessesRules(HostRulespec):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersDiscovery
+
+    @property
+    def name(self):
+        return "inventory_processes_rules"
+
+    @property
+    def match_type(self):
+        return "all"
+
+    @property
+    def valuespec(self):
+        return Transform(
+            Dictionary(
+                title=_('Process Discovery'),
+                help=_("This ruleset defines criteria for automatically creating checks for running"
+                       "processes based upon what is running when the service discovery is"
+                       "done. These services will be created with default parameters. They will get"
+                       "critical when no process is running and OK otherwise. You can parameterize"
+                       "the check with the ruleset <i>State and count of processes</i>."),
+                elements=[
+                    ('descr',
+                     TextAscii(
+                         title=_('Process Name'),
+                         style="dropdown",
+                         allow_empty=False,
+                         help=
+                         _("<p>The process name may contain one or more occurances of <tt>%s</tt>. If "
+                           "you do this, then the pattern must be a regular expression and be prefixed "
+                           "with ~. For each <tt>%s</tt> in the description, the expression has to "
+                           "contain one \"group\". A group is a subexpression enclosed in brackets, "
+                           "for example <tt>(.*)</tt> or <tt>([a-zA-Z]+)</tt> or <tt>(...)</tt>. "
+                           "When the inventory finds a process matching the pattern, it will "
+                           "substitute all such groups with the actual values when creating the "
+                           "check. That way one rule can create several checks on a host.</p>"
+                           "<p>If the pattern contains more groups then occurrances of <tt>%s</tt> in "
+                           "the service description then only the first matching subexpressions are "
+                           "used for the service descriptions. The matched substrings corresponding to "
+                           "the remaining groups are copied into the regular expression, "
+                           "nevertheless.</p>"
+                           "<p>As an alternative to <tt>%s</tt> you may also use <tt>%1</tt>, "
+                           "<tt>%2</tt>, etc.  These will be replaced by the first, second, "
+                           "... matching group. This allows you to reorder thing"),
+                     )),
+                    ('match', process_match_options),
+                    ('user',
+                     user_match_options([
+                         FixedValue(
+                             False,
+                             title=_('Grab user from found processess'),
+                             totext='',
+                             help=
+                             _('Specifying "grab user" makes the created check expect the process to '
+                               'run as the same user as during inventory: the user name will be '
+                               'hardcoded into the check. In that case if you put %u into the service '
+                               'description, that will be replaced by the actual user name during '
+                               'inventory. You need that if your rule might match for more than one '
+                               'user - your would create duplicate services with the same description '
+                               'otherwise.'))
+                     ])),
+                    ('default_params',
+                     Dictionary(
+                         title=_("Default parameters for detected services"),
+                         help=
+                         _("Here you can select default parameters that are being set "
+                           "for detected services. Note: the preferred way for setting parameters is to use "
+                           "the rule set <a href='wato.py?varname=checkgroup_parameters%3Apsmode=edit_ruleset'> "
+                           "State and Count of Processes</a> instead. "
+                           "A change there will immediately be active, while a change in this rule "
+                           "requires a re-discovery of the services."),
+                         elements=process_level_elements,
+                         ignored_keys=["match_groups"],
+                         required_keys=["cpu_rescale_max"])),
+                ],
+                required_keys=["descr", "default_params"],
+            ),
+            forth=convert_inventory_processes,
+        )

@@ -37,37 +37,51 @@ from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersDiscovery,
     RulespecGroupCheckParametersStorage,
     register_check_parameters,
-    register_rule,
+    rulespec_registry,
+    HostRulespec,
 )
 
-register_rule(
-    RulespecGroupCheckParametersDiscovery,
-    varname="inventory_heartbeat_crm_rules",
-    title=_("Heartbeat CRM Discovery"),
-    valuespec=Dictionary(
-        elements=[
-            ("naildown_dc",
-             Checkbox(
-                 title=_("Naildown the DC"),
-                 label=_("Mark the currently distinguished controller as preferred one"),
-                 help=_(
-                     "Nails down the DC to the node which is the DC during discovery. The check "
-                     "will report CRITICAL when another node becomes the DC during later checks."))
-            ),
-            ("naildown_resources",
-             Checkbox(
-                 title=_("Naildown the resources"),
-                 label=_("Mark the nodes of the resources as preferred one"),
-                 help=_(
-                     "Nails down the resources to the node which is holding them during discovery. "
-                     "The check will report CRITICAL when another holds the resource during later checks."
-                 ))),
-        ],
-        help=_('This rule can be used to control the discovery for Heartbeat CRM checks.'),
-        optional_keys=[],
-    ),
-    match='dict',
-)
+
+@rulespec_registry.register
+class RulespecInventoryHeartbeatCrmRules(HostRulespec):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersDiscovery
+
+    @property
+    def name(self):
+        return "inventory_heartbeat_crm_rules"
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def valuespec(self):
+        return Dictionary(
+            title=_("Heartbeat CRM Discovery"),
+            elements=[
+                ("naildown_dc",
+                 Checkbox(
+                     title=_("Naildown the DC"),
+                     label=_("Mark the currently distinguished controller as preferred one"),
+                     help=_(
+                         "Nails down the DC to the node which is the DC during discovery. The check "
+                         "will report CRITICAL when another node becomes the DC during later checks."
+                     ))),
+                ("naildown_resources",
+                 Checkbox(
+                     title=_("Naildown the resources"),
+                     label=_("Mark the nodes of the resources as preferred one"),
+                     help=
+                     _("Nails down the resources to the node which is holding them during discovery. "
+                       "The check will report CRITICAL when another holds the resource during later checks."
+                      ))),
+            ],
+            help=_('This rule can be used to control the discovery for Heartbeat CRM checks.'),
+            optional_keys=[],
+        )
+
 
 register_check_parameters(
     RulespecGroupCheckParametersStorage,

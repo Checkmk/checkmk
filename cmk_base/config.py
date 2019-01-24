@@ -2869,7 +2869,20 @@ class ConfigCache(object):
         return self._hosttags.get(hostname, [])
 
     def set_all_processed_hosts(self, all_processed_hosts):
-        self._all_processed_hosts = all_processed_hosts
+        self._all_processed_hosts = set(all_processed_hosts)
+
+        nodes_and_clusters = set()
+        for hostname in self._all_processed_hosts:
+            nodes_and_clusters.update(self._nodes_of_cache.get(hostname, []))
+            nodes_and_clusters.update(self._clusters_of_cache.get(hostname, []))
+        self._all_processed_hosts.update(nodes_and_clusters)
+
+        # The folder host lookup includes a list of all -processed- hosts within a given
+        # folder. Any update with set_all_processed hosts invalidates this cache, because
+        # the scope of relevant hosts has changed. This is -good-, since the values in this
+        # lookup are iterated one by one later on in all_matching_hosts
+        self._folder_host_lookup = {}
+
         self._adjust_processed_hosts_similarity()
 
     def _adjust_processed_hosts_similarity(self):
@@ -2912,17 +2925,19 @@ class ConfigCache(object):
             self._hosts_grouped_by_tags.setdefault(group_ref, set()).add(hostname)
             self._host_grouped_ref[hostname] = group_ref
 
-    def get_hosts_within_folder(self, folder_path):
-        if folder_path not in self._folder_host_lookup:
+    def get_hosts_within_folder(self, folder_path, with_foreign_hosts):
+        cache_id = with_foreign_hosts, folder_path
+        if cache_id not in self._folder_host_lookup:
             hosts_in_folder = set()
             # Strip off "+"
             folder_path_tmp = folder_path[:-1]
-            for hostname in self._all_configured_hosts:
+            relevant_hosts = self._all_configured_hosts if with_foreign_hosts else self._all_processed_hosts
+            for hostname in relevant_hosts:
                 if self._host_paths[hostname].startswith(folder_path_tmp):
                     hosts_in_folder.add(hostname)
-            self._folder_host_lookup[folder_path] = hosts_in_folder
+            self._folder_host_lookup[cache_id] = hosts_in_folder
             return hosts_in_folder
-        return self._folder_host_lookup[folder_path]
+        return self._folder_host_lookup[cache_id]
 
     def get_autochecks_of(self, hostname, world):
         try:
@@ -2990,7 +3005,8 @@ class ConfigCache(object):
 
         # Thin out the valid hosts further. If the rule is located in a folder
         # we only need the intersection of the folders hosts and the previously determined valid_hosts
-        valid_hosts = self.get_hosts_within_folder(rule_path).intersection(valid_hosts)
+        valid_hosts = self.get_hosts_within_folder(rule_path,
+                                                   with_foreign_hosts).intersection(valid_hosts)
 
         # Contains matched hosts
 

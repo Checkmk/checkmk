@@ -235,6 +235,7 @@ class JolokiaInstance(object):
         self.custom_vars = self.config.get("custom_vars", [])
 
         self.base_url = self._get_base_url()
+        self.target = self._get_target()
 
     def _get_base_url(self):
         return "%s://%s:%d/%s" % (
@@ -243,6 +244,28 @@ class JolokiaInstance(object):
             self.config["port"],
             self.config["suburi"],
         )
+
+    def _get_target(self):
+        url = self.config.get("service_url")
+        if url is None:
+            return {}
+        user = self.config.get("service_user")
+        if user is None:
+            return {"url": url}
+        return {
+            "url": url,
+            "user": user,
+            "password": self.config["service_password"],
+        }
+
+    def get_post_data(self, path, function):
+        segments = path.strip("/").split("/")
+        data = {"mbean": segments[0], "attribute": segments[1]}
+        if len(segments) > 2:
+            data["path"] = segments[2]
+        data["type"] = function
+        data["target"] = self.target
+        return data
 
 
 def fetch_url(request_url, post_data=None):
@@ -258,26 +281,11 @@ def fetch_url(request_url, post_data=None):
     return json_data
 
 
-def _get_post_data(path, service_url, service_user, service_password, function):
-    segments = path.strip("/").split("/")
-    data = {"mbean": segments[0], "attribute": segments[1]}
-    if len(segments) > 2:
-        data["path"] = segments[2]
-    data["type"] = function
+def fetch_var(inst, function, path, use_target=False):
 
-    data["target"] = {"url": service_url}
-    if service_user:
-        data["target"]["user"] = service_user
-        data["target"]["password"] = service_password
-
-    return json.dumps(data)
-
-
-def fetch_var(inst, function, path, service_url, service_user, service_password):
-
-    if service_url is not None:
-        post_data = _get_post_data(path, service_url, service_user, service_password, function)
-        json_data = fetch_url(inst.base_url, post_data)
+    if use_target and inst.target:
+        post_data = inst.get_post_data(path, function)
+        json_data = fetch_url(inst.base_url, json.dumps(post_data))
     else:
         request_url = "%s/%s/%s" % (inst.base_url, function, path) if path else inst.base_url + "/"
         json_data = fetch_url(request_url)
@@ -356,8 +364,7 @@ def extract_item(key, itemspec):
 
 
 def fetch_metric(inst, path, title, itemspec, inst_add=None):
-    values = fetch_var(inst, "read", path, inst.config["service_url"], inst.config["service_user"],
-                       inst.config["service_password"])
+    values = fetch_var(inst, "read", path, use_target=True)
     item_list = make_item_list((), values, itemspec)
 
     for subinstance, value in item_list:
@@ -390,7 +397,7 @@ def _get_queries(do_search, inst, itemspec, title, path, mbean):
     if not do_search:
         return [(mbean + "/" + path, title, itemspec)]
 
-    value = fetch_var(inst, "search", mbean, None, None, None)
+    value = fetch_var(inst, "search", mbean)
     try:
         paths = make_item_list((), value, "")[0][1]
     except IndexError:
@@ -514,11 +521,11 @@ def prepare_http_opener(inst):
 
 def generate_jolokia_info(inst):
     # Determine type of server
-    value = fetch_var(inst, "read", "", None, None, None)
+    value = fetch_var(inst, "read", "")
     server_info = make_item_list((), value, "")
 
     if not server_info:
-        sys.stderr.write("%s ERROR: Empty server info\n" % (inst.name,))
+        sys.stderr.write("%s ERROR: Empty server info\n" % inst.name)
         raise SkipInstance()
 
     info_dict = dict(server_info)

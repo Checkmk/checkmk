@@ -228,6 +228,9 @@ class JolokiaInstance(object):
         self.config = self._sanitize_config(config)
 
         self.name = self.config["instance"]
+        self.product = self.config["product"]
+        self.custom_vars = self.config.get("custom_vars", [])
+
         self.base_url = self._get_base_url()
 
     def _get_base_url(self):
@@ -413,10 +416,10 @@ def query_instance(inst):
 
     write_section('jolokia_info', generate_jolokia_info(inst))
 
-    shipped_vars = QUERY_SPECS_GENERIC + QUERY_SPECS_SPECIFIC.get(inst.config["product"], [])
+    shipped_vars = QUERY_SPECS_GENERIC + QUERY_SPECS_SPECIFIC.get(inst.product, [])
     write_section('jolokia_metrics', generate_values(inst, shipped_vars))
 
-    write_section('jolokia_generic', generate_values(inst, inst.config.get("custom_vars")))
+    write_section('jolokia_generic', generate_values(inst, inst.custom_vars))
 
 
 class PreemptiveBasicAuthHandler(urllib2.HTTPBasicAuthHandler):
@@ -518,8 +521,8 @@ def generate_jolokia_info(inst):
     info_dict = dict(server_info)
     version = info_dict.get(('info', 'version'), "unknown")
     product = info_dict.get(('info', 'product'), "unknown")
-    if inst.config.get("product"):
-        product = inst.config["product"]
+    if inst.product:
+        product = inst.product
     agentversion = info_dict.get(('agent',), "unknown")
     yield inst.name, product, version, agentversion
 

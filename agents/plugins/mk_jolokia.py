@@ -188,39 +188,44 @@ def cached(function):
     return cached_function
 
 
-def sanitize_config(config):
+class JolokiaInstance(object):
+    @staticmethod
+    def _sanitize_config(config):
+        instance = config.get("instance")
+        err_msg = "%s in configuration"
+        if instance:
+            err_msg += " for %s" % instance
 
-    instance = config.get("instance")
-    err_msg = "%s in configuration"
-    if instance:
-        err_msg += " for %s" % instance
+        required_keys = {"protocol", "server", "port", "suburi"}
+        auth_mode = config.get("mode")
+        if auth_mode in ("digest", "basic", "basic_preemtive"):
+            required_keys |= {"user", "password"}
+        elif auth_mode == "https":
+            required_keys |= {"client_cert", "client_key"}
+        if config.get("service_url") is not None and config.get("service_user") is not None:
+            required_keys.add("service_password")
+        missing_keys = required_keys - set(config.keys())
+        if missing_keys:
+            raise ValueError(err_msg % ("Missing keys " % ", ".join(missing_keys)))
 
-    required_keys = {"protocol", "server", "port", "suburi"}
-    auth_mode = config.get("mode")
-    if auth_mode in ("digest", "basic", "basic_preemtive"):
-        required_keys |= {"user", "password"}
-    elif auth_mode == "https":
-        required_keys |= {"client_cert", "client_key"}
-    if config.get("service_url") is not None and config.get("service_user") is not None:
-        required_keys.add("service_password")
-    missing_keys = required_keys - set(config.keys())
-    if missing_keys:
-        raise ValueError(err_msg % ("Missing keys " % ", ".join(missing_keys)))
+        if not instance:
+            config["instance"] = str(config["port"])
+        config["instance"] = config["instance"].replace(" ", "_")
 
-    if not instance:
-        config["instance"] = str(config["port"])
-    config["instance"] = config["instance"].replace(" ", "_")
+        # port must be (or look like) an integer
+        try:
+            config["port"] = int(config["port"])
+        except ValueError:
+            raise ValueError(err_msg % ("Invalid port %r" % config["port"]))
 
-    # port must be (or look like) an integer
-    try:
-        config["port"] = int(config["port"])
-    except ValueError:
-        raise ValueError(err_msg % ("Invalid port %r" % config["port"]))
+        if config.get("server") == "use fqdn":
+            config["server"] = socket.getfqdn()
 
-    if config.get("server") == "use fqdn":
-        config["server"] = socket.getfqdn()
+        return config
 
-    return config
+    def __init__(self, config):
+        super(JolokiaInstance, self).__init__()
+        self.config = self._sanitize_config(config)
 
 
 def _get_base_url(inst):
@@ -400,17 +405,17 @@ def _process_queries(inst, queries):
 
 def query_instance(inst):
     try:
-        prepare_http_opener(inst)
+        prepare_http_opener(inst.config)
     except () if DEBUG else Exception, exc:
         sys.stderr.write("ERROR: %s\n" % exc)
         raise SkipInstance()
 
     write_section('jolokia_info', generate_jolokia_info(inst))
 
-    shipped_vars = QUERY_SPECS_GENERIC + QUERY_SPECS_SPECIFIC.get(inst["product"], [])
+    shipped_vars = QUERY_SPECS_GENERIC + QUERY_SPECS_SPECIFIC.get(inst.config["product"], [])
     write_section('jolokia_metrics', generate_values(inst, shipped_vars))
 
-    write_section('jolokia_generic', generate_values(inst, inst.get("custom_vars")))
+    write_section('jolokia_generic', generate_values(inst, inst.config.get("custom_vars")))
 
 
 class PreemptiveBasicAuthHandler(urllib2.HTTPBasicAuthHandler):
@@ -502,20 +507,20 @@ def prepare_http_opener(inst):
 
 def generate_jolokia_info(inst):
     # Determine type of server
-    value = fetch_var(inst, "", None, None, None)
+    value = fetch_var(inst.config, "", None, None, None)
     server_info = make_item_list((), value, "")
 
     if not server_info:
-        sys.stderr.write("%s ERROR: Empty server info\n" % (inst["instance"],))
+        sys.stderr.write("%s ERROR: Empty server info\n" % (inst.config["instance"],))
         raise SkipInstance()
 
     info_dict = dict(server_info)
     version = info_dict.get(('info', 'version'), "unknown")
     product = info_dict.get(('info', 'product'), "unknown")
-    if inst.get("product"):
-        product = inst["product"]
+    if inst.config.get("product"):
+        product = inst.config["product"]
     agentversion = info_dict.get(('agent',), "unknown")
-    yield inst["instance"], product, version, agentversion
+    yield inst.config["instance"], product, version, agentversion
 
 
 def generate_values(inst, var_list):
@@ -523,9 +528,9 @@ def generate_values(inst, var_list):
         mbean, path, title, itemspec, do_search = var[:5]
         value_type = var[5] if len(var) >= 6 else None
 
-        queries = _get_queries(do_search, inst, itemspec, title, path, mbean)
+        queries = _get_queries(do_search, inst.config, itemspec, title, path, mbean)
 
-        for item, title, value in _process_queries(inst, queries):
+        for item, title, value in _process_queries(inst.config, queries):
             if value_type:
                 yield item, title, value, value_type
             else:
@@ -553,7 +558,7 @@ def main(configs_iterable=None):
         configs_iterable = yield_configured_instances()
 
     for config in configs_iterable:
-        instance = sanitize_config(config)
+        instance = JolokiaInstance(config)
         try:
             query_instance(instance)
         except SkipInstance:

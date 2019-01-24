@@ -227,14 +227,16 @@ class JolokiaInstance(object):
         super(JolokiaInstance, self).__init__()
         self.config = self._sanitize_config(config)
 
+        self.name = self.config["instance"]
+        self.base_url = self._get_base_url()
 
-def _get_base_url(inst):
-    return "%s://%s:%d/%s" % (
-        inst["protocol"].strip('/'),
-        inst["server"].strip('/'),
-        inst["port"],
-        inst["suburi"],
-    )
+    def _get_base_url(self):
+        return "%s://%s:%d/%s" % (
+            self.config["protocol"].strip('/'),
+            self.config["server"].strip('/'),
+            self.config["port"],
+            self.config["suburi"],
+        )
 
 
 def fetch_url(request_url, post_data=None):
@@ -266,13 +268,12 @@ def _get_post_data(path, service_url, service_user, service_password, function):
 
 
 def fetch_var(inst, path, service_url, service_user, service_password, function="read"):
-    base_url = _get_base_url(inst)
 
     if service_url is not None:
         post_data = _get_post_data(path, service_url, service_user, service_password, function)
-        json_data = fetch_url(base_url, post_data)
+        json_data = fetch_url(inst.base_url, post_data)
     else:
-        request_url = "%s/%s/%s" % (base_url, function, path) if path else base_url + "/"
+        request_url = "%s/%s/%s" % (inst.base_url, function, path) if path else inst.base_url + "/"
         json_data = fetch_url(request_url)
 
     try:
@@ -283,7 +284,7 @@ def fetch_var(inst, path, service_url, service_user, service_password, function=
         return []
 
     if obj.get('status', 200) != 200:
-        sys.stderr.write('ERROR: Invalid response when fetching url %s\n' % base_url)
+        sys.stderr.write('ERROR: Invalid response when fetching url %s\n' % inst.base_url)
         sys.stderr.write('       Response: %s\n' % json_data)
         return []
 
@@ -362,11 +363,11 @@ def fetch_metric(inst, path, title, itemspec, inst_add=None):
             continue
 
         if len(subinstance) > 1:
-            item = ",".join((inst.config["instance"],) + subinstance[:-1])
+            item = ",".join((inst.name,) + subinstance[:-1])
         elif inst_add is not None:
-            item = ",".join((inst.config["instance"], inst_add))
+            item = ",".join((inst.name, inst_add))
         else:
-            item = inst.config["instance"]
+            item = inst.name
         if title:
             if subinstance:
                 tit = title + "." + subinstance[-1]
@@ -511,7 +512,7 @@ def generate_jolokia_info(inst):
     server_info = make_item_list((), value, "")
 
     if not server_info:
-        sys.stderr.write("%s ERROR: Empty server info\n" % (inst.config["instance"],))
+        sys.stderr.write("%s ERROR: Empty server info\n" % (inst.name,))
         raise SkipInstance()
 
     info_dict = dict(server_info)
@@ -520,7 +521,7 @@ def generate_jolokia_info(inst):
     if inst.config.get("product"):
         product = inst.config["product"]
     agentversion = info_dict.get(('agent',), "unknown")
-    yield inst.config["instance"], product, version, agentversion
+    yield inst.name, product, version, agentversion
 
 
 def generate_values(inst, var_list):

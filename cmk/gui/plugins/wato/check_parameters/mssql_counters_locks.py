@@ -36,20 +36,35 @@ from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersApplications,
     RulespecGroupCheckParametersDiscovery,
     register_check_parameters,
-    register_rule,
+    rulespec_registry,
+    HostRulespec,
 )
 
-register_rule(
-    RulespecGroupCheckParametersDiscovery,
-    varname="inventory_mssql_counters_rules",
-    title=_("Include MSSQL Counters services"),
-    valuespec=Dictionary(
-        elements=[
-            ("add_zero_based_services", Checkbox(title=_("Include service with zero base."))),
-        ],
-        optional_keys=[]),
-    match="dict",
-)
+
+@rulespec_registry.register
+class RulespecInventoryMssqlCountersRules(HostRulespec):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersDiscovery
+
+    @property
+    def name(self):
+        return "inventory_mssql_counters_rules"
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def valuespec(self):
+        return Dictionary(
+            title=_("Include MSSQL Counters services"),
+            elements=[
+                ("add_zero_based_services", Checkbox(title=_("Include service with zero base."))),
+            ],
+            optional_keys=[],
+        )
+
 
 register_check_parameters(
     RulespecGroupCheckParametersApplications,

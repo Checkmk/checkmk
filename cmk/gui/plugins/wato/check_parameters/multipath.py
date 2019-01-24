@@ -37,30 +37,44 @@ from cmk.gui.valuespec import (
 from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersStorage,
     register_check_parameters,
-    register_rule,
+    rulespec_registry,
+    HostRulespec,
 )
 
-register_rule(
-    RulespecGroupCheckParametersStorage,
-    varname="inventory_multipath_rules",
-    title=_("Linux Multipath Inventory"),
-    valuespec=Dictionary(
-        elements=[
-            ("use_alias",
-             Checkbox(
-                 title=_("Use the multipath alias as service name, if one is set"),
-                 label=_("use alias"),
-                 help=_(
-                     "If a multipath device has an alias then you can use it for specifying "
-                     "the device instead of the UUID. The alias will then be part of the service "
-                     "description. The UUID will be displayed in the plugin output."))),
-        ],
-        help=_(
-            "This rule controls whether the UUID or the alias is used in the service description during "
-            "discovery of Multipath devices on Linux."),
-    ),
-    match='dict',
-)
+
+@rulespec_registry.register
+class RulespecInventoryMultipathRules(HostRulespec):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersStorage
+
+    @property
+    def name(self):
+        return "inventory_multipath_rules"
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def valuespec(self):
+        return Dictionary(
+            title=_("Linux Multipath Inventory"),
+            elements=[
+                ("use_alias",
+                 Checkbox(
+                     title=_("Use the multipath alias as service name, if one is set"),
+                     label=_("use alias"),
+                     help=_(
+                         "If a multipath device has an alias then you can use it for specifying "
+                         "the device instead of the UUID. The alias will then be part of the service "
+                         "description. The UUID will be displayed in the plugin output."))),
+            ],
+            help=_(
+                "This rule controls whether the UUID or the alias is used in the service description during "
+                "discovery of Multipath devices on Linux."),
+        )
+
 
 register_check_parameters(
     RulespecGroupCheckParametersStorage, "multipath", _("Linux and Solaris Multipath Count"),

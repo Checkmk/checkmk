@@ -39,24 +39,39 @@ from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersApplications,
     RulespecGroupCheckParametersDiscovery,
     register_check_parameters,
-    register_rule,
+    rulespec_registry,
+    HostRulespec,
 )
 
-register_rule(
-    RulespecGroupCheckParametersDiscovery,
-    varname="discovery_win_dhcp_pools",
-    title=_("Discovery of Windows DHCP Pools"),
-    valuespec=Dictionary(elements=[
-        ("empty_pools",
-         Checkbox(
-             title=_("Discovery of empty DHCP pools"),
-             label=_("Include empty pools into the monitoring"),
-             help=_("You can activate the creation of services for "
-                    "DHCP pools, which contain no IP addresses."),
-         )),
-    ]),
-    match='dict',
-)
+
+@rulespec_registry.register
+class RulespecDiscoveryWinDhcpPools(HostRulespec):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersDiscovery
+
+    @property
+    def name(self):
+        return "discovery_win_dhcp_pools"
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def valuespec(self):
+        return Dictionary(
+            title=_("Discovery of Windows DHCP Pools"),
+            elements=[
+                ("empty_pools",
+                 Checkbox(
+                     title=_("Discovery of empty DHCP pools"),
+                     label=_("Include empty pools into the monitoring"),
+                     help=_("You can activate the creation of services for "
+                            "DHCP pools, which contain no IP addresses."),
+                 )),
+            ],
+        )
 
 register_check_parameters(
     RulespecGroupCheckParametersApplications,

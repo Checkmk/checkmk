@@ -51,7 +51,9 @@ from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersDiscovery,
     RulespecGroupCheckParametersNetworking,
     register_check_parameters,
-    register_rule,
+    rulespec_registry,
+    HostRulespec,
+    BinaryHostRulespec,
 )
 
 
@@ -125,127 +127,142 @@ def transform_if_groups_forth(params):
     return params
 
 
-register_rule(
-    RulespecGroupCheckParametersDiscovery,
-    varname="inventory_if_rules",
-    title=_("Network Interface and Switch Port Discovery"),
-    valuespec=Dictionary(
-        elements=[
-            ("use_desc",
-             DropdownChoice(
-                 choices=[
-                     (True, _('Use description')),
-                     (False, _('Do not use description')),
-                 ],
-                 title=_("Description as service name for network interface checks"),
-                 help=_(
-                     "This option lets Check_MK use the interface description as item instead "
-                     "of the port number. If no description is available then the port number is "
-                     "used anyway."))),
-            ("use_alias",
-             DropdownChoice(
-                 choices=[
-                     (True, _('Use alias')),
-                     (False, _('Do not use alias')),
-                 ],
-                 title=_("Alias as service name for network interface checks"),
-                 help=_(
-                     "This option lets Check_MK use the alias of the port (ifAlias) as item instead "
-                     "of the port number. If no alias is available then the port number is used "
-                     "anyway."))),
-            ("pad_portnumbers",
-             DropdownChoice(
-                 choices=[
-                     (True, _('Pad port numbers with zeros')),
-                     (False, _('Do not pad')),
-                 ],
-                 title=_("Port numbers"),
-                 help=_("If this option is activated then Check_MK will pad port numbers of "
-                        "network interfaces with zeroes so that all port descriptions from "
-                        "all ports of a host or switch have the same length and thus sort "
-                        "currectly in the GUI. In versions prior to 1.1.13i3 there was no "
-                        "padding. You can switch back to the old behaviour by disabling this "
-                        "option. This will retain the old service descriptions and the old "
-                        "performance data."),
-             )),
-            ("match_alias",
-             ListOfStrings(
-                 title=_("Match interface alias (regex)"),
-                 help=_("Only discover interfaces whose alias matches one of the configured "
-                        "regular expressions. The match is done on the beginning of the alias. "
-                        "This allows you to select interfaces based on the alias without having "
-                        "the alias be part of the service description."),
-                 orientation="horizontal",
-                 valuespec=RegExp(
-                     size=32,
-                     mode=RegExp.prefix,
-                 ),
-             )),
-            ("match_desc",
-             ListOfStrings(
-                 title=_("Match interface description (regex)"),
-                 help=_(
-                     "Only discover interfaces whose the description matches one of the configured "
-                     "regular expressions. The match is done on the beginning of the description. "
-                     "This allows you to select interfaces based on the description without having "
-                     "the alias be part of the service description."),
-                 orientation="horizontal",
-                 valuespec=RegExp(
-                     size=32,
-                     mode=RegExp.prefix,
-                 ),
-             )),
-            ("portstates",
-             ListChoice(
-                 title=_("Network interface port states to discover"),
-                 help=
-                 _("When doing discovery on switches or other devices with network interfaces "
-                   "then only ports found in one of the configured port states will be added to the monitoring. "
-                   "Note: the state <i>admin down</i> is in fact not an <tt>ifOperStatus</tt> but represents the "
-                   "<tt>ifAdminStatus</tt> of <tt>down</tt> - a port administratively switched off. If you check this option "
-                   "then an alternate version of the check is being used that fetches the <tt>ifAdminState</tt> in addition. "
-                   "This will add about 5% of additional SNMP traffic."),
-                 choices=defines.interface_oper_states(),
-                 toggle_all=True,
-                 default_value=['1'],
-             )),
-            ("porttypes",
-             DualListChoice(
-                 title=_("Network interface port types to discover"),
-                 help=_("When doing discovery on switches or other devices with network interfaces "
-                        "then only ports of the specified types will be created services for."),
-                 choices=defines.interface_port_types(),
-                 custom_order=True,
-                 rows=40,
-                 toggle_all=True,
-                 default_value=[
-                     '6', '32', '62', '117', '127', '128', '129', '180', '181', '182', '205', '229'
-                 ],
-             )),
-            ("rmon",
-             DropdownChoice(
-                 choices=[
-                     (True,
-                      _("Create extra service with RMON statistics data (if available for the device)"
-                       )),
-                     (False, _('Do not create extra services')),
-                 ],
-                 title=_("Collect RMON statistics data"),
-                 help=
-                 _("If you enable this option, for every RMON capable switch port an additional service will "
-                   "be created which is always OK and collects RMON data. This will give you detailed information "
-                   "about the distribution of packet sizes transferred over the port. Note: currently "
-                   "this extra RMON check does not honor the inventory settings for switch ports. In a future "
-                   "version of Check_MK RMON data may be added to the normal interface service and not add "
-                   "an additional service."),
-             )),
-        ],
-        help=_('This rule can be used to control the inventory for network ports. '
-               'You can configure the port types and port states for inventory'
-               'and the use of alias or description as service name.'),
-    ),
-    match='list',
-)
+@rulespec_registry.register
+class RulespecInventoryIfRules(HostRulespec):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersDiscovery
+
+    @property
+    def name(self):
+        return "inventory_if_rules"
+
+    @property
+    def match_type(self):
+        return "list"
+
+    @property
+    def valuespec(self):
+        return Dictionary(
+            title=_("Network Interface and Switch Port Discovery"),
+            elements=[
+                ("use_desc",
+                 DropdownChoice(
+                     choices=[
+                         (True, _('Use description')),
+                         (False, _('Do not use description')),
+                     ],
+                     title=_("Description as service name for network interface checks"),
+                     help=_(
+                         "This option lets Check_MK use the interface description as item instead "
+                         "of the port number. If no description is available then the port number is "
+                         "used anyway."))),
+                ("use_alias",
+                 DropdownChoice(
+                     choices=[
+                         (True, _('Use alias')),
+                         (False, _('Do not use alias')),
+                     ],
+                     title=_("Alias as service name for network interface checks"),
+                     help=
+                     _("This option lets Check_MK use the alias of the port (ifAlias) as item instead "
+                       "of the port number. If no alias is available then the port number is used "
+                       "anyway."))),
+                ("pad_portnumbers",
+                 DropdownChoice(
+                     choices=[
+                         (True, _('Pad port numbers with zeros')),
+                         (False, _('Do not pad')),
+                     ],
+                     title=_("Port numbers"),
+                     help=_("If this option is activated then Check_MK will pad port numbers of "
+                            "network interfaces with zeroes so that all port descriptions from "
+                            "all ports of a host or switch have the same length and thus sort "
+                            "currectly in the GUI. In versions prior to 1.1.13i3 there was no "
+                            "padding. You can switch back to the old behaviour by disabling this "
+                            "option. This will retain the old service descriptions and the old "
+                            "performance data."),
+                 )),
+                ("match_alias",
+                 ListOfStrings(
+                     title=_("Match interface alias (regex)"),
+                     help=_(
+                         "Only discover interfaces whose alias matches one of the configured "
+                         "regular expressions. The match is done on the beginning of the alias. "
+                         "This allows you to select interfaces based on the alias without having "
+                         "the alias be part of the service description."),
+                     orientation="horizontal",
+                     valuespec=RegExp(
+                         size=32,
+                         mode=RegExp.prefix,
+                     ),
+                 )),
+                ("match_desc",
+                 ListOfStrings(
+                     title=_("Match interface description (regex)"),
+                     help=
+                     _("Only discover interfaces whose the description matches one of the configured "
+                       "regular expressions. The match is done on the beginning of the description. "
+                       "This allows you to select interfaces based on the description without having "
+                       "the alias be part of the service description."),
+                     orientation="horizontal",
+                     valuespec=RegExp(
+                         size=32,
+                         mode=RegExp.prefix,
+                     ),
+                 )),
+                ("portstates",
+                 ListChoice(
+                     title=_("Network interface port states to discover"),
+                     help=
+                     _("When doing discovery on switches or other devices with network interfaces "
+                       "then only ports found in one of the configured port states will be added to the monitoring. "
+                       "Note: the state <i>admin down</i> is in fact not an <tt>ifOperStatus</tt> but represents the "
+                       "<tt>ifAdminStatus</tt> of <tt>down</tt> - a port administratively switched off. If you check this option "
+                       "then an alternate version of the check is being used that fetches the <tt>ifAdminState</tt> in addition. "
+                       "This will add about 5% of additional SNMP traffic."),
+                     choices=defines.interface_oper_states(),
+                     toggle_all=True,
+                     default_value=['1'],
+                 )),
+                ("porttypes",
+                 DualListChoice(
+                     title=_("Network interface port types to discover"),
+                     help=_(
+                         "When doing discovery on switches or other devices with network interfaces "
+                         "then only ports of the specified types will be created services for."),
+                     choices=defines.interface_port_types(),
+                     custom_order=True,
+                     rows=40,
+                     toggle_all=True,
+                     default_value=[
+                         '6', '32', '62', '117', '127', '128', '129', '180', '181', '182', '205',
+                         '229'
+                     ],
+                 )),
+                ("rmon",
+                 DropdownChoice(
+                     choices=[
+                         (True,
+                          _("Create extra service with RMON statistics data (if available for the device)"
+                           )),
+                         (False, _('Do not create extra services')),
+                     ],
+                     title=_("Collect RMON statistics data"),
+                     help=
+                     _("If you enable this option, for every RMON capable switch port an additional service will "
+                       "be created which is always OK and collects RMON data. This will give you detailed information "
+                       "about the distribution of packet sizes transferred over the port. Note: currently "
+                       "this extra RMON check does not honor the inventory settings for switch ports. In a future "
+                       "version of Check_MK RMON data may be added to the normal interface service and not add "
+                       "an additional service."),
+                 )),
+            ],
+            help=_('This rule can be used to control the inventory for network ports. '
+                   'You can configure the port types and port states for inventory'
+                   'and the use of alias or description as service name.'),
+        )
+
 
 vs_elements_if_groups_matches = [
     ("iftype",
@@ -287,59 +304,85 @@ vs_elements_if_groups_group = [
      )),
 ]
 
-register_rule(
-    RulespecGroupCheckParametersNetworking,
-    varname="if_groups",
-    title=_('Network interface groups'),
-    help=_(
-        'Normally the Interface checks create a single service for interface. '
-        'By defining if-group patterns multiple interfaces can be combined together. '
-        'A single service is created for this interface group showing the total traffic amount '
-        'of its members. You can configure if interfaces which are identified as group interfaces '
-        'should not show up as single service. You can restrict grouped interfaces by iftype and the '
-        'item name of the single interface.'),
-    valuespec=Transform(
-        Alternative(
-            style="dropdown",
-            elements=[
-                ListOf(
-                    title=_("Groups on single host"),
-                    add_label=_("Add pattern"),
-                    valuespec=Dictionary(
-                        elements=vs_elements_if_groups_group + vs_elements_if_groups_matches,
-                        required_keys=["group_name", "group_presence"]),
-                ),
-                ListOf(
-                    magic="@!!",
-                    title=_("Groups on cluster"),
-                    add_label=_("Add pattern"),
-                    valuespec=Dictionary(
-                        elements=vs_elements_if_groups_group +
-                        [("node_patterns",
-                          ListOf(
-                              title=_("Patterns for each node"),
-                              add_label=_("Add pattern"),
-                              valuespec=Dictionary(
-                                  elements=[("node_name", TextAscii(title=_("Node name")))] +
-                                  vs_elements_if_groups_matches,
-                                  required_keys=["node_name"]),
-                              allow_empty=False,
-                          ))],
-                        optional_keys=[])),
-            ],
-        ),
-        forth=transform_if_groups_forth),
-    match='all',
-)
 
-register_rule(
-    RulespecGroupCheckParametersNetworking,
-    "if_disable_if64_hosts",
-    title=_("Hosts forced to use <tt>if</tt> instead of <tt>if64</tt>"),
-    help=_("A couple of switches with broken firmware report that they "
-           "support 64 bit counters but do not output any actual data "
-           "in those counters. Listing those hosts in this rule forces "
-           "them to use the interface check with 32 bit counters instead."))
+@rulespec_registry.register
+class RulespecIfGroups(HostRulespec):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersNetworking
+
+    @property
+    def name(self):
+        return "if_groups"
+
+    @property
+    def match_type(self):
+        return "all"
+
+    @property
+    def valuespec(self):
+        return Transform(
+            Alternative(
+                title=_('Network interface groups'),
+                help=
+                _('Normally the Interface checks create a single service for interface. '
+                  'By defining if-group patterns multiple interfaces can be combined together. '
+                  'A single service is created for this interface group showing the total traffic amount '
+                  'of its members. You can configure if interfaces which are identified as group interfaces '
+                  'should not show up as single service. You can restrict grouped interfaces by iftype and the '
+                  'item name of the single interface.'),
+                style="dropdown",
+                elements=[
+                    ListOf(
+                        title=_("Groups on single host"),
+                        add_label=_("Add pattern"),
+                        valuespec=Dictionary(
+                            elements=vs_elements_if_groups_group + vs_elements_if_groups_matches,
+                            required_keys=["group_name", "group_presence"]),
+                    ),
+                    ListOf(
+                        magic="@!!",
+                        title=_("Groups on cluster"),
+                        add_label=_("Add pattern"),
+                        valuespec=Dictionary(
+                            elements=vs_elements_if_groups_group +
+                            [("node_patterns",
+                              ListOf(
+                                  title=_("Patterns for each node"),
+                                  add_label=_("Add pattern"),
+                                  valuespec=Dictionary(
+                                      elements=[("node_name", TextAscii(title=_("Node name")))] +
+                                      vs_elements_if_groups_matches,
+                                      required_keys=["node_name"]),
+                                  allow_empty=False,
+                              ))],
+                            optional_keys=[])),
+                ],
+            ),
+            forth=transform_if_groups_forth)
+
+
+@rulespec_registry.register
+class RulespecIfDisableIf64Hosts(BinaryHostRulespec):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersNetworking
+
+    @property
+    def name(self):
+        return "if_disable_if64_hosts"
+
+    @property
+    def title(self):
+        return _("Hosts forced to use <tt>if</tt> instead of <tt>if64</tt>")
+
+    @property
+    def help(self):
+        return _("A couple of switches with broken firmware report that they support 64 bit "
+                 "counters but do not output any actual data in those counters. Listing those "
+                 "hosts in this rule forces them to use the interface check with 32 bit counters "
+                 "instead.")
+
 
 register_check_parameters(
     RulespecGroupCheckParametersNetworking,

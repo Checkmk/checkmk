@@ -37,34 +37,49 @@ from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersApplications,
     RulespecGroupCheckParametersDiscovery,
     register_check_parameters,
-    register_rule,
+    rulespec_registry,
+    HostRulespec,
 )
 
-register_rule(
-    RulespecGroupCheckParametersDiscovery,
-    varname="discovery_systemd_units_services_rules",
-    title=_("Systemd Service Discovery"),
-    valuespec=Dictionary(
-        elements=[
-            ('descriptions', ListOfStrings(title=_("Descriptions"))),
-            ('names', ListOfStrings(title=_("Service unit names"))),
-            ('states',
-             ListOf(
-                 DropdownChoice(
-                     choices=[
-                         ("active", "active"),
-                         ("inactive", "inactive"),
-                         ("failed", "failed"),
-                     ],),
-                 title=_("States"),
-             )),
-        ],
-        help=_('This rule can be used to configure the discovery of the Linux services check. '
-               'You can configure specific Linux services to be monitored by the Linux check by '
-               'selecting them by description, unit name, or current state during the discovery.'),
-    ),
-    match='all',
-)
+
+@rulespec_registry.register
+class RulespecDiscoverySystemdUnitsServicesRules(HostRulespec):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersDiscovery
+
+    @property
+    def name(self):
+        return "discovery_systemd_units_services_rules"
+
+    @property
+    def match_type(self):
+        return "all"
+
+    @property
+    def valuespec(self):
+        return Dictionary(
+            title=_("Systemd Service Discovery"),
+            elements=[
+                ('descriptions', ListOfStrings(title=_("Descriptions"))),
+                ('names', ListOfStrings(title=_("Service unit names"))),
+                ('states',
+                 ListOf(
+                     DropdownChoice(
+                         choices=[
+                             ("active", "active"),
+                             ("inactive", "inactive"),
+                             ("failed", "failed"),
+                         ],),
+                     title=_("States"),
+                 )),
+            ],
+            help=_(
+                'This rule can be used to configure the discovery of the Linux services check. '
+                'You can configure specific Linux services to be monitored by the Linux check by '
+                'selecting them by description, unit name, or current state during the discovery.'),
+        )
+
 
 register_check_parameters(
     RulespecGroupCheckParametersApplications,

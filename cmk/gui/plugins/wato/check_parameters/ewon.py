@@ -36,26 +36,36 @@ from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersDiscovery,
     RulespecGroupCheckParametersEnvironment,
     register_check_parameters,
-    register_rule,
+    rulespec_registry,
+    HostRulespec,
 )
 
-register_rule(
-    RulespecGroupCheckParametersDiscovery,
-    varname="ewon_discovery_rules",
-    title=_("eWON Discovery"),
-    help=_("The ewon vpn routers can rely data from a secondary device via snmp. "
-           "It doesn't however allow discovery of the device type relayed this way. "
-           "To allow interpretation of the data you need to pick the device manually."),
-    valuespec=DropdownChoice(
-        title=_("Device Type"),
-        label=_("Select device type"),
-        choices=[
-            (None, _("None selected")),
-            ("oxyreduct", _("Wagner OxyReduct")),
-        ],
-        default_value=None,
-    ),
-    match='first')
+
+@rulespec_registry.register
+class RulespecEwonDiscoveryRules(HostRulespec):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersDiscovery
+
+    @property
+    def name(self):
+        return "ewon_discovery_rules"
+
+    @property
+    def valuespec(self):
+        return DropdownChoice(
+            title=_("eWON Discovery"),
+            help=_("The ewon vpn routers can rely data from a secondary device via snmp. "
+                   "It doesn't however allow discovery of the device type relayed this way. "
+                   "To allow interpretation of the data you need to pick the device manually."),
+            label=_("Select device type"),
+            choices=[
+                (None, _("None selected")),
+                ("oxyreduct", _("Wagner OxyReduct")),
+            ],
+            default_value=None,
+        )
+
 
 register_check_parameters(
     RulespecGroupCheckParametersEnvironment,

@@ -41,7 +41,8 @@ from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersDiscovery,
     RulespecGroupCheckParametersStorage,
     register_check_parameters,
-    register_rule,
+    rulespec_registry,
+    HostRulespec,
 )
 
 _brocade_fcport_adm_choices = [
@@ -75,65 +76,78 @@ _brocade_fcport_phy_choices = [
     (255, 'unkown(255)'),
 ]
 
-register_rule(
-    RulespecGroupCheckParametersDiscovery,
-    varname="brocade_fcport_inventory",
-    title=_("Brocade Port Discovery"),
-    valuespec=Dictionary(
-        elements=[
-            ("use_portname",
-             Checkbox(
-                 title=_("Use port name as service name"),
-                 label=_("use port name"),
-                 default_value=True,
-                 help=_("This option lets Check_MK use the port name as item instead of the "
-                        "port number. If no description is available then the port number is "
-                        "used anyway."))),
-            ("show_isl",
-             Checkbox(
-                 title=_("add \"ISL\" to service description for interswitch links"),
-                 label=_("add ISL"),
-                 default_value=True,
-                 help=_("This option lets Check_MK add the string \"ISL\" to the service "
-                        "description for interswitch links."))),
-            ("admstates",
-             ListChoice(
-                 title=_("Administrative port states to discover"),
-                 help=_(
-                     "When doing service discovery on brocade switches only ports with the given administrative "
-                     "states will be added to the monitoring system."),
-                 choices=_brocade_fcport_adm_choices,
-                 columns=1,
-                 toggle_all=True,
-                 default_value=['1', '3', '4'],
-             )),
-            ("phystates",
-             ListChoice(
-                 title=_("Physical port states to discover"),
-                 help=_(
-                     "When doing service discovery on brocade switches only ports with the given physical "
-                     "states will be added to the monitoring system."),
-                 choices=_brocade_fcport_phy_choices,
-                 columns=1,
-                 toggle_all=True,
-                 default_value=[3, 4, 5, 6, 7, 8, 9, 10])),
-            ("opstates",
-             ListChoice(
-                 title=_("Operational port states to discover"),
-                 help=_(
-                     "When doing service discovery on brocade switches only ports with the given operational "
-                     "states will be added to the monitoring system."),
-                 choices=_brocade_fcport_op_choices,
-                 columns=1,
-                 toggle_all=True,
-                 default_value=[1, 2, 3, 4])),
-        ],
-        help=_('This rule can be used to control the service discovery for brocade ports. '
-               'You can configure the port states for inventory '
-               'and the use of the description as service name.'),
-    ),
-    match='dict',
-)
+
+@rulespec_registry.register
+class RulespecBrocadeFcportInventory(HostRulespec):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersDiscovery
+
+    @property
+    def name(self):
+        return "brocade_fcport_inventory"
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def valuespec(self):
+        return Dictionary(
+            title=_("Brocade Port Discovery"),
+            elements=[
+                ("use_portname",
+                 Checkbox(
+                     title=_("Use port name as service name"),
+                     label=_("use port name"),
+                     default_value=True,
+                     help=_("This option lets Check_MK use the port name as item instead of the "
+                            "port number. If no description is available then the port number is "
+                            "used anyway."))),
+                ("show_isl",
+                 Checkbox(
+                     title=_("add \"ISL\" to service description for interswitch links"),
+                     label=_("add ISL"),
+                     default_value=True,
+                     help=_("This option lets Check_MK add the string \"ISL\" to the service "
+                            "description for interswitch links."))),
+                ("admstates",
+                 ListChoice(
+                     title=_("Administrative port states to discover"),
+                     help=_(
+                         "When doing service discovery on brocade switches only ports with the given administrative "
+                         "states will be added to the monitoring system."),
+                     choices=_brocade_fcport_adm_choices,
+                     columns=1,
+                     toggle_all=True,
+                     default_value=['1', '3', '4'],
+                 )),
+                ("phystates",
+                 ListChoice(
+                     title=_("Physical port states to discover"),
+                     help=_(
+                         "When doing service discovery on brocade switches only ports with the given physical "
+                         "states will be added to the monitoring system."),
+                     choices=_brocade_fcport_phy_choices,
+                     columns=1,
+                     toggle_all=True,
+                     default_value=[3, 4, 5, 6, 7, 8, 9, 10])),
+                ("opstates",
+                 ListChoice(
+                     title=_("Operational port states to discover"),
+                     help=_(
+                         "When doing service discovery on brocade switches only ports with the given operational "
+                         "states will be added to the monitoring system."),
+                     choices=_brocade_fcport_op_choices,
+                     columns=1,
+                     toggle_all=True,
+                     default_value=[1, 2, 3, 4])),
+            ],
+            help=_('This rule can be used to control the service discovery for brocade ports. '
+                   'You can configure the port states for inventory '
+                   'and the use of the description as service name.'),
+        )
+
 
 register_check_parameters(
     RulespecGroupCheckParametersStorage,

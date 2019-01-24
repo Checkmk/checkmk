@@ -35,32 +35,43 @@ from cmk.gui.plugins.wato import (
     Levels,
     RulespecGroupCheckParametersStorage,
     register_check_parameters,
-    register_rule,
+    rulespec_registry,
+    HostRulespec,
 )
 
-register_rule(
-    RulespecGroupCheckParametersStorage,
-    "diskstat_inventory",
-    ListChoice(
-        title=_("Discovery mode for Disk IO check"),
-        help=_("This rule controls which and how many checks will be created "
-               "for monitoring individual physical and logical disks. "
-               "Note: the option <i>Create a summary for all read, one for "
-               "write</i> has been removed. Some checks will still support "
-               "this settings, but it will be removed there soon."),
-        choices=[
-            ("summary", _("Create a summary over all physical disks")),
-            # This option is still supported by some checks, but is deprecated and
-            # we fade it out...
-            # ( "legacy",   _("Create a summary for all read, one for write") ),
-            ("physical", _("Create a separate check for each physical disk")),
-            ("lvm", _("Create a separate check for each LVM volume (Linux)")),
-            ("vxvm", _("Creata a separate check for each VxVM volume (Linux)")),
-            ("diskless", _("Creata a separate check for each partition (XEN)")),
-        ],
-        default_value=['summary'],
-    ),
-    match="first")
+
+@rulespec_registry.register
+class RulespecDiskstatInventory(HostRulespec):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersStorage
+
+    @property
+    def name(self):
+        return "diskstat_inventory"
+
+    @property
+    def valuespec(self):
+        return ListChoice(
+            title=_("Discovery mode for Disk IO check"),
+            help=_("This rule controls which and how many checks will be created "
+                   "for monitoring individual physical and logical disks. "
+                   "Note: the option <i>Create a summary for all read, one for "
+                   "write</i> has been removed. Some checks will still support "
+                   "this settings, but it will be removed there soon."),
+            choices=[
+                ("summary", _("Create a summary over all physical disks")),
+                # This option is still supported by some checks, but is deprecated and
+                # we fade it out...
+                # ( "legacy",   _("Create a summary for all read, one for write") ),
+                ("physical", _("Create a separate check for each physical disk")),
+                ("lvm", _("Create a separate check for each LVM volume (Linux)")),
+                ("vxvm", _("Creata a separate check for each VxVM volume (Linux)")),
+                ("diskless", _("Creata a separate check for each partition (XEN)")),
+            ],
+            default_value=['summary'],
+        )
+
 
 register_check_parameters(
     RulespecGroupCheckParametersStorage,

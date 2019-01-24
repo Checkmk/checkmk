@@ -38,69 +38,96 @@ from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersDiscovery,
     RulespecGroupCheckParametersStorage,
     register_check_parameters,
-    register_rule,
+    rulespec_registry,
+    HostRulespec,
 )
 from cmk.gui.plugins.wato.check_parameters.utils import vs_filesystem
 
-register_rule(
-    RulespecGroupCheckParametersDiscovery,
-    varname="inventory_df_rules",
-    title=_("Discovery parameters for filesystem checks"),
-    valuespec=Dictionary(
-        elements=[
-            ("include_volume_name", Checkbox(title=_("Include Volume name in item"))),
-            ("ignore_fs_types",
-             ListChoice(
-                 title=_("Filesystem types to ignore"),
-                 choices=[
-                     ("tmpfs", "tmpfs"),
-                     ("nfs", "nfs"),
-                     ("smbfs", "smbfs"),
-                     ("cifs", "cifs"),
-                     ("iso9660", "iso9660"),
-                 ],
-                 default_value=["tmpfs", "nfs", "smbfs", "cifs", "iso9660"])),
-            ("never_ignore_mountpoints",
-             ListOf(
-                 TextUnicode(),
-                 title=_(u"Mountpoints to never ignore"),
-                 help=_(
-                     u"Regardless of filesystem type, these mountpoints will always be discovered."
-                     u"Globbing or regular expressions are currently not supported."),
-             )),
-        ],),
-    match="dict",
-)
 
-register_rule(
-    RulespecGroupCheckParametersStorage,
-    varname="filesystem_groups",
-    title=_('Filesystem grouping patterns'),
-    help=_('Normally the filesystem checks (<tt>df</tt>, <tt>hr_fs</tt> and others) '
-           'will create a single service for each filesystem. '
-           'By defining grouping '
-           'patterns you can handle groups of filesystems like one filesystem. '
-           'For each group you can define one or several patterns. '
-           'The filesystems matching one of the patterns '
-           'will be monitored like one big filesystem in a single service.'),
-    valuespec=ListOf(
-        Tuple(
-            show_titles=True,
-            orientation="horizontal",
+@rulespec_registry.register
+class RulespecInventoryDfRules(HostRulespec):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersDiscovery
+
+    @property
+    def name(self):
+        return "inventory_df_rules"
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def valuespec(self):
+        return Dictionary(
+            title=_("Discovery parameters for filesystem checks"),
             elements=[
-                TextAscii(title=_("Name of group"),),
-                TextAscii(
-                    title=_("Pattern for mount point (using * and ?)"),
-                    help=_("You can specify one or several patterns containing "
-                           "<tt>*</tt> and <tt>?</tt>, for example <tt>/spool/tmpspace*</tt>. "
-                           "The filesystems matching the patterns will be monitored "
-                           "like one big filesystem in a single service."),
-                ),
-            ]),
-        add_label=_("Add pattern"),
-    ),
-    match='all',
-)
+                ("include_volume_name", Checkbox(title=_("Include Volume name in item"))),
+                ("ignore_fs_types",
+                 ListChoice(
+                     title=_("Filesystem types to ignore"),
+                     choices=[
+                         ("tmpfs", "tmpfs"),
+                         ("nfs", "nfs"),
+                         ("smbfs", "smbfs"),
+                         ("cifs", "cifs"),
+                         ("iso9660", "iso9660"),
+                     ],
+                     default_value=["tmpfs", "nfs", "smbfs", "cifs", "iso9660"])),
+                ("never_ignore_mountpoints",
+                 ListOf(
+                     TextUnicode(),
+                     title=_(u"Mountpoints to never ignore"),
+                     help=_(
+                         u"Regardless of filesystem type, these mountpoints will always be discovered."
+                         u"Globbing or regular expressions are currently not supported."),
+                 )),
+            ],
+        )
+
+
+@rulespec_registry.register
+class RulespecFilesystemGroups(HostRulespec):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersStorage
+
+    @property
+    def name(self):
+        return "filesystem_groups"
+
+    @property
+    def match_type(self):
+        return "all"
+
+    @property
+    def valuespec(self):
+        return ListOf(
+            Tuple(
+                show_titles=True,
+                orientation="horizontal",
+                elements=[
+                    TextAscii(title=_("Name of group"),),
+                    TextAscii(
+                        title=_("Pattern for mount point (using * and ?)"),
+                        help=_("You can specify one or several patterns containing "
+                               "<tt>*</tt> and <tt>?</tt>, for example <tt>/spool/tmpspace*</tt>. "
+                               "The filesystems matching the patterns will be monitored "
+                               "like one big filesystem in a single service."),
+                    ),
+                ]),
+            add_label=_("Add pattern"),
+            title=_('Filesystem grouping patterns'),
+            help=_('Normally the filesystem checks (<tt>df</tt>, <tt>hr_fs</tt> and others) '
+                   'will create a single service for each filesystem. '
+                   'By defining grouping '
+                   'patterns you can handle groups of filesystems like one filesystem. '
+                   'For each group you can define one or several patterns. '
+                   'The filesystems matching one of the patterns '
+                   'will be monitored like one big filesystem in a single service.'),
+        )
+
 
 register_check_parameters(
     RulespecGroupCheckParametersStorage, "filesystem", _("Filesystems (used space and growth)"),

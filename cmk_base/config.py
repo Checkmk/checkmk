@@ -3083,8 +3083,9 @@ class ConfigCache(object):
                 rule_dict.setdefault(key, value)
         return rule_dict
 
-    def host_extra_conf(self, hostname, ruleset, include_foreign_hosts=False):
-        cache_id = id(ruleset), include_foreign_hosts
+    def host_extra_conf(self, hostname, ruleset):
+        with_foreign_hosts = hostname not in self._all_processed_hosts
+        cache_id = id(ruleset), with_foreign_hosts
         try:
             return self._host_extra_conf_match_cache[cache_id][hostname]
         except KeyError:
@@ -3093,7 +3094,7 @@ class ConfigCache(object):
         try:
             ruleset = self._host_extra_conf_ruleset_cache[cache_id]
         except KeyError:
-            ruleset = self._convert_host_ruleset(ruleset, include_foreign_hosts)
+            ruleset = self._convert_host_ruleset(ruleset, with_foreign_hosts)
             self._host_extra_conf_ruleset_cache[cache_id] = ruleset
             new_cache = {}
             for value, hostname_list in ruleset:
@@ -3122,10 +3123,11 @@ class ConfigCache(object):
 
         return new_rules
 
-    def service_extra_conf(self, hostname, service, ruleset, with_foreign_hosts=False):
+    def service_extra_conf(self, hostname, service, ruleset):
         """Compute outcome of a service rule set that has an item."""
         # When the requested host is part of the local sites configuration,
         # then use only the sites hosts for processing the rules
+        with_foreign_hosts = hostname not in self._all_processed_hosts
         cache_id = id(ruleset), with_foreign_hosts
 
         cached_ruleset = self._service_extra_conf_ruleset_cache.get(cache_id)

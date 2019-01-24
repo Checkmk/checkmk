@@ -142,29 +142,24 @@ class AWSSection(object):
             raise AWSSectionError(msg)
 
         try:
-            raw_result = self._get_raw_result()
+            content = self._extract_content_from_raw_result()
         except botocore.exceptions.EndpointConnectionError:
             raise
+        except Exception:
+            raise
 
-        content = self._extract_content_from(raw_result)
-        self.send(content)
+        self._send(content)
         return self._format_content(content)
 
     @abc.abstractmethod
-    def _get_raw_result(self):
+    def _extract_content_from_raw_result(self):
         """
-        Returns the raw result which we received from any API method, eg
-        response = ec2_client.describe_instances()
-        """
-        pass
-
-    @abc.abstractmethod
-    def _extract_content_from(self, raw_result):
-        """
+        Call an API method, eg. 'response = ec2_client.describe_instances()'
+        and extract content from raw result.
         Raw results basically consist of two sub results:
         - 'ResponseMetadata'
         - '<KEY>'
-        Returns raw_result['<KEY>'].
+        Return raw_result['<KEY>'].
         """
         pass
 
@@ -178,7 +173,7 @@ class AWSSection(object):
         """
         pass
 
-    def send(self, content):
+    def _send(self, content):
         self._distributor.distribute(self, content)
 
     def receive(self, sender, content):
@@ -211,10 +206,10 @@ class CostsAndUsage(AWSSection):
     def interval(self):
         return 86400
 
-    def _get_raw_result(self):
+    def _extract_content_from_raw_result(self):
         fmt = "%Y-%m-%d"
         now = time.time()
-        return self._client.get_cost_and_usage(
+        response = self._client.get_cost_and_usage(
             TimePeriod={
                 'Start': time.strftime(fmt, time.gmtime(now - self.interval)),
                 'End': time.strftime(fmt, time.gmtime(now)),
@@ -229,13 +224,11 @@ class CostsAndUsage(AWSSection):
                 'Key': 'SERVICE'
             }],
         )
-
-    def _extract_content_from(self, raw_result):
         try:
-            return raw_result['ResultsByTime']
+            return response['ResultsByTime']
         except KeyError, e:
-            logging.info("%s: KeyError %s; Available are %s", self.name, e, raw_result.keys())
-            return
+            logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
+            return []
 
     def _format_content(self, content):
         return [AWSSectionResult("", content)]
@@ -267,14 +260,12 @@ class SecurityGroups(AWSSection):
     def interval(self):
         return 300
 
-    def _get_raw_result(self):
-        return self._client.describe_security_groups()
-
-    def _extract_content_from(self, raw_result):
+    def _extract_content_from_raw_result(self):
+        response = self._client.describe_security_groups()
         try:
-            return raw_result['SecurityGroups']
+            return response['SecurityGroups']
         except KeyError, e:
-            logging.info("%s: KeyError %s; Available are %s", self.name, e, raw_result.keys())
+            logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
             return []
 
     def _format_content(self, content):
@@ -302,14 +293,12 @@ class EC2Summary(AWSSection):
     def interval(self):
         return 300
 
-    def _get_raw_result(self):
-        return self._client.describe_instances()
-
-    def _extract_content_from(self, raw_result):
+    def _extract_content_from_raw_result(self):
+        response = self._client.describe_instances()
         try:
-            reservations = raw_result['Reservations']
+            reservations = response['Reservations']
         except KeyError, e:
-            logging.info("%s: KeyError %s; Available are %s", self.name, e, raw_result.keys())
+            logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
             return {}
 
         for group in self._received_results.get('security_groups'):
@@ -349,7 +338,7 @@ class EC2(AWSSection):
     def interval(self):
         return 300
 
-    def _get_raw_result(self):
+    def _extract_content_from_raw_result(self):
         end_time = time.time()
         start_time = end_time - self.period
         metrics = self._get_metrics()
@@ -359,7 +348,7 @@ class EC2(AWSSection):
         # A single GetMetricData call can include up to 100 MetricDataQuery structures
         # There's no pagination for this operation:
         # self._client.can_paginate('get_metric_data') = False
-        raw_result = []
+        content = []
         for chunk in _chunks(metrics):
             if not chunk:
                 continue
@@ -373,8 +362,8 @@ class EC2(AWSSection):
             except KeyError, e:
                 logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
                 continue
-            raw_result.extend(metrics)
-        return raw_result
+            content.extend(metrics)
+        return content
 
     def _get_metrics(self):
         metrics = []
@@ -415,9 +404,6 @@ class EC2(AWSSection):
                 idx += 1
         return metrics
 
-    def _extract_content_from(self, raw_result):
-        return raw_result
-
     def _format_content(self, content):
         content_by_piggyback_hosts = {}
         for row in content:
@@ -448,7 +434,7 @@ class S3(AWSSection):
     def interval(self):
         return 86400
 
-    def _get_raw_result(self):
+    def _extract_content_from_raw_result(self):
         response = self._client.list_buckets()
         try:
             buckets = response['Buckets']
@@ -481,9 +467,6 @@ class S3(AWSSection):
             bucket['Contents'] = contents
         return buckets
 
-    def _extract_content_from(self, raw_result):
-        return raw_result
-
     def _format_content(self, content):
         return [AWSSectionResult("", content)]
 
@@ -508,7 +491,7 @@ class ELBSummary(AWSSection):
     def interval(self):
         return 300
 
-    def _get_raw_result(self):
+    def _extract_content_from_raw_result(self):
         response = self._client.describe_load_balancers()
         try:
             load_balancers = response['LoadBalancerDescriptions']
@@ -528,9 +511,6 @@ class ELBSummary(AWSSection):
                 load_balancer['InstanceStates'] = states
         return load_balancers
 
-    def _extract_content_from(self, raw_result):
-        return raw_result
-
     def _format_content(self, content):
         return [AWSSectionResult("", content)]
 
@@ -544,11 +524,8 @@ class ELBHealth(AWSSection):
     def interval(self):
         return 300
 
-    def _get_raw_result(self):
+    def _extract_content_from_raw_result(self):
         return self._received_results.get('elb_summary', [])
-
-    def _extract_content_from(self, raw_result):
-        return raw_result
 
     def _format_content(self, content):
         content_by_piggyback_hosts = {}
@@ -574,7 +551,7 @@ class ELB(AWSSection):
     def interval(self):
         return 300
 
-    def _get_raw_result(self):
+    def _extract_content_from_raw_result(self):
         end_time = time.time()
         start_time = end_time - self.period
         metrics = self._get_metrics()
@@ -584,7 +561,7 @@ class ELB(AWSSection):
         # A single GetMetricData call can include up to 100 MetricDataQuery structures
         # There's no pagination for this operation:
         # self._client.can_paginate('get_metric_data') = False
-        raw_result = []
+        content = []
         for chunk in _chunks(metrics):
             if not chunk:
                 continue
@@ -598,8 +575,8 @@ class ELB(AWSSection):
             except KeyError, e:
                 logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
                 continue
-            raw_result.extend(metrics)
-        return raw_result
+            content.extend(metrics)
+        return content
 
     def _get_metrics(self):
         load_balancers = []
@@ -644,9 +621,6 @@ class ELB(AWSSection):
                 idx += 1
         return metrics
 
-    def _extract_content_from(self, raw_result):
-        return raw_result
-
     def _format_content(self, content):
         content_by_piggyback_hosts = {}
         for row in content:
@@ -680,7 +654,7 @@ class EBSSummary(AWSSection):
     def interval(self):
         return 300
 
-    def _get_raw_result(self):
+    def _extract_content_from_raw_result(self):
         response = self._client.describe_volumes()
         try:
             volumes = {r['VolumeId']: r for r in response['Volumes']}
@@ -695,15 +669,12 @@ class EBSSummary(AWSSection):
             logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
             volume_states = {}
 
-        raw_result = []
+        content = []
         for volume_id in set(volumes.keys()).union(set(volume_states.keys())):
             volume = volumes.get(volume_id, {})
             volume.update(volume_states.get(volume_id, {}))
-            raw_result.append(volume)
-        return raw_result
-
-    def _extract_content_from(self, raw_result):
-        return raw_result
+            content.append(volume)
+        return content
 
     def _format_content(self, content):
         instance_ids = self._received_results.get('ec2_summary', {})\
@@ -730,7 +701,7 @@ class EBS(AWSSection):
     def interval(self):
         return 300
 
-    def _get_raw_result(self):
+    def _extract_content_from_raw_result(self):
         end_time = time.time()
         start_time = end_time - self.period
         metrics = self._get_metrics()
@@ -740,7 +711,7 @@ class EBS(AWSSection):
         # A single GetMetricData call can include up to 100 MetricDataQuery structures
         # There's no pagination for this operation:
         # self._client.can_paginate('get_metric_data') = False
-        raw_result = []
+        content = []
         for chunk in _chunks(metrics):
             if not chunk:
                 continue
@@ -754,8 +725,8 @@ class EBS(AWSSection):
             except KeyError, e:
                 logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
                 continue
-            raw_result.extend(metrics)
-        return raw_result
+            content.extend(metrics)
+        return content
 
     def _get_metrics(self):
         instance_ids = self._received_results.get('ec2_summary', {})\
@@ -814,9 +785,6 @@ class EBS(AWSSection):
                 idx += 1
         return metrics
 
-    def _extract_content_from(self, raw_result):
-        return raw_result
-
     def _format_content(self, content):
         content_by_piggyback_hosts = {}
         for row in content:
@@ -847,7 +815,7 @@ class Glacier(AWSSection):
     def interval(self):
         return 300
 
-    def _get_raw_result(self):
+    def _extract_content_from_raw_result(self):
         response = self._client.list_vaults()
         try:
             vaults = {r['VaultName']: r for r in response['VaultList']}
@@ -865,9 +833,6 @@ class Glacier(AWSSection):
                 jobs = []
             vault['Jobs'] = jobs
         return vaults
-
-    def _extract_content_from(self, raw_result):
-        return raw_result
 
     def _format_content(self, content):
         return [AWSSectionResult("", content)]
@@ -895,7 +860,7 @@ class CloudTrail(AWSSection):
     def interval(self):
         return 300
 
-    def _get_raw_result(self):
+    def _extract_content_from_raw_result(self):
         response = self._client.describe_trails()
         try:
             trails = {trail['Name']: trail for trail in response['trailList']}
@@ -907,9 +872,6 @@ class CloudTrail(AWSSection):
             response = self._client.get_trail_status(Name=trail_name)
             trail['Status'] = response
         return trails
-
-    def _extract_content_from(self, raw_result):
-        return raw_result
 
     def _format_content(self, content):
         return [AWSSectionResult("", content)]
@@ -1104,15 +1066,17 @@ class AWSSections(AWSSectionsTmpl):
 
         #---register sections for execution---------------------------------
         # Dependencies: First append sections which distribute their results:
-        # -- ec2_summary ('ec2')
+        # -- security_groups
         #    |
-        #    |-- ec2 ('ec2')
-        #    |
-        #    |-- ebs_summary ('ec2', 'ebs')
-        #    |       |
-        #    |       |-- ebs ('ec2', 'ebs')
-        #    |
-        #    |-- ebs ('ec2')
+        #    |--ec2_summary ('ec2')
+        #       |
+        #       |-- ec2 ('ec2')
+        #       |
+        #       |-- ebs_summary ('ec2', 'ebs')
+        #       |       |
+        #       |       |-- ebs ('ec2', 'ebs')
+        #       |
+        #       |-- ebs ('ec2')
         #
         # -- elb_summary
         #    |

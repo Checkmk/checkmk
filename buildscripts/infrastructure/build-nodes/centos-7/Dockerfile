@@ -1,4 +1,4 @@
-FROM centos:6
+FROM centos:7
 
 SHELL ["/bin/bash", "-c"]
 
@@ -6,20 +6,19 @@ RUN yum -y makecache \
     && yum -y install \
     bind-utils \
     boost-devel \
-    centos-release-scl \
-    compat-readline5 \
     curl-devel \
     expat-devel \
     flex \
+    flex-devel \
     freeradius-devel \
     gcc \
     gcc-c++ \
     gd-devel \
     gettext \
-    git \
     groff \
     httpd-devel \
     libXpm-devel \
+    libdbi-devel \
     libevent-devel \
     libffi-devel \
     libgsf-devel \
@@ -30,15 +29,16 @@ RUN yum -y makecache \
     libtool-ltdl-devel \
     libuuid-devel \
     libxml2-devel \
-    mysql-devel \
+    mariadb-devel \
     ncurses-devel \
-    openssh-clients \
+    openssh-clients \ 
     openssl-devel \
     pango-devel \
     patch \
     pcre-devel \
-    pcre-devel \
     perl-ExtUtils-Embed \
+    perl-IO-Zlib \
+    perl-Locale-Maketext-Simple \
     perl-Time-HiRes \
     perl-devel \
     php \
@@ -52,11 +52,12 @@ RUN yum -y makecache \
     sqlite-devel \
     texinfo \
     tk-devel \
-    which \
     wget \
-    && yum -y install devtoolset-7 \
+    which \
     && yum clean all
 
 COPY bw-build-gnu-toolchain.sh /usr/sbin
-RUN source scl_source enable devtoolset-7 \ 
-    && bw-build-gnu-toolchain.sh -b
+RUN bw-build-gnu-toolchain.sh -b
+RUN mv /usr/bin/gcc /usr/bin/gcc-4 \
+    && ln -s /usr/local/bin/gcc-8 /usr/local/bin/gcc \
+    && ln -s /usr/local/bin/gcc-8 /usr/local/bin/cc

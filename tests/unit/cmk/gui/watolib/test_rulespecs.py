@@ -17326,7 +17326,7 @@ expected_rulespecs = {
     'usewalk_hosts': {
         'factory_default': [],
         'group_name': 'agent/snmp',
-        'help': u'This ruleset helps in test and development. You can create stored SNMP walks on the command line with cmk --snmpwalk HOSTNAME. A host that is configured with this ruleset will then use the information from that file instead of using real SNMP. ',
+        'help': u'This ruleset helps in test and development. You can create stored SNMP walks on the command line with cmk --snmpwalk HOSTNAME. A host that is configured with this ruleset will then use the information from that file instead of using real SNMP.',
         'is_deprecated': False,
         'is_optional': False,
         'item_enum': None,

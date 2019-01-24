@@ -3497,6 +3497,13 @@ def backup_site_files_to_tarfile(site, tar, options):
     exclude.append("*.mk.new*")
     exclude.append("var/log/.liveproxyd.state.new*")
 
+    # exclude section cache because files may vanish during backup. It would
+    # be better to have them in the backup and simply don't make the backup
+    # fail in case a file vanishes during the backup, but the tarfile module
+    # does not allow this.
+    exclude.append("var/check_mk/persisted/*")
+    exclude.append("var/check_mk/persisted_sections/*")
+
     def filter_files(filename):
         for glob_pattern in exclude:
             # patterns are relative to site directory, filename is full path.

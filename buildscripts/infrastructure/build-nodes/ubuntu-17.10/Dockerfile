@@ -1,4 +1,4 @@
-FROM ubuntu:18.04
+FROM ubuntu:17.10
 
 SHELL ["/bin/bash", "-c"]
 ENV DEBIAN_FRONTEND=noninteractive
@@ -50,17 +50,6 @@ RUN apt-get update \
     tk-dev \
     uuid-dev \
     && rm -rf /var/lib/apt/lists/*
-
-# For the common part, split later
-#RUN pip install pathlib2 \
-#    typing
-
-#RUN apt-get update \
-#    && apt-get install -y \
-#    rpm \
-#    alien \
-#    mono-xbuild \
-#    && rm -rf /var/lib/apt/lists/*
 
 COPY bw-build-gnu-toolchain.sh /usr/sbin
 RUN bw-build-gnu-toolchain.sh -b

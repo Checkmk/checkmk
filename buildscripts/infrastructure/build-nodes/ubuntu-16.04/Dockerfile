@@ -1,4 +1,4 @@
-FROM ubuntu:18.04
+FROM ubuntu:16.04
 
 SHELL ["/bin/bash", "-c"]
 ENV DEBIAN_FRONTEND=noninteractive
@@ -23,9 +23,8 @@ RUN apt-get update \
     libfreeradius-dev \
     libgd-dev \
     libglib2.0-dev \
-    libgnutls28-dev \
+    libgnutls-dev \
     libgsf-1-dev \
-    libkrb5-dev \
     libldap2-dev \
     libltdl-dev \
     libmcrypt-dev \
@@ -50,17 +49,6 @@ RUN apt-get update \
     tk-dev \
     uuid-dev \
     && rm -rf /var/lib/apt/lists/*
-
-# For the common part, split later
-#RUN pip install pathlib2 \
-#    typing
-
-#RUN apt-get update \
-#    && apt-get install -y \
-#    rpm \
-#    alien \
-#    mono-xbuild \
-#    && rm -rf /var/lib/apt/lists/*
 
 COPY bw-build-gnu-toolchain.sh /usr/sbin
 RUN bw-build-gnu-toolchain.sh -b

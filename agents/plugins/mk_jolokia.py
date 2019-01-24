@@ -270,7 +270,7 @@ def _get_post_data(path, service_url, service_user, service_password, function):
     return json.dumps(data)
 
 
-def fetch_var(inst, path, service_url, service_user, service_password, function="read"):
+def fetch_var(inst, function, path, service_url, service_user, service_password):
 
     if service_url is not None:
         post_data = _get_post_data(path, service_url, service_user, service_password, function)
@@ -353,7 +353,7 @@ def extract_item(key, itemspec):
 
 
 def fetch_metric(inst, path, title, itemspec, inst_add=None):
-    values = fetch_var(inst, path, inst.config["service_url"], inst.config["service_user"],
+    values = fetch_var(inst, "read", path, inst.config["service_url"], inst.config["service_user"],
                        inst.config["service_password"])
     item_list = make_item_list((), values, itemspec)
 
@@ -387,7 +387,7 @@ def _get_queries(do_search, inst, itemspec, title, path, mbean):
     if not do_search:
         return [(mbean + "/" + path, title, itemspec)]
 
-    value = fetch_var(inst, mbean, None, None, None, function="search")
+    value = fetch_var(inst, "search", mbean, None, None, None)
     try:
         paths = make_item_list((), value, "")[0][1]
     except IndexError:
@@ -511,7 +511,7 @@ def prepare_http_opener(inst):
 
 def generate_jolokia_info(inst):
     # Determine type of server
-    value = fetch_var(inst, "", None, None, None)
+    value = fetch_var(inst, "read", "", None, None, None)
     server_info = make_item_list((), value, "")
 
     if not server_info:

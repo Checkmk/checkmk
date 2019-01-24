@@ -9421,7 +9421,7 @@ expected_rulespecs = {
     'extra_host_conf:_ec_contact': {
         'factory_default': [],
         'group_name': 'eventconsole',
-        'help': u'This rule set is useful if you send your monitoring notifications into the Event Console. The contact information that is set by this rule will be put into the resulting event in the Event Console.',
+        'help': u'This rule set is useful if you send your monitoring notifications into the Event Console. The contact information that is set by this rule will be put into the resulting event in the Event Console. Note: if no contact information is configured for a service then that of the host will be used instead (if configured).',
         'is_deprecated': False,
         'is_optional': False,
         'item_enum': None,

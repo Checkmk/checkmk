@@ -121,7 +121,9 @@ from cmk.gui.plugins.wato.utils import (
     make_action_link,
     rulespec_group_registry,
     RulespecGroup,
-    register_rule,
+    rulespec_registry,
+    HostRulespec,
+    ServiceRulespec,
     main_module_registry,
     MainModule,
     wato_confirm,
@@ -3738,129 +3740,152 @@ def convert_mkevents_hostspec(value):
     return value
 
 
-register_rule(
-    RulespecGroupEventConsole,
-    "extra_host_conf:_ec_event_limit",
-    Transform(
-        vs_ec_host_limit(title=_("Host event limit")),
-        forth=lambda x: dict([("limit", int(x.split(":")[0])), ("action", x.split(":")[1])]),
-        back=lambda x: "%d:%s" % (x["limit"], x["action"]),
-    ),
-    match="first",
-)
+@rulespec_registry.register
+class RulespecExtraHostConfEcEventLimit(HostRulespec):
+    @property
+    def group(self):
+        return RulespecGroupEventConsole
 
-register_rule(
-    RulespecGroupEventConsole,
-    "active_checks:mkevents",
-    Dictionary(
-        title=_("Check event state in Event Console"),
-        help=_("This check is part of the Check_MK Event Console and will check "
-               "if there are any open events for a certain host (and maybe a certain "
-               "application on that host. The state of the check will reflect the status "
-               "of the worst open event for that host."),
-        elements=[
-            ("hostspec",
-             Transform(
-                 Alternative(
-                     title=_("Host specification"),
-                     elements=[
-                         ListChoice(
-                             title=_("Match the hosts with..."),
-                             choices=[
-                                 ('$HOSTNAME$', _("Hostname")),
-                                 ('$HOSTADDRESS$', _("IP address")),
-                                 ('$HOSTALIAS$', _("Alias")),
-                             ]),
-                         TextAscii(
-                             allow_empty=False, attrencode=True, title="Specify host explicitely"),
-                     ],
-                     default_value=['$HOSTNAME$', '$HOSTADDRESS$']),
-                 help=_(
-                     "When quering the event status you can either use the monitoring "
-                     "host name, the IP address, the host alias or a custom host name for referring to a "
-                     "host. This is needed in cases where the event source (syslog, snmptrapd) "
-                     "do not send a host name that matches the monitoring host name."),
-                 forth=convert_mkevents_hostspec)),
-            ("item",
-             TextAscii(
-                 title=_("Item (used in service description)"),
-                 help=_("If you enter an item name here, this will be used as "
-                        "part of the service description after the prefix \"Events \". "
-                        "The prefix plus the configured item must result in an unique "
-                        "service description per host. If you leave this empty either the "
-                        "string provided in \"Application\" is used as item or the service "
-                        "gets no item when the \"Application\" field is also not configured."),
-                 allow_empty=False,
-             )),
-            ("application",
-             RegExp(
-                 title=_("Application (regular expression)"),
-                 help=_("If you enter an application name here then only "
-                        "events for that application name are counted. You enter "
-                        "a regular expression here that must match a <b>part</b> "
-                        "of the application name. Use anchors <tt>^</tt> and <tt>$</tt> "
-                        "if you need a complete match."),
-                 allow_empty=False,
-                 mode=RegExp.infix,
-                 case_sensitive=False,
-             )),
-            ("ignore_acknowledged",
-             FixedValue(
-                 True,
-                 title=_("Ignore acknowledged events"),
-                 help=_("If you check this box then only open events are honored when "
-                        "determining the event state. Acknowledged events are displayed "
-                        "(i.e. their count) but not taken into account."),
-                 totext=_("acknowledged events will not be honored"),
-             )),
-            ("remote",
-             Alternative(
-                 title=_("Access to the Event Console"),
-                 style="dropdown",
-                 elements=[
-                     FixedValue(
-                         None,
-                         title=_("Connect to the local Event Console"),
-                         totext=_("local connect"),
-                     ),
-                     Tuple(
+    @property
+    def name(self):
+        return "extra_host_conf:_ec_event_limit"
+
+    @property
+    def valuespec(self):
+        return Transform(
+            vs_ec_host_limit(title=_("Host event limit")),
+            forth=lambda x: dict([("limit", int(x.split(":")[0])), ("action", x.split(":")[1])]),
+            back=lambda x: "%d:%s" % (x["limit"], x["action"]),
+        )
+
+
+@rulespec_registry.register
+class RulespecActiveChecksMkevents(HostRulespec):
+    @property
+    def group(self):
+        return RulespecGroupEventConsole
+
+    @property
+    def name(self):
+        return "active_checks:mkevents"
+
+    @property
+    def match_type(self):
+        return "all"
+
+    @property
+    def valuespec(self):
+        return Dictionary(
+            title=_("Check event state in Event Console"),
+            help=_("This check is part of the Check_MK Event Console and will check "
+                   "if there are any open events for a certain host (and maybe a certain "
+                   "application on that host. The state of the check will reflect the status "
+                   "of the worst open event for that host."),
+            elements=[
+                ("hostspec",
+                 Transform(
+                     Alternative(
+                         title=_("Host specification"),
                          elements=[
+                             ListChoice(
+                                 title=_("Match the hosts with..."),
+                                 choices=[
+                                     ('$HOSTNAME$', _("Hostname")),
+                                     ('$HOSTADDRESS$', _("IP address")),
+                                     ('$HOSTALIAS$', _("Alias")),
+                                 ]),
                              TextAscii(
-                                 title=_("Hostname/IP address of Event Console:"),
                                  allow_empty=False,
                                  attrencode=True,
-                             ),
-                             Integer(
-                                 title=_("TCP Port number:"),
-                                 minvalue=1,
-                                 maxvalue=65535,
-                                 default_value=6558,
-                             ),
+                                 title="Specify host explicitely"),
                          ],
-                         title=_("Access via TCP"),
-                         help=
-                         _("In a distributed setup where the Event Console is not running in the same "
-                           "site as the host is monitored you need to access the remote Event Console "
-                           "via TCP. Please make sure that this is activated in the global settings of "
-                           "the event console. The default port number is 6558."),
-                     ),
-                     TextAscii(
-                         title=_("Access via UNIX socket"),
-                         allow_empty=False,
-                         size=64,
-                         attrencode=True,
-                     ),
-                 ],
-                 default_value=None,
-             )),
-        ],
-        optional_keys=["application", "remote", "ignore_acknowledged", "item"],
-        ignored_keys=["less_verbose"],  # is deprecated
-    ),
-    match='all',
-)
+                         default_value=['$HOSTNAME$', '$HOSTADDRESS$']),
+                     help=_(
+                         "When quering the event status you can either use the monitoring "
+                         "host name, the IP address, the host alias or a custom host name for referring to a "
+                         "host. This is needed in cases where the event source (syslog, snmptrapd) "
+                         "do not send a host name that matches the monitoring host name."),
+                     forth=convert_mkevents_hostspec)),
+                ("item",
+                 TextAscii(
+                     title=_("Item (used in service description)"),
+                     help=_("If you enter an item name here, this will be used as "
+                            "part of the service description after the prefix \"Events \". "
+                            "The prefix plus the configured item must result in an unique "
+                            "service description per host. If you leave this empty either the "
+                            "string provided in \"Application\" is used as item or the service "
+                            "gets no item when the \"Application\" field is also not configured."),
+                     allow_empty=False,
+                 )),
+                ("application",
+                 RegExp(
+                     title=_("Application (regular expression)"),
+                     help=_("If you enter an application name here then only "
+                            "events for that application name are counted. You enter "
+                            "a regular expression here that must match a <b>part</b> "
+                            "of the application name. Use anchors <tt>^</tt> and <tt>$</tt> "
+                            "if you need a complete match."),
+                     allow_empty=False,
+                     mode=RegExp.infix,
+                     case_sensitive=False,
+                 )),
+                ("ignore_acknowledged",
+                 FixedValue(
+                     True,
+                     title=_("Ignore acknowledged events"),
+                     help=_("If you check this box then only open events are honored when "
+                            "determining the event state. Acknowledged events are displayed "
+                            "(i.e. their count) but not taken into account."),
+                     totext=_("acknowledged events will not be honored"),
+                 )),
+                ("remote",
+                 Alternative(
+                     title=_("Access to the Event Console"),
+                     style="dropdown",
+                     elements=[
+                         FixedValue(
+                             None,
+                             title=_("Connect to the local Event Console"),
+                             totext=_("local connect"),
+                         ),
+                         Tuple(
+                             elements=[
+                                 TextAscii(
+                                     title=_("Hostname/IP address of Event Console:"),
+                                     allow_empty=False,
+                                     attrencode=True,
+                                 ),
+                                 Integer(
+                                     title=_("TCP Port number:"),
+                                     minvalue=1,
+                                     maxvalue=65535,
+                                     default_value=6558,
+                                 ),
+                             ],
+                             title=_("Access via TCP"),
+                             help=
+                             _("In a distributed setup where the Event Console is not running in the same "
+                               "site as the host is monitored you need to access the remote Event Console "
+                               "via TCP. Please make sure that this is activated in the global settings of "
+                               "the event console. The default port number is 6558."),
+                         ),
+                         TextAscii(
+                             title=_("Access via UNIX socket"),
+                             allow_empty=False,
+                             size=64,
+                             attrencode=True,
+                         ),
+                     ],
+                     default_value=None,
+                 )),
+            ],
+            optional_keys=["application", "remote", "ignore_acknowledged", "item"],
+            ignored_keys=["less_verbose"],  # is deprecated
+        )
 
-sl_help = _("A service level is a number that describes the business impact of a host or "
+
+def _sl_help():
+    return _("A service level is a number that describes the business impact of a host or "
             "service. This level can be used in rules for notifications, as a filter in "
             "views or as a criteria in rules for the Event Console. A higher service level "
             "is assumed to be more business critical. This ruleset allows to assign service "
@@ -3872,67 +3897,97 @@ sl_help = _("A service level is a number that describes the business impact of a
             "levels is configured via a <a href='%s'>global option.</a>") % \
             "wato.py?varname=mkeventd_service_levels&mode=edit_configvar"
 
-register_rule(
-    RulespecGroupGrouping,
-    "extra_host_conf:_ec_sl",
-    DropdownChoice(
-        title=_("Service Level of hosts"),
-        help=sl_help,
-        choices=cmk.gui.mkeventd.service_levels,
-    ),
-    match='first',
-)
 
-register_rule(
-    RulespecGroupGrouping,
-    "extra_service_conf:_ec_sl",
-    DropdownChoice(
-        title=_("Service Level of services"),
-        help=sl_help + _(" Note: if no service level is configured for a service "
-                         "then that of the host will be used instead (if configured)."),
-        choices=cmk.gui.mkeventd.service_levels,
-    ),
-    itemtype='service',
-    match='first',
-)
+@rulespec_registry.register
+class RulespecExtraHostConfEcSl(HostRulespec):
+    @property
+    def group(self):
+        return RulespecGroupGrouping
 
-contact_help = _("This rule set is useful if you send your monitoring notifications "
-                 "into the Event Console. The contact information that is set by this rule "
-                 "will be put into the resulting event in the Event Console.")
-contact_regex = r"^[^;'$|]*$"
-contact_regex_error = _(
-    "The contact information must not contain one of the characters <tt>;</tt> <tt>'</tt> <tt>|</tt> or <tt>$</tt>"
-)
+    @property
+    def name(self):
+        return "extra_host_conf:_ec_sl"
 
-register_rule(
-    RulespecGroupEventConsole,
-    "extra_host_conf:_ec_contact",
-    TextUnicode(
-        title=_("Host contact information"),
-        help=contact_help,
+    @property
+    def valuespec(self):
+        return DropdownChoice(
+            title=_("Service Level of hosts"),
+            help=_sl_help(),
+            choices=cmk.gui.mkeventd.service_levels,
+        )
+
+
+@rulespec_registry.register
+class RulespecExtraServiceConfEcSl(ServiceRulespec):
+    @property
+    def group(self):
+        return RulespecGroupGrouping
+
+    @property
+    def name(self):
+        return "extra_service_conf:_ec_sl"
+
+    @property
+    def item_type(self):
+        return "service"
+
+    @property
+    def valuespec(self):
+        return DropdownChoice(
+            title=_("Service Level of services"),
+            help=_sl_help() + _(" Note: if no service level is configured for a service "
+                                "then that of the host will be used instead (if configured)."),
+            choices=cmk.gui.mkeventd.service_levels,
+        )
+
+
+def _vs_contact(title):
+    return TextUnicode(
+        title=title,
+        help=_("This rule set is useful if you send your monitoring notifications "
+               "into the Event Console. The contact information that is set by this rule "
+               "will be put into the resulting event in the Event Console.") + _(
+                   " Note: if no contact information is configured for a service "
+                   "then that of the host will be used instead (if configured)."),
         size=80,
-        regex=contact_regex,
-        regex_error=contact_regex_error,
-        attrencode=True,
-    ),
-    match='first',
-)
+        regex=r"^[^;'$|]*$",
+        regex_error=_("The contact information must not contain one of the characters "
+                      "<tt>;</tt> <tt>'</tt> <tt>|</tt> or <tt>$</tt>"),
+    )
 
-register_rule(
-    RulespecGroupEventConsole,
-    "extra_service_conf:_ec_contact",
-    TextUnicode(
-        title=_("Service contact information"),
-        help=contact_help + _(" Note: if no contact information is configured for a service "
-                              "then that of the host will be used instead (if configured)."),
-        size=80,
-        regex=contact_regex,
-        regex_error=contact_regex_error,
-        attrencode=True,
-    ),
-    itemtype='service',
-    match='first',
-)
+
+@rulespec_registry.register
+class RulespecExtraHostConfEcContact(HostRulespec):
+    @property
+    def group(self):
+        return RulespecGroupEventConsole
+
+    @property
+    def name(self):
+        return "extra_host_conf:_ec_contact"
+
+    @property
+    def valuespec(self):
+        return _vs_contact(_("Host contact information"))
+
+
+@rulespec_registry.register
+class RulespecExtraServiceConfEcContact(ServiceRulespec):
+    @property
+    def group(self):
+        return RulespecGroupEventConsole
+
+    @property
+    def name(self):
+        return "extra_service_conf:_ec_contact"
+
+    @property
+    def item_type(self):
+        return "service"
+
+    @property
+    def valuespec(self):
+        return _vs_contact(title=_("Service contact information"))
 
 
 #.

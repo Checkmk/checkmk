@@ -4214,7 +4214,7 @@ class PainterDowntimeRecurring(Painter):
         r = row["downtime_recurring"]
         if not r:
             return "", _("no")
-        return "", recurring_downtimes_types.get(r, _("(unknown: %d)") % r)
+        return "", recurring_downtimes_types().get(r, _("(unknown: %d)") % r)
 
 
 @painter_registry.register

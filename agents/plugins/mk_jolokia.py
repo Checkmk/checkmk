@@ -223,6 +223,15 @@ def sanitize_config(config):
     return config
 
 
+def _get_base_url(inst):
+    return "%s://%s:%d/%s" % (
+        inst["protocol"].strip('/'),
+        inst["server"].strip('/'),
+        inst["port"],
+        inst["suburi"],
+    )
+
+
 def fetch_url(request_url, post_data=None):
     if VERBOSE:
         sys.stderr.write("DEBUG: Fetching: %s\n" % request_url)
@@ -251,16 +260,8 @@ def _get_post_data(path, service_url, service_user, service_password, function):
     return json.dumps(data)
 
 
-def fetch_var(protocol,
-              server,
-              port,
-              path,
-              suburi,
-              service_url,
-              service_user,
-              service_password,
-              function="read"):
-    base_url = "%s://%s:%d/%s" % (protocol, server, port, suburi)
+def fetch_var(inst, path, service_url, service_user, service_password, function="read"):
+    base_url = _get_base_url(inst)
 
     if service_url is not None:
         post_data = _get_post_data(path, service_url, service_user, service_password, function)
@@ -343,8 +344,8 @@ def extract_item(key, itemspec):
 
 
 def fetch_metric(inst, path, title, itemspec, inst_add=None):
-    values = fetch_var(inst["protocol"], inst["server"], inst["port"], path, inst["suburi"],
-                       inst["service_url"], inst["service_user"], inst["service_password"])
+    values = fetch_var(inst, path, inst["service_url"], inst["service_user"],
+                       inst["service_password"])
     item_list = make_item_list((), values, itemspec)
 
     for subinstance, value in item_list:
@@ -377,16 +378,7 @@ def _get_queries(do_search, inst, itemspec, title, path, mbean):
     if not do_search:
         return [(mbean + "/" + path, title, itemspec)]
 
-    value = fetch_var(
-        inst["protocol"],
-        inst["server"],
-        inst["port"],
-        mbean,
-        inst["suburi"],
-        None,
-        None,
-        None,
-        function="search")
+    value = fetch_var(inst, mbean, None, None, None, function="search")
     try:
         paths = make_item_list((), value, "")[0][1]
     except IndexError:
@@ -510,8 +502,7 @@ def prepare_http_opener(inst):
 
 def generate_jolokia_info(inst):
     # Determine type of server
-    value = fetch_var(inst["protocol"], inst["server"], inst["port"], "", inst["suburi"], None,
-                      None, None)
+    value = fetch_var(inst, "", None, None, None)
     server_info = make_item_list((), value, "")
 
     if not server_info:

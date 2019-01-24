@@ -1244,18 +1244,22 @@ register_rule(
             ("--subscription-id", TextAscii(
                 title=_("Subscription ID"),
                 allow_empty=False,
+                size=45,
             )),
             ("--tenant-id", TextAscii(
                 title=_("Tenant ID / Directory ID"),
                 allow_empty=False,
+                size=45,
             )),
             ("--client-id", TextAscii(
                 title=_("Client ID / Application ID"),
                 allow_empty=False,
+                size=45,
             )),
             ("--secret", Password(
                 title=_("Secret"),
                 allow_empty=False,
+                size=45,
             )),
             (
                 "config",

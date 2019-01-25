@@ -34,14 +34,17 @@ import copy
 from httplib import HTTPConnection, HTTPSConnection
 
 try:
-    from simplejson import json
-except ImportError:
     try:
-        import json
+        from simplejson import json
     except ImportError:
-        sys.stdout.write("<<<jolokia_info>>>\n")
-        sys.stdout.write("Error: Missing JSON library for Agent Plugin mk_jolokia\n")
-        exit()
+        import json
+except ImportError as import_error:
+    sys.stdout.write(
+        "<<<jolokia_info>>>\n"
+        "Error: mk_jolokia requires either the json or simplejson library\n"
+        "Please either use a Python version that contains the json library or install the"
+        " simplejson library on the monitored system.")
+    sys.exit(1)
 
 VERBOSE = '--verbose' in sys.argv
 DEBUG = '--debug' in sys.argv

@@ -1564,25 +1564,24 @@ class RulespecSpecialAgentsAzure(HostRulespec):
                    "service of the host owning the datasource program."),
             # element names starting with "--" will be passed do cmd line w/o parsing!
             elements=[
-                ("--subscription-id",
-                 TextAscii(
-                     title=_("Subscription ID"),
-                     allow_empty=False,
-                     size=45,
-                 )),
-                ("--tenant-id",
+                ("subscription", TextAscii(
+                    title=_("Subscription ID"),
+                    allow_empty=False,
+                    size=45,
+                )),
+                ("tenant",
                  TextAscii(
                      title=_("Tenant ID / Directory ID"),
                      allow_empty=False,
                      size=45,
                  )),
-                ("--client-id",
+                ("client",
                  TextAscii(
                      title=_("Client ID / Application ID"),
                      allow_empty=False,
                      size=45,
                  )),
-                ("--secret", Password(
+                ("secret", Password(
                     title=_("Secret"),
                     allow_empty=False,
                     size=45,
@@ -1616,7 +1615,7 @@ class RulespecSpecialAgentsAzure(HostRulespec):
                              )),
                         ],
                     )),
-                ("--piggyback-vms",
+                ("piggyback_vms",
                  DropdownChoice(
                      title=_("Create piggyback VM data"),
                      help=_("You can choose to <i>additionally</i> send data concerning VMs to"
@@ -1629,14 +1628,14 @@ class RulespecSpecialAgentsAzure(HostRulespec):
                          ("all", _("Send data to both the agent host and the VM itself")),
                      ],
                  )),
-                ("--sequential",
+                ("sequential",
                  Checkbox(
                      title=_("Run in single thread"),
                      help=_("Check this to avoid multiprocessing. "
                             "Recommended for debugging purposes only."),
                  )),
             ],
-            optional_keys=["--piggyback-vms"],
+            optional_keys=["piggyback_vms"],
         )
 
     def _azure_group_config(self):

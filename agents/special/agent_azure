@@ -166,16 +166,16 @@ def parse_arguments(argv):
         type=int,
         help='''Timeout for individual processes in seconds (default 10)''')
     parser.add_argument(
-        "--piggyback-vms",
+        "--piggyback_vms",
         default="",
         choices=["agenthost", "self", "all"],
         help='''Additionally create VM piggyback data for the host running the agent,
         the VM iteself, or both''')
 
     # REQUIRED
-    parser.add_argument("--subscription-id", required=True, help="Azure subscription ID")
-    parser.add_argument("--client-id", required=True, help="Azure client ID")
-    parser.add_argument("--tenant-id", required=True, help="Azure tenant ID")
+    parser.add_argument("--subscription", required=True, help="Azure subscription ID")
+    parser.add_argument("--client", required=True, help="Azure client ID")
+    parser.add_argument("--tenant", required=True, help="Azure tenant ID")
     parser.add_argument("--secret", required=True, help="Azure authentication secret")
     # CONSTRAIN DATA TO REQUEST
     parser.add_argument(
@@ -468,11 +468,11 @@ class AzureClient(object):  # pylint: disable=too-many-instance-attributes
         self.remaining_reads = "unknown (no metrics fetched)"
 
         self._creds = ServicePrincipalCredentials(
-            client_id=args.client_id, secret=args.secret, tenant=args.tenant_id)
+            client_id=args.client, secret=args.secret, tenant=args.tenant)
         # azure-api-call
-        self._monitor_client = MonitorManagementClient(self._creds, self.args.subscription_id)
+        self._monitor_client = MonitorManagementClient(self._creds, self.args.subscription)
         # azure-api-call
-        self._resource_client = ResourceManagementClient(self._creds, self.args.subscription_id)
+        self._resource_client = ResourceManagementClient(self._creds, self.args.subscription)
 
         self.specific_clients = {}
 
@@ -501,7 +501,7 @@ class AzureClient(object):  # pylint: disable=too-many-instance-attributes
         for rtp in r_types:
             client_class = AzureClient.SPECIFIC_CLIENTS.get(rtp)
             if client_class is not None:
-                self.specific_clients[rtp] = client_class(self._creds, self.args.subscription_id)
+                self.specific_clients[rtp] = client_class(self._creds, self.args.subscription)
 
     def process_specific(self, resource):
         client = self.specific_clients.get(resource.info["type"])

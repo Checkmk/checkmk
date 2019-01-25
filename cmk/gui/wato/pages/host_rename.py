@@ -73,8 +73,11 @@ from cmk.gui.plugins.wato import (
 
 @gui_background_job.job_registry.register
 class RenameHostsBackgroundJob(WatoBackgroundJob):
-    gui_title = _("Host renaming")
     job_prefix = "rename-hosts"
+
+    @property
+    def gui_title(self):
+        return _("Host renaming")
 
     def __init__(self, title=None):
         if not title:

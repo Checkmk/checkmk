@@ -37,6 +37,7 @@ import traceback
 
 import six
 
+from cmk.utils.defines import host_state_name
 from cmk.utils.regex import regex
 import cmk
 
@@ -120,19 +121,18 @@ CRIT = 2
 UNKNOWN = 3
 UNAVAIL = 4
 
-service_state_names = {
-    OK: _("OK"),
-    WARN: _("WARN"),
-    CRIT: _("CRIT"),
-    UNKNOWN: _("UNKNOWN"),
-    PENDING: _("PENDING"),
-    UNAVAIL: _("UNAVAILABLE")
-}
-host_state_names = {
-    0: _("UP"),
-    1: _("DOWN"),
-    2: _("UNREACHABLE"),
-}
+
+# Not equal to cmk.utils.defines. Should be cleaned up
+def _service_state_names():
+    return {
+        OK: _("OK"),
+        WARN: _("WARN"),
+        CRIT: _("CRIT"),
+        UNKNOWN: _("UNKNOWN"),
+        PENDING: _("PENDING"),
+        UNAVAIL: _("UNAVAILABLE")
+    }
+
 
 AGGR_HOST = 0
 AGGR_MULTI = 1
@@ -2203,7 +2203,7 @@ def execute_leaf_node(node, status_info, aggregation_options):
                 if state_assumption is not None:
                     assumed_state = {
                         "state": state_assumption,
-                        "output": _("Assumed to be %s") % service_state_names[state_assumption],
+                        "output": _("Assumed to be %s") % _service_state_names()[state_assumption],
                         "in_downtime": downtime_depth > 0 and 2 or host_in_downtime != 0 and 1 or 0,
                         "acknowledged": bool(acknowledged),
                         "in_service_period": in_service_period,
@@ -2237,7 +2237,7 @@ def execute_leaf_node(node, status_info, aggregation_options):
         if state_assumption is not None:
             assumed_state = {
                 "state": state_assumption,
-                "output": _("Assumed to be %s") % host_state_names[state_assumption],
+                "output": _("Assumed to be %s") % host_state_name(state_assumption),
                 "in_downtime": host_in_downtime != 0,
                 "acknowledged": host_acknowledged,
                 "in_service_period": host_in_service_period,
@@ -3512,10 +3512,10 @@ def is_part_of_aggregation(what, site, host, service):
 def get_state_name(node):
     if node[1]['type'] == NT_LEAF:
         if 'service' in node[1]:
-            return service_state_names[node[0]['state']]
-        return host_state_names[node[0]['state']]
+            return _service_state_names()[node[0]['state']]
+        return host_state_name[node[0]['state']]
 
-    return service_state_names[node[0]['state']]
+    return _service_state_names()[node[0]['state']]
 
 
 def migrate_bi_configuration():

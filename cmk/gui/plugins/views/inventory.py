@@ -136,26 +136,27 @@ def _paint_host_inventory_tree_value(struct_tree, parsed_path, tree_renderer, in
     return "", code
 
 
-inv_filter_info = {
-    "bytes": {
-        "unit": _("MB"),
-        "scale": 1024 * 1024
-    },
-    "bytes_rounded": {
-        "unit": _("MB"),
-        "scale": 1024 * 1024
-    },
-    "hz": {
-        "unit": _("MHz"),
-        "scale": 1000000
-    },
-    "volt": {
-        "unit": _("Volt")
-    },
-    "timestamp": {
-        "unit": _("secs")
-    },
-}
+def _inv_filter_info():
+    return {
+        "bytes": {
+            "unit": _("MB"),
+            "scale": 1024 * 1024
+        },
+        "bytes_rounded": {
+            "unit": _("MB"),
+            "scale": 1024 * 1024
+        },
+        "hz": {
+            "unit": _("MHz"),
+            "scale": 1000000
+        },
+        "volt": {
+            "unit": _("Volt")
+        },
+        "timestamp": {
+            "unit": _("secs")
+        },
+    }
 
 
 # Declares painters, sorters and filters to be used in views based on all host related datasources.
@@ -189,7 +190,7 @@ def declare_inv_column(invpath, datatype, title, short=None):
                 "cmp": lambda a, b: cmp_inventory_node(a, b, invpath),
             })
 
-        filter_info = inv_filter_info.get(datatype, {})
+        filter_info = _inv_filter_info().get(datatype, {})
 
         # Declare filter. Sync this with declare_invtable_columns()
         if datatype in ["str", "bool"]:

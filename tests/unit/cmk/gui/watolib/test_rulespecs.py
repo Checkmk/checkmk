@@ -3668,7 +3668,7 @@ expected_rulespecs = {
     'checkgroup_parameters:azure_vms': {
         'factory_default': [],
         'group_name': 'checkparams/applications',
-        'help': u'To obtain the data required for this check, please configure the datasource program "Agent Azure".',
+        'help': u'To obtain the data required for this check, please configure the datasource program "Microsoft Azure".',
         'is_deprecated': False,
         'is_optional': False,
         'item_enum': None,
@@ -3683,7 +3683,7 @@ expected_rulespecs = {
     'checkgroup_parameters:azure_vms_summary': {
         'factory_default': [],
         'group_name': 'checkparams/applications',
-        'help': u'To obtain the data required for this check, please configure the datasource program "Agent Azure".',
+        'help': u'To obtain the data required for this check, please configure the datasource program "Microsoft Azure".',
         'is_deprecated': False,
         'is_optional': False,
         'item_enum': None,
@@ -10984,7 +10984,7 @@ expected_rulespecs = {
     'special_agents:azure': {
         'factory_default': [],
         'group_name': 'datasource_programs',
-        'help': u'To monitor Azure resources add this datasource to <b>one</b> host. The data will be transported using the piggyback mechanism, so make sure to create one host for every monitored resource group. You can learn about the discovered groups in the <i>Agent Azure Info</i> service of the host owning the datasource program.',
+        'help': u'To monitor Azure resources add this datasource to <b>one</b> host. The data will be transported using the piggyback mechanism, so make sure to create one host for every monitored resource group. You can learn about the discovered groups in the <i>Azure Agent Info</i> service of the host owning the datasource program.',
         'is_deprecated': False,
         'is_optional': False,
         'item_enum': None,
@@ -10993,7 +10993,7 @@ expected_rulespecs = {
         'item_spec_class_name': 'NoneType',
         'item_type': None,
         'match_type': 'first',
-        'title': u'Agent Azure Configuration',
+        'title': u'Microsoft Azure',
         'valuespec_class_name': 'Dictionary'
     },
     'special_agents:bi': {

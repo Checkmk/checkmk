@@ -1556,11 +1556,11 @@ class RulespecSpecialAgentsAzure(HostRulespec):
     @property
     def valuespec(self):
         return Dictionary(
-            title=_("Agent Azure Configuration"),
+            title=_("Microsoft Azure"),
             help=_("To monitor Azure resources add this datasource to <b>one</b> host. "
                    "The data will be transported using the piggyback mechanism, so make "
                    "sure to create one host for every monitored resource group. You can "
-                   "learn about the discovered groups in the <i>Agent Azure Info</i> "
+                   "learn about the discovered groups in the <i>Azure Agent Info</i> "
                    "service of the host owning the datasource program."),
             # element names starting with "--" will be passed do cmd line w/o parsing!
             elements=[
@@ -1582,101 +1582,71 @@ class RulespecSpecialAgentsAzure(HostRulespec):
                      size=45,
                  )),
                 ("secret", Password(
-                    title=_("Secret"),
+                    title=_("Client Secret"),
                     allow_empty=False,
                     size=45,
                 )),
                 (
                     "config",
                     Dictionary(
-                        title=_("Monitoring Settings"),
+                        title=_("Retrieve information about..."),
                         # Since we introduced this, Microsoft has already reduced the number
                         # of allowed API requests. At the time of this writing (11/2018)
                         # you can find the number here:
                         # https://docs.microsoft.com/de-de/azure/azure-resource-manager/resource-manager-request-limits
-                        help=_("You can choose to to monitor all resources known to "
-                               "the Azure API. However, be aware that Microsoft limits"
-                               " API calls to %s per hour (%s per minute).") % ("12000", "200"),
+                        help=_("By default, all resources associated to the configured tenant ID"
+                               " will be monitored.") + " " +
+                        _("However, since Microsoft limits API calls to %s per hour"
+                          " (%s per minute), you can restrict the monitoring to individual"
+                          " resource groups and resources.") % ("12000", "200"),
                         elements=[
-                            ('explicit-config',
-                             ListOf(
-                                 self._azure_group_config(),
-                                 title=_("Explicitly specify groups"),
-                                 allow_empty=False,
-                                 magic="@-groups-@",
-                             )),
-                            ('fetchall',
-                             FixedValue(
-                                 "fetchall",
-                                 title=
-                                 _("Monitor all available resource groups (overrides previous settings)"
-                                  ),
-                                 totext="",
-                             )),
+                            ('explicit', self._azure_explicit_config()),
                         ],
                     )),
                 ("piggyback_vms",
                  DropdownChoice(
-                     title=_("Create piggyback VM data"),
-                     help=_("You can choose to <i>additionally</i> send data concerning VMs to"
-                            " the host that is associated with the special agent, to a piggyback"
-                            " host with name of the VM itself, or both. By default data is sent"
-                            " to the corresponding resource group only."),
+                     title=_("Map data relating to VMs"),
+                     help=_("By default, data relating to a VM is sent to the group host"
+                            " corresponding to the resource group of the VM, the same way"
+                            " as for any other resource. If the VM is present in your "
+                            " monitoring as a separate host, you can choose to send the data"
+                            " to the VM itself."),
                      choices=[
-                         ("agenthost", _("Send data to agent host")),
-                         ("self", _("Send data to the VM itself")),
-                         ("all", _("Send data to both the agent host and the VM itself")),
+                         ("grouphost", _("Map data to group host")),
+                         ("self", _("Map data to the VM itself")),
                      ],
                  )),
                 ("sequential",
-                 Checkbox(
-                     title=_("Run in single thread"),
-                     help=_("Check this to avoid multiprocessing. "
-                            "Recommended for debugging purposes only."),
+                 FixedValue(
+                     True,
+                     title=_("Run agent in single thread"),
+                     help=_("Check this to turn off multiprocessing."
+                            " Recommended for debugging purposes only."),
                  )),
             ],
-            optional_keys=["piggyback_vms"],
+            optional_keys=["piggyback_vms", "sequential"],
         )
 
-    def _azure_group_config(self):
-        return Dictionary(
-            elements=[
-                ('group_name', TextAscii(
-                    title=_('Name of the resource group'),
-                    allow_empty=False,
-                )),
-                ('group_config',
-                 Alternative(
-                     title=_("Resources to monitor"),
-                     style="dropdown",
-                     elements=[
-                         ListOf(
-                             self._azure_resource_config(),
-                             title=_("Explicitly specify resources"),
-                             allow_empty=False,
-                             magic="@-resources-@",
-                         ),
-                         FixedValue(
-                             'fetchall',
-                             title=_("Monitor all available resources"),
-                             totext="",
-                         ),
-                     ],
-                 )),
-            ],
-            optional_keys=False,
-        )
-
-    def _azure_resource_config(self):
-        return Dictionary(
-            orientation="horizontal",
-            elements=[
-                ('resource', ListOfStrings(
-                    title=_('Resource names'),
-                    allow_empty=False,
-                )),
-            ],
-            optional_keys=False,
+    def _azure_explicit_config(self):
+        return ListOf(
+            Dictionary(
+                elements=[
+                    ('group_name',
+                     TextAscii(
+                         title=_('Name of the resource group'),
+                         allow_empty=False,
+                     )),
+                    ('resources',
+                     ListOfStrings(
+                         title=_('Explicitly specify resources'),
+                         allow_empty=False,
+                     )),
+                ],
+                optional_keys=["resources"],
+            ),
+            title=_("explicitly specified groups"),
+            allow_empty=False,
+            add_label=_("Add resource group"),
         )
 
 

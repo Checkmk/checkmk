@@ -167,10 +167,9 @@ def parse_arguments(argv):
         help='''Timeout for individual processes in seconds (default 10)''')
     parser.add_argument(
         "--piggyback_vms",
-        default="",
-        choices=["agenthost", "self", "all"],
-        help='''Additionally create VM piggyback data for the host running the agent,
-        the VM iteself, or both''')
+        default="grouphost",
+        choices=["grouphost", "self"],
+        help='''Send VM piggyback data to group host (default) or the VM iteself''')
 
     # REQUIRED
     parser.add_argument("--subscription", required=True, help="Azure subscription ID")
@@ -230,45 +229,28 @@ def _add_hint(msg):
 # For now the passed commandline arguments are used to create it.
 
 
-class ResourceConfig(object):
-    def __init__(self, name):
-        super(ResourceConfig, self).__init__()
-        self.name = name
-        self.fetchall = True
-
-    @staticmethod
-    def add_key(key, _value):
-        raise ValueError("unknown key: %r" % key)
-
-    def __str__(self):
-        return "  %s <fetchall>" % self.name
-
-
 class GroupConfig(object):
     def __init__(self, name):
         super(GroupConfig, self).__init__()
         if not name:
             raise ValueError("falsey group name: %r" % name)
         self.name = name
-        self.resources = {}
-        self.current_resource = None
+        self.resources = []
 
     @property
     def fetchall(self):
         return not self.resources
 
     def add_key(self, key, value):
-        if key == "resource":
-            self.current_resource = self.resources.setdefault(value, ResourceConfig(value))
+        if key == "resources":
+            self.resources = value.split(",")
             return
-        if self.current_resource is None:
-            raise RuntimeError("missing arg: resource=<name>")
-        self.current_resource.add_key(key, value)
+        raise ValueError("unknown config key: %s" % key)
 
     def __str__(self):
         if self.fetchall:
             return "[%s]\n  <fetchall>" % self.name
-        return "[%s]\n" % self.name + "\n".join(str(r_cfg) for r_cfg in self.resources.values())
+        return "[%s]\n" % self.name + "\n".join("resource: %s" % r for r in self.resources)
 
 
 class ExplicitConfig(object):
@@ -303,13 +285,6 @@ class ExplicitConfig(object):
         if group_config.fetchall:
             return True
         return resource.info['name'] in group_config.resources
-
-    def get_resource_config(self, resource):
-        r_name = resource.info['name']
-        group = self.groups.get(resource.info['group'])
-        if self.fetchall or group.fetchall:
-            return ResourceConfig(r_name)
-        return group.resources[r_name]
 
     def __str__(self):
         if self.fetchall:
@@ -450,9 +425,9 @@ class AzureComputeClient(object):
         items = ((k, inst_view.get(k)) for k in use_keys)
         vmach.info["specific_info"] = {k: v for k, v in items if v is not None}
 
-        if args.piggyback_vms in ("agenthost", "all"):
-            vmach.piggytargets.append('')
-        if args.piggyback_vms in ("self", "all"):
+        if args.piggyback_vms not in ("grouphost",):
+            vmach.piggytargets.remove(vmach.info["group"])
+        if args.piggyback_vms in ("self",):
             vmach.piggytargets.append(vmach.info["name"])
 
 
@@ -565,10 +540,7 @@ class AzureClient(object):  # pylint: disable=too-many-instance-attributes
 
         return metrics
 
-    def get_metrics(self, resource, r_config, err):
-        if not r_config.fetchall:
-            raise NotImplementedError("selective configuration on resource level")
-
+    def get_metrics(self, resource, err):
         metric_params = METRICS_SELECTED.get(resource.info["type"], [])
 
         metrics = []
@@ -580,14 +552,12 @@ class AzureClient(object):  # pylint: disable=too-many-instance-attributes
 
 
 def process_resource(args):
-    resource, client, config = args
-
-    r_config = config.get_resource_config(resource)
+    resource, client = args
 
     client.process_specific(resource)
 
     err = IssueCollecter()  # pass this to methods to collect issues
-    for metric in client.get_metrics(resource, r_config, err):
+    for metric in client.get_metrics(resource, err):
         resource.metrics.append(metric)
 
     sections = [Section('agent_info')]
@@ -634,7 +604,7 @@ def main(argv=None):
 
         write_groups(resources)
 
-        func_args = ((resource, client, config) for resource in resources)
+        func_args = ((resource, client) for resource in resources)
         map_ = map if args.sequential else AsyncMapper(args.timeout, args.debug)
         for sections in map_(process_resource, func_args):
             for section in sections:

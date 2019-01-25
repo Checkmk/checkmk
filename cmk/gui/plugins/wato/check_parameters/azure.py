@@ -226,7 +226,7 @@ register_check_parameters(
     _("Azure Virtual Machines"),
     Dictionary(
         help=_("To obtain the data required for this check, please configure"
-               " the datasource program \"Agent Azure\"."),
+               " the datasource program \"Microsoft Azure\"."),
         elements=[
             ('map_provisioning_states',
              Dictionary(
@@ -281,7 +281,7 @@ register_check_parameters(
     _("Azure Virtual Machines Summary"),
     Dictionary(
         help=_("To obtain the data required for this check, please configure"
-               " the datasource program \"Agent Azure\"."),
+               " the datasource program \"Microsoft Azure\"."),
         elements=[
             ('levels_provisioning',
              Dictionary(

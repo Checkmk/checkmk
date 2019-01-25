@@ -1,0 +1,21 @@
+Title: Introduced various performance improvements for cmc config generation (e.g. multiprocessing)
+Level: 2
+Component: cmc
+Compatible: compat
+Edition: cee
+Version: 1.6.0i1
+Date: 1548418345
+Class: feature
+
+Previous versions only used one CPU core for the config generation.
+The time to generate the config highly depends on the number of hosts, services and especially rulesets.
+
+Lots of the underlying computation code has been changed, caches and functions were optimized.
+As a result Check_MK is now able to distribute the work load of the config generation over several CPUs.
+
+Per default, this feature is activated. Unless configured otherwise, it uses up to 75% of the available
+CPUs during the config generation, leaving some CPUs for running monitoring core.
+A new configuration option <tt>Generate monitoring configuration via multiprocessing</tt> has been introduced.
+You can either switch of multiprocessing or configure the number of used CPUs manually.
+
+Tests have shown that the performance can increased by a factor of 5-10 on a 8 CPU core setup.

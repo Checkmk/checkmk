@@ -3413,8 +3413,8 @@ def test_registered_filters(load_plugins):
         assert filt.description == spec["comment"]
         assert filt.sort_index == spec["sort_index"]
         assert filt.info == spec["info"]
-        assert filt.link_columns == spec["link_columns"]
-        assert filt.htmlvars == spec["htmlvars"]
+        assert sorted(filt.link_columns) == sorted(spec["link_columns"])
+        assert sorted(filt.htmlvars) == sorted(spec["htmlvars"])
         if "column" in spec:
             assert filt.column == spec["column"]
 

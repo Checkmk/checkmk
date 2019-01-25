@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "5d8f69a83ce41ca3d51d618ccc3b8be542e3028e8636a7ac3115eef8d01203d7"
+            "sha256": "85eac5968e6f89ffb7b7646ecc728d51a36334d1f4df5b31d9b5346eaa37048d"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -1049,10 +1049,10 @@
         },
         "dill": {
             "hashes": [
-                "sha256:624dc244b94371bb2d6e7f40084228a2edfff02373fe20e018bef1ee92fdd5b3"
+                "sha256:f6d6046f9f9195206063dd0415dff185ad593d6ee8b0e67f12597c0f4df4986f"
             ],
             "index": "pypi",
-            "version": "==0.2.8.2"
+            "version": "==0.2.9"
         },
         "docker": {
             "hashes": [
@@ -1079,6 +1079,12 @@
             "index": "pypi",
             "version": "==1.1.6"
         },
+        "fancycompleter": {
+            "hashes": [
+                "sha256:d2522f1f3512371f295379c4c0d1962de06762eb586c199620a2a5d423539b12"
+            ],
+            "version": "==0.8"
+        },
         "funcparserlib": {
             "hashes": [
                 "sha256:b7992eac1a3eb97b3d91faa342bfda0729e990bd8a43774c1592c091e563c91d"
@@ -1090,7 +1096,7 @@
                 "sha256:330cc27ccbf7f1e992e69fef78261dc7c6569012cf397db8d3de0234e6c937ca",
                 "sha256:a7bb0f2cf3a3fd1ab2732cb49eba4252c2af4240442415b4abce3b87022a8f50"
             ],
-            "markers": "python_version < '3.3'",
+            "markers": "python_version < '3.0'",
             "version": "==1.0.2"
         },
         "futures": {
@@ -1261,6 +1267,13 @@
             "index": "pypi",
             "version": "==5.1.0"
         },
+        "pdbpp": {
+            "hashes": [
+                "sha256:535085916fcfb768690ba0aeab2967c2a2163a0a60e5b703776846873e171399"
+            ],
+            "index": "pypi",
+            "version": "==0.9.3"
+        },
         "pluggy": {
             "hashes": [
                 "sha256:8ddc32f03971bfdf900a81961a48ccf2fb677cf7715108f85295c67405798616",
@@ -1300,6 +1313,13 @@
             "index": "pypi",
             "version": "==2.0.0"
         },
+        "pygments": {
+            "hashes": [
+                "sha256:5ffada19f6203563680669ee7f53b64dabbeb100eb51b61996085e99c03b284a",
+                "sha256:e8218dd399a61674745138520d0d4cf2621d7e032439341bc3f647bff125818d"
+            ],
+            "version": "==2.3.1"
+        },
         "pylint": {
             "hashes": [
                 "sha256:02c2b6d268695a8b64ad61847f92e611e6afcff33fd26c3a2125370c4662905d",
@@ -1307,6 +1327,12 @@
             ],
             "index": "pypi",
             "version": "==1.9.4"
+        },
+        "pyrepl": {
+            "hashes": [
+                "sha256:3bcbbf1e47d2b80819b805aceea16dc90832ba4800035d595fa3c4bf48fcd4d7"
+            ],
+            "version": "==0.8.4"
         },
         "pytest": {
             "hashes": [
@@ -1417,10 +1443,10 @@
         },
         "soupsieve": {
             "hashes": [
-                "sha256:009d8865916766f7f452880d08ff94ed4c5445011a3deaac67543b82bdb0b9ee",
-                "sha256:97599c45a1ddfe9ab0a0cba889b7f214b3e310b703f176a0610c0b54e207cc04"
+                "sha256:466910df7561796a60748826781ebe9a888f7a1668a636ae86783f44d10aae73",
+                "sha256:87db12ae79194f0ff9808d2b1641c4f031ae39ffa3cab6b907ea7c1e5e5ed445"
             ],
-            "version": "==1.7.1"
+            "version": "==1.7.3"
         },
         "stevedore": {
             "hashes": [
@@ -1445,11 +1471,17 @@
             "index": "pypi",
             "version": "==0.54.0"
         },
+        "wmctrl": {
+            "hashes": [
+                "sha256:d806f65ac1554366b6e31d29d7be2e8893996c0acbb2824bbf2b1f49cf628a13"
+            ],
+            "version": "==0.3"
+        },
         "wrapt": {
             "hashes": [
-                "sha256:e03f19f64d81d0a3099518ca26b04550026f131eced2e76ced7b85c6b8d32128"
+                "sha256:4aea003270831cceb8a90ff27c4031da6ead7ec1886023b80ce0dfe0adf61533"
             ],
-            "version": "==1.11.0"
+            "version": "==1.11.1"
         },
         "yapf": {
             "hashes": [

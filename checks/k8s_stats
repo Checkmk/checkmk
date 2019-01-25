@@ -1,0 +1,106 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2018             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+@discover
+def discover_k8s_stats_network(key, value):
+    if key == 'network':
+        return [interface.get('name') for interface in value['interfaces']]
+
+
+@discover
+def discover_k8s_stats_fs(key, value):
+    ignore_fs = ['tmpfs', 'rootfs']
+    if key == 'filesystem':
+        devices = [disk.get('device') for disk in value]
+        return [x for x in devices if x not in ignore_fs]
+
+
+def check_k8s_stats_network(item, params, metrics):
+    def get_if():
+        for device in metrics['network']['interfaces']:
+            if device.get('name') == item:
+                return device
+
+    device = get_if()
+
+    perf_names = [
+        ('In', 'rx_bytes', 'in', lambda x: "%s/s" % get_bytes_human_readable(x)),
+        ('Out', 'tx_bytes', 'out', lambda x: "%s/s" % get_bytes_human_readable(x)),
+        ('Input Packets', 'rx_packets', 'if_in_pkts', None),
+        ('Output Packets', 'tx_packets', 'if_out_pkts', None),
+        ('Input Errors', 'rx_errors', 'if_in_errors', None),
+        ('Output Errors', 'tx_errors', 'if_out_errors', None),
+        ('Input Discards', 'rx_dropped', 'if_in_discards', None),
+        ('Output Discards', 'tx_dropped', 'if_out_discards', None),
+    ]
+
+    for name, met, dsname, hrf in perf_names:
+        rate = get_rate('if.%s.%s' % (item, dsname), time.time(), device[met])
+        yield check_levels_backport(
+            rate, dsname, params, unit='/s', human_readable_func=hrf, infoname=name)
+
+
+def check_k8s_stats_fs(item, params, metrics):
+    def get_disk():
+        for disk in metrics['filesystem']:
+            if disk.get('device') == item:
+                return disk
+
+    disk = get_disk()
+
+    yield df_check_filesystem_single(
+        item,
+        disk['capacity'] / 1024.0 / 1024.0,
+        disk['available'] / 1024.0 / 1024.0,
+        0,
+        disk['inodes'],
+        disk['inodes_free'],
+        params,
+    )
+
+
+check_info['k8s_stats'] = {
+    'parse_function': parse_k8s,
+}
+
+check_info['k8s_stats.network'] = {
+    'inventory_function': discover_k8s_stats_network,
+    'check_function': check_k8s_stats_network,
+    'service_description': 'Interface %s',
+    "has_perfdata": True,
+    'includes': ['backport.include', 'k8s.include'],
+}
+
+check_info['k8s_stats.fs'] = {
+    'inventory_function': discover_k8s_stats_fs,
+    'check_function': check_k8s_stats_fs,
+    'service_description': 'Filesystem %s',
+    "has_perfdata": True,
+    "group": "filesystem",
+    "default_levels_variable": "filesystem_default_levels",
+    'includes': ['backport.include', 'k8s.include', 'size_trend.include', 'df.include'],
+}

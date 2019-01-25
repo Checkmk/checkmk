@@ -151,33 +151,35 @@ mkeventd_status_file = cmk.utils.paths.omd_root + "/var/mkeventd/status"
 #   +----------------------------------------------------------------------+
 #   | Declarations of the structure of rules and actions                   |
 #   '----------------------------------------------------------------------'
-_help_list = [
-    ("$ID$", _("Event ID")),
-    ("$COUNT$", _("Number of occurrances")),
-    ("$TEXT$", _("Message text")),
-    ("$FIRST$", _("Time of the first occurrence (time stamp)")),
-    ("$LAST$", _("Time of the most recent occurrance")),
-    ("$COMMENT$", _("Event comment")),
-    ("$SL$", _("Service Level")),
-    ("$HOST$", _("Host name (as sent by syslog)")),
-    ("$ORIG_HOST$", _("Original host name when host name has been rewritten, empty otherwise")),
-    ("$CONTACT$", _("Contact information")),
-    ("$APPLICATION$", _("Syslog tag / Application")),
-    ("$PID$", _("Process ID of the origin process")),
-    ("$PRIORITY$", _("Syslog Priority")),
-    ("$FACILITY$", _("Syslog Facility")),
-    ("$RULE_ID$", _("ID of the rule")),
-    ("$STATE$", _("State of the event (0/1/2/3)")),
-    ("$PHASE$", _("Phase of the event (open in normal situations, closed when cancelling)")),
-    ("$OWNER$", _("Owner of the event")),
-    ("$MATCH_GROUPS$", _("Text groups from regular expression match, separated by spaces")),
-    ("$MATCH_GROUP_1$", _("Text of the first match group from expression match")),
-    ("$MATCH_GROUP_2$", _("Text of the second match group from expression match")),
-    ("$MATCH_GROUP_3$", _("Text of the third match group from expression match (and so on...)")),
-]
 
 
 def substitute_help():
+    _help_list = [
+        ("$ID$", _("Event ID")),
+        ("$COUNT$", _("Number of occurrances")),
+        ("$TEXT$", _("Message text")),
+        ("$FIRST$", _("Time of the first occurrence (time stamp)")),
+        ("$LAST$", _("Time of the most recent occurrance")),
+        ("$COMMENT$", _("Event comment")),
+        ("$SL$", _("Service Level")),
+        ("$HOST$", _("Host name (as sent by syslog)")),
+        ("$ORIG_HOST$", _("Original host name when host name has been rewritten, empty otherwise")),
+        ("$CONTACT$", _("Contact information")),
+        ("$APPLICATION$", _("Syslog tag / Application")),
+        ("$PID$", _("Process ID of the origin process")),
+        ("$PRIORITY$", _("Syslog Priority")),
+        ("$FACILITY$", _("Syslog Facility")),
+        ("$RULE_ID$", _("ID of the rule")),
+        ("$STATE$", _("State of the event (0/1/2/3)")),
+        ("$PHASE$", _("Phase of the event (open in normal situations, closed when cancelling)")),
+        ("$OWNER$", _("Owner of the event")),
+        ("$MATCH_GROUPS$", _("Text groups from regular expression match, separated by spaces")),
+        ("$MATCH_GROUP_1$", _("Text of the first match group from expression match")),
+        ("$MATCH_GROUP_2$", _("Text of the second match group from expression match")),
+        ("$MATCH_GROUP_3$",
+         _("Text of the third match group from expression match (and so on...)")),
+    ]
+
     # TODO: While loading this module there is no "html" object available for generating the HTML
     # code below. The HTML generating code could be independent of a HTML request.
     _help_rows = [
@@ -949,72 +951,6 @@ def vs_mkeventd_rule(customer=None):
     )
 
 
-# VS for simulating an even
-vs_mkeventd_event = Dictionary(
-    title=_("Event Simulator"),
-    help=_("You can simulate an event here and check out, which rules are matching."),
-    render="form",
-    form_narrow=True,
-    optional_keys=False,
-    elements=[
-        ("text",
-         TextUnicode(
-             title=_("Message text"),
-             size=30,
-             try_max_width=True,
-             allow_empty=False,
-             default_value=_("Still nothing happened."),
-             attrencode=True)),
-        ("application",
-         TextUnicode(
-             title=_("Application name"),
-             help=_("The syslog tag"),
-             size=40,
-             default_value=_("Foobar-Daemon"),
-             allow_empty=True,
-             attrencode=True)),
-        ("host",
-         TextUnicode(
-             title=_("Host Name"),
-             help=_("The host name of the event"),
-             size=40,
-             default_value=_("myhost089"),
-             allow_empty=True,
-             attrencode=True,
-             regex="^\\S*$",
-             regex_error=_("The host name may not contain spaces."),
-         )),
-        ("ipaddress",
-         IPv4Address(
-             title=_("IP Address"),
-             help=_("Original IP address the event was received from"),
-             default_value="1.2.3.4",
-         )),
-        ("priority",
-         DropdownChoice(
-             title=_("Syslog Priority"),
-             choices=cmk.gui.mkeventd.syslog_priorities,
-             default_value=5,
-         )),
-        ("facility",
-         DropdownChoice(
-             title=_("Syslog Facility"),
-             choices=cmk.gui.mkeventd.syslog_facilities,
-             default_value=1,
-         )),
-        ("sl",
-         DropdownChoice(
-             title=_("Service Level"),
-             choices=cmk.gui.mkeventd.service_levels,
-             prefix_values=True,
-         )),
-        ("site",
-         DropdownChoice(
-             title=_("Simulate for site"),
-             choices=config.get_event_console_site_choices,
-         )),
-    ])
-
 #.
 #   .--Load & Save---------------------------------------------------------.
 #   |       _                    _    ___     ____                         |
@@ -1093,7 +1029,7 @@ class EventConsoleMode(WatoMode):
     def _show_event_simulator(self):
         event = config.user.load_file("simulated_event", {})
         html.begin_form("simulator")
-        vs_mkeventd_event.render_input("event", event)
+        self._vs_mkeventd_event().render_input("event", event)
         forms.end()
         html.hidden_fields()
         html.button("simulate", _("Try out"))
@@ -1102,14 +1038,15 @@ class EventConsoleMode(WatoMode):
         html.br()
 
         if html.request.var("simulate") or html.request.var("_generate"):
-            return vs_mkeventd_event.from_html_vars("event")
+            return self._vs_mkeventd_event().from_html_vars("event")
         return None
 
     def _event_simulation_action(self):
         # Validation of input for rule simulation (no further action here)
         if html.request.var("simulate") or html.request.var("_generate"):
-            event = vs_mkeventd_event.from_html_vars("event")
-            vs_mkeventd_event.validate_value(event, "event")
+            vs = self._vs_mkeventd_event()
+            event = vs.from_html_vars("event")
+            vs.validate_value(event, "event")
             config.user.save_file("simulated_event", event)
 
         if html.request.has_var("_generate") and html.check_transaction():
@@ -1156,6 +1093,73 @@ class EventConsoleMode(WatoMode):
             return {}
         package_info = watolib.check_mk_local_automation("get-package-info")
         return ec.rule_pack_id_to_mkp(package_info)
+
+    def _vs_mkeventd_event(self):
+        """Valuespec for simulating an event"""
+        return Dictionary(
+            title=_("Event Simulator"),
+            help=_("You can simulate an event here and check out, which rules are matching."),
+            render="form",
+            form_narrow=True,
+            optional_keys=False,
+            elements=[
+                ("text",
+                 TextUnicode(
+                     title=_("Message text"),
+                     size=30,
+                     try_max_width=True,
+                     allow_empty=False,
+                     default_value=_("Still nothing happened."),
+                     attrencode=True)),
+                ("application",
+                 TextUnicode(
+                     title=_("Application name"),
+                     help=_("The syslog tag"),
+                     size=40,
+                     default_value=_("Foobar-Daemon"),
+                     allow_empty=True,
+                     attrencode=True)),
+                ("host",
+                 TextUnicode(
+                     title=_("Host Name"),
+                     help=_("The host name of the event"),
+                     size=40,
+                     default_value=_("myhost089"),
+                     allow_empty=True,
+                     attrencode=True,
+                     regex="^\\S*$",
+                     regex_error=_("The host name may not contain spaces."),
+                 )),
+                ("ipaddress",
+                 IPv4Address(
+                     title=_("IP Address"),
+                     help=_("Original IP address the event was received from"),
+                     default_value="1.2.3.4",
+                 )),
+                ("priority",
+                 DropdownChoice(
+                     title=_("Syslog Priority"),
+                     choices=cmk.gui.mkeventd.syslog_priorities,
+                     default_value=5,
+                 )),
+                ("facility",
+                 DropdownChoice(
+                     title=_("Syslog Facility"),
+                     choices=cmk.gui.mkeventd.syslog_facilities,
+                     default_value=1,
+                 )),
+                ("sl",
+                 DropdownChoice(
+                     title=_("Service Level"),
+                     choices=cmk.gui.mkeventd.service_levels,
+                     prefix_values=True,
+                 )),
+                ("site",
+                 DropdownChoice(
+                     title=_("Simulate for site"),
+                     choices=config.get_event_console_site_choices,
+                 )),
+            ])
 
 
 @mode_registry.register

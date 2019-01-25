@@ -367,11 +367,13 @@ def execute_discovery_job(request):
 @job_registry.register
 class ServiceDiscoveryBackgroundJob(WatoBackgroundJob):
     """The background job is always executed on the site where the host is located on"""
-    # TODO: Move this localization out of the module global scope!
-    gui_title = _("Service discovery")
     job_prefix = "service_discovery"
     housekeeping_max_age_sec = 86400  # 1 day
     housekeeping_max_count = 20
+
+    @property
+    def gui_title(self):
+        return _("Service discovery")
 
     def __init__(self, host_name):
         # type: (str) -> None

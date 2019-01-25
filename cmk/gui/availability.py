@@ -59,55 +59,58 @@ from cmk.gui.globals import html
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-host_availability_columns = [
-    ("up", "state0", _("UP"), None),
-    ("down", "state2", _("DOWN"), None),
-    ("unreach", "state3", _("UNREACH"), None),
-    ("flapping", "flapping", _("Flapping"), None),
-    ("in_downtime", "downtime", _("Downtime"), _("The host was in a scheduled downtime")),
-    ("outof_notification_period", "", _("OO/Notif"), _("Out of Notification Period")),
-    ("outof_service_period", "ooservice", _("OO/Service"), _("Out of Service Period")),
-    ("unmonitored", "unmonitored", _("N/A"),
-     _("During this time period no monitoring data is available")),
-]
 
-service_availability_columns = [
-    ("ok", "state0", _("OK"), None),
-    ("warn", "state1", _("WARN"), None),
-    ("crit", "state2", _("CRIT"), None),
-    ("unknown", "state3", _("UNKNOWN"), None),
-    ("flapping", "flapping", _("Flapping"), None),
-    ("host_down", "hostdown", _("H.Down"), _("The host was down")),
-    ("in_downtime", "downtime", _("Downtime"),
-     _("The host or service was in a scheduled downtime")),
-    ("outof_notification_period", "", _("OO/Notif"), _("Out of Notification Period")),
-    ("outof_service_period", "ooservice", _("OO/Service"), _("Out of Service Period")),
-    ("unmonitored", "unmonitored", _("N/A"),
-     _("During this time period no monitoring data is available")),
-]
+class AvailabilityColumns(object):
+    def __init__(self):
+        super(AvailabilityColumns, self).__init__()
+        self.host = self._host_availability_columns()
+        self.service = self._service_availability_columns()
+        self.bi = self._bi_availability_columns()
 
-bi_availability_columns = [
-    ("ok", "state0", _("OK"), None),
-    ("warn", "state1", _("WARN"), None),
-    ("crit", "state2", _("CRIT"), None),
-    ("unknown", "state3", _("UNKNOWN"), None),
-    ("in_downtime", "downtime", _("Downtime"), _("The aggregate was in a scheduled downtime")),
-    ("unmonitored", "unmonitored", _("N/A"),
-     _("During this time period no monitoring data is available")),
-]
+    def __getitem__(self, key):
+        return getattr(self, key)
 
-availability_columns = {
-    "host": host_availability_columns,
-    "service": service_availability_columns,
-    "bi": bi_availability_columns,
-}
+    def _host_availability_columns(self):
+        return [
+            ("up", "state0", _("UP"), None),
+            ("down", "state2", _("DOWN"), None),
+            ("unreach", "state3", _("UNREACH"), None),
+            ("flapping", "flapping", _("Flapping"), None),
+            ("in_downtime", "downtime", _("Downtime"), _("The host was in a scheduled downtime")),
+            ("outof_notification_period", "", _("OO/Notif"), _("Out of Notification Period")),
+            ("outof_service_period", "ooservice", _("OO/Service"), _("Out of Service Period")),
+            ("unmonitored", "unmonitored", _("N/A"),
+             _("During this time period no monitoring data is available")),
+        ]
 
-statistics_headers = {
-    "min": _("Shortest"),
-    "max": _("Longest"),
-    "avg": _("Average"),
-    "cnt": _("Count"),
-}
+    def _service_availability_columns(self):
+        return [
+            ("ok", "state0", _("OK"), None),
+            ("warn", "state1", _("WARN"), None),
+            ("crit", "state2", _("CRIT"), None),
+            ("unknown", "state3", _("UNKNOWN"), None),
+            ("flapping", "flapping", _("Flapping"), None),
+            ("host_down", "hostdown", _("H.Down"), _("The host was down")),
+            ("in_downtime", "downtime", _("Downtime"),
+             _("The host or service was in a scheduled downtime")),
+            ("outof_notification_period", "", _("OO/Notif"), _("Out of Notification Period")),
+            ("outof_service_period", "ooservice", _("OO/Service"), _("Out of Service Period")),
+            ("unmonitored", "unmonitored", _("N/A"),
+             _("During this time period no monitoring data is available")),
+        ]
+
+    def _bi_availability_columns(self):
+        return [
+            ("ok", "state0", _("OK"), None),
+            ("warn", "state1", _("WARN"), None),
+            ("crit", "state2", _("CRIT"), None),
+            ("unknown", "state3", _("UNKNOWN"), None),
+            ("in_downtime", "downtime", _("Downtime"),
+             _("The aggregate was in a scheduled downtime")),
+            ("unmonitored", "unmonitored", _("N/A"),
+             _("During this time period no monitoring data is available")),
+        ]
+
 
 #.
 #   .--Options-------------------------------------------------------------.
@@ -1220,6 +1223,14 @@ def layout_availability_table(what, group_title, availability_table, avoptions):
         "rows": [],
     }
 
+    availability_columns = AvailabilityColumns()
+    statistics_headers = {
+        "min": _("Shortest"),
+        "max": _("Longest"),
+        "avg": _("Average"),
+        "cnt": _("Count"),
+    }
+
     # Titles for the columns that specify the object
     titles = []
     if what == "bi":
@@ -1422,6 +1433,7 @@ def layout_timeline(what, timeline_rows, considered_duration, avoptions, style):
     time_range, _range_title = avoptions["range"]
     from_time, until_time = time_range
     total_duration = until_time - from_time
+    availability_columns = AvailabilityColumns()
 
     # Timeformat: show date only if the displayed time range spans over
     # more than one day.

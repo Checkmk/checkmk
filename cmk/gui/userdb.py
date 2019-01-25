@@ -1389,7 +1389,10 @@ def ajax_sync():
 @gui_background_job.job_registry.register
 class UserSyncBackgroundJob(gui_background_job.GUIBackgroundJob):
     job_prefix = "user_sync"
-    gui_title = _("User synchronization")
+
+    @property
+    def gui_title(self):
+        return _("User synchronization")
 
     def __init__(self):
         kwargs = {}

@@ -695,7 +695,10 @@ cmk.gui.pages.register_page_handler("fetch_agent_output", lambda: PageFetchAgent
 @gui_background_job.job_registry.register
 class FetchAgentOutputBackgroundJob(cmk.gui.plugins.wato.utils.WatoBackgroundJob):
     job_prefix = "agent-output-"
-    gui_title = _("Fetch agent output")
+
+    @property
+    def gui_title(self):
+        return _("Fetch agent output")
 
     def __init__(self, site_id, host_name, ty):
         self._site_id = site_id

@@ -50,15 +50,15 @@ from cmk.gui.permissions import (
 
 # ASN1 MIB source directory candidates. Non existing dirs are ok.
 # Please sync these paths with htdocs/mkeventd.py
-mib_dirs = [('/usr/share/snmp/mibs', _('System MIBs'))]
+mib_dirs = [('/usr/share/snmp/mibs', 'System MIBs')]
 
 socket_path = cmk.utils.paths.omd_root + "/tmp/run/mkeventd/status"
 compiled_mibs_dir = cmk.utils.paths.omd_root + "/local/share/check_mk/compiled_mibs"
 
 # Please sync these paths with htdocs/mkeventd.py
 mib_upload_dir = cmk.utils.paths.omd_root + "/local/share/snmp/mibs"
-mib_dirs.insert(0, (cmk.utils.paths.omd_root + "/share/snmp/mibs", _('MIBs shipped with Check_MK')))
-mib_dirs.insert(0, (mib_upload_dir, _('Custom MIBs')))
+mib_dirs.insert(0, (cmk.utils.paths.omd_root + "/share/snmp/mibs", 'MIBs shipped with Check_MK'))
+mib_dirs.insert(0, (mib_upload_dir, 'Custom MIBs'))
 
 syslog_priorities = [
     (0, "emerg"),

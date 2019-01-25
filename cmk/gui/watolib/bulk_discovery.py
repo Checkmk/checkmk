@@ -126,7 +126,10 @@ def vs_bulk_discovery(render_form=False, include_subfolders=True):
 @gui_background_job.job_registry.register
 class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
     job_prefix = "bulk_discovery"
-    gui_title = _("Bulk Discovery")
+
+    @property
+    def gui_title(self):
+        return _("Bulk Discovery")
 
     def __init__(self):
         kwargs = {}

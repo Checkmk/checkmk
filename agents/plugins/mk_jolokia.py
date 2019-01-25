@@ -206,7 +206,7 @@ class JolokiaInstance(object):
             required_keys.add("service_password")
         missing_keys = required_keys - set(config.keys())
         if missing_keys:
-            raise ValueError(err_msg % ("Missing keys " % ", ".join(missing_keys)))
+            raise ValueError(err_msg % ("Missing keys %s" % ", ".join(missing_keys)))
 
         if not instance:
             config["instance"] = str(config["port"])
@@ -228,7 +228,7 @@ class JolokiaInstance(object):
         self.config = self._sanitize_config(config)
 
         self.name = self.config["instance"]
-        self.product = self.config["product"]
+        self.product = self.config.get("product")
         self.custom_vars = self.config.get("custom_vars", [])
 
         self.base_url = self._get_base_url()
@@ -353,7 +353,7 @@ def extract_item(key, itemspec):
 
 
 def fetch_metric(inst, path, title, itemspec, inst_add=None):
-    values = fetch_var(inst.config, path, inst.config["service_url"], inst.config["service_user"],
+    values = fetch_var(inst, path, inst.config["service_url"], inst.config["service_user"],
                        inst.config["service_password"])
     item_list = make_item_list((), values, itemspec)
 
@@ -387,7 +387,7 @@ def _get_queries(do_search, inst, itemspec, title, path, mbean):
     if not do_search:
         return [(mbean + "/" + path, title, itemspec)]
 
-    value = fetch_var(inst.config, mbean, None, None, None, function="search")
+    value = fetch_var(inst, mbean, None, None, None, function="search")
     try:
         paths = make_item_list((), value, "")[0][1]
     except IndexError:
@@ -511,7 +511,7 @@ def prepare_http_opener(inst):
 
 def generate_jolokia_info(inst):
     # Determine type of server
-    value = fetch_var(inst.config, "", None, None, None)
+    value = fetch_var(inst, "", None, None, None)
     server_info = make_item_list((), value, "")
 
     if not server_info:

@@ -71,7 +71,7 @@ from cmk.gui.plugins.wato import (
     make_action_link,
     add_change,
     rule_option_elements,
-    get_notification_parameters,
+    notification_parameter_registry,
 )
 from cmk.gui.watolib.notifications import (
     save_notification_rules,
@@ -1174,10 +1174,9 @@ class EditNotificationRuleMode(NotificationsMode):
 
     def _notification_script_choices_with_parameters(self):
         choices = []
-        script_params = get_notification_parameters()
         for script_name, title in watolib.notification_script_choices():
-            if script_name in script_params:
-                vs = script_params[script_name]
+            if script_name in notification_parameter_registry:
+                vs = notification_parameter_registry[script_name]
             else:
                 vs = ListOfStrings(
                     title=_("Call with the following parameters:"),

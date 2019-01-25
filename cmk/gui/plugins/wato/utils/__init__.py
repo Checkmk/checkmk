@@ -1883,33 +1883,59 @@ def register_hook(name, func):
     hooks.register_from_plugin(name, func)
 
 
-_notification_parameters = {}  # type: Dict[str, Dict]
+class NotificationParameter(object):
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractproperty
+    def ident(self):
+        # type: () -> str
+        raise NotImplementedError()
+
+    @abc.abstractproperty
+    def spec(self):
+        # type: () -> Dictionary
+        raise NotImplementedError()
 
 
-def get_notification_parameters():
-    return _notification_parameters
+class NotificationParameterRegistry(cmk.utils.plugin_registry.ClassRegistry):
+    def plugin_base_class(self):
+        return NotificationParameter
+
+    def plugin_name(self, plugin_class):
+        return plugin_class().ident
+
+    def registration_hook(self, plugin_class):
+        plugin = plugin_class()
+
+        script_title = notification_script_title(plugin.ident)
+
+        valuespec = plugin.spec
+        # TODO: Cleanup this hack
+        valuespec._title = _("Call with the following parameters:")
+
+        register_rule(
+            rulespec_group_registry["monconf/notifications"],
+            "notification_parameters:" + plugin.ident,
+            valuespec,
+            _("Parameters for %s") % script_title,
+            itemtype=None,
+            match="dict")
 
 
+notification_parameter_registry = NotificationParameterRegistry()
+
+
+# TODO: Kept for pre 1.6 plugin compatibility
 def register_notification_parameters(scriptname, valuespec):
-    rulespec_group_class = rulespec_group_registry["monconf/notifications"]
-    _register_user_script_parameters(_notification_parameters, "notification_parameters",
-                                     rulespec_group_class, scriptname, valuespec)
-
-
-def _register_user_script_parameters(ruleset_dict, ruleset_dict_name, ruleset_group, scriptname,
-                                     valuespec):
-    script_title = notification_script_title(scriptname)
-    title = _("Parameters for %s") % script_title
-    valuespec._title = _("Call with the following parameters:")
-
-    register_rule(
-        ruleset_group,
-        ruleset_dict_name + ":" + scriptname,
-        valuespec,
-        title,
-        itemtype=None,
-        match="dict")
-    ruleset_dict[scriptname] = valuespec
+    parameter_class = type(
+        "NotificationParameter%s" % scriptname.title(),
+        (NotificationParameter,),
+        {
+            "ident": scriptname,
+            "spec": valuespec,
+        },
+    )
+    notification_parameter_registry.register(parameter_class)
 
 
 class HostTagCondition(ValueSpec):

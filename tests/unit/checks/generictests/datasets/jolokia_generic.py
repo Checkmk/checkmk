@@ -15,9 +15,9 @@ info = [
 
 discovery = {
     '': [
-        ('Instance1 MBean Mitglieder_Anzahl', {}),
-        ('Instance2 MBean Mitglieder Anzahl', {}),
-        ('JIRA,com.atlassian.jira:type=web.requests,invocation.count MBean jira.value', {}),
+        ('Instance1 Mitglieder_Anzahl', {}),
+        ('Instance2 Mitglieder Anzahl', {}),
+        ('JIRA,com.atlassian.jira:type=web.requests,invocation.count jira.value', {}),
     ],
     'rate': [],
     'string': []
@@ -25,13 +25,13 @@ discovery = {
 
 checks = {
     '': [
-        ('Instance1 MBean Mitglieder_Anzahl', {},
-         [(0, '-23.0', [('generic_number', -23.0, None, None, None, None)])]),
-        ('Instance2 MBean Mitglieder Anzahl', {},
-         [(0, '-23.0', [('generic_number', -23.0, None, None, None, None)])]),
-        ('JIRA,com.atlassian.jira:type=web.requests,invocation.count MBean jira.name', {},
+        ('Instance1 Mitglieder_Anzahl', {}, [(0, '-23.0', [('generic_number', -23.0, None, None,
+                                                            None, None)])]),
+        ('Instance2 Mitglieder Anzahl', {}, [(0, '-23.0', [('generic_number', -23.0, None, None,
+                                                            None, None)])]),
+        ('JIRA,com.atlassian.jira:type=web.requests,invocation.count jira.name', {},
          [(3, "Non-numeric MBean value", [])]),
-        ('JIRA,com.atlassian.jira:type=web.requests,invocation.count MBean jira.value', {},
+        ('JIRA,com.atlassian.jira:type=web.requests,invocation.count jira.value', {},
          [(0, "2624460.0", [('generic_number', 2624460.0, None, None, None, None)])]),
     ]
 }

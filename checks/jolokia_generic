@@ -32,7 +32,7 @@ def parse_jolokia_generic(info):
             instance, mbean, value, type_ = jolokia_basic_split(line, 4)
         except ValueError:
             continue
-        item = "%s MBean %s" % (instance, mbean)
+        item = "%s %s" % (instance, mbean)
         parsed[item] = {"value": value, "type": type_}
 
     return parsed

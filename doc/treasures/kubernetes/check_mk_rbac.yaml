@@ -19,6 +19,7 @@ rules:
   resources:
   - componentstatuses
   - nodes
+  - nodes/proxy
   - services
   - pods
   - configmaps

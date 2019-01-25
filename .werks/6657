@@ -1,0 +1,12 @@
+Title: Kubernetes checks for node Network and Filesystem usage
+Level: 1
+Component: checks
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p12
+Date: 1548165552
+
+Kubernetes special agent obtains the node statistics of network and filesystem usage for each node. Corresponding checks are available at node or cluster level.
+

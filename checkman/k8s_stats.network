@@ -1,0 +1,14 @@
+title: Kubernetes node and cluster level network usage
+agents: linux
+catalog: containerization/kubernetes
+license: GPL
+distribution: check_mk
+description:
+ This check monitors at cluster and node level the network interfaces. It
+ gives the link speed, packet counts, discards and errors.
+
+item:
+ The network interface that is monitored
+
+inventory:
+ One service per network interface

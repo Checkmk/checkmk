@@ -311,6 +311,8 @@ class Section(object):
         return chr(Section.SEP).join(map(str, tokens)) + '\n'
 
     def add(self, info):
+        if not info:
+            return
         if isinstance(info[0], (list, tuple)):  # we got a list of lines
             for row in info:
                 self._cont.append(self.formatline(row))
@@ -318,6 +320,8 @@ class Section(object):
             self._cont.append(self.formatline(info))
 
     def write(self):
+        if not self._cont:
+            return
         self.LOCK.acquire()
         sys.stdout.writelines(self._head + self._cont + self._foot)
         sys.stdout.flush()
@@ -560,17 +564,15 @@ def process_resource(args):
     for metric in client.get_metrics(resource, err):
         resource.metrics.append(metric)
 
-    sections = [Section('agent_info')]
-    sections[0].add(('remaining-reads', client.remaining_reads))
+    agent_info_section = Section('agent_info')
+    agent_info_section.add(('remaining-reads', client.remaining_reads))
+    agent_info_section.add(err.dumpinfo())
 
+    sections = [agent_info_section]
     for piggytarget in resource.piggytargets:
         section = Section(resource.section, piggytarget)
         section.add(resource.dumpinfo())
         sections.append(section)
-        if err:
-            err_section = Section('agent_info', piggytarget)
-            err_section.add(err.dumpinfo())
-            sections.append(err_section)
 
     return sections
 

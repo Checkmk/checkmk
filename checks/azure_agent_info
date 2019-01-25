@@ -72,11 +72,11 @@ def parse_azure_agent_info(info):
     return parsed
 
 
-def discovery_azure_agent_info(parsed):
-    yield "Azure Agent Info", {}
+def discovery_azure_agent_info(_parsed):
+    yield None, {}
 
 
-def check_azure_agent_info(item, params, parsed):
+def check_azure_agent_info(_no_item, params, parsed):
 
     reads = parsed.get('remaining-reads')
     # this is only reported for the Datasource Host, so None
@@ -98,10 +98,10 @@ def check_azure_agent_info(item, params, parsed):
         yield 0, "Monitored groups: %s" % ', '.join(groups[0])
 
     issues = parsed.get('issues', {})
-    for t in ('warning', 'exception'):
-        count = len(issues.get(t, ()))
-        state, txt = 0, "%d %ss" % (count, t)
-        warn, crit = params.get('%s_levels' % t, (None, None))
+    for type_ in ('warning', 'exception'):
+        count = len(issues.get(type_, ()))
+        state, txt = 0, "%d %ss" % (count, type_)
+        warn, crit = params.get('%s_levels' % type_, (None, None))
         if crit is not None and count >= crit:
             state = 2
         elif warn is not None and count >= warn:
@@ -120,7 +120,7 @@ check_info['azure_agent_info'] = {
     'parse_function': parse_azure_agent_info,
     'inventory_function': discovery_azure_agent_info,
     'check_function': check_azure_agent_info,
-    'service_description': "%s",
+    'service_description': "Azure Agent Info",
     'default_levels_variable': "azure_agent_info_levels",
     'has_perfdata': True,
     'group': "azure_agent_info",

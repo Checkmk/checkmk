@@ -1,0 +1,14 @@
+title: AWS ELB Latency
+agents: aws
+catalog: cloud/aws
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the latency of AWS/ELB services.
+ To make this check work you have to configure the related
+ special agent {{Amazon Web Services (AWS)}}.
+
+ No default levels are set; these are configurable.
+
+inventory:
+ One service will be created.

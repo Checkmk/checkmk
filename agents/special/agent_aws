@@ -538,11 +538,21 @@ class ELBSummary(AWSSectionGeneric):
             response = self._client.describe_instance_health(LoadBalancerName=load_balancer_name)
             try:
                 states = response['InstanceStates']
-            except KeyError, e:
+            except KeyError as e:
                 logging.info("%s/%s: KeyError %s; Available are %s", self.name, load_balancer_name,
                              e, response.keys())
             else:
                 load_balancer['InstanceStates'] = states
+
+            response = self._client.describe_tags(LoadBalancerNames=[load_balancer_name])
+            try:
+                tag_descrs = response['TagDescriptions']
+            except KeyError as e:
+                logging.info("%s/%s: KeyError %s; Available are %s", self.name, load_balancer_name,
+                             e, response.keys())
+            else:
+                load_balancer['TagDescriptions'] = tag_descrs
+
         return load_balancers
 
     def _format_content(self, content):
@@ -1106,7 +1116,7 @@ AWSServices = [
     ("ec2", "Elastic Compute Cloud (EC2)"),
     ("ebs", "Elastic Block Storage (EBS)"),
     ("s3", "Simple Storage Service (S3)"),
-    #("elb", "Elastic Load Balancing (ELB)"),
+    ("elb", "Elastic Load Balancing (ELB)"),
     #("cloudtrail", ""),
     #("glacier", ""),
 ]

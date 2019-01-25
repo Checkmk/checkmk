@@ -1865,6 +1865,8 @@ class RulespecSpecialAgentsAws(HostRulespec):
                                              ]))],
                               optional_keys=[],
                           )),
+                         ("elb", FixedValue(
+                             None, totext="", title=_("Elastic Load Balancing (ELB)"))),
                      ],
                  )),
             ],

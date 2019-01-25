@@ -29,6 +29,9 @@ from cmk.gui.valuespec import (
     Dictionary,
     Integer,
     Tuple,
+    Float,
+    Percentage,
+    Age,
 )
 from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersApplications,
@@ -61,6 +64,112 @@ register_check_parameters(
                                   Integer(title=_("Warning at")),
                                   Integer(title=_("Critical at")),
                               ]))]),
+    None,
+    match_type='dict',
+)
+
+register_check_parameters(
+    RulespecGroupCheckParametersApplications,
+    'aws_elb_statistics',
+    _("AWS/ELB Statistics"),
+    Dictionary(elements=[
+        ('levels_surge_queue_length',
+         Tuple(
+             title=_("Upper levels for surge queue length"),
+             elements=[
+                 Integer(title=_("Warning at")),
+                 Integer(title=_("Critical at")),
+             ])),
+        ('levels_spillover',
+         Tuple(
+             title=_("Upper levels for the number of requests that were rejected (spillover)"),
+             elements=[
+                 Integer(title=_("Warning at")),
+                 Integer(title=_("Critical at")),
+             ])),
+    ]),
+    None,
+    match_type='dict',
+)
+
+register_check_parameters(
+    RulespecGroupCheckParametersApplications,
+    'aws_elb_latency',
+    _("AWS/ELB Latency"),
+    Dictionary(elements=[
+        ('levels_latency',
+         Tuple(
+             title=_("Upper levels for latency"),
+             elements=[
+                 Age(title=_("Warning at")),
+                 Age(title=_("Critical at")),
+             ])),
+    ]),
+    None,
+    match_type='dict',
+)
+
+register_check_parameters(
+    RulespecGroupCheckParametersApplications,
+    'aws_elb_http',
+    _("AWS/ELB HTTP Errors"),
+    Dictionary(elements=[
+        ('levels_http_4xx_perc',
+         Tuple(
+             title=_("Upper percentual levels for HTTP 400 errors"),
+             help=_("Specify levels for HTTP 400 errors in percentage "
+                    "which refer to the total number of requests"),
+             elements=[
+                 Percentage(title=_("Warning at")),
+                 Percentage(title=_("Critical at")),
+             ])),
+        ('levels_http_5xx_perc',
+         Tuple(
+             title=_("Upper percentual levels for HTTP 500 errors"),
+             help=_("Specify levels for HTTP 500 errors in percentage "
+                    "which refer to the total number of requests"),
+             elements=[
+                 Percentage(title=_("Warning at")),
+                 Percentage(title=_("Critical at")),
+             ])),
+    ]),
+    None,
+    match_type='dict',
+)
+
+register_check_parameters(
+    RulespecGroupCheckParametersApplications,
+    'aws_elb_healthy_hosts',
+    _("AWS/ELB Healthy Hosts"),
+    Dictionary(elements=[
+        ('levels_overall_hosts_health_perc',
+         Tuple(
+             title=_("Upper percentual levels for healthy hosts"),
+             help=_("These levels refer to the total number of instances or hosts "
+                    "that are registered to the load balancer which is the sum of "
+                    "healthy and unhealthy instances."),
+             elements=[
+                 Percentage(title=_("Warning at")),
+                 Percentage(title=_("Critical at")),
+             ])),
+    ]),
+    None,
+    match_type='dict',
+)
+
+register_check_parameters(
+    RulespecGroupCheckParametersApplications,
+    'aws_elb_backend_connection_errors',
+    _("AWS/ELB Backend Connection Errors"),
+    Dictionary(elements=[
+        ('levels_backend_connections_errors_rate',
+         Tuple(
+             title=_("Upper levels for backend connection errors per second"),
+             elements=[
+                 Float(title=_("Warning at")),
+                 Float(title=_("Critical at")),
+             ])),
+    ]),
     None,
     match_type='dict',
 )

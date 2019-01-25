@@ -3923,10 +3923,34 @@ metric_info["failed_ad_requests"] = {
     "color": "42/a"
 }
 
-metric_info["http_5xx"] = {
-    "title": _("HTTP 5xx Responses"),
+metric_info["http_4xx_rate"] = {
+    "title": _("HTTP 400 errors"),
+    "unit": "1/s",
+    "color": "32/a",
+}
+
+metric_info["http_5xx_rate"] = {
+    "title": _("HTTP 500 errors"),
     "unit": "1/s",
     "color": "42/a",
+}
+
+metric_info["http_4xx_perc"] = {
+    "title": _("Percentage of HTTP 400 errors"),
+    "unit": "%",
+    "color": "32/a",
+}
+
+metric_info["http_5xx_perc"] = {
+    "title": _("Percentage of HTTP 500 errors"),
+    "unit": "%",
+    "color": "42/a",
+}
+
+metric_info["aws_overall_hosts_health_perc"] = {
+    "title": _("Proportion of healthy host"),
+    "unit": "%",
+    "color": "35/a",
 }
 
 metric_info["sip_message_processing_time"] = {
@@ -4794,19 +4818,19 @@ metric_info['bucket_size'] = {
     'color': '15/a',
 }
 
-metric_info['surge_queue_length'] = {
+metric_info['aws_surge_queue_length'] = {
     'title': _('Surge queue length'),
     'unit': 'count',
     'color': '12/a',
 }
 
-metric_info['spillover'] = {
-    'title': _('Spillover'),
+metric_info['aws_spillover'] = {
+    'title': _('The number of requests that were rejected (spillover)'),
     'unit': 'count',
     'color': '13/a',
 }
 
-metric_info['backend_connection_errors'] = {
+metric_info['backend_connection_errors_rate'] = {
     'title': _('Backend connection errors'),
     'unit': '1/s',
     'color': '15/a',
@@ -8138,6 +8162,12 @@ perfometer_info.append({
     "exponent": 2,
 })
 
+perfometer_info.append({
+    "type": "logarithmic",
+    "metric": "aws_overall_hosts_health_perc",
+    "half_value": 100,
+    "exponent": 2,
+})
 #.
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
@@ -9926,5 +9956,13 @@ graph_info['DB_connections'] = {
     'metrics': [
         ('connections_max_used', 'area'),
         ('connections_max', 'line'),
+    ],
+}
+
+graph_info['http_errors'] = {
+    'title': _('HTTP Errors'),
+    'metrics': [
+        ('http_5xx_rate', 'area'),
+        ('http_4xx_rate', 'area'),
     ],
 }

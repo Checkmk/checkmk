@@ -715,6 +715,8 @@ class ApiData(object):
             except ApiException as err:
                 if err.status == 404:
                     logging.info('Data unavailable. No pods in namespace %s', namespace.name)
+                elif err.status == 500:
+                    logging.info('Data unavailable. %s', err)
                 else:
                     raise err
 

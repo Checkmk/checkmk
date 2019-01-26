@@ -173,7 +173,8 @@ class ModeUsers(WatoMode):
 
         elif self._job_snapshot.is_running():
             # Still running
-            html.message(_("User synchronization currently running: %s") % self._job_details_link())
+            html.message(
+                HTML(_("User synchronization currently running: ")) + self._job_details_link())
             url = html.makeuri([])
             html.immediate_browser_redirect(2, url)
 
@@ -186,7 +187,8 @@ class ModeUsers(WatoMode):
         elif not self._job_snapshot.acknowledged_by() and self._job_snapshot.has_exception():
             # Finished, but not OK - show info message with links to details
             html.show_warning(
-                _("Last user synchronization ran into an exception: %s") % self._job_details_link())
+                HTML(_("Last user synchronization ran into an exception: ")) +
+                self._job_details_link())
 
         self._show_user_list()
 

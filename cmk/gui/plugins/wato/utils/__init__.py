@@ -735,9 +735,6 @@ class RulespecGroupDiscoveryCheckParameters(RulespecGroup):
                  "by the automatic service discovery of Check_MK.")
 
 
-group = RulespecGroupDiscoveryCheckParameters().name
-
-
 @rulespec_group_registry.register
 class RulespecGroupCheckParametersNetworking(RulespecSubGroup):
     @property

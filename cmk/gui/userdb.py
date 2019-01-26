@@ -78,8 +78,6 @@ auth_logger = logger.getChild("auth")
 
 # Load all userdb plugins
 def load_plugins(force):
-    update_config_based_user_attributes()
-
     connection_dict.clear()
     for connection in config.user_connections:
         connection_dict[connection['id']] = connection
@@ -1192,6 +1190,9 @@ def update_config_based_user_attributes():
             from_config=True,
         )
 
+    cmk.gui.plugins.userdb.ldap_connector.register_user_attribute_sync_plugins(
+        user_attribute_registry)
+
 
 def _clear_config_based_user_attributes():
     for attr_class in user_attribute_registry.values():
@@ -1199,6 +1200,9 @@ def _clear_config_based_user_attributes():
         if attr.from_config():
             del user_attribute_registry[attr.name()]
 
+
+# Make the config module initialize the user attributes after loading the config
+config.register_post_config_load_hook(update_config_based_user_attributes)
 
 #.
 #   .--ConnectorCfg--------------------------------------------------------.

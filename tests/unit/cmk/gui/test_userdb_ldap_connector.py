@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-import pytest
+import pytest  # type: ignore
 from mockldap import MockLdap, LDAPObject
 
+from cmk.gui.valuespec import Dictionary
 import cmk.gui.plugins.userdb.ldap_connector as ldap
 import cmk.gui.plugins.userdb.utils as userdb_utils
+
 
 def test_connector_info():
     assert ldap.LDAPUserConnector.type() == "ldap"
@@ -17,16 +19,68 @@ def test_connector_registered():
     assert userdb_utils.user_connector_registry.get("ldap") == ldap.LDAPUserConnector
 
 
+expected_plugins = {
+    'alias': {
+        'help': u'Populates the alias attribute of the WATO user by synchronizing an attribute from the LDAP user account. By default the LDAP attribute <tt>cn</tt> is used.',
+        'parameters': [('attr', 'tuple')],
+        'title': u'Alias'
+    },
+    'auth_expire': {
+        'help': u'This plugin fetches all information which are needed to check whether or not an already authenticated user should be deauthenticated, e.g. because the password has changed in LDAP or the account has been locked.',
+        'multisite_attributes': ['ldap_pw_last_changed'],
+        'non_contact_attributes': ['ldap_pw_last_changed'],
+        'parameters': [('attr', 'tuple')],
+        'title': u'Authentication Expiration'
+    },
+    'email': {
+        'help': u'Synchronizes the email of the LDAP user account into Check_MK.',
+        'parameters': [('attr', 'tuple')],
+        'title': u'Email address'
+    },
+    'groups_to_attributes': {
+        'help': u'Sets custom user attributes based on the group memberships in LDAP. This plugin can be used to set custom user attributes to specified values for all users which are member of a group in LDAP. The specified group name must match the common name (CN) of the LDAP group.',
+        'parameters': [('nested', 'tuple'), ('other_connections', 'tuple'), ('groups', 'tuple')],
+        'required_parameters': ['groups'],
+        'title': u'Groups to custom user attributes'
+    },
+    'groups_to_contactgroups': {
+        'help': u'Adds the user to contactgroups based on the group memberships in LDAP. This plugin adds the user only to existing contactgroups while the name of the contactgroup must match the common name (cn) of the LDAP group.',
+        'parameters': [('nested', 'tuple'), ('other_connections', 'tuple')],
+        'title': u'Contactgroup Membership'
+    },
+    'groups_to_roles': {
+        'help': u'Configures the roles of the user depending on its group memberships in LDAP.<br><br>Please note: Additionally the user is assigned to the <a href="wato.py?mode=edit_configvar&varname=default_user_profile&site=&folder=">Default Roles</a>. Deactivate them if unwanted.',
+        'title': u'Roles'
+    },
+    'pager': {
+        'help': u'This plugin synchronizes a field of the users LDAP account to the pager attribute of the WATO user accounts, which is then forwarded to the monitoring core and can be usedfor notifications. By default the LDAP attribute <tt>mobile</tt> is used.',
+        'parameters': [('attr', 'tuple')],
+        'title': u'Pager'
+    },
+}
+
+
 def test_sync_plugins():
-    assert sorted(ldap.ldap_attribute_plugins.keys()) == [
+    assert sorted(ldap.ldap_attribute_plugin_registry.keys()) == [
         'alias',
         'auth_expire',
         'email',
         'groups_to_attributes',
         'groups_to_contactgroups',
         'groups_to_roles',
-        'pager'
+        'pager',
     ]
+
+
+def test_sync_plugin_attributes():
+    for plugin_class in ldap.ldap_attribute_plugin_registry.values():
+        plugin = plugin_class()
+        spec = expected_plugins[plugin.ident]
+
+        assert plugin.title == spec["title"]
+        assert plugin.help == spec["help"]
+        if "parameters" in spec:
+            assert isinstance(plugin.parameters(None), Dictionary)
 
 
 def _ldap_tree():
@@ -92,9 +146,7 @@ def _ldap_tree():
             "objectcategory": ["group"],
             "dn": ["cn=admins,ou=groups,dc=check-mk,dc=org"],
             "cn": ["admins"],
-            "member": [
-                "cn=admin,ou=users,dc=check-mk,dc=org",
-            ],
+            "member": ["cn=admin,ou=users,dc=check-mk,dc=org",],
         },
         u"cn=älle,ou=groups,dc=check-mk,dc=org": {
             "objectclass": ["group"],
@@ -121,9 +173,7 @@ def _ldap_tree():
             "objectcategory": ["group"],
             "dn": ["cn=level1,ou=groups,dc=check-mk,dc=org"],
             "cn": ["level1"],
-            "member": [
-                "cn=level2,ou=groups,dc=check-mk,dc=org",
-            ],
+            "member": ["cn=level2,ou=groups,dc=check-mk,dc=org",],
         },
         "cn=level2,ou=groups,dc=check-mk,dc=org": {
             "objectclass": ["group"],
@@ -150,9 +200,7 @@ def _ldap_tree():
             "objectcategory": ["group"],
             "dn": ["cn=loop2,ou=groups,dc=check-mk,dc=org"],
             "cn": ["loop2"],
-            "member": [
-                "cn=loop3,ou=groups,dc=check-mk,dc=org",
-            ],
+            "member": ["cn=loop3,ou=groups,dc=check-mk,dc=org",],
         },
         "cn=loop3,ou=groups,dc=check-mk,dc=org": {
             "objectclass": ["group"],
@@ -169,26 +217,21 @@ def _ldap_tree():
             "objectcategory": ["group"],
             "dn": ["cn=empty,ou=groups,dc=check-mk,dc=org"],
             "cn": ["empty"],
-            "member": [
-            ],
+            "member": [],
         },
         "cn=member-out-of-scope,ou=groups,dc=check-mk,dc=org": {
             "objectclass": ["group"],
             "objectcategory": ["group"],
             "dn": ["cn=member-out-of-scope,ou=groups,dc=check-mk,dc=org"],
             "cn": ["member-out-of-scope"],
-            "member": [
-                "cn=nono,ou=out-of-scope,dc=check-mk,dc=org",
-            ],
+            "member": ["cn=nono,ou=out-of-scope,dc=check-mk,dc=org",],
         },
         "cn=out-of-scope,dc=check-mk,dc=org": {
             "objectclass": ["group"],
             "objectcategory": ["group"],
             "dn": ["cn=out-of-scope,ou=groups,dc=check-mk,dc=org"],
             "cn": ["out-of-scope"],
-            "member": [
-                "cn=admin,ou=users,dc=check-mk,dc=org",
-            ],
+            "member": ["cn=admin,ou=users,dc=check-mk,dc=org",],
         },
     }
 
@@ -207,7 +250,10 @@ def _ldap_tree():
 
 def encode_to_byte_strings(inp):
     if isinstance(inp, dict):
-        return {encode_to_byte_strings(key): encode_to_byte_strings(value) for key, value in inp.iteritems()}
+        return {
+            encode_to_byte_strings(key): encode_to_byte_strings(value)
+            for key, value in inp.iteritems()
+        }
     elif isinstance(inp, list):
         return [encode_to_byte_strings(element) for element in inp]
     elif isinstance(inp, tuple):
@@ -222,15 +268,21 @@ def mocked_ldap():
     ldap_mock = MockLdap(_ldap_tree())
 
     ldap_connection = ldap.LDAPUserConnector({
-        "id"   : "default",
-        "type" : "ldap",
+        "id": "default",
+        "type": "ldap",
         "description": "Test connection",
         "disabled": False,
         "cache_livetime": 300,
         "suffix": "testldap",
-        "active_plugins": {'email': {}, 'alias': {}, 'auth_expire': {}},
+        "active_plugins": {
+            'email': {},
+            'alias': {},
+            'auth_expire': {}
+        },
         "directory_type": ("ad", {
-            "connect_to": ("fixed_list", {"server": "127.0.0.1"}),
+            "connect_to": ("fixed_list", {
+                "server": "127.0.0.1"
+            }),
         }),
         "bind": ("cn=sync-user,ou=users,dc=check-mk,dc=org", "sync-secret"),
         "user_id_umlauts": "keep",
@@ -245,7 +297,13 @@ def mocked_ldap():
     ldap_mock.start()
     ldap_connection._ldap_obj = ldap_mock["ldap://127.0.0.1"]
 
-    def search_ext(self, base, scope, filterstr='(objectclass=*)', attrlist=None, attrsonly=0, serverctrls=None):
+    def search_ext(self,
+                   base,
+                   scope,
+                   filterstr='(objectclass=*)',
+                   attrlist=None,
+                   attrsonly=0,
+                   serverctrls=None):
 
         # MockLdap does not exactly behave like python ldap library in terms of
         # encoding. The latter want's to have byte encoded strings and MockLdap
@@ -258,7 +316,6 @@ def mocked_ldap():
             filterstr = filterstr.decode("utf-8")
 
         return self.search(base, scope, filterstr, attrlist, attrsonly)
-
 
     LDAPObject.search_ext = search_ext
 
@@ -361,10 +418,10 @@ def test_get_users(mocked_ldap):
     assert "sync-user" in users
 
     assert users[u"härry"] == {
-        'dn'             : u'cn=h\xe4rry,ou=users,dc=check-mk,dc=org',
-        'mail'           : [u'h\xe4rry@check-mk.org'],
-        'samaccountname' : [u'h\xe4rry'],
-        'cn'             : [u'H\xe4rry H\xf6rsch']
+        'dn': u'cn=h\xe4rry,ou=users,dc=check-mk,dc=org',
+        'mail': [u'h\xe4rry@check-mk.org'],
+        'samaccountname': [u'h\xe4rry'],
+        'cn': [u'H\xe4rry H\xf6rsch']
     }
 
 
@@ -373,9 +430,7 @@ def test_get_group_memberships_simple(mocked_ldap, nested):
     assert mocked_ldap.get_group_memberships(["admins"], nested=nested) == {
         u'cn=admins,ou=groups,dc=check-mk,dc=org': {
             'cn': u'admins',
-            'members': [
-                u'cn=admin,ou=users,dc=check-mk,dc=org'
-            ],
+            'members': [u'cn=admin,ou=users,dc=check-mk,dc=org'],
         }
     }
 
@@ -426,15 +481,15 @@ def test_get_group_memberships_not_existing(mocked_ldap, nested):
 
 
 def test_get_group_memberships_nested(mocked_ldap):
-    memberships = mocked_ldap.get_group_memberships(["empty", "top-level", "level1", "level2"], nested=True)
+    memberships = mocked_ldap.get_group_memberships(["empty", "top-level", "level1", "level2"],
+                                                    nested=True)
 
     assert len(memberships) == 4
 
     needed_groups = [
         (u'cn=empty,ou=groups,dc=check-mk,dc=org', {
             'cn': u'empty',
-            'members': [
-            ],
+            'members': [],
         }),
         (u'cn=level2,ou=groups,dc=check-mk,dc=org', {
             'cn': u'level2',

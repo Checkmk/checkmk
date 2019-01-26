@@ -376,8 +376,8 @@ class ModeEditLDAPConnection(LDAPMode):
         params = active_plugins['groups_to_roles']
         connection.connect(enforce_new=True, enforce_server=address)
 
-        ldap_groups = cmk.gui.plugins.userdb.ldap_connector.fetch_needed_groups_for_groups_to_roles(
-            connection, params)
+        plugin = cmk.gui.plugins.userdb.ldap_connector.LDAPAttributePluginGroupsToRoles()
+        ldap_groups = plugin.fetch_needed_groups_for_groups_to_roles(connection, params)
 
         num_groups = 0
         for role_id, group_distinguished_names in active_plugins['groups_to_roles'].items():

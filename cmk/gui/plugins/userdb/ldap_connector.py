@@ -47,14 +47,16 @@
 #   | Some basic declarations and module loading etc.                      |
 #   '----------------------------------------------------------------------'
 
+import abc
 import copy
 from multiprocessing.pool import ThreadPool
-from multiprocessing.pool import TimeoutError
+from multiprocessing import TimeoutError
 import os
 import re
 import shutil
 import sys
 import time
+from typing import Union, Dict, List, Text  # pylint: disable=unused-import
 
 # docs: http://www.python-ldap.org/doc/html/index.html
 import ldap  # type: ignore
@@ -511,13 +513,12 @@ class LDAPUserConnector(UserConnector):
             else:
                 LDAPUserConnector.connection_suffixes[suffix] = self.id()
 
-    # Returns a list of all needed LDAP attributes of all enabled plugins
     def needed_attributes(self):
+        """Returns a list of all needed LDAP attributes of all enabled plugins"""
         attrs = set([])
         for key, params in self._config['active_plugins'].items():
-            plugin = ldap_attribute_plugins[key]
-            if 'needed_attributes' in plugin:
-                attrs.update(plugin['needed_attributes'](self, params or {}))
+            plugin = ldap_attribute_plugin_registry[key]()
+            attrs.update(plugin.needed_attributes(self, params or {}))
         return list(attrs)
 
     def object_exists(self, dn):
@@ -1125,8 +1126,6 @@ class LDAPUserConnector(UserConnector):
             self._logger.info("Not trying sync (no \"user base DN\" configured)")
             return  # silently skip sync without configuration
 
-        register_user_attribute_sync_plugins()
-
         # Flush ldap related before each sync to have a caching only for the
         # current sync process
         self._flush_caches()
@@ -1280,8 +1279,8 @@ class LDAPUserConnector(UserConnector):
 
     def _execute_active_sync_plugins(self, user_id, ldap_user, user):
         for key, params in self._config['active_plugins'].items():
-            user.update(ldap_attribute_plugins[key]['sync_func'](self, key, params or {}, user_id,
-                                                                 ldap_user, user))
+            plugin = ldap_attribute_plugin_registry[key]()
+            user.update(plugin.sync_func(self, key, params or {}, user_id, ldap_user, user))
 
     def _flush_caches(self):
         self._num_queries = 0
@@ -1325,11 +1324,8 @@ class LDAPUserConnector(UserConnector):
     def locked_attributes(self):
         locked = set(['password'])  # This attributes are locked in all cases!
         for key, params in self._config['active_plugins'].items():
-            lock_attrs = ldap_attribute_plugins.get(key, {}).get('lock_attributes', [])
-            if isinstance(lock_attrs, list):
-                locked.update(lock_attrs)
-            else:  # maby be a function which returns a list
-                locked.update(lock_attrs(params))
+            plugin = ldap_attribute_plugin_registry[key]()
+            locked.update(plugin.lock_attributes(params))
         return list(locked)
 
     # Calculates the attributes added in this connector which shal be written to
@@ -1337,7 +1333,8 @@ class LDAPUserConnector(UserConnector):
     def multisite_attributes(self):
         attrs = set([])
         for key in self._config['active_plugins'].keys():
-            attrs.update(ldap_attribute_plugins.get(key, {}).get('multisite_attributes', []))
+            plugin = ldap_attribute_plugin_registry[key]()
+            attrs.update(plugin.multisite_attributes)
         return list(attrs)
 
     # Calculates the attributes added in this connector which shal NOT be written to
@@ -1345,7 +1342,8 @@ class LDAPUserConnector(UserConnector):
     def non_contact_attributes(self):
         attrs = set([])
         for key in self._config['active_plugins'].keys():
-            attrs.update(ldap_attribute_plugins.get(key, {}).get('non_contact_attributes', []))
+            plugin = ldap_attribute_plugin_registry[key]()
+            attrs.update(plugin.non_contact_attributes)
         return list(attrs)
 
 
@@ -1783,7 +1781,7 @@ class LDAPConnectionValuespec(Transform):
                    'or disabled. When enabling a plugin, it is used upon the next synchonisation of '
                    'user accounts for gathering their attributes. The user options which get imported '
                    'into Check_MK from LDAP will be locked in WATO.'),
-                 elements=lambda: ldap_attribute_plugins_elements(self._connection_id),
+                 elements=lambda: ldap_attribute_plugins_elements(self._connection),
                  default_keys=['email', 'alias', 'auth_expire'],
              )),
             ("cache_livetime",
@@ -1857,85 +1855,156 @@ class LDAPConnectionValuespec(Transform):
 #   | are defnied here.                                                    |
 #   '----------------------------------------------------------------------'
 
-ldap_attribute_plugins = {}
-ldap_builtin_attribute_plugin_names = []
+
+class LDAPAttributePlugin(object):
+    """Base class for all LDAP attribute synchronization plugins"""
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractproperty
+    def ident(self):
+        # type: () -> str
+        raise NotImplementedError()
+
+    @abc.abstractproperty
+    def title(self):
+        # type: () -> Text
+        raise NotImplementedError()
+
+    @abc.abstractproperty
+    def help(self):
+        # type: () -> Text
+        raise NotImplementedError()
+
+    @abc.abstractproperty
+    def is_builtin(self):
+        # type: () -> bool
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def lock_attributes(self, params):
+        # type: (Dict) -> List[Text]
+        """List of user attributes to lock
+
+        Normally the attributes that are modified by the sync_func()"""
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def needed_attributes(self, connection, params):
+        # type: (LDAPUserConnector, Dict) -> List[Text]
+        """Gathers the LDAP user attributes that are needed by this plugin"""
+        raise NotImplementedError()
+
+    # TODO: plugin is not needed anymore?
+    @abc.abstractmethod
+    def sync_func(self, connection, plugin, params, user_id, ldap_user, user):
+        # type: (LDAPUserConnector, dict, dict, Text, dict, dict) -> dict
+        """Executed during user synchronization to modify the "user" structure"""
+        raise NotImplementedError()
+
+    def parameters(self, connection):
+        # type: (LDAPUserConnector) -> Union[FixedValue, Dictionary]
+        return FixedValue(
+            title=self.title,
+            help=self.help,
+            value={},
+            totext=_('This synchronization plugin has no parameters.'),
+        )
+
+    #Dictionary(
+    #    title=plugin['title'],
+    #    help=plugin['help'],
+    #    elements=plugin['parameters'],
+    #    required_keys=plugin.get('required_parameters', []),
+    #)))
+
+    @property
+    def multisite_attributes(self):
+        # type: () -> List[str]
+        """When a plugin introduces new user attributes, it should declare the output target for
+        this attribute. It can either be written to the multisites users.mk or the check_mk
+        contacts.mk to be forwarded to nagios. Undeclared attributes are stored in the check_mk
+        contacts.mk file."""
+        return []
+
+    @property
+    def non_contact_attributes(self):
+        # type: () -> List[str]
+        """When a plugin introduces new user attributes, it should declare the output target for
+        this attribute. It can either be written to the multisites users.mk or the check_mk
+        contacts.mk to be forwarded to nagios. Undeclared attributes are stored in the check_mk
+        contacts.mk file."""
+        return []
 
 
-# Returns a list of pairs (key, parameters) of all available attribute plugins
-def ldap_attribute_plugins_elements(connection_id):
-    global g_editing_connection_id
-    g_editing_connection_id = connection_id
+class LDAPAttributePluginRegistry(cmk.utils.plugin_registry.ClassRegistry):
+    def plugin_base_class(self):
+        return LDAPAttributePlugin
 
-    register_user_attribute_sync_plugins()
+    def plugin_name(self, plugin_class):
+        return plugin_class().ident
 
+
+class LDAPBuiltinAttributePlugin(LDAPAttributePlugin):
+    """Base class for all builtin based sync plugins"""
+
+    @property
+    def is_builtin(self):
+        return True
+
+
+class LDAPUserAttributePlugin(LDAPAttributePlugin):
+    """Base class for all custom user attribute based sync plugins"""
+
+    @property
+    def is_builtin(self):
+        return False
+
+
+ldap_attribute_plugin_registry = LDAPAttributePluginRegistry()
+
+
+def ldap_attribute_plugins_elements(connection):
+    """Returns a list of pairs (key, parameters) of all available attribute plugins"""
     elements = []
-    items = sorted(ldap_attribute_plugins.items(), key=lambda x: x[1]['title'])
+    items = sorted(
+        [(ident, plugin_class()) for ident, plugin_class in ldap_attribute_plugin_registry.items()],
+        key=lambda x: x[1].title)
     for key, plugin in items:
-        if 'parameters' not in plugin:
-            elements.append((key, FixedValue(
-                title    = plugin['title'],
-                help     = plugin['help'],
-                value    = {},
-                totext   = 'no_param_txt' in plugin and plugin['no_param_txt'] \
-                              or _('This synchronization plugin has no parameters.'),
-            )))
-        else:
-            elements.append((key,
-                             Dictionary(
-                                 title=plugin['title'],
-                                 help=plugin['help'],
-                                 elements=plugin['parameters'],
-                                 required_keys=plugin.get('required_parameters', []),
-                             )))
+        elements.append((key, plugin.parameters(connection)))
     return elements
 
 
-# Register sync plugins for all custom user attributes (assuming simple data types)
-def register_user_attribute_sync_plugins():
-    # Save the names of the builtin (shipped) attribute sync plugins. These names
-    # are needed below to delete the dynamically create sync plugins which are based
-    # on the custom user attributes
-    global ldap_builtin_attribute_plugin_names
-    if not ldap_builtin_attribute_plugin_names:
-        ldap_builtin_attribute_plugin_names = ldap_attribute_plugins.keys()
-
+def register_user_attribute_sync_plugins(user_attribute_registry):
+    """Register sync plugins for all custom user attributes (assuming simple data types)"""
     # Remove old user attribute plugins
-    # FIXME: Do not modify the dict while iterating over it.
-    for attr_name in list(ldap_attribute_plugins.keys()):
-        if attr_name not in ldap_builtin_attribute_plugin_names:
-            del ldap_attribute_plugins[attr_name]
+    for ident, plugin_class in list(ldap_attribute_plugin_registry.items()):
+        plugin = plugin_class()
+        if not plugin.is_builtin:
+            del ldap_attribute_plugin_registry[ident]
 
-    def default_attr_value(attr):
-        return lambda: ldap_attr_of_connection(g_editing_connection_id, attr)
-
-    def needed_attributes(attr):
-        return lambda connection, params: [params.get('attr', connection.ldap_attr(attr)).lower()]
-
-    import cmk.gui.userdb as userdb  # TODO: Cleanup
-    for attr, val in userdb.get_user_attributes():
-        ldap_attribute_plugins[attr] = {
-            'title': val.valuespec().title(),
-            'help':  val.valuespec().help(),
-            'needed_attributes': needed_attributes(attr),
-            'sync_func':         lambda connection, plugin, params, user_id, ldap_user, user: \
-                                         ldap_sync_simple(user_id, ldap_user, user, plugin,
-                                                        params.get('attr', connection.ldap_attr(plugin)).lower()),
-            'lock_attributes': [ attr ],
-            'parameters': [
-                ('attr', TextAscii(
-                    title = _("LDAP attribute to sync"),
-                    help  = _("The LDAP attribute whose contents shall be synced into this custom attribute."),
-                    default_value = default_attr_value(attr),
-                )),
-            ],
-        }
-
-
-# This hack is needed to make the connection_id of the connection currently
-# being edited (or None if being created) available in the "default_value"
-# handler functions of the valuespec. There is no other standard way to
-# transport this info to these functions.
-g_editing_connection_id = None
+    for attr, attribute_class in user_attribute_registry.items():
+        attribute = attribute_class()
+        plugin_class = type("LDAPUserAttributePlugin%s" % attr.title(), (LDAPUserAttributePlugin,), {
+            "ident": attr,
+            "title": attribute.valuespec().title(),
+            "help": attribute.valuespec().help(),
+            'needed_attributes': lambda self, connection, params: [params.get("attr", connection.ldap_attr(self.ident)).lower()],
+            'lock_attributes': lambda self, params: [ self.ident ],
+            'parameters': lambda self, connection: Dictionary(
+                title=self.title,
+                help=self.help,
+                elements = [
+                    ('attr', TextAscii(
+                        title = _("LDAP attribute to sync"),
+                        help  = _("The LDAP attribute whose contents shall be synced into this custom attribute."),
+                        default_value = lambda: ldap_attr_of_connection(connection.id(), self.ident),
+                    )),
+                ],
+            ),
+            'sync_func': lambda self, connection, plugin, params, user_id, ldap_user, user: \
+                        ldap_sync_simple(user_id, ldap_user, user, plugin, self.needed_attributes(connection, params)[0]),
+        })
+        ldap_attribute_plugin_registry.register(plugin_class)
 
 
 # Helper function for gathering the default LDAP attribute names of a connection.
@@ -2018,70 +2087,76 @@ def get_groups_of_user(connection, user_id, ldap_user, cg_names, nested, other_c
     return group_cns
 
 
-group_membership_parameters = [
-    ('nested',
-     FixedValue(
-         title=_('Handle nested group memberships (Active Directory only at the moment)'),
-         help=_('Once you enable this option, this plugin will not only handle direct '
-                'group memberships, instead it will also dig into nested groups and treat '
-                'the members of those groups as contact group members as well. Please mind '
-                'that this feature might increase the execution time of your LDAP sync.'),
-         value=True,
-         totext=_('Nested group memberships are resolved'),
-     )),
-    ('other_connections',
-     ListChoice(
-         title=_("Sync group memberships from other connections"),
-         help=_("This is a special feature for environments where user accounts are located "
-                "in one LDAP directory and groups objects having them as members are located "
-                "in other directories. You should only enable this feature when you are in this "
-                "situation and really need it. The current connection is always used."),
-         choices=lambda: get_connection_choices(add_this=False),
-         default_value=[None],
-     )),
-]
-
-#.
-#   .--Mail----------------------------------------------------------------.
-#   |                          __  __       _ _                            |
-#   |                         |  \/  | __ _(_) |                           |
-#   |                         | |\/| |/ _` | | |                           |
-#   |                         | |  | | (_| | | |                           |
-#   |                         |_|  |_|\__,_|_|_|                           |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-
-def ldap_sync_mail(connection, plugin, params, user_id, ldap_user, user):
-    mail = ''
-    mail_attr = params.get('attr', connection.ldap_attr('mail')).lower()
-    if ldap_user.get(mail_attr):
-        mail = ldap_user[mail_attr][0].lower()
-
-    if mail:
-        return {'email': mail}
-    return {}
-
-
-def ldap_needed_attributes_mail(connection, params):
-    return [params.get('attr', connection.ldap_attr('mail')).lower()]
-
-
-ldap_attribute_plugins['email'] = {
-    'title': _('Email address'),
-    'help': _('Synchronizes the email of the LDAP user account into Check_MK.'),
-    'needed_attributes': ldap_needed_attributes_mail,
-    'sync_func': ldap_sync_mail,
-    'lock_attributes': ['email'],
-    'parameters': [
-        ("attr",
-         TextAscii(
-             title=_("LDAP attribute to sync"),
-             help=_("The LDAP attribute containing the mail address of the user."),
-             default_value=lambda: ldap_attr_of_connection(g_editing_connection_id, 'mail'),
+def _group_membership_parameters():
+    return [
+        ('nested',
+         FixedValue(
+             title=_('Handle nested group memberships (Active Directory only at the moment)'),
+             help=_('Once you enable this option, this plugin will not only handle direct '
+                    'group memberships, instead it will also dig into nested groups and treat '
+                    'the members of those groups as contact group members as well. Please mind '
+                    'that this feature might increase the execution time of your LDAP sync.'),
+             value=True,
+             totext=_('Nested group memberships are resolved'),
          )),
-    ],
-}
+        ('other_connections',
+         ListChoice(
+             title=_("Sync group memberships from other connections"),
+             help=_(
+                 "This is a special feature for environments where user accounts are located "
+                 "in one LDAP directory and groups objects having them as members are located "
+                 "in other directories. You should only enable this feature when you are in this "
+                 "situation and really need it. The current connection is always used."),
+             choices=lambda: get_connection_choices(add_this=False),
+             default_value=[None],
+         )),
+    ]
+
+
+@ldap_attribute_plugin_registry.register
+class LDAPAttributePluginMail(LDAPBuiltinAttributePlugin):
+    @property
+    def ident(self):
+        return "email"
+
+    @property
+    def title(self):
+        return _('Email address')
+
+    @property
+    def help(self):
+        return _('Synchronizes the email of the LDAP user account into Check_MK.')
+
+    def lock_attributes(self, params):
+        return ['email']
+
+    def needed_attributes(self, connection, params):
+        return [params.get('attr', connection.ldap_attr('mail')).lower()]
+
+    def sync_func(self, connection, plugin, params, user_id, ldap_user, user):
+        mail = ''
+        mail_attr = params.get('attr', connection.ldap_attr('mail')).lower()
+        if ldap_user.get(mail_attr):
+            mail = ldap_user[mail_attr][0].lower()
+
+        if mail:
+            return {'email': mail}
+        return {}
+
+    def parameters(self, connection):
+        return Dictionary(
+            title=self.title,
+            help=self.help,
+            elements=[
+                ("attr",
+                 TextAscii(
+                     title=_("LDAP attribute to sync"),
+                     help=_("The LDAP attribute containing the mail address of the user."),
+                     default_value=lambda: ldap_attr_of_connection(connection.id(), 'mail'),
+                 )),
+            ],
+        )
+
 
 #.
 #   .--Alias---------------------------------------------------------------.
@@ -2094,31 +2169,45 @@ ldap_attribute_plugins['email'] = {
 #   '----------------------------------------------------------------------'
 
 
-def ldap_sync_alias(connection, plugin, params, user_id, ldap_user, user):
-    return ldap_sync_simple(user_id, ldap_user, user, 'alias',
-                            params.get('attr', connection.ldap_attr('cn')).lower())
+@ldap_attribute_plugin_registry.register
+class LDAPAttributePluginAlias(LDAPBuiltinAttributePlugin):
+    @property
+    def ident(self):
+        return "alias"
 
+    @property
+    def title(self):
+        return _('Alias')
 
-def ldap_needed_attributes_alias(connection, params):
-    return [params.get('attr', connection.ldap_attr('cn')).lower()]
+    @property
+    def help(self):
+        return _('Populates the alias attribute of the WATO user by synchronizing an attribute '
+                 'from the LDAP user account. By default the LDAP attribute <tt>cn</tt> is used.')
 
+    def lock_attributes(self, params):
+        return ['alias']
 
-ldap_attribute_plugins['alias'] = {
-    'title': _('Alias'),
-    'help': _('Populates the alias attribute of the WATO user by synchronizing an attribute '
-              'from the LDAP user account. By default the LDAP attribute <tt>cn</tt> is used.'),
-    'needed_attributes': ldap_needed_attributes_alias,
-    'sync_func': ldap_sync_alias,
-    'lock_attributes': ['alias'],
-    'parameters': [
-        ("attr",
-         TextAscii(
-             title=_("LDAP attribute to sync"),
-             help=_("The LDAP attribute containing the alias of the user."),
-             default_value=lambda: ldap_attr_of_connection(g_editing_connection_id, 'cn'),
-         )),
-    ],
-}
+    def needed_attributes(self, connection, params):
+        return [params.get('attr', connection.ldap_attr('cn')).lower()]
+
+    def sync_func(self, connection, plugin, params, user_id, ldap_user, user):
+        return ldap_sync_simple(user_id, ldap_user, user, 'alias',
+                                params.get('attr', connection.ldap_attr('cn')).lower())
+
+    def parameters(self, connection):
+        return Dictionary(
+            title=self.title,
+            help=self.help,
+            elements=[
+                ("attr",
+                 TextAscii(
+                     title=_("LDAP attribute to sync"),
+                     help=_("The LDAP attribute containing the alias of the user."),
+                     default_value=lambda: ldap_attr_of_connection(connection.id(), 'cn'),
+                 )),
+            ],
+        )
+
 
 #.
 #   .--Auth Expire---------------------------------------------------------.
@@ -2128,89 +2217,106 @@ ldap_attribute_plugins['alias'] = {
 #   |        / ___ \ |_| | |_| | | | | |___ >  <| |_) | | | |  __/         |
 #   |       /_/   \_\__,_|\__|_| |_| |_____/_/\_\ .__/|_|_|  \___|         |
 #   |                                           |_|                        |
-#   +----------------------------------------------------------------------+
-#   | Checks whether or not the user auth must be invalidated (increasing   |
-#   | the serial). In first instance, it must parse the pw-changed field,  |
-#   | then check whether or not a date has been stored in the user before   |
-#   | and then maybe increase the serial.                                  |
 #   '----------------------------------------------------------------------'
 
 
-def ldap_sync_auth_expire(connection, plugin, params, user_id, ldap_user, user):
-    # Special handling for active directory: Is the user enabled / disabled?
-    if connection.is_active_directory() and ldap_user.get('useraccountcontrol'):
-        # see http://www.selfadsi.de/ads-attributes/user-userAccountControl.htm for details
-        locked_in_ad = int(ldap_user['useraccountcontrol'][0]) & 2
-        locked_in_cmk = user.get("locked", False)
+@ldap_attribute_plugin_registry.register
+class LDAPAttributePluginAuthExpire(LDAPBuiltinAttributePlugin):
+    """Checks whether or not the user auth must be invalidated
 
-        if locked_in_ad and not locked_in_cmk:
+    This is done by increasing the auth serial of the user. In first instance, it must parse
+    the pw-changed field, then check whether or not a date has been stored in the user before
+    and then maybe increase the serial."""
+
+    @property
+    def ident(self):
+        return "auth_expire"
+
+    @property
+    def title(self):
+        return _('Authentication Expiration')
+
+    @property
+    def help(self):
+        return _('This plugin fetches all information which are needed to check whether or '
+                 'not an already authenticated user should be deauthenticated, e.g. because '
+                 'the password has changed in LDAP or the account has been locked.')
+
+    def lock_attributes(self, params):
+        return ['locked']
+
+    @property
+    def multisite_attributes(self):
+        return ["ldap_pw_last_changed"]
+
+    @property
+    def non_contact_attributes(self):
+        return ["ldap_pw_last_changed"]
+
+    def needed_attributes(self, connection, params):
+        attrs = [params.get('attr', connection.ldap_attr('pw_changed')).lower()]
+
+        # Fetch user account flags to check locking
+        if connection.is_active_directory():
+            attrs.append('useraccountcontrol')
+        return attrs
+
+    def sync_func(self, connection, plugin, params, user_id, ldap_user, user):
+        # Special handling for active directory: Is the user enabled / disabled?
+        if connection.is_active_directory() and ldap_user.get('useraccountcontrol'):
+            # see http://www.selfadsi.de/ads-attributes/user-userAccountControl.htm for details
+            locked_in_ad = int(ldap_user['useraccountcontrol'][0]) & 2
+            locked_in_cmk = user.get("locked", False)
+
+            if locked_in_ad and not locked_in_cmk:
+                return {
+                    'locked': True,
+                    'serial': user.get('serial', 0) + 1,
+                }
+            elif not locked_in_ad and locked_in_cmk:
+                return {
+                    'locked': False,
+                }
+
+        changed_attr = params.get('attr', connection.ldap_attr('pw_changed')).lower()
+        if not changed_attr in ldap_user:
+            raise MKLDAPException(
+                _('The "Authentication Expiration" attribute (%s) could not be fetched '
+                  'from the LDAP server for user %s.') % (changed_attr, ldap_user))
+
+        # For keeping this thing simple, we don't parse the date here. We just store
+        # the last value of the field in the user data and invalidate the auth if the
+        # value has been changed.
+
+        if 'ldap_pw_last_changed' not in user:
+            return {'ldap_pw_last_changed': ldap_user[changed_attr][0]}  # simply store
+
+        # Update data (and invalidate auth) if the attribute has changed
+        if user['ldap_pw_last_changed'] != ldap_user[changed_attr][0]:
             return {
-                'locked': True,
+                'ldap_pw_last_changed': ldap_user[changed_attr][0],
                 'serial': user.get('serial', 0) + 1,
             }
-        elif not locked_in_ad and locked_in_cmk:
-            return {
-                'locked': False,
-            }
 
-    changed_attr = params.get('attr', connection.ldap_attr('pw_changed')).lower()
-    if not changed_attr in ldap_user:
-        raise MKLDAPException(
-            _('The "Authentication Expiration" attribute (%s) could not be fetched '
-              'from the LDAP server for user %s.') % (changed_attr, ldap_user))
+        return {}
 
-    # For keeping this thing simple, we don't parse the date here. We just store
-    # the last value of the field in the user data and invalidate the auth if the
-    # value has been changed.
+    def parameters(self, connection):
+        return Dictionary(
+            title=self.title,
+            help=self.help,
+            elements=[
+                ("attr",
+                 TextAscii(
+                     title=_("LDAP attribute to be used as indicator"),
+                     help=_("When the value of this attribute changes for a user account, all "
+                            "current authenticated sessions of the user are invalidated and the "
+                            "user must login again. By default this field uses the fields which "
+                            "hold the time of the last password change of the user."),
+                     default_value=lambda: ldap_attr_of_connection(connection.id(), 'pw_changed'),
+                 )),
+            ],
+        )
 
-    if 'ldap_pw_last_changed' not in user:
-        return {'ldap_pw_last_changed': ldap_user[changed_attr][0]}  # simply store
-
-    # Update data (and invalidate auth) if the attribute has changed
-    if user['ldap_pw_last_changed'] != ldap_user[changed_attr][0]:
-        return {
-            'ldap_pw_last_changed': ldap_user[changed_attr][0],
-            'serial': user.get('serial', 0) + 1,
-        }
-
-    return {}
-
-
-def ldap_needed_attributes_auth_expire(connection, params):
-    attrs = [params.get('attr', connection.ldap_attr('pw_changed')).lower()]
-
-    # Fetch user account flags to check locking
-    if connection.is_active_directory():
-        attrs.append('useraccountcontrol')
-    return attrs
-
-
-ldap_attribute_plugins['auth_expire'] = {
-    'title': _('Authentication Expiration'),
-    'help': _('This plugin fetches all information which are needed to check whether or '
-              'not an already authenticated user should be deauthenticated, e.g. because '
-              'the password has changed in LDAP or the account has been locked.'),
-    'needed_attributes': ldap_needed_attributes_auth_expire,
-    'sync_func': ldap_sync_auth_expire,
-    'lock_attributes': ['locked'],
-    # When a plugin introduces new user attributes, it should declare the output target for
-    # this attribute. It can either be written to the multisites users.mk or the check_mk
-    # contacts.mk to be forwarded to nagios. Undeclared attributes are stored in the check_mk
-    # contacts.mk file.
-    'multisite_attributes': ['ldap_pw_last_changed'],
-    'non_contact_attributes': ['ldap_pw_last_changed'],
-    'parameters': [
-        ("attr",
-         TextAscii(
-             title=_("LDAP attribute to be used as indicator"),
-             help=_("When the value of this attribute changes for a user account, all "
-                    "current authenticated sessions of the user are invalidated and the "
-                    "user must login again. By default this field uses the fields which "
-                    "hold the time of the last password change of the user."),
-             default_value=lambda: ldap_attr_of_connection(g_editing_connection_id, 'pw_changed'),
-         )),
-    ],
-}
 
 #.
 #   .--Pager---------------------------------------------------------------.
@@ -2223,33 +2329,47 @@ ldap_attribute_plugins['auth_expire'] = {
 #   '----------------------------------------------------------------------'
 
 
-def ldap_sync_pager(connection, plugin, params, user_id, ldap_user, user):
-    return ldap_sync_simple(user_id, ldap_user, user, 'pager',
-                            params.get('attr', connection.ldap_attr('mobile')).lower())
+@ldap_attribute_plugin_registry.register
+class LDAPAttributePluginPager(LDAPBuiltinAttributePlugin):
+    @property
+    def ident(self):
+        return "pager"
 
+    @property
+    def title(self):
+        return _('Pager')
 
-def ldap_needed_attributes_pager(connection, params):
-    return [params.get('attr', connection.ldap_attr('mobile')).lower()]
+    @property
+    def help(self):
+        return _(
+            'This plugin synchronizes a field of the users LDAP account to the pager attribute '
+            'of the WATO user accounts, which is then forwarded to the monitoring core and can be used'
+            'for notifications. By default the LDAP attribute <tt>mobile</tt> is used.')
 
+    def lock_attributes(self, params):
+        return ['pager']
 
-ldap_attribute_plugins['pager'] = {
-    'title': _('Pager'),
-    'help': _(
-        'This plugin synchronizes a field of the users LDAP account to the pager attribute '
-        'of the WATO user accounts, which is then forwarded to the monitoring core and can be used'
-        'for notifications. By default the LDAP attribute <tt>mobile</tt> is used.'),
-    'needed_attributes': ldap_needed_attributes_pager,
-    'sync_func': ldap_sync_pager,
-    'lock_attributes': ['pager'],
-    'parameters': [
-        ('attr',
-         TextAscii(
-             title=_("LDAP attribute to sync"),
-             help=_("The LDAP attribute containing the pager number of the user."),
-             default_value=lambda: ldap_attr_of_connection(g_editing_connection_id, 'mobile'),
-         )),
-    ],
-}
+    def needed_attributes(self, connection, params):
+        return [params.get('attr', connection.ldap_attr('mobile')).lower()]
+
+    def sync_func(self, connection, plugin, params, user_id, ldap_user, user):
+        return ldap_sync_simple(user_id, ldap_user, user, 'pager',
+                                params.get('attr', connection.ldap_attr('mobile')).lower())
+
+    def parameters(self, connection):
+        return Dictionary(
+            title=self.title,
+            help=self.help,
+            elements=[
+                ('attr',
+                 TextAscii(
+                     title=_("LDAP attribute to sync"),
+                     help=_("The LDAP attribute containing the pager number of the user."),
+                     default_value=lambda: ldap_attr_of_connection(connection.id(), 'mobile'),
+                 )),
+            ],
+        )
+
 
 #.
 #   .--Contactgroups-------------------------------------------------------.
@@ -2262,27 +2382,46 @@ ldap_attribute_plugins['pager'] = {
 #   '----------------------------------------------------------------------'
 
 
-def ldap_sync_groups_to_contactgroups(connection, plugin, params, user_id, ldap_user, user):
-    # Gather all group names to search for in LDAP
-    import cmk.gui.userdb as userdb  # TODO: Cleanup
-    cg_names = userdb.load_group_information().get("contact", {}).keys()
+@ldap_attribute_plugin_registry.register
+class LDAPAttributePluginGroupsToContactgroups(LDAPBuiltinAttributePlugin):
+    @property
+    def ident(self):
+        return "groups_to_contactgroups"
 
-    return {
-        "contactgroups": get_groups_of_user(connection, user_id, ldap_user, cg_names,
-                                            params.get('nested', False),
-                                            params.get("other_connections", []))
-    }
+    @property
+    def title(self):
+        return _('Contactgroup Membership')
 
+    @property
+    def help(self):
+        return _('Adds the user to contactgroups based on the group memberships in LDAP. This '
+                 'plugin adds the user only to existing contactgroups while the name of the '
+                 'contactgroup must match the common name (cn) of the LDAP group.')
 
-ldap_attribute_plugins['groups_to_contactgroups'] = {
-    'title': _('Contactgroup Membership'),
-    'help': _('Adds the user to contactgroups based on the group memberships in LDAP. This '
-              'plugin adds the user only to existing contactgroups while the name of the '
-              'contactgroup must match the common name (cn) of the LDAP group.'),
-    'sync_func': ldap_sync_groups_to_contactgroups,
-    'lock_attributes': ['contactgroups'],
-    'parameters': group_membership_parameters,
-}
+    def lock_attributes(self, params):
+        return ['contactgroups']
+
+    def needed_attributes(self, connection, params):
+        return []
+
+    def sync_func(self, connection, plugin, params, user_id, ldap_user, user):
+        # Gather all group names to search for in LDAP
+        import cmk.gui.userdb as userdb  # TODO: Cleanup
+        cg_names = userdb.load_group_information().get("contact", {}).keys()
+
+        return {
+            "contactgroups": get_groups_of_user(connection, user_id, ldap_user, cg_names,
+                                                params.get('nested', False),
+                                                params.get("other_connections", []))
+        }
+
+    def parameters(self, connection):
+        return Dictionary(
+            title=self.title,
+            help=self.help,
+            elements=_group_membership_parameters(),
+        )
+
 
 #.
 #   .--Group-Attrs.--------------------------------------------------------.
@@ -2292,101 +2431,115 @@ ldap_attribute_plugins['groups_to_contactgroups'] = {
 #   |    | |_| | | | (_) | |_| | |_) |_____/ ___ \ |_| |_| |  \__ \_       |
 #   |     \____|_|  \___/ \__,_| .__/     /_/   \_\__|\__|_|  |___(_)      |
 #   |                          |_|                                         |
-#   +----------------------------------------------------------------------+
-#   | Populate user attributes based on group memberships within LDAP      |
 #   '----------------------------------------------------------------------'
 
 
-def ldap_sync_groups_to_attributes(connection, plugin, params, user_id, ldap_user, user):
-    # Which groups need to be checked whether or not the user is a member?
-    cg_names = list(set([g["cn"] for g in params["groups"]]))
+@ldap_attribute_plugin_registry.register
+class LDAPAttributePluginGroupAttributes(LDAPBuiltinAttributePlugin):
+    """Populate user attributes based on group memberships within LDAP"""
 
-    # Get the group names the user is member of
-    groups = get_groups_of_user(connection, user_id, ldap_user, cg_names, params.get(
-        'nested', False), params.get("other_connections", []))
+    @property
+    def ident(self):
+        return "groups_to_attributes"
 
-    # Now construct the user update dictionary
-    update = {}
+    @property
+    def title(self):
+        return _('Groups to custom user attributes')
 
-    # First clean all previously set values from attributes to be synced where
-    # user is not a member of
-    import cmk.gui.userdb as userdb  # TODO: Cleanup
-    user_attrs = dict(userdb.get_user_attributes())
-    for group_spec in params["groups"]:
-        attr_name, value = group_spec["attribute"]
-        if group_spec["cn"] not in groups \
-           and attr_name in user \
-           and attr_name in user_attrs:
-            # not member, but set -> set to default. Maybe it would be cleaner
-            # to just remove the attribute from the user, but the sync plugin
-            # API does not support this at the moment.
-            update[attr_name] = user_attrs[attr_name].valuespec().default_value()
+    @property
+    def help(self):
+        return _('Sets custom user attributes based on the group memberships in LDAP. This '
+                 'plugin can be used to set custom user attributes to specified values '
+                 'for all users which are member of a group in LDAP. The specified group '
+                 'name must match the common name (CN) of the LDAP group.')
 
-    # Set the values of the groups the user is a member of
-    for group_spec in params["groups"]:
-        attr_name, value = group_spec["attribute"]
-        if group_spec["cn"] in groups:
-            # is member, set the configured value
-            update[attr_name] = value
+    def lock_attributes(self, params):
+        attrs = []
+        for group_spec in params["groups"]:
+            attr_name, _value = group_spec["attribute"]
+            attrs.append(attr_name)
+        return attrs
 
-    return update
+    def needed_attributes(self, connection, params):
+        return []
 
+    def sync_func(self, connection, plugin, params, user_id, ldap_user, user):
+        # Which groups need to be checked whether or not the user is a member?
+        cg_names = list(set([g["cn"] for g in params["groups"]]))
 
-# find out locked attributes depending on configuration
-def ldap_locked_attributes_groups_to_attributes(params):
-    attrs = []
-    for group_spec in params["groups"]:
-        attr_name, _value = group_spec["attribute"]
-        attrs.append(attr_name)
-    return attrs
+        # Get the group names the user is member of
+        groups = get_groups_of_user(connection, user_id, ldap_user, cg_names,
+                                    params.get('nested', False), params.get(
+                                        "other_connections", []))
 
+        # Now construct the user update dictionary
+        update = {}
 
-def get_user_attribute_choices():
-    choices = []
-    import cmk.gui.userdb as userdb  # TODO: Cleanup
-    for attr, val in userdb.get_user_attributes():
-        choices.append((attr, val.valuespec().title(), val.valuespec()))
-    return choices
+        # First clean all previously set values from attributes to be synced where
+        # user is not a member of
+        import cmk.gui.userdb as userdb  # TODO: Cleanup
+        user_attrs = dict(userdb.get_user_attributes())
+        for group_spec in params["groups"]:
+            attr_name, value = group_spec["attribute"]
+            if group_spec["cn"] not in groups \
+               and attr_name in user \
+               and attr_name in user_attrs:
+                # not member, but set -> set to default. Maybe it would be cleaner
+                # to just remove the attribute from the user, but the sync plugin
+                # API does not support this at the moment.
+                update[attr_name] = user_attrs[attr_name].valuespec().default_value()
 
+        # Set the values of the groups the user is a member of
+        for group_spec in params["groups"]:
+            attr_name, value = group_spec["attribute"]
+            if group_spec["cn"] in groups:
+                # is member, set the configured value
+                update[attr_name] = value
 
-ldap_attribute_plugins['groups_to_attributes'] = {
-    'title': _('Groups to custom user attributes'),
-    'help': _('Sets custom user attributes based on the group memberships in LDAP. This '
-              'plugin can be used to set custom user attributes to specified values '
-              'for all users which are member of a group in LDAP. The specified group '
-              'name must match the common name (CN) of the LDAP group.'),
-    'sync_func': ldap_sync_groups_to_attributes,
-    'lock_attributes': ldap_locked_attributes_groups_to_attributes,
-    'parameters': group_membership_parameters + [
-        ('groups',
-         ListOf(
-             Dictionary(
-                 elements=[
-                     ('cn',
-                      TextUnicode(
-                          title=_("Group<nobr> </nobr>CN"),
-                          size=40,
-                          allow_empty=False,
-                      )),
-                     ('attribute',
-                      CascadingDropdown(
-                          title=_("Attribute to set"),
-                          choices=get_user_attribute_choices,
-                      )),
-                 ],
-                 optional_keys=[],
-             ),
-             title=_("Groups to synchronize"),
-             help=_(
-                 "Specify the groups to control the value of a given user attribute. If a user is "
-                 "not a member of a group, the attribute will be left at it's default value. When "
-                 "a single attribute is set by multiple groups and a user is member of multiple "
-                 "of these groups, the later plugin in the list will override the others."),
-             allow_empty=False,
-         )),
-    ],
-    'required_parameters': ["groups"],
-}
+        return update
+
+    def parameters(self, connection):
+        return Dictionary(
+            title=self.title,
+            help=self.help,
+            elements=_group_membership_parameters() + [
+                ('groups',
+                 ListOf(
+                     Dictionary(
+                         elements=[
+                             ('cn',
+                              TextUnicode(
+                                  title=_("Group<nobr> </nobr>CN"),
+                                  size=40,
+                                  allow_empty=False,
+                              )),
+                             ('attribute',
+                              CascadingDropdown(
+                                  title=_("Attribute to set"),
+                                  choices=self._get_user_attribute_choices,
+                              )),
+                         ],
+                         optional_keys=[],
+                     ),
+                     title=_("Groups to synchronize"),
+                     help=
+                     _("Specify the groups to control the value of a given user attribute. If a user is "
+                       "not a member of a group, the attribute will be left at it's default value. When "
+                       "a single attribute is set by multiple groups and a user is member of multiple "
+                       "of these groups, the later plugin in the list will override the others."),
+                     allow_empty=False,
+                 )),
+            ],
+            required_keys=["groups"],
+        )
+
+    def _get_user_attribute_choices(self):
+        choices = []
+        import cmk.gui.userdb as userdb  # TODO: Cleanup
+        for attr, val in userdb.get_user_attributes():
+            choices.append((attr, val.valuespec().title(), val.valuespec()))
+        return choices
+
 
 #.
 #   .--Roles---------------------------------------------------------------.
@@ -2399,147 +2552,165 @@ ldap_attribute_plugins['groups_to_attributes'] = {
 #   '----------------------------------------------------------------------'
 
 
-def ldap_sync_groups_to_roles(connection, plugin, params, user_id, ldap_user, user):
-    ldap_groups = fetch_needed_groups_for_groups_to_roles(connection, params)
+@ldap_attribute_plugin_registry.register
+class LDAPAttributePluginGroupsToRoles(LDAPBuiltinAttributePlugin):
+    @property
+    def ident(self):
+        return "groups_to_roles"
 
-    # posixGroup objects use the memberUid attribute to specify the group
-    # memberships. This is the username instead of the users DN. So the
-    # username needs to be used for filtering here.
-    user_cmp_val = get_group_member_cmp_val(connection, user_id, ldap_user)
+    @property
+    def title(self):
+        return _('Roles')
 
-    roles = set([])
+    @property
+    def help(self):
+        return _(
+            'Configures the roles of the user depending on its group memberships '
+            'in LDAP.<br><br>'
+            'Please note: Additionally the user is assigned to the '
+            '<a href="wato.py?mode=edit_configvar&varname=default_user_profile&site=&folder=">Default Roles</a>. '
+            'Deactivate them if unwanted.')
 
-    # Loop all roles mentioned in params (configured to be synchronized)
-    for role_id, group_specs in params.items():
-        if not isinstance(group_specs, list):
-            group_specs = [group_specs]  # be compatible to old single group configs
+    def lock_attributes(self, params):
+        return ['roles']
 
-        for group_spec in group_specs:
-            if isinstance(group_spec, six.string_types):
-                dn = group_spec  # be compatible to old config without connection spec
-            elif not isinstance(group_spec, tuple):
-                continue  # skip non configured ones (old valuespecs allowed None)
-            else:
-                dn = group_spec[0]
-            dn = dn.lower()  # lower case matching for DNs!
+    def needed_attributes(self, connection, params):
+        return []
 
-            # if group could be found and user is a member, add the role
-            if dn in ldap_groups and user_cmp_val in ldap_groups[dn]['members']:
-                roles.add(role_id)
+    def sync_func(self, connection, plugin, params, user_id, ldap_user, user):
+        ldap_groups = self.fetch_needed_groups_for_groups_to_roles(connection, params)
 
-    # Load default roles from default user profile when the user got no role
-    # by the role sync plugin
-    if not roles:
-        roles = config.default_user_profile['roles'][:]
+        # posixGroup objects use the memberUid attribute to specify the group
+        # memberships. This is the username instead of the users DN. So the
+        # username needs to be used for filtering here.
+        user_cmp_val = get_group_member_cmp_val(connection, user_id, ldap_user)
 
-    return {'roles': list(roles)}
+        roles = set([])
 
+        # Loop all roles mentioned in params (configured to be synchronized)
+        for role_id, group_specs in params.items():
+            if not isinstance(group_specs, list):
+                group_specs = [group_specs]  # be compatible to old single group configs
 
-def fetch_needed_groups_for_groups_to_roles(connection, params):
-    import cmk.gui.userdb as userdb  # TODO: Cleanup
-
-    # Load the needed LDAP groups, which match the DNs mentioned in the role sync plugin config
-    ldap_groups = {}
-    for connection_id, group_dns in _get_groups_to_fetch(connection, params).items():
-        conn = userdb.get_connection(connection_id)
-        ldap_groups.update(
-            dict(
-                conn.get_group_memberships(
-                    group_dns, filt_attr='distinguishedname', nested=params.get('nested', False))))
-
-    return ldap_groups
-
-
-def _get_groups_to_fetch(connection, params):
-    groups_to_fetch = {}
-    for group_specs in params.itervalues():
-        if isinstance(group_specs, list):
             for group_spec in group_specs:
-                if isinstance(group_spec, tuple):
-                    this_conn_id = group_spec[1]
-                    if this_conn_id is None:
-                        this_conn_id = connection.id()
-                    groups_to_fetch.setdefault(this_conn_id, [])
-                    groups_to_fetch[this_conn_id].append(group_spec[0].lower())
+                if isinstance(group_spec, six.string_types):
+                    dn = group_spec  # be compatible to old config without connection spec
+                elif not isinstance(group_spec, tuple):
+                    continue  # skip non configured ones (old valuespecs allowed None)
                 else:
-                    # Be compatible to old config format (no connection specified)
-                    this_conn_id = connection.id()
-                    groups_to_fetch.setdefault(this_conn_id, [])
-                    groups_to_fetch[this_conn_id].append(group_spec.lower())
+                    dn = group_spec[0]
+                dn = dn.lower()  # lower case matching for DNs!
 
-        elif isinstance(group_specs, six.string_types):
-            # Need to be compatible to old config formats
-            this_conn_id = connection.id()
-            groups_to_fetch.setdefault(this_conn_id, [])
-            groups_to_fetch[this_conn_id].append(group_specs.lower())
+                # if group could be found and user is a member, add the role
+                if dn in ldap_groups and user_cmp_val in ldap_groups[dn]['members']:
+                    roles.add(role_id)
 
-    return groups_to_fetch
+        # Load default roles from default user profile when the user got no role
+        # by the role sync plugin
+        if not roles:
+            roles = config.default_user_profile['roles'][:]
 
+        return {'roles': list(roles)}
 
-def ldap_list_roles_with_group_dn():
-    import cmk.gui.userdb as userdb  # TODO: Cleanup
-    elements = []
-    for role_id, role in userdb.load_roles().items():
-        elements.append((
-            role_id,
-            Transform(
-                ListOf(
-                    Transform(
-                        Tuple(
-                            elements=[
-                                LDAPDistinguishedName(
-                                    title=_("Group<nobr> </nobr>DN"),
-                                    size=80,
-                                    allow_empty=False,
-                                ),
-                                DropdownChoice(
-                                    title=_("Search<nobr> </nobr>in"),
-                                    choices=get_connection_choices,
-                                    default_value=None,
-                                ),
-                            ],),
-                        # convert old distinguished names to tuples
-                        forth=lambda v: (v,) if not isinstance(v, tuple) else v,
+    def fetch_needed_groups_for_groups_to_roles(self, connection, params):
+        import cmk.gui.userdb as userdb  # TODO: Cleanup
+
+        # Load the needed LDAP groups, which match the DNs mentioned in the role sync plugin config
+        ldap_groups = {}
+        for connection_id, group_dns in self._get_groups_to_fetch(connection, params).items():
+            conn = userdb.get_connection(connection_id)
+            ldap_groups.update(
+                dict(
+                    conn.get_group_memberships(
+                        group_dns,
+                        filt_attr='distinguishedname',
+                        nested=params.get('nested', False))))
+
+        return ldap_groups
+
+    def _get_groups_to_fetch(self, connection, params):
+        groups_to_fetch = {}
+        for group_specs in params.itervalues():
+            if isinstance(group_specs, list):
+                for group_spec in group_specs:
+                    if isinstance(group_spec, tuple):
+                        this_conn_id = group_spec[1]
+                        if this_conn_id is None:
+                            this_conn_id = connection.id()
+                        groups_to_fetch.setdefault(this_conn_id, [])
+                        groups_to_fetch[this_conn_id].append(group_spec[0].lower())
+                    else:
+                        # Be compatible to old config format (no connection specified)
+                        this_conn_id = connection.id()
+                        groups_to_fetch.setdefault(this_conn_id, [])
+                        groups_to_fetch[this_conn_id].append(group_spec.lower())
+
+            elif isinstance(group_specs, six.string_types):
+                # Need to be compatible to old config formats
+                this_conn_id = connection.id()
+                groups_to_fetch.setdefault(this_conn_id, [])
+                groups_to_fetch[this_conn_id].append(group_specs.lower())
+
+        return groups_to_fetch
+
+    def parameters(self, connection):
+        return Dictionary(
+            title=self.title,
+            help=self.help,
+            elements=self._list_roles_with_group_dn,
+        )
+
+    def _list_roles_with_group_dn(self):
+        import cmk.gui.userdb as userdb  # TODO: Cleanup
+        elements = []
+        for role_id, role in userdb.load_roles().items():
+            elements.append((
+                role_id,
+                Transform(
+                    ListOf(
+                        Transform(
+                            Tuple(
+                                elements=[
+                                    LDAPDistinguishedName(
+                                        title=_("Group<nobr> </nobr>DN"),
+                                        size=80,
+                                        allow_empty=False,
+                                    ),
+                                    DropdownChoice(
+                                        title=_("Search<nobr> </nobr>in"),
+                                        choices=get_connection_choices,
+                                        default_value=None,
+                                    ),
+                                ],),
+                            # convert old distinguished names to tuples
+                            forth=lambda v: (v,) if not isinstance(v, tuple) else v,
+                        ),
+                        title=role['alias'],
+                        help=_(
+                            "Distinguished Names of the LDAP groups to add users this role. "
+                            "e. g. <tt>CN=cmk-users,OU=groups,DC=example,DC=com</tt><br> "
+                            "This group must be defined within the scope of the "
+                            "<a href=\"wato.py?mode=ldap_config&varname=ldap_groupspec\">LDAP Group Settings</a>."
+                        ),
+                        movable=False,
                     ),
-                    title=role['alias'],
-                    help=_(
-                        "Distinguished Names of the LDAP groups to add users this role. "
-                        "e. g. <tt>CN=cmk-users,OU=groups,DC=example,DC=com</tt><br> "
-                        "This group must be defined within the scope of the "
-                        "<a href=\"wato.py?mode=ldap_config&varname=ldap_groupspec\">LDAP Group Settings</a>."
-                    ),
-                    movable=False,
-                ),
-                # convert old single distinguished names to list of :Ns
-                forth=lambda v: [v] if not isinstance(v, list) else v,
-            )))
+                    # convert old single distinguished names to list of :Ns
+                    forth=lambda v: [v] if not isinstance(v, list) else v,
+                )))
 
-    elements.append(
-        ('nested',
-         FixedValue(
-             title=_('Handle nested group memberships (Active Directory only at the moment)'),
-             help=_('Once you enable this option, this plugin will not only handle direct '
-                    'group memberships, instead it will also dig into nested groups and treat '
-                    'the members of those groups as contact group members as well. Please mind '
-                    'that this feature might increase the execution time of your LDAP sync.'),
-             value=True,
-             totext=_('Nested group memberships are resolved'),
-         )))
-    return elements
+        elements.append(
+            ('nested',
+             FixedValue(
+                 title=_('Handle nested group memberships (Active Directory only at the moment)'),
+                 help=_('Once you enable this option, this plugin will not only handle direct '
+                        'group memberships, instead it will also dig into nested groups and treat '
+                        'the members of those groups as contact group members as well. Please mind '
+                        'that this feature might increase the execution time of your LDAP sync.'),
+                 value=True,
+                 totext=_('Nested group memberships are resolved'),
+             )))
+        return elements
 
-
-ldap_attribute_plugins['groups_to_roles'] = {
-    'title': _('Roles'),
-    'help': _(
-        'Configures the roles of the user depending on its group memberships '
-        'in LDAP.<br><br>'
-        'Please note: Additionally the user is assigned to the '
-        '<a href="wato.py?mode=edit_configvar&varname=default_user_profile&site=&folder=">Default Roles</a>. '
-        'Deactivate them if unwanted.'),
-    'sync_func': ldap_sync_groups_to_roles,
-    'lock_attributes': ['roles'],
-    'parameters': ldap_list_roles_with_group_dn,
-}
 
 #.
 #   .--WATO-Sync-----------------------------------------------------------.

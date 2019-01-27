@@ -32,7 +32,20 @@ import six
 
 import cmk.utils.plugin_registry
 
+from cmk.gui.globals import html
 from cmk.gui.valuespec import ValueSpec  # pylint: disable=unused-import
+from cmk.gui.valuespec import (
+    Dictionary,
+    Transform,
+    ListOf,
+    ElementSelection,
+    FixedValue,
+    Tuple,
+    DropdownChoice,
+    OptionalDropdownChoice,
+)
+from cmk.gui.watolib.timeperiods import TimeperiodSelection
+from cmk.gui.watolib.automations import check_mk_local_automation
 from cmk.gui.i18n import _
 
 
@@ -205,7 +218,7 @@ rulespec_group_registry = RulespecGroupRegistry()
 
 
 @rulespec_group_registry.register
-class RulespecGroupStaticChecks(RulespecGroup):
+class RulespecGroupManualChecks(RulespecGroup):
     @property
     def name(self):
         return "static"
@@ -217,6 +230,111 @@ class RulespecGroupStaticChecks(RulespecGroup):
     @property
     def help(self):
         return _("Statically configured Check_MK checks that do not rely on the inventory")
+
+
+@rulespec_group_registry.register
+class RulespecGroupManualChecksNetworking(RulespecSubGroup):
+    @property
+    def main_group(self):
+        return RulespecGroupManualChecks
+
+    @property
+    def sub_group_name(self):
+        return "networking"
+
+    @property
+    def title(self):
+        return _("Networking")
+
+
+@rulespec_group_registry.register
+class RulespecGroupManualChecksApplications(RulespecSubGroup):
+    @property
+    def main_group(self):
+        return RulespecGroupManualChecks
+
+    @property
+    def sub_group_name(self):
+        return "applications"
+
+    @property
+    def title(self):
+        return _("Applications, Processes & Services")
+
+
+@rulespec_group_registry.register
+class RulespecGroupManualChecksEnvironment(RulespecSubGroup):
+    @property
+    def main_group(self):
+        return RulespecGroupManualChecks
+
+    @property
+    def sub_group_name(self):
+        return "environment"
+
+    @property
+    def title(self):
+        return _("Temperature, Humidity, Electrical Parameters, etc.")
+
+
+@rulespec_group_registry.register
+class RulespecGroupManualChecksOperatingSystem(RulespecSubGroup):
+    @property
+    def main_group(self):
+        return RulespecGroupManualChecks
+
+    @property
+    def sub_group_name(self):
+        return "os"
+
+    @property
+    def title(self):
+        return _("Operating System Resources")
+
+
+@rulespec_group_registry.register
+class RulespecGroupManualChecksHardware(RulespecSubGroup):
+    @property
+    def main_group(self):
+        return RulespecGroupManualChecks
+
+    @property
+    def sub_group_name(self):
+        return "hardware"
+
+    @property
+    def title(self):
+        return _("Hardware, BIOS")
+
+
+@rulespec_group_registry.register
+class RulespecGroupManualChecksStorage(RulespecSubGroup):
+    @property
+    def main_group(self):
+        return RulespecGroupManualChecks
+
+    @property
+    def sub_group_name(self):
+        return "storage"
+
+    @property
+    def title(self):
+        return _("Storage, Filesystems and Files")
+
+
+@rulespec_group_registry.register
+class RulespecGroupManualChecksVirtualization(RulespecSubGroup):
+    @property
+    def main_group(self):
+        return RulespecGroupManualChecks
+
+    @property
+    def sub_group_name(self):
+        return "virtualization"
+
+    @property
+    def title(self):
+        return _("Virtualization")
 
 
 # TODO: Kept for compatibility with pre 1.6 plugins
@@ -360,6 +478,7 @@ class Rulespec(object):
 class ABCHostRulespec(object):
     """Base class for all rulespecs managing host rule sets"""
 
+    @property
     def is_for_services(self):
         return False
 
@@ -392,6 +511,7 @@ class ABCHostRulespec(object):
 class ABCServiceRulespec(object):
     """Base class for all rulespecs managing service rule sets"""
 
+    @property
     def is_for_services(self):
         return True
 
@@ -482,6 +602,152 @@ class ServiceRulespec(ABCServiceRulespec, ABCValueRulespec):
     pass
 
 
+class CheckParameterRulespecWithItem(ServiceRulespec):
+    """Base class for all rulespecs managing parameters for check groups with item
+
+    These have to be named checkgroup_parameters:<name-of-checkgroup>. These
+    parameters affect the discovered services only, not the manually configured
+    checks."""
+
+    @abc.abstractproperty
+    def check_group_name(self):
+        raise NotImplementedError()
+
+    @property
+    def name(self):
+        return "checkgroup_parameters:%s" % self.check_group_name
+
+    @property
+    def item_type(self):
+        return "item"
+
+    # TODO: Cleanup call sites to use item_spec directly
+    @property
+    def item_name(self):
+        return self.item_spec.title()
+
+    # TODO: Cleanup call sites to use item_spec directly
+    @property
+    def item_help(self):
+        return self.item_spec.help()
+
+    @property
+    def item_enum(self):
+        if isinstance(self.item_spec, (DropdownChoice, OptionalDropdownChoice)):
+            return self.item_spec._choices
+        return None
+
+    @property
+    def valuespec(self):
+        # type: () -> ValueSpec
+        """Enclose the parameter valuespec with a TimeperiodValuespec.
+        The given valuespec will be transformed to a list of valuespecs,
+        whereas each element can be set to a specific timeperiod.
+        """
+        parameter_vs = self.parameter_valuespec
+        if isinstance(parameter_vs, TimeperiodValuespec):
+            # Legacy check parameters registered through register_check_parameters() already
+            # have their valuespec wrapped in TimeperiodValuespec.
+            return parameter_vs
+        return TimeperiodValuespec(self.parameter_valuespec)
+
+    @abc.abstractproperty
+    def parameter_valuespec(self):
+        # type: () -> ValueSpec
+        raise NotImplementedError()
+
+
+class CheckParameterRulespecWithoutItem(HostRulespec):
+    """Base class for all rulespecs managing parameters for check groups without item
+
+    These have to be named checkgroup_parameters:<name-of-checkgroup>. These
+    parameters affect the discovered services only, not the manually configured
+    checks."""
+
+    @abc.abstractproperty
+    def check_group_name(self):
+        raise NotImplementedError()
+
+    @property
+    def name(self):
+        return "checkgroup_parameters:%s" % self.check_group_name
+
+    @property
+    def valuespec(self):
+        # type: () -> ValueSpec
+        """Enclose the parameter valuespec with a TimeperiodValuespec.
+        The given valuespec will be transformed to a list of valuespecs,
+        whereas each element can be set to a specific timeperiod.
+        """
+        parameter_vs = self.parameter_valuespec
+        if isinstance(parameter_vs, TimeperiodValuespec):
+            # Legacy check parameters registered through register_check_parameters() already
+            # have their valuespec wrapped in TimeperiodValuespec.
+            return parameter_vs
+        return TimeperiodValuespec(self.parameter_valuespec)
+
+    @abc.abstractproperty
+    def parameter_valuespec(self):
+        # type: () -> ValueSpec
+        raise NotImplementedError()
+
+
+class ManualCheckParameterRulespec(HostRulespec):
+    """Base class for all rulespecs managing manually configured checks
+
+    These have to be named static_checks:<name-of-checkgroup>"""
+
+    @abc.abstractproperty
+    def check_group_name(self):
+        raise NotImplementedError()
+
+    @property
+    def name(self):
+        return "static_checks:%s" % self.check_group_name
+
+    @property
+    def valuespec(self):
+        """Wraps the parameter together with the other needed valuespecs
+
+        This should not be overridden by specific manual checks. Normally the parameter_valuespec
+        is the one that should be overridden.
+        """
+        parameter_vs = self.parameter_valuespec
+        return Tuple(
+            title=parameter_vs.title(),
+            elements=[
+                CheckTypeGroupSelection(
+                    self.check_group_name,
+                    title=_("Checktype"),
+                    help=_("Please choose the check plugin"),
+                ),
+                self.item_spec,
+                parameter_vs,
+            ],
+        )
+
+    @property
+    def parameter_valuespec(self):
+        return FixedValue(
+            None,
+            help=_("This check has no parameters."),
+            totext="",
+        )
+
+    @property
+    def item_spec(self):
+        """Not used as condition, only for the rule value valuespec"""
+        return FixedValue(
+            None,
+            totext='',
+        )
+
+    @property
+    def match_type(self):
+        """Manual check rulespecs always use this match type"""
+        return "all"
+
+
 # Pre 1.6 rule registering logic. Need to be kept for some time
 def register_rule(
         group,
@@ -512,11 +778,20 @@ def register_rule(
         "is_deprecated": deprecated,
     }
 
-    if valuespec is None:
+    if valuespec is not None:
+        class_attrs["valuespec"] = valuespec
+
+    if varname.startswith("static_checks:"):
+        base_class = ManualCheckParameterRulespec
+    elif varname.startswith("checkgroup_parameters:"):
+        base_class = CheckParameterRulespecWithItem if itemtype is not None else CheckParameterRulespecWithoutItem
+    elif valuespec is None:
         base_class = BinaryServiceRulespec if itemtype is not None else BinaryHostRulespec
     else:
-        class_attrs["valuespec"] = valuespec
         base_class = ServiceRulespec if itemtype is not None else HostRulespec
+
+    if varname.startswith("static_checks:") or varname.startswith("checkgroup_parameters:"):
+        class_attrs["check_group_name"] = varname.split(":", 1)[1]
 
     if title is not None:
         class_attrs["title"] = title
@@ -570,6 +845,222 @@ class RulespecRegistry(cmk.utils.plugin_registry.ClassRegistry):
         Can not use direct rulespec_group_registry access for this, because the
         group registry does not know whether a group is registered for it"""
         return list(set(gc().group_name for gc in self.values()))
+
+    def register(self, plugin_class):
+        """Check group parameter rulespecs (checkgroup_parameters:*) added to the registry
+        are registering a second rulespec for manual check registration. This may be
+        prevented by setting the argument with_manual_check_rulespec=False"""
+        super(RulespecRegistry, self).register(plugin_class)
+
+        if issubclass(plugin_class,
+                      (CheckParameterRulespecWithItem, CheckParameterRulespecWithoutItem)):
+            self._register_manual_check_rulespec(plugin_class)
+
+    def register_without_manual_check_rulespec(self, plugin_class):
+        """Use this register method to prevent adding a manual check rulespec"""
+        super(RulespecRegistry, self).register(plugin_class)
+
+    def _register_manual_check_rulespec(self, plugin_class):
+        """Register a manual check configuration rulespec based on the given checkgroup parameter
+        rulespec
+
+        The user will be able to configure manual checks of the check types that are registered
+        for this check group instead of relying on the service discovery.
+
+        Static checks are always host rulespecs.
+        """
+
+        param_rulespec = plugin_class()
+
+        class_attrs = {
+            "check_group_name": param_rulespec.check_group_name,
+            "title": param_rulespec.title,
+            "is_deprecated": param_rulespec.is_deprecated,
+        }
+
+        valuespec = param_rulespec.valuespec
+        if valuespec:
+            if not valuespec.title():
+                # TODO: Clean up this hack
+                valuespec._title = _("Parameters")
+
+            class_attrs["parameter_valuespec"] = valuespec
+
+        item_spec = param_rulespec.item_spec
+        if item_spec:
+            class_attrs["item_spec"] = item_spec
+
+        # There may be no RulespecSubGroup declaration for the static checks.
+        # Create some based on the regular check groups (which should have a definition)
+        group = param_rulespec.group()
+        try:
+            subgroup_key = "static/" + group.sub_group_name
+            checkparams_static_sub_group_class = rulespec_group_registry[subgroup_key]
+        except KeyError:
+            main_group_static_class = rulespec_group_registry["static"]
+            checkparams_static_sub_group_class = type("%sStatic" % group.__class__.__name__,
+                                                      (group.__class__,), {
+                                                          "main_group": main_group_static_class,
+                                                      })
+            rulespec_group_registry.register(checkparams_static_sub_group_class)
+
+        class_attrs["group"] = checkparams_static_sub_group_class
+
+        manual_check_class = type("ManualCheck%s", (ManualCheckParameterRulespec,), class_attrs)
+        rulespec_registry.register(manual_check_class)
+
+
+class CheckTypeGroupSelection(ElementSelection):
+    def __init__(self, checkgroup, **kwargs):
+        super(CheckTypeGroupSelection, self).__init__(**kwargs)
+        self._checkgroup = checkgroup
+
+    def get_elements(self):
+        checks = check_mk_local_automation("get-check-information")
+        elements = dict([(cn, "%s - %s" % (cn, c["title"]))
+                         for (cn, c) in checks.items()
+                         if c.get("group") == self._checkgroup])
+        return elements
+
+    def value_to_text(self, value):
+        return "<tt>%s</tt>" % value
+
+
+class TimeperiodValuespec(ValueSpec):
+    # Used by GUI switch
+    # The actual set mode
+    # "0" - no timespecific settings
+    # "1" - timespecific settings active
+    tp_toggle_var = "tp_toggle"
+    tp_current_mode = "tp_active"
+
+    tp_default_value_key = "tp_default_value"  # Used in valuespec
+    tp_values_key = "tp_values"  # Used in valuespec
+
+    def __init__(self, valuespec):
+        super(TimeperiodValuespec, self).__init__(
+            title=valuespec.title(),
+            help=valuespec.help(),
+        )
+        self._enclosed_valuespec = valuespec
+
+    def default_value(self):
+        # If nothing is configured, simply return the default value of the enclosed valuespec
+        return self._enclosed_valuespec.default_value()
+
+    def render_input(self, varprefix, value):
+        # The display mode differs when the valuespec is activated
+        vars_copy = dict(html.request.itervars())
+
+        # The timeperiod mode can be set by either the GUI switch or by the value itself
+        # GUI switch overrules the information stored in the value
+        if html.request.has_var(self.tp_toggle_var):
+            is_active = self._is_switched_on()
+        else:
+            is_active = self.is_active(value)
+
+        # Set the actual used mode
+        html.hidden_field(self.tp_current_mode, "%d" % is_active)
+
+        mode = _("Disable") if is_active else _("Enable")
+        vars_copy[self.tp_toggle_var] = "%d" % (not is_active)
+        toggle_url = html.makeuri(vars_copy.items())
+
+        if is_active:
+            value = self._get_timeperiod_value(value)
+            self._get_timeperiod_valuespec().render_input(varprefix, value)
+            html.buttonlink(
+                toggle_url,
+                _("%s timespecific parameters") % mode,
+                class_=["toggle_timespecific_parameter"])
+        else:
+            value = self._get_timeless_value(value)
+            r = self._enclosed_valuespec.render_input(varprefix, value)
+            html.buttonlink(
+                toggle_url,
+                _("%s timespecific parameters") % mode,
+                class_=["toggle_timespecific_parameter"])
+            return r
+
+    def value_to_text(self, value):
+        text = ""
+        if self.is_active(value):
+            # TODO/Phantasm: highlight currently active timewindow
+            text += self._get_timeperiod_valuespec().value_to_text(value)
+        else:
+            text += self._enclosed_valuespec.value_to_text(value)
+        return text
+
+    def from_html_vars(self, varprefix):
+        if html.request.var(self.tp_current_mode) == "1":
+            # Fetch the timespecific settings
+            parameters = self._get_timeperiod_valuespec().from_html_vars(varprefix)
+            if parameters[self.tp_values_key]:
+                return parameters
+
+            # Fall back to enclosed valuespec data when no timeperiod is set
+            return parameters[self.tp_default_value_key]
+
+        # Fetch the data from the enclosed valuespec
+        return self._enclosed_valuespec.from_html_vars(varprefix)
+
+    def canonical_value(self):
+        return self._enclosed_valuespec.canonical_value()
+
+    def validate_datatype(self, value, varprefix):
+        if self.is_active(value):
+            self._get_timeperiod_valuespec().validate_datatype(value, varprefix)
+        else:
+            self._enclosed_valuespec.validate_datatype(value, varprefix)
+
+    def validate_value(self, value, varprefix):
+        if self.is_active(value):
+            self._get_timeperiod_valuespec().validate_value(value, varprefix)
+        else:
+            self._enclosed_valuespec.validate_value(value, varprefix)
+
+    def _get_timeperiod_valuespec(self):
+        return Dictionary(
+            elements=[
+                (self.tp_default_value_key,
+                 Transform(
+                     self._enclosed_valuespec,
+                     title=_("Default parameters when no timeperiod matches"))),
+                (self.tp_values_key,
+                 ListOf(
+                     Tuple(elements=[
+                         TimeperiodSelection(
+                             title=_("Match only during timeperiod"),
+                             help=_("Match this rule only during times where the "
+                                    "selected timeperiod from the monitoring "
+                                    "system is active."),
+                         ), self._enclosed_valuespec
+                     ]),
+                     title=_("Configured timeperiod parameters"),
+                 )),
+            ],
+            optional_keys=False,
+        )
+
+    # Checks whether the tp-mode is switched on through the gui
+    def _is_switched_on(self):
+        return html.request.var(self.tp_toggle_var) == "1"
+
+    # Checks whether the value itself already uses the tp-mode
+    def is_active(self, value):
+        return isinstance(value, dict) and self.tp_default_value_key in value
+
+    # Returns simply the value or converts a plain value to a tp-value
+    def _get_timeperiod_value(self, value):
+        if isinstance(value, dict) and self.tp_default_value_key in value:
+            return value
+        return {self.tp_values_key: [], self.tp_default_value_key: value}
+
+    # Returns simply the value or converts tp-value back to a plain value
+    def _get_timeless_value(self, value):
+        if isinstance(value, dict) and self.tp_default_value_key in value:
+            return value.get(self.tp_default_value_key)
+        return value
 
 
 rulespec_registry = RulespecRegistry(rulespec_group_registry)

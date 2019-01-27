@@ -32,22 +32,39 @@ from cmk.gui.valuespec import (
     Tuple,
 )
 from cmk.gui.plugins.wato import (
-    RulespecGroupCheckParametersNetworking,
-    register_check_parameters,
+    RulespecGroupManualChecksNetworking,
+    rulespec_registry,
+    ManualCheckParameterRulespec,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersNetworking, "mem_cluster", _("Memory Usage of Clusters"),
-    ListOf(
-        Tuple(elements=[
-            Integer(title=_("Equal or more than"), unit=_("nodes")),
-            Tuple(
-                title=_("Percentage of total RAM"),
-                elements=[
-                    Percentage(title=_("Warning at a RAM usage of"), default_value=80.0),
-                    Percentage(title=_("Critical at a RAM usage of"), default_value=90.0),
-                ])
-        ]),
-        help=_("Here you can specify the total memory usage levels for clustered hosts."),
-        title=_("Memory Usage"),
-        add_label=_("Add limits")), None, "first", False)
+
+@rulespec_registry.register
+class ManualCheckParameterMemCluster(ManualCheckParameterRulespec):
+    @property
+    def group(self):
+        return RulespecGroupManualChecksNetworking
+
+    @property
+    def check_group_name(self):
+        return "mem_cluster"
+
+    @property
+    def title(self):
+        return _("Memory Usage of Clusters")
+
+    @property
+    def parameter_valuespec(self):
+        return ListOf(
+            Tuple(elements=[
+                Integer(title=_("Equal or more than"), unit=_("nodes")),
+                Tuple(
+                    title=_("Percentage of total RAM"),
+                    elements=[
+                        Percentage(title=_("Warning at a RAM usage of"), default_value=80.0),
+                        Percentage(title=_("Critical at a RAM usage of"), default_value=90.0),
+                    ])
+            ]),
+            help=_("Here you can specify the total memory usage levels for clustered hosts."),
+            title=_("Memory Usage"),
+            add_label=_("Add limits"),
+        )

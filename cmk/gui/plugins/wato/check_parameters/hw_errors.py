@@ -26,15 +26,22 @@
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato import (
-    RulespecGroupCheckParametersHardware,
-    register_check_parameters,
+    RulespecGroupManualChecksHardware,
+    ManualCheckParameterRulespec,
+    rulespec_registry,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersHardware,
-    "hw_errors",
-    _("Simple checks for BIOS/Hardware errors"),
-    None,
-    None,
-    match_type="first",
-)
+
+@rulespec_registry.register
+class ManualCheckParameterHWErrors(ManualCheckParameterRulespec):
+    @property
+    def group(self):
+        return RulespecGroupManualChecksHardware
+
+    @property
+    def check_group_name(self):
+        return "hw_errors"
+
+    @property
+    def title(self):
+        return _("Simple checks for BIOS/Hardware errors")

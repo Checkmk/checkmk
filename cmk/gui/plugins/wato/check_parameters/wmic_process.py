@@ -32,26 +32,45 @@ from cmk.gui.valuespec import (
     Tuple,
 )
 from cmk.gui.plugins.wato import (
-    RulespecGroupCheckParametersApplications,
-    register_check_parameters,
+    RulespecGroupManualChecksApplications,
+    rulespec_registry,
+    ManualCheckParameterRulespec,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications, "wmic_process",
-    _("Memory and CPU of processes on Windows"),
-    Tuple(
-        elements=[
-            TextAscii(
-                title=_("Name of the process"),
-                allow_empty=False,
-            ),
-            Integer(title=_("Memory warning at"), unit="MB"),
-            Integer(title=_("Memory critical at"), unit="MB"),
-            Integer(title=_("Pagefile warning at"), unit="MB"),
-            Integer(title=_("Pagefile critical at"), unit="MB"),
-            Percentage(title=_("CPU usage warning at")),
-            Percentage(title=_("CPU usage critical at")),
-        ],),
-    TextAscii(
-        title=_("Process name for usage in the Nagios service description"), allow_empty=False),
-    "first", False)
+
+@rulespec_registry.register
+class ManualCheckParameterWMICProcess(ManualCheckParameterRulespec):
+    @property
+    def group(self):
+        return RulespecGroupManualChecksApplications
+
+    @property
+    def check_group_name(self):
+        return "wmic_process"
+
+    @property
+    def title(self):
+        return _("Memory and CPU of processes on Windows")
+
+    @property
+    def parameter_valuespec(self):
+        return Tuple(
+            elements=[
+                TextAscii(
+                    title=_("Name of the process"),
+                    allow_empty=False,
+                ),
+                Integer(title=_("Memory warning at"), unit="MB"),
+                Integer(title=_("Memory critical at"), unit="MB"),
+                Integer(title=_("Pagefile warning at"), unit="MB"),
+                Integer(title=_("Pagefile critical at"), unit="MB"),
+                Percentage(title=_("CPU usage warning at")),
+                Percentage(title=_("CPU usage critical at")),
+            ],)
+
+    @property
+    def item_spec(self):
+        return TextAscii(
+            title=_("Process name for usage in the Nagios service description"),
+            allow_empty=False,
+        )

@@ -34,78 +34,94 @@ from cmk.gui.valuespec import (
     Tuple,
 )
 from cmk.gui.plugins.wato import (
-    RulespecGroupCheckParametersNetworking,
-    register_check_parameters,
+    RulespecGroupManualChecksNetworking,
+    rulespec_registry,
+    ManualCheckParameterRulespec,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersNetworking,
-    "tcp_connections",
-    _("Monitor specific TCP/UDP connections and listeners"),
-    Dictionary(
-        help=_("This rule allows to monitor the existence of specific TCP connections or "
-               "TCP/UDP listeners."),
-        elements=[
-            (
-                "proto",
-                DropdownChoice(
-                    title=_("Protocol"),
-                    choices=[("TCP", _("TCP")), ("UDP", _("UDP"))],
-                    default_value="TCP",
+
+@rulespec_registry.register
+class ManualCheckParameterTCPConnections(ManualCheckParameterRulespec):
+    @property
+    def group(self):
+        return RulespecGroupManualChecksNetworking
+
+    @property
+    def check_group_name(self):
+        return "tcp_connections"
+
+    @property
+    def title(self):
+        return _("Monitor specific TCP/UDP connections and listeners")
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            help=_("This rule allows to monitor the existence of specific TCP connections or "
+                   "TCP/UDP listeners."),
+            elements=[
+                (
+                    "proto",
+                    DropdownChoice(
+                        title=_("Protocol"),
+                        choices=[("TCP", _("TCP")), ("UDP", _("UDP"))],
+                        default_value="TCP",
+                    ),
                 ),
-            ),
-            (
-                "state",
-                DropdownChoice(
-                    title=_("State"),
-                    choices=[
-                        ("ESTABLISHED", "ESTABLISHED"),
-                        ("LISTENING", "LISTENING"),
-                        ("SYN_SENT", "SYN_SENT"),
-                        ("SYN_RECV", "SYN_RECV"),
-                        ("LAST_ACK", "LAST_ACK"),
-                        ("CLOSE_WAIT", "CLOSE_WAIT"),
-                        ("TIME_WAIT", "TIME_WAIT"),
-                        ("CLOSED", "CLOSED"),
-                        ("CLOSING", "CLOSING"),
-                        ("FIN_WAIT1", "FIN_WAIT1"),
-                        ("FIN_WAIT2", "FIN_WAIT2"),
-                        ("BOUND", "BOUND"),
-                    ]),
-            ),
-            ("local_ip", IPv4Address(title=_("Local IP address"))),
-            ("local_port", Integer(
-                title=_("Local port number"),
-                minvalue=1,
-                maxvalue=65535,
-            )),
-            ("remote_ip", IPv4Address(title=_("Remote IP address"))),
-            ("remote_port", Integer(
-                title=_("Remote port number"),
-                minvalue=1,
-                maxvalue=65535,
-            )),
-            ("max_states",
-             Tuple(
-                 title=_("Maximum number of connections or listeners"),
-                 elements=[
-                     Integer(title=_("Warning at")),
-                     Integer(title=_("Critical at")),
-                 ],
-             )),
-            ("min_states",
-             Tuple(
-                 title=_("Minimum number of connections or listeners"),
-                 elements=[
-                     Integer(title=_("Warning if below")),
-                     Integer(title=_("Critical if below")),
-                 ],
-             )),
-        ]),
-    TextAscii(
-        title=_("Connection name"),
-        help=_("Specify an arbitrary name of this connection here"),
-        allow_empty=False),
-    "dict",
-    has_inventory=False,
-)
+                (
+                    "state",
+                    DropdownChoice(
+                        title=_("State"),
+                        choices=[
+                            ("ESTABLISHED", "ESTABLISHED"),
+                            ("LISTENING", "LISTENING"),
+                            ("SYN_SENT", "SYN_SENT"),
+                            ("SYN_RECV", "SYN_RECV"),
+                            ("LAST_ACK", "LAST_ACK"),
+                            ("CLOSE_WAIT", "CLOSE_WAIT"),
+                            ("TIME_WAIT", "TIME_WAIT"),
+                            ("CLOSED", "CLOSED"),
+                            ("CLOSING", "CLOSING"),
+                            ("FIN_WAIT1", "FIN_WAIT1"),
+                            ("FIN_WAIT2", "FIN_WAIT2"),
+                            ("BOUND", "BOUND"),
+                        ]),
+                ),
+                ("local_ip", IPv4Address(title=_("Local IP address"))),
+                ("local_port", Integer(
+                    title=_("Local port number"),
+                    minvalue=1,
+                    maxvalue=65535,
+                )),
+                ("remote_ip", IPv4Address(title=_("Remote IP address"))),
+                ("remote_port", Integer(
+                    title=_("Remote port number"),
+                    minvalue=1,
+                    maxvalue=65535,
+                )),
+                ("max_states",
+                 Tuple(
+                     title=_("Maximum number of connections or listeners"),
+                     elements=[
+                         Integer(title=_("Warning at")),
+                         Integer(title=_("Critical at")),
+                     ],
+                 )),
+                ("min_states",
+                 Tuple(
+                     title=_("Minimum number of connections or listeners"),
+                     elements=[
+                         Integer(title=_("Warning if below")),
+                         Integer(title=_("Critical if below")),
+                     ],
+                 )),
+            ],
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(
+            title=_("Connection name"),
+            help=_("Specify an arbitrary name of this connection here"),
+            allow_empty=False,
+        )

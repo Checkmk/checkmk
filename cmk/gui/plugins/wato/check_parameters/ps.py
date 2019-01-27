@@ -44,12 +44,14 @@ from cmk.gui.valuespec import (
     Tuple,
 )
 from cmk.gui.plugins.wato import (
+    RulespecGroupManualChecksApplications,
     RulespecGroupCheckParametersApplications,
     RulespecGroupCheckParametersDiscovery,
     UserIconOrAction,
     register_check_parameters,
     rulespec_registry,
     HostRulespec,
+    ManualCheckParameterRulespec,
 )
 
 process_level_elements = [
@@ -361,32 +363,45 @@ register_check_parameters(
     register_static_check=False,
 )
 
+
 # Rule for static process checks
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    "ps",
-    _("State and count of processes"),
-    Transform(
-        Dictionary(
-            elements=[
-                ("process", process_match_options),
-                ("user", user_match_options()),
-            ] + process_level_elements,
-            ignored_keys=["match_groups"],
-            required_keys=["cpu_rescale_max"]),
-        forth=ps_cleanup_params,
-    ),
-    TextAscii(
-        title=_("Process Name"),
-        help=_("This name will be used in the description of the service"),
-        allow_empty=False,
-        regex="^[a-zA-Z_0-9 _./-]*$",
-        regex_error=_("Please use only a-z, A-Z, 0-9, space, underscore, "
-                      "dot, hyphen and slash for your service description"),
-    ),
-    "dict",
-    has_inventory=False,
-)
+@rulespec_registry.register
+class ManualCheckParameterPs(ManualCheckParameterRulespec):
+    @property
+    def group(self):
+        return RulespecGroupManualChecksApplications
+
+    @property
+    def check_group_name(self):
+        return "ps"
+
+    @property
+    def title(self):
+        return _("State and count of processes")
+
+    @property
+    def parameter_valuespec(self):
+        return Transform(
+            Dictionary(
+                elements=[
+                    ("process", process_match_options),
+                    ("user", user_match_options()),
+                ] + process_level_elements,
+                ignored_keys=["match_groups"],
+                required_keys=["cpu_rescale_max"]),
+            forth=ps_cleanup_params,
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(
+            title=_("Process Name"),
+            help=_("This name will be used in the description of the service"),
+            allow_empty=False,
+            regex="^[a-zA-Z_0-9 _./-]*$",
+            regex_error=_("Please use only a-z, A-Z, 0-9, space, underscore, "
+                          "dot, hyphen and slash for your service description"),
+        )
 
 
 # In version 1.2.4 the check parameters for the resulting ps check

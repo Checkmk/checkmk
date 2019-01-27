@@ -25,17 +25,33 @@
 # Boston, MA 02110-1301 USA.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    TextAscii,)
+from cmk.gui.valuespec import TextAscii
 from cmk.gui.plugins.wato import (
-    RulespecGroupCheckParametersStorage,
-    register_check_parameters,
+    RulespecGroupManualChecksStorage,
+    ManualCheckParameterRulespec,
+    rulespec_registry,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersStorage, "raid", _("RAID: overall state"), None,
-    TextAscii(
-        title=_("Name of the device"),
-        help=_("For Linux MD specify the device name without the "
-               "<tt>/dev/</tt>, e.g. <tt>md0</tt>, for hardware raids "
-               "please refer to the manual of the actual check being used.")), "first")
+
+@rulespec_registry.register
+class ManualCheckParameterRAID(ManualCheckParameterRulespec):
+    @property
+    def group(self):
+        return RulespecGroupManualChecksStorage
+
+    @property
+    def check_group_name(self):
+        return "raid"
+
+    @property
+    def title(self):
+        return _("RAID: overall state")
+
+    @property
+    def item_spec(self):
+        return TextAscii(
+            title=_("Name of the device"),
+            help=_("For Linux MD specify the device name without the "
+                   "<tt>/dev/</tt>, e.g. <tt>md0</tt>, for hardware raids "
+                   "please refer to the manual of the actual check being used."),
+        )

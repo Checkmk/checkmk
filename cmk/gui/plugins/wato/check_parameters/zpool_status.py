@@ -26,15 +26,22 @@
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato import (
-    RulespecGroupCheckParametersStorage,
-    register_check_parameters,
+    RulespecGroupManualChecksStorage,
+    ManualCheckParameterRulespec,
+    rulespec_registry,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersStorage,
-    "zpool_status",
-    _("ZFS storage pool status"),
-    None,
-    None,
-    match_type="first",
-)
+
+@rulespec_registry.register
+class ManualCheckParameterVMState(ManualCheckParameterRulespec):
+    @property
+    def group(self):
+        return RulespecGroupManualChecksStorage
+
+    @property
+    def check_group_name(self):
+        return "zpool_status"
+
+    @property
+    def title(self):
+        return _("ZFS storage pool status")

@@ -197,7 +197,7 @@ from cmk.gui.watolib.rulespecs import (
     RulespecSubGroup,
     RulespecGroupRegistry,
     rulespec_group_registry,
-    RulespecGroupStaticChecks,
+    RulespecGroupManualChecks,
     register_rulegroup,
     get_rulegroup,
     Rulespec,

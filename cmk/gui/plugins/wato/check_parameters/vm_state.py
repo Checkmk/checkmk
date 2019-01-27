@@ -26,15 +26,22 @@
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato import (
-    RulespecGroupCheckParametersVirtualization,
-    register_check_parameters,
+    RulespecGroupManualChecksVirtualization,
+    ManualCheckParameterRulespec,
+    rulespec_registry,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersVirtualization,
-    "vm_state",
-    _("Overall state of a virtual machine (for example ESX VMs)"),
-    None,
-    None,
-    match_type="first",
-)
+
+@rulespec_registry.register
+class ManualCheckParameterVMState(ManualCheckParameterRulespec):
+    @property
+    def group(self):
+        return RulespecGroupManualChecksVirtualization
+
+    @property
+    def check_group_name(self):
+        return "vm_state"
+
+    @property
+    def title(self):
+        return _("Overall state of a virtual machine (for example ESX VMs)")

@@ -26,15 +26,22 @@
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato import (
-    RulespecGroupCheckParametersOperatingSystem,
-    register_check_parameters,
+    RulespecGroupManualChecksOperatingSystem,
+    ManualCheckParameterRulespec,
+    rulespec_registry,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersOperatingSystem,
-    "zypper",
-    _("Zypper Updates"),
-    None,
-    None,
-    match_type="first",
-)
+
+@rulespec_registry.register
+class ManualCheckParameterZypper(ManualCheckParameterRulespec):
+    @property
+    def group(self):
+        return RulespecGroupManualChecksOperatingSystem
+
+    @property
+    def check_group_name(self):
+        return "zypper"
+
+    @property
+    def title(self):
+        return _("Zypper Updates")

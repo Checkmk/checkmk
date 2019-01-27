@@ -117,12 +117,23 @@ from cmk.gui.watolib.host_tags import group_hosttags_by_topic
 from cmk.gui.watolib.timeperiods import TimeperiodSelection
 from cmk.gui.watolib.users import notification_script_title
 from cmk.gui.watolib.rulespecs import (
+    TimeperiodValuespec,
     rulespec_registry,
     Rulespec,
     HostRulespec,
     ServiceRulespec,
     BinaryHostRulespec,
     BinaryServiceRulespec,
+    CheckParameterRulespecWithItem,
+    CheckParameterRulespecWithoutItem,
+    ManualCheckParameterRulespec,
+    RulespecGroupManualChecksNetworking,
+    RulespecGroupManualChecksApplications,
+    RulespecGroupManualChecksEnvironment,
+    RulespecGroupManualChecksOperatingSystem,
+    RulespecGroupManualChecksHardware,
+    RulespecGroupManualChecksStorage,
+    RulespecGroupManualChecksVirtualization,
     rulespec_group_registry,
     RulespecGroup,
     RulespecSubGroup,
@@ -618,103 +629,48 @@ def register_check_parameters(subgroup,
                               has_inventory=True,
                               register_static_check=True,
                               deprecated=False):
-    """Special version of register_rule, dedicated to checks."""
+    """Legacy registration of check parameters"""
     if valuespec and isinstance(valuespec, Dictionary) and match_type != "dict":
         raise MKGeneralException(
             "Check parameter definition for %s has type Dictionary, but match_type %s" %
             (checkgroup, match_type))
+
+    if not valuespec:
+        raise NotImplementedError()
 
     # Added during 1.6 development for easier transition. Convert all legacy subgroup
     # parameters (which are either str/unicode to group classes
     if isinstance(subgroup, six.string_types):
         subgroup = get_rulegroup("checkparams/" + subgroup).__class__
 
-    # Enclose this valuespec with a TimeperiodValuespec
-    # The given valuespec will be transformed to a list of valuespecs,
-    # whereas each element can be set to a specific timeperiod
-    if valuespec:
-        valuespec = TimeperiodValuespec(valuespec)
-
     # Register rule for discovered checks
-    if valuespec and has_inventory:  # would be useless rule if check has no parameters
-        itemenum = None
-        if itemspec:
-            itemtype = "item"
-            itemname = itemspec.title()
-            itemhelp = itemspec.help()
-            if isinstance(itemspec, (DropdownChoice, OptionalDropdownChoice)):
-                itemenum = itemspec._choices
-        else:
-            itemtype = None
-            itemname = None
-            itemhelp = None
+    if has_inventory:
+        class_attrs = {
+            "group": subgroup,
+            "title": title,
+            "match_type": match_type,
+            "is_deprecated": deprecated,
+            "parameter_valuespec": valuespec,
+            "check_group_name": checkgroup,
+            "item_spec": itemspec,
+        }
 
-        register_rule(
-            subgroup,
-            varname="checkgroup_parameters:%s" % checkgroup,
-            title=title,
-            valuespec=valuespec,
-            itemspec=itemspec,
-            itemtype=itemtype,
-            itemname=itemname,
-            itemhelp=itemhelp,
-            itemenum=itemenum,
-            match=match_type,
-            deprecated=deprecated)
+        base_class = CheckParameterRulespecWithItem if itemspec is not None else CheckParameterRulespecWithoutItem
 
-    # Static checks are always host rulespecs
-    if register_static_check:
-        # Register rule for static checks
-        elements = [
-            CheckTypeGroupSelection(
-                checkgroup,
-                title=_("Checktype"),
-                help=_("Please choose the check plugin"),
-            )
-        ]
-        if itemspec:
-            elements.append(itemspec)
-        else:
-            # In case of static checks without check-item, add the fixed
-            # valuespec to add "None" as second element in the tuple
-            elements.append(FixedValue(
-                None,
-                totext='',
-            ))
-        if not valuespec:
-            valuespec =\
-                FixedValue(None,
-                    help = _("This check has no parameters."),
-                    totext = "")
+        rulespec_class = type("LegacyCheckParameterRulespec%s" % checkgroup.title(), (base_class,),
+                              class_attrs)
+        rulespec_registry.register(rulespec_class)
 
-        if not valuespec.title():
-            valuespec._title = _("Parameters")
+    if not (valuespec and has_inventory) and register_static_check:
+        raise MKGeneralException("Sorry, registering manual check parameters without discovery "
+                                 "check parameters is not supported anymore using the old API. "
+                                 "Please register the manual check rulespec using the new API. "
+                                 "Checkgroup: %s" % checkgroup)
 
-        elements.append(valuespec)
-
-        # There is never a RulespecSubGroup declaration for the static checks.
-        # Create some based on the regular check groups which should have a definition
-        try:
-            subgroup_key = "static/" + subgroup().sub_group_name
-            checkparams_static_sub_group_class = rulespec_group_registry[subgroup_key]
-        except KeyError:
-            main_group_static_class = rulespec_group_registry["static"]
-            checkparams_static_sub_group_class = type("%sStatic" % subgroup.__name__, (subgroup,), {
-                "main_group": main_group_static_class,
-            })
-            rulespec_group_registry.register(checkparams_static_sub_group_class)
-
-        register_rule(
-            checkparams_static_sub_group_class,
-            "static_checks:%s" % checkgroup,
-            title=title,
-            valuespec=Tuple(
-                title=valuespec.title(),
-                elements=elements,
-            ),
-            itemspec=itemspec,
-            match="all",
-            deprecated=deprecated)
+    if has_inventory and not register_static_check:
+        # Remove the static checks rulespec that was created during the checkgroup
+        # rulespec registration by the registry
+        del rulespec_registry["static_checks:%s" % checkgroup]
 
 
 @rulespec_group_registry.register
@@ -868,159 +824,6 @@ class RulespecGroupCheckParametersDiscovery(RulespecSubGroup):
     @property
     def title(self):
         return _("Discovery - automatic service detection")
-
-
-class TimeperiodValuespec(ValueSpec):
-    # Used by GUI switch
-    # The actual set mode
-    # "0" - no timespecific settings
-    # "1" - timespecific settings active
-    tp_toggle_var = "tp_toggle"
-    tp_current_mode = "tp_active"
-
-    tp_default_value_key = "tp_default_value"  # Used in valuespec
-    tp_values_key = "tp_values"  # Used in valuespec
-
-    def __init__(self, valuespec):
-        super(TimeperiodValuespec, self).__init__(
-            title=valuespec.title(),
-            help=valuespec.help(),
-        )
-        self._enclosed_valuespec = valuespec
-
-    def default_value(self):
-        # If nothing is configured, simply return the default value of the enclosed valuespec
-        return self._enclosed_valuespec.default_value()
-
-    def render_input(self, varprefix, value):
-        # The display mode differs when the valuespec is activated
-        vars_copy = dict(html.request.itervars())
-
-        # The timeperiod mode can be set by either the GUI switch or by the value itself
-        # GUI switch overrules the information stored in the value
-        if html.request.has_var(self.tp_toggle_var):
-            is_active = self._is_switched_on()
-        else:
-            is_active = self.is_active(value)
-
-        # Set the actual used mode
-        html.hidden_field(self.tp_current_mode, "%d" % is_active)
-
-        mode = _("Disable") if is_active else _("Enable")
-        vars_copy[self.tp_toggle_var] = "%d" % (not is_active)
-        toggle_url = html.makeuri(vars_copy.items())
-
-        if is_active:
-            value = self._get_timeperiod_value(value)
-            self._get_timeperiod_valuespec().render_input(varprefix, value)
-            html.buttonlink(
-                toggle_url,
-                _("%s timespecific parameters") % mode,
-                class_=["toggle_timespecific_parameter"])
-        else:
-            value = self._get_timeless_value(value)
-            r = self._enclosed_valuespec.render_input(varprefix, value)
-            html.buttonlink(
-                toggle_url,
-                _("%s timespecific parameters") % mode,
-                class_=["toggle_timespecific_parameter"])
-            return r
-
-    def value_to_text(self, value):
-        text = ""
-        if self.is_active(value):
-            # TODO/Phantasm: highlight currently active timewindow
-            text += self._get_timeperiod_valuespec().value_to_text(value)
-        else:
-            text += self._enclosed_valuespec.value_to_text(value)
-        return text
-
-    def from_html_vars(self, varprefix):
-        if html.request.var(self.tp_current_mode) == "1":
-            # Fetch the timespecific settings
-            parameters = self._get_timeperiod_valuespec().from_html_vars(varprefix)
-            if parameters[self.tp_values_key]:
-                return parameters
-
-            # Fall back to enclosed valuespec data when no timeperiod is set
-            return parameters[self.tp_default_value_key]
-
-        # Fetch the data from the enclosed valuespec
-        return self._enclosed_valuespec.from_html_vars(varprefix)
-
-    def canonical_value(self):
-        return self._enclosed_valuespec.canonical_value()
-
-    def validate_datatype(self, value, varprefix):
-        if self.is_active(value):
-            self._get_timeperiod_valuespec().validate_datatype(value, varprefix)
-        else:
-            self._enclosed_valuespec.validate_datatype(value, varprefix)
-
-    def validate_value(self, value, varprefix):
-        if self.is_active(value):
-            self._get_timeperiod_valuespec().validate_value(value, varprefix)
-        else:
-            self._enclosed_valuespec.validate_value(value, varprefix)
-
-    def _get_timeperiod_valuespec(self):
-        return Dictionary(
-            elements=[
-                (self.tp_default_value_key,
-                 Transform(
-                     self._enclosed_valuespec,
-                     title=_("Default parameters when no timeperiod matches"))),
-                (self.tp_values_key,
-                 ListOf(
-                     Tuple(elements=[
-                         watolib.timeperiods.TimeperiodSelection(
-                             title=_("Match only during timeperiod"),
-                             help=_("Match this rule only during times where the "
-                                    "selected timeperiod from the monitoring "
-                                    "system is active."),
-                         ), self._enclosed_valuespec
-                     ]),
-                     title=_("Configured timeperiod parameters"),
-                 )),
-            ],
-            optional_keys=False,
-        )
-
-    # Checks whether the tp-mode is switched on through the gui
-    def _is_switched_on(self):
-        return html.request.var(self.tp_toggle_var) == "1"
-
-    # Checks whether the value itself already uses the tp-mode
-    def is_active(self, value):
-        return isinstance(value, dict) and self.tp_default_value_key in value
-
-    # Returns simply the value or converts a plain value to a tp-value
-    def _get_timeperiod_value(self, value):
-        if isinstance(value, dict) and self.tp_default_value_key in value:
-            return value
-        return {self.tp_values_key: [], self.tp_default_value_key: value}
-
-    # Returns simply the value or converts tp-value back to a plain value
-    def _get_timeless_value(self, value):
-        if isinstance(value, dict) and self.tp_default_value_key in value:
-            return value.get(self.tp_default_value_key)
-        return value
-
-
-class CheckTypeGroupSelection(ElementSelection):
-    def __init__(self, checkgroup, **kwargs):
-        super(CheckTypeGroupSelection, self).__init__(**kwargs)
-        self._checkgroup = checkgroup
-
-    def get_elements(self):
-        checks = watolib.check_mk_local_automation("get-check-information")
-        elements = dict([(cn, "%s - %s" % (cn, c["title"]))
-                         for (cn, c) in checks.items()
-                         if c.get("group") == self._checkgroup])
-        return elements
-
-    def value_to_text(self, value):
-        return "<tt>%s</tt>" % value
 
 
 # The following function looks like a value spec and in fact

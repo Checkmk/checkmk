@@ -4,6 +4,7 @@ import pytest  # type: ignore
 import cmk.gui.wato  # pylint: disable=unused-import
 import cmk.gui.watolib as watolib
 import cmk.gui.watolib.rulespecs
+from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.watolib.rulespecs import (
     rulespec_group_registry,
     RulespecGroupRegistry,
@@ -13,14 +14,22 @@ from cmk.gui.watolib.rulespecs import (
     Rulespec,
     HostRulespec,
     rulespec_registry,
+    CheckTypeGroupSelection,
+    RulespecGroupManualChecks,
 )
 from cmk.gui.valuespec import (
     Dictionary,
+    Tuple,
     TextAscii,
     FixedValue,
+    ValueSpec,
 )
 
-from cmk.gui.plugins.wato.utils import register_check_parameters
+from cmk.gui.plugins.wato.utils import (
+    register_check_parameters,
+    TimeperiodValuespec,
+)
+
 
 
 def test_rulespec_sub_group():
@@ -1457,18 +1466,23 @@ def test_legacy_register_rule_attributes(monkeypatch):
     assert spec.factory_default == "humpf"
 
 
-def test_register_check_parameters(monkeypatch):
+@pytest.fixture()
+def patch_rulespec_registries(monkeypatch):
     group_registry = watolib.RulespecGroupRegistry()
+    group_registry.register(RulespecGroupManualChecks)
+    rulespec_registry = RulespecRegistry(group_registry)
     monkeypatch.setattr(cmk.gui.watolib.rulespecs, "rulespec_group_registry", group_registry)
-    monkeypatch.setattr(cmk.gui.watolib.rulespecs, "rulespec_registry",
-                        RulespecRegistry(group_registry))
+    monkeypatch.setattr(cmk.gui.watolib.rulespecs, "rulespec_registry", rulespec_registry)
+    monkeypatch.setattr(cmk.gui.plugins.wato.utils, "rulespec_registry", rulespec_registry)
 
+
+def test_register_check_parameters(patch_rulespec_registries):
     register_check_parameters(
         "netblabla",
-        "check_group_name",
-        "Title of check group",
+        "bla_params",
+        "Title of bla",
         Dictionary(elements=[],),
-        None,
+        TextAscii(title="The object name"),
         "dict",
     )
 
@@ -1481,8 +1495,20 @@ def test_register_check_parameters(monkeypatch):
         r.name
         for r in cmk.gui.watolib.rulespecs.rulespec_registry.get_by_group("checkparams/netblabla")
     ]
-    assert "checkgroup_parameters:check_group_name" in rulespec_names
+    assert "checkgroup_parameters:bla_params" in rulespec_names
     assert len(rulespec_names) == 1
+    rulespec = cmk.gui.watolib.rulespecs.rulespec_registry["checkgroup_parameters:bla_params"]()
+
+    assert rulespec.title == "Title of bla"
+    assert isinstance(rulespec.valuespec, TimeperiodValuespec)
+    assert rulespec.is_for_services is True
+    assert rulespec.item_type == "item"
+    assert rulespec.item_name == "The object name"
+    assert rulespec.item_help is None
+    assert isinstance(rulespec.item_spec, TextAscii)
+    assert rulespec.match_type == "dict"
+    assert rulespec.is_deprecated is False
+    assert rulespec.is_optional is False
 
     # and also as static ruleset
     group = cmk.gui.watolib.rulespecs.get_rulegroup("static/netblabla")
@@ -1492,8 +1518,88 @@ def test_register_check_parameters(monkeypatch):
     rulespec_names = [
         r.name for r in cmk.gui.watolib.rulespecs.rulespec_registry.get_by_group("static/netblabla")
     ]
-    assert "static_checks:check_group_name" in rulespec_names
+    assert "static_checks:bla_params" in rulespec_names
     assert len(rulespec_names) == 1
+    rulespec = cmk.gui.watolib.rulespecs.rulespec_registry["static_checks:bla_params"]()
+
+    # Static checks rulespecs are always
+    # a) host rulespecs
+    # b) match_type == "all"
+    assert rulespec.is_for_services is False
+    assert rulespec.match_type == "all"
+
+    assert rulespec.title == "Title of bla"
+    assert rulespec.item_type is None
+    assert rulespec.item_name is None
+    assert rulespec.item_help is None
+    assert isinstance(rulespec.item_spec, TextAscii)
+    assert rulespec.is_deprecated is False
+    assert rulespec.is_optional is False
+
+    # Static checks wrap the valuespec into a 3-element tuple
+    # - check type selection
+    # - item spec for the service description
+    # - original valuespec (TimeperiodSelection)
+    assert isinstance(rulespec.valuespec, Tuple)
+    assert len(rulespec.valuespec._elements) == 3
+    assert isinstance(rulespec.valuespec._elements[0], CheckTypeGroupSelection)
+    assert isinstance(rulespec.valuespec._elements[1], ValueSpec)
+    assert isinstance(rulespec.valuespec._elements[2], TimeperiodValuespec)
+
+
+def test_register_host_check_parameters(patch_rulespec_registries):
+    register_check_parameters(
+        "netblabla",
+        "bla_params",
+        "Title of bla",
+        Dictionary(elements=[],),
+        None,
+        "dict",
+    )
+
+    # Check either registration as discovery check ruleset
+    rulespec = cmk.gui.watolib.rulespecs.rulespec_registry["checkgroup_parameters:bla_params"]()
+    assert rulespec.is_for_services is False
+
+    rulespec = cmk.gui.watolib.rulespecs.rulespec_registry["static_checks:bla_params"]()
+    assert rulespec.is_for_services is False
+    assert isinstance(rulespec.valuespec, Tuple)
+    assert len(rulespec.valuespec._elements) == 3
+    assert isinstance(rulespec.valuespec._elements[0], CheckTypeGroupSelection)
+    assert isinstance(rulespec.valuespec._elements[1], ValueSpec)
+    assert isinstance(rulespec.valuespec._elements[2], TimeperiodValuespec)
+
+
+def test_register_without_discovery(patch_rulespec_registries):
+    with pytest.raises(MKGeneralException, match="registering manual check"):
+        register_check_parameters(
+            "netblabla",
+            "bla_params",
+            "Title of bla",
+            Dictionary(elements=[],),
+            None,
+            "dict",
+            has_inventory=False,
+        )
+
+
+def test_register_without_static(patch_rulespec_registries):
+    register_check_parameters(
+        "netblabla",
+        "bla_params",
+        "Title of bla",
+        Dictionary(elements=[],),
+        None,
+        "dict",
+        has_inventory=True,
+        register_static_check=False,
+    )
+
+    # Check either registration as discovery check ruleset
+    rulespec = cmk.gui.watolib.rulespecs.rulespec_registry["checkgroup_parameters:bla_params"]()
+    assert rulespec.is_for_services is False
+
+    assert "static_checks:bla_params" not in cmk.gui.watolib.rulespecs.rulespec_registry
 
 
 class DummyGroup(RulespecGroup):
@@ -1521,7 +1627,7 @@ class DummyRulespec(HostRulespec):
     item_enum = None
     match_type = "first"
     title = "bla"
-    help = None
+    help = "xyz"
     factory_default = Rulespec.NO_FACTORY_DEFAULT
     is_optional = False
     is_deprecated = False
@@ -11981,7 +12087,7 @@ expected_rulespecs = {
         'item_enum': None,
         'item_help': None,
         'item_name': None,
-        'item_spec_class_name': 'NoneType',
+        'item_spec_class_name': 'FixedValue',
         'item_type': None,
         'match_type': 'all',
         'title': u'Checkpoint Firewall Packet Rates',
@@ -14276,7 +14382,7 @@ expected_rulespecs = {
         'item_enum': None,
         'item_help': None,
         'item_name': None,
-        'item_spec_class_name': 'NoneType',
+        'item_spec_class_name': 'FixedValue',
         'item_type': None,
         'match_type': 'all',
         'title': u'McAfee web gateway miscellaneous',
@@ -16796,7 +16902,7 @@ expected_rulespecs = {
         'item_enum': None,
         'item_help': None,
         'item_name': None,
-        'item_spec_class_name': 'NoneType',
+        'item_spec_class_name': 'FixedValue',
         'item_type': None,
         'match_type': 'all',
         'title': u'Varnish Client',
@@ -17346,29 +17452,6 @@ expected_rulespecs = {
 
 
 def test_registered_rulespecs():
-    #xx = {}
-    #for ident, cls in rulespec_registry.items():
-    #    rulespec = cls()
-    #    xx[ident] = {
-    #        "group_name": rulespec.group_name,
-    #        "item_name": rulespec.item_name,
-    #        "title": rulespec.title,
-    #        "help": rulespec.help,
-    #        "valuespec_class_name": rulespec.valuespec.__class__.__name__,
-    #        "item_spec_class_name": rulespec.item_spec.__class__.__name__,
-    #        "item_type": rulespec.item_type,
-    #        "item_help": rulespec.item_help,
-    #        "item_enum": rulespec.item_enum,
-    #        "match_type": rulespec.match_type,
-    #        "factory_default": rulespec.factory_default,
-    #        "is_optional": rulespec.is_optional,
-    #        "is_deprecated": rulespec.is_deprecated,
-    #    }
-
-    #import pprint
-    #x = pprint.pformat(xx)
-    #open("/tmp/x", "w").write(x)
-
     names = rulespec_registry.keys()
     assert sorted(expected_rulespecs.keys()) == sorted(names)
 
@@ -17392,7 +17475,16 @@ def test_registered_rulespecs():
             assert rulespec.item_enum is None
 
         assert rulespec.item_name == spec["item_name"], rulespec.title
-        assert rulespec.item_spec.__class__.__name__ == spec["item_spec_class_name"]
+
+        if rulespec.name.startswith(
+                "static_checks:") and spec["item_spec_class_name"] == "NoneType":
+            # was changed during plugin rewrite. Instead of implicitly changing None to FixedValue
+            # during registration the classes now default to a FixedValue(None, ...)
+            item_spec_class_name = "FixedValue"
+        else:
+            item_spec_class_name = spec["item_spec_class_name"]
+
+        assert rulespec.item_spec.__class__.__name__ == item_spec_class_name, rulespec.name
         assert rulespec.item_type == spec["item_type"]
         assert rulespec.item_help == spec["item_help"]
         assert rulespec.item_enum == spec["item_enum"]

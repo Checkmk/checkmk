@@ -25,19 +25,35 @@
 # Boston, MA 02110-1301 USA.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    TextAscii,)
+from cmk.gui.valuespec import TextAscii
 from cmk.gui.plugins.wato import (
-    RulespecGroupCheckParametersEnvironment,
-    register_check_parameters,
+    RulespecGroupManualChecksEnvironment,
+    ManualCheckParameterRulespec,
+    rulespec_registry,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersEnvironment,
-    "temperature_auto",
-    _("Temperature sensors with builtin levels"),
-    None,
-    TextAscii(title=_("Sensor ID"), help=_("The identificator of the thermal sensor.")),
-    "first",
-    deprecated=True,
-)
+
+@rulespec_registry.register
+class ManualCheckParameterTemperatureAuto(ManualCheckParameterRulespec):
+    @property
+    def group(self):
+        return RulespecGroupManualChecksEnvironment
+
+    @property
+    def check_group_name(self):
+        return "temperature_auto"
+
+    @property
+    def title(self):
+        return _("Temperature sensors with builtin levels")
+
+    @property
+    def is_deprecated(self):
+        return True
+
+    @property
+    def item_spec(self):
+        return TextAscii(
+            title=_("Sensor ID"),
+            help=_("The identificator of the thermal sensor."),
+        )

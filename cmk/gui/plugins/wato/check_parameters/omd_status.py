@@ -25,15 +25,31 @@
 # Boston, MA 02110-1301 USA.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    TextAscii,)
+from cmk.gui.valuespec import TextAscii
 from cmk.gui.plugins.wato import (
-    RulespecGroupCheckParametersApplications,
-    register_check_parameters,
+    RulespecGroupManualChecksApplications,
+    ManualCheckParameterRulespec,
+    rulespec_registry,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications, "omd_status", _("OMD site status"), None,
-    TextAscii(
-        title=_("Name of the OMD site"),
-        help=_("The name of the OMD site to check the status for")), "first")
+
+@rulespec_registry.register
+class ManualCheckParameterOMDStatus(ManualCheckParameterRulespec):
+    @property
+    def group(self):
+        return RulespecGroupManualChecksApplications
+
+    @property
+    def check_group_name(self):
+        return "omd_status"
+
+    @property
+    def title(self):
+        return _("OMD site status")
+
+    @property
+    def item_spec(self):
+        return TextAscii(
+            title=_("Name of the OMD site"),
+            help=_("The name of the OMD site to check the status for"),
+        )

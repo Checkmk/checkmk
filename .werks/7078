@@ -1,0 +1,16 @@
+Title: Docker container: Don't print missleading initial password  with CMK_PASSWORD
+Level: 1
+Component: omd
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1548715130
+Class: fix
+
+When using the environment option CMK_PASSWORD to set an initial password,
+the previous docker containers showed the default "welcome message" after
+site creation with a random initial password. The initial password was set
+afterwards leaving the missleading password in the log.
+
+The initial password is now set during site creation which makes the output
+don't show the wrong password anymore.

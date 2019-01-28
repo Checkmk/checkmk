@@ -582,7 +582,6 @@ def check_mem_windows(_no_item, params, info):
             used_kb = get_average(
                 "mem.win.%s" % paramname, now, used_kb, average_min, initialize_zero=False)
             used_mb = used_kb / 1024.0
-            free_mb = total_mb - used_mb
             perc = 100.0 * used_kb / total_kb
             infotext += ", %d min average: %s (%s)" % (average_min,
                                                        get_percent_human_readable(perc),

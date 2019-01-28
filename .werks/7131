@@ -1,4 +1,4 @@
-Title: win.mem: Fix incorrect representation of absolute memory levels in graphs
+Title: mem.win: Fix incorrect representation of absolute memory levels in graphs
 Level: 1
 Component: checks
 Compatible: compat

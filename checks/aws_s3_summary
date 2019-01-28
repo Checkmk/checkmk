@@ -104,8 +104,8 @@ def check_aws_s3_summary_objects(item, params, metrics):
         if size >= largest_size:
             largest = row['Key']
             largest_size = size
-    yield 0, 'Bucket size: %s' % get_bytes_human_readable(sum_size)
-    yield 0, 'Number of objects: %s' % num_objects
+    yield 0, 'Bucket size: %s' % get_bytes_human_readable(sum_size), [('bucket_size', sum_size)]
+    yield 0, 'Number of objects: %s' % num_objects, [('num_objects', num_objects)]
     if largest:
         yield 0, 'Largest object: %s, %s' % (largest, get_bytes_human_readable(largest_size))
 
@@ -114,4 +114,5 @@ check_info['aws_s3_summary.objects'] = {
     'inventory_function': discover(),
     'check_function': check_aws_s3_summary_objects,
     'service_description': 'AWS/S3 Objects %s',
+    'has_perfdata': True,
 }

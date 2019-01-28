@@ -4782,6 +4782,36 @@ metric_info['aws_costs_unblended'] = {
     'color': '11/a',
 }
 
+metric_info['num_objects'] = {
+    'title': _('Numer of objects'),
+    'unit': 'count',
+    'color': '21/a',
+}
+
+metric_info['bucket_size'] = {
+    'title': _('Bucket size'),
+    'unit': 'bytes',
+    'color': '15/a',
+}
+
+metric_info['surge_queue_length'] = {
+    'title': _('Surge queue length'),
+    'unit': 'count',
+    'color': '12/a',
+}
+
+metric_info['spillover'] = {
+    'title': _('Spillover'),
+    'unit': 'count',
+    'color': '13/a',
+}
+
+metric_info['backend_connection_errors'] = {
+    'title': _('Backend connection errors'),
+    'unit': '1/s',
+    'color': '15/a',
+}
+
 #.
 #   .--Checks--------------------------------------------------------------.
 #   |                    ____ _               _                            |

@@ -29,6 +29,7 @@
 
 import abc
 import time
+from typing import Text, Optional  # pylint: disable=unused-import
 
 import cmk.utils.plugin_registry
 
@@ -39,12 +40,80 @@ from cmk.gui.globals import html
 
 # TODO: Refactor to standard registry API
 _infos = {}
-# TODO: Refactor to standard registry API
-visual_types = {}
 
 
 def declare_info(infoname, info):
     _infos[infoname] = info
+
+
+class VisualType(object):
+    """Base class for all filters"""
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractproperty
+    def ident(self):
+        # type: () -> str
+        """The identity of a visual type. One word, may contain alpha numeric characters"""
+        raise NotImplementedError()
+
+    @abc.abstractproperty
+    def title(self):
+        # type: () -> Text
+        """The human readable GUI title"""
+        raise NotImplementedError()
+
+    @abc.abstractproperty
+    def add_visual_handler(self):
+        # type: () -> Optional[str]
+        """The function to handle adding a visual of this type"""
+        raise NotImplementedError()
+
+    @abc.abstractproperty
+    def ident_attr(self):
+        # type: () -> str
+        """The name of the attribute that is used to identify a visual of this type"""
+        raise NotImplementedError()
+
+    @abc.abstractproperty
+    def module_name(self):
+        # type: () -> str
+        """The full python module name of this visual type"""
+        raise NotImplementedError()
+
+    @abc.abstractproperty
+    def multicontext_links(self):
+        # type: () -> bool
+        """Whether or not to show context buttons even if not single infos present"""
+        raise NotImplementedError()
+
+    @abc.abstractproperty
+    def plural_title(self):
+        # type: () -> str
+        """The plural title to use in the GUI"""
+        raise NotImplementedError()
+
+    @abc.abstractproperty
+    def popup_add_handler(self):
+        # type: () -> str
+        """Name of the function to render the list of visuals another visual can be added to"""
+        raise NotImplementedError()
+
+    @abc.abstractproperty
+    def show_url(self):
+        # type: () -> str
+        """The URL filename that can be used to show visuals of this type"""
+        raise NotImplementedError()
+
+
+class VisualTypeRegistry(cmk.utils.plugin_registry.ClassRegistry):
+    def plugin_base_class(self):
+        return VisualType
+
+    def plugin_name(self, plugin_class):
+        return plugin_class().ident
+
+
+visual_type_registry = VisualTypeRegistry()
 
 
 class Filter(object):

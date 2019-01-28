@@ -61,11 +61,13 @@ from cmk.gui.i18n import _u, _
 from cmk.gui.globals import html
 
 from cmk.gui.plugins.visuals.utils import (
-    filter_registry,)
+    visual_type_registry,
+    filter_registry,
+)
 
 # Needed for legacy (pre 1.6) plugins
 from cmk.gui.plugins.visuals.utils import (  # pylint: disable=unused-import
-    declare_info, visual_types, Filter, FilterTime, FilterTristate, FilterUnicodeFilter,
+    declare_info, Filter, FilterTime, FilterTristate, FilterUnicodeFilter,
 )
 from cmk.gui.plugins.visuals.utils import _infos as infos
 from cmk.gui.permissions import permission_registry
@@ -95,27 +97,6 @@ def load_plugins(force):
     global loaded_with_language, title_functions
     if loaded_with_language == cmk.gui.i18n.get_current_language() and not force:
         return
-
-    visual_types.update({
-        'views': {
-            'show_url': 'view.py',
-            'ident_attr': 'view_name',
-            'title': _("view"),
-            'plural_title': _("views"),
-            'module_name': 'cmk.gui.views',
-            'multicontext_links': False,
-        },
-        'dashboards': {
-            'show_url': 'dashboard.py',
-            'ident_attr': 'name',
-            'title': _("dashboard"),
-            'plural_title': _("dashboards"),
-            'module_name': 'cmk.gui.dashboard',
-            'popup_add_handler': 'popup_list_dashboards',
-            'add_visual_handler': 'popup_add_dashlet',
-            'multicontext_links': False,
-        },
-    })
 
     title_functions = []
 
@@ -440,10 +421,12 @@ def page_list(what,
     html.context_button(_('New'), 'create_%s.py' % what_s, "new")
     if render_custom_context_buttons:
         render_custom_context_buttons()
-    for other_what, info in visual_types.items():
-        if what != other_what:
-            html.context_button(info["plural_title"].title(), 'edit_%s.py' % other_what,
-                                other_what[:-1])
+
+    for plugin_class in visual_type_registry.items():
+        plugin = plugin_class()
+        if what != plugin.ident:
+            html.context_button(plugin.plural_title.title(), 'edit_%s.py' % plugin.ident,
+                                plugin.ident[:-1])
 
     # TODO: We hack in those visuals that already have been moved to pagetypes here
     if pagetypes.has_page_type("graph_collection"):
@@ -553,7 +536,7 @@ def page_list(what,
                 if _visual_can_be_linked(what, visual_name, visuals, visual, owner):
                     html.a(
                         title2,
-                        href="%s.py?%s=%s" % (what_s, visual_types[what]['ident_attr'],
+                        href="%s.py?%s=%s" % (what_s, visual_type_registry[what]().ident_attr,
                                               visual_name))
                 else:
                     html.write_text(title2)
@@ -608,7 +591,7 @@ def _visual_can_be_linked(what, visual_name, all_visuals, visual, owner):
 
 
 def page_create_visual(what, info_keys, next_url=None):
-    title = visual_types[what]['title']
+    title = visual_type_registry[what]().title
     what_s = what[:-1]
 
     # FIXME: Sort by (assumed) common usage
@@ -751,11 +734,9 @@ def page_edit_visual(what,
     if sub_pages is None:
         sub_pages = []
 
-    visual_type = visual_types[what]
-
-    visual_type = visual_types[what]
+    visual_type = visual_type_registry[what]()
     if not config.user.may("general.edit_" + what):
-        raise MKAuthException(_("You are not allowed to edit %s.") % visual_type["plural_title"])
+        raise MKAuthException(_("You are not allowed to edit %s.") % visual_type.plural_title)
     visual = {}
 
     # Load existing visual from disk - and create a copy if 'load_user' is set
@@ -769,7 +750,7 @@ def page_edit_visual(what,
             mode = 'clone'
             visual = copy.deepcopy(all_visuals.get((cloneuser, visualname), None))
             if not visual:
-                raise MKUserError('cloneuser', _('The %s does not exist.') % visual_type["title"])
+                raise MKUserError('cloneuser', _('The %s does not exist.') % visual_type.title)
 
             # Make sure, name is unique
             if cloneuser == owner_user_id:  # Clone own visual
@@ -794,9 +775,8 @@ def page_edit_visual(what,
                 visual = all_visuals.get(('', visualname))  # load builtin visual
                 mode = 'clone'
                 if not visual:
-                    raise MKUserError(
-                        None,
-                        _('The requested %s does not exist.') % visual_types[what]['title'])
+                    raise MKUserError(None,
+                                      _('The requested %s does not exist.') % visual_type.title)
                 visual["public"] = False
 
         single_infos = visual['single_infos']
@@ -816,11 +796,11 @@ def page_edit_visual(what,
         visual['single_infos'] = single_infos
 
     if mode == 'clone':
-        title = _('Clone %s') % visual_type["title"]
+        title = _('Clone %s') % visual_type.title
     elif mode == 'create':
-        title = _('Create %s') % visual_type["title"]
+        title = _('Create %s') % visual_type.title
     else:
-        title = _('Edit %s') % visual_type["title"]
+        title = _('Edit %s') % visual_type.title
 
     html.header(title, stylesheets=["pages", "views", "status", "bi"])
     html.begin_context_buttons()
@@ -831,7 +811,7 @@ def page_edit_visual(what,
     # this visual that are more complex to be done in one value spec.
     if mode not in ["clone", "create"]:
         for title, pagename, icon in sub_pages:
-            uri = html.makeuri_contextless([(visual_types[what]['ident_attr'], visualname)],
+            uri = html.makeuri_contextless([(visual_type.ident_attr, visualname)],
                                            filename=pagename + '.py')
             html.context_button(title, uri, icon)
     html.end_context_buttons()
@@ -843,13 +823,13 @@ def page_edit_visual(what,
         ('hidden',
          FixedValue(
              True,
-             title=_('Hide this %s from the sidebar') % visual_type["title"],
+             title=_('Hide this %s from the sidebar') % visual_type.title,
              totext="",
          )),
         ('hidebutton',
          FixedValue(
              True,
-             title=_('Do not show a context button to this %s') % visual_type["title"],
+             title=_('Do not show a context button to this %s') % visual_type.title,
              totext="",
          )),
     ]
@@ -857,7 +837,7 @@ def page_edit_visual(what,
         with_foreign_groups = config.user.may("general.publish_" + what + "_to_foreign_groups")
         visibility_elements.append(('public',
                                     PublishTo(
-                                        type_title=visual_type["title"],
+                                        type_title=visual_type.title,
                                         with_foreign_groups=with_foreign_groups,
                                     )))
 
@@ -890,7 +870,7 @@ def page_edit_visual(what,
                  title=_('Button Text') + '<sup>*</sup>',
                  help=_('If you define a text here, then it will be used in '
                         'context buttons linking to the %s instead of the regular title.') %
-                 visual_type["title"],
+                 visual_type.title,
                  size=26)),
             ('icon', IconSelector(title=_('Button Icon'),)),
             ('visibility', Dictionary(
@@ -948,9 +928,8 @@ def page_edit_visual(what,
 
             if html.request.var("save") or save_and_go:
                 if save_and_go:
-                    back_url = html.makeuri_contextless(
-                        [(visual_types[what]['ident_attr'], visual['name'])],
-                        filename=save_and_go + '.py')
+                    back_url = html.makeuri_contextless([(visual_type.ident_attr, visual['name'])],
+                                                        filename=save_and_go + '.py')
 
                 if html.check_transaction():
                     all_visuals[(owner_user_id, visual["name"])] = visual
@@ -961,13 +940,13 @@ def page_edit_visual(what,
                             del all_visuals[(owner_user_id, oldname)]
                         # -> change visual_name in back parameter
                         if back_url:
-                            varstring = visual_type["ident_attr"] + "="
+                            varstring = visual_type.ident_attr + "="
                             back_url = back_url.replace(varstring + oldname,
                                                         varstring + visual["name"])
                     save(what, all_visuals, owner_user_id)
 
                 html.immediate_browser_redirect(1, back_url)
-                html.message(_('Your %s has been saved.') % visual_type["title"])
+                html.message(_('Your %s has been saved.') % visual_type.title)
                 html.reload_sidebar()
                 html.footer()
                 return
@@ -1386,8 +1365,8 @@ def verify_single_contexts(what, visual, link_filters):
             raise MKUserError(
                 k,
                 _('This %s can not be displayed, because the '
-                  'necessary context information "%s" is missing.') % (visual_types[what]['title'],
-                                                                       k))
+                  'necessary context information "%s" is missing.') %
+                (visual_type_registry[what]().title, k))
 
 
 def visual_title(what, visual):
@@ -1483,7 +1462,7 @@ def collect_context_links(this_visual, mobile=False, only_types=None):
             active_filter_vars.add(var)
 
     context_links = []
-    for what in visual_types:
+    for what in visual_type_registry.keys():
         if not only_types or what in only_types:
             context_links += collect_context_links_of(what, this_visual, active_filter_vars, mobile)
     return context_links
@@ -1493,8 +1472,8 @@ def collect_context_links_of(visual_type_name, this_visual, active_filter_vars, 
     context_links = []
 
     # FIXME: Make this cross module access cleaner
-    visual_type = visual_types[visual_type_name]
-    module_name = visual_type["module_name"]
+    visual_type = visual_type_registry[visual_type_name]()
+    module_name = visual_type.module_name
     thing_module = importlib.import_module(module_name)
     load_func_name = 'load_%s' % visual_type_name
     if load_func_name not in thing_module.__dict__:
@@ -1523,7 +1502,7 @@ def collect_context_links_of(visual_type_name, this_visual, active_filter_vars, 
         # For dashboards and views we currently only show a link button,
         # if the target dashboard/view shares a single info with the
         # current visual.
-        if not visual['single_infos'] and not visual_type["multicontext_links"]:
+        if not visual['single_infos'] and not visual_type.multicontext_links:
             continue  # skip non single visuals for dashboard, views
 
         # We can show a button only if all single contexts of the
@@ -1556,16 +1535,14 @@ def collect_context_links_of(visual_type_name, this_visual, active_filter_vars, 
         if not skip:
             # add context link to this visual. For reports we put in
             # the *complete* context, even the non-single one.
-            if visual_type["multicontext_links"]:
-                uri = html.makeuri([(visual_type['ident_attr'], name)],
-                                   filename=visual_type["show_url"])
+            if visual_type.multicontext_links:
+                uri = html.makeuri([(visual_type.ident_attr, name)], filename=visual_type.show_url)
 
             # For views and dashboards currently the current filter
             # settings
             else:
                 uri = html.makeuri_contextless(
-                    vars_values + [(visual_type['ident_attr'], name)],
-                    filename=visual_type["show_url"])
+                    vars_values + [(visual_type.ident_attr, name)], filename=visual_type.show_url)
             icon = visual.get("icon")
             buttonid = "cb_" + name
             context_links.append((_u(linktitle), uri, icon, buttonid))
@@ -1629,32 +1606,34 @@ def ajax_popup_add():
 
     pagetypes.render_addto_popup(add_type)
 
-    for visual_type_name, visual_type in visual_types.items():
-        if "popup_add_handler" in visual_type:
-            module_name = visual_type["module_name"]
-            visual_module = importlib.import_module(module_name)
+    for visual_type_name, visual_type_class in visual_type_registry.items():
+        visual_type = visual_type_class()
+        if visual_type.popup_add_handler is None:
+            continue
 
-            handler = visual_module.__dict__[visual_type["popup_add_handler"]]
-            visuals = handler(add_type)
-            if not visuals:
-                continue
+        module_name = visual_type.module_name
+        visual_module = importlib.import_module(module_name)
 
+        handler = visual_module.__dict__[visual_type.popup_add_handler]
+        visuals = handler(add_type)
+        if not visuals:
+            continue
+
+        html.open_li()
+        html.open_span()
+        html.write("%s %s:" % (_('Add to'), visual_type.title))
+        html.close_span()
+        html.close_li()
+
+        for name, title in sorted(visuals, key=lambda x: x[1]):
             html.open_li()
-            html.open_span()
-            html.write("%s %s:" % (_('Add to'), visual_type["title"]))
-            html.close_span()
+            html.open_a(
+                href="javascript:void(0)",
+                onclick="cmk.popup_menu.add_to_visual(\'%s\', \'%s\')" % (visual_type_name, name))
+            html.icon(None, visual_type_name.rstrip('s'))
+            html.write(title)
+            html.close_a()
             html.close_li()
-
-            for name, title in sorted(visuals, key=lambda x: x[1]):
-                html.open_li()
-                html.open_a(
-                    href="javascript:void(0)",
-                    onclick="cmk.popup_menu.add_to_visual(\'%s\', \'%s\')" % (visual_type_name,
-                                                                              name))
-                html.icon(None, visual_type_name.rstrip('s'))
-                html.write(title)
-                html.close_a()
-                html.close_li()
 
     # TODO: Find a good place for this special case. This needs to be modularized.
     if add_type == "pnpgraph" and metrics.cmk_graphs_possible():
@@ -1681,10 +1660,10 @@ def ajax_popup_add():
 @cmk.gui.pages.register("ajax_add_visual")
 def ajax_add_visual():
     visual_type_name = html.request.var('visual_type')  # dashboards / views / ...
-    visual_type = visual_types[visual_type_name]
-    module_name = visual_type["module_name"]
+    visual_type = visual_type_registry[visual_type_name]()
+    module_name = visual_type.module_name
     visual_module = importlib.import_module(module_name)
-    handler = visual_module.__dict__[visual_type["add_visual_handler"]]
+    handler = visual_module.__dict__[visual_type.add_visual_handler]
 
     visual_name = html.request.var("visual_name")  # add to this visual
 

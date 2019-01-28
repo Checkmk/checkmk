@@ -73,6 +73,10 @@ from cmk.gui.permissions import (
     PermissionSection,
     declare_permission,
 )
+from cmk.gui.plugins.visuals.utils import (
+    visual_type_registry,
+    VisualType,
+)
 from cmk.gui.plugins.views.icons.utils import (
     icon_and_action_registry,
     Icon,
@@ -127,6 +131,45 @@ multisite_commands = {}
 multisite_datasources = {}
 multisite_painters = {}
 multisite_sorters = {}
+
+
+@visual_type_registry.register
+class VisualTypeViews(VisualType):
+    @property
+    def ident(self):
+        return "views"
+
+    @property
+    def title(self):
+        return _("view")
+
+    @property
+    def plural_title(self):
+        return _("views")
+
+    @property
+    def add_visual_handler(self):
+        return None
+
+    @property
+    def ident_attr(self):
+        return "view_name"
+
+    @property
+    def module_name(self):
+        return "cmk.gui.views"
+
+    @property
+    def multicontext_links(self):
+        return False
+
+    @property
+    def popup_add_handler(self):
+        return None
+
+    @property
+    def show_url(self):
+        return "view.py"
 
 
 @permission_section_registry.register

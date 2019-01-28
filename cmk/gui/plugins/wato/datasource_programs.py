@@ -1843,20 +1843,19 @@ class RulespecSpecialAgentsAws(HostRulespec):
                      ],
                                     key=lambda x: x[1]),
                  )),
-                (
-                    "--services",
-                    ListChoice(
-                        title=_("Services to monitor"),
-                        choices=[
-                            ("ce", _("Costs and usage")),
-                            ("ec2", _("Elastic Compute Cloud (EC2)")),
-                            ("ebs", _("Elastic Block Storage (EBS)")),
-                            ("s3", _("Simple Storage Service (S3)")),
-                            #("elb", _("Elastic Load Balancing (ELB)")),
-                            #("cloudtrail", _("")),
-                            #("glacier", _("")),
-                        ],
-                    )),
+                ("--services",
+                 Dictionary(
+                     title=_("Services to monitor"),
+                     elements=[
+                         ("ce", FixedValue(None, totext="", title=_("Costs and usage"))),
+                         ("ec2", FixedValue(
+                             None, totext="", title=_("Elastic Compute Cloud (EC2)"))),
+                         ("ebs", FixedValue(
+                             None, totext="", title=_("Elastic Block Storage (EBS)"))),
+                         ("s3", FixedValue(None, totext="",
+                                           title=_("Simple Storage Service (S3)"))),
+                     ],
+                 )),
             ],
             optional_keys=[],
         )

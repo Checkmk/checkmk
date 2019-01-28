@@ -148,28 +148,35 @@ class VisualTypeViews(VisualType):
         return _("views")
 
     @property
-    def add_visual_handler(self):
-        return None
-
-    @property
     def ident_attr(self):
         return "view_name"
-
-    @property
-    def module_name(self):
-        return "cmk.gui.views"
 
     @property
     def multicontext_links(self):
         return False
 
     @property
-    def popup_add_handler(self):
-        return None
-
-    @property
     def show_url(self):
         return "view.py"
+
+    def popup_add_handler(self, add_type):
+        return []
+
+    def add_visual_handler(self, target_visual_name, add_type, context, parameters):
+        return None
+
+    def load_handler(self):
+        load_views()
+
+    @property
+    def permitted_visuals(self):
+        return permitted_views()
+
+    def is_enabled_for(self, this_visual, visual, context_vars):
+        if visual["name"] not in view_is_enabled:
+            return True  # Not registered are always visible!
+
+        return view_is_enabled[visual["name"]](this_visual, visual, context_vars)
 
 
 @permission_section_registry.register
@@ -298,13 +305,6 @@ def all_views():
 
 def save_views(us):
     visuals.save('views', multisite_views)
-
-
-def is_enabled_for(linking_view, view, context_vars):
-    if view["name"] not in view_is_enabled:
-        return True  # Not registered are always visible!
-
-    return view_is_enabled[view["name"]](linking_view, view, context_vars)
 
 
 def paint_host_tag(row, tgid):

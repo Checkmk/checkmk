@@ -1,4 +1,4 @@
-import pytest
+import pytest # type: ignore
 from cmk_base.check_api import MKCounterWrapped
 from checktestlib import CheckResult, assertCheckResultsEqual
 
@@ -36,7 +36,16 @@ def parsed_change(bandwidth_change):
     ]
 
 
-DISCOVERY = [('5', "{'state': ['1'], 'speed': 10000000}"), ('6', "{'state': ['1'], 'speed': 0}")]
+DISCOVERY = [
+    ('5', "%r" % {
+        'state': ['1'],
+        'speed': 10000000
+    }),
+    ('6', "%r" % {
+        'state': ['1'],
+        'speed': 0
+    }),
+]
 
 
 @pytest.mark.parametrize('item, params, result', [

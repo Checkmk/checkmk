@@ -31,25 +31,41 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersOperatingSystem,
-    register_check_parameters,
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersOperatingSystem,
-    "apt",
-    _("APT Updates"),
-    Dictionary(elements=[
-        ("normal",
-         MonitoringState(
-             title=_("State when normal updates are pending"),
-             default_value=1,
-         )),
-        ("security",
-         MonitoringState(
-             title=_("State when security updates are pending"),
-             default_value=2,
-         )),
-    ]),
-    None,
-    match_type="dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersApt(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersOperatingSystem
+
+    @property
+    def check_group_name(self):
+        return "apt"
+
+    @property
+    def title(self):
+        return _("APT Updates")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ("normal",
+                 MonitoringState(
+                     title=_("State when normal updates are pending"),
+                     default_value=1,
+                 )),
+                ("security",
+                 MonitoringState(
+                     title=_("State when security updates are pending"),
+                     default_value=2,
+                 )),
+            ],)

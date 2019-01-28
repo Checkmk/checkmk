@@ -31,42 +31,63 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications, "threepar_remotecopy", _("3PAR Remote Copy"),
-    Dictionary(elements=[
-        ("1", MonitoringState(
-            title=_("Status: NORMAL"),
-            default_value=0,
-        )),
-        ("2", MonitoringState(
-            title=_("Status: STARTUP"),
-            default_value=1,
-        )),
-        ("3", MonitoringState(
-            title=_("Status: SHUTDOWN"),
-            default_value=1,
-        )),
-        ("4", MonitoringState(
-            title=_("Status: ENABLE"),
-            default_value=0,
-        )),
-        ("5", MonitoringState(
-            title=_("Status: DISBALE"),
-            default_value=2,
-        )),
-        ("6", MonitoringState(
-            title=_("Status: INVALID"),
-            default_value=2,
-        )),
-        ("7", MonitoringState(
-            title=_("Status: NODEUP"),
-            default_value=1,
-        )),
-        ("8", MonitoringState(
-            title=_("Status: UPGRADE"),
-            default_value=0,
-        )),
-    ]), None, "dict")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersThreeparRemotecopy(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "threepar_remotecopy"
+
+    @property
+    def title(self):
+        return _("3PAR Remote Copy")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ("1", MonitoringState(
+                    title=_("Status: NORMAL"),
+                    default_value=0,
+                )),
+                ("2", MonitoringState(
+                    title=_("Status: STARTUP"),
+                    default_value=1,
+                )),
+                ("3", MonitoringState(
+                    title=_("Status: SHUTDOWN"),
+                    default_value=1,
+                )),
+                ("4", MonitoringState(
+                    title=_("Status: ENABLE"),
+                    default_value=0,
+                )),
+                ("5", MonitoringState(
+                    title=_("Status: DISBALE"),
+                    default_value=2,
+                )),
+                ("6", MonitoringState(
+                    title=_("Status: INVALID"),
+                    default_value=2,
+                )),
+                ("7", MonitoringState(
+                    title=_("Status: NODEUP"),
+                    default_value=1,
+                )),
+                ("8", MonitoringState(
+                    title=_("Status: UPGRADE"),
+                    default_value=0,
+                )),
+            ],)

@@ -32,41 +32,61 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersEnvironment,
-    register_check_parameters,
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersEnvironment,
-    "airflow",
-    _("Airflow levels"),
-    Dictionary(
-        title=_("Levels for airflow"),
-        elements=[
-            ("level_low",
-             Tuple(
-                 title=_("Lower levels"),
-                 elements=[
-                     Float(
-                         title=_("Warning if below"),
-                         unit=_("l/s"),
-                         default_value=5.0,
-                         allow_int=True),
-                     Float(
-                         title=_("Critical if below"),
-                         unit=_("l/s"),
-                         default_value=2.0,
-                         allow_int=True)
-                 ])),
-            ("level_high",
-             Tuple(
-                 title=_("Upper levels"),
-                 elements=[
-                     Float(
-                         title=_("Warning at"), unit=_("l/s"), default_value=10.0, allow_int=True),
-                     Float(
-                         title=_("Critical at"), unit=_("l/s"), default_value=11.0, allow_int=True)
-                 ])),
-        ]),
-    None,
-    match_type="dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersAirflow(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersEnvironment
+
+    @property
+    def check_group_name(self):
+        return "airflow"
+
+    @property
+    def title(self):
+        return _("Airflow levels")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ("level_low",
+                 Tuple(
+                     title=_("Lower levels"),
+                     elements=[
+                         Float(
+                             title=_("Warning if below"),
+                             unit=_("l/s"),
+                             default_value=5.0,
+                             allow_int=True),
+                         Float(
+                             title=_("Critical if below"),
+                             unit=_("l/s"),
+                             default_value=2.0,
+                             allow_int=True)
+                     ])),
+                ("level_high",
+                 Tuple(
+                     title=_("Upper levels"),
+                     elements=[
+                         Float(
+                             title=_("Warning at"),
+                             unit=_("l/s"),
+                             default_value=10.0,
+                             allow_int=True),
+                         Float(
+                             title=_("Critical at"),
+                             unit=_("l/s"),
+                             default_value=11.0,
+                             allow_int=True)
+                     ])),
+            ],)

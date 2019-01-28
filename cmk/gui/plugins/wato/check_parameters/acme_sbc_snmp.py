@@ -32,24 +32,40 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    "acme_sbc_snmp",
-    _("ACME SBC health"),
-    Dictionary(
-        elements=[
-            ("levels_lower",
-             Tuple(
-                 title=_("Levels on health status score in percent"),
-                 elements=[
-                     Integer(title=_("Warning below"), unit=_("percent"), default_value=99),
-                     Integer(title=_("Critical below"), unit=_("percent"), default_value=75),
-                 ])),
-        ],
-        required_keys=["levels_lower"]),
-    None,
-    match_type="dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersAcmeSbcSnmp(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "acme_sbc_snmp"
+
+    @property
+    def title(self):
+        return _("ACME SBC health")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ("levels_lower",
+                 Tuple(
+                     title=_("Levels on health status score in percent"),
+                     elements=[
+                         Integer(title=_("Warning below"), unit=_("percent"), default_value=99),
+                         Integer(title=_("Critical below"), unit=_("percent"), default_value=75),
+                     ])),
+            ],
+            required_keys=["levels_lower"],
+        )

@@ -33,27 +33,53 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersNetworking,
-    register_check_parameters,
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersNetworking, "adva_ifs", _("Adva Optical Transport Laser Power"),
-    Dictionary(elements=[
-        ("limits_output_power",
-         Tuple(
-             title=_("Sending Power"),
-             elements=[
-                 Float(title=_("lower limit"), unit="dBm"),
-                 Float(title=_("upper limit"), unit="dBm"),
-             ])),
-        ("limits_input_power",
-         Tuple(
-             title=_("Received Power"),
-             elements=[
-                 Float(title=_("lower limit"), unit="dBm"),
-                 Float(title=_("upper limit"), unit="dBm"),
-             ])),
-    ]), TextAscii(
-        title=_("Interface"),
-        allow_empty=False,
-    ), "dict")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersAdvaIfs(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersNetworking
+
+    @property
+    def check_group_name(self):
+        return "adva_ifs"
+
+    @property
+    def title(self):
+        return _("Adva Optical Transport Laser Power")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(elements=[
+            ("limits_output_power",
+             Tuple(
+                 title=_("Sending Power"),
+                 elements=[
+                     Float(title=_("lower limit"), unit="dBm"),
+                     Float(title=_("upper limit"), unit="dBm"),
+                 ],
+             )),
+            ("limits_input_power",
+             Tuple(
+                 title=_("Received Power"),
+                 elements=[
+                     Float(title=_("lower limit"), unit="dBm"),
+                     Float(title=_("upper limit"), unit="dBm"),
+                 ],
+             )),
+        ])
+
+    @property
+    def item_spec(self):
+        return TextAscii(
+            title=_("Interface"),
+            allow_empty=False,
+        )

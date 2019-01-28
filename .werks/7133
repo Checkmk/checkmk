@@ -1,0 +1,12 @@
+Title: mem.win: Change label from "Commit Charge" to "Page file"
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1548670807
+Class: fix
+
+The agent actually reports total/available page file, so adjust the check output
+accordingly and replace the confusing "Commit Charge" label.
+This change only affects the displayed text.

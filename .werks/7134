@@ -1,0 +1,12 @@
+Title: mk_jolokia: now requires requests library
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1548680628
+Class: fix
+
+The mk_jolokia plugin has been rewritten to make use of the python requests library.
+If you encounter an error, please install it on the monitored system using
+'pip install requests'.

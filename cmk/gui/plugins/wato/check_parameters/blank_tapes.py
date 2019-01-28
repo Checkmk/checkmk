@@ -31,18 +31,29 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersStorage,
-    register_check_parameters,
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersStorage,
-    "blank_tapes",
-    _("Remaining blank tapes in DIVA CSM Devices"),
-    Tuple(
-        elements=[
-            Integer(title=_("Warning below"), default_value=5),
-            Integer(title=_("Critical below"), default_value=1),
-        ],),
-    None,
-    match_type="first",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersBlankTapes(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersStorage
+
+    @property
+    def check_group_name(self):
+        return "blank_tapes"
+
+    @property
+    def title(self):
+        return _("Remaining blank tapes in DIVA CSM Devices")
+
+    @property
+    def parameter_valuespec(self):
+        return Tuple(
+            elements=[
+                Integer(title=_("Warning below"), default_value=5),
+                Integer(title=_("Critical below"), default_value=1),
+            ],)

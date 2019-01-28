@@ -32,16 +32,40 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersEnvironment,
-    register_check_parameters,
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersEnvironment, "airflow_deviation", _("Airflow Deviation in Percent"),
-    Tuple(
-        help=_("Levels for Airflow Deviation measured at airflow sensors "),
-        elements=[
-            Float(title=_("critical if below or equal"), unit=u"%", default_value=-20),
-            Float(title=_("warning if below or equal"), unit=u"%", default_value=-20),
-            Float(title=_("warning if above or equal"), unit=u"%", default_value=20),
-            Float(title=_("critical if above or equal"), unit=u"%", default_value=20),
-        ]), TextAscii(title=_("Detector ID"), help=_("The identifier of the detector.")), "first")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersAirflowDeviation(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersEnvironment
+
+    @property
+    def check_group_name(self):
+        return "airflow_deviation"
+
+    @property
+    def title(self):
+        return _("Airflow Deviation in Percent")
+
+    @property
+    def parameter_valuespec(self):
+        return Tuple(
+            help=_("Levels for Airflow Deviation measured at airflow sensors "),
+            elements=[
+                Float(title=_("critical if below or equal"), unit=u"%", default_value=-20),
+                Float(title=_("warning if below or equal"), unit=u"%", default_value=-20),
+                Float(title=_("warning if above or equal"), unit=u"%", default_value=20),
+                Float(title=_("critical if above or equal"), unit=u"%", default_value=20),
+            ],
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(
+            title=_("Detector ID"),
+            help=_("The identifier of the detector."),
+        )

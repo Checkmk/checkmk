@@ -30,34 +30,57 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     TextAscii,
 )
+from cmk.gui.plugins.wato.check_parameters.utils import filesystem_elements
 from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
 )
-from cmk.gui.plugins.wato.check_parameters.utils import filesystem_elements
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications, "asm_diskgroup",
-    _("ASM Disk Group (used space and growth)"),
-    Dictionary(
-        elements=filesystem_elements + [
-            ("req_mir_free",
-             DropdownChoice(
-                 title=_("Handling for required mirror space"),
-                 totext="",
-                 choices=[
-                     (False, _("Do not regard required mirror space as free space")),
-                     (True, _("Regard required mirror space as free space")),
-                 ],
-                 help=_(
-                     "ASM calculates the free space depending on free_mb or required mirror "
-                     "free space. Enable this option to set the check against required "
-                     "mirror free space. This only works for normal or high redundancy Disk Groups."
-                 ))),
-        ],
-        hidden_keys=["flex_levels"],
-    ),
-    TextAscii(
-        title=_("ASM Disk Group"),
-        help=_("Specify the name of the ASM Disk Group "),
-        allow_empty=False), "dict")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersAsmDiskgroup(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "asm_diskgroup"
+
+    @property
+    def title(self):
+        return _("ASM Disk Group (used space and growth)")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=filesystem_elements + [
+                ("req_mir_free",
+                 DropdownChoice(
+                     title=_("Handling for required mirror space"),
+                     totext="",
+                     choices=[
+                         (False, _("Do not regard required mirror space as free space")),
+                         (True, _("Regard required mirror space as free space")),
+                     ],
+                     help=_(
+                         "ASM calculates the free space depending on free_mb or required mirror "
+                         "free space. Enable this option to set the check against required "
+                         "mirror free space. This only works for normal or high redundancy Disk Groups."
+                     ))),
+            ],
+            hidden_keys=["flex_levels"],
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(
+            title=_("ASM Disk Group"),
+            help=_("Specify the name of the ASM Disk Group "),
+            allow_empty=False,
+        )

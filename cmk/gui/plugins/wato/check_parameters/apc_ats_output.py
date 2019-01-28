@@ -34,47 +34,66 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersEnvironment,
-    register_check_parameters,
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersEnvironment,
-    "apc_ats_output",
-    _("APC Automatic Transfer Switch Output"),
-    Dictionary(
-        title=_("Levels for ATS Output parameters"),
-        optional_keys=True,
-        elements=[
-            ("output_voltage_max",
-             Tuple(
-                 title=_("Maximum Levels for Voltage"),
-                 elements=[
-                     Integer(title=_("Warning at"), unit="Volt"),
-                     Integer(title=_("Critical at"), unit="Volt"),
-                 ])),
-            ("output_voltage_min",
-             Tuple(
-                 title=_("Minimum Levels for Voltage"),
-                 elements=[
-                     Integer(title=_("Warning if below"), unit="Volt"),
-                     Integer(title=_("Critical if below"), unit="Volt"),
-                 ])),
-            ("load_perc_max",
-             Tuple(
-                 title=_("Maximum Levels for load in percent"),
-                 elements=[
-                     Percentage(title=_("Warning at")),
-                     Percentage(title=_("Critical at")),
-                 ])),
-            ("load_perc_min",
-             Tuple(
-                 title=_("Minimum Levels for load in percent"),
-                 elements=[
-                     Percentage(title=_("Warning if below")),
-                     Percentage(title=_("Critical if below")),
-                 ])),
-        ],
-    ),
-    TextAscii(title=_("ID of phase")),
-    "dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersApcAtsOutput(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersEnvironment
+
+    @property
+    def check_group_name(self):
+        return "apc_ats_output"
+
+    @property
+    def title(self):
+        return _("APC Automatic Transfer Switch Output")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            title=_("Levels for ATS Output parameters"),
+            optional_keys=True,
+            elements=[
+                ("output_voltage_max",
+                 Tuple(
+                     title=_("Maximum Levels for Voltage"),
+                     elements=[
+                         Integer(title=_("Warning at"), unit="Volt"),
+                         Integer(title=_("Critical at"), unit="Volt"),
+                     ])),
+                ("output_voltage_min",
+                 Tuple(
+                     title=_("Minimum Levels for Voltage"),
+                     elements=[
+                         Integer(title=_("Warning if below"), unit="Volt"),
+                         Integer(title=_("Critical if below"), unit="Volt"),
+                     ])),
+                ("load_perc_max",
+                 Tuple(
+                     title=_("Maximum Levels for load in percent"),
+                     elements=[
+                         Percentage(title=_("Warning at")),
+                         Percentage(title=_("Critical at")),
+                     ])),
+                ("load_perc_min",
+                 Tuple(
+                     title=_("Minimum Levels for load in percent"),
+                     elements=[
+                         Percentage(title=_("Warning if below")),
+                         Percentage(title=_("Critical if below")),
+                     ])),
+            ],
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("ID of phase"),)

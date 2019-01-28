@@ -33,19 +33,43 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications, "acme_certificates", _("ACME certificates"),
-    Dictionary(
-        elements=[("expire_lower",
-                   Tuple(
-                       title=_("Lower age levels for expire date"),
-                       elements=[
-                           Age(title=_("Warning if below"), default_value=604800),
-                           Age(title=_("Critical if below"), default_value=2592000),
-                       ]))],), TextAscii(
-                           title=_("Name of certificate"),
-                           allow_empty=False,
-                       ), "dict")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersAcmeCertificates(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "acme_certificates"
+
+    @property
+    def title(self):
+        return _("ACME certificates")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[("expire_lower",
+                       Tuple(
+                           title=_("Lower age levels for expire date"),
+                           elements=[
+                               Age(title=_("Warning if below"), default_value=604800),
+                               Age(title=_("Critical if below"), default_value=2592000),
+                           ]))],)
+
+    @property
+    def item_spec(self):
+        return TextAscii(
+            title=_("Name of certificate"),
+            allow_empty=False,
+        )

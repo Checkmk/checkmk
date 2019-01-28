@@ -32,29 +32,46 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersEnvironment,
-    register_check_parameters,
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersEnvironment,
-    "apc_power",
-    _("APC Power Consumption"),
-    Tuple(
-        title=_("Power Comsumption of APC Devices"),
-        elements=[
-            Integer(
-                title=_("Warning below"),
-                unit=_("W"),
-                default_value=20,
-            ),
-            Integer(
-                title=_("Critical below"),
-                unit=_("W"),
-                default_value=1,
-            ),
-        ]),
-    TextAscii(
-        title=_("Phase"),
-        help=_("The identifier of the phase the power is related to."),
-    ),
-    match_type="first")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersApcPower(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersEnvironment
+
+    @property
+    def check_group_name(self):
+        return "apc_power"
+
+    @property
+    def title(self):
+        return _("APC Power Consumption")
+
+    @property
+    def parameter_valuespec(self):
+        return Tuple(
+            title=_("Power Comsumption of APC Devices"),
+            elements=[
+                Integer(
+                    title=_("Warning below"),
+                    unit=_("W"),
+                    default_value=20,
+                ),
+                Integer(
+                    title=_("Critical below"),
+                    unit=_("W"),
+                    default_value=1,
+                ),
+            ],
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(
+            title=_("Phase"),
+            help=_("The identifier of the phase the power is related to."),
+        )

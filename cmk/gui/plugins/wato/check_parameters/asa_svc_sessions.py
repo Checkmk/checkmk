@@ -31,21 +31,40 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    "asa_svc_sessions",
-    _("Cisco SSl VPN Client Sessions"),
-    Tuple(
-        title=_("Number of active sessions"),
-        help=_("This check monitors the current number of active sessions"),
-        elements=[
-            Integer(title=_("Warning at"), unit=_("sessions"), default_value=100),
-            Integer(title=_("Critical at"), unit=_("sessions"), default_value=200),
-        ],
-    ),
-    None,
-    match_type="first",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersAsaSvcSessions(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "asa_svc_sessions"
+
+    @property
+    def title(self):
+        return _("Cisco SSl VPN Client Sessions")
+
+    @property
+    def parameter_valuespec(self):
+        return Tuple(
+            title=_("Number of active sessions"),
+            help=_("This check monitors the current number of active sessions"),
+            elements=[
+                Integer(
+                    title=_("Warning at"),
+                    unit=_("sessions"),
+                    default_value=100,
+                ),
+                Integer(
+                    title=_("Critical at"),
+                    unit=_("sessions"),
+                    default_value=200,
+                ),
+            ],
+        )

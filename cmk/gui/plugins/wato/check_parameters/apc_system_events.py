@@ -31,16 +31,38 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersEnvironment,
-    register_check_parameters,
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersEnvironment, "apc_system_events", _("APC Inrow System Events"),
-    Dictionary(
-        title=_("System Events on APX Inrow Devices"),
-        elements=[
-            ("state", MonitoringState(
-                title=_("State during active system events"),
-                default_value=2,
-            )),
-        ]), None, "dict")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersApcSystemEvents(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersEnvironment
+
+    @property
+    def check_group_name(self):
+        return "apc_system_events"
+
+    @property
+    def title(self):
+        return _("APC Inrow System Events")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            title=_("System Events on APX Inrow Devices"),
+            elements=[
+                ("state",
+                 MonitoringState(
+                     title=_("State during active system events"),
+                     default_value=2,
+                 )),
+            ],
+        )

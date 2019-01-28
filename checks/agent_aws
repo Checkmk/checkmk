@@ -42,6 +42,16 @@ def agent_aws_arguments(params, hostname, ipaddress):
         # in order to create reliable tests
         args += sorted(services.keys())
 
+    # {'s3': {'buckets': 'all'} already handled by services.keys()
+    # {'s3': {'buckets', ('buckets', ['cmk-dev', 'foo'])}}
+    try:
+        _, buckets = services.get('s3', {}).get('buckets')
+    except (TypeError, ValueError):
+        pass
+    else:
+        args.append("--buckets")
+        args += buckets
+
     args += [
         "--hostname",
         hostname,

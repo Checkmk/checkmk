@@ -1852,8 +1852,19 @@ class RulespecSpecialAgentsAws(HostRulespec):
                              None, totext="", title=_("Elastic Compute Cloud (EC2)"))),
                          ("ebs", FixedValue(
                              None, totext="", title=_("Elastic Block Storage (EBS)"))),
-                         ("s3", FixedValue(None, totext="",
-                                           title=_("Simple Storage Service (S3)"))),
+                         ("s3",
+                          Dictionary(
+                              title=_("Simple Storage Service (S3)"),
+                              elements=[('buckets',
+                                         CascadingDropdown(
+                                             title=_("Buckets"),
+                                             choices=[
+                                                 ('all', _("All buckets")),
+                                                 ('buckets', _("Specific buckets"),
+                                                  ListOfStrings()),
+                                             ]))],
+                              optional_keys=[],
+                          )),
                      ],
                  )),
             ],

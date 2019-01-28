@@ -440,9 +440,9 @@ class EC2(AWSSectionCloudwatch):
 #   '----------------------------------------------------------------------'
 
 
-class S3(AWSSectionGeneric):
+class S3Summary(AWSSectionGeneric):
     def __init__(self, client, distributor=None, buckets=None):
-        super(S3, self).__init__(client, distributor=distributor)
+        super(S3Summary, self).__init__(client, distributor=distributor)
         self._buckets = self._determine_buckets(buckets)
 
     def _determine_buckets(self, buckets):
@@ -457,7 +457,7 @@ class S3(AWSSectionGeneric):
 
     @property
     def name(self):
-        return "s3"
+        return "s3_summary"
 
     @property
     def interval(self):
@@ -981,14 +981,14 @@ class AWSSectionsUSEast(AWSSections):
 
         #---sections--------------------------------------------------------
         ce = CostsAndUsage(ce_client)
-        s3 = S3(s3_client, buckets=kwargs.get('buckets'))
+        s3_summary = S3Summary(s3_client, buckets=kwargs.get('buckets'))
 
         #---register sections for execution---------------------------------
         if 'ce' in self._services:
             self._sections.append(ce)
 
         if 's3' in self._services:
-            self._sections.append(s3)
+            self._sections.append(s3_summary)
 
 
 class AWSSectionsGeneric(AWSSections):

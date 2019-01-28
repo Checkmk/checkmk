@@ -1,0 +1,15 @@
+Title: Kubernetes monitoring
+Level: 2
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0p12
+Date: 1548664673
+Class: feature
+
+A special agent and multiple checks to support the monitoring of
+Kubernetes clusters are added. For a detailled description of the
+features and a setup guide please refer to the official Check_MK
+guide:
+
+https://mathias-kettner.de/cms_monitoring_kubernetes.html

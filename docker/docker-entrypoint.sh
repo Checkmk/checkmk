@@ -34,17 +34,12 @@ fi
 # site tmpfs below tmp.
 if [ ! -d "/opt/omd/sites/$CMK_SITE_ID/etc" ] ; then
     echo "### CREATING SITE '$CMK_SITE_ID'"
-    omd create --no-tmpfs -u 1000 -g 1000 "$CMK_SITE_ID"
+    omd create --no-tmpfs -u 1000 -g 1000 --admin-password "$CMK_PASSWORD" "$CMK_SITE_ID"
     omd config "$CMK_SITE_ID" set APACHE_TCP_ADDR 0.0.0.0
     omd config "$CMK_SITE_ID" set APACHE_TCP_PORT 5000
 
     if [ "$CMK_LIVESTATUS_TCP" = "on" ]; then
         omd config "$CMK_SITE_ID" set LIVESTATUS_TCP on
-    fi
-
-    if [ -n "$CMK_PASSWORD" ]; then
-        echo "### SETTING PASSWORD OF 'cmkadmin'"
-        htpasswd -b -m "/omd/sites/$CMK_SITE_ID/etc/htpasswd" cmkadmin "$CMK_PASSWORD"
     fi
 fi
 

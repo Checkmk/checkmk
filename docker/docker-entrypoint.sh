@@ -28,7 +28,11 @@ if [ ! -z "$MAIL_RELAY_HOST" ]; then
 fi
 
 # Create the site in case it does not exist
-if [ ! -d "/opt/omd/sites/$CMK_SITE_ID" ] ; then
+#
+# Check for a file in the directory because the directory itself might have
+# been pre-created by docker when the --tmpfs option is used to create a
+# site tmpfs below tmp.
+if [ ! -d "/opt/omd/sites/$CMK_SITE_ID/etc" ] ; then
     echo "### CREATING SITE '$CMK_SITE_ID'"
     omd create --no-tmpfs -u 1000 -g 1000 "$CMK_SITE_ID"
     omd config "$CMK_SITE_ID" set APACHE_TCP_ADDR 0.0.0.0

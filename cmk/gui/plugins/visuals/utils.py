@@ -29,7 +29,7 @@
 
 import abc
 import time
-from typing import Text, Optional  # pylint: disable=unused-import
+from typing import Dict, List, Tuple, Text, Optional  # pylint: disable=unused-import
 
 import cmk.utils.plugin_registry
 
@@ -63,21 +63,9 @@ class VisualType(object):
         raise NotImplementedError()
 
     @abc.abstractproperty
-    def add_visual_handler(self):
-        # type: () -> Optional[str]
-        """The function to handle adding a visual of this type"""
-        raise NotImplementedError()
-
-    @abc.abstractproperty
     def ident_attr(self):
         # type: () -> str
         """The name of the attribute that is used to identify a visual of this type"""
-        raise NotImplementedError()
-
-    @abc.abstractproperty
-    def module_name(self):
-        # type: () -> str
-        """The full python module name of this visual type"""
         raise NotImplementedError()
 
     @abc.abstractproperty
@@ -93,16 +81,42 @@ class VisualType(object):
         raise NotImplementedError()
 
     @abc.abstractproperty
-    def popup_add_handler(self):
-        # type: () -> str
-        """Name of the function to render the list of visuals another visual can be added to"""
-        raise NotImplementedError()
-
-    @abc.abstractproperty
     def show_url(self):
         # type: () -> str
         """The URL filename that can be used to show visuals of this type"""
         raise NotImplementedError()
+
+    @abc.abstractmethod
+    def add_visual_handler(self, target_visual_name, add_type, context, parameters):
+        # type: (str, str, Dict, Dict) -> None
+        """The function to handle adding the given visual to the given visual of this type"""
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def popup_add_handler(self, add_type):
+        # type: (str) -> List[Tuple[str, Text]]
+        """List of visual choices another visual of the given type can be added to"""
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def load_handler(self):
+        # type: () -> None
+        """Load all visuals of this type"""
+        raise NotImplementedError()
+
+    @abc.abstractproperty
+    def permitted_visuals(self):
+        # type: () -> Dict
+        """Get the permitted visuals of this type"""
+        raise NotImplementedError()
+
+    def is_enabled_for(self, this_visual, visual, context_vars):
+        """Optional feature of visuals: Make them dynamically available as links or not
+
+        This has been implemented for HW/SW inventory views which are often useless when a host
+        has no such information available. For example the "Oracle Tablespaces" inventory view
+        is useless on hosts that don't host Oracle databases."""
+        return True
 
 
 class VisualTypeRegistry(cmk.utils.plugin_registry.ClassRegistry):

@@ -29,7 +29,6 @@ import copy
 import sys
 import traceback
 import json
-import importlib
 from typing import Dict, List, Type, Callable  # pylint: disable=unused-import
 
 import cmk.gui.pages
@@ -422,7 +421,7 @@ def page_list(what,
     if render_custom_context_buttons:
         render_custom_context_buttons()
 
-    for plugin_class in visual_type_registry.items():
+    for plugin_class in visual_type_registry.values():
         plugin = plugin_class()
         if what != plugin.ident:
             html.context_button(plugin.plural_title.title(), 'edit_%s.py' % plugin.ident,
@@ -1471,15 +1470,9 @@ def collect_context_links(this_visual, mobile=False, only_types=None):
 def collect_context_links_of(visual_type_name, this_visual, active_filter_vars, mobile):
     context_links = []
 
-    # FIXME: Make this cross module access cleaner
     visual_type = visual_type_registry[visual_type_name]()
-    module_name = visual_type.module_name
-    thing_module = importlib.import_module(module_name)
-    load_func_name = 'load_%s' % visual_type_name
-    if load_func_name not in thing_module.__dict__:
-        return context_links  # in case of exception in "reporting", the load function might be missing
-    thing_module.__dict__['load_%s' % visual_type_name]()
-    available_visuals = thing_module.__dict__['permitted_%s' % visual_type_name]()
+    visual_type.load_handler()
+    available_visuals = visual_type.permitted_visuals
 
     # sort buttons somehow
     visuals = available_visuals.values()
@@ -1529,8 +1522,8 @@ def collect_context_links_of(visual_type_name, this_visual, active_filter_vars, 
         # This has been implemented for HW/SW inventory views which are often useless when a host
         # has no such information available. For example the "Oracle Tablespaces" inventory view
         # is useless on hosts that don't host Oracle databases.
-        if not skip and 'is_enabled_for' in thing_module.__dict__:
-            skip = not thing_module.__dict__['is_enabled_for'](this_visual, visual, vars_values)
+        if not skip:
+            skip = not visual_type.is_enabled_for(this_visual, visual, vars_values)
 
         if not skip:
             # add context link to this visual. For reports we put in
@@ -1608,14 +1601,7 @@ def ajax_popup_add():
 
     for visual_type_name, visual_type_class in visual_type_registry.items():
         visual_type = visual_type_class()
-        if visual_type.popup_add_handler is None:
-            continue
-
-        module_name = visual_type.module_name
-        visual_module = importlib.import_module(module_name)
-
-        handler = visual_module.__dict__[visual_type.popup_add_handler]
-        visuals = handler(add_type)
+        visuals = visual_type.popup_add_handler(add_type)
         if not visuals:
             continue
 
@@ -1661,9 +1647,6 @@ def ajax_popup_add():
 def ajax_add_visual():
     visual_type_name = html.request.var('visual_type')  # dashboards / views / ...
     visual_type = visual_type_registry[visual_type_name]()
-    module_name = visual_type.module_name
-    visual_module = importlib.import_module(module_name)
-    handler = visual_module.__dict__[visual_type.add_visual_handler]
 
     visual_name = html.request.var("visual_name")  # add to this visual
 
@@ -1674,4 +1657,4 @@ def ajax_add_visual():
     for what in ['context', 'params']:
         extra_data.append(json.loads(html.request.var(what)))
 
-    handler(visual_name, element_type, *extra_data)
+    visual_type.add_visual_handler(visual_name, element_type, *extra_data)

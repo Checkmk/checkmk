@@ -112,28 +112,101 @@ class VisualTypeDashboards(VisualType):
         return _("dashboards")
 
     @property
-    def add_visual_handler(self):
-        return "popup_add_dashlet"
-
-    @property
     def ident_attr(self):
         return "name"
-
-    @property
-    def module_name(self):
-        return "cmk.gui.dashboard"
 
     @property
     def multicontext_links(self):
         return False
 
     @property
-    def popup_add_handler(self):
-        return "popup_list_dashboards"
-
-    @property
     def show_url(self):
         return "dashboard.py"
+
+    def popup_add_handler(self, add_type):
+        if not config.user.may("general.edit_dashboards"):
+            return []
+
+        if add_type in ["availability", "graph_collection"]:
+            return
+
+        load_dashboards()
+        return [(name, board["title"]) for (name, board) in available_dashboards.items()]
+
+    def add_visual_handler(self, target_visual_name, add_type, context, parameters):
+        if not config.user.may("general.edit_dashboards"):
+            # Exceptions do not work here.
+            return
+
+        if add_type == "pnpgraph" and context is None:
+            # Raw Edition graphs are added correctly by htdocs/js/checkmk.js create_pnp_graph().
+            # Enterprise Edition graphs:
+            #
+            # Context will always be None here, but the specification (in parameters)
+            # will contain it. Transform the data to the format needed by the dashlets.
+            #
+            # Example:
+            # parameters = [ 'template', {'service_description': 'CPU load', 'site': 'mysite',
+            #                         'graph_index': 0, 'host_name': 'server123'}])
+            specification = parameters["definition"]["specification"]
+            if specification[0] == "template":
+                context = {"host": specification[1]["host_name"]}
+                if specification[1].get("service_description") != "_HOST_":
+                    context["service"] = specification[1]["service_description"]
+                parameters = {"source": specification[1]["graph_index"] + 1}
+
+            elif specification[0] == "custom":
+                # Override the dashlet type here. It would be better to get the
+                # correct dashlet type from the menu. But this does not seem to
+                # be a trivial change.
+                add_type = "custom_graph"
+                context = {}
+                parameters = {
+                    "custom_graph": specification[1],
+                }
+
+            else:
+                raise MKGeneralException(_("Invalid graph type '%s'") % specification[0])
+
+        load_dashboards(lock=True)
+
+        if target_visual_name not in available_dashboards:
+            return
+        dashboard = load_dashboard_with_cloning(target_visual_name)
+
+        dashlet = default_dashlet_definition(add_type)
+
+        dashlet["context"] = context
+        if add_type == 'view':
+            view_name = parameters['name']
+        else:
+            dashlet.update(parameters)
+
+        # When a view shal be added to the dashboard, load the view and put it into the dashlet
+        # FIXME: Mave this to the dashlet plugins
+        if add_type == 'view':
+            # save the original context and override the context provided by the view
+            context = dashlet['context']
+            load_view_into_dashlet(
+                dashlet, len(dashboard['dashlets']), view_name, add_context=context)
+
+        elif add_type in ["pnpgraph", "custom_graph"]:
+            # The "add to visual" popup does not provide a timerange information,
+            # but this is not an optional value. Set it to 25h initially.
+            dashlet.setdefault("timerange", "1")
+
+        add_dashlet(dashlet, dashboard)
+
+        # Directly go to the dashboard in edit mode. We send the URL as an answer
+        # to the AJAX request
+        html.write('OK dashboard.py?name=' + target_visual_name + '&edit=1')
+
+    def load_handler(self):
+        load_dashboards()
+
+    @property
+    def permitted_visuals(self):
+        return permitted_dashboards()
 
 
 @permission_section_registry.register
@@ -1498,17 +1571,6 @@ def ajax_delete_user_notification():
 #   '----------------------------------------------------------------------'
 
 
-def popup_list_dashboards(add_type):
-    if not config.user.may("general.edit_dashboards"):
-        return []
-
-    if add_type in ["availability", "graph_collection"]:
-        return
-
-    load_dashboards()
-    return [(name, board["title"]) for (name, board) in available_dashboards.items()]
-
-
 # TODO: Move this to the Dashlet class
 def default_dashlet_definition(ty):
     return {
@@ -1523,71 +1585,3 @@ def add_dashlet(dashlet, dashboard):
     dashboard['dashlets'].append(dashlet)
     dashboard['mtime'] = int(time.time())
     visuals.save('dashboards', dashboards)
-
-
-def popup_add_dashlet(dashboard_name, dashlet_type, context, params):
-    if not config.user.may("general.edit_dashboards"):
-        # Exceptions do not work here.
-        return
-
-    if dashlet_type == "pnpgraph" and context is None:
-        # Raw Edition graphs are added correctly by htdocs/js/checkmk.js create_pnp_graph().
-        # Enterprise Edition graphs:
-        #
-        # Context will always be None here, but the specification (in params)
-        # will contain it. Transform the data to the format needed by the dashlets.
-        #
-        # Example:
-        # params = [ 'template', {'service_description': 'CPU load', 'site': 'mysite',
-        #                         'graph_index': 0, 'host_name': 'server123'}])
-        specification = params["definition"]["specification"]
-        if specification[0] == "template":
-            context = {"host": specification[1]["host_name"]}
-            if specification[1].get("service_description") != "_HOST_":
-                context["service"] = specification[1]["service_description"]
-            params = {"source": specification[1]["graph_index"] + 1}
-
-        elif specification[0] == "custom":
-            # Override the dashlet type here. It would be better to get the
-            # correct dashlet type from the menu. But this does not seem to
-            # be a trivial change.
-            dashlet_type = "custom_graph"
-            context = {}
-            params = {
-                "custom_graph": specification[1],
-            }
-
-        else:
-            raise MKGeneralException(_("Invalid graph type '%s'") % specification[0])
-
-    load_dashboards(lock=True)
-
-    if dashboard_name not in available_dashboards:
-        return
-    dashboard = load_dashboard_with_cloning(dashboard_name)
-
-    dashlet = default_dashlet_definition(dashlet_type)
-
-    dashlet["context"] = context
-    if dashlet_type == 'view':
-        view_name = params['name']
-    else:
-        dashlet.update(params)
-
-    # When a view shal be added to the dashboard, load the view and put it into the dashlet
-    # FIXME: Mave this to the dashlet plugins
-    if dashlet_type == 'view':
-        # save the original context and override the context provided by the view
-        context = dashlet['context']
-        load_view_into_dashlet(dashlet, len(dashboard['dashlets']), view_name, add_context=context)
-
-    elif dashlet_type in ["pnpgraph", "custom_graph"]:
-        # The "add to visual" popup does not provide a timerange information,
-        # but this is not an optional value. Set it to 25h initially.
-        dashlet.setdefault("timerange", "1")
-
-    add_dashlet(dashlet, dashboard)
-
-    # Directly go to the dashboard in edit mode. We send the URL as an answer
-    # to the AJAX request
-    html.write('OK dashboard.py?name=' + dashboard_name + '&edit=1')

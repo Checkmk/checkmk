@@ -37,7 +37,7 @@ import cmk_base.console as console
 import cmk_base.config as config
 
 
-def get_piggyback_raw_data(hostname):
+def get_piggyback_raw_data(piggyback_max_cachefile_age, hostname):
     """Returns the usable piggyback data for the given host
 
     A list of two element tuples where the first element is
@@ -48,7 +48,8 @@ def get_piggyback_raw_data(hostname):
         return []
 
     piggyback_data = []
-    for source_host, piggyback_file_path in _get_piggyback_files(hostname):
+    for source_host, piggyback_file_path in _get_piggyback_files(piggyback_max_cachefile_age,
+                                                                 hostname):
         try:
             raw_data = file(piggyback_file_path).read()
         except IOError, e:
@@ -61,11 +62,11 @@ def get_piggyback_raw_data(hostname):
     return piggyback_data
 
 
-def has_piggyback_raw_data(hostname):
-    return _get_piggyback_files(hostname) != []
+def has_piggyback_raw_data(piggyback_max_cachefile_age, hostname):
+    return _get_piggyback_files(piggyback_max_cachefile_age, hostname) != []
 
 
-def _get_piggyback_files(hostname):
+def _get_piggyback_files(piggyback_max_cachefile_age, hostname):
     """Gather a list of piggyback files to read for further processing.
 
     Please note that there may be multiple parallel calls executing the
@@ -100,9 +101,9 @@ def _get_piggyback_files(hostname):
             continue # File might've been deleted. That's ok.
 
         # Skip piggyback files that are outdated at all
-        if file_age > config.piggyback_max_cachefile_age:
+        if file_age > piggyback_max_cachefile_age:
             console.verbose("Piggyback file %s is outdated (%d seconds too old). Skip processing.\n" %
-                            (piggyback_file_path, file_age - config.piggyback_max_cachefile_age))
+                            (piggyback_file_path, file_age - piggyback_max_cachefile_age))
             continue
 
         status_file_path = _piggyback_source_status_path(source_host)

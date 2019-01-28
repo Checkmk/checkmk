@@ -27,13 +27,6 @@ nagios-start-post
 nagios-stop-post
 nagios-reload-post
 
-shinken-*-pre
-
-icinga-*-pre
-icinga-start-post
-icinga-stop-post
-icinga-reload-post
-
 apache-*-pre
 apache-start-post
 apache-stop-post

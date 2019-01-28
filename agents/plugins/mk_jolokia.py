@@ -268,7 +268,8 @@ class JolokiaInstance(object):
         return data
 
 
-def fetch_url(request_url, post_data=None):
+def fetch_url(request_url, data):
+    post_data = json.dumps(data) if data is not None else None
     if VERBOSE:
         sys.stderr.write("DEBUG: Fetching: %s\n" % request_url)
     try:
@@ -277,34 +278,32 @@ def fetch_url(request_url, post_data=None):
             sys.stderr.write("DEBUG: Result: %s\n\n" % json_data)
     except () if DEBUG else Exception, exc:
         sys.stderr.write("ERROR: %s\n\n" % exc)
-        return []
-    return json_data
-
-
-def fetch_var(inst, function, path, use_target=False):
-
-    if use_target and inst.target:
-        post_data = inst.get_post_data(path, function)
-        json_data = fetch_url(inst.base_url, json.dumps(post_data))
-    else:
-        request_url = "%s/%s/%s" % (inst.base_url, function, path) if path else inst.base_url + "/"
-        json_data = fetch_url(request_url)
+        return {}
 
     try:
-        obj = json.loads(json_data)
+        response = json.loads(json_data)
     except (ValueError, TypeError), exc:
         sys.stderr.write('ERROR: Invalid json code (%s)\n' % exc)
         sys.stderr.write('       Response %s\n' % json_data)
-        return []
+        return {}
 
-    if obj.get('status', 200) != 200:
-        sys.stderr.write('ERROR: Invalid response when fetching url %s\n' % inst.base_url)
-        sys.stderr.write('       Response: %s\n' % json_data)
-        return []
+    if response.get('status', 200) != 200:
+        sys.stderr.write('ERROR: Invalid response when fetching url %r\n' % request_url)
+        return {}
 
-    # Only take the value of the object. If the value is an object
-    # take the first items first value.
-    # {'Catalina:host=localhost,path=\\/test,type=Manager': {'activeSessions': 0}}
+    return response
+
+
+def fetch_var(inst, function, path, use_target=False):
+    post_data = inst.get_post_data(path, function)
+    if use_target and inst.target:
+        use_url = inst.base_url
+    else:
+        use_url = "%s/%s/%s" % (inst.base_url, function, path) if path else inst.base_url + "/"
+        post_data = None
+
+    obj = fetch_url(use_url, post_data)
+
     try:
         return obj['value']
     except KeyError:

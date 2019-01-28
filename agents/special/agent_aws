@@ -208,7 +208,7 @@ class AWSSectionCloudwatch(AWSSection):
             )
             try:
                 metrics = response['MetricDataResults']
-            except KeyError, e:
+            except KeyError as e:
                 logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
                 continue
             content.extend(metrics)
@@ -277,7 +277,7 @@ class CostsAndUsage(AWSSectionGeneric):
         )
         try:
             return response['ResultsByTime']
-        except KeyError, e:
+        except KeyError as e:
             logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
             return []
 
@@ -315,7 +315,7 @@ class SecurityGroups(AWSSectionGeneric):
         response = self._client.describe_security_groups()
         try:
             return response['SecurityGroups']
-        except KeyError, e:
+        except KeyError as e:
             logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
             return []
 
@@ -348,7 +348,7 @@ class EC2Summary(AWSSectionGeneric):
         response = self._client.describe_instances()
         try:
             reservations = response['Reservations']
-        except KeyError, e:
+        except KeyError as e:
             logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
             return {}
 
@@ -656,14 +656,14 @@ class EBSSummary(AWSSectionGeneric):
         response = self._client.describe_volumes()
         try:
             volumes = {r['VolumeId']: r for r in response['Volumes']}
-        except KeyError, e:
+        except KeyError as e:
             logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
             volumes = {}
 
         response = self._client.describe_volume_status()
         try:
             volume_states = {r['VolumeId']: r for r in response['VolumeStatuses']}
-        except KeyError, e:
+        except KeyError as e:
             logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
             volume_states = {}
 
@@ -781,7 +781,7 @@ class Glacier(AWSSectionGeneric):
         response = self._client.list_vaults()
         try:
             vaults = {r['VaultName']: r for r in response['VaultList']}
-        except KeyError, e:
+        except KeyError as e:
             logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
             vaults = {}
 
@@ -789,7 +789,7 @@ class Glacier(AWSSectionGeneric):
             response = self._client.list_jobs(vaultName=vault_name)
             try:
                 jobs = response['JobList']
-            except KeyError, e:
+            except KeyError as e:
                 logging.info("%s/%s: KeyError %s; Available are %s", self.name, vault_name, e,
                              response.keys())
                 jobs = []
@@ -826,7 +826,7 @@ class CloudTrail(AWSSectionGeneric):
         response = self._client.describe_trails()
         try:
             trails = {trail['Name']: trail for trail in response['trailList']}
-        except KeyError, e:
+        except KeyError as e:
             logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
             trails = {}
 

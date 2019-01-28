@@ -34,8 +34,14 @@ def agent_aws_arguments(params, hostname, ipaddress):
     ]
     args.append("--regions")
     args += params["--regions"]
-    args.append("--services")
-    args += params["--services"]
+
+    services = params.get("--services", {})
+    if services:
+        args.append("--services")
+        # We need to sort the inner services-as-a-dict-params
+        # in order to create reliable tests
+        args += sorted(services.keys())
+
     args += [
         "--hostname",
         hostname,

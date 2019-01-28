@@ -440,7 +440,7 @@ class EC2(AWSSectionCloudwatch):
 #   '----------------------------------------------------------------------'
 
 
-class S3(AWSSection):
+class S3(AWSSectionGeneric):
     @property
     def name(self):
         return "s3"

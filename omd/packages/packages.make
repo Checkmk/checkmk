@@ -70,7 +70,6 @@ include     packages/apache-omd/apache-omd.make \
     packages/dokuwiki/dokuwiki.make \
     packages/freetds/freetds.make \
     packages/heirloom-pkgtools/heirloom-pkgtools.make \
-    packages/icinga/icinga.make \
     packages/jmx4perl/jmx4perl.make \
     packages/libgsf/libgsf.make \
     packages/maintenance/maintenance.make \

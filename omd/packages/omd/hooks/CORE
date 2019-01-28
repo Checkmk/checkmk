@@ -22,14 +22,12 @@ case "$1" in
     default)
             if [ -e $OMD_ROOT/bin/cmc ] ; then echo "cmc"
             elif [ -e $OMD_ROOT/bin/nagios ] ; then echo "nagios"
-            elif [ -e $OMD_ROOT/bin/icinga ] ; then echo "icinga"
             else echo "none"
             fi
     ;;
     choices)
             [ ! -e $OMD_ROOT/bin/cmc ] || echo "cmc: Check_MK Micro core"
             [ ! -e $OMD_ROOT/bin/nagios ] || echo "nagios: Nagios"
-            [ ! -e $OMD_ROOT/bin/icinga ] || echo "icinga: Icinga"
             echo "none: No monitoring core"
     ;;
     set)
@@ -64,9 +62,6 @@ case "$1" in
             if [ -e $OMD_ROOT/var/check_mk/core/config ] ; then
                 cmk -U >/dev/null
             fi
-        elif [ "$2" == "icinga" ]
-        then
-            make_link icinga $OMD_ROOT/etc/init.d/core
         elif [ "$2" == "cmc" ]
         then
             make_link cmc $OMD_ROOT/etc/init.d/core

@@ -33,11 +33,6 @@ $(MONITORING_PLUGINS_INSTALL): $(MONITORING_PLUGINS_BUILD)
 	for file in ACKNOWLEDGEMENTS AUTHORS CODING COPYING FAQ LEGAL NEWS README REQUIREMENTS SUPPORT THANKS ; do \
 	   install -m 644 $(MONITORING_PLUGINS_DIR)/$$file $(DESTDIR)$(OMD_ROOT)/share/doc/$(MONITORING_PLUGINS); \
 	done
-
-	# link lib/nagios/plugins to lib/icinga/plugins
-	if [ -d "$(DESTDIR)$(OMD_ROOT)/lib/icinga" ] ; then \
-            cd $(DESTDIR)$(OMD_ROOT)/lib/icinga && ln -s ../nagios/plugins plugins ; \
-	fi
 	$(TOUCH) $@
 
 $(MONITORING_PLUGINS)-skel:

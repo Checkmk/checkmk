@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -24,14 +24,11 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import base64
 import os
 import socket
-import ssl
 import sys
 import urllib2
 import copy
-from httplib import HTTPConnection, HTTPSConnection
 
 try:
     try:
@@ -44,6 +41,15 @@ except ImportError as import_error:
         "Error: mk_jolokia requires either the json or simplejson library\n"
         "Please either use a Python version that contains the json library or install the"
         " simplejson library on the monitored system.")
+    sys.exit(1)
+
+try:
+    import requests
+    from requests.auth import HTTPDigestAuth
+except ImportError as import_error:
+    sys.stdout.write("<<<jolokia_info>>>\n"
+                     "Error: mk_jolokia requires the requests library.\n"
+                     "Please install it on the monitored system.")
     sys.exit(1)
 
 VERBOSE = '--verbose' in sys.argv
@@ -59,7 +65,7 @@ DEFAULT_CONFIG = {
     "mode": "digest",
     "suburi": "jolokia",
     "instance": None,
-    "cert_path": None,
+    "verify": None,  # if not set, we change it to True
     "client_cert": None,
     "client_key": None,
     "service_url": None,
@@ -161,12 +167,6 @@ QUERY_SPECS_SPECIFIC = {
 #   ("Catalina:J2EEApplication=none,J2EEServer=none,WebModule=*,j2eeType=Servlet,name=*",
 #    None, [ "WebModule", "name" ]),
 
-# We have to deal with socket timeouts. Python > 2.6
-# supports timeout parameter for the urllib2.urlopen method
-# but we are on a python 2.5 system here which seem to use the
-# default socket timeout. We are local here so  set it to 1 second.
-socket.setdefaulttimeout(1.0)
-
 
 class SkipInstance(RuntimeError):
     pass
@@ -228,6 +228,18 @@ class JolokiaInstance(object):
         if config.get("server") == "use fqdn":
             config["server"] = socket.getfqdn()
 
+        # if "verify" was not set to bool/string
+        if config.get("verify") is None:
+            # handle legacy "cert_path"
+            cert_path = config.get("cert_path")
+            if cert_path not in ("_default", None):
+                # The '_default' was the default value
+                # up to cmk version 1.5.0p8. It broke things.
+                config["verify"] = cert_path
+            else:
+                # this is default, but be explicit
+                config["verify"] = True
+
         return config
 
     def __init__(self, config):
@@ -240,6 +252,7 @@ class JolokiaInstance(object):
 
         self.base_url = self._get_base_url()
         self.target = self._get_target()
+        self._session = self._initialize_http_session()
 
     def _get_base_url(self):
         return "%s://%s:%d/%s" % (
@@ -262,51 +275,73 @@ class JolokiaInstance(object):
             "password": self.config["service_password"],
         }
 
-    def get_post_data(self, path, function):
+    def _initialize_http_session(self):
+        session = requests.Session()
+        session.verify = self.config["verify"]
+
+        session.timeout = 1.0
+
+        auth_method = self.config.get("mode")
+        if auth_method is None:
+            return session
+
+        # initialize authentication
+        if auth_method == "https":
+            session.cert = (
+                self.config["client_cert"],
+                self.config["client_key"],
+            )
+        elif auth_method == 'digest':
+            session.auth = HTTPDigestAuth(
+                self.config["user"],
+                self.config["password"],
+            )
+        elif auth_method in ("basic", "basic_preemptive"):
+            session.auth = (
+                self.config["user"],
+                self.config["password"],
+            )
+        else:
+            raise NotImplementedError("Authentication method %r" % auth_method)
+
+        return session
+
+    def get_post_data(self, path, function, use_target):
         segments = path.strip("/").split("/")
         data = {"mbean": segments[0], "attribute": segments[1]}
         if len(segments) > 2:
             data["path"] = segments[2]
         data["type"] = function
-        data["target"] = self.target
+        if use_target and self.target:
+            data["target"] = self.target
         return data
 
-
-def fetch_url(request_url, data):
-    post_data = json.dumps(data) if data is not None else None
-    if VERBOSE:
-        sys.stderr.write("DEBUG: Fetching: %s\n" % request_url)
-    try:
-        json_data = urllib2.urlopen(request_url, data=post_data).read()
+    def post(self, data):
+        post_data = json.dumps(data)
         if VERBOSE:
-            sys.stderr.write("DEBUG: Result: %s\n\n" % json_data)
-    except () if DEBUG else Exception, exc:
-        sys.stderr.write("ERROR: %s\n\n" % exc)
-        raise SkipMBean(exc)
+            sys.stderr.write("DEBUG: POST data: %r\n" % post_data)
+        try:
+            raw_response = self._session.post(self.base_url, data=post_data)
+        except () if DEBUG else Exception, exc:
+            sys.stderr.write("ERROR: %s\n" % exc)
+            raise SkipMBean(exc)
 
-    try:
-        response = json.loads(json_data)
-    except (ValueError, TypeError), exc:
-        sys.stderr.write('ERROR: Invalid json code (%s)\n' % exc)
-        sys.stderr.write('       Response %s\n' % json_data)
-        raise SkipMBean(exc)
+        if raw_response.status_code == 401:
+            sys.stderr.write("ERROR: Unauthorized (authentication failed/missing)\n")
+            raise SkipInstance("auth failed")
+        elif raw_response.status_code != 200:
+            sys.stderr.write('ERROR: Invalid response when posting %r\n' % post_data)
+            raise SkipMBean("HTTP Error (%s)" % raw_response.status_code)
 
-    if response.get('status', 200) != 200:
-        sys.stderr.write('ERROR: Invalid response when fetching url %r\n' % request_url)
-        raise SkipMBean("HTTP Error (%s)" % response.get('status'))
-
-    return response
+        response = raw_response.json()
+        if VERBOSE:
+            sys.stderr.write("DEBUG: Result: %r\n\n" % response)
+        return response
 
 
 def fetch_var(inst, function, path, use_target=False):
-    post_data = inst.get_post_data(path, function)
-    if use_target and inst.target:
-        use_url = inst.base_url
-    else:
-        use_url = "%s/%s/%s" % (inst.base_url, function, path) if path else inst.base_url + "/"
-        post_data = None
-
-    obj = fetch_url(use_url, post_data)
+    data = inst.get_post_data(path, function, use_target=use_target)
+    obj = inst.post(data)
 
     try:
         return obj['value']
@@ -424,105 +459,12 @@ def _process_queries(inst, queries):
 
 
 def query_instance(inst):
-    try:
-        prepare_http_opener(inst.config)
-    except () if DEBUG else Exception, exc:
-        sys.stderr.write("ERROR: %s\n" % exc)
-        raise SkipInstance()
-
     write_section('jolokia_info', generate_jolokia_info(inst))
 
     shipped_vars = QUERY_SPECS_GENERIC + QUERY_SPECS_SPECIFIC.get(inst.product, [])
     write_section('jolokia_metrics', generate_values(inst, shipped_vars))
 
     write_section('jolokia_generic', generate_values(inst, inst.custom_vars))
-
-
-class PreemptiveBasicAuthHandler(urllib2.HTTPBasicAuthHandler):
-    """
-    sends basic authentication with the first request,
-    before the server even asks for it
-    """
-
-    def http_request(self, req):
-        url = req.get_full_url()
-        realm = None
-        user, pwd = self.passwd.find_user_password(realm, url)
-        if pwd:
-            raw = "%s:%s" % (user, pwd)
-            auth = 'Basic %s' % base64.b64encode(raw).strip()
-            req.add_unredirected_header(self.auth_header, auth)
-        return req
-
-    https_request = http_request
-
-
-class HTTPSValidatingConnection(HTTPSConnection):
-    def __init__(self, host, ca_file, key_file, cert_file):
-        HTTPSConnection.__init__(self, host, key_file=key_file, cert_file=cert_file)
-        self.__ca_file = ca_file
-        self.__key_file = key_file
-        self.__cert_file = cert_file
-
-    def connect(self):
-        HTTPConnection.connect(self)
-        if self.__ca_file:
-            self.sock = ssl.wrap_socket(
-                self.sock,
-                keyfile=self.key_file,
-                certfile=self.cert_file,
-                ca_certs=self.__ca_file,
-                cert_reqs=ssl.CERT_REQUIRED)
-        else:
-            self.sock = ssl.wrap_socket(
-                self.sock,
-                keyfile=self.key_file,
-                certfile=self.cert_file,
-                ca_certs=self.__ca_file,
-                cert_reqs=ssl.CERT_NONE)
-
-
-class HTTPSAuthHandler(urllib2.HTTPSHandler):
-    def __init__(self, ca_file, key, cert):
-        urllib2.HTTPSHandler.__init__(self)
-        self.__ca_file = ca_file
-        self.__key = key
-        self.__cert = cert
-
-    def https_open(self, req):
-        # do_open expects a class as the first parameter but getConnection will act
-        # as a facotry function
-        return self.do_open(self.get_connection, req)
-
-    def get_connection(self, host, _timeout):
-        return HTTPSValidatingConnection(
-            host, ca_file=self.__ca_file, key_file=self.__key, cert_file=self.__cert)
-
-
-def prepare_http_opener(inst):
-    # Prepare user/password authentication via HTTP Auth
-    password_mngr = urllib2.HTTPPasswordMgrWithDefaultRealm()
-    if inst.get("password"):
-        password_mngr.add_password(None,
-                                   "%s://%s:%d/" % (inst["protocol"], inst["server"], inst["port"]),
-                                   inst["user"], inst["password"])
-
-    handlers = []
-    if inst["protocol"] == "https":
-        if inst["mode"] == 'https' and (inst["client_key"] is None or inst["client_cert"] is None):
-            raise ValueError("Missing client certificate for HTTPS authentication")
-        handlers.append(
-            HTTPSAuthHandler(inst["cert_path"], inst["client_key"], inst["client_cert"]))
-    if inst["mode"] == 'digest':
-        handlers.append(urllib2.HTTPDigestAuthHandler(password_mngr))
-    elif inst["mode"] == "basic_preemptive":
-        handlers.append(PreemptiveBasicAuthHandler(password_mngr))
-    elif inst["mode"] == "basic" and inst["protocol"] != "https":
-        handlers.append(urllib2.HTTPBasicAuthHandler(password_mngr))
-
-    if handlers:
-        opener = urllib2.build_opener(*handlers)
-        urllib2.install_opener(opener)
 
 
 def generate_jolokia_info(inst):

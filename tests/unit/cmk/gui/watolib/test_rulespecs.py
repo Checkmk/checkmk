@@ -2456,7 +2456,7 @@ expected_rulespecs = {
     'agent_config:mk_jolokia': {
         'factory_default': [],
         'group_name': 'agents/agent_plugins',
-        'help': u"This will deploy and configure the Check_MK agent plugin <tt>mk_jolokia</tt>. In order to use this you need the Jolokia <tt>.war</tt> file from the <a href='http://www.jolokia.org/index.html'>Jolokia Project Homepage</a> deployed in your JVMs. Currently at least Tomcat, JBoss and BEA Weblogic are supported. Please note: you need both the Check_MK <tt>mk_jolokia</tt> plugin <b>and</b> the WAR file.",
+        'help': u"This will deploy and configure the Check_MK agent plugin <tt>mk_jolokia</tt>. In order to use this you need the Jolokia <tt>.war</tt> file from the <a href='http://www.jolokia.org/index.html'>Jolokia Project Homepage</a> deployed in your JVMs. Currently at least Tomcat, JBoss and BEA Weblogic are supported. Please note: The Check_MK <tt>mk_jolokia</tt> plugin requires both the requests python library on the host running the plugin <b>and</b> the WAR file on the JVMs.",
         'is_deprecated': False,
         'is_optional': False,
         'item_enum': None,

@@ -2868,7 +2868,11 @@ def main_rm(site, args, options=None):
 
 
 def create_site_dir(site):
-    os.makedirs(site.dir)
+    try:
+        os.makedirs(site.dir)
+    except OSError as e:
+        if e.errno != errno.EEXIST:
+            raise
     os.chown(site.dir, user_id(site.name), group_id(site.name))
 
 
@@ -4217,6 +4221,18 @@ class SiteContext(AbstractSiteContext):
         return config
 
     def exists(self):
+        # In dockerized environments the tmpfs may be managed by docker (when
+        # using the --tmpfs option).  In this case the site directory is
+        # created as parent of the tmp directory to mount the tmpfs during
+        # container initialization. Detect this situation and don't treat the
+        # site as existing in that case.
+        if is_dockerized():
+            if not os.path.exists(self.dir):
+                return False
+            if os.listdir(self.dir) == ["tmp"]:
+                return False
+            return True
+
         return os.path.exists(self.dir)
 
     def is_empty(self):

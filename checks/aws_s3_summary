@@ -32,6 +32,12 @@ def parse_aws_s3(info):
     return parsed
 
 
+def _extract_aws_s3_tags(metrics):
+    # metrics is dict with key 'Tagging'
+    return ", ".join(
+        ["%s: %s" % (pair['Key'], pair['Value']) for pair in metrics.get('Tagging', [])])
+
+
 #   .--summary-------------------------------------------------------------.
 #   |                                                                      |
 #   |           ___ _   _ _ __ ___  _ __ ___   __ _ _ __ _   _             |
@@ -50,11 +56,17 @@ def check_aws_s3_summary(item, params, parsed):
         region = row['LocationConstraint']
         if not region:
             region = "unknown"
+
         buckets_by_region.setdefault(region, []).append(row)
-        long_output.append("Bucket: %s, Region: %s" % (bucket_name, region))
+        long_output_info = ["Bucket: %s, Region: %s" % (bucket_name, region)]
+        tags = _extract_aws_s3_tags(row)
+        if tags:
+            long_output_info.append("[Tags] %s" % tags)
+        long_output.append(", ".join(long_output_info))
 
     for region, buckets in buckets_by_region.iteritems():
-        yield 0, "%s: %s" % (region, len(buckets))
+        region_readable = AWSRegions.get(region, 'unknown[%s]' % region)
+        yield 0, "%s: %s" % (region_readable, len(buckets))
 
     if long_output:
         yield 0, '\n%s' % '\n'.join(long_output)

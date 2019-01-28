@@ -441,6 +441,20 @@ class EC2(AWSSectionCloudwatch):
 
 
 class S3(AWSSectionGeneric):
+    def __init__(self, client, distributor=None, buckets=None):
+        super(S3, self).__init__(client, distributor=distributor)
+        self._buckets = self._determine_buckets(buckets)
+
+    def _determine_buckets(self, buckets):
+        if buckets:
+            return [{"Name": b} for b in buckets]
+        response = self._client.list_buckets()
+        try:
+            return response['Buckets']
+        except KeyError as e:
+            logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
+            return []
+
     @property
     def name(self):
         return "s3"
@@ -450,15 +464,8 @@ class S3(AWSSectionGeneric):
         return 86400
 
     def _extract_content_from_raw_result(self):
-        response = self._client.list_buckets()
-        try:
-            buckets = response['Buckets']
-        except KeyError as e:
-            logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
-            return []
-
         paginator = self._client.get_paginator('list_objects')
-        for bucket in buckets:
+        for bucket in self._buckets:
             bucket_name = bucket['Name']
             response = self._client.get_bucket_location(Bucket=bucket_name)
             try:
@@ -468,6 +475,18 @@ class S3(AWSSectionGeneric):
                              response.keys())
             else:
                 bucket['LocationConstraint'] = location
+
+            try:
+                response = self._client.get_bucket_tagging(Bucket=bucket_name)
+                tagging = response['TagSet']
+            except botocore.exceptions.ClientError as e:
+                # If there are no tags attached to a bucket we receive a 'ClientError'
+                logging.info("%s/%s: No tags set, %s", self.name, bucket_name, e)
+            except KeyError as e:
+                logging.info("%s/%s: KeyError %s; Available are %s", self.name, bucket_name, e,
+                             response.keys())
+            else:
+                bucket['Tagging'] = tagging
 
             contents = []
             pages = paginator.paginate(Bucket=bucket_name)
@@ -480,7 +499,7 @@ class S3(AWSSectionGeneric):
                 else:
                     contents += objects
             bucket['Contents'] = contents
-        return buckets
+        return self._buckets
 
     def _format_content(self, content):
         return [AWSSectionResult("", content)]
@@ -958,20 +977,24 @@ class AWSSectionsUSEast(AWSSections):
     def init_sections(self, **kwargs):
         #---clients---------------------------------------------------------
         ce_client = self._init_client('ce')
+        s3_client = self._init_client('s3')
 
         #---sections--------------------------------------------------------
         ce = CostsAndUsage(ce_client)
+        s3 = S3(s3_client, buckets=kwargs.get('buckets'))
 
         #---register sections for execution---------------------------------
         if 'ce' in self._services:
             self._sections.append(ce)
+
+        if 's3' in self._services:
+            self._sections.append(s3)
 
 
 class AWSSectionsGeneric(AWSSections):
     def init_sections(self, **kwargs):
         #---clients---------------------------------------------------------
         ec2_client = self._init_client('ec2')
-        s3_client = self._init_client('s3')
         elb_client = self._init_client('elb')
         cloudtrail_client = self._init_client('cloudtrail')
         glacier_client = self._init_client('glacier')
@@ -990,7 +1013,6 @@ class AWSSectionsGeneric(AWSSections):
         elb_summary = ELBSummary(elb_client, elb_summary_distributor)
 
         #---sections--------------------------------------------------------
-        s3 = S3(s3_client)
         elb_health = ELBHealth(elb_client)
         cloudtrail = CloudTrail(cloudtrail_client)
         glacier = Glacier(glacier_client)
@@ -1039,10 +1061,6 @@ class AWSSectionsGeneric(AWSSections):
             self._sections.append(elb_summary)
             self._sections.append(elb_health)
             self._sections.append(elb)
-
-        # No dependencies
-        if 's3' in self._services:
-            self._sections.append(s3)
 
         if 'cloudtrail' in self._services:
             self._sections.append(cloudtrail)
@@ -1112,6 +1130,7 @@ def parse_arguments(argv):
         nargs='+',
         required=True,
         help="Services to monitor:\n%s" % "\n".join(["%-15s %s" % e for e in AWSServices]))
+    parser.add_argument('--buckets', nargs='+', help="Buckets to monitor")
     parser.add_argument(
         "--no-cache", action="store_true", help="Execute all sections, do not rely on cached data.")
     parser.add_argument("--hostname", required=True)
@@ -1153,7 +1172,7 @@ def main(args=None):
     try:
         session = create_session(access_key_id, secret_access_key, "us-east-1")
         aws_sections_us_east = AWSSectionsUSEast(hostname, session, services)
-        aws_sections_us_east.init_sections()
+        aws_sections_us_east.init_sections(buckets=args.buckets)
         aws_sections_us_east.run(use_cache=use_cache)
     except Exception as e:
         if args.debug:

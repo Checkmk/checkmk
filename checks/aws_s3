@@ -51,8 +51,7 @@ def check_aws_s3_summary(item, params, parsed):
         if not region:
             region = "unknown"
         buckets_by_region.setdefault(region, []).append(row)
-        long_output.append("Bucket: %s, Region: %s, Creation date: %s"\
-                           % (bucket_name, region, row['CreationDate']))
+        long_output.append("Bucket: %s, Region: %s" % (bucket_name, region))
 
     for region, buckets in buckets_by_region.iteritems():
         yield 0, "%s: %s" % (region, len(buckets))
@@ -93,9 +92,10 @@ def check_aws_s3_objects(item, params, metrics):
         if size >= largest_size:
             largest = row['Key']
             largest_size = size
-    yield 0, 'Number of object: %s' % num_objects
-    yield 0, 'Size: %s' % get_bytes_human_readable(sum_size)
-    yield 0, 'Largest: %s, %s' % (largest, get_bytes_human_readable(largest_size))
+    yield 0, 'Bucket size: %s' % get_bytes_human_readable(sum_size)
+    yield 0, 'Number of objects: %s' % num_objects
+    if largest:
+        yield 0, 'Largest object: %s, %s' % (largest, get_bytes_human_readable(largest_size))
 
 
 check_info['aws_s3.objects'] = {

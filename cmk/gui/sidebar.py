@@ -63,9 +63,9 @@ if cmk.is_managed_edition():
 # Kept for compatibility with legacy plugins
 # TODO: Drop once we don't support legacy snapins anymore
 from cmk.gui.plugins.sidebar.utils import (  # pylint: disable=unused-import
-    snapin_registry, sidebar_snapins, snapin_width, snapin_site_choice, visuals_by_topic,
-    render_link, heading, link, simplelink, bulletlink, iconlink, nagioscgilink, footnotelinks,
-    begin_footnote_links, end_footnote_links, write_snapin_exception,
+    snapin_registry, snapin_width, snapin_site_choice, visuals_by_topic, render_link, heading, link,
+    simplelink, bulletlink, iconlink, nagioscgilink, footnotelinks, begin_footnote_links,
+    end_footnote_links, write_snapin_exception,
 )
 
 from cmk.gui.plugins.sidebar.quicksearch import QuicksearchMatchPlugin  # pylint: disable=unused-import
@@ -75,6 +75,9 @@ quicksearch_match_plugins = []  # type: List[QuicksearchMatchPlugin]
 # Datastructures and functions needed before plugins can be loaded
 loaded_with_language = False
 search_plugins = []  # type: List
+
+# TODO: Kept for pre 1.6 plugin compatibility
+sidebar_snapins = {}  # type: Dict[str, Dict]
 
 
 def load_plugins(force):

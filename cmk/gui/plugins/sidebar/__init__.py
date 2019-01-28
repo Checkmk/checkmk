@@ -40,7 +40,6 @@ from cmk.gui.plugins.sidebar.utils import (
     SidebarSnapin,
     CustomizableSidebarSnapin,
     snapin_registry,
-    sidebar_snapins,
     snapin_width,
     snapin_site_choice,
     visuals_by_topic,

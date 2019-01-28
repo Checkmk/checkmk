@@ -24,30 +24,53 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+from cmk.gui.i18n import _
+from cmk.gui.globals import html
+from cmk.gui.plugins.sidebar import (
+    SidebarSnapin,
+    snapin_registry,
+)
 
-def render_webconf():
+
+@snapin_registry.register
+class SidebarSnapinCMAWebconf(SidebarSnapin):
+    @staticmethod
+    def type_name():
+        return "webconf"
+
+    @classmethod
+    def title(cls):
+        return _("Check_MK Appliance")
+
+    @classmethod
+    def description(cls):
+        return _("Access to the Check_MK Appliance Web Configuration")
+
+    @classmethod
+    def allowed_roles(cls):
+        return ["admin"]
+
+    def show(self):
+
+        import imp
+        try:
+            cma_nav = imp.load_source("cma_nav", "/usr/lib/python2.7/cma_nav.py")
+        except IOError:
+            html.show_error(_("Unable to import cma_nav module"))
+            return
+
+        base_url = "/webconf/"
+
+        self._iconlink(_("Main Menu"), base_url, "home")
+
+        for url, icon, title, _descr in cma_nav.modules():
+            url = base_url + url
+            self._iconlink(title, url, icon)
+
     # Our version of iconlink -> the images are located elsewhere
-    def iconlink(text, url, icon):
+    def _iconlink(self, text, url, icon):
         html.open_a(class_=["iconlink", "link"], target="main", href=url)
         html.icon(icon="/webconf/images/icon_%s.png" % icon, title=None, cssclass="inline")
         html.write(text)
         html.close_a()
         html.br()
-
-    base_url = "/webconf/"
-
-    iconlink(_("Main Menu"), base_url, "home")
-
-    import imp
-    cma_nav = imp.load_source("cma_nav", "/usr/lib/python2.7/cma_nav.py")
-    for url, icon, title, descr in cma_nav.modules():
-        url = base_url + url
-        iconlink(title, url, icon)
-
-
-sidebar_snapins["webconf"] = {
-    "title": _("Check_MK Appliance"),
-    "description": _("Access to the Check_MK Appliance Web Configuration"),
-    "render": render_webconf,
-    "allowed": ["admin"],
-}

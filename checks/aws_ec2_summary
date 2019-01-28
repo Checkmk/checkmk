@@ -30,6 +30,19 @@ def inventory_aws_ec2_summary(parsed):
         return [(None, {})]
 
 
+def _extract_aws_ec2_security_groups(metrics):
+    # metrics is dict with key 'SecurityGroups'
+    return ", ".join([
+        "%s: %s" % (pair['GroupId'], pair['GroupName'])
+        for pair in metrics.get('SecurityGroups', [])
+    ])
+
+
+def _extract_aws_ec2_tags(metrics):
+    # metrics is dict with key 'Tags'
+    return ", ".join(["%s: %s" % (pair['Key'], pair['Value']) for pair in metrics.get('Tags', [])])
+
+
 def check_aws_ec2_summary(item, params, parsed):
     instances_by_state = {}
     long_output = []
@@ -38,7 +51,15 @@ def check_aws_ec2_summary(item, params, parsed):
             instance_id = instance['InstanceId']
             instance_state = instance['State']['Name']
             instances_by_state.setdefault(instance_state, []).append(instance_id)
-            long_output.append("Instance: %s, Status: %s" % (instance_id, instance_state))
+
+            long_output_info = ["Instance: %s, Status: %s" % (instance_id, instance_state)]
+            security_groups = _extract_aws_ec2_security_groups(instance)
+            if security_groups:
+                long_output_info.append("[Security groups] %s" % security_groups)
+            tags = _extract_aws_ec2_tags(instance)
+            if tags:
+                long_output_info.append("[Tags] %s" % tags)
+            long_output.append(", ".join(long_output_info))
 
     yield 0, "Instances: %s" % sum([len(v) for v in instances_by_state.itervalues()])
     for instance_state, instances in instances_by_state.iteritems():

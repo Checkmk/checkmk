@@ -21,6 +21,37 @@ def test_missing_config_basic(removed):
         SANITIZE(config)
 
 
+def test_missing_config_auth():
+    def missing_keys(key_string):
+        msg_pattern = r'Missing key\(s\): %s in configuration for UnitTest' % key_string
+        return pytest.raises(ValueError, match=msg_pattern)
+
+    config = copy.deepcopy(mk_jolokia.DEFAULT_CONFIG)
+    for key in ("password", "user", "service_password", "client_cert", "client_key"):
+        config.pop(key)
+    config["instance"] = "UnitTest"
+    config["mode"] = "digest"
+
+    with missing_keys("password, user"):
+        SANITIZE(config)
+    config["user"] = "TestUser"
+    with missing_keys("password"):
+        SANITIZE(config)
+
+    config["mode"] = "https"
+    with missing_keys("client_cert, client_key"):
+        SANITIZE(config)
+    config["client_cert"] = "path/to/MyClientCert"
+    with missing_keys("client_key"):
+        SANITIZE(config)
+    config["client_key"] = "mysecretkey"
+
+    config["service_user"] = "service user"
+    config["service_url"] = "u://r/l"
+    with missing_keys("service_password"):
+        SANITIZE(config)
+
+
 def test_config_instance():
     config = copy.deepcopy(mk_jolokia.DEFAULT_CONFIG)
     assert SANITIZE(config).get("instance") == "8080"
@@ -34,12 +65,23 @@ def test_config_timeout():
     assert isinstance(SANITIZE(config).get("timeout"), float)
 
 
+def test_config_legacy_cert_path_to_verify():
+    config = copy.deepcopy(mk_jolokia.DEFAULT_CONFIG)
+    config["verify"] = None
+    assert SANITIZE(config).get("verify") is True
+    config["cert_path"] = "_default"
+    assert SANITIZE(config).get("verify") is True
+    config["verify"] = None
+    config["cert_path"] = "some/path/to/file"
+    assert SANITIZE(config).get("verify") == "some/path/to/file"
+
+
 @pytest.mark.parametrize("config,base_url", [({
     "protocol": "sftp",
     "server": "billy.theserver",
     "port": 42,
     "suburi": "jolo-site",
-    "timeout": 2.0
+    "timeout": 0
 }, "sftp://billy.theserver:42/jolo-site/")])
 def test_jolokia_instance_base_url(config, base_url):
     joloi = mk_jolokia.JolokiaInstance(config)

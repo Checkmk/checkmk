@@ -464,11 +464,11 @@ def query_instance(inst):
 
 def generate_jolokia_info(inst):
     # Determine type of server
-    data = fetch_var(inst, "version", "")
-
-    if not data:
-        sys.stderr.write("%s ERROR: Empty server info\n" % inst.name)
-        raise SkipInstance()
+    try:
+        data = fetch_var(inst, "version", "")
+    except (SkipInstance, SkipMBean) as exc:
+        yield inst.name, "ERROR", str(exc)
+        raise SkipInstance(exc)
 
     info = data.get('info', {})
     version = info.get('version', "unknown")

@@ -710,7 +710,9 @@ def create_version_symlink(site, version):
 
 
 def calculate_admin_password(options):
-    return options.get("admin-password", random_password())
+    if options.get("admin-password"):
+        return options["admin-password"]
+    return random_password()
 
 
 def set_admin_password(site, pw):

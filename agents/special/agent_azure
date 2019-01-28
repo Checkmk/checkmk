@@ -166,16 +166,15 @@ def parse_arguments(argv):
         type=int,
         help='''Timeout for individual processes in seconds (default 10)''')
     parser.add_argument(
-        "--piggyback-vms",
-        default="",
-        choices=["agenthost", "self", "all"],
-        help='''Additionally create VM piggyback data for the host running the agent,
-        the VM iteself, or both''')
+        "--piggyback_vms",
+        default="grouphost",
+        choices=["grouphost", "self"],
+        help='''Send VM piggyback data to group host (default) or the VM iteself''')
 
     # REQUIRED
-    parser.add_argument("--subscription-id", required=True, help="Azure subscription ID")
-    parser.add_argument("--client-id", required=True, help="Azure client ID")
-    parser.add_argument("--tenant-id", required=True, help="Azure tenant ID")
+    parser.add_argument("--subscription", required=True, help="Azure subscription ID")
+    parser.add_argument("--client", required=True, help="Azure client ID")
+    parser.add_argument("--tenant", required=True, help="Azure tenant ID")
     parser.add_argument("--secret", required=True, help="Azure authentication secret")
     # CONSTRAIN DATA TO REQUEST
     parser.add_argument(
@@ -230,45 +229,28 @@ def _add_hint(msg):
 # For now the passed commandline arguments are used to create it.
 
 
-class ResourceConfig(object):
-    def __init__(self, name):
-        super(ResourceConfig, self).__init__()
-        self.name = name
-        self.fetchall = True
-
-    @staticmethod
-    def add_key(key, _value):
-        raise ValueError("unknown key: %r" % key)
-
-    def __str__(self):
-        return "  %s <fetchall>" % self.name
-
-
 class GroupConfig(object):
     def __init__(self, name):
         super(GroupConfig, self).__init__()
         if not name:
             raise ValueError("falsey group name: %r" % name)
         self.name = name
-        self.resources = {}
-        self.current_resource = None
+        self.resources = []
 
     @property
     def fetchall(self):
         return not self.resources
 
     def add_key(self, key, value):
-        if key == "resource":
-            self.current_resource = self.resources.setdefault(value, ResourceConfig(value))
+        if key == "resources":
+            self.resources = value.split(",")
             return
-        if self.current_resource is None:
-            raise RuntimeError("missing arg: resource=<name>")
-        self.current_resource.add_key(key, value)
+        raise ValueError("unknown config key: %s" % key)
 
     def __str__(self):
         if self.fetchall:
             return "[%s]\n  <fetchall>" % self.name
-        return "[%s]\n" % self.name + "\n".join(str(r_cfg) for r_cfg in self.resources.values())
+        return "[%s]\n" % self.name + "\n".join("resource: %s" % r for r in self.resources)
 
 
 class ExplicitConfig(object):
@@ -304,13 +286,6 @@ class ExplicitConfig(object):
             return True
         return resource.info['name'] in group_config.resources
 
-    def get_resource_config(self, resource):
-        r_name = resource.info['name']
-        group = self.groups.get(resource.info['group'])
-        if self.fetchall or group.fetchall:
-            return ResourceConfig(r_name)
-        return group.resources[r_name]
-
     def __str__(self):
         if self.fetchall:
             return "[<fetchall>]"
@@ -336,6 +311,8 @@ class Section(object):
         return chr(Section.SEP).join(map(str, tokens)) + '\n'
 
     def add(self, info):
+        if not info:
+            return
         if isinstance(info[0], (list, tuple)):  # we got a list of lines
             for row in info:
                 self._cont.append(self.formatline(row))
@@ -343,10 +320,11 @@ class Section(object):
             self._cont.append(self.formatline(info))
 
     def write(self):
-        self.LOCK.acquire()
-        sys.stdout.writelines(self._head + self._cont + self._foot)
-        sys.stdout.flush()
-        self.LOCK.release()
+        if not self._cont:
+            return
+        with self.LOCK:
+            sys.stdout.writelines(self._head + self._cont + self._foot)
+            sys.stdout.flush()
 
 
 class IssueCollecter(object):
@@ -450,9 +428,9 @@ class AzureComputeClient(object):
         items = ((k, inst_view.get(k)) for k in use_keys)
         vmach.info["specific_info"] = {k: v for k, v in items if v is not None}
 
-        if args.piggyback_vms in ("agenthost", "all"):
-            vmach.piggytargets.append('')
-        if args.piggyback_vms in ("self", "all"):
+        if args.piggyback_vms not in ("grouphost",):
+            vmach.piggytargets.remove(vmach.info["group"])
+        if args.piggyback_vms in ("self",):
             vmach.piggytargets.append(vmach.info["name"])
 
 
@@ -468,11 +446,11 @@ class AzureClient(object):  # pylint: disable=too-many-instance-attributes
         self.remaining_reads = "unknown (no metrics fetched)"
 
         self._creds = ServicePrincipalCredentials(
-            client_id=args.client_id, secret=args.secret, tenant=args.tenant_id)
+            client_id=args.client, secret=args.secret, tenant=args.tenant)
         # azure-api-call
-        self._monitor_client = MonitorManagementClient(self._creds, self.args.subscription_id)
+        self._monitor_client = MonitorManagementClient(self._creds, self.args.subscription)
         # azure-api-call
-        self._resource_client = ResourceManagementClient(self._creds, self.args.subscription_id)
+        self._resource_client = ResourceManagementClient(self._creds, self.args.subscription)
 
         self.specific_clients = {}
 
@@ -501,7 +479,7 @@ class AzureClient(object):  # pylint: disable=too-many-instance-attributes
         for rtp in r_types:
             client_class = AzureClient.SPECIFIC_CLIENTS.get(rtp)
             if client_class is not None:
-                self.specific_clients[rtp] = client_class(self._creds, self.args.subscription_id)
+                self.specific_clients[rtp] = client_class(self._creds, self.args.subscription)
 
     def process_specific(self, resource):
         client = self.specific_clients.get(resource.info["type"])
@@ -565,10 +543,7 @@ class AzureClient(object):  # pylint: disable=too-many-instance-attributes
 
         return metrics
 
-    def get_metrics(self, resource, r_config, err):
-        if not r_config.fetchall:
-            raise NotImplementedError("selective configuration on resource level")
-
+    def get_metrics(self, resource, err):
         metric_params = METRICS_SELECTED.get(resource.info["type"], [])
 
         metrics = []
@@ -580,27 +555,23 @@ class AzureClient(object):  # pylint: disable=too-many-instance-attributes
 
 
 def process_resource(args):
-    resource, client, config = args
-
-    r_config = config.get_resource_config(resource)
+    resource, client = args
 
     client.process_specific(resource)
 
     err = IssueCollecter()  # pass this to methods to collect issues
-    for metric in client.get_metrics(resource, r_config, err):
+    for metric in client.get_metrics(resource, err):
         resource.metrics.append(metric)
 
-    sections = [Section('agent_info')]
-    sections[0].add(('remaining-reads', client.remaining_reads))
+    agent_info_section = Section('agent_info')
+    agent_info_section.add(('remaining-reads', client.remaining_reads))
+    agent_info_section.add(err.dumpinfo())
 
+    sections = [agent_info_section]
     for piggytarget in resource.piggytargets:
         section = Section(resource.section, piggytarget)
         section.add(resource.dumpinfo())
         sections.append(section)
-        if err:
-            err_section = Section('agent_info', piggytarget)
-            err_section.add(err.dumpinfo())
-            sections.append(err_section)
 
     return sections
 
@@ -634,7 +605,7 @@ def main(argv=None):
 
         write_groups(resources)
 
-        func_args = ((resource, client, config) for resource in resources)
+        func_args = ((resource, client) for resource in resources)
         map_ = map if args.sequential else AsyncMapper(args.timeout, args.debug)
         for sections in map_(process_resource, func_args):
             for section in sections:

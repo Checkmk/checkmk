@@ -24,42 +24,36 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-_FETCHALL = '*'
-
 
 def agent_azure_arguments(params, _no_hostname, _no_ipaddress):
     args = []
 
-    opts = (i for i in params.iteritems() if i[0].startswith("--"))
-    for key, value in opts:
+    keys = ("subscription", "tenant", "client", "secret", "piggyback_vms", "sequential")
+    present_keys = (k for k in keys if k in params.keys())
+
+    for key in present_keys:
+        option = "--%s" % key
+        value = params[key]
         if isinstance(value, bool):
             if value:
-                args.append(key)
+                args.append(option)
         else:
-            args += [key, quote_shell_string(value)]
+            args += [option, value]
 
     config = params['config']
     if "fetchall" in config:
         return ' '.join(args)
 
-    explicit = config.get('explicit-config', [])
+    explicit = config.get('explicit', [])
     if explicit:
         args.append("--explicit-config")
     for group_dict in explicit:
-        g_name = group_dict['group_name']
-        args.append(quote_shell_string("group=%s" % g_name))
+        group_name = group_dict['group_name']
+        args.append("group=%s" % group_name)
 
-        group_cfg = group_dict['group_config']
-        if group_cfg == 'fetchall':
-            continue
-
-        for resource_cfg in group_cfg:
-            value = resource_cfg.get('resource')
-            if not value:
-                break
-            if isinstance(value, list):
-                value = ','.join(value)
-            args.append(quote_shell_string("resource=%s" % value))
+        group_resources = group_dict['resources']
+        if group_resources:
+            args.append("resources=%s" % ",".join(group_resources))
 
     return args
 

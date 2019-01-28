@@ -1,0 +1,10 @@
+Title: mk_jolokia bakery rule: Define custom Mbeans per instance
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cee
+Version: 1.6.0i1
+Date: 1548658943
+Class: feature
+
+The custom MBeans to fetch can now be configured on a per instance level as well.

@@ -551,7 +551,7 @@ def check_mem_windows(_no_item, params, info):
         return warn, crit
 
     for title, prefix, paramname in [("Memory usage", "Mem", "memory"),
-                                     ("Commit Charge", "Page", "pagefile")]:
+                                     ("Page file", "Page", "pagefile")]:
 
         total_kb = meminfo.get("%sTotal" % prefix)
         free_kb = meminfo.get("%sFree" % prefix)

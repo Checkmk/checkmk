@@ -859,7 +859,10 @@ def is_ping_host(hostname):
 
 def is_agent_host(hostname):
     import cmk_base.piggyback as piggyback
-    return is_tcp_host(hostname) or piggyback.has_piggyback_raw_data(hostname)
+    import cmk_base.data_sources as data_sources
+    return (is_tcp_host(hostname) or
+            piggyback.has_piggyback_raw_data(piggyback_max_cachefile_age, hostname) or
+            data_sources.has_persisted_piggyback_agent_sections(hostname))
 
 
 def is_dual_host(hostname):

@@ -29,6 +29,7 @@ import os
 import cmk.paths
 
 import cmk_base.piggyback as piggyback
+from cmk_base.config import piggyback_max_cachefile_age
 
 from .abstract import CheckMKAgentDataSource
 
@@ -48,8 +49,8 @@ class PiggyBackDataSource(CheckMKAgentDataSource):
 
 
     def _execute(self):
-        entries = piggyback.get_piggyback_raw_data(self._hostname) \
-                + piggyback.get_piggyback_raw_data(self._ipaddress)
+        entries = piggyback.get_piggyback_raw_data(piggyback_max_cachefile_age, self._hostname) \
+                + piggyback.get_piggyback_raw_data(piggyback_max_cachefile_age, self._ipaddress)
 
         raw_data = ""
         for source_hostname, source_raw_data in entries:

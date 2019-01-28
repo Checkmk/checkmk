@@ -51,5 +51,5 @@ def test_get_conn_rate_params(check_manager, config, result):
     "connections to use fixed levels."))])
 def test_get_conn_rate_params_exception(check_manager, config, exception_msg):
     check = check_manager.get_check("f5_bigip_conns")
-    with pytest.raises(ValueError, message=exception_msg):
+    with pytest.raises(ValueError, match=exception_msg):
         check.context["get_conn_rate_params"](config)

@@ -172,6 +172,10 @@ class SkipInstance(RuntimeError):
     pass
 
 
+class SkipMBean(RuntimeError):
+    pass
+
+
 def write_section(name, iterable):
     sys.stdout.write('<<<%s:sep(0)>>>\n' % name)
     for line in iterable:
@@ -278,18 +282,18 @@ def fetch_url(request_url, data):
             sys.stderr.write("DEBUG: Result: %s\n\n" % json_data)
     except () if DEBUG else Exception, exc:
         sys.stderr.write("ERROR: %s\n\n" % exc)
-        return {}
+        raise SkipMBean(exc)
 
     try:
         response = json.loads(json_data)
     except (ValueError, TypeError), exc:
         sys.stderr.write('ERROR: Invalid json code (%s)\n' % exc)
         sys.stderr.write('       Response %s\n' % json_data)
-        return {}
+        raise SkipMBean(exc)
 
     if response.get('status', 200) != 200:
         sys.stderr.write('ERROR: Invalid response when fetching url %r\n' % request_url)
-        return {}
+        raise SkipMBean("HTTP Error (%s)" % response.get('status'))
 
     return response
 
@@ -307,9 +311,10 @@ def fetch_var(inst, function, path, use_target=False):
     try:
         return obj['value']
     except KeyError:
+        msg = "not found: %s" % path
         if VERBOSE:
-            sys.stderr.write("ERROR: not found: %s\n" % path)
-        return []
+            sys.stderr.write("ERROR: %s\n" % msg)
+        raise SkipMBean(msg)
 
 
 # convert single values into lists of items in
@@ -412,6 +417,8 @@ def _process_queries(inst, queries):
                 yield item, out_title, value
         except (IOError, socket.timeout):
             raise SkipInstance()
+        except SkipMBean:
+            continue
         except () if DEBUG else Exception:
             continue
 

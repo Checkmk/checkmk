@@ -1,0 +1,15 @@
+Title: mem.win: Fix incorrect representation of absolute memory levels in graphs
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p12
+Date: 1548248661
+
+Previously, a warn or crit level of less than e.g. 20 GB free space would be displayed
+in the graph as a warn or crit level of more than 20 GB used space. 
+The problem only affected the levels passed to the metrics system for representation,
+not the actual levels used for evaluation.
+

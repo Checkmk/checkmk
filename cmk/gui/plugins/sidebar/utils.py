@@ -44,7 +44,6 @@ from cmk.gui.permissions import (
 # Constants to be used in snapins
 snapin_width = 230
 
-sidebar_snapins = {}
 search_plugins = []
 
 

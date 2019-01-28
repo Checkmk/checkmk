@@ -44,7 +44,8 @@ from cmk.gui.plugins.visuals.utils import (
     FilterTime,
     FilterTristate,
     FilterUnicodeFilter,
-    visual_types,
+    VisualType,
+    visual_type_registry,
 )
 
 #.

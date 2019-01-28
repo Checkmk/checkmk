@@ -1,7 +1,8 @@
-import pytest
+import pytest  # type: ignore
 from pathlib2 import Path
 import cmk.gui.config as config
 
+import cmk.gui.plugins.visuals.utils as utils
 import cmk.gui.plugins.visuals
 import cmk.gui.views
 import cmk.gui.visuals as visuals
@@ -36,6 +37,59 @@ def test_filters_allowed_for_infos():
     allowed = visuals.filters_allowed_for_infos(["host", "service"])
     assert isinstance(allowed["host"], cmk.gui.plugins.visuals.filters.FilterText)
     assert isinstance(allowed["service"], cmk.gui.plugins.visuals.filters.FilterText)
+
+
+expected_visual_types = {
+    'dashboards': {
+        'add_visual_handler': 'popup_add_dashlet',
+        'ident_attr': 'name',
+        'module_name': 'cmk.gui.dashboard',
+        'multicontext_links': False,
+        'plural_title': u'dashboards',
+        'popup_add_handler': 'popup_list_dashboards',
+        'show_url': 'dashboard.py',
+        'title': u'dashboard',
+    },
+    'reports': {
+        'add_visual_handler': 'popup_add_element',
+        'ident_attr': 'name',
+        'module_name': 'cmk.gui.cee.reporting',
+        'multicontext_links': True,
+        'plural_title': u'reports',
+        'popup_add_handler': 'popup_list_reports',
+        'show_url': 'report.py',
+        'title': u'report',
+    },
+    'views': {
+        'add_visual_handler': None,
+        'ident_attr': 'view_name',
+        'module_name': 'cmk.gui.views',
+        'multicontext_links': False,
+        'plural_title': u'views',
+        'popup_add_handler': None,
+        'show_url': 'view.py',
+        'title': u'view',
+    },
+}
+
+
+def test_registered_visual_types(load_plugins):
+    assert sorted(utils.visual_type_registry.keys()) == sorted(expected_visual_types.keys())
+
+
+def test_registered_visual_type_attributes(load_plugins):
+    for ident, plugin_class in utils.visual_type_registry.items():
+        plugin = plugin_class()
+        spec = expected_visual_types[ident]
+
+        assert plugin.add_visual_handler == spec["add_visual_handler"]
+        assert plugin.ident_attr == spec["ident_attr"]
+        assert plugin.module_name == spec["module_name"]
+        assert plugin.multicontext_links == spec["multicontext_links"]
+        assert plugin.plural_title == spec["plural_title"]
+        assert plugin.popup_add_handler == spec["popup_add_handler"]
+        assert plugin.show_url == spec["show_url"]
+        assert plugin.title == spec["title"]
 
 
 expected_filters = {

@@ -62,6 +62,10 @@ from cmk.gui.permissions import (
     permission_section_registry,
     PermissionSection,
 )
+from cmk.gui.plugins.visuals.utils import (
+    visual_type_registry,
+    VisualType,
+)
 
 import cmk.gui.plugins.dashboard
 
@@ -91,6 +95,45 @@ screen_margin = 5  # Distance from the left border of the main-frame to the dash
 dashlet_padding = 34, 4, -2, 4, 4  # Margin (N, E, S, W, N w/o title) between outer border of dashlet and its content
 #dashlet_padding  = 23, 2, 2, 2, 2 # Margin (N, E, S, W, N w/o title) between outer border of dashlet and its content
 raster = 10  # Raster the dashlet coords are measured in (px)
+
+
+@visual_type_registry.register
+class VisualTypeDashboards(VisualType):
+    @property
+    def ident(self):
+        return "dashboards"
+
+    @property
+    def title(self):
+        return _("dashboard")
+
+    @property
+    def plural_title(self):
+        return _("dashboards")
+
+    @property
+    def add_visual_handler(self):
+        return "popup_add_dashlet"
+
+    @property
+    def ident_attr(self):
+        return "name"
+
+    @property
+    def module_name(self):
+        return "cmk.gui.dashboard"
+
+    @property
+    def multicontext_links(self):
+        return False
+
+    @property
+    def popup_add_handler(self):
+        return "popup_list_dashboards"
+
+    @property
+    def show_url(self):
+        return "dashboard.py"
 
 
 @permission_section_registry.register

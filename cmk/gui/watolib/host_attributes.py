@@ -27,6 +27,9 @@
 hosts. Examples are the IP address and the host tags."""
 
 import abc
+from typing import Set, List, Tuple, Type, Text  # pylint: disable=unused-import
+
+import cmk.utils.plugin_registry
 
 import cmk.gui.userdb as userdb
 import cmk.gui.config as config
@@ -46,6 +49,131 @@ from cmk.gui.watolib.utils import (
     convert_cgroups_from_tuple,
 )
 
+
+class HostAttributeTopic(object):
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractproperty
+    def ident(self):
+        # type: () -> str
+        """Unique internal ID of this attribute. Only ASCII characters allowed."""
+        raise NotImplementedError()
+
+    @abc.abstractproperty
+    def title(self):
+        # type: () -> Text
+        """Used as title for the attribute topics on the host edit page"""
+        raise NotImplementedError()
+
+    @abc.abstractproperty
+    def sort_index(self):
+        # type: () -> int
+        """The topics are sorted by this number wherever displayed as a list"""
+        raise NotImplementedError()
+
+
+class HostAttributeTopicRegistry(cmk.utils.plugin_registry.ClassRegistry):
+    def plugin_base_class(self):
+        return HostAttributeTopic
+
+    def plugin_name(self, plugin_class):
+        return plugin_class().ident
+
+
+host_attribute_topic_registry = HostAttributeTopicRegistry()
+
+
+# TODO: Move these plugins?
+@host_attribute_topic_registry.register
+class HostAttributeTopicBasicSettings(HostAttributeTopic):
+    @property
+    def ident(self):
+        return "basic"
+
+    @property
+    def title(self):
+        return _("Basic settings")
+
+    @property
+    def sort_index(self):
+        return 0
+
+
+@host_attribute_topic_registry.register
+class HostAttributeTopicAddress(HostAttributeTopic):
+    @property
+    def ident(self):
+        return "address"
+
+    @property
+    def title(self):
+        return _("Address")
+
+    @property
+    def sort_index(self):
+        return 10
+
+
+@host_attribute_topic_registry.register
+class HostAttributeTopicDataSources(HostAttributeTopic):
+    @property
+    def ident(self):
+        return "data_sources"
+
+    @property
+    def title(self):
+        return _("Data sources")
+
+    @property
+    def sort_index(self):
+        return 20
+
+
+@host_attribute_topic_registry.register
+class HostAttributeTopicHostTags(HostAttributeTopic):
+    @property
+    def ident(self):
+        return "host_tags"
+
+    @property
+    def title(self):
+        return _("Host tags")
+
+    @property
+    def sort_index(self):
+        return 30
+
+
+@host_attribute_topic_registry.register
+class HostAttributeTopicNetworkScan(HostAttributeTopic):
+    @property
+    def ident(self):
+        return "network_scan"
+
+    @property
+    def title(self):
+        return _("Network Scan")
+
+    @property
+    def sort_index(self):
+        return 40
+
+
+@host_attribute_topic_registry.register
+class HostAttributeTopicManagementBoard(HostAttributeTopic):
+    @property
+    def ident(self):
+        return "management_board"
+
+    @property
+    def title(self):
+        return _("Management Board")
+
+    @property
+    def sort_index(self):
+        return 50
+
+
 # Global datastructure holding all attributes (in a defined order)
 # as pairs of (attr, topic). Topic is the title under which the
 # attribute is being displayed. All builtin attributes use the
@@ -60,24 +188,15 @@ _host_attribute = {}
 
 
 def get_sorted_host_attribute_topics(for_what):
-    # show attributes grouped by topics, in order of their
-    # appearance. If only one topic exists, do not show topics
-    # Make sure, that the topics "Basic settings" and host tags
-    # are always show first.
-    # TODO: Clean this up! Implement some explicit sorting
-    topics = [None]
-    if config.host_tag_groups():
-        topics.append(_("Address"))
-        topics.append(_("Data sources"))
-        topics.append(_("Host tags"))
+    # type: (str) -> List[Tuple[str, Text]]
+    """Return a list of needed topics for the given "what"""
+    needed_topics = set()  # type: Set[Type[HostAttributeTopic]]
+    for attr in _host_attribute.values():
+        if attr.topic() not in needed_topics and attr.is_visible(for_what):
+            needed_topics.add(attr.topic())
 
-    # The remaining topics are shown in the order of the
-    # appearance of the attribute declarations:
-    for attr, topic in all_host_attributes():
-        if topic not in topics and attr.is_visible(for_what):
-            topics.append(topic)
-
-    return [(t, _("Basic settings") if t is None else _u(t)) for t in topics]
+    return [(t.ident, t.title)
+            for t in sorted([t_class() for t_class in needed_topics], key=lambda e: e.sort_index)]
 
 
 def get_sorted_host_attributes_by_topic(topic):
@@ -103,6 +222,7 @@ def attributes():
     return _host_attribute
 
 
+# TODO: Kept for comatibility with pre 1.6 plugins
 # Declare attributes with this method
 def declare_host_attribute(a,
                            show_in_table=True,
@@ -124,6 +244,7 @@ def declare_host_attribute(a,
 
     _host_attributes.append((a, topic))
     _host_attribute[a.name()] = a
+    a._topic = declare_host_attribute_topic(topic)
     a._show_in_table = show_in_table
     a._show_in_folder = show_in_folder
     a._show_in_host_search = show_in_host_search
@@ -136,6 +257,26 @@ def declare_host_attribute(a,
 
     if may_edit:
         a.may_edit = may_edit
+
+
+def declare_host_attribute_topic(topic_title):
+    if topic_title is None:
+        return HostAttributeTopicBasicSettings
+
+    ident = str(topic_title).replace(" ", "_").lower()
+
+    try:
+        return host_attribute_topic_registry[ident]
+    except KeyError:
+        pass
+
+    topic_class = type("DynamicHostAttributeTopic%s" % ident.title(), (HostAttributeTopic,), {
+        "ident": ident,
+        "title": topic_title,
+        "sort_index": 80,
+    })
+    host_attribute_topic_registry.register(topic_class)
+    return topic_class
 
 
 def undeclare_host_attribute(attrname):
@@ -252,6 +393,7 @@ class Attribute(object):
         self._title = title
         self._help = help_txt
         self._default_value = default_value
+        self._topic = HostAttributeTopicBasicSettings
 
         self._show_in_table = True
         self._show_in_folder = True
@@ -275,6 +417,10 @@ class Attribute(object):
     # Return the title to be displayed to the user
     def title(self):
         return self._title
+
+    def topic(self):
+        # type: () -> Type[HostAttributeTopic]
+        return self._topic
 
     # Return an optional help text
     def help(self):

@@ -1,6 +1,14 @@
+import pytest  # type: ignore
+
 # Triggers plugin loading of plugins.wato which registers all the plugins
 import cmk.gui.wato  # pylint: disable=unused-import
 import cmk.gui.watolib.host_attributes as attrs
+
+
+@pytest.fixture()
+def load_plugins(register_builtin_html):
+    attrs.update_config_based_host_attributes()
+
 
 expected_attributes = {
     'additional_ipv4addresses': {
@@ -328,7 +336,7 @@ def test_legacy_register_rulegroup_without_defaults(monkeypatch):
         show_in_table=False,
         show_in_folder=False,
         show_in_host_search=False,
-        topic="xyz",
+        topic=u"Xyz",
         show_in_form=False,
         depends_on_tags=["xxx"],
         depends_on_roles=["guest"],
@@ -337,6 +345,10 @@ def test_legacy_register_rulegroup_without_defaults(monkeypatch):
         may_edit=lambda: False,
         from_config=True,
     )
+
+    topic = attrs.host_attribute_topic_registry["xyz"]()
+    assert topic.title == u"Xyz"
+    assert topic.sort_index == 80
 
     attr = attrs._host_attribute["lat"]
     assert isinstance(attr, cmk.gui.wato.NagiosTextAttribute)
@@ -347,7 +359,7 @@ def test_legacy_register_rulegroup_without_defaults(monkeypatch):
 
     topic = [e[1] for e in attrs._host_attributes if e[0] == attr]
     topic = topic[0] if topic else None
-    assert topic == "xyz"
+    assert topic == u"Xyz"
 
     assert attr.depends_on_tags() == ["xxx"]
     assert attr.depends_on_roles() == ["guest"]
@@ -357,23 +369,68 @@ def test_legacy_register_rulegroup_without_defaults(monkeypatch):
     assert attr.from_config() is True
 
 
-def test_get_sorted_host_attribute_topics():
-    assert attrs.get_sorted_host_attribute_topics("host") == [
-        (None, u'Basic settings'),
-        (u'Address', u'Address'),
-        (u'Data sources', u'Data sources'),
-        (u'Host tags', u'Host tags'),
-        (u'Management Board', u'Management Board'),
+@pytest.mark.parametrize("for_what", [
+    "host",
+    "cluster",
+    "host_search",
+    "bulk",
+])
+def test_host_attribute_topics(load_plugins, for_what):
+    assert attrs.get_sorted_host_attribute_topics(for_what=for_what) == [
+        ("basic", u"Basic settings"),
+        ("address", u'Address'),
+        ("data_sources", u'Data sources'),
+        ("management_board", u'Management Board'),
     ]
 
 
-def test_get_sorted_host_attributes_by_topic():
-    assert [a.name() for a in attrs.get_sorted_host_attributes_by_topic(None)] == [
-        'contactgroups',
-        'alias',
-        'snmp_community',
-        'parents',
-        'site',
-        'locked_by',
-        'locked_attributes',
+def test_host_attribute_topics_for_folders(load_plugins):
+    assert attrs.get_sorted_host_attribute_topics("folder") == [
+        ("basic", u"Basic settings"),
+        ('address', u'Address'),
+        ('data_sources', u'Data sources'),
+        ('network_scan', u'Network Scan'),
+        ('management_board', u'Management Board'),
     ]
+
+
+@pytest.mark.parametrize("for_what", [
+    "host",
+    "cluster",
+    "folder",
+    "host_search",
+    "bulk",
+])
+def test_host_attributes(load_plugins, for_what):
+    topics = {
+        None: [
+            'contactgroups',
+            'alias',
+            'snmp_community',
+            'parents',
+            'site',
+            'locked_by',
+            'locked_attributes',
+        ],
+        "Address": [
+            'ipaddress',
+            'ipv6address',
+            'additional_ipv4addresses',
+            'additional_ipv6addresses',
+        ],
+        "Data sources": [],
+        "Management Board": [
+            'management_address',
+            'management_protocol',
+            'management_snmp_community',
+            'management_ipmi_credentials',
+        ],
+        "Network Scan": [
+            'network_scan',
+            'network_scan_result',
+        ],
+    }
+    for topic, _title in attrs.get_sorted_host_attribute_topics(for_what):
+        names = [a.name() for a in attrs.get_sorted_host_attributes_by_topic(topic)]
+        assert names == topics.get(topic,
+                                   []), "Expected attributes not specified for topic %r" % topic

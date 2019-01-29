@@ -193,9 +193,6 @@ def _url_args(address_family, address, settings):
     if settings.get("urlize"):
         args += ['-L']
 
-    if "verbose" in settings:
-        args += ["-v"]
-
     return args
 
 

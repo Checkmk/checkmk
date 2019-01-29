@@ -1371,25 +1371,16 @@ def configure_attributes(new,
 
     volatile_topics = []
     hide_attributes = []
-    for topic, title in watolib.get_sorted_host_attribute_topics(for_what):
+    for topic_id, topic_title in watolib.get_sorted_host_attribute_topics(for_what):
         topic_is_volatile = True  # assume topic is sometimes hidden due to dependencies
 
-        if topic == _("Host tags"):
-            topic_id = "wato_host_tags"
-        elif topic == _("Address"):
-            topic_id = "address"
-        elif topic == _("Data sources"):
-            topic_id = "data_sources"
-        else:
-            topic_id = None
-
         forms.header(
-            title,
-            isopen=topic in [None, _("Address"), _("Data sources")],
+            topic_title,
+            isopen=topic_id in ["basic", "address", "data_sources"],
             table_id=topic_id,
         )
 
-        for attr in watolib.get_sorted_host_attributes_by_topic(topic):
+        for attr in watolib.get_sorted_host_attributes_by_topic(topic_id):
             attrname = attr.name()
             if attrname in without_attributes:
                 continue  # e.g. needed to skip ipaddress in CSV-Import
@@ -1616,7 +1607,7 @@ def configure_attributes(new,
             html.close_div()
 
         if topic_is_volatile:
-            volatile_topics.append((topic or _("Basic settings")).encode('utf-8'))
+            volatile_topics.append(topic_id)
 
     forms.end()
 

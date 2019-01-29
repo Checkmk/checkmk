@@ -1,0 +1,150 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# INFO: This backport of the check_levels function from the master
+# branch is only intended to be used by the backported features
+# included in version 1.5.0p12.
+#
+# WARNING: The backported version does NOT support predictive levels.
+
+
+def _normalize_bounds_backport(levels):
+    if len(levels) == 2:  # upper warn and crit
+        warn_upper, crit_upper = levels[0], levels[1]
+        warn_lower, crit_lower = None, None
+
+    else:  # upper and lower warn and crit
+        warn_upper, crit_upper = levels[0], levels[1]
+        warn_lower, crit_lower = levels[2], levels[3]
+
+    return warn_upper, crit_upper, warn_lower, crit_lower
+
+
+def _check_boundaries_backport(value, levels, human_readable_func=str):
+    def levelsinfo_ty(ty, warn, crit, human_readable_func):
+        if human_readable_func is None:
+            human_readable_func = str
+        return " (warn/crit %s %s/%s)" % (ty, human_readable_func(warn), human_readable_func(crit))
+
+    warn_upper, crit_upper, warn_lower, crit_lower = _normalize_bounds_backport(levels)
+    # Critical cases
+    if crit_upper is not None and value >= crit_upper:
+        return 2, levelsinfo_ty("at", warn_upper, crit_upper, human_readable_func)
+    if crit_lower is not None and value < crit_lower:
+        return 2, levelsinfo_ty("below", warn_lower, crit_lower, human_readable_func)
+
+    # Warning cases
+    if warn_upper is not None and value >= warn_upper:
+        return 1, levelsinfo_ty("at", warn_upper, crit_upper, human_readable_func)
+    if warn_lower is not None and value < warn_lower:
+        return 1, levelsinfo_ty("below", warn_lower, crit_lower, human_readable_func)
+    return 0, ""
+
+
+def check_levels_backport(value,
+                          dsname,
+                          params,
+                          unit="",
+                          factor=1.0,
+                          scale=1.0,
+                          statemarkers=False,
+                          human_readable_func=None,
+                          infoname=None):
+    """Generic function for checking a value against levels
+
+    This also supports predictive levels.
+
+    value:   currently measured value
+    dsname:  name of the datasource in the RRD that corresponds to this value
+    unit:    unit to be displayed in the plugin output, e.g. "MB/s"
+    factor:  the levels are multiplied with this factor before applying
+             them to the value. This is being used for the CPU load check
+             currently. The levels here are "per CPU", so the number of
+             CPUs is used as factor.
+    scale:   Scale of the levels in relation to "value" and the value in the RRDs.
+             For example if the levels are specified in GB and the RRD store KB, then
+             the scale is 1024*1024.
+    human_readable_func: Single argument function to present in a human readable fashion
+                         the value. It has priority over the unit argument.
+    infoname: Perf value name for infotext, defaults to dsname
+    """
+    if unit not in ('', '%'):
+        unit = " " + unit  # Insert space before MB, GB, etc.
+    elif unit == "%" and not human_readable_func:
+        human_readable_func = get_percent_human_readable
+
+    if human_readable_func is None:
+        human_readable_func = lambda x: "%.2f%s" % (x / scale, unit)
+
+    def scale_value(v):
+        if v is None:
+            return None
+
+        return v * factor * scale
+
+    infotext = "%s: %s" % (infoname or dsname, human_readable_func(value))
+    perf_value = (dsname, value)
+    # None, {} or (None, None) -> do not check any levels
+    if not params or params == (None, None):
+        return 0, infotext, [perf_value]
+
+    # Pair of numbers -> static levels
+    elif isinstance(params, tuple):
+        levels = map(scale_value, _normalize_bounds_backport(params))
+        ref_value = None
+
+    # Dictionary -> predictive levels
+    else:
+        try:
+            raise MKGeneralException(
+                "Predictive levels are not supported by the check_levels backport "
+                "for version 1.5.0.")
+
+        except MKGeneralException as e:
+            ref_value = None
+            levels = [None, None, None, None]
+            predictive_levels_msg = "no reference for prediction (%s)" % e
+
+        except Exception as e:
+            if _debug.enabled():
+                raise
+            return 3, "%s" % e, []
+
+        if predictive_levels_msg:
+            infotext += " (%s)" % predictive_levels_msg
+
+    state, levelstext = _check_boundaries_backport(value, levels, human_readable_func)
+
+    infotext += levelstext
+
+    if statemarkers:
+        infotext += state_markers[state]
+
+    perfdata = [perf_value + tuple(levels[:2])]
+    if ref_value:
+        perfdata.append(('predict_' + dsname, ref_value))
+
+    return state, infotext, perfdata

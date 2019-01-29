@@ -35,7 +35,7 @@ MANAGED            := no
 endif
 
 SHELL              := /bin/bash
-VERSION            := 1.4.0p38
+VERSION            := 1.4.0p39
 NAME               := check_mk
 PREFIX             := /usr
 BINDIR             := $(PREFIX)/bin

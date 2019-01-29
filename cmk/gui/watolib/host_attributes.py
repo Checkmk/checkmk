@@ -79,6 +79,12 @@ class HostAttributeTopicRegistry(cmk.utils.plugin_registry.ClassRegistry):
     def plugin_name(self, plugin_class):
         return plugin_class().ident
 
+    def get_choices(self):
+        return [
+            (t.ident, t.title)
+            for t in sorted([t_class() for t_class in self.values()], key=lambda e: e.sort_index)
+        ]
+
 
 host_attribute_topic_registry = HostAttributeTopicRegistry()
 
@@ -174,6 +180,21 @@ class HostAttributeTopicManagementBoard(HostAttributeTopic):
         return 50
 
 
+@host_attribute_topic_registry.register
+class HostAttributeTopicCustomAttributes(HostAttributeTopic):
+    @property
+    def ident(self):
+        return "custom_attributes"
+
+    @property
+    def title(self):
+        return _("Custom attributes")
+
+    @property
+    def sort_index(self):
+        return 35
+
+
 # Global datastructure holding all attributes (in a defined order)
 # as pairs of (attr, topic). Topic is the title under which the
 # attribute is being displayed. All builtin attributes use the
@@ -189,7 +210,8 @@ _host_attribute = {}
 
 def get_sorted_host_attribute_topics(for_what):
     # type: (str) -> List[Tuple[str, Text]]
-    """Return a list of needed topics for the given "what"""
+    """Return a list of needed topics for the given "what".
+    Only returns the topics that are used by a visible attribute"""
     needed_topics = set()  # type: Set[Type[HostAttributeTopic]]
     for attr in _host_attribute.values():
         if attr.topic() not in needed_topics and attr.is_visible(for_what):
@@ -199,23 +221,19 @@ def get_sorted_host_attribute_topics(for_what):
             for t in sorted([t_class() for t_class in needed_topics], key=lambda e: e.sort_index)]
 
 
-def get_sorted_host_attributes_by_topic(topic):
+def get_sorted_host_attributes_by_topic(topic_id):
     # Hack to sort the address family host tag attribute above the IPv4/v6 addresses
     # TODO: Clean this up by implementing some sort of explicit sorting
     def sort_host_attributes(a, b):
-        if a[0].name() == "tag_address_family":
+        if a.name() == "tag_address_family":
             return -1
         return 0
 
     sorted_attributes = []
-    for attr, atopic in sorted(all_host_attributes(), cmp=sort_host_attributes):
-        if atopic == topic:
+    for attr in sorted(_host_attributes, cmp=sort_host_attributes):
+        if attr.topic() == host_attribute_topic_registry[topic_id]:
             sorted_attributes.append(attr)
     return sorted_attributes
-
-
-def all_host_attributes():
-    return _host_attributes
 
 
 def attributes():
@@ -242,9 +260,15 @@ def declare_host_attribute(a,
     if depends_on_roles is None:
         depends_on_roles = []
 
-    _host_attributes.append((a, topic))
+    _host_attributes.append(a)
     _host_attribute[a.name()] = a
-    a._topic = declare_host_attribute_topic(topic)
+
+    if isinstance(topic, HostAttributeTopic):
+        a._topic = topic
+    else:
+        ident = str(topic).replace(" ", "_").lower() if topic else None
+        a._topic = _declare_host_attribute_topic(ident, topic)
+
     a._show_in_table = show_in_table
     a._show_in_folder = show_in_folder
     a._show_in_host_search = show_in_host_search
@@ -259,11 +283,11 @@ def declare_host_attribute(a,
         a.may_edit = may_edit
 
 
-def declare_host_attribute_topic(topic_title):
-    if topic_title is None:
+def _declare_host_attribute_topic(ident, topic_title):
+    """We get the "topic title" here. Create a topic class dynamically and
+    returns a reference to this class"""
+    if ident is None:
         return HostAttributeTopicBasicSettings
-
-    ident = str(topic_title).replace(" ", "_").lower()
 
     try:
         return host_attribute_topic_registry[ident]
@@ -285,7 +309,7 @@ def undeclare_host_attribute(attrname):
     if attrname in _host_attribute:
         attr = _host_attribute[attrname]
         del _host_attribute[attrname]
-        _host_attributes = [ha for ha in _host_attributes if ha[0].name() != attr.name()]
+        _host_attributes = [ha for ha in _host_attributes if ha.name() != attr.name()]
 
 
 def undeclare_host_tag_attribute(tag_id):
@@ -343,7 +367,7 @@ def _declare_host_tag_attributes():
 
 
 def declare_custom_host_attrs():
-    for attr in config.wato_host_attrs:
+    for attr in transform_pre_16_host_topics(config.wato_host_attrs):
         if attr['type'] == "TextAscii":
             vs = TextAscii(title=attr['title'], help=attr['help'])
         else:
@@ -354,12 +378,42 @@ def declare_custom_host_attrs():
         else:
             a = ValueSpecAttribute(attr["name"], vs)
 
+        # Previous to 1.6 the topic was a the "topic title". Since 1.6
+        # it's the internal ID of the topic. Because referenced topics may
+        # have been removed, be compatible and dynamically create a topic
+        # in case one is missing.
+        topic_class = _declare_host_attribute_topic(attr['topic'], attr['topic'].title())
+
         declare_host_attribute(
             a,
             show_in_table=attr['show_in_table'],
-            topic=attr['topic'],
+            topic=topic_class,
             from_config=True,
         )
+
+
+def transform_pre_16_host_topics(custom_attributes):
+    """Previous to 1.6 the titles of the host attribute topics were stored.
+
+    This lead to issues with localized topics. We now have internal IDs for
+    all the topics and try to convert the values here to the new format.
+
+    At least for unlocalized topics the conversion works. Localized topics
+    are put into the "Custom attributes" topic once. Users will have to
+    re-configure the topic, sorry :-/."""
+    topics = [a_class() for a_class in host_attribute_topic_registry.values()]
+    for custom_attr in custom_attributes:
+        found = False
+        for topic in topics:
+            if custom_attr["topic"] == topic.title:
+                custom_attr["topic"] = topic.ident
+                found = True
+                break
+
+        if not found:
+            custom_attr["topic"] = "custom_attributes"
+
+    return custom_attributes
 
 
 def host_attribute(name):
@@ -369,7 +423,7 @@ def host_attribute(name):
 # Read attributes from HTML variables
 def collect_attributes(for_what, do_validate=True, varprefix=""):
     host = {}
-    for attr, _topic in all_host_attributes():
+    for attr in _host_attribute.values():
         attrname = attr.name()
         if not html.request.var(for_what + "_change_%s" % attrname, False):
             continue

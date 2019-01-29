@@ -540,7 +540,7 @@ def test_data_sources_of_hosts(clear_config_caches, monkeypatch):
         ], {}),
     ])
 
-    config.collect_hosttags()
+    config.get_config_cache().initialize()
 
     for hostname, host_attrs in hosts:
         sources = cmk_base.data_sources.DataSources(hostname, "127.0.0.1")

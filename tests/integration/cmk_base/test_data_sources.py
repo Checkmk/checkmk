@@ -527,7 +527,7 @@ def test_data_sources_of_hosts(clear_config_caches, monkeypatch):
 
     all_hosts = [("%s|%s" % (name, h["tags"])) for name, h in hosts]
     monkeypatch.setattr(config, "all_hosts", all_hosts)
-    monkeypatch.setattr(config, "host_paths", dict((name, "") for name, h in hosts))
+    monkeypatch.setattr(config, "host_paths", dict((name, "/") for name, h in hosts))
 
     monkeypatch.setattr(config, "datasource_programs", [
         ('echo 1', [], ['ds-host-14', 'all-agents-host', 'all-special-host'], {}),

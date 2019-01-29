@@ -1176,7 +1176,7 @@ class EditNotificationRuleMode(NotificationsMode):
         choices = []
         for script_name, title in watolib.notification_script_choices():
             if script_name in notification_parameter_registry:
-                vs = notification_parameter_registry[script_name]
+                vs = notification_parameter_registry[script_name]().spec
             else:
                 vs = ListOfStrings(
                     title=_("Call with the following parameters:"),

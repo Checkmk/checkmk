@@ -34,6 +34,7 @@ from cmk.gui.globals import html
 from cmk.gui.i18n import _, _u
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.valuespec import (
+    TextAscii,
     DualListChoice,
     Checkbox,
     DropdownChoice,
@@ -202,7 +203,10 @@ def _declare_host_tag_attributes():
 
 def declare_custom_host_attrs():
     for attr in config.wato_host_attrs:
-        vs = globals()[attr['type']](title=attr['title'], help=attr['help'])
+        if attr['type'] == "TextAscii":
+            vs = TextAscii(title=attr['title'], help=attr['help'])
+        else:
+            raise NotImplementedError()
 
         if attr['add_custom_macro']:
             a = NagiosValueSpecAttribute(attr["name"], "_" + attr["name"], vs)

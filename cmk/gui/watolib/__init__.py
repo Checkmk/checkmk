@@ -128,7 +128,6 @@ from cmk.gui.watolib.timeperiods import TimeperiodSelection
 from cmk.gui.watolib.host_attributes import (
     get_sorted_host_attribute_topics,
     get_sorted_host_attributes_by_topic,
-    all_host_attributes,
     declare_host_attribute,
     undeclare_host_attribute,
     host_attribute,

@@ -37,6 +37,7 @@ import cmk.gui.weblib as weblib
 import cmk.gui.forms as forms
 
 from cmk.gui.watolib.hosts_and_folders import Folder
+import cmk.gui.watolib.host_attributes as host_attributes
 from cmk.gui.plugins.wato.utils import (
     mode_registry,
     configure_attributes,
@@ -471,7 +472,7 @@ class ModeFolder(WatoMode):
 
             # Compute colspan for bulk actions
             colspan = 6
-            for attr, _topic in watolib.all_host_attributes():
+            for attr in host_attributes.attributes().values():
                 if attr.show_in_table():
                     colspan += 1
             if not self._folder.locked_hosts() and config.user.may(
@@ -555,7 +556,7 @@ class ModeFolder(WatoMode):
                 html.a(hostname, href=host.edit_url())
 
                 # Show attributes
-                for attr, _topic in watolib.all_host_attributes():
+                for attr in host_attributes.attributes().values():
                     if attr.show_in_table():
                         attrname = attr.name()
                         if attrname in host.attributes():

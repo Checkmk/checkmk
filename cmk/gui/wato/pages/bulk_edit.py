@@ -154,7 +154,7 @@ class ModeBulkCleanup(WatoMode):
 
     def _bulk_collect_cleaned_attributes(self):
         to_clean = []
-        for attr, _topic in watolib.all_host_attributes():
+        for attr in watolib.host_attributes.attributes().values():
             attrname = attr.name()
             if html.get_checkbox("_clean_" + attrname) is True:
                 to_clean.append(attrname)
@@ -182,7 +182,7 @@ class ModeBulkCleanup(WatoMode):
 
     def _select_attributes_for_bulk_cleanup(self, hosts):
         num_shown = 0
-        for attr, _topic in watolib.all_host_attributes():
+        for attr in sorted(watolib.host_attributes.attributes().values(), key=lambda a: a.title()):
             attrname = attr.name()
 
             # only show attributes that at least on host have set

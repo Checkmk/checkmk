@@ -38,7 +38,11 @@ import cmk.utils.store as store
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
-from cmk.gui.watolib.host_attributes import declare_custom_host_attrs
+from cmk.gui.watolib.host_attributes import (
+    declare_custom_host_attrs,
+    host_attribute_topic_registry,
+    transform_pre_16_host_topics,
+)
 from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.plugins.wato import WatoMode, add_change, mode_registry, wato_confirm
 
@@ -64,7 +68,10 @@ def load_custom_attrs_from_mk_file(lock):
 
     attrs = {}
     for what in ["user", "host"]:
-        attrs[what] = vars_.get("wato_%s_attrs" % what, [])
+        attributes = vars_.get("wato_%s_attrs" % what, [])
+        if what == "host":
+            attributes = transform_pre_16_host_topics(attributes)
+        attrs[what] = attributes
     return attrs
 
 
@@ -342,15 +349,11 @@ class ModeEditCustomHostAttr(ModeEditCustomAttr):
 
     @property
     def _topics(self):
-        default = self._default_topic
-        topics = list(
-            set((a[1], a[1]) for a in watolib.all_host_attributes() if a[1] not in (None, default)))
-        topics.insert(0, (default, default))
-        return topics
+        return host_attribute_topic_registry.get_choices()
 
     @property
     def _default_topic(self):
-        return _("Custom attributes")
+        return "custom_attributes"
 
     @property
     def _macro_help(self):

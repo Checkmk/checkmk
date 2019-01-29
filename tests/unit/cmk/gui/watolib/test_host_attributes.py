@@ -48,7 +48,7 @@ expected_attributes = {
         'show_in_host_search': True,
         'show_in_table': True,
         'show_inherited_value': True,
-        'topic': None
+        'topic': u'Basic settings',
     },
     'contactgroups': {
         'class_name': 'ContactGroupsAttribute',
@@ -61,7 +61,7 @@ expected_attributes = {
         'show_in_host_search': True,
         'show_in_table': False,
         'show_inherited_value': True,
-        'topic': None
+        'topic': u'Basic settings',
     },
     'ipaddress': {
         'class_name': 'ValueSpecAttribute',
@@ -100,7 +100,7 @@ expected_attributes = {
         'show_in_host_search': False,
         'show_in_table': False,
         'show_inherited_value': False,
-        'topic': None
+        'topic': u'Basic settings',
     },
     'locked_by': {
         'class_name': 'ValueSpecAttribute',
@@ -113,7 +113,7 @@ expected_attributes = {
         'show_in_host_search': True,
         'show_in_table': False,
         'show_inherited_value': False,
-        'topic': None
+        'topic': u'Basic settings',
     },
     'management_address': {
         'class_name': 'ValueSpecAttribute',
@@ -204,7 +204,7 @@ expected_attributes = {
         'show_in_host_search': True,
         'show_in_table': True,
         'show_inherited_value': True,
-        'topic': None
+        'topic': u'Basic settings',
     },
     'site': {
         'class_name': 'SiteAttribute',
@@ -217,7 +217,7 @@ expected_attributes = {
         'show_in_host_search': True,
         'show_in_table': True,
         'show_inherited_value': True,
-        'topic': None
+        'topic': u'Basic settings',
     },
     'snmp_community': {
         'class_name': 'ValueSpecAttribute',
@@ -230,7 +230,7 @@ expected_attributes = {
         'show_in_host_search': True,
         'show_in_table': False,
         'show_inherited_value': True,
-        'topic': None
+        'topic': u'Basic settings',
     },
 }
 
@@ -268,10 +268,8 @@ def test_registered_host_attributes():
 
         assert attr.__class__.__name__ == spec["class_name"]
 
-        topic = [e[1] for e in attrs._host_attributes if e[0] == attr]
-        topic = topic[0] if topic else None
-        assert topic == spec["topic"]
-
+        attr_topic_class = attr.topic()
+        assert spec["topic"] == attr_topic_class().title, ident
         assert spec["show_in_table"] == attr._show_in_table
         assert spec["show_in_folder"] == attr._show_in_folder
         assert spec["show_in_host_search"] == attr._show_in_host_search
@@ -305,11 +303,7 @@ def test_legacy_register_rulegroup_with_defaults(monkeypatch):
     assert attr.show_in_folder() is True
     assert attr.show_in_host_search() is True
     assert attr.show_in_form() is True
-
-    topic = [e[1] for e in attrs._host_attributes if e[0] == attr]
-    topic = topic[0] if topic else None
-    assert topic is None
-
+    assert attr.topic() == attrs.HostAttributeTopicBasicSettings
     assert attr.depends_on_tags() == []
     assert attr.depends_on_roles() == []
     assert attr.editable() is True
@@ -357,16 +351,35 @@ def test_legacy_register_rulegroup_without_defaults(monkeypatch):
     assert attr.show_in_host_search() is False
     assert attr.show_in_form() is False
 
-    topic = [e[1] for e in attrs._host_attributes if e[0] == attr]
-    topic = topic[0] if topic else None
-    assert topic == u"Xyz"
-
+    assert attr.topic()().title == u"Xyz"
     assert attr.depends_on_tags() == ["xxx"]
     assert attr.depends_on_roles() == ["guest"]
     assert attr.editable() is False
     assert attr.show_inherited_value() is False
     assert attr.may_edit() is False
     assert attr.from_config() is True
+
+
+@pytest.mark.parametrize("old,new", [
+    ('Basic settings', 'basic'),
+    ('Management Board', 'management_board'),
+    ("Custom attributes", 'custom_attributes'),
+    ('Eigene Attribute', 'custom_attributes'),
+    ('xyz_unknown', 'custom_attributes'),
+])
+def test_custom_host_attribute_transform(old, new):
+    attributes = [{
+        'add_custom_macro': True,
+        'help': u'',
+        'name': 'attr1',
+        'show_in_table': True,
+        'title': u'Attribute 1',
+        'topic': old,
+        'type': 'TextAscii',
+    }]
+
+    transformed_attributes = attrs.transform_pre_16_host_topics(attributes)
+    assert transformed_attributes[0]["topic"] == new
 
 
 @pytest.mark.parametrize("for_what", [
@@ -403,7 +416,7 @@ def test_host_attribute_topics_for_folders(load_plugins):
 ])
 def test_host_attributes(load_plugins, for_what):
     topics = {
-        None: [
+        "basic": [
             'contactgroups',
             'alias',
             'snmp_community',
@@ -412,25 +425,36 @@ def test_host_attributes(load_plugins, for_what):
             'locked_by',
             'locked_attributes',
         ],
-        "Address": [
+        "address": [
+            'tag_address_family',
             'ipaddress',
             'ipv6address',
             'additional_ipv4addresses',
             'additional_ipv6addresses',
         ],
-        "Data sources": [],
-        "Management Board": [
+        "data_sources": [
+            'tag_agent',
+            'tag_snmp',
+        ],
+        "management_board": [
             'management_address',
             'management_protocol',
             'management_snmp_community',
             'management_ipmi_credentials',
         ],
-        "Network Scan": [
+    }
+
+    if for_what == "folder":
+        topics["network_scan"] = [
             'network_scan',
             'network_scan_result',
-        ],
-    }
-    for topic, _title in attrs.get_sorted_host_attribute_topics(for_what):
-        names = [a.name() for a in attrs.get_sorted_host_attributes_by_topic(topic)]
-        assert names == topics.get(topic,
-                                   []), "Expected attributes not specified for topic %r" % topic
+        ]
+
+    current_topics = attrs.get_sorted_host_attribute_topics(for_what)
+
+    assert sorted(topics.keys()) == sorted(dict(current_topics).keys())
+
+    for topic_id, _title in current_topics:
+        names = [a.name() for a in attrs.get_sorted_host_attributes_by_topic(topic_id)]
+        assert names == topics.get(topic_id,
+                                   []), "Expected attributes not specified for topic %r" % topic_id

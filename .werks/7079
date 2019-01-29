@@ -1,0 +1,19 @@
+Title: check_http: Remove problematic "verbose" option from the GUI
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0p12
+Date: 1548769790
+Class: fix
+
+Since werk #5224 (1.5.0i1) it was possible to configure the HTTP active check
+to print out verbose output. The intention was to let it write it's information
+to the long output.
+
+The problem is that the verbose output of the check_http active check does not
+work this way. Instead of producing long output, it prints out it's verbose output
+before the regular check result output. For this reason the verbose output will be
+treated as regular plugin output. This can result in random performance data which
+is then processed by the core and results in garbage RRD data filling up the disk
+space.

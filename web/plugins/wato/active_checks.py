@@ -853,6 +853,13 @@ ip_address_family_element = ("address_family",
         ),
     )
 
+# The "verbose" option was part configurable since 1.5.0i1 and has been dropped with 1.5.0p12
+# See #5224 and #7079 for additional information.
+def _transform_check_http_cleanup_verbose(value):
+    if "verbose" in value:
+        del value["verbose"]
+    return value
+
 register_rule(group,
     "active_checks:http",
     Tuple(
@@ -874,284 +881,282 @@ register_rule(group,
                 title = _("Mode of the Check"),
                 help = _("Perform a check of the URL or the certificate expiration."),
                 elements = [
-                    Dictionary(
-                        title = _("Check the URL"),
-                        elements = [
-                            ( "virthost",
-                                Tuple(
-                                    title = _("Virtual host"),
-                                    elements = [
-                                        TextAscii(
-                                            title = _("Name of the virtual host"),
-                                            help = _("Set this in order to specify the name of the "
-                                                     "virtual host for the query (using HTTP/1.1). If you "
-                                                     "leave this empty, then the IP address of the host "
-                                                     "will be used instead."),
-                                            allow_empty = False
-                                        ),
-                                        Checkbox(
-                                            label = _("Omit specifying an IP address"),
-                                            help = _("Usually Check_MK will nail this check to the "
-                                                     "IP address of the host it is attached to. With this "
-                                                     "option you can have the check use the name of the "
-                                                     "virtual host instead and do a dynamic DNS lookup."),
-                                            true_label = _("omit IP address"),
-                                            false_label = _("specify IP address"),
-                                        ),
-                                    ]
-                                )
-                            ),
-                            ( "uri",
-                                TextAscii(
-                                    title = _("URI to fetch (default is <tt>/</tt>)"),
-                                    allow_empty = False,
-                                    default_value = "/"
-                                )
-                            ),
-                            ( "port",
-                                Integer(
-                                    title = _("TCP Port"),
-                                    minvalue = 1,
-                                    maxvalue = 65535,
-                                    default_value = 80
-                                )
-                            ),
-                            ip_address_family_element,
-                            ("ssl", Transform(
-                                DropdownChoice(
-                                    title = _("Use SSL/HTTPS for the connection"),
-                                    choices = [
-                                        ("auto",  _("Use SSL with auto negotiation")),
-                                        ("1.2",   _("Use SSL, enforce TLSv1.2")),
-                                        ("1.1",   _("Use SSL, enforce TLSv1.1")),
-                                        ("1",     _("Use SSL, enforce TLSv1")),
-                                        ("2",     _("Use SSL, enforce SSLv2")),
-                                        ("3",     _("Use SSL, enforce SSLv3")),
-                                    ],
-                                    default_value = "auto",
-                                ),
-                                forth = lambda x: x == True and "auto" or x,
-                            )),
-                            ( "sni",
-                                FixedValue(
-                                    value = True,
-                                    totext = _("enable SNI"),
-                                    title = _("Enable SSL/TLS hostname extension support (SNI)"),
-                                )
-                            ),
-                            ( "response_time",
-                                Tuple(
-                                    title = _("Expected response time"),
-                                    elements = [
-                                        Float(
-                                            title = _("Warning if above"),
-                                            unit = "ms",
-                                            default_value = 100.0
-                                        ),
-                                        Float(
-                                            title = _("Critical if above"),
-                                            unit = "ms",
-                                            default_value = 200.0
-                                        ),
-                                    ]
-                                )
-                            ),
-                            ( "timeout",
-                                Integer(
-                                    title = _("Seconds before connection times out"),
-                                    unit = _("sec"),
-                                    default_value = 10,
-                                )
-                            ),
-                            ( "user_agent",
-                                TextAscii(
-                                    title = _("User Agent"),
-                                    help = _("String to be sent in http header as \"User Agent\""),
-                                    allow_empty = False,
-                                ),
-                            ),
-                            ( "add_headers",
-                                ListOfStrings(
-                                    title = _("Additional header lines"),
-                                    orientation = "vertical",
-                                    valuespec = TextAscii(size = 40),
-                                ),
-                            ),
-                            ( "auth",
-                                Tuple(
-                                    title = _("Authorization"),
-                                    help = _("Credentials for HTTP Basic Authentication"),
-                                    elements = [
-                                        TextAscii(
-                                            title = _("Username"),
-                                            size = 12,
-                                            allow_empty = False
-                                        ),
-                                        IndividualOrStoredPassword(
-                                            title = _("Password"),
-                                        )
-                                    ]
-                                )
-                            ),
-                            ( "proxy",
-                                TextAscii(
-                                    title = _("Proxy host"),
-                                    help = _("To use a proxy you have to use the Port of the proxy, "
-                                             "specify the virtual host and the URL to fetch, "
-                                             "use the HTTP Method CONNECT, and use SSL/HTTPS "
-                                             "for the connection")
-                                ),
-                            ),
-                            ( "proxy_auth",
-                                Tuple(
-                                    title = _("Proxy-Authorization"),
-                                    help = _("Credentials for HTTP Proxy with basic authentication"),
-                                    elements = [
-                                        TextAscii(
-                                            title = _("Username"),
-                                            size = 12,
-                                            allow_empty = False
-                                        ),
-                                        IndividualOrStoredPassword(
-                                            title = _("Password"),
-                                        ),
-                                    ]
-                                )
-                            ),
-                            ( "onredirect",
-                                DropdownChoice(
-                                    title = _("How to handle redirect"),
-                                    choices = [
-                                        ( 'ok',         _("Make check OK") ),
-                                        ( 'warning',    _("Make check WARNING") ),
-                                        ( 'critical',   _("Make check CRITICAL") ),
-                                        ( 'follow',     _("Follow the redirection") ),
-                                        ( 'sticky',     _("Follow, but stay to same IP address") ),
-                                        ( 'stickyport', _("Follow, but stay to same IP-address and port") ),
-                                    ],
-                                    default_value = 'follow'
-                                ),
-                            ),
-                            ( "expect_response_header",
-                                TextAscii(
-                                    title = _("String to expect in response headers"),
-                                )
-                            ),
-                            ( "expect_response",
-                                ListOfStrings(
-                                    title = _("Strings to expect in server response"),
-                                    help = _("At least one of these strings is expected in "
-                                             "the first (status) line of the server response "
-                                             "(default: <tt>HTTP/1.</tt>). If specified skips "
-                                             "all other status line logic (ex: 3xx, 4xx, 5xx "
-                                             "processing)"),
-                                )
-                            ),
-                            ( "expect_string",
-                                TextUnicode(
-                                    title = _("Fixed string to expect in the content"),
-                                    allow_empty = False,
-                                )
-                            ),
-                            ( "expect_regex",
-                                Transform(
+                    Transform(
+                        Dictionary(
+                            title = _("Check the URL"),
+                            elements = [
+                                ( "virthost",
                                     Tuple(
-                                        orientation = "vertical",
-                                        show_titles = False,
+                                        title = _("Virtual host"),
                                         elements = [
-                                            RegExp(
-                                                label = _("Regular expression: "),
-                                                mode = RegExp.infix,
+                                            TextAscii(
+                                                title = _("Name of the virtual host"),
+                                                help = _("Set this in order to specify the name of the "
+                                                         "virtual host for the query (using HTTP/1.1). If you "
+                                                         "leave this empty, then the IP address of the host "
+                                                         "will be used instead."),
+                                                allow_empty = False
                                             ),
-                                            Checkbox(label = _("Case insensitive")),
-                                            Checkbox(label = _("return CRITICAL if found, OK if not")),
-                                            Checkbox(label = _("Multiline string matching")),
+                                            Checkbox(
+                                                label = _("Omit specifying an IP address"),
+                                                help = _("Usually Check_MK will nail this check to the "
+                                                         "IP address of the host it is attached to. With this "
+                                                         "option you can have the check use the name of the "
+                                                         "virtual host instead and do a dynamic DNS lookup."),
+                                                true_label = _("omit IP address"),
+                                                false_label = _("specify IP address"),
+                                            ),
                                         ]
-                                    ),
-                                    forth = lambda x: len(x) == 3 and tuple(list(x) + [False]) or x,
-                                    title = _("Regular expression to expect in content"),
+                                    )
                                 ),
-                            ),
-                            ( "post_data",
-                                Tuple(
-                                    title = _("Send HTTP POST data"),
-                                    elements = [
-                                        TextUnicode(
-                                            title = _("HTTP POST data"),
-                                            help = _("Data to send via HTTP POST method. "
-                                                     "Please make sure, that the data is URL-encoded."),
-                                            size = 40,
+                                ( "uri",
+                                    TextAscii(
+                                        title = _("URI to fetch (default is <tt>/</tt>)"),
+                                        allow_empty = False,
+                                        default_value = "/"
+                                    )
+                                ),
+                                ( "port",
+                                    Integer(
+                                        title = _("TCP Port"),
+                                        minvalue = 1,
+                                        maxvalue = 65535,
+                                        default_value = 80
+                                    )
+                                ),
+                                ip_address_family_element,
+                                ("ssl", Transform(
+                                    DropdownChoice(
+                                        title = _("Use SSL/HTTPS for the connection"),
+                                        choices = [
+                                            ("auto",  _("Use SSL with auto negotiation")),
+                                            ("1.2",   _("Use SSL, enforce TLSv1.2")),
+                                            ("1.1",   _("Use SSL, enforce TLSv1.1")),
+                                            ("1",     _("Use SSL, enforce TLSv1")),
+                                            ("2",     _("Use SSL, enforce SSLv2")),
+                                            ("3",     _("Use SSL, enforce SSLv3")),
+                                        ],
+                                        default_value = "auto",
+                                    ),
+                                    forth = lambda x: x == True and "auto" or x,
+                                )),
+                                ( "sni",
+                                    FixedValue(
+                                        value = True,
+                                        totext = _("enable SNI"),
+                                        title = _("Enable SSL/TLS hostname extension support (SNI)"),
+                                    )
+                                ),
+                                ( "response_time",
+                                    Tuple(
+                                        title = _("Expected response time"),
+                                        elements = [
+                                            Float(
+                                                title = _("Warning if above"),
+                                                unit = "ms",
+                                                default_value = 100.0
+                                            ),
+                                            Float(
+                                                title = _("Critical if above"),
+                                                unit = "ms",
+                                                default_value = 200.0
+                                            ),
+                                        ]
+                                    )
+                                ),
+                                ( "timeout",
+                                    Integer(
+                                        title = _("Seconds before connection times out"),
+                                        unit = _("sec"),
+                                        default_value = 10,
+                                    )
+                                ),
+                                ( "user_agent",
+                                    TextAscii(
+                                        title = _("User Agent"),
+                                        help = _("String to be sent in http header as \"User Agent\""),
+                                        allow_empty = False,
+                                    ),
+                                ),
+                                ( "add_headers",
+                                    ListOfStrings(
+                                        title = _("Additional header lines"),
+                                        orientation = "vertical",
+                                        valuespec = TextAscii(size = 40),
+                                    ),
+                                ),
+                                ( "auth",
+                                    Tuple(
+                                        title = _("Authorization"),
+                                        help = _("Credentials for HTTP Basic Authentication"),
+                                        elements = [
+                                            TextAscii(
+                                                title = _("Username"),
+                                                size = 12,
+                                                allow_empty = False
+                                            ),
+                                            IndividualOrStoredPassword(
+                                                title = _("Password"),
+                                            )
+                                        ]
+                                    )
+                                ),
+                                ( "proxy",
+                                    TextAscii(
+                                        title = _("Proxy host"),
+                                        help = _("To use a proxy you have to use the Port of the proxy, "
+                                                 "specify the virtual host and the URL to fetch, "
+                                                 "use the HTTP Method CONNECT, and use SSL/HTTPS "
+                                                 "for the connection")
+                                    ),
+                                ),
+                                ( "proxy_auth",
+                                    Tuple(
+                                        title = _("Proxy-Authorization"),
+                                        help = _("Credentials for HTTP Proxy with basic authentication"),
+                                        elements = [
+                                            TextAscii(
+                                                title = _("Username"),
+                                                size = 12,
+                                                allow_empty = False
+                                            ),
+                                            IndividualOrStoredPassword(
+                                                title = _("Password"),
+                                            ),
+                                        ]
+                                    )
+                                ),
+                                ( "onredirect",
+                                    DropdownChoice(
+                                        title = _("How to handle redirect"),
+                                        choices = [
+                                            ( 'ok',         _("Make check OK") ),
+                                            ( 'warning',    _("Make check WARNING") ),
+                                            ( 'critical',   _("Make check CRITICAL") ),
+                                            ( 'follow',     _("Follow the redirection") ),
+                                            ( 'sticky',     _("Follow, but stay to same IP address") ),
+                                            ( 'stickyport', _("Follow, but stay to same IP-address and port") ),
+                                        ],
+                                        default_value = 'follow'
+                                    ),
+                                ),
+                                ( "expect_response_header",
+                                    TextAscii(
+                                        title = _("String to expect in response headers"),
+                                    )
+                                ),
+                                ( "expect_response",
+                                    ListOfStrings(
+                                        title = _("Strings to expect in server response"),
+                                        help = _("At least one of these strings is expected in "
+                                                 "the first (status) line of the server response "
+                                                 "(default: <tt>HTTP/1.</tt>). If specified skips "
+                                                 "all other status line logic (ex: 3xx, 4xx, 5xx "
+                                                 "processing)"),
+                                    )
+                                ),
+                                ( "expect_string",
+                                    TextUnicode(
+                                        title = _("Fixed string to expect in the content"),
+                                        allow_empty = False,
+                                    )
+                                ),
+                                ( "expect_regex",
+                                    Transform(
+                                        Tuple(
+                                            orientation = "vertical",
+                                            show_titles = False,
+                                            elements = [
+                                                RegExp(
+                                                    label = _("Regular expression: "),
+                                                    mode = RegExp.infix,
+                                                ),
+                                                Checkbox(label = _("Case insensitive")),
+                                                Checkbox(label = _("return CRITICAL if found, OK if not")),
+                                                Checkbox(label = _("Multiline string matching")),
+                                            ]
                                         ),
-                                        TextAscii(
-                                            title = _("Content-Type"),
-                                            default_value = "text/html"),
-                                    ]
-                                )
-                            ),
-                            ( "method",
-                                DropdownChoice(
-                                    title = _("HTTP Method"),
-                                    default_value = "GET",
-                                    choices = [
-                                        ( "GET", "GET" ),
-                                        ( "POST", "POST" ),
-                                        ( "OPTIONS", "OPTIONS" ),
-                                        ( "TRACE", "TRACE" ),
-                                        ( "PUT", "PUT" ),
-                                        ( "DELETE", "DELETE" ),
-                                        ( "HEAD", "HEAD" ),
-                                        ( "CONNECT", "CONNECT" ),
-                                        ( "PROPFIND", "PROPFIND" ),
-                                    ]
-                                )
-                            ),
-                            ( "no_body",
-                                FixedValue(
+                                        forth = lambda x: len(x) == 3 and tuple(list(x) + [False]) or x,
+                                        title = _("Regular expression to expect in content"),
+                                    ),
+                                ),
+                                ( "post_data",
+                                    Tuple(
+                                        title = _("Send HTTP POST data"),
+                                        elements = [
+                                            TextUnicode(
+                                                title = _("HTTP POST data"),
+                                                help = _("Data to send via HTTP POST method. "
+                                                         "Please make sure, that the data is URL-encoded."),
+                                                size = 40,
+                                            ),
+                                            TextAscii(
+                                                title = _("Content-Type"),
+                                                default_value = "text/html"),
+                                        ]
+                                    )
+                                ),
+                                ( "method",
+                                    DropdownChoice(
+                                        title = _("HTTP Method"),
+                                        default_value = "GET",
+                                        choices = [
+                                            ( "GET", "GET" ),
+                                            ( "POST", "POST" ),
+                                            ( "OPTIONS", "OPTIONS" ),
+                                            ( "TRACE", "TRACE" ),
+                                            ( "PUT", "PUT" ),
+                                            ( "DELETE", "DELETE" ),
+                                            ( "HEAD", "HEAD" ),
+                                            ( "CONNECT", "CONNECT" ),
+                                            ( "PROPFIND", "PROPFIND" ),
+                                        ]
+                                    )
+                                ),
+                                ( "no_body",
+                                    FixedValue(
+                                        value = True,
+                                        title = _("Don't wait for document body"),
+                                        help = _("Note: this still does an HTTP GET or POST, not a HEAD."),
+                                        totext = _("don't wait for body")
+                                    )
+                                ),
+                                ( "page_size",
+                                    Tuple(
+                                        title = _("Page size to expect"),
+                                        elements = [
+                                            Integer(title = _("Minimum"), unit=_("Bytes")),
+                                            Integer(title = _("Maximum"), unit=_("Bytes")),
+                                        ]
+                                    )
+                                ),
+                                ( "max_age",
+                                    Age(
+                                        title = _("Maximum age"),
+                                        help = _("Warn, if the age of the page is older than this"),
+                                        default_value = 3600 * 24,
+                                    )
+                                ),
+                                ( "urlize",
+                                    FixedValue(
+                                        value = True,
+                                        title = _("Clickable URLs"),
+                                        totext = _("Format check output as hyperlink"),
+                                        help = _("With this option the check produces an output that is a valid hyperlink "
+                                                 "to the checked URL and this clickable."),
+                                    )
+                                ),
+                                ("extended_perfdata", FixedValue(
                                     value = True,
-                                    title = _("Don't wait for document body"),
-                                    help = _("Note: this still does an HTTP GET or POST, not a HEAD."),
-                                    totext = _("don't wait for body")
-                                )
-                            ),
-                            ( "page_size",
-                                Tuple(
-                                    title = _("Page size to expect"),
-                                    elements = [
-                                        Integer(title = _("Minimum"), unit=_("Bytes")),
-                                        Integer(title = _("Maximum"), unit=_("Bytes")),
-                                    ]
-                                )
-                            ),
-                            ( "max_age",
-                                Age(
-                                    title = _("Maximum age"),
-                                    help = _("Warn, if the age of the page is older than this"),
-                                    default_value = 3600 * 24,
-                                )
-                            ),
-                            ( "urlize",
-                                FixedValue(
-                                    value = True,
-                                    title = _("Clickable URLs"),
-                                    totext = _("Format check output as hyperlink"),
-                                    help = _("With this option the check produces an output that is a valid hyperlink "
-                                             "to the checked URL and this clickable."),
-                                )
-                            ),
-                            ("extended_perfdata", FixedValue(
-                                value = True,
-                                totext = _("Extended perfdata"),
-                                title = _("Record additional performance data"),
-                                help = _("This option makes the HTTP check produce more detailed performance data values "
-                                         "like the connect time, header time, time till first byte received and the "
-                                         "transfer time."),
-                            )),
-                            ( "verbose", FixedValue(
-                                value=True,
-                                title=_("Verbose output"),
-                                totext=_("Give verbose output"),
-                            )),
-                        ]
+                                    totext = _("Extended perfdata"),
+                                    title = _("Record additional performance data"),
+                                    help = _("This option makes the HTTP check produce more detailed performance data values "
+                                             "like the connect time, header time, time till first byte received and the "
+                                             "transfer time."),
+                                )),
+                            ]
+                        ),
+                    forth=_transform_check_http_cleanup_verbose,
                     ),
 
                     Dictionary(

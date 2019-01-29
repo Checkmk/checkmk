@@ -76,7 +76,9 @@ def test_active_check_macros(test_cfg, site, web, core):
     macros = {
         "$HOSTADDRESS$": "127.0.0.1",
         "$HOSTNAME$": "test-host",
-        "$_HOSTTAGS$": "/wato/ ip-v4 ip-v4-only lan no-agent no-snmp ping prod site:%s wato" % site.id,
+        "$_HOSTTAGS$": " ".join(sorted(["/wato/", "ip-v4", "ip-v4-only", "lan",
+                                        "no-agent", "no-snmp", "ping",
+                                        "prod", "site:%s" % site.id, "wato"])),
         "$_HOSTADDRESS_4$": "127.0.0.1",
         "$_HOSTADDRESS_6$": "",
         "$_HOSTADDRESS_FAMILY$": "4",
@@ -132,6 +134,10 @@ def test_active_check_macros(test_cfg, site, web, core):
             # TODO: Cleanup difference between nagios/cmc
             if core == "nagios":
                 expected_output = expected_output.strip()
+                if var == "$_HOSTTAGS$":
+                    splitted_output = plugin_output.split(" ")
+                    plugin_output = splitted_output[0] + " " + " ".join(sorted(splitted_output[1:]))
+
 
             assert expected_output == plugin_output, \
                 "Macro %s has wrong value (%r instead of %r)" % (var, plugin_output, expected_output)

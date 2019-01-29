@@ -464,7 +464,7 @@ class S3Summary(AWSSectionGeneric):
         return 86400
 
     def _extract_content_from_raw_result(self):
-        paginator = self._client.get_paginator('list_objects')
+        #paginator = self._client.get_paginator('list_objects')
         for bucket in self._buckets:
             bucket_name = bucket['Name']
             response = self._client.get_bucket_location(Bucket=bucket_name)
@@ -488,18 +488,68 @@ class S3Summary(AWSSectionGeneric):
             else:
                 bucket['Tagging'] = tagging
 
-            contents = []
-            pages = paginator.paginate(Bucket=bucket_name)
-            for page in pages:
-                try:
-                    objects = page['Contents']
-                except KeyError as e:
-                    logging.info("%s/%s: KeyError %s; Available are %s", self.name, bucket_name, e,
-                                 page.keys())
-                else:
-                    contents += objects
-            bucket['Contents'] = contents
+            #contents = []
+            #pages = paginator.paginate(Bucket=bucket_name)
+            #for page in pages:
+            #    try:
+            #        objects = page['Contents']
+            #    except KeyError as e:
+            #        logging.info("%s/%s: KeyError %s; Available are %s", self.name, bucket_name, e,
+            #                     page.keys())
+            #    else:
+            #        contents += objects
+            #bucket['Contents'] = contents
         return self._buckets
+
+    def _format_content(self, content):
+        return [AWSSectionResult("", content)]
+
+
+class S3(AWSSectionCloudwatch):
+    @property
+    def name(self):
+        return "s3"
+
+    @property
+    def interval(self):
+        return 86400
+
+    def _get_metrics(self):
+        metrics = []
+        idx = 0
+        for bucket in self._received_results.get('s3_summary', []):
+            bucket_name = bucket['Name']
+            for metric_name, unit, storage_classes in [
+                ("BucketSizeBytes", "Bytes", [
+                    "StandardStorage",
+                    "StandardIAStorage",
+                    "ReducedRedundancyStorage",
+                ]),
+                ("NumberOfObjects", "Count", ["AllStorageTypes"]),
+            ]:
+                for storage_class in storage_classes:
+                    metrics.append({
+                        'Id': "%s_%s_%s" % (metric_name.lower(), storage_class.lower(), idx),
+                        'Label': bucket_name,
+                        'MetricStat': {
+                            'Metric': {
+                                'Namespace': 'AWS/S3',
+                                'MetricName': metric_name,
+                                'Dimensions': [{
+                                    'Name': "BucketName",
+                                    'Value': bucket_name,
+                                }, {
+                                    'Name': 'StorageType',
+                                    'Value': storage_class,
+                                }]
+                            },
+                            'Period': self.period,
+                            'Stat': 'Average',
+                            'Unit': unit,
+                        },
+                    })
+                    idx += 1
+        return metrics
 
     def _format_content(self, content):
         return [AWSSectionResult("", content)]
@@ -988,10 +1038,21 @@ class AWSSectionsUSEast(AWSSections):
         #---clients---------------------------------------------------------
         ce_client = self._init_client('ce')
         s3_client = self._init_client('s3')
+        cloudwatch_client = self._init_client('cloudwatch')
+
+        #---distributors----------------------------------------------------
+        s3_summary_distributor = ResultDistributor()
+
+        #---sections with distributors--------------------------------------
+        s3_summary = S3Summary(
+            s3_client, distributor=s3_summary_distributor, buckets=kwargs.get('buckets'))
 
         #---sections--------------------------------------------------------
         ce = CostsAndUsage(ce_client)
-        s3_summary = S3Summary(s3_client, buckets=kwargs.get('buckets'))
+        s3 = S3(cloudwatch_client)
+
+        #---register sections to distributors-------------------------------
+        s3_summary_distributor.add(s3)
 
         #---register sections for execution---------------------------------
         if 'ce' in self._services:
@@ -999,6 +1060,7 @@ class AWSSectionsUSEast(AWSSections):
 
         if 's3' in self._services:
             self._sections.append(s3_summary)
+            self._sections.append(s3)
 
 
 class AWSSectionsGeneric(AWSSections):

@@ -20,17 +20,19 @@ def clear_config_caches(monkeypatch):
     monkeypatch.setattr(cmk_base, "runtime_cache", cmk_base.caching.CacheManager())
 
 
-# TODO: Test the negations
+
 def test_service_extra_conf(monkeypatch):
     import cmk_base.config as config
     monkeypatch.setattr(config, "all_hosts", ["host1|tag1|tag2", "host2|tag1"])
     monkeypatch.setattr(config, "host_paths", {"host1": "/", "host2": "/"})
     monkeypatch.setattr(config, "clusters", {})
-    config.get_config_cache().initialize()
+
+    config_cache = config.get_config_cache()
+    config_cache.initialize()
 
     ruleset = [
         ("1", [], config.ALL_HOSTS, config.ALL_SERVICES, {}),
-        ("2", [], config.ALL_HOSTS, config.ALL_SERVICES, {}),
+        ("2", [], config.ALL_HOSTS, config.ALL_SERVICES, {}), # Duplicate test to detect caching issues
         ("3", ["tag1"], config.ALL_HOSTS, config.ALL_SERVICES, {}),
         ("4", ["tag2"], config.ALL_HOSTS, config.ALL_SERVICES, {}),
         ("5", ["tag3"], config.ALL_HOSTS, config.ALL_SERVICES, {}),
@@ -39,28 +41,118 @@ def test_service_extra_conf(monkeypatch):
         ("8", [], ["host1"], ["service1$"], {}),
         ("9", [], ["host1"], ["ser$"], {}),
         ("10", [], ["host1"], ["^serv$"], {}),
-        ("11", [], ["~host"], config.ALL_SERVICES, {}),
-        # TODO: Is it really OK that this does not match "host1" below? Maybe a bug?!
-        ("12", [], ["!host2"], config.ALL_SERVICES, {}),
+        ("11", [], ["~host"] + config.ALL_HOSTS, config.ALL_SERVICES, {}),
+        ("12", [], ["!host2"] + config.ALL_HOSTS, config.ALL_SERVICES, {}),
     ]
 
-    assert config.service_extra_conf("host1", "service1", ruleset) == \
-            [ "1", "2", "3", "4", "7", "8", "11" ]
+    assert config_cache.service_extra_conf("host1", "service1", ruleset) == \
+            [ "1", "2", "3", "4", "7", "8", "11", "12" ]
 
-    assert config.service_extra_conf("host1", "serv", ruleset) == \
-            [ "1", "2", "3", "4", "7", "10", "11" ]
+    assert config_cache.service_extra_conf("host1", "serv", ruleset) == \
+            [ "1", "2", "3", "4", "7", "10", "11", "12" ]
 
-    assert config.service_extra_conf("host2", "service1", ruleset) == \
+    assert config_cache.service_extra_conf("host2", "service1", ruleset) == \
             [ "1", "2", "3", "11" ]
 
 
-# TODO: _convert_service_ruleset
-# TODO: in_boolean_serviceconf_list
-# TODO: _convert_boolean_service_ruleset
-# TODO: host_extra_conf
-# TODO: _convert_host_ruleset
-# TODO: host_extra_conf_merged
 
+@pytest.fixture(scope="function")
+def host_ruleset():
+    return [
+            ({"1": True}, [], config.ALL_HOSTS, {}),
+            ({"2": True}, ["tag1"], config.ALL_HOSTS, {}),
+            ({"3": True}, ["tag2"], config.ALL_HOSTS, {}),
+            ({"4": True}, ["tag3"], config.ALL_HOSTS, {}),
+            ({"5": True}, ["tag1"], ["host1"], {}),
+            ({"6": True}, ["tag3"], ["host1"], {}),
+            ({"7": True}, [], ["host1"], {}),
+            ({"8": True}, [], ["~host"] + config.ALL_HOSTS, {}),
+            ({"9": True}, [], ["!host2"] + config.ALL_HOSTS, {}),
+    ]
+
+
+def test_host_extra_conf(monkeypatch, host_ruleset):
+    import cmk_base.config as config
+    monkeypatch.setattr(config, "all_hosts", ["host1|tag1|tag2", "host2|tag1"])
+    monkeypatch.setattr(config, "host_paths", {"host1": "/", "host2": "/"})
+    monkeypatch.setattr(config, "clusters", {})
+
+    config_cache = config.get_config_cache()
+    config_cache.initialize()
+
+    assert config_cache.host_extra_conf("host1", host_ruleset) == \
+            [{"1": True},
+             {"2": True},
+             {"3": True},
+             {"5": True},
+             {"7": True},
+             {"8": True},
+             {"9": True}]
+
+
+    assert config_cache.host_extra_conf("host2", host_ruleset) == \
+            [{"1": True},
+             {"2": True},
+             {"8": True}]
+
+
+def test_host_extra_conf_merged(monkeypatch, host_ruleset):
+    import cmk_base.config as config
+    monkeypatch.setattr(config, "all_hosts", ["host1|tag1|tag2", "host2|tag1"])
+    monkeypatch.setattr(config, "host_paths", {"host1": "/", "host2": "/"})
+    monkeypatch.setattr(config, "clusters", {})
+
+    config_cache = config.get_config_cache()
+    config_cache.initialize()
+
+    assert config_cache.host_extra_conf_merged("host1", host_ruleset) == \
+            {"1": True,
+             "2": True,
+             "3": True,
+             "5": True,
+             "7": True,
+             "8": True,
+             "9": True}
+
+
+    assert config_cache.host_extra_conf_merged("host2", host_ruleset) == \
+            {"1": True,
+             "2": True,
+             "8": True}
+
+
+@pytest.mark.parametrize("parameters", [
+    # ruleset, outcome host1, outcome host2
+    [[], False, False],
+    [[(config.NEGATE, [], config.ALL_HOSTS, config.ALL_SERVICES, {})], False, False],
+    [[([], config.ALL_HOSTS, config.ALL_SERVICES, {})], True, True],
+    [[([], ["!host1"] + config.ALL_HOSTS, config.ALL_SERVICES, {})], False, True],
+    [[([], ["!host1", "!host2"] + config.ALL_HOSTS, config.ALL_SERVICES, {})], False, False],
+    [[(["tag2"], config.ALL_HOSTS, config.ALL_SERVICES, {})], True, False],
+    [[(["tag2"], ["!host1"] + config.ALL_HOSTS, config.ALL_SERVICES, {})], False, False],
+    [[([], ["!host1"] + config.ALL_HOSTS, config.ALL_SERVICES, {})], False, True],
+    [[(config.NEGATE, [], ["!host1"] + config.ALL_HOSTS, config.ALL_SERVICES, {})], False, False],
+    [[(config.NEGATE, ["tag2"], ["!host1"] + config.ALL_HOSTS, config.ALL_SERVICES, {})], False, False],
+    [[([], config.ALL_HOSTS, ["serv"], {})], True, True],
+    [[(config.NEGATE, [], config.ALL_HOSTS, ["serv"], {})], False, False],
+    [[(config.NEGATE, [], config.ALL_HOSTS, ["service1"], {})], False, False],
+    # Dual rule test, first rule matches host1 - negates -> False
+    #                 second rule matches host2 -> True
+    [[(config.NEGATE, [], config.ALL_HOSTS, ["service1"], {}),
+      ([], config.ALL_HOSTS, config.ALL_SERVICES, {})], False, True]])
+
+def test_in_boolean_serviceconf_list(monkeypatch, parameters):
+    monkeypatch.setattr(config, "all_hosts", ["host1|tag1|tag2", "host2|tag1"])
+    monkeypatch.setattr(config, "host_paths", {"host1": "/", "host2": "/"})
+    monkeypatch.setattr(config, "clusters", {})
+
+    config_cache = config.get_config_cache()
+    config_cache.initialize()
+
+    ruleset, outcome_host1, outcome_host2 = parameters
+
+    assert config_cache.in_boolean_serviceconf_list("host1", "service1", ruleset) == outcome_host1
+    assert config_cache.in_boolean_serviceconf_list("host2", "service2", ruleset) == outcome_host2
 
 def test_all_matching_hosts(monkeypatch):
     import cmk_base.config as config

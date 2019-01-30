@@ -30,31 +30,33 @@ from typing import Union  # pylint: disable=unused-import
 import cmk.gui.htmllib  # pylint: disable=unused-import
 
 
-class HTMLProxy(object):
-    def __init__(self):
-        super(HTMLProxy, self).__init__()
-        self._current_html = None
+class Proxy(object):
+    def __init__(self, name):
+        super(Proxy, self).__init__()
+        self._proxy_name = name
+        self._current_obj = None
 
     def set_current(self, obj):
-        self._current_html = obj
+        self._current_obj = obj
 
     def unset_current(self):
-        self._current_html = None
+        self._current_obj = None
 
-    def in_html_context(self):
-        return self._current_html is not None
+    def in_context(self):
+        return self._current_obj is not None
 
     def __getattribute__(self, name):
-        if name in ["set_current", "unset_current", "in_html_context", "_current_html"]:
+        if name in ["set_current", "unset_current", "in_context", "_current_obj", "_proxy_name"]:
             return object.__getattribute__(self, name)
 
-        h = self._current_html
+        h = self._current_obj
         if h is None:
-            raise AttributeError("Not in html context")
+            raise AttributeError("Not in %s context" % self._proxy_name)
         return getattr(h, name)
 
     def __repr__(self):
-        return repr(self._current_html)
+        return repr(self._current_obj)
 
 
-html = HTMLProxy()  # type: Union[cmk.gui.htmllib.html, HTMLProxy]
+html = Proxy(name="html")  # type: Union[cmk.gui.htmllib.html, Proxy]
+current_app = Proxy(name="application")

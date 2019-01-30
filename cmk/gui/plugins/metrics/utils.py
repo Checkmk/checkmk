@@ -35,7 +35,7 @@ import cmk.utils.regex
 import cmk.gui.config as config
 from cmk.gui.log import logger
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, current_app
 from cmk.gui.exceptions import MKGeneralException
 
 
@@ -721,12 +721,12 @@ def get_palette_color_by_index(i, shading='a'):
 
 def get_next_random_palette_color():
     keys = _cmk_color_palette.keys()
-    if html.is_cached("random_color_index"):
-        last_index = html.get_cached("random_color_index")
+    if "random_color_index" in current_app.g:
+        last_index = current_app.g["random_color_index"]
     else:
         last_index = random.randint(0, len(keys))
     index = (last_index + 1) % len(keys)
-    html.set_cache("random_color_index", index)
+    current_app.g["random_color_index"] = index
     return parse_color_into_hexrgb("%s/a" % keys[index])
 
 

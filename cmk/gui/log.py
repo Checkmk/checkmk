@@ -48,7 +48,7 @@ class CMKWebLogger(_logging.getLoggerClass()):
         msg = kwargs.pop('msg', msg)
 
         from cmk.gui.globals import html
-        if html.in_html_context():
+        if html.in_context():
             msg = "%s %s" % (html.request.requested_url, msg)
 
         super(CMKWebLogger, self).exception(msg, *args, **kwargs)

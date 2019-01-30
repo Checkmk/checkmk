@@ -43,7 +43,7 @@ from cmk.gui.exceptions import (
     MKUserError,
 )
 from cmk.gui.htmllib import HTML
-from cmk.gui.globals import html
+from cmk.gui.globals import html, current_app
 
 from cmk.gui.watolib.utils import (
     wato_root_dir,
@@ -329,10 +329,10 @@ class CREFolder(BaseFolder):
 
     @staticmethod
     def all_folders():
-        if not html.is_cached("wato_folders"):
-            wato_folders = html.set_cache("wato_folders", {})
+        if "wato_folders" not in current_app.g:
+            wato_folders = current_app.g["wato_folders"] = {}
             Folder("", "").add_to_dictionary(wato_folders)
-        return html.get_cached("wato_folders")
+        return current_app.g["wato_folders"]
 
     @staticmethod
     def folder_choices():
@@ -374,7 +374,10 @@ class CREFolder(BaseFolder):
 
     @staticmethod
     def invalidate_caches():
-        html.del_cache("wato_folders")
+        try:
+            del current_app.g["wato_folders"]
+        except KeyError:
+            pass
         Folder.root_folder().drop_caches()
 
     # Find folder that is specified by the current URL. This is either by a folder
@@ -385,8 +388,8 @@ class CREFolder(BaseFolder):
     # this is a host search. This method has to return a folder in all cases.
     @staticmethod
     def current():
-        if html.is_cached("wato_current_folder"):
-            return html.get_cached("wato_current_folder")
+        if "wato_current_folder" in current_app.g:
+            return current_app.g["wato_current_folder"]
 
         folder = SearchFolder.current_search_folder()
         if folder:
@@ -417,7 +420,7 @@ class CREFolder(BaseFolder):
 
     @staticmethod
     def set_current(folder):
-        html.set_cache("wato_current_folder", folder)
+        current_app.g["wato_current_folder"] = folder
 
     # .-----------------------------------------------------------------------.
     # | CONSTRUCTION, LOADING & SAVING                                        |
@@ -2422,7 +2425,7 @@ def get_folder_title_path(path, with_links=False):
     components, e.g. "muc/north" -> [ "Main Directory", "Munich", "North" ]"""
     # In order to speed this up, we work with a per HTML-request cache
     cache_name = "wato_folder_titles" + (with_links and "_linked" or "")
-    cache = html.set_cache_default(cache_name, {})
+    cache = current_app.g.setdefault(cache_name, {})
     if path not in cache:
         cache[path] = Folder.folder(path).title_path(with_links)
     return cache[path]

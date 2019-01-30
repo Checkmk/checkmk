@@ -975,7 +975,6 @@ class html(HTMLGenerator):
         self.events = set([])  # currently used only for sounds
         self.status_icons = {}
         self.final_javascript_code = ""
-        self.caches = {}
         self.treestates = None
         self.page_context = {}
 
@@ -2938,31 +2937,6 @@ hy
             for name, duration in entries:
                 self.div("%s: %.1fms" % (name, duration * 1000))
             self.close_div()
-
-    #
-    # Per request caching
-    # TODO: Remove this cache here. Do we need some generic functionality
-    # like this? Probably use some more generic / standard thing.
-    #
-
-    def set_cache(self, name, value):
-        self.caches[name] = value
-        return value
-
-    def set_cache_default(self, name, value):
-        if self.is_cached(name):
-            return self.get_cached(name)
-        return self.set_cache(name, value)
-
-    def is_cached(self, name):
-        return name in self.caches
-
-    def get_cached(self, name):
-        return self.caches.get(name)
-
-    def del_cache(self, name):
-        if name in self.caches:
-            del self.caches[name]
 
     #
     # FIXME: Legacy functions

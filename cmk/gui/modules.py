@@ -54,7 +54,7 @@ import cmk.utils.paths
 
 import cmk.gui.utils as utils
 import cmk.gui.pages
-from cmk.gui.globals import html
+from cmk.gui.globals import html, current_app
 
 import cmk.gui.plugins.main_modules
 
@@ -173,8 +173,8 @@ _last_web_plugins_update = 0
 def _local_web_plugins_have_changed():
     global _last_web_plugins_update
 
-    if html.is_cached("local_web_plugins_have_changed"):
-        return html.get_cached("local_web_plugins_have_changed")
+    if "local_web_plugins_have_changed" in current_app.g:
+        return current_app.g["local_web_plugins_have_changed"]
 
     this_time = 0.0
     for path in _find_local_web_plugins():
@@ -183,5 +183,5 @@ def _local_web_plugins_have_changed():
     _last_web_plugins_update = this_time
 
     have_changed = this_time > last_time
-    html.set_cache("local_web_plugins_have_changed", have_changed)
+    current_app.g["local_web_plugins_have_changed"] = have_changed
     return have_changed

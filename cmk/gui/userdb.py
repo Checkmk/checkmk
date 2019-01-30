@@ -53,7 +53,7 @@ from cmk.gui.valuespec import (
 )
 import cmk.gui.i18n
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, current_app
 import cmk.gui.plugins.userdb
 from cmk.gui.plugins.userdb.htpasswd import Htpasswd
 
@@ -603,8 +603,8 @@ def load_users(lock=False):
         #       end of page request automatically.
         store.aquire_lock(filename)
 
-    if html.is_cached('users'):
-        return html.get_cached('users')
+    if "users" in current_app.g:
+        return current_app.g["users"]
 
     # First load monitoring contacts from Check_MK's world. If this is
     # the first time, then the file will be empty, which is no problem.
@@ -731,7 +731,7 @@ def load_users(lock=False):
                     }
 
     # populate the users cache
-    html.set_cache('users', result)
+    current_app.g['users'] = result
 
     return result
 
@@ -792,8 +792,7 @@ def save_users(profiles):
     release_users_lock()
 
     # populate the users cache
-    # TODO: Can we clean this up?
-    html.set_cache('users', updated_profiles)
+    current_app.g['users'] = updated_profiles
 
     # Call the users_saved hook
     hooks.call("users-saved", updated_profiles)

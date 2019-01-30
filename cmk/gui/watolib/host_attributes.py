@@ -577,7 +577,8 @@ def _declare_host_tag_attributes():
                 editable=attr_editable,
                 depends_on_tags=depends_on_tags,
                 depends_on_roles=depends_on_roles,
-                topic=topic,
+                # TODO: We need to adapt the tag data structure to contain topic IDs
+                topic=_transform_attribute_topic_title_to_id(topic),
                 from_config=True,
             )
 
@@ -614,22 +615,40 @@ def transform_pre_16_host_topics(custom_attributes):
     This lead to issues with localized topics. We now have internal IDs for
     all the topics and try to convert the values here to the new format.
 
-    At least for unlocalized topics the conversion works. Localized topics
-    are put into the "Custom attributes" topic once. Users will have to
-    re-configure the topic, sorry :-/."""
-    topics = [a_class() for a_class in host_attribute_topic_registry.values()]
+    We translate the titles which have been distributed with Check_MK to their
+    internal topic ID. No action should be needed. Custom topics or topics of
+    other languages are not translated. The attributes are put into the
+    "Custom attributes" topic once. Users will have to re-configure the topic,
+    sorry :-/."""
     for custom_attr in custom_attributes:
-        found = False
-        for topic in topics:
-            if custom_attr["topic"] == topic.title:
-                custom_attr["topic"] = topic.ident
-                found = True
-                break
+        if custom_attr["topic"] in host_attribute_topic_registry:
+            continue
 
-        if not found:
-            custom_attr["topic"] = "custom_attributes"
+        custom_attr["topic"] = _transform_attribute_topic_title_to_id(custom_attr["topic"])
 
     return custom_attributes
+
+
+def _transform_attribute_topic_title_to_id(topic_title):
+    _topic_title_to_id_map = {
+        u"Basic settings": "basic",
+        u"Address": "address",
+        u"Data sources": "data_sources",
+        u"Management Board": "management_board",
+        u"Network Scan": "network_scan",
+        u"Custom attributes": "custom_attributes",
+        u"Grundeinstellungen": "basic",
+        u"Adresse": "address",
+        u"Datenquellen": "data_sources",
+        u"Management-Board": "management_board",
+        u"Netzwerk-Scan": "network_scan",
+        u"Eigene Attribute": "custom_attributes",
+    }
+
+    try:
+        return _topic_title_to_id_map[topic_title]
+    except KeyError:
+        return "custom_attributes"
 
 
 def host_attribute(name):

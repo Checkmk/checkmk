@@ -58,6 +58,7 @@ from cmk.gui.watolib.utils import (
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.automations import check_mk_automation
 from cmk.gui.watolib.sidebar_reload import need_sidebar_reload
+from cmk.gui.watolib.host_attributes import host_attribute_registry
 
 from cmk.gui.plugins.watolib.utils import wato_fileheader
 
@@ -732,7 +733,7 @@ class CREFolder(BaseFolder):
                             out.write('    ( %r, [%r], ALL_SERVICES ),\n' % (cg, hostname))
                         out.write(']\n\n')
 
-            for attr in cmk.gui.watolib.host_attributes.attributes().values():
+            for attr in host_attribute_registry.attributes():
                 attrname = attr.name()
                 if attrname in effective:
                     custom_varname = attr.nagios_name()
@@ -802,7 +803,7 @@ class CREFolder(BaseFolder):
         # reading in hosts.mk files where host_attributes is missing. Can
         # we drop this one day?
         attributes = {}
-        for attr in cmk.gui.watolib.host_attributes.attributes().values():
+        for attr in host_attribute_registry.attributes():
             if attr.is_tag_attribute:
                 tagvalue = attr.get_tag_value(host_tags)
                 attributes[attr.name()] = tagvalue
@@ -1091,7 +1092,7 @@ class CREFolder(BaseFolder):
         effective.update(self.attributes())
 
         # now add default values of attributes for all missing values
-        for host_attribute in cmk.gui.watolib.host_attributes.attributes().values():
+        for host_attribute in host_attribute_registry.attributes():
             attrname = host_attribute.name()
             if attrname not in effective:
                 effective.setdefault(attrname, host_attribute.default_value())
@@ -1811,7 +1812,7 @@ class SearchFolder(BaseFolder):
 
             # Check attributes
             dont_match = False
-            for attr in cmk.gui.watolib.host_attributes.attributes().values():
+            for attr in host_attribute_registry.attributes():
                 attrname = attr.name()
                 if attrname in self._criteria and  \
                     not attr.filter_matches(self._criteria[attrname], effective.get(attrname), host_name):
@@ -1914,7 +1915,7 @@ class CREHost(WithPermissionsAndAttributes):
 
         tags = set([])
         effective = self.effective_attributes()
-        for attr in cmk.gui.watolib.host_attributes.attributes().values():
+        for attr in host_attribute_registry.attributes():
             value = effective.get(attr.name())
             tags.update(attr.get_tag_list(value))
 

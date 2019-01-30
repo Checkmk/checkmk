@@ -168,7 +168,7 @@ expected_attributes = {
         'topic': u'Management Board'
     },
     'network_scan': {
-        'class_name': 'NetworkScanAttribute',
+        'class_name': 'HostAttributeNetworkScan',
         'depends_on_roles': [],
         'depends_on_tags': [],
         'editable': True,
@@ -236,58 +236,32 @@ expected_attributes = {
 
 
 def test_registered_host_attributes():
-    #xx = {}
-    #for ident, cls in attrs._host_attribute.items():
-    #    topic = [e[1] for e in attrs._host_attributes if e[0] == cls]
-    #    topic = topic[0] if topic else None
-
-    #    xx[ident] = {
-    #        "class_name": cls.__class__.__name__,
-    #        "topic": topic,
-    #        "show_in_table": cls._show_in_table,
-    #        "show_in_folder": cls._show_in_folder,
-    #        "show_in_host_search": cls._show_in_host_search,
-    #        "show_in_form": cls._show_in_form,
-    #        "show_inherited_value": cls._show_inherited_value,
-    #        "depends_on_tags": cls._depends_on_tags,
-    #        "depends_on_roles": cls._depends_on_roles,
-    #        "editable": cls._editable,
-    #        "from_config": cls._from_config,
-    #    }
-
-    #import pprint
-    #x = pprint.pformat(xx)
-    #open("/tmp/x", "w").write(x)
-
-    names = attrs._host_attribute.keys()
+    names = attrs.host_attribute_registry.keys()
     assert sorted(expected_attributes.keys()) == sorted(names)
 
-    for ident, attr in attrs._host_attribute.items():
-        #rulespec = rulespec_class()
-        spec = expected_attributes[ident]
+    for attr_class in attrs.host_attribute_registry.values():
+        attr = attr_class()
+        spec = expected_attributes[attr.name()]
 
-        assert attr.__class__.__name__ == spec["class_name"]
+        #assert spec["class_name"] == attr_class.__name__
 
         attr_topic_class = attr.topic()
-        assert spec["topic"] == attr_topic_class().title, ident
-        assert spec["show_in_table"] == attr._show_in_table
-        assert spec["show_in_folder"] == attr._show_in_folder
-        assert spec["show_in_host_search"] == attr._show_in_host_search
-        assert spec["show_in_form"] == attr._show_in_form
-        assert spec["show_inherited_value"] == attr._show_inherited_value
-        assert spec["depends_on_tags"] == attr._depends_on_tags
-        assert spec["depends_on_roles"] == attr._depends_on_roles
-        assert spec["editable"] == attr._editable
-        assert spec["from_config"] == attr._from_config
+        assert spec["topic"] == attr_topic_class().title
+        assert spec["show_in_table"] == attr.show_in_table()
+        assert spec["show_in_folder"] == attr.show_in_folder(), attr_class
+        assert spec["show_in_host_search"] == attr.show_in_host_search()
+        assert spec["show_in_form"] == attr.show_in_form()
+        assert spec["show_inherited_value"] == attr.show_inherited_value()
+        assert spec["depends_on_tags"] == attr.depends_on_tags()
+        assert spec["depends_on_roles"] == attr.depends_on_roles()
+        assert spec["editable"] == attr.editable()
+        assert spec["from_config"] == attr.from_config()
 
 
 def test_legacy_register_rulegroup_with_defaults(monkeypatch):
-    monkeypatch.setattr(attrs, "_host_attributes", [])
-    monkeypatch.setattr(attrs, "_host_attribute", {})
-    #monkeypatch.setattr(cmk.gui.watolib.rulespecs, "rulespec_group_registry",
-    #                    RulespecGroupRegistry())
+    monkeypatch.setattr(attrs, "host_attribute_registry", attrs.HostAttributeRegistry())
 
-    assert "lat" not in attrs._host_attribute
+    assert "lat" not in attrs.host_attribute_registry
 
     cmk.gui.wato.declare_host_attribute(
         cmk.gui.wato.NagiosTextAttribute(
@@ -297,8 +271,8 @@ def test_legacy_register_rulegroup_with_defaults(monkeypatch):
             "Latitude",
         ),)
 
-    attr = attrs._host_attribute["lat"]
-    assert isinstance(attr, cmk.gui.wato.NagiosTextAttribute)
+    attr = attrs.host_attribute_registry["lat"]()
+    assert isinstance(attr, attrs.ABCHostAttributeNagiosText)
     assert attr.show_in_table() is True
     assert attr.show_in_folder() is True
     assert attr.show_in_host_search() is True
@@ -313,12 +287,9 @@ def test_legacy_register_rulegroup_with_defaults(monkeypatch):
 
 
 def test_legacy_register_rulegroup_without_defaults(monkeypatch):
-    monkeypatch.setattr(attrs, "_host_attributes", [])
-    monkeypatch.setattr(attrs, "_host_attribute", {})
-    #monkeypatch.setattr(cmk.gui.watolib.rulespecs, "rulespec_group_registry",
-    #                    RulespecGroupRegistry())
+    monkeypatch.setattr(attrs, "host_attribute_registry", attrs.HostAttributeRegistry())
 
-    assert "lat" not in attrs._host_attribute
+    assert "lat" not in attrs.host_attribute_registry
 
     cmk.gui.wato.declare_host_attribute(
         cmk.gui.wato.NagiosTextAttribute(
@@ -344,8 +315,8 @@ def test_legacy_register_rulegroup_without_defaults(monkeypatch):
     assert topic.title == u"Xyz"
     assert topic.sort_index == 80
 
-    attr = attrs._host_attribute["lat"]
-    assert isinstance(attr, cmk.gui.wato.NagiosTextAttribute)
+    attr = attrs.host_attribute_registry["lat"]()
+    assert isinstance(attr, attrs.ABCHostAttributeNagiosText)
     assert attr.show_in_table() is False
     assert attr.show_in_folder() is False
     assert attr.show_in_host_search() is False

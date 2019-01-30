@@ -56,20 +56,17 @@ from cmk.gui.valuespec import (
 from cmk.gui.exceptions import MKUserError
 
 from cmk.gui.plugins.wato import (
+    HostAttributeTopicBasicSettings,
+    HostAttributeTopicNetworkScan,
+    ABCHostAttributeValueSpec,
+    host_attribute_registry,
     declare_host_attribute,
     SNMPCredentials,
     IPMIParameters,
-    ContactGroupsAttribute,
     NagiosTextAttribute,
     ValueSpecAttribute,
     HostnameTranslation,
     ConfigHostname,
-)
-
-declare_host_attribute(
-    ContactGroupsAttribute(),
-    show_in_table=False,
-    show_in_folder=True,
 )
 
 declare_host_attribute(
@@ -189,22 +186,33 @@ declare_host_attribute(
 )
 
 
-# Attribute for configuring parents
-class ParentsAttribute(ValueSpecAttribute):
-    def __init__(self):
-        ValueSpecAttribute.__init__(
-            self, "parents",
-            ListOfStrings(
-                valuespec=ConfigHostname(),
-                title=_("Parents"),
-                help=_("Parents are used to configure the reachability of hosts by the "
-                       "monitoring server. A host is considered to be <b>unreachable</b> if all "
-                       "of its parents are unreachable or down. Unreachable hosts will not be "
-                       "actively monitored.<br><br><b>Clusters</b> automatically configure all "
-                       "of their nodes as parents, but only if you do not configure parents "
-                       "manually.<br><br>In a distributed setup make sure that the host and all "
-                       "of its parents are monitored by the same site."),
-                orientation="horizontal"))
+@host_attribute_registry.register
+class HostAttributeParents(ABCHostAttributeValueSpec):
+    def name(self):
+        return "parents"
+
+    def topic(self):
+        return HostAttributeTopicBasicSettings
+
+    def show_in_table(self):
+        return True
+
+    def show_in_folder(self):
+        return True
+
+    def valuespec(self):
+        return ListOfStrings(
+            valuespec=ConfigHostname(),
+            title=_("Parents"),
+            help=_("Parents are used to configure the reachability of hosts by the "
+                   "monitoring server. A host is considered to be <b>unreachable</b> if all "
+                   "of its parents are unreachable or down. Unreachable hosts will not be "
+                   "actively monitored.<br><br><b>Clusters</b> automatically configure all "
+                   "of their nodes as parents, but only if you do not configure parents "
+                   "manually.<br><br>In a distributed setup make sure that the host and all "
+                   "of its parents are monitored by the same site."),
+            orientation="horizontal",
+        )
 
     def is_visible(self, for_what):
         return for_what != "cluster"
@@ -222,13 +230,6 @@ class ParentsAttribute(ValueSpecAttribute):
                                                                 ("host", hn)])) for hn in value
         ]
         return "", HTML(", ").join(parts)
-
-
-declare_host_attribute(
-    ParentsAttribute(),
-    show_in_table=True,
-    show_in_folder=True,
-)
 
 
 def validate_host_parents(host):
@@ -255,22 +256,44 @@ def validate_host_parents(host):
 hooks.register_builtin('validate-host', validate_host_parents)
 
 
-class NetworkScanAttribute(ValueSpecAttribute):
-    def __init__(self):
+@host_attribute_registry.register
+class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
+    def name(self):
+        return "network_scan"
 
-        ValueSpecAttribute.__init__(
-            self, "network_scan",
-            Dictionary(
-                elements=self._network_scan_elements,
-                title=_("Network Scan"),
-                help=_("For each folder an automatic network scan can be configured. It will "
-                       "try to detect new hosts in the configured IP ranges by sending pings "
-                       "to each IP address to check whether or not a host is using this ip "
-                       "address. Each new found host will be added to the current folder by "
-                       "it's hostname, when resolvable via DNS, or by it's IP address."),
-                optional_keys=["max_parallel_pings", "translate_names"],
-                default_text=_("Not configured."),
-            ))
+    def may_edit(self):
+        return config.user.may("wato.manage_hosts")
+
+    def topic(self):
+        return HostAttributeTopicNetworkScan
+
+    def show_in_table(self):
+        return False
+
+    def show_in_form(self):
+        return False
+
+    def show_in_folder(self):
+        return True
+
+    def show_in_host_search(self):
+        return False
+
+    def show_inherited_value(self):
+        return False
+
+    def valuespec(self):
+        return Dictionary(
+            elements=self._network_scan_elements,
+            title=_("Network Scan"),
+            help=_("For each folder an automatic network scan can be configured. It will "
+                   "try to detect new hosts in the configured IP ranges by sending pings "
+                   "to each IP address to check whether or not a host is using this ip "
+                   "address. Each new found host will be added to the current folder by "
+                   "it's hostname, when resolvable via DNS, or by it's IP address."),
+            optional_keys=["max_parallel_pings", "translate_names"],
+            default_text=_("Not configured."),
+        )
 
     def _network_scan_elements(self):
         return [
@@ -390,100 +413,101 @@ class NetworkScanAttribute(ValueSpecAttribute):
         ])
 
 
-declare_host_attribute(
-    NetworkScanAttribute(),
-    show_in_table=False,
-    show_in_form=False,
-    show_in_folder=True,
-    show_in_host_search=False,
-    show_inherited_value=False,
-    may_edit=lambda: config.user.may("wato.manage_hosts"),
-    topic=_("Network Scan"))
+@host_attribute_registry.register
+class HostAttributeNetworkScanResult(ABCHostAttributeValueSpec):
+    def name(self):
+        return "network_scan_result"
 
+    def topic(self):
+        return HostAttributeTopicNetworkScan
 
-class NetworkScanResultAttribute(ValueSpecAttribute):
-    def __init__(self):
-        ValueSpecAttribute.__init__(
-            self,
-            "network_scan_result",
-            Dictionary(
-                elements=[
-                    (
-                        "start",
-                        Alternative(
-                            title=_("Started"),
-                            elements=[
-                                FixedValue(
-                                    None,
-                                    totext=_("No scan has been started yet."),
-                                ),
-                                AbsoluteDate(
-                                    include_time=True,
-                                    default_value=0,
-                                ),
-                            ],
-                        ),
-                    ),
-                    (
-                        "end",
-                        Alternative(
-                            title=_("Finished"),
-                            elements=[
-                                FixedValue(
-                                    None,
-                                    totext=_("No scan has finished yet."),
-                                ),
-                                FixedValue(
-                                    True,
-                                    totext="",  # currently running
-                                ),
-                                AbsoluteDate(
-                                    include_time=True,
-                                    default_value=0,
-                                ),
-                            ],
-                        ),
-                    ),
-                    (
-                        "state",
-                        Alternative(
-                            title=_("State"),
-                            elements=[
-                                FixedValue(
-                                    None,
-                                    totext="",  # Not started or currently running
-                                ),
-                                FixedValue(
-                                    True,
-                                    totext=_("Succeeded"),
-                                ),
-                                FixedValue(
-                                    False,
-                                    totext=_("Failed"),
-                                ),
-                            ],
-                        ),
-                    ),
-                    (
-                        "output",
-                        TextUnicode(title=_("Output")),
-                    ),
-                ],
-                title=_("Last Scan Result"),
-                optional_keys=[],
-                default_text=_("No scan performed yet."),
-            ))
+    def show_in_table(self):
+        return False
 
+    def show_in_form(self):
+        return False
 
-declare_host_attribute(
-    NetworkScanResultAttribute(),
-    show_in_table=False,
-    show_in_form=False,
-    show_in_folder=True,
-    show_in_host_search=False,
-    show_inherited_value=False,
-    editable=False,
-    topic=_("Network Scan"))
+    def show_in_folder(self):
+        return True
+
+    def show_in_host_search(self):
+        return False
+
+    def show_inherited_value(self):
+        return False
+
+    def editable(self):
+        return False
+
+    def valuespec(self):
+        return Dictionary(
+            elements=[
+                (
+                    "start",
+                    Alternative(
+                        title=_("Started"),
+                        elements=[
+                            FixedValue(
+                                None,
+                                totext=_("No scan has been started yet."),
+                            ),
+                            AbsoluteDate(
+                                include_time=True,
+                                default_value=0,
+                            ),
+                        ],
+                    ),
+                ),
+                (
+                    "end",
+                    Alternative(
+                        title=_("Finished"),
+                        elements=[
+                            FixedValue(
+                                None,
+                                totext=_("No scan has finished yet."),
+                            ),
+                            FixedValue(
+                                True,
+                                totext="",  # currently running
+                            ),
+                            AbsoluteDate(
+                                include_time=True,
+                                default_value=0,
+                            ),
+                        ],
+                    ),
+                ),
+                (
+                    "state",
+                    Alternative(
+                        title=_("State"),
+                        elements=[
+                            FixedValue(
+                                None,
+                                totext="",  # Not started or currently running
+                            ),
+                            FixedValue(
+                                True,
+                                totext=_("Succeeded"),
+                            ),
+                            FixedValue(
+                                False,
+                                totext=_("Failed"),
+                            ),
+                        ],
+                    ),
+                ),
+                (
+                    "output",
+                    TextUnicode(title=_("Output")),
+                ),
+            ],
+            title=_("Last Scan Result"),
+            optional_keys=[],
+            default_text=_("No scan performed yet."),
+        )
+
 
 declare_host_attribute(
     ValueSpecAttribute(
@@ -552,21 +576,31 @@ declare_host_attribute(
 )
 
 
-class SiteAttribute(ValueSpecAttribute):
-    def __init__(self):
-        # Default is is the local one, if one exists or
-        # no one if there is no local site
-        ValueSpecAttribute.__init__(
-            self, "site",
-            SiteChoice(
-                title=_("Monitored on site"),
-                help=_("Specify the site that should monitor this host."),
-                invalid_choice_error=_("The configured site is not known to this site. In case you "
-                                       "are configuring in a distributed slave, this may be a host "
-                                       "monitored by another site. If you want to modify this "
-                                       "host, you will have to change the site attribute to the "
-                                       "local site. But this may make the host be monitored from "
-                                       "multiple sites.")))
+@host_attribute_registry.register
+class HostAttributeSite(ABCHostAttributeValueSpec):
+    def name(self):
+        return "site"
+
+    def topic(self):
+        return HostAttributeTopicBasicSettings
+
+    def show_in_table(self):
+        return True
+
+    def show_in_folder(self):
+        return True
+
+    def valuespec(self):
+        return SiteChoice(
+            title=_("Monitored on site"),
+            help=_("Specify the site that should monitor this host."),
+            invalid_choice_error=_("The configured site is not known to this site. In case you "
+                                   "are configuring in a distributed slave, this may be a host "
+                                   "monitored by another site. If you want to modify this "
+                                   "host, you will have to change the site attribute to the "
+                                   "local site. But this may make the host be monitored from "
+                                   "multiple sites."),
+        )
 
     def get_tag_list(self, value):
         if value is False:
@@ -575,12 +609,6 @@ class SiteAttribute(ValueSpecAttribute):
             return ["site:" + value]
         return []
 
-
-declare_host_attribute(
-    SiteAttribute(),
-    show_in_table=True,
-    show_in_folder=True,
-)
 
 declare_host_attribute(
     ValueSpecAttribute(
@@ -613,10 +641,7 @@ declare_host_attribute(
     ValueSpecAttribute(
         "locked_attributes",
         ListOf(
-            DropdownChoice(
-                choices=lambda: [(a.name(), a.title()) for a in watolib.host_attributes.attributes().values()],
-                sorted=True,
-            ),
+            DropdownChoice(choices=host_attribute_registry.get_choices),
             title=_("Locked attributes"),
         )),
     show_in_table=False,

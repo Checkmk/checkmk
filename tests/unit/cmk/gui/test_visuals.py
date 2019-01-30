@@ -3471,3 +3471,203 @@ def test_registered_filters(load_plugins):
 
         bases = [c.__name__ for c in filt.__class__.__bases__] + [filt.__class__.__name__]
         assert spec["filter_class"] in bases
+
+
+expected_infos = {
+    'aggr': {
+        'single_spec': [('aggr_name', 'TextUnicode')],
+        'title': u'BI Aggregation',
+        'title_plural': u'BI Aggregations'
+    },
+    'aggr_group': {
+        'single_spec': [('aggr_group', 'TextUnicode')],
+        'title': u'BI Aggregation Group',
+        'title_plural': u'BI Aggregation Groups'
+    },
+    'command': {
+        'single_spec': [('command_name', 'TextUnicode')],
+        'title': u'Command',
+        'title_plural': u'Commands'
+    },
+    'comment': {
+        'single_spec': [('comment_id', 'Integer')],
+        'title': u'Comment',
+        'title_plural': u'Comments'
+    },
+    'contact': {
+        'single_spec': [('log_contact_name', 'TextUnicode')],
+        'title': u'Contact',
+        'title_plural': u'Contacts'
+    },
+    'discovery': {
+        'single_spec': None,
+        'title': u'Discovery Output',
+        'title_plural': u'Discovery Outputs'
+    },
+    'downtime': {
+        'single_spec': [('downtime_id', 'Integer')],
+        'title': u'Downtime',
+        'title_plural': u'Downtimes'
+    },
+    'event': {
+        'single_spec': [('event_id', 'Integer')],
+        'title': u'Event Console Event',
+        'title_plural': u'Event Console Events'
+    },
+    'history': {
+        'single_spec': [('event_id', 'Integer'), ('history_line', 'Integer')],
+        'title': u'Historic Event Console Event',
+        'title_plural': u'Historic Event Console Events'
+    },
+    'host': {
+        'multiple_site_filters': ['hostgroup'],
+        'single_spec': [('host', 'TextUnicode')],
+        'title': u'Host',
+        'title_plural': u'Hosts'
+    },
+    'hostgroup': {
+        'single_site': False,
+        'single_spec': [('hostgroup', 'TextUnicode')],
+        'title': u'Host Group',
+        'title_plural': u'Host Groups'
+    },
+    'invbackplane': {
+        'single_spec': None,
+        'title': u'Backplane',
+        'title_plural': u'Backplanes'
+    },
+    'invchassis': {
+        'single_spec': None,
+        'title': u'Chassis',
+        'title_plural': u'Chassis'
+    },
+    'invcontainer': {
+        'single_spec': None,
+        'title': u'HW container',
+        'title_plural': u'HW containers'
+    },
+    'invdockercontainers': {
+        'single_spec': None,
+        'title': u'Docker containers',
+        'title_plural': u'Docker containers'
+    },
+    'invdockerimages': {
+        'single_spec': None,
+        'title': u'Docker images',
+        'title_plural': u'Docker images'
+    },
+    'invfan': {
+        'single_spec': None,
+        'title': u'Fan',
+        'title_plural': u'Fans'
+    },
+    'invhist': {
+        'single_spec': None,
+        'title': u'Inventory History',
+        'title_plural': u'Inventory Historys'
+    },
+    'invinterface': {
+        'single_spec': None,
+        'title': u'Network interface',
+        'title_plural': u'Network interfaces'
+    },
+    'invmodule': {
+        'single_spec': None,
+        'title': u'Module',
+        'title_plural': u'Modules'
+    },
+    'invoradataguardstats': {
+        'single_spec': None,
+        'title': u'Oracle dataguard statistic',
+        'title_plural': u'Oracle dataguard statistics'
+    },
+    'invorainstance': {
+        'single_spec': None,
+        'title': u'Oracle instance',
+        'title_plural': u'Oracle instances'
+    },
+    'invorarecoveryarea': {
+        'single_spec': None,
+        'title': u'Oracle recovery area',
+        'title_plural': u'Oracle recovery areas'
+    },
+    'invorasga': {
+        'single_spec': None,
+        'title': u'Oracle performance',
+        'title_plural': u'Oracle performance'
+    },
+    'invoratablespace': {
+        'single_spec': None,
+        'title': u'Oracle tablespace',
+        'title_plural': u'Oracle tablespaces'
+    },
+    'invother': {
+        'single_spec': None,
+        'title': u'Other entity',
+        'title_plural': u'Other entities'
+    },
+    'invpsu': {
+        'single_spec': None,
+        'title': u'Power supply',
+        'title_plural': u'Power supplies'
+    },
+    'invsensor': {
+        'single_spec': None,
+        'title': u'Sensor',
+        'title_plural': u'Sensors'
+    },
+    'invstack': {
+        'single_spec': None,
+        'title': u'Stack',
+        'title_plural': u'Stacks'
+    },
+    'invswpac': {
+        'single_spec': None,
+        'title': u'Software package',
+        'title_plural': u'Software packages'
+    },
+    'invunknown': {
+        'single_spec': None,
+        'title': u'Unknown entity',
+        'title_plural': u'Unknown entities'
+    },
+    'log': {
+        'single_spec': None,
+        'title': u'Log Entry',
+        'title_plural': u'Log Entries'
+    },
+    'service': {
+        'multiple_site_filters': ['servicegroup'],
+        'single_spec': [('service', 'TextUnicode')],
+        'title': u'Service',
+        'title_plural': u'Services'
+    },
+    'servicegroup': {
+        'single_site': False,
+        'single_spec': [('servicegroup', 'TextUnicode')],
+        'title': u'Service Group',
+        'title_plural': u'Service Groups'
+    },
+}
+
+
+def test_registered_infos(load_plugins):
+    assert sorted(utils._infos.keys()) == sorted(expected_infos.keys())
+
+
+def test_registered_info_attributes(load_plugins):
+    for ident, info in utils._infos.items():
+        #info = cls()
+        spec = expected_infos[ident]
+
+        assert info["title"] == spec["title"]
+        assert info["title_plural"] == spec["title_plural"]
+
+        if spec["single_spec"] is None:
+            assert info["single_spec"] is None
+        else:
+            assert [(e[0], e[1].__class__.__name__) for e in info["single_spec"]
+                   ] == spec["single_spec"]
+
+        assert info.get("multiple_site_filters", []) == spec.get("multiple_site_filters", [])
+        assert info.get("single_site", True) == spec.get("single_site", True)

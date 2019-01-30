@@ -30,6 +30,7 @@
 import abc
 import time
 from typing import Dict, List, Tuple, Text, Optional  # pylint: disable=unused-import
+from cmk.gui.valuespec import ValueSpec  # pylint: disable=unused-import
 
 import cmk.utils.plugin_registry
 
@@ -40,6 +41,58 @@ from cmk.gui.globals import html
 
 # TODO: Refactor to standard registry API
 _infos = {}
+
+
+class VisualInfo(object):
+    """Base class for all visual info classes"""
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractproperty
+    def ident(self):
+        # type: () -> str
+        """The identity of a visual type. One word, may contain alpha numeric characters"""
+        raise NotImplementedError()
+
+    @abc.abstractproperty
+    def title(self):
+        # type: () -> Text
+        """The human readable GUI title"""
+        raise NotImplementedError()
+
+    @abc.abstractproperty
+    def title_plural(self):
+        # type: () -> Text
+        """The human readable GUI title for multiple items"""
+        raise NotImplementedError()
+
+    @abc.abstractproperty
+    def single_spec(self):
+        # type: () -> Optional[Tuple[str, ValueSpec]]
+        """The key / valuespec pairs (choices) to identify a single row"""
+        raise NotImplementedError()
+
+    def multiple_site_filters(self):
+        # type: () -> List[str]
+        """Returns a list of filter identifiers. When one of these filters is
+        used by a visual, the "site hint" may not be used"""
+        return []
+
+    def single_site(self):
+        # type: () -> bool
+        """When there is one non single site info used by a visual
+        don't add the site hint"""
+        return True
+
+
+class VisualInfoRegistry(cmk.utils.plugin_registry.ClassRegistry):
+    def plugin_base_class(self):
+        return VisualInfo
+
+    def plugin_name(self, plugin_class):
+        return plugin_class().ident
+
+
+visual_info_registry = VisualInfoRegistry()
 
 
 def declare_info(infoname, info):
@@ -199,7 +252,7 @@ class Filter(object):
 
     @abc.abstractmethod
     def display(self):
-        # type: (None) -> None
+        # type: () -> None
         raise NotImplementedError()
 
     def filter(self, infoname):

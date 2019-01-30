@@ -2126,7 +2126,7 @@ expected_rulespecs = {
     'agent_config:custom_files': {
         'factory_default': [],
         'group_name': 'agents/generic_options',
-        'help': u'This rule allows you to add your own files and folders to the agent package. All you have to do is to place them under <i>/local/share/check_mk/agents/custom with</i> the following constraints. Create a subdirectory for each package you want to deploy. Those packages will be shown in this rule as list choice. Within a package folder you can create the following subfolders: <i>lib</i>, <i>bin</i>, <i>var</i>, <i>config</i>. These folders are the logical target paths for the files. For example, if you put <i>mypackage/lib/myfolder/myfile</i> into the <i>custom</i> directory. This rule will show mypackage as list choice option. The subfolder <i>lib</i> will be resolved to <i>/usr/lib/check_mk_agent</i> when using a linux agent with the default configuration. In the end the file will be located at <i>/usr/lib/check_mk_agent/myfolder/myfile</i>. Note: When using the windows agent, all logical paths point to the same location - the agent installation dir. Multiple rules can apply, this means that the packages of multiple rules are merged.',
+        'help': u'This rule allows you to add your own files and folders to the agent package. All you have to do is to place them under <i>./local/share/check_mk/agents/custom with</i> the following constraints. Create a subdirectory for each package you want to deploy. Those packages will be shown in this rule as list choice. Within a package folder you can create the following subfolders: <i>lib</i>, <i>bin</i>, <i>var</i>, <i>config</i>. These folders are the logical target paths for the files. For example, if you put <i>mypackage/lib/myfolder/myfile</i> into the <i>custom</i> directory. This rule will show mypackage as list choice option. The subfolder <i>lib</i> will be resolved to <i>/usr/lib/check_mk_agent</i> when using a linux agent with the default configuration. In the end the file will be located at <i>/usr/lib/check_mk_agent/myfolder/myfile</i>. Note: When using the windows agent, all logical paths point to the same location - the agent installation dir. Multiple rules can apply, this means that the packages of multiple rules are merged.',
         'is_deprecated': False,
         'is_optional': False,
         'item_enum': None,
@@ -9700,7 +9700,7 @@ expected_rulespecs = {
     'extra_host_conf:icon_image': {
         'factory_default': [],
         'group_name': 'user_interface',
-        'help': u'You can assign icons to hosts for the status GUI. Put your images into <tt>/local/share/check_mk/web/htdocs/images/icons</tt>. ',
+        'help': u'You can assign icons to hosts for the status GUI. Put your images into <tt>./local/share/check_mk/web/htdocs/images/icons</tt>. ',
         'is_deprecated': False,
         'is_optional': False,
         'item_enum': None,
@@ -9985,7 +9985,7 @@ expected_rulespecs = {
     'extra_service_conf:icon_image': {
         'factory_default': [],
         'group_name': 'user_interface',
-        'help': u'You can assign icons to services for the status GUI. Put your images into <tt>/local/share/check_mk/web/htdocs/images/icons</tt>. ',
+        'help': u'You can assign icons to services for the status GUI. Put your images into <tt>./local/share/check_mk/web/htdocs/images/icons</tt>. ',
         'is_deprecated': False,
         'is_optional': False,
         'item_enum': None,

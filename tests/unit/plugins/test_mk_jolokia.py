@@ -31,7 +31,7 @@ def test_config_instance():
 
 @pytest.mark.parametrize("config,base_url", [
     ({"protocol": "sftp", "server": "billy.theserver", "port": 42,
-      "suburi": "jolo-site"}, "sftp://billy.theserver:42/jolo-site")
+      "suburi": "jolo-site"}, "sftp://billy.theserver:42/jolo-site/")
 ])
 def test_jolokia_instance_base_url(config, base_url):
     joloi = mk_jolokia.JolokiaInstance(config)

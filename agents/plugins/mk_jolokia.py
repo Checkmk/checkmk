@@ -249,7 +249,7 @@ class JolokiaInstance(object):
         self._session = self._initialize_http_session()
 
     def _get_base_url(self):
-        return "%s://%s:%d/%s" % (
+        return "%s://%s:%d/%s/" % (
             self._config["protocol"].strip('/'),
             self._config["server"].strip('/'),
             self._config["port"],
@@ -302,9 +302,9 @@ class JolokiaInstance(object):
 
     def get_post_data(self, path, function, use_target):
         segments = path.strip("/").split("/")
-        data = {"mbean": segments[0], "attribute": segments[1]}
-        if len(segments) > 2:
-            data["path"] = segments[2]
+        # we may have one to three segments:
+        data = dict(zip(("mbean", "attribute", "path"), segments))
+
         data["type"] = function
         if use_target and self.target:
             data["target"] = self.target
@@ -462,19 +462,19 @@ def query_instance(inst):
 
 def generate_jolokia_info(inst):
     # Determine type of server
-    value = fetch_var(inst, "read", "")
-    server_info = make_item_list((), value, "")
+    data = fetch_var(inst, "version", "")
 
-    if not server_info:
+    if not data:
         sys.stderr.write("%s ERROR: Empty server info\n" % inst.name)
         raise SkipInstance()
 
-    info_dict = dict(server_info)
-    version = info_dict.get(('info', 'version'), "unknown")
-    product = info_dict.get(('info', 'product'), "unknown")
+    info = data.get('info', {})
+    version = info.get('version', "unknown")
+    product = info.get('product', "unknown")
     if inst.product:
         product = inst.product
-    agentversion = info_dict.get(('agent',), "unknown")
+
+    agentversion = data.get('agent', "unknown")
     yield inst.name, product, version, agentversion
 
 

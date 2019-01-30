@@ -7,7 +7,7 @@ description:
  This check monitors the percentage of allocated EC2 compute units that are
  currently in use on the AWS EC2 instance.
  To make this check work you have to configure the related
- special agent {{Amazon Web Services (AWS)}}.
+ special agent {Amazon Web Services (AWS)}.
 
 inventory:
  One service will be created.

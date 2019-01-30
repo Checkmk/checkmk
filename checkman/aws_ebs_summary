@@ -7,7 +7,7 @@ description:
  This check monitors all AWS EBS and reports
  a summary of their states.
  To make this check work you have to configure the related
- special agent {{Amazon Web Services (AWS)}}.
+ special agent {Amazon Web Services (AWS)}.
 
 inventory:
  One summary service is created.

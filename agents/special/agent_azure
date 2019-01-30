@@ -216,14 +216,6 @@ def parse_arguments(argv):
     return args
 
 
-def _add_hint(msg):
-    if "does not have authorization to perform action" in msg:
-        hint = "Make sure you have a proper role asigned to your client!"
-    else:
-        return msg
-    return "%s\nHINT: %s\n" % (msg, hint)
-
-
 # The following *Config objects provide a Configuration instance as described in
 # CMK-513 (comment-12620).
 # For now the passed commandline arguments are used to create it.
@@ -587,6 +579,20 @@ def write_groups(resources):
         Section('agent_info', group).write()
 
 
+def write_exception_to_agent_info_section(exception):
+    # those exeptions are quite noisy. try to make them more concise:
+    msg = str(exception).split('Trace ID')[0]
+    msg = msg.split(':', 2)[-1].strip(' ,')
+
+    if "does not have authorization to perform action" in msg:
+        msg += "HINT: Make sure you have a proper role asigned to your client!"
+
+    value = json.dumps((2, msg))
+    section = Section('agent_info')
+    section.add(('agent-bailout', value))
+    section.write()
+
+
 def main(argv=None):
 
     args = parse_arguments(argv or sys.argv[1:])
@@ -612,8 +618,7 @@ def main(argv=None):
                 section.write()
 
     except () if args.debug else Exception as exc:
-        sys.stderr.write(_add_hint(str(exc)))
-        return 1
+        write_exception_to_agent_info_section(exc)
     return 0
 
 

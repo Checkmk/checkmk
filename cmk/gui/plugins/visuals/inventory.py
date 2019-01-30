@@ -40,7 +40,8 @@ from cmk.gui.plugins.visuals import (
     filter_registry,
     Filter,
     FilterTristate,
-    declare_info,
+    VisualInfo,
+    visual_info_registry,
 )
 
 
@@ -640,8 +641,20 @@ class FilterInvHasSoftwarePackage(Filter):
         return utils.cmp_version(a, b) == 1
 
 
-declare_info('invhist', {
-    'title': _('Inventory History'),
-    'title_plural': _('Inventory Historys'),
-    'single_spec': None,
-})
+@visual_info_registry.register
+class VisualInfoHost(VisualInfo):
+    @property
+    def ident(self):
+        return "invhist"
+
+    @property
+    def title(self):
+        return _("Inventory History")
+
+    @property
+    def title_plural(self):
+        return _("Inventory Historys")
+
+    @property
+    def single_spec(self):
+        return None

@@ -60,15 +60,15 @@ from cmk.gui.i18n import _u, _
 from cmk.gui.globals import html
 
 from cmk.gui.plugins.visuals.utils import (
+    visual_info_registry,
     visual_type_registry,
     filter_registry,
 )
 
 # Needed for legacy (pre 1.6) plugins
 from cmk.gui.plugins.visuals.utils import (  # pylint: disable=unused-import
-    declare_info, Filter, FilterTime, FilterTristate, FilterUnicodeFilter,
+    Filter, FilterTime, FilterTristate, FilterUnicodeFilter,
 )
-from cmk.gui.plugins.visuals.utils import _infos as infos
 from cmk.gui.permissions import permission_registry
 
 if not cmk.is_raw_edition():
@@ -596,7 +596,8 @@ def page_create_visual(what, info_keys, next_url=None):
     # FIXME: Sort by (assumed) common usage
     info_choices = []
     for key in info_keys:
-        info_choices.append((key, _('Show information of a single %s') % infos[key]['title']))
+        info_choices.append(
+            (key, _('Show information of a single %s') % visual_info_registry[key]().title))
 
     vs_infos = SingleInfoSelection(info_keys)
 
@@ -665,29 +666,26 @@ def get_context_specs(visual, info_handler):
         info_keys = info_handler(visual)
 
     if not info_keys:
-        info_keys = infos.keys()
+        info_keys = visual_info_registry.keys()
 
     single_info_keys = [key for key in info_keys if key in visual['single_infos']]
     multi_info_keys = [key for key in info_keys if key not in single_info_keys]
 
     def visual_spec_single(info_key):
-        info = infos[info_key]
-        params = info['single_spec']
+        info = visual_info_registry[info_key]()
+        params = info.single_spec
         optional = True
         isopen = True
         return Dictionary(
-            title=info['title'],
-            # render = 'form',
+            title=info.title,
             form_isopen=isopen,
             optional_keys=optional,
             elements=params,
         )
 
     def visual_spec_multi(info_key):
-        info = infos[info_key]
-        filter_list = VisualFilterList([info_key],
-                                       title=info['title'],
-                                       ignore=set(single_info_keys))
+        info = visual_info_registry[info_key]()
+        filter_list = VisualFilterList([info_key], title=info.title, ignore=set(single_info_keys))
         filter_names = filter_list.filter_names()
         # Skip infos which have no filters available
         return filter_list if filter_names else None
@@ -790,7 +788,7 @@ def page_edit_visual(what,
         if single_infos_raw:
             single_infos = single_infos_raw.split(',')
             for key in single_infos:
-                if key not in infos:
+                if key not in visual_info_registry:
                     raise MKUserError('single_infos', _('The info %s does not exist.') % key)
         visual['single_infos'] = single_infos
 
@@ -1305,7 +1303,8 @@ class VisualFilter(ValueSpec):
 def SingleInfoSelection(info_keys, **args):
     info_choices = []
     for key in info_keys:
-        info_choices.append((key, _('Show information of a single %s') % infos[key]['title']))
+        info_choices.append(
+            (key, _('Show information of a single %s') % visual_info_registry[key]().title))
 
     args.setdefault("title", _('Specific objects'))
     args["choices"] = info_choices
@@ -1320,7 +1319,7 @@ def pack_context_for_editing(visual, info_handler):
     # we pack into every info every filter. The dict valuespec will
     # pick out what it needs. Yurks.
     packed_context = {}
-    info_keys = info_handler(visual) if info_handler else infos.keys()
+    info_keys = info_handler(visual) if info_handler else visual_info_registry.keys()
     for info_name in info_keys:
         packed_context[info_name] = visual.get('context', {})
     return packed_context
@@ -1347,7 +1346,7 @@ def unpack_context_after_editing(packed_context):
 
 
 def is_single_site_info(info_key):
-    return infos[info_key].get('single_site', True)
+    return visual_info_registry[info_key]().single_site
 
 
 def single_infos_spec(single_infos):
@@ -1419,7 +1418,7 @@ def visual_title(what, visual):
 # the variables "event_id" and "history_line" to be set in order
 # to exactly specify one history entry.
 def info_params(info_key):
-    single_spec = infos[info_key]['single_spec']
+    single_spec = visual_info_registry[info_key]().single_spec
     if single_spec is None:
         return []
     return dict(single_spec).keys()
@@ -1511,7 +1510,7 @@ def collect_context_links_of(visual_type_name, this_visual, active_filter_vars, 
 
         add_site_hint = may_add_site_hint(
             name,
-            info_keys=infos.keys(),
+            info_keys=visual_info_registry.keys(),
             single_info_keys=visual["single_infos"],
             filter_names=dict(vars_values).keys())
 
@@ -1552,7 +1551,7 @@ def may_add_site_hint(visual_name, info_keys, single_info_keys, filter_names):
     # Alternatively when the infos allow a site hint it is also needed to skip the site hint based
     # on the filters used by the target visual
     for info_key in info_keys:
-        for filter_key in infos[info_key].get('multiple_site_filters', []):
+        for filter_key in visual_info_registry[info_key]().multiple_site_filters:
             if filter_key in filter_names:
                 return False
 

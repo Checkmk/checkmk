@@ -74,6 +74,7 @@ from cmk.gui.permissions import (
     declare_permission,
 )
 from cmk.gui.plugins.visuals.utils import (
+    visual_info_registry,
     visual_type_registry,
     VisualType,
 )
@@ -1857,7 +1858,7 @@ def painter_choices(painters, add_params=False):
 
 def get_painter_title_for_choices(painter):
     info_title = "/".join([
-        visuals.infos[info_name]["title_plural"]
+        visual_info_registry[info_name]().title_plural
         for info_name in sorted(infos_needed_by_painter(painter))
     ])
 
@@ -2031,7 +2032,7 @@ def do_actions(view, what, action_rows, backurl):
             _("Do you really want to %(title)s the following %(count)d %(what)s?") % {
                 "title": title,
                 "count": len(action_rows),
-                "what": visuals.infos[what]["title_plural"],
+                "what": visual_info_registry[what]().title_plural,
             },
             method='GET'):
         return False

@@ -41,8 +41,11 @@ from cmk.gui.htmllib import HTML
 from cmk.gui.valuespec import Checkbox, Hostname
 from cmk.gui.exceptions import MKUserError
 
-import cmk.gui.plugins.visuals
-from cmk.gui.plugins.visuals import filter_registry
+from cmk.gui.plugins.visuals import (
+    filter_registry,
+    VisualInfo,
+    visual_info_registry,
+)
 from cmk.gui.plugins.visuals.inventory import (
     FilterInvText,
     FilterInvBool,
@@ -1517,11 +1520,17 @@ def declare_invtable_view(infoname, invpath, title_singular, title_plural):
                                    filters)
 
     # Declare the "info" (like a database table)
-    cmk.gui.plugins.visuals.declare_info(infoname, {
-        'title': title_singular,
-        'title_plural': title_plural,
-        'single_spec': None,
-    })
+    info_class = type(
+        "VisualInfo%s" % infoname.title(), (VisualInfo,), {
+            "_ident": infoname,
+            "ident": property(lambda self: self._ident),
+            "_title": title_singular,
+            "title": property(lambda self: self._title),
+            "_title_plural": title_plural,
+            "title_plural": property(lambda self: self._title_plural),
+            "single_spec": property(lambda self: None),
+        })
+    visual_info_registry.register(info_class)
 
     # Create the datasource (like a database view)
     ds_class = type(

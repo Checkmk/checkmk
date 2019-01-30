@@ -24,122 +24,314 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import cmk.gui.config as config
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (TextUnicode, Integer)
+from cmk.gui.valuespec import (
+    TextUnicode,
+    Integer,
+)
 
-from cmk.gui.plugins.visuals import declare_info
+from cmk.gui.plugins.visuals import (
+    VisualInfo,
+    visual_info_registry,
+)
 
-declare_info(
-    'host',
-    {
-        'title': _('Host'),
-        'title_plural': _('Hosts'),
-        'single_spec': [('host', TextUnicode(title=_('Hostname'),))],
-        # When these filters are set, the site hint will not be added to urls
-        # which link to views using this datasource, because the resuling view
-        # should show the objects spread accross the sites
-        "multiple_site_filters": ["hostgroup"],
-    })
 
-declare_info(
-    'service',
-    {
-        'title': _('Service'),
-        'title_plural': _('Services'),
-        'single_spec': [('service', TextUnicode(title=_('Service Description'),))],
-        # When these filters are set, the site hint will not be added to urls
-        # which link to views using this datasource, because the resuling view
-        # should show the objects spread accross the sites
-        "multiple_site_filters": ["servicegroup"],
-    })
+@visual_info_registry.register
+class VisualInfoHost(VisualInfo):
+    @property
+    def ident(self):
+        return "host"
 
-declare_info(
-    'hostgroup',
-    {
-        'title': _('Host Group'),
-        'title_plural': _('Host Groups'),
-        'single_site': False,  # spread over multiple sites
-        'single_spec': [('hostgroup', TextUnicode(title=_('Host Group Name'),))],
-    })
+    @property
+    def title(self):
+        return _("Host")
 
-declare_info(
-    'servicegroup',
-    {
-        'title': _('Service Group'),
-        'title_plural': _('Service Groups'),
-        'single_site': False,  # spread over multiple sites
-        'single_spec': [('servicegroup', TextUnicode(title=_('Service Group Name'),)),],
-    })
+    @property
+    def title_plural(self):
+        return _("Hosts")
 
-declare_info('log', {
-    'title': _('Log Entry'),
-    'title_plural': _('Log Entries'),
-    'single_spec': None,
-})
+    @property
+    def single_spec(self):
+        return [('host', TextUnicode(title=_('Hostname'),))]
 
-declare_info(
-    'comment', {
-        'title': _('Comment'),
-        'title_plural': _('Comments'),
-        'single_spec': [('comment_id', Integer(title=_('Comment ID'),)),]
-    })
+    @property
+    def multiple_site_filters(self):
+        return ["hostgroup"]
 
-declare_info(
-    'downtime', {
-        'title': _('Downtime'),
-        'title_plural': _('Downtimes'),
-        'single_spec': [('downtime_id', Integer(title=_('Downtime ID'),)),]
-    })
 
-declare_info(
-    'contact', {
-        'title': _('Contact'),
-        'title_plural': _('Contacts'),
-        'single_spec': [('log_contact_name', TextUnicode(title=_('Contact Name'),)),]
-    })
+@visual_info_registry.register
+class VisualInfoService(VisualInfo):
+    @property
+    def ident(self):
+        return "service"
 
-declare_info(
-    'command', {
-        'title': _('Command'),
-        'title_plural': _('Commands'),
-        'single_spec': [('command_name', TextUnicode(title=_('Command Name'),)),]
-    })
+    @property
+    def title(self):
+        return _("Service")
 
-declare_info(
-    'aggr', {
-        'title': _('BI Aggregation'),
-        'title_plural': _('BI Aggregations'),
-        'single_spec': [('aggr_name', TextUnicode(title=_('Aggregation Name'),)),],
-    })
+    @property
+    def title_plural(self):
+        return _("Services")
 
-declare_info(
-    'aggr_group', {
-        'title': _('BI Aggregation Group'),
-        'title_plural': _('BI Aggregation Groups'),
-        'single_spec': [('aggr_group', TextUnicode(title=_('Aggregation group'),)),],
-    })
+    @property
+    def single_spec(self):
+        return [('service', TextUnicode(title=_('Service Description'),))]
 
-declare_info('discovery', {
-    'title': _('Discovery Output'),
-    'title_plural': _('Discovery Outputs'),
-    'single_spec': None,
-})
+    @property
+    def multiple_site_filters(self):
+        return ["servicegroup"]
 
-if config.mkeventd_enabled:
-    declare_info(
-        'event', {
-            'title': _('Event Console Event'),
-            'title_plural': _('Event Console Events'),
-            'single_spec': [('event_id', Integer(title=_('Event ID'),)),]
-        })
 
-    declare_info(
-        'history', {
-            'title': _('Historic Event Console Event'),
-            'title_plural': _('Historic Event Console Events'),
-            'single_spec': [
-                ('event_id', Integer(title=_('Event ID'),)),
-                ('history_line', Integer(title=_('History Line Number'),)),
-            ]
-        })
+@visual_info_registry.register
+class VisualInfoHostgroup(VisualInfo):
+    @property
+    def ident(self):
+        return "hostgroup"
+
+    @property
+    def title(self):
+        return _("Host Group")
+
+    @property
+    def title_plural(self):
+        return _("Host Groups")
+
+    @property
+    def single_spec(self):
+        return [('hostgroup', TextUnicode(title=_('Host Group Name'),))]
+
+    @property
+    def single_site(self):
+        return False
+
+
+@visual_info_registry.register
+class VisualInfoServicegroup(VisualInfo):
+    @property
+    def ident(self):
+        return "servicegroup"
+
+    @property
+    def title(self):
+        return _("Service Group")
+
+    @property
+    def title_plural(self):
+        return _("Service Groups")
+
+    @property
+    def single_spec(self):
+        return [
+            ('servicegroup', TextUnicode(title=_('Service Group Name'),)),
+        ]
+
+    @property
+    def single_site(self):
+        return False
+
+
+@visual_info_registry.register
+class VisualInfoLog(VisualInfo):
+    @property
+    def ident(self):
+        return "log"
+
+    @property
+    def title(self):
+        return _('Log Entry')
+
+    @property
+    def title_plural(self):
+        return _('Log Entries')
+
+    @property
+    def single_spec(self):
+        return
+
+
+@visual_info_registry.register
+class VisualInfoComment(VisualInfo):
+    @property
+    def ident(self):
+        return "comment"
+
+    @property
+    def title(self):
+        return _('Comment')
+
+    @property
+    def title_plural(self):
+        return _('Comments')
+
+    @property
+    def single_spec(self):
+        return [
+            ('comment_id', Integer(title=_('Comment ID'),)),
+        ]
+
+
+@visual_info_registry.register
+class VisualInfoDowntime(VisualInfo):
+    @property
+    def ident(self):
+        return "downtime"
+
+    @property
+    def title(self):
+        return _('Downtime')
+
+    @property
+    def title_plural(self):
+        return _('Downtimes')
+
+    @property
+    def single_spec(self):
+        return [
+            ('downtime_id', Integer(title=_('Downtime ID'),)),
+        ]
+
+
+@visual_info_registry.register
+class VisualInfoContact(VisualInfo):
+    @property
+    def ident(self):
+        return "contact"
+
+    @property
+    def title(self):
+        return _('Contact')
+
+    @property
+    def title_plural(self):
+        return _('Contacts')
+
+    @property
+    def single_spec(self):
+        return [
+            ('log_contact_name', TextUnicode(title=_('Contact Name'),)),
+        ]
+
+
+@visual_info_registry.register
+class VisualInfoCommand(VisualInfo):
+    @property
+    def ident(self):
+        return "command"
+
+    @property
+    def title(self):
+        return _('Command')
+
+    @property
+    def title_plural(self):
+        return _('Commands')
+
+    @property
+    def single_spec(self):
+        return [
+            ('command_name', TextUnicode(title=_('Command Name'),)),
+        ]
+
+
+@visual_info_registry.register
+class VisualInfoBIAggregation(VisualInfo):
+    @property
+    def ident(self):
+        return "aggr"
+
+    @property
+    def title(self):
+        return _('BI Aggregation')
+
+    @property
+    def title_plural(self):
+        return _('BI Aggregations')
+
+    @property
+    def single_spec(self):
+        return [
+            ('aggr_name', TextUnicode(title=_('Aggregation Name'),)),
+        ]
+
+
+@visual_info_registry.register
+class VisualInfoBIAggregationGroup(VisualInfo):
+    @property
+    def ident(self):
+        return "aggr_group"
+
+    @property
+    def title(self):
+        return _('BI Aggregation Group')
+
+    @property
+    def title_plural(self):
+        return _('BI Aggregation Groups')
+
+    @property
+    def single_spec(self):
+        return [
+            ('aggr_group', TextUnicode(title=_('Aggregation group'),)),
+        ]
+
+
+@visual_info_registry.register
+class VisualInfoDiscovery(VisualInfo):
+    @property
+    def ident(self):
+        return "discovery"
+
+    @property
+    def title(self):
+        return _('Discovery Output')
+
+    @property
+    def title_plural(self):
+        return _('Discovery Outputs')
+
+    @property
+    def single_spec(self):
+        return None
+
+
+@visual_info_registry.register
+class VisualInfoEvent(VisualInfo):
+    @property
+    def ident(self):
+        return "event"
+
+    @property
+    def title(self):
+        return _('Event Console Event')
+
+    @property
+    def title_plural(self):
+        return _('Event Console Events')
+
+    @property
+    def single_spec(self):
+        return [
+            ('event_id', Integer(title=_('Event ID'),)),
+        ]
+
+
+@visual_info_registry.register
+class VisualInfoEventHistory(VisualInfo):
+    @property
+    def ident(self):
+        return "history"
+
+    @property
+    def title(self):
+        return _('Historic Event Console Event')
+
+    @property
+    def title_plural(self):
+        return _('Historic Event Console Events')
+
+    @property
+    def single_spec(self):
+        return [
+            ('event_id', Integer(title=_('Event ID'),)),
+            ('history_line', Integer(title=_('History Line Number'),)),
+        ]

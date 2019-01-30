@@ -39,9 +39,6 @@ import cmk.gui.sites as sites
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 
-# TODO: Refactor to standard registry API
-_infos = {}
-
 
 class VisualInfo(object):
     """Base class for all visual info classes"""
@@ -71,12 +68,17 @@ class VisualInfo(object):
         """The key / valuespec pairs (choices) to identify a single row"""
         raise NotImplementedError()
 
+    @property
     def multiple_site_filters(self):
         # type: () -> List[str]
-        """Returns a list of filter identifiers. When one of these filters is
-        used by a visual, the "site hint" may not be used"""
+        """Returns a list of filter identifiers.
+
+        When these filters are set, the site hint will not be added to urls
+        which link to views using this datasource, because the resuling view
+        should show the objects spread accross the sites"""
         return []
 
+    @property
     def single_site(self):
         # type: () -> bool
         """When there is one non single site info used by a visual
@@ -93,10 +95,6 @@ class VisualInfoRegistry(cmk.utils.plugin_registry.ClassRegistry):
 
 
 visual_info_registry = VisualInfoRegistry()
-
-
-def declare_info(infoname, info):
-    _infos[infoname] = info
 
 
 class VisualType(object):

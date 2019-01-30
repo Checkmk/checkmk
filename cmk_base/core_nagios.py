@@ -123,7 +123,7 @@ def create_config(outfile, hostnames):
             "service_notification_periods is not longer supported. Please use extra_service_conf['notification_period'] instead."
         )
 
-    # Map service_period to _SERVICE_PERIOD. This field das not exist in Nagios/Icinga.
+    # Map service_period to _SERVICE_PERIOD. This field das not exist in Nagios.
     # The CMC has this field natively.
     if "service_period" in config.extra_host_conf:
         config.extra_host_conf["_SERVICE_PERIOD"] = config.extra_host_conf["service_period"]

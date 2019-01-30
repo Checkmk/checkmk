@@ -132,31 +132,34 @@ class AWSSection(object):
     def period(self):
         return 2 * self.interval
 
+    def _send(self, content):
+        self._distributor.distribute(self, content)
+
+    def receive(self, sender, content):
+        self._received_results.setdefault(sender.name, content)
+
     def run(self):
-        if self._client is None:
-            msg = "%s: No client initialized" % self.__class__.__name__
-            raise AWSSectionError(msg)
-
-        if self.name is None:
-            msg = "%s: No name set" % self.__class__.__name__
-            raise AWSSectionError(msg)
-
-        try:
-            content = self._extract_content_from_raw_result()
-        except botocore.exceptions.EndpointConnectionError:
-            raise
-        except Exception:
-            raise
-
-        self._send(content)
-        return self._format_content(content)
+        colleague_contents = self._get_colleague_contents()
+        raw_content = self._fetch_raw_content(colleague_contents)
+        computed_content = self._compute_content(raw_content, colleague_contents)
+        self._send(computed_content)
+        return self._create_results(computed_content)
 
     @abc.abstractmethod
-    def _extract_content_from_raw_result(self):
+    def _get_colleague_contents(self):
         """
-        Call an API method, eg. 'response = ec2_client.describe_instances()'
-        and extract content from raw result.
-        Raw results basically consist of two sub results:
+        Receive section contents from colleagues. The results are stored in
+        self._receive_results. The relateion between two sections must be
+        declared in the related distributor in advance to make this work.
+        """
+        pass
+
+    @abc.abstractmethod
+    def _fetch_raw_content(self, colleague_contents):
+        """
+        Call API methods, eg. 'response = ec2_client.describe_instances()' and
+        extract content from raw content.  Raw contents basically consist of
+        two sub results:
         - 'ResponseMetadata'
         - '<KEY>'
         Return raw_result['<KEY>'].
@@ -164,20 +167,18 @@ class AWSSection(object):
         pass
 
     @abc.abstractmethod
-    def _format_content(self, content):
+    def _compute_content(self, raw_content, colleague_contents):
         """
-        Returns a list of named tuples. Each tuple contains
-        - piggyback hostname or "", and
-        - content
-        Use AWSSectionResult.
+        Compute the final content of this section based on the raw content of
+        this section and the content received from the optional colleague
+        sections.
         """
         pass
 
-    def _send(self, content):
-        self._distributor.distribute(self, content)
-
-    def receive(self, sender, content):
-        self._received_results.setdefault(sender.name, content)
+    @abc.abstractmethod
+    def _create_results(self, computed_content):
+        # type: (Any) -> List(AWSSectionResult)
+        pass
 
 
 class AWSSectionGeneric(AWSSection):
@@ -187,17 +188,17 @@ class AWSSectionGeneric(AWSSection):
 class AWSSectionCloudwatch(AWSSection):
     __metaclass__ = abc.ABCMeta
 
-    def _extract_content_from_raw_result(self):
+    def _fetch_raw_content(self, colleague_contents):
         end_time = time.time()
         start_time = end_time - self.period
-        metrics = self._get_metrics()
+        metrics = self._get_metrics(colleague_contents)
         if not metrics:
             return []
 
         # A single GetMetricData call can include up to 100 MetricDataQuery structures
         # There's no pagination for this operation:
         # self._client.can_paginate('get_metric_data') = False
-        content = []
+        raw_content = []
         for chunk in _chunks(metrics):
             if not chunk:
                 continue
@@ -211,24 +212,12 @@ class AWSSectionCloudwatch(AWSSection):
             except KeyError as e:
                 logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
                 continue
-            content.extend(metrics)
-        return content
+            raw_content.extend(metrics)
+        return raw_content
 
     @abc.abstractmethod
-    def _get_metrics(self):
-        """
-        Gather specific metrics.
-        """
+    def _get_metrics(self, colleague_contents):
         pass
-
-    def _format_content(self, content):
-        content_by_piggyback_hosts = {}
-        for row in content:
-            content_by_piggyback_hosts.setdefault(row['Label'], []).append(row)
-        return [
-            AWSSectionResult(piggyback_hostname, rows)
-            for piggyback_hostname, rows in content_by_piggyback_hosts.iteritems()
-        ]
 
 
 #.
@@ -257,7 +246,10 @@ class CostsAndUsage(AWSSectionGeneric):
     def interval(self):
         return 86400
 
-    def _extract_content_from_raw_result(self):
+    def _get_colleague_contents(self):
+        return
+
+    def _fetch_raw_content(self, colleague_contents):
         fmt = "%Y-%m-%d"
         now = time.time()
         response = self._client.get_cost_and_usage(
@@ -281,8 +273,11 @@ class CostsAndUsage(AWSSectionGeneric):
             logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
             return []
 
-    def _format_content(self, content):
-        return [AWSSectionResult("", content)]
+    def _compute_content(self, raw_content, colleague_contents):
+        return raw_content
+
+    def _create_results(self, computed_content):
+        return [AWSSectionResult("", computed_content)]
 
 
 #.
@@ -311,7 +306,10 @@ class SecurityGroups(AWSSectionGeneric):
     def interval(self):
         return 300
 
-    def _extract_content_from_raw_result(self):
+    def _get_colleague_contents(self):
+        return
+
+    def _fetch_raw_content(self, colleague_contents):
         response = self._client.describe_security_groups()
         try:
             return response['SecurityGroups']
@@ -319,9 +317,11 @@ class SecurityGroups(AWSSectionGeneric):
             logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
             return []
 
-    def _format_content(self, content):
-        #return [AWSSectionResult("", content)]
-        return
+    def _compute_content(self, raw_content, colleague_contents):
+        return raw_content
+
+    def _create_results(self, computed_content):
+        return [AWSSectionResult("", computed_content)]
 
 
 #.
@@ -344,40 +344,44 @@ class EC2Summary(AWSSectionGeneric):
     def interval(self):
         return 300
 
-    def _extract_content_from_raw_result(self):
+    def _get_colleague_contents(self):
+        return self._received_results.get('security_groups', [])
+
+    def _fetch_raw_content(self, colleague_contents):
         response = self._client.describe_instances()
         try:
-            reservations = response['Reservations']
+            return response['Reservations']
         except KeyError as e:
             logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
             return {}
 
-        for group in self._received_results.get('security_groups'):
-            for reservation in reservations:
-                if group['OwnerId'] == reservation['OwnerId']:
-                    reservation['SecurityGroup'] = group
+    def _compute_content(self, raw_content, colleague_contents):
+        for security_group in colleague_contents:
+            for reservation in raw_content:
+                if security_group['OwnerId'] == reservation['OwnerId']:
+                    reservation['SecurityGroup'] = security_group
         return {
-            "Reservations": reservations,
-            "mapping": self._map_instance_id_to_name(reservations),
+            "Reservations": raw_content,
+            "mapping": self._map_instance_id_to_name(raw_content),
         }
 
     def _map_instance_id_to_name(self, reservations):
         mapping = {}
-        for row in reservations:
-            for instance in row.get('Instances', []):
+        for reservation in reservations:
+            for instance in reservation.get('Instances', []):
                 instance_id = instance['InstanceId']
-                instance_name = self._extract_instance_name(instance, instance_id)
+                instance_name = self._extract_instance_name_from_tags(instance, instance_id)
                 mapping.setdefault(instance_id, instance_name)
         return mapping
 
-    def _extract_instance_name(self, instance, instance_id):
-        for row in instance.get('Tags', []):
-            if row.get('Key') == 'Name':
-                return row['Value']
+    def _extract_instance_name_from_tags(self, instance, instance_id):
+        for tag in instance.get('Tags', []):
+            if tag.get('Key') == 'Name':
+                return tag['Value']
         return instance_id
 
-    def _format_content(self, content):
-        return [AWSSectionResult("", content['Reservations'])]
+    def _create_results(self, computed_content):
+        return [AWSSectionResult("", computed_content['Reservations'])]
 
 
 class EC2(AWSSectionCloudwatch):
@@ -389,12 +393,13 @@ class EC2(AWSSectionCloudwatch):
     def interval(self):
         return 300
 
-    def _get_metrics(self):
+    def _get_colleague_contents(self):
+        return self._received_results.get('ec2_summary', {}).get('mapping', {})
+
+    def _get_metrics(self, colleague_contents):
         metrics = []
         idx = 0
-        for instance_id, instance_name in\
-            self._received_results.get('ec2_summary', {})\
-                                  .get('mapping', {}).iteritems():
+        for instance_id, instance_name in colleague_contents.iteritems():
             for metric_name, unit in [
                 ("CPUCreditUsage", "Count"),
                 ("CPUCreditBalance", "Count"),
@@ -427,6 +432,18 @@ class EC2(AWSSectionCloudwatch):
                 })
                 idx += 1
         return metrics
+
+    def _compute_content(self, raw_content, colleague_contents):
+        content_by_piggyback_hosts = {}
+        for row in raw_content:
+            content_by_piggyback_hosts.setdefault(row['Label'], []).append(row)
+        return content_by_piggyback_hosts
+
+    def _create_results(self, computed_content):
+        return [
+            AWSSectionResult(piggyback_hostname, rows)
+            for piggyback_hostname, rows in computed_content.iteritems()
+        ]
 
 
 #.
@@ -463,8 +480,10 @@ class S3Summary(AWSSectionGeneric):
     def interval(self):
         return 86400
 
-    def _extract_content_from_raw_result(self):
-        #paginator = self._client.get_paginator('list_objects')
+    def _get_colleague_contents(self):
+        return
+
+    def _fetch_raw_content(self, colleague_contents):
         for bucket in self._buckets:
             bucket_name = bucket['Name']
             response = self._client.get_bucket_location(Bucket=bucket_name)
@@ -487,22 +506,13 @@ class S3Summary(AWSSectionGeneric):
                              response.keys())
             else:
                 bucket['Tagging'] = tagging
-
-            #contents = []
-            #pages = paginator.paginate(Bucket=bucket_name)
-            #for page in pages:
-            #    try:
-            #        objects = page['Contents']
-            #    except KeyError as e:
-            #        logging.info("%s/%s: KeyError %s; Available are %s", self.name, bucket_name, e,
-            #                     page.keys())
-            #    else:
-            #        contents += objects
-            #bucket['Contents'] = contents
         return self._buckets
 
-    def _format_content(self, content):
-        return [AWSSectionResult("", content)]
+    def _compute_content(self, raw_content, colleague_contents):
+        return raw_content
+
+    def _create_results(self, computed_content):
+        return [AWSSectionResult("", computed_content)]
 
 
 class S3(AWSSectionCloudwatch):
@@ -514,11 +524,13 @@ class S3(AWSSectionCloudwatch):
     def interval(self):
         return 86400
 
-    def _get_metrics(self):
+    def _get_colleague_contents(self):
+        return [bucket['Name'] for bucket in self._received_results.get('s3_summary', [])]
+
+    def _get_metrics(self, colleague_contents):
         metrics = []
         idx = 0
-        for bucket in self._received_results.get('s3_summary', []):
-            bucket_name = bucket['Name']
+        for bucket_name in colleague_contents:
             for metric_name, unit, storage_classes in [
                 ("BucketSizeBytes", "Bytes", [
                     "StandardStorage",
@@ -551,8 +563,11 @@ class S3(AWSSectionCloudwatch):
                     idx += 1
         return metrics
 
-    def _format_content(self, content):
-        return [AWSSectionResult("", content)]
+    def _compute_content(self, raw_content, colleague_contents):
+        return raw_content
+
+    def _create_results(self, computed_content):
+        return [AWSSectionResult("", computed_content)]
 
 
 #.
@@ -575,7 +590,10 @@ class ELBSummary(AWSSectionGeneric):
     def interval(self):
         return 300
 
-    def _extract_content_from_raw_result(self):
+    def _get_colleague_contents(self):
+        return
+
+    def _fetch_raw_content(self, colleague_contents):
         response = self._client.describe_load_balancers()
         try:
             load_balancers = response['LoadBalancerDescriptions']
@@ -585,15 +603,6 @@ class ELBSummary(AWSSectionGeneric):
 
         for load_balancer in load_balancers:
             load_balancer_name = load_balancer['LoadBalancerName']
-            response = self._client.describe_instance_health(LoadBalancerName=load_balancer_name)
-            try:
-                states = response['InstanceStates']
-            except KeyError as e:
-                logging.info("%s/%s: KeyError %s; Available are %s", self.name, load_balancer_name,
-                             e, response.keys())
-            else:
-                load_balancer['InstanceStates'] = states
-
             response = self._client.describe_tags(LoadBalancerNames=[load_balancer_name])
             try:
                 tag_descrs = response['TagDescriptions']
@@ -602,11 +611,20 @@ class ELBSummary(AWSSectionGeneric):
                              e, response.keys())
             else:
                 load_balancer['TagDescriptions'] = tag_descrs
-
         return load_balancers
 
-    def _format_content(self, content):
-        return [AWSSectionResult("", content)]
+    def _compute_content(self, raw_content, colleague_contents):
+        content_by_piggyback_hosts = {}
+        for load_balancer in raw_content:
+            content_by_piggyback_hosts.setdefault(load_balancer['LoadBalancerName'],
+                                                  []).append(load_balancer)
+        return content_by_piggyback_hosts
+
+    def _create_results(self, computed_content):
+        return [
+            AWSSectionResult(piggyback_hostname, rows)
+            for piggyback_hostname, rows in computed_content.iteritems()
+        ]
 
 
 class ELBHealth(AWSSectionGeneric):
@@ -618,21 +636,32 @@ class ELBHealth(AWSSectionGeneric):
     def interval(self):
         return 300
 
-    def _extract_content_from_raw_result(self):
-        return self._received_results.get('elb_summary', [])
+    def _get_colleague_contents(self):
+        return [
+            load_balancer['LoadBalancerName']
+            for load_balancer in self._received_results.get('elb_summary', [])
+        ]
 
-    def _format_content(self, content):
-        content_by_piggyback_hosts = {}
-        for load_balancer in content:
+    def _fetch_raw_content(self, colleague_contents):
+        load_balancers = {}
+        for load_balancer_name in colleague_contents:
+            response = self._client.describe_instance_health(LoadBalancerName=load_balancer_name)
             try:
-                content_by_piggyback_hosts.setdefault(load_balancer['LoadBalancerName'],
-                                                      load_balancer['InstanceStates'])
-            except KeyError, e:
-                logging.info("%s: KeyError %s; Available are %s", self.name, e,
-                             load_balancer.keys())
+                states = response['InstanceStates']
+            except KeyError as e:
+                logging.info("%s/%s: KeyError %s; Available are %s", self.name, load_balancer_name,
+                             e, response.keys())
+            else:
+                load_balancers.setdefault(load_balancer_name, states)
+        return load_balancers
+
+    def _compute_content(self, raw_content, colleague_contents):
+        return raw_content
+
+    def _create_results(self, computed_content):
         return [
             AWSSectionResult(piggyback_hostname, rows)
-            for piggyback_hostname, rows in content_by_piggyback_hosts.iteritems()
+            for piggyback_hostname, rows in computed_content.iteritems()
         ]
 
 
@@ -645,13 +674,16 @@ class ELB(AWSSectionCloudwatch):
     def interval(self):
         return 300
 
-    def _get_metrics(self):
-        load_balancers = []
-        for entry in self._received_results.get('elb_summary', []):
-            load_balancers.append(entry['LoadBalancerName'])
+    def _get_colleague_contents(self):
+        return [
+            load_balancer['LoadBalancerName']
+            for load_balancer in self._received_results.get('elb_summary', [])
+        ]
+
+    def _get_metrics(self, colleague_contents):
         metrics = []
         idx = 0
-        for load_balancer in load_balancers:
+        for load_balancer_name in colleague_contents:
             for metric_name, stat in [
                     # Load balancer metrics
                 ("RequestCount", "Sum"),
@@ -671,14 +703,14 @@ class ELB(AWSSectionCloudwatch):
             ]:
                 metrics.append({
                     'Id': "%s_%s" % (metric_name.lower(), idx),
-                    'Label': load_balancer,
+                    'Label': load_balancer_name,
                     'MetricStat': {
                         'Metric': {
                             'Namespace': 'AWS/ELB',
                             'MetricName': metric_name,
                             'Dimensions': [{
                                 'Name': "LoadBalancerName",
-                                'Value': load_balancer,
+                                'Value': load_balancer_name,
                             }]
                         },
                         'Period': self.period,
@@ -687,6 +719,18 @@ class ELB(AWSSectionCloudwatch):
                 })
                 idx += 1
         return metrics
+
+    def _compute_content(self, raw_content, colleague_contents):
+        content_by_piggyback_hosts = {}
+        for row in raw_content:
+            content_by_piggyback_hosts.setdefault(row['Label'], []).append(row)
+        return content_by_piggyback_hosts
+
+    def _create_results(self, computed_content):
+        return [
+            AWSSectionResult(piggyback_hostname, rows)
+            for piggyback_hostname, rows in computed_content.iteritems()
+        ]
 
 
 #.
@@ -712,7 +756,10 @@ class EBSSummary(AWSSectionGeneric):
     def interval(self):
         return 300
 
-    def _extract_content_from_raw_result(self):
+    def _get_colleague_contents(self):
+        return self._received_results.get('ec2_summary', {}).get('mapping', {})
+
+    def _fetch_raw_content(self, colleague_contents):
         response = self._client.describe_volumes()
         try:
             volumes = {r['VolumeId']: r for r in response['Volumes']}
@@ -726,27 +773,28 @@ class EBSSummary(AWSSectionGeneric):
         except KeyError as e:
             logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
             volume_states = {}
+        return volumes, volume_states
 
+    def _compute_content(self, raw_content, colleague_contents):
+        volumes, volume_states = raw_content
         content = []
         for volume_id in set(volumes.keys()).union(set(volume_states.keys())):
             volume = volumes.get(volume_id, {})
             volume.update(volume_states.get(volume_id, {}))
             content.append(volume)
-        return content
 
-    def _format_content(self, content):
-        instance_ids = self._received_results.get('ec2_summary', {})\
-                                             .get('mapping', {})
         content_by_piggyback_hosts = {}
         for row in content:
             for attachment in row['Attachments']:
                 attachment_id = attachment['InstanceId']
-                instance_name = instance_ids.get(attachment_id, attachment_id)
-                content_by_piggyback_hosts.setdefault(instance_name, [])\
-                                          .append(row)
+                instance_name = colleague_contents.get(attachment_id, attachment_id)
+                content_by_piggyback_hosts.setdefault(instance_name, []).append(row)
+        return content_by_piggyback_hosts
+
+    def _create_results(self, computed_content):
         return [
             AWSSectionResult(piggyback_hostname, rows)
-            for piggyback_hostname, rows in content_by_piggyback_hosts.iteritems()
+            for piggyback_hostname, rows in computed_content.iteritems()
         ]
 
 
@@ -759,20 +807,17 @@ class EBS(AWSSectionCloudwatch):
     def interval(self):
         return 300
 
-    def _get_metrics(self):
-        instance_ids = self._received_results.get('ec2_summary', {})\
-                                             .get('mapping', {})
-        volumes = []
-        for row in self._received_results.get('ebs_summary', []):
-            vol_id = row['VolumeId']
-            vol_type = row['VolumeType']
-            for attachment in row['Attachments']:
-                attachment_id = attachment['InstanceId']
-                instance_name = instance_ids.get(attachment_id, attachment_id)
-                volumes.append((instance_name, vol_id, vol_type))
+    def _get_colleague_contents(self):
+        return [
+            (instance_name, row['VolumeId'], row['VolumeType'])
+            for instance_name, rows in self._received_results.get('ebs_summary', {}).iteritems()
+            for row in rows
+        ]
+
+    def _get_metrics(self, colleague_contents):
         metrics = []
         idx = 0
-        for instance_name, volume_name, volume_type in volumes:
+        for instance_name, volume_name, volume_type in colleague_contents:
             for metric_name, unit, volume_types in [
                     # Disk IO
                 ("VolumeReadOps", "Count", []),
@@ -816,6 +861,18 @@ class EBS(AWSSectionCloudwatch):
                 idx += 1
         return metrics
 
+    def _compute_content(self, raw_content, colleague_contents):
+        content_by_piggyback_hosts = {}
+        for row in raw_content:
+            content_by_piggyback_hosts.setdefault(row['Label'], []).append(row)
+        return content_by_piggyback_hosts
+
+    def _create_results(self, computed_content):
+        return [
+            AWSSectionResult(piggyback_hostname, rows)
+            for piggyback_hostname, rows in computed_content.iteritems()
+        ]
+
 
 #.
 #   .--glacier-------------------------------------------------------------.
@@ -827,38 +884,36 @@ class EBS(AWSSectionCloudwatch):
 #   |                   |___/                                              |
 #   '----------------------------------------------------------------------'
 
-
-class Glacier(AWSSectionGeneric):
-    @property
-    def name(self):
-        return "glacier"
-
-    @property
-    def interval(self):
-        return 300
-
-    def _extract_content_from_raw_result(self):
-        response = self._client.list_vaults()
-        try:
-            vaults = {r['VaultName']: r for r in response['VaultList']}
-        except KeyError as e:
-            logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
-            vaults = {}
-
-        for vault_name, vault in vaults.iteritems():
-            response = self._client.list_jobs(vaultName=vault_name)
-            try:
-                jobs = response['JobList']
-            except KeyError as e:
-                logging.info("%s/%s: KeyError %s; Available are %s", self.name, vault_name, e,
-                             response.keys())
-                jobs = []
-            vault['Jobs'] = jobs
-        return vaults
-
-    def _format_content(self, content):
-        return [AWSSectionResult("", content)]
-
+#class Glacier(AWSSectionGeneric):
+#    @property
+#    def name(self):
+#        return "glacier"
+#
+#    @property
+#    def interval(self):
+#        return 300
+#
+#    def _fetch_raw_content(self, colleague_contents):
+#        response = self._client.list_vaults()
+#        try:
+#            vaults = {r['VaultName']: r for r in response['VaultList']}
+#        except KeyError as e:
+#            logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
+#            vaults = {}
+#
+#        for vault_name, vault in vaults.iteritems():
+#            response = self._client.list_jobs(vaultName=vault_name)
+#            try:
+#                jobs = response['JobList']
+#            except KeyError as e:
+#                logging.info("%s/%s: KeyError %s; Available are %s", self.name, vault_name, e,
+#                             response.keys())
+#                jobs = []
+#            vault['Jobs'] = jobs
+#        return vaults
+#
+#    def _create_results(self, computed_content):
+#        return [AWSSectionResult("", computed_content)]
 
 #.
 #   .--cloud trail---------------------------------------------------------.
@@ -872,32 +927,30 @@ class Glacier(AWSSectionGeneric):
 
 # AWS eigener Monitoring service
 
-
-class CloudTrail(AWSSectionGeneric):
-    @property
-    def name(self):
-        return "cloud_trail"
-
-    @property
-    def interval(self):
-        return 300
-
-    def _extract_content_from_raw_result(self):
-        response = self._client.describe_trails()
-        try:
-            trails = {trail['Name']: trail for trail in response['trailList']}
-        except KeyError as e:
-            logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
-            trails = {}
-
-        for trail_name, trail in trails.iteritems():
-            response = self._client.get_trail_status(Name=trail_name)
-            trail['Status'] = response
-        return trails
-
-    def _format_content(self, content):
-        return [AWSSectionResult("", content)]
-
+#class CloudTrail(AWSSectionGeneric):
+#    @property
+#    def name(self):
+#        return "cloud_trail"
+#
+#    @property
+#    def interval(self):
+#        return 300
+#
+#    def _fetch_raw_content(self, colleague_contents):
+#        response = self._client.describe_trails()
+#        try:
+#            trails = {trail['Name']: trail for trail in response['trailList']}
+#        except KeyError as e:
+#            logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
+#            trails = {}
+#
+#        for trail_name, trail in trails.iteritems():
+#            response = self._client.get_trail_status(Name=trail_name)
+#            trail['Status'] = response
+#        return trails
+#
+#    def _create_results(self, computed_content):
+#        return [AWSSectionResult("", computed_content)]
 
 #.
 #   .--sections------------------------------------------------------------.
@@ -1068,8 +1121,6 @@ class AWSSectionsGeneric(AWSSections):
         #---clients---------------------------------------------------------
         ec2_client = self._init_client('ec2')
         elb_client = self._init_client('elb')
-        cloudtrail_client = self._init_client('cloudtrail')
-        glacier_client = self._init_client('glacier')
         cloudwatch_client = self._init_client('cloudwatch')
 
         #---distributors----------------------------------------------------
@@ -1086,8 +1137,6 @@ class AWSSectionsGeneric(AWSSections):
 
         #---sections--------------------------------------------------------
         elb_health = ELBHealth(elb_client)
-        cloudtrail = CloudTrail(cloudtrail_client)
-        glacier = Glacier(glacier_client)
         ec2 = EC2(cloudwatch_client)
         ebs = EBS(cloudwatch_client)
         elb = ELB(cloudwatch_client)
@@ -1134,12 +1183,6 @@ class AWSSectionsGeneric(AWSSections):
             self._sections.append(elb_health)
             self._sections.append(elb)
 
-        if 'cloudtrail' in self._services:
-            self._sections.append(cloudtrail)
-
-        if 'glacier' in self._services:
-            self._sections.append(glacier)
-
 
 #.
 #   .--main----------------------------------------------------------------.
@@ -1179,8 +1222,6 @@ AWSServices = [
     ("ebs", "Elastic Block Storage (EBS)"),
     ("s3", "Simple Storage Service (S3)"),
     ("elb", "Elastic Load Balancing (ELB)"),
-    #("cloudtrail", ""),
-    #("glacier", ""),
 ]
 
 

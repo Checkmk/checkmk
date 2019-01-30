@@ -537,6 +537,10 @@ def update_config_based_host_attributes():
     Folder.invalidate_caches()
 
 
+# Make the config module initialize the host attributes after loading the config
+config.register_post_config_load_hook(update_config_based_host_attributes)
+
+
 def _clear_config_based_host_attributes():
     for attr in host_attribute_registry.attributes():
         if attr.from_config():

@@ -318,7 +318,6 @@ def init_wato_datastructures(with_wato_lock=False):
         cmk.gui.watolib.git.prepare_git_commit()
 
     cmk.gui.watolib.sidebar_reload.reset()
-    cmk.gui.watolib.host_attributes.update_config_based_host_attributes()
 
     if os.path.exists(ConfigDomainCACertificates.trusted_cas_file) and\
         not _need_to_create_sample_config():

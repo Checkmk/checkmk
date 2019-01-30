@@ -458,9 +458,10 @@ class EC2(AWSSectionCloudwatch):
 
 
 class S3Summary(AWSSectionGeneric):
-    def __init__(self, client, distributor=None, buckets=None):
+    def __init__(self, client, distributor=None, buckets=None, region=None):
         super(S3Summary, self).__init__(client, distributor=distributor)
         self._buckets = self._determine_buckets(buckets)
+        self._region = region
 
     def _determine_buckets(self, buckets):
         if buckets:
@@ -484,6 +485,7 @@ class S3Summary(AWSSectionGeneric):
         return
 
     def _fetch_raw_content(self, colleague_contents):
+        buckets = []
         for bucket in self._buckets:
             bucket_name = bucket['Name']
             response = self._client.get_bucket_location(Bucket=bucket_name)
@@ -492,8 +494,13 @@ class S3Summary(AWSSectionGeneric):
             except KeyError as e:
                 logging.info("%s/%s: KeyError %s; Available are %s", self.name, bucket_name, e,
                              response.keys())
-            else:
-                bucket['LocationConstraint'] = location
+                location = None
+
+            # We can request buckets globally but if a bucket is located in
+            # another region we do not get any results
+            if location is None or location != self._region:
+                continue
+            bucket['LocationConstraint'] = location
 
             try:
                 response = self._client.get_bucket_tagging(Bucket=bucket_name)
@@ -506,7 +513,8 @@ class S3Summary(AWSSectionGeneric):
                              response.keys())
             else:
                 bucket['Tagging'] = tagging
-        return self._buckets
+            buckets.append(bucket)
+        return buckets
 
     def _compute_content(self, raw_content, colleague_contents):
         return raw_content
@@ -1090,30 +1098,19 @@ class AWSSectionsUSEast(AWSSections):
     def init_sections(self, **kwargs):
         #---clients---------------------------------------------------------
         ce_client = self._init_client('ce')
-        s3_client = self._init_client('s3')
-        cloudwatch_client = self._init_client('cloudwatch')
 
         #---distributors----------------------------------------------------
-        s3_summary_distributor = ResultDistributor()
 
         #---sections with distributors--------------------------------------
-        s3_summary = S3Summary(
-            s3_client, distributor=s3_summary_distributor, buckets=kwargs.get('buckets'))
 
         #---sections--------------------------------------------------------
         ce = CostsAndUsage(ce_client)
-        s3 = S3(cloudwatch_client)
 
         #---register sections to distributors-------------------------------
-        s3_summary_distributor.add(s3)
 
         #---register sections for execution---------------------------------
         if 'ce' in self._services:
             self._sections.append(ce)
-
-        if 's3' in self._services:
-            self._sections.append(s3_summary)
-            self._sections.append(s3)
 
 
 class AWSSectionsGeneric(AWSSections):
@@ -1121,6 +1118,7 @@ class AWSSectionsGeneric(AWSSections):
         #---clients---------------------------------------------------------
         ec2_client = self._init_client('ec2')
         elb_client = self._init_client('elb')
+        s3_client = self._init_client('s3')
         cloudwatch_client = self._init_client('cloudwatch')
 
         #---distributors----------------------------------------------------
@@ -1128,18 +1126,25 @@ class AWSSectionsGeneric(AWSSections):
         ec2_summary_distributor = ResultDistributor()
         elb_summary_distributor = ResultDistributor()
         ebs_summary_distributor = ResultDistributor()
+        s3_summary_distributor = ResultDistributor()
 
         #---sections with distributors--------------------------------------
         security_groups = SecurityGroups(ec2_client, security_groups_distributor)
         ec2_summary = EC2Summary(ec2_client, ec2_summary_distributor)
         ebs_summary = EBSSummary(ec2_client, ebs_summary_distributor)
         elb_summary = ELBSummary(elb_client, elb_summary_distributor)
+        s3_summary = S3Summary(
+            s3_client,
+            distributor=s3_summary_distributor,
+            buckets=kwargs.get('buckets'),
+            region=kwargs.get('region'))
 
         #---sections--------------------------------------------------------
         elb_health = ELBHealth(elb_client)
         ec2 = EC2(cloudwatch_client)
         ebs = EBS(cloudwatch_client)
         elb = ELB(cloudwatch_client)
+        s3 = S3(cloudwatch_client)
 
         #---register sections to distributors-------------------------------
         security_groups_distributor.add(ec2_summary)
@@ -1149,6 +1154,7 @@ class AWSSectionsGeneric(AWSSections):
         ebs_summary_distributor.add(ebs)
         elb_summary_distributor.add(elb_health)
         elb_summary_distributor.add(elb)
+        s3_summary_distributor.add(s3)
 
         #---register sections for execution---------------------------------
         # Dependencies: First append sections which distribute their results:
@@ -1182,6 +1188,10 @@ class AWSSectionsGeneric(AWSSections):
             self._sections.append(elb_summary)
             self._sections.append(elb_health)
             self._sections.append(elb)
+
+        if 's3' in self._services:
+            self._sections.append(s3_summary)
+            self._sections.append(s3)
 
 
 #.
@@ -1296,7 +1306,7 @@ def main(args=None):
         try:
             session = create_session(access_key_id, secret_access_key, region)
             aws_sections = AWSSectionsGeneric(hostname, session, services)
-            aws_sections.init_sections()
+            aws_sections.init_sections(region=region)
             aws_sections.run(use_cache=use_cache)
         except Exception as e:
             if args.debug:

@@ -148,6 +148,7 @@ from cmk.gui.watolib.host_attributes import (
     HostAttributeTopicCustomAttributes,
     host_attribute_topic_registry,
     ABCHostAttributeValueSpec,
+    ABCHostAttributeNagiosText,
     host_attribute_registry,
 )
 from cmk.gui.watolib import (
@@ -161,13 +162,9 @@ from cmk.gui.watolib import (
     log_audit,
     get_rulegroup,
     register_rule,
-    declare_host_attribute,
     add_replication_paths,
     make_action_link,
     folder_preserving_link,
-    NagiosTextAttribute,
-    NagiosValueSpecAttribute,
-    ValueSpecAttribute,
     ACTestCategories,
     ACTest,
     ac_test_registry,

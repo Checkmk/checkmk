@@ -979,8 +979,6 @@ class AWSSections(object):
         self._session = session
         self._services = services
         self._sections = []
-        self._results = {}
-        self._exceptions = []
 
     @abc.abstractmethod
     def init_sections(self, **kwargs):
@@ -999,26 +997,25 @@ class AWSSections(object):
             # during we execute an operation, eg. cloudwatch.get_metrics(**kwargs):
             # - botocore.exceptions.EndpointConnectionError
             logging.info(e)
-            self._exceptions.append(e)
 
     def run(self, use_cache=True):
         now = time.time()
+        exceptions = []
+        results = {}
         for section in self._sections:
             if use_cache and self._section_cache_is_recent_enough(now, section):
                 continue
 
             try:
                 result = section.run()
-            except botocore.exceptions.EndpointConnectionError:
-                raise
             except Exception as e:
                 logging.info(e)
-                self._exceptions.append(e)
+                exceptions.append(e)
             else:
-                self._results.setdefault((section.name, section.interval), result)
+                results.setdefault((section.name, section.interval), result)
 
-        self._write_exceptions()
-        self._write_section_results(now)
+        self._write_exceptions(exceptions)
+        self._write_section_results(now, results)
 
     def _section_cache_is_recent_enough(self, now, section):
         state_dir = AWSStateFilesPath / self._hostname
@@ -1046,20 +1043,20 @@ class AWSSections(object):
             return False
         return True
 
-    def _write_exceptions(self):
+    def _write_exceptions(self, exceptions):
         sys.stdout.write("<<<aws_exceptions>>>\n")
-        if self._exceptions:
-            out = "\n".join([e.message for e in self._exceptions])
+        if exceptions:
+            out = "\n".join([e.message for e in exceptions])
         else:
             out = "No exceptions"
         sys.stdout.write("%s: %s\n" % (self.__class__.__name__, out))
 
-    def _write_section_results(self, now):
-        if not self._results:
+    def _write_section_results(self, now, results):
+        if not results:
             logging.info("No results or cached data")
             return
 
-        for (section_name, section_interval), result in self._results.iteritems():
+        for (section_name, section_interval), result in results.iteritems():
             if not result:
                 logging.info("No results of %s", section_name)
                 continue

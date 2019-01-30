@@ -138,6 +138,18 @@ from cmk.gui.watolib.rulespecs import (
     RulespecGroup,
     RulespecSubGroup,
 )
+from cmk.gui.watolib.host_attributes import (
+    HostAttributeTopicBasicSettings,
+    HostAttributeTopicAddress,
+    HostAttributeTopicDataSources,
+    HostAttributeTopicHostTags,
+    HostAttributeTopicNetworkScan,
+    HostAttributeTopicManagementBoard,
+    HostAttributeTopicCustomAttributes,
+    host_attribute_topic_registry,
+    ABCHostAttributeValueSpec,
+    host_attribute_registry,
+)
 from cmk.gui.watolib import (
     multisite_dir,
     wato_root_dir,
@@ -153,7 +165,6 @@ from cmk.gui.watolib import (
     add_replication_paths,
     make_action_link,
     folder_preserving_link,
-    ContactGroupsAttribute,
     NagiosTextAttribute,
     NagiosValueSpecAttribute,
     ValueSpecAttribute,
@@ -1596,7 +1607,7 @@ def configure_attributes(new,
                 if not content:
                     content = _("empty")
 
-                if isinstance(attr, ValueSpecAttribute):
+                if isinstance(attr, ABCHostAttributeValueSpec):
                     html.open_b()
                     html.write(content)
                     html.close_b()

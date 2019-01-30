@@ -132,17 +132,14 @@ from cmk.gui.watolib.host_attributes import (
     undeclare_host_attribute,
     host_attribute,
     collect_attributes,
-    Attribute,
     TextAttribute,
     ValueSpecAttribute,
     FixedTextAttribute,
     NagiosTextAttribute,
     EnumAttribute,
-    HostTagAttribute,
     HostTagListAttribute,
     HostTagCheckboxAttribute,
     NagiosValueSpecAttribute,
-    ContactGroupsAttribute,
 )
 from cmk.gui.watolib.automations import (
     MKAutomationException,

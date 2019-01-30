@@ -341,8 +341,6 @@ from cmk.gui.watolib import (
     add_service_change,
     site_neutral_path,
     declare_host_attribute,
-    Attribute,
-    ContactGroupsAttribute,
     NagiosTextAttribute,
     ValueSpecAttribute,
     ACTestCategories,

@@ -40,6 +40,7 @@ from cmk.gui.plugins.wato.utils import (
     get_hosts_from_checkboxes,
 )
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode
+from cmk.gui.watolib.host_attributes import host_attribute_registry
 
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
@@ -154,7 +155,7 @@ class ModeBulkCleanup(WatoMode):
 
     def _bulk_collect_cleaned_attributes(self):
         to_clean = []
-        for attr in watolib.host_attributes.attributes().values():
+        for attr in host_attribute_registry.attributes():
             attrname = attr.name()
             if html.get_checkbox("_clean_" + attrname) is True:
                 to_clean.append(attrname)
@@ -182,7 +183,7 @@ class ModeBulkCleanup(WatoMode):
 
     def _select_attributes_for_bulk_cleanup(self, hosts):
         num_shown = 0
-        for attr in sorted(watolib.host_attributes.attributes().values(), key=lambda a: a.title()):
+        for attr in host_attribute_registry.get_sorted_host_attributes():
             attrname = attr.name()
 
             # only show attributes that at least on host have set

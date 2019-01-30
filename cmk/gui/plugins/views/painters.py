@@ -339,7 +339,7 @@ class PainterSiteIcon(Painter):
 
     @property
     def short_title(self):
-        return _("")
+        return u""
 
     @property
     def columns(self):
@@ -457,7 +457,7 @@ class PainterServiceNagiosLink(Painter):
 
     @property
     def short_title(self):
-        return _("")
+        return u""
 
     @property
     def columns(self):
@@ -2463,7 +2463,7 @@ class PainterHostNagiosLink(Painter):
 
     @property
     def short_title(self):
-        return _("")
+        return u""
 
     @property
     def columns(self):
@@ -2778,7 +2778,7 @@ class PainterNumServices(Painter):
 
     @property
     def short_title(self):
-        return _("")
+        return u""
 
     @property
     def columns(self):
@@ -3420,7 +3420,7 @@ class PainterHgNumServices(Painter):
 
     @property
     def short_title(self):
-        return _("")
+        return u""
 
     @property
     def columns(self):
@@ -3714,7 +3714,7 @@ class PainterSgNumServices(Painter):
 
     @property
     def short_title(self):
-        return _("")
+        return u""
 
     @property
     def columns(self):
@@ -4590,7 +4590,7 @@ class PainterLogIcon(Painter):
 
     @property
     def short_title(self):
-        return _("")
+        return u""
 
     @property
     def columns(self):

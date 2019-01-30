@@ -25,47 +25,32 @@
 # Boston, MA 02110-1301 USA.
 
 
-def parse_aws_s3_summary(info):
+def parse_aws_s3(info):
     parsed = {}
     for row in parse_aws(info):
-        parsed.setdefault(row['Name'], row)
+        splitted_row = row['Id'].split("_")
+        inst = parsed.setdefault(row['Label'], {}).setdefault(splitted_row[0], {})
+        try:
+            inst.setdefault(splitted_row[1], row['Values'][0])
+        except (IndexError, ValueError):
+            pass
     return parsed
 
 
-def _extract_aws_s3_tags(metrics):
-    # metrics is dict with key 'Tagging'
-    return ", ".join(
-        ["%s: %s" % (pair['Key'], pair['Value']) for pair in metrics.get('Tagging', [])])
+@get_parsed_item_data
+def check_aws_s3(item, params, metrics):
+    sum_size = sum(metrics['bucketsizebytes'].values())
+    yield 0, 'Bucket size: %s' % get_bytes_human_readable(sum_size), [('bucket_size', sum_size)]
+
+    num_objects = sum(metrics['numberofobjects'].values())
+    yield 0, 'Number of objects: %s' % int(num_objects), [('num_objects', num_objects)]
 
 
-def check_aws_s3_summary(item, params, parsed):
-    yield 0, '%s buckets' % len(parsed)
-    buckets_by_region = {}
-    long_output = []
-    for bucket_name, row in parsed.iteritems():
-        region = row['LocationConstraint']
-        if not region:
-            region = "unknown"
-
-        buckets_by_region.setdefault(region, []).append(row)
-        long_output_info = ["Bucket: %s, Region: %s" % (bucket_name, region)]
-        tags = _extract_aws_s3_tags(row)
-        if tags:
-            long_output_info.append("[Tags] %s" % tags)
-        long_output.append(", ".join(long_output_info))
-
-    for region, buckets in buckets_by_region.iteritems():
-        region_readable = AWSRegions.get(region, 'unknown[%s]' % region)
-        yield 0, "%s: %s" % (region_readable, len(buckets))
-
-    if long_output:
-        yield 0, '\n%s' % '\n'.join(long_output)
-
-
-check_info['aws_s3_summary'] = {
-    'parse_function': parse_aws_s3_summary,
-    'inventory_function': discover_single,
-    'check_function': check_aws_s3_summary,
-    'service_description': 'AWS/S3 Summary',
+check_info['aws_s3'] = {
+    'parse_function': parse_aws_s3,
+    'inventory_function': discover(),
+    'check_function': check_aws_s3,
+    'service_description': 'AWS/S3 Objects %s',
+    'has_perfdata': True,
     'includes': ['aws.include'],
 }

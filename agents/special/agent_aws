@@ -1292,7 +1292,7 @@ def main(args=None):
     try:
         session = create_session(access_key_id, secret_access_key, "us-east-1")
         aws_sections_us_east = AWSSectionsUSEast(hostname, session, services)
-        aws_sections_us_east.init_sections(buckets=args.buckets)
+        aws_sections_us_east.init_sections()
         aws_sections_us_east.run(use_cache=use_cache)
     except Exception as e:
         if args.debug:
@@ -1303,7 +1303,7 @@ def main(args=None):
         try:
             session = create_session(access_key_id, secret_access_key, region)
             aws_sections = AWSSectionsGeneric(hostname, session, services)
-            aws_sections.init_sections(region=region)
+            aws_sections.init_sections(buckets=args.buckets, region=region)
             aws_sections.run(use_cache=use_cache)
         except Exception as e:
             if args.debug:

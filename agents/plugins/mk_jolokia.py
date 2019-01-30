@@ -38,7 +38,7 @@ try:
 except ImportError as import_error:
     sys.stdout.write(
         "<<<jolokia_info>>>\n"
-        "Error: mk_jolokia requires either the json or simplejson library\n"
+        "Error: mk_jolokia requires either the json or simplejson library.\n"
         "Please either use a Python version that contains the json library or install the"
         " simplejson library on the monitored system.")
     sys.exit(1)
@@ -161,12 +161,6 @@ QUERY_SPECS_SPECIFIC = {
                False),],
 }
 
-#   ('*:j2eeType=WebModule,name=/--/localhost/-/%(app)s,*/state', None, [ "name" ]),
-#   ('*:j2eeType=Servlet,WebModule=/--/localhost/-/%(app)s,name=%(servlet)s,*/requestCount',
-#    None, [ "WebModule", "name" ]),
-#   ("Catalina:J2EEApplication=none,J2EEServer=none,WebModule=*,j2eeType=Servlet,name=*",
-#    None, [ "WebModule", "name" ]),
-
 
 class SkipInstance(RuntimeError):
     pass
@@ -213,11 +207,11 @@ class JolokiaInstance(object):
             required_keys.add("service_password")
         missing_keys = required_keys - set(config.keys())
         if missing_keys:
-            raise ValueError(err_msg % ("Missing keys %s" % ", ".join(missing_keys)))
+            raise ValueError(err_msg % ("Missing key(s): %s" % ", ".join(missing_keys)))
 
         if not instance:
-            config["instance"] = str(config["port"])
-        config["instance"] = config["instance"].replace(" ", "_")
+            instance = str(config["port"])
+        config["instance"] = instance.replace(" ", "_")
 
         # port must be (or look like) an integer
         try:
@@ -244,11 +238,11 @@ class JolokiaInstance(object):
 
     def __init__(self, config):
         super(JolokiaInstance, self).__init__()
-        self.config = self._sanitize_config(config)
+        self._config = self._sanitize_config(config)
 
-        self.name = self.config["instance"]
-        self.product = self.config.get("product")
-        self.custom_vars = self.config.get("custom_vars", [])
+        self.name = self._config["instance"]
+        self.product = self._config.get("product")
+        self.custom_vars = self._config.get("custom_vars", [])
 
         self.base_url = self._get_base_url()
         self.target = self._get_target()
@@ -256,50 +250,50 @@ class JolokiaInstance(object):
 
     def _get_base_url(self):
         return "%s://%s:%d/%s" % (
-            self.config["protocol"].strip('/'),
-            self.config["server"].strip('/'),
-            self.config["port"],
-            self.config["suburi"],
+            self._config["protocol"].strip('/'),
+            self._config["server"].strip('/'),
+            self._config["port"],
+            self._config["suburi"],
         )
 
     def _get_target(self):
-        url = self.config.get("service_url")
+        url = self._config.get("service_url")
         if url is None:
             return {}
-        user = self.config.get("service_user")
+        user = self._config.get("service_user")
         if user is None:
             return {"url": url}
         return {
             "url": url,
             "user": user,
-            "password": self.config["service_password"],
+            "password": self._config["service_password"],
         }
 
     def _initialize_http_session(self):
         session = requests.Session()
-        session.verify = self.config["verify"]
+        session.verify = self._config["verify"]
 
         session.timeout = 1.0
 
-        auth_method = self.config.get("mode")
+        auth_method = self._config.get("mode")
         if auth_method is None:
             return session
 
         # initialize authentication
         if auth_method == "https":
             session.cert = (
-                self.config["client_cert"],
-                self.config["client_key"],
+                self._config["client_cert"],
+                self._config["client_key"],
             )
         elif auth_method == 'digest':
             session.auth = HTTPDigestAuth(
-                self.config["user"],
-                self.config["password"],
+                self._config["user"],
+                self._config["password"],
             )
         elif auth_method in ("basic", "basic_preemptive"):
             session.auth = (
-                self.config["user"],
-                self.config["password"],
+                self._config["user"],
+                self._config["password"],
             )
         else:
             raise NotImplementedError("Authentication method %r" % auth_method)
@@ -382,8 +376,6 @@ def make_item_list(path, value, itemspec):
 # key = 'Catalina:host=localhost,path=\\/,type=Manager'
 # itemsepc = [ "path" ]
 # --> "/"
-
-
 def extract_item(key, itemspec):
     if not itemspec:
         return ()
@@ -420,6 +412,7 @@ def fetch_metric(inst, path, title, itemspec, inst_add=None):
             item = ",".join((inst.name, inst_add))
         else:
             item = inst.name
+
         if title:
             if subinstance:
                 tit = title + "." + subinstance[-1]

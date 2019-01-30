@@ -38,7 +38,7 @@ def agent_azure_arguments(params, _no_hostname, _no_ipaddress):
             if value:
                 args.append(option)
         else:
-            args += [option, value]
+            args += [option, quote_shell_string(value)]
 
     config = params['config']
     if "fetchall" in config:
@@ -49,13 +49,13 @@ def agent_azure_arguments(params, _no_hostname, _no_ipaddress):
         args.append("--explicit-config")
     for group_dict in explicit:
         group_name = group_dict['group_name']
-        args.append("group=%s" % group_name)
+        args.append(quote_shell_string("group=%s" % group_name))
 
-        group_resources = group_dict['resources']
+        group_resources = group_dict.get('resources')
         if group_resources:
-            args.append("resources=%s" % ",".join(group_resources))
+            args.append(quote_shell_string("resources=%s" % ",".join(group_resources)))
 
-    return args
+    return ' '.join(args)
 
 
 special_agent_info['azure'] = agent_azure_arguments

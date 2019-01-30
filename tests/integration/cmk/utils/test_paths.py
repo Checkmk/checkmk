@@ -1,36 +1,23 @@
-import pytest
 import os
 
-from cmk.utils.exceptions import MKGeneralException
 import cmk.utils.paths
 
-def _all_path_names():
-    import cmk.utils.paths
-    names = []
-    for name in dir(cmk.utils.paths):
-        if name in [ "MKGeneralException", "os" ] or name[0] == "_":
-            continue
-        names.append(name)
-    return names
+
+def _check_paths(root):
+    for var, value in cmk.utils.paths.__dict__.iteritems():
+        if not var.startswith("_") and var not in ('Path', 'os'):
+            assert isinstance(value, str)
+            assert value.startswith(root)
 
 
 def test_paths_in_site(site):
-    for var_name in _all_path_names():
-        value = cmk.utils.paths.__dict__[var_name]
-        assert value is not None
-        assert type(value) == str
-        assert value.startswith(site.root)
+    _check_paths(site.root)
 
 
-def test_no_path_variable_none(monkeypatch):
-    monkeypatch.setitem(os.environ, 'OMD_ROOT', '/omd/sites/dingeling')
-    reload(cmk.utils.paths)
-
-    for var_name in _all_path_names():
-        value = cmk.utils.paths.__dict__[var_name]
-        assert value is not None
-        assert type(value) == str
-        assert value.startswith("/omd/sites/dingeling")
-
-    monkeypatch.undo()
+def test_paths_in_omd_root(monkeypatch):
+    omd_root = '/omd/sites/dingeling'
+    with monkeypatch.context() as m:
+        m.setitem(os.environ, 'OMD_ROOT', omd_root)
+        reload(cmk.utils.paths)
+        _check_paths(omd_root)
     reload(cmk.utils.paths)

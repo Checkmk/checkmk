@@ -44,7 +44,7 @@ import cmk.gui.config as config
 import cmk.gui.userdb as userdb
 import cmk.gui.sites as sites
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, current_app
 from cmk.gui.exceptions import MKException, MKGeneralException, MKAuthException, MKUserError, RequestTimeout
 
 
@@ -266,11 +266,7 @@ def _load_inventory_tree(hostname):
     if not hostname:
         return
 
-    inventory_tree_cache = html.get_cached("inventory")
-    if not inventory_tree_cache:
-        inventory_tree_cache = {}
-        html.set_cache("inventory", inventory_tree_cache)
-
+    inventory_tree_cache = current_app.g.setdefault("inventory", {})
     if hostname in inventory_tree_cache:
         inventory_tree = inventory_tree_cache[hostname]
     else:
@@ -313,12 +309,12 @@ def _get_permitted_inventory_paths():
     None in case the user is allowed to see the whole tree.
     """
     cache_varname = "permitted_inventory_paths"
-    if html.is_cached(cache_varname):
-        return html.get_cached(cache_varname)
+    if cache_varname in current_app.g:
+        return current_app.g[cache_varname]
     contact_groups = userdb.load_group_information().get("contact", {})
     user_groups = userdb.contactgroups_of_user(config.user.id)
     if not user_groups:
-        html.set_cache(cache_varname, None)
+        current_app.g[cache_varname] = None
         return None
 
     forbid_whole_tree = False
@@ -327,11 +323,11 @@ def _get_permitted_inventory_paths():
         inventory_paths = contact_groups.get(user_group, {}).get('inventory_paths')
         if inventory_paths is None:
             # Old configuration: no paths configured means 'allow_all'
-            html.set_cache(cache_varname, None)
+            current_app.g[cache_varname] = None
             return None
 
         if inventory_paths == "allow_all":
-            html.set_cache(cache_varname, None)
+            current_app.g[cache_varname] = None
             return None
 
         elif inventory_paths == "forbid_all":
@@ -348,10 +344,10 @@ def _get_permitted_inventory_paths():
             permitted_paths.append((parsed, entry.get("attributes")))
 
     if forbid_whole_tree and not permitted_paths:
-        html.set_cache(cache_varname, [])
+        current_app.g[cache_varname] = []
         return []
 
-    html.set_cache(cache_varname, permitted_paths)
+    current_app.g[cache_varname] = permitted_paths
     return permitted_paths
 
 

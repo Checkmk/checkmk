@@ -69,6 +69,13 @@ class Application(object):
         self._request = cmk.gui.http.Request(environ)
         self._response = cmk.gui.http.Response(is_secure=self._request.is_ssl_request)
 
+        # Register application object for access from other modules
+        cmk.gui.globals.current_app.set_current(self)
+
+        # Initialize some simple per request global namespace. Nothing fancy here.
+        # Each request starts with a fresh instance.
+        self.g = {}
+
         # Create an object that contains all data about the request and
         # helper functions for creating valid HTML. Parse URI and
         # store results in the request object for later usage.

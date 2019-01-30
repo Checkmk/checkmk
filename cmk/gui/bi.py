@@ -48,7 +48,7 @@ import cmk.gui.i18n
 import cmk.gui.utils
 import cmk.gui.view_utils
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, current_app
 from cmk.gui.htmllib import HTML
 from cmk.gui.log import logger
 from cmk.gui.exceptions import MKConfigError, MKGeneralException
@@ -1423,9 +1423,9 @@ def compile_forest(only_hosts=None, only_groups=None):
     # Prevent multiple redundant calls of this function
     # Sometimes, the GUI likes to call this function a hundred times in the same request
     html_cache_id = "BI_CACHE_%r/%r" % (only_hosts, only_groups)
-    if html.is_cached(html_cache_id):
+    if html_cache_id in current_app.g:
         return
-    html.set_cache(html_cache_id, "1")
+    current_app.g[html_cache_id] = "1"
 
     compilation_start_time = time.time()
     log("###########################################################")

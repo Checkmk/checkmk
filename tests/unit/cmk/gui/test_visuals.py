@@ -3652,22 +3652,22 @@ expected_infos = {
 
 
 def test_registered_infos(load_plugins):
-    assert sorted(utils._infos.keys()) == sorted(expected_infos.keys())
+    assert sorted(utils.visual_info_registry.keys()) == sorted(expected_infos.keys())
 
 
 def test_registered_info_attributes(load_plugins):
-    for ident, info in utils._infos.items():
-        #info = cls()
+    for ident, cls in utils.visual_info_registry.items():
+        info = cls()
         spec = expected_infos[ident]
 
-        assert info["title"] == spec["title"]
-        assert info["title_plural"] == spec["title_plural"]
+        assert info.title == spec["title"]
+        assert info.title_plural == spec["title_plural"]
 
         if spec["single_spec"] is None:
-            assert info["single_spec"] is None
+            assert info.single_spec is None
         else:
-            assert [(e[0], e[1].__class__.__name__) for e in info["single_spec"]
+            assert [(e[0], e[1].__class__.__name__) for e in info.single_spec
                    ] == spec["single_spec"]
 
-        assert info.get("multiple_site_filters", []) == spec.get("multiple_site_filters", [])
-        assert info.get("single_site", True) == spec.get("single_site", True)
+        assert info.multiple_site_filters == spec.get("multiple_site_filters", [])
+        assert info.single_site == spec.get("single_site", True)

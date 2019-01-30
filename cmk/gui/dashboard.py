@@ -63,6 +63,7 @@ from cmk.gui.permissions import (
     PermissionSection,
 )
 from cmk.gui.plugins.visuals.utils import (
+    visual_info_registry,
     visual_type_registry,
     VisualType,
 )
@@ -1086,7 +1087,7 @@ def page_edit_dashboards():
 
 @cmk.gui.pages.register("create_dashboard")
 def page_create_dashboard():
-    visuals.page_create_visual('dashboards', visuals.infos.keys())
+    visuals.page_create_visual('dashboards', visual_info_registry.keys())
 
 
 #.
@@ -1294,7 +1295,7 @@ def page_edit_dashlet():
         if single_infos_raw:
             single_infos = single_infos_raw.split(',')
             for key in single_infos:
-                if key not in visuals.infos:
+                if key not in visual_info_registry:
                     raise MKUserError('single_infos', _('The info %s does not exist.') % key)
 
         if not single_infos:

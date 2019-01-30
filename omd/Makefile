@@ -42,7 +42,6 @@ PACKAGES := \
     dokuwiki \
     jmx4perl \
     mk-livestatus \
-    icinga \
     nagios \
     monitoring-plugins \
     nagvis \

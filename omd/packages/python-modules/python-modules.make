@@ -111,17 +111,10 @@ PYTHON_MODULES_LIST += dnspython-1.15.0.zip # needed for LDAP (nearest DC detect
 PYTHON_MODULES_LIST += python-ad-0.9.tar.gz # needed for LDAP (nearest DC detection)
 
 PYTHON_MODULES_LIST += idna-2.7.tar.gz
-ifneq ($(filter $(DISTRO_CODE),el5 lucid sles11sp1 sles11sp2 sles11sp3 sles11sp4 squeeze),)
+ifneq ($(filter $(DISTRO_CODE),el5 sles11sp1 lucid squeeze),)
     PYTHON_MODULES_LIST += cryptography-1.4.tar.gz
     PYTHON_MODULES_PATCHES += $(PACKAGE_DIR)/$(PYTHON_MODULES)/patches/0005-NID_ecdsa_with_SHA-fix.patch
     PYTHON_MODULES_PATCHES += $(PACKAGE_DIR)/$(PYTHON_MODULES)/patches/0009-cryptography-1.4-disable-version-warning.patch
-else ifneq ($(filter $(DISTRO_CODE),el6),)
-# Cryptography dropped support for OpenSSL 1.0.0 with release 1.7
-# (https://github.com/pyca/cryptography/blob/master/CHANGELOG.rst),
-# so we stick with 1.5.3.
-    PYTHON_MODULES_LIST += cryptography-1.5.3.tar.gz
-    PYTHON_MODULES_PATCHES += $(PACKAGE_DIR)/$(PYTHON_MODULES)/patches/0004-CMS_DEBUG_DECRYPT-fix.patch
-    PYTHON_MODULES_PATCHES += $(PACKAGE_DIR)/$(PYTHON_MODULES)/patches/0009-cryptography-1.5.3-disable-version-warning.patch
 else
     PYTHON_MODULES_LIST  += asn1crypto-0.24.0.tar.gz
     PYTHON_MODULES_LIST  += cryptography-2.4.1.tar.gz

@@ -6,7 +6,7 @@ distribution: check_mk
 description:
  This check monitors health of AWS elastic block storages.
  To make this check work you have to configure the related
- special agent {{Amazon Web Services (AWS)}}.
+ special agent {Amazon Web Services (AWS)}.
  If the EBS status is OK the check returns OK otherwise CRIT.
  Details of the single status checks are also reported.
 

@@ -8,7 +8,7 @@ description:
  the number of objects, the summarized size and the largest
  object of a bucket.
  To make this check work you have to configure the related
- special agent {{Amazon Web Services (AWS)}}.
+ special agent {Amazon Web Services (AWS)}.
 
 inventory:
  One service per bucket will be created.

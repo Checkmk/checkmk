@@ -7,7 +7,7 @@ description:
  This check monitors the number of bytes/packets received and transmitted on
  all network interfaces by the instance.
  To make this check work you have to configure the related
- special agent {{Amazon Web Services (AWS)}}.
+ special agent {Amazon Web Services (AWS)}.
 
 inventory:
  One service will be created.

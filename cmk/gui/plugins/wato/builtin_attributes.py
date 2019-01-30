@@ -58,32 +58,55 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.plugins.wato import (
     HostAttributeTopicBasicSettings,
     HostAttributeTopicNetworkScan,
+    HostAttributeTopicAddress,
+    HostAttributeTopicManagementBoard,
     ABCHostAttributeValueSpec,
+    ABCHostAttributeNagiosText,
     host_attribute_registry,
-    declare_host_attribute,
     SNMPCredentials,
     IPMIParameters,
-    NagiosTextAttribute,
-    ValueSpecAttribute,
     HostnameTranslation,
     ConfigHostname,
 )
 
-declare_host_attribute(
-    NagiosTextAttribute(
-        "alias",
-        "alias",
-        _("Alias"),
-        _("A comment or description of this host"),
-        "",
-        mandatory=False),
-    show_in_table=True,
-    show_in_folder=False)
 
-declare_host_attribute(
-    ValueSpecAttribute(
-        "ipaddress",
-        HostAddress(
+@host_attribute_registry.register
+class HostAttributeAlias(ABCHostAttributeNagiosText):
+    def topic(self):
+        return HostAttributeTopicBasicSettings
+
+    def name(self):
+        return "alias"
+
+    def nagios_name(self):
+        return "alias"
+
+    def title(self):
+        return _("Alias")
+
+    def help(self):
+        return _("A comment or description of this host")
+
+    def show_in_folder(self):
+        return False
+
+
+@host_attribute_registry.register
+class HostAttributeIPv4Address(ABCHostAttributeValueSpec):
+    def topic(self):
+        return HostAttributeTopicAddress
+
+    def name(self):
+        return "ipaddress"
+
+    def show_in_folder(self):
+        return False
+
+    def depends_on_tags(self):
+        return ["ip-v4"]
+
+    def valuespec(self):
+        return HostAddress(
             title=_("IPv4 Address"),
             help=_("In case the name of the host is not resolvable via <tt>/etc/hosts</tt> "
                    "or DNS by your monitoring server, you can specify an explicit IP "
@@ -99,17 +122,25 @@ declare_host_attribute(
                    "Use this only for hosts with dynamic IP addresses."),
             allow_empty=False,
             allow_ipv6_address=False,
-        )),
-    show_in_table=True,
-    show_in_folder=False,
-    depends_on_tags=["ip-v4"],
-    topic=_("Address"),
-)
+        )
 
-declare_host_attribute(
-    ValueSpecAttribute(
-        "ipv6address",
-        HostAddress(
+
+@host_attribute_registry.register
+class HostAttributeIPv6Address(ABCHostAttributeValueSpec):
+    def topic(self):
+        return HostAttributeTopicAddress
+
+    def name(self):
+        return "ipv6address"
+
+    def show_in_folder(self):
+        return False
+
+    def depends_on_tags(self):
+        return ["ip-v6"]
+
+    def valuespec(self):
+        return HostAddress(
             title=_("IPv6 Address"),
             help=_("In case the name of the host is not resolvable via <tt>/etc/hosts</tt> "
                    "or DNS by your monitoring server, you can specify an explicit IPv6 "
@@ -125,17 +156,28 @@ declare_host_attribute(
                    "Use this only for hosts with dynamic IP addresses."),
             allow_empty=False,
             allow_ipv4_address=False,
-        )),
-    show_in_table=True,
-    show_in_folder=False,
-    depends_on_tags=["ip-v6"],
-    topic=_("Address"),
-)
+        )
 
-declare_host_attribute(
-    ValueSpecAttribute(
-        "additional_ipv4addresses",
-        ListOf(
+
+@host_attribute_registry.register
+class HostAttributeAdditionalIPv4Addresses(ABCHostAttributeValueSpec):
+    def topic(self):
+        return HostAttributeTopicAddress
+
+    def name(self):
+        return "additional_ipv4addresses"
+
+    def show_in_table(self):
+        return False
+
+    def show_in_folder(self):
+        return False
+
+    def depends_on_tags(self):
+        return ["ip-v4"]
+
+    def valuespec(self):
+        return ListOf(
             HostAddress(
                 allow_empty=False,
                 allow_ipv6_address=False,
@@ -143,17 +185,28 @@ declare_host_attribute(
             title=_("Additional IPv4 addresses"),
             help=_("Here you can specify additional IPv4 addresses. "
                    "These can be used in some active checks like ICMP."),
-        )),
-    show_in_table=False,
-    show_in_folder=False,
-    depends_on_tags=["ip-v4"],
-    topic=_("Address"),
-)
+        )
 
-declare_host_attribute(
-    ValueSpecAttribute(
-        "additional_ipv6addresses",
-        ListOf(
+
+@host_attribute_registry.register
+class HostAttributeAdditionalIPv6Addresses(ABCHostAttributeValueSpec):
+    def topic(self):
+        return HostAttributeTopicAddress
+
+    def name(self):
+        return "additional_ipv6addresses"
+
+    def show_in_table(self):
+        return False
+
+    def show_in_folder(self):
+        return False
+
+    def depends_on_tags(self):
+        return ["ip-v6"]
+
+    def valuespec(self):
+        return ListOf(
             HostAddress(
                 allow_empty=False,
                 allow_ipv4_address=False,
@@ -161,17 +214,28 @@ declare_host_attribute(
             title=_("Additional IPv6 addresses"),
             help=_("Here you can specify additional IPv6 addresses. "
                    "These can be used in some active checks like ICMP."),
-        )),
-    show_in_table=False,
-    show_in_folder=False,
-    depends_on_tags=["ip-v6"],
-    topic=_("Address"),
-)
+        )
 
-declare_host_attribute(
-    ValueSpecAttribute(
-        "snmp_community",
-            SNMPCredentials(
+
+@host_attribute_registry.register
+class HostAttributeSNMPCommunity(ABCHostAttributeValueSpec):
+    def topic(self):
+        return HostAttributeTopicBasicSettings
+
+    def name(self):
+        return "snmp_community"
+
+    def show_in_table(self):
+        return False
+
+    def show_in_folder(self):
+        return True
+
+    def depends_on_tags(self):
+        return ["snmp"]
+
+    def valuespec(self):
+        return SNMPCredentials(
                 help =  _("Using this option you can configure the community which should be used when "
                           "contacting this host via SNMP v1/v2 or v3. It is possible to configure the SNMP community by "
                           "using the <a href=\"%s\">SNMP Communities</a> ruleset, but when you configure "
@@ -179,11 +243,6 @@ declare_host_attribute(
                             "wato.py?mode=edit_ruleset&varname=snmp_communities",
                 default_value = None,
             )
-    ),
-    show_in_table = False,
-    show_in_folder = True,
-    depends_on_tags = ['snmp'],
-)
 
 
 @host_attribute_registry.register
@@ -498,10 +557,7 @@ class HostAttributeNetworkScanResult(ABCHostAttributeValueSpec):
                         ],
                     ),
                 ),
-                (
-                    "output",
-                    TextUnicode(title=_("Output")),
-                ),
+                ("output", TextUnicode(title=_("Output"),)),
             ],
             title=_("Last Scan Result"),
             optional_keys=[],
@@ -509,23 +565,46 @@ class HostAttributeNetworkScanResult(ABCHostAttributeValueSpec):
         )
 
 
-declare_host_attribute(
-    ValueSpecAttribute(
-        "management_address",
-        HostAddress(
+@host_attribute_registry.register
+class HostAttributeManagementAddress(ABCHostAttributeValueSpec):
+    def name(self):
+        return "management_address"
+
+    def topic(self):
+        return HostAttributeTopicManagementBoard
+
+    def show_in_table(self):
+        return False
+
+    def show_in_folder(self):
+        return False
+
+    def valuespec(self):
+        return HostAddress(
             title=_("Address"),
             help=_("Address (IPv4 or IPv6) or dns name under which the "
                    "management board can be reached. If this is not set, "
                    "the same address as that of the host will be used."),
-            allow_empty=False)),
-    show_in_table=False,
-    show_in_folder=False,
-    topic=_("Management Board"))
+            allow_empty=False,
+        )
 
-declare_host_attribute(
-    ValueSpecAttribute(
-        "management_protocol",
-        DropdownChoice(
+
+@host_attribute_registry.register
+class HostAttributeManagementProtocol(ABCHostAttributeValueSpec):
+    def name(self):
+        return "management_protocol"
+
+    def topic(self):
+        return HostAttributeTopicManagementBoard
+
+    def show_in_table(self):
+        return False
+
+    def show_in_folder(self):
+        return True
+
+    def valuespec(self):
+        return DropdownChoice(
             title=_("Protocol"),
             help=_("Specify the protocol used to connect to the management board."),
             choices=[
@@ -534,20 +613,28 @@ declare_host_attribute(
                 ("ipmi", _("IPMI")),
                 #("ping", _("Ping-only"))
             ],
-        )),
-    show_in_table=False,
-    show_in_folder=True,
-    topic=_("Management Board"))
+        )
 
-declare_host_attribute(
-    ValueSpecAttribute("management_snmp_community",
-                       SNMPCredentials(
-                           default_value=None,
-                           allow_none=True,
-                       )),
-    show_in_table=False,
-    show_in_folder=True,
-    topic=_("Management Board"))
+
+@host_attribute_registry.register
+class HostAttributeManagementSNMPCommunity(ABCHostAttributeValueSpec):
+    def name(self):
+        return "management_snmp_community"
+
+    def topic(self):
+        return HostAttributeTopicManagementBoard
+
+    def show_in_table(self):
+        return False
+
+    def show_in_folder(self):
+        return True
+
+    def valuespec(self):
+        return SNMPCredentials(
+            default_value=None,
+            allow_none=True,
+        )
 
 
 class IPMICredentials(Alternative):
@@ -564,16 +651,25 @@ class IPMICredentials(Alternative):
         super(IPMICredentials, self).__init__(**kwargs)
 
 
-declare_host_attribute(
-    ValueSpecAttribute("management_ipmi_credentials",
-                       IPMICredentials(
-                           title=_("IPMI credentials"),
-                           default_value=None,
-                       )),
-    show_in_table=False,
-    show_in_folder=True,
-    topic=_("Management Board"),
-)
+@host_attribute_registry.register
+class HostAttributeManagementIPMICredentials(ABCHostAttributeValueSpec):
+    def name(self):
+        return "management_ipmi_credentials"
+
+    def topic(self):
+        return HostAttributeTopicManagementBoard
+
+    def show_in_table(self):
+        return False
+
+    def show_in_folder(self):
+        return True
+
+    def valuespec(self):
+        return IPMICredentials(
+            title=_("IPMI credentials"),
+            default_value=None,
+        )
 
 
 @host_attribute_registry.register
@@ -610,10 +706,34 @@ class HostAttributeSite(ABCHostAttributeValueSpec):
         return []
 
 
-declare_host_attribute(
-    ValueSpecAttribute(
-        "locked_by",
-        Transform(
+@host_attribute_registry.register
+class HostAttributeLockedBy(ABCHostAttributeValueSpec):
+    def name(self):
+        return "locked_by"
+
+    def topic(self):
+        return HostAttributeTopicBasicSettings
+
+    def show_in_table(self):
+        return False
+
+    def show_in_form(self):
+        return True
+
+    def show_in_folder(self):
+        return True
+
+    def show_in_host_search(self):
+        return True
+
+    def show_inherited_value(self):
+        return False
+
+    def editable(self):
+        return False
+
+    def valuespec(self):
+        return Transform(
             Tuple(
                 orientation="horizontal",
                 title_br=False,
@@ -628,26 +748,37 @@ declare_host_attribute(
             ),
             forth=tuple,
             back=list,
-        )),
-    show_in_table=False,
-    show_in_form=True,
-    show_in_folder=True,
-    show_in_host_search=True,
-    show_inherited_value=False,
-    editable=False,
-)
+        )
 
-declare_host_attribute(
-    ValueSpecAttribute(
-        "locked_attributes",
-        ListOf(
+
+@host_attribute_registry.register
+class HostAttributeLockedAttributes(ABCHostAttributeValueSpec):
+    def name(self):
+        return "locked_attributes"
+
+    def topic(self):
+        return HostAttributeTopicBasicSettings
+
+    def show_in_table(self):
+        return False
+
+    def show_in_form(self):
+        return True
+
+    def show_in_folder(self):
+        return True
+
+    def show_in_host_search(self):
+        return False
+
+    def show_inherited_value(self):
+        return False
+
+    def editable(self):
+        return False
+
+    def valuespec(self):
+        return ListOf(
             DropdownChoice(choices=host_attribute_registry.get_choices),
             title=_("Locked attributes"),
-        )),
-    show_in_table=False,
-    show_in_form=True,
-    show_in_folder=True,
-    show_in_host_search=False,
-    show_inherited_value=False,
-    editable=False,
-)
+        )

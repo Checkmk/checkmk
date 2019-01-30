@@ -132,12 +132,7 @@ config_parts = [
 ]
 
 package_ignored_files = {
-    "lib": [
-        "nagios/plugins/README.txt",
-        # it's a symlink to the nagios directory. All files would be doubled.
-        # So better ignore this directory to prevent confusions.
-        "icinga/plugins",
-    ],
+    "lib": ["nagios/plugins/README.txt"],
 }
 
 

@@ -19,7 +19,7 @@ $(CHECK_MULTI)-install: $(CHECK_MULTI_INSTALL)
 $(CHECK_MULTI)-skel:
 
 # TODO
-#--with-nagios-name=<nagios|icinga>       set nagios name (there might be some clones ;)) (default:nagios)
+#--with-nagios-name=<nagios>       set nagios name (there might be some clones ;)) (default:nagios)
 #--with-action_url="$(OMD_SITE)/pnp4nagios/index.php/graph?host=\\\$$HOSTNAME\\\$$&srv=\\\$$SERVICEDESC\\\$$"
 CHECK_MULTI_CONFIGUREOPTS := \
 	--libexecdir="$(ROOTDIR)/lib/nagios/plugins" \

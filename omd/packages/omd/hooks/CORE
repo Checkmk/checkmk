@@ -38,6 +38,8 @@ case "$1" in
         if [ -e $OMD_ROOT/etc/apache/conf.d/nagios.conf ] ; then
             rm -f $OMD_ROOT/etc/apache/conf.d/nagios.conf
         fi
+        # NOTE: Although we don't ship Icinga anymore, we leave this to make
+        # sure there is no dangling symlink and keep Apache happy.
         if [ -e $OMD_ROOT/etc/apache/conf.d/icinga.conf ] ; then
             rm -f $OMD_ROOT/etc/apache/conf.d/icinga.conf
         fi

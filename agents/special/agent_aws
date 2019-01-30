@@ -34,12 +34,13 @@ import json
 import logging
 import sys
 import time
-import os
+import errno
 from typing import NamedTuple, Any
 from pathlib2 import Path
 import boto3  # type: ignore
 import botocore  # type: ignore
 from cmk.utils.paths import tmp_dir
+import cmk.utils.store as store
 import cmk.utils.password_store
 
 #   .--helpers-------------------------------------------------------------.
@@ -99,21 +100,32 @@ class ResultDistributor(object):
 
 #   ---sections/colleagues--------------------------------------------------
 
+#TODO wrap computed results in NamedTuple:
+#AWSSectionResults = NamedTuple("Results", [
+#    ("section_name", str),
+#    ("valid_until", int),
+#    ("results", List),
+#])
+
 AWSSectionResult = NamedTuple("Result", [
     ("piggyback_hostname", str),
     ("content", Any),
 ])
 
-AWSStateFilesPath = Path(os.environ['OMD_ROOT']) / tmp_dir / "agents/agent_aws"
+AWSCacheFilePath = Path(tmp_dir) / "agents" / "agent_aws"
 
 
 class AWSSection(object):
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, client, distributor=None):
+    def __init__(self, client, hostname, region, distributor=None):
         self._client = client
+        self._hostname = hostname
+        self._region = region
         self._distributor = ResultDistributor() if distributor is None else distributor
         self._received_results = {}
+        self._cache_file_dir = AWSCacheFilePath / region / hostname
+        self._cache_file = AWSCacheFilePath / region / hostname / self.name
 
     @abc.abstractproperty
     def name(self):
@@ -138,12 +150,65 @@ class AWSSection(object):
     def receive(self, sender, content):
         self._received_results.setdefault(sender.name, content)
 
-    def run(self):
+    def run(self, use_cache=False):
         colleague_contents = self._get_colleague_contents()
-        raw_content = self._fetch_raw_content(colleague_contents)
+        raw_content = self._get_raw_content(colleague_contents, use_cache=use_cache)
         computed_content = self._compute_content(raw_content, colleague_contents)
         self._send(computed_content)
         return self._create_results(computed_content)
+
+    def _get_raw_content(self, colleague_contents, use_cache=False):
+        # Cache is only used if the age is lower than section interval AND
+        # the collected data from colleagues are not newer
+        self._cache_file_dir.mkdir(parents=True, exist_ok=True)
+        if use_cache and self._cache_is_recent_enough(colleague_contents):
+            raw_content, cache_timestamp = self._read_from_cache()
+        else:
+            raw_content = self._fetch_raw_content(colleague_contents)
+            cache_timestamp = time.time()
+            # TODO: Write cache only when _compute_section_content succeeded?
+            self._write_to_cache(raw_content, cache_timestamp)
+        return raw_content
+
+    def _cache_is_recent_enough(self, colleague_contents):
+        #TODO check age of colleague data
+        if not self._cache_file.exists():
+            logging.info("New cache file %s", self._cache_file)
+            return False
+
+        try:
+            age = time.time() - self._cache_file.stat().st_mtime
+        except OSError as e:
+            if e.errno == 2:  # No such file or directory
+                logging.info("Cannot calculate cache file age of %s", self._cache_file)
+                return False
+            else:
+                raise
+
+        if age >= self.interval:
+            logging.info("Cache file %s is outdated", self._cache_file)
+            return False
+        return True
+
+    def _read_from_cache(self):
+        try:
+            with self._cache_file.open(encoding="utf-8") as f:
+                raw_content = f.read().strip()
+        except IOError as e:
+            if e.errno == errno.ENOENT:  # No such file or directory
+                raw_content = None
+            else:
+                raise
+        try:
+            content = json.loads(raw_content)
+        except ValueError as e:
+            logging.debug(e)
+            content = None
+        return content, None
+
+    def _write_to_cache(self, raw_content, cache_timestamp):
+        json_dump = json.dumps(raw_content, default=_datetime_converter)
+        store.save_file(str(self._cache_file), json_dump)
 
     @abc.abstractmethod
     def _get_colleague_contents(self):
@@ -458,10 +523,9 @@ class EC2(AWSSectionCloudwatch):
 
 
 class S3Summary(AWSSectionGeneric):
-    def __init__(self, client, distributor=None, buckets=None, region=None):
-        super(S3Summary, self).__init__(client, distributor=distributor)
+    def __init__(self, client, hostname, region, distributor=None, buckets=None):
+        super(S3Summary, self).__init__(client, hostname, region, distributor=distributor)
         self._buckets = self._determine_buckets(buckets)
-        self._region = region
 
     def _determine_buckets(self, buckets):
         if buckets:
@@ -974,8 +1038,9 @@ class EBS(AWSSectionCloudwatch):
 class AWSSections(object):
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, hostname, session, services):
+    def __init__(self, hostname, region, session, services):
         self._hostname = hostname
+        self._region = region
         self._session = session
         self._services = services
         self._sections = []
@@ -999,15 +1064,11 @@ class AWSSections(object):
             logging.info(e)
 
     def run(self, use_cache=True):
-        now = time.time()
         exceptions = []
         results = {}
         for section in self._sections:
-            if use_cache and self._section_cache_is_recent_enough(now, section):
-                continue
-
             try:
-                result = section.run()
+                result = section.run(use_cache=use_cache)
             except Exception as e:
                 logging.info(e)
                 exceptions.append(e)
@@ -1015,33 +1076,7 @@ class AWSSections(object):
                 results.setdefault((section.name, section.interval), result)
 
         self._write_exceptions(exceptions)
-        self._write_section_results(now, results)
-
-    def _section_cache_is_recent_enough(self, now, section):
-        state_dir = AWSStateFilesPath / self._hostname
-        state_dir.mkdir(parents=True, exist_ok=True)
-        state_file = state_dir / Path("%s-%s" % (self._session.region_name, section.name))
-        if not state_file.exists():
-            logging.info("New state file of section '%s'", section.name)
-            state_file.touch()
-            return False
-
-        try:
-            age = now - state_file.stat().st_mtime
-        except OSError as e:
-            if e.errno == 2:  # No such file or directory
-                logging.info("Cannot calculate age; new state file of section '%s'", section.name)
-                state_file.touch()
-                return False
-            else:
-                raise
-
-        if age >= section.interval:
-            logging.info("State file of section '%s' is outdated: %s >= %s", section.name, age,
-                         section.interval)
-            state_file.touch()
-            return False
-        return True
+        self._write_section_results(results)
 
     def _write_exceptions(self, exceptions):
         sys.stdout.write("<<<aws_exceptions>>>\n")
@@ -1051,7 +1086,7 @@ class AWSSections(object):
             out = "No exceptions"
         sys.stdout.write("%s: %s\n" % (self.__class__.__name__, out))
 
-    def _write_section_results(self, now, results):
+    def _write_section_results(self, results):
         if not results:
             logging.info("No results or cached data")
             return
@@ -1066,15 +1101,16 @@ class AWSSections(object):
                 logging.info(msg)
                 continue
 
-            persist_suffix = ""
+            cached_suffix = ""
             if section_interval > 60:
-                persist_suffix = ":persist(%s)" % int(now + section_interval + 60)
+                # TODO now comes from section
+                cached_suffix = ":cached(%s,%s)" % (int(time.time()), section_interval + 60)
 
             if any([r.content for r in result]):
-                self._write_section_result(section_name, persist_suffix, result)
+                self._write_section_result(section_name, cached_suffix, result)
 
-    def _write_section_result(self, section_name, persist_suffix, result):
-        section_header = "<<<aws_%s%s>>>\n" % (section_name, persist_suffix)
+    def _write_section_result(self, section_name, cached_suffix, result):
+        section_header = "<<<aws_%s%s>>>\n" % (section_name, cached_suffix)
         for row in result:
             write_piggyback_header = row.piggyback_hostname\
                                      and row.piggyback_hostname != self._hostname
@@ -1101,7 +1137,7 @@ class AWSSectionsUSEast(AWSSections):
         #---sections with distributors--------------------------------------
 
         #---sections--------------------------------------------------------
-        ce = CostsAndUsage(ce_client)
+        ce = CostsAndUsage(ce_client, self._hostname, self._region)
 
         #---register sections to distributors-------------------------------
 
@@ -1126,22 +1162,24 @@ class AWSSectionsGeneric(AWSSections):
         s3_summary_distributor = ResultDistributor()
 
         #---sections with distributors--------------------------------------
-        security_groups = SecurityGroups(ec2_client, security_groups_distributor)
-        ec2_summary = EC2Summary(ec2_client, ec2_summary_distributor)
-        ebs_summary = EBSSummary(ec2_client, ebs_summary_distributor)
-        elb_summary = ELBSummary(elb_client, elb_summary_distributor)
+        security_groups = SecurityGroups(ec2_client, self._hostname, self._region,
+                                         security_groups_distributor)
+        ec2_summary = EC2Summary(ec2_client, self._hostname, self._region, ec2_summary_distributor)
+        ebs_summary = EBSSummary(ec2_client, self._hostname, self._region, ebs_summary_distributor)
+        elb_summary = ELBSummary(elb_client, self._hostname, self._region, elb_summary_distributor)
         s3_summary = S3Summary(
             s3_client,
+            self._hostname,
+            self._region,
             distributor=s3_summary_distributor,
-            buckets=kwargs.get('buckets'),
-            region=kwargs.get('region'))
+            buckets=kwargs.get('buckets'))
 
         #---sections--------------------------------------------------------
-        elb_health = ELBHealth(elb_client)
-        ec2 = EC2(cloudwatch_client)
-        ebs = EBS(cloudwatch_client)
-        elb = ELB(cloudwatch_client)
-        s3 = S3(cloudwatch_client)
+        elb_health = ELBHealth(elb_client, self._hostname, self._region)
+        ec2 = EC2(cloudwatch_client, self._hostname, self._region)
+        ebs = EBS(cloudwatch_client, self._hostname, self._region)
+        elb = ELB(cloudwatch_client, self._hostname, self._region)
+        s3 = S3(cloudwatch_client, self._hostname, self._region)
 
         #---register sections to distributors-------------------------------
         security_groups_distributor.add(ec2_summary)
@@ -1290,8 +1328,9 @@ def main(args=None):
 
     exceptions = []
     try:
-        session = create_session(access_key_id, secret_access_key, "us-east-1")
-        aws_sections_us_east = AWSSectionsUSEast(hostname, session, services)
+        region_us_east_1 = "us-east-1"
+        session = create_session(access_key_id, secret_access_key, region_us_east_1)
+        aws_sections_us_east = AWSSectionsUSEast(hostname, region_us_east_1, session, services)
         aws_sections_us_east.init_sections()
         aws_sections_us_east.run(use_cache=use_cache)
     except Exception as e:
@@ -1302,8 +1341,8 @@ def main(args=None):
     for region in args.regions:
         try:
             session = create_session(access_key_id, secret_access_key, region)
-            aws_sections = AWSSectionsGeneric(hostname, session, services)
-            aws_sections.init_sections(buckets=args.buckets, region=region)
+            aws_sections = AWSSectionsGeneric(hostname, region, session, services)
+            aws_sections.init_sections(buckets=args.buckets)
             aws_sections.run(use_cache=use_cache)
         except Exception as e:
             if args.debug:

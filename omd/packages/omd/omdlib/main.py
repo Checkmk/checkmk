@@ -1621,49 +1621,62 @@ def is_dockerized():
     return os.path.exists("/.dockerenv")
 
 
+def tmpfs_is_managed_by_node(site):
+    """When running in a container, and the tmpfs is managed by the node, the
+    mount is visible, but can not be unmounted. umount exits with 32 in this
+    case. Treat this case like there is no tmpfs and only the directory needs
+    to be cleaned."""
+    if not is_dockerized():
+        return False
+
+    if not tmpfs_mounted(site.name):
+        return False
+
+    return subprocess.call(["umount", site.tmp_dir],
+                           stdout=open(os.devnull, "w"),
+                           stderr=subprocess.STDOUT) == 32
+
+
 def unmount_tmpfs(site, output=True, kill=False):
     # Clear directory hierarchy when not using a tmpfs
     # During omd update TMPFS hook might not be set so assume
     # that the hook is enabled by default.
     # If kill is True, then we do an fuser -k on the tmp
     # directory first.
-    if not tmpfs_mounted(site.name):
+    if not tmpfs_mounted(site.name) or tmpfs_is_managed_by_node(site):
         tmp = site.tmp_dir
         if os.path.exists(tmp):
             if output:
-                sys.stdout.write("Cleaning up temp filesystem...")
+                sys.stdout.write("Cleaning up tmp directory...")
                 sys.stdout.flush()
             delete_directory_contents(tmp)
             if output:
                 ok()
         return True
 
-    else:
-        if output:
-            sys.stdout.write("Unmounting temporary filesystem...")
+    if output:
+        sys.stdout.write("Unmounting temporary filesystem...")
 
-        for _t in range(0, 10):
-            if subprocess.call(["umount", site.tmp_dir]) == 0:
-                if output:
-                    ok()
-                return True
-
-            if kill:
-                if output:
-                    sys.stdout.write("Killing processes still using '%s'\n" % site.tmp_dir)
-                subprocess.call(["fuser", "--silent", "-k", site.tmp_dir])
-
+    for _t in range(0, 10):
+        if subprocess.call(["umount", site.tmp_dir]) == 0:
             if output:
-                sys.stdout.write(kill and "K" or ".")
-                sys.stdout.flush()
-            time.sleep(1)
+                ok()
+            return True
+
+        if kill:
+            if output:
+                sys.stdout.write("Killing processes still using '%s'\n" % site.tmp_dir)
+            subprocess.call(["fuser", "--silent", "-k", site.tmp_dir])
 
         if output:
-            bail_out(tty_error + ": Cannot unmount tmp filesystem.")
-        else:
-            return False
+            sys.stdout.write(kill and "K" or ".")
+            sys.stdout.flush()
+        time.sleep(1)
 
-    return True
+    if output:
+        bail_out(tty_error + ": Cannot unmount temporary filesystem.")
+    else:
+        return False
 
 
 def add_to_fstab(site, tmpfs_size=None):

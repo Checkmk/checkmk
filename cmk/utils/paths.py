@@ -28,148 +28,88 @@ to all components of Check_MK."""
 
 import os
 
-#
-# First declare the possible paths for the linters. Then set it within _set_paths()
-#
-
-# TODO: Add piggyback_dir and use it in code
-omd_root = ''  # type: str
-default_config_dir = ''  # type: str
-main_config_file = None
-final_config_file = None
-local_config_file = None
-check_mk_config_dir = None
-modules_dir = None
-var_dir = ''
-log_dir = ''
-precompiled_checks_dir = None
-autochecks_dir = None
-precompiled_hostchecks_dir = None
-snmpwalks_dir = None
-counters_dir = None
-tcp_cache_dir = None
-data_source_cache_dir = None
-snmp_scan_cache_dir = None
-include_cache_dir = None
-tmp_dir = ''
-logwatch_dir = None
-nagios_objects_file = None
-nagios_command_pipe_path = None
-check_result_path = None
-nagios_status_file = None
-nagios_conf_dir = None
-nagios_config_file = None
-nagios_startscript = None
-nagios_binary = None
-apache_config_dir = None
-htpasswd_file = None
-livestatus_unix_socket = None
-pnp_rraconf_dir = None
-livebackendsdir = None
-inventory_output_dir = ''
-inventory_archive_dir = ''
-status_data_dir = ''
-
-share_dir = ''
-checks_dir = None
-notifications_dir = None
-inventory_dir = None
-check_manpages_dir = None
-agents_dir = None
-mibs_dir = None
-web_dir = None
-pnp_templates_dir = None
-doc_dir = None
-locale_dir = ''  # type: str
-bin_dir = None
-lib_dir = None
-mib_dir = None
-
-# TODO: Add active_checks_dir and make it used in code
-local_share_dir = ''
-local_checks_dir = ''
-local_notifications_dir = ''
-local_inventory_dir = ''
-local_check_manpages_dir = ''
-local_agents_dir = ''
-local_mibs_dir = ''
-local_web_dir = ''
-local_pnp_templates_dir = ''
-local_doc_dir = ''
-local_locale_dir = ''
-local_bin_dir = ''
-local_lib_dir = ''
-local_mib_dir = ''
+from pathlib2 import Path
 
 
-def _set_paths():
-    global omd_root
-    omd_root = os.environ.get("OMD_ROOT", "")
-
-    globals().update({
-        "default_config_dir": os.path.join(omd_root, "etc/check_mk"),
-        "main_config_file": os.path.join(omd_root, "etc/check_mk/main.mk"),
-        "final_config_file": os.path.join(omd_root, "etc/check_mk/final.mk"),
-        "local_config_file": os.path.join(omd_root, "etc/check_mk/local.mk"),
-        "check_mk_config_dir": os.path.join(omd_root, "etc/check_mk/conf.d"),
-        "modules_dir": os.path.join(omd_root, "share/check_mk/modules"),
-        "var_dir": os.path.join(omd_root, "var/check_mk"),
-        "log_dir": os.path.join(omd_root, "var/log"),
-        "precompiled_checks_dir": os.path.join(omd_root, "var/check_mk/precompiled_checks"),
-        "autochecks_dir": os.path.join(omd_root, "var/check_mk/autochecks"),
-        "precompiled_hostchecks_dir": os.path.join(omd_root, "var/check_mk/precompiled"),
-        "snmpwalks_dir": os.path.join(omd_root, "var/check_mk/snmpwalks"),
-        "counters_dir": os.path.join(omd_root, "tmp/check_mk/counters"),
-        "tcp_cache_dir": os.path.join(omd_root, "tmp/check_mk/cache"),
-        "data_source_cache_dir": os.path.join(omd_root, "tmp/check_mk/data_source_cache"),
-        "snmp_scan_cache_dir": os.path.join(omd_root, "tmp/check_mk/snmp_scan_cache"),
-        "include_cache_dir": os.path.join(omd_root, "tmp/check_mk/check_includes"),
-        "tmp_dir": os.path.join(omd_root, "tmp/check_mk"),
-        "logwatch_dir": os.path.join(omd_root, "var/check_mk/logwatch"),
-        "nagios_objects_file": os.path.join(omd_root, "etc/nagios/conf.d/check_mk_objects.cfg"),
-        "nagios_command_pipe_path": os.path.join(omd_root, "tmp/run/nagios.cmd"),
-        "check_result_path": os.path.join(omd_root, "tmp/nagios/checkresults"),
-        "nagios_status_file": os.path.join(omd_root, "tmp/nagios/status.dat"),
-        "nagios_conf_dir": os.path.join(omd_root, "etc/nagios/conf.d"),
-        "nagios_config_file": os.path.join(omd_root, "tmp/nagios/nagios.cfg"),
-        "nagios_startscript": os.path.join(omd_root, "etc/init.d/core"),
-        "nagios_binary": os.path.join(omd_root, "bin/nagios"),
-        "apache_config_dir": os.path.join(omd_root, "etc/apache"),
-        "htpasswd_file": os.path.join(omd_root, "etc/htpasswd"),
-        "livestatus_unix_socket": os.path.join(omd_root, "tmp/run/live"),
-        "pnp_rraconf_dir": os.path.join(omd_root, "share/check_mk/pnp-rraconf"),
-        "livebackendsdir": os.path.join(omd_root, "share/check_mk/livestatus"),
-        "inventory_output_dir": os.path.join(omd_root, "var/check_mk/inventory"),
-        "inventory_archive_dir": os.path.join(omd_root, "var/check_mk/inventory_archive"),
-        "status_data_dir": os.path.join(omd_root, "tmp/check_mk/status_data"),
-    })
+# One bright day, when every path is really a Path, this can die... :-)
+def _path(*args):
+    return str(Path(*args))
 
 
-def _set_overridable_paths(local=False):
-    rel_base = "local" if local else ""
-    var_prefix = "local_" if local else ""
-
-    globals().update({
-        var_prefix + "share_dir": os.path.join(omd_root, rel_base, "share/check_mk"),
-        var_prefix + "checks_dir": os.path.join(omd_root, rel_base, "share/check_mk/checks"),
-        var_prefix + "notifications_dir": os.path.join(omd_root, rel_base,
-                                                       "share/check_mk/notifications"),
-        var_prefix + "inventory_dir": os.path.join(omd_root, rel_base, "share/check_mk/inventory"),
-        var_prefix + "check_manpages_dir": os.path.join(omd_root, rel_base,
-                                                        "share/check_mk/checkman"),
-        var_prefix + "agents_dir": os.path.join(omd_root, rel_base, "share/check_mk/agents"),
-        var_prefix + "mibs_dir": os.path.join(omd_root, rel_base, "share/check_mk/mibs"),
-        var_prefix + "web_dir": os.path.join(omd_root, rel_base, "share/check_mk/web"),
-        var_prefix + "pnp_templates_dir": os.path.join(omd_root, rel_base,
-                                                       "share/check_mk/pnp-templates"),
-        var_prefix + "doc_dir": os.path.join(omd_root, rel_base, "share/doc/check_mk"),
-        var_prefix + "locale_dir": os.path.join(omd_root, rel_base, "share/check_mk/locale"),
-        var_prefix + "bin_dir": os.path.join(omd_root, rel_base, "bin"),
-        var_prefix + "lib_dir": os.path.join(omd_root, rel_base, "lib"),
-        var_prefix + "mib_dir": os.path.join(omd_root, rel_base, "share/snmp/mibs"),
-    })
+def _omd_path(path):
+    return _path(omd_root, path)
 
 
-_set_paths()
-_set_overridable_paths()
-_set_overridable_paths(local=True)
+def _local_path(global_path):
+    return _path(omd_root, "local", Path(global_path).relative_to(omd_root))
+
+
+# TODO: Add piggyback_dir and active_checks_dir and use it in code
+
+omd_root = _path(os.environ.get("OMD_ROOT", ""))
+
+default_config_dir = _omd_path("etc/check_mk")
+main_config_file = _omd_path("etc/check_mk/main.mk")
+final_config_file = _omd_path("etc/check_mk/final.mk")
+local_config_file = _omd_path("etc/check_mk/local.mk")
+check_mk_config_dir = _omd_path("etc/check_mk/conf.d")
+modules_dir = _omd_path("share/check_mk/modules")
+var_dir = _omd_path("var/check_mk")
+log_dir = _omd_path("var/log")
+precompiled_checks_dir = _omd_path("var/check_mk/precompiled_checks")
+autochecks_dir = _omd_path("var/check_mk/autochecks")
+precompiled_hostchecks_dir = _omd_path("var/check_mk/precompiled")
+snmpwalks_dir = _omd_path("var/check_mk/snmpwalks")
+counters_dir = _omd_path("tmp/check_mk/counters")
+tcp_cache_dir = _omd_path("tmp/check_mk/cache")
+data_source_cache_dir = _omd_path("tmp/check_mk/data_source_cache")
+snmp_scan_cache_dir = _omd_path("tmp/check_mk/snmp_scan_cache")
+include_cache_dir = _omd_path("tmp/check_mk/check_includes")
+tmp_dir = _omd_path("tmp/check_mk")
+logwatch_dir = _omd_path("var/check_mk/logwatch")
+nagios_objects_file = _omd_path("etc/nagios/conf.d/check_mk_objects.cfg")
+nagios_command_pipe_path = _omd_path("tmp/run/nagios.cmd")
+check_result_path = _omd_path("tmp/nagios/checkresults")
+nagios_status_file = _omd_path("tmp/nagios/status.dat")
+nagios_conf_dir = _omd_path("etc/nagios/conf.d")
+nagios_config_file = _omd_path("tmp/nagios/nagios.cfg")
+nagios_startscript = _omd_path("etc/init.d/core")
+nagios_binary = _omd_path("bin/nagios")
+apache_config_dir = _omd_path("etc/apache")
+htpasswd_file = _omd_path("etc/htpasswd")
+livestatus_unix_socket = _omd_path("tmp/run/live")
+pnp_rraconf_dir = _omd_path("share/check_mk/pnp-rraconf")
+livebackendsdir = _omd_path("share/check_mk/livestatus")
+inventory_output_dir = _omd_path("var/check_mk/inventory")
+inventory_archive_dir = _omd_path("var/check_mk/inventory_archive")
+status_data_dir = _omd_path("tmp/check_mk/status_data")
+
+share_dir = _omd_path("share/check_mk")
+checks_dir = _omd_path("share/check_mk/checks")
+notifications_dir = _omd_path("share/check_mk/notifications")
+inventory_dir = _omd_path("share/check_mk/inventory")
+check_manpages_dir = _omd_path("share/check_mk/checkman")
+agents_dir = _omd_path("share/check_mk/agents")
+mibs_dir = _omd_path("share/check_mk/mibs")
+web_dir = _omd_path("share/check_mk/web")
+pnp_templates_dir = _omd_path("share/check_mk/pnp-templates")
+doc_dir = _omd_path("share/doc/check_mk")
+locale_dir = _omd_path("share/check_mk/locale")
+bin_dir = _omd_path("bin")
+lib_dir = _omd_path("lib")
+mib_dir = _omd_path("share/snmp/mibs")
+
+local_share_dir = _local_path(share_dir)
+local_checks_dir = _local_path(checks_dir)
+local_notifications_dir = _local_path(notifications_dir)
+local_inventory_dir = _local_path(inventory_dir)
+local_check_manpages_dir = _local_path(check_manpages_dir)
+local_agents_dir = _local_path(agents_dir)
+local_mibs_dir = _local_path(mibs_dir)
+local_web_dir = _local_path(web_dir)
+local_pnp_templates_dir = _local_path(pnp_templates_dir)
+local_doc_dir = _local_path(doc_dir)
+local_locale_dir = _local_path(locale_dir)
+local_bin_dir = _local_path(bin_dir)
+local_lib_dir = _local_path(lib_dir)
+local_mib_dir = _local_path(mib_dir)

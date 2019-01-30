@@ -78,6 +78,9 @@ def discovery_azure_agent_info(_parsed):
 
 def check_azure_agent_info(_no_item, params, parsed):
 
+    for status, text in parsed.get('agent-bailout', []):
+        yield status, text
+
     reads = parsed.get('remaining-reads')
     # this is only reported for the Datasource Host, so None
     # is ignored.

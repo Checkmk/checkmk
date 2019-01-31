@@ -43,6 +43,10 @@ elif [ "$SSH_CLIENT" ] ; then
     export REMOTE=${SSH_CLIENT%% *}
 fi
 
+# The package name gets patched for baked agents to either
+# "check-mk-agent" or the name set by the "name of agent packages" rule
+XINETD_SERVICE_NAME=check_mk
+
 # Make sure, locally installed binaries are found
 PATH=$PATH:/usr/local/bin
 
@@ -361,7 +365,7 @@ echo "LocalDirectory: $LOCALDIR"
 if [ -n "$REMOTE_HOST" ]
 then
     echo -n 'OnlyFrom: '
-    sed -n '/^service[[:space:]]*check_mk/,/}/s/^[[:space:]]*only_from[[:space:]]*=[[:space:]]*\(.*\)/\1/p' /etc/xinetd.d/* | head -n1; echo
+    sed -n '/^service[[:space:]]*'$XINETD_SERVICE_NAME'/,/}/s/^[[:space:]]*only_from[[:space:]]*=[[:space:]]*\(.*\)/\1/p' /etc/xinetd.d/* | head -n1; echo
 fi
 
 section_df

@@ -15914,6 +15914,32 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_applications,
+    "k8s_nodes",
+    _("Kubernetes nodes"),
+    Dictionary(elements=[
+        ('levels',
+         Tuple(
+             title=_('Upper levels'),
+             elements=[
+                 Integer(title=_("Warning above")),
+                 Integer(title=_("Critical above")),
+             ],
+         )),
+        ('levels_lower',
+         Tuple(
+             title=_('Lower levels'),
+             elements=[
+                 Integer(title=_("Warning below")),
+                 Integer(title=_("Critical below")),
+             ],
+         )),
+    ]),
+    None,
+    match_type="dict",
+)
+
+register_check_parameters(
+    subgroup_applications,
     "azure_agent_info",
     ("Azure Agent Info"),
     Dictionary(elements=[

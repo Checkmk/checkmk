@@ -35,7 +35,7 @@ import logging
 import sys
 import time
 import errno
-from typing import NamedTuple, Any
+from typing import NamedTuple, Any, List
 from pathlib2 import Path
 import boto3  # type: ignore
 import botocore  # type: ignore
@@ -100,16 +100,24 @@ class ResultDistributor(object):
 
 #   ---sections/colleagues--------------------------------------------------
 
-#TODO wrap computed results in NamedTuple:
-#AWSSectionResults = NamedTuple("Results", [
-#    ("section_name", str),
-#    ("valid_until", int),
-#    ("results", List),
-#])
+AWSSectionResults = NamedTuple("AWSSectionResults", [
+    ("results", List),
+    ("cache_timestamp", int),
+])
 
-AWSSectionResult = NamedTuple("Result", [
+AWSSectionResult = NamedTuple("AWSSectionResult", [
     ("piggyback_hostname", str),
     ("content", Any),
+])
+
+AWSRawContent = NamedTuple("AWSRawContent", [
+    ("content", Any),
+    ("cache_timestamp", float),
+])
+
+AWSComputedContent = NamedTuple("AWSComputedContent", [
+    ("content", Any),
+    ("cache_timestamp", float),
 ])
 
 AWSCacheFilePath = Path(tmp_dir) / "agents" / "agent_aws"
@@ -155,29 +163,30 @@ class AWSSection(object):
         raw_content = self._get_raw_content(colleague_contents, use_cache=use_cache)
         computed_content = self._compute_content(raw_content, colleague_contents)
         self._send(computed_content)
-        return self._create_results(computed_content)
+        return AWSSectionResults(
+            self._create_results(computed_content), computed_content.cache_timestamp)
 
     def _get_raw_content(self, colleague_contents, use_cache=False):
         # Cache is only used if the age is lower than section interval AND
         # the collected data from colleagues are not newer
         self._cache_file_dir.mkdir(parents=True, exist_ok=True)
-        if use_cache and self._cache_is_recent_enough(colleague_contents):
+        if use_cache and self._cache_is_recent_enough():
             raw_content, cache_timestamp = self._read_from_cache()
         else:
             raw_content = self._fetch_raw_content(colleague_contents)
-            cache_timestamp = time.time()
             # TODO: Write cache only when _compute_section_content succeeded?
-            self._write_to_cache(raw_content, cache_timestamp)
-        return raw_content
+            self._write_to_cache(raw_content)
+            cache_timestamp = time.time()
+        return AWSRawContent(raw_content, cache_timestamp)
 
-    def _cache_is_recent_enough(self, colleague_contents):
-        #TODO check age of colleague data
+    def _cache_is_recent_enough(self):
         if not self._cache_file.exists():
             logging.info("New cache file %s", self._cache_file)
             return False
 
+        now = time.time()
         try:
-            age = time.time() - self._cache_file.stat().st_mtime
+            age = now - self._cache_file.stat().st_mtime
         except OSError as e:
             if e.errno == 2:  # No such file or directory
                 logging.info("Cannot calculate cache file age of %s", self._cache_file)
@@ -188,6 +197,11 @@ class AWSSection(object):
         if age >= self.interval:
             logging.info("Cache file %s is outdated", self._cache_file)
             return False
+
+        for received_result in self._received_results.values():
+            if received_result and received_result.cache_timestamp > now:
+                logging.info("Colleague data is newer than cache file %s", self._cache_file)
+                return False
         return True
 
     def _read_from_cache(self):
@@ -196,7 +210,7 @@ class AWSSection(object):
                 raw_content = f.read().strip()
         except IOError as e:
             if e.errno == errno.ENOENT:  # No such file or directory
-                raw_content = None
+                return None, time.time()
             else:
                 raise
         try:
@@ -204,9 +218,9 @@ class AWSSection(object):
         except ValueError as e:
             logging.debug(e)
             content = None
-        return content, None
+        return content, self._cache_file.stat().st_mtime
 
-    def _write_to_cache(self, raw_content, cache_timestamp):
+    def _write_to_cache(self, raw_content):
         json_dump = json.dumps(raw_content, default=_datetime_converter)
         store.save_file(str(self._cache_file), json_dump)
 
@@ -214,8 +228,9 @@ class AWSSection(object):
     def _get_colleague_contents(self):
         """
         Receive section contents from colleagues. The results are stored in
-        self._receive_results. The relateion between two sections must be
-        declared in the related distributor in advance to make this work.
+        self._receive_results: {<KEY>: AWSComputedContent}.
+        The relation between two sections must be declared in the related
+        distributor in advance to make this work.
         """
         pass
 
@@ -233,6 +248,7 @@ class AWSSection(object):
 
     @abc.abstractmethod
     def _compute_content(self, raw_content, colleague_contents):
+        # type: (AWSRawContent, Any) -> AWSComputedContent
         """
         Compute the final content of this section based on the raw content of
         this section and the content received from the optional colleague
@@ -339,10 +355,10 @@ class CostsAndUsage(AWSSectionGeneric):
             return []
 
     def _compute_content(self, raw_content, colleague_contents):
-        return raw_content
+        return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
 
     def _create_results(self, computed_content):
-        return [AWSSectionResult("", computed_content)]
+        return [AWSSectionResult("", computed_content.content)]
 
 
 #.
@@ -383,10 +399,10 @@ class SecurityGroups(AWSSectionGeneric):
             return []
 
     def _compute_content(self, raw_content, colleague_contents):
-        return raw_content
+        return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
 
     def _create_results(self, computed_content):
-        return [AWSSectionResult("", computed_content)]
+        return [AWSSectionResult("", computed_content.content)]
 
 
 #.
@@ -410,7 +426,10 @@ class EC2Summary(AWSSectionGeneric):
         return 300
 
     def _get_colleague_contents(self):
-        return self._received_results.get('security_groups', [])
+        colleague = self._received_results.get('security_groups')
+        if colleague and colleague.content:
+            return colleague.content
+        return []
 
     def _fetch_raw_content(self, colleague_contents):
         response = self._client.describe_instances()
@@ -421,14 +440,15 @@ class EC2Summary(AWSSectionGeneric):
             return {}
 
     def _compute_content(self, raw_content, colleague_contents):
+        reservations = raw_content.content
         for security_group in colleague_contents:
-            for reservation in raw_content:
+            for reservation in reservations:
                 if security_group['OwnerId'] == reservation['OwnerId']:
                     reservation['SecurityGroup'] = security_group
-        return {
-            "Reservations": raw_content,
-            "mapping": self._map_instance_id_to_name(raw_content),
-        }
+        return AWSComputedContent({
+            "Reservations": reservations,
+            "mapping": self._map_instance_id_to_name(reservations),
+        }, raw_content.cache_timestamp)
 
     def _map_instance_id_to_name(self, reservations):
         mapping = {}
@@ -446,7 +466,7 @@ class EC2Summary(AWSSectionGeneric):
         return instance_id
 
     def _create_results(self, computed_content):
-        return [AWSSectionResult("", computed_content['Reservations'])]
+        return [AWSSectionResult("", computed_content.content['Reservations'])]
 
 
 class EC2(AWSSectionCloudwatch):
@@ -459,7 +479,10 @@ class EC2(AWSSectionCloudwatch):
         return 300
 
     def _get_colleague_contents(self):
-        return self._received_results.get('ec2_summary', {}).get('mapping', {})
+        colleague = self._received_results.get('ec2_summary')
+        if colleague and colleague.content:
+            return colleague.content.get('mapping', {})
+        return {}
 
     def _get_metrics(self, colleague_contents):
         metrics = []
@@ -500,14 +523,14 @@ class EC2(AWSSectionCloudwatch):
 
     def _compute_content(self, raw_content, colleague_contents):
         content_by_piggyback_hosts = {}
-        for row in raw_content:
+        for row in raw_content.content:
             content_by_piggyback_hosts.setdefault(row['Label'], []).append(row)
-        return content_by_piggyback_hosts
+        return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
 
     def _create_results(self, computed_content):
         return [
             AWSSectionResult(piggyback_hostname, rows)
-            for piggyback_hostname, rows in computed_content.iteritems()
+            for piggyback_hostname, rows in computed_content.content.iteritems()
         ]
 
 
@@ -581,10 +604,10 @@ class S3Summary(AWSSectionGeneric):
         return buckets
 
     def _compute_content(self, raw_content, colleague_contents):
-        return raw_content
+        return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
 
     def _create_results(self, computed_content):
-        return [AWSSectionResult("", computed_content)]
+        return [AWSSectionResult("", computed_content.content)]
 
 
 class S3(AWSSectionCloudwatch):
@@ -597,7 +620,10 @@ class S3(AWSSectionCloudwatch):
         return 86400
 
     def _get_colleague_contents(self):
-        return [bucket['Name'] for bucket in self._received_results.get('s3_summary', [])]
+        colleague = self._received_results.get('s3_summary')
+        if colleague and colleague.content:
+            return [bucket['Name'] for bucket in colleague.content]
+        return []
 
     def _get_metrics(self, colleague_contents):
         metrics = []
@@ -636,10 +662,10 @@ class S3(AWSSectionCloudwatch):
         return metrics
 
     def _compute_content(self, raw_content, colleague_contents):
-        return raw_content
+        return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
 
     def _create_results(self, computed_content):
-        return [AWSSectionResult("", computed_content)]
+        return [AWSSectionResult("", computed_content.content)]
 
 
 #.
@@ -687,15 +713,15 @@ class ELBSummary(AWSSectionGeneric):
 
     def _compute_content(self, raw_content, colleague_contents):
         content_by_piggyback_hosts = {}
-        for load_balancer in raw_content:
+        for load_balancer in raw_content.content:
             content_by_piggyback_hosts.setdefault(load_balancer['LoadBalancerName'],
                                                   []).append(load_balancer)
-        return content_by_piggyback_hosts
+        return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
 
     def _create_results(self, computed_content):
         return [
             AWSSectionResult(piggyback_hostname, rows)
-            for piggyback_hostname, rows in computed_content.iteritems()
+            for piggyback_hostname, rows in computed_content.content.iteritems()
         ]
 
 
@@ -709,10 +735,10 @@ class ELBHealth(AWSSectionGeneric):
         return 300
 
     def _get_colleague_contents(self):
-        return [
-            load_balancer['LoadBalancerName']
-            for load_balancer in self._received_results.get('elb_summary', [])
-        ]
+        colleague = self._received_results.get('elb_summary')
+        if colleague and colleague.content:
+            return [load_balancer['LoadBalancerName'] for load_balancer in colleague.content]
+        return []
 
     def _fetch_raw_content(self, colleague_contents):
         load_balancers = {}
@@ -728,12 +754,12 @@ class ELBHealth(AWSSectionGeneric):
         return load_balancers
 
     def _compute_content(self, raw_content, colleague_contents):
-        return raw_content
+        return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
 
     def _create_results(self, computed_content):
         return [
             AWSSectionResult(piggyback_hostname, rows)
-            for piggyback_hostname, rows in computed_content.iteritems()
+            for piggyback_hostname, rows in computed_content.content.iteritems()
         ]
 
 
@@ -747,10 +773,10 @@ class ELB(AWSSectionCloudwatch):
         return 300
 
     def _get_colleague_contents(self):
-        return [
-            load_balancer['LoadBalancerName']
-            for load_balancer in self._received_results.get('elb_summary', [])
-        ]
+        colleague = self._received_results.get('elb_summary')
+        if colleague and colleague.content:
+            return [load_balancer['LoadBalancerName'] for load_balancer in colleague.content]
+        return []
 
     def _get_metrics(self, colleague_contents):
         metrics = []
@@ -794,14 +820,14 @@ class ELB(AWSSectionCloudwatch):
 
     def _compute_content(self, raw_content, colleague_contents):
         content_by_piggyback_hosts = {}
-        for row in raw_content:
+        for row in raw_content.content:
             content_by_piggyback_hosts.setdefault(row['Label'], []).append(row)
-        return content_by_piggyback_hosts
+        return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
 
     def _create_results(self, computed_content):
         return [
             AWSSectionResult(piggyback_hostname, rows)
-            for piggyback_hostname, rows in computed_content.iteritems()
+            for piggyback_hostname, rows in computed_content.content.iteritems()
         ]
 
 
@@ -829,7 +855,10 @@ class EBSSummary(AWSSectionGeneric):
         return 300
 
     def _get_colleague_contents(self):
-        return self._received_results.get('ec2_summary', {}).get('mapping', {})
+        colleague = self._received_results.get('ec2_summary')
+        if colleague and colleague.content:
+            return colleague.content.get('mapping', {})
+        return {}
 
     def _fetch_raw_content(self, colleague_contents):
         response = self._client.describe_volumes()
@@ -848,7 +877,7 @@ class EBSSummary(AWSSectionGeneric):
         return volumes, volume_states
 
     def _compute_content(self, raw_content, colleague_contents):
-        volumes, volume_states = raw_content
+        volumes, volume_states = raw_content.content
         content = []
         for volume_id in set(volumes.keys()).union(set(volume_states.keys())):
             volume = volumes.get(volume_id, {})
@@ -861,12 +890,12 @@ class EBSSummary(AWSSectionGeneric):
                 attachment_id = attachment['InstanceId']
                 instance_name = colleague_contents.get(attachment_id, attachment_id)
                 content_by_piggyback_hosts.setdefault(instance_name, []).append(row)
-        return content_by_piggyback_hosts
+        return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
 
     def _create_results(self, computed_content):
         return [
             AWSSectionResult(piggyback_hostname, rows)
-            for piggyback_hostname, rows in computed_content.iteritems()
+            for piggyback_hostname, rows in computed_content.content.iteritems()
         ]
 
 
@@ -880,11 +909,12 @@ class EBS(AWSSectionCloudwatch):
         return 300
 
     def _get_colleague_contents(self):
-        return [
-            (instance_name, row['VolumeId'], row['VolumeType'])
-            for instance_name, rows in self._received_results.get('ebs_summary', {}).iteritems()
-            for row in rows
-        ]
+        colleague = self._received_results.get('ebs_summary')
+        if colleague and colleague.content:
+            return [(instance_name, row['VolumeId'], row['VolumeType'])
+                    for instance_name, rows in colleague.content.iteritems()
+                    for row in rows]
+        return []
 
     def _get_metrics(self, colleague_contents):
         metrics = []
@@ -935,14 +965,14 @@ class EBS(AWSSectionCloudwatch):
 
     def _compute_content(self, raw_content, colleague_contents):
         content_by_piggyback_hosts = {}
-        for row in raw_content:
+        for row in raw_content.content:
             content_by_piggyback_hosts.setdefault(row['Label'], []).append(row)
-        return content_by_piggyback_hosts
+        return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
 
     def _create_results(self, computed_content):
         return [
             AWSSectionResult(piggyback_hostname, rows)
-            for piggyback_hostname, rows in computed_content.iteritems()
+            for piggyback_hostname, rows in computed_content.content.iteritems()
         ]
 
 
@@ -1068,12 +1098,13 @@ class AWSSections(object):
         results = {}
         for section in self._sections:
             try:
-                result = section.run(use_cache=use_cache)
+                section_result = section.run(use_cache=use_cache)
             except Exception as e:
                 logging.info(e)
                 exceptions.append(e)
             else:
-                results.setdefault((section.name, section.interval), result)
+                results.setdefault((section.name, section_result.cache_timestamp, section.interval),
+                                   section_result.results)
 
         self._write_exceptions(exceptions)
         self._write_section_results(results)
@@ -1091,20 +1122,18 @@ class AWSSections(object):
             logging.info("No results or cached data")
             return
 
-        for (section_name, section_interval), result in results.iteritems():
+        for (section_name, cache_timestamp, section_interval), result in results.iteritems():
             if not result:
                 logging.info("No results of %s", section_name)
                 continue
 
             if not isinstance(result, list):
-                msg = "Section result must be formatted as a list of 'AWSSectionResult's"
-                logging.info(msg)
+                logging.info("Section result must be formatted as a list of 'AWSSectionResult's")
                 continue
 
             cached_suffix = ""
             if section_interval > 60:
-                # TODO now comes from section
-                cached_suffix = ":cached(%s,%s)" % (int(time.time()), section_interval + 60)
+                cached_suffix = ":cached(%s,%s)" % (int(cache_timestamp), section_interval + 60)
 
             if any([r.content for r in result]):
                 self._write_section_result(section_name, cached_suffix, result)
@@ -1296,11 +1325,10 @@ def parse_arguments(argv):
 
 
 def setup_logging(opt_debug):
+    fmt = '%(levelname)s: %(name)s: %(filename)s: %(lineno)s: %(message)s'
     if opt_debug:
-        fmt = '%(levelname)s: %(name)s: %(filename)s: %(lineno)s: %(message)s'
         lvl = logging.DEBUG
     else:
-        fmt = '%(levelname)s: %(message)s'
         lvl = logging.INFO
     logging.basicConfig(level=lvl, format=fmt)
 

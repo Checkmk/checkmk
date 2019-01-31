@@ -1054,7 +1054,7 @@ class APICallOther(APICallCollection):
             result = watolib.check_mk_automation(
                 host_attributes.get("site"), "try-inventory", ["@scan"] + [hostname])
             counts = {"new": 0, "old": 0}
-            for entry in result:
+            for entry in result["check_table"]:
                 if entry[0] in counts:
                     counts[entry[0]] += 1
 

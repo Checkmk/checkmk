@@ -31,6 +31,8 @@ import subprocess
 import sys
 import time
 import shutil
+import cStringIO
+import contextlib
 
 import cmk.utils.paths
 import cmk.utils.debug
@@ -125,12 +127,34 @@ class AutomationDiscovery(DiscoveryAutomation):
 automations.register(AutomationDiscovery())
 
 
+# Python 3? use contextlib.redirect_stdout
+@contextlib.contextmanager
+def redirect_output(where):
+    """Redirects stdout/stderr to the given file like object"""
+    prev_stdout, prev_stderr = sys.stdout, sys.stderr
+    prev_stdout.flush()
+    prev_stderr.flush()
+    sys.stdout = sys.stderr = where
+    try:
+        yield where
+    finally:
+        where.flush()
+        sys.stdout, sys.stderr = prev_stdout, prev_stderr
+
+
 class AutomationTryDiscovery(Automation):
     cmd = "try-inventory"  # TODO: Rename!
     needs_config = True
     needs_checks = True  # TODO: Can we change this?
 
     def execute(self, args):
+        cmk.utils.log.set_verbosity(2)
+
+        with redirect_output(cStringIO.StringIO()) as buf:
+            result = self._execute_discovery(args)
+            return {"output": buf.getvalue(), "check_table": result}
+
+    def _execute_discovery(self, args):
         use_caches = False
         do_snmp_scan = False
         if args[0] == '@noscan':

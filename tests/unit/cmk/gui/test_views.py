@@ -3710,6 +3710,14 @@ def test_registered_painters(load_view_plugins):
             'sorter': 'inv_software_applications_docker_num_images',
             'title': u'Inventory: Docker \u27a4 # Images'
         },
+        'inv_software_applications_kubernetes_nodes': {
+            'columns': ['host_inventory', 'host_structured_status'],
+            'load_inv': True,
+            'options': ['show_internal_tree_paths'],
+            'short': u'Nodes',
+            'sorter': 'inv_software_applications_kubernetes_nodes',
+            'title': u'Inventory: Kubernetes \u27a4 Nodes',
+        },
         'inv_software_applications_kubernetes_roles': {
             'columns': ['host_inventory', 'host_structured_status'],
             'load_inv': True,

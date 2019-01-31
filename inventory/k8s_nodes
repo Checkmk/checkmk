@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -7,7 +7,7 @@
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
-# | Copyright Mathias Kettner 2018             mk@mathias-kettner.de |
+# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 #
 # This file is part of Check_MK.
@@ -25,30 +25,15 @@
 # Boston, MA 02110-1301 USA.
 
 
-def inventory_k8s_nodes(parsed):
-    return [(None, {})]
+def inv_k8s_nodes(parsed, inventory_tree):
+    node = inventory_tree.get_list("software.applications.kubernetes.nodes:")
+
+    for k8s_node in sorted(parsed.get('nodes', [])):
+        node.append({
+            'name': k8s_node,
+        })
 
 
-def check_k8s_nodes(_no_item, params, parsed):
-    num_nodes = len(parsed.get('nodes', []))
-    levels = params.get('levels', (None, None))
-    levels_lower = params.get('levels_lower', (None, None))
-
-    yield check_levels(
-        num_nodes,
-        'k8s_nodes',
-        levels + levels_lower,
-        human_readable_func=int,
-        infoname='Number of nodes',
-    )
-
-
-check_info['k8s_nodes'] = {
-    'parse_function': parse_k8s,
-    'inventory_function': inventory_k8s_nodes,
-    'check_function': check_k8s_nodes,
-    'service_description': 'Nodes',
-    'group': 'k8s_nodes',
-    'has_perfdata': True,
-    'includes': ['k8s.include'],
+inv_info['k8s_nodes'] = {
+    'inv_function': inv_k8s_nodes,
 }

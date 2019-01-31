@@ -322,6 +322,7 @@ def test_grouped_rulespecs():
             'static_checks:generic_rate',
             'static_checks:generic_string',
             'static_checks:jvm_uptime',
+            'static_checks:k8s_nodes',
             'static_checks:k8s_resources',
             'static_checks:k8s_pods_cpu',
             'static_checks:k8s_pods_memory',
@@ -839,6 +840,7 @@ def test_grouped_rulespecs():
             'checkgroup_parameters:generic_rate',
             'checkgroup_parameters:generic_string',
             'checkgroup_parameters:jvm_uptime',
+            'checkgroup_parameters:k8s_nodes',
             'checkgroup_parameters:k8s_resources',
             'checkgroup_parameters:k8s_pods_cpu',
             'checkgroup_parameters:k8s_pods_memory',
@@ -6253,6 +6255,21 @@ expected_rulespecs = {
         'item_type': None,
         'match_type': 'dict',
         'title': u'Kubernetes roles',
+        'valuespec_class_name': 'TimeperiodValuespec'
+    },
+    'checkgroup_parameters:k8s_nodes': {
+        'factory_default': [],
+        'group_name': 'checkparams/applications',
+        'help': None,
+        'is_deprecated': False,
+        'is_optional': False,
+        'item_enum': None,
+        'item_help': None,
+        'item_name': None,
+        'item_spec_class_name': 'NoneType',
+        'item_type': None,
+        'match_type': 'dict',
+        'title': u'Kubernetes nodes',
         'valuespec_class_name': 'TimeperiodValuespec'
     },
     'checkgroup_parameters:kaspersky_av_client': {
@@ -14418,6 +14435,21 @@ expected_rulespecs = {
         'item_type': None,
         'match_type': 'all',
         'title': u'Kubernetes roles',
+        'valuespec_class_name': 'Tuple'
+    },
+    'static_checks:k8s_nodes': {
+        'factory_default': [],
+        'group_name': 'static/applications',
+        'help': None,
+        'is_deprecated': False,
+        'is_optional': False,
+        'item_enum': None,
+        'item_help': None,
+        'item_name': None,
+        'item_spec_class_name': 'NoneType',
+        'item_type': None,
+        'match_type': 'all',
+        'title': u'Kubernetes nodes',
         'valuespec_class_name': 'Tuple'
     },
     'static_checks:kaspersky_av_client': {

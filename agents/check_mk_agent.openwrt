@@ -35,6 +35,10 @@ export MK_VARDIR="/var/lib/check_mk_agent"
 # Optionally set a tempdir for all subsequent calls
 #export TMPDIR=
 
+# The package name gets patched for baked agents to either
+# "check-mk-agent" or the name set by the "name of agent packages" rule
+XINETD_SERVICE_NAME=check_mk
+
 # Provide information about the remote host. That helps when data
 # is being sent only once to each remote host.
 if [ "$REMOTE_HOST" ] ; then
@@ -237,7 +241,7 @@ echo "LocalDirectory: $LOCALDIR"
 if [ -n "$REMOTE_HOST" ]
 then
     echo -n 'OnlyFrom: '
-    echo $(sed -n '/^service[[:space:]]*check_mk/,/}/s/^[[:space:]]*only_from[[:space:]]*=[[:space:]]*\(.*\)/\1/p' /etc/xinetd.d/* | head -n1)
+    echo $(sed -n '/^service[[:space:]]*'$XINETD_SERVICE_NAME'/,/}/s/^[[:space:]]*only_from[[:space:]]*=[[:space:]]*\(.*\)/\1/p' /etc/xinetd.d/* | head -n1)
 fi
 
 # Print out Partitions / Filesystems. (-P gives non-wrapped POSIXed output)

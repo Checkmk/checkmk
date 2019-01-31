@@ -6597,7 +6597,7 @@ expected_rulespecs = {
         'item_spec_class_name': 'NoneType',
         'item_type': None,
         'match_type': 'dict',
-        'title': u'Memory and pagefile levels for Windows',
+        'title': u'Memory levels for Windows',
         'valuespec_class_name': 'TimeperiodValuespec'
     },
     'checkgroup_parameters:memory_relative': {
@@ -14777,7 +14777,7 @@ expected_rulespecs = {
         'item_spec_class_name': 'NoneType',
         'item_type': None,
         'match_type': 'all',
-        'title': u'Memory and pagefile levels for Windows',
+        'title': u'Memory levels for Windows',
         'valuespec_class_name': 'Tuple'
     },
     'static_checks:memory_relative': {

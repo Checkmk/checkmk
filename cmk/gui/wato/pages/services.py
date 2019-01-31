@@ -530,6 +530,9 @@ class ModeAjaxServiceDiscovery(WatoWebApiMode):
 
         job_title = discovery_result.job_status.get("title", _("Service discovery"))
         duration_txt = cmk.utils.render.Age(discovery_result.job_status["duration"])
+        finished_time = discovery_result.job_status["started"] + discovery_result.job_status[
+            "duration"]
+        finished_txt = cmk.utils.render.date_and_time(finished_time)
 
         if discovery_result.job_status["state"] == JobStatus.state_running:
             return _("%s running for %s") % (job_title, duration_txt)
@@ -540,10 +543,12 @@ class ModeAjaxServiceDiscovery(WatoWebApiMode):
 
         messages = []
         if discovery_result.job_status["state"] == JobStatus.state_stopped:
-            messages.append(_("%s was stopped after %s") % (job_title, duration_txt))
+            messages.append(
+                _("%s was stopped after %s at %s.") % (job_title, duration_txt, finished_txt))
 
         elif discovery_result.job_status["state"] == JobStatus.state_finished:
-            messages.append(_("%s finished after %s") % (job_title, duration_txt))
+            messages.append(
+                _("%s finished after %s at %s.") % (job_title, duration_txt, finished_txt))
 
         cmk_check_entries = [
             e for e in discovery_result.check_table if DiscoveryState.is_discovered(e[0])
@@ -553,7 +558,20 @@ class ModeAjaxServiceDiscovery(WatoWebApiMode):
             if no_data:
                 messages.append(_("No data for discovery available. Please perform a full scan."))
         else:
-            messages.append(_("Found no services yet. Try to perform a full scan."))
+            messages.append(_("Found no services yet. To retry please execute a full scan."))
+
+        with html.plugged():
+            html.begin_foldable_container(
+                treename="service_discovery",
+                id_="options",
+                isopen=False,
+                title=_("Job details"),
+                indent=False)
+            html.open_div(class_="log_output", style="height: 400px;", id_="progress_log")
+            html.pre("\n".join(discovery_result.job_status["loginfo"]["JobProgressUpdate"]))
+            html.close_div()
+            html.end_foldable_container()
+            messages.append(html.drain())
 
         if messages:
             return " ".join(messages)

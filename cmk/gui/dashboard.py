@@ -75,7 +75,11 @@ if not cmk.is_raw_edition():
 if cmk.is_managed_edition():
     import cmk.gui.cme.plugins.dashboard
 
-from cmk.gui.plugins.views.utils import data_source_registry
+from cmk.gui.plugins.views.utils import (
+    data_source_registry,
+    get_permitted_views,
+    get_all_views,
+)
 from cmk.gui.plugins.dashboard.utils import (
     builtin_dashboards,
     GROW,
@@ -546,10 +550,7 @@ def transform_builtin_dashboards():
 
 
 def load_view_into_dashlet(dashlet, nr, view_name, add_context=None, load_from_all_views=False):
-    import cmk.gui.views as views
-    views.load_views()
-
-    permitted_views = views.permitted_views()
+    permitted_views = get_permitted_views()
 
     # it is random which user is first accessing
     # an apache python process, initializing the dashboard loading and conversion of
@@ -560,7 +561,7 @@ def load_view_into_dashlet(dashlet, nr, view_name, add_context=None, load_from_a
         # but we do this for the rare edge case during legacy dashboard conversion, so
         # this should be sufficient
         view = None
-        for (_u, n), this_view in views.all_views().iteritems():
+        for (_u, n), this_view in get_all_views().iteritems():
             # take the first view with a matching name
             if view_name == n:
                 view = this_view
@@ -1198,7 +1199,6 @@ def page_create_view_dashlet_infos():
 
 def choose_view(name):
     import cmk.gui.views as views
-    views.load_views()
     vs_view = DropdownChoice(
         title=_('View Name'),
         choices=views.view_choices,

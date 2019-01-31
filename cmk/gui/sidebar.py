@@ -40,7 +40,6 @@ from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 import cmk.gui.utils as utils
 import cmk.gui.config as config
-import cmk.gui.views as views
 import cmk.gui.userdb as userdb
 import cmk.gui.pagetypes as pagetypes
 import cmk.gui.notify as notify
@@ -355,8 +354,6 @@ class SidebarRenderer(object):
             'onunload="cmk.sidebar.store_scroll_position()">\n' % interval)
         html.open_div(id_="check_mk_sidebar")
 
-        # FIXME: Move this to the code where views are needed (snapins?)
-        views.load_views()
         self._sidebar_head()
         user_config = UserSidebarConfig(config.user, config.sidebar)
         refresh_snapins = []

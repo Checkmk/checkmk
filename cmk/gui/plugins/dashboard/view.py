@@ -61,7 +61,6 @@ class ViewDashlet(IFrameDashlet):
     @classmethod
     def vs_parameters(cls):
         def _render_input(dashlet):
-            views.load_views()
             # TODO: Don't modify the self._dashlet data structure here!
             views.transform_view_to_valuespec_value(dashlet)
             return views.render_view_config(dashlet)
@@ -69,7 +68,6 @@ class ViewDashlet(IFrameDashlet):
         def _handle_input(ident, dashlet):
             dashlet['name'] = 'dashlet_%d' % ident
             dashlet.setdefault('title', _('View'))
-            views.load_views()
             return views.create_view_from_valuespec(dashlet, dashlet)
 
         return _render_input, _handle_input
@@ -90,6 +88,5 @@ class ViewDashlet(IFrameDashlet):
         html.request.set_var('_display_options', display_options)
         html.add_body_css_class('dashlet')
 
-        views.load_views()
         views.painter_options.load(self._dashlet_spec["name"])
         views.show_view(self._dashlet_spec, show_heading=True, show_buttons=False, show_footer=True)

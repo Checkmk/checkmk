@@ -1634,7 +1634,7 @@ def tmpfs_is_managed_by_node(site):
 
     return subprocess.call(["umount", site.tmp_dir],
                            stdout=open(os.devnull, "w"),
-                           stderr=subprocess.STDOUT) == 32
+                           stderr=subprocess.STDOUT) in [1, 32]
 
 
 def unmount_tmpfs(site, output=True, kill=False):

@@ -1081,8 +1081,13 @@ inventory_displayhints.update({
         "title": _("Roles"),
         "keyorder": ["role", "namespace"],
     },
-    ".software.applications.k8s.roles:*.role": {"title": _("Name")},
-    ".software.applications.k8s.roles:*.namespace": {"title": _("Namespace")},
+    ".software.applications.kubernetes.nodes:": {
+        "title": _("Nodes"),
+        "keyorder": ["name"],
+    },
+    ".software.applications.kubernetes.roles:*.role" : {"title": _("Name")},
+    ".software.applications.kubernetes.roles:*.namespace" : {"title": _("Namespace")},
+    ".software.applications.kubernetes.nodes:*.name" : {"title": _("Name")},
     ".software.applications.citrix.": {"title": _("Citrix")},
     ".software.applications.citrix.controller.": {"title": _("Controller")},
     ".software.applications.citrix.controller.controller_version": {

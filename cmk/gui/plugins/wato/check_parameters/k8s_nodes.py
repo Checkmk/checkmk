@@ -7,7 +7,7 @@
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
-# | Copyright Mathias Kettner 2018             mk@mathias-kettner.de |
+# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 #
 # This file is part of Check_MK.
@@ -24,31 +24,39 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+from cmk.gui.i18n import _
+from cmk.gui.valuespec import (
+    Dictionary,
+    Tuple,
+    Integer,
+)
+from cmk.gui.plugins.wato import (
+    RulespecGroupCheckParametersApplications,
+    register_check_parameters,
+)
 
-def inventory_k8s_nodes(parsed):
-    return [(None, {})]
-
-
-def check_k8s_nodes(_no_item, params, parsed):
-    num_nodes = len(parsed.get('nodes', []))
-    levels = params.get('levels', (None, None))
-    levels_lower = params.get('levels_lower', (None, None))
-
-    yield check_levels(
-        num_nodes,
-        'k8s_nodes',
-        levels + levels_lower,
-        human_readable_func=int,
-        infoname='Number of nodes',
-    )
-
-
-check_info['k8s_nodes'] = {
-    'parse_function': parse_k8s,
-    'inventory_function': inventory_k8s_nodes,
-    'check_function': check_k8s_nodes,
-    'service_description': 'Nodes',
-    'group': 'k8s_nodes',
-    'has_perfdata': True,
-    'includes': ['k8s.include'],
-}
+register_check_parameters(
+    RulespecGroupCheckParametersApplications,
+    "k8s_nodes",
+    _("Kubernetes nodes"),
+    Dictionary(elements=[
+        ('levels',
+         Tuple(
+             title=_('Upper levels'),
+             elements=[
+                 Integer(title=_("Warning above")),
+                 Integer(title=_("Critical above")),
+             ],
+         )),
+        ('levels_lower',
+         Tuple(
+             title=_('Lower levels'),
+             elements=[
+                 Integer(title=_("Warning below")),
+                 Integer(title=_("Critical below")),
+             ],
+         )),
+    ]),
+    None,
+    match_type="dict",
+)

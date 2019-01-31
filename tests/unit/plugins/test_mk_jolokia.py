@@ -10,11 +10,10 @@ sys.path.insert(0, os.path.join(cmk_path(), 'agents', 'plugins'))
 
 import mk_jolokia  # pylint: disable=import-error,wrong-import-position
 
-
 SANITIZE = mk_jolokia.JolokiaInstance._sanitize_config
 
 
-@pytest.mark.parametrize("removed", ["protocol", "server", "port", "suburi"])
+@pytest.mark.parametrize("removed", ["protocol", "server", "port", "suburi", "timeout"])
 def test_missing_config_basic(removed):
     config = copy.deepcopy(mk_jolokia.DEFAULT_CONFIG)
     config.pop(removed)
@@ -29,10 +28,19 @@ def test_config_instance():
     assert SANITIZE(config).get("instance") == "some_spaces_in_string"
 
 
-@pytest.mark.parametrize("config,base_url", [
-    ({"protocol": "sftp", "server": "billy.theserver", "port": 42,
-      "suburi": "jolo-site"}, "sftp://billy.theserver:42/jolo-site/")
-])
+def test_config_timeout():
+    config = copy.deepcopy(mk_jolokia.DEFAULT_CONFIG)
+    config["timeout"] = '23'
+    assert isinstance(SANITIZE(config).get("timeout"), float)
+
+
+@pytest.mark.parametrize("config,base_url", [({
+    "protocol": "sftp",
+    "server": "billy.theserver",
+    "port": 42,
+    "suburi": "jolo-site",
+    "timeout": 2.0
+}, "sftp://billy.theserver:42/jolo-site/")])
 def test_jolokia_instance_base_url(config, base_url):
     joloi = mk_jolokia.JolokiaInstance(config)
     assert joloi._get_base_url() == base_url

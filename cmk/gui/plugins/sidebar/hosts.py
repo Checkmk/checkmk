@@ -75,7 +75,6 @@ class HostSnapin(SidebarSnapin):
         else:
             num_columns = 2
 
-        views.load_views()
         target = views.get_context_link(config.user.id, view)
         html.open_table(class_="allhosts")
         col = 1

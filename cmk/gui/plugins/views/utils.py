@@ -50,7 +50,7 @@ from cmk.gui.valuespec import ValueSpec  # pylint: disable=unused-import
 from cmk.gui.log import logger
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, current_app
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.display_options import display_options
 from cmk.gui.permissions import permission_registry
@@ -914,7 +914,7 @@ def url_to_view(row, view_name):
     if display_options.disabled(display_options.I):
         return None
 
-    view = get_permitted_views(load_all_views()).get(view_name)
+    view = get_permitted_views().get(view_name)
     if view:
         # Get the context type of the view to link to, then get the parameters of this
         # context type and try to construct the context from the data of the row
@@ -1354,17 +1354,38 @@ def render_cache_info(what, row):
     return text
 
 
-def load_all_views():
-    # Skip views which do not belong to known datasources
-    all_views = visuals.load(
-        'views',
-        multisite_builtin_views,
-        skip_func=lambda v: v['datasource'] not in data_source_registry)
-    return _transform_old_views(all_views)
+class ViewStore(object):
+    @classmethod
+    def get_instance(cls):
+        """Use the request globals to prevent multiple instances during a request"""
+        if "view_store" not in current_app.g:
+            current_app.g["view_store"] = cls()
+        return current_app.g["view_store"]
+
+    def __init__(self):
+        self.all = self._load_all_views()
+        self.permitted = self._load_permitted_views(self.all)
+
+    def _load_all_views(self):
+        """Loads all view definitions from disk and returns them"""
+        # Skip views which do not belong to known datasources
+        return _transform_old_views(
+            visuals.load(
+                'views',
+                multisite_builtin_views,
+                skip_func=lambda v: v['datasource'] not in data_source_registry))
+
+    def _load_permitted_views(self, all_views):
+        """Returns all view defitions that a user is allowed to use"""
+        return visuals.available('views', all_views)
 
 
-def get_permitted_views(all_views):
-    return visuals.available('views', all_views)
+def get_all_views():
+    return ViewStore.get_instance().all
+
+
+def get_permitted_views():
+    return ViewStore.get_instance().permitted
 
 
 # Convert views that are saved in the pre 1.2.6-style
@@ -1627,7 +1648,7 @@ class Cell(object):
 
     def _link_view(self):
         try:
-            return get_permitted_views(load_all_views())[self._link_view_name]
+            return get_permitted_views()[self._link_view_name]
         except KeyError:
             return None
 

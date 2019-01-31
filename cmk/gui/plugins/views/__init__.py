@@ -37,6 +37,7 @@ from cmk.utils.plugin_loader import load_plugins
 #   '----------------------------------------------------------------------'
 
 from cmk.gui.plugins.views.utils import (
+    get_permitted_views,
     cmp_custom_variable,
     cmp_ip_address,
     cmp_num_split,

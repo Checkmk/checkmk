@@ -34,6 +34,7 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html
 
 from cmk.gui.plugins.views import (
+    get_permitted_views,
     command_registry,
     Command,
     data_source_registry,
@@ -810,9 +811,7 @@ def render_delete_event_icons(row):
                 urlvars += parse_qsl(url.query)
         else:
             # Regular view
-            # TODO: Find a better place for permitted_views that is importable on module level
-            from cmk.gui.views import permitted_views
-            view = permitted_views()[(html.request.var("view_name"))]
+            view = get_permitted_views()[(html.request.var("view_name"))]
             filename = None
 
         urlvars += [

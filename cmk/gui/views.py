@@ -88,21 +88,23 @@ from cmk.gui.plugins.views.utils import (
     painter_registry,
     Painter,
     sorter_registry,
+    get_permitted_views,
+    get_all_views,
 )
 
 # Needed for legacy (pre 1.6) plugins
 from cmk.gui.htmllib import HTML  # pylint: disable=unused-import
 from cmk.gui.plugins.views.utils import (  # pylint: disable=unused-import
-    load_all_views, get_permitted_views, view_title, multisite_builtin_views, view_hooks,
-    inventory_displayhints, register_command_group, transform_action_url, is_stale, paint_stalified,
-    paint_host_list, format_plugin_output, link_to_view, url_to_view, get_host_tags, row_id,
-    group_value, view_is_enabled, paint_age, declare_1to1_sorter, declare_simple_sorter,
-    cmp_simple_number, cmp_simple_string, cmp_insensitive_string, cmp_num_split,
-    cmp_custom_variable, cmp_service_name_equiv, cmp_string_list, cmp_ip_address, get_custom_var,
-    get_perfdata_nth_value, get_tag_group, query_data, do_query_data, PainterOptions, join_row,
-    get_view_infos, replace_action_url_macros, Cell, JoinCell, get_cells, get_group_cells,
-    get_sorter_name_of_painter, get_separated_sorters, get_primary_sorter_order, parse_url_sorters,
-    substract_sorters, painter_options, register_legacy_command, register_painter, register_sorter,
+    view_title, multisite_builtin_views, view_hooks, inventory_displayhints, register_command_group,
+    transform_action_url, is_stale, paint_stalified, paint_host_list, format_plugin_output,
+    link_to_view, url_to_view, get_host_tags, row_id, group_value, view_is_enabled, paint_age,
+    declare_1to1_sorter, declare_simple_sorter, cmp_simple_number, cmp_simple_string,
+    cmp_insensitive_string, cmp_num_split, cmp_custom_variable, cmp_service_name_equiv,
+    cmp_string_list, cmp_ip_address, get_custom_var, get_perfdata_nth_value, get_tag_group,
+    query_data, do_query_data, PainterOptions, join_row, get_view_infos, replace_action_url_macros,
+    Cell, JoinCell, get_cells, get_group_cells, get_sorter_name_of_painter, get_separated_sorters,
+    get_primary_sorter_order, parse_url_sorters, substract_sorters, painter_options,
+    register_legacy_command, register_painter, register_sorter,
 )
 
 # Needed for legacy (pre 1.6) plugins
@@ -166,11 +168,11 @@ class VisualTypeViews(VisualType):
         return None
 
     def load_handler(self):
-        load_views()
+        pass
 
     @property
     def permitted_visuals(self):
-        return permitted_views()
+        return get_permitted_views()
 
     def is_enabled_for(self, this_visual, visual, context_vars):
         if visual["name"] not in view_is_enabled:
@@ -277,36 +279,6 @@ def transform_old_dict_based_icons():
         icon_and_action_registry.register(icon_class)
 
 
-multisite_views = {}  # type: Dict
-available_views = {}  # type: Dict
-
-
-# Load all views - users or builtins
-# TODO: Clean these request specific module scope variables
-def load_views():
-    global multisite_views, available_views
-    multisite_views = load_all_views()
-    available_views = get_permitted_views(multisite_views)
-
-
-def permitted_views():
-    try:
-        return available_views
-    except:
-        # In some cases, for example when handling AJAX calls the views might
-        # have not been loaded yet
-        load_views()
-        return available_views
-
-
-def all_views():
-    return multisite_views
-
-
-def save_views(us):
-    visuals.save('views', multisite_views)
-
-
 def paint_host_tag(row, tgid):
     tags_of_host = get_host_tags(row).split()
 
@@ -403,9 +375,8 @@ def _cmp_host_tag(r1, r2, tgid):
 
 @cmk.gui.pages.register("edit_views")
 def page_edit_views():
-    load_views()
     cols = [(_('Datasource'), lambda v: data_source_registry[v["datasource"]]().title)]
-    visuals.page_list('views', _("Edit Views"), multisite_views, cols)
+    visuals.page_list('views', _("Edit Views"), get_all_views(), cols)
 
 
 #.
@@ -503,11 +474,9 @@ def page_create_view_infos():
 
 @cmk.gui.pages.register("edit_view")
 def page_edit_view():
-    load_views()
-
     visuals.page_edit_visual(
         'views',
-        multisite_views,
+        get_all_views(),
         custom_field_handler=render_view_config,
         load_handler=transform_view_to_valuespec_value,
         create_handler=create_view_from_valuespec,
@@ -517,7 +486,7 @@ def page_edit_view():
 
 def view_choices(only_with_hidden=False):
     choices = [("", "")]
-    for name, view in available_views.items():
+    for name, view in get_permitted_views().items():
         if not only_with_hidden or view['single_infos']:
             title = format_view_title(name, view)
             choices.append(("%s" % name, title))
@@ -566,7 +535,6 @@ def view_editor_options():
 
 
 def view_editor_specs(ds_name, general_properties=True):
-    load_views()  # make sure that available_views is present
     specs = []
     if general_properties:
         specs.append(('view',
@@ -937,11 +905,10 @@ def show_filter_form(is_open, filters):
 
 @cmk.gui.pages.register("view")
 def page_view():
-    load_views()
     view_name = html.get_ascii_input("view_name")
     if view_name is None:
         raise MKUserError("view_name", _("Missing the variable view_name in the URL."))
-    view = available_views.get(view_name)
+    view = get_permitted_views().get(view_name)
     if not view:
         raise MKUserError("view_name", _("No view defined with the name '%s'.") % view_name)
 
@@ -2132,23 +2099,21 @@ def filter_selected_rows(view, rows, selected_ids):
 
 
 def get_context_link(user, viewname):
-    if viewname in available_views:
+    if viewname in get_permitted_views():
         return "view.py?view_name=%s" % viewname
     return None
 
 
 @cmk.gui.pages.register("export_views")
 def ajax_export():
-    load_views()
-    for view in available_views.itervalues():
+    for view in get_permitted_views().itervalues():
         view["owner"] = ''
         view["public"] = True
-    html.write(pprint.pformat(available_views))
+    html.write(pprint.pformat(get_permitted_views()))
 
 
 def get_view_by_name(view_name):
-    load_views()
-    return available_views[view_name]
+    return get_permitted_views()[view_name]
 
 
 #.

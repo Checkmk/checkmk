@@ -110,6 +110,11 @@ AWSSectionResult = NamedTuple("AWSSectionResult", [
     ("content", Any),
 ])
 
+AWSColleagueContents = NamedTuple("AWSColleagueContents", [
+    ("content", Any),
+    ("cache_timestamp", float),
+])
+
 AWSRawContent = NamedTuple("AWSRawContent", [
     ("content", Any),
     ("cache_timestamp", float),
@@ -160,8 +165,14 @@ class AWSSection(object):
 
     def run(self, use_cache=False):
         colleague_contents = self._get_colleague_contents()
+        assert isinstance(colleague_contents, AWSColleagueContents)
+
         raw_content = self._get_raw_content(colleague_contents, use_cache=use_cache)
+        assert isinstance(raw_content, AWSRawContent)
+
         computed_content = self._compute_content(raw_content, colleague_contents)
+        assert isinstance(computed_content, AWSComputedContent)
+
         self._send(computed_content)
         return AWSSectionResults(
             self._create_results(computed_content), computed_content.cache_timestamp)
@@ -170,7 +181,7 @@ class AWSSection(object):
         # Cache is only used if the age is lower than section interval AND
         # the collected data from colleagues are not newer
         self._cache_file_dir.mkdir(parents=True, exist_ok=True)
-        if use_cache and self._cache_is_recent_enough():
+        if use_cache and self._cache_is_recent_enough(colleague_contents):
             raw_content, cache_timestamp = self._read_from_cache()
         else:
             raw_content = self._fetch_raw_content(colleague_contents)
@@ -179,7 +190,7 @@ class AWSSection(object):
             cache_timestamp = time.time()
         return AWSRawContent(raw_content, cache_timestamp)
 
-    def _cache_is_recent_enough(self):
+    def _cache_is_recent_enough(self, colleague_contents):
         if not self._cache_file.exists():
             logging.info("New cache file %s", self._cache_file)
             return False
@@ -198,10 +209,9 @@ class AWSSection(object):
             logging.info("Cache file %s is outdated", self._cache_file)
             return False
 
-        for received_result in self._received_results.values():
-            if received_result and received_result.cache_timestamp > now:
-                logging.info("Colleague data is newer than cache file %s", self._cache_file)
-                return False
+        if colleague_contents.cache_timestamp > now:
+            logging.info("Colleague data is newer than cache file %s", self._cache_file)
+            return False
         return True
 
     def _read_from_cache(self):
@@ -226,11 +236,14 @@ class AWSSection(object):
 
     @abc.abstractmethod
     def _get_colleague_contents(self):
+        # type: AWSColleagueContents
         """
         Receive section contents from colleagues. The results are stored in
         self._receive_results: {<KEY>: AWSComputedContent}.
         The relation between two sections must be declared in the related
         distributor in advance to make this work.
+        Use max. cache_timestamp of all received results for
+        AWSColleagueContents.cache_timestamp
         """
         pass
 
@@ -258,7 +271,7 @@ class AWSSection(object):
 
     @abc.abstractmethod
     def _create_results(self, computed_content):
-        # type: (Any) -> List(AWSSectionResult)
+        # type: (Any) -> List[AWSSectionResult]
         pass
 
 
@@ -328,7 +341,7 @@ class CostsAndUsage(AWSSectionGeneric):
         return 86400
 
     def _get_colleague_contents(self):
-        return
+        return AWSColleagueContents(None, 0)
 
     def _fetch_raw_content(self, colleague_contents):
         fmt = "%Y-%m-%d"
@@ -388,7 +401,7 @@ class SecurityGroups(AWSSectionGeneric):
         return 300
 
     def _get_colleague_contents(self):
-        return
+        return AWSColleagueContents(None, 0)
 
     def _fetch_raw_content(self, colleague_contents):
         response = self._client.describe_security_groups()
@@ -428,8 +441,8 @@ class EC2Summary(AWSSectionGeneric):
     def _get_colleague_contents(self):
         colleague = self._received_results.get('security_groups')
         if colleague and colleague.content:
-            return colleague.content
-        return []
+            return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
+        return AWSColleagueContents([], 0)
 
     def _fetch_raw_content(self, colleague_contents):
         response = self._client.describe_instances()
@@ -441,7 +454,7 @@ class EC2Summary(AWSSectionGeneric):
 
     def _compute_content(self, raw_content, colleague_contents):
         reservations = raw_content.content
-        for security_group in colleague_contents:
+        for security_group in colleague_contents.content:
             for reservation in reservations:
                 if security_group['OwnerId'] == reservation['OwnerId']:
                     reservation['SecurityGroup'] = security_group
@@ -481,13 +494,14 @@ class EC2(AWSSectionCloudwatch):
     def _get_colleague_contents(self):
         colleague = self._received_results.get('ec2_summary')
         if colleague and colleague.content:
-            return colleague.content.get('mapping', {})
-        return {}
+            return AWSColleagueContents(
+                colleague.content.get('mapping', {}), colleague.cache_timestamp)
+        return AWSColleagueContents({}, 0)
 
     def _get_metrics(self, colleague_contents):
         metrics = []
         idx = 0
-        for instance_id, instance_name in colleague_contents.iteritems():
+        for instance_id, instance_name in colleague_contents.content.iteritems():
             for metric_name, unit in [
                 ("CPUCreditUsage", "Count"),
                 ("CPUCreditBalance", "Count"),
@@ -569,7 +583,7 @@ class S3Summary(AWSSectionGeneric):
         return 86400
 
     def _get_colleague_contents(self):
-        return
+        return AWSColleagueContents(None, 0)
 
     def _fetch_raw_content(self, colleague_contents):
         buckets = []
@@ -622,13 +636,14 @@ class S3(AWSSectionCloudwatch):
     def _get_colleague_contents(self):
         colleague = self._received_results.get('s3_summary')
         if colleague and colleague.content:
-            return [bucket['Name'] for bucket in colleague.content]
-        return []
+            return AWSColleagueContents([bucket['Name'] for bucket in colleague.content],
+                                        colleague.cache_timestamp)
+        return AWSColleagueContents([], 0)
 
     def _get_metrics(self, colleague_contents):
         metrics = []
         idx = 0
-        for bucket_name in colleague_contents:
+        for bucket_name in colleague_contents.content:
             for metric_name, unit, storage_classes in [
                 ("BucketSizeBytes", "Bytes", [
                     "StandardStorage",
@@ -689,7 +704,7 @@ class ELBSummary(AWSSectionGeneric):
         return 300
 
     def _get_colleague_contents(self):
-        return
+        return AWSColleagueContents(None, 0)
 
     def _fetch_raw_content(self, colleague_contents):
         response = self._client.describe_load_balancers()
@@ -737,12 +752,14 @@ class ELBHealth(AWSSectionGeneric):
     def _get_colleague_contents(self):
         colleague = self._received_results.get('elb_summary')
         if colleague and colleague.content:
-            return [load_balancer['LoadBalancerName'] for load_balancer in colleague.content]
-        return []
+            return AWSColleagueContents(
+                [load_balancer['LoadBalancerName'] for load_balancer in colleague.content],
+                colleague.cache_timestamp)
+        return AWSColleagueContents([], 0)
 
     def _fetch_raw_content(self, colleague_contents):
         load_balancers = {}
-        for load_balancer_name in colleague_contents:
+        for load_balancer_name in colleague_contents.content:
             response = self._client.describe_instance_health(LoadBalancerName=load_balancer_name)
             try:
                 states = response['InstanceStates']
@@ -775,13 +792,15 @@ class ELB(AWSSectionCloudwatch):
     def _get_colleague_contents(self):
         colleague = self._received_results.get('elb_summary')
         if colleague and colleague.content:
-            return [load_balancer['LoadBalancerName'] for load_balancer in colleague.content]
-        return []
+            return AWSColleagueContents(
+                [load_balancer['LoadBalancerName'] for load_balancer in colleague.content],
+                colleague.cache_timestamp)
+        return AWSColleagueContents([], 0)
 
     def _get_metrics(self, colleague_contents):
         metrics = []
         idx = 0
-        for load_balancer_name in colleague_contents:
+        for load_balancer_name in colleague_contents.content:
             for metric_name, stat in [
                     # Load balancer metrics
                 ("RequestCount", "Sum"),
@@ -857,8 +876,9 @@ class EBSSummary(AWSSectionGeneric):
     def _get_colleague_contents(self):
         colleague = self._received_results.get('ec2_summary')
         if colleague and colleague.content:
-            return colleague.content.get('mapping', {})
-        return {}
+            return AWSColleagueContents(
+                colleague.content.get('mapping', {}), colleague.cache_timestamp)
+        return AWSColleagueContents({}, 0)
 
     def _fetch_raw_content(self, colleague_contents):
         response = self._client.describe_volumes()
@@ -888,7 +908,7 @@ class EBSSummary(AWSSectionGeneric):
         for row in content:
             for attachment in row['Attachments']:
                 attachment_id = attachment['InstanceId']
-                instance_name = colleague_contents.get(attachment_id, attachment_id)
+                instance_name = colleague_contents.content.get(attachment_id, attachment_id)
                 content_by_piggyback_hosts.setdefault(instance_name, []).append(row)
         return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
 
@@ -911,15 +931,15 @@ class EBS(AWSSectionCloudwatch):
     def _get_colleague_contents(self):
         colleague = self._received_results.get('ebs_summary')
         if colleague and colleague.content:
-            return [(instance_name, row['VolumeId'], row['VolumeType'])
-                    for instance_name, rows in colleague.content.iteritems()
-                    for row in rows]
-        return []
+            return AWSColleagueContents([(instance_name, row['VolumeId'], row['VolumeType'])
+                                         for instance_name, rows in colleague.content.iteritems()
+                                         for row in rows], colleague.cache_timestamp)
+        return AWSColleagueContents([], 0)
 
     def _get_metrics(self, colleague_contents):
         metrics = []
         idx = 0
-        for instance_name, volume_name, volume_type in colleague_contents:
+        for instance_name, volume_name, volume_type in colleague_contents.content:
             for metric_name, unit, volume_types in [
                     # Disk IO
                 ("VolumeReadOps", "Count", []),

@@ -1,0 +1,20 @@
+Title: Fix OnlyFrom entry in check_mk agent section
+Level: 1
+Component: agents
+Compatible: compat
+Edition: cee
+Version: 1.6.0i1
+Date: 1548937503
+Class: fix
+
+Previously, the OnlyFrom entry, that represents the list of
+only-from IP entries within the xinetd-configuration,
+rendered empty for baked agents.
+
+The cause for this was that the agent was looking for
+the service name "check_mk", that only is used by the
+raw agent.
+
+The agent is now looking for the right service name set
+from the agent bakery, i.e. "check-mk-agent" or a user-specified
+name coming from the "name of agent packages" rule.

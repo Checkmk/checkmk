@@ -31,6 +31,7 @@ import json
 import traceback
 import time
 import pprint
+import sys
 from hashlib import sha256
 from typing import NamedTuple, Text, List, Optional  # pylint: disable=unused-import
 
@@ -408,8 +409,9 @@ class ServiceDiscoveryBackgroundJob(WatoBackgroundJob):
     def _perform_service_scan(self, request):
         """The try-inventory automation refreshes the Check_MK internal cache and makes the new
         information available to the next try-inventory call made by get_result()."""
-        check_mk_automation(request.host.site_id(), "try-inventory",
-                            self._get_automation_options(request))
+        result = check_mk_automation(request.host.site_id(), "try-inventory",
+                                     self._get_automation_options(request))
+        sys.stdout.write(result["output"])
 
     def _perform_automatic_refresh(self, request):
         _counts, _failed_hosts = check_mk_automation(
@@ -446,14 +448,14 @@ class ServiceDiscoveryBackgroundJob(WatoBackgroundJob):
         # time for all data of a host. The data sources should be able to provide this information
         # somehow.
         check_table_created = time.time()
-        check_table = check_mk_automation(
+        result = check_mk_automation(
             request.host.site_id(), "try-inventory",
             ["@noscan", "@raiseerrors", request.host.name()])
 
         return DiscoveryResult(
             job_status=job_status,
             check_table_created=check_table_created,
-            check_table=check_table,
+            check_table=result["check_table"],
         )
 
     def _check_table_file_path(self):

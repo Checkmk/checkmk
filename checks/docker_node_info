@@ -28,6 +28,10 @@
 def check_docker_node_info(_no_item, _no_params, parsed):
     if "Name" in parsed:
         yield 0, 'Daemon running on host %s' % parsed["Name"]
+    if "Warning" in parsed:
+        yield 1, parsed["Warning"]
+    if "Critical" in parsed:
+        yield 2, parsed["Critical"]
 
 
 check_info['docker_node_info'] = {

@@ -75,18 +75,18 @@ register_check_parameters(
         (
             "pagefile",
             Alternative(
-                title=_("Pagefile Levels"),
+                title=_("Commit charge Levels"),
                 style="dropdown",
                 elements=[
                     Tuple(
-                        title=_("Pagefile usage in percent"),
+                        title=_("Commit charge in percent (relative to commit limit)"),
                         elements=[
                             Percentage(title=_("Warning at")),
                             Percentage(title=_("Critical at")),
                         ]),
                     Transform(
                         Tuple(
-                            title=_("Absolute free pagefile"),
+                            title=_("Absolute commitable memory"),
                             elements=[
                                 Filesize(title=_("Warning if less than")),
                                 Filesize(title=_("Critical if less than")),

@@ -43,7 +43,7 @@ from cmk.gui.plugins.wato import (
 register_check_parameters(
     RulespecGroupCheckParametersOperatingSystem,
     "memory_pagefile_win",
-    _("Memory and pagefile levels for Windows"),
+    _("Memory levels for Windows"),
     Dictionary(elements=[
         (
             "memory",

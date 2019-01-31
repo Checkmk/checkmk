@@ -60,6 +60,7 @@ DEFAULT_CONFIG = {
     "protocol": "http",
     "server": "localhost",
     "port": 8080,
+    "timeout": 1.0,
     "user": "monitoring",
     "password": None,
     "mode": "digest",
@@ -197,7 +198,7 @@ class JolokiaInstance(object):
         if instance:
             err_msg += " for %s" % instance
 
-        required_keys = {"protocol", "server", "port", "suburi"}
+        required_keys = {"protocol", "server", "port", "suburi", "timeout"}
         auth_mode = config.get("mode")
         if auth_mode in ("digest", "basic", "basic_preemtive"):
             required_keys |= {"user", "password"}
@@ -213,11 +214,13 @@ class JolokiaInstance(object):
             instance = str(config["port"])
         config["instance"] = instance.replace(" ", "_")
 
-        # port must be (or look like) an integer
-        try:
-            config["port"] = int(config["port"])
-        except ValueError:
-            raise ValueError(err_msg % ("Invalid port %r" % config["port"]))
+        # port must be (or look like) an integer, timeout like float
+        for key, type_ in (("port", int), ("timeout", float)):
+            val = config[key]
+            try:
+                config[key] = type_(val)
+            except ValueError:
+                raise ValueError(err_msg % ("Invalid %s %r" % (key, val)))
 
         if config.get("server") == "use fqdn":
             config["server"] = socket.getfqdn()
@@ -272,8 +275,7 @@ class JolokiaInstance(object):
     def _initialize_http_session(self):
         session = requests.Session()
         session.verify = self._config["verify"]
-
-        session.timeout = 1.0
+        session.timeout = self._config["timeout"]
 
         auth_method = self._config.get("mode")
         if auth_method is None:

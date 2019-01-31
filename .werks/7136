@@ -1,0 +1,11 @@
+Title: mk_jolokia: connection timeout is now configurable
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1548921175
+Class: feature
+
+Previously the connection timeout was hardcoded to 1 second, based on the assumption that the jolokia server is most likely the local host.
+This assumption has been dropped, and the timeout can now be configured using the agent bakery or by adding (e.g.) "timeout=23.0" to your configuration file.

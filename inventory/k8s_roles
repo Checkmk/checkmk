@@ -27,8 +27,6 @@
 
 def inv_k8s_roles(parsed):
     import itertools
-
-    now = time.time()
     node = inv_tree_list("software.applications.kubernetes.roles:")
 
     for role in sorted(
@@ -38,7 +36,6 @@ def inv_k8s_roles(parsed):
         node.append({
             'role': role['name'],
             'namespace': role['namespace'],
-            'age': get_age_human_readable(now - role['creation_timestamp']),
         })
 
 

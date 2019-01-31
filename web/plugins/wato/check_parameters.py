@@ -6514,7 +6514,7 @@ register_check_parameters(
 register_check_parameters(
     subgroup_os,
     "memory_pagefile_win",
-    _("Memory and pagefile levels for Windows"),
+    _("Memory levels for Windows"),
     Dictionary(
         elements = [
             ( "memory",
@@ -6550,11 +6550,11 @@ register_check_parameters(
                    default_value = (80.0, 90.0))),
             ( "pagefile",
                Alternative(
-                   title = _("Pagefile Levels"),
+                   title = _("Commit charge Levels"),
                    style = "dropdown",
                    elements = [
                        Tuple(
-                           title = _("Pagefile usage in percent"),
+                           title = _("Commit charge in percent (relative to commit limit)"),
                            elements = [
                                Percentage(title = _("Warning at")),
                                Percentage(title = _("Critical at")),
@@ -6562,7 +6562,7 @@ register_check_parameters(
                        ),
                        Transform(
                             Tuple(
-                                title = _("Absolute free pagefile"),
+                                title = _("Absolute commitable memory"),
                                 elements = [
                                      Filesize(title = _("Warning if less than")),
                                      Filesize(title = _("Critical if less than")),

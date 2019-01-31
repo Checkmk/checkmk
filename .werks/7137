@@ -1,0 +1,11 @@
+Title: mem.win: Titles of rule are more consistent
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p12
+Date: 1548925887
+
+Some of the titles and rules still referred to the commit charge as 'page file'.

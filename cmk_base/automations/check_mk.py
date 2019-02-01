@@ -148,9 +148,9 @@ class AutomationTryDiscovery(Automation):
     needs_checks = True  # TODO: Can we change this?
 
     def execute(self, args):
-        cmk.utils.log.set_verbosity(2)
-
         with redirect_output(cStringIO.StringIO()) as buf:
+            cmk.utils.log.setup_console_logging()
+            cmk.utils.log.set_verbosity(1)
             result = self._execute_discovery(args)
             return {"output": buf.getvalue(), "check_table": result}
 

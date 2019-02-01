@@ -1,0 +1,15 @@
+Title: Management board: Continue when firmware information can not be fetched
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1549008780
+
+The management board monitoring currently tries to fetch two types of information
+from the boards: Sensor states and information about the firmware version. In
+case the later could not be fetched the processing of the management board data
+was terminated. This has now been changed to continue with the data that could
+be fetched.

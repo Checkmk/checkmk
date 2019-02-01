@@ -1,0 +1,17 @@
+Title: Allow "coding" comment in notification scripts
+Level: 1
+Component: notifications
+Compatible: compat
+Edition: cre
+Version: 1.5.0p12
+Date: 1549018644
+Class: fix
+
+Notification scripts can contain the name of the notification
+script as a comment after the shebang and the optional encoding
+comment. When the encoding comment contained only the word
+"coding" but not "encoding" the encoding comment was accidentally
+used as the title of the notification script. Now the regular
+expression from https://docs.python.org/2.7/reference/lexical_analysis.html
+is used to recognize encoding comments. Therefore, "coding" and
+"encoding" can now be used.

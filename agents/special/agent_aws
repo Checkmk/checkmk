@@ -375,51 +375,6 @@ class CostsAndUsage(AWSSectionGeneric):
 
 
 #.
-#   .--security groups-----------------------------------------------------.
-#   |                                         _ _                          |
-#   |                ___  ___  ___ _   _ _ __(_) |_ _   _                  |
-#   |               / __|/ _ \/ __| | | | '__| | __| | | |                 |
-#   |               \__ \  __/ (__| |_| | |  | | |_| |_| |                 |
-#   |               |___/\___|\___|\__,_|_|  |_|\__|\__, |                 |
-#   |                                               |___/                  |
-#   |                                                                      |
-#   |                    __ _ _ __ ___  _   _ _ __  ___                    |
-#   |                   / _` | '__/ _ \| | | | '_ \/ __|                   |
-#   |                  | (_| | | | (_) | |_| | |_) \__ \                   |
-#   |                   \__, |_|  \___/ \__,_| .__/|___/                   |
-#   |                   |___/                |_|                           |
-#   '----------------------------------------------------------------------'
-
-
-class SecurityGroups(AWSSectionGeneric):
-    @property
-    def name(self):
-        return "security_groups"
-
-    @property
-    def interval(self):
-        return 300
-
-    def _get_colleague_contents(self):
-        return AWSColleagueContents(None, 0)
-
-    def _fetch_raw_content(self, colleague_contents):
-        # TODO Filter
-        response = self._client.describe_security_groups()
-        try:
-            return response['SecurityGroups']
-        except KeyError as e:
-            logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
-            return []
-
-    def _compute_content(self, raw_content, colleague_contents):
-        return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
-
-    def _create_results(self, computed_content):
-        return [AWSSectionResult("", computed_content.content)]
-
-
-#.
 #   .--EC2-----------------------------------------------------------------.
 #   |                          _____ ____ ____                             |
 #   |                         | ____/ ___|___ \                            |
@@ -449,39 +404,42 @@ class EC2Summary(AWSSectionGeneric):
         # TODO Filter
         response = self._client.describe_instances()
         try:
-            return response['Reservations']
+            instances = {
+                self._extract_instance_name_from_tags(instance): instance
+                for reservation in response['Reservations']
+                for instance in reservation.get('Instances', [])
+            }
         except KeyError as e:
             logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
-            return {}
+            instances = {}
+
+        # TODO Filter
+        response = self._client.describe_security_groups()
+        try:
+            security_groups = {group['GroupId']: group for group in response['SecurityGroups']}
+        except KeyError as e:
+            logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
+            security_groups = {}
+        return instances, security_groups
 
     def _compute_content(self, raw_content, colleague_contents):
-        reservations = raw_content.content
-        for security_group in colleague_contents.content:
-            for reservation in reservations:
-                if security_group['OwnerId'] == reservation['OwnerId']:
-                    reservation.setdefault('SecurityGroups', []).append(security_group)
-        return AWSComputedContent({
-            "Reservations": reservations,
-            "mapping": self._map_instance_id_to_name(reservations),
-        }, raw_content.cache_timestamp)
+        instances, security_groups = raw_content.content
 
-    def _map_instance_id_to_name(self, reservations):
-        mapping = {}
-        for reservation in reservations:
-            for instance in reservation.get('Instances', []):
-                instance_id = instance['InstanceId']
-                instance_name = self._extract_instance_name_from_tags(instance, instance_id)
-                mapping.setdefault(instance_id, instance_name)
-        return mapping
+        for instance in instances.itervalues():
+            for security_group in instance.get('SecurityGroups', []):
+                security_group_id = security_group['GroupId']
+                if security_group_id in security_groups:
+                    security_group.update(security_groups[security_group_id])
+        return AWSComputedContent(instances, raw_content.cache_timestamp)
 
-    def _extract_instance_name_from_tags(self, instance, instance_id):
+    def _extract_instance_name_from_tags(self, instance):
         for tag in instance.get('Tags', []):
             if tag.get('Key') == 'Name':
                 return tag['Value']
-        return instance_id
+        return instance['InstanceId']
 
     def _create_results(self, computed_content):
-        return [AWSSectionResult("", computed_content.content['Reservations'])]
+        return [AWSSectionResult("", [computed_content.content])]
 
 
 class EC2(AWSSectionCloudwatch):
@@ -496,14 +454,14 @@ class EC2(AWSSectionCloudwatch):
     def _get_colleague_contents(self):
         colleague = self._received_results.get('ec2_summary')
         if colleague and colleague.content:
-            return AWSColleagueContents(
-                colleague.content.get('mapping', {}), colleague.cache_timestamp)
+            return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
         return AWSColleagueContents({}, 0)
 
     def _get_metrics(self, colleague_contents):
         metrics = []
         idx = 0
-        for instance_id, instance_name in colleague_contents.content.iteritems():
+        for instance_name, attrs in colleague_contents.content.iteritems():
+            instance_id = attrs['InstanceId']
             for metric_name, unit in [
                 ("CPUCreditUsage", "Count"),
                 ("CPUCreditBalance", "Count"),
@@ -880,8 +838,8 @@ class EBSSummary(AWSSectionGeneric):
     def _get_colleague_contents(self):
         colleague = self._received_results.get('ec2_summary')
         if colleague and colleague.content:
-            return AWSColleagueContents(
-                colleague.content.get('mapping', {}), colleague.cache_timestamp)
+            mapping = {v['InstanceId']: k for k, v in colleague.content.iteritems()}
+            return AWSColleagueContents(mapping, colleague.cache_timestamp)
         return AWSColleagueContents({}, 0)
 
     def _fetch_raw_content(self, colleague_contents):
@@ -1207,14 +1165,12 @@ class AWSSectionsGeneric(AWSSections):
         cloudwatch_client = self._init_client('cloudwatch')
 
         #---distributors----------------------------------------------------
-        security_groups_distributor = ResultDistributor()
         ec2_summary_distributor = ResultDistributor()
         elb_summary_distributor = ResultDistributor()
         ebs_summary_distributor = ResultDistributor()
         s3_summary_distributor = ResultDistributor()
 
         #---sections with distributors--------------------------------------
-        security_groups = SecurityGroups(ec2_client, hostname, region, security_groups_distributor)
         ec2_summary = EC2Summary(ec2_client, hostname, region, ec2_summary_distributor)
         ebs_summary = EBSSummary(ec2_client, hostname, region, ebs_summary_distributor)
         elb_summary = ELBSummary(elb_client, hostname, region, elb_summary_distributor)
@@ -1229,7 +1185,6 @@ class AWSSectionsGeneric(AWSSections):
         s3 = S3(cloudwatch_client, hostname, region)
 
         #---register sections to distributors-------------------------------
-        security_groups_distributor.add(ec2_summary)
         ec2_summary_distributor.add(ec2)
         ec2_summary_distributor.add(ebs_summary)
         ec2_summary_distributor.add(ebs)
@@ -1240,17 +1195,15 @@ class AWSSectionsGeneric(AWSSections):
 
         #---register sections for execution---------------------------------
         # Dependencies: First append sections which distribute their results:
-        # -- security_groups
-        #    |
-        #    |--ec2_summary ('ec2')
-        #       |
-        #       |-- ec2 ('ec2')
-        #       |
-        #       |-- ebs_summary ('ec2', 'ebs')
-        #       |       |
-        #       |       |-- ebs ('ec2', 'ebs')
-        #       |
-        #       |-- ebs ('ec2')
+        # --ec2_summary ('ec2')
+        #   |
+        #   |-- ec2 ('ec2')
+        #   |
+        #   |-- ebs_summary ('ec2', 'ebs')
+        #   |       |
+        #   |       |-- ebs ('ec2', 'ebs')
+        #   |
+        #   |-- ebs ('ec2')
         #
         # -- elb_summary
         #    |
@@ -1258,7 +1211,6 @@ class AWSSectionsGeneric(AWSSections):
         #    |
         #    |-- elb
         if 'ec2' in services:
-            self._sections.append(security_groups)
             self._sections.append(ec2_summary)
             self._sections.append(ec2)
 

@@ -187,9 +187,15 @@ class IPMIManagementBoardDataSource(ManagementBoardDataSource, CheckMKAgentDataS
 
     def _fetch_ipmi_firmware_section(self, connection):
         self._logger.debug("Fetching firmware information via UDP from %s:623" % (self._ipaddress))
+        try:
+            firmware_entries = connection.get_firmware()
+        except Exception as e:
+            self._logger.verbose("Failed to fetch firmware information: %r" % e)
+            self._logger.debug("Exception", exc_info=True)
+            return ""
 
         output = "<<<mgmt_ipmi_firmware:sep(124)>>>\n"
-        for entity_name, attributes in connection.get_firmware():
+        for entity_name, attributes in firmware_entries:
             for attribute_name, value in attributes.items():
                output += "%s|%s|%s\n" % (entity_name, attribute_name, value)
 

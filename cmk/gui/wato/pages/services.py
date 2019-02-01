@@ -525,10 +525,10 @@ class ModeAjaxServiceDiscovery(WatoWebApiMode):
 
     def _get_status_message(self, discovery_result):
         # type: (DiscoveryResult) -> Optional[Text]
-        if discovery_result.job_status[
-                "state"] == JobStatus.state_initialized and discovery_result.job_status[
-                    "is_running"]:
-            return _("Initializing discovery...")
+        if discovery_result.job_status["state"] == JobStatus.state_initialized:
+            if self._is_running(discovery_result):
+                return _("Initializing discovery...")
+            return _("No discovery information available. Please perform a full scan.")
 
         job_title = discovery_result.job_status.get("title", _("Service discovery"))
         duration_txt = cmk.utils.render.Age(discovery_result.job_status["duration"])

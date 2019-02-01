@@ -256,7 +256,7 @@ def test_automation_analyse_service_no_check(test_cfg, site):
 
 
 def test_automation_try_discovery_not_existing_host(test_cfg, site):
-    data = _execute_automation(site, "try-inventory",
+    _execute_automation(site, "try-inventory",
         args=["xxx-not-existing-host"],
         expect_stderr_pattern=r"Failed to lookup IPv4 address of xxx-not-existing-host " \
                               r"via DNS: (\[Errno -2\] Name or service not known"
@@ -265,9 +265,6 @@ def test_automation_try_discovery_not_existing_host(test_cfg, site):
         expect_exit_code=2,
         parse_data=False,
     )
-    assert isinstance(data, dict)
-    assert isinstance(data["output"], str)
-    assert isinstance(data["check_table"], list)
 
 
 def test_automation_try_discovery_host(test_cfg, site):

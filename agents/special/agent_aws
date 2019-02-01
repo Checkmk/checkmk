@@ -404,6 +404,7 @@ class SecurityGroups(AWSSectionGeneric):
         return AWSColleagueContents(None, 0)
 
     def _fetch_raw_content(self, colleague_contents):
+        # TODO Filter
         response = self._client.describe_security_groups()
         try:
             return response['SecurityGroups']
@@ -445,6 +446,7 @@ class EC2Summary(AWSSectionGeneric):
         return AWSColleagueContents([], 0)
 
     def _fetch_raw_content(self, colleague_contents):
+        # TODO Filter
         response = self._client.describe_instances()
         try:
             return response['Reservations']
@@ -567,6 +569,7 @@ class S3Summary(AWSSectionGeneric):
     def _determine_buckets(self, buckets):
         if buckets:
             return [{"Name": b} for b in buckets]
+        # TODO Filter
         response = self._client.list_buckets()
         try:
             return response['Buckets']
@@ -707,6 +710,7 @@ class ELBSummary(AWSSectionGeneric):
         return AWSColleagueContents(None, 0)
 
     def _fetch_raw_content(self, colleague_contents):
+        # TODO Filter
         response = self._client.describe_load_balancers()
         try:
             load_balancers = response['LoadBalancerDescriptions']
@@ -881,6 +885,7 @@ class EBSSummary(AWSSectionGeneric):
         return AWSColleagueContents({}, 0)
 
     def _fetch_raw_content(self, colleague_contents):
+        # TODO Filter
         response = self._client.describe_volumes()
         try:
             volumes = {r['VolumeId']: r for r in response['Volumes']}
@@ -1088,15 +1093,13 @@ class EBS(AWSSectionCloudwatch):
 class AWSSections(object):
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, hostname, region, session, services):
+    def __init__(self, hostname, session):
         self._hostname = hostname
-        self._region = region
         self._session = session
-        self._services = services
         self._sections = []
 
     @abc.abstractmethod
-    def init_sections(self, **kwargs):
+    def init_sections(self, hostname, region, services, buckets=None):
         pass
 
     def _init_client(self, client_key):
@@ -1177,7 +1180,7 @@ class AWSSectionsUSEast(AWSSections):
     https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/ce-api.html
     """
 
-    def init_sections(self, **kwargs):
+    def init_sections(self, hostname, region, services, buckets=None):
         #---clients---------------------------------------------------------
         ce_client = self._init_client('ce')
 
@@ -1186,17 +1189,17 @@ class AWSSectionsUSEast(AWSSections):
         #---sections with distributors--------------------------------------
 
         #---sections--------------------------------------------------------
-        ce = CostsAndUsage(ce_client, self._hostname, self._region)
+        ce = CostsAndUsage(ce_client, hostname, region)
 
         #---register sections to distributors-------------------------------
 
         #---register sections for execution---------------------------------
-        if 'ce' in self._services:
+        if 'ce' in services:
             self._sections.append(ce)
 
 
 class AWSSectionsGeneric(AWSSections):
-    def init_sections(self, **kwargs):
+    def init_sections(self, hostname, region, services, buckets=None):
         #---clients---------------------------------------------------------
         ec2_client = self._init_client('ec2')
         elb_client = self._init_client('elb')
@@ -1211,24 +1214,19 @@ class AWSSectionsGeneric(AWSSections):
         s3_summary_distributor = ResultDistributor()
 
         #---sections with distributors--------------------------------------
-        security_groups = SecurityGroups(ec2_client, self._hostname, self._region,
-                                         security_groups_distributor)
-        ec2_summary = EC2Summary(ec2_client, self._hostname, self._region, ec2_summary_distributor)
-        ebs_summary = EBSSummary(ec2_client, self._hostname, self._region, ebs_summary_distributor)
-        elb_summary = ELBSummary(elb_client, self._hostname, self._region, elb_summary_distributor)
+        security_groups = SecurityGroups(ec2_client, hostname, region, security_groups_distributor)
+        ec2_summary = EC2Summary(ec2_client, hostname, region, ec2_summary_distributor)
+        ebs_summary = EBSSummary(ec2_client, hostname, region, ebs_summary_distributor)
+        elb_summary = ELBSummary(elb_client, hostname, region, elb_summary_distributor)
         s3_summary = S3Summary(
-            s3_client,
-            self._hostname,
-            self._region,
-            distributor=s3_summary_distributor,
-            buckets=kwargs.get('buckets'))
+            s3_client, hostname, region, distributor=s3_summary_distributor, buckets=buckets)
 
         #---sections--------------------------------------------------------
-        elb_health = ELBHealth(elb_client, self._hostname, self._region)
-        ec2 = EC2(cloudwatch_client, self._hostname, self._region)
-        ebs = EBS(cloudwatch_client, self._hostname, self._region)
-        elb = ELB(cloudwatch_client, self._hostname, self._region)
-        s3 = S3(cloudwatch_client, self._hostname, self._region)
+        elb_health = ELBHealth(elb_client, hostname, region)
+        ec2 = EC2(cloudwatch_client, hostname, region)
+        ebs = EBS(cloudwatch_client, hostname, region)
+        elb = ELB(cloudwatch_client, hostname, region)
+        s3 = S3(cloudwatch_client, hostname, region)
 
         #---register sections to distributors-------------------------------
         security_groups_distributor.add(ec2_summary)
@@ -1259,21 +1257,21 @@ class AWSSectionsGeneric(AWSSections):
         #    |-- elb_health
         #    |
         #    |-- elb
-        if 'ec2' in self._services:
+        if 'ec2' in services:
             self._sections.append(security_groups)
             self._sections.append(ec2_summary)
             self._sections.append(ec2)
 
-        if 'ebs' in self._services:
+        if 'ebs' in services:
             self._sections.append(ebs_summary)
             self._sections.append(ebs)
 
-        if 'elb' in self._services:
+        if 'elb' in services:
             self._sections.append(elb_summary)
             self._sections.append(elb_health)
             self._sections.append(elb)
 
-        if 's3' in self._services:
+        if 's3' in services:
             self._sections.append(s3_summary)
             self._sections.append(s3)
 
@@ -1324,6 +1322,9 @@ def parse_arguments(argv):
         description=__doc__, formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument("--debug", action="store_true", help="Raise Python exceptions.")
     parser.add_argument(
+        "--no-cache", action="store_true", help="Execute all sections, do not rely on cached data.")
+
+    parser.add_argument(
         "--aws-access-key-id", required=True, help="The access key for your AWS account.")
     parser.add_argument(
         "--aws-secret-access-key", required=True, help="The secret key for your AWS account.")
@@ -1337,9 +1338,8 @@ def parse_arguments(argv):
         nargs='+',
         required=True,
         help="Services to monitor:\n%s" % "\n".join(["%-15s %s" % e for e in AWSServices]))
+
     parser.add_argument('--buckets', nargs='+', help="Buckets to monitor")
-    parser.add_argument(
-        "--no-cache", action="store_true", help="Execute all sections, do not rely on cached data.")
     parser.add_argument("--hostname", required=True)
     return parser.parse_args(argv)
 
@@ -1374,12 +1374,20 @@ def main(args=None):
     use_cache = not args.no_cache
     services = args.services
 
+    config = {
+        "hostname": hostname,
+        "services": services,
+    }
+
     exceptions = []
     try:
         region_us_east_1 = "us-east-1"
         session = create_session(access_key_id, secret_access_key, region_us_east_1)
-        aws_sections_us_east = AWSSectionsUSEast(hostname, region_us_east_1, session, services)
-        aws_sections_us_east.init_sections()
+        config_us_east_1 = config.copy()
+        config_us_east_1.update({"region": region_us_east_1})
+
+        aws_sections_us_east = AWSSectionsUSEast(hostname, session)
+        aws_sections_us_east.init_sections(**config_us_east_1)
         aws_sections_us_east.run(use_cache=use_cache)
     except Exception as e:
         if args.debug:
@@ -1389,8 +1397,11 @@ def main(args=None):
     for region in args.regions:
         try:
             session = create_session(access_key_id, secret_access_key, region)
-            aws_sections = AWSSectionsGeneric(hostname, region, session, services)
-            aws_sections.init_sections(buckets=args.buckets)
+            config_generic = config.copy()
+            config_generic.update({"region": region, "buckets": args.buckets})
+
+            aws_sections = AWSSectionsGeneric(hostname, session)
+            aws_sections.init_sections(**config_generic)
             aws_sections.run(use_cache=use_cache)
         except Exception as e:
             if args.debug:

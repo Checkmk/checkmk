@@ -124,7 +124,7 @@ def get_formatter(format_str="%(asctime)s [%(levelno)s] [%(name)s %(process)d] %
     return _logging.Formatter(format_str)
 
 
-def setup_console_logging():
+def setup_console_logging(stream=None, formatter=None):
     """This method enables all log messages to be written to the console
     without any additional information like date/time, logger-name. Just
     the log line is written.
@@ -132,13 +132,13 @@ def setup_console_logging():
     This can be used for existing command line applications which were
     using sys.stdout.write() or print() before.
     """
+    if stream is None:
+        stream = sys.stdout
 
-    handler = _logging.StreamHandler(stream=sys.stdout)
+    if formatter is None:
+        formatter = get_formatter("%(message)s")
 
-    formatter = _logging.Formatter("%(message)s")
-    handler.setFormatter(formatter)
-
-    logger.addHandler(handler)
+    setup_logging_handler(stream, formatter)
 
 
 def open_log(log_file_path, fallback_to=None):
@@ -164,13 +164,16 @@ def open_log(log_file_path, fallback_to=None):
     return logfile
 
 
-def setup_logging_handler(stream):
+def setup_logging_handler(stream, formatter=None):
     """This method enables all log messages to be written to the given
     stream file object. The messages are formated in Check_MK standard
     logging format.
     """
+    if formatter is None:
+        formatter = get_formatter("%(asctime)s [%(levelno)s] [%(name)s] %(message)s")
+
     handler = _logging.StreamHandler(stream=stream)
-    handler.setFormatter(get_formatter("%(asctime)s [%(levelno)s] [%(name)s] %(message)s"))
+    handler.setFormatter(formatter)
 
     del logger.handlers[:]  # Remove all previously existing handlers
     logger.addHandler(handler)

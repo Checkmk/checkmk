@@ -542,10 +542,10 @@ class JobRenderer(object):
     def show_job_class_infos(cls, job_class_infos, **kwargs):
         """Renders all jobs from the job_class_infos in a single multi-table"""
         html.open_table(css="job_table data")
-        for job_class, jobs_info in sorted(job_class_infos.items(), key=lambda x: x[0].gui_title):
+        for job_class, jobs_info in sorted(job_class_infos.items(), key=lambda x: x[0].gui_title()):
             html.open_tr()
             html.open_td(colspan=len(cls.get_headers()))
-            html.h3(job_class.gui_title)
+            html.h3(job_class.gui_title())
             html.close_td()
             html.close_tr()
 

@@ -372,8 +372,8 @@ class ServiceDiscoveryBackgroundJob(WatoBackgroundJob):
     housekeeping_max_age_sec = 86400  # 1 day
     housekeeping_max_count = 20
 
-    @property
-    def gui_title(self):
+    @classmethod
+    def gui_title(cls):
         return _("Service discovery")
 
     def __init__(self, host_name):

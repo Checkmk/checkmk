@@ -1393,13 +1393,13 @@ def ajax_sync():
 class UserSyncBackgroundJob(gui_background_job.GUIBackgroundJob):
     job_prefix = "user_sync"
 
-    @property
-    def gui_title(self):
+    @classmethod
+    def gui_title(cls):
         return _("User synchronization")
 
     def __init__(self):
         kwargs = {}
-        kwargs["title"] = self.gui_title
+        kwargs["title"] = self.gui_title()
         kwargs["deletable"] = False
         kwargs["stoppable"] = False
 

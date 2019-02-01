@@ -442,6 +442,34 @@ class EC2Summary(AWSSectionGeneric):
         return [AWSSectionResult("", [computed_content.content])]
 
 
+class EC2SecurityGroups(AWSSectionGeneric):
+    @property
+    def name(self):
+        return "ec2_security_groups"
+
+    @property
+    def interval(self):
+        return 300
+
+    def _get_colleague_contents(self):
+        colleague = self._received_results.get('ec2_summary')
+        if colleague and colleague.content:
+            return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
+        return AWSColleagueContents({}, 0)
+
+    def _fetch_raw_content(self, colleague_contents):
+        return colleague_contents.content
+
+    def _compute_content(self, raw_content, colleague_contents):
+        return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
+
+    def _create_results(self, computed_content):
+        return [
+            AWSSectionResult(piggyback_hostname, rows.get('SecurityGroups', []))
+            for piggyback_hostname, rows in computed_content.content.iteritems()
+        ]
+
+
 class EC2(AWSSectionCloudwatch):
     @property
     def name(self):
@@ -1179,12 +1207,14 @@ class AWSSectionsGeneric(AWSSections):
 
         #---sections--------------------------------------------------------
         elb_health = ELBHealth(elb_client, hostname, region)
+        ec2_security_groups = EC2SecurityGroups(None, hostname, region)
         ec2 = EC2(cloudwatch_client, hostname, region)
         ebs = EBS(cloudwatch_client, hostname, region)
         elb = ELB(cloudwatch_client, hostname, region)
         s3 = S3(cloudwatch_client, hostname, region)
 
         #---register sections to distributors-------------------------------
+        ec2_summary_distributor.add(ec2_security_groups)
         ec2_summary_distributor.add(ec2)
         ec2_summary_distributor.add(ebs_summary)
         ec2_summary_distributor.add(ebs)
@@ -1212,6 +1242,7 @@ class AWSSectionsGeneric(AWSSections):
         #    |-- elb
         if 'ec2' in services:
             self._sections.append(ec2_summary)
+            self._sections.append(ec2_security_groups)
             self._sections.append(ec2)
 
         if 'ebs' in services:

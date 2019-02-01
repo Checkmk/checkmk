@@ -1,0 +1,10 @@
+Title: mk_docker_container_piggybacked: Fix execution of agent in contiainer
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0p12
+Date: 1549021542
+Class: fix
+
+If a running container has no Check_MK agent installed, the agent of the node is used. This has been broken since version 1.5.0p5.

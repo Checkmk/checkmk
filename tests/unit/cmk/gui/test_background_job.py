@@ -8,6 +8,8 @@ import testlib  # type: ignore
 import cmk.utils.paths
 import cmk.gui.background_job as background_job
 import cmk.gui.gui_background_job as gui_background_job
+# Loads all GUI modules
+import cmk.gui.modules  # pylint: disable=unused-import
 
 import cmk.gui.log
 
@@ -17,6 +19,27 @@ def debug_logging():
     cmk.gui.log.set_log_levels({"cmk.web": cmk.gui.log._logging.DEBUG})
     yield
     cmk.gui.log.set_log_levels({"cmk.web": cmk.gui.log._logging.INFO})
+
+
+def test_registered_background_jobs():
+    assert sorted(gui_background_job.job_registry.keys()) == sorted([
+        'ParentScanBackgroundJob',
+        'BakeAgentsBackgroundJob',
+        'DummyBackgroundJob',
+        'RenameHostsBackgroundJob',
+        'ReportingBackgroundJob',
+        'RenameHostBackgroundJob',
+        'FetchAgentOutputBackgroundJob',
+        'BulkDiscoveryBackgroundJob',
+        'UserSyncBackgroundJob',
+        'ServiceDiscoveryBackgroundJob',
+    ])
+
+
+def test_registered_background_jobs_attributes():
+    for job_class in gui_background_job.job_registry.values():
+        assert isinstance(job_class.job_prefix, str)
+        assert isinstance(job_class.gui_title(), unicode)
 
 
 @pytest.fixture(autouse=True)
@@ -39,11 +62,14 @@ def job_base_dir(tmpdir, monkeypatch):
 @gui_background_job.job_registry.register
 class DummyBackgroundJob(gui_background_job.GUIBackgroundJob):
     job_prefix = "dummy_job"
-    gui_title = u"Dummy Job"
+
+    @classmethod
+    def gui_title(cls):
+        return u"Dummy Job"
 
     def __init__(self):
         kwargs = {}
-        kwargs["title"] = self.gui_title
+        kwargs["title"] = self.gui_title()
         kwargs["deletable"] = False
         kwargs["stoppable"] = True
         self.finish_hello_event = multiprocessing.Event()

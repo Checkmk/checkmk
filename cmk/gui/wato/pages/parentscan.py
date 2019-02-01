@@ -53,8 +53,8 @@ ParentScanResult = collections.namedtuple("ParentScanResult",
 class ParentScanBackgroundJob(WatoBackgroundJob):
     job_prefix = "parent_scan"
 
-    @property
-    def gui_title(self):
+    @classmethod
+    def gui_title(cls):
         return _("Parent scan")
 
     def __init__(self):

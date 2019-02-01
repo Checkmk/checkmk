@@ -127,13 +127,13 @@ def vs_bulk_discovery(render_form=False, include_subfolders=True):
 class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
     job_prefix = "bulk_discovery"
 
-    @property
-    def gui_title(self):
+    @classmethod
+    def gui_title(cls):
         return _("Bulk Discovery")
 
     def __init__(self):
         kwargs = {}
-        kwargs["title"] = _("Bulk discovery")
+        kwargs["title"] = self.gui_title()
         kwargs["lock_wato"] = False
         kwargs["deletable"] = False
         kwargs["stoppable"] = False

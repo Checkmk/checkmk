@@ -459,7 +459,7 @@ class EC2Summary(AWSSectionGeneric):
         for security_group in colleague_contents.content:
             for reservation in reservations:
                 if security_group['OwnerId'] == reservation['OwnerId']:
-                    reservation['SecurityGroup'] = security_group
+                    reservation.setdefault('SecurityGroups', []).append(security_group)
         return AWSComputedContent({
             "Reservations": reservations,
             "mapping": self._map_instance_id_to_name(reservations),

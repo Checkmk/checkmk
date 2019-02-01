@@ -1,9 +1,9 @@
-import pytest
-import subprocess
-
-from testlib import web, repo_path
 import re
 import ast
+import subprocess
+import pytest
+
+from testlib import web, repo_path  # pylint: disable=unused-import
 
 
 @pytest.fixture(scope="module")
@@ -154,6 +154,7 @@ def _execute_automation(site,
     if args:
         args = ["--"] + args
 
+    print ["cmk", "--automation", cmd] + args
     p = site.execute(
         ["cmk", "--automation", cmd] + args,
         stdout=subprocess.PIPE,
@@ -257,18 +258,23 @@ def test_automation_analyse_service_no_check(test_cfg, site):
 def test_automation_try_discovery_not_existing_host(test_cfg, site):
     data = _execute_automation(site, "try-inventory",
         args=["xxx-not-existing-host"],
-        expect_stderr_pattern="Failed to lookup IPv4 address of xxx-not-existing-host " \
-                              "via DNS: (\[Errno -2\] Name or service not known"
-                              "|\[Errno -3\] Temporary failure in name resolution)\n",
+        expect_stderr_pattern=r"Failed to lookup IPv4 address of xxx-not-existing-host " \
+                              r"via DNS: (\[Errno -2\] Name or service not known"
+                              r"|\[Errno -3\] Temporary failure in name resolution)\n",
         expect_stdout="",
         expect_exit_code=2,
         parse_data=False,
     )
+    assert isinstance(data, dict)
+    assert isinstance(data["output"], str)
+    assert isinstance(data["check_table"], list)
 
 
 def test_automation_try_discovery_host(test_cfg, site):
     data = _execute_automation(site, "try-inventory", args=["modes-test-host"])
-    print data
+    assert isinstance(data, dict)
+    assert isinstance(data["output"], str)
+    assert isinstance(data["check_table"], list)
 
 
 def test_automation_get_autochecks_unknown_host(test_cfg, site):
@@ -282,7 +288,7 @@ def test_automation_get_autochecks_known_host(test_cfg, site):
     assert isinstance(data, list)
     for entry in data:
         assert len(entry) == 4
-        checktype, item, resolved_paramstring, paramstring = entry
+        checktype, item, _resolved_paramstring, paramstring = entry
         assert isinstance(checktype, str)
         assert item is None or isinstance(item, unicode)
         assert isinstance(paramstring, str)
@@ -355,7 +361,7 @@ def test_automation_get_check_information(test_cfg, site):
     assert isinstance(data, dict)
     assert len(data) > 1000
 
-    for check_type, info in data.items():
+    for _check_type, info in data.items():
         assert isinstance(info["title"], unicode)
         assert "service_description" in info
         assert "snmp" in info
@@ -419,7 +425,7 @@ def test_automation_get_agent_output(test_cfg, site):
     assert data[1] == ""
     assert isinstance(data[2], str)
     assert "<<<uptime>>>" in data[2]
-    assert data[0] == True
+    assert data[0] is True
 
 
 def test_automation_get_agent_output_unknown_host(test_cfg, site):
@@ -429,7 +435,7 @@ def test_automation_get_agent_output_unknown_host(test_cfg, site):
 
     assert data[1].startswith("Failed to fetch data from ")
     assert data[2] == ""
-    assert data[0] == False
+    assert data[0] is False
 
 
 # TODO: active-check: Add test for real active_checks check

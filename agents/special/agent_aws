@@ -401,39 +401,23 @@ class EC2Summary(AWSSectionGeneric):
         # TODO Filter
         response = self._client.describe_instances()
         try:
-            instances = {
+            return {
                 self._extract_instance_name_from_tags(instance): instance
                 for reservation in response['Reservations']
                 for instance in reservation.get('Instances', [])
             }
         except KeyError as e:
             logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
-            instances = {}
-
-        # TODO Filter
-        response = self._client.describe_security_groups()
-        try:
-            security_groups = {group['GroupId']: group for group in response['SecurityGroups']}
-        except KeyError as e:
-            logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
-            security_groups = {}
-        return instances, security_groups
-
-    def _compute_content(self, raw_content, colleague_contents):
-        instances, security_groups = raw_content.content
-
-        for instance in instances.itervalues():
-            for security_group in instance.get('SecurityGroups', []):
-                security_group_id = security_group['GroupId']
-                if security_group_id in security_groups:
-                    security_group.update(security_groups[security_group_id])
-        return AWSComputedContent(instances, raw_content.cache_timestamp)
+            return {}
 
     def _extract_instance_name_from_tags(self, instance):
         for tag in instance.get('Tags', []):
             if tag.get('Key') == 'Name':
                 return tag['Value']
         return instance['InstanceId']
+
+    def _compute_content(self, raw_content, colleague_contents):
+        return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
 
     def _create_results(self, computed_content):
         return [AWSSectionResult("", [computed_content.content])]
@@ -455,14 +439,27 @@ class EC2SecurityGroups(AWSSectionGeneric):
         return AWSColleagueContents({}, 0)
 
     def _fetch_raw_content(self, colleague_contents):
-        return colleague_contents.content
+        # TODO Filter
+        response = self._client.describe_security_groups()
+        try:
+            return {group['GroupId']: group for group in response['SecurityGroups']}
+        except KeyError as e:
+            logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
+            return {}
 
     def _compute_content(self, raw_content, colleague_contents):
-        return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
+        content_by_piggyback_hosts = {}
+        for instance_name, instance in colleague_contents.content.iteritems():
+            for security_group_from_instance in instance.get('SecurityGroups', []):
+                security_group = raw_content.content.get(security_group_from_instance['GroupId'])
+                if security_group is None:
+                    continue
+                content_by_piggyback_hosts.setdefault(instance_name, []).append(security_group)
+        return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
 
     def _create_results(self, computed_content):
         return [
-            AWSSectionResult(piggyback_hostname, rows.get('SecurityGroups', []))
+            AWSSectionResult(piggyback_hostname, rows)
             for piggyback_hostname, rows in computed_content.content.iteritems()
         ]
 
@@ -1204,7 +1201,7 @@ class AWSSectionsGeneric(AWSSections):
 
         #---sections--------------------------------------------------------
         elb_health = ELBHealth(elb_client, hostname, region)
-        ec2_security_groups = EC2SecurityGroups(None, hostname, region)
+        ec2_security_groups = EC2SecurityGroups(ec2_client, hostname, region)
         ec2 = EC2(cloudwatch_client, hostname, region)
         ebs = EBS(cloudwatch_client, hostname, region)
         elb = ELB(cloudwatch_client, hostname, region)

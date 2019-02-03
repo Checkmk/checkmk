@@ -41,6 +41,7 @@ import * as crash_reporting from "crash_reporting";
 import * as backup from "backup";
 import * as hover from "hover";
 import * as service_discovery from "service_discovery";
+import * as sites from "sites";
 import * as host_diagnose from "host_diagnose";
 import * as profile_replication from "profile_replication";
 import * as wato from "wato";
@@ -86,6 +87,7 @@ export default {
         backup: backup,
         hover: hover,
         service_discovery: service_discovery,
+        sites: sites,
         host_diagnose: host_diagnose,
         profile_replication: profile_replication,
         wato: wato,

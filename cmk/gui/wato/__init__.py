@@ -248,7 +248,6 @@ from cmk.gui.wato.pages.services import (
     ModeAjaxExecuteCheck,
 )
 from cmk.gui.wato.pages.sites import (
-    ModeSites,
     ModeEditSite,
     ModeDistributedMonitoring,
     ModeEditSiteGlobals,

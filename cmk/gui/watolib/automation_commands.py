@@ -2,6 +2,7 @@
 
 import abc
 
+import cmk
 import cmk.utils.plugin_registry
 
 import cmk.gui.config as config
@@ -43,7 +44,7 @@ class AutomationCommand(object):
         if not config.is_single_local_site():
             raise MKGeneralException(
                 _("Configuration error. You treat us as "
-                  "a <b>slave</b>, but we have an own distributed WATO configuration!"))
+                  "a <b>remote</b>, but we have an own distributed WATO configuration!"))
 
         if our_id is not None and our_id != site_id:
             raise MKGeneralException(
@@ -71,3 +72,18 @@ class AutomationCommandRegistry(cmk.utils.plugin_registry.ClassRegistry):
 
 
 automation_command_registry = AutomationCommandRegistry()
+
+
+@automation_command_registry.register
+class AutomationPing(AutomationCommand):
+    def command_name(self):
+        return "ping"
+
+    def get_request(self):
+        return None
+
+    def execute(self, _unused_request):
+        return {
+            "version": cmk.__version__,
+            "edition": cmk.edition_short(),
+        }

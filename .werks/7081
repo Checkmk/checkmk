@@ -1,0 +1,29 @@
+Title: Reworked "Distributed Monitoring" page
+Level: 2
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1549191548
+Class: feature
+
+The "Distributed Monitoring" pages have been reworked to make it easier
+to manage multiple Check_MK site connections.
+
+The list page is now showing less site configuration details. Instead of
+these columns status columns have been added to visualize whether or not
+your site connections can currently be used.
+
+One column shows the current status of the Livestatus connection, which
+is needed by the GUI to gather the monitoring status from the site. In
+case your livestatus connection is not configured properly, you may
+have a look at the status and hover the icon for more information about
+the reason.
+
+One possible reason for a non functional Livestatus connection may be
+a TLS connection issue (if you use encrypted Livestatus). You can use
+this site to inspect the remote site certificate and establish a trust
+with this certificate to allow the GUI to connect with that site.
+
+The replication status column tells you whether or not the configuration
+replication connection is working.

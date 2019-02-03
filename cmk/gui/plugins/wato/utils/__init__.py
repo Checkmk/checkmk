@@ -33,7 +33,8 @@ import json
 import re
 import subprocess
 import time
-from typing import Dict  # pylint: disable=unused-import
+import typing  # pylint: disable=unused-import
+from typing import List, Dict  # pylint: disable=unused-import
 
 import six
 
@@ -1326,15 +1327,10 @@ class EventsMode(WatoMode):
                                  _("Changed position of %s %d") % (what_title, from_pos))
 
 
-# Sort given sites argument by local, followed by slaves
-# TODO: Change to sorted() mechanism
 def sort_sites(sitelist):
-    def custom_sort(a, b):
-        return cmp(a[1].get("replication"), b[1].get("replication")) or \
-               cmp(a[1].get("alias"), b[1].get("alias"))
-
-    sitelist.sort(cmp=custom_sort)
-    return sitelist
+    # type: (List[typing.Tuple[str, Dict]]) -> List[typing.Tuple[str, Dict]]
+    """Sort given sites argument by local, followed by remote sites"""
+    return sorted(sitelist, key=lambda (sid, s): (s.get("replication"), s.get("alias"), sid))
 
 
 class ModeRegistry(cmk.utils.plugin_registry.ClassRegistry):

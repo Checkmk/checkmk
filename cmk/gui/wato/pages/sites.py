@@ -27,20 +27,24 @@
 
 import re
 import traceback
+import time
+import multiprocessing
+import Queue
+from typing import TypeVar, List, Dict, NamedTuple  # pylint: disable=unused-import
 
 import cmk
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.userdb as userdb
 import cmk.gui.forms as forms
+import cmk.gui.log as log
 from cmk.gui.table import table_element
 from cmk.gui.valuespec import (
     MonitoredHostname,)
 
 from cmk.gui.plugins.wato.utils import mode_registry, sort_sites
-from cmk.gui.plugins.wato.utils.base_modes import WatoMode
+from cmk.gui.plugins.wato.utils.base_modes import WatoMode, WatoWebApiMode
 from cmk.gui.plugins.wato.utils.html_elements import wato_html_head, wato_confirm
-from cmk.gui.plugins.wato.utils.context_buttons import global_buttons
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import MKUserError
@@ -50,18 +54,8 @@ from cmk.gui.watolib.activate_changes import clear_site_replication_status
 from cmk.gui.wato.pages.global_settings import GlobalSettingsMode, is_a_checkbox
 
 
-# TODO: Rename to SitesMode()
-class ModeSites(WatoMode):
-    def __init__(self):
-        super(ModeSites, self).__init__()
-        self._site_mgmt = watolib.SiteManagementFactory().factory()
-
-    def buttons(self):
-        global_buttons()
-
-
 @mode_registry.register
-class ModeEditSite(ModeSites):
+class ModeEditSite(WatoMode):
     @classmethod
     def name(cls):
         return "edit_site"
@@ -72,6 +66,7 @@ class ModeEditSite(ModeSites):
 
     def __init__(self):
         super(ModeEditSite, self).__init__()
+        self._site_mgmt = watolib.SiteManagementFactory().factory()
         self._from_html_vars()
 
         self._new = self._site_id is None
@@ -455,7 +450,7 @@ class ModeEditSite(ModeSites):
 
 
 @mode_registry.register
-class ModeDistributedMonitoring(ModeSites):
+class ModeDistributedMonitoring(WatoMode):
     @classmethod
     def name(cls):
         return "sites"
@@ -463,6 +458,10 @@ class ModeDistributedMonitoring(ModeSites):
     @classmethod
     def permissions(cls):
         return ["sites"]
+
+    def __init__(self):
+        super(ModeDistributedMonitoring, self).__init__()
+        self._site_mgmt = watolib.SiteManagementFactory().factory()
 
     def title(self):
         return _("Distributed Monitoring")
@@ -632,25 +631,33 @@ class ModeDistributedMonitoring(ModeSites):
         return False
 
     def page(self):
+        sites = sort_sites(self._site_mgmt.load_sites().items())
+
+        html.div("", id_="message_container")
         with table_element(
                 "sites",
-                _("Connections to local and remote sites"),
+                _("Connections"),
                 empty_text=_(
                     "You have not configured any local or remotes sites. Multisite will "
                     "implicitely add the data of the local monitoring site. If you add remotes "
                     "sites, please do not forget to add your local monitoring site also, if "
                     "you want to display its data.")) as table:
 
-            sites = sort_sites(self._site_mgmt.load_sites().items())
             for site_id, site in sites:
                 table.row()
 
-                self._page_buttons(table, site_id, site)
-                self._page_basic_settings(table, site_id, site)
-                self._page_livestatus_settings(table, site_id, site)
-                self._page_replication_configuration(table, site_id, site)
+                self._show_buttons(table, site_id, site)
+                self._show_basic_settings(table, site_id, site)
+                self._show_livestatus_settings(table, site_id, site)
+                self._show_replication_configuration(table, site_id, site)
+                self._show_livestatus_status(table, site_id, site)
+                self._show_replication_status(table, site_id, site)
 
-    def _page_buttons(self, table, site_id, site):
+        has_replication_sites = any(e[1].get("replication") for e in sites)
+        if has_replication_sites:
+            html.javascript("cmk.sites.fetch_replication_status();")
+
+    def _show_buttons(self, table, site_id, site):
         table.cell(_("Actions"), css="buttons")
         edit_url = watolib.folder_preserving_link([("mode", "edit_site"), ("edit", site_id)])
         html.icon_button(edit_url, _("Properties"), "edit")
@@ -662,9 +669,7 @@ class ModeDistributedMonitoring(ModeSites):
         delete_url = html.makeactionuri([("_delete", site_id)])
         html.icon_button(delete_url, _("Delete"), "delete")
 
-        if (config.has_wato_slave_sites()
-            and (site.get("replication") or config.site_is_local(site_id))) \
-           or watolib.is_wato_slave_site():
+        if self._site_globals_editable(site_id, site):
             globals_url = watolib.folder_preserving_link([("mode", "edit_site_globals"),
                                                           ("site", site_id)])
 
@@ -678,66 +683,223 @@ class ModeDistributedMonitoring(ModeSites):
 
             html.icon_button(globals_url, title, icon)
 
-    def _page_basic_settings(self, table, site_id, site):
+        if site.get("replication"):
+            if site.get("secret"):
+                logout_url = watolib.make_action_link([("mode", "sites"), ("_logout", site_id)])
+                html.icon_button(logout_url, _("Logout"), "autherr")
+            else:
+                login_url = watolib.make_action_link([("mode", "sites"), ("_login", site_id)])
+                html.icon_button(login_url, _("Login"), "authok")
+
+    def _site_globals_editable(self, site_id, site):
+        # Site is a remote site of another site. Allow to edit probably pushed site
+        # specific globals when remote WATO is enabled
+        if watolib.is_wato_slave_site():
+            return True
+
+        # Local site: Don't enable site specific locals when no remote sites configured
+        if not config.has_wato_slave_sites():
+            return False
+
+        return site.get("replication") or config.site_is_local(site_id)
+
+    def _show_basic_settings(self, table, site_id, site):
         table.text_cell(_("ID"), site_id)
         table.text_cell(_("Alias"), site.get("alias", ""))
 
-    def _page_livestatus_settings(self, table, site_id, site):
-        # Socket
-        table.cell(_("Socket"))
+    def _show_livestatus_settings(self, table, site_id, site):
+        table.cell(_("Connection"))
         vs_connection = self._site_mgmt.connection_method_valuespec()
         html.write(vs_connection.value_to_text(site["socket"]))
 
-        # Status host
-        if site.get("status_host"):
-            sh_site, sh_host = site["status_host"]
-            table.text_cell(_("Status host"), "%s/%s" % (sh_site, sh_host))
-        else:
-            table.text_cell(_("Status host"))
+    def _show_replication_configuration(self, table, site_id, site):
+        table.text_cell(_("Replication"))
+        if not site.get("replication"):
+            html.icon(_("Replication not enabled for this site"), "disabled")
+            return
 
-        # Disabled
-        if site.get("disabled", False) is True:
-            table.text_cell(_("Disabled"), "<b>%s</b>" % _("yes"))
-        else:
-            table.text_cell(_("Disabled"), _("no"))
+        html.icon(_("Replication enabled for this site"), "enabled")
 
-        # Timeout
-        if "timeout" in site:
-            table.text_cell(_("Timeout"), _("%d sec") % int(site["timeout"]), css="number")
-        else:
-            table.text_cell(_("Timeout"), "")
+        if site.get("replicate_ec"):
+            html.icon(_("Replicate Event Console configuration to this site"), "mkeventd")
+        if site.get("replicate_mkps"):
+            html.icon(_("Replicate extensions"), "mkps")
 
-        # Persist
-        if site.get("persist", False):
-            table.text_cell(_("Pers."), "<b>%s</b>" % _("yes"))
-        else:
-            table.text_cell(_("Pers."), _("no"))
+    def _show_livestatus_status(self, table, site_id, site):
+        table.text_cell(_("Livestatus"))
 
-    def _page_replication_configuration(self, table, site_id, site):
-        # Replication
+        # The status is fetched asynchronously for all sites. Show a temporary loading icon.
+        html.open_div(id_="livestatus_status_%s" % site_id)
+        html.icon(
+            _("Fetching livestatus status"),
+            "reload",
+            class_=["reloading", "replication_status_loading"])
+        html.close_div()
+
+    def _show_replication_status(self, table, site_id, site):
+        table.text_cell(_("Repl. status"))
+        html.open_div(id_="replication_status_%s" % site_id)
         if site.get("replication"):
-            repl = _("Slave")
-            if site.get("replicate_ec"):
-                repl += ", " + _("EC")
-            if site.get("replicate_mkps"):
-                repl += ", " + _("MKPs")
-        else:
-            repl = ""
-        table.text_cell(_("Replication"), repl)
+            # The status is fetched asynchronously for all sites. Show a temporary loading icon.
+            html.icon(
+                _("Fetching replication status"),
+                "reload",
+                class_=["reloading", "replication_status_loading"])
+        html.close_div()
 
-        # Login-Button for Replication
-        table.cell(_("Login"))
-        if repl:
-            if site.get("secret"):
-                logout_url = watolib.make_action_link([("mode", "sites"), ("_logout", site_id)])
-                html.buttonlink(logout_url, _("Logout"))
-            else:
-                login_url = watolib.make_action_link([("mode", "sites"), ("_login", site_id)])
-                html.buttonlink(login_url, _("Login"))
+
+class ModeAjaxFetchSiteStatus(WatoWebApiMode):
+    """AJAX handler for asynchronous fetching of the site status"""
+
+    def page(self):
+        site_states = {}
+
+        sites = watolib.SiteManagementFactory().factory().load_sites().items()
+        replication_sites = [e for e in sites if e[1].get("replication")]
+        replication_status = ReplicationStatusFetcher().fetch(replication_sites)
+
+        for site_id, site in sites:
+            site_states[site_id] = {
+                "livestatus": self._render_livestatus_status(site_id, site),
+                "replication": self._render_replication_status(site_id, site, replication_status),
+            }
+        return site_states
+
+    def _render_replication_status(self, site_id, site, replication_status):
+        """Check whether or not the replication connection is possible.
+
+        This deals with these situations:
+        - No connection possible
+        - connection possible but site down
+        - Not logged in
+        - And of course: Everything is fine
+        """
+        if not site.get("replication"):
+            return ""
+
+        status = replication_status[site_id]
+        if status.success:
+            msg = _("Site is reachable (Version: %s, Edition: %s)") % (status.response.version,
+                                                                       status.response.edition)
+            return html.render_icon("success", title=msg)
+        return html.render_icon("failed", title="%s" % status.response)
+
+    def _render_livestatus_status(self, site_id, site):
+        site_status = cmk.gui.sites.state(site_id, {})
+        if site.get("disabled", False) is True:
+            status = status_msg = "disabled"
+        else:
+            status = status_msg = site_status.get("state", "unknown")
+
+        if "exception" in site_status:
+            message = "%s" % site_status["exception"]
+        else:
+            message = _("This site is %s") % status_msg
+
+        if message.startswith("[SSL:"):
+            status_msg = "TLS error"
+
+        with html.plugged():
+            html.status_label(content=status_msg, status=status, title=message)
+            return html.drain()
+
+
+cmk.gui.pages.register_page_handler("wato_ajax_fetch_site_status",
+                                    lambda: ModeAjaxFetchSiteStatus().handle_page())
+
+PingResult = NamedTuple("PingResult", [
+    ("version", str),
+    ("edition", str),
+])
+
+ReplicationStatus = NamedTuple("ReplicationStatus", [
+    ("site_id", str),
+    ("success", bool),
+    ("response", TypeVar("ReplicationStatus", PingResult, Exception)),
+])
+
+
+class ReplicationStatusFetcher(object):
+    """Helper class to retrieve the replication status of all relevant sites"""
+
+    def __init__(self):
+        super(ReplicationStatusFetcher, self).__init__()
+        self._logger = logger.getChild("replication-status")
+
+    def fetch(self, sites):
+        # type: (List[Tuple[str, Dict]]) -> Dict[str, PingResult]
+        self._logger.debug("Fetching replication status for %d sites" % len(sites))
+        results_by_site = {}
+
+        # Results are fetched simultaneously from the remote sites
+        result_queue = multiprocessing.JoinableQueue()
+
+        processes = []
+        for site_id, site in sites:
+            process = multiprocessing.Process(
+                target=self._fetch_for_site, args=(site_id, site, result_queue))
+            process.start()
+            processes.append((site_id, process))
+
+        # Now collect the results from the queue until all processes are finished
+        while any([p.is_alive() for site_id, p in processes]):
+            try:
+                result = result_queue.get_nowait()
+                result_queue.task_done()
+                results_by_site[result.site_id] = result
+            except Queue.Empty:
+                time.sleep(0.5)  # wait some time to prevent CPU hogs
+
+            except Exception as e:
+                logger.exception()
+                html.show_error("%s: %s" % (site_id, e))
+
+        self._logger.debug("Got results")
+        return results_by_site
+
+    def _fetch_for_site(self, site_id, site, result_queue):
+        """Executes the tests on the site. This method is executed in a dedicated
+        subprocess (One per site)"""
+        self._logger.debug("[%s] Starting" % site_id)
+        try:
+            # TODO: Would be better to clean all open fds that are not needed, but we don't
+            # know the FDs of the result_queue pipe. Can we find it out somehow?
+            # Cleanup resources of the apache
+            # TODO: Needs to be solved for analzye_configuration too
+            #for x in range(3, 256):
+            #    try:
+            #        os.close(x)
+            #    except OSError, e:
+            #        if e.errno == 9: # Bad file descriptor
+            #            pass
+            #        else:
+            #            raise
+
+            # Reinitialize logging targets
+            log.init_logging()
+
+            result = ReplicationStatus(
+                site_id=site_id,
+                success=True,
+                response=PingResult(**watolib.do_remote_automation(site, "ping", [], timeout=5)),
+            )
+            self._logger.debug("[%s] Finished" % site_id)
+        except Exception as e:
+            self._logger.debug("[%s] Failed" % site_id, exc_info=True)
+            result = ReplicationStatus(
+                site_id=site_id,
+                success=False,
+                response=e,
+            )
+        finally:
+            result_queue.put(result)
+            result_queue.close()
+            result_queue.join_thread()
+            result_queue.join()
 
 
 @mode_registry.register
-class ModeEditSiteGlobals(ModeSites, GlobalSettingsMode):
+class ModeEditSiteGlobals(GlobalSettingsMode):
     @classmethod
     def name(cls):
         return "edit_site_globals"
@@ -749,6 +911,7 @@ class ModeEditSiteGlobals(ModeSites, GlobalSettingsMode):
     def __init__(self):
         super(ModeEditSiteGlobals, self).__init__()
         self._site_id = html.request.var("site")
+        self._site_mgmt = watolib.SiteManagementFactory().factory()
         self._configured_sites = self._site_mgmt.load_sites()
         try:
             self._site = self._configured_sites[self._site_id]

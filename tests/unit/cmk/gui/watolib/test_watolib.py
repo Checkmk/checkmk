@@ -44,6 +44,7 @@ def test_registered_automation_commands():
         'check-analyze-config',
         'execute-dcd-command',
         'network-scan',
+        'ping',
         'push-snapshot',
         'service-discovery-job',
     ])

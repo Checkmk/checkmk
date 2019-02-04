@@ -38,6 +38,7 @@
 """
 
 import os
+import re
 
 import cmk.utils.paths
 
@@ -76,7 +77,7 @@ def _load_user_scripts_from(adir):
                     lines = file(path)
                     lines.next()
                     line = lines.next().decode("utf-8").strip()
-                    if line.startswith("#") and "encoding:" in line:
+                    if line.startswith("#") and re.search(r'coding[=:]\s*([-\w.]+)', line):
                         line = lines.next().strip()
                     if line.startswith("#"):
                         info["title"] = line.lstrip("#").strip().split("#", 1)[0]

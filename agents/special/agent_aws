@@ -131,14 +131,14 @@ AWSCacheFilePath = Path(tmp_dir) / "agents" / "agent_aws"
 class AWSSection(object):
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, client, hostname, region, distributor=None):
+    def __init__(self, client, region, config, distributor=None):
         self._client = client
-        self._hostname = hostname
         self._region = region
+        self._config = config
         self._distributor = ResultDistributor() if distributor is None else distributor
         self._received_results = {}
-        self._cache_file_dir = AWSCacheFilePath / region / hostname
-        self._cache_file = AWSCacheFilePath / region / hostname / self.name
+        self._cache_file_dir = AWSCacheFilePath / self._region / self._config.hostname
+        self._cache_file = AWSCacheFilePath / self._region / self._config.hostname / self.name
 
     @abc.abstractproperty
     def name(self):
@@ -386,6 +386,11 @@ class CostsAndUsage(AWSSectionGeneric):
 
 
 class EC2Summary(AWSSectionGeneric):
+    def __init__(self, client, region, config, distributor=None):
+        super(EC2Summary, self).__init__(client, region, config, distributor=distributor)
+        self._names = self._config.service_config['ec2']['names']
+        self._tags = self._config.service_config['ec2']['tags']
+
     @property
     def name(self):
         return "ec2_summary"
@@ -398,8 +403,7 @@ class EC2Summary(AWSSectionGeneric):
         return AWSColleagueContents(None, 0)
 
     def _fetch_raw_content(self, colleague_contents):
-        # TODO Filter
-        response = self._client.describe_instances()
+        response = self._describe_instances()
         try:
             return {
                 self._extract_instance_name_from_tags(instance): instance
@@ -409,6 +413,13 @@ class EC2Summary(AWSSectionGeneric):
         except KeyError as e:
             logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
             return {}
+
+    def _describe_instances(self):
+        if self._names:
+            return self._client.describe_instances(InstanceIds=self._names)
+        elif self._tags:
+            return self._client.describe_instances(Filters=self._tags)
+        return self._client.describe_instances()
 
     def _extract_instance_name_from_tags(self, instance):
         for tag in instance.get('Tags', []):
@@ -542,20 +553,19 @@ class EC2(AWSSectionCloudwatch):
 
 
 class S3Summary(AWSSectionGeneric):
-    def __init__(self, client, hostname, region, distributor=None, buckets=None):
-        super(S3Summary, self).__init__(client, hostname, region, distributor=distributor)
-        self._buckets = self._determine_buckets(buckets)
+    def __init__(self, client, region, config, distributor=None):
+        super(S3Summary, self).__init__(client, region, config, distributor=distributor)
+        self._names = self._config.service_config['s3']['names']
+        self._tags = self._prepare_s3_tags(self._config.service_config['s3']['tags'])
 
-    def _determine_buckets(self, buckets):
-        if buckets:
-            return [{"Name": b} for b in buckets]
-        # TODO Filter
-        response = self._client.list_buckets()
-        try:
-            return response['Buckets']
-        except KeyError as e:
-            logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
-            return []
+    def _prepare_s3_tags(self, tags):
+        """
+        S3 tags have a different format:
+        [{'Key': KEY, 'Value': VALUE}, ...]
+        """
+        if not tags:
+            return
+        return [{'Key': e['Name'].strip("tag:"), 'Value': v} for e in tags for v in e['Values']]
 
     @property
     def name(self):
@@ -569,8 +579,8 @@ class S3Summary(AWSSectionGeneric):
         return AWSColleagueContents(None, 0)
 
     def _fetch_raw_content(self, colleague_contents):
-        buckets = []
-        for bucket in self._buckets:
+        found_buckets = []
+        for bucket in self._list_buckets():
             bucket_name = bucket['Name']
             response = self._client.get_bucket_location(Bucket=bucket_name)
             try:
@@ -597,8 +607,27 @@ class S3Summary(AWSSectionGeneric):
                              response.keys())
             else:
                 bucket['Tagging'] = tagging
-            buckets.append(bucket)
-        return buckets
+                if self._matches_conditions(tagging):
+                    found_buckets.append(bucket)
+        return found_buckets
+
+    def _list_buckets(self):
+        if self._names:
+            return [{'Name': n} for n in self._names]
+        response = self._client.list_buckets()
+        try:
+            return response['Buckets']
+        except KeyError as e:
+            logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
+            return []
+
+    def _matches_conditions(self, tagging):
+        if not self._names and self._tags:
+            for tag in tagging:
+                if tag in self._tags:
+                    return True
+            return False
+        return True
 
     def _compute_content(self, raw_content, colleague_contents):
         return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
@@ -678,6 +707,20 @@ class S3(AWSSectionCloudwatch):
 
 
 class ELBSummary(AWSSectionGeneric):
+    def __init__(self, client, region, config, distributor=None):
+        super(ELBSummary, self).__init__(client, region, config, distributor=distributor)
+        self._names = self._config.service_config['elb']['names']
+        self._tags = self._prepare_elb_tags(self._config.service_config['elb']['tags'])
+
+    def _prepare_elb_tags(self, tags):
+        """
+        ELB tags have a different format:
+        [{'Key': KEY, 'Value': VALUE}, ...]
+        """
+        if not tags:
+            return
+        return [{'Key': e['Name'].strip("tag:"), 'Value': v} for e in tags for v in e['Values']]
+
     @property
     def name(self):
         return "elb_summary"
@@ -690,15 +733,8 @@ class ELBSummary(AWSSectionGeneric):
         return AWSColleagueContents(None, 0)
 
     def _fetch_raw_content(self, colleague_contents):
-        # TODO Filter
-        response = self._client.describe_load_balancers()
-        try:
-            load_balancers = response['LoadBalancerDescriptions']
-        except KeyError, e:
-            logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
-            return []
-
-        for load_balancer in load_balancers:
+        found_load_balancers = []
+        for load_balancer in self._describe_load_balancers():
             load_balancer_name = load_balancer['LoadBalancerName']
             response = self._client.describe_tags(LoadBalancerNames=[load_balancer_name])
             try:
@@ -708,7 +744,28 @@ class ELBSummary(AWSSectionGeneric):
                              e, response.keys())
             else:
                 load_balancer['TagDescriptions'] = tag_descrs
-        return load_balancers
+                if self._matches_conditions(tag_descrs):
+                    found_load_balancers.append(load_balancer)
+        return found_load_balancers
+
+    def _describe_load_balancers(self):
+        if self._names:
+            response = self._client.describe_load_balancers(LoadBalancerNames=self._names)
+        else:
+            response = self._client.describe_load_balancers()
+        try:
+            return response['LoadBalancerDescriptions']
+        except KeyError, e:
+            logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
+            return []
+
+    def _matches_conditions(self, tagging):
+        if not self._names and self._tags:
+            for tag in tagging:
+                if tag in self._tags:
+                    return True
+            return False
+        return True
 
     def _compute_content(self, raw_content, colleague_contents):
         content_by_piggyback_hosts = {}
@@ -849,6 +906,11 @@ class ELB(AWSSectionCloudwatch):
 
 
 class EBSSummary(AWSSectionGeneric):
+    def __init__(self, client, region, config, distributor=None):
+        super(EBSSummary, self).__init__(client, region, config, distributor=distributor)
+        self._names = self._config.service_config['ebs']['names']
+        self._tags = self._config.service_config['ebs']['tags']
+
     @property
     def name(self):
         return "ebs_summary"
@@ -865,21 +927,32 @@ class EBSSummary(AWSSectionGeneric):
         return AWSColleagueContents({}, 0)
 
     def _fetch_raw_content(self, colleague_contents):
-        # TODO Filter
-        response = self._client.describe_volumes()
+        response_volumes, response_volume_stats = self._describe_volumes()
         try:
-            volumes = {r['VolumeId']: r for r in response['Volumes']}
+            volumes = {r['VolumeId']: r for r in response_volumes['Volumes']}
         except KeyError as e:
-            logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
+            logging.info("%s: KeyError %s; Available are %s", self.name, e, response_volumes.keys())
             volumes = {}
 
-        response = self._client.describe_volume_status()
         try:
-            volume_states = {r['VolumeId']: r for r in response['VolumeStatuses']}
+            volume_states = {r['VolumeId']: r for r in response_volume_stats['VolumeStatuses']}
         except KeyError as e:
-            logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
+            logging.info("%s: KeyError %s; Available are %s", self.name, e,
+                         response_volume_stats.keys())
             volume_states = {}
         return volumes, volume_states
+
+    def _describe_volumes(self):
+        if self._names:
+            response_volumes = self._client.describe_volumes(VolumeIds=self._names)
+            response_volume_stats = self._client.describe_volume_status(VolumeIds=self._names)
+        elif self._tags:
+            response_volumes = self._client.describe_volumes(Filters=self._tags)
+            response_volume_stats = self._client.describe_volume_status(Filters=self._tags)
+        else:
+            response_volumes = self._client.describe_volumes()
+            response_volume_stats = self._client.describe_volume_status()
+        return response_volumes, response_volume_stats
 
     def _compute_content(self, raw_content, colleague_contents):
         volumes, volume_states = raw_content.content
@@ -1079,7 +1152,7 @@ class AWSSections(object):
         self._sections = []
 
     @abc.abstractmethod
-    def init_sections(self, hostname, region, services, buckets=None):
+    def init_sections(self, services, region, config):
         pass
 
     def _init_client(self, client_key):
@@ -1160,7 +1233,7 @@ class AWSSectionsUSEast(AWSSections):
     https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/ce-api.html
     """
 
-    def init_sections(self, hostname, region, services, buckets=None):
+    def init_sections(self, services, region, config):
         #---clients---------------------------------------------------------
         ce_client = self._init_client('ce')
 
@@ -1169,7 +1242,7 @@ class AWSSectionsUSEast(AWSSections):
         #---sections with distributors--------------------------------------
 
         #---sections--------------------------------------------------------
-        ce = CostsAndUsage(ce_client, hostname, region)
+        ce = CostsAndUsage(ce_client, region, config)
 
         #---register sections to distributors-------------------------------
 
@@ -1179,7 +1252,7 @@ class AWSSectionsUSEast(AWSSections):
 
 
 class AWSSectionsGeneric(AWSSections):
-    def init_sections(self, hostname, region, services, buckets=None):
+    def init_sections(self, services, region, config):
         #---clients---------------------------------------------------------
         ec2_client = self._init_client('ec2')
         elb_client = self._init_client('elb')
@@ -1193,19 +1266,18 @@ class AWSSectionsGeneric(AWSSections):
         s3_summary_distributor = ResultDistributor()
 
         #---sections with distributors--------------------------------------
-        ec2_summary = EC2Summary(ec2_client, hostname, region, ec2_summary_distributor)
-        ebs_summary = EBSSummary(ec2_client, hostname, region, ebs_summary_distributor)
-        elb_summary = ELBSummary(elb_client, hostname, region, elb_summary_distributor)
-        s3_summary = S3Summary(
-            s3_client, hostname, region, distributor=s3_summary_distributor, buckets=buckets)
+        ec2_summary = EC2Summary(ec2_client, region, config, ec2_summary_distributor)
+        ebs_summary = EBSSummary(ec2_client, region, config, ebs_summary_distributor)
+        elb_summary = ELBSummary(elb_client, region, config, elb_summary_distributor)
+        s3_summary = S3Summary(s3_client, region, config, s3_summary_distributor)
 
         #---sections--------------------------------------------------------
-        elb_health = ELBHealth(elb_client, hostname, region)
-        ec2_security_groups = EC2SecurityGroups(ec2_client, hostname, region)
-        ec2 = EC2(cloudwatch_client, hostname, region)
-        ebs = EBS(cloudwatch_client, hostname, region)
-        elb = ELB(cloudwatch_client, hostname, region)
-        s3 = S3(cloudwatch_client, hostname, region)
+        elb_health = ELBHealth(elb_client, region, config)
+        ec2_security_groups = EC2SecurityGroups(ec2_client, region, config)
+        ec2 = EC2(cloudwatch_client, region, config)
+        ebs = EBS(cloudwatch_client, region, config)
+        elb = ELB(cloudwatch_client, region, config)
+        s3 = S3(cloudwatch_client, region, config)
 
         #---register sections to distributors-------------------------------
         ec2_summary_distributor.add(ec2_security_groups)
@@ -1310,13 +1382,29 @@ def parse_arguments(argv):
         nargs='+',
         required=True,
         help="Regions to use:\n%s" % "\n".join(["%-15s %s" % e for e in AWSRegions]))
+
+    parser.add_argument('--overall-tag-key', nargs=1, action='append', help="Overall tag key")
+    parser.add_argument(
+        '--overall-tag-values', nargs='+', action='append', help="Overall tag values")
+
+    for service_name, title in AWSServices:
+        if service_name == 'ce':
+            continue
+        parser.add_argument(
+            '--%s-tag-key' % service_name, nargs=1, action='append', help="Tag key for %s" % title)
+        parser.add_argument(
+            '--%s-tag-values' % service_name,
+            nargs='+',
+            action='append',
+            help="Tag values for %s" % title)
+        parser.add_argument('--%s-names' % service_name, nargs='+', help="Names for %s" % title)
+
     parser.add_argument(
         "--services",
         nargs='+',
         required=True,
         help="Services to monitor:\n%s" % "\n".join(["%-15s %s" % e for e in AWSServices]))
 
-    parser.add_argument('--buckets', nargs='+', help="Buckets to monitor")
     parser.add_argument("--hostname", required=True)
     return parser.parse_args(argv)
 
@@ -1337,6 +1425,35 @@ def create_session(access_key_id, secret_access_key, region):
         region_name=region)
 
 
+class AWSConfig(object):
+    def __init__(self, hostname, overall_tags):
+        self.hostname = hostname
+        self._overall_tags = self._prepare_tags(overall_tags)
+        self.service_config = {}
+
+    def add_service_config(self, key, names, tags):
+        self.service_config.setdefault(key, {"names": None, "tags": None})
+        if names:
+            self.service_config[key]["names"] = names
+        if tags != (None, None):
+            self.service_config[key]["tags"] = self._prepare_tags(tags)
+        elif self._overall_tags:
+            self.service_config[key]["tags"] = self._overall_tags
+
+    def _prepare_tags(self, tags):
+        """
+        Prepare tags format as needed in API methods:
+        Filters=[{'Name': 'tag:KEY', 'Values': [VAL,...]}, ...]
+        """
+        keys, values = tags
+        if keys and values:
+            return [{
+                'Name': 'tag:%s' % k,
+                'Values': v
+            } for k, v in zip([k[0] for k in keys], values)]
+        return []
+
+
 def main(args=None):
     if args is None:
         cmk.utils.password_store.replace_passwords()
@@ -1351,20 +1468,21 @@ def main(args=None):
     use_cache = not args.no_cache
     services = args.services
 
-    config = {
-        "hostname": hostname,
-        "services": services,
-    }
+    aws_config = AWSConfig(hostname, (args.overall_tag_key, args.overall_tag_values))
+    for service_key, service_names, service_tags in [
+        ("ec2", args.ec2_names, (args.ec2_tag_key, args.ec2_tag_values)),
+        ("ebs", args.ebs_names, (args.ebs_tag_key, args.ebs_tag_values)),
+        ("s3", args.s3_names, (args.s3_tag_key, args.s3_tag_values)),
+        ("elb", args.elb_names, (args.elb_tag_key, args.elb_tag_values)),
+    ]:
+        aws_config.add_service_config(service_key, service_names, service_tags)
 
     exceptions = []
     try:
         region_us_east_1 = "us-east-1"
         session = create_session(access_key_id, secret_access_key, region_us_east_1)
-        config_us_east_1 = config.copy()
-        config_us_east_1.update({"region": region_us_east_1})
-
         aws_sections_us_east = AWSSectionsUSEast(hostname, session)
-        aws_sections_us_east.init_sections(**config_us_east_1)
+        aws_sections_us_east.init_sections(services, region_us_east_1, aws_config)
         aws_sections_us_east.run(use_cache=use_cache)
     except Exception as e:
         if args.debug:
@@ -1374,11 +1492,8 @@ def main(args=None):
     for region in args.regions:
         try:
             session = create_session(access_key_id, secret_access_key, region)
-            config_generic = config.copy()
-            config_generic.update({"region": region, "buckets": args.buckets})
-
             aws_sections = AWSSectionsGeneric(hostname, session)
-            aws_sections.init_sections(**config_generic)
+            aws_sections.init_sections(services, region, aws_config)
             aws_sections.run(use_cache=use_cache)
         except Exception as e:
             if args.debug:

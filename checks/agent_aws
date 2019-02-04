@@ -25,33 +25,67 @@
 # Boston, MA 02110-1301 USA.
 
 
+def _get_tag_options(tag_values, prefix):
+    options = []
+    for key, values in tag_values:
+        options.append('--%s-tag-key' % prefix)
+        options.append(key)
+        options.append('--%s-tag-values' % prefix)
+        options += values
+    return options
+
+
+def _get_services_choice(services):
+    print services
+    # '--services': {
+    #   's3': {'choice': ('tags', [('KEY', ['VAL1', 'VAL2'])])},
+    #   'ec2': {'choice': 'all'},
+    #   'ebs': {'choice': ('names', ['ebs1', 'ebs2'])},
+    # }
+    service_args = []
+    for service_name, service_choice in services.iteritems():
+        if service_choice is None:
+            continue
+
+        choice = service_choice.get('choice')
+        if not isinstance(choice, tuple):
+            # 'all' is handled by services.keys()
+            continue
+
+        choice_type, choice_values = choice
+        if not choice_values:
+            continue
+
+        if choice_type == "names":
+            service_args.append("--%s-names" % service_name)
+            service_args += choice_values
+
+        elif choice_type == "tags":
+            service_args += _get_tag_options(choice_values, service_name)
+    return service_args
+
+
 def agent_aws_arguments(params, hostname, ipaddress):
     args = [
         "--aws-access-key-id",
-        params["--aws-access-key-id"],
+        params["aws_access_key_id"],
         "--aws-secret-access-key",
-        passwordstore_get_cmdline("%s", params["--aws-secret-access-key"]),
+        passwordstore_get_cmdline("%s", params["aws_secret_access_key"]),
     ]
     args.append("--regions")
-    args += params["--regions"]
+    args += params["regions"]
 
-    services = params.get("--services", {})
+    # '--overall-tags': [('KEY_1', ['VAL_1', 'VAL_2']), ...)],
+    args += _get_tag_options(params.get('overall_tags', []), 'overall')
+
+    services = params.get("services", {})
     if services:
         args.append("--services")
         # We need to sort the inner services-as-a-dict-params
         # in order to create reliable tests
         args += sorted(services.keys())
 
-    # {'s3': {'buckets': 'all'} already handled by services.keys()
-    # {'s3': {'buckets', ('buckets', ['cmk-dev', 'foo'])}}
-    try:
-        _, buckets = services.get('s3', {}).get('buckets')
-    except (TypeError, ValueError):
-        pass
-    else:
-        args.append("--buckets")
-        args += buckets
-
+    args += _get_services_choice(services)
     args += [
         "--hostname",
         hostname,

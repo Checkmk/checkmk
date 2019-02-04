@@ -154,7 +154,7 @@ def _start(request, client, version=None, is_update=False, **kwargs):
 
         request.addfinalizer(lambda: c.remove(force=True))
 
-        testlib.wait_until(lambda: c.exec_run(["omd", "status"], user=site_id)[0] == 0, timeout=30)
+        testlib.wait_until(lambda: c.exec_run(["omd", "status"], user=site_id)[0] == 0, timeout=120)
         output = c.logs()
 
         if not is_update:

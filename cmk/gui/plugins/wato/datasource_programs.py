@@ -1788,6 +1788,76 @@ class RulespecSpecialAgentsBi(HostRulespec):
         )
 
 
+def _validate_aws_tags(value, varprefix):
+    used_keys = []
+    # KEY:
+    # ve_p_services_p_ec2_p_choice_1_IDX_0
+    # VALUES:
+    # ve_p_services_p_ec2_p_choice_1_IDX_1_IDX
+    for idx_tag, (tag_key, tag_values) in enumerate(value):
+        tag_field = "%s_%s_0" % (varprefix, idx_tag + 1)
+        if tag_key not in used_keys:
+            used_keys.append(tag_key)
+        else:
+            raise MKUserError(tag_field,
+                              _("Each tag must be unique and cannot be used multiple times"))
+        if tag_key.startswith('aws:'):
+            raise MKUserError(tag_field, _("Do not use 'aws:' prefix for the key."))
+        if len(tag_key) > 128:
+            raise MKUserError(tag_field, _("The maximum key length is 128 characters."))
+        if len(tag_values) > 50:
+            raise MKUserError(tag_field, _("The maximum number of tags per resource is 50."))
+
+        for idx_values, v in enumerate(tag_values):
+            values_field = "%s_%s_1_%s" % (varprefix, idx_tag + 1, idx_values + 1)
+            if len(v) > 256:
+                raise MKUserError(values_field, _("The maximum value length is 256 characters."))
+            if v.startswith('aws:'):
+                raise MKUserError(values_field, _("Do not use 'aws:' prefix for the values."))
+
+
+def _vs_aws_tags(title):
+    return ListOf(
+        Tuple(
+            help=_("How to configure AWS tags please see "
+                   "https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Using_Tags.html"),
+            orientation="horizontal",
+            elements=[
+                TextAscii(title=_("Key")),
+                ListOfStrings(title=_("Values"), orientation="horizontal")
+            ]),
+        title=title,
+        validate=_validate_aws_tags)
+
+
+def _vs_aws_service_choice(title):
+    return Dictionary(
+        title=title,
+        elements=[(
+            'choice',
+            CascadingDropdown(
+                title=_("Choice"),
+                help=_(
+                    "<i>Gather all service instances and use overall tags</i> means that "
+                    "if overall tags are stated above then all service instances are filtered "
+                    "by these tags. Otherwise all instances are gathered.<br>"
+                    "With <i>Use explicit service tags and overwrite overall tags</i> you can "
+                    "specify explicit tags for these services. The overall tags are ignored for "
+                    "these services.<br>"
+                    "<i>Use explicit service names and ignore overall tags</i>: With this selection "
+                    "you can state explicit names. The overall tags are ignored for these service."
+                ),
+                choices=[
+                    ('all', _("Gather all service instances and use overall tags")),
+                    ('tags', _("Use explicit service tags and overwrite overall tags"),
+                     _vs_aws_tags(_("Tags"))),
+                    ('names', _("Use explicit service names and ignore overall tags"),
+                     ListOfStrings()),
+                ]))],
+        optional_keys=[],
+    )
+
+
 @rulespec_registry.register
 class RulespecSpecialAgentsAws(HostRulespec):
     @property
@@ -1807,17 +1877,17 @@ class RulespecSpecialAgentsAws(HostRulespec):
         return Dictionary(
             title=_('Amazon Web Services (AWS)'),
             elements=[
-                ("--aws-access-key-id",
+                ("aws_access_key_id",
                  TextAscii(
                      title=_("The access key for your AWS account"),
                      allow_empty=False,
                  )),
-                ("--aws-secret-access-key",
+                ("aws_secret_access_key",
                  IndividualOrStoredPassword(
                      title=_("The secret key for your AWS account"),
                      allow_empty=False,
                  )),
-                ("--regions",
+                ("regions",
                  ListChoice(
                      title=_("Regions to use"),
                      choices=sorted([
@@ -1843,30 +1913,16 @@ class RulespecSpecialAgentsAws(HostRulespec):
                      ],
                                     key=lambda x: x[1]),
                  )),
-                ("--services",
+                ("overall_tags", _vs_aws_tags(_("Overall tags"))),
+                ("services",
                  Dictionary(
                      title=_("Services to monitor"),
                      elements=[
                          ("ce", FixedValue(None, totext="", title=_("Costs and usage"))),
-                         ("ec2", FixedValue(
-                             None, totext="", title=_("Elastic Compute Cloud (EC2)"))),
-                         ("ebs", FixedValue(
-                             None, totext="", title=_("Elastic Block Storage (EBS)"))),
-                         ("s3",
-                          Dictionary(
-                              title=_("Simple Storage Service (S3)"),
-                              elements=[('buckets',
-                                         CascadingDropdown(
-                                             title=_("Buckets"),
-                                             choices=[
-                                                 ('all', _("All buckets")),
-                                                 ('buckets', _("Specific buckets"),
-                                                  ListOfStrings()),
-                                             ]))],
-                              optional_keys=[],
-                          )),
-                         ("elb", FixedValue(
-                             None, totext="", title=_("Elastic Load Balancing (ELB)"))),
+                         ("ec2", _vs_aws_service_choice(_("Elastic Compute Cloud (EC2)"))),
+                         ("ebs", _vs_aws_service_choice(_("Elastic Block Storage (EBS)"))),
+                         ("s3", _vs_aws_service_choice(_("Simple Storage Service (S3)"))),
+                         ("elb", _vs_aws_service_choice(_("Elastic Load Balancing (ELB)"))),
                      ],
                  )),
             ],

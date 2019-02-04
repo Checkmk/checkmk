@@ -610,42 +610,6 @@ class MultiSiteConnection(Helpers):
         self.limit = None
         self.parallelize = True
 
-        # Helper function for connecting to a site
-        def connect_to_site(sitename, site, temporary=False):
-            try:
-                url = site["socket"]
-                persist = not temporary and site.get("persist", False)
-                tls_type, tls_params = site.get("tls", ("plain_text", {}))
-
-                connection = SingleSiteConnection(
-                    socketurl=url,
-                    persist=persist,
-                    allow_cache=site.get("cache", False),
-                    tls=tls_type != "plain_text",
-                    verify=tls_params.get("verify", True),
-                    ca_file_path=tls_params.get("ca_file_path", None),
-                )
-
-                if "timeout" in site:
-                    connection.set_timeout(int(site["timeout"]))
-                connection.connect()
-                self.connections.append((sitename, site, connection))
-
-            except Exception as e:
-                self.deadsites[sitename] = {
-                    "exception": e,
-                    "site": site,
-                }
-
-        # Needed for temporary connection for status_hosts in disabled sites
-        def disconnect_site(sitename):
-            i = 0
-            for name, _site, _connection in self.connections:
-                if name == sitename:
-                    del self.connections[i]
-                    return
-                i += 1
-
         # Status host: A status host helps to prevent trying to connect
         # to a remote site which is unreachable. This is done by looking
         # at the current state of a certain host on a local site that is
@@ -687,7 +651,14 @@ class MultiSiteConnection(Helpers):
                 s, h = status_host
                 status_hosts[s] = status_hosts.get(s, []) + [h]
             else:
-                connect_to_site(sitename, site)
+                try:
+                    connection = self.connect_to_site(sitename, site)
+                    self.connections.append((sitename, site, connection))
+                except Exception as e:
+                    self.deadsites[sitename] = {
+                        "exception": e,
+                        "site": site,
+                    }
 
         # Now learn current states of status hosts and store it in a dictionary
         # from (local_site, host) => state
@@ -713,7 +684,7 @@ class MultiSiteConnection(Helpers):
         # Disconnect from disabled sites that we connected to only to
         # get status information from
         for sitename, site in extra_status_sites.items():
-            disconnect_site(sitename)
+            self._disconnect_site(sitename)
 
         # Now loop over all sites having a status_host and take that state
         # of that into consideration
@@ -724,7 +695,14 @@ class MultiSiteConnection(Helpers):
                 shs, lastup = status_host_states.get(status_host,
                                                      (4, now))  # None => Status host not existing
                 if shs == 0 or shs is None:
-                    connect_to_site(sitename, site)
+                    try:
+                        connection = self.connect_to_site(sitename, site)
+                        self.connections.append((sitename, site, connection))
+                    except Exception as e:
+                        self.deadsites[sitename] = {
+                            "exception": e,
+                            "site": site,
+                        }
                 else:
                     if shs == 1:
                         ex = "The remote monitoring host is down"
@@ -742,6 +720,35 @@ class MultiSiteConnection(Helpers):
                         "status_host_state": shs,
                         "exception": ex,
                     }
+
+    def connect_to_site(self, sitename, site, temporary=False):
+        """Helper function for connecting to a site"""
+        url = site["socket"]
+        persist = not temporary and site.get("persist", False)
+        tls_type, tls_params = site.get("tls", ("plain_text", {}))
+
+        connection = SingleSiteConnection(
+            socketurl=url,
+            persist=persist,
+            allow_cache=site.get("cache", False),
+            tls=tls_type != "plain_text",
+            verify=tls_params.get("verify", True),
+            ca_file_path=tls_params.get("ca_file_path", None),
+        )
+
+        if "timeout" in site:
+            connection.set_timeout(int(site["timeout"]))
+        connection.connect()
+        return connection
+
+    # Needed for temporary connection for status_hosts in disabled sites
+    def _disconnect_site(self, sitename):
+        i = 0
+        for name, _site, _connection in self.connections:
+            if name == sitename:
+                del self.connections[i]
+                return
+            i += 1
 
     def add_header(self, header):
         for _sitename, _site, connection in self.connections:
@@ -889,6 +896,13 @@ class MultiSiteConnection(Helpers):
             if site["socket"].startswith("unix:") and "liveproxy" not in site["socket"]:
                 return connection
         raise MKLivestatusConfigError("No livestatus connection to local host")
+
+    def get_connection(self, site_id):
+        # type: (str) -> SingleSiteConnection
+        for this_site_id, _site, connection in self.connections:
+            if this_site_id == site_id:
+                return connection
+        raise KeyError("Connection does not exist")
 
 
 #.

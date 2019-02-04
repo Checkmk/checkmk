@@ -917,6 +917,10 @@ class Url(TextAscii):
     def validate_value(self, value, varprefix):
         super(Url, self).validate_value(value, varprefix)
 
+        if self._allow_empty and value == "":
+            ValueSpec.custom_validate(self, value, varprefix)
+            return
+
         parts = urlparse.urlparse(value)
         if not parts.scheme or not parts.netloc:
             raise MKUserError(varprefix, _("Invalid URL given"))

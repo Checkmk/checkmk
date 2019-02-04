@@ -243,6 +243,7 @@ class ModeEditSite(WatoMode):
 
         return [
             ("socket", self._site_mgmt.connection_method_valuespec()),
+            ("proxy", self._site_mgmt.livestatus_proxy_valuespec()),
             ("timeout",
              Integer(
                  title=_("Connect timeout"),

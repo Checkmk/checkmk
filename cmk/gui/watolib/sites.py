@@ -109,6 +109,14 @@ class SiteManagement(object):
         )
 
     @classmethod
+    def livestatus_proxy_valuespec(cls):
+        return FixedValue(
+            None,
+            title=_("Use Livestatus Proxy Daemon"),
+            totext=_("Connect directly (not available in CRE)"),
+        )
+
+    @classmethod
     def _connection_choices(cls):
         conn_choices = [
             ("local", _("Connect to the local site"), FixedValue(
@@ -304,9 +312,8 @@ class SiteManagement(object):
 
         sites = config.migrate_old_site_config(config_vars["sites"])
         for site in sites.itervalues():
-            socket = site["socket"]
-            if socket[0] == "proxy":
-                site["socket"] = ("proxy", cls.transform_old_connection_params(socket[1]))
+            if site["proxy"] is not None:
+                site["proxy"] = cls.transform_old_connection_params(site["proxy"])
 
         return sites
 
@@ -385,32 +392,21 @@ class CRESiteManagement(SiteManagement):
 # move this to a CEE/CME specific watolib plugin
 class CEESiteManagement(SiteManagement):
     @classmethod
-    def _connection_choices(cls):
-        choices = super(CEESiteManagement, cls)._connection_choices()
-
-        choices.append(("proxy", _("Use Livestatus Proxy Daemon"), Transform(
-            Dictionary(
+    def livestatus_proxy_valuespec(cls):
+        return Alternative(
+            title=_("Use Livestatus Proxy Daemon"),
+            style="dropdown",
+            elements = [
+                FixedValue(None,
+                    title=_("Connect directly, without Livestatus Proxy"),
+                    totext="",
+                ),
+                Transform(
+                    Dictionary(
+                title=_("Use Livestatus Proxy Daemon"),
                 optional_keys = ["tcp"],
                 columns = 1,
                 elements = [
-                    ("socket", Transform(
-                        CascadingDropdown(
-                            title = _("Connect to"),
-                            orientation="horizontal",
-                            choices=super(CEESiteManagement, cls)._connection_choices(),
-                        ),
-                        forth=cls._transform_old_socket_spec,
-                    )),
-                    ("tcp", LivestatusViaTCP(
-                        title = _("Allow access via TCP"),
-                        help = _("This option can be useful to build a cascading distributed setup. "
-                                 "The Livestatus Proxy of this site connects to the site configured "
-                                 "here via Livestatus and opens up a TCP port for clients. The "
-                                 "requests of the clients are forwarded to the destination site. "
-                                 "You need to configure a TCP port here that is not used on the "
-                                 "local system yet."),
-                        tcp_port = 6560,
-                    )),
                     ("params", Alternative(
                         title = _("Parameters"),
                         style = "dropdown",
@@ -426,12 +422,21 @@ class CEESiteManagement(SiteManagement):
                             ),
                         ],
                     )),
+                    ("tcp", LivestatusViaTCP(
+                        title = _("Allow access via TCP"),
+                        help = _("This option can be useful to build a cascading distributed setup. "
+                                 "The Livestatus Proxy of this site connects to the site configured "
+                                 "here via Livestatus and opens up a TCP port for clients. The "
+                                 "requests of the clients are forwarded to the destination site. "
+                                 "You need to configure a TCP port here that is not used on the "
+                                 "local system yet."),
+                        tcp_port = 6560,
+                    )),
                 ],
             ),
             forth = cls.transform_old_connection_params,
-        )))
-
-        return choices
+        ),
+        ],)
 
     # Duplicate code with cmk.cee.liveproxy.Channel._transform_old_socket_spec
     @classmethod
@@ -522,7 +527,6 @@ class CEESiteManagement(SiteManagement):
             return value
 
         new_value = {
-            "socket": value.pop("socket"),
             "params": value,
         }
 
@@ -549,19 +553,19 @@ class CEESiteManagement(SiteManagement):
 
         conf = {}
         for siteid, siteconf in sites.items():
-            socket_type, params = siteconf["socket"]
-            if socket_type != "proxy":
+            proxy_params = siteconf["proxy"]
+            if proxy_params is None:
                 continue
 
             conf[siteid] = {
-                "socket": params["socket"],
+                "socket": siteconf["socket"],
             }
 
-            if "tcp" in params:
-                conf[siteid]["tcp"] = params["tcp"]
+            if "tcp" in proxy_params:
+                conf[siteid]["tcp"] = proxy_params["tcp"]
 
-            if params["params"]:
-                conf[siteid].update(params["params"])
+            if proxy_params["params"]:
+                conf[siteid].update(proxy_params["params"])
 
         store.save_to_mk_file(path, "sites", conf)
 
@@ -621,11 +625,7 @@ def _create_nagvis_backends(sites_config):
         if site == config.omd_site():
             continue  # skip local site, backend already added by omd
 
-        if site['socket'][0] == "proxy":
-            socket = cmk.gui.sites.encode_socket_for_livestatus(site_id,
-                                                                site["socket"][1]["socket"])
-        else:
-            socket = cmk.gui.sites.encode_socket_for_livestatus(site_id, site['socket'])
+        socket = cmk.gui.sites.encode_socket_for_livestatus(site_id, site)
 
         cfg += [
             '',

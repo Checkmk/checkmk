@@ -574,6 +574,7 @@ def test_permission_sorting(do_sort, result):
         # Possible formats pre 1.6:
         ({}, {
             "socket": ("local", None),
+            "proxy": None,
             "replication": None,
             "url_prefix": "/mysite/",
         }),
@@ -581,6 +582,7 @@ def test_permission_sorting(do_sort, result):
             "socket": None,
         }, {
             "socket": ("local", None),
+            "proxy": None,
             "replication": None,
             "url_prefix": "/mysite/",
         }),
@@ -589,6 +591,7 @@ def test_permission_sorting(do_sort, result):
         }, {
             "socket": ("local", None),
             "disabled": True,
+            "proxy": None,
             "replication": None,
             "url_prefix": "/mysite/",
         }),
@@ -598,6 +601,7 @@ def test_permission_sorting(do_sort, result):
             "socket": ("unix", {
                 "path": "/ab:c/xyz"
             }),
+            "proxy": None,
             "replication": None,
             "url_prefix": "/mysite/",
         }),
@@ -608,6 +612,7 @@ def test_permission_sorting(do_sort, result):
                 "address": ("127.0.0.1", 1234),
                 "tls": ("plain_text", {}),
             }),
+            "proxy": None,
             "replication": None,
             "url_prefix": "/mysite/",
         }),
@@ -618,6 +623,7 @@ def test_permission_sorting(do_sort, result):
                 "address": ("::1", 1234),
                 "tls": ("plain_text", {}),
             }),
+            "proxy": None,
             "replication": None,
             "url_prefix": "/mysite/",
         }),
@@ -626,25 +632,36 @@ def test_permission_sorting(do_sort, result):
                 "socket": None,
             })
         }, {
-            "socket": ("proxy", {
-                "socket": ("local", None),
-            }),
+            "socket": ("local", None),
+            "proxy": {},
             "replication": None,
             "url_prefix": "/mysite/",
         }),
+        ({
+            "socket": ("proxy", {
+                "socket": ("127.0.0.1", 6790),
+            })
+        }, {
+            "socket": ("tcp", {
+                "address": ("127.0.0.1", 6790),
+                "tls": ("plain_text", {}),
+            }),
+            "proxy": {},
+            "replication": None,
+            "url_prefix": "/mysite/",
+        }),
+
         # Is allowed in 1.6 and should not be converted
         ({
-            "socket": ("proxy", {
-                "socket": ("unix", {
-                    "path": "/a/b/c"
-                })
+            "proxy": {},
+            "socket": ("unix", {
+                "path": "/a/b/c"
             })
         }, {
-            "socket": ("proxy", {
-                "socket": ("unix", {
-                    "path": "/a/b/c"
-                })
+            "socket": ("unix", {
+                "path": "/a/b/c"
             }),
+            "proxy": {},
             "replication": None,
             "url_prefix": "/mysite/",
         }),
@@ -658,6 +675,7 @@ def test_permission_sorting(do_sort, result):
                 "address": ("127.0.0.1", 1234),
                 "tls": ("plain_text", {}),
             }),
+            "proxy": None,
             "replication": None,
             "url_prefix": "/mysite/",
         }),
@@ -665,12 +683,13 @@ def test_permission_sorting(do_sort, result):
             "socket": ("tcp6", {
                 "address": ("::1", 1234),
                 "tls": ("plain_text", {}),
-            })
+            }),
         }, {
             "socket": ("tcp6", {
                 "address": ("::1", 1234),
                 "tls": ("plain_text", {}),
             }),
+            "proxy": None,
             "replication": None,
             "url_prefix": "/mysite/",
         }),
@@ -678,6 +697,7 @@ def test_permission_sorting(do_sort, result):
             "socket": ("local", None)
         }, {
             "socket": ("local", None),
+            "proxy": None,
             "replication": None,
             "url_prefix": "/mysite/",
         }),
@@ -689,6 +709,7 @@ def test_permission_sorting(do_sort, result):
             "socket": ("unix", {
                 "path": "/a/b/c"
             }),
+            "proxy": None,
             "replication": None,
             "url_prefix": "/mysite/",
         }),

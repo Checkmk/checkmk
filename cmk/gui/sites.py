@@ -211,26 +211,35 @@ def _get_enabled_and_disabled_sites():
 
 
 def _site_config_for_livestatus(site_id, site):
+    """Prepares a site config specification for the livestatus module
+
+    In case the GUI connects to the local livestatus proxy there are several
+    special things to do:
+    a) Tell livestatus not to strip away the cache header
+    b) Connect in plain text to the sites local proxy unix socket
+    """
     site = site.copy()
 
-    if site["socket"][0] == "proxy":
-        site["cache"] = site["socket"][1].get("cache", True)
+    if site["proxy"] is not None:
+        site["cache"] = site["proxy"].get("cache", True)
 
-    if site["socket"][0] in ["tcp", "tcp6"]:
-        site["tls"] = site["socket"][1]["tls"]
+    else:
+        if site["socket"][0] in ["tcp", "tcp6"]:
+            site["tls"] = site["socket"][1]["tls"]
 
-    site["socket"] = encode_socket_for_livestatus(site_id, site["socket"])
+    site["socket"] = encode_socket_for_livestatus(site_id, site)
 
     return site
 
 
-def encode_socket_for_livestatus(site_id, socket_spec):
+def encode_socket_for_livestatus(site_id, site):
+    socket_spec = site["socket"]
     family_spec, address_spec = socket_spec
 
     if family_spec == "local":
         return "unix:%s" % cmk.utils.paths.livestatus_unix_socket
 
-    if family_spec == "proxy":
+    if site["proxy"] is not None:
         return "unix:%sproxy/%s" % (cmk.utils.paths.livestatus_unix_socket, site_id)
 
     if family_spec == "unix":

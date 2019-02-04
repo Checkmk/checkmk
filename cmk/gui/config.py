@@ -789,6 +789,8 @@ def migrate_old_site_config(site_config):
         if "url_prefix" not in site_cfg:
             site_cfg["url_prefix"] = "/%s/" % site_id
 
+        site_cfg.setdefault("proxy", None)
+
         _migrate_pre_16_socket_config(site_cfg)
 
     return site_config
@@ -804,19 +806,35 @@ def migrate_old_site_config(site_config):
 # 3. The "socket" attribute was stored in the livestatus.py socketurl encoded format, at least when
 #    livestatus proxy was not used. This is now stored in the CascadingDropdown() native format and
 #    converted here to the correct format.
+# 4. When the livestatus proxy was enabled for a site, the settings were stored in the "socket"
+#    attribute. The proxy settings were an additional dict which also held a "socket" key containing
+#    the final socket connection properties.
+#    This has now been split up. The top level socket settings are now used independent of the proxy.
+#    The proxy options are stored in the separate key "proxy" which is a mandatory key.
 def _migrate_pre_16_socket_config(site_cfg):
     if site_cfg.get("socket") is None:
         site_cfg["socket"] = ("local", None)
         return
 
     socket = site_cfg["socket"]
-
-    # Same as above for liveproxy configs
     if isinstance(socket, tuple) and socket[0] == "proxy":
-        proxy_cfg = socket[1]
-        if proxy_cfg.get("socket") is None:
-            proxy_cfg["socket"] = ("local", None)
-            return
+        site_cfg["proxy"] = socket[1]
+
+        # "socket" of proxy could either be None or two element tuple for "tcp"
+        proxy_socket = site_cfg["proxy"].pop("socket", None)
+        if proxy_socket is None:
+            site_cfg["socket"] = ("local", None)
+
+        elif isinstance(socket, tuple):
+            site_cfg["socket"] = ("tcp", {
+                "address": proxy_socket,
+                "tls": ("plain_text", {}),
+            })
+
+        else:
+            raise NotImplementedError("Unhandled proxy socket: %r" % proxy_socket)
+
+        return
 
     if socket == 'disabled':
         site_cfg['disabled'] = True
@@ -1013,6 +1031,7 @@ def default_single_site_configuration():
             'replication': None,
             'timeout': 5,
             'user_login': True,
+            'proxy': None,
         }
     }
 
@@ -1092,14 +1111,7 @@ def site(site_id):
 
 def site_is_local(site_id):
     family_spec, address_spec = site(site_id)["socket"]
-
-    if _is_local_socket_spec(family_spec, address_spec):
-        return True
-
-    if family_spec == "proxy" and _is_local_socket_spec(*address_spec["socket"]):
-        return True
-
-    return False
+    return _is_local_socket_spec(family_spec, address_spec)
 
 
 def _is_local_socket_spec(family_spec, address_spec):

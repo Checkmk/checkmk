@@ -225,6 +225,9 @@ class ConfigDomainCACertificates(ConfigDomain):
         # errors - this must be enough for the moment.
         self._update_trusted_cas(current_config)
 
+        if ConfigDomainLiveproxy.enabled():
+            ConfigDomainLiveproxy().activate()
+
     def activate(self):
         try:
             return self._update_trusted_cas(config.trusted_certificate_authorities)

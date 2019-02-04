@@ -29,7 +29,17 @@ import traceback
 import time
 import multiprocessing
 import Queue
-from typing import TypeVar, List, Dict, NamedTuple  # pylint: disable=unused-import
+import socket
+import contextlib
+import binascii
+import typing  # pylint: disable=unused-import
+from typing import Text, TypeVar, List, Dict, NamedTuple  # pylint: disable=unused-import
+from OpenSSL import crypto, SSL
+# mypy can't find x509 for some reason (is a c extension involved?)
+from cryptography.x509.oid import ExtensionOID, NameOID  # type: ignore
+from cryptography import x509  # type: ignore
+from cryptography.hazmat.backends import default_backend  # type: ignore
+from cryptography.hazmat.primitives import hashes  # type: ignore
 
 import cmk
 import cmk.gui.config as config
@@ -53,11 +63,12 @@ from cmk.gui.valuespec import (
 )
 
 from cmk.gui.plugins.wato.utils import mode_registry, sort_sites
+from cmk.gui.plugins.watolib.utils import config_variable_registry
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode, WatoWebApiMode
 from cmk.gui.plugins.wato.utils.html_elements import wato_html_head, wato_confirm
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
-from cmk.gui.exceptions import MKUserError
+from cmk.gui.exceptions import MKUserError, MKGeneralException
 from cmk.gui.log import logger
 
 from cmk.gui.watolib.activate_changes import clear_site_replication_status
@@ -618,6 +629,10 @@ class ModeDistributedMonitoring(WatoMode):
         delete_url = html.makeactionuri([("_delete", site_id)])
         html.icon_button(delete_url, _("Delete"), "delete")
 
+        encrypted_url = watolib.folder_preserving_link([("mode", "site_livestatus_encryption"),
+                                                        ("site", site_id)])
+        html.icon_button(encrypted_url, _("Show details about livestatus encryption"), "encrypted")
+
         if self._site_globals_editable(site_id, site):
             globals_url = watolib.folder_preserving_link([("mode", "edit_site_globals"),
                                                           ("site", site_id)])
@@ -766,7 +781,7 @@ PingResult = NamedTuple("PingResult", [
 ReplicationStatus = NamedTuple("ReplicationStatus", [
     ("site_id", str),
     ("success", bool),
-    ("response", TypeVar("ReplicationStatus", PingResult, Exception)),
+    ("response", TypeVar("ReplicationResponse", PingResult, Exception)),
 ])
 
 
@@ -778,7 +793,7 @@ class ReplicationStatusFetcher(object):
         self._logger = logger.getChild("replication-status")
 
     def fetch(self, sites):
-        # type: (List[Tuple[str, Dict]]) -> Dict[str, PingResult]
+        # type: (List[typing.Tuple[str, Dict]]) -> Dict[str, PingResult]
         self._logger.debug("Fetching replication status for %d sites" % len(sites))
         results_by_site = {}
 
@@ -898,7 +913,7 @@ class ModeEditSiteGlobals(GlobalSettingsMode):
         if not varname:
             return
 
-        config_variable = watolib.config_variable_registry[varname]()
+        config_variable = config_variable_registry[varname]()
         def_value = self._global_settings.get(varname, self._default_values[varname])
 
         if action == "reset" and not is_a_checkbox(config_variable.valuespec()):
@@ -967,3 +982,271 @@ class ModeEditSiteGlobals(GlobalSettingsMode):
                 return
 
         self._show_configuration_variables(self._groups(show_all=True))
+
+
+ChainVerifyResult = NamedTuple("ChainVerifyResult", [
+    ("cert_pem", str),
+    ("error_number", int),
+    ("error_depth", int),
+    ("error_message", str),
+    ("is_valid", bool),
+])
+
+CertificateDetails = NamedTuple("CertificateDetails", [
+    ("issued_to", Text),
+    ("issued_by", Text),
+    ("valid_from", Text),
+    ("valid_till", Text),
+    ("signature_algorithm", Text),
+    ("digest_sha256", str),
+    ("serial_number", int),
+    ("is_ca", bool),
+    ("verify_result", ChainVerifyResult),
+])
+
+
+@mode_registry.register
+class ModeSiteLivestatusEncryption(WatoMode):
+    @classmethod
+    def name(cls):
+        return "site_livestatus_encryption"
+
+    @classmethod
+    def permissions(cls):
+        return ["sites"]
+
+    def __init__(self):
+        super(ModeSiteLivestatusEncryption, self).__init__()
+        self._site_id = html.request.var("site")
+        self._site_mgmt = watolib.SiteManagementFactory().factory()
+        self._configured_sites = self._site_mgmt.load_sites()
+        try:
+            self._site = self._configured_sites[self._site_id]
+        except KeyError:
+            raise MKUserError("site", _("This site does not exist."))
+
+    def title(self):
+        return _("Livestatus encryption of %s") % self._site_id
+
+    def buttons(self):
+        super(ModeSiteLivestatusEncryption, self).buttons()
+        html.context_button(
+            _("All Sites"), watolib.folder_preserving_link([("mode", "sites")]), "back")
+        html.context_button(
+            _("Connection"),
+            watolib.folder_preserving_link([("mode", "edit_site"), ("edit", self._site_id)]),
+            "sites")
+
+    def action(self):
+        if not html.check_transaction():
+            return
+
+        action = html.request.var("_action")
+        if action != "trust":
+            return
+
+        digest_sha256 = html.get_ascii_input("_digest")
+
+        try:
+            cert_details = self._fetch_certificate_details()
+        except Exception as e:
+            logger.error(_("Failed to fetch peer certificate"), exc_info=True)
+            html.show_error(_("Failed to fetch peer certificate (%s)") % e)
+            return
+
+        cert_pem = None
+        for cert_detail in cert_details:
+            if cert_detail.digest_sha256 == digest_sha256:
+                cert_pem = cert_detail.verify_result.cert_pem
+
+        if cert_pem is None:
+            raise MKGeneralException(_("Failed to find matching certificate in chain"))
+
+        config_variable = config_variable_registry["trusted_certificate_authorities"]()
+
+        global_settings = watolib.load_configuration_settings()
+        trusted = global_settings.get(
+            "trusted_certificate_authorities",
+            watolib.ConfigDomain.get_all_default_globals()["trusted_certificate_authorities"])
+        trusted.setdefault("trusted_cas", []).append(cert_pem)
+        global_settings["trusted_certificate_authorities"] = trusted
+
+        watolib.add_change(
+            "edit-configvar",
+            _("Added CA with fingerprint %s to trusted certificate authorities") % digest_sha256,
+            domains=[config_variable.domain()],
+            need_restart=config_variable.need_restart())
+        watolib.save_global_settings(global_settings)
+
+        return None, _(
+            "Added CA with fingerprint %s to trusted certificate authorities") % digest_sha256
+
+    def page(self):
+        if not self._is_livestatus_encrypted():
+            html.show_info(
+                _("The livestatus connection to this site configured not to be encrypted."))
+            return
+
+        if self._site["socket"][1]["tls"][1]["verify"] is False:
+            html.show_warning(
+                _("Encrypted connections to this site are made without "
+                  "certificate verification."))
+
+        try:
+            cert_details = self._fetch_certificate_details()
+        except Exception as e:
+            logger.error(_("Failed to fetch peer certificate"), exc_info=True)
+            html.show_error(_("Failed to fetch peer certificate (%s)") % e)
+            return
+
+        html.h3(_("Certificate details"))
+        html.open_table(class_=["data", "headerleft"])
+
+        server_cert = cert_details[0]
+        for title, css_class, value in [
+            (_("Issued to"), None, server_cert.issued_to),
+            (_("Issued by"), None, server_cert.issued_by),
+            (_("Valid from"), None, server_cert.valid_from),
+            (_("Valid till"), None, server_cert.valid_till),
+            (_("Signature algorithm"), None, server_cert.signature_algorithm),
+            (_("Fingerprint (SHA256)"), None, server_cert.digest_sha256),
+            (_("Serial number"), None, server_cert.serial_number),
+            (_("Trusted"), self._cert_trusted_css_class(server_cert),
+             self._render_cert_trusted(server_cert)),
+        ]:
+            html.open_tr()
+            html.th(title)
+            html.td(value, class_=css_class)
+            html.close_tr()
+        html.close_table()
+
+        with table_element("certificate_chain", _("Certificate chain")) as table:
+            for cert_detail in reversed(cert_details[1:]):
+                table.row()
+                table.cell("", css="buttons")
+                if cert_detail.is_ca:
+                    url = html.makeactionuri([
+                        ("_action", "trust"),
+                        ("_digest", cert_detail.digest_sha256),
+                    ])
+                    html.icon_button(url=url, title=_("Add to trusted CAs"), icon="trust")
+                table.text_cell(_("Issued to"), cert_detail.issued_to)
+                table.text_cell(_("Issued by"), cert_detail.issued_by)
+                table.text_cell(_("Is CA"), _("Yes") if cert_detail.is_ca else _("No"))
+                table.text_cell(_("Fingerprint"), cert_detail.digest_sha256)
+                table.text_cell(_("Valid till"), cert_detail.valid_till)
+                table.text_cell(
+                    _("Trusted"),
+                    self._render_cert_trusted(cert_detail),
+                    css=self._cert_trusted_css_class(cert_detail))
+
+    def _render_cert_trusted(self, cert):
+        if cert.verify_result.is_valid:
+            return _("Yes")
+
+        return _("No (Error: %s, Code: %d, Depth: %d)") % (cert.verify_result.error_message,
+                                                           cert.verify_result.error_number,
+                                                           cert.verify_result.error_depth)
+
+    def _cert_trusted_css_class(self, cert):
+        return "state state0" if cert.verify_result.is_valid else "state state2"
+
+    def _is_livestatus_encrypted(self):
+        family_spec, address_spec = self._site["socket"]
+        return family_spec in ["tcp", "tcp6"] and address_spec["tls"][0] != "plain_text"
+
+    def _fetch_certificate_details(self):
+        # type: () -> List[CertificateDetails]
+        """Creates a list of certificate details for the chain certs"""
+        verify_chain_results = self._fetch_certificate_chain_verify_results()
+        if not verify_chain_results:
+            raise MKGeneralException(_("Failed to fetch the certificate chain"))
+
+        def get_name(name_obj):
+            return name_obj.get_attributes_for_oid(NameOID.COMMON_NAME)[0].value
+
+        cert_details = []
+        for result in verify_chain_results:
+            # use cryptography module over OpenSSL because it is easier to do the x509 parsing
+            crypto_cert = x509.load_pem_x509_certificate(result.cert_pem, default_backend())
+
+            cert_details.append(
+                CertificateDetails(
+                    issued_to=get_name(crypto_cert.subject),
+                    issued_by=get_name(crypto_cert.issuer),
+                    valid_from=crypto_cert.not_valid_before,
+                    valid_till=crypto_cert.not_valid_after,
+                    signature_algorithm=crypto_cert.signature_hash_algorithm.name,
+                    digest_sha256=binascii.hexlify(crypto_cert.fingerprint(hashes.SHA256())),
+                    serial_number=crypto_cert.serial_number,
+                    is_ca=self._is_ca_certificate(crypto_cert),
+                    verify_result=result,
+                ))
+
+        return cert_details
+
+    def _is_ca_certificate(self, crypto_cert):
+        # type: (SSL.Certificate) -> bool
+        try:
+            key_usage = crypto_cert.extensions.get_extension_for_oid(ExtensionOID.KEY_USAGE)
+            use_key_for_signing = key_usage.value.key_cert_sign is True
+        except x509.extensions.ExtensionNotFound:
+            use_key_for_signing = False
+
+        try:
+            basic_constraints = crypto_cert.extensions.get_extension_for_oid(
+                ExtensionOID.BASIC_CONSTRAINTS)
+            is_ca = basic_constraints.value.ca is True
+        except x509.extensions.ExtensionNotFound:
+            is_ca = False
+
+        return is_ca and use_key_for_signing
+
+    def _fetch_certificate_chain_verify_results(self):
+        # type: () -> List[ChainVerifyResult]
+        """Opens a SSL connection and performs a handshake to get the certificate chain"""
+
+        ctx = SSL.Context(SSL.SSLv23_METHOD)
+        # On this page we don't want to fail because of invalid certificates,
+        # but SSL.VERIFY_PEER must be set to trigger the verify_cb. This callback
+        # will then accept any certificate offered.
+        #ctx.set_verify(SSL.VERIFY_PEER, verify_cb)
+        ctx.load_verify_locations(cmk.utils.paths.omd_root + "/var/ssl/ca-certificates.crt")
+
+        family_spec, address_spec = self._site["socket"]
+        address_family = socket.AF_INET if family_spec == "tcp" else socket.AF_INET6
+        with contextlib.closing(
+                SSL.Connection(ctx, socket.socket(address_family, socket.SOCK_STREAM))) as sock:
+
+            # pylint does not get the object type of sock right
+            sock.connect(address_spec["address"])  # pylint: disable=no-member
+            sock.do_handshake()  # pylint: disable=no-member
+            certificate_chain = sock.get_peer_cert_chain()  # pylint: disable=no-member
+
+            return self._verify_certificate_chain(sock, certificate_chain)
+
+    def _verify_certificate_chain(self, connection, certificate_chain):
+        # type: (SSL.Connection, List[crypto.X509]) -> List[ChainVerifyResult]
+        verify_chain_results = []
+
+        # Used to record all certificates and verification results for later displaying
+        for cert in certificate_chain:
+            # This is mainly done to get the textual error message without accessing internals of the SSL modules
+            error_number, error_depth, error_message = 0, 0, ""
+            try:
+                x509_store = connection.get_context().get_cert_store()
+                x509_store_context = crypto.X509StoreContext(x509_store, cert)
+                x509_store_context.verify_certificate()
+            except crypto.X509StoreContextError as e:
+                error_number, error_depth, error_message = e.args[0]
+
+            verify_chain_results.append(
+                ChainVerifyResult(
+                    cert_pem=crypto.dump_certificate(crypto.FILETYPE_PEM, cert),
+                    error_number=error_number,
+                    error_depth=error_depth,
+                    error_message=error_message,
+                    is_valid=error_number == 0,
+                ))
+
+        return verify_chain_results

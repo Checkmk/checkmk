@@ -97,9 +97,15 @@ class SiteManagement(object):
     @classmethod
     def connection_method_valuespec(cls):
         return CascadingDropdown(
+            title=_("Connection"),
             orientation="horizontal",
             choices=cls._connection_choices(),
             render=CascadingDropdown.Render.foldable,
+            help=_("When connecting to remote site please make sure "
+                   "that Livestatus over TCP is activated there. You can use UNIX sockets "
+                   "to connect to foreign sites on localhost. Please make sure that this "
+                   "site has proper read and write permissions to the UNIX socket of the "
+                   "foreign site."),
         )
 
     @classmethod
@@ -195,6 +201,7 @@ class SiteManagement(object):
     @classmethod
     def user_sync_valuespec(cls):
         return CascadingDropdown(
+            title=_("Sync with LDAP connections"),
             orientation="horizontal",
             choices=[
                 (None, _("Disable automatic user synchronization (use master site users)")),
@@ -204,7 +211,19 @@ class SiteManagement(object):
                      choices=userdb.connection_choices,
                      allow_empty=False,
                  )),
-            ])
+            ],
+            help=_(
+                'By default the users are synchronized automatically in the interval configured '
+                'in the connection. For example the LDAP connector synchronizes the users every '
+                'five minutes by default. The interval can be changed for each connection '
+                'individually in the <a href="wato.py?mode=ldap_config">connection settings</a>. '
+                'Please note that the synchronization is only performed on the master site in '
+                'distributed setups by default.<br>'
+                'The remote sites don\'t perform automatic user synchronizations with the '
+                'configured connections. But you can configure each site to either '
+                'synchronize the users with all configured connections or a specific list of '
+                'connections.'),
+        )
 
     @classmethod
     def validate_configuration(cls, site_id, site_configuration, all_sites):

@@ -106,7 +106,7 @@ def site_local_ca_path():
     if not omd_root:
         raise MKLivestatusConfigError("OMD_ROOT is not set. You are not running in OMD context.")
 
-    return os.path.join(omd_root, "etc/ssl/ca.pem")
+    return os.path.join(omd_root, "var/ssl/ca-certificates.crt")
 
 
 def create_client_socket(family, tls, verify, ca_file_path):

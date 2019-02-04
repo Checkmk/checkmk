@@ -573,25 +573,33 @@ def test_permission_sorting(do_sort, result):
     [
         # Possible formats pre 1.6:
         ({}, {
-            "socket": ("local", None)
+            "socket": ("local", None),
+            "replication": None,
+            "url_prefix": "/mysite/",
         }),
         ({
-            "socket": None
+            "socket": None,
         }, {
-            "socket": ("local", None)
+            "socket": ("local", None),
+            "replication": None,
+            "url_prefix": "/mysite/",
         }),
         ({
             "socket": "disabled"
         }, {
             "socket": ("local", None),
-            "disabled": True
+            "disabled": True,
+            "replication": None,
+            "url_prefix": "/mysite/",
         }),
         ({
             "socket": "unix:/ab:c/xyz"
         }, {
             "socket": ("unix", {
                 "path": "/ab:c/xyz"
-            })
+            }),
+            "replication": None,
+            "url_prefix": "/mysite/",
         }),
         ({
             "socket": "tcp:127.0.0.1:1234"
@@ -599,7 +607,9 @@ def test_permission_sorting(do_sort, result):
             "socket": ("tcp", {
                 "address": ("127.0.0.1", 1234),
                 "tls": ("plain_text", {}),
-            })
+            }),
+            "replication": None,
+            "url_prefix": "/mysite/",
         }),
         ({
             "socket": "tcp6:::1:1234"
@@ -607,7 +617,9 @@ def test_permission_sorting(do_sort, result):
             "socket": ("tcp6", {
                 "address": ("::1", 1234),
                 "tls": ("plain_text", {}),
-            })
+            }),
+            "replication": None,
+            "url_prefix": "/mysite/",
         }),
         ({
             "socket": ("proxy", {
@@ -616,7 +628,9 @@ def test_permission_sorting(do_sort, result):
         }, {
             "socket": ("proxy", {
                 "socket": ("local", None),
-            })
+            }),
+            "replication": None,
+            "url_prefix": "/mysite/",
         }),
         # Is allowed in 1.6 and should not be converted
         ({
@@ -630,7 +644,9 @@ def test_permission_sorting(do_sort, result):
                 "socket": ("unix", {
                     "path": "/a/b/c"
                 })
-            })
+            }),
+            "replication": None,
+            "url_prefix": "/mysite/",
         }),
         ({
             "socket": ("tcp", {
@@ -641,7 +657,9 @@ def test_permission_sorting(do_sort, result):
             "socket": ("tcp", {
                 "address": ("127.0.0.1", 1234),
                 "tls": ("plain_text", {}),
-            })
+            }),
+            "replication": None,
+            "url_prefix": "/mysite/",
         }),
         ({
             "socket": ("tcp6", {
@@ -652,12 +670,16 @@ def test_permission_sorting(do_sort, result):
             "socket": ("tcp6", {
                 "address": ("::1", 1234),
                 "tls": ("plain_text", {}),
-            })
+            }),
+            "replication": None,
+            "url_prefix": "/mysite/",
         }),
         ({
             "socket": ("local", None)
         }, {
-            "socket": ("local", None)
+            "socket": ("local", None),
+            "replication": None,
+            "url_prefix": "/mysite/",
         }),
         ({
             "socket": ("unix", {
@@ -666,7 +688,9 @@ def test_permission_sorting(do_sort, result):
         }, {
             "socket": ("unix", {
                 "path": "/a/b/c"
-            })
+            }),
+            "replication": None,
+            "url_prefix": "/mysite/",
         }),
     ])
 def test_migrate_old_site_config(site, result):

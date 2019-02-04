@@ -772,6 +772,28 @@ class BuiltinTags(object):
         return aux_tags_
 
 
+def migrate_old_site_config(site_config):
+    if not site_config:
+        # Prevent problem when user has deleted all sites from his
+        # configuration and sites is {}. We assume a default single site
+        # configuration in that case.
+        return default_single_site_configuration()
+
+    for site_id, site_cfg in site_config.iteritems():
+        # Until 1.6 "replication" could be not present or
+        # set to "" instead of None
+        if site_cfg.get("replication", "") == "":
+            site_cfg["replication"] = None
+
+        # Until 1.6 "url_prefix" was an optional attribute
+        if "url_prefix" not in site_cfg:
+            site_cfg["url_prefix"] = "/%s/" % site_id
+
+        _migrate_pre_16_socket_config(site_cfg)
+
+    return site_config
+
+
 # During development of the 1.6 version the site configuration has been cleaned up in several ways:
 # 1. The "socket" attribute could be "disabled" to disable a site connection. This has already been
 #    deprecated long time ago and was not configurable in WATO. This has now been superceeded by
@@ -782,36 +804,27 @@ class BuiltinTags(object):
 # 3. The "socket" attribute was stored in the livestatus.py socketurl encoded format, at least when
 #    livestatus proxy was not used. This is now stored in the CascadingDropdown() native format and
 #    converted here to the correct format.
-def migrate_old_site_config(site_config):
-    if not site_config:
-        # Prevent problem when user has deleted all sites from his
-        # configuration and sites is {}. We assume a default single site
-        # configuration in that case.
-        return default_single_site_configuration()
+def _migrate_pre_16_socket_config(site_cfg):
+    if site_cfg.get("socket") is None:
+        site_cfg["socket"] = ("local", None)
+        return
 
-    for site_cfg in site_config.itervalues():
-        if site_cfg.get("socket") is None:
-            site_cfg["socket"] = ("local", None)
-            continue
+    socket = site_cfg["socket"]
 
-        socket = site_cfg["socket"]
+    # Same as above for liveproxy configs
+    if isinstance(socket, tuple) and socket[0] == "proxy":
+        proxy_cfg = socket[1]
+        if proxy_cfg.get("socket") is None:
+            proxy_cfg["socket"] = ("local", None)
+            return
 
-        # Same as above for liveproxy configs
-        if isinstance(socket, tuple) and socket[0] == "proxy":
-            proxy_cfg = socket[1]
-            if proxy_cfg.get("socket") is None:
-                proxy_cfg["socket"] = ("local", None)
-                continue
+    if socket == 'disabled':
+        site_cfg['disabled'] = True
+        site_cfg['socket'] = ("local", None)
+        return
 
-        if socket == 'disabled':
-            site_cfg['disabled'] = True
-            site_cfg['socket'] = ("local", None)
-            continue
-
-        if isinstance(socket, six.string_types):
-            site_cfg["socket"] = _migrate_string_encoded_socket(socket)
-
-    return site_config
+    if isinstance(socket, six.string_types):
+        site_cfg["socket"] = _migrate_string_encoded_socket(socket)
 
 
 def _migrate_string_encoded_socket(value):
@@ -993,11 +1006,12 @@ def default_single_site_configuration():
             'disable_wato': True,
             'disabled': False,
             'insecure': False,
+            'url_prefix': "/%s/" % omd_site(),
             'multisiteurl': '',
             'persist': False,
             'replicate_ec': False,
-            'replication': '',
-            'timeout': 10,
+            'replication': None,
+            'timeout': 5,
             'user_login': True,
         }
     }

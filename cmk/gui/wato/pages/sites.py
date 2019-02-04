@@ -25,7 +25,6 @@
 # Boston, MA 02110-1301 USA.
 """Mode for managing sites"""
 
-import re
 import traceback
 import time
 import multiprocessing
@@ -35,12 +34,23 @@ from typing import TypeVar, List, Dict, NamedTuple  # pylint: disable=unused-imp
 import cmk
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
-import cmk.gui.userdb as userdb
 import cmk.gui.forms as forms
 import cmk.gui.log as log
 from cmk.gui.table import table_element
 from cmk.gui.valuespec import (
-    MonitoredHostname,)
+    Dictionary,
+    ID,
+    Integer,
+    FixedValue,
+    TextUnicode,
+    TextAscii,
+    Checkbox,
+    Tuple,
+    Alternative,
+    DropdownChoice,
+    MonitoredHostname,
+    HTTPUrl,
+)
 
 from cmk.gui.plugins.wato.utils import mode_registry, sort_sites
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode, WatoWebApiMode
@@ -67,34 +77,40 @@ class ModeEditSite(WatoMode):
     def __init__(self):
         super(ModeEditSite, self).__init__()
         self._site_mgmt = watolib.SiteManagementFactory().factory()
-        self._from_html_vars()
 
+        self._site_id = html.request.var("edit")
+        self._clone_id = html.request.var("clone")
         self._new = self._site_id is None
-        self._new_site = {}
+
         configured_sites = self._site_mgmt.load_sites()
 
         if self._clone_id:
-            self._site = configured_sites[self._clone_id]
+            try:
+                self._site = configured_sites[self._clone_id]
+            except KeyError:
+                raise MKUserError(None, _("The requested site does not exist"))
 
         elif self._new:
-            self._site = {"replicate_mkps": True}
+            self._site = {
+                "replicate_mkps": True,
+                "replicate_ec": True,
+                "socket": ("tcp", {
+                    "address": ("", 6557),
+                    "tls": ("encrypted", {
+                        "verify": True,
+                    })
+                }),
+                "timeout": 5,
+                "disable_wato": True,
+                "user_login": True,
+                "replication": None,
+            }
 
         else:
-            self._site = configured_sites.get(self._site_id, {})
-
-    def _from_html_vars(self):
-        self._site_id = html.request.var("edit")
-        self._clone_id = html.request.var("clone")
-        self._id = html.request.var("id")
-        self._url_prefix = html.request.var("url_prefix", "").strip()
-        self._timeout = html.request.var("timeout", "").strip()
-        self._sh_site = html.request.var("sh_site")
-
-        self._sh_host = self._vs_host().from_html_vars("sh_host")
-        self._vs_host().validate_value(self._sh_host, "sh_Host")
-
-        self._repl = html.request.var("replication")
-        self._multisiteurl = html.request.var("multisiteurl", "").strip()
+            try:
+                self._site = configured_sites[self._site_id]
+            except KeyError:
+                raise MKUserError(None, _("The requested site does not exist"))
 
     def title(self):
         if self._new:
@@ -105,7 +121,7 @@ class ModeEditSite(WatoMode):
         super(ModeEditSite, self).buttons()
         html.context_button(
             _("All Sites"), watolib.folder_preserving_link([("mode", "sites")]), "back")
-        if not self._new and self._site.get("replication"):
+        if not self._new and self._site["replication"]:
             html.context_button(
                 _("Site-Globals"),
                 watolib.folder_preserving_link([("mode", "edit_site_globals"),
@@ -115,338 +131,270 @@ class ModeEditSite(WatoMode):
         if not html.check_transaction():
             return "sites"
 
+        vs = self._valuespec()
+        site_spec = vs.from_html_vars("site")
+        vs.validate_value(site_spec, "site")
+
+        # Extract the ID. It is not persisted in the site value
         if self._new:
-            self._id = self._id.strip()
-        else:
-            self._id = self._site_id
+            self._site_id = site_spec["id"]
+        del site_spec["id"]
 
         configured_sites = self._site_mgmt.load_sites()
-        if self._new and self._id in configured_sites:
-            raise MKUserError("id", _("This id is already being used by another connection."))
 
-        if not re.match("^[-a-z0-9A-Z_]+$", self._id):
-            raise MKUserError(
-                "id", _("The site id must consist only of letters, digit and the underscore."))
+        # Take over all unknown elements from existing site specs, like for
+        # example, the replication secret
+        for key, value in configured_sites.get(self._site_id, {}).items():
+            site_spec.setdefault(key, value)
 
-        detail_msg = self._set_site_attributes()
-        configured_sites[self._id] = self._new_site
+        self._site_mgmt.validate_configuration(self._site_id, site_spec, configured_sites)
+
+        self._site = configured_sites[self._site_id] = site_spec
         self._site_mgmt.save_sites(configured_sites)
 
         if self._new:
-            msg = _("Created new connection to site %s") % html.render_tt(self._id)
+            msg = _("Created new connection to site %s") % html.render_tt(self._site_id)
         else:
-            msg = _("Modified site connection %s") % html.render_tt(self._id)
+            msg = _("Modified site connection %s") % html.render_tt(self._site_id)
 
         # Don't know exactly what have been changed, so better issue a change
         # affecting all domains
         watolib.add_change(
-            "edit-sites", msg, sites=[self._id], domains=watolib.ConfigDomain.enabled_domains())
+            "edit-sites",
+            msg,
+            sites=[self._site_id],
+            domains=watolib.ConfigDomain.enabled_domains())
 
         # In case a site is not being replicated anymore, confirm all changes for this site!
-        if not self._repl:
-            clear_site_replication_status(self._id)
+        if not site_spec["replication"]:
+            clear_site_replication_status(self._site_id)
 
-        if self._id != config.omd_site():
+        if self._site_id != config.omd_site():
             # On central site issue a change only affecting the GUI
             watolib.add_change(
                 "edit-sites", msg, sites=[config.omd_site()], domains=[watolib.ConfigDomainGUI])
 
-        return "sites", detail_msg
-
-    def _set_site_attributes(self):
-        # Save copy of old site for later
-        configured_sites = self._site_mgmt.load_sites()
-        if not self._new:
-            old_site = configured_sites[self._site_id]
-
-        self._new_site = {}
-        self._new_site["alias"] = html.get_unicode_input("alias", "").strip()
-        if self._url_prefix:
-            self._new_site["url_prefix"] = self._url_prefix
-        self._new_site["disabled"] = html.get_checkbox("disabled")
-
-        # Connection
-        vs_connection = self._site_mgmt.connection_method_valuespec()
-        method = vs_connection.from_html_vars("method")
-        vs_connection.validate_value(method, "method")
-        self._new_site["socket"] = method
-
-        # Timeout
-        if self._timeout != "":
-            try:
-                self._new_site["timeout"] = int(self._timeout)
-            except ValueError:
-                raise MKUserError(
-                    "timeout",
-                    _("The timeout %s is not a valid integer number.") % self._timeout)
-
-        # Persist
-        self._new_site["persist"] = html.get_checkbox("persist")
-
-        # Status host
-        if self._sh_site:
-            self._new_site["status_host"] = (self._sh_site, self._sh_host)
-        else:
-            self._new_site["status_host"] = None
-
-        # Replication
-        if self._repl == "none":
-            self._repl = None
-        self._new_site["replication"] = self._repl
-        self._new_site["multisiteurl"] = self._multisiteurl
-
-        # Save Multisite-URL even if replication is turned off. That way that
-        # setting is not lost if replication is turned off for a while.
-
-        # Disabling of WATO
-        self._new_site["disable_wato"] = html.get_checkbox("disable_wato")
-
-        # Handle the insecure replication flag
-        self._new_site["insecure"] = html.get_checkbox("insecure")
-
-        # Allow direct user login
-        self._new_site["user_login"] = html.get_checkbox("user_login")
-
-        # User synchronization
-        user_sync = self._site_mgmt.user_sync_valuespec().from_html_vars("user_sync")
-        self._new_site["user_sync"] = user_sync
-
-        # Event Console Replication
-        self._new_site["replicate_ec"] = html.get_checkbox("replicate_ec")
-
-        # MKPs and ~/local/
-        self._new_site["replicate_mkps"] = html.get_checkbox("replicate_mkps")
-
-        # Secret is not checked here, just kept
-        if not self._new and "secret" in old_site:
-            self._new_site["secret"] = old_site["secret"]
-
-        # Do not forget to add those settings (e.g. "globals") that
-        # are not edited with this dialog
-        if not self._new:
-            for key in old_site.keys():
-                if key not in self._new_site:
-                    self._new_site[key] = old_site[key]
-
-        self._site_mgmt.validate_configuration(self._site_id or self._id, self._new_site,
-                                               configured_sites)
+        return "sites", msg
 
     def page(self):
         html.begin_form("site")
 
-        self._page_basic_settings()
-        self._page_livestatus_settings()
-        self._page_replication_configuration()
+        self._valuespec().render_input("site", self._site)
 
         forms.end()
         html.button("save", _("Save"))
         html.hidden_fields()
         html.end_form()
 
-    def _page_basic_settings(self):
-        forms.header(_("Basic settings"))
-        # ID
-        forms.section(_("Site ID"), simple=not self._new)
+    def _valuespec(self):
+        basic_elements = self._basic_elements()
+        livestatus_elements = self._livestatus_elements()
+        replication_elements = self._replication_elements()
+
+        return Dictionary(
+            elements=basic_elements + livestatus_elements + replication_elements,
+            headers=[
+                (_("Basic settings"), [key for key, _vs in basic_elements]),
+                (_("Livestatus settings"), [key for key, _vs in livestatus_elements]),
+                (_("Configuration Replication"), [key for key, _vs in replication_elements]),
+            ],
+            render="form",
+            form_narrow=True,
+            optional_keys=[],
+        )
+
+    def _basic_elements(self):
         if self._new:
-            html.text_input("id", self._site_id or self._clone_id)
-            html.set_focus("id")
+            vs_site_id = ID(
+                title=_("Site ID"),
+                size=60,
+                allow_empty=False,
+                help=_("The site ID must be identical (case sensitive) with "
+                       "the instance's exact name."),
+                validate=self._validate_site_id,
+            )
         else:
-            html.write_text(self._site_id)
+            vs_site_id = FixedValue(
+                self._site_id,
+                title=_("Site ID"),
+            )
 
-        html.help(
-            _("The site ID must be identical (case sensitive) with the instance's exact name."))
-        # Alias
-        forms.section(_("Alias"))
-        html.text_input("alias", self._site.get("alias", ""), size=60)
-        if not self._new:
-            html.set_focus("alias")
-        html.help(_("An alias or description of the site."))
+        return [
+            ("id", vs_site_id),
+            ("alias",
+             TextUnicode(
+                 title=_("Alias"),
+                 size=60,
+                 help=_("An alias or description of the site."),
+                 allow_empty=False,
+             )),
+        ]
 
-    def _page_livestatus_settings(self):
-        forms.header(_("Livestatus settings"))
+    def _validate_site_id(self, value, varprefix):
+        if value in self._site_mgmt.load_sites():
+            raise MKUserError("id", _("This id is already being used by another connection."))
 
-        forms.section(_("Connection"))
-        method = self._site.get("socket", ("tcp", {
-            "address": ("", 6557),
-            "tls": ("encrypted", {
-                "verify": True,
-            })
-        }))
-        self._site_mgmt.connection_method_valuespec().render_input("method", method)
-        html.help(
-            _("When connecting to remote site please make sure "
-              "that Livestatus over TCP is activated there. You can use UNIX sockets "
-              "to connect to foreign sites on localhost. Please make sure that this "
-              "site has proper read and write permissions to the UNIX socket of the "
-              "foreign site."))
-
-        # Timeout
-        forms.section(_("Connect Timeout"))
-        timeout = self._site.get("timeout", 10)
-        html.number_input("timeout", timeout, size=2)
-        html.write_text(_(" seconds"))
-        html.help(
-            _("This sets the time that Multisite waits for a connection "
-              "to the site to be established before the site is considered to be unreachable. "
-              "If not set, the operating system defaults are begin used and just one login attempt is being. "
-              "performed."))
-
-        # Persistent connections
-        forms.section(_("Persistent Connection"), simple=True)
-        html.checkbox(
-            "persist", self._site.get("persist", False), label=_("Use persistent connections"))
-        html.help(
-            _("If you enable persistent connections then Multisite will try to keep open "
-              "the connection to the remote sites. This brings a great speed up in high-latency "
-              "situations but locks a number of threads in the Livestatus module of the target site."
-             ))
-
-        # URL-Prefix
-        docu_url = "https://mathias-kettner.com/checkmk_multisite_modproxy.html"
-        forms.section(_("URL prefix"))
-        html.text_input("url_prefix", self._site.get("url_prefix", ""), size=60)
-        html.help(
-            _("The URL prefix will be prepended to links of addons like PNP4Nagios "
-              "or the classical Nagios GUI when a link to such applications points to a host or "
-              "service on that site. You can either use an absolute URL prefix like <tt>http://some.host/mysite/</tt> "
-              "or a relative URL like <tt>/mysite/</tt>. When using relative prefixes you needed a mod_proxy "
-              "configuration in your local system apache that proxies such URLs to the according remote site. "
-              "Please refer to the <a target=_blank href='%s'>online documentation</a> for details. "
-              "The prefix should end with a slash. Omit the <tt>/pnp4nagios/</tt> from the prefix.")
-            % docu_url)
-
-        # Status-Host
-        docu_url = "https://mathias-kettner.com/checkmk_multisite_statushost.html"
-        forms.section(_("Status host"))
-
-        sh = self._site.get("status_host")
-        if sh:
-            self._sh_site, self._sh_host = sh
-        else:
-            self._sh_site = ""
-            self._sh_host = ""
-
-        html.write_text(_("host: "))
-        self._vs_host().render_input("sh_host", self._sh_host)
-
-        html.write_text(_(" on monitoring site: "))
-
-        choices = [("", _("(no status host)"))] + [
+    def _livestatus_elements(self):
+        proxy_docu_url = "https://mathias-kettner.com/checkmk_multisite_modproxy.html"
+        status_host_docu_url = "https://mathias-kettner.com/checkmk_multisite_statushost.html"
+        site_choices = [("", _("(no status host)"))] + [
             (sk, si.get("alias", sk)) for (sk, si) in self._site_mgmt.load_sites().items()
         ]
-        html.dropdown("sh_site", choices, deflt=self._sh_site, ordered=True)
 
-        html.help(
-            _("By specifying a status host for each non-local connection "
-              "you prevent Multisite from running into timeouts when remote sites do not respond. "
-              "You need to add the remote monitoring servers as hosts into your local monitoring "
-              "site and use their host state as a reachability state of the remote site. Please "
-              "refer to the <a target=_blank href='%s'>online documentation</a> for details.") %
-            docu_url)
-
-        # Disabled
-        forms.section(_("Disable"), simple=True)
-        html.checkbox(
-            "disabled",
-            self._site.get("disabled", False),
-            label=_("Temporarily disable this connection"))
-        html.help(
-            _("If you disable a connection, then no data of this site will be shown in the status GUI. "
-              "The replication is not affected by this, however."))
+        return [
+            ("socket", self._site_mgmt.connection_method_valuespec()),
+            ("timeout",
+             Integer(
+                 title=_("Connect timeout"),
+                 size=2,
+                 unit=_("Seconds"),
+                 minvalue=0,
+                 help=_("This sets the time that Multisite waits for a connection "
+                        "to the site to be established before the site is "
+                        "considered to be unreachable. If not set, the operating system "
+                        "defaults are begin used and just one login attempt is being. "
+                        "performed."),
+             )),
+            ("persist",
+             Checkbox(
+                 title=_("Persistent Connection"),
+                 label=_("Use persistent connections"),
+                 help=
+                 _("If you enable persistent connections then Multisite will try to keep open "
+                   "the connection to the remote sites. This brings a great speed up in high-latency "
+                   "situations but locks a number of threads in the Livestatus module of the target site."
+                  ),
+             )),
+            ("url_prefix",
+             TextAscii(
+                 title=_("URL prefix"),
+                 size=60,
+                 help=
+                 _("The URL prefix will be prepended to links of addons like PNP4Nagios "
+                   "or the classical Nagios GUI when a link to such applications points to a host or "
+                   "service on that site. You can either use an absolute URL prefix like <tt>http://some.host/mysite/</tt> "
+                   "or a relative URL like <tt>/mysite/</tt>. When using relative prefixes you needed a mod_proxy "
+                   "configuration in your local system apache that proxies such URLs to the according remote site. "
+                   "Please refer to the <a target=_blank href='%s'>online documentation</a> for details. "
+                   "The prefix should end with a slash. Omit the <tt>/pnp4nagios/</tt> from the prefix."
+                  ) % proxy_docu_url,
+                 allow_empty=False,
+             )),
+            ("status_host",
+             Alternative(
+                 title=_("Status host"),
+                 style="dropdown",
+                 elements=[
+                     FixedValue(None, title=_("No status host"), totext=""),
+                     Tuple(
+                         title=_("Use the following status host"),
+                         orientation="horizontal",
+                         elements=[
+                             DropdownChoice(
+                                 title=_("Site:"),
+                                 choices=site_choices,
+                                 sorted=True,
+                             ),
+                             self._vs_host(),
+                         ],
+                     ),
+                 ],
+                 help=
+                 _("By specifying a status host for each non-local connection "
+                   "you prevent Multisite from running into timeouts when remote sites do not respond. "
+                   "You need to add the remote monitoring servers as hosts into your local monitoring "
+                   "site and use their host state as a reachability state of the remote site. Please "
+                   "refer to the <a target=_blank href='%s'>online documentation</a> for details.")
+                 % status_host_docu_url,
+             )),
+            ("disabled",
+             Checkbox(
+                 title=_("Disable in status GUI"),
+                 label=_("Temporarily disable this connection"),
+                 help=_(
+                     "If you disable a connection, then no data of this site will be shown in the status GUI. "
+                     "The replication is not affected by this, however."),
+             )),
+        ]
 
     def _vs_host(self):
-        return MonitoredHostname()
+        return MonitoredHostname(
+            title=_("Host:"),
+            allow_empty=False,
+        )
 
-    def _page_replication_configuration(self):
-        # Replication
-        forms.header(_("Configuration Replication (Distributed WATO)"))
-        forms.section(_("Replication method"))
-        html.dropdown(
-            "replication", [(None, _("No replication with this site")),
-                            ("slave", _("Slave: push configuration to this site"))],
-            deflt=self._site.get("replication"))
-        html.help(
-            _("WATO replication allows you to manage several monitoring sites with a "
-              "logically centralized WATO. Slave sites receive their configuration "
-              "from master sites. <br><br>Note: Slave sites "
-              "do not need any replication configuration. They will be remote-controlled "
-              "by the master sites."))
-
-        forms.section(_("Multisite-URL of remote site"))
-        html.text_input("multisiteurl", self._site.get("multisiteurl", ""), size=60)
-        html.help(
-            _("URL of the remote Check_MK including <tt>/check_mk/</tt>. "
-              "This URL is in many cases the same as the URL-Prefix but with <tt>check_mk/</tt> "
-              "appended, but it must always be an absolute URL. Please note, that "
-              "that URL will be fetched by the Apache server of the local "
-              "site itself, whilst the URL-Prefix is used by your local Browser."))
-
-        forms.section(_("WATO"), simple=True)
-        html.checkbox(
-            "disable_wato",
-            self._site.get("disable_wato", True),
-            label=_('Disable configuration via WATO on this site'))
-        html.help(
-            _('It is a good idea to disable access to WATO completely on the slave site. '
-              'Otherwise a user who does not now about the replication could make local '
-              'changes that are overridden at the next configuration activation.'))
-
-        forms.section(_("SSL"), simple=True)
-        html.checkbox(
-            "insecure", self._site.get("insecure", False), label=_('Ignore SSL certificate errors'))
-        html.help(
-            _('This might be needed to make the synchronization accept problems with '
-              'SSL certificates when using an SSL secured connection.'))
-
-        forms.section(_('Direct login to Web GUI allowed'), simple=True)
-        html.checkbox(
-            'user_login',
-            self._site.get('user_login', True),
-            label=_('Users are allowed to directly login into the Web GUI of this site'))
-        html.help(
-            _('When enabled, this site is marked for synchronisation every time a Web GUI '
-              'related option is changed in the master site.'))
-
-        forms.section(_("Sync with LDAP connections"), simple=True)
-        self._site_mgmt.user_sync_valuespec().render_input(
-            "user_sync",
-            self._site.get("user_sync",
-                           None if self._new else userdb.user_sync_default_config(self._site_id)))
-        html.br()
-        html.help(
-            _('By default the users are synchronized automatically in the interval configured '
-              'in the connection. For example the LDAP connector synchronizes the users every '
-              'five minutes by default. The interval can be changed for each connection '
-              'individually in the <a href="wato.py?mode=ldap_config">connection settings</a>. '
-              'Please note that the synchronization is only performed on the master site in '
-              'distributed setups by default.<br>'
-              'The remote sites don\'t perform automatic user synchronizations with the '
-              'configured connections. But you can configure each site to either '
-              'synchronize the users with all configured connections or a specific list of '
-              'connections.'))
-
-        if config.mkeventd_enabled:
-            forms.section(_('Event Console'), simple=True)
-            html.checkbox(
-                'replicate_ec',
-                self._site.get("replicate_ec", True),
-                label=_("Replicate Event Console configuration to this site"))
-            html.help(
-                _("This option enables the distribution of global settings and rules of the Event Console "
-                  "to the remote site. Any change in the local Event Console settings will mark the site "
-                  "as <i>need sync</i>. A synchronization will automatically reload the Event Console of "
-                  "the remote site."))
-
-        forms.section(_("Extensions"), simple=True)
-        html.checkbox(
-            "replicate_mkps",
-            self._site.get("replicate_mkps", False),
-            label=_("Replicate extensions (MKPs and files in <tt>~/local/</tt>)"))
-        html.help(
-            _("If you enable the replication of MKPs then during each <i>Activate Changes</i> MKPs "
-              "that are installed on your master site and all other files below the <tt>~/local/</tt> "
-              "directory will be also transferred to the slave site. Note: <b>all other MKPs and files "
-              "below <tt>~/local/</tt> on the slave will be removed</b>."))
+    def _replication_elements(self):
+        return [
+            ("replication",
+             DropdownChoice(
+                 title=_("Enable replication"),
+                 choices=[
+                     (None, _("No replication with this site")),
+                     ("slave", _("Push configuration to this site")),
+                 ],
+                 help=_("WATO replication allows you to manage several monitoring sites with a "
+                        "logically centralized WATO. Remote sites receive their configuration "
+                        "from the central sites. <br><br>Note: Remote sites "
+                        "do not need any replication configuration. They will be remote-controlled "
+                        "by the central sites."),
+             )),
+            ("multisiteurl",
+             HTTPUrl(
+                 title=_("URL of remote site"),
+                 size=60,
+                 help=_(
+                     "URL of the remote Check_MK including <tt>/check_mk/</tt>. "
+                     "This URL is in many cases the same as the URL-Prefix but with <tt>check_mk/</tt> "
+                     "appended, but it must always be an absolute URL. Please note, that "
+                     "that URL will be fetched by the Apache server of the local "
+                     "site itself, whilst the URL-Prefix is used by your local Browser."),
+                 allow_empty=True,
+             )),
+            ("disable_wato",
+             Checkbox(
+                 title=_("Disable remote configuration"),
+                 label=_('Disable configuration via WATO on this site'),
+                 help=_('It is a good idea to disable access to WATO completely on the slave site. '
+                        'Otherwise a user who does not now about the replication could make local '
+                        'changes that are overridden at the next configuration activation.'),
+             )),
+            ("insecure",
+             Checkbox(
+                 title=_("Ignore TLS errors"),
+                 label=_('Ignore SSL certificate errors'),
+                 help=_('This might be needed to make the synchronization accept problems with '
+                        'SSL certificates when using an SSL secured connection.'),
+             )),
+            ("user_login",
+             Checkbox(
+                 title=_('Direct login to Web GUI allowed'),
+                 label=_('Users are allowed to directly login into the Web GUI of this site'),
+                 help=_(
+                     'When enabled, this site is marked for synchronisation every time a Web GUI '
+                     'related option is changed in the master site.'),
+             )),
+            ("user_sync", self._site_mgmt.user_sync_valuespec()),
+            ("replicate_ec",
+             Checkbox(
+                 title=_("Replicate Event Console config"),
+                 label=_("Replicate Event Console configuration to this site"),
+                 help=
+                 _("This option enables the distribution of global settings and rules of the Event Console "
+                   "to the remote site. Any change in the local Event Console settings will mark the site "
+                   "as <i>need sync</i>. A synchronization will automatically reload the Event Console of "
+                   "the remote site."),
+             )),
+            ("replicate_mkps",
+             Checkbox(
+                 title=_("Replicate extensions"),
+                 label=_("Replicate extensions (MKPs and files in <tt>~/local/</tt>)"),
+                 help=
+                 _("If you enable the replication of MKPs then during each <i>Activate Changes</i> MKPs "
+                   "that are installed on your master site and all other files below the <tt>~/local/</tt> "
+                   "directory will be also transferred to the slave site. Note: <b>all other MKPs and files "
+                   "below <tt>~/local/</tt> on the slave will be removed</b>."),
+             )),
+        ]
 
 
 @mode_registry.register
@@ -653,7 +601,7 @@ class ModeDistributedMonitoring(WatoMode):
                 self._show_livestatus_status(table, site_id, site)
                 self._show_replication_status(table, site_id, site)
 
-        has_replication_sites = any(e[1].get("replication") for e in sites)
+        has_replication_sites = any(e[1]["replication"] for e in sites)
         if has_replication_sites:
             html.javascript("cmk.sites.fetch_replication_status();")
 
@@ -683,7 +631,7 @@ class ModeDistributedMonitoring(WatoMode):
 
             html.icon_button(globals_url, title, icon)
 
-        if site.get("replication"):
+        if site["replication"]:
             if site.get("secret"):
                 logout_url = watolib.make_action_link([("mode", "sites"), ("_logout", site_id)])
                 html.icon_button(logout_url, _("Logout"), "autherr")
@@ -701,7 +649,7 @@ class ModeDistributedMonitoring(WatoMode):
         if not config.has_wato_slave_sites():
             return False
 
-        return site.get("replication") or config.site_is_local(site_id)
+        return site["replication"] or config.site_is_local(site_id)
 
     def _show_basic_settings(self, table, site_id, site):
         table.text_cell(_("ID"), site_id)
@@ -714,7 +662,7 @@ class ModeDistributedMonitoring(WatoMode):
 
     def _show_replication_configuration(self, table, site_id, site):
         table.text_cell(_("Replication"))
-        if not site.get("replication"):
+        if not site["replication"]:
             html.icon(_("Replication not enabled for this site"), "disabled")
             return
 
@@ -752,10 +700,12 @@ class ModeAjaxFetchSiteStatus(WatoWebApiMode):
     """AJAX handler for asynchronous fetching of the site status"""
 
     def page(self):
+        config.user.need_permission("wato.sites")
+
         site_states = {}
 
         sites = watolib.SiteManagementFactory().factory().load_sites().items()
-        replication_sites = [e for e in sites if e[1].get("replication")]
+        replication_sites = [e for e in sites if e[1]["replication"]]
         replication_status = ReplicationStatusFetcher().fetch(replication_sites)
 
         for site_id, site in sites:
@@ -774,7 +724,7 @@ class ModeAjaxFetchSiteStatus(WatoWebApiMode):
         - Not logged in
         - And of course: Everything is fine
         """
-        if not site.get("replication"):
+        if not site["replication"]:
             return ""
 
         status = replication_status[site_id]
@@ -1009,7 +959,7 @@ class ModeEditSiteGlobals(GlobalSettingsMode):
                       "in non distributed setups."))
                 return
 
-            if not self._site.get("replication") and not config.site_is_local(self._site_id):
+            if not self._site["replication"] and not config.site_is_local(self._site_id):
                 html.show_error(
                     _("This site is not the master site nor a replication slave. "
                       "You cannot configure specific settings for it."))

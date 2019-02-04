@@ -1,6 +1,5 @@
 import socket
 import ssl
-import os
 from contextlib import closing
 from pathlib2 import Path
 import pytest  # type: ignore
@@ -125,6 +124,11 @@ def test_single_site_connection_socketurl(socket_url, result, monkeypatch):
 def test_create_socket(tls, verify, ca, ca_file_path, monkeypatch, tmpdir):
     ca.initialize()
 
+    ssl_dir = Path("%s/var/ssl" % tmpdir)
+    ssl_dir.mkdir(parents=True)
+    with ssl_dir.joinpath("ca-certificates.crt").open(mode="w", encoding="utf-8") as f:  # pylint: disable=no-member
+        f.write(ca.ca_path.joinpath("ca.pem").open(encoding="utf-8").read())
+
     monkeypatch.setenv("OMD_ROOT", "%s" % tmpdir)
 
     if ca_file_path is not None:
@@ -134,7 +138,7 @@ def test_create_socket(tls, verify, ca, ca_file_path, monkeypatch, tmpdir):
         "unix:/tmp/xyz", tls=tls, verify=verify, ca_file_path=ca_file_path)
 
     if ca_file_path is None:
-        ca_file_path = "%s/ca.pem" % ca.ca_path
+        ca_file_path = "%s/var/ssl/ca-certificates.crt" % tmpdir
 
     sock = live._create_socket(socket.AF_INET)
 

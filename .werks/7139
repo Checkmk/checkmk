@@ -1,0 +1,11 @@
+Title: cisco_ip_sla: Don't crash upon vanished IP SLA
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1549263498
+
+

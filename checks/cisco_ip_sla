@@ -144,8 +144,9 @@ def inventory_cisco_ip_sla(parsed):
         yield index, {}
 
 
-def check_cisco_ip_sla(item, params, parsed):
-    for description, value, unit, type_ in parsed[item]:
+@get_parsed_item_data
+def check_cisco_ip_sla(_item, params, data):
+    for description, value, unit, type_ in data:
         if not value:
             continue
 

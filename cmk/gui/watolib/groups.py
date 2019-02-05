@@ -190,7 +190,7 @@ def save_group_information(all_groups, custom_default_config_dir=None):
                     multisite_groups[what][gid][attr] = value
 
     # Save Check_MK world related parts
-    store.mkdir(check_mk_config_dir)
+    store.makedirs(check_mk_config_dir)
     output = wato_fileheader()
     for what in ["host", "service", "contact"]:
         if check_mk_groups.get(what):
@@ -200,7 +200,7 @@ def save_group_information(all_groups, custom_default_config_dir=None):
     cmk.utils.store.save_file("%s/groups.mk" % check_mk_config_dir, output)
 
     # Users with passwords for Multisite
-    store.mkdir(multisite_config_dir)
+    store.makedirs(multisite_config_dir)
     output = wato_fileheader()
     for what in ["host", "service", "contact"]:
         if multisite_groups.get(what):

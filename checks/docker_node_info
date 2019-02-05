@@ -26,8 +26,16 @@
 
 
 def parse_docker_node_info(info):
+    version = docker_get_version(info)  # pylint: disable=undefined-variable
 
-    return parse_legacy_docker_node_info(info)  # pylint: disable=undefined-variable
+    if version is None:
+        return parse_legacy_docker_node_info(info)  # pylint: disable=undefined-variable
+
+    if len(info) < 2:
+        return {}
+
+    loaded = docker_json_get_obj(info[1])  # pylint: disable=undefined-variable
+    return loaded or {}
 
 
 def check_docker_node_info(_no_item, _no_params, parsed):
@@ -40,7 +48,7 @@ def check_docker_node_info(_no_item, _no_params, parsed):
 
 
 check_info['docker_node_info'] = {
-    'includes': ['legacy_docker.include'],
+    'includes': ['docker.include', 'legacy_docker.include'],
     'parse_function': parse_docker_node_info,
     'inventory_function': discover_single,
     'check_function': check_docker_node_info,
@@ -68,6 +76,7 @@ def check_docker_node_containers(_no_item, params, parsed):
         ("paused", "ContainersPaused", 'paused_'),
         ("stopped", "ContainersStopped", 'stopped_'),
     ):
+
         count = parsed.get(key)
         if count is None:
             yield 3, "%s: count not present in agent output" % title
@@ -89,4 +98,5 @@ check_info["docker_node_info.containers"] = {
     "service_description": "Docker containers",
     "has_perfdata": True,
     "group": "docker_node_containers",
+    'includes': ['docker.include', 'legacy_docker.include'],
 }

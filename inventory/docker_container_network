@@ -26,7 +26,10 @@
 
 
 def parse_docker_container_network(info):
-    parsed = docker_json_get_obj(info[0]) or {}  # pylint: disable=undefined-variable
+    # pylint: disable=undefined-variable
+    version = docker_get_version(info)
+    index = 0 if version is None else 1
+    parsed = docker_json_get_obj(info[index]) or {}
     return parsed
 
 

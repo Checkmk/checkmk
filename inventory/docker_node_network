@@ -26,13 +26,19 @@
 
 
 def parse_docker_network(info):
+    version = docker_get_version(info)  # pylint: disable=undefined-variable
 
-    networks = parse_legacy_docker_network_inspect(info)  # pylint: disable=undefined-variable
-    return dict((n["Id"], n) for n in networks)
+    if version is None:
+        networks = parse_legacy_docker_network_inspect(info)  # pylint: disable=undefined-variable
+        return DeprecatedDict((n["Id"], n) for n in networks)
+
+    networks = (docker_json_get_obj(line) for line in info[1:])  # pylint: disable=undefined-variable
+    return {n["Id"]: n for n in networks if n is not None}
 
 
 def inv_docker_node_network_networks(info, inventory_tree, status_data_tree):
     parsed = parse_docker_network(info)
+
     for network_id, network in parsed.iteritems():
 
         containers = []
@@ -75,6 +81,6 @@ def inv_docker_node_network_networks(info, inventory_tree, status_data_tree):
 
 
 inv_info["docker_node_network.networks"] = {  # pylint: disable=undefined-variable
-    "includes": ["docker.include", "legacy_docker.include"],
+    "includes": ['docker.include', 'legacy_docker.include'],
     "inv_function": inv_docker_node_network_networks,
 }

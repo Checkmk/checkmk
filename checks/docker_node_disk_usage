@@ -26,8 +26,13 @@
 
 
 def parse_docker_node_disk_usage(info):
+    version = docker_get_version(info)  # pylint: disable=undefined-variable
 
-    return parse_legacy_docker_system_df(info)  # pylint: disable=undefined-variable
+    if version is None:
+        return parse_legacy_docker_system_df(info)  # pylint: disable=undefined-variable
+
+    table_rows = map(docker_json_get_obj, info[1:])  # pylint: disable=undefined-variable
+    return {r.get('type'): r for r in table_rows if r is not None}
 
 
 @get_parsed_item_data
@@ -60,7 +65,7 @@ check_info["docker_node_disk_usage"] = {
     "inventory_function": discover(),
     "check_function": check_docker_node_disk_usage,
     "service_description": "Docker disk usage - %s",
-    "includes": ["legacy_docker.include"],
+    "includes": ['docker.include', 'legacy_docker.include'],
     "has_perfdata": True,
     "group": "docker_node_disk_usage",
 }

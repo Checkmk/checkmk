@@ -27,7 +27,11 @@
 
 def parse_docker_container_node_name(info):
     # pylint: disable=undefined-variable
-    return {"NodeName": parse_legacy_docker_container_node_name(info)}
+    version = docker_get_version(info)
+    if version is None:
+        return {"NodeName": parse_legacy_docker_container_node_name(info)}
+
+    return docker_json_get_obj(info[1]) or {}
 
 
 def inv_docker_container_node_name(info, inventory_tree):
@@ -39,6 +43,6 @@ def inv_docker_container_node_name(info, inventory_tree):
 
 
 inv_info['docker_container_node_name'] = {  # pylint: disable=undefined-variable
-    'includes': ['legacy_docker.include'],
+    'includes': ['docker.include', 'legacy_docker.include'],
     'inv_function': inv_docker_container_node_name,
 }

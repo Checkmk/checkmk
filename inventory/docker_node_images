@@ -39,9 +39,25 @@ def _split_subsections(info):
 
 
 def parse_docker_node_images(info):
+    # pylint: disable=undefined-variable
+    version = docker_get_version(info)
 
-    subsections = _split_subsections(info)
-    return parse_legacy_docker_node_images(subsections)  # pylint: disable=undefined-variable
+    if version is None:
+        subsections = _split_subsections(info)
+        return parse_legacy_docker_node_images(subsections)
+
+    subsections = _split_subsections(info[1:])
+    i_images = (docker_json_get_obj(i) for i in subsections.get('images', []))
+    images = {i["Id"]: i for i in i_images if i is not None}
+    i_containers = (docker_json_get_obj(c) for c in subsections.get('containers', []))
+    containers = {c["Id"]: c for c in i_containers if c is not None}
+
+    running_images = [c['Image'] for c in containers.itervalues()]
+
+    for image_id in images:
+        images[image_id]['amount_containers'] = running_images.count(image_id)
+
+    return {'images': images, 'containers': containers}
 
 
 def inv_docker_node_images(info, inventory_tree, status_data_tree):
@@ -72,7 +88,8 @@ def inv_docker_node_images(info, inventory_tree, status_data_tree):
     for container_id, container in sorted(containers.iteritems()):
         status_node.append({
             "id": docker_get_short_id(container_id),  # pylint: disable=undefined-variable
-            "name": container["Names"],
+            "image": docker_get_short_id(container["Image"]),  # pylint: disable=undefined-variable
+            "name": container["Name"],
             "creation": container["Created"],
             "labels": docker_format_labels(container),  # pylint: disable=undefined-variable
             "status": container.get("State", {}).get("Status"),
@@ -80,7 +97,7 @@ def inv_docker_node_images(info, inventory_tree, status_data_tree):
 
 
 inv_info['docker_node_images'] = {  # pylint: disable=undefined-variable
-    'includes': ['docker.include', 'legacy_docker.include'],
+    'includes': ['legacy_docker.include', 'docker.include'],
     'inv_function': inv_docker_node_images,
     'has_status_data': True,
 }

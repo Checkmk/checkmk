@@ -31,7 +31,8 @@ from pathlib2 import Path  # pylint: disable=unused-import
 from OpenSSL import crypto
 from OpenSSL.SSL import FILETYPE_PEM  # type: ignore
 
-CERT_NOT_AFTER = 3 * 365 * 24 * 60 * 60  # 3 years by default
+CERT_NOT_AFTER = 999 * 365 * 24 * 60 * 60  # 999 years by default
+CA_CERT_NOT_AFTER = CERT_NOT_AFTER
 
 
 class CertificateAuthority(object):
@@ -66,7 +67,7 @@ class CertificateAuthority(object):
         # type: () -> Tuple[str, str]
         key = self._make_private_key()
 
-        cert = self._make_cert(self._ca_name, 10 * 365 * 24 * 60 * 60)  # 10 years
+        cert = self._make_cert(self._ca_name, CA_CERT_NOT_AFTER)
         cert.set_issuer(cert.get_subject())
         cert.set_pubkey(key)
         cert.add_extensions([

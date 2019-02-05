@@ -7,7 +7,7 @@
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 #
 # This file is part of Check_MK.
@@ -23,7 +23,11 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-#
+
+factory_settings["netscaler_vserver_default_levels"] = {
+    "health_levels": (100.0, 0.1),
+    "cluster_status": "best",
+}
 
 netscaler_vserver_states = {
     "0": (1, "unknown"),
@@ -77,67 +81,94 @@ netscaler_vserver_entitytypes = {
     "5": "cache redirection",
 }
 
-factory_settings["netscaler_vserver_default_levels"] = {
-    "health_levels": (100.0, 0.1),
-}
+
+def inventory_netscaler_vserver(parsed):
+    for srv_name in parsed:
+        yield srv_name, {}
 
 
-def inventory_netscaler_vserver(info):
-    for line in info:
-        full_server_name = line[10]
-        if full_server_name:
-            server_name = full_server_name
-        else:
-            server_name = line[0]
-        if server_name:
-            yield server_name, {}
+def parse_netscaler_vserver(info):
+    parsed = {}
+    for (node, name, ip, port, svr_type, svr_state, svr_health, svr_entitytype, request_rate,
+         rx_bytes, tx_bytes, full_name) in info:
+
+        server_name = full_name if full_name else name
+        svr_state, svr_state_readable = netscaler_vserver_states.get(svr_state, (1, "unknown"))
+
+        entity_service_type = "Type: %s, Protocol: %s, Socket: %s:%s" % (
+            netscaler_vserver_entitytypes.get(svr_entitytype, "unknown (%s)" % svr_entitytype),
+            netscaler_vserver_types.get(svr_type, "service unknown (%s)" % svr_type),
+            ip,
+            port,
+        )
+
+        tmp_dict = {
+            'node': node,
+            'service_state': (svr_state, svr_state_readable),
+            'entity_service_type': entity_service_type,
+            'request_rate': int(request_rate),
+            'rx_bytes': int(rx_bytes),
+            'tx_bytes': int(tx_bytes),
+        }
+
+        if svr_entitytype in ["1", "2"]:
+            tmp_dict['health'] = float(svr_health)
+
+        parsed.setdefault(server_name, []).append(tmp_dict)
+    return parsed
 
 
-def check_netscaler_vserver(item, params, info):
+@get_parsed_item_data
+def check_netscaler_vserver(item, params, data):
     if params is None:
         params = {}
 
-    for name, ip, port, svr_type, svr_state, \
-        svr_health, svr_entitytype, request_rate, \
-        rx_bytes, tx_bytes, full_name in info:
-        if item in [name, full_name]:
-            svr_state, svr_state_readable = \
-                netscaler_vserver_states.get(svr_state, ("unknown", 1))
-            yield svr_state, "Status: %s" % svr_state_readable
+    cluster_status = params.get('cluster_status', 'best')
+    node_stat_list = []
+    req_rate_list, rx_list, tx_list = [0], [0], [0]
 
-            if svr_entitytype in ["1", "2"]:
-                health_perc = float(svr_health)
-                health_state = 0
-                infotext = "Health: %s" % get_percent_human_readable(health_perc)
-                warn, crit = params["health_levels"]
+    for node in data:
+        node_stat_list.append(node['service_state'][0])
+        req_rate_list.append(node.get('request_rate'))
+        rx_list.append(node.get('rx_bytes'))
+        tx_list.append(node.get('tx_bytes'))
 
-                if health_perc < crit:
-                    health_state = 2
-                elif health_perc < warn:
-                    health_state = 1
+    for node in data:
+        if node['node']:
+            txt = "Status: %s (%s)" % (node['service_state'][1], node['node'])
+        else:
+            txt = "Status: %s" % node['service_state'][1]
+        if cluster_status == 'best':
+            yield min(node_stat_list), txt
+        else:
+            yield node['service_state'][0], txt
 
-                if health_state > 0:
-                    infotext += " (warn/crit below %s/%s)" % \
-                                (get_percent_human_readable(warn),
-                                 get_percent_human_readable(crit))
+    if params.get('entity_service_type') in ["1", "2"]:
+        warn, crit = params.get("health_levels", (None, None))
+        health_perc = data[0]['health']
+        info_txt = "Health: %s" % get_percent_human_readable(health_perc)
+        health_state = 0
+        if crit and health_perc < crit:
+            health_state = 2
+        elif warn and health_perc < warn:
+            health_state = 1
 
-                yield health_state, infotext, \
-                      [("health_perc", health_perc, None, None, 0, 100)]
+        if health_state > 0:
+            info_txt += " (warn/crit below %s/%s)" % (get_percent_human_readable(warn),
+                                                      get_percent_human_readable(crit))
+        yield health_state, info_txt, [("health_perc", health_perc, warn, crit, 0, 100)]
 
-            yield 0, "Type: %s, Protocol: %s, Socket: %s:%s" % (
-                netscaler_vserver_entitytypes.get(svr_entitytype, "unknown (%s)" % svr_entitytype),
-                netscaler_vserver_types.get(svr_type, "service unknown (%s)" % svr_type), ip, port)
+    yield 0, data[0]["entity_service_type"]
 
-            request_rate = int(request_rate)
-            rx_bytes = int(rx_bytes)
-            tx_bytes = int(tx_bytes)
-            yield 0, "Request rate: %s/s, In: %s/s, Out: %s/s" % \
-                     (request_rate, get_bytes_human_readable(rx_bytes),
-                      get_bytes_human_readable(tx_bytes)), \
-                     [("request_rate", request_rate), ("if_in_octets", rx_bytes), ("if_out_octets", tx_bytes)]
+    info_txt = "Request rate: %s/s, In: %s/s, Out: %s/s" % (max(req_rate_list),
+                                                            get_bytes_human_readable(max(rx_list)),
+                                                            get_bytes_human_readable(max(tx_list)))
+    yield 0, info_txt, [("request_rate", max(req_rate_list)), ("if_in_octets", max(rx_list)),
+                        ("if_out_octets", max(tx_list))]
 
 
 check_info["netscaler_vserver"] = {
+    "parse_function": parse_netscaler_vserver,
     "check_function": check_netscaler_vserver,
     "inventory_function": inventory_netscaler_vserver,
     "service_description": "VServer %s",
@@ -160,4 +191,5 @@ check_info["netscaler_vserver"] = {
     "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.5951.1"),
     "group": "netscaler_vserver",
     "default_levels_variable": "netscaler_vserver_default_levels",
+    "node_info": True,
 }

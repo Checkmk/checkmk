@@ -33,11 +33,13 @@ def parse_docker_container_status(info):
     When a container got piggyback data from multiple hosts (e.g. a cluster) this results
     in multiple JSON objects handed over to this check.
     '''
-    if not info or not info[0]:
-        return
+    version = docker_get_version(info)  # pylint: disable=undefined-variable
 
-    parsed = docker_json_get_obj(info[0]) or {}
+    index = 0 if version is None else 1
+    parsed = docker_json_get_obj(info[index]) or {} if info[index:] else {}  # pylint: disable=undefined-variable
 
+    if version is None:
+        return DeprecatedDict(parsed)  # pylint: disable=undefined-variable
     return parsed
 
 
@@ -77,7 +79,7 @@ check_info["docker_container_status.health"] = {
     "inventory_function": inventory_docker_container_status_health,
     "check_function": check_docker_container_status_health,
     "service_description": "Docker container health",
-    'includes': ['docker.include'],
+    'includes': ['docker.include', 'legacy_docker.include'],
 }
 
 #.
@@ -108,5 +110,5 @@ check_info['docker_container_status'] = {
     'inventory_function': discover_single,
     'check_function': check_docker_container_status,
     'service_description': 'Docker container status',
-    'includes': ['docker.include'],
+    'includes': ['docker.include', 'legacy_docker.include'],
 }

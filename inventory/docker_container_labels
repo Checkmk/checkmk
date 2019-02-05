@@ -28,7 +28,9 @@
 
 
 def parse_docker_container_labels(info):
-    data = docker_json_get_obj(info[0]) if info[0:] else None
+    version = docker_get_version(info)
+    index = 0 if version is None else 1
+    data = docker_json_get_obj(info[index]) if info[index:] else None
     return data
 
 

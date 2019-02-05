@@ -1,0 +1,12 @@
+Title: netscaler_vserver: the check is now cluster aware
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1549359528
+Class: feature
+
+The check can now be used together with Check_MK clusters.
+The cluster behaviour can be defined via the corresponding
+WATO rule.

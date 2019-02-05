@@ -61,7 +61,8 @@ class CertificateAuthority(object):
         """Initialize the root CA key / certficate in case it does not exist yet"""
         if self.is_initialized:
             return
-        self._write_pem(self._root_cert_path, *self._create_root_certificate())
+        root_cert, root_key = self._create_root_certificate()
+        self._write_pem(self._root_cert_path, [root_cert], root_key)
 
     def _create_root_certificate(self):
         # type: () -> Tuple[str, str]
@@ -93,10 +94,7 @@ class CertificateAuthority(object):
 
     def create_site_certificate(self, site_id):
         # type: (str) -> str
-        """Creates the key / certificate for the given Check_MK site
-
-        It lazily initializes the CA in case it has not been initialized yet.
-        """
+        """Creates the key / certificate for the given Check_MK site"""
         if not self.is_initialized:
             raise Exception("Certificate authority is not initialized yet")
 
@@ -120,7 +118,8 @@ class CertificateAuthority(object):
 
     def write_site_certificate(self, site_id, cert, key):
         # type: (str, str, str) -> None
-        self._write_pem(self.site_certificate_path(site_id), cert, key)
+        certificate_chain = [cert, self._get_root_certificate()[0]]
+        self._write_pem(self.site_certificate_path(site_id), certificate_chain, key)
 
     def site_certificate_path(self, site_id):
         # type: (str) -> Path
@@ -145,12 +144,13 @@ class CertificateAuthority(object):
         key.generate_key(crypto.TYPE_RSA, 2048)
         return key
 
-    def _write_pem(self, path, cert, key):
-        # type: (Path, str, str) -> None
+    def _write_pem(self, path, certificate_chain, key):
+        # type: (Path, List[str], str) -> None
         path.parent.mkdir(mode=0o770, parents=True, exist_ok=True)
         with path.open(mode="wb") as f:
             f.write(crypto.dump_privatekey(FILETYPE_PEM, key))
-            f.write(crypto.dump_certificate(FILETYPE_PEM, cert))
+            for cert in certificate_chain:
+                f.write(crypto.dump_certificate(FILETYPE_PEM, cert))
         path.chmod(mode=0o660)
 
     def _read_pem(self, path):

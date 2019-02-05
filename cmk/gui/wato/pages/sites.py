@@ -164,9 +164,9 @@ class ModeEditSite(WatoMode):
         self._site_mgmt.save_sites(configured_sites)
 
         if self._new:
-            msg = _("Created new connection to site %s") % html.render_tt(self._site_id)
+            msg = _("Created new connection to site %s") % self._site_id
         else:
-            msg = _("Modified site connection %s") % html.render_tt(self._site_id)
+            msg = _("Modified site connection %s") % self._site_id
 
         # Don't know exactly what have been changed, so better issue a change
         # affecting all domains

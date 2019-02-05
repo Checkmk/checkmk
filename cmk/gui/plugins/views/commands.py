@@ -994,7 +994,7 @@ class CommandScheduleDowntimes(Command):
         if self._has_recurring_downtimes():
             html.hr()
             html.checkbox(
-                "_down_do_recur", False, label=_("Repeat this downtime on a regular base every"))
+                "_down_do_recur", False, label=_("Repeat this downtime on a regular basis every"))
             html.write_text(" ")
 
             from cmk.gui.cee.plugins.wato.cmc import recurring_downtimes_types

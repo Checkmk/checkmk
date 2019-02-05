@@ -75,6 +75,37 @@ from cmk.gui.watolib.activate_changes import clear_site_replication_status
 from cmk.gui.wato.pages.global_settings import GlobalSettingsMode, is_a_checkbox
 
 
+def _site_detail_buttons(site_id, site, current_mode):
+    if current_mode != "edit_site_globals" and _site_globals_editable(site_id, site):
+        html.context_button(
+            _("Site globals"),
+            watolib.folder_preserving_link([("mode", "edit_site_globals"), ("site", site_id)]),
+            "configuration")
+
+    if current_mode != "edit_site":
+        html.context_button(
+            _("Edit site"),
+            watolib.folder_preserving_link([("mode", "edit_site"), ("edit", site_id)]), "edit")
+
+    if current_mode != "site_livestatus_encryption":
+        encrypted_url = watolib.folder_preserving_link([("mode", "site_livestatus_encryption"),
+                                                        ("site", site_id)])
+        html.context_button(_("Livestatus TLS"), encrypted_url, "encrypted")
+
+
+def _site_globals_editable(site_id, site):
+    # Site is a remote site of another site. Allow to edit probably pushed site
+    # specific globals when remote WATO is enabled
+    if watolib.is_wato_slave_site():
+        return True
+
+    # Local site: Don't enable site specific locals when no remote sites configured
+    if not config.has_wato_slave_sites():
+        return False
+
+    return site["replication"] or config.site_is_local(site_id)
+
+
 @mode_registry.register
 class ModeEditSite(WatoMode):
     @classmethod
@@ -132,11 +163,8 @@ class ModeEditSite(WatoMode):
         super(ModeEditSite, self).buttons()
         html.context_button(
             _("All Sites"), watolib.folder_preserving_link([("mode", "sites")]), "back")
-        if not self._new and self._site["replication"]:
-            html.context_button(
-                _("Site-Globals"),
-                watolib.folder_preserving_link([("mode", "edit_site_globals"),
-                                                ("site", self._site_id)]), "configuration")
+        if not self._new:
+            _site_detail_buttons(self._site_id, self._site, current_mode=self.name())
 
     def action(self):
         if not html.check_transaction():
@@ -633,7 +661,7 @@ class ModeDistributedMonitoring(WatoMode):
                                                         ("site", site_id)])
         html.icon_button(encrypted_url, _("Show details about livestatus encryption"), "encrypted")
 
-        if self._site_globals_editable(site_id, site):
+        if _site_globals_editable(site_id, site):
             globals_url = watolib.folder_preserving_link([("mode", "edit_site_globals"),
                                                           ("site", site_id)])
 
@@ -654,18 +682,6 @@ class ModeDistributedMonitoring(WatoMode):
             else:
                 login_url = watolib.make_action_link([("mode", "sites"), ("_login", site_id)])
                 html.icon_button(login_url, _("Login"), "authok")
-
-    def _site_globals_editable(self, site_id, site):
-        # Site is a remote site of another site. Allow to edit probably pushed site
-        # specific globals when remote WATO is enabled
-        if watolib.is_wato_slave_site():
-            return True
-
-        # Local site: Don't enable site specific locals when no remote sites configured
-        if not config.has_wato_slave_sites():
-            return False
-
-        return site["replication"] or config.site_is_local(site_id)
 
     def _show_basic_settings(self, table, site_id, site):
         table.text_cell(_("ID"), site_id)
@@ -895,16 +911,13 @@ class ModeEditSiteGlobals(GlobalSettingsMode):
             self._current_settings = self._site.get("globals", {})
 
     def title(self):
-        return _("Edit site specific global settings of %r") % self._site_id
+        return _("Edit site specific global settings of %s") % self._site_id
 
     def buttons(self):
         super(ModeEditSiteGlobals, self).buttons()
         html.context_button(
             _("All Sites"), watolib.folder_preserving_link([("mode", "sites")]), "back")
-        html.context_button(
-            _("Connection"),
-            watolib.folder_preserving_link([("mode", "edit_site"), ("edit", self._site_id)]),
-            "sites")
+        _site_detail_buttons(self._site_id, self._site, current_mode=self.name())
 
     # TODO: Consolidate with ModeEditGlobals.action()
     def action(self):
@@ -1032,10 +1045,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
         super(ModeSiteLivestatusEncryption, self).buttons()
         html.context_button(
             _("All Sites"), watolib.folder_preserving_link([("mode", "sites")]), "back")
-        html.context_button(
-            _("Connection"),
-            watolib.folder_preserving_link([("mode", "edit_site"), ("edit", self._site_id)]),
-            "sites")
+        _site_detail_buttons(self._site_id, self._site, current_mode=self.name())
 
     def action(self):
         if not html.check_transaction():

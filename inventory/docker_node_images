@@ -50,7 +50,7 @@ def inv_docker_node_images(info, inventory_tree, status_data_tree):
 
 
 inv_info['docker_node_images'] = {
-    'includes': ['docker.include'],
+    'includes': ['legacy_docker.include'],
     'inv_function': inv_docker_node_images,
     'has_status_data': True,
 }
@@ -83,7 +83,7 @@ def _format_labels(labels):
 # using the extra_sections feature. In case this is not possible for the inventory
 # plugins at the moment we should make it possible.
 inv_info['docker_node_images.containers'] = {
-    'includes': ['docker.include'],
+    'includes': ['legacy_docker.include'],
     'inv_function': inv_docker_node_images_containers,
     'has_status_data': True,
 }

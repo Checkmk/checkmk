@@ -62,7 +62,7 @@ check_info["docker_node_disk_usage"] = {
     "inventory_function": inventory_docker_node_disk_usage,
     "check_function": check_docker_node_disk_usage,
     "service_description": "Docker disk usage - %s",
-    "includes": ["docker.include"],
+    "includes": ["legacy_docker.include"],
     "has_perfdata": True,
     "group": "docker_node_disk_usage",
 }

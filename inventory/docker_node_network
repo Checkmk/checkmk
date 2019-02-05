@@ -69,6 +69,6 @@ def inv_docker_node_network_networks(info, inventory_tree, status_data_tree):
 
 
 inv_info["docker_node_network.networks"] = {
-    "includes": ["docker.include"],
+    "includes": ["legacy_docker.include"],
     "inv_function": inv_docker_node_network_networks,
 }

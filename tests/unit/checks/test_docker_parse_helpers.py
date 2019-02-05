@@ -3,7 +3,7 @@ import os
 
 pytestmark = pytest.mark.checks
 
-execfile(os.path.join(os.path.dirname(__file__), '../../../checks/docker.include'))
+execfile(os.path.join(os.path.dirname(__file__), '../../../checks/legacy_docker.include'))
 
 
 @pytest.mark.parametrize('indata,outdata', [

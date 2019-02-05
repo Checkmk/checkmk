@@ -7,7 +7,7 @@ pytestmark = pytest.mark.checks
 
 regex = re.compile
 
-execfile(os.path.join(os.path.dirname(__file__), '../../../checks/docker.include'))
+execfile(os.path.join(os.path.dirname(__file__), '../../../checks/legacy_docker.include'))
 
 
 REQUIRED_IMAGE_KEYS = (

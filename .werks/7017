@@ -18,13 +18,25 @@ communication in their local setup.
 To improve the security for all users of Check_MK, we have now changed
 the Livestatus TCP communication to be encrypted by default using TLS.
 This is realized using an internal CA and internally generated
-certificates.
+certificates by default.
 
 Existing sites that already have Livestatus via TCP enabled before
 updating to 1.6 still use the unencrypted communication for
 compatibility. An analyze configuration" test will create a CRITICAL
 message about the unencrypted Livestatus TCP configuration in this
 situation.
+
+If you want to encrypt the Livestatus communication between two sites,
+you first have to update both sites to use Check_MK 1.6. Then you will
+have to enable the 'omd config' option LIVESTATUS_TCP_TLS. After that
+go to the 'Distributed Monitoring' configuration page on the central
+site and enable "Encryption" for the remote site connection. If you use
+the internal site certificate, you will now have open the
+"Livestatus encryption" detail page of the site which should show you
+that the certificate of the remote site is not trusted by the central
+site. Klick on the "Add to trusted CAs" icon button in the certificate
+chain list to establish the tust with the remote site. Once this is
+done your livestatus connection should be encrypted and working fine.
 
 Technical details:
 
@@ -38,14 +50,20 @@ Technical details:
   to manage the sites local certificates.</li>
 <li>The site local certificate is created automatically during update or
   site creation.</li>
-<li>The sites local CA and certificates are stored in 'etc/ssl'. The CA
-certificate is always located at 'etc/ssl/ca.pem'.</li>
+<li>The CA certificate is always located at 'etc/ssl/ca.pem'.</li>
+<li>The site certificate is located at 'etc/ssl/sites/[site].pem'</li>
+<li>Both files are in PEM format and need to have the private key and
+  certificate stored in a single file.</li>
 <li>The keys are 2048 bit RSA keys and the certificates are signed using
   SHA512.</li>
-<li>The CA certificate is valid for 10 years, the site certificates are
-  valid for 3 years.</li>
-<li>Check_MK / OMD code may use 'omdlib.certs.SiteLocalCA(site_id)' to
-  use the local CA</li>
+<li>These certificates are valid for 999 years.</li>
+<li>The site PEM file should contain the certificates of the whole
+  certificate chain.</li>
+<li>In case you want to use other site certificates, you are free to
+  replace the site PEM file with your own. Please note that you will
+  have to restart the stunnel process of the site to apply the change.</li>
 <li>stunnel is introduced as site internal daemon that serves the TLS
-  wrapped socket once it has been enabled through 'omd config'.
+  wrapped socket once it has been enabled through 'omd config'.</li>
+<li>The livestatus_status check is now checking for the livestatus
+  certificate expiration time.</li>
 </ul>

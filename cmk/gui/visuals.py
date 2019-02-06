@@ -1087,24 +1087,24 @@ def filters_of_visual(visual, info_keys, link_filters=None):
     if link_filters is None:
         link_filters = []
 
-    filters = []
+    filters = {}
 
     for info_key in info_keys:
         if info_key in visual['single_infos']:
             for key in info_params(info_key):
-                filters.append(get_filter(key))
+                filters[key] = get_filter(key)
             continue
 
         for key, val in visual['context'].items():
             if isinstance(val, dict):  # this is a real filter
                 try:
-                    filters.append(get_filter(key))
+                    filters[key] = get_filter(key)
                 except KeyError:
                     pass  # Silently ignore not existing filters
 
     # See get_link_filter_names() comment for details
     for key, dst_key in get_link_filter_names(visual, info_keys, link_filters):
-        filters.append(get_filter(dst_key))
+        filters[dst_key] = get_filter(dst_key)
 
     # add ubiquitary_filters that are possible for these infos
     for fn in get_ubiquitary_filters():
@@ -1114,9 +1114,9 @@ def filters_of_visual(visual, info_keys, link_filters=None):
         if fn == "wato_folder" and (not filter_.available() or 'host' in visual['single_infos']):
             continue
         if not filter_.info or filter_.info in info_keys:
-            filters.append(filter_)
+            filters[fn] = filter_
 
-    return list(set(filters))  # remove duplicates
+    return filters.values()
 
 
 # TODO: Cleanup this special case

@@ -595,7 +595,6 @@ class S3Summary(AWSSectionGeneric):
             if location is None or location != self._region:
                 continue
             bucket['LocationConstraint'] = location
-
             try:
                 response = self._client.get_bucket_tagging(Bucket=bucket_name)
                 tagging = response['TagSet']
@@ -781,14 +780,13 @@ class ELBSummary(AWSSectionGeneric):
     def _compute_content(self, raw_content, colleague_contents):
         content_by_piggyback_hosts = {}
         for load_balancer in raw_content.content:
-            content_by_piggyback_hosts.setdefault(load_balancer['LoadBalancerName'],
-                                                  []).append(load_balancer)
+            content_by_piggyback_hosts.setdefault(load_balancer['LoadBalancerName'], load_balancer)
         return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
 
     def _create_results(self, computed_content):
         return [
-            AWSSectionResult(piggyback_hostname, rows)
-            for piggyback_hostname, rows in computed_content.content.iteritems()
+            AWSSectionResult(piggyback_hostname, [content])
+            for piggyback_hostname, content in computed_content.content.iteritems()
         ]
 
 
@@ -804,14 +802,12 @@ class ELBHealth(AWSSectionGeneric):
     def _get_colleague_contents(self):
         colleague = self._received_results.get('elb_summary')
         if colleague and colleague.content:
-            return AWSColleagueContents(
-                [load_balancer['LoadBalancerName'] for load_balancer in colleague.content],
-                colleague.cache_timestamp)
-        return AWSColleagueContents([], 0)
+            return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
+        return AWSColleagueContents({}, 0)
 
     def _fetch_raw_content(self, colleague_contents):
         load_balancers = {}
-        for load_balancer_name in colleague_contents.content:
+        for load_balancer_name in colleague_contents.content.iterkeys():
             response = self._client.describe_instance_health(LoadBalancerName=load_balancer_name)
             try:
                 states = response['InstanceStates']
@@ -827,8 +823,8 @@ class ELBHealth(AWSSectionGeneric):
 
     def _create_results(self, computed_content):
         return [
-            AWSSectionResult(piggyback_hostname, rows)
-            for piggyback_hostname, rows in computed_content.content.iteritems()
+            AWSSectionResult(piggyback_hostname, content)
+            for piggyback_hostname, content in computed_content.content.iteritems()
         ]
 
 
@@ -844,15 +840,13 @@ class ELB(AWSSectionCloudwatch):
     def _get_colleague_contents(self):
         colleague = self._received_results.get('elb_summary')
         if colleague and colleague.content:
-            return AWSColleagueContents(
-                [load_balancer['LoadBalancerName'] for load_balancer in colleague.content],
-                colleague.cache_timestamp)
-        return AWSColleagueContents([], 0)
+            return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
+        return AWSColleagueContents({}, 0)
 
     def _get_metrics(self, colleague_contents):
         metrics = []
         idx = 0
-        for load_balancer_name in colleague_contents.content:
+        for load_balancer_name in colleague_contents.content.iterkeys():
             for metric_name, stat in [
                     # Load balancer metrics
                 ("RequestCount", "Sum"),

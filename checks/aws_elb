@@ -248,8 +248,15 @@ check_info['aws_elb.http_backend'] = {
 
 
 def check_aws_elb_healthy_hosts(item, params, parsed):
-    healthy_hosts = parsed.get("HealthyHostCount")
-    unhealthy_hosts = parsed.get("UnHealthyHostCount")
+    try:
+        healthy_hosts = int(parsed["HealthyHostCount"])
+    except (KeyError, ValueError):
+        healthy_hosts = None
+
+    try:
+        unhealthy_hosts = int(parsed["UnHealthyHostCount"])
+    except (KeyError, ValueError):
+        unhealthy_hosts = None
 
     if healthy_hosts is not None:
         yield 0, 'Healthy hosts: %s' % healthy_hosts

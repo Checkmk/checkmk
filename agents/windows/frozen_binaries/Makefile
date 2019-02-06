@@ -37,7 +37,7 @@ mk_logwatch.exe: src/python-$(PYTHON_VERSION).msi $(PYTHON_PACKAGES) src/vcredis
 	cp $(BUILD_DIR)/drive_c/compile/dist/mk_logwatch.exe ../plugins
 	rm -rf $(BUILD_DIR)
 
-mk_jolokia.exe: src/python-$(PYTHON_VERSION).msi $(PYTHON_PACKAGES) src/vcredist_x87.exe $(PLUGINS_DIR)/mk_jolokia.py
+mk_jolokia.exe: src/python-$(PYTHON_VERSION).msi $(PYTHON_PACKAGES) src/vcredist_x86.exe $(PLUGINS_DIR)/mk_jolokia.py
 	mkdir $(BUILD_DIR) ; \
 		cd $(BUILD_DIR) ; \
 		cp -pr $(CURDIR)/src/* . ; \

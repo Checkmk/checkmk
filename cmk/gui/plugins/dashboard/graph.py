@@ -112,8 +112,8 @@ class GraphDashlet(Dashlet):
         ]
 
         import cmk.gui.metrics as metrics
-        import cmk.gui.cee.plugins.metrics.graphs as graphs
         if metrics.cmk_graphs_possible():
+            import cmk.gui.cee.plugins.metrics.graphs as graphs
             elements += [
                 ("graph_render_options",
                  graphs.vs_graph_render_options(

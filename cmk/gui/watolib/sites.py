@@ -188,7 +188,7 @@ class SiteManagement(object):
               "transport. Starting with Check_MK 1.6 it is possible to use encrypted Livestatus "
               "communication. Sites created with 1.6 will automatically use encrypted communication "
               "by default. Sites created with previous versions need to be configured manually to "
-              "enable the encryption. Have a look at <a href=\"werks.py?werk=7017\">werk #7017</a> "
+              "enable the encryption. Have a look at <a href=\"werk.py?werk=7017\">werk #7017</a> "
               "for further information."),
         )
 

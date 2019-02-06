@@ -208,7 +208,7 @@ class JolokiaInstance(object):
             required_keys.add("service_password")
         missing_keys = required_keys - set(config.keys())
         if missing_keys:
-            raise ValueError(err_msg % ("Missing key(s): %s" % ", ".join(missing_keys)))
+            raise ValueError(err_msg % ("Missing key(s): %s" % ", ".join(sorted(missing_keys))))
 
         if not instance:
             instance = str(config["port"])

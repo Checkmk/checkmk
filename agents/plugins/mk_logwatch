@@ -733,6 +733,25 @@ class Options(object):
             sys.exit(1)
 
 
+def find_matching_logfiles(glob_pattern):
+    """
+    Glob matching of hard linked, unbroken soft linked/symlinked files.
+    No tilde expansion is done, but *, ?, and character ranges expressed with []
+    will be correctly matched. No support for recursive globs ** (supported
+    beginning with Python3.5 only). Hard linked dublicates of files are not filtered.
+    Soft links may not be detected properly dependent on the Python runtime
+    [Python Standard Lib, os.path.islink()].
+    """
+    files = []
+    for match in glob.glob(glob_pattern):
+        if os.path.isdir(match):
+            continue
+        if os.path.islink(match):
+            match = os.readlink(match)
+        files.append(match)
+    return files
+
+
 def parse_sections(config):
     """
     Returns dict with logfile name as key and either tuple of (patterns, options)
@@ -751,8 +770,7 @@ def parse_sections(config):
 
         # Then handle the file patterns
         for glob_pattern in (f for f in filenames if '=' not in f):
-
-            logfiles = glob.glob(glob_pattern)  # TODO: discard dirs via filter
+            logfiles = find_matching_logfiles(glob_pattern)
             if opt.regex is not None:
                 logfiles = [f for f in logfiles if opt.regex.search(f)]
             if not logfiles:

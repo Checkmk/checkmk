@@ -633,7 +633,7 @@ class S3Summary(AWSSectionGeneric):
         return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
 
     def _create_results(self, computed_content):
-        return [AWSSectionResult("", computed_content.content)]
+        return [AWSSectionResult("", None)]
 
 
 class S3(AWSSectionCloudwatch):
@@ -648,14 +648,14 @@ class S3(AWSSectionCloudwatch):
     def _get_colleague_contents(self):
         colleague = self._received_results.get('s3_summary')
         if colleague and colleague.content:
-            return AWSColleagueContents([bucket['Name'] for bucket in colleague.content],
+            return AWSColleagueContents({bucket['Name']: bucket for bucket in colleague.content},
                                         colleague.cache_timestamp)
         return AWSColleagueContents([], 0)
 
     def _get_metrics(self, colleague_contents):
         metrics = []
         idx = 0
-        for bucket_name in colleague_contents.content:
+        for bucket_name in colleague_contents.content.iterkeys():
             for metric_name, unit, storage_classes in [
                 ("BucketSizeBytes", "Bytes", [
                     "StandardStorage",
@@ -689,6 +689,10 @@ class S3(AWSSectionCloudwatch):
         return metrics
 
     def _compute_content(self, raw_content, colleague_contents):
+        for row in raw_content.content:
+            bucket = colleague_contents.content.get(row['Label'])
+            if bucket:
+                row.update(bucket)
         return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
 
     def _create_results(self, computed_content):

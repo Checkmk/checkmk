@@ -148,6 +148,12 @@ class ModeEditSite(WatoMode):
                 "replication": None,
             }
 
+            if watolib.ConfigDomainLiveproxy.enabled():
+                self._site.update({
+                    "proxy": {},
+                    "timeout": 2,
+                })
+
         else:
             try:
                 self._site = configured_sites[self._site_id]
@@ -289,11 +295,13 @@ class ModeEditSite(WatoMode):
                  size=2,
                  unit=_("Seconds"),
                  minvalue=0,
-                 help=_("This sets the time that Multisite waits for a connection "
+                 help=_("This sets the time that the GUI waits for a connection "
                         "to the site to be established before the site is "
-                        "considered to be unreachable. If not set, the operating system "
-                        "defaults are begin used and just one login attempt is being. "
-                        "performed."),
+                        "considered to be unreachable. It is highly recommended to set a value "
+                        "as low as possible here because this setting directly affects the GUI "
+                        "response time when the destionation is not reachable. When using the "
+                        "Livestatus Proxy Daemon the GUI connects to the local proxy, in this "
+                        "situation a lower value, like 2 seconds is recommended."),
              )),
             ("persist",
              Checkbox(

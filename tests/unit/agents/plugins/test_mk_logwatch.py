@@ -210,3 +210,89 @@ def test_save_status(tmpdir):
     assert sorted(fake_status_file.read().splitlines()) == [
         '/var/log/messages|7767698|32455445', '/var/test/x12134.log|12345|32444355'
     ]
+
+
+@pytest.mark.parametrize("pattern_suffix, file_suffixes", [
+    ("/*", ["/file.log", "/hard_linked_file_a.log", "/hard_linked_file_b.log", "/symlinked_file.log"]),
+    ("/**", ["/file.log", "/hard_linked_file_a.log", "/hard_linked_file_b.log", "/symlinked_file.log"]),
+    ("/subdir/*", ["/subdir/another_symlinked_file.log"]),
+    ("/symlink_to_dir/*", ["/symlink_to_dir/yet_another_file.log"]),
+])
+def test_find_matching_logfiles(fake_filesystem, pattern_suffix, file_suffixes):
+    fake_fs_path = str(fake_filesystem)
+    files = mk_logwatch.find_matching_logfiles(fake_fs_path + pattern_suffix)
+    assert sorted(files) == [fake_fs_path + fs for fs in file_suffixes]
+
+
+@pytest.fixture
+def fake_filesystem(tmp_path):
+    """
+    root
+      file.log
+      symlink_to_file.log -> symlinked_file.log
+      /subdir
+        symlink_to_file.log -> another_symlinked_file.log
+        /subsubdir
+          yaf.log
+      /symlink_to_dir -> /symlinked_dir
+      /symlinked_dir
+        yet_another_file.log
+      hard_linked_file_a.log = hard_linked_file_b.log
+    """
+    fake_fs = tmp_path / "root"
+    fake_fs.mkdir()
+
+    fake_file = fake_fs / "file.log"
+    fake_file.write_text(u"blub")
+
+    fake_fs_subdir = fake_fs / "subdir"
+    fake_fs_subdir.mkdir()
+
+    fake_fs_subsubdir = fake_fs / "subdir" / "subsubdir"
+    fake_fs_subsubdir.mkdir()
+    fake_subsubdir_file = fake_fs_subsubdir / "yaf.log"
+    fake_subsubdir_file.write_text(u"bla")
+
+    fake_fs_another_subdir = fake_fs / "another_subdir"
+    fake_fs_another_subdir.mkdir()
+
+    fake_symlink_file_root_level = fake_fs / "symlink_to_file.log"
+    fake_symlink_file_root_level.symlink_to(fake_fs / "symlinked_file.log")
+    assert fake_symlink_file_root_level.is_symlink()
+
+    fake_symlink_file_subdir_level = fake_fs_subdir / "symlink_to_file.log"
+    fake_symlink_file_subdir_level.symlink_to(
+        fake_fs_subdir / "another_symlinked_file.log", target_is_directory=False)
+    assert fake_symlink_file_subdir_level.is_symlink()
+
+    fake_fs_symlink_to_dir = fake_fs / "symlink_to_dir"
+    fake_fs_symlinked_dir = fake_fs / "symlinked_dir"
+    fake_fs_symlinked_dir.mkdir()
+    symlinked_file = fake_fs_symlinked_dir / "yet_another_file.log"
+    symlinked_file.write_text(u"bla")
+    fake_fs_symlink_to_dir.symlink_to(fake_fs_symlinked_dir, target_is_directory=True)
+
+    hard_linked_file_a = fake_fs / "hard_linked_file_a.log"
+    hard_linked_file_a.write_text(u"bla")  # only create src via writing
+    hard_linked_file_b = fake_fs / "hard_linked_file_b.log"
+    os.link(str(hard_linked_file_a), str(hard_linked_file_b))
+    assert os.stat(str(hard_linked_file_a)) == os.stat(str(hard_linked_file_b))
+
+    return fake_fs
+
+
+def _print_tree(directory, resolve=True):
+    """
+    Print fake filesystem with optional expansion of symlinks.
+    Don't remove this helper function. Used for debugging.
+    """
+    print('%s' % directory)
+    for path in sorted(directory.rglob('*')):
+        if resolve:
+            try:  # try resolve symlinks
+                path = path.resolve()
+            except Exception:
+                pass
+        depth = len(path.relative_to(directory).parts)
+        spacer = '    ' * depth
+        print('%s%s' % (spacer, path.name))

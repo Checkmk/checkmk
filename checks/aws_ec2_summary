@@ -55,11 +55,7 @@ def check_aws_ec2_summary(item, params, parsed):
 
     yield 0, "Instances: %s" % sum([len(v) for v in instances_by_state.itervalues()])
     for instance_state, instances in instances_by_state.iteritems():
-        if instance_state == 'running':
-            state = 0
-        else:
-            state = 1
-        yield state, "%s: %s" % (instance_state, len(instances))
+        yield 0, "%s: %s" % (instance_state, len(instances))
 
     if long_output:
         yield 0, "\n%s" % "\n".join(long_output)

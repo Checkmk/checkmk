@@ -37,7 +37,7 @@ mk_logwatch.exe: src/python-$(PYTHON_VERSION).msi $(PYTHON_PACKAGES) src/vcredis
 	cp $(BUILD_DIR)/drive_c/compile/dist/mk_logwatch.exe ../plugins
 	rm -rf $(BUILD_DIR)
 
-mk_jolokia.exe: src/python-$(PYTHON_VERSION).msi $(PYTHON_PACKAGES) src/vcredist_x86.exe $(PLUGINS_DIR)/mk_jolokia
+mk_jolokia.exe: src/python-$(PYTHON_VERSION).msi $(PYTHON_PACKAGES) src/vcredist_x87.exe $(PLUGINS_DIR)/mk_jolokia.py
 	mkdir $(BUILD_DIR) ; \
 		cd $(BUILD_DIR) ; \
 		cp -pr $(CURDIR)/src/* . ; \
@@ -54,7 +54,7 @@ mk_jolokia.exe: src/python-$(PYTHON_VERSION).msi $(PYTHON_PACKAGES) src/vcredist
 		cd drive_c/pip ; \
 		wine c:\\Python27\\python.exe -m pip install --no-index --find-links="c:\\pip" * ; \
 		mkdir $(BUILD_DIR)/drive_c/compile ; \
-		cp $(PLUGINS_DIR)/mk_jolokia $(BUILD_DIR)/drive_c/compile/mk_jolokia.py ; \
+		cp $(PLUGINS_DIR)/mk_jolokia.py $(BUILD_DIR)/drive_c/compile/mk_jolokia.py ; \
 		cd $(BUILD_DIR)/drive_c/compile ; \
 		wine c:\\Python27\\Scripts\\pyinstaller.exe \
 			--clean \

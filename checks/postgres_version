@@ -26,11 +26,19 @@
 
 # <<<postgres_version>>>
 # PostgreSQL 9.3.6 on x86_64-unknown-linux-gnu, compiled by gcc (Ubuntu 4.8.2-19ubuntu1) 4.8.2, 64-bit
-
-# instance
+#
+# # instance
 # <<<postgres_version>>>
 # [[[foobar]]]
 # PostgreSQL 9.3.6 on x86_64-unknown-linux-gnu, compiled by gcc (Ubuntu 4.8.2-19ubuntu1) 4.8.2, 64-bit
+#
+# # In case the server has been stopped:
+# <<<postgres_version:sep(1)>>>
+#
+# psql: could not connect to server: No such file or directory
+#     Is the server running locally and accepting
+#     connections on Unix domain socket "/var/run/postgresql/.s.PGSQL.5437"?
+#
 
 
 def parse_postgres_version(info):
@@ -44,19 +52,16 @@ def parse_postgres_version(info):
     return parsed
 
 
-def inventory_postgres_version(parsed):
-    for instance in parsed:
-        yield instance, None
-
-
-def check_postgres_version(item, _no_params, parsed):
-    if item in parsed:
-        yield 0, parsed[item]
+@get_parsed_item_data
+def check_postgres_version(_no_item, _no_params, data):
+    if "could not connect" in data:
+        raise MKCounterWrapped("Login into database failed")
+    yield 0, data
 
 
 check_info['postgres_version'] = {
     "parse_function": parse_postgres_version,
-    "inventory_function": inventory_postgres_version,
+    "inventory_function": discover(),
     "check_function": check_postgres_version,
     "service_description": "PostgreSQL Version %s",
 }

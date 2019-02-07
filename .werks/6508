@@ -1,0 +1,13 @@
+Title: Set owner when event is changed by user
+Level: 1
+Component: ec
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p12
+Date: 1543306731
+
+When the event console processes one of the commands UDPATE, CHANGESTATE,
+ACTION, or DELETE, the owner of the corresponding event is upated to the
+user given in the command.

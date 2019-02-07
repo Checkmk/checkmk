@@ -1,0 +1,148 @@
+## Documentation
+# https://github.com/sasstools/sass-lint/tree/master/docs/rules
+
+## Linter Options
+options:
+  merge-default-rules: false
+
+## Rule Configuration
+rules:
+  bem-depth:
+    - 1
+    -
+      max-depth: 6
+  border-zero:
+   - 2
+   -
+      convention: 'none'
+  brace-style:
+    - 0
+    -
+      allow-single-line: false
+  clean-import-paths: 0
+  empty-line-between-blocks:
+    - 2
+    -
+      allow-single-line-rulesets: true
+  extends-before-mixins: 2
+  extends-before-declarations: 2
+  final-newline: 2
+  force-attribute-nesting: 0
+  force-element-nesting: 0
+  force-pseudo-nesting: 0
+  hex-length: 2
+  hex-notation:
+    - 2
+    -
+      style: lowercase
+  indentation:
+    - 2
+    -
+      size: 2
+  leading-zero:
+    - 0
+    -
+      include: true
+  mixins-before-declarations:
+    - 2
+    -
+      exclude:
+        - media
+  nesting-depth:
+    - 1
+    -
+      max-depth: 6
+  no-color-keywords: 2
+  no-color-literals:
+    - 0
+    -
+      allow-rgba: true
+  no-css-comments: 0
+  no-debug: 1
+  no-duplicate-properties:
+    - 1
+    -
+      exclude:
+        - src
+  no-empty-rulesets: 2
+  no-extends: 0
+  no-ids: 0
+  no-important: 1
+  no-invalid-hex: 2
+  no-mergeable-selectors: 0
+  no-misspelled-properties: 2
+  no-qualifying-elements:
+    - 2
+    -
+      allow-element-with-attribute: true
+  no-trailing-whitespace: 2
+  no-trailing-zero: 2
+  no-transition-all: 0
+  no-url-protocols: 2
+  no-vendor-prefixes: 1
+  no-warn: 0
+  one-declaration-per-line: 2
+  placeholder-in-extend: 0
+  property-sort-order:
+    - 1
+    -
+      order: 'recess'
+  property-units:
+    - 2
+    -
+      global: ['rem', 'vh', 'vw', '%', 's', 'em', 'px']
+  quotes:
+    - 2
+    -
+      style: double
+  shorthand-values: 2
+  single-line-per-selector: 0
+  space-after-bang: 2
+  space-after-colon: 2
+  space-after-comma: 2
+  space-around-operator: 2
+  space-before-bang: 2
+  space-before-brace: 2
+  space-before-colon: 2
+  space-between-parens: 2
+  trailing-semicolon: 2
+  url-quotes: 2
+  variable-for-property: 0
+  zero-unit: 2
+  # name formats
+  class-name-format:
+    - 2
+    -
+      allow-leading-underscore: false
+      convention: 'hyphenatedbem'
+      ignore:
+        - mod_cssanimations
+        - mod_csstransforms
+        - mod_supports
+        - mod_csstransforms3d
+        - mod_csstransitions
+  function-name-format:
+    - 2
+    -
+      allow-leading-underscore: false
+      convention: 'hyphenatedlowercase'
+  id-name-format:
+    - 2
+    -
+      allow-leading-underscore: false
+      convention: 'hyphenatedlowercase'
+  mixin-name-format:
+    - 0
+    -
+      allow-leading-underscore: false
+      convention: 'hyphenatedlowercase'
+  placeholder-name-format:
+    - 2
+    -
+      allow-leading-underscore: false
+      convention: 'hyphenatedlowercase'
+  variable-name-format:
+    - 0
+    -
+      allow-leading-underscore: false
+      convention: 'hyphenatedlowercase'

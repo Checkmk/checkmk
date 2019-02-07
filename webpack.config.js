@@ -1,12 +1,16 @@
 const path = require("path");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const FixStyleOnlyEntriesPlugin = require("webpack-fix-style-only-entries");
 
 module.exports = {
     mode: "production",
     entry: {
         main: "./web/htdocs/js/index.js",
         mobile: "./web/htdocs/js/mobile.js",
-        side: "./web/htdocs/js/side_index.js"
+        side: "./web/htdocs/js/side_index.js",
+        themes: [
+            "./web/htdocs/themes/facelift/theme.scss",
+        ],
     },
     output: {
         path: path.resolve(__dirname, "web/htdocs/js"),
@@ -37,6 +41,8 @@ module.exports = {
                     }
                 }
             },
+
+            // needed for plugin styles (like select2)
             {
                 test: /\.css$/,
                 use: [
@@ -48,10 +54,52 @@ module.exports = {
                     },
                     "css-loader"
                 ]
-            }
+            },
+
+            // needed for theme CSS files
+            {
+                test: /\.scss$/,
+                use: [
+                    // 5. Write to theme specific file
+                    {
+                        loader: "file-loader",
+                        options: {
+                            name: "../themes/facelift/theme.css"
+                        }
+                    },
+                    // 4. Extract CSS definitions from JS wrapped CSS
+                    {
+                        loader: "extract-loader"
+                    },
+                    // 3. Interpret and resolve @import / url()
+                    {
+                        loader: "css-loader",
+                        options: {
+                            url: false,
+                            importLoaders: 2
+                        },
+                    },
+                    // 2. Some postprocessing of CSS definitions (see postcss.config.js)
+                    // - add browser vendor prefixes https://github.com/postcss/autoprefixer
+                    // - minifies CSS with https://github.com/jakubpawlowicz/clean-css
+                    {
+                        loader: "postcss-loader"
+                    },
+                    // 1. Transform sass definitions into CSS
+                    {
+                        loader: "sass-loader",
+                        options: {
+                            // See https://github.com/sass/node-sass/blob/master/README.md#options
+                            outputStyle: "expanded",
+                            precision: 10
+                        }
+                    }
+                ]
+            },
         ]
     },
     plugins: [
+        new FixStyleOnlyEntriesPlugin(),
         new MiniCssExtractPlugin({
             filename: "../[name]_min.css",
         })

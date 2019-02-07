@@ -1,0 +1,13 @@
+Title: Fixed "omd create" when fstab has 0 bytes
+Level: 1
+Component: omd
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1549523521
+
+The "omd create" command failed with a "IndexError: string index out of range"
+in case a /etc/fstab file existed but was empty. While regular systems most likely
+have entries in there, this can often happen for containers.

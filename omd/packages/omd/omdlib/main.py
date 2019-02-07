@@ -1681,13 +1681,18 @@ def unmount_tmpfs(site, output=True, kill=False):
         return False
 
 
+# Extracted to separate function to be able to monkeypatch the path for tests
+def fstab_path():
+    return "/etc/fstab"
+
+
 def add_to_fstab(site, tmpfs_size=None):
-    if not os.path.exists("/etc/fstab"):
+    if not os.path.exists(fstab_path()):
         return  # Don't do anything in case there is no fstab
 
     # tmpfs                   /opt/omd/sites/b01/tmp  tmpfs   user,uid=b01,gid=b01 0 0
     mountpoint = "/opt" + site.tmp_dir
-    sys.stdout.write("Adding %s to /etc/fstab.\n" % mountpoint)
+    sys.stdout.write("Adding %s to %s.\n" % (mountpoint, fstab_path()))
 
     # No size option: using up to 50% of the RAM
     sizespec = ''
@@ -1695,9 +1700,10 @@ def add_to_fstab(site, tmpfs_size=None):
         sizespec = ',size=%s' % tmpfs_size
 
     # Ensure the fstab has a newline char at it's end before appending
-    complete_last_line = file("/etc/fstab").read()[-1] != "\n"
+    previous_fstab = file(fstab_path()).read()
+    complete_last_line = previous_fstab and not previous_fstab.endswith("\n")
 
-    with file("/etc/fstab", "a+") as fstab:
+    with file(fstab_path(), "a+") as fstab:
         if complete_last_line:
             fstab.write("\n")
 

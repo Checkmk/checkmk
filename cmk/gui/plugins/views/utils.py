@@ -33,6 +33,7 @@ import time
 import re
 import hashlib
 import traceback
+import six
 
 import livestatus
 
@@ -1559,18 +1560,23 @@ def _transform_old_views(all_views):
 #   '----------------------------------------------------------------------'
 
 
+def extract_painter_name(painter_spec):
+    if isinstance(painter_spec[0], tuple):
+        return painter_spec[0][0]
+    if isinstance(painter_spec, tuple):
+        return painter_spec[0]
+    if isinstance(painter_spec, six.string_types):
+        return painter_spec
+
+
+def painter_exists(painter_spec):
+    painter_name = extract_painter_name(painter_spec)
+
+    return painter_name in painter_registry
+
+
 # A cell is an instance of a painter in a view (-> a cell or a grouping cell)
 class Cell(object):
-    # Wanted to have the "parse painter spec logic" in one place (The Cell() class)
-    # but this should be cleaned up more. TODO: Move this to another place
-    @staticmethod
-    def painter_exists(painter_spec):
-        if isinstance(painter_spec[0], tuple):
-            painter_name = painter_spec[0][0]
-        else:
-            painter_name = painter_spec[0]
-
-        return painter_name in painter_registry
 
     # Wanted to have the "parse painter spec logic" in one place (The Cell() class)
     # but this should be cleaned up more. TODO: Move this to another place
@@ -1606,16 +1612,14 @@ class Cell(object):
     # Same as above but instead of the "Painter name" a two element tuple with the painter name as
     # first element and a dictionary of parameters as second element is set.
     def _from_view(self, painter_spec):
+        self._painter_name = extract_painter_name(painter_spec)
         if isinstance(painter_spec[0], tuple):
-            self._painter_name, self._painter_params = painter_spec[0]
-        else:
-            self._painter_name = painter_spec[0]
+            self._painter_params = painter_spec[0][1]
 
         if painter_spec[1] is not None:
             self._link_view_name = painter_spec[1]
 
-        # Clean this call to Cell.painter_exists() up!
-        if len(painter_spec) >= 3 and Cell.painter_exists((painter_spec[2], None)):
+        if len(painter_spec) >= 3 and painter_spec[2] in painter_registry:
             self._tooltip_painter_name = painter_spec[2]
 
     # Get a list of columns we need to fetch in order to render this cell
@@ -1944,7 +1948,7 @@ class EmptyCell(Cell):
 def get_cells(view):
     cells = []
     for e in view["painters"]:
-        if not Cell.painter_exists(e):
+        if not painter_exists(e):
             continue
 
         if Cell.is_join_cell(e):
@@ -1957,7 +1961,7 @@ def get_cells(view):
 
 
 def get_group_cells(view):
-    return [Cell(view, e) for e in view["group_painters"] if Cell.painter_exists(e)]
+    return [Cell(view, e) for e in view["group_painters"] if painter_exists(e)]
 
 
 def output_csv_headers(view):
@@ -1968,20 +1972,22 @@ def output_csv_headers(view):
     html.response.headers["Content-Disposition"] = "Attachment; filename=\"%s\"" % filename
 
 
-def get_sorter_name_of_painter(painter_name):
+def get_sorter_name_of_painter(painter_name_or_spec):
+    painter_name = extract_painter_name(painter_name_or_spec)
     painter = painter_registry[painter_name]()
     if painter.sorter:
         return painter.sorter
 
-    elif painter_name in sorter_registry:
+    if painter_name in sorter_registry:
         return painter_name
+
     return None
 
 
 def get_separated_sorters(view):
-    group_sort = [(get_sorter_name_of_painter(p[0]), False)
+    group_sort = [(get_sorter_name_of_painter(p), False)
                   for p in view['group_painters']
-                  if p[0] in painter_registry and get_sorter_name_of_painter(p[0]) is not None]
+                  if painter_exists(p) and get_sorter_name_of_painter(p) is not None]
     view_sort = [s for s in view['sorters'] if not s[0] in group_sort]
 
     # Get current url individual sorters. Parse the "sort" url parameter,

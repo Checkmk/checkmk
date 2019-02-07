@@ -100,7 +100,7 @@ def try_detect_servers():
             server_address = '127.0.0.1'
         elif server_address == '::':
             server_address = '[::1]'
-        elif ':' in address:
+        elif ':' in server_address:
             server_address = '[%s]' % server_address
 
         # Switch protocol if port is SSL port. In case you use SSL on another

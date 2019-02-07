@@ -54,6 +54,7 @@ export function start(host_name, folder_path, discovery_options, transid, reques
         "is_finished_function": is_finished,
         "update_function": update,
         "finish_function": finish,
+        "error_function": error,
         "post_data": get_post_data(host_name, folder_path, discovery_options, transid, request_vars)
     });
 }
@@ -106,6 +107,15 @@ function finish(response)
     }
     lock_controls(false);
 }
+
+function error(response)
+{
+    if (g_show_updating_timer) {
+        clearTimeout(g_show_updating_timer);
+    }
+    async_progress.show_error(response);
+}
+
 
 function update(handler_data, response) {
     if (g_show_updating_timer) {

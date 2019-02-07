@@ -58,8 +58,8 @@ def inventory_docker_container_status_health(parsed):
         return [(None, None)]
 
 
-def check_docker_container_status_health(_no_item, params, parsed):
-    health_status = parsed[u"Health"][u"Status"]
+def check_docker_container_status_health(_no_item, _no_params, parsed):
+    health_status = parsed.get(u"Health", {}).get(u"Status")
 
     if health_status == "healthy":
         return 0, "Healthy"
@@ -90,25 +90,19 @@ check_info["docker_container_status.health"] = {
 #   '----------------------------------------------------------------------'
 
 
-def inventory_docker_container_status(parsed):
-    if parsed:
-        return [(None, None)]
+def check_docker_container_status(_no_item, _no_params, parsed):
+    status = parsed.get("Status", "unknown")
+    state = {"running": 0, "unknown": 3}.get(status, 2)
 
+    yield state, "Status: %s" % status
 
-def check_docker_container_status(_no_item, params, parsed):
-    if parsed[u"Status"] == u"running":
-        return 0, "Running"
-    else:
-        status = 2
-        infotext = "Status: " + parsed[u"Status"]
-        if parsed.get(u"Error"):
-            infotext += " Error: " + parsed[u"Error"]
-        return status, infotext
+    if parsed.get(u"Error"):
+        yield 2, "Error: %s" % parsed[u"Error"]
 
 
 check_info['docker_container_status'] = {
     'parse_function': parse_docker_container_status,
-    'inventory_function': inventory_docker_container_status,
+    'inventory_function': discover_single,
     'check_function': check_docker_container_status,
     'service_description': 'Docker container status',
 }

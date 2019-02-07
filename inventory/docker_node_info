@@ -31,8 +31,7 @@ def _try_set(node, nkey, data, dkey):
 
 
 def inv_docker_node_info(parsed, inventory_tree, status_data_tree):
-    if not parsed or not isinstance(parsed, dict):
-        # String with error message in case the daemon is not running
+    if not parsed:
         return
 
     node = inventory_tree.get_dict("software.applications.docker.")

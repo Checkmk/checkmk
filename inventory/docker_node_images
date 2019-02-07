@@ -26,7 +26,8 @@
 
 
 def inv_docker_node_images(info, inventory_tree, status_data_tree):
-    images = parse_docker_node_images(info).get("images", {})
+    parsed = parse_docker_node_images(info)
+    images = parsed.get("images", {})
     path = "software.applications.docker.images:"
     inv_node = inventory_tree.get_list(path)
     status_node = status_data_tree.get_list(path)
@@ -48,16 +49,7 @@ def inv_docker_node_images(info, inventory_tree, status_data_tree):
             "amount_containers": image["amount_containers"],
         })
 
-
-inv_info['docker_node_images'] = {
-    'includes': ['legacy_docker.include'],
-    'inv_function': inv_docker_node_images,
-    'has_status_data': True,
-}
-
-
-def inv_docker_node_images_containers(info, inventory_tree, status_data_tree):
-    containers = parse_docker_node_images(info).get("containers", {})
+    containers = parsed.get("containers", {})
     status_node = status_data_tree.get_list("software.applications.docker.containers:")
 
     for container in sorted(containers.itervalues(), key=lambda c: c["ID"]):
@@ -78,12 +70,8 @@ def _format_labels(labels):
     return ", ".join(["%s: %s" % item for item in labels])
 
 
-# TODO: This section contains also information about the containers. We should
-# better split it into multiple sections and add them to the different plugins
-# using the extra_sections feature. In case this is not possible for the inventory
-# plugins at the moment we should make it possible.
-inv_info['docker_node_images.containers'] = {
+inv_info['docker_node_images'] = {
     'includes': ['legacy_docker.include'],
-    'inv_function': inv_docker_node_images_containers,
+    'inv_function': inv_docker_node_images,
     'has_status_data': True,
 }

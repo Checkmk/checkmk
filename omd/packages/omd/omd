@@ -1680,7 +1680,8 @@ def add_to_fstab(sitename, tmpfs_size = None):
         sizespec = ',size=%s' % tmpfs_size
 
     # Ensure the fstab has a newline char at it's end before appending
-    complete_last_line = file("/etc/fstab").read()[-1] != "\n"
+    previous_fstab = file("/etc/fstab").read()
+    complete_last_line = previous_fstab and previous_fstab[-1] != "\n"
 
     with file("/etc/fstab", "a+") as fstab:
         if complete_last_line:

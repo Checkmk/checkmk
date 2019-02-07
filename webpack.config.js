@@ -64,7 +64,8 @@ module.exports = {
                     {
                         loader: "file-loader",
                         options: {
-                            name: "../themes/facelift/theme.css"
+                            regExp: /\/([a-z0-9_-]+)\/theme\.scss$/,
+                            name: '../themes/[1]/theme.css'
                         }
                     },
                     // 4. Extract CSS definitions from JS wrapped CSS

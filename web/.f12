@@ -5,8 +5,12 @@ SITE=${SITE:-$(cat ../.site 2>/dev/null || true)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 
-echo "Updating compiled JS files..."
-make -C .. web/htdocs/js/main_min.js web/htdocs/js/mobile_min.js web/htdocs/js/side_min.js
+echo "Updating compiled JS/CSS files..."
+make -C .. \
+    web/htdocs/js/main_min.js \
+    web/htdocs/js/mobile_min.js \
+    web/htdocs/js/side_min.js \
+    web/htdocs/themes/facelift/theme.css
 
 echo "Update site $SITE..."
 

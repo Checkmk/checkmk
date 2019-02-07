@@ -1826,19 +1826,21 @@ def _vs_aws_tags(title):
                 TextAscii(title=_("Key")),
                 ListOfStrings(title=_("Values"), orientation="horizontal")
             ]),
+        add_label=_("Add new tag"),
+        movable=False,
         title=title,
         validate=_validate_aws_tags)
 
 
-def _vs_aws_service_choice(title):
+def _vs_aws_service_selection(title):
     return Dictionary(
         title=title,
         elements=[(
-            'choice',
+            'selection',
             CascadingDropdown(
-                title=_("Choice"),
+                title=_("Selection of service instances"),
                 help=_(
-                    "<i>Gather all service instances and use overall tags</i> means that "
+                    "<i>Gather all service instances and restrict by overall tags</i> means that "
                     "if overall tags are stated above then all service instances are filtered "
                     "by these tags. Otherwise all instances are gathered.<br>"
                     "With <i>Use explicit service tags and overwrite overall tags</i> you can "
@@ -1848,8 +1850,8 @@ def _vs_aws_service_choice(title):
                     "you can state explicit names. The overall tags are ignored for these service."
                 ),
                 choices=[
-                    ('all', _("Gather all service instances and use overall tags")),
-                    ('tags', _("Use explicit service tags and overwrite overall tags"),
+                    ('all', _("Gather all service instances and restrict by overall tags")),
+                    ('tags', _("Use explicit service tags and overrule overall tags"),
                      _vs_aws_tags(_("Tags"))),
                     ('names', _("Use explicit service names and ignore overall tags"),
                      ListOfStrings()),
@@ -1913,20 +1915,24 @@ class RulespecSpecialAgentsAws(HostRulespec):
                      ],
                                     key=lambda x: x[1]),
                  )),
-                ("overall_tags", _vs_aws_tags(_("Overall tags"))),
                 ("services",
                  Dictionary(
                      title=_("Services to monitor"),
                      elements=[
-                         ("ce", FixedValue(None, totext="", title=_("Costs and usage"))),
-                         ("ec2", _vs_aws_service_choice(_("Elastic Compute Cloud (EC2)"))),
-                         ("ebs", _vs_aws_service_choice(_("Elastic Block Storage (EBS)"))),
-                         ("s3", _vs_aws_service_choice(_("Simple Storage Service (S3)"))),
-                         ("elb", _vs_aws_service_choice(_("Elastic Load Balancing (ELB)"))),
+                         ("ce",
+                          FixedValue(
+                              None, totext=_("Monitor costs and usage"),
+                              title=_("Costs and usage"))),
+                         ("ec2", _vs_aws_service_selection(_("Elastic Compute Cloud (EC2)"))),
+                         ("ebs", _vs_aws_service_selection(_("Elastic Block Storage (EBS)"))),
+                         ("s3", _vs_aws_service_selection(_("Simple Storage Service (S3)"))),
+                         ("elb", _vs_aws_service_selection(_("Elastic Load Balancing (ELB)"))),
                      ],
                  )),
+                ("overall_tags", _vs_aws_tags(
+                    _("Restrict monitoring services by one of these tags"))),
             ],
-            optional_keys=[],
+            optional_keys=["overall_tags"],
         )
 
 

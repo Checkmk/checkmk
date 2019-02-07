@@ -415,9 +415,9 @@ class EC2Summary(AWSSectionGeneric):
             return {}
 
     def _describe_instances(self):
-        if self._names:
+        if self._names is not None:
             return self._client.describe_instances(InstanceIds=self._names)
-        elif self._tags:
+        elif self._tags is not None:
             return self._client.describe_instances(Filters=self._tags)
         return self._client.describe_instances()
 
@@ -606,13 +606,13 @@ class S3Summary(AWSSectionGeneric):
                 logging.info("%s/%s: KeyError %s; Available are %s", self.name, bucket_name, e,
                              response.keys())
             else:
-                bucket['Tagging'] = tagging
                 if self._matches_conditions(tagging):
+                    bucket['Tagging'] = tagging
                     found_buckets.append(bucket)
         return found_buckets
 
     def _list_buckets(self):
-        if self._names:
+        if self._tags is None and self._names is not None:
             return [{'Name': n} for n in self._names]
         response = self._client.list_buckets()
         try:
@@ -622,12 +622,14 @@ class S3Summary(AWSSectionGeneric):
             return []
 
     def _matches_conditions(self, tagging):
-        if not self._names and self._tags:
-            for tag in tagging:
-                if tag in self._tags:
-                    return True
-            return False
-        return True
+        if self._names is not None:
+            return True
+        if self._tags is None:
+            return True
+        for tag in tagging:
+            if tag in self._tags:
+                return True
+        return False
 
     def _compute_content(self, raw_content, colleague_contents):
         return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
@@ -740,20 +742,23 @@ class ELBSummary(AWSSectionGeneric):
         found_load_balancers = []
         for load_balancer in self._describe_load_balancers():
             load_balancer_name = load_balancer['LoadBalancerName']
-            response = self._client.describe_tags(LoadBalancerNames=[load_balancer_name])
             try:
+                response = self._client.describe_tags(LoadBalancerNames=[load_balancer_name])
                 tag_descrs = response['TagDescriptions']
+            except botocore.exceptions.ClientError as e:
+                # If there are no tags attached to a bucket we receive a 'ClientError'
+                logging.info("%s/%s: No tags set, %s", self.name, load_balancer_name, e)
             except KeyError as e:
                 logging.info("%s/%s: KeyError %s; Available are %s", self.name, load_balancer_name,
                              e, response.keys())
             else:
-                load_balancer['TagDescriptions'] = tag_descrs
                 if self._matches_conditions(tag_descrs):
+                    load_balancer['TagDescriptions'] = tag_descrs
                     found_load_balancers.append(load_balancer)
         return found_load_balancers
 
     def _describe_load_balancers(self):
-        if self._names:
+        if self._tags is None and self._names is not None:
             response = self._client.describe_load_balancers(LoadBalancerNames=self._names)
         else:
             response = self._client.describe_load_balancers()
@@ -764,12 +769,14 @@ class ELBSummary(AWSSectionGeneric):
             return []
 
     def _matches_conditions(self, tagging):
-        if not self._names and self._tags:
-            for tag in tagging:
-                if tag in self._tags:
-                    return True
-            return False
-        return True
+        if self._names is not None:
+            return True
+        if self._tags is None:
+            return True
+        for tag in tagging:
+            if tag in self._tags:
+                return True
+        return False
 
     def _compute_content(self, raw_content, colleague_contents):
         content_by_piggyback_hosts = {}
@@ -947,10 +954,10 @@ class EBSSummary(AWSSectionGeneric):
         return volumes, volume_states
 
     def _describe_volumes(self):
-        if self._names:
+        if self._names is not None:
             response_volumes = self._client.describe_volumes(VolumeIds=self._names)
             response_volume_stats = self._client.describe_volume_status(VolumeIds=self._names)
-        elif self._tags:
+        elif self._tags is not None:
             response_volumes = self._client.describe_volumes(Filters=self._tags)
             response_volume_stats = self._client.describe_volume_status(Filters=self._tags)
         else:
@@ -1361,12 +1368,18 @@ AWSRegions = [
     ("us-west-2", "US West (Oregon)"),
 ]
 
+AWSServiceAttributes = NamedTuple("AWSServiceAttributes", [
+    ("key", str),
+    ("title", str),
+    ("filter_by_names_or_tags", bool),
+])
+
 AWSServices = [
-    ("ce", "Costs and usage"),
-    ("ec2", "Elastic Compute Cloud (EC2)"),
-    ("ebs", "Elastic Block Storage (EBS)"),
-    ("s3", "Simple Storage Service (S3)"),
-    ("elb", "Elastic Load Balancing (ELB)"),
+    AWSServiceAttributes("ce", "Costs and usage", False),
+    AWSServiceAttributes("ec2", "Elastic Compute Cloud (EC2)", True),
+    AWSServiceAttributes("ebs", "Elastic Block Storage (EBS)", True),
+    AWSServiceAttributes("s3", "Simple Storage Service (S3)", True),
+    AWSServiceAttributes("elb", "Elastic Load Balancing (ELB)", True),
 ]
 
 
@@ -1391,23 +1404,27 @@ def parse_arguments(argv):
     parser.add_argument(
         '--overall-tag-values', nargs='+', action='append', help="Overall tag values")
 
-    for service_name, title in AWSServices:
-        if service_name == 'ce':
-            continue
-        parser.add_argument(
-            '--%s-tag-key' % service_name, nargs=1, action='append', help="Tag key for %s" % title)
-        parser.add_argument(
-            '--%s-tag-values' % service_name,
-            nargs='+',
-            action='append',
-            help="Tag values for %s" % title)
-        parser.add_argument('--%s-names' % service_name, nargs='+', help="Names for %s" % title)
+    for service in AWSServices:
+        if service.filter_by_names_or_tags:
+            parser.add_argument(
+                '--%s-names' % service.key, nargs='+', help="Names for %s" % service.title)
+            parser.add_argument(
+                '--%s-tag-key' % service.key,
+                nargs=1,
+                action='append',
+                help="Tag key for %s" % service.title)
+            parser.add_argument(
+                '--%s-tag-values' % service.key,
+                nargs='+',
+                action='append',
+                help="Tag values for %s" % service.title)
 
     parser.add_argument(
         "--services",
         nargs='+',
         required=True,
-        help="Services to monitor:\n%s" % "\n".join(["%-15s %s" % e for e in AWSServices]))
+        help="Services to monitor:\n%s" % "\n".join(
+            ["%-15s %s" % (e[0], e[1]) for e in AWSServices]))
 
     parser.add_argument("--hostname", required=True)
     return parser.parse_args(argv)
@@ -1448,6 +1465,7 @@ class AWSConfig(object):
         """
         Prepare tags format as needed in API methods:
         Filters=[{'Name': 'tag:KEY', 'Values': [VAL,...]}, ...]
+        Keys AND values must be set for filtering.
         """
         keys, values = tags
         if keys and values:
@@ -1455,7 +1473,7 @@ class AWSConfig(object):
                 'Name': 'tag:%s' % k,
                 'Values': v
             } for k, v in zip([k[0] for k in keys], values)]
-        return []
+        return
 
 
 def main(args=None):
@@ -1476,8 +1494,8 @@ def main(args=None):
     for service_key, service_names, service_tags in [
         ("ec2", args.ec2_names, (args.ec2_tag_key, args.ec2_tag_values)),
         ("ebs", args.ebs_names, (args.ebs_tag_key, args.ebs_tag_values)),
-        ("s3", args.s3_names, (args.s3_tag_key, args.s3_tag_values)),
-        ("elb", args.elb_names, (args.elb_tag_key, args.elb_tag_values)),
+        ("s3", args.s3_names, (None, None)),
+        ("elb", args.elb_names, (None, None)),
     ]:
         aws_config.add_service_config(service_key, service_names, service_tags)
 

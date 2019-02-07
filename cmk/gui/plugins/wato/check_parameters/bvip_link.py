@@ -31,7 +31,8 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersEnvironment,
-    register_check_parameters,
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
 )
 
 bvip_link_states = [
@@ -44,31 +45,48 @@ bvip_link_states = [
     (7, "Wifi"),
 ]
 
-register_check_parameters(
-    RulespecGroupCheckParametersEnvironment,
-    "bvip_link",
-    _("Allowed Network states on Bosch IP Cameras"),
-    Dictionary(
-        title=_("Update State"),
-        elements=[
-            ("ok_states",
-             ListChoice(
-                 title=_("States which result in OK"),
-                 choices=bvip_link_states,
-                 default_value=[0, 4, 5])),
-            ("warn_states",
-             ListChoice(
-                 title=_("States which result in Warning"),
-                 choices=bvip_link_states,
-                 default_value=[7])),
-            ("crit_states",
-             ListChoice(
-                 title=_("States which result in Critical"),
-                 choices=bvip_link_states,
-                 default_value=[1, 2, 3])),
-        ],
-        optional_keys=None,
-    ),
-    None,
-    match_type="dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersBvipLink(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersEnvironment
+
+    @property
+    def check_group_name(self):
+        return "bvip_link"
+
+    @property
+    def title(self):
+        return _("Allowed Network states on Bosch IP Cameras")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            title=_("Update State"),
+            elements=[
+                ("ok_states",
+                 ListChoice(
+                     title=_("States which result in OK"),
+                     choices=bvip_link_states,
+                     default_value=[0, 4, 5],
+                 )),
+                ("warn_states",
+                 ListChoice(
+                     title=_("States which result in Warning"),
+                     choices=bvip_link_states,
+                     default_value=[7],
+                 )),
+                ("crit_states",
+                 ListChoice(
+                     title=_("States which result in Critical"),
+                     choices=bvip_link_states,
+                     default_value=[1, 2, 3],
+                 )),
+            ],
+            optional_keys=None,
+        )

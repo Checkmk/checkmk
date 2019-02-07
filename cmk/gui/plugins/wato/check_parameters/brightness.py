@@ -29,23 +29,42 @@ from cmk.gui.valuespec import TextAscii
 from cmk.gui.plugins.wato import (
     Levels,
     RulespecGroupCheckParametersEnvironment,
-    register_check_parameters,
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersEnvironment,
-    "brightness",
-    _("Brightness Levels"),
-    Levels(
-        title=_("Brightness"),
-        unit=_("lx"),
-        default_value=None,
-        default_difference=(2.0, 4.0),
-        default_levels=(50.0, 100.0),
-    ),
-    TextAscii(
-        title=_("Sensor name"),
-        help=_("The identifier of the sensor."),
-    ),
-    match_type="dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersBrightness(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersEnvironment
+
+    @property
+    def check_group_name(self):
+        return "brightness"
+
+    @property
+    def title(self):
+        return _("Brightness Levels")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Levels(
+            title=_("Brightness"),
+            unit=_("lx"),
+            default_value=None,
+            default_difference=(2.0, 4.0),
+            default_levels=(50.0, 100.0),
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(
+            title=_("Sensor name"),
+            help=_("The identifier of the sensor."),
+        )

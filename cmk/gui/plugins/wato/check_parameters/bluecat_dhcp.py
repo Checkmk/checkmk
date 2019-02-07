@@ -31,38 +31,53 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersNetworking,
-    register_check_parameters,
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
 )
 from cmk.gui.plugins.wato.check_parameters.bluecat_ntp import bluecat_operstates
 
-register_check_parameters(
-    RulespecGroupCheckParametersNetworking,
-    "bluecat_dhcp",
-    _("Bluecat DHCP Settings"),
-    Dictionary(
-        elements=[
-            ("oper_states",
-             Dictionary(
-                 title=_("Operations States"),
-                 elements=[
-                     ("warning",
-                      ListChoice(
-                          title=_("States treated as warning"),
-                          choices=bluecat_operstates,
-                          default_value=[2, 3, 4],
-                      )),
-                     ("critical",
-                      ListChoice(
-                          title=_("States treated as critical"),
-                          choices=bluecat_operstates,
-                          default_value=[5],
-                      )),
-                 ],
-                 required_keys=['warning', 'critical'],
-             )),
-        ],
-        required_keys=['oper_states'],  # There is only one value, so its required
-    ),
-    None,
-    match_type="dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersBluecatDhcp(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersNetworking
+
+    @property
+    def check_group_name(self):
+        return "bluecat_dhcp"
+
+    @property
+    def title(self):
+        return _("Bluecat DHCP Settings")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ("oper_states",
+                 Dictionary(
+                     title=_("Operations States"),
+                     elements=[
+                         ("warning",
+                          ListChoice(
+                              title=_("States treated as warning"),
+                              choices=bluecat_operstates,
+                              default_value=[2, 3, 4],
+                          )),
+                         ("critical",
+                          ListChoice(
+                              title=_("States treated as critical"),
+                              choices=bluecat_operstates,
+                              default_value=[5],
+                          )),
+                     ],
+                     required_keys=['warning', 'critical'],
+                 )),
+            ],
+            required_keys=['oper_states'],  # There is only one value, so its required
+        )

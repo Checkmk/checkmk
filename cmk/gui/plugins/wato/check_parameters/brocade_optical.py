@@ -32,27 +32,49 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersNetworking,
-    register_check_parameters,
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersNetworking,
-    "brocade_optical",
-    "Brocade Optical Signal",
-    Dictionary(
-        elements=[
-            ('temp', Checkbox(title=_("Temperature Alert"), default_value=True)),
-            ('tx_light',
-             Checkbox(title=_("TX Light alert"), label=_("TX Light alert"), default_value=False)),
-            ('rx_light',
-             Checkbox(title=_("RX Light alert"), label=_("TX Light alert"), default_value=False)),
-            ('lanes',
-             Checkbox(
-                 title=_("Lanes"),
-                 label=_("Monitor & Graph Lanes"),
-                 help=_("Monitor and graph the lanes, if the port has multiple"))),
-        ],
-        optional_keys=[]),
-    TextAscii(title=_("Interface id"),),
-    match_type="dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersBrocadeOptical(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersNetworking
+
+    @property
+    def check_group_name(self):
+        return "brocade_optical"
+
+    @property
+    def title(self):
+        return _("Brocade Optical Signal")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ('temp', Checkbox(title=_("Temperature Alert"), default_value=True)),
+                ('tx_light',
+                 Checkbox(
+                     title=_("TX Light alert"), label=_("TX Light alert"), default_value=False)),
+                ('rx_light',
+                 Checkbox(
+                     title=_("RX Light alert"), label=_("TX Light alert"), default_value=False)),
+                ('lanes',
+                 Checkbox(
+                     title=_("Lanes"),
+                     label=_("Monitor & Graph Lanes"),
+                     help=_("Monitor and graph the lanes, if the port has multiple"))),
+            ],
+            optional_keys=[],
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Interface id"))

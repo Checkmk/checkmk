@@ -33,28 +33,55 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersStorage,
-    register_check_parameters,
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersStorage, "brocade_sfp", _("Brocade SFPs"),
-    Dictionary(elements=[
-        ("rx_power",
-         Tuple(
-             title=_("Rx power level"),
-             elements=[
-                 Float(title=_("Critical below"), unit=_("dBm")),
-                 Float(title=_("Warning below"), unit=_("dBm")),
-                 Float(title=_("Warning at"), unit=_("dBm")),
-                 Float(title=_("Critical at"), unit=_("dBm"))
-             ])),
-        ("tx_power",
-         Tuple(
-             title=_("Tx power level"),
-             elements=[
-                 Float(title=_("Critical below"), unit=_("dBm")),
-                 Float(title=_("Warning below"), unit=_("dBm")),
-                 Float(title=_("Warning at"), unit=_("dBm")),
-                 Float(title=_("Critical at"), unit=_("dBm"))
-             ])),
-    ]), TextAscii(title=_("Port index")), "dict")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersBrocadeSfp(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersStorage
+
+    @property
+    def check_group_name(self):
+        return "brocade_sfp"
+
+    @property
+    def title(self):
+        return _("Brocade SFPs")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ("rx_power",
+                 Tuple(
+                     title=_("Rx power level"),
+                     elements=[
+                         Float(title=_("Critical below"), unit=_("dBm")),
+                         Float(title=_("Warning below"), unit=_("dBm")),
+                         Float(title=_("Warning at"), unit=_("dBm")),
+                         Float(title=_("Critical at"), unit=_("dBm"))
+                     ],
+                 )),
+                ("tx_power",
+                 Tuple(
+                     title=_("Tx power level"),
+                     elements=[
+                         Float(title=_("Critical below"), unit=_("dBm")),
+                         Float(title=_("Warning below"), unit=_("dBm")),
+                         Float(title=_("Warning at"), unit=_("dBm")),
+                         Float(title=_("Critical at"), unit=_("dBm"))
+                     ],
+                 )),
+            ],)
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Port index"))

@@ -1798,8 +1798,8 @@ def sort_data(data, sorters):
             neg = -1 if entry.negate else 1
 
             if entry.join_key:  # Sorter for join column, use JOIN info
-                c = neg * save_compare(entry.sorter.cmp, e1["JOIN"].get(entry.sorter.join_key),
-                                       e2["JOIN"].get(entry.sorter.join_key))
+                c = neg * save_compare(entry.sorter.cmp, e1["JOIN"].get(entry.join_key),
+                                       e2["JOIN"].get(entry.join_key))
             else:
                 c = neg * entry.sorter.cmp(e1, e2)
 

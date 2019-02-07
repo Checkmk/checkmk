@@ -997,8 +997,7 @@ def paint_age(timestamp, has_been_checked, bold_if_younger_than, mode=None, what
 
     dateformat = painter_options.get("ts_date")
     age = time.time() - timestamp
-    if mode == "abs" or \
-        (mode == "mixed" and abs(age) >= 48 * 3600):
+    if mode == "abs" or (mode == "mixed" and abs(age) >= 48 * 3600):
         return "age", time.strftime(dateformat + " %H:%M:%S", time.localtime(timestamp))
 
     warn_txt = ''
@@ -1325,11 +1324,11 @@ def pnp_url(row, what, how='graph'):
         svc = cmk.utils.pnp_cleanup(row["service_description"])
     url_prefix = config.site(sitename)["url_prefix"]
     if html.mobile:
-        url = url_prefix + ("pnp4nagios/index.php?kohana_uri=/mobile/%s/%s/%s" % \
-            (how, html.urlencode(host), html.urlencode(svc)))
+        url = url_prefix + ("pnp4nagios/index.php?kohana_uri=/mobile/%s/%s/%s" %
+                            (how, html.urlencode(host), html.urlencode(svc)))
     else:
-        url = url_prefix + ("pnp4nagios/index.php/%s?host=%s&srv=%s" % \
-            (how, html.urlencode(host), html.urlencode(svc)))
+        url = url_prefix + ("pnp4nagios/index.php/%s?host=%s&srv=%s" %
+                            (how, html.urlencode(host), html.urlencode(svc)))
 
     pnp_theme = html.get_theme()
     if pnp_theme == "classic":
@@ -1482,7 +1481,7 @@ def _transform_old_views(all_views):
                 # we need to transform views which have been created with the old filter var names.
                 # Changes which have been made so far:
                 changed_filter_vars = {
-                    'serviceregex': { # Name of the filter
+                    'serviceregex': {  # Name of the filter
                         # old var name: new var name
                         'service': 'service_regex',
                     },
@@ -2019,7 +2018,7 @@ def parse_url_sorters(sort):
     if not sort:
         return sorters
     for s in sort.split(','):
-        if not '~' in s:
+        if '~' not in s:
             sorters.append((s.replace('-', ''), s.startswith('-')))
         else:
             sorter, join_index = s.split('~', 1)

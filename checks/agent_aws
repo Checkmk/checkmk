@@ -36,7 +36,6 @@ def _get_tag_options(tag_values, prefix):
 
 
 def _get_services_choice(services):
-    print services
     # '--services': {
     #   's3': {'choice': ('tags', [('KEY', ['VAL1', 'VAL2'])])},
     #   'ec2': {'choice': 'all'},

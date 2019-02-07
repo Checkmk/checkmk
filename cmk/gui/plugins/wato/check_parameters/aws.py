@@ -37,152 +37,271 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    'aws_ec2_cpu_credits',
-    _("AWS/EC2 CPU Credits"),
-    Dictionary(elements=[('balance_levels_lower',
-                          Alternative(
-                              title=_("Lower levels for CPU balance"),
-                              style="dropdown",
-                              elements=[
-                                  Tuple(
-                                      title=_("Set levels"),
-                                      elements=[
-                                          Integer(title=_("Warning at or below")),
-                                          Integer(title=_("Critical at or below")),
-                                      ]),
-                                  Tuple(
-                                      title=_("No levels"),
-                                      elements=[
-                                          FixedValue(None, totext=""),
-                                          FixedValue(None, totext=""),
-                                      ]),
-                              ]))]),
-    None,
-    match_type='dict',
-)
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    'aws_costs_and_usage',
-    _("AWS Costs and Usage"),
-    Dictionary(elements=[('levels_unblended',
-                          Tuple(
-                              title=_("Upper levels for unblended costs"),
-                              elements=[
-                                  Integer(title=_("Warning at")),
-                                  Integer(title=_("Critical at")),
-                              ]))]),
-    None,
-    match_type='dict',
-)
+@rulespec_registry.register
+class RulespecCheckgroupParametersAwsEc2CpuCredits(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    'aws_elb_statistics',
-    _("AWS/ELB Statistics"),
-    Dictionary(elements=[
-        ('levels_surge_queue_length',
-         Tuple(
-             title=_("Upper levels for surge queue length"),
-             elements=[
-                 Integer(title=_("Warning at")),
-                 Integer(title=_("Critical at")),
-             ])),
-        ('levels_spillover',
-         Tuple(
-             title=_("Upper levels for the number of requests that were rejected (spillover)"),
-             elements=[
-                 Integer(title=_("Warning at")),
-                 Integer(title=_("Critical at")),
-             ])),
-    ]),
-    None,
-    match_type='dict',
-)
+    @property
+    def check_group_name(self):
+        return "aws_ec2_cpu_credits"
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    'aws_elb_latency',
-    _("AWS/ELB Latency"),
-    Dictionary(elements=[
-        ('levels_latency',
-         Tuple(
-             title=_("Upper levels for latency"),
-             elements=[
-                 Age(title=_("Warning at")),
-                 Age(title=_("Critical at")),
-             ])),
-    ]),
-    None,
-    match_type='dict',
-)
+    @property
+    def title(self):
+        return _("AWS/EC2 CPU Credits")
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    'aws_elb_http',
-    _("AWS/ELB HTTP Errors"),
-    Dictionary(elements=[
-        ('levels_http_4xx_perc',
-         Tuple(
-             title=_("Upper percentual levels for HTTP 400 errors"),
-             help=_("Specify levels for HTTP 400 errors in percentage "
-                    "which refer to the total number of requests"),
-             elements=[
-                 Percentage(title=_("Warning at")),
-                 Percentage(title=_("Critical at")),
-             ])),
-        ('levels_http_5xx_perc',
-         Tuple(
-             title=_("Upper percentual levels for HTTP 500 errors"),
-             help=_("Specify levels for HTTP 500 errors in percentage "
-                    "which refer to the total number of requests"),
-             elements=[
-                 Percentage(title=_("Warning at")),
-                 Percentage(title=_("Critical at")),
-             ])),
-    ]),
-    None,
-    match_type='dict',
-)
+    @property
+    def match_type(self):
+        return "dict"
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    'aws_elb_healthy_hosts',
-    _("AWS/ELB Healthy Hosts"),
-    Dictionary(elements=[
-        ('levels_overall_hosts_health_perc',
-         Tuple(
-             title=_("Upper percentual levels for healthy hosts"),
-             help=_("These levels refer to the total number of instances or hosts "
-                    "that are registered to the load balancer which is the sum of "
-                    "healthy and unhealthy instances."),
-             elements=[
-                 Percentage(title=_("Warning at")),
-                 Percentage(title=_("Critical at")),
-             ])),
-    ]),
-    None,
-    match_type='dict',
-)
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ('balance_levels_lower',
+                 Alternative(
+                     title=_("Lower levels for CPU balance"),
+                     style="dropdown",
+                     elements=[
+                         Tuple(
+                             title=_("Set levels"),
+                             elements=[
+                                 Integer(title=_("Warning at or below")),
+                                 Integer(title=_("Critical at or below")),
+                             ]),
+                         Tuple(
+                             title=_("No levels"),
+                             elements=[
+                                 FixedValue(None, totext=""),
+                                 FixedValue(None, totext=""),
+                             ]),
+                     ])),
+            ],)
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    'aws_elb_backend_connection_errors',
-    _("AWS/ELB Backend Connection Errors"),
-    Dictionary(elements=[
-        ('levels_backend_connections_errors_rate',
-         Tuple(
-             title=_("Upper levels for backend connection errors per second"),
-             elements=[
-                 Float(title=_("Warning at")),
-                 Float(title=_("Critical at")),
-             ])),
-    ]),
-    None,
-    match_type='dict',
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersAwsCostsAndUsage(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "aws_costs_and_usage"
+
+    @property
+    def title(self):
+        return _("AWS Costs and Usage")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[(
+                'levels_unblended',
+                Tuple(
+                    title=_("Upper levels for unblended costs"),
+                    elements=[
+                        Integer(title=_("Warning at")),
+                        Integer(title=_("Critical at")),
+                    ],
+                ),
+            )],)
+
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersAwsElbStatistics(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "aws_elb_statistics"
+
+    @property
+    def title(self):
+        return _("AWS/ELB Statistics")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ('levels_surge_queue_length',
+                 Tuple(
+                     title=_("Upper levels for surge queue length"),
+                     elements=[
+                         Integer(title=_("Warning at")),
+                         Integer(title=_("Critical at")),
+                     ],
+                 )),
+                ('levels_spillover',
+                 Tuple(
+                     title=_(
+                         "Upper levels for the number of requests that were rejected (spillover)"),
+                     elements=[
+                         Integer(title=_("Warning at")),
+                         Integer(title=_("Critical at")),
+                     ],
+                 )),
+            ],)
+
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersAwsElbLatency(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "aws_elb_latency"
+
+    @property
+    def title(self):
+        return _("AWS/ELB Latency")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[(
+                'levels_latency',
+                Tuple(
+                    title=_("Upper levels for latency"),
+                    elements=[
+                        Age(title=_("Warning at")),
+                        Age(title=_("Critical at")),
+                    ],
+                ),
+            )],)
+
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersAwsElbHttp(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "aws_elb_http"
+
+    @property
+    def title(self):
+        return _("AWS/ELB HTTP Errors")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ('levels_http_4xx_perc',
+                 Tuple(
+                     title=_("Upper percentual levels for HTTP 400 errors"),
+                     help=_("Specify levels for HTTP 400 errors in percentage "
+                            "which refer to the total number of requests"),
+                     elements=[
+                         Percentage(title=_("Warning at")),
+                         Percentage(title=_("Critical at")),
+                     ],
+                 )),
+                ('levels_http_5xx_perc',
+                 Tuple(
+                     title=_("Upper percentual levels for HTTP 500 errors"),
+                     help=_("Specify levels for HTTP 500 errors in percentage "
+                            "which refer to the total number of requests"),
+                     elements=[
+                         Percentage(title=_("Warning at")),
+                         Percentage(title=_("Critical at")),
+                     ],
+                 )),
+            ],)
+
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersAwsElbHealthyHosts(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "aws_elb_healthy_hosts"
+
+    @property
+    def title(self):
+        return _("AWS/ELB Healthy Hosts")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[(
+                'levels_overall_hosts_health_perc',
+                Tuple(
+                    title=_("Upper percentual levels for healthy hosts"),
+                    help=_("These levels refer to the total number of instances or hosts "
+                           "that are registered to the load balancer which is the sum of "
+                           "healthy and unhealthy instances."),
+                    elements=[
+                        Percentage(title=_("Warning at")),
+                        Percentage(title=_("Critical at")),
+                    ],
+                ),
+            )],)
+
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersAwsElbBackendConnectionErrors(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "aws_elb_backend_connection_errors"
+
+    @property
+    def title(self):
+        return _("AWS/ELB Backend Connection Errors")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[(
+                'levels_backend_connections_errors_rate',
+                Tuple(
+                    title=_("Upper levels for backend connection errors per second"),
+                    elements=[
+                        Float(title=_("Warning at")),
+                        Float(title=_("Critical at")),
+                    ],
+                ),
+            )],)

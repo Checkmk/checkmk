@@ -33,7 +33,8 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersNetworking,
-    register_check_parameters,
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
 )
 
 bluecat_operstates = [
@@ -44,38 +45,54 @@ bluecat_operstates = [
     (5, "fault"),
 ]
 
-register_check_parameters(
-    RulespecGroupCheckParametersNetworking,
-    "bluecat_ntp",
-    _("Bluecat NTP Settings"),
-    Dictionary(elements=[
-        ("oper_states",
-         Dictionary(
-             title=_("Operations States"),
-             elements=[
-                 ("warning",
-                  ListChoice(
-                      title=_("States treated as warning"),
-                      choices=bluecat_operstates,
-                      default_value=[2, 3, 4],
-                  )),
-                 ("critical",
-                  ListChoice(
-                      title=_("States treated as critical"),
-                      choices=bluecat_operstates,
-                      default_value=[5],
-                  )),
-             ],
-             required_keys=['warning', 'critical'],
-         )),
-        ("stratum",
-         Tuple(
-             title=_("Levels for Stratum "),
-             elements=[
-                 Integer(title=_("Warning at")),
-                 Integer(title=_("Critical at")),
-             ])),
-    ]),
-    None,
-    match_type="dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersBluecatNtp(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersNetworking
+
+    @property
+    def check_group_name(self):
+        return "bluecat_ntp"
+
+    @property
+    def title(self):
+        return _("Bluecat NTP Settings")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ("oper_states",
+                 Dictionary(
+                     title=_("Operations States"),
+                     elements=[
+                         ("warning",
+                          ListChoice(
+                              title=_("States treated as warning"),
+                              choices=bluecat_operstates,
+                              default_value=[2, 3, 4],
+                          )),
+                         ("critical",
+                          ListChoice(
+                              title=_("States treated as critical"),
+                              choices=bluecat_operstates,
+                              default_value=[5],
+                          )),
+                     ],
+                     required_keys=['warning', 'critical'],
+                 )),
+                ("stratum",
+                 Tuple(
+                     title=_("Levels for Stratum "),
+                     elements=[
+                         Integer(title=_("Warning at")),
+                         Integer(title=_("Critical at")),
+                     ],
+                 )),
+            ],)

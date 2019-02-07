@@ -32,14 +32,35 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersStorage,
-    register_check_parameters,
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersStorage, "bossock_fibers", _("Number of Running Bossock Fibers"),
-    Tuple(
-        title=_("Number of fibers"),
-        elements=[
-            Integer(title=_("Warning at"), unit=_("fibers")),
-            Integer(title=_("Critical at"), unit=_("fibers")),
-        ]), TextAscii(title=_("Node ID")), "first")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersBossockFibers(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersStorage
+
+    @property
+    def check_group_name(self):
+        return "bossock_fibers"
+
+    @property
+    def title(self):
+        return _("Number of Running Bossock Fibers")
+
+    @property
+    def parameter_valuespec(self):
+        return Tuple(
+            title=_("Number of fibers"),
+            elements=[
+                Integer(title=_("Warning at"), unit=_("fibers")),
+                Integer(title=_("Critical at"), unit=_("fibers")),
+            ],
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Node ID"))

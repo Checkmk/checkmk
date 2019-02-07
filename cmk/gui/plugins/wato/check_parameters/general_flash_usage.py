@@ -33,27 +33,40 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersOperatingSystem,
-    register_check_parameters,
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersOperatingSystem,
-    "general_flash_usage",
-    _("Flash Space Usage"),
-    Alternative(elements=[
-        Tuple(
-            title=_("Specify levels in percentage of total Flash"),
-            elements=[
-                Percentage(title=_("Warning at a usage of"), label=_("% of Flash"), maxvalue=None),
-                Percentage(title=_("Critical at a usage of"), label=_("% of Flash"), maxvalue=None)
-            ]),
-        Tuple(
-            title=_("Specify levels in absolute usage values"),
-            elements=[
-                Integer(title=_("Warning at"), unit=_("MB")),
-                Integer(title=_("Critical at"), unit=_("MB"))
-            ]),
-    ]),
-    None,
-    match_type="first",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersGeneralFlashUsage(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersOperatingSystem
+
+    @property
+    def check_group_name(self):
+        return "general_flash_usage"
+
+    @property
+    def title(self):
+        return _("Flash Space Usage")
+
+    @property
+    def parameter_valuespec(self):
+        return Alternative(elements=[
+            Tuple(
+                title=_("Specify levels in percentage of total Flash"),
+                elements=[
+                    Percentage(
+                        title=_("Warning at a usage of"), label=_("% of Flash"), maxvalue=None),
+                    Percentage(
+                        title=_("Critical at a usage of"), label=_("% of Flash"), maxvalue=None)
+                ]),
+            Tuple(
+                title=_("Specify levels in absolute usage values"),
+                elements=[
+                    Integer(title=_("Warning at"), unit=_("MB")),
+                    Integer(title=_("Critical at"), unit=_("MB"))
+                ]),
+        ])

@@ -191,6 +191,7 @@ def test_read_status(tmpdir):
 
     # execution
     actual_status = mk_logwatch.read_status(file_path)
+    # comparing dicts (having unordered keys) is ok
     assert actual_status == {
         '/var/log/messages': (7767698, 32455445),
         '/var/test/x12134.log': (12345, 32444355)
@@ -206,6 +207,6 @@ def test_save_status(tmpdir):
         '/var/test/x12134.log': (12345, 32444355)
     }
     mk_logwatch.save_status(fake_status, file_path)
-    assert fake_status_file.read() == """/var/log/messages|7767698|32455445
-/var/test/x12134.log|12345|32444355
-"""
+    assert sorted(fake_status_file.read().splitlines()) == [
+        '/var/log/messages|7767698|32455445', '/var/test/x12134.log|12345|32444355'
+    ]

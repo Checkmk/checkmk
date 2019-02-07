@@ -39,7 +39,7 @@ def inv_docker_node_images(info, inventory_tree, status_data_tree):
             "id": image["ID"],
             "creation": image["CreatedAt"],
             "size": image["VirtualSize"],
-            "labels": _format_labels(image.get("__labels__", {})),
+            "labels": docker_format_labels(image.get("__labels__", {})),
         })
 
         status_node.append({
@@ -59,19 +59,13 @@ def inv_docker_node_images(info, inventory_tree, status_data_tree):
             "tag": container["Tag"],
             "name": container["Names"],
             "creation": container["CreatedAt"],
-            "labels": _format_labels(container["Labels"]),
+            "labels": docker_format_labels(container["Labels"]),
             "status": container["Status"],
         })
 
 
-def _format_labels(labels):
-    if isinstance(labels, dict):
-        labels = labels.iteritems()
-    return ", ".join(["%s: %s" % item for item in labels])
-
-
 inv_info['docker_node_images'] = {
-    'includes': ['legacy_docker.include'],
+    'includes': ['docker.include', 'legacy_docker.include'],
     'inv_function': inv_docker_node_images,
     'has_status_data': True,
 }

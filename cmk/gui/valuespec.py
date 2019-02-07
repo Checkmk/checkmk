@@ -1278,9 +1278,9 @@ class ListOf(ValueSpec):
 
     def _show_entries(self, varprefix, value):
         if self._style == ListOf.Style.REGULAR:
+            self._show_current_entries(varprefix, value)
             html.br()
             self._list_buttons(varprefix)
-            self._show_current_entries(varprefix, value)
 
         elif self._style == ListOf.Style.FLOATING:
             html.open_table()

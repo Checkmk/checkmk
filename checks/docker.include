@@ -25,14 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 
-def inv_docker_container_labels(info, inventory_tree):
-    import json
-    data = json.loads(" ".join(info[0]))
-    container = inventory_tree.get_dict("software.applications.docker.container.")
-    container["labels"] = docker_format_labels(data)
-
-
-inv_info['docker_container_labels'] = {
-    'includes': ['docker.include'],
-    'inv_function': inv_docker_container_labels,
-}
+def docker_format_labels(labels):
+    if isinstance(labels, dict):
+        labels = labels.iteritems()
+    return ", ".join(["%s: %s" % item for item in labels])

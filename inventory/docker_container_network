@@ -30,12 +30,12 @@ def _parse_docker_container_network(info):
     return json.loads(" ".join(info[0]))
 
 
-def inv_docker_container_network_networks(info, inventory_tree):
-    parsed = _parse_docker_container_network(info)
+def inv_docker_container_network_networks(parsed, inventory_tree):
+    network_data = parsed.get("Networks") or {}
 
     networks = inventory_tree.get_list("software.applications.docker.container.networks:")
 
-    for network_name, network in parsed["Networks"].items():
+    for network_name, network in network_data.iteritems():
         networks.append({
             "name": network_name,
             "network_id": network["NetworkID"],
@@ -46,17 +46,12 @@ def inv_docker_container_network_networks(info, inventory_tree):
         })
 
 
-inv_info["docker_container_network.networks"] = {
-    "inv_function": inv_docker_container_network_networks,
-}
-
-
-def inv_docker_container_network_ports(info, inventory_tree):
-    parsed = _parse_docker_container_network(info)
+def inv_docker_container_network_ports(parsed, inventory_tree):
+    port_data = parsed.get("Ports") or None
 
     ports = inventory_tree.get_list("software.applications.docker.container.ports:")
 
-    for container_port_spec, host_ports in parsed["Ports"].items():
+    for container_port_spec, host_ports in port_data.iteritems():
         port, proto = container_port_spec.split("/", 1)
 
         if host_ports:
@@ -72,6 +67,12 @@ def inv_docker_container_network_ports(info, inventory_tree):
         })
 
 
-inv_info["docker_container_network.ports"] = {
-    "inv_function": inv_docker_container_network_ports,
+def inv_docker_container_network(info, inventory_tree):
+    parsed = _parse_docker_container_network(info)
+    inv_docker_container_network_networks(parsed, inventory_tree)
+    inv_docker_container_network_ports(parsed, inventory_tree)
+
+
+inv_info["docker_container_network"] = {  # pylint: disable=undefined-variable
+    "inv_function": inv_docker_container_network,
 }

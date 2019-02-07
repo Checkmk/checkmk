@@ -1052,16 +1052,7 @@ def show_view(view,
     query = filterheaders + view.get("add_headers", "")
 
     # Sorting - use view sorters and URL supplied sorters
-    if not only_count:
-        user_sorters = parse_url_sorters(html.request.var("sort"))
-        if user_sorters:
-            sorter_list = user_sorters
-        else:
-            sorter_list = view["sorters"]
-
-        sorters = _get_sorters(sorter_list)
-    else:
-        sorters = []
+    sorters = get_sorters(view, only_count, html.request.var("sort"))
 
     # Prepare cells of the view
     # Group cells:   Are displayed as titles of grouped rows
@@ -1187,7 +1178,20 @@ def show_view(view,
 SorterEntry = namedtuple("SorterEntry", ["sorter", "negate", "join_key"])
 
 
-def _get_sorters(sorter_list):
+def get_sorters(view, only_count, user_sort_parameter):
+    if only_count:
+        return []
+
+    user_sorters = parse_url_sorters(user_sort_parameter)
+    if user_sorters:
+        sorter_list = user_sorters
+    else:
+        sorter_list = view["sorters"]
+
+    return _get_sorter_entries(sorter_list)
+
+
+def _get_sorter_entries(sorter_list):
     sorters = []
     for entry in sorter_list:
         if entry[0] not in sorter_registry:
@@ -1455,8 +1459,13 @@ def _do_table_join(master_ds, master_rows, master_filters, join_cells, join_colu
 
     join_filters.append("Or: %d" % len(join_filters))
     query = "%s%s\n" % (master_filters, "\n".join(join_filters))
-    rows = query_data(slave_ds, [join_master_column, join_slave_column] + join_columns, [], query,
-                      only_sites, None)
+    rows = query_data(
+        datasource=slave_ds,
+        columns=[join_master_column, join_slave_column] + join_columns,
+        add_columns=[],
+        add_headers=query,
+        only_sites=only_sites,
+        limit=None)
     per_master_entry = {}
     current_key = None
     current_entry = None

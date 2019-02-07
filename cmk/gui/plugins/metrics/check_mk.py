@@ -5631,6 +5631,9 @@ df_translation = {
         "name": "fs_trend",
         "scale": MB / 86400.0
     },
+    "trend_hoursleft": {
+        "scale": 3600,
+    },
 }
 
 check_metrics["check_mk-df"] = df_translation
@@ -10035,4 +10038,15 @@ graph_info['http_errors'] = {
         ('http_5xx_rate', 'area'),
         ('http_4xx_rate', 'area'),
     ],
+}
+
+graph_info['inodes_used'] = {
+    'title': _('Used inodes'),
+    'metrics': [('inodes_used', 'area'),],
+    'scalars': [
+        'inodes_used:warn',
+        'inodes_used:crit',
+        ('inodes_used:max', _('Maximum inodes')),
+    ],
+    'range': (0, 'inodes_used:max'),
 }

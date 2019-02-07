@@ -54,18 +54,13 @@ def parse_docker_container_mem(info):
     return mem
 
 
-def inventory_docker_container_mem(parsed):
-    if parsed:
-        return [(None, {})]
-
-
 def check_docker_container_mem(_no_item, params, parsed):
     return check_memory(params, parsed)
 
 
 check_info["docker_container_mem"] = {
     "parse_function": parse_docker_container_mem,
-    "inventory_function": inventory_docker_container_mem,
+    "inventory_function": discover_single,
     "check_function": check_docker_container_mem,
     "service_description": "Memory used",
     "has_perfdata": True,

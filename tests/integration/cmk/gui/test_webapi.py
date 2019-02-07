@@ -212,17 +212,13 @@ def test_get_all_sites(web, site):
     assert site.id in response["sites"]
 
 
-@pytest.mark.parametrize(
-    "sock_spec",
-    [
-        "tcp:1.2.3.4:6557",
-        (
-            "tcp",
-            {
-                "address": ("1.2.3.4", 6557),
-                #"tls": ("plain_text", {}),
-            }),
-    ])
+@pytest.mark.parametrize("sock_spec", [
+    "tcp:1.2.3.4:6557",
+    ("tcp", {
+        "address": ("1.2.3.4", 6557),
+        "tls": ("plain_text", {}),
+    }),
+])
 def test_set_site(web, site, sock_spec):
     original_site = web.get_site(site.id)
     assert site.id == original_site["site_id"]
@@ -232,12 +228,10 @@ def test_set_site(web, site, sock_spec):
     new_site_config["socket"] = sock_spec
 
     expected_site_config = copy.deepcopy(original_site["site_config"])
-    expected_site_config["socket"] = (
-        "tcp",
-        {
-            "address": ("1.2.3.4", 6557),
-            #"tls": ("plain_text", {}),
-        })
+    expected_site_config["socket"] = ("tcp", {
+        "address": ("1.2.3.4", 6557),
+        "tls": ("plain_text", {}),
+    })
 
     try:
         web.set_site(new_site_id, new_site_config)
@@ -253,17 +247,13 @@ def test_set_site(web, site, sock_spec):
         web.delete_site(new_site_id)
 
 
-@pytest.mark.parametrize(
-    "sock_spec",
-    [
-        "tcp:1.2.3.4:6557",
-        (
-            "tcp",
-            {
-                "address": ("1.2.3.4", 6557),
-                #"tls": ("plain_text", {}),
-            }),
-    ])
+@pytest.mark.parametrize("sock_spec", [
+    "tcp:1.2.3.4:6557",
+    ("tcp", {
+        "address": ("1.2.3.4", 6557),
+        "tls": ("plain_text", {}),
+    }),
+])
 def test_set_all_sites(web, site, sock_spec):
     response = web.get_all_sites()
     del response["configuration_hash"]
@@ -274,12 +264,10 @@ def test_set_all_sites(web, site, sock_spec):
     new_site_config["socket"] = sock_spec
 
     expected_site_config = copy.deepcopy(copy.deepcopy(response["sites"][site.id]))
-    expected_site_config["socket"] = (
-        "tcp",
-        {
-            "address": ("1.2.3.4", 6557),
-            #"tls": ("plain_text", {}),
-        })
+    expected_site_config["socket"] = ("tcp", {
+        "address": ("1.2.3.4", 6557),
+        "tls": ("plain_text", {}),
+    })
 
     response["sites"][new_site_id] = new_site_config
 

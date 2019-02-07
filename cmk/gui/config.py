@@ -28,8 +28,10 @@ import sys
 import errno
 import os
 import copy
+import json
 from typing import Callable, Union, Tuple, Dict  # pylint: disable=unused-import
 import six
+from pathlib2 import Path
 
 import cmk.gui.utils as utils
 import cmk.gui.i18n
@@ -1197,10 +1199,30 @@ def load_plugins(force):
 
 
 def theme_choices():
-    return [
-        ("classic", _("Classic")),
-        ("facelift", _("Modern")),
-    ]
+    themes = {
+        "classic": _("Classic"),
+    }
+
+    for base_dir in [Path(cmk.utils.paths.web_dir), Path(cmk.utils.paths.local_web_dir)]:
+        if not base_dir.exists():
+            continue
+
+        for theme_dir in (base_dir / "htdocs" / "themes").iterdir():  # pylint: disable=no-member
+            meta_file = theme_dir / "theme.json"
+            if not meta_file.exists():
+                continue
+
+            try:
+                theme_meta = json.loads(meta_file.open(encoding="utf-8").read())
+            except ValueError:
+                # Ignore broken meta files and show the directory name as title
+                theme_meta = {
+                    "title": theme_dir.name,
+                }
+
+            themes[theme_dir.name] = theme_meta["title"]
+
+    return sorted(themes.items())
 
 
 def get_page_heading():

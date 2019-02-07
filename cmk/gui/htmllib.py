@@ -1033,7 +1033,13 @@ class html(HTMLGenerator):
 
     def set_theme(self, theme_id):
         # type: (str) -> None
-        self._theme = theme_id or config.ui_theme
+        if not theme_id:
+            theme_id = config.ui_theme
+
+        if theme_id not in dict(config.theme_choices()):
+            theme_id = "facelift"
+
+        self._theme = theme_id
 
     def get_theme(self):
         # type: () -> str

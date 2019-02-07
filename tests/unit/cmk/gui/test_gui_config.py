@@ -1,10 +1,15 @@
+# encoding: utf-8
+
+import json
 import six
 import pytest  # type: ignore
 from pathlib2 import Path
 
+import cmk.utils.paths
 import cmk.gui.modules as modules
 import cmk.gui.config as config
 import cmk.gui.permissions as permissions
+from cmk.gui.globals import html
 from cmk.gui.permissions import (
     permission_section_registry,
     permission_registry,
@@ -718,3 +723,89 @@ def test_permission_sorting(do_sort, result):
     ])
 def test_migrate_old_site_config(site, result):
     assert config.migrate_old_site_config({"mysite": site}) == {"mysite": result}
+
+
+@pytest.fixture()
+def theme_dirs(tmp_path, monkeypatch):
+    theme_path = tmp_path / "htdocs" / "themes"
+    theme_path.mkdir(parents=True)
+
+    local_theme_path = tmp_path / "local" / "htdocs" / "themes"
+    local_theme_path.mkdir(parents=True)
+
+    monkeypatch.setattr(cmk.utils.paths, "web_dir", str(tmp_path))
+    monkeypatch.setattr(cmk.utils.paths, "local_web_dir", str(tmp_path / "local"))
+
+    return theme_path, local_theme_path
+
+
+@pytest.fixture()
+def my_theme(theme_dirs):
+    theme_path = theme_dirs[0]
+    my_dir = theme_path / "my_theme"
+    my_dir.mkdir()
+    my_dir.joinpath("theme.json").open(
+        mode="w", encoding="utf-8").write(unicode(json.dumps({"title": "Määh Theme :-)"})))
+    return my_dir
+
+
+# TODO: Enable with next commit
+#def test_theme_choices_empty(theme_dirs):
+#    assert config.theme_choices() == []
+#
+#def test_theme_choices_normal(my_theme):
+#    assert config.theme_choices() == [("my_theme", u"Määh Theme :-)")]
+
+
+def test_theme_choices_local_theme(theme_dirs, my_theme):
+    local_theme_path = theme_dirs[1]
+
+    my_dir = local_theme_path / "my_improved_theme"
+    my_dir.mkdir()
+    my_dir.joinpath("theme.json").open(
+        mode="w", encoding="utf-8").write(unicode(json.dumps({"title": "Määh Bettr Theme :-D"})))
+
+    assert config.theme_choices() == sorted([
+        # TODO: Remove classic with next commit
+        ('classic', u'Classic'),
+        ("my_theme", u"Määh Theme :-)"),
+        ("my_improved_theme", u"Määh Bettr Theme :-D"),
+    ])
+
+
+def test_theme_choices_override(theme_dirs, my_theme):
+    local_theme_path = theme_dirs[1]
+
+    my_dir = local_theme_path / "my_theme"
+    my_dir.mkdir()
+    my_dir.joinpath("theme.json").open(
+        mode="w", encoding="utf-8").write(unicode(json.dumps({"title": "Fixed theme"})))
+
+    assert config.theme_choices() == sorted([
+        # TODO: Remove classic with next commit
+        ('classic', u'Classic'),
+        ("my_theme", u"Fixed theme"),
+    ])
+
+
+def test_theme_broken_meta(my_theme):
+    my_theme.joinpath("theme.json").open(
+        mode="w", encoding="utf-8").write(unicode("{\"titlewrong\": xyz\"bla\"}"))
+
+    assert config.theme_choices() == sorted([
+        # TODO: Remove classic with next commit
+        ('classic', u'Classic'),
+        ("my_theme", u"my_theme"),
+    ])
+
+
+def test_html_set_theme(my_theme, register_builtin_html):
+    html.set_theme(None)
+    # TODO: Cleanup with next commit
+    assert html.get_theme() == "classic"
+
+    html.set_theme("not_existing")
+    assert html.get_theme() == "facelift"
+
+    html.set_theme("my_theme")
+    assert html.get_theme() == "my_theme"

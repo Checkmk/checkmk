@@ -1253,6 +1253,12 @@ def _get_needed_join_columns(join_cells, sorters):
     for entry in sorters:
         join_columns.update(entry.sorter.columns)
 
+    # Remove (implicit) site column
+    try:
+        join_columns.remove("site")
+    except KeyError:
+        pass
+
     return list(join_columns)
 
 

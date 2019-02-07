@@ -1,3 +1,4 @@
+import copy
 import pytest
 from pathlib2 import Path
 import cmk.gui.config as config
@@ -5705,3 +5706,66 @@ def test_register_sorter(monkeypatch):
     assert sorter.title == "A B C"
     assert sorter.columns == ["x"]
     assert sorter.cmp.__name__ == cmpfunc.__name__
+
+
+def test_get_needed_regular_columns(register_builtin_html, load_view_plugins):
+    view = cmk.gui.views.multisite_builtin_views["allhosts"]
+
+    datasource = cmk.gui.views._get_datasource(view)
+    sorters = cmk.gui.views.get_sorters(view, only_count=False, user_sort_parameter=None)
+    group_cells = cmk.gui.views.get_group_cells(view)
+    cells = cmk.gui.views.get_cells(view)
+
+    columns = cmk.gui.views._get_needed_regular_columns(group_cells + cells, sorters, datasource)
+    assert sorted(columns) == sorted([
+        'host_scheduled_downtime_depth',
+        'host_in_check_period',
+        'host_num_services_pending',
+        'host_downtimes_with_extra_info',
+        'host_pnpgraph_present',
+        'host_check_type',
+        'host_active_passive_checks',
+        'host_num_services_crit',
+        'host_icon_image',
+        'host_is_flapping',
+        'host_in_notification_period',
+        'host_check_command',
+        'host_modified_attributes_list',
+        'host_downtimes',
+        'host_filename',
+        'host_acknowledged',
+        'host_custom_variable_names',
+        'host_state',
+        'host_action_url_expanded',
+        'host_comments_with_extra_info',
+        'host_in_service_period',
+        'host_num_services_ok',
+        'host_has_been_checked',
+        'host_address',
+        'host_staleness',
+        'host_num_services_unknown',
+        'host_notifications_enabled',
+        'host_active_checks_enabled',
+        'host_perf_data',
+        'host_custom_variable_values',
+        'host_name',
+        'host_num_services_warn',
+        'host_notes_url_expanded',
+    ])
+
+
+def test_get_needed_join_columns(register_builtin_html, load_view_plugins):
+    builtin_view = cmk.gui.views.multisite_builtin_views["allhosts"]
+
+    view = copy.deepcopy(builtin_view)
+    view["painters"].append(('service_description', None, None, u'CPU load'))
+
+    sorters = cmk.gui.views.get_sorters(view, only_count=False, user_sort_parameter=None)
+    cells = cmk.gui.views.get_cells(view)
+    join_cells = cmk.gui.views.get_join_cells(cells)
+
+    columns = cmk.gui.views._get_needed_join_columns(join_cells, sorters)
+    assert sorted(columns) == sorted([
+        'host_name',
+        'service_description',
+    ])

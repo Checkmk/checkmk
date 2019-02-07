@@ -122,6 +122,9 @@ function handle_start_activation(_unused, response_json)
             "update_function": update_activation_state,
             "is_finished_function": is_activation_progress_finished,
             "finish_function": finish_activation,
+            "error_function": function(response) {
+                async_progress.show_error(response);
+            },
             "post_data": ""
         });
     }

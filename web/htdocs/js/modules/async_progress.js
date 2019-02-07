@@ -56,7 +56,7 @@ function handle_update(handler_data, response_json)
 {
     var response = JSON.parse(response_json);
     if (response.result_code == 1) {
-        show_error(response.result);
+        handler_data.error_function(response.result);
         return; // Abort on error!
     } else {
         handler_data.update_function(handler_data, response.result);

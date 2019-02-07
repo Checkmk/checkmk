@@ -26,13 +26,16 @@
 
 
 def parse_docker_container_status(info):
+    '''process the first line to a JSON object
+
+    In case there are multiple lines of output sent by the agent only process the first
+    line. We assume that this a full JSON object. The rest of the section is skipped.
+    When a container got piggyback data from multiple hosts (e.g. a cluster) this results
+    in multiple JSON objects handed over to this check.
+    '''
     if not info or not info[0]:
         return
 
-    # In case there are multiple lines of output sent by the agent only process the first
-    # line. We assume that this a full JSON object. The rest of the section is skipped.
-    # When a container got piggyback data from multiple hosts (e.g. a cluster) this results
-    # in multiple JSON objects handed over to this check.
     json_raw_data = " ".join(info[0])
 
     import json
@@ -54,19 +57,19 @@ def parse_docker_container_status(info):
 
 
 def inventory_docker_container_status_health(parsed):
-    if u"Health" in parsed:
-        return [(None, None)]
+    if "Health" in parsed:
+        yield None, None
 
 
 def check_docker_container_status_health(_no_item, _no_params, parsed):
-    health_status = parsed.get(u"Health", {}).get(u"Status")
+    health_status = parsed.get("Health", {}).get("Status")
 
     if health_status == "healthy":
         return 0, "Healthy"
     elif health_status == "starting":
         return 1, "Starting"
     elif health_status == "unhealthy":
-        failing_streak = parsed[u"Health"][u"FailingStreak"]
+        failing_streak = parsed.get("Health", {}).get("FailingStreak", "not found")
         return 2, "Unhealthy - Failing Streak: %d" % failing_streak
     return 3, "Health Status '%s' unknown" % health_status
 
@@ -96,8 +99,8 @@ def check_docker_container_status(_no_item, _no_params, parsed):
 
     yield state, "Status: %s" % status
 
-    if parsed.get(u"Error"):
-        yield 2, "Error: %s" % parsed[u"Error"]
+    if parsed.get("Error"):
+        yield 2, "Error: %s" % parsed["Error"]
 
 
 check_info['docker_container_status'] = {

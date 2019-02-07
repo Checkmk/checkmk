@@ -1681,7 +1681,7 @@ def add_to_fstab(sitename, tmpfs_size = None):
 
     # Ensure the fstab has a newline char at it's end before appending
     previous_fstab = file("/etc/fstab").read()
-    complete_last_line = previous_fstab and previous_fstab[-1] != "\n"
+    complete_last_line = previous_fstab and not previous_fstab.endswith("\n")
 
     with file("/etc/fstab", "a+") as fstab:
         if complete_last_line:

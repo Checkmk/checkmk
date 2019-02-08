@@ -64,14 +64,14 @@ TableLog::TableLog(MonitoringCore *mc, LogCache *log_cache)
     addColumn(std::make_unique<OffsetIntColumn>(
         "class",
         "The class of the message as integer (0:info, 1:state, 2:program, 3:notification, 4:passive, 5:command)",
-        -1, -1, -1, DANGEROUS_OFFSETOF(LogEntry, _logclass)));
+        -1, -1, -1, DANGEROUS_OFFSETOF(LogEntry, _class)));
     addColumn(std::make_unique<OffsetSStringColumn>(
         "message", "The complete message line including the timestamp", -1, -1,
-        -1, DANGEROUS_OFFSETOF(LogEntry, _complete)));
+        -1, DANGEROUS_OFFSETOF(LogEntry, _message)));
     addColumn(std::make_unique<OffsetStringColumn>(
         "type",
         "The type of the message (text before the colon), the message itself for info messages",
-        -1, -1, -1, DANGEROUS_OFFSETOF(LogEntry, _text)));
+        -1, -1, -1, DANGEROUS_OFFSETOF(LogEntry, _type)));
     addColumn(std::make_unique<OffsetStringColumn>(
         "options", "The part of the message after the ':'", -1, -1, -1,
         DANGEROUS_OFFSETOF(LogEntry, _options)));
@@ -81,7 +81,7 @@ TableLog::TableLog(MonitoringCore *mc, LogCache *log_cache)
     addColumn(std::make_unique<OffsetSStringColumn>(
         "plugin_output",
         "The output of the check, if any is associated with the message", -1,
-        -1, -1, DANGEROUS_OFFSETOF(LogEntry, _check_output)));
+        -1, -1, DANGEROUS_OFFSETOF(LogEntry, _plugin_output)));
     addColumn(std::make_unique<OffsetIntColumn>(
         "state", "The state of the host or service in question", -1, -1, -1,
         DANGEROUS_OFFSETOF(LogEntry, _state)));
@@ -94,7 +94,7 @@ TableLog::TableLog(MonitoringCore *mc, LogCache *log_cache)
     addColumn(std::make_unique<OffsetSStringColumn>(
         "service_description",
         "The description of the service log entry is about (might be empty)",
-        -1, -1, -1, DANGEROUS_OFFSETOF(LogEntry, _svc_desc)));
+        -1, -1, -1, DANGEROUS_OFFSETOF(LogEntry, _service_description)));
     addColumn(std::make_unique<OffsetSStringColumn>(
         "host_name",
         "The name of the host the log entry is about (might be empty)", -1, -1,
@@ -187,11 +187,11 @@ bool TableLog::isAuthorized(Row row, const contact *ctc) const {
         // suppress entries for messages that belong to hosts that do not exist
         // anymore.
     }
-    return !(entry->_logclass == LogEntry::Class::alert ||
-             entry->_logclass == LogEntry::Class::hs_notification ||
-             entry->_logclass == LogEntry::Class::passivecheck ||
-             entry->_logclass == LogEntry::Class::alert_handlers ||
-             entry->_logclass == LogEntry::Class::state);
+    return !(entry->_class == LogEntry::Class::alert ||
+             entry->_class == LogEntry::Class::hs_notification ||
+             entry->_class == LogEntry::Class::passivecheck ||
+             entry->_class == LogEntry::Class::alert_handlers ||
+             entry->_class == LogEntry::Class::state);
 }
 
 std::shared_ptr<Column> TableLog::column(std::string colname) const {

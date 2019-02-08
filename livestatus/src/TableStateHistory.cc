@@ -364,8 +364,8 @@ void TableStateHistory::answerQuery(Query *query) {
         }
 
         if (in_nagios_initial_states &&
-            !(entry->_type == LogEntryType::state_service_initial ||
-              entry->_type == LogEntryType::state_host_initial)) {
+            !(entry->_kind == LogEntryKind::state_service_initial ||
+              entry->_kind == LogEntryKind::state_host_initial)) {
             // Set still unknown hosts / services to unmonitored
             for (auto &it_hst : state_info) {
                 HostServiceState *hst = it_hst.second;
@@ -378,27 +378,27 @@ void TableStateHistory::answerQuery(Query *query) {
 
         HostServiceKey key = nullptr;
         bool is_service = false;
-        switch (entry->_type) {
-            case LogEntryType::none:
-            case LogEntryType::core_starting:
-            case LogEntryType::core_stopping:
-            case LogEntryType::log_version:
-            case LogEntryType::acknowledge_alert_host:
-            case LogEntryType::acknowledge_alert_service:
+        switch (entry->_kind) {
+            case LogEntryKind::none:
+            case LogEntryKind::core_starting:
+            case LogEntryKind::core_stopping:
+            case LogEntryKind::log_version:
+            case LogEntryKind::acknowledge_alert_host:
+            case LogEntryKind::acknowledge_alert_service:
                 break;
-            case LogEntryType::alert_service:
-            case LogEntryType::state_service:
-            case LogEntryType::state_service_initial:
-            case LogEntryType::downtime_alert_service:
-            case LogEntryType::flapping_service:
+            case LogEntryKind::alert_service:
+            case LogEntryKind::state_service:
+            case LogEntryKind::state_service_initial:
+            case LogEntryKind::downtime_alert_service:
+            case LogEntryKind::flapping_service:
                 key = entry->_service;
                 is_service = true;
             // fall-through
-            case LogEntryType::alert_host:
-            case LogEntryType::state_host:
-            case LogEntryType::state_host_initial:
-            case LogEntryType::downtime_alert_host:
-            case LogEntryType::flapping_host: {
+            case LogEntryKind::alert_host:
+            case LogEntryKind::state_host:
+            case LogEntryKind::state_host_initial:
+            case LogEntryKind::downtime_alert_host:
+            case LogEntryKind::flapping_host: {
                 if (!is_service) {
                     key = entry->_host;
                 }
@@ -420,7 +420,7 @@ void TableStateHistory::answerQuery(Query *query) {
                     // Create state object that we also need for filtering right
                     // now
                     state = new HostServiceState();
-                    state->_is_host = entry->_svc_desc.empty();
+                    state->_is_host = entry->_service_description.empty();
                     state->_host = entry->_host;
                     state->_service = entry->_service;
 #ifdef CMC
@@ -439,7 +439,7 @@ void TableStateHistory::answerQuery(Query *query) {
                     // No state found. Now check if this host/services is
                     // filtered out.  Note: we currently do not filter out hosts
                     // since they might be needed for service states
-                    if (!entry->_svc_desc.empty()) {
+                    if (!entry->_service_description.empty()) {
                         if (!object_filter->accepts(Row(state),
                                                     query->authUser(),
                                                     query->timezoneOffset())) {
@@ -557,9 +557,9 @@ void TableStateHistory::answerQuery(Query *query) {
                 int state_changed =
                     updateHostServiceState(query, entry, state, only_update);
                 // Host downtime or state changes also affect its services
-                if (entry->_type == LogEntryType::alert_host ||
-                    entry->_type == LogEntryType::state_host ||
-                    entry->_type == LogEntryType::downtime_alert_host) {
+                if (entry->_kind == LogEntryKind::alert_host ||
+                    entry->_kind == LogEntryKind::state_host ||
+                    entry->_kind == LogEntryKind::downtime_alert_host) {
                     if (state_changed != 0) {
                         for (auto &_service : state->_services) {
                             updateHostServiceState(query, entry, _service,
@@ -569,7 +569,7 @@ void TableStateHistory::answerQuery(Query *query) {
                 }
                 break;
             }
-            case LogEntryType::timeperiod_transition: {
+            case LogEntryKind::timeperiod_transition: {
                 try {
                     TimeperiodTransition tpt(entry->_options);
                     _notification_periods[tpt.name()] = tpt.to();
@@ -580,11 +580,11 @@ void TableStateHistory::answerQuery(Query *query) {
                 } catch (const std::logic_error &e) {
                     Warning(logger())
                         << "Error: Invalid syntax of TIMEPERIOD TRANSITION: "
-                        << entry->_complete;
+                        << entry->_message;
                 }
                 break;
             }
-            case LogEntryType::log_initial_states: {
+            case LogEntryKind::log_initial_states: {
                 // This feature is only available if log_initial_states is set
                 // to 1. If log_initial_states is set, each nagios startup logs
                 // the initial states of all known hosts and services. Therefore
@@ -649,7 +649,7 @@ int TableStateHistory::updateHostServiceState(Query *query,
     int state_changed = 1;
 
     // Revive host / service if it was unmonitored
-    if (entry->_type != LogEntryType::timeperiod_transition &&
+    if (entry->_kind != LogEntryKind::timeperiod_transition &&
         hs_state->_has_vanished) {
         hs_state->_time = hs_state->_last_known_time;
         hs_state->_until = hs_state->_last_known_time;
@@ -697,22 +697,22 @@ int TableStateHistory::updateHostServiceState(Query *query,
 
     // A timeperiod entry never brings an absent host or service into
     // existence..
-    if (entry->_type != LogEntryType::timeperiod_transition) {
+    if (entry->_kind != LogEntryKind::timeperiod_transition) {
         hs_state->_may_no_longer_exist = false;
     }
 
-    switch (entry->_type) {
-        case LogEntryType::none:
-        case LogEntryType::core_starting:
-        case LogEntryType::core_stopping:
-        case LogEntryType::log_version:
-        case LogEntryType::log_initial_states:
-        case LogEntryType::acknowledge_alert_host:
-        case LogEntryType::acknowledge_alert_service:
+    switch (entry->_kind) {
+        case LogEntryKind::none:
+        case LogEntryKind::core_starting:
+        case LogEntryKind::core_stopping:
+        case LogEntryKind::log_version:
+        case LogEntryKind::log_initial_states:
+        case LogEntryKind::acknowledge_alert_host:
+        case LogEntryKind::acknowledge_alert_service:
             break;
-        case LogEntryType::state_host:
-        case LogEntryType::state_host_initial:
-        case LogEntryType::alert_host: {
+        case LogEntryKind::state_host:
+        case LogEntryKind::state_host_initial:
+        case LogEntryKind::alert_host: {
             if (hs_state->_is_host) {
                 if (hs_state->_state != entry->_state) {
                     if (!only_update) {
@@ -734,9 +734,9 @@ int TableStateHistory::updateHostServiceState(Query *query,
             }
             break;
         }
-        case LogEntryType::state_service:
-        case LogEntryType::state_service_initial:
-        case LogEntryType::alert_service: {
+        case LogEntryKind::state_service:
+        case LogEntryKind::state_service_initial:
+        case LogEntryKind::alert_service: {
             if (hs_state->_state != entry->_state) {
                 if (!only_update) {
                     process(query, hs_state);
@@ -746,7 +746,7 @@ int TableStateHistory::updateHostServiceState(Query *query,
             }
             break;
         }
-        case LogEntryType::downtime_alert_host: {
+        case LogEntryKind::downtime_alert_host: {
             int downtime_active =
                 mk::starts_with(entry->_state_type, "STARTED") ? 1 : 0;
 
@@ -765,7 +765,7 @@ int TableStateHistory::updateHostServiceState(Query *query,
             }
             break;
         }
-        case LogEntryType::downtime_alert_service: {
+        case LogEntryKind::downtime_alert_service: {
             int downtime_active =
                 mk::starts_with(entry->_state_type, "STARTED") ? 1 : 0;
             if (hs_state->_in_downtime != downtime_active) {
@@ -777,8 +777,8 @@ int TableStateHistory::updateHostServiceState(Query *query,
             }
             break;
         }
-        case LogEntryType::flapping_host:
-        case LogEntryType::flapping_service: {
+        case LogEntryKind::flapping_host:
+        case LogEntryKind::flapping_service: {
             int flapping_active =
                 mk::starts_with(entry->_state_type, "STARTED") ? 1 : 0;
             if (hs_state->_is_flapping != flapping_active) {
@@ -792,7 +792,7 @@ int TableStateHistory::updateHostServiceState(Query *query,
             }
             break;
         }
-        case LogEntryType::timeperiod_transition: {
+        case LogEntryKind::timeperiod_transition: {
             try {
                 TimeperiodTransition tpt(entry->_options);
                 // if no _host pointer is available the initial status of
@@ -821,19 +821,19 @@ int TableStateHistory::updateHostServiceState(Query *query,
             } catch (const std::logic_error &e) {
                 Warning(logger())
                     << "Error: Invalid syntax of TIMEPERIOD TRANSITION: "
-                    << entry->_complete;
+                    << entry->_message;
             }
             break;
         }
     }
 
-    if (entry->_type != LogEntryType::timeperiod_transition) {
-        if ((entry->_type == LogEntryType::state_host_initial ||
-             entry->_type == LogEntryType::state_service_initial) &&
-            entry->_check_output == "(null)") {
+    if (entry->_kind != LogEntryKind::timeperiod_transition) {
+        if ((entry->_kind == LogEntryKind::state_host_initial ||
+             entry->_kind == LogEntryKind::state_service_initial) &&
+            entry->_plugin_output == "(null)") {
             hs_state->_log_output = "";
         } else {
-            hs_state->_log_output = entry->_check_output;
+            hs_state->_log_output = entry->_plugin_output;
         }
     }
 

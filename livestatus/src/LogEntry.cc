@@ -37,31 +37,31 @@ static constexpr size_t timestamp_prefix_length = 13;
 // this set-me-to-zero-to-be-sure-block.
 LogEntry::LogEntry(MonitoringCore *mc, size_t lineno, std::string line)
     : _lineno(static_cast<int32_t>(lineno))
-    , _complete(std::move(line))
+    , _message(std::move(line))
     , _state(0)
     , _attempt(0)
     , _host(nullptr)
     , _service(nullptr)
     , _contact(nullptr) {
     // pointer to options (everything after ':')
-    size_t pos = _complete.find(':');
+    size_t pos = _message.find(':');
     if (pos != std::string::npos) {
-        pos = _complete.find_first_not_of(' ', pos + 1);
+        pos = _message.find_first_not_of(' ', pos + 1);
     }
     if (pos == std::string::npos) {
-        pos = _complete.size();
+        pos = _message.size();
     }
-    _options = &_complete[pos];
+    _options = &_message[pos];
 
     try {
-        if (_complete.size() < timestamp_prefix_length || _complete[0] != '[' ||
-            _complete[11] != ']' || _complete[12] != ' ') {
+        if (_message.size() < timestamp_prefix_length || _message[0] != '[' ||
+            _message[11] != ']' || _message[12] != ' ') {
             throw std::invalid_argument("timestamp delimiter");
         }
-        _time = std::stoi(_complete.substr(1, 10));
+        _time = std::stoi(_message.substr(1, 10));
     } catch (const std::logic_error &e) {
-        _logclass = Class::invalid;
-        _type = LogEntryType::none;
+        _class = Class::invalid;
+        _kind = LogEntryKind::none;
         return;  // ignore invalid lines silently
     }
 
@@ -75,8 +75,8 @@ bool LogEntry::assign(Param par, const std::string &field) {
         case Param::HostName:
             this->_host_name = field;
             break;
-        case Param::SvcDesc:
-            this->_svc_desc = field;
+        case Param::ServiceDescription:
+            this->_service_description = field;
             break;
         case Param::HostState:
             this->_state = static_cast<int>(parseHostState(field));
@@ -102,8 +102,8 @@ bool LogEntry::assign(Param par, const std::string &field) {
         case Param::ContactName:
             this->_contact_name = field;
             break;
-        case Param::CheckOutput:
-            this->_check_output = field;
+        case Param::PluginOutput:
+            this->_plugin_output = field;
             break;
     }
 
@@ -113,208 +113,211 @@ bool LogEntry::assign(Param par, const std::string &field) {
 std::vector<LogEntry::LogDef> LogEntry::log_definitions{
     LogDef{"INITIAL HOST STATE",
            Class::state,
-           LogEntryType::state_host_initial,
+           LogEntryKind::state_host_initial,
            {Param::HostName, Param::HostState, Param::StateType, Param::Attempt,
-            Param::CheckOutput}},
+            Param::PluginOutput}},
     ////////////////
     LogDef{"CURRENT HOST STATE",
            Class::state,
-           LogEntryType::state_host,
+           LogEntryKind::state_host,
            {Param::HostName, Param::HostState, Param::StateType, Param::Attempt,
-            Param::CheckOutput}},
+            Param::PluginOutput}},
     ////////////////
     LogDef{"HOST ALERT",
            Class::alert,
-           LogEntryType::alert_host,
+           LogEntryKind::alert_host,
            {Param::HostName, Param::HostState, Param::StateType, Param::Attempt,
-            Param::CheckOutput}},
+            Param::PluginOutput}},
     ////////////////
     LogDef{"HOST DOWNTIME ALERT",
            Class::alert,
-           LogEntryType::downtime_alert_host,
+           LogEntryKind::downtime_alert_host,
            {Param::HostName, Param::StateType, Param::Comment}},
     ////////////////
     LogDef{"HOST ACKNOWLEDGE ALERT",
            Class::alert,
-           LogEntryType::acknowledge_alert_host,
+           LogEntryKind::acknowledge_alert_host,
            {Param::HostName, Param::StateType, Param::ContactName,
             Param::Comment}},
     ////////////////
     LogDef{"HOST FLAPPING ALERT",
            Class::alert,
-           LogEntryType::flapping_host,
+           LogEntryKind::flapping_host,
            {Param::HostName, Param::StateType, Param::Comment}},
     ////////////////
     LogDef{"INITIAL SERVICE STATE",
            Class::state,
-           LogEntryType::state_service_initial,
-           {Param::HostName, Param::SvcDesc, Param::ServiceState,
-            Param::StateType, Param::Attempt, Param::CheckOutput}},
+           LogEntryKind::state_service_initial,
+           {Param::HostName, Param::ServiceDescription, Param::ServiceState,
+            Param::StateType, Param::Attempt, Param::PluginOutput}},
     ////////////////
     LogDef{"CURRENT SERVICE STATE",
            Class::state,
-           LogEntryType::state_service,
-           {Param::HostName, Param::SvcDesc, Param::ServiceState,
-            Param::StateType, Param::Attempt, Param::CheckOutput}},
+           LogEntryKind::state_service,
+           {Param::HostName, Param::ServiceDescription, Param::ServiceState,
+            Param::StateType, Param::Attempt, Param::PluginOutput}},
     ////////////////
     LogDef{"SERVICE ALERT",
            Class::alert,
-           LogEntryType::alert_service,
-           {Param::HostName, Param::SvcDesc, Param::ServiceState,
-            Param::StateType, Param::Attempt, Param::CheckOutput}},
+           LogEntryKind::alert_service,
+           {Param::HostName, Param::ServiceDescription, Param::ServiceState,
+            Param::StateType, Param::Attempt, Param::PluginOutput}},
     ////////////////
     LogDef{"SERVICE DOWNTIME ALERT",
            Class::alert,
-           LogEntryType::downtime_alert_service,
-           {Param::HostName, Param::SvcDesc, Param::StateType, Param::Comment}},
+           LogEntryKind::downtime_alert_service,
+           {Param::HostName, Param::ServiceDescription, Param::StateType,
+            Param::Comment}},
     ////////////////
     LogDef{"SERVICE ACKNOWLEDGE ALERT",
            Class::alert,
-           LogEntryType::acknowledge_alert_service,
-           {Param::HostName, Param::SvcDesc, Param::StateType,
+           LogEntryKind::acknowledge_alert_service,
+           {Param::HostName, Param::ServiceDescription, Param::StateType,
             Param::ContactName, Param::Comment}},
     ////////////////
     LogDef{"SERVICE FLAPPING ALERT",
            Class::alert,
-           LogEntryType::flapping_service,
-           {Param::HostName, Param::SvcDesc, Param::StateType, Param::Comment}},
+           LogEntryKind::flapping_service,
+           {Param::HostName, Param::ServiceDescription, Param::StateType,
+            Param::Comment}},
     ////////////////
     LogDef{"TIMEPERIOD TRANSITION",
            Class::state,
-           LogEntryType::timeperiod_transition,
+           LogEntryKind::timeperiod_transition,
            {}},
     ////////////////
     LogDef{"HOST NOTIFICATION",
            Class::hs_notification,
-           LogEntryType::none,
+           LogEntryKind::none,
            {Param::ContactName, Param::HostName, Param::StateType,
-            Param::CommandName, Param::CheckOutput}},
+            Param::CommandName, Param::PluginOutput}},
     ////////////////
     LogDef{"SERVICE NOTIFICATION",
            Class::hs_notification,
-           LogEntryType::none,
-           {Param::ContactName, Param::HostName, Param::SvcDesc,
-            Param::StateType, Param::CommandName, Param::CheckOutput}},
+           LogEntryKind::none,
+           {Param::ContactName, Param::HostName, Param::ServiceDescription,
+            Param::StateType, Param::CommandName, Param::PluginOutput}},
     ////////////////
     LogDef{"HOST NOTIFICATION RESULT",
            Class::hs_notification,
-           LogEntryType::none,
+           LogEntryKind::none,
            {Param::ContactName, Param::HostName, Param::StateType,
-            Param::CommandName, Param::CheckOutput, Param::Comment}},
+            Param::CommandName, Param::PluginOutput, Param::Comment}},
     ////////////////
-    LogDef{
-        "SERVICE NOTIFICATION RESULT",
-        Class::hs_notification,
-        LogEntryType::none,
-        {Param::ContactName, Param::HostName, Param::SvcDesc, Param::StateType,
-         Param::CommandName, Param::CheckOutput, Param::Comment}},
+    LogDef{"SERVICE NOTIFICATION RESULT",
+           Class::hs_notification,
+           LogEntryKind::none,
+           {Param::ContactName, Param::HostName, Param::ServiceDescription,
+            Param::StateType, Param::CommandName, Param::PluginOutput,
+            Param::Comment}},
     ////////////////
     LogDef{"HOST NOTIFICATION PROGRESS",
            Class::hs_notification,
-           LogEntryType::none,
+           LogEntryKind::none,
            {Param::ContactName, Param::HostName, Param::StateType,
-            Param::CommandName, Param::CheckOutput}},
+            Param::CommandName, Param::PluginOutput}},
     ////////////////
     LogDef{"SERVICE NOTIFICATION PROGRESS",
            Class::hs_notification,
-           LogEntryType::none,
-           {Param::ContactName, Param::HostName, Param::SvcDesc,
-            Param::StateType, Param::CommandName, Param::CheckOutput}},
+           LogEntryKind::none,
+           {Param::ContactName, Param::HostName, Param::ServiceDescription,
+            Param::StateType, Param::CommandName, Param::PluginOutput}},
     ////////////////
     LogDef{"HOST ALERT HANDLER STARTED",
            Class::alert_handlers,
-           LogEntryType::none,
+           LogEntryKind::none,
            {Param::HostName, Param::CommandName}},
     ////////////////
     LogDef{"SERVICE ALERT HANDLER STARTED",
            Class::alert_handlers,
-           LogEntryType::none,
-           {Param::HostName, Param::SvcDesc, Param::CommandName}},
+           LogEntryKind::none,
+           {Param::HostName, Param::ServiceDescription, Param::CommandName}},
     ////////////////
     LogDef{"HOST ALERT HANDLER STOPPED",
            Class::alert_handlers,
-           LogEntryType::none,
+           LogEntryKind::none,
            {Param::HostName, Param::CommandName, Param::ServiceState,
-            Param::CheckOutput}},
+            Param::PluginOutput}},
     ////////////////
     LogDef{"SERVICE ALERT HANDLER STOPPED",
            Class::alert_handlers,
-           LogEntryType::none,
-           {Param::HostName, Param::SvcDesc, Param::CommandName,
-            Param::ServiceState, Param::CheckOutput}},
+           LogEntryKind::none,
+           {Param::HostName, Param::ServiceDescription, Param::CommandName,
+            Param::ServiceState, Param::PluginOutput}},
     ////////////////
     LogDef{"PASSIVE SERVICE CHECK",
            Class::passivecheck,
-           LogEntryType::none,
-           {Param::HostName, Param::SvcDesc, Param::State, Param::CheckOutput}},
+           LogEntryKind::none,
+           {Param::HostName, Param::ServiceDescription, Param::State,
+            Param::PluginOutput}},
     ////////////////
     LogDef{"PASSIVE HOST CHECK",
            Class::passivecheck,
-           LogEntryType::none,
-           {Param::HostName, Param::State, Param::CheckOutput}},
+           LogEntryKind::none,
+           {Param::HostName, Param::State, Param::PluginOutput}},
     ////////////////
-    LogDef{"EXTERNAL COMMAND", Class::ext_command, LogEntryType::none, {}}};
+    LogDef{"EXTERNAL COMMAND", Class::ext_command, LogEntryKind::none, {}}};
 
 // A bit verbose, but we avoid unnecessary string copies below.
 void LogEntry::classifyLogMessage() {
     for (const auto &def : log_definitions) {
         if (textStartsWith(def.prefix) &&
-            _complete.compare(timestamp_prefix_length + def.prefix.size(), 2,
-                              ": ") == 0) {
-            _text = &def.prefix[0];
-            _logclass = def.log_class;
-            _type = def.log_type;
+            _message.compare(timestamp_prefix_length + def.prefix.size(), 2,
+                             ": ") == 0) {
+            _type = &def.prefix[0];
+            _class = def.log_class;
+            _kind = def.log_type;
             // TODO(sp) Use boost::tokenizer instead of this index fiddling
             size_t pos = timestamp_prefix_length + def.prefix.size() + 2;
             for (Param par : def.params) {
-                size_t sep_pos = _complete.find(';', pos);
+                size_t sep_pos = _message.find(';', pos);
                 size_t end_pos =
-                    sep_pos == std::string::npos ? _complete.size() : sep_pos;
-                assign(par, _complete.substr(pos, end_pos - pos));
-                pos = sep_pos == std::string::npos ? _complete.size()
+                    sep_pos == std::string::npos ? _message.size() : sep_pos;
+                assign(par, _message.substr(pos, end_pos - pos));
+                pos = sep_pos == std::string::npos ? _message.size()
                                                    : (sep_pos + 1);
             }
             return;
         }
     }
-    _text = &_complete[timestamp_prefix_length];
+    _type = &_message[timestamp_prefix_length];
     if (textStartsWith("LOG VERSION: 2.0")) {
-        _logclass = Class::program;
-        _type = LogEntryType::log_version;
+        _class = Class::program;
+        _kind = LogEntryKind::log_version;
         return;
     }
     if (textStartsWith("logging initial states") ||
         textStartsWith("logging intitial states")) {
-        _logclass = Class::program;
-        _type = LogEntryType::log_initial_states;
+        _class = Class::program;
+        _kind = LogEntryKind::log_initial_states;
         return;
     }
     if (textContains("starting...") || textContains("active mode...")) {
-        _logclass = Class::program;
-        _type = LogEntryType::core_starting;
+        _class = Class::program;
+        _kind = LogEntryKind::core_starting;
         return;
     }
     if (textContains("shutting down...") || textContains("Bailing out") ||
         textContains("standby mode...")) {
-        _logclass = Class::program;
-        _type = LogEntryType::core_stopping;
+        _class = Class::program;
+        _kind = LogEntryKind::core_stopping;
         return;
     }
     if (textContains("restarting...")) {
-        _logclass = Class::program;
-        _type = LogEntryType::none;
+        _class = Class::program;
+        _kind = LogEntryKind::none;
         return;
     }
-    _logclass = Class::info;
-    _type = LogEntryType::none;
+    _class = Class::info;
+    _kind = LogEntryKind::none;
 }
 
 bool LogEntry::textStartsWith(const std::string &what) {
-    return _complete.compare(timestamp_prefix_length, what.size(), what) == 0;
+    return _message.compare(timestamp_prefix_length, what.size(), what) == 0;
 }
 
 bool LogEntry::textContains(const std::string &what) {
-    return _complete.find(what, timestamp_prefix_length) != std::string::npos;
+    return _message.find(what, timestamp_prefix_length) != std::string::npos;
 }
 
 // The NotifyHelper class has a long, tragic history: Through a long series of
@@ -325,8 +328,8 @@ bool LogEntry::textContains(const std::string &what) {
 // to support parsing an incorrect ordering of "state type" and "command name"
 // fields. :-P
 void LogEntry::applyWorkarounds() {
-    if (_logclass != Class::hs_notification ||  // no need for any workaround
-        _state_type.empty()) {                  // extremely broken line
+    if (_class != Class::hs_notification ||  // no need for any workaround
+        _state_type.empty()) {               // extremely broken line
         return;
     }
 
@@ -339,7 +342,7 @@ void LogEntry::applyWorkarounds() {
         return;  // extremely broken line, even after a potential swap
     }
 
-    _state = _svc_desc.empty()
+    _state = _service_description.empty()
                  ? static_cast<int>(parseHostState(_state_type))
                  : static_cast<int>(parseServiceState(_state_type));
 }
@@ -398,10 +401,11 @@ unsigned LogEntry::updateReferences(MonitoringCore *mc) {
         _host = find_host(const_cast<char *>(_host_name.c_str()));
         updated++;
     }
-    if (!_svc_desc.empty()) {
+    if (!_service_description.empty()) {
         // Older Nagios headers are not const-correct... :-P
-        _service = find_service(const_cast<char *>(_host_name.c_str()),
-                                const_cast<char *>(_svc_desc.c_str()));
+        _service =
+            find_service(const_cast<char *>(_host_name.c_str()),
+                         const_cast<char *>(_service_description.c_str()));
         updated++;
     }
     if (!_contact_name.empty()) {

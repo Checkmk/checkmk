@@ -25,39 +25,24 @@
 # Boston, MA 02110-1301 USA.
 
 
-def inventory_docker_node_info(parsed):
-    if parsed and isinstance(parsed, dict):
-        return [(None, {})]
-
-
-def check_docker_node_info(item, params, parsed):
-    if isinstance(parsed, dict):
-        # TODO use other infos from this section?
-        return 0, 'Daemon running on host %s' % parsed["Name"]
-
-    return 2, parsed
+def check_docker_node_info(_no_item, _no_params, parsed):
+    if "Name" in parsed:
+        yield 0, 'Daemon running on host %s' % parsed["Name"]
 
 
 check_info['docker_node_info'] = {
     'includes': ['legacy_docker.include'],
     'parse_function': parse_legacy_docker_node_info,
-    'inventory_function': inventory_docker_node_info,
+    'inventory_function': discover_single,
     'check_function': check_docker_node_info,
     'service_description': 'Docker node info',
 }
 
 
-def inventory_docker_node_containers(parsed):
-    if parsed and isinstance(parsed, dict):
-        return [(None, {})]
-
-
-def check_docker_node_containers(item, params, parsed):
-    if not isinstance(parsed, dict):
-        # String with error message in case the daemon is not running
-        return
-
-    def check_node_levels(count, warn, crit, warn_lower, crit_lower):
+def check_docker_node_containers(_no_item, params, parsed):
+    def check_node_levels(count, levels, levels_lower):
+        warn, crit = levels
+        warn_lower, crit_lower = levels_lower
         if crit is not None and count >= crit:
             return 2, " (warn/crit at %s/%s)" % (warn, crit)
         if crit_lower is not None and count < crit_lower:
@@ -68,32 +53,29 @@ def check_docker_node_containers(item, params, parsed):
             return 1, " (warn/crit below %s/%s)" % (warn_lower, crit_lower)
         return 0, ""
 
-    for title, key, upper_name, lower_name in (
-        ("containers", "Containers", 'upper_levels', 'lower_levels'),
-        ("running", "ContainersRunning", 'running_upper_levels', 'running_lower_levels'),
-        ("paused", "ContainersPaused", 'paused_upper_levels', 'paused_lower_levels'),
-        ("stopped", "ContainersStopped", 'stopped_upper_levels', 'stopped_lower_levels'),
+    for title, key, levels_prefix in (
+        ("containers", "Containers", ''),
+        ("running", "ContainersRunning", 'running_'),
+        ("paused", "ContainersPaused", 'paused_'),
+        ("stopped", "ContainersStopped", 'stopped_'),
     ):
-        raw_count = parsed.get(key)
-        if raw_count is None:
+        count = parsed.get(key)
+        if count is None:
             yield 3, "%s: count not present in agent output" % title
             continue
-        count = int(raw_count)
 
-        warn, crit = params.get(upper_name, (None, None))
-        lower_warn, lower_crit = params.get(lower_name, (None, None))
+        levels = params.get('%supper_levels' % levels_prefix, (None, None))
+        levels_lower = params.get('%slower_levels' % levels_prefix, (None, None))
 
-        status, level_text = check_node_levels(count, warn, crit, lower_warn, lower_crit)
-        infotext = "%s: %d" % (title, count)
-        if level_text:
-            infotext += level_text
-        perfdata = [(title.lower(), count, warn, crit, lower_warn, lower_crit)]
+        status, level_text = check_node_levels(count, levels, levels_lower)
+        infotext = "%s: %d%s" % (title, count, level_text)
+        perfdata = [(title, count) + levels]
 
         yield status, infotext, perfdata
 
 
 check_info["docker_node_info.containers"] = {
-    "inventory_function": inventory_docker_node_containers,
+    "inventory_function": discover_single,
     "check_function": check_docker_node_containers,
     "service_description": "Docker containers",
     "has_perfdata": True,

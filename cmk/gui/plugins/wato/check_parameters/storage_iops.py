@@ -31,33 +31,62 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersStorage,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersStorage, "storage_iops", _(u"I/O operations for DDN S2A devices"),
-    Dictionary(elements=[
-        ("read",
-         Tuple(
-             title=_(u"Read IO operations per second"),
-             elements=[
-                 Float(title=_(u"Warning at"), unit="1/s"),
-                 Float(title=_(u"Critical at"), unit="1/s"),
-             ])),
-        ("write",
-         Tuple(
-             title=_(u"Write IO operations per second"),
-             elements=[
-                 Float(title=_(u"Warning at"), unit="1/s"),
-                 Float(title=_(u"Critical at"), unit="1/s"),
-             ])),
-        ("total",
-         Tuple(
-             title=_(u"Total IO operations per second"),
-             elements=[
-                 Float(title=_(u"Warning at"), unit="1/s"),
-                 Float(title=_(u"Critical at"), unit="1/s"),
-             ])),
-    ]), TextAscii(title=_(u"Port index or 'Total'")), "dict")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersStorageIops(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersStorage
+
+    @property
+    def check_group_name(self):
+        return "storage_iops"
+
+    @property
+    def title(self):
+        return _("I/O operations for DDN S2A devices")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ("read",
+                 Tuple(
+                     title=_(u"Read IO operations per second"),
+                     elements=[
+                         Float(title=_(u"Warning at"), unit="1/s"),
+                         Float(title=_(u"Critical at"), unit="1/s"),
+                     ],
+                 )),
+                ("write",
+                 Tuple(
+                     title=_(u"Write IO operations per second"),
+                     elements=[
+                         Float(title=_(u"Warning at"), unit="1/s"),
+                         Float(title=_(u"Critical at"), unit="1/s"),
+                     ],
+                 )),
+                ("total",
+                 Tuple(
+                     title=_(u"Total IO operations per second"),
+                     elements=[
+                         Float(title=_(u"Warning at"), unit="1/s"),
+                         Float(title=_(u"Critical at"), unit="1/s"),
+                     ],
+                 )),
+            ],)
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_(u"Port index or 'Total'"))

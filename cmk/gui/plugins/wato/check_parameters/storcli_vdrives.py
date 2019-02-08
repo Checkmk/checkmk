@@ -30,38 +30,64 @@ from cmk.gui.valuespec import (
     MonitoringState,
     TextAscii,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersStorage,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersStorage, "storcli_vdrives", _("LSI RAID VDrives (StorCLI)"),
-    Dictionary(
-        title=_("Evaluation of VDrive States"),
-        elements=[
-            ("Optimal", MonitoringState(
-                title=_("State for <i>Optimal</i>"),
-                default_value=0,
-            )),
-            ("Partially Degraded",
-             MonitoringState(
-                 title=_("State for <i>Partially Degraded</i>"),
-                 default_value=1,
-             )),
-            ("Degraded", MonitoringState(
-                title=_("State for <i>Degraded</i>"),
-                default_value=2,
-            )),
-            ("Offline", MonitoringState(
-                title=_("State for <i>Offline</i>"),
-                default_value=1,
-            )),
-            ("Recovery", MonitoringState(
-                title=_("State for <i>Recovery</i>"),
-                default_value=1,
-            )),
-        ]), TextAscii(
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersStorcliVdrives(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersStorage
+
+    @property
+    def check_group_name(self):
+        return "storcli_vdrives"
+
+    @property
+    def title(self):
+        return _("LSI RAID VDrives (StorCLI)")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            title=_("Evaluation of VDrive States"),
+            elements=[
+                ("Optimal", MonitoringState(
+                    title=_("State for <i>Optimal</i>"),
+                    default_value=0,
+                )),
+                ("Partially Degraded",
+                 MonitoringState(
+                     title=_("State for <i>Partially Degraded</i>"),
+                     default_value=1,
+                 )),
+                ("Degraded", MonitoringState(
+                    title=_("State for <i>Degraded</i>"),
+                    default_value=2,
+                )),
+                ("Offline", MonitoringState(
+                    title=_("State for <i>Offline</i>"),
+                    default_value=1,
+                )),
+                ("Recovery", MonitoringState(
+                    title=_("State for <i>Recovery</i>"),
+                    default_value=1,
+                )),
+            ],
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(
             title=_("Virtual Drive"),
             allow_empty=False,
-        ), "dict")
+        )

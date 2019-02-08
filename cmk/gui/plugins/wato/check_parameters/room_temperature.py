@@ -32,22 +32,41 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersEnvironment,
-    register_check_parameters,
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersEnvironment,
-    "room_temperature",
-    _("Room temperature (external thermal sensors)"),
-    Tuple(
-        help=_("Temperature levels for external thermometers that are used "
-               "for monitoring the temperature of a datacenter. An example "
-               "is the webthem from W&T."),
-        elements=[
-            Integer(title=_("warning at"), unit=u"°C", default_value=26),
-            Integer(title=_("critical at"), unit=u"°C", default_value=30),
-        ]),
-    TextAscii(title=_("Sensor ID"), help=_("The identifier of the thermal sensor.")),
-    "first",
-    deprecated=True,
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersRoomTemperature(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersEnvironment
+
+    @property
+    def check_group_name(self):
+        return "room_temperature"
+
+    @property
+    def title(self):
+        return _("Room temperature (external thermal sensors)")
+
+    @property
+    def is_deprecated(self):
+        return True
+
+    @property
+    def parameter_valuespec(self):
+        return Tuple(
+            help=_("Temperature levels for external thermometers that are used "
+                   "for monitoring the temperature of a datacenter. An example "
+                   "is the webthem from W&T."),
+            elements=[
+                Integer(title=_("warning at"), unit=u"°C", default_value=26),
+                Integer(title=_("critical at"), unit=u"°C", default_value=30),
+            ],
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Sensor ID"), help=_("The identifier of the thermal sensor."))

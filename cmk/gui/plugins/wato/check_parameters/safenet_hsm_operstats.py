@@ -31,34 +31,57 @@ from cmk.gui.valuespec import (
     Integer,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
     Levels,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications, "safenet_hsm_operstats",
-    _("Safenet HSM Operation Stats"),
-    Dictionary(elements=[
-        ("error_rate",
-         Tuple(
-             title=_(u"Error rate"),
-             elements=[
-                 Float(title=_("Warning at"), default_value=0.01, unit=_("1/s")),
-                 Float(title=_("Critical at"), default_value=0.05, unit=_("1/s")),
-             ])),
-        ("request_rate", Levels(
-            title=_(u"Request rate"),
-            unit=_("1/s"),
-            default_value=None,
-        )),
-        ("operation_errors",
-         Tuple(
-             title=_("Operation errors"),
-             help=_("Sets levels on total operation errors since last counter reset."),
-             elements=[
-                 Integer(title=_("Warning at"), default_value=0),
-                 Integer(title=_("Critical at"), default_value=1),
-             ])),
-    ]), None, "dict")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersSafenetHsmOperstats(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "safenet_hsm_operstats"
+
+    @property
+    def title(self):
+        return _("Safenet HSM Operation Stats")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ("error_rate",
+                 Tuple(
+                     title=_(u"Error rate"),
+                     elements=[
+                         Float(title=_("Warning at"), default_value=0.01, unit=_("1/s")),
+                         Float(title=_("Critical at"), default_value=0.05, unit=_("1/s")),
+                     ],
+                 )),
+                ("request_rate", Levels(
+                    title=_(u"Request rate"),
+                    unit=_("1/s"),
+                    default_value=None,
+                )),
+                ("operation_errors",
+                 Tuple(
+                     title=_("Operation errors"),
+                     help=_("Sets levels on total operation errors since last counter reset."),
+                     elements=[
+                         Integer(title=_("Warning at"), default_value=0),
+                         Integer(title=_("Critical at"), default_value=1),
+                     ],
+                 )),
+            ],)

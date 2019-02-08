@@ -30,16 +30,38 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersStorage,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersStorage, "read_hits", _(u"Read prefetch hits for DDN S2A devices"),
-    Tuple(
-        title=_(u"Prefetch hits"),
-        elements=[
-            Float(title=_(u"Warning below"), default_value=95.0),
-            Float(title=_(u"Critical below"), default_value=90.0),
-        ]), TextAscii(title=_(u"Port index or 'Total'")), "first")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersReadHits(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersStorage
+
+    @property
+    def check_group_name(self):
+        return "read_hits"
+
+    @property
+    def title(self):
+        return _("Read prefetch hits for DDN S2A devices")
+
+    @property
+    def parameter_valuespec(self):
+        return Tuple(
+            title=_(u"Prefetch hits"),
+            elements=[
+                Float(title=_(u"Warning below"), default_value=95.0),
+                Float(title=_(u"Critical below"), default_value=90.0),
+            ],
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_(u"Port index or 'Total'"))

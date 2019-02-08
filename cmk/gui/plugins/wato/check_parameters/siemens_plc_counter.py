@@ -31,34 +31,56 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersEnvironment,
-    "siemens_plc_counter",
-    _("Siemens PLC Counter"),
-    Dictionary(
-        elements=[
-            ('levels',
-             Tuple(
-                 title=_("Counter level"),
-                 elements=[
-                     Integer(title=_("Warning at"),),
-                     Integer(title=_("Critical at"),),
-                 ])),
-        ],
-        help=_("This rule is used to configure thresholds for counter values read from "
-               "Siemens PLC devices."),
-        title=_("Counter levels"),
-    ),
-    TextAscii(
-        title=_("Device Name and Value Ident"),
-        help=_("You need to concatenate the device name which is configured in the special agent "
-               "for the PLC device separated by a space with the ident of the value which is also "
-               "configured in the special agent."),
-    ),
-    match_type="dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersSiemensPlcCounter(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersEnvironment
+
+    @property
+    def check_group_name(self):
+        return "siemens_plc_counter"
+
+    @property
+    def title(self):
+        return _("Siemens PLC Counter")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ('levels',
+                 Tuple(
+                     title=_("Counter level"),
+                     elements=[
+                         Integer(title=_("Warning at"),),
+                         Integer(title=_("Critical at"),),
+                     ],
+                 )),
+            ],
+            help=_("This rule is used to configure thresholds for counter values read from "
+                   "Siemens PLC devices."),
+            title=_("Counter levels"),
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(
+            title=_("Device Name and Value Ident"),
+            help=_(
+                "You need to concatenate the device name which is configured in the special agent "
+                "for the PLC device separated by a space with the ident of the value which is also "
+                "configured in the special agent."),
+        )

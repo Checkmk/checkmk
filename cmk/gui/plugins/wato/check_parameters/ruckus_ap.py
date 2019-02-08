@@ -31,36 +31,57 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications, "ruckus_ap", _("Ruckus Spot Access Points"),
-    Tuple(
-        elements=[
-            Optional(
-                Tuple(
-                    elements=[
-                        Integer(title=_("Warning at"), default_value=1, unit=_("devices")),
-                        Integer(title=_("Critical at"), default_value=1, unit=_("devices")),
-                    ],),
-                sameline=True,
-                label=_("Levels for <i>device time drifted</i>"),
-                none_label=_("No levels set"),
-                none_value=(None, None)),
-            Optional(
-                Tuple(
-                    elements=[
-                        Integer(title=_("Warning at"), default_value=1, unit=_("devices")),
-                        Integer(title=_("Critical at"), default_value=1, unit=_("devices")),
-                    ],),
-                sameline=True,
-                label=_("Levels for <i>device not responding</i>"),
-                none_label=_("No levels set"),
-                none_value=(None, None)),
-        ],), TextAscii(
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersRuckusAp(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "ruckus_ap"
+
+    @property
+    def title(self):
+        return _("Ruckus Spot Access Points")
+
+    @property
+    def parameter_valuespec(self):
+        return Tuple(
+            elements=[
+                Optional(
+                    Tuple(
+                        elements=[
+                            Integer(title=_("Warning at"), default_value=1, unit=_("devices")),
+                            Integer(title=_("Critical at"), default_value=1, unit=_("devices")),
+                        ],),
+                    sameline=True,
+                    label=_("Levels for <i>device time drifted</i>"),
+                    none_label=_("No levels set"),
+                    none_value=(None, None)),
+                Optional(
+                    Tuple(
+                        elements=[
+                            Integer(title=_("Warning at"), default_value=1, unit=_("devices")),
+                            Integer(title=_("Critical at"), default_value=1, unit=_("devices")),
+                        ],),
+                    sameline=True,
+                    label=_("Levels for <i>device not responding</i>"),
+                    none_label=_("No levels set"),
+                    none_value=(None, None)),
+            ],)
+
+    @property
+    def item_spec(self):
+        return TextAscii(
             title=_("Band"),
             help=_("Name of the band, e.g. 5 GHz"),
-        ), "first")
+        )

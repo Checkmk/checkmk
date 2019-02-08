@@ -199,7 +199,8 @@ class ConfigVariableNotificationLogging(ConfigVariable):
         return Transform(
             DropdownChoice(
                 choices=[
-                    (20, _("Normal logging")),
+                    (20, _("Minimal logging")),
+                    (15, _("Normal logging")),
                     (10, _("Full dump of all variables and command")),
                 ],),
             forth=self._transform_log_level,

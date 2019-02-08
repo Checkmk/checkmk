@@ -1504,6 +1504,24 @@ metric_info["fpga_util"] = {
     "color": "#60f020",
 }
 
+metric_info["overall_util"] = {
+    "title": _("Overall utilization"),
+    "unit": "%",
+    "color": "26/a",
+}
+
+metric_info["pci_io_util"] = {
+    "title": _("PCI Express IO utilization"),
+    "unit": "%",
+    "color": "26/a",
+}
+
+metric_info["memory_util"] = {
+    "title": _("Memory utilization"),
+    "unit": "%",
+    "color": "26/a",
+}
+
 metric_info["generic_util"] = {
     "title": _("Utilization"),
     "unit": "%",
@@ -7514,6 +7532,24 @@ perfometer_info.append({
 perfometer_info.append({
     "type": "linear",
     "segments": ["fpga_util",],
+    "total": 100.0,
+})
+
+perfometer_info.append({
+    "type": "linear",
+    "segments": ["overall_util",],
+    "total": 100.0,
+})
+
+perfometer_info.append({
+    "type": "linear",
+    "segments": ["pci_io_util",],
+    "total": 100.0,
+})
+
+perfometer_info.append({
+    "type": "linear",
+    "segments": ["memory_util",],
     "total": 100.0,
 })
 

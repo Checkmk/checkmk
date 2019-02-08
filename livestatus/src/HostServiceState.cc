@@ -32,16 +32,16 @@ HostServiceState::HostServiceState()
     , _until(0)
     , _duration(0)
     , _duration_part(0)
-    , _duration_state_UNMONITORED(0)
-    , _duration_part_UNMONITORED(0)
-    , _duration_state_OK(0)
-    , _duration_part_OK(0)
-    , _duration_state_WARNING(0)
-    , _duration_part_WARNING(0)
-    , _duration_state_CRITICAL(0)
-    , _duration_part_CRITICAL(0)
-    , _duration_state_UNKNOWN(0)
-    , _duration_part_UNKNOWN(0)
+    , _duration_unmonitored(0)
+    , _duration_part_unmonitored(0)
+    , _duration_ok(0)
+    , _duration_part_ok(0)
+    , _duration_warning(0)
+    , _duration_part_warning(0)
+    , _duration_critical(0)
+    , _duration_part_critical(0)
+    , _duration_unknown(0)
+    , _duration_part_unknown(0)
     , _host_down(0)
     , _state(0)
     , _in_notification_period(0)
@@ -57,37 +57,37 @@ HostServiceState::HostServiceState()
 
 #ifdef CMC
 void HostServiceState::computePerStateDurations() {
-    _duration_state_UNMONITORED = 0;
-    _duration_part_UNMONITORED = 0;
-    _duration_state_OK = 0;
-    _duration_part_OK = 0;
-    _duration_state_WARNING = 0;
-    _duration_part_WARNING = 0;
-    _duration_state_CRITICAL = 0;
-    _duration_part_CRITICAL = 0;
-    _duration_state_UNKNOWN = 0;
-    _duration_part_UNKNOWN = 0;
+    _duration_unmonitored = 0;
+    _duration_part_unmonitored = 0;
+    _duration_ok = 0;
+    _duration_part_ok = 0;
+    _duration_warning = 0;
+    _duration_part_warning = 0;
+    _duration_critical = 0;
+    _duration_part_critical = 0;
+    _duration_unknown = 0;
+    _duration_part_unknown = 0;
 
     switch (_state) {
         case -1:
-            _duration_state_UNMONITORED = _duration;
-            _duration_part_UNMONITORED = _duration_part;
+            _duration_unmonitored = _duration;
+            _duration_part_unmonitored = _duration_part;
             break;
         case 0:
-            _duration_state_OK = _duration;
-            _duration_part_OK = _duration_part;
+            _duration_ok = _duration;
+            _duration_part_ok = _duration_part;
             break;
         case 1:
-            _duration_state_WARNING = _duration;
-            _duration_part_WARNING = _duration_part;
+            _duration_warning = _duration;
+            _duration_part_warning = _duration_part;
             break;
         case 2:
-            _duration_state_CRITICAL = _duration;
-            _duration_part_CRITICAL = _duration_part;
+            _duration_critical = _duration;
+            _duration_part_critical = _duration_part;
             break;
         case 3:
-            _duration_state_UNKNOWN = _duration;
-            _duration_part_UNKNOWN = _duration_part;
+            _duration_unknown = _duration;
+            _duration_part_unknown = _duration_part;
             break;
     }
 }

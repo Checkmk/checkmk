@@ -34,51 +34,77 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersStorage,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersStorage,
-    "fileinfo",
-    _("Size and age of single files"),
-    Dictionary(elements=[
-        ("minage",
-         Tuple(
-             title=_("Minimal age"),
-             elements=[
-                 Age(title=_("Warning if younger than")),
-                 Age(title=_("Critical if younger than")),
-             ])),
-        ("maxage",
-         Tuple(
-             title=_("Maximal age"),
-             elements=[
-                 Age(title=_("Warning if older than")),
-                 Age(title=_("Critical if older than")),
-             ])),
-        ("minsize",
-         Tuple(
-             title=_("Minimal size"),
-             elements=[
-                 Filesize(title=_("Warning if below")),
-                 Filesize(title=_("Critical if below")),
-             ])),
-        ("maxsize",
-         Tuple(
-             title=_("Maximal size"),
-             elements=[
-                 Filesize(title=_("Warning at")),
-                 Filesize(title=_("Critical at")),
-             ])),
-        ("timeofday",
-         ListOfTimeRanges(
-             title=_("Only check during the following times of the day"),
-             help=_("Outside these ranges the check will always be OK"),
-         )),
-        ("state_missing", MonitoringState(default_value=3, title=_("State when file is missing"))),
-    ]),
-    TextAscii(title=_("File name"), allow_empty=True),
-    match_type="dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersFileinfo(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersStorage
+
+    @property
+    def check_group_name(self):
+        return "fileinfo"
+
+    @property
+    def title(self):
+        return _("Size and age of single files")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ("minage",
+                 Tuple(
+                     title=_("Minimal age"),
+                     elements=[
+                         Age(title=_("Warning if younger than")),
+                         Age(title=_("Critical if younger than")),
+                     ],
+                 )),
+                ("maxage",
+                 Tuple(
+                     title=_("Maximal age"),
+                     elements=[
+                         Age(title=_("Warning if older than")),
+                         Age(title=_("Critical if older than")),
+                     ],
+                 )),
+                ("minsize",
+                 Tuple(
+                     title=_("Minimal size"),
+                     elements=[
+                         Filesize(title=_("Warning if below")),
+                         Filesize(title=_("Critical if below")),
+                     ],
+                 )),
+                ("maxsize",
+                 Tuple(
+                     title=_("Maximal size"),
+                     elements=[
+                         Filesize(title=_("Warning at")),
+                         Filesize(title=_("Critical at")),
+                     ],
+                 )),
+                ("timeofday",
+                 ListOfTimeRanges(
+                     title=_("Only check during the following times of the day"),
+                     help=_("Outside these ranges the check will always be OK"),
+                 )),
+                ("state_missing",
+                 MonitoringState(default_value=3, title=_("State when file is missing"))),
+            ],)
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("File name"), allow_empty=True)

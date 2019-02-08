@@ -30,24 +30,42 @@ from cmk.gui.valuespec import (
     Integer,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    "fireeye_active_vms",
-    _("Fireeye Active VMs"),
-    Dictionary(elements=[(
-        "vms",
-        Tuple(
-            title=_("Levels for active VMs"),
-            elements=[
-                Integer(title="Warning at", default_value=60, unit="VMs"),
-                Integer(title="Critical at", default_value=70, unit="VMs"),
-            ]),
-    )]),
-    None,
-    match_type="dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersFireeyeActiveVms(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "fireeye_active_vms"
+
+    @property
+    def title(self):
+        return _("Fireeye Active VMs")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[(
+                "vms",
+                Tuple(
+                    title=_("Levels for active VMs"),
+                    elements=[
+                        Integer(title="Warning at", default_value=60, unit="VMs"),
+                        Integer(title="Critical at", default_value=70, unit="VMs"),
+                    ],
+                ),
+            )],)

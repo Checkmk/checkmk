@@ -29,100 +29,121 @@ from cmk.gui.valuespec import (
     Dictionary,
     TextAscii,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
     Levels,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    "f5_bigip_snat",
-    _("F5 Loadbalancer Source NAT"),
-    Dictionary(elements=[("if_in_octets",
-                          Levels(
-                              title=_("Incoming Traffic Maximum"),
-                              unit=_("bytes/s"),
-                              default_difference=(5, 8),
-                              default_value=None,
-                          )),
-                         ("if_in_octets_lower",
-                          Levels(
-                              title=_("Incoming Traffic Minimum"),
-                              unit=_("bytes/s"),
-                              default_difference=(5, 8),
-                              default_value=None,
-                          )),
-                         ("if_out_octets",
-                          Levels(
-                              title=_("Outgoing Traffic Maximum"),
-                              unit=_("bytes/s"),
-                              default_difference=(5, 8),
-                              default_value=None,
-                          )),
-                         ("if_out_octets_lower",
-                          Levels(
-                              title=_("Outgoing Traffic Minimum"),
-                              unit=_("bytes/s"),
-                              default_difference=(5, 8),
-                              default_value=None,
-                          )),
-                         ("if_total_octets",
-                          Levels(
-                              title=_("Total Traffic Maximum"),
-                              unit=_("bytes/s"),
-                              default_difference=(5, 8),
-                              default_value=None,
-                          )),
-                         ("if_total_octets_lower",
-                          Levels(
-                              title=_("Total Traffic Minimum"),
-                              unit=_("bytes/s"),
-                              default_difference=(5, 8),
-                              default_value=None,
-                          )),
-                         ("if_in_pkts",
-                          Levels(
-                              title=_("Incoming Packets Maximum"),
-                              unit=_("packets/s"),
-                              default_difference=(5, 8),
-                              default_value=None,
-                          )),
-                         ("if_in_pkts_lower",
-                          Levels(
-                              title=_("Incoming Packets Minimum"),
-                              unit=_("packets/s"),
-                              default_difference=(5, 8),
-                              default_value=None,
-                          )),
-                         ("if_out_pkts",
-                          Levels(
-                              title=_("Outgoing Packets Maximum"),
-                              unit=_("packets/s"),
-                              default_difference=(5, 8),
-                              default_value=None,
-                          )),
-                         ("if_out_pkts_lower",
-                          Levels(
-                              title=_("Outgoing Packets Minimum"),
-                              unit=_("packets/s"),
-                              default_difference=(5, 8),
-                              default_value=None,
-                          )),
-                         ("if_total_pkts",
-                          Levels(
-                              title=_("Total Packets Maximum"),
-                              unit=_("packets/s"),
-                              default_difference=(5, 8),
-                              default_value=None,
-                          )),
-                         ("if_total_pkts_lower",
-                          Levels(
-                              title=_("Total Packets Minimum"),
-                              unit=_("packets/s"),
-                              default_difference=(5, 8),
-                              default_value=None,
-                          ))]),
-    TextAscii(title=_("Source NAT Name"), allow_empty=False),
-    'dict',
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersF5BigipSnat(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "f5_bigip_snat"
+
+    @property
+    def title(self):
+        return _("F5 Loadbalancer Source NAT")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[("if_in_octets",
+                       Levels(
+                           title=_("Incoming Traffic Maximum"),
+                           unit=_("bytes/s"),
+                           default_difference=(5, 8),
+                           default_value=None,
+                       )),
+                      ("if_in_octets_lower",
+                       Levels(
+                           title=_("Incoming Traffic Minimum"),
+                           unit=_("bytes/s"),
+                           default_difference=(5, 8),
+                           default_value=None,
+                       )),
+                      ("if_out_octets",
+                       Levels(
+                           title=_("Outgoing Traffic Maximum"),
+                           unit=_("bytes/s"),
+                           default_difference=(5, 8),
+                           default_value=None,
+                       )),
+                      ("if_out_octets_lower",
+                       Levels(
+                           title=_("Outgoing Traffic Minimum"),
+                           unit=_("bytes/s"),
+                           default_difference=(5, 8),
+                           default_value=None,
+                       )),
+                      ("if_total_octets",
+                       Levels(
+                           title=_("Total Traffic Maximum"),
+                           unit=_("bytes/s"),
+                           default_difference=(5, 8),
+                           default_value=None,
+                       )),
+                      ("if_total_octets_lower",
+                       Levels(
+                           title=_("Total Traffic Minimum"),
+                           unit=_("bytes/s"),
+                           default_difference=(5, 8),
+                           default_value=None,
+                       )),
+                      ("if_in_pkts",
+                       Levels(
+                           title=_("Incoming Packets Maximum"),
+                           unit=_("packets/s"),
+                           default_difference=(5, 8),
+                           default_value=None,
+                       )),
+                      ("if_in_pkts_lower",
+                       Levels(
+                           title=_("Incoming Packets Minimum"),
+                           unit=_("packets/s"),
+                           default_difference=(5, 8),
+                           default_value=None,
+                       )),
+                      ("if_out_pkts",
+                       Levels(
+                           title=_("Outgoing Packets Maximum"),
+                           unit=_("packets/s"),
+                           default_difference=(5, 8),
+                           default_value=None,
+                       )),
+                      ("if_out_pkts_lower",
+                       Levels(
+                           title=_("Outgoing Packets Minimum"),
+                           unit=_("packets/s"),
+                           default_difference=(5, 8),
+                           default_value=None,
+                       )),
+                      ("if_total_pkts",
+                       Levels(
+                           title=_("Total Packets Maximum"),
+                           unit=_("packets/s"),
+                           default_difference=(5, 8),
+                           default_value=None,
+                       )),
+                      ("if_total_pkts_lower",
+                       Levels(
+                           title=_("Total Packets Minimum"),
+                           unit=_("packets/s"),
+                           default_difference=(5, 8),
+                           default_value=None,
+                       ))],)
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Source NAT Name"), allow_empty=False)

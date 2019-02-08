@@ -31,21 +31,47 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersNetworking,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersNetworking, "docsis_channels_downstream",
-    _("Docsis Downstream Channels"),
-    Dictionary(elements=[
-        ("power",
-         Tuple(
-             title=_("Transmit Power"),
-             help=_("The operational transmit power"),
-             elements=[
-                 Float(title=_("warning at or below"), unit="dBmV", default_value=5.0),
-                 Float(title=_("critical at or below"), unit="dBmV", default_value=1.0),
-             ])),
-    ]), TextAscii(title=_("ID of the channel (usually ranging from 1)")), "dict")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersDocsisChannelsDownstream(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersNetworking
+
+    @property
+    def check_group_name(self):
+        return "docsis_channels_downstream"
+
+    @property
+    def title(self):
+        return _("Docsis Downstream Channels")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ("power",
+                 Tuple(
+                     title=_("Transmit Power"),
+                     help=_("The operational transmit power"),
+                     elements=[
+                         Float(title=_("warning at or below"), unit="dBmV", default_value=5.0),
+                         Float(title=_("critical at or below"), unit="dBmV", default_value=1.0),
+                     ],
+                 )),
+            ],)
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("ID of the channel (usually ranging from 1)"))

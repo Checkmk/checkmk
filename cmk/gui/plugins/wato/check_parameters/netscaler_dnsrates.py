@@ -30,36 +30,57 @@ from cmk.gui.valuespec import (
     Float,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications, "netscaler_dnsrates",
-    _("Citrix Netscaler DNS counter rates"),
-    Dictionary(
-        help=_("Counter rates of DNS parameters for Citrix Netscaler Loadbalancer "
-               "Appliances"),
-        elements=[
-            (
-                "query",
-                Tuple(
-                    title=_("Upper Levels for Total Number of DNS queries"),
-                    elements=[
-                        Float(title=_("Warning at"), default_value=1500.0, unit="/sec"),
-                        Float(title=_("Critical at"), default_value=2000.0, unit="/sec")
-                    ],
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersNetscalerDnsrates(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "netscaler_dnsrates"
+
+    @property
+    def title(self):
+        return _("Citrix Netscaler DNS counter rates")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            help=_("Counter rates of DNS parameters for Citrix Netscaler Loadbalancer "
+                   "Appliances"),
+            elements=[
+                (
+                    "query",
+                    Tuple(
+                        title=_("Upper Levels for Total Number of DNS queries"),
+                        elements=[
+                            Float(title=_("Warning at"), default_value=1500.0, unit="/sec"),
+                            Float(title=_("Critical at"), default_value=2000.0, unit="/sec")
+                        ],
+                    ),
                 ),
-            ),
-            (
-                "answer",
-                Tuple(
-                    title=_("Upper Levels for Total Number of DNS replies"),
-                    elements=[
-                        Float(title=_("Warning at"), default_value=1500.0, unit="/sec"),
-                        Float(title=_("Critical at"), default_value=2000.0, unit="/sec")
-                    ],
+                (
+                    "answer",
+                    Tuple(
+                        title=_("Upper Levels for Total Number of DNS replies"),
+                        elements=[
+                            Float(title=_("Warning at"), default_value=1500.0, unit="/sec"),
+                            Float(title=_("Critical at"), default_value=2000.0, unit="/sec")
+                        ],
+                    ),
                 ),
-            ),
-        ]), None, "dict")
+            ],
+        )

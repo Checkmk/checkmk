@@ -36,7 +36,9 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersOperatingSystem,
-    register_check_parameters,
+    CheckParameterRulespecWithItem,
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
 )
 
 ntp_params = Tuple(
@@ -63,33 +65,71 @@ ntp_params = Tuple(
         ),
     ])
 
-register_check_parameters(RulespecGroupCheckParametersOperatingSystem, "ntp_peer",
-                          _("State of NTP peer"), ntp_params,
-                          TextAscii(title=_("Name of the peer")), "first")
 
-register_check_parameters(
-    RulespecGroupCheckParametersOperatingSystem, "ntp_time", _("State of NTP time synchronisation"),
-    Transform(
-        Dictionary(elements=[
-            (
-                "ntp_levels",
-                ntp_params,
-            ),
-            ("alert_delay",
-             Tuple(
-                 title=_("Phases without synchronization"),
-                 elements=[
-                     Age(
-                         title=_("Warning at"),
-                         display=["hours", "minutes"],
-                         default_value=300,
-                     ),
-                     Age(
-                         title=_("Critical at"),
-                         display=["hours", "minutes"],
-                         default_value=3600,
-                     ),
-                 ])),
-        ]),
-        forth=lambda params: isinstance(params, tuple) and {"ntp_levels": params} or params), None,
-    "dict")
+@rulespec_registry.register
+class RulespecCheckgroupParametersNtpPeer(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersOperatingSystem
+
+    @property
+    def check_group_name(self):
+        return "ntp_peer"
+
+    @property
+    def title(self):
+        return _("State of NTP peer")
+
+    @property
+    def parameter_valuespec(self):
+        return ntp_params
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Name of the peer"))
+
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersNtpTime(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersOperatingSystem
+
+    @property
+    def check_group_name(self):
+        return "ntp_time"
+
+    @property
+    def title(self):
+        return _("State of NTP time synchronisation")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Transform(
+            Dictionary(
+                elements=[
+                    (
+                        "ntp_levels",
+                        ntp_params,
+                    ),
+                    ("alert_delay",
+                     Tuple(
+                         title=_("Phases without synchronization"),
+                         elements=[
+                             Age(
+                                 title=_("Warning at"),
+                                 display=["hours", "minutes"],
+                                 default_value=300,
+                             ),
+                             Age(
+                                 title=_("Critical at"),
+                                 display=["hours", "minutes"],
+                                 default_value=3600,
+                             ),
+                         ])),
+                ],),
+            forth=lambda params: isinstance(params, tuple) and {"ntp_levels": params} or params)

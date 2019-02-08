@@ -31,17 +31,34 @@ from cmk.gui.valuespec import (
     MonitoringState,
     TextAscii,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersEnvironment, "netapp_instance", _("Netapp Instance State"),
-    ListOf(
-        Dictionary(
-            help=_("This rule allows you to override netapp warnings"),
-            elements=[("name", TextAscii(title=_("Warning starts with"))),
-                      ("state", MonitoringState(title="Set state to", default_value=1))],
-            optional_keys=False),
-        add_label=_("Add warning")), None, "first")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersNetappInstance(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersEnvironment
+
+    @property
+    def check_group_name(self):
+        return "netapp_instance"
+
+    @property
+    def title(self):
+        return _("Netapp Instance State")
+
+    @property
+    def parameter_valuespec(self):
+        return ListOf(
+            Dictionary(
+                help=_("This rule allows you to override netapp warnings"),
+                elements=[("name", TextAscii(title=_("Warning starts with"))),
+                          ("state", MonitoringState(title="Set state to", default_value=1))],
+                optional_keys=False),
+            add_label=_("Add warning"))

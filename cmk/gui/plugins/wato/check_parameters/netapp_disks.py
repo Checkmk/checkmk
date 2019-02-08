@@ -32,48 +32,67 @@ from cmk.gui.valuespec import (
     Transform,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersStorage,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersStorage,
-    "netapp_disks",
-    _("Filer Disk Levels (NetApp, IBM SVC)"),
-    Transform(
-        Dictionary(
-            elements=[
-                ("failed_spare_ratio",
-                 Tuple(
-                     title=_("Failed to spare ratio"),
-                     help=_("You can set a limit to the failed to spare disk ratio. "
-                            "The ratio is calculated with <i>spare / (failed + spare)</i>."),
-                     elements=[
-                         Percentage(title=_("Warning at or above"), default_value=1.0),
-                         Percentage(title=_("Critical at or above"), default_value=50.0),
-                     ])),
-                ("offline_spare_ratio",
-                 Tuple(
-                     title=_("Offline to spare ratio"),
-                     help=_("You can set a limit to the offline to spare disk ratio. "
-                            "The ratio is calculated with <i>spare / (offline + spare)</i>."),
-                     elements=[
-                         Percentage(title=_("Warning at or above"), default_value=1.0),
-                         Percentage(title=_("Critical at or above"), default_value=50.0),
-                     ])),
-                ("number_of_spare_disks",
-                 Tuple(
-                     title=_("Number of spare disks"),
-                     help=_("You can set a lower limit to the absolute number of spare disks."),
-                     elements=[
-                         Integer(title=_("Warning below"), default_value=2, min_value=0),
-                         Integer(title=_("Critical below"), default_value=1, min_value=0),
-                     ])),
-            ],),
-        forth=
-        lambda a: "broken_spare_ratio" in a and {"failed_spare_ratio": a["broken_spare_ratio"]} or a
-    ),
-    None,
-    match_type="dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersNetappDisks(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersStorage
+
+    @property
+    def check_group_name(self):
+        return "netapp_disks"
+
+    @property
+    def title(self):
+        return _("Filer Disk Levels (NetApp, IBM SVC)")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Transform(
+            Dictionary(
+                elements=[
+                    ("failed_spare_ratio",
+                     Tuple(
+                         title=_("Failed to spare ratio"),
+                         help=_("You can set a limit to the failed to spare disk ratio. "
+                                "The ratio is calculated with <i>spare / (failed + spare)</i>."),
+                         elements=[
+                             Percentage(title=_("Warning at or above"), default_value=1.0),
+                             Percentage(title=_("Critical at or above"), default_value=50.0),
+                         ],
+                     )),
+                    ("offline_spare_ratio",
+                     Tuple(
+                         title=_("Offline to spare ratio"),
+                         help=_("You can set a limit to the offline to spare disk ratio. "
+                                "The ratio is calculated with <i>spare / (offline + spare)</i>."),
+                         elements=[
+                             Percentage(title=_("Warning at or above"), default_value=1.0),
+                             Percentage(title=_("Critical at or above"), default_value=50.0),
+                         ],
+                     )),
+                    ("number_of_spare_disks",
+                     Tuple(
+                         title=_("Number of spare disks"),
+                         help=_("You can set a lower limit to the absolute number of spare disks."),
+                         elements=[
+                             Integer(title=_("Warning below"), default_value=2, min_value=0),
+                             Integer(title=_("Critical below"), default_value=1, min_value=0),
+                         ],
+                     )),
+                ],),
+            forth=
+            lambda a: "broken_spare_ratio" in a and {"failed_spare_ratio": a["broken_spare_ratio"]} or a
+        )

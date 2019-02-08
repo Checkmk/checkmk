@@ -33,75 +33,96 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    "oracle_instance",
-    _("Oracle Instance"),
-    Dictionary(
-        title=_("Consider state of Archivelogmode: "),
-        elements=[
-            ('archivelog',
-             MonitoringState(
-                 default_value=0,
-                 title=_("State in case of Archivelogmode is enabled: "),
-             )),
-            (
-                'noarchivelog',
-                MonitoringState(
-                    default_value=1,
-                    title=_("State in case of Archivelogmode is disabled: "),
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersOracleInstance(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "oracle_instance"
+
+    @property
+    def title(self):
+        return _("Oracle Instance")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            title=_("Consider state of Archivelogmode: "),
+            elements=[
+                ('archivelog',
+                 MonitoringState(
+                     default_value=0,
+                     title=_("State in case of Archivelogmode is enabled: "),
+                 )),
+                (
+                    'noarchivelog',
+                    MonitoringState(
+                        default_value=1,
+                        title=_("State in case of Archivelogmode is disabled: "),
+                    ),
                 ),
-            ),
-            (
-                'forcelogging',
-                MonitoringState(
-                    default_value=0,
-                    title=_("State in case of Force Logging is enabled: "),
+                (
+                    'forcelogging',
+                    MonitoringState(
+                        default_value=0,
+                        title=_("State in case of Force Logging is enabled: "),
+                    ),
                 ),
-            ),
-            (
-                'noforcelogging',
-                MonitoringState(
-                    default_value=1,
-                    title=_("State in case of Force Logging is disabled: "),
+                (
+                    'noforcelogging',
+                    MonitoringState(
+                        default_value=1,
+                        title=_("State in case of Force Logging is disabled: "),
+                    ),
                 ),
-            ),
-            (
-                'logins',
-                MonitoringState(
-                    default_value=2,
-                    title=_("State in case of logins are not possible: "),
+                (
+                    'logins',
+                    MonitoringState(
+                        default_value=2,
+                        title=_("State in case of logins are not possible: "),
+                    ),
                 ),
-            ),
-            (
-                'primarynotopen',
-                MonitoringState(
-                    default_value=2,
-                    title=_("State in case of Database is PRIMARY and not OPEN: "),
+                (
+                    'primarynotopen',
+                    MonitoringState(
+                        default_value=2,
+                        title=_("State in case of Database is PRIMARY and not OPEN: "),
+                    ),
                 ),
-            ),
-            ('uptime_min',
-             Tuple(
-                 title=_("Minimum required uptime"),
-                 elements=[
-                     Age(title=_("Warning if below")),
-                     Age(title=_("Critical if below")),
-                 ])),
-            ('ignore_noarchivelog',
-             Checkbox(
-                 title=_("Ignore state of no-archive log"),
-                 label=_("Enable"),
-                 help=_("If active, only a single summary item is displayed. The summary "
-                        "will explicitly mention sensors in warn/crit state but the "
-                        "sensors that are ok are aggregated."),
-                 default_value=False)),
-        ],
-    ),
-    TextAscii(title=_("Database SID"), size=12, allow_empty=False),
-    match_type="dict",
-)
+                ('uptime_min',
+                 Tuple(
+                     title=_("Minimum required uptime"),
+                     elements=[
+                         Age(title=_("Warning if below")),
+                         Age(title=_("Critical if below")),
+                     ],
+                 )),
+                ('ignore_noarchivelog',
+                 Checkbox(
+                     title=_("Ignore state of no-archive log"),
+                     label=_("Enable"),
+                     help=_("If active, only a single summary item is displayed. The summary "
+                            "will explicitly mention sensors in warn/crit state but the "
+                            "sensors that are ok are aggregated."),
+                     default_value=False)),
+            ],
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Database SID"), size=12, allow_empty=False)

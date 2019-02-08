@@ -31,22 +31,44 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    "oracle_locks",
-    _("Oracle Locks"),
-    Dictionary(elements=[("levels",
-                          Tuple(
-                              title=_("Levels for minimum wait time for a lock"),
-                              elements=[
-                                  Age(title=_("warning if higher then"), default_value=1800),
-                                  Age(title=_("critical if higher then"), default_value=3600),
-                              ]))]),
-    TextAscii(title=_("Database SID"), size=12, allow_empty=False),
-    "dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersOracleLocks(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "oracle_locks"
+
+    @property
+    def title(self):
+        return _("Oracle Locks")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[("levels",
+                       Tuple(
+                           title=_("Levels for minimum wait time for a lock"),
+                           elements=[
+                               Age(title=_("warning if higher then"), default_value=1800),
+                               Age(title=_("critical if higher then"), default_value=3600),
+                           ],
+                       ))],)
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Database SID"), size=12, allow_empty=False)

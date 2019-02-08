@@ -31,22 +31,44 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    "oracle_rman",
-    _("Oracle RMAN Backups"),
-    Dictionary(elements=[("levels",
-                          Tuple(
-                              title=_("Maximum Age for RMAN backups"),
-                              elements=[
-                                  Age(title=_("warning if older than"), default_value=1800),
-                                  Age(title=_("critical if older than"), default_value=3600),
-                              ]))]),
-    TextAscii(title=_("Database SID"), size=12, allow_empty=False),
-    "dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersOracleRman(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "oracle_rman"
+
+    @property
+    def title(self):
+        return _("Oracle RMAN Backups")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[("levels",
+                       Tuple(
+                           title=_("Maximum Age for RMAN backups"),
+                           elements=[
+                               Age(title=_("warning if older than"), default_value=1800),
+                               Age(title=_("critical if older than"), default_value=3600),
+                           ],
+                       ))],)
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Database SID"), size=12, allow_empty=False)

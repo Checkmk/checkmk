@@ -30,20 +30,36 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersEnvironment,
-    "ocprot_current",
-    _("Electrical Current of Overcurrent Protectors"),
-    Tuple(
-        elements=[
-            Float(title=_("Warning at"), unit=u"A", default_value=14.0),
-            Float(title=_("Critical at"), unit=u"A", default_value=15.0),
-        ],),
-    TextAscii(title=_("The Index of the Overcurrent Protector")),
-    match_type="first",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersOcprotCurrent(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersEnvironment
+
+    @property
+    def check_group_name(self):
+        return "ocprot_current"
+
+    @property
+    def title(self):
+        return _("Electrical Current of Overcurrent Protectors")
+
+    @property
+    def parameter_valuespec(self):
+        return Tuple(
+            elements=[
+                Float(title=_("Warning at"), unit=u"A", default_value=14.0),
+                Float(title=_("Critical at"), unit=u"A", default_value=15.0),
+            ],)
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("The Index of the Overcurrent Protector"))

@@ -35,9 +35,11 @@ from cmk.gui.valuespec import (
     Transform,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
 
@@ -49,48 +51,66 @@ def convert_oracle_sessions(value):
     return value
 
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    "oracle_sessions",
-    _("Oracle Sessions"),
-    Transform(
-        Dictionary(
-            elements=[
-                ("sessions_abs",
-                 Alternative(
-                     title=_("Absolute levels of active sessions"),
-                     style="dropdown",
-                     help=_("This check monitors the current number of active sessions on Oracle"),
-                     elements=[
-                         FixedValue(None, title=_("Do not use absolute levels"), totext=""),
-                         Tuple(
-                             title=_("Number of active sessions"),
-                             elements=[
-                                 Integer(
-                                     title=_("Warning at"), unit=_("sessions"), default_value=100),
-                                 Integer(
-                                     title=_("Critical at"), unit=_("sessions"), default_value=200),
-                             ],
-                         ),
-                     ],
-                 )),
-                (
-                    "sessions_perc",
-                    Tuple(
-                        title=_("Relative levels of active sessions."),
-                        help=
-                        _("Set upper levels of active sessions relative to max. number of sessions. This is optional."
-                         ),
-                        elements=[
-                            Percentage(title=_("Warning at")),
-                            Percentage(title=_("Critical at")),
-                        ],
+@rulespec_registry.register
+class RulespecCheckgroupParametersOracleSessions(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "oracle_sessions"
+
+    @property
+    def title(self):
+        return _("Oracle Sessions")
+
+    @property
+    def parameter_valuespec(self):
+        return Transform(
+            Dictionary(
+                elements=[
+                    ("sessions_abs",
+                     Alternative(
+                         title=_("Absolute levels of active sessions"),
+                         style="dropdown",
+                         help=_(
+                             "This check monitors the current number of active sessions on Oracle"),
+                         elements=[
+                             FixedValue(None, title=_("Do not use absolute levels"), totext=""),
+                             Tuple(
+                                 title=_("Number of active sessions"),
+                                 elements=[
+                                     Integer(
+                                         title=_("Warning at"),
+                                         unit=_("sessions"),
+                                         default_value=100),
+                                     Integer(
+                                         title=_("Critical at"),
+                                         unit=_("sessions"),
+                                         default_value=200),
+                                 ],
+                             ),
+                         ],
+                     )),
+                    (
+                        "sessions_perc",
+                        Tuple(
+                            title=_("Relative levels of active sessions."),
+                            help=
+                            _("Set upper levels of active sessions relative to max. number of sessions. This is optional."
+                             ),
+                            elements=[
+                                Percentage(title=_("Warning at")),
+                                Percentage(title=_("Critical at")),
+                            ],
+                        ),
                     ),
-                ),
-            ],
-            optional_keys=["sessions_perc"],
-        ),
-        forth=convert_oracle_sessions),
-    TextAscii(title=_("Database name"), allow_empty=False),
-    match_type="first",
-)
+                ],
+                optional_keys=["sessions_perc"],
+            ),
+            forth=convert_oracle_sessions)
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Database name"), allow_empty=False)

@@ -31,32 +31,55 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    "oracle_recovery_status",
-    _("Oracle Recovery Status"),
-    Dictionary(elements=[("levels",
-                          Tuple(
-                              title=_("Levels for checkpoint time"),
-                              elements=[
-                                  Age(title=_("warning if higher then"), default_value=1800),
-                                  Age(title=_("critical if higher then"), default_value=3600),
-                              ])),
-                         ("backup_age",
-                          Tuple(
-                              title=_("Levels for user managed backup files"),
-                              help=_("Important! This checks is only for monitoring of datafiles "
-                                     "who were left in backup mode. "
-                                     "(alter database datafile ... begin backup;) "),
-                              elements=[
-                                  Age(title=_("warning if higher then"), default_value=1800),
-                                  Age(title=_("critical if higher then"), default_value=3600),
-                              ]))]),
-    TextAscii(title=_("Database SID"), size=12, allow_empty=False),
-    "dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersOracleRecoveryStatus(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "oracle_recovery_status"
+
+    @property
+    def title(self):
+        return _("Oracle Recovery Status")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[("levels",
+                       Tuple(
+                           title=_("Levels for checkpoint time"),
+                           elements=[
+                               Age(title=_("warning if higher then"), default_value=1800),
+                               Age(title=_("critical if higher then"), default_value=3600),
+                           ],
+                       )),
+                      ("backup_age",
+                       Tuple(
+                           title=_("Levels for user managed backup files"),
+                           help=_("Important! This checks is only for monitoring of datafiles "
+                                  "who were left in backup mode. "
+                                  "(alter database datafile ... begin backup;) "),
+                           elements=[
+                               Age(title=_("warning if higher then"), default_value=1800),
+                               Age(title=_("critical if higher then"), default_value=3600),
+                           ],
+                       ))],)
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Database SID"), size=12, allow_empty=False)

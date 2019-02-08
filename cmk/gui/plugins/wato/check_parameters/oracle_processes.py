@@ -31,30 +31,51 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    "oracle_processes",
-    _("Oracle Processes"),
-    Dictionary(
-        help=_(
-            "Here you can override the default levels for the ORACLE Processes check. The levels "
-            "are applied on the number of used processes in percentage of the configured limit."),
-        elements=[
-            ("levels",
-             Tuple(
-                 title=_("Levels for used processes"),
-                 elements=[
-                     Percentage(title=_("Warning if more than"), default_value=70.0),
-                     Percentage(title=_("Critical if more than"), default_value=90.0)
-                 ])),
-        ],
-        optional_keys=False,
-    ),
-    TextAscii(title=_("Database SID"), size=12, allow_empty=False),
-    "dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersOracleProcesses(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "oracle_processes"
+
+    @property
+    def title(self):
+        return _("Oracle Processes")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            help=
+            _("Here you can override the default levels for the ORACLE Processes check. The levels "
+              "are applied on the number of used processes in percentage of the configured limit."),
+            elements=[
+                ("levels",
+                 Tuple(
+                     title=_("Levels for used processes"),
+                     elements=[
+                         Percentage(title=_("Warning if more than"), default_value=70.0),
+                         Percentage(title=_("Critical if more than"), default_value=90.0)
+                     ],
+                 )),
+            ],
+            optional_keys=False,
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Database SID"), size=12, allow_empty=False)

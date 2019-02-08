@@ -30,33 +30,52 @@ from cmk.gui.valuespec import (
     Float,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    "mcafee_web_gateway",
-    _("McAfee web gateway statistics"),
-    Dictionary(elements=[
-        ("infections",
-         Tuple(
-             title=_("Upper levels for infections"),
-             help=_("Here you can specify upper levels for the number of "
-                    "infections detected by the McAfee Gateway Antimalware Engine."),
-             elements=[
-                 Float(title=_("Warning at")),
-                 Float(title=_("Critical at")),
-             ])),
-        ("connections_blocked",
-         Tuple(
-             title=_("Upper levels for blocked connections"),
-             elements=[
-                 Float(title=_("Warning at")),
-                 Float(title=_("Critical at")),
-             ])),
-    ]),
-    None,
-    match_type="dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersMcafeeWebGateway(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "mcafee_web_gateway"
+
+    @property
+    def title(self):
+        return _("McAfee web gateway statistics")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ("infections",
+                 Tuple(
+                     title=_("Upper levels for infections"),
+                     help=_("Here you can specify upper levels for the number of "
+                            "infections detected by the McAfee Gateway Antimalware Engine."),
+                     elements=[
+                         Float(title=_("Warning at")),
+                         Float(title=_("Critical at")),
+                     ],
+                 )),
+                ("connections_blocked",
+                 Tuple(
+                     title=_("Upper levels for blocked connections"),
+                     elements=[
+                         Float(title=_("Warning at")),
+                         Float(title=_("Critical at")),
+                     ],
+                 )),
+            ],)

@@ -29,20 +29,40 @@ from cmk.gui.valuespec import (
     TextAscii,
     Transform,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 from cmk.gui.plugins.wato.check_parameters.mailqueue_length import mailqueue_params
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    "mail_queue_length",
-    _("Number of mails in outgoing mail queue"),
-    Transform(
-        mailqueue_params,
-        forth=lambda old: not isinstance(old, dict) and {"deferred": old} or old,
-    ),
-    TextAscii(title=_("Mail queue name")),
-    match_type="dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersMailQueueLength(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "mail_queue_length"
+
+    @property
+    def title(self):
+        return _("Number of mails in outgoing mail queue")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Transform(
+            mailqueue_params,
+            forth=lambda old: not isinstance(old, dict) and {"deferred": old} or old,
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Mail queue name"))

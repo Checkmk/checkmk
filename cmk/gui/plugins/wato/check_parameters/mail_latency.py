@@ -29,16 +29,34 @@ from cmk.gui.valuespec import (
     Age,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications, "mail_latency", _("Mail Latency"),
-    Tuple(
-        title=_("Upper levels for Mail Latency"),
-        elements=[
-            Age(title=_("Warning at"), default_value=40),
-            Age(title=_("Critical at"), default_value=60),
-        ]), None, "first")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersMailLatency(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "mail_latency"
+
+    @property
+    def title(self):
+        return _("Mail Latency")
+
+    @property
+    def parameter_valuespec(self):
+        return Tuple(
+            title=_("Upper levels for Mail Latency"),
+            elements=[
+                Age(title=_("Warning at"), default_value=40),
+                Age(title=_("Critical at"), default_value=60),
+            ],
+        )

@@ -32,23 +32,40 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersStorage,
-    register_check_parameters,
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersStorage,
-    "mongodb_locks",
-    _("MongoDB Locks"),
-    Dictionary(
-        elements=[("%s_locks" % what,
-                   Tuple(
-                       title=_("%s Locks") % what.title().replace("_", " "),
-                       elements=[
-                           Integer(title=_("Warning at"), minvalue=0),
-                           Integer(title=_("Critical at"), minvalue=0),
-                       ])) for what in [
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersMongodbLocks(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersStorage
+
+    @property
+    def check_group_name(self):
+        return "mongodb_locks"
+
+    @property
+    def title(self):
+        return _("MongoDB Locks")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[("%s_locks" % what,
+                       Tuple(
+                           title=_("%s Locks") % what.title().replace("_", " "),
+                           elements=[
+                               Integer(title=_("Warning at"), minvalue=0),
+                               Integer(title=_("Critical at"), minvalue=0),
+                           ],
+                       )) for what in [
                            "clients_readers", "clients_writers", "clients_total", "queue_readers",
                            "queue_writers", "queue_total"
-                       ]],),
-    None,
-    match_type="dict")
+                       ]],)

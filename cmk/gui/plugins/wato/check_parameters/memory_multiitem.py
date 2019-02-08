@@ -33,45 +33,69 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersOperatingSystem,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersOperatingSystem,
-    "memory_multiitem",
-    _("Main memory usage of devices with modules"),
-    Dictionary(
-        help=_(
-            "The memory levels for one specific module of this host. This is relevant for hosts that have "
-            "several distinct memory areas, e.g. pluggable cards"),
-        elements=[
-            ("levels",
-             Alternative(
-                 title=_("Memory levels"),
-                 elements=[
-                     Tuple(
-                         title=_("Specify levels in percentage of total RAM"),
-                         elements=[
-                             Percentage(
-                                 title=_("Warning at a memory usage of"),
-                                 default_value=80.0,
-                                 maxvalue=None),
-                             Percentage(
-                                 title=_("Critical at a memory usage of"),
-                                 default_value=90.0,
-                                 maxvalue=None)
-                         ]),
-                     Tuple(
-                         title=_("Specify levels in absolute usage values"),
-                         elements=[
-                             Filesize(title=_("Warning at")),
-                             Filesize(title=_("Critical at"))
-                         ]),
-                 ])),
-        ],
-        optional_keys=[]),
-    TextAscii(title=_("Module name"), allow_empty=False),
-    "dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersMemoryMultiitem(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersOperatingSystem
+
+    @property
+    def check_group_name(self):
+        return "memory_multiitem"
+
+    @property
+    def title(self):
+        return _("Main memory usage of devices with modules")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            help=_(
+                "The memory levels for one specific module of this host. This is relevant for hosts that have "
+                "several distinct memory areas, e.g. pluggable cards"),
+            elements=[
+                ("levels",
+                 Alternative(
+                     title=_("Memory levels"),
+                     elements=[
+                         Tuple(
+                             title=_("Specify levels in percentage of total RAM"),
+                             elements=[
+                                 Percentage(
+                                     title=_("Warning at a memory usage of"),
+                                     default_value=80.0,
+                                     maxvalue=None),
+                                 Percentage(
+                                     title=_("Critical at a memory usage of"),
+                                     default_value=90.0,
+                                     maxvalue=None)
+                             ],
+                         ),
+                         Tuple(
+                             title=_("Specify levels in absolute usage values"),
+                             elements=[
+                                 Filesize(title=_("Warning at")),
+                                 Filesize(title=_("Critical at"))
+                             ],
+                         ),
+                     ],
+                 )),
+            ],
+            optional_keys=[],
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Module name"), allow_empty=False)

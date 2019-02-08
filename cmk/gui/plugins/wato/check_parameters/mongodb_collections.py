@@ -31,14 +31,37 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersStorage,
-    register_check_parameters,
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
 )
 from cmk.gui.plugins.wato.check_parameters.utils import (
     fs_levels_elements,
     size_trend_elements,
 )
 
-register_check_parameters(RulespecGroupCheckParametersStorage, "mongodb_collections",
-                          _("MongoDB Collection Size"),
-                          Dictionary(elements=fs_levels_elements + size_trend_elements),
-                          TextAscii(title=_("Collection name"),), "dict")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersMongodbCollections(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersStorage
+
+    @property
+    def check_group_name(self):
+        return "mongodb_collections"
+
+    @property
+    def title(self):
+        return _("MongoDB Collection Size")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(elements=fs_levels_elements + size_trend_elements)
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Collection name"),)

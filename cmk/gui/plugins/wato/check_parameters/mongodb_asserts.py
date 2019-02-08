@@ -30,22 +30,43 @@ from cmk.gui.valuespec import (
     Float,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersStorage,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersStorage,
-    "mongodb_asserts",
-    _("MongoDB Assert Rates"),
-    Dictionary(
-        elements=[("%s_assert_rate" % what,
-                   Tuple(
-                       title=_("%s rate") % what.title(),
-                       elements=[
-                           Float(title=_("Warning at"), unit=_("Asserts / s"), default_value=1.0),
-                           Float(title=_("Critical at"), unit=_("Asserts / s"), default_value=2.0),
-                       ])) for what in ["msg", "rollovers", "regular", "warning", "user"]],),
-    None,
-    match_type="dict")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersMongodbAsserts(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersStorage
+
+    @property
+    def check_group_name(self):
+        return "mongodb_asserts"
+
+    @property
+    def title(self):
+        return _("MongoDB Assert Rates")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[("%s_assert_rate" % what,
+                       Tuple(
+                           title=_("%s rate") % what.title(),
+                           elements=[
+                               Float(
+                                   title=_("Warning at"), unit=_("Asserts / s"), default_value=1.0),
+                               Float(
+                                   title=_("Critical at"), unit=_("Asserts / s"),
+                                   default_value=2.0),
+                           ],
+                       )) for what in ["msg", "rollovers", "regular", "warning", "user"]],)

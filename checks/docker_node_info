@@ -38,6 +38,7 @@ def parse_docker_node_info(info):
     return loaded or {}
 
 
+@append_deprecation_warning  # pylint: disable=undefined-variable
 def check_docker_node_info(_no_item, _no_params, parsed):
     if "Name" in parsed:
         yield 0, 'Daemon running on host %s' % parsed["Name"]
@@ -56,6 +57,7 @@ check_info['docker_node_info'] = {
 }
 
 
+@append_deprecation_warning  # pylint: disable=undefined-variable
 def check_docker_node_containers(_no_item, params, parsed):
     def check_node_levels(count, levels, levels_lower):
         warn, crit = levels

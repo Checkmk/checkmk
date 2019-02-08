@@ -1,0 +1,29 @@
+Title: mk_docker.py: A new docker monitoring plugin
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.6.0i1
+Date: 1550048642
+Class: feature
+
+We introduce a new plugin for docker monitoring, 'mk_docker.py'.
+It combines the functionality of the two deprecated plugins
+'mk_docker_node' and 'mk_docker_container_piggybacked', while
+adding more configuration options.
+
+If you where using both plugins, you can use the new plugin in its
+default configuration to replace them. If you have been using only
+one of them, you can disable the opposite parts of the new plugin,
+either by using the bakery rule "Docker node and containers" or via
+the configuration file (please refer to the example files in 
+agents/cfg_examples fo rmore details).
+
+The previous rule "Piggybacked docker containers" is deprecated -
+please set up a corresponding new one.
+
+To deploy this plugin you must have the 'docker-py' python library
+installed on the monitored system. You can install it using the 
+python package manager pip (using the shell command
+"pip install docker-py").
+

@@ -95,6 +95,7 @@ check_info["docker_container_status.health"] = {
 #   '----------------------------------------------------------------------'
 
 
+@append_deprecation_warning  # pylint: disable=undefined-variable
 def check_docker_container_status(_no_item, _no_params, parsed):
     status = parsed.get("Status", "unknown")
     state = {"running": 0, "unknown": 3}.get(status, 2)

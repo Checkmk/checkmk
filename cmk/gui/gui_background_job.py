@@ -671,9 +671,8 @@ class ActionHandler(object):
     delete_job_var = "_delete_job"
     acknowledge_job_var = "_acknowledge_job"
 
-    def __init__(self, stylesheets=None):
+    def __init__(self):
         super(ActionHandler, self).__init__()
-        self._stylesheets = stylesheets
         self._did_acknowledge_job = False
         self._did_stop_job = False
         self._did_delete_job = False
@@ -723,7 +722,7 @@ class ActionHandler(object):
         if not job.is_available():
             return
 
-        html.header("Interuption of job", stylesheets=self._stylesheets)
+        html.header("Interuption of job")
         if self.confirm_dialog_opened() and not job.is_running():
             html.message(_("No longer able to stop job. Background job just finished."))
             return
@@ -743,7 +742,7 @@ class ActionHandler(object):
         if not job.is_available():
             return
 
-        html.header("Deletion of job", stylesheets=self._stylesheets)
+        html.header("Deletion of job")
         c = html.confirm(_("Delete job %s%s?") % (job_id, self._get_extra_info(job)))
         if c and job.may_delete():
             job.delete()

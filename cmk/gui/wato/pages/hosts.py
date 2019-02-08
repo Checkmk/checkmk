@@ -100,7 +100,7 @@ class HostMode(WatoMode):
             html.open_tr()
 
             html.open_td(class_="img")
-            html.img("images/icon_validation_error.png")
+            html.icon(title=None, icon="validation_error")
             html.close_td()
 
             html.open_td()

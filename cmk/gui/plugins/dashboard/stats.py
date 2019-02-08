@@ -112,7 +112,7 @@ class DashletStats(Dashlet):
             width=pie_diameter,
             height=pie_diameter,
             style="float: left")
-        html.img("images/globe.png", class_="globe")
+        html.img(html.theme_url("images/globe.png"), class_="globe")
 
         html.open_table(
             class_=["hoststats"] + (["narrow"] if len(pies) > 0 else []), style="float:left")

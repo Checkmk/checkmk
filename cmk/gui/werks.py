@@ -58,12 +58,10 @@ acknowledgement_path = cmk.utils.paths.var_dir + "/acknowledged_werks.mk"
 # Keep global variable for caching werks between requests. The never change.
 g_werks = None
 
-werks_stylesheets = ["pages", "check_mk", "status", "wato", "views"]
-
 
 @cmk.gui.pages.register("version")
 def page_version():
-    html.header(_("Check_MK %s Release Notes") % cmk.__version__, stylesheets=werks_stylesheets)
+    html.header(_("Check_MK %s Release Notes") % cmk.__version__)
     load_werks()
     handle_acknowledgement()
     render_werks_table()
@@ -106,9 +104,7 @@ def page_werk():
         raise MKUserError("werk", _("This werk does not exist."))
     werk = g_werks[werk_id]
 
-    html.header(
-        ("%s %s - %s") % (_("Werk"), render_werk_id(werk, with_link=False), werk["title"]),
-        stylesheets=werks_stylesheets)
+    html.header(("%s %s - %s") % (_("Werk"), render_werk_id(werk, with_link=False), werk["title"]))
     html.begin_context_buttons()
     back_url = html.makeuri([], filename="version.py", delvars=["werk"])  # keeps filter settings
     html.context_button(_("Back"), back_url, "back")

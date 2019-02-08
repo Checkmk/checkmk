@@ -177,7 +177,7 @@ def render_notification_table(failed_notifications):
 
 # TODO: We should really recode this to use the view and a normal view command / action
 def render_page_confirm(acktime, prev_url, failed_notifications):
-    html.header(_("Confirm failed notifications"), stylesheets=["pages", "check_mk"])
+    html.header(_("Confirm failed notifications"))
 
     if failed_notifications:
         html.open_div(class_="really")

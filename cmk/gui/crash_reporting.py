@@ -68,7 +68,7 @@ def page_crashed(what):
     # Do not reveal crash context information to unauthenticated users or not permitted
     # users to prevent disclosure of internal information
     if not config.user.may("general.see_crash_reports"):
-        html.header(_("Internal error"), stylesheets=["status", "pages"])
+        html.header(_("Internal error"))
         html.show_error("<b>%s:</b> %s" % (_("Internal error"), sys.exc_info()[1]))
         html.p(
             _("An internal error occurred while processing your request. "
@@ -93,7 +93,7 @@ def page_crashed(what):
     else:
         title = _("Internal error")
 
-    html.header(title, stylesheets=["status", "pages"])
+    html.header(title)
 
     show_context_buttons(what, tardata)
 

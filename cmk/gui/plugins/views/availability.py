@@ -232,7 +232,7 @@ def render_availability_page(view, datasource, context, filterheaders, only_site
     title += " - " + range_title
 
     if display_options.enabled(display_options.H):
-        html.body_start(title, stylesheets=["pages", "views", "status"], force=True)
+        html.body_start(title, force=True)
 
     if display_options.enabled(display_options.T):
         html.top_heading(title)
@@ -581,7 +581,7 @@ def render_bi_availability(title, aggr_rows):
         title = _("Availability of") + " " + title
 
     if html.output_format != "csv_export":
-        html.body_start(title, stylesheets=["pages", "views", "status", "bi"])
+        html.body_start(title)
         html.top_heading(title)
         html.begin_context_buttons()
         html.toggle_button("avoptions", False, "painteroptions",
@@ -905,7 +905,7 @@ def edit_annotation():
     if service:
         title += "/" + service
 
-    html.body_start(title, stylesheets=["pages", "views", "status"])
+    html.body_start(title)
     html.top_heading(title)
 
     html.begin_context_buttons()

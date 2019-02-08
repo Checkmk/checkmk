@@ -51,16 +51,14 @@ def mobile_html_head(title, ready_code=""):
     html.meta(name="apple-mobile-web-app-title", content="Check_MK")
     html.title(title)
     html.stylesheet(href="jquery/jquery.mobile-1.0.css")
-    html.stylesheet(href="check_mk.css")
-    html.stylesheet(href="status.css")
-    html.stylesheet(href="mobile.css")
-
-    if metrics.cmk_graphs_possible():
-        html.stylesheet(href="graphs.css")
+    html.stylesheet(href="themes/classic/theme.css")
 
     html.write(
         html._render_opening_tag(
-            "link", rel="apple-touch-icon", href="images/ios_logo.png", close_tag=True))
+            "link",
+            rel="apple-touch-icon",
+            href="themes/classic/images/ios_logo.png",
+            close_tag=True))
     html.javascript_file(src='js/mobile_min.js')
 
     if metrics.cmk_graphs_possible():
@@ -213,7 +211,7 @@ def page_login():
     html.set_focus("_username")
     html.end_form()
     html.open_div(id_="loginfoot")
-    html.img("images/logo_cmk_small.png", class_="logomk")
+    html.img("themes/classic/images/logo_cmk_small.png", class_="logomk")
     html.div(
         HTML(
             _("&copy; <a target=\"_blank\" href=\"https://mathias-kettner.com\">Mathias Kettner</a>"

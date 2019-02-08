@@ -140,7 +140,7 @@ export function toggle_popup(event, trigger_obj, ident, what, data, url_vars, me
     if (what) {
         popup_data = data;
 
-        content.innerHTML = "<img src=\"images/icon_reload.png\" class=\"icon reloading\">";
+        content.innerHTML = "<img src=\"themes/facelift/images/icon_reload.png\" class=\"icon reloading\">";
 
         url_vars = !url_vars ? "" : "?"+url_vars;
         ajax.get_url("ajax_popup_"+what+".py"+url_vars, handle_render_popup_contents, {

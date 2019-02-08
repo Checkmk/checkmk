@@ -1,0 +1,29 @@
+@import "~select2/dist/css/select2";
+
+@import "scss/_check_mk.scss";
+@import "scss/_pages.scss";
+@import "scss/_status.scss";
+@import "scss/_bi.scss";
+@import "scss/_dashboard.scss";
+@import "scss/_login.scss";
+@import "scss/_logwatch.scss";
+@import "scss/_prediction.scss";
+@import "scss/_views.scss";
+@import "scss/_wato.scss";
+@import "scss/_mobile.scss";
+@import "scss/_sidebar.scss";
+@import "scss/_sidebar_wiki.scss";
+@import "scss/_sidebar_quicksearch.scss";
+
+// CEE specific files
+@import "../../../../enterprise/web/htdocs/themes/classic/scss/_graphs.scss";
+@import "../../../../enterprise/web/htdocs/themes/classic/scss/_reporting.scss";
+@if $ENTERPRISE = "yes" {
+  @include graphs;
+  @include reporting;
+}
+
+@import "../../../../managed/web/htdocs/themes/classic/scss/_managed.scss";
+@if $MANAGED = "yes" {
+  @include managed;
+}

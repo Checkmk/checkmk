@@ -1,3 +1,7 @@
+// This theme is based on the classic theme, so first load the whole
+// classic themen and then the overrides.
+@import "../classic/theme.scss";
+
 @import "scss/_variables.scss";
 @import "scss/_main.scss";
 @import "scss/_tables.scss";

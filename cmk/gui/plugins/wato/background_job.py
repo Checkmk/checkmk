@@ -33,7 +33,6 @@ from cmk.gui.globals import html
 from cmk.gui.log import logger
 
 from cmk.gui.plugins.wato import (
-    wato_styles,
     main_module_registry,
     MainModule,
     WatoMode,
@@ -94,7 +93,7 @@ class ModeBackgroundJobsOverview(WatoMode):
             html.set_browser_reload(0.8)
 
     def action(self):
-        action_handler = gui_background_job.ActionHandler(stylesheets=wato_styles)
+        action_handler = gui_background_job.ActionHandler()
         action_handler.handle_actions()
 
 
@@ -140,7 +139,7 @@ class ModeBackgroundJobDetails(WatoMode):
             html.set_browser_reload(1)
 
     def action(self):
-        action_handler = gui_background_job.ActionHandler(stylesheets=wato_styles)
+        action_handler = gui_background_job.ActionHandler()
         action_handler.handle_actions()
         if action_handler.did_delete_job():
             if self._back_url():

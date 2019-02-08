@@ -749,12 +749,12 @@ def my_theme(theme_dirs):
     return my_dir
 
 
-# TODO: Enable with next commit
-#def test_theme_choices_empty(theme_dirs):
-#    assert config.theme_choices() == []
-#
-#def test_theme_choices_normal(my_theme):
-#    assert config.theme_choices() == [("my_theme", u"Määh Theme :-)")]
+def test_theme_choices_empty(theme_dirs):
+    assert config.theme_choices() == []
+
+
+def test_theme_choices_normal(my_theme):
+    assert config.theme_choices() == [("my_theme", u"Määh Theme :-)")]
 
 
 def test_theme_choices_local_theme(theme_dirs, my_theme):
@@ -766,8 +766,6 @@ def test_theme_choices_local_theme(theme_dirs, my_theme):
         mode="w", encoding="utf-8").write(unicode(json.dumps({"title": "Määh Bettr Theme :-D"})))
 
     assert config.theme_choices() == sorted([
-        # TODO: Remove classic with next commit
-        ('classic', u'Classic'),
         ("my_theme", u"Määh Theme :-)"),
         ("my_improved_theme", u"Määh Bettr Theme :-D"),
     ])
@@ -782,8 +780,6 @@ def test_theme_choices_override(theme_dirs, my_theme):
         mode="w", encoding="utf-8").write(unicode(json.dumps({"title": "Fixed theme"})))
 
     assert config.theme_choices() == sorted([
-        # TODO: Remove classic with next commit
-        ('classic', u'Classic'),
         ("my_theme", u"Fixed theme"),
     ])
 
@@ -793,16 +789,13 @@ def test_theme_broken_meta(my_theme):
         mode="w", encoding="utf-8").write(unicode("{\"titlewrong\": xyz\"bla\"}"))
 
     assert config.theme_choices() == sorted([
-        # TODO: Remove classic with next commit
-        ('classic', u'Classic'),
         ("my_theme", u"my_theme"),
     ])
 
 
 def test_html_set_theme(my_theme, register_builtin_html):
     html.set_theme(None)
-    # TODO: Cleanup with next commit
-    assert html.get_theme() == "classic"
+    assert html.get_theme() == "facelift"
 
     html.set_theme("not_existing")
     assert html.get_theme() == "facelift"

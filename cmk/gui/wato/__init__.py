@@ -359,7 +359,6 @@ from cmk.gui.plugins.watolib.utils import (
 modes = {}
 
 from cmk.gui.plugins.wato.utils.html_elements import (
-    wato_styles,
     wato_confirm,
     wato_html_head,
     initialize_wato_html_head,
@@ -637,8 +636,7 @@ class AgentOutputPage(object):
 
 class PageFetchAgentOutput(AgentOutputPage):
     def page(self):
-        html.header(
-            _("%s: Download agent output") % self._host.name(), stylesheets=["status", "pages"])
+        html.header(_("%s: Download agent output") % self._host.name())
 
         html.begin_context_buttons()
         if self._back_url:

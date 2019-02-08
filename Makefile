@@ -177,7 +177,7 @@ endif
 	rm -rf check-mk-$(EDITION)-$(OMD_VERSION)
 
 # This tar file is only used by "omd/packages/check_mk/Makefile"
-$(DISTNAME).tar.gz: omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .werks/werks web/htdocs/js/main_min.js web/htdocs/js/mobile_min.js web/htdocs/js/side_min.js web/htdocs/themes/facelift/theme.css ChangeLog
+$(DISTNAME).tar.gz: omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .werks/werks web/htdocs/js/main_min.js web/htdocs/js/mobile_min.js web/htdocs/js/side_min.js web/htdocs/themes/facelift/theme.css ChangeLog web/htdocs/themes/classic/theme.css
 	@echo "Making $(DISTNAME)"
 	rm -rf $(DISTNAME)
 	mkdir -p $(DISTNAME)
@@ -315,10 +315,10 @@ node_modules: package.json
 	npm install
 
 web/htdocs/js/%_min.js: node_modules webpack.config.js $(JAVASCRIPT_SOURCES)
-	node_modules/.bin/webpack --mode=development
+	ENTERPRISE=$(ENTERPRISE) MANAGED=$(MANAGED) node_modules/.bin/webpack --mode=development
 
 web/htdocs/themes/%/theme.css: node_modules webpack.config.js postcss.config.js web/htdocs/themes/%/theme.scss web/htdocs/themes/%/scss/*.scss
-	node_modules/.bin/webpack --mode=development
+	ENTERPRISE=$(ENTERPRISE) MANAGED=$(MANAGED) node_modules/.bin/webpack --mode=development
 
 # TODO(sp) The target below is not correct, we should not e.g. remove any stuff
 # which is needed to run configure, this should live in a separate target. In

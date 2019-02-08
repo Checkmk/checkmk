@@ -144,7 +144,7 @@ def page_notify():
     if not config.user.may("general.notify"):
         raise MKAuthException(_("You are not allowed to use the notification module."))
 
-    html.header(_('Notify Users'), stylesheets=['pages', 'status', 'views'])
+    html.header(_('Notify Users'))
 
     html.begin_context_buttons()
     html.context_button(_("Users"), "wato.py?mode=users", "back")

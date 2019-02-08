@@ -414,7 +414,7 @@ def page_list(what,
     if not config.user.may("general.edit_" + what):
         raise MKAuthException(_("Sorry, you lack the permission for editing this type of visuals."))
 
-    html.header(title, stylesheets=["pages", "views", "status"])
+    html.header(title)
 
     html.begin_context_buttons()
     html.context_button(_('New'), 'create_%s.py' % what_s, "new")
@@ -601,7 +601,7 @@ def page_create_visual(what, info_keys, next_url=None):
 
     vs_infos = SingleInfoSelection(info_keys)
 
-    html.header(_('Create %s') % title, stylesheets=["pages"])
+    html.header(_('Create %s') % title)
     html.begin_context_buttons()
     html.context_button(_("Back"), html.get_url_input("back", "edit_%s.py" % what), "back")
     html.end_context_buttons()
@@ -799,7 +799,7 @@ def page_edit_visual(what,
     else:
         title = _('Edit %s') % visual_type.title
 
-    html.header(title, stylesheets=["pages", "views", "status", "bi"])
+    html.header(title)
     html.begin_context_buttons()
     back_url = html.get_url_input("back", "edit_%s.py" % what)
     html.context_button(_("Back"), back_url, "back")

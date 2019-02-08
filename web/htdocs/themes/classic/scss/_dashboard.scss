@@ -1,0 +1,638 @@
+/*
++------------------------------------------------------------------+
+|             ____ _               _        __  __ _  __           |
+|            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+|           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+|           | |___| | | |  __/ (__|   <    | |  | | . \            |
+|            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+|                                                                  |
+| Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
++------------------------------------------------------------------+
+
+This file is part of Check_MK.
+The official homepage is at http://mathias-kettner.de/check_mk.
+
+check_mk is free software;  you can redistribute it and/or modify it
+under the  terms of the  GNU General Public License  as published by
+the Free Software Foundation in version 2.  check_mk is  distributed
+in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+ails.  You should have  received  a copy of the  GNU  General Public
+License along with GNU Make; see the file  COPYING.  If  not,  write
+to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+Boston, MA 02110-1301 USA.
+
+*/
+
+/* Styles used by the dashboard only */
+
+body.dashboard {
+    padding: 0;
+    overflow: hidden;
+}
+
+body.dashboard table.header {
+    padding: 10px;
+}
+
+div#dashboard {
+    position: absolute;
+    padding: 0;
+    margin: 0;
+}
+
+
+div.dashlet {
+    position: absolute;
+    padding: 0;
+    margin: 0;
+    display: none;
+    z-index: 1;
+}
+
+/* content area of dashlet, if no iframes are used */
+div.dashlet div.dashlet_inner {
+    position: absolute;
+    padding: 0;
+    margin: 0;
+    overflow: hidden;
+}
+
+/* Dashlets with "background" set to True */
+.dashlet .dashlet_inner.background {
+    background-color: #cbd6da;
+}
+
+div.dashlet div.really,
+div.dashlet div.success,
+div.dashlet div.error,
+div.dashelt div.message,
+div.dashlet div.warning {
+    margin: 0;
+    border-radius: 0;
+    box-shadow: 0;
+}
+
+div.dashlet iframe {
+    border-style: none;
+}
+
+div.dashlet > div.title {
+    position: absolute;
+    background-color: rgba(0, 0, 0, 0.3);
+    /* IE < 9 */
+    filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0, startColorstr='#4c000000', endColorstr='#4c000000');
+    left: 0;
+    width: 150px; /* will be changed by javascript later */
+    color: #fff;
+    padding: 0px;
+    margin: 0px;
+    border-radius: 5px 5px 0 0;
+    padding-left: 9px;
+    padding-top: 4px;
+    font-weight: normal;
+    overflow: hidden;
+    height: 17px;
+    white-space: nowrap;
+}
+div.dashlet div.title a {
+    text-decoration: none;
+    color: white;
+}
+div.dashlet div.title a:hover {
+    text-decoration: underline;
+}
+
+div.dashlet.edit div.title span {
+    padding-left: 27px;
+}
+
+table.dashlet_overview h2 {
+    margin: 8px 0px 8px 0px;
+    font-size: 10pt;
+}
+
+/* Styles for various builtin dashlets */
+div.dashlet canvas.pie {
+    position: absolute;
+    top:5px;
+    left:10px;
+    z-index: 10;
+}
+
+div.dashlet img.globe {
+    position: absolute;
+    top: 5px;
+    left: 10px;
+    z-index: 20;
+}
+
+div.dashlet table.hoststats {
+    margin-top: 10px;
+    width: 135px;
+    height: 142px;
+    border-collapse: collapse;
+    border-spacing: 0px;
+    position:absolute;
+    right:5px;
+}
+div.dashlet table.hoststats.narrow {
+    margin-top: 6px;
+}
+
+div.dashlet table.hoststats a {
+    color: black;
+    text-decoration: none;
+}
+div.dashlet table.hoststats a:hover {
+    text-decoration: underline;
+}
+
+
+div.dashlet table.hoststats td {
+    text-align: right;
+    padding-right: 4px;
+    padding-left: 4px;
+    background-color: #95bbcd;
+}
+
+div.dashlet table.hoststats th {
+    text-align: left;
+    background-color: transparent;
+    padding-left: 4px;
+}
+div.dashlet table.hoststats td.color {
+    padding: 0px;
+    width: 4px;
+}
+div.dashlet table.hoststats th, table.hoststats td {
+    padding-top: 3px;
+    padding-bottom: 3px;
+    border-color: #498aa6;
+    border-style: solid none;
+    border-width: 1px;
+    vertical-align: middle;
+}
+div.dashlet table.hoststats.narrow th, table.hoststats.narrow td {
+    font-size: 8pt;
+    font-weight: normal;
+}
+
+div.dashlet_inner div.stats {
+    background-color: #6da1b8;
+    position: relative;
+    height: 100%;
+    width: 100%;
+    padding: 0px;
+    margin: 0px;
+}
+
+/**
+ * Dashboard editing
+ */
+
+#controls_toggle {
+    z-index: 150;
+    position: absolute;
+    right: 0px;
+    bottom: -41px;
+    padding: 6px 3px;
+    background-color: rgba(0, 0, 0, 0.5);
+    /* IE < 9 */
+    filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0, startColorstr='#7f000000', endColorstr='#7f000000');
+    border-radius: 5px;
+}
+
+#controls_toggle:hover {
+    bottom: -10px;
+}
+
+#controls_toggle .iconbutton {
+    width: 33px;
+    height: 31px;
+}
+
+#controls, ul.sub {
+    margin: 0;
+    z-index: 180;
+    display: block;
+    position: absolute;
+    padding: 5px;
+    width: 200px;
+    list-style: none;
+
+    color: #fff;
+    background-color: #508AA1;
+    border-width: 1px;
+    border-style: solid;
+    border-color: #9bc #367 #367 #9bc;
+    box-shadow:  0.5px 0.5px 8px #000;
+    border-radius: 5px;
+}
+
+#controls a {
+    display: block;
+    padding: 1px 15px 1px 2px;
+    line-height: 14px;
+    text-align: left;
+    text-decoration: none;
+}
+
+#controls a:hover {
+    text-decoration: underline;
+}
+
+/* submenu */
+
+#controls ul.sub {
+    bottom: 5px;
+    right: 212px;
+}
+
+#controls > li > a > img,
+#controls ul.menu > li > a > img {
+    margin-right: 4px;
+    vertical-align: middle;
+    width: 12px;
+    height: 12px;
+}
+
+/* dashlet controls */
+
+div.dashlet.edit .controls {
+    z-index: 100;
+    cursor: auto;
+}
+
+div.dashlet.edit .controls:hover {
+    cursor: move;
+}
+
+div#dashboard.grid {
+    background-image: url(images/dashboard_grid.png);
+}
+
+div.dashlet.edit .controls {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(50, 80, 90, 0.6);
+    /* IE < 9 */
+    filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0, startColorstr='#fffffff', endColorstr='#7fffffff');
+}
+
+/* dashlet edit button */
+
+div.dashlet.edit .edit {
+    cursor: pointer;
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    top: 4px;
+    left: 19px;
+
+    /* background-color: rgba(0, 0, 0, 0.7); */
+    border-radius: 5px;
+    /* IE < 9 */
+    filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0, startColorstr='#32000000', endColorstr='#32000000');
+
+    background-image: url(images/dashlet_edit_lo.png);
+}
+
+div.dashlet.edit .edit:hover {
+    background-image: url(images/dashlet_edit_hi.png);
+}
+
+/* dashlet delete button */
+
+div.dashlet.edit .del {
+    cursor: pointer;
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    top: 4px;
+    right: 19px;
+
+    /* background-color: rgba(0, 0, 0, 0.7); */
+    border-radius: 5px;
+    /* IE < 9 */
+    filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0, startColorstr='#32000000', endColorstr='#32000000');
+
+    background-image: url(images/dashlet_del_lo.png);
+}
+
+div.dashlet.edit .del:hover {
+    background-image: url(images/dashlet_del_hi.png);
+}
+
+/* position anchors */
+
+div.dashlet.edit .anchor {
+    cursor: auto;
+    position: absolute;
+    width: 14px;
+    height: 14px;
+
+    /* background-color: rgba(255, 255, 255, 0.7); */
+    border-radius: 5px;
+    /* IE < 9 */
+    filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0, startColorstr='#32000000', endColorstr='#32000000');
+
+    background-image: url(images/dashlet_anchor_lo.png);
+}
+
+div.dashlet.edit .anchor.off {
+    cursor: pointer;
+    background-image: url(images/dashlet_anchor_off.png);
+}
+
+div.dashlet.edit .anchor.off:hover {
+    background-image: url(images/dashlet_anchor_hi.png);
+}
+
+div.dashlet.edit .anchor.anchor0 {
+    top: 4px;
+    left: 4px;
+}
+
+div.dashlet.edit .anchor.anchor1 {
+    top: 4px;
+    right: 4px;
+}
+
+div.dashlet.edit .anchor.anchor2 {
+    bottom: 4px;
+    right: 4px;
+}
+
+div.dashlet.edit .anchor.anchor3 {
+    bottom: 4px;
+    left: 4px;
+}
+
+.sizer {
+    position: absolute;
+    border: 1px solid #666;
+}
+
+.sizer, .sizer_lbl {
+    cursor: auto;
+}
+
+.sizer {
+    box-shadow: .5px .5px 2px #333;
+    border-radius: 2px;
+}
+
+.sizer:hover, .sizer_lbl:hover {
+    cursor: pointer;
+}
+
+.sizer0 {
+    width: 50%;
+    height: 10px;
+}
+
+.sizer1 {
+    height: 50%;
+    width: 10px;
+}
+
+.sizer.max {
+    background-color: #f00;
+}
+
+.sizer.grow {
+    background-color: #ff0;
+}
+
+.sizer.abs {
+    background-color: #eee;
+}
+
+/* left side */
+.sizer1.anchor0,
+.sizer1.anchor3 {
+    left: 5px;
+    top: 25%;
+}
+
+/* right side */
+.sizer1.anchor1,
+.sizer1.anchor2 {
+    right: 10px;
+    top: 25%;
+}
+
+/* top side */
+.sizer0.anchor0,
+.sizer0.anchor1 {
+    left: 25%;
+    top: 5px;
+}
+
+/* bottom side */
+.sizer0.anchor2,
+.sizer0.anchor3 {
+    left: 25%;
+    bottom: 10px;
+}
+
+/* general arrow */
+.sizer0:before,
+.sizer1:before {
+    position: absolute;
+    content: " ";
+}
+
+/* arrow on left */
+.sizer0.anchor1:before, .sizer0.anchor2:before {
+    top: -7px;
+    left: -11px;
+    background-repeat: no-repeat;
+    width: 13px;
+    height: 21px;
+}
+
+.sizer0.anchor1.max:before, .sizer0.anchor2.max:before {
+    background-image: url(images/dashlet_arrow_l_max.png);
+}
+
+.sizer0.anchor1.grow:before, .sizer0.anchor2.grow:before {
+    background-image: url(images/dashlet_arrow_l_grow.png);
+}
+
+/* arrow on right */
+.sizer0.anchor0:before, .sizer0.anchor3:before {
+    top: -7px;
+    left: 100%;
+    background-repeat: no-repeat;
+    width: 12px;
+    height: 21px;
+}
+
+.sizer0.anchor0.max:before, .sizer0.anchor3.max:before {
+    background-image: url(images/dashlet_arrow_r_max.png);
+}
+
+.sizer0.anchor0.grow:before, .sizer0.anchor3.grow:before {
+    background-image: url(images/dashlet_arrow_r_grow.png);
+}
+
+/* arrow at top */
+.sizer1.anchor2:before, .sizer1.anchor3:before {
+    top: -10px;
+    left: -7px;
+    background-repeat: no-repeat;
+    height: 14px;
+    width: 23px;
+}
+
+.sizer1.anchor2.max:before, .sizer1.anchor3.max:before {
+    background-image: url(images/dashlet_arrow_t_max.png);
+}
+
+.sizer1.anchor2.grow:before, .sizer1.anchor3.grow:before {
+    background-image: url(images/dashlet_arrow_t_grow.png);
+}
+
+/* arrow at bottom */
+.sizer1.anchor0:before, .sizer1.anchor1:before {
+    bottom: -10px;
+    left: -7px;
+    background-repeat: no-repeat;
+    height: 14px;
+    width: 23px;
+}
+
+.sizer1.anchor0.max:before, .sizer1.anchor1.max:before {
+    background-image: url(images/dashlet_arrow_b_max.png);
+}
+
+.sizer1.anchor0.grow:before, .sizer1.anchor1.grow:before {
+    background-image: url(images/dashlet_arrow_b_grow.png);
+}
+
+.sizer_lbl {
+    position: absolute;
+    color: #000;
+    padding: 2px;
+    cursor: auto;
+    /* display: none; */
+    font-size: 6px;
+}
+
+.sizer_lbl0 {
+    width: auto;
+    height: 15px;
+}
+
+.sizer_lbl1 {
+    height: auto;
+    width: 15px;
+
+    -webkit-transform: rotate(-90deg);
+    -moz-transform: rotate(-90deg);
+    -ms-transform: rotate(-90deg);
+    -o-transform: rotate(-90deg);
+    transform: rotate(-90deg);
+
+    /* Should be unset in IE9+ I think. */
+    filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=3);
+}
+
+/* left side */
+.sizer_lbl1.anchor0,
+.sizer_lbl1.anchor3 {
+    left: 1.5px;
+    top: 47%;
+}
+
+/* right side */
+.sizer_lbl1.anchor1,
+.sizer_lbl1.anchor2 {
+    right: 6.5px;
+    top: 47%;
+}
+
+/* top side */
+.sizer_lbl0.anchor0,
+.sizer_lbl0.anchor1 {
+    left: 47%;
+    top: 5px;
+}
+
+/* bottom side */
+.sizer_lbl0.anchor2,
+.sizer_lbl0.anchor3 {
+    left: 47%;
+    bottom: 2.5px;
+}
+
+/* transparent resize areas for absolute sized */
+
+.resize {
+    position: absolute;
+    z-index: 70;
+}
+
+.resize0 {
+    height: 100%;
+    width: 5px;
+}
+
+.resize1 {
+    width: 100%;
+    height: 5px;
+}
+
+.resize0_0 {
+    left: 0;
+    cursor:w-resize;
+}
+
+.resize0_1 {
+    right: 0;
+    cursor:e-resize;
+}
+
+.resize1_0 {
+    top: 0;
+    cursor:n-resize;
+}
+
+.resize1_1 {
+    bottom: 0;
+    cursor:s-resize;
+}
+
+.resize_corner {
+    width: 10px;
+    height: 10px;
+    z-index: 80;
+}
+
+.resize_corner0 {
+    top:0;
+    left:0;
+    cursor:nw-resize;
+}
+
+.resize_corner1 {
+    top:0;
+    right:0;
+    cursor:ne-resize;
+}
+
+.resize_corner2 {
+    bottom:0;
+    right:0;
+    cursor:se-resize;
+}
+
+.resize_corner3 {
+    bottom:0;
+    left:0;
+    cursor:sw-resize;
+}

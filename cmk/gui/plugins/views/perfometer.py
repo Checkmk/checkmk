@@ -256,7 +256,7 @@ class PainterPerfometer(Painter):
 
         content = html.render_div(HTML(h), class_=["content"]) \
                 + html.render_div(title, class_=["title"]) \
-                + html.render_img(src="images/perfometer-bg.png", class_=["glass"])
+                + html.render_div("", class_=["glass"])
 
         # pnpgraph_present: -1 means unknown (path not configured), 0: no, 1: yes
         if display_options.enabled(display_options.X) \

@@ -24,7 +24,6 @@
 
 import $ from "jquery";
 import "select2";
-import "select2/dist/css/select2.css";
 import * as utils from "utils";
 
 // html.dropdown() adds the .select2-enable class for all dropdowns

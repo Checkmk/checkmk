@@ -31,22 +31,44 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    "oracle_longactivesessions",
-    _("Oracle Long Active Sessions"),
-    Dictionary(elements=[("levels",
-                          Tuple(
-                              title=_("Levels of active sessions"),
-                              elements=[
-                                  Integer(title=_("Warning if more than"), unit=_("sessions")),
-                                  Integer(title=_("Critical if more than"), unit=_("sessions")),
-                              ]))]),
-    TextAscii(title=_("Database SID"), size=12, allow_empty=False),
-    "dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersOracleLongactivesessions(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "oracle_longactivesessions"
+
+    @property
+    def title(self):
+        return _("Oracle Long Active Sessions")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[("levels",
+                       Tuple(
+                           title=_("Levels of active sessions"),
+                           elements=[
+                               Integer(title=_("Warning if more than"), unit=_("sessions")),
+                               Integer(title=_("Critical if more than"), unit=_("sessions")),
+                           ],
+                       ))],)
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Database SID"), size=12, allow_empty=False)

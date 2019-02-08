@@ -33,51 +33,74 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    "oracle_jobs",
-    _("Oracle Scheduler Job"),
-    Dictionary(
-        help=_("A scheduler job is an object in an ORACLE database which could be "
-               "compared to a cron job on Unix. "),
-        elements=[
-            ("run_duration",
-             Tuple(
-                 title=_("Maximum run duration for last execution"),
-                 help=_("Here you can define an upper limit for the run duration of "
-                        "last execution of the job."),
-                 elements=[
-                     Age(title=_("warning at")),
-                     Age(title=_("critical at")),
-                 ])),
-            ("disabled",
-             DropdownChoice(
-                 title=_("Job State"),
-                 help=_("The state of the job is ignored per default."),
-                 totext="",
-                 choices=[
-                     (True, _("Ignore the state of the Job")),
-                     (False, _("Consider the state of the job")),
-                 ],
-             )),
-            ("status_disabled_jobs",
-             MonitoringState(title="Status of service in case of disabled job", default_value=0)),
-            ("status_missing_jobs",
-             MonitoringState(
-                 title=_("Status of service in case of missing job."),
-                 default_value=2,
-             )),
-        ]),
-    TextAscii(
-        title=_("Scheduler Job Name"),
-        help=_("Here you can set explicit Scheduler-Jobs by defining them via SID, Job-Owner "
-               "and Job-Name, separated by a dot, for example <tt>TUX12C.SYS.PURGE_LOG</tt>"),
-        regex=r'.+\..+',
-        allow_empty=False),
-    match_type="dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersOracleJobs(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "oracle_jobs"
+
+    @property
+    def title(self):
+        return _("Oracle Scheduler Job")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            help=_("A scheduler job is an object in an ORACLE database which could be "
+                   "compared to a cron job on Unix. "),
+            elements=[
+                ("run_duration",
+                 Tuple(
+                     title=_("Maximum run duration for last execution"),
+                     help=_("Here you can define an upper limit for the run duration of "
+                            "last execution of the job."),
+                     elements=[
+                         Age(title=_("warning at")),
+                         Age(title=_("critical at")),
+                     ],
+                 )),
+                ("disabled",
+                 DropdownChoice(
+                     title=_("Job State"),
+                     help=_("The state of the job is ignored per default."),
+                     totext="",
+                     choices=[
+                         (True, _("Ignore the state of the Job")),
+                         (False, _("Consider the state of the job")),
+                     ],
+                 )),
+                ("status_disabled_jobs",
+                 MonitoringState(
+                     title="Status of service in case of disabled job", default_value=0)),
+                ("status_missing_jobs",
+                 MonitoringState(
+                     title=_("Status of service in case of missing job."),
+                     default_value=2,
+                 )),
+            ],
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(
+            title=_("Scheduler Job Name"),
+            help=_("Here you can set explicit Scheduler-Jobs by defining them via SID, Job-Owner "
+                   "and Job-Name, separated by a dot, for example <tt>TUX12C.SYS.PURGE_LOG</tt>"),
+            regex=r'.+\..+',
+            allow_empty=False)

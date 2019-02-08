@@ -31,22 +31,44 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    "oracle_recovery_area",
-    _("Oracle Recovery Area"),
-    Dictionary(elements=[("levels",
-                          Tuple(
-                              title=_("Levels for used space (reclaimable is considered as free)"),
-                              elements=[
-                                  Percentage(title=_("warning at"), default_value=70.0),
-                                  Percentage(title=_("critical at"), default_value=90.0),
-                              ]))]),
-    TextAscii(title=_("Database SID"), size=12, allow_empty=False),
-    "dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersOracleRecoveryArea(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "oracle_recovery_area"
+
+    @property
+    def title(self):
+        return _("Oracle Recovery Area")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[("levels",
+                       Tuple(
+                           title=_("Levels for used space (reclaimable is considered as free)"),
+                           elements=[
+                               Percentage(title=_("warning at"), default_value=70.0),
+                               Percentage(title=_("critical at"), default_value=90.0),
+                           ],
+                       ))],)
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Database SID"), size=12, allow_empty=False)

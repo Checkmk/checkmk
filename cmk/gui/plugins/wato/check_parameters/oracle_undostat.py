@@ -32,31 +32,53 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    "oracle_undostat",
-    _("Oracle Undo Retention"),
-    Dictionary(elements=[
-        ("levels",
-         Tuple(
-             title=_("Levels for remaining undo retention"),
-             elements=[
-                 Age(title=_("warning if less then"), default_value=600),
-                 Age(title=_("critical if less then"), default_value=300),
-             ])),
-        (
-            'nospaceerrcnt_state',
-            MonitoringState(
-                default_value=2,
-                title=_("State in case of non space error count is greater then 0: "),
-            ),
-        ),
-    ]),
-    TextAscii(title=_("Database SID"), size=12, allow_empty=False),
-    "dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersOracleUndostat(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "oracle_undostat"
+
+    @property
+    def title(self):
+        return _("Oracle Undo Retention")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ("levels",
+                 Tuple(
+                     title=_("Levels for remaining undo retention"),
+                     elements=[
+                         Age(title=_("warning if less then"), default_value=600),
+                         Age(title=_("critical if less then"), default_value=300),
+                     ],
+                 )),
+                (
+                    'nospaceerrcnt_state',
+                    MonitoringState(
+                        default_value=2,
+                        title=_("State in case of non space error count is greater then 0: "),
+                    ),
+                ),
+            ],)
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Database SID"), size=12, allow_empty=False)

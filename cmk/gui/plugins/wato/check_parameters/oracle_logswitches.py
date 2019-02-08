@@ -32,9 +32,11 @@ from cmk.gui.valuespec import (
     Transform,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
 
@@ -47,50 +49,65 @@ def transform_oracle_logswitches(params):
     return params
 
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    "oracle_logswitches",
-    _("Oracle Logswitches"),
-    Transform(
-        Dictionary(
-            help=_("This check monitors the number of log switches of an ORACLE "
-                   "database instance in the last 60 minutes. You can set levels "
-                   "for upper and lower bounds."),
-            elements=[
-                (
-                    'levels',
-                    Tuple(
-                        title=_("Set upper Levels"),
-                        elements=[
-                            Integer(
-                                title=_("Warning at or above"),
-                                unit=_("log switches / hour"),
-                                default_value=50),
-                            Integer(
-                                title=_("Critical at or above"),
-                                unit=_("log switches / hour"),
-                                default_value=100),
-                        ]),
-                ),
-                (
-                    'levels_lower',
-                    Tuple(
-                        title=_("Set lower Levels"),
-                        elements=[
-                            Integer(
-                                title=_("Warning at or below"),
-                                unit=_("log switches / hour"),
-                                default_value=-1),
-                            Integer(
-                                title=_("Critical at or below"),
-                                unit=_("log switches / hour"),
-                                default_value=-1),
-                        ]),
-                ),
-            ],
-        ),
-        forth=transform_oracle_logswitches,
-    ),
-    TextAscii(title=_("Database SID"), size=12, allow_empty=False),
-    "first",
-)
+@rulespec_registry.register
+class RulespecCheckgroupParametersOracleLogswitches(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "oracle_logswitches"
+
+    @property
+    def title(self):
+        return _("Oracle Logswitches")
+
+    @property
+    def parameter_valuespec(self):
+        return Transform(
+            Dictionary(
+                help=_("This check monitors the number of log switches of an ORACLE "
+                       "database instance in the last 60 minutes. You can set levels "
+                       "for upper and lower bounds."),
+                elements=[
+                    (
+                        'levels',
+                        Tuple(
+                            title=_("Set upper Levels"),
+                            elements=[
+                                Integer(
+                                    title=_("Warning at or above"),
+                                    unit=_("log switches / hour"),
+                                    default_value=50),
+                                Integer(
+                                    title=_("Critical at or above"),
+                                    unit=_("log switches / hour"),
+                                    default_value=100),
+                            ],
+                        ),
+                    ),
+                    (
+                        'levels_lower',
+                        Tuple(
+                            title=_("Set lower Levels"),
+                            elements=[
+                                Integer(
+                                    title=_("Warning at or below"),
+                                    unit=_("log switches / hour"),
+                                    default_value=-1),
+                                Integer(
+                                    title=_("Critical at or below"),
+                                    unit=_("log switches / hour"),
+                                    default_value=-1),
+                            ],
+                        ),
+                    ),
+                ],
+            ),
+            forth=transform_oracle_logswitches,
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Database SID"), size=12, allow_empty=False)

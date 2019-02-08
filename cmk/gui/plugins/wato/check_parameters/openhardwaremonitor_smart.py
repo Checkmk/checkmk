@@ -31,28 +31,50 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersStorage,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersStorage,
-    "openhardwaremonitor_smart",
-    _("OpenHardwareMonitor S.M.A.R.T."),
-    Dictionary(elements=[
-        ("remaining_life",
-         Tuple(
-             title=_("Remaining Life"),
-             help=_("Estimated remaining health of the disk based on other readings."),
-             elements=[
-                 Percentage(title=_("Warning below"), default_value=30),
-                 Percentage(title=_("Critical below"), default_value=10),
-             ],
-         )),
-    ]),
-    TextAscii(
-        title=_("Device Name"),
-        help=_("Name of the Hard Disk as reported by OHM: hdd0, hdd1, ..."),
-    ),
-    match_type="dict")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersOpenhardwaremonitorSmart(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersStorage
+
+    @property
+    def check_group_name(self):
+        return "openhardwaremonitor_smart"
+
+    @property
+    def title(self):
+        return _("OpenHardwareMonitor S.M.A.R.T.")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ("remaining_life",
+                 Tuple(
+                     title=_("Remaining Life"),
+                     help=_("Estimated remaining health of the disk based on other readings."),
+                     elements=[
+                         Percentage(title=_("Warning below"), default_value=30),
+                         Percentage(title=_("Critical below"), default_value=10),
+                     ],
+                 )),
+            ],)
+
+    @property
+    def item_spec(self):
+        return TextAscii(
+            title=_("Device Name"),
+            help=_("Name of the Hard Disk as reported by OHM: hdd0, hdd1, ..."),
+        )

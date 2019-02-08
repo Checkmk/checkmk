@@ -31,43 +31,67 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    "oracle_dataguard_stats",
-    _("Oracle Data-Guard Stats"),
-    Dictionary(
-        help=
-        _("The Data-Guard statistics are available in Oracle Enterprise Edition with enabled Data-Guard. "
-          "The <tt>init.ora</tt> parameter <tt>dg_broker_start</tt> must be <tt>TRUE</tt> for this check. "
-          "The apply and transport lag can be configured with this rule."),
-        elements=[
-            ("apply_lag",
-             Tuple(
-                 title=_("Apply Lag Maximum Time"),
-                 help=_("The maximum limit for the apply lag in <tt>v$dataguard_stats</tt>."),
-                 elements=[Age(title=_("Warning at"),),
-                           Age(title=_("Critical at"),)])),
-            ("apply_lag_min",
-             Tuple(
-                 title=_("Apply Lag Minimum Time"),
-                 help=_(
-                     "The minimum limit for the apply lag in <tt>v$dataguard_stats</tt>. "
-                     "This is only useful if also <i>Apply Lag Maximum Time</i> has been configured."
-                 ),
-                 elements=[Age(title=_("Warning at"),),
-                           Age(title=_("Critical at"),)])),
-            ("transport_lag",
-             Tuple(
-                 title=_("Transport Lag"),
-                 help=_("The limit for the transport lag in <tt>v$dataguard_stats</tt>"),
-                 elements=[Age(title=_("Warning at"),),
-                           Age(title=_("Critical at"),)])),
-        ]),
-    TextAscii(title=_("Database SID"), size=12, allow_empty=False),
-    "dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersOracleDataguardStats(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "oracle_dataguard_stats"
+
+    @property
+    def title(self):
+        return _("Oracle Data-Guard Stats")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            help=
+            _("The Data-Guard statistics are available in Oracle Enterprise Edition with enabled Data-Guard. "
+              "The <tt>init.ora</tt> parameter <tt>dg_broker_start</tt> must be <tt>TRUE</tt> for this check. "
+              "The apply and transport lag can be configured with this rule."),
+            elements=[
+                ("apply_lag",
+                 Tuple(
+                     title=_("Apply Lag Maximum Time"),
+                     help=_("The maximum limit for the apply lag in <tt>v$dataguard_stats</tt>."),
+                     elements=[Age(title=_("Warning at"),),
+                               Age(title=_("Critical at"),)],
+                 )),
+                ("apply_lag_min",
+                 Tuple(
+                     title=_("Apply Lag Minimum Time"),
+                     help=_(
+                         "The minimum limit for the apply lag in <tt>v$dataguard_stats</tt>. "
+                         "This is only useful if also <i>Apply Lag Maximum Time</i> has been configured."
+                     ),
+                     elements=[Age(title=_("Warning at"),),
+                               Age(title=_("Critical at"),)],
+                 )),
+                ("transport_lag",
+                 Tuple(
+                     title=_("Transport Lag"),
+                     help=_("The limit for the transport lag in <tt>v$dataguard_stats</tt>"),
+                     elements=[Age(title=_("Warning at"),),
+                               Age(title=_("Critical at"),)],
+                 )),
+            ],
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Database SID"), size=12, allow_empty=False)

@@ -802,8 +802,6 @@ def rbn_match_event(context, state, last_state, event_map, allowed_events):
     else:
         event = event_map.get(last_state, '?') + event_map.get(state, '?')
 
-    notify_log("Event type is %s" % event)
-
     # Now go through the allowed events. Handle '?' has matching all types!
     for allowed in allowed_events:
         if event == allowed or \
@@ -1916,7 +1914,7 @@ def notify_log(message):
 
 def notify_log_debug(message):
     if config.notification_logging >= 2:
-        notify_log(message)
+        events.event_log(notification_log, message)
 
 
 def fresh_uuid():

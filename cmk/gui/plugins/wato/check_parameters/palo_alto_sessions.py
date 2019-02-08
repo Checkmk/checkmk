@@ -30,24 +30,42 @@ from cmk.gui.valuespec import (
     Tuple,
     Integer,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersNetworking,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersNetworking,
-    "palo_alto_sessions",
-    _("Palo Alto Active Sessions"),
-    Dictionary(elements=[
-        ("levels_sessions_used",
-         Tuple(
-             title=_("Levels for sessions used"),
-             elements=[
-                 Integer(title=_("Warning at"), default_value=60, unit=u"%"),
-                 Integer(title=_("Critical at"), default_value=70, unit=u"%"),
-             ])),
-    ]),
-    None,
-    "dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersPaloAltoSessions(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersNetworking
+
+    @property
+    def check_group_name(self):
+        return "palo_alto_sessions"
+
+    @property
+    def title(self):
+        return _("Palo Alto Active Sessions")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ("levels_sessions_used",
+                 Tuple(
+                     title=_("Levels for sessions used"),
+                     elements=[
+                         Integer(title=_("Warning at"), default_value=60, unit=u"%"),
+                         Integer(title=_("Critical at"), default_value=70, unit=u"%"),
+                     ],
+                 )),
+            ],)

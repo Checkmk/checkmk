@@ -29,22 +29,34 @@ from cmk.gui.valuespec import (
     Float,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersEnvironment,
-    "ps_voltage",
-    _("Output Voltage of Power Supplies"),
-    Tuple(
-        elements=[
-            Float(title=_("Warning below"), unit=u"V"),
-            Float(title=_("Critical below"), unit=u"V"),
-            Float(title=_("Warning at or above"), unit=u"V"),
-            Float(title=_("Critical at or above"), unit=u"V"),
-        ],),
-    None,
-    match_type="first",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersPsVoltage(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersEnvironment
+
+    @property
+    def check_group_name(self):
+        return "ps_voltage"
+
+    @property
+    def title(self):
+        return _("Output Voltage of Power Supplies")
+
+    @property
+    def parameter_valuespec(self):
+        return Tuple(
+            elements=[
+                Float(title=_("Warning below"), unit=u"V"),
+                Float(title=_("Critical below"), unit=u"V"),
+                Float(title=_("Warning at or above"), unit=u"V"),
+                Float(title=_("Critical at or above"), unit=u"V"),
+            ],)

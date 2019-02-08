@@ -31,40 +31,62 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    "postgres_instance_sessions",
-    _("PostgreSQL Sessions"),
-    Dictionary(
-        help=_("This check monitors the current number of active and idle sessions on PostgreSQL"),
-        elements=[
-            (
-                "total",
-                Tuple(
-                    title=_("Number of current sessions"),
-                    elements=[
-                        Integer(title=_("Warning at"), unit=_("sessions"), default_value=100),
-                        Integer(title=_("Critical at"), unit=_("sessions"), default_value=200),
-                    ],
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersPostgresInstanceSessions(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "postgres_instance_sessions"
+
+    @property
+    def title(self):
+        return _("PostgreSQL Sessions")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            help=_(
+                "This check monitors the current number of active and idle sessions on PostgreSQL"),
+            elements=[
+                (
+                    "total",
+                    Tuple(
+                        title=_("Number of current sessions"),
+                        elements=[
+                            Integer(title=_("Warning at"), unit=_("sessions"), default_value=100),
+                            Integer(title=_("Critical at"), unit=_("sessions"), default_value=200),
+                        ],
+                    ),
                 ),
-            ),
-            (
-                "running",
-                Tuple(
-                    title=_("Number of currently running sessions"),
-                    help=_("Levels for the number of sessions that are currently active"),
-                    elements=[
-                        Integer(title=_("Warning at"), unit=_("sessions"), default_value=10),
-                        Integer(title=_("Critical at"), unit=_("sessions"), default_value=20),
-                    ],
+                (
+                    "running",
+                    Tuple(
+                        title=_("Number of currently running sessions"),
+                        help=_("Levels for the number of sessions that are currently active"),
+                        elements=[
+                            Integer(title=_("Warning at"), unit=_("sessions"), default_value=10),
+                            Integer(title=_("Critical at"), unit=_("sessions"), default_value=20),
+                        ],
+                    ),
                 ),
-            ),
-        ]),
-    TextAscii(title=_("Instance")),
-    match_type="dict",
-)
+            ],
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Instance"))

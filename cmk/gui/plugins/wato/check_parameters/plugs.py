@@ -29,29 +29,45 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     TextAscii,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersEnvironment,
-    "plugs",
-    _("State of PDU Plugs"),
-    DropdownChoice(
-        help=_("This rule sets the required state of a PDU plug. It is meant to "
-               "be independent of the hardware manufacturer."),
-        title=_("Required plug state"),
-        choices=[
-            ("on", _("Plug is ON")),
-            ("off", _("Plug is OFF")),
-        ],
-        default_value="on"),
-    TextAscii(
-        title=_("Plug item number or name"),
-        help=
-        _("Whether you need the number or the name depends on the check. Just take a look to the service description."
-         ),
-        allow_empty=True),
-    match_type="first",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersPlugs(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersEnvironment
+
+    @property
+    def check_group_name(self):
+        return "plugs"
+
+    @property
+    def title(self):
+        return _("State of PDU Plugs")
+
+    @property
+    def parameter_valuespec(self):
+        return DropdownChoice(
+            help=_("This rule sets the required state of a PDU plug. It is meant to "
+                   "be independent of the hardware manufacturer."),
+            title=_("Required plug state"),
+            choices=[
+                ("on", _("Plug is ON")),
+                ("off", _("Plug is OFF")),
+            ],
+            default_value="on")
+
+    @property
+    def item_spec(self):
+        return TextAscii(
+            title=_("Plug item number or name"),
+            help=
+            _("Whether you need the number or the name depends on the check. Just take a look to the service description."
+             ),
+            allow_empty=True)

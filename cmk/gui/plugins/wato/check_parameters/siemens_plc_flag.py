@@ -29,29 +29,46 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     TextAscii,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersEnvironment,
-    "siemens_plc_flag",
-    _("State of Siemens PLC Flags"),
-    DropdownChoice(
-        help=_("This rule sets the expected state, the one which should result in an OK state, "
-               "of the monitored flags of Siemens PLC devices."),
-        title=_("Expected flag state"),
-        choices=[
-            (True, _("Expect the flag to be: On")),
-            (False, _("Expect the flag to be: Off")),
-        ],
-        default_value=True),
-    TextAscii(
-        title=_("Device Name and Value Ident"),
-        help=_("You need to concatenate the device name which is configured in the special agent "
-               "for the PLC device separated by a space with the ident of the value which is also "
-               "configured in the special agent."),
-        allow_empty=True),
-    match_type="first",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersSiemensPlcFlag(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersEnvironment
+
+    @property
+    def check_group_name(self):
+        return "siemens_plc_flag"
+
+    @property
+    def title(self):
+        return _("State of Siemens PLC Flags")
+
+    @property
+    def parameter_valuespec(self):
+        return DropdownChoice(
+            help=_("This rule sets the expected state, the one which should result in an OK state, "
+                   "of the monitored flags of Siemens PLC devices."),
+            title=_("Expected flag state"),
+            choices=[
+                (True, _("Expect the flag to be: On")),
+                (False, _("Expect the flag to be: Off")),
+            ],
+            default_value=True)
+
+    @property
+    def item_spec(self):
+        return TextAscii(
+            title=_("Device Name and Value Ident"),
+            help=_(
+                "You need to concatenate the device name which is configured in the special agent "
+                "for the PLC device separated by a space with the ident of the value which is also "
+                "configured in the special agent."),
+            allow_empty=True)

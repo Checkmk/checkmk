@@ -31,37 +31,59 @@ from cmk.gui.valuespec import (
     TextAscii,
     Transform,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersStorage,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersStorage, "raid_disk", _("RAID: state of a single disk"),
-    Transform(
-        Dictionary(elements=[
-            (
-                "expected_state",
-                TextAscii(
-                    title=_("Expected state"),
-                    help=_("State the disk is expected to be in. Typical good states "
-                           "are online, host spare, OK and the like. The exact way of how "
-                           "to specify a state depends on the check and hard type being used. "
-                           "Please take examples from discovered checks for reference.")),
-            ),
-            ("use_device_states",
-             DropdownChoice(
-                 title=_("Use device states and overwrite expected status"),
-                 choices=[
-                     (False, _("Ignore")),
-                     (True, _("Use device states")),
-                 ],
-                 default_value=True,
-             )),
-        ]),
-        forth=lambda x: isinstance(x, str) and {"expected_state": x} or x,
-    ),
-    TextAscii(
-        title=_("Number or ID of the disk"),
-        help=_("How the disks are named depends on the type of hardware being "
-               "used. Please look at already discovered checks for examples.")), "first")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersRaidDisk(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersStorage
+
+    @property
+    def check_group_name(self):
+        return "raid_disk"
+
+    @property
+    def title(self):
+        return _("RAID: state of a single disk")
+
+    @property
+    def parameter_valuespec(self):
+        return Transform(
+            Dictionary(
+                elements=[
+                    (
+                        "expected_state",
+                        TextAscii(
+                            title=_("Expected state"),
+                            help=_(
+                                "State the disk is expected to be in. Typical good states "
+                                "are online, host spare, OK and the like. The exact way of how "
+                                "to specify a state depends on the check and hard type being used. "
+                                "Please take examples from discovered checks for reference.")),
+                    ),
+                    ("use_device_states",
+                     DropdownChoice(
+                         title=_("Use device states and overwrite expected status"),
+                         choices=[
+                             (False, _("Ignore")),
+                             (True, _("Use device states")),
+                         ],
+                         default_value=True,
+                     )),
+                ],),
+            forth=lambda x: isinstance(x, str) and {"expected_state": x} or x,
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(
+            title=_("Number or ID of the disk"),
+            help=_("How the disks are named depends on the type of hardware being "
+                   "used. Please look at already discovered checks for examples."))

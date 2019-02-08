@@ -29,21 +29,43 @@ from cmk.gui.valuespec import (
     Dictionary,
     DropdownChoice,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersStorage,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersStorage, "raid_summary", _("RAID: summary state"),
-    Dictionary(elements=[
-        ("use_device_states",
-         DropdownChoice(
-             title=_("Use device states and overwrite expected status"),
-             choices=[
-                 (False, _("Ignore")),
-                 (True, _("Use device states")),
-             ],
-             default_value=True,
-         )),
-    ]), None, "dict")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersRaidSummary(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersStorage
+
+    @property
+    def check_group_name(self):
+        return "raid_summary"
+
+    @property
+    def title(self):
+        return _("RAID: summary state")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ("use_device_states",
+                 DropdownChoice(
+                     title=_("Use device states and overwrite expected status"),
+                     choices=[
+                         (False, _("Ignore")),
+                         (True, _("Use device states")),
+                     ],
+                     default_value=True,
+                 )),
+            ],)

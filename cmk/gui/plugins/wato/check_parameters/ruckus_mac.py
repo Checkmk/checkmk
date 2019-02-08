@@ -30,55 +30,78 @@ from cmk.gui.valuespec import (
     Integer,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications, "ruckus_mac", _("Ruckus Spot Unique MAC addresses"),
-    Dictionary(
-        elements=[
-            ("inside",
-             Dictionary(
-                 title=_("Inside unique MACs"),
-                 elements=[
-                     ("levels_upper",
-                      Tuple(
-                          title=_("Upper levels"),
-                          elements=[
-                              Integer(title=_("Warning at")),
-                              Integer(title=_("Critical at")),
-                          ],
-                      )),
-                     ("levels_lower",
-                      Tuple(
-                          title=_("Lower levels"),
-                          elements=[
-                              Integer(title=_("Warning if below")),
-                              Integer(title=_("Critical if below")),
-                          ],
-                      )),
-                 ])),
-            ("outside",
-             Dictionary(
-                 title=_("Outside unique MACs"),
-                 elements=[
-                     ("levels_upper",
-                      Tuple(
-                          title=_("Upper levels"),
-                          elements=[
-                              Integer(title=_("Warning at")),
-                              Integer(title=_("Critical at")),
-                          ],
-                      )),
-                     ("levels_lower",
-                      Tuple(
-                          title=_("Lower levels"),
-                          elements=[
-                              Integer(title=_("Warning if below")),
-                              Integer(title=_("Critical if below")),
-                          ],
-                      )),
-                 ])),
-        ],), None, "dict")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersRuckusMac(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "ruckus_mac"
+
+    @property
+    def title(self):
+        return _("Ruckus Spot Unique MAC addresses")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ("inside",
+                 Dictionary(
+                     title=_("Inside unique MACs"),
+                     elements=[
+                         ("levels_upper",
+                          Tuple(
+                              title=_("Upper levels"),
+                              elements=[
+                                  Integer(title=_("Warning at")),
+                                  Integer(title=_("Critical at")),
+                              ],
+                          )),
+                         ("levels_lower",
+                          Tuple(
+                              title=_("Lower levels"),
+                              elements=[
+                                  Integer(title=_("Warning if below")),
+                                  Integer(title=_("Critical if below")),
+                              ],
+                          )),
+                     ],
+                 )),
+                ("outside",
+                 Dictionary(
+                     title=_("Outside unique MACs"),
+                     elements=[
+                         ("levels_upper",
+                          Tuple(
+                              title=_("Upper levels"),
+                              elements=[
+                                  Integer(title=_("Warning at")),
+                                  Integer(title=_("Critical at")),
+                              ],
+                          )),
+                         ("levels_lower",
+                          Tuple(
+                              title=_("Lower levels"),
+                              elements=[
+                                  Integer(title=_("Warning if below")),
+                                  Integer(title=_("Critical if below")),
+                              ],
+                          )),
+                     ],
+                 )),
+            ],)

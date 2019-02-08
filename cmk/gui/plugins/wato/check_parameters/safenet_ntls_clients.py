@@ -25,16 +25,37 @@
 # Boston, MA 02110-1301 USA.
 
 from cmk.gui.i18n import _
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
     Levels,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications, "safenet_ntls_clients", _(u"Safenet NTLS Clients"),
-    Levels(
-        title=_(u"NTLS Clients"),
-        help=_(u"Number of connected clients"),
-        default_value=None,
-    ), None, "dict")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersSafenetNtlsClients(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "safenet_ntls_clients"
+
+    @property
+    def title(self):
+        return _("Safenet NTLS Clients")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Levels(
+            title=_(u"NTLS Clients"),
+            help=_(u"Number of connected clients"),
+            default_value=None,
+        )

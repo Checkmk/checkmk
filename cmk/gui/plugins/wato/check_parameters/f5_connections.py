@@ -30,39 +30,63 @@ from cmk.gui.valuespec import (
     Integer,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     Levels,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications, "f5_connections", _("F5 Loadbalancer Connections"),
-    Dictionary(elements=[
-        ("conns",
-         Levels(
-             title=_("Max. number of connections"),
-             default_value=None,
-             default_levels=(25000, 30000))),
-        ("ssl_conns",
-         Levels(
-             title=_("Max. number of SSL connections"),
-             default_value=None,
-             default_levels=(25000, 30000))),
-        ("connections_rate",
-         Levels(
-             title=_("Maximum connections per second"),
-             default_value=None,
-             default_levels=(500, 1000))),
-        ("connections_rate_lower",
-         Tuple(
-             title=_("Minimum connections per second"),
-             elements=[
-                 Integer(title=_("Warning at")),
-                 Integer(title=_("Critical at")),
-             ],
-         )),
-        ("http_req_rate",
-         Levels(
-             title=_("HTTP requests per second"), default_value=None, default_levels=(500, 1000))),
-    ]), None, "dict")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersF5Connections(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "f5_connections"
+
+    @property
+    def title(self):
+        return _("F5 Loadbalancer Connections")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ("conns",
+                 Levels(
+                     title=_("Max. number of connections"),
+                     default_value=None,
+                     default_levels=(25000, 30000))),
+                ("ssl_conns",
+                 Levels(
+                     title=_("Max. number of SSL connections"),
+                     default_value=None,
+                     default_levels=(25000, 30000))),
+                ("connections_rate",
+                 Levels(
+                     title=_("Maximum connections per second"),
+                     default_value=None,
+                     default_levels=(500, 1000))),
+                ("connections_rate_lower",
+                 Tuple(
+                     title=_("Minimum connections per second"),
+                     elements=[
+                         Integer(title=_("Warning at")),
+                         Integer(title=_("Critical at")),
+                     ],
+                 )),
+                ("http_req_rate",
+                 Levels(
+                     title=_("HTTP requests per second"),
+                     default_value=None,
+                     default_levels=(500, 1000))),
+            ],)

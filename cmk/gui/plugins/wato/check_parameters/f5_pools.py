@@ -30,17 +30,38 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications, "f5_pools", _("F5 Loadbalancer Pools"),
-    Tuple(
-        title=_("Minimum number of pool members"),
-        elements=[
-            Integer(title=_("Warning if below"), unit=_("Members ")),
-            Integer(title=_("Critical if below"), unit=_("Members")),
-        ],
-    ), TextAscii(title=_("Name of pool")), "first")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersF5Pools(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "f5_pools"
+
+    @property
+    def title(self):
+        return _("F5 Loadbalancer Pools")
+
+    @property
+    def parameter_valuespec(self):
+        return Tuple(
+            title=_("Minimum number of pool members"),
+            elements=[
+                Integer(title=_("Warning if below"), unit=_("Members ")),
+                Integer(title=_("Critical if below"), unit=_("Members")),
+            ],
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Name of pool"))

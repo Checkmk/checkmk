@@ -30,38 +30,58 @@ from cmk.gui.valuespec import (
     Integer,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    "fireeye_mailq",
-    _("Fireeye Mail Queues"),
-    Dictionary(elements=[
-        ("deferred",
-         Tuple(
-             title=_("Levels for Deferred Queue length"),
-             elements=[
-                 Integer(title="Warning at", default_value=10, unit="Mails"),
-                 Integer(title="Critical at", default_value=15, unit="Mails"),
-             ])),
-        ("hold",
-         Tuple(
-             title=_("Levels for Hold Queue length"),
-             elements=[
-                 Integer(title="Warning at", default_value=500, unit="Mails"),
-                 Integer(title="Critical at", default_value=700, unit="Mails"),
-             ])),
-        ("drop",
-         Tuple(
-             title=_("Levels for Drop Queue length"),
-             elements=[
-                 Integer(title="Warning at", default_value=10, unit="Mails"),
-                 Integer(title="Critical at", default_value=15, unit="Mails"),
-             ])),
-    ]),
-    None,
-    match_type="dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersFireeyeMailq(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "fireeye_mailq"
+
+    @property
+    def title(self):
+        return _("Fireeye Mail Queues")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ("deferred",
+                 Tuple(
+                     title=_("Levels for Deferred Queue length"),
+                     elements=[
+                         Integer(title="Warning at", default_value=10, unit="Mails"),
+                         Integer(title="Critical at", default_value=15, unit="Mails"),
+                     ],
+                 )),
+                ("hold",
+                 Tuple(
+                     title=_("Levels for Hold Queue length"),
+                     elements=[
+                         Integer(title="Warning at", default_value=500, unit="Mails"),
+                         Integer(title="Critical at", default_value=700, unit="Mails"),
+                     ],
+                 )),
+                ("drop",
+                 Tuple(
+                     title=_("Levels for Drop Queue length"),
+                     elements=[
+                         Integer(title="Warning at", default_value=10, unit="Mails"),
+                         Integer(title="Critical at", default_value=15, unit="Mails"),
+                     ],
+                 )),
+            ],)

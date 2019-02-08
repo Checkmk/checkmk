@@ -34,11 +34,12 @@ from cmk.gui.valuespec import (
     TextUnicode,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersDiscovery,
     RulespecGroupCheckParametersStorage,
-    register_check_parameters,
-    rulespec_registry,
     HostRulespec,
 )
 from cmk.gui.plugins.wato.check_parameters.utils import vs_filesystem
@@ -129,11 +130,32 @@ class RulespecFilesystemGroups(HostRulespec):
         )
 
 
-register_check_parameters(
-    RulespecGroupCheckParametersStorage, "filesystem", _("Filesystems (used space and growth)"),
-    vs_filesystem(),
-    TextAscii(
-        title=_("Mount point"),
-        help=_("For Linux/UNIX systems, specify the mount point, for Windows systems "
-               "the drive letter uppercase followed by a colon and a slash, e.g. <tt>C:/</tt>"),
-        allow_empty=False), "dict")
+@rulespec_registry.register
+class RulespecCheckgroupParametersFilesystem(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersStorage
+
+    @property
+    def check_group_name(self):
+        return "filesystem"
+
+    @property
+    def title(self):
+        return _("Filesystems (used space and growth)")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return vs_filesystem()
+
+    @property
+    def item_spec(self):
+        return TextAscii(
+            title=_("Mount point"),
+            help=_("For Linux/UNIX systems, specify the mount point, for Windows systems "
+                   "the drive letter uppercase followed by a colon and a slash, e.g. <tt>C:/</tt>"),
+            allow_empty=False)

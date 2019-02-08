@@ -31,24 +31,46 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    "fireeye_lic",
-    _("Fireeye Licenses"),
-    Dictionary(elements=[(
-        "days",
-        Tuple(
-            title=_("Levels for Fireeye License Expiration"),
-            elements=[
-                Integer(title="Warning at", default_value=90, unit="days"),
-                Integer(title="Critical at", default_value=120, unit="days"),
-            ]),
-    )]),
-    TextAscii(title=_("License Feature")),
-    match_type="dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersFireeyeLic(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "fireeye_lic"
+
+    @property
+    def title(self):
+        return _("Fireeye Licenses")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[(
+                "days",
+                Tuple(
+                    title=_("Levels for Fireeye License Expiration"),
+                    elements=[
+                        Integer(title="Warning at", default_value=90, unit="days"),
+                        Integer(title="Critical at", default_value=120, unit="days"),
+                    ],
+                ),
+            )],)
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("License Feature"))

@@ -30,26 +30,45 @@ from cmk.gui.valuespec import (
     Percentage,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersStorage,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersStorage,
-    "filehandler",
-    _("Filehandler"),
-    Dictionary(elements=[
-        (
-            "levels",
-            Tuple(
-                title=_("Levels"),
-                default_value=(80.0, 90.0),
-                elements=[
-                    Percentage(title=_("Warning at"), unit=_("%")),
-                    Percentage(title=_("Critical at"), unit=_("%"))
-                ]),
-        ),
-    ]),
-    None,
-    match_type="dict")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersFilehandler(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersStorage
+
+    @property
+    def check_group_name(self):
+        return "filehandler"
+
+    @property
+    def title(self):
+        return _("Filehandler")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                (
+                    "levels",
+                    Tuple(
+                        title=_("Levels"),
+                        default_value=(80.0, 90.0),
+                        elements=[
+                            Percentage(title=_("Warning at"), unit=_("%")),
+                            Percentage(title=_("Critical at"), unit=_("%"))
+                        ],
+                    ),
+                ),
+            ],)

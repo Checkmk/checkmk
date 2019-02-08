@@ -29,21 +29,41 @@ from cmk.gui.valuespec import (
     Dictionary,
     Integer,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    "fireeye_mail",
-    _("Fireeye Mail Rate Average"),
-    Dictionary(elements=[
-        (
-            "interval",
-            Integer(title="Timespan for mail rate computation", default_value=60, unit="minutes"),
-        ),
-    ]),
-    None,
-    match_type="dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersFireeyeMail(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "fireeye_mail"
+
+    @property
+    def title(self):
+        return _("Fireeye Mail Rate Average")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                (
+                    "interval",
+                    Integer(
+                        title="Timespan for mail rate computation",
+                        default_value=60,
+                        unit="minutes"),
+                ),
+            ],)

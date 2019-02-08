@@ -30,22 +30,49 @@ from cmk.gui.valuespec import (
     TextAscii,
     DropdownChoice,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications, "local", _("Settings for local checks"),
-    Dictionary(elements=[(
-        "outcome_on_cluster",
-        DropdownChoice(
-            choices=[
-                ("worst", _("Worst state")),
-                ("best", _("Best state")),
-            ],
-            title=_("Clusters: Prefered check result of local checks"),
-            help=_("If you're running local checks on clusters via clustered services rule "
-                   "you can influence the check result with this rule. You can choose between "
-                   "best or worst state. Default setting is worst state."),
-            default_value="worst"))]), TextAscii(title=_("Name of local item")), "dict")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersLocal(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "local"
+
+    @property
+    def title(self):
+        return _("Settings for local checks")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[(
+                "outcome_on_cluster",
+                DropdownChoice(
+                    choices=[
+                        ("worst", _("Worst state")),
+                        ("best", _("Best state")),
+                    ],
+                    title=_("Clusters: Prefered check result of local checks"),
+                    help=_(
+                        "If you're running local checks on clusters via clustered services rule "
+                        "you can influence the check result with this rule. You can choose between "
+                        "best or worst state. Default setting is worst state."),
+                    default_value="worst"))],)
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Name of local item"))

@@ -30,33 +30,50 @@ from cmk.gui.valuespec import (
     Tuple,
     Integer,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    "k8s_nodes",
-    _("Kubernetes nodes"),
-    Dictionary(elements=[
-        ('levels',
-         Tuple(
-             title=_('Upper levels'),
-             elements=[
-                 Integer(title=_("Warning above")),
-                 Integer(title=_("Critical above")),
-             ],
-         )),
-        ('levels_lower',
-         Tuple(
-             title=_('Lower levels'),
-             elements=[
-                 Integer(title=_("Warning below")),
-                 Integer(title=_("Critical below")),
-             ],
-         )),
-    ]),
-    None,
-    match_type="dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersK8SNodes(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "k8s_nodes"
+
+    @property
+    def title(self):
+        return _("Kubernetes nodes")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ('levels',
+                 Tuple(
+                     title=_('Upper levels'),
+                     elements=[
+                         Integer(title=_("Warning above")),
+                         Integer(title=_("Critical above")),
+                     ],
+                 )),
+                ('levels_lower',
+                 Tuple(
+                     title=_('Lower levels'),
+                     elements=[
+                         Integer(title=_("Warning below")),
+                         Integer(title=_("Critical below")),
+                     ],
+                 )),
+            ],)

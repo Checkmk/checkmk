@@ -33,37 +33,57 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersStorage,
-    register_check_parameters,
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersStorage,
-    "lvm_lvs_pools",
-    _("Logical Volume Pools (LVM)"),
-    Dictionary(elements=[
-        (
-            "levels_meta",
-            Tuple(
-                title=_("Levels for Meta"),
-                default_value=(80.0, 90.0),
-                elements=[
-                    Percentage(title=_("Warning at"), unit=_("%")),
-                    Percentage(title=_("Critical at"), unit=_("%"))
-                ]),
-        ),
-        (
-            "levels_data",
-            Tuple(
-                title=_("Levels for Data"),
-                default_value=(80.0, 90.0),
-                elements=[
-                    Percentage(title=_("Warning at"), unit=_("%")),
-                    Percentage(title=_("Critical at"), unit=_("%"))
-                ]),
-        ),
-    ]),
-    TextAscii(
-        title=_("Logical Volume Pool"),
-        allow_empty=True,
-    ),
-    match_type="dict")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersLvmLvsPools(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersStorage
+
+    @property
+    def check_group_name(self):
+        return "lvm_lvs_pools"
+
+    @property
+    def title(self):
+        return _("Logical Volume Pools (LVM)")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(elements=[
+            (
+                "levels_meta",
+                Tuple(
+                    title=_("Levels for Meta"),
+                    default_value=(80.0, 90.0),
+                    elements=[
+                        Percentage(title=_("Warning at"), unit=_("%")),
+                        Percentage(title=_("Critical at"), unit=_("%"))
+                    ]),
+            ),
+            (
+                "levels_data",
+                Tuple(
+                    title=_("Levels for Data"),
+                    default_value=(80.0, 90.0),
+                    elements=[
+                        Percentage(title=_("Warning at"), unit=_("%")),
+                        Percentage(title=_("Critical at"), unit=_("%"))
+                    ]),
+            ),
+        ])
+
+    @property
+    def item_spec(self):
+        return TextAscii(
+            title=_("Logical Volume Pool"),
+            allow_empty=True,
+        )

@@ -30,35 +30,60 @@ from cmk.gui.valuespec import (
     Float,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications, "varnish_backend", _("Varnish Backend"),
-    Dictionary(
-        elements=[
-            ("busy",
-             Tuple(
-                 title=_("Upper levels for \"backend connections busy/too many\" per second"),
-                 elements=[
-                     Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
-                     Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
-                 ])),
-            ("fail",
-             Tuple(
-                 title=_("Upper levels for \"backend connections failures\" per second"),
-                 elements=[
-                     Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
-                     Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
-                 ])),
-            ("unhealthy",
-             Tuple(
-                 title=_(
-                     "Upper levels for \"backend connections unhealthy/not attempted\" per second"),
-                 elements=[
-                     Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
-                     Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
-                 ])),
-        ],), None, "dict")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersVarnishBackend(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "varnish_backend"
+
+    @property
+    def title(self):
+        return _("Varnish Backend")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ("busy",
+                 Tuple(
+                     title=_("Upper levels for \"backend connections busy/too many\" per second"),
+                     elements=[
+                         Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
+                         Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
+                     ],
+                 )),
+                ("fail",
+                 Tuple(
+                     title=_("Upper levels for \"backend connections failures\" per second"),
+                     elements=[
+                         Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
+                         Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
+                     ],
+                 )),
+                ("unhealthy",
+                 Tuple(
+                     title=
+                     _("Upper levels for \"backend connections unhealthy/not attempted\" per second"
+                      ),
+                     elements=[
+                         Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
+                         Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
+                     ],
+                 )),
+            ],)

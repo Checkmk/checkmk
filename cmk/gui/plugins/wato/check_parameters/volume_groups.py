@@ -31,9 +31,11 @@ from cmk.gui.valuespec import (
     TextAscii,
     Transform,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersStorage,
-    register_check_parameters,
 )
 from cmk.gui.plugins.wato.check_parameters.utils import (
     get_free_used_dynamic_valuespec,
@@ -41,25 +43,49 @@ from cmk.gui.plugins.wato.check_parameters.utils import (
     transform_filesystem_free,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersStorage, "volume_groups", _("Volume Groups (LVM)"),
-    Dictionary(
-        elements=[
-            ("levels",
-             Alternative(
-                 title=_("Levels for volume group"),
-                 show_alternative_title=True,
-                 default_value=(80.0, 90.0),
-                 match=match_dual_level_type,
-                 elements=[
-                     get_free_used_dynamic_valuespec("used", "volume group"),
-                     Transform(
-                         get_free_used_dynamic_valuespec(
-                             "free", "volume group", default_value=(20.0, 10.0)),
-                         title=_("Levels for volume group free space"),
-                         allow_empty=False,
-                         forth=transform_filesystem_free,
-                         back=transform_filesystem_free)
-                 ])),
-        ],
-        optional_keys=False), TextAscii(title=_("Volume Group"), allow_empty=False), "dict")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersVolumeGroups(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersStorage
+
+    @property
+    def check_group_name(self):
+        return "volume_groups"
+
+    @property
+    def title(self):
+        return _("Volume Groups (LVM)")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ("levels",
+                 Alternative(
+                     title=_("Levels for volume group"),
+                     show_alternative_title=True,
+                     default_value=(80.0, 90.0),
+                     match=match_dual_level_type,
+                     elements=[
+                         get_free_used_dynamic_valuespec("used", "volume group"),
+                         Transform(
+                             get_free_used_dynamic_valuespec(
+                                 "free", "volume group", default_value=(20.0, 10.0)),
+                             title=_("Levels for volume group free space"),
+                             allow_empty=False,
+                             forth=transform_filesystem_free,
+                             back=transform_filesystem_free)
+                     ],
+                 )),
+            ],
+            optional_keys=False)
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Volume Group"), allow_empty=False)

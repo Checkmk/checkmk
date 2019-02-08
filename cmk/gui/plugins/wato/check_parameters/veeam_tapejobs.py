@@ -30,22 +30,38 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersStorage,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersStorage,
-    "veeam_tapejobs",
-    _("VEEAM tape backup jobs"),
-    Tuple(
-        title=_("Levels for duration of backup job"),
-        elements=[
-            Age(title="Warning at"),
-            Age(title="Critical at"),
-        ],
-    ),
-    TextAscii(title=_("Name of the tape job"),),
-    "first",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersVeeamTapejobs(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersStorage
+
+    @property
+    def check_group_name(self):
+        return "veeam_tapejobs"
+
+    @property
+    def title(self):
+        return _("VEEAM tape backup jobs")
+
+    @property
+    def parameter_valuespec(self):
+        return Tuple(
+            title=_("Levels for duration of backup job"),
+            elements=[
+                Age(title="Warning at"),
+                Age(title="Critical at"),
+            ],
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Name of the tape job"),)

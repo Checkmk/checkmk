@@ -31,34 +31,57 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersEnvironment,
-    "voltage",
-    _("Voltage Sensor"),
-    Dictionary(
-        title=_("Voltage Sensor"),
-        optional_keys=True,
-        elements=[
-            ("levels",
-             Tuple(
-                 title=_("Upper Levels for Voltage"),
-                 elements=[
-                     Float(title=_("Warning at"), default_value=15.00, unit="V"),
-                     Float(title=_("Critical at"), default_value=16.00, unit="V"),
-                 ])),
-            ("levels_lower",
-             Tuple(
-                 title=_("Lower Levels for Voltage"),
-                 elements=[
-                     Float(title=_("Warning below"), default_value=10.00, unit="V"),
-                     Float(title=_("Critical below"), default_value=9.00, unit="V"),
-                 ])),
-        ]),
-    TextAscii(title=_("Sensor Description and Index"),),
-    match_type="dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersVoltage(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersEnvironment
+
+    @property
+    def check_group_name(self):
+        return "voltage"
+
+    @property
+    def title(self):
+        return _("Voltage Sensor")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            title=_("Voltage Sensor"),
+            optional_keys=True,
+            elements=[
+                ("levels",
+                 Tuple(
+                     title=_("Upper Levels for Voltage"),
+                     elements=[
+                         Float(title=_("Warning at"), default_value=15.00, unit="V"),
+                         Float(title=_("Critical at"), default_value=16.00, unit="V"),
+                     ],
+                 )),
+                ("levels_lower",
+                 Tuple(
+                     title=_("Lower Levels for Voltage"),
+                     elements=[
+                         Float(title=_("Warning below"), default_value=10.00, unit="V"),
+                         Float(title=_("Critical below"), default_value=9.00, unit="V"),
+                     ],
+                 )),
+            ],
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Sensor Description and Index"),)

@@ -26,12 +26,37 @@
 
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import TextAscii
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersStorage,
-    register_check_parameters,
 )
 from cmk.gui.plugins.wato.check_parameters.utils import vs_filesystem
 
-register_check_parameters(RulespecGroupCheckParametersStorage, "threepar_cpgs",
-                          _("3Par CPG (used space and growth)"), vs_filesystem(),
-                          TextAscii(title=_("CPG member name"), allow_empty=False), "dict")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersThreeparCpgs(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersStorage
+
+    @property
+    def check_group_name(self):
+        return "threepar_cpgs"
+
+    @property
+    def title(self):
+        return _("3Par CPG (used space and growth)")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return vs_filesystem()
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("CPG member name"), allow_empty=False)

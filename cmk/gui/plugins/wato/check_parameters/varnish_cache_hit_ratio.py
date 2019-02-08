@@ -30,22 +30,44 @@ from cmk.gui.valuespec import (
     Percentage,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications, "varnish_cache_hit_ratio",
-    _("Varnish Cache Hit Ratio"),
-    Dictionary(
-        elements=[
-            ("levels_lower",
-             Tuple(
-                 title=_("Lower levels"),
-                 elements=[
-                     Percentage(title=_("Warning if below"), default_value=70.0, allow_empty=False),
-                     Percentage(
-                         title=_("Critical if below"), default_value=60.0, allow_empty=False)
-                 ])),
-        ],), None, "dict")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersVarnishCacheHitRatio(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "varnish_cache_hit_ratio"
+
+    @property
+    def title(self):
+        return _("Varnish Cache Hit Ratio")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ("levels_lower",
+                 Tuple(
+                     title=_("Lower levels"),
+                     elements=[
+                         Percentage(
+                             title=_("Warning if below"), default_value=70.0, allow_empty=False),
+                         Percentage(
+                             title=_("Critical if below"), default_value=60.0, allow_empty=False)
+                     ],
+                 )),
+            ],)

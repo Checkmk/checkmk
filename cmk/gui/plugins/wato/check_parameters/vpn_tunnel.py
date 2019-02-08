@@ -34,51 +34,72 @@ from cmk.gui.valuespec import (
     TextUnicode,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersNetworking,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersNetworking,
-    "vpn_tunnel",
-    _("VPN Tunnel"),
-    Dictionary(
-        elements=[
-            ("tunnels",
-             ListOf(
-                 Tuple(
-                     title=("VPN Tunnel Endpoints"),
-                     elements=[
-                         IPv4Address(
-                             title=_("IP-Address or Name of Tunnel Endpoint"),
-                             help=_(
-                                 "The configured value must match a tunnel reported by the monitored "
-                                 "device."),
-                             allow_empty=False,
-                         ),
-                         TextUnicode(
-                             title=_("Tunnel Alias"),
-                             help=_(
-                                 "You can configure an individual alias here for the tunnel matching "
-                                 "the IP-Address or Name configured in the field above."),
-                         ),
-                         MonitoringState(
-                             default_value=2,
-                             title=_("State if tunnel is not found"),
-                         )
-                     ]),
-                 add_label=_("Add tunnel"),
-                 movable=False,
-                 title=_("VPN tunnel specific configuration"),
-             )),
-            ("state",
-             MonitoringState(
-                 title=_("Default state to report when tunnel can not be found anymore"),
-                 help=_("Default state if a tunnel, which is not listed above in this rule, "
-                        "can no longer be found."),
-             )),
-        ],),
-    TextAscii(title=_("IP-Address of Tunnel Endpoint")),
-    match_type="dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersVpnTunnel(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersNetworking
+
+    @property
+    def check_group_name(self):
+        return "vpn_tunnel"
+
+    @property
+    def title(self):
+        return _("VPN Tunnel")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ("tunnels",
+                 ListOf(
+                     Tuple(
+                         title=("VPN Tunnel Endpoints"),
+                         elements=[
+                             IPv4Address(
+                                 title=_("IP-Address or Name of Tunnel Endpoint"),
+                                 help=_(
+                                     "The configured value must match a tunnel reported by the monitored "
+                                     "device."),
+                                 allow_empty=False,
+                             ),
+                             TextUnicode(
+                                 title=_("Tunnel Alias"),
+                                 help=_(
+                                     "You can configure an individual alias here for the tunnel matching "
+                                     "the IP-Address or Name configured in the field above."),
+                             ),
+                             MonitoringState(
+                                 default_value=2,
+                                 title=_("State if tunnel is not found"),
+                             )
+                         ],
+                     ),
+                     add_label=_("Add tunnel"),
+                     movable=False,
+                     title=_("VPN tunnel specific configuration"),
+                 )),
+                ("state",
+                 MonitoringState(
+                     title=_("Default state to report when tunnel can not be found anymore"),
+                     help=_("Default state if a tunnel, which is not listed above in this rule, "
+                            "can no longer be found."),
+                 )),
+            ],)
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("IP-Address of Tunnel Endpoint"))

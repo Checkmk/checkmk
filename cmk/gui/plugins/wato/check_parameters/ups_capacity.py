@@ -30,67 +30,83 @@ from cmk.gui.valuespec import (
     Integer,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersEnvironment,
-    "ups_capacity",
-    _("UPS Capacity"),
-    Dictionary(
-        title=_("Levels for battery parameters"),
-        optional_keys=False,
-        elements=[(
-            "capacity",
-            Tuple(
-                title=_("Battery capacity"),
-                elements=[
-                    Integer(
-                        title=_("Warning at"),
-                        help=
-                        _("The battery capacity in percent at and below which a warning state is triggered"
-                         ),
-                        unit="%",
-                        default_value=95,
-                    ),
-                    Integer(
-                        title=_("Critical at"),
-                        help=
-                        _("The battery capacity in percent at and below which a critical state is triggered"
-                         ),
-                        unit="%",
-                        default_value=90,
-                    ),
-                ],
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersUpsCapacity(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersEnvironment
+
+    @property
+    def check_group_name(self):
+        return "ups_capacity"
+
+    @property
+    def title(self):
+        return _("UPS Capacity")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            title=_("Levels for battery parameters"),
+            optional_keys=False,
+            elements=[(
+                "capacity",
+                Tuple(
+                    title=_("Battery capacity"),
+                    elements=[
+                        Integer(
+                            title=_("Warning at"),
+                            help=
+                            _("The battery capacity in percent at and below which a warning state is triggered"
+                             ),
+                            unit="%",
+                            default_value=95,
+                        ),
+                        Integer(
+                            title=_("Critical at"),
+                            help=
+                            _("The battery capacity in percent at and below which a critical state is triggered"
+                             ),
+                            unit="%",
+                            default_value=90,
+                        ),
+                    ],
+                ),
             ),
-        ),
-                  (
-                      "battime",
-                      Tuple(
-                          title=_("Time left on battery"),
-                          elements=[
-                              Integer(
-                                  title=_("Warning at"),
-                                  help=
-                                  _("Time left on Battery at and below which a warning state is triggered"
-                                   ),
-                                  unit=_("min"),
-                                  default_value=0,
-                              ),
-                              Integer(
-                                  title=_("Critical at"),
-                                  help=
-                                  _("Time Left on Battery at and below which a critical state is triggered"
-                                   ),
-                                  unit=_("min"),
-                                  default_value=0,
-                              ),
-                          ],
-                      ),
-                  )],
-    ),
-    None,
-    match_type="dict",
-)
+                      (
+                          "battime",
+                          Tuple(
+                              title=_("Time left on battery"),
+                              elements=[
+                                  Integer(
+                                      title=_("Warning at"),
+                                      help=
+                                      _("Time left on Battery at and below which a warning state is triggered"
+                                       ),
+                                      unit=_("min"),
+                                      default_value=0,
+                                  ),
+                                  Integer(
+                                      title=_("Critical at"),
+                                      help=
+                                      _("Time Left on Battery at and below which a critical state is triggered"
+                                       ),
+                                      unit=_("min"),
+                                      default_value=0,
+                                  ),
+                              ],
+                          ),
+                      )],
+        )

@@ -29,27 +29,45 @@ from cmk.gui.valuespec import (
     Dictionary,
     DropdownChoice,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersNetworking,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersNetworking,
-    "viprinet_router",
-    _("Viprinet router"),
-    Dictionary(elements=[
-        ("expect_mode",
-         DropdownChoice(
-             title=_("Set expected router mode"),
-             choices=[
-                 ("inv", _("Mode found during inventory")),
-                 ("0", _("Node")),
-                 ("1", _("Hub")),
-                 ("2", _("Hub running as HotSpare")),
-                 ("3", _("Hotspare-Hub replacing another router")),
-             ])),
-    ]),
-    None,
-    match_type="dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersViprinetRouter(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersNetworking
+
+    @property
+    def check_group_name(self):
+        return "viprinet_router"
+
+    @property
+    def title(self):
+        return _("Viprinet router")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ("expect_mode",
+                 DropdownChoice(
+                     title=_("Set expected router mode"),
+                     choices=[
+                         ("inv", _("Mode found during inventory")),
+                         ("0", _("Node")),
+                         ("1", _("Hub")),
+                         ("2", _("Hub running as HotSpare")),
+                         ("3", _("Hotspare-Hub replacing another router")),
+                     ],
+                 )),
+            ],)

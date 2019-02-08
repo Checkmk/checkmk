@@ -30,27 +30,50 @@ from cmk.gui.valuespec import (
     Float,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications, "varnish_client", _("Varnish Client"),
-    Dictionary(
-        elements=[
-            ("drop",
-             Tuple(
-                 title=_("Upper levels for \"clients dropped\" per second"),
-                 elements=[
-                     Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
-                     Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
-                 ])),
-            ("req",
-             Tuple(
-                 title=_("Upper levels for \"client requests\" per second"),
-                 elements=[
-                     Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
-                     Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
-                 ])),
-        ],), None, "dict")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersVarnishClient(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "varnish_client"
+
+    @property
+    def title(self):
+        return _("Varnish Client")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ("drop",
+                 Tuple(
+                     title=_("Upper levels for \"clients dropped\" per second"),
+                     elements=[
+                         Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
+                         Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
+                     ],
+                 )),
+                ("req",
+                 Tuple(
+                     title=_("Upper levels for \"client requests\" per second"),
+                     elements=[
+                         Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
+                         Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
+                     ],
+                 )),
+            ],)

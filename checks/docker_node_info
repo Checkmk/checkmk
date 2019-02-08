@@ -40,7 +40,7 @@ def check_docker_node_info(item, params, parsed):
 
 check_info['docker_node_info'] = {
     'includes': ['legacy_docker.include'],
-    'parse_function': parse_docker_node_info,
+    'parse_function': parse_legacy_docker_node_info,
     'inventory_function': inventory_docker_node_info,
     'check_function': check_docker_node_info,
     'service_description': 'Docker node info',

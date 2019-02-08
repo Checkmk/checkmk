@@ -97,6 +97,6 @@ regex = re.compile
               "Reclaimable": 0},
           }),
 ])
-def test_parse_docker_system_df(indata, outdata):
-    parsed = parse_docker_system_df(indata)
+def test_parse_legacy_docker_system_df(indata, outdata):
+    parsed = parse_legacy_docker_system_df(indata)
     assert parsed == outdata, "expected: %r, got %r" % (outdata, parsed)

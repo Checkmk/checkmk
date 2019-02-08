@@ -321,7 +321,7 @@ execfile(os.path.join(os.path.dirname(__file__), '../../../checks/legacy_docker.
      ], {}),
     ([], {}),
 ])
-def test_parse_docker_node_info(indata, outdata_subset):
+def test_parse_legacy_docker_node_info(indata, outdata_subset):
     
     def assert_contains(dic, key, value):
         assert key in dic, "missing key: %r" % key
@@ -331,7 +331,7 @@ def test_parse_docker_node_info(indata, outdata_subset):
         else:
             assert dic[key] == value, "expected: %r, got %r" % (v, parsed[k])
 
-    parsed = parse_docker_node_info(indata)
+    parsed = parse_legacy_docker_node_info(indata)
     for k, v in outdata_subset.iteritems():
         assert_contains(parsed, k, v)
 

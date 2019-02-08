@@ -26,7 +26,7 @@
 
 
 def inv_docker_node_images(info, inventory_tree, status_data_tree):
-    parsed = parse_docker_node_images(info)
+    parsed = parse_legacy_docker_node_images(info)
     images = parsed.get("images", {})
     path = "software.applications.docker.images:"
     inv_node = inventory_tree.get_list(path)

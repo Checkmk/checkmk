@@ -27,7 +27,7 @@ import json
 import re
 
 
-def _docker_get_bytes(string):
+def _legacy_docker_get_bytes(string):
     '''get number of bytes from string
 
     e.g.
@@ -56,7 +56,7 @@ def _docker_get_bytes(string):
         return None
 
 
-def _docker_trunc_id(hash_string):
+def _legacy_docker_trunk_id(hash_string):
     '''normalize to short ID
 
     Some docker commands use shortened, some long IDs:
@@ -75,7 +75,7 @@ def _get_repo_tag(string):
     return string, "latest"
 
 
-def parse_docker_node_info(info):
+def parse_legacy_docker_node_info(info):
     '''parse output of "docker info"'''
     if not info:
         return {}
@@ -140,7 +140,7 @@ def parse_docker_node_info(info):
     return parsed
 
 
-def _docker_parse_table(rows, fields, keys):
+def _legacy_docker_parse_table(rows, fields, keys):
     '''docker provides us with space separated tables with field containing spaces
 
     e.g.:
@@ -178,20 +178,20 @@ def _docker_parse_table(rows, fields, keys):
     return table
 
 
-def parse_docker_system_df(info):
+def parse_legacy_docker_system_df(info):
     def int_or_zero(s):
         return int(s.strip() or 0)
 
     field_map = (
         ('TYPE', 'TOTAL', 'ACTIVE', 'SIZE', 'RECLAIMABLE'),
         ('Type', 'TotalCount', 'Active', 'Size', 'Reclaimable'),
-        (str, int_or_zero, int_or_zero, _docker_get_bytes, _docker_get_bytes),
+        (str, int_or_zero, int_or_zero, _legacy_docker_get_bytes, _legacy_docker_get_bytes),
     )
 
     try:  # parse legacy json output: from 1.5.0 - 1.5.0p6
         table = [json.loads(",".join(row)) for row in info if row]
     except ValueError:
-        table = _docker_parse_table(info, field_map[0], field_map[1])
+        table = _legacy_docker_parse_table(info, field_map[0], field_map[1])
 
     parsed = {}
     for line in table:
@@ -217,7 +217,7 @@ def _get_json_list(info):
     return [element for element in json_list if element]
 
 
-def parse_docker_subsection_images(info):
+def parse_legacy_docker_subsection_images(info):
 
     table = _get_json_list(info)
 
@@ -225,28 +225,28 @@ def parse_docker_subsection_images(info):
     for item in table:
         v = item.get("VirtualSize")
         if v is not None:
-            item["VirtualSize"] = _docker_get_bytes(v)
+            item["VirtualSize"] = _legacy_docker_get_bytes(v)
         parsed[item.get("ID")] = item
 
     return parsed
 
 
-def parse_docker_subsection_image_labels(info):
+def parse_legacy_docker_subsection_image_labels(info):
 
     table = _get_json_list(info)
 
-    return {_docker_trunc_id(long_id): data for long_id, data in table if data is not None}
+    return {_legacy_docker_trunk_id(long_id): data for long_id, data in table if data is not None}
 
 
-def parse_docker_subsection_image_inspect(info):
+def parse_legacy_docker_subsection_image_inspect(info):
     try:
         table = json.loads(' '.join(' '.join(row) for row in info if row))
     except ValueError:
         return {}
-    return {_docker_trunc_id(image["Id"]): image for image in table}
+    return {_legacy_docker_trunk_id(image["Id"]): image for image in table}
 
 
-def parse_docker_subsection_containers(info):
+def parse_legacy_docker_subsection_containers(info):
 
     table = _get_json_list(info)
 
@@ -272,7 +272,7 @@ def _split_subsections(info):
     return subsections
 
 
-def parse_docker_messed_up_labels(string):
+def parse_legacy_docker_messed_up_labels(string):
     '''yield key value pairs
 
     'string' is in the format "key1=value1,key2=value2,...", but there
@@ -288,12 +288,13 @@ def parse_docker_messed_up_labels(string):
     return dict(zip(toggler, toggler))
 
 
-def parse_docker_node_images(info):
+def parse_legacy_docker_node_images(info):
     subsections = _split_subsections(info)
-    images = parse_docker_subsection_images(subsections.get("images", []))
-    image_labels = parse_docker_subsection_image_labels(subsections.get("image_labels", []))
-    image_inspect = parse_docker_subsection_image_inspect(subsections.get("image_inspect", []))
-    containers = parse_docker_subsection_containers(subsections.get("containers", []))
+    images = parse_legacy_docker_subsection_images(subsections.get("images", []))
+    image_labels = parse_legacy_docker_subsection_image_labels(subsections.get("image_labels", []))
+    image_inspect = parse_legacy_docker_subsection_image_inspect(
+        subsections.get("image_inspect", []))
+    containers = parse_legacy_docker_subsection_containers(subsections.get("containers", []))
 
     for image_id, pref_info in image_inspect.iteritems():
         image = images.setdefault(image_id, {})
@@ -315,7 +316,7 @@ def parse_docker_node_images(info):
         image.setdefault("__labels__", {})
 
     for image_id, labels in image_labels.iteritems():
-        image = images.get(_docker_trunc_id(image_id))
+        image = images.get(_legacy_docker_trunk_id(image_id))
         if image is not None and labels is not None:
             image["__labels__"].update(labels)
 
@@ -329,12 +330,12 @@ def parse_docker_node_images(info):
 
         labels = cont.get("Labels")
         if isinstance(labels, (str, unicode)):
-            cont["Labels"] = parse_docker_messed_up_labels(labels)
+            cont["Labels"] = parse_legacy_docker_messed_up_labels(labels)
 
     return {"images": images, "containers": containers}
 
 
-def parse_docker_network_inspect(info):
+def parse_legacy_docker_network_inspect(info):
     try:
         return json.loads(''.join(row[0] for row in info if row))
     except ValueError:

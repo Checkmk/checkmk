@@ -31,11 +31,12 @@ from cmk.gui.valuespec import (
     ListChoice,
     TextAscii,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     Levels,
     RulespecGroupCheckParametersStorage,
-    register_check_parameters,
-    rulespec_registry,
     HostRulespec,
 )
 
@@ -73,63 +74,85 @@ class RulespecDiskstatInventory(HostRulespec):
         )
 
 
-register_check_parameters(
-    RulespecGroupCheckParametersStorage,
-    "diskstat",
-    _("Levels for disk IO"),
-    Dictionary(
-        help=_(
-            "With this rule you can set limits for various disk IO statistics. "
-            "Keep in mind that not all of these settings may be applicable for the actual "
-            "check. For example, if the check doesn't provide a <i>Read wait</i> information in its "
-            "output, any configuration setting referring to <i>Read wait</i> will have no effect."),
-        elements=[
-            ("read",
-             Levels(
-                 title=_("Read throughput"),
-                 unit=_("MB/s"),
-                 default_levels=(50.0, 100.0),
-             )),
-            ("write",
-             Levels(
-                 title=_("Write throughput"),
-                 unit=_("MB/s"),
-                 default_levels=(50.0, 100.0),
-             )),
-            ("utilization",
-             Levels(
-                 title=_("Disk Utilization"),
-                 unit=_("%"),
-                 default_levels=(80.0, 90.0),
-             )),
-            ("latency", Levels(
-                title=_("Disk Latency"),
-                unit=_("ms"),
-                default_levels=(80.0, 160.0),
-            )),
-            ("read_wait", Levels(title=_("Read wait"), unit=_("ms"), default_levels=(30.0, 50.0))),
-            ("write_wait", Levels(title=_("Write wait"), unit=_("ms"), default_levels=(30.0,
-                                                                                       50.0))),
-            ("average",
-             Age(
-                 title=_("Averaging"),
-                 help=_(
-                     "When averaging is set, then all of the disk's metrics are averaged "
-                     "over the selected interval - rather then the check interval. This allows "
-                     "you to make your monitoring less reactive to short peaks. But it will also "
-                     "introduce a loss of accuracy in your graphs. "),
-                 default_value=300,
-             )),
-            ("read_ios",
-             Levels(title=_("Read operations"), unit=_("1/s"), default_levels=(400.0, 600.0))),
-            ("write_ios",
-             Levels(title=_("Write operations"), unit=_("1/s"), default_levels=(300.0, 400.0))),
-        ]),
-    TextAscii(
-        title=_("Device"),
-        help=_(
-            "For a summarized throughput of all disks, specify <tt>SUMMARY</tt>,  "
-            "a per-disk IO is specified by the drive letter, a colon and a slash on Windows "
-            "(e.g. <tt>C:/</tt>) or by the device name on Linux/UNIX (e.g. <tt>/dev/sda</tt>).")),
-    "dict",
-)
+@rulespec_registry.register
+class RulespecCheckgroupParametersDiskstat(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersStorage
+
+    @property
+    def check_group_name(self):
+        return "diskstat"
+
+    @property
+    def title(self):
+        return _("Levels for disk IO")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            help=
+            _("With this rule you can set limits for various disk IO statistics. "
+              "Keep in mind that not all of these settings may be applicable for the actual "
+              "check. For example, if the check doesn't provide a <i>Read wait</i> information in its "
+              "output, any configuration setting referring to <i>Read wait</i> will have no effect."
+             ),
+            elements=[
+                ("read",
+                 Levels(
+                     title=_("Read throughput"),
+                     unit=_("MB/s"),
+                     default_levels=(50.0, 100.0),
+                 )),
+                ("write",
+                 Levels(
+                     title=_("Write throughput"),
+                     unit=_("MB/s"),
+                     default_levels=(50.0, 100.0),
+                 )),
+                ("utilization",
+                 Levels(
+                     title=_("Disk Utilization"),
+                     unit=_("%"),
+                     default_levels=(80.0, 90.0),
+                 )),
+                ("latency",
+                 Levels(
+                     title=_("Disk Latency"),
+                     unit=_("ms"),
+                     default_levels=(80.0, 160.0),
+                 )),
+                ("read_wait", Levels(
+                    title=_("Read wait"), unit=_("ms"), default_levels=(30.0, 50.0))),
+                ("write_wait",
+                 Levels(title=_("Write wait"), unit=_("ms"), default_levels=(30.0, 50.0))),
+                ("average",
+                 Age(
+                     title=_("Averaging"),
+                     help=_(
+                         "When averaging is set, then all of the disk's metrics are averaged "
+                         "over the selected interval - rather then the check interval. This allows "
+                         "you to make your monitoring less reactive to short peaks. But it will also "
+                         "introduce a loss of accuracy in your graphs. "),
+                     default_value=300,
+                 )),
+                ("read_ios",
+                 Levels(title=_("Read operations"), unit=_("1/s"), default_levels=(400.0, 600.0))),
+                ("write_ios",
+                 Levels(title=_("Write operations"), unit=_("1/s"), default_levels=(300.0, 400.0))),
+            ],
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(
+            title=_("Device"),
+            help=_(
+                "For a summarized throughput of all disks, specify <tt>SUMMARY</tt>,  "
+                "a per-disk IO is specified by the drive letter, a colon and a slash on Windows "
+                "(e.g. <tt>C:/</tt>) or by the device name on Linux/UNIX (e.g. <tt>/dev/sda</tt>).")
+        )

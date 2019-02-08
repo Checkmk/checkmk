@@ -31,25 +31,45 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications, "db2_backup",
-    _("DB2 Time since last database Backup"),
-    Optional(
-        Tuple(elements=[
-            Age(title=_("Warning at"),
-                display=["days", "hours", "minutes"],
-                default_value=86400 * 14),
-            Age(title=_("Critical at"),
-                display=["days", "hours", "minutes"],
-                default_value=86400 * 28)
-        ]),
-        title=_("Specify time since last successful backup"),
-    ),
-    TextAscii(
-        title=_("Instance"),
-        help=_("DB2 instance followed by database name, e.g db2taddm:CMDBS1")), "first")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersDb2Backup(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "db2_backup"
+
+    @property
+    def title(self):
+        return _("DB2 Time since last database Backup")
+
+    @property
+    def parameter_valuespec(self):
+        return Optional(
+            Tuple(
+                elements=[
+                    Age(title=_("Warning at"),
+                        display=["days", "hours", "minutes"],
+                        default_value=86400 * 14),
+                    Age(title=_("Critical at"),
+                        display=["days", "hours", "minutes"],
+                        default_value=86400 * 28)
+                ],),
+            title=_("Specify time since last successful backup"),
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(
+            title=_("Instance"),
+            help=_("DB2 instance followed by database name, e.g db2taddm:CMDBS1"))

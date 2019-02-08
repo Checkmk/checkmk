@@ -32,22 +32,40 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersEnvironment,
-    register_check_parameters,
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersEnvironment,
-    "disk_temperature",
-    _("Harddisk temperature (e.g. via SMART)"),
-    Tuple(
-        help=_("Temperature levels for hard disks, that is determined e.g. via SMART"),
-        elements=[
-            Integer(title=_("warning at"), unit=u"°C", default_value=35),
-            Integer(title=_("critical at"), unit=u"°C", default_value=40),
-        ]),
-    TextAscii(
-        title=_("Hard disk device"),
-        help=_("The identificator of the hard disk device, e.g. <tt>/dev/sda</tt>.")),
-    "first",
-    deprecated=True,
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersDiskTemperature(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersEnvironment
+
+    @property
+    def check_group_name(self):
+        return "disk_temperature"
+
+    @property
+    def title(self):
+        return _("Harddisk temperature (e.g. via SMART)")
+
+    @property
+    def is_deprecated(self):
+        return True
+
+    @property
+    def parameter_valuespec(self):
+        return Tuple(
+            help=_("Temperature levels for hard disks, that is determined e.g. via SMART"),
+            elements=[
+                Integer(title=_("warning at"), unit=u"°C", default_value=35),
+                Integer(title=_("critical at"), unit=u"°C", default_value=40),
+            ])
+
+    @property
+    def item_spec(self):
+        return TextAscii(
+            title=_("Hard disk device"),
+            help=_("The identificator of the hard disk device, e.g. <tt>/dev/sda</tt>."))

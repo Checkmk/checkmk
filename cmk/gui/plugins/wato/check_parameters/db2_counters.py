@@ -31,41 +31,63 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    "db2_counters",
-    _("DB2 Counters"),
-    Dictionary(
-        help=_("This rule allows you to configure limits for the deadlocks and lockwaits "
-               "counters of a DB2."),
-        elements=[
-            (
-                "deadlocks",
-                Tuple(
-                    title=_("Deadlocks"),
-                    elements=[
-                        Float(title=_("Warning at"), unit=_("deadlocks/sec")),
-                        Float(title=_("Critical at"), unit=_("deadlocks/sec")),
-                    ],
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersDb2Counters(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "db2_counters"
+
+    @property
+    def title(self):
+        return _("DB2 Counters")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            help=_("This rule allows you to configure limits for the deadlocks and lockwaits "
+                   "counters of a DB2."),
+            elements=[
+                (
+                    "deadlocks",
+                    Tuple(
+                        title=_("Deadlocks"),
+                        elements=[
+                            Float(title=_("Warning at"), unit=_("deadlocks/sec")),
+                            Float(title=_("Critical at"), unit=_("deadlocks/sec")),
+                        ],
+                    ),
                 ),
-            ),
-            (
-                "lockwaits",
-                Tuple(
-                    title=_("Lockwaits"),
-                    elements=[
-                        Float(title=_("Warning at"), unit=_("lockwaits/sec")),
-                        Float(title=_("Critical at"), unit=_("lockwaits/sec")),
-                    ],
+                (
+                    "lockwaits",
+                    Tuple(
+                        title=_("Lockwaits"),
+                        elements=[
+                            Float(title=_("Warning at"), unit=_("lockwaits/sec")),
+                            Float(title=_("Critical at"), unit=_("lockwaits/sec")),
+                        ],
+                    ),
                 ),
-            ),
-        ]),
-    TextAscii(
-        title=_("Instance"), help=_("DB2 instance followed by database name, e.g db2taddm:CMDBS1")),
-    "dict",
-)
+            ],
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(
+            title=_("Instance"),
+            help=_("DB2 instance followed by database name, e.g db2taddm:CMDBS1"))

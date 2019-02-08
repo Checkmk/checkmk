@@ -32,49 +32,79 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications, "db_bloat", _("Database Bloat (PostgreSQL)"),
-    Dictionary(
-        help=_("This rule allows you to configure bloat levels for a databases tablespace and "
-               "indexspace."),
-        elements=[
-            ("table_bloat_abs",
-             Tuple(
-                 title=_("Table absolute bloat levels"),
-                 elements=[
-                     Filesize(title=_("Warning at")),
-                     Filesize(title=_("Critical at")),
-                 ])),
-            ("table_bloat_perc",
-             Tuple(
-                 title=_("Table percentage bloat levels"),
-                 help=_("Percentage in respect to the optimal utilization. "
-                        "For example if an alarm should raise at 50% wasted space, you need "
-                        "to configure 150%"),
-                 elements=[
-                     Percentage(title=_("Warning at"), maxvalue=None),
-                     Percentage(title=_("Critical at"), maxvalue=None),
-                 ])),
-            ("index_bloat_abs",
-             Tuple(
-                 title=_("Index absolute levels"),
-                 elements=[
-                     Filesize(title=_("Warning at")),
-                     Filesize(title=_("Critical at")),
-                 ])),
-            ("index_bloat_perc",
-             Tuple(
-                 title=_("Index percentage bloat levels"),
-                 help=_("Percentage in respect to the optimal utilization. "
-                        "For example if an alarm should raise at 50% wasted space, you need "
-                        "to configure 150%"),
-                 elements=[
-                     Percentage(title=_("Warning at"), maxvalue=None),
-                     Percentage(title=_("Critical at"), maxvalue=None),
-                 ])),
-        ]), TextAscii(title=_("Name of the database"),), "dict")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersDbBloat(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "db_bloat"
+
+    @property
+    def title(self):
+        return _("Database Bloat (PostgreSQL)")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            help=_("This rule allows you to configure bloat levels for a databases tablespace and "
+                   "indexspace."),
+            elements=[
+                ("table_bloat_abs",
+                 Tuple(
+                     title=_("Table absolute bloat levels"),
+                     elements=[
+                         Filesize(title=_("Warning at")),
+                         Filesize(title=_("Critical at")),
+                     ],
+                 )),
+                ("table_bloat_perc",
+                 Tuple(
+                     title=_("Table percentage bloat levels"),
+                     help=_("Percentage in respect to the optimal utilization. "
+                            "For example if an alarm should raise at 50% wasted space, you need "
+                            "to configure 150%"),
+                     elements=[
+                         Percentage(title=_("Warning at"), maxvalue=None),
+                         Percentage(title=_("Critical at"), maxvalue=None),
+                     ],
+                 )),
+                ("index_bloat_abs",
+                 Tuple(
+                     title=_("Index absolute levels"),
+                     elements=[
+                         Filesize(title=_("Warning at")),
+                         Filesize(title=_("Critical at")),
+                     ],
+                 )),
+                ("index_bloat_perc",
+                 Tuple(
+                     title=_("Index percentage bloat levels"),
+                     help=_("Percentage in respect to the optimal utilization. "
+                            "For example if an alarm should raise at 50% wasted space, you need "
+                            "to configure 150%"),
+                     elements=[
+                         Percentage(title=_("Warning at"), maxvalue=None),
+                         Percentage(title=_("Critical at"), maxvalue=None),
+                     ],
+                 )),
+            ],
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Name of the database"),)

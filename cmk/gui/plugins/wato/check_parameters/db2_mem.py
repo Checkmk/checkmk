@@ -30,15 +30,36 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications, "db2_mem", _("Memory levels for DB2 memory usage"),
-    Tuple(
-        elements=[
-            Percentage(title=_("Warning if less than"), unit=_("% memory left")),
-            Percentage(title=_("Critical if less than"), unit=_("% memory left")),
-        ],), TextAscii(title=_("Instance name"), allow_empty=True), "first")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersDb2Mem(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "db2_mem"
+
+    @property
+    def title(self):
+        return _("Memory levels for DB2 memory usage")
+
+    @property
+    def parameter_valuespec(self):
+        return Tuple(
+            elements=[
+                Percentage(title=_("Warning if less than"), unit=_("% memory left")),
+                Percentage(title=_("Critical if less than"), unit=_("% memory left")),
+            ],)
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Instance name"), allow_empty=True)

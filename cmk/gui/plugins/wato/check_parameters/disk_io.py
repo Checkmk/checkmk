@@ -33,82 +33,110 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     Levels,
     RulespecGroupCheckParametersStorage,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersStorage, "disk_io", _("Levels on disk IO (old style checks)"),
-    Dictionary(elements=[
-        ("read",
-         Levels(
-             title=_("Read throughput"),
-             unit=_("MB/s"),
-             default_value=None,
-             default_levels=(50.0, 100.0))),
-        ("write",
-         Levels(
-             title=_("Write throughput"),
-             unit=_("MB/s"),
-             default_value=None,
-             default_levels=(50.0, 100.0))),
-        ("average",
-         Integer(
-             title=_("Average"),
-             help=_("When averaging is set, a floating average value "
-                    "of the disk throughput is computed and the levels for read "
-                    "and write will be applied to the average instead of the current "
-                    "value."),
-             default_value=5,
-             minvalue=1,
-             unit=_("minutes"))),
-        ("latency",
-         Tuple(
-             title=_("IO Latency"),
-             elements=[
-                 Float(title=_("warning at"), unit=_("ms"), default_value=80.0),
-                 Float(title=_("critical at"), unit=_("ms"), default_value=160.0),
-             ])),
-        (
-            "latency_perfdata",
-            Checkbox(
-                title=_("Performance Data for Latency"),
-                label=_("Collect performance data for disk latency"),
-                help=_("Note: enabling performance data for the latency might "
-                       "cause incompatibilities with existing historical data "
-                       "if you are running PNP4Nagios in SINGLE mode.")),
-        ),
-        ("read_ql",
-         Tuple(
-             title=_("Read Queue-Length"),
-             elements=[
-                 Float(title=_("warning at"), default_value=80.0),
-                 Float(title=_("critical at"), default_value=90.0),
-             ])),
-        ("write_ql",
-         Tuple(
-             title=_("Write Queue-Length"),
-             elements=[
-                 Float(title=_("warning at"), default_value=80.0),
-                 Float(title=_("critical at"), default_value=90.0),
-             ])),
-        (
-            "ql_perfdata",
-            Checkbox(
-                title=_("Performance Data for Queue Length"),
-                label=_("Collect performance data for disk latency"),
-                help=_("Note: enabling performance data for the latency might "
-                       "cause incompatibilities with existing historical data "
-                       "if you are running PNP4Nagios in SINGLE mode.")),
-        ),
-    ]),
-    TextAscii(
-        title=_("Device"),
-        help=_(
-            "For a summarized throughput of all disks, specify <tt>SUMMARY</tt>, for a "
-            "sum of read or write throughput write <tt>read</tt> or <tt>write</tt> resp. "
-            "A per-disk IO is specified by the drive letter, a colon and a slash on Windows "
-            "(e.g. <tt>C:/</tt>) or by the device name on Linux/UNIX (e.g. <tt>/dev/sda</tt>).")),
-    "dict")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersDiskIo(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersStorage
+
+    @property
+    def check_group_name(self):
+        return "disk_io"
+
+    @property
+    def title(self):
+        return _("Levels on disk IO (old style checks)")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ("read",
+                 Levels(
+                     title=_("Read throughput"),
+                     unit=_("MB/s"),
+                     default_value=None,
+                     default_levels=(50.0, 100.0))),
+                ("write",
+                 Levels(
+                     title=_("Write throughput"),
+                     unit=_("MB/s"),
+                     default_value=None,
+                     default_levels=(50.0, 100.0))),
+                ("average",
+                 Integer(
+                     title=_("Average"),
+                     help=_("When averaging is set, a floating average value "
+                            "of the disk throughput is computed and the levels for read "
+                            "and write will be applied to the average instead of the current "
+                            "value."),
+                     default_value=5,
+                     minvalue=1,
+                     unit=_("minutes"))),
+                ("latency",
+                 Tuple(
+                     title=_("IO Latency"),
+                     elements=[
+                         Float(title=_("warning at"), unit=_("ms"), default_value=80.0),
+                         Float(title=_("critical at"), unit=_("ms"), default_value=160.0),
+                     ],
+                 )),
+                (
+                    "latency_perfdata",
+                    Checkbox(
+                        title=_("Performance Data for Latency"),
+                        label=_("Collect performance data for disk latency"),
+                        help=_("Note: enabling performance data for the latency might "
+                               "cause incompatibilities with existing historical data "
+                               "if you are running PNP4Nagios in SINGLE mode.")),
+                ),
+                ("read_ql",
+                 Tuple(
+                     title=_("Read Queue-Length"),
+                     elements=[
+                         Float(title=_("warning at"), default_value=80.0),
+                         Float(title=_("critical at"), default_value=90.0),
+                     ],
+                 )),
+                ("write_ql",
+                 Tuple(
+                     title=_("Write Queue-Length"),
+                     elements=[
+                         Float(title=_("warning at"), default_value=80.0),
+                         Float(title=_("critical at"), default_value=90.0),
+                     ],
+                 )),
+                (
+                    "ql_perfdata",
+                    Checkbox(
+                        title=_("Performance Data for Queue Length"),
+                        label=_("Collect performance data for disk latency"),
+                        help=_("Note: enabling performance data for the latency might "
+                               "cause incompatibilities with existing historical data "
+                               "if you are running PNP4Nagios in SINGLE mode.")),
+                ),
+            ],)
+
+    @property
+    def item_spec(self):
+        return TextAscii(
+            title=_("Device"),
+            help=_(
+                "For a summarized throughput of all disks, specify <tt>SUMMARY</tt>, for a "
+                "sum of read or write throughput write <tt>read</tt> or <tt>write</tt> resp. "
+                "A per-disk IO is specified by the drive letter, a colon and a slash on Windows "
+                "(e.g. <tt>C:/</tt>) or by the device name on Linux/UNIX (e.g. <tt>/dev/sda</tt>).")
+        )

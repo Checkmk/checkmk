@@ -31,27 +31,54 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications, "db2_connections", _("DB2 Connections"),
-    Dictionary(
-        help=_("This rule allows you to set limits for the maximum number of DB2 connections"),
-        elements=[
-            (
-                "levels_total",
-                Tuple(
-                    title=_("Number of current connections"),
-                    elements=[
-                        Integer(title=_("Warning at"), unit=_("connections"), default_value=150),
-                        Integer(title=_("Critical at"), unit=_("connections"), default_value=200),
-                    ],
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersDb2Connections(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "db2_connections"
+
+    @property
+    def title(self):
+        return _("DB2 Connections")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            help=_("This rule allows you to set limits for the maximum number of DB2 connections"),
+            elements=[
+                (
+                    "levels_total",
+                    Tuple(
+                        title=_("Number of current connections"),
+                        elements=[
+                            Integer(
+                                title=_("Warning at"), unit=_("connections"), default_value=150),
+                            Integer(
+                                title=_("Critical at"), unit=_("connections"), default_value=200),
+                        ],
+                    ),
                 ),
-            ),
-        ]),
-    TextAscii(
-        title=_("Instance"), help=_("DB2 instance followed by database name, e.g db2taddm:CMDBS1")),
-    "dict")
+            ],
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(
+            title=_("Instance"),
+            help=_("DB2 instance followed by database name, e.g db2taddm:CMDBS1"))

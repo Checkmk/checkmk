@@ -30,35 +30,61 @@ from cmk.gui.valuespec import (
     MonitoringState,
     TextAscii,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersNetworking,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersNetworking,
-    "hp_hh3c_ext_states",
-    _("States of HP Switch modules"),
-    Dictionary(elements=[
-        ("oper",
-         Dictionary(
-             title=_("Operational states"),
-             elements=[
-                 ("not_supported", MonitoringState(title=_("Not supported"), default_value=1)),
-                 ("disabled", MonitoringState(title=_("Disabled"), default_value=2)),
-                 ("enabled", MonitoringState(title=_("Enabled"), default_value=0)),
-                 ("dangerous", MonitoringState(title=_("Dangerous"), default_value=2)),
-             ])),
-        ("admin",
-         Dictionary(
-             title=_("Administrative states"),
-             elements=[
-                 ("not_supported", MonitoringState(title=_("Not supported"), default_value=1)),
-                 ("locked", MonitoringState(title=_("Locked"), default_value=0)),
-                 ("shutting_down", MonitoringState(title=_("Shutting down"), default_value=2)),
-                 ("unlocked", MonitoringState(title=_("Unlocked"), default_value=2)),
-             ])),
-    ]),
-    TextAscii(title=_("Port"), help=_("The Port Description")),
-    "dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersHpHh3CExtStates(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersNetworking
+
+    @property
+    def check_group_name(self):
+        return "hp_hh3c_ext_states"
+
+    @property
+    def title(self):
+        return _("States of HP Switch modules")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ("oper",
+                 Dictionary(
+                     title=_("Operational states"),
+                     elements=[
+                         ("not_supported", MonitoringState(
+                             title=_("Not supported"), default_value=1)),
+                         ("disabled", MonitoringState(title=_("Disabled"), default_value=2)),
+                         ("enabled", MonitoringState(title=_("Enabled"), default_value=0)),
+                         ("dangerous", MonitoringState(title=_("Dangerous"), default_value=2)),
+                     ],
+                 )),
+                ("admin",
+                 Dictionary(
+                     title=_("Administrative states"),
+                     elements=[
+                         ("not_supported", MonitoringState(
+                             title=_("Not supported"), default_value=1)),
+                         ("locked", MonitoringState(title=_("Locked"), default_value=0)),
+                         ("shutting_down", MonitoringState(
+                             title=_("Shutting down"), default_value=2)),
+                         ("unlocked", MonitoringState(title=_("Unlocked"), default_value=2)),
+                     ],
+                 )),
+            ],)
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Port"), help=_("The Port Description"))

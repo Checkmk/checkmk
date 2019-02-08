@@ -31,26 +31,54 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications, "generic_number", _("Generic numeric value"),
-    Dictionary(elements=[
-        ("levels",
-         Tuple(
-             title=_("Upper levels"),
-             elements=[
-                 Float(title="Warning at"),
-                 Float(title="Critical at"),
-             ])),
-        ("levels_lower",
-         Tuple(
-             title=_("Lower levels"),
-             elements=[
-                 Float(title="Warning below"),
-                 Float(title="Critical below"),
-             ])),
-    ]), TextAscii(title=_("Item"),), "dict")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersGenericNumber(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "generic_number"
+
+    @property
+    def title(self):
+        return _("Generic numeric value")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ("levels",
+                 Tuple(
+                     title=_("Upper levels"),
+                     elements=[
+                         Float(title="Warning at"),
+                         Float(title="Critical at"),
+                     ],
+                 )),
+                ("levels_lower",
+                 Tuple(
+                     title=_("Lower levels"),
+                     elements=[
+                         Float(title="Warning below"),
+                         Float(title="Critical below"),
+                     ],
+                 )),
+            ],)
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Item"),)

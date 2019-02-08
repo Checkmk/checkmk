@@ -32,9 +32,11 @@ from cmk.gui.valuespec import (
     Transform,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
-    register_check_parameters,
 )
 
 
@@ -47,34 +49,54 @@ def transform_humidity(p):
     return p
 
 
-register_check_parameters(
-    RulespecGroupCheckParametersEnvironment,
-    "humidity",
-    _("Humidity Levels"),
-    Transform(
-        Dictionary(
-            help=_("This Ruleset sets the threshold limits for humidity sensors"),
-            elements=[
-                ("levels",
-                 Tuple(
-                     title=_("Upper levels"),
-                     elements=[
-                         Percentage(title=_("Warning at")),
-                         Percentage(title=_("Critical at")),
-                     ])),
-                ("levels_lower",
-                 Tuple(
-                     title=_("Lower levels"),
-                     elements=[
-                         Percentage(title=_("Warning below")),
-                         Percentage(title=_("Critical below")),
-                     ])),
-            ]),
-        forth=transform_humidity,
-    ),
-    TextAscii(
-        title=_("Sensor name"),
-        help=_("The identifier of the sensor."),
-    ),
-    match_type="dict",
-)
+@rulespec_registry.register
+class RulespecCheckgroupParametersHumidity(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersEnvironment
+
+    @property
+    def check_group_name(self):
+        return "humidity"
+
+    @property
+    def title(self):
+        return _("Humidity Levels")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Transform(
+            Dictionary(
+                help=_("This Ruleset sets the threshold limits for humidity sensors"),
+                elements=[
+                    ("levels",
+                     Tuple(
+                         title=_("Upper levels"),
+                         elements=[
+                             Percentage(title=_("Warning at")),
+                             Percentage(title=_("Critical at")),
+                         ],
+                     )),
+                    ("levels_lower",
+                     Tuple(
+                         title=_("Lower levels"),
+                         elements=[
+                             Percentage(title=_("Warning below")),
+                             Percentage(title=_("Critical below")),
+                         ],
+                     )),
+                ],
+            ),
+            forth=transform_humidity,
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(
+            title=_("Sensor name"),
+            help=_("The identifier of the sensor."),
+        )

@@ -31,35 +31,56 @@ from cmk.gui.valuespec import (
     Integer,
     TextAscii,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersNetworking,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersNetworking,
-    "huawei_osn_laser",
-    _("OSN Laser attenuation"),
-    Dictionary(elements=[
-        ('levels_low_in',
-         Tuple(
-             title=_('Levels for laser input'),
-             default_value=(-160.0, -180.0),
-             elements=[
-                 Integer(title=_("Warning below")),
-                 Integer(title=_("Critical below")),
-             ],
-         )),
-        ('levels_low_out',
-         Tuple(
-             title=_('Levels for laser output'),
-             default_value=(-160.0, -180.0),
-             elements=[
-                 Integer(title=_("Warning below")),
-                 Integer(title=_("Critical below")),
-             ],
-         )),
-    ]),
-    TextAscii(title=_("Laser id")),
-    match_type="dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersHuaweiOsnLaser(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersNetworking
+
+    @property
+    def check_group_name(self):
+        return "huawei_osn_laser"
+
+    @property
+    def title(self):
+        return _("OSN Laser attenuation")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ('levels_low_in',
+                 Tuple(
+                     title=_('Levels for laser input'),
+                     default_value=(-160.0, -180.0),
+                     elements=[
+                         Integer(title=_("Warning below")),
+                         Integer(title=_("Critical below")),
+                     ],
+                 )),
+                ('levels_low_out',
+                 Tuple(
+                     title=_('Levels for laser output'),
+                     default_value=(-160.0, -180.0),
+                     elements=[
+                         Integer(title=_("Warning below")),
+                         Integer(title=_("Critical below")),
+                     ],
+                 )),
+            ],)
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Laser id"))

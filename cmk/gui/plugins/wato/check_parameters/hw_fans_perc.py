@@ -31,31 +31,54 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersEnvironment,
-    "hw_fans_perc",
-    _("Fan speed of hardware devices (in percent)"),
-    Dictionary(elements=[
-        ("levels",
-         Tuple(
-             title=_("Upper fan speed levels"),
-             elements=[
-                 Percentage(title=_("warning if at")),
-                 Percentage(title=_("critical if at")),
-             ])),
-        ("levels_lower",
-         Tuple(
-             title=_("Lower fan speed levels"),
-             elements=[
-                 Percentage(title=_("warning if below")),
-                 Percentage(title=_("critical if below")),
-             ])),
-    ]),
-    TextAscii(title=_("Fan Name"), help=_("The identifier of the fan.")),
-    "dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersHwFansPerc(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersEnvironment
+
+    @property
+    def check_group_name(self):
+        return "hw_fans_perc"
+
+    @property
+    def title(self):
+        return _("Fan speed of hardware devices (in percent)")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ("levels",
+                 Tuple(
+                     title=_("Upper fan speed levels"),
+                     elements=[
+                         Percentage(title=_("warning if at")),
+                         Percentage(title=_("critical if at")),
+                     ],
+                 )),
+                ("levels_lower",
+                 Tuple(
+                     title=_("Lower fan speed levels"),
+                     elements=[
+                         Percentage(title=_("warning if below")),
+                         Percentage(title=_("critical if below")),
+                     ],
+                 )),
+            ],)
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Fan Name"), help=_("The identifier of the fan."))

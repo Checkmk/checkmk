@@ -29,22 +29,43 @@ from cmk.gui.valuespec import (
     Dictionary,
     DropdownChoice,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersStorage,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersStorage, "esx_hostystem_maintenance",
-    _("ESX Hostsystem Maintenance Mode"),
-    Dictionary(
-        elements=[
-            ("target_state",
-             DropdownChoice(
-                 title=_("Target State"),
-                 help=_("Configure the target mode for the system."),
-                 choices=[
-                     ('true', "System should be in Maintenance Mode"),
-                     ('false', "System not should be in Maintenance Mode"),
-                 ])),
-        ],), None, "dict")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersEsxHostystemMaintenance(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersStorage
+
+    @property
+    def check_group_name(self):
+        return "esx_hostystem_maintenance"
+
+    @property
+    def title(self):
+        return _("ESX Hostsystem Maintenance Mode")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ("target_state",
+                 DropdownChoice(
+                     title=_("Target State"),
+                     help=_("Configure the target mode for the system."),
+                     choices=[
+                         ('true', "System should be in Maintenance Mode"),
+                         ('false', "System not should be in Maintenance Mode"),
+                     ],
+                 )),
+            ],)

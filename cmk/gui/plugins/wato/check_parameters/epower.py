@@ -30,19 +30,40 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersEnvironment, "epower", _("Electrical Power"),
-    Tuple(
-        help=_("Levels for the electrical power consumption of a device "
-               "like a UPS or a PDU. Several phases may be addressed independently."),
-        elements=[
-            Integer(title=_("warning if below"), unit="Watt", default_value=20),
-            Integer(title=_("critical if below"), unit="Watt", default_value=1),
-        ]),
-    TextAscii(title=_("Phase"), help=_("The identifier of the phase the power is related to.")),
-    "first")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersEpower(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersEnvironment
+
+    @property
+    def check_group_name(self):
+        return "epower"
+
+    @property
+    def title(self):
+        return _("Electrical Power")
+
+    @property
+    def parameter_valuespec(self):
+        return Tuple(
+            help=_("Levels for the electrical power consumption of a device "
+                   "like a UPS or a PDU. Several phases may be addressed independently."),
+            elements=[
+                Integer(title=_("warning if below"), unit="Watt", default_value=20),
+                Integer(title=_("critical if below"), unit="Watt", default_value=1),
+            ],
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(
+            title=_("Phase"), help=_("The identifier of the phase the power is related to."))

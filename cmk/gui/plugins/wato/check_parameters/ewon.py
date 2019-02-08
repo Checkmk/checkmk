@@ -32,12 +32,13 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    HostRulespec,
+    rulespec_registry,
     RulespecGroupCheckParametersDiscovery,
     RulespecGroupCheckParametersEnvironment,
-    register_check_parameters,
-    rulespec_registry,
-    HostRulespec,
 )
 
 
@@ -67,28 +68,52 @@ class RulespecEwonDiscoveryRules(HostRulespec):
         )
 
 
-register_check_parameters(
-    RulespecGroupCheckParametersEnvironment,
-    "ewon",
-    _("eWON SNMP Proxy"),
-    Dictionary(
-        title=_("Device Type"),
-        help=_("The eWON router can act as a proxy to metrics from a secondary non-snmp device."
-               "Here you can make settings to the monitoring of the proxied device."),
-        elements=[("oxyreduct",
-                   Dictionary(
-                       title=_("Wagner OxyReduct"),
-                       elements=[("o2_levels",
-                                  Tuple(
-                                      title=_("O2 levels"),
-                                      elements=[
-                                          Percentage(title=_("Warning at"), default_value=16.0),
-                                          Percentage(title=_("Critical at"), default_value=17.0),
-                                          Percentage(title=_("Warning below"), default_value=14.0),
-                                          Percentage(title=_("Critical below"), default_value=13.0),
-                                      ]))]))]),
-    TextAscii(
-        title=_("Item name"),
-        help=_("The item name. The meaning of this depends on the proxied device: "
-               "- Wagner OxyReduct: Name of the room/protection zone")),
-    match_type="dict")
+@rulespec_registry.register
+class RulespecCheckgroupParametersEwon(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersEnvironment
+
+    @property
+    def check_group_name(self):
+        return "ewon"
+
+    @property
+    def title(self):
+        return _("eWON SNMP Proxy")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            title=_("Device Type"),
+            help=_("The eWON router can act as a proxy to metrics from a secondary non-snmp device."
+                   "Here you can make settings to the monitoring of the proxied device."),
+            elements=[("oxyreduct",
+                       Dictionary(
+                           title=_("Wagner OxyReduct"),
+                           elements=[("o2_levels",
+                                      Tuple(
+                                          title=_("O2 levels"),
+                                          elements=[
+                                              Percentage(title=_("Warning at"), default_value=16.0),
+                                              Percentage(
+                                                  title=_("Critical at"), default_value=17.0),
+                                              Percentage(
+                                                  title=_("Warning below"), default_value=14.0),
+                                              Percentage(
+                                                  title=_("Critical below"), default_value=13.0),
+                                          ],
+                                      ))],
+                       ))],
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(
+            title=_("Item name"),
+            help=_("The item name. The meaning of this depends on the proxied device: "
+                   "- Wagner OxyReduct: Name of the room/protection zone"))

@@ -30,26 +30,50 @@ from cmk.gui.valuespec import (
     ListChoice,
     TextAscii,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersNetworking,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersNetworking, "enterasys_powersupply",
-    _("Enterasys Power Supply Settings"),
-    Dictionary(
-        elements=[
-            ("redundancy_ok_states",
-             ListChoice(
-                 title=_("States treated as OK"),
-                 choices=[
-                     (1, 'redundant'),
-                     (2, 'notRedundant'),
-                     (3, 'notSupported'),
-                 ],
-                 default_value=[1],
-             )),
-        ],
-        optional_keys=False,
-    ), TextAscii(title=_("Number of Powersupply"),), "dict")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersEnterasysPowersupply(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersNetworking
+
+    @property
+    def check_group_name(self):
+        return "enterasys_powersupply"
+
+    @property
+    def title(self):
+        return _("Enterasys Power Supply Settings")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ("redundancy_ok_states",
+                 ListChoice(
+                     title=_("States treated as OK"),
+                     choices=[
+                         (1, 'redundant'),
+                         (2, 'notRedundant'),
+                         (3, 'notSupported'),
+                     ],
+                     default_value=[1],
+                 )),
+            ],
+            optional_keys=False,
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Number of Powersupply"),)

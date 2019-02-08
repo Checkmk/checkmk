@@ -31,37 +31,62 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersStorage,
-    register_check_parameters,
 )
 from cmk.gui.plugins.wato.check_parameters.utils import filesystem_elements
 
-register_check_parameters(
-    RulespecGroupCheckParametersStorage, "esx_vsphere_datastores",
-    _("ESX Datastores (used space and growth)"),
-    Dictionary(
-        elements=filesystem_elements + [
-            ("provisioning_levels",
-             Tuple(
-                 title=_("Provisioning Levels"),
-                 help=
-                 _("A provisioning of more than 100% is called "
-                   "over provisioning and can be a useful strategy for saving disk space. But you cannot guarantee "
-                   "any longer that every VM can really use all space that it was assigned. Here you can "
-                   "set levels for the maximum provisioning. A warning level of 150% will warn at 50% over provisioning."
-                  ),
-                 elements=[
-                     Percentage(
-                         title=_("Warning at a provisioning of"),
-                         maxvalue=None,
-                         default_value=120.0),
-                     Percentage(
-                         title=_("Critical at a provisioning of"),
-                         maxvalue=None,
-                         default_value=150.0),
-                 ])),
-        ],
-        hidden_keys=["flex_levels"],
-    ), TextAscii(title=_("Datastore Name"), help=_("The name of the Datastore"), allow_empty=False),
-    "dict")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersEsxVsphereDatastores(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersStorage
+
+    @property
+    def check_group_name(self):
+        return "esx_vsphere_datastores"
+
+    @property
+    def title(self):
+        return _("ESX Datastores (used space and growth)")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=filesystem_elements + [
+                ("provisioning_levels",
+                 Tuple(
+                     title=_("Provisioning Levels"),
+                     help=
+                     _("A provisioning of more than 100% is called "
+                       "over provisioning and can be a useful strategy for saving disk space. But you cannot guarantee "
+                       "any longer that every VM can really use all space that it was assigned. Here you can "
+                       "set levels for the maximum provisioning. A warning level of 150% will warn at 50% over provisioning."
+                      ),
+                     elements=[
+                         Percentage(
+                             title=_("Warning at a provisioning of"),
+                             maxvalue=None,
+                             default_value=120.0),
+                         Percentage(
+                             title=_("Critical at a provisioning of"),
+                             maxvalue=None,
+                             default_value=150.0),
+                     ],
+                 )),
+            ],
+            hidden_keys=["flex_levels"],
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(
+            title=_("Datastore Name"), help=_("The name of the Datastore"), allow_empty=False)

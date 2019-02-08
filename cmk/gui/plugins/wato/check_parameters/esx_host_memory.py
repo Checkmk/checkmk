@@ -29,21 +29,34 @@ from cmk.gui.valuespec import (
     Percentage,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersOperatingSystem,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersOperatingSystem,
-    "esx_host_memory",
-    _("Main memory usage of ESX host system"),
-    Tuple(
-        title=_("Specify levels in percentage of total RAM"),
-        elements=[
-            Percentage(title=_("Warning at a RAM usage of"), default_value=80.0),
-            Percentage(title=_("Critical at a RAM usage of"), default_value=90.0),
-        ]),
-    None,
-    match_type="first",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersEsxHostMemory(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersOperatingSystem
+
+    @property
+    def check_group_name(self):
+        return "esx_host_memory"
+
+    @property
+    def title(self):
+        return _("Main memory usage of ESX host system")
+
+    @property
+    def parameter_valuespec(self):
+        return Tuple(
+            title=_("Specify levels in percentage of total RAM"),
+            elements=[
+                Percentage(title=_("Warning at a RAM usage of"), default_value=80.0),
+                Percentage(title=_("Critical at a RAM usage of"), default_value=90.0),
+            ],
+        )

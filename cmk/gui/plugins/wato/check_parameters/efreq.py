@@ -30,19 +30,40 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersEnvironment, "efreq", _("Nominal Frequencies"),
-    Tuple(
-        help=_("Levels for the nominal frequencies of AC devices "
-               "like UPSs or PDUs. Several phases may be addressed independently."),
-        elements=[
-            Integer(title=_("warning if below"), unit="Hz", default_value=40),
-            Integer(title=_("critical if below"), unit="Hz", default_value=45),
-        ]),
-    TextAscii(title=_("Phase"), help=_("The identifier of the phase the power is related to.")),
-    "first")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersEfreq(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersEnvironment
+
+    @property
+    def check_group_name(self):
+        return "efreq"
+
+    @property
+    def title(self):
+        return _("Nominal Frequencies")
+
+    @property
+    def parameter_valuespec(self):
+        return Tuple(
+            help=_("Levels for the nominal frequencies of AC devices "
+                   "like UPSs or PDUs. Several phases may be addressed independently."),
+            elements=[
+                Integer(title=_("warning if below"), unit="Hz", default_value=40),
+                Integer(title=_("critical if below"), unit="Hz", default_value=45),
+            ],
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(
+            title=_("Phase"), help=_("The identifier of the phase the power is related to."))

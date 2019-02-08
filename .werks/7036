@@ -1,0 +1,19 @@
+Title: ucs_c_rack_server_util: Utilization
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1549642135
+Class: feature
+
+This werk adds support for monitoring of Cisco UCS C-Series Rack Server utilization.
+
+Main check:
+- ucs_c_rack_server_util: Overall utilization
+
+Sub checks:
+- ucs_c_rack_server_util.cpu: CPU utilization
+- ucs_c_rack_Server_util.memory: Memory utilitazion
+- ucs_c_rack_server_util.io: IO utilization
+

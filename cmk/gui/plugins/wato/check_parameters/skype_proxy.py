@@ -31,32 +31,59 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications, "skype_proxy", _("Skype for Business Data Proxy"),
-    Dictionary(
-        help=_("Warn/Crit levels for various Skype for Business "
-               "(formerly known as Lync) metrics"),
-        elements=[
-            ('throttled_connections',
-             Dictionary(
-                 title=_("Throttled Server Connections"),
-                 elements=[
-                     ("upper",
-                      Tuple(elements=[
-                          Integer(title=_("Warning at"), default_value=3),
-                          Integer(title=_("Critical at"), default_value=6),
-                      ])),
-                 ],
-                 optional_keys=[])),
-        ],
-        optional_keys=[]),
-    TextAscii(
-        title=_("Name of the Proxy"),
-        help=_("The name of the Data Proxy"),
-        allow_empty=False,
-    ), "dict")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersSkypeProxy(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "skype_proxy"
+
+    @property
+    def title(self):
+        return _("Skype for Business Data Proxy")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            help=_("Warn/Crit levels for various Skype for Business "
+                   "(formerly known as Lync) metrics"),
+            elements=[
+                ('throttled_connections',
+                 Dictionary(
+                     title=_("Throttled Server Connections"),
+                     elements=[
+                         ("upper",
+                          Tuple(
+                              elements=[
+                                  Integer(title=_("Warning at"), default_value=3),
+                                  Integer(title=_("Critical at"), default_value=6),
+                              ],)),
+                     ],
+                     optional_keys=[],
+                 )),
+            ],
+            optional_keys=[],
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(
+            title=_("Name of the Proxy"),
+            help=_("The name of the Data Proxy"),
+            allow_empty=False,
+        )

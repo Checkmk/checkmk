@@ -29,25 +29,43 @@ from cmk.gui.valuespec import (
     Integer,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications, "sansymphony_alerts",
-    _("Sansymphony: Number of unacknowlegded alerts"),
-    Tuple(
-        help=_("This rule sets the warn and crit levels for the number of unacknowlegded alerts"),
-        elements=[
-            Integer(
-                title=_("Warning at"),
-                unit=_("alerts"),
-                default_value=1,
-            ),
-            Integer(
-                title=_("Critical at"),
-                unit=_("alerts"),
-                default_value=2,
-            ),
-        ]), None, "first")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersSansymphonyAlerts(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "sansymphony_alerts"
+
+    @property
+    def title(self):
+        return _("Sansymphony: Number of unacknowlegded alerts")
+
+    @property
+    def parameter_valuespec(self):
+        return Tuple(
+            help=_(
+                "This rule sets the warn and crit levels for the number of unacknowlegded alerts"),
+            elements=[
+                Integer(
+                    title=_("Warning at"),
+                    unit=_("alerts"),
+                    default_value=1,
+                ),
+                Integer(
+                    title=_("Critical at"),
+                    unit=_("alerts"),
+                    default_value=2,
+                ),
+            ],
+        )

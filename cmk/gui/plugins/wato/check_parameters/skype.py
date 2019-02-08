@@ -31,97 +31,162 @@ from cmk.gui.valuespec import (
     Float,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications, "skype", _("Skype for Business"),
-    Dictionary(
-        elements=[
-            ('failed_search_requests',
-             Dictionary(
-                 title=_("Failed search requests"),
-                 elements=[
-                     ("upper",
-                      Tuple(elements=[
-                          Float(title=_("Warning at"), unit=_("per second"), default_value=1.0),
-                          Float(title=_("Critical at"), unit=_("per second"), default_value=2.0),
-                      ])),
-                 ],
-                 optional_keys=[])),
-            ('failed_locations_requests',
-             Dictionary(
-                 title=_("Failed Get Locations Requests"),
-                 elements=[
-                     ("upper",
-                      Tuple(elements=[
-                          Float(title=_("Warning at"), unit=_("per second"), default_value=1.0),
-                          Float(title=_("Critical at"), unit=_("per second"), default_value=2.0),
-                      ])),
-                 ],
-                 optional_keys=[])),
-            ('failed_file_requests',
-             Dictionary(
-                 title=_("Failed requests to Adressbook files"),
-                 elements=[
-                     ("upper",
-                      Tuple(elements=[
-                          Float(title=_("Warning at"), unit=_("per second"), default_value=1.0),
-                          Float(title=_("Critical at"), unit=_("per second"), default_value=2.0),
-                      ]))
-                 ],
-                 optional_keys=[])),
-            ('join_failures',
-             Dictionary(
-                 title=_("Failures of the join launcher service"),
-                 elements=[("upper",
-                            Tuple(elements=[
-                                Integer(title=_("Warning at"), default_value=1),
-                                Integer(title=_("Critical at"), default_value=2),
-                            ]))],
-                 optional_keys=[])),
-            ('failed_validate_cert',
-             Dictionary(
-                 title=_("Failed certificate validations"),
-                 elements=[("upper",
-                            Tuple(elements=[
-                                Integer(title=_("Warning at"), default_value=1),
-                                Integer(title=_("Critical at"), default_value=2),
-                            ]))],
-                 optional_keys=[])),
-            ('timedout_ad_requests',
-             Dictionary(
-                 title=_("Timed out Active Directory Requests"),
-                 elements=[
-                     ("upper",
-                      Tuple(elements=[
-                          Float(title=_("Warning at"), unit=_("per second"), default_value=0.01),
-                          Float(title=_("Critical at"), unit=_("per second"), default_value=0.02),
-                      ])),
-                 ],
-                 optional_keys=[])),
-            ('5xx_responses',
-             Dictionary(
-                 title=_("HTTP 5xx Responses"),
-                 elements=[
-                     ("upper",
-                      Tuple(elements=[
-                          Float(title=_("Warning at"), unit=_("per second"), default_value=1.0),
-                          Float(title=_("Critical at"), unit=_("per second"), default_value=2.0),
-                      ])),
-                 ],
-                 optional_keys=[])),
-            ('asp_requests_rejected',
-             Dictionary(
-                 title=_("ASP Requests Rejected"),
-                 elements=[
-                     ("upper",
-                      Tuple(elements=[
-                          Integer(title=_("Warning at"), default_value=1),
-                          Integer(title=_("Critical at"), default_value=2),
-                      ])),
-                 ],
-                 optional_keys=[])),
-        ],), None, "dict")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersSkype(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "skype"
+
+    @property
+    def title(self):
+        return _("Skype for Business")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ('failed_search_requests',
+                 Dictionary(
+                     title=_("Failed search requests"),
+                     elements=[
+                         ("upper",
+                          Tuple(
+                              elements=[
+                                  Float(
+                                      title=_("Warning at"),
+                                      unit=_("per second"),
+                                      default_value=1.0),
+                                  Float(
+                                      title=_("Critical at"),
+                                      unit=_("per second"),
+                                      default_value=2.0),
+                              ],)),
+                     ],
+                     optional_keys=[],
+                 )),
+                ('failed_locations_requests',
+                 Dictionary(
+                     title=_("Failed Get Locations Requests"),
+                     elements=[
+                         ("upper",
+                          Tuple(
+                              elements=[
+                                  Float(
+                                      title=_("Warning at"),
+                                      unit=_("per second"),
+                                      default_value=1.0),
+                                  Float(
+                                      title=_("Critical at"),
+                                      unit=_("per second"),
+                                      default_value=2.0),
+                              ],)),
+                     ],
+                     optional_keys=[],
+                 )),
+                ('failed_file_requests',
+                 Dictionary(
+                     title=_("Failed requests to Adressbook files"),
+                     elements=[("upper",
+                                Tuple(
+                                    elements=[
+                                        Float(
+                                            title=_("Warning at"),
+                                            unit=_("per second"),
+                                            default_value=1.0),
+                                        Float(
+                                            title=_("Critical at"),
+                                            unit=_("per second"),
+                                            default_value=2.0),
+                                    ],))],
+                     optional_keys=[],
+                 )),
+                ('join_failures',
+                 Dictionary(
+                     title=_("Failures of the join launcher service"),
+                     elements=[("upper",
+                                Tuple(
+                                    elements=[
+                                        Integer(title=_("Warning at"), default_value=1),
+                                        Integer(title=_("Critical at"), default_value=2),
+                                    ],))],
+                     optional_keys=[],
+                 )),
+                ('failed_validate_cert',
+                 Dictionary(
+                     title=_("Failed certificate validations"),
+                     elements=[("upper",
+                                Tuple(
+                                    elements=[
+                                        Integer(title=_("Warning at"), default_value=1),
+                                        Integer(title=_("Critical at"), default_value=2),
+                                    ],))],
+                     optional_keys=[],
+                 )),
+                ('timedout_ad_requests',
+                 Dictionary(
+                     title=_("Timed out Active Directory Requests"),
+                     elements=[
+                         ("upper",
+                          Tuple(
+                              elements=[
+                                  Float(
+                                      title=_("Warning at"),
+                                      unit=_("per second"),
+                                      default_value=0.01),
+                                  Float(
+                                      title=_("Critical at"),
+                                      unit=_("per second"),
+                                      default_value=0.02),
+                              ],)),
+                     ],
+                     optional_keys=[],
+                 )),
+                ('5xx_responses',
+                 Dictionary(
+                     title=_("HTTP 5xx Responses"),
+                     elements=[
+                         ("upper",
+                          Tuple(
+                              elements=[
+                                  Float(
+                                      title=_("Warning at"),
+                                      unit=_("per second"),
+                                      default_value=1.0),
+                                  Float(
+                                      title=_("Critical at"),
+                                      unit=_("per second"),
+                                      default_value=2.0),
+                              ],)),
+                     ],
+                     optional_keys=[],
+                 )),
+                ('asp_requests_rejected',
+                 Dictionary(
+                     title=_("ASP Requests Rejected"),
+                     elements=[
+                         ("upper",
+                          Tuple(
+                              elements=[
+                                  Integer(title=_("Warning at"), default_value=1),
+                                  Integer(title=_("Critical at"), default_value=2),
+                              ],)),
+                     ],
+                     optional_keys=[],
+                 )),
+            ],)

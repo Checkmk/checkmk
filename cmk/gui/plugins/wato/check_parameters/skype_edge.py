@@ -31,49 +31,96 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications, "skype_edge", _("Skype for Business Edge"),
-    Dictionary(elements=[
-        ('authentication_failures',
-         Dictionary(
-             title=_("Authentication Failures"),
-             elements=[
-                 ("upper",
-                  Tuple(elements=[
-                      Integer(title=_("Warning at"), unit=_("per second"), default_value=20),
-                      Integer(title=_("Critical at"), unit=_("per second"), default_value=40),
-                  ])),
-             ],
-             optional_keys=[])),
-        ('allocate_requests_exceeding',
-         Dictionary(
-             title=_("Allocate Requests Exceeding Port Limit"),
-             elements=[
-                 ("upper",
-                  Tuple(elements=[
-                      Integer(title=_("Warning at"), unit=_("per second"), default_value=20),
-                      Integer(title=_("Critical at"), unit=_("per second"), default_value=40),
-                  ])),
-             ],
-             optional_keys=[])),
-        ('packets_dropped',
-         Dictionary(
-             title=_("Packets Dropped"),
-             elements=[
-                 ("upper",
-                  Tuple(elements=[
-                      Integer(title=_("Warning at"), unit=_("per second"), default_value=200),
-                      Integer(title=_("Critical at"), unit=_("per second"), default_value=400),
-                  ])),
-             ],
-             optional_keys=[])),
-    ]),
-    TextAscii(
-        title=_("Interface"),
-        help=_("The name of the interface (Public/Private IPv4/IPv6 Network Interface)"),
-    ), "dict")  # Rule for disovered process checks
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersSkypeEdge(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "skype_edge"
+
+    @property
+    def title(self):
+        return _("Skype for Business Edge")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ('authentication_failures',
+                 Dictionary(
+                     title=_("Authentication Failures"),
+                     elements=[
+                         ("upper",
+                          Tuple(
+                              elements=[
+                                  Integer(
+                                      title=_("Warning at"), unit=_("per second"),
+                                      default_value=20),
+                                  Integer(
+                                      title=_("Critical at"),
+                                      unit=_("per second"),
+                                      default_value=40),
+                              ],)),
+                     ],
+                     optional_keys=[],
+                 )),
+                ('allocate_requests_exceeding',
+                 Dictionary(
+                     title=_("Allocate Requests Exceeding Port Limit"),
+                     elements=[
+                         ("upper",
+                          Tuple(
+                              elements=[
+                                  Integer(
+                                      title=_("Warning at"), unit=_("per second"),
+                                      default_value=20),
+                                  Integer(
+                                      title=_("Critical at"),
+                                      unit=_("per second"),
+                                      default_value=40),
+                              ],)),
+                     ],
+                     optional_keys=[],
+                 )),
+                ('packets_dropped',
+                 Dictionary(
+                     title=_("Packets Dropped"),
+                     elements=[
+                         ("upper",
+                          Tuple(
+                              elements=[
+                                  Integer(
+                                      title=_("Warning at"),
+                                      unit=_("per second"),
+                                      default_value=200),
+                                  Integer(
+                                      title=_("Critical at"),
+                                      unit=_("per second"),
+                                      default_value=400),
+                              ],)),
+                     ],
+                     optional_keys=[],
+                 )),
+            ],)
+
+    @property
+    def item_spec(self):
+        return TextAscii(
+            title=_("Interface"),
+            help=_("The name of the interface (Public/Private IPv4/IPv6 Network Interface)"),
+        )

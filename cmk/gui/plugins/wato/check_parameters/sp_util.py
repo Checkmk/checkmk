@@ -29,21 +29,34 @@ from cmk.gui.valuespec import (
     Percentage,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersOperatingSystem,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersOperatingSystem,
-    "sp_util",
-    _("Storage Processor Utilization"),
-    Tuple(
-        title=_("Specify levels in percentage of storage processor usage"),
-        elements=[
-            Percentage(title=_("Warning at"), default_value=50.0),
-            Percentage(title=_("Critical at"), default_value=60.0),
-        ]),
-    None,
-    "first",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersSpUtil(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersOperatingSystem
+
+    @property
+    def check_group_name(self):
+        return "sp_util"
+
+    @property
+    def title(self):
+        return _("Storage Processor Utilization")
+
+    @property
+    def parameter_valuespec(self):
+        return Tuple(
+            title=_("Specify levels in percentage of storage processor usage"),
+            elements=[
+                Percentage(title=_("Warning at"), default_value=50.0),
+                Percentage(title=_("Critical at"), default_value=60.0),
+            ],
+        )

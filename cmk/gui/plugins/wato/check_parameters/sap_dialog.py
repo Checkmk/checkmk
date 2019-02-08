@@ -32,41 +32,65 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    "sap_dialog",
-    ("SAP Dialog"),
-    Dictionary(elements=[
-        ("UsersLoggedIn",
-         Tuple(
-             title=_("Number of Loggedin Users"),
-             elements=[
-                 Integer(title=_("Warning at"), label=_("Users")),
-                 Integer(title=_("Critical at"), label=_("Users"))
-             ])),
-        ("FrontEndNetTime",
-         Tuple(
-             title=_("Frontend net time"),
-             elements=[
-                 Float(title=_("Warning at"), unit=_('ms')),
-                 Float(title=_("Critical at"), unit=_('ms'))
-             ])),
-        ("ResponseTime",
-         Tuple(
-             title=_("Response Time"),
-             elements=[
-                 Float(title=_("Warning at"), unit=_('ms')),
-                 Float(title=_("Critical at"), unit=_('ms'))
-             ])),
-    ]),
-    TextAscii(
-        title=_("System ID"),
-        help=_("The SAP system ID."),
-    ),
-    match_type="dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersSapDialog(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "sap_dialog"
+
+    @property
+    def title(self):
+        return _("SAP Dialog")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ("UsersLoggedIn",
+                 Tuple(
+                     title=_("Number of Loggedin Users"),
+                     elements=[
+                         Integer(title=_("Warning at"), label=_("Users")),
+                         Integer(title=_("Critical at"), label=_("Users"))
+                     ],
+                 )),
+                ("FrontEndNetTime",
+                 Tuple(
+                     title=_("Frontend net time"),
+                     elements=[
+                         Float(title=_("Warning at"), unit=_('ms')),
+                         Float(title=_("Critical at"), unit=_('ms'))
+                     ],
+                 )),
+                ("ResponseTime",
+                 Tuple(
+                     title=_("Response Time"),
+                     elements=[
+                         Float(title=_("Warning at"), unit=_('ms')),
+                         Float(title=_("Critical at"), unit=_('ms'))
+                     ],
+                 )),
+            ],)
+
+    @property
+    def item_spec(self):
+        return TextAscii(
+            title=_("System ID"),
+            help=_("The SAP system ID."),
+        )

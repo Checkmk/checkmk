@@ -29,18 +29,43 @@ from cmk.gui.valuespec import (
     Dictionary,
     TextAscii,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     Levels,
     RulespecGroupCheckParametersStorage,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersStorage, "fcport_words", _("Atto Fibrebridge FC port"),
-    Dictionary(
-        title=_("Levels for transmitted and received words"),
-        elements=[
-            ("fc_tx_words", Levels(title=_("Tx"), unit=_("words/s"))),
-            ("fc_rx_words", Levels(title=_("Rx"), unit=_("words/s"))),
-        ],
-    ), TextAscii(title=_("Port index"),), "dict")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersFcportWords(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersStorage
+
+    @property
+    def check_group_name(self):
+        return "fcport_words"
+
+    @property
+    def title(self):
+        return _("Atto Fibrebridge FC port")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            title=_("Levels for transmitted and received words"),
+            elements=[
+                ("fc_tx_words", Levels(title=_("Tx"), unit=_("words/s"))),
+                ("fc_rx_words", Levels(title=_("Rx"), unit=_("words/s"))),
+            ],
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Port index"),)

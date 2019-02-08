@@ -30,9 +30,11 @@ from cmk.gui.valuespec import (
     Integer,
     TextAscii,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersNetworking,
-    register_check_parameters,
 )
 
 fortigate_sessions_element = Tuple(
@@ -42,11 +44,25 @@ fortigate_sessions_element = Tuple(
         Integer(title=_(u"Critical at"), default_value=150000, size=10),
     ])
 
-register_check_parameters(
-    RulespecGroupCheckParametersNetworking,
-    "fortigate_node_sessions",
-    _(u"Fortigate Active Sessions"),
-    fortigate_sessions_element,
-    TextAscii(title=_("Node name"), allow_empty=False),
-    "first",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersFortigateNodeSessions(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersNetworking
+
+    @property
+    def check_group_name(self):
+        return "fortigate_node_sessions"
+
+    @property
+    def title(self):
+        return _("Fortigate Active Sessions")
+
+    @property
+    def parameter_valuespec(self):
+        return fortigate_sessions_element
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Node name"), allow_empty=False)

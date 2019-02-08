@@ -30,19 +30,39 @@ from cmk.gui.valuespec import (
     TextAscii,
     TextUnicode,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersStorage,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersStorage, "fs_mount_options",
-    _("Filesystem mount options (Linux/UNIX)"),
-    ListOfStrings(
-        title=_("Expected mount options"),
-        help=_("Specify all expected mount options here. If the list of "
-               "actually found options differs from this list, the check will go "
-               "warning or critical. Just the option <tt>commit</tt> is being "
-               "ignored since it is modified by the power saving algorithms."),
-        valuespec=TextUnicode(),
-    ), TextAscii(title=_("Mount point"), allow_empty=False), "first")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersFsMountOptions(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersStorage
+
+    @property
+    def check_group_name(self):
+        return "fs_mount_options"
+
+    @property
+    def title(self):
+        return _("Filesystem mount options (Linux/UNIX)")
+
+    @property
+    def parameter_valuespec(self):
+        return ListOfStrings(
+            title=_("Expected mount options"),
+            help=_("Specify all expected mount options here. If the list of "
+                   "actually found options differs from this list, the check will go "
+                   "warning or critical. Just the option <tt>commit</tt> is being "
+                   "ignored since it is modified by the power saving algorithms."),
+            valuespec=TextUnicode(),
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Mount point"), allow_empty=False)

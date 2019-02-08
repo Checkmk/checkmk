@@ -31,30 +31,50 @@ from cmk.gui.valuespec import (
     TextAscii,
     Percentage,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersOperatingSystem,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersOperatingSystem,
-    "fortigate_node_memory",
-    _("Fortigate node memory"),
-    Dictionary(
-        elements=[("levels",
-                   Tuple(
-                       title=_("Levels"),
-                       elements=[
-                           Percentage(
-                               title=_("Warning at"),
-                               default_value=70.0,
-                           ),
-                           Percentage(
-                               title=_("Critical at"),
-                               default_value=80.0,
-                           ),
-                       ],
-                   ))],),
-    TextAscii(title=_("node"),),
-    "dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersFortigateNodeMemory(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersOperatingSystem
+
+    @property
+    def check_group_name(self):
+        return "fortigate_node_memory"
+
+    @property
+    def title(self):
+        return _("Fortigate node memory")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[("levels",
+                       Tuple(
+                           title=_("Levels"),
+                           elements=[
+                               Percentage(
+                                   title=_("Warning at"),
+                                   default_value=70.0,
+                               ),
+                               Percentage(
+                                   title=_("Critical at"),
+                                   default_value=80.0,
+                               ),
+                           ],
+                       ))],)
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("node"),)

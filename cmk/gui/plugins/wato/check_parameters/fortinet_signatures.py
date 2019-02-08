@@ -32,9 +32,11 @@ from cmk.gui.valuespec import (
     Age,
     FixedValue,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersNetworking,
-    register_check_parameters,
 )
 
 
@@ -58,19 +60,33 @@ def _vs_fortinet_signatures(title):
         ])
 
 
-register_check_parameters(
-    RulespecGroupCheckParametersNetworking,
-    "fortinet_signatures",
-    _("Fortigate Signatures"),
-    Dictionary(
-        elements=[
-            ('av_age', _vs_fortinet_signatures(_("Age of Anti-Virus signature"))),
-            ('av_ext_age',
-             _vs_fortinet_signatures(_("Age of Anti-Virus signature extended database"))),
-            ('ips_age', _vs_fortinet_signatures(_("Age of Intrusion Prevention signature"))),
-            ('ips_ext_age',
-             _vs_fortinet_signatures(_("Age of Intrusion Prevention signature extended database"))),
-        ],),
-    None,
-    "dict",
-)
+@rulespec_registry.register
+class RulespecCheckgroupParametersFortinetSignatures(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersNetworking
+
+    @property
+    def check_group_name(self):
+        return "fortinet_signatures"
+
+    @property
+    def title(self):
+        return _("Fortigate Signatures")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ('av_age', _vs_fortinet_signatures(_("Age of Anti-Virus signature"))),
+                ('av_ext_age',
+                 _vs_fortinet_signatures(_("Age of Anti-Virus signature extended database"))),
+                ('ips_age', _vs_fortinet_signatures(_("Age of Intrusion Prevention signature"))),
+                ('ips_ext_age',
+                 _vs_fortinet_signatures(
+                     _("Age of Intrusion Prevention signature extended database"))),
+            ],)

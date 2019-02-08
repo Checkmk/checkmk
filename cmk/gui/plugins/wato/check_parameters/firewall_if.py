@@ -30,42 +30,62 @@ from cmk.gui.valuespec import (
     Integer,
     TextAscii,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
     Levels,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    "firewall_if",
-    _("Firewall Interfaces"),
-    Dictionary(
-        elements=[
-            (
-                "ipv4_in_blocked",
-                Levels(
-                    title=_("Levels for rate of incoming IPv4 packets blocked"),
-                    unit=_("pkts/s"),
-                    default_levels=(100.0, 10000.0),
-                    default_difference=(5, 8),
-                    default_value=None,
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersFirewallIf(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "firewall_if"
+
+    @property
+    def title(self):
+        return _("Firewall Interfaces")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                (
+                    "ipv4_in_blocked",
+                    Levels(
+                        title=_("Levels for rate of incoming IPv4 packets blocked"),
+                        unit=_("pkts/s"),
+                        default_levels=(100.0, 10000.0),
+                        default_difference=(5, 8),
+                        default_value=None,
+                    ),
                 ),
-            ),
-            ("average",
-             Integer(
-                 title=_("Averaging"),
-                 help=_("When this option is activated then the block rate is being "
-                        "averaged <b>before</b> the levels are being applied."),
-                 unit=_("minutes"),
-                 default_value=3,
-                 minvalue=1,
-                 label=_("Compute average over last "),
-             )),
-        ],),
-    TextAscii(
-        title=_("Interface"),
-        help=_("The description of the interface as provided by the device"),
-    ),
-    match_type="dict",
-)
+                ("average",
+                 Integer(
+                     title=_("Averaging"),
+                     help=_("When this option is activated then the block rate is being "
+                            "averaged <b>before</b> the levels are being applied."),
+                     unit=_("minutes"),
+                     default_value=3,
+                     minvalue=1,
+                     label=_("Compute average over last "),
+                 )),
+            ],)
+
+    @property
+    def item_spec(self):
+        return TextAscii(
+            title=_("Interface"),
+            help=_("The description of the interface as provided by the device"),
+        )

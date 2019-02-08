@@ -30,32 +30,49 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersOperatingSystem,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersOperatingSystem,
-    "juniper_mem_modules",
-    _("Juniper Modules Memory Usage"),
-    Tuple(
-        title=_("Specify levels in percentage of total memory usage"),
-        elements=[
-            Percentage(
-                title=_("Warning at a usage of"),
-                unit=_("% of RAM"),
-                default_value=80.0,
-                maxvalue=100.0),
-            Percentage(
-                title=_("Critical at a usage of"),
-                unit=_("% of RAM"),
-                default_value=90.0,
-                maxvalue=100.0)
-        ]),
-    TextAscii(
-        title=_("Module Name"),
-        help=_("The identificator of the module."),
-    ),
-    "first",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersJuniperMemModules(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersOperatingSystem
+
+    @property
+    def check_group_name(self):
+        return "juniper_mem_modules"
+
+    @property
+    def title(self):
+        return _("Juniper Modules Memory Usage")
+
+    @property
+    def parameter_valuespec(self):
+        return Tuple(
+            title=_("Specify levels in percentage of total memory usage"),
+            elements=[
+                Percentage(
+                    title=_("Warning at a usage of"),
+                    unit=_("% of RAM"),
+                    default_value=80.0,
+                    maxvalue=100.0),
+                Percentage(
+                    title=_("Critical at a usage of"),
+                    unit=_("% of RAM"),
+                    default_value=90.0,
+                    maxvalue=100.0)
+            ],
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(
+            title=_("Module Name"),
+            help=_("The identificator of the module."),
+        )

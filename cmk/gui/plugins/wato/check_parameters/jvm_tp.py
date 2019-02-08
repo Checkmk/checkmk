@@ -32,41 +32,70 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications, "jvm_tp", _("JVM tomcat threadpool levels"),
-    Dictionary(
-        help=_("This ruleset also covers Tomcat, Jolokia and JMX. "),
-        elements=[
-            ("currentThreadCount",
-             Alternative(
-                 title=_("Current thread count levels"),
-                 elements=[
-                     Tuple(
-                         title=_("Percentage levels of current thread count in threadpool"),
-                         elements=[
-                             Integer(title=_("Warning at"), unit=_(u"%"), allow_empty=False),
-                             Integer(title=_("Critical at"), unit=_(u"%"), allow_empty=False),
-                         ])
-                 ])),
-            ("currentThreadsBusy",
-             Alternative(
-                 title=_("Current threads busy levels"),
-                 elements=[
-                     Tuple(
-                         title=_("Percentage of current threads busy in threadpool"),
-                         elements=[
-                             Integer(title=_("Warning at"), unit=_(u"%"), allow_empty=False),
-                             Integer(title=_("Critical at"), unit=_(u"%"), allow_empty=False),
-                         ])
-                 ])),
-        ]),
-    TextAscii(
-        title=_("Name of the virtual machine and/or<br>threadpool"),
-        help=_("The name of the application server"),
-        allow_empty=False,
-    ), "dict")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersJvmTp(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "jvm_tp"
+
+    @property
+    def title(self):
+        return _("JVM tomcat threadpool levels")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            help=_("This ruleset also covers Tomcat, Jolokia and JMX. "),
+            elements=[
+                ("currentThreadCount",
+                 Alternative(
+                     title=_("Current thread count levels"),
+                     elements=[
+                         Tuple(
+                             title=_("Percentage levels of current thread count in threadpool"),
+                             elements=[
+                                 Integer(title=_("Warning at"), unit=_(u"%"), allow_empty=False),
+                                 Integer(title=_("Critical at"), unit=_(u"%"), allow_empty=False),
+                             ],
+                         )
+                     ],
+                 )),
+                ("currentThreadsBusy",
+                 Alternative(
+                     title=_("Current threads busy levels"),
+                     elements=[
+                         Tuple(
+                             title=_("Percentage of current threads busy in threadpool"),
+                             elements=[
+                                 Integer(title=_("Warning at"), unit=_(u"%"), allow_empty=False),
+                                 Integer(title=_("Critical at"), unit=_(u"%"), allow_empty=False),
+                             ],
+                         )
+                     ],
+                 )),
+            ],
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(
+            title=_("Name of the virtual machine and/or<br>threadpool"),
+            help=_("The name of the application server"),
+            allow_empty=False,
+        )

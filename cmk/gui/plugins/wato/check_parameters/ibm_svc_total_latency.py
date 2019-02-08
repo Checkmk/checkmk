@@ -29,37 +29,58 @@ from cmk.gui.valuespec import (
     Dictionary,
     DropdownChoice,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     Levels,
     RulespecGroupCheckParametersStorage,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersStorage,
-    "ibm_svc_total_latency",
-    _("IBM SVC: Levels for total disk latency"),
-    Dictionary(elements=[
-        ("read",
-         Levels(
-             title=_("Read latency"),
-             unit=_("ms"),
-             default_value=None,
-             default_levels=(50.0, 100.0))),
-        ("write",
-         Levels(
-             title=_("Write latency"),
-             unit=_("ms"),
-             default_value=None,
-             default_levels=(50.0, 100.0))),
-    ]),
-    DropdownChoice(
-        choices=[
-            ("Drives", _("Total latency for all drives")),
-            ("MDisks", _("Total latency for all MDisks")),
-            ("VDisks", _("Total latency for all VDisks")),
-        ],
-        title=_("Disk/Drive type"),
-        help=_("Please enter <tt>Drives</tt>, <tt>Mdisks</tt> or <tt>VDisks</tt> here.")),
-    match_type="dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersIbmSvcTotalLatency(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersStorage
+
+    @property
+    def check_group_name(self):
+        return "ibm_svc_total_latency"
+
+    @property
+    def title(self):
+        return _("IBM SVC: Levels for total disk latency")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ("read",
+                 Levels(
+                     title=_("Read latency"),
+                     unit=_("ms"),
+                     default_value=None,
+                     default_levels=(50.0, 100.0))),
+                ("write",
+                 Levels(
+                     title=_("Write latency"),
+                     unit=_("ms"),
+                     default_value=None,
+                     default_levels=(50.0, 100.0))),
+            ],)
+
+    @property
+    def item_spec(self):
+        return DropdownChoice(
+            choices=[
+                ("Drives", _("Total latency for all drives")),
+                ("MDisks", _("Total latency for all MDisks")),
+                ("VDisks", _("Total latency for all VDisks")),
+            ],
+            title=_("Disk/Drive type"),
+            help=_("Please enter <tt>Drives</tt>, <tt>Mdisks</tt> or <tt>VDisks</tt> here."))

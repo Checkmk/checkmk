@@ -30,40 +30,61 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications, "jvm_requests", _("JVM request count"),
-    Tuple(
-        help=_("This rule sets the warn and crit levels for the number "
-               "of incoming requests to a JVM application server."),
-        elements=[
-            Integer(
-                title=_("Warning if below"),
-                unit=_("requests/sec"),
-                default_value=-1,
-            ),
-            Integer(
-                title=_("Critical if below"),
-                unit=_("requests/sec"),
-                default_value=-1,
-            ),
-            Integer(
-                title=_("Warning at"),
-                unit=_("requests/sec"),
-                default_value=800,
-            ),
-            Integer(
-                title=_("Critical at"),
-                unit=_("requests/sec"),
-                default_value=1000,
-            ),
-        ]),
-    TextAscii(
-        title=_("Name of the virtual machine"),
-        help=_("The name of the application server"),
-        allow_empty=False,
-    ), "first")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersJvmRequests(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "jvm_requests"
+
+    @property
+    def title(self):
+        return _("JVM request count")
+
+    @property
+    def parameter_valuespec(self):
+        return Tuple(
+            help=_("This rule sets the warn and crit levels for the number "
+                   "of incoming requests to a JVM application server."),
+            elements=[
+                Integer(
+                    title=_("Warning if below"),
+                    unit=_("requests/sec"),
+                    default_value=-1,
+                ),
+                Integer(
+                    title=_("Critical if below"),
+                    unit=_("requests/sec"),
+                    default_value=-1,
+                ),
+                Integer(
+                    title=_("Warning at"),
+                    unit=_("requests/sec"),
+                    default_value=800,
+                ),
+                Integer(
+                    title=_("Critical at"),
+                    unit=_("requests/sec"),
+                    default_value=1000,
+                ),
+            ],
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(
+            title=_("Name of the virtual machine"),
+            help=_("The name of the application server"),
+            allow_empty=False,
+        )

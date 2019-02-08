@@ -32,33 +32,55 @@ from cmk.gui.valuespec import (
     Transform,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersOperatingSystem,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersOperatingSystem,
-    "juniper_cpu_util",
-    _("Juniper Processor Utilization of Routing Engine"),
-    Transform(
-        Dictionary(
-            help=_("CPU utilization of routing engine."),
-            optional_keys=[],
-            elements=[
-                (
-                    "levels",
-                    Tuple(
-                        title=_("Specify levels in percentage of processor routing engine usage"),
-                        elements=[
-                            Percentage(title=_("Warning at"), default_value=80.0),
-                            Percentage(title=_("Critical at"), default_value=90.0),
-                        ],
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersJuniperCpuUtil(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersOperatingSystem
+
+    @property
+    def check_group_name(self):
+        return "juniper_cpu_util"
+
+    @property
+    def title(self):
+        return _("Juniper Processor Utilization of Routing Engine")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Transform(
+            Dictionary(
+                help=_("CPU utilization of routing engine."),
+                optional_keys=[],
+                elements=[
+                    (
+                        "levels",
+                        Tuple(
+                            title=_(
+                                "Specify levels in percentage of processor routing engine usage"),
+                            elements=[
+                                Percentage(title=_("Warning at"), default_value=80.0),
+                                Percentage(title=_("Critical at"), default_value=90.0),
+                            ],
+                        ),
                     ),
-                ),
-            ]),
-        forth=lambda old: not old and {'levels': (80.0, 90.0)} or old,
-    ),
-    TextAscii(title=_("Routing Engine"),),
-    "dict",
-)
+                ],
+            ),
+            forth=lambda old: not old and {'levels': (80.0, 90.0)} or old,
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Routing Engine"),)

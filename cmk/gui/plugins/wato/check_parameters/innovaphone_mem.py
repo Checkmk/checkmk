@@ -29,16 +29,34 @@ from cmk.gui.valuespec import (
     Percentage,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersOperatingSystem,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersOperatingSystem, "innovaphone_mem", _("Innovaphone Memory Usage"),
-    Tuple(
-        title=_("Specify levels in percentage of total RAM"),
-        elements=[
-            Percentage(title=_("Warning at a usage of"), unit=_("% of RAM")),
-            Percentage(title=_("Critical at a usage of"), unit=_("% of RAM")),
-        ]), None, "first")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersInnovaphoneMem(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersOperatingSystem
+
+    @property
+    def check_group_name(self):
+        return "innovaphone_mem"
+
+    @property
+    def title(self):
+        return _("Innovaphone Memory Usage")
+
+    @property
+    def parameter_valuespec(self):
+        return Tuple(
+            title=_("Specify levels in percentage of total RAM"),
+            elements=[
+                Percentage(title=_("Warning at a usage of"), unit=_("% of RAM")),
+                Percentage(title=_("Critical at a usage of"), unit=_("% of RAM")),
+            ],
+        )

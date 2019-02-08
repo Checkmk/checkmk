@@ -30,32 +30,53 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications, "jvm_queue", _("JVM Execute Queue Count"),
-    Tuple(
-        help=_("The BEA application servers have 'Execute Queues' "
-               "in which requests are processed. This rule allows to set "
-               "warn and crit levels for the number of requests that are "
-               "being queued for processing."),
-        elements=[
-            Integer(
-                title=_("Warning at"),
-                unit=_("requests"),
-                default_value=20,
-            ),
-            Integer(
-                title=_("Critical at"),
-                unit=_("requests"),
-                default_value=50,
-            ),
-        ]),
-    TextAscii(
-        title=_("Name of the virtual machine"),
-        help=_("The name of the application server"),
-        allow_empty=False,
-    ), "first")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersJvmQueue(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "jvm_queue"
+
+    @property
+    def title(self):
+        return _("JVM Execute Queue Count")
+
+    @property
+    def parameter_valuespec(self):
+        return Tuple(
+            help=_("The BEA application servers have 'Execute Queues' "
+                   "in which requests are processed. This rule allows to set "
+                   "warn and crit levels for the number of requests that are "
+                   "being queued for processing."),
+            elements=[
+                Integer(
+                    title=_("Warning at"),
+                    unit=_("requests"),
+                    default_value=20,
+                ),
+                Integer(
+                    title=_("Critical at"),
+                    unit=_("requests"),
+                    default_value=50,
+                ),
+            ],
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(
+            title=_("Name of the virtual machine"),
+            help=_("The name of the application server"),
+            allow_empty=False,
+        )

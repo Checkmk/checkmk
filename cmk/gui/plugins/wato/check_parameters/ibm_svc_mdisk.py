@@ -30,78 +30,99 @@ from cmk.gui.valuespec import (
     MonitoringState,
     TextAscii,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersStorage,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersStorage,
-    "ibm_svc_mdisk",
-    _("IBM SVC: Options for SVC Disk Check"),
-    Dictionary(
-        optional_keys=False,
-        elements=[
-            (
-                "online_state",
-                MonitoringState(
-                    title=_("Resulting state if disk is online"),
-                    default_value=0,
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersIbmSvcMdisk(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersStorage
+
+    @property
+    def check_group_name(self):
+        return "ibm_svc_mdisk"
+
+    @property
+    def title(self):
+        return _("IBM SVC: Options for SVC Disk Check")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            optional_keys=False,
+            elements=[
+                (
+                    "online_state",
+                    MonitoringState(
+                        title=_("Resulting state if disk is online"),
+                        default_value=0,
+                    ),
                 ),
-            ),
-            (
-                "degraded_state",
-                MonitoringState(
-                    title=_("Resulting state if disk is degraded"),
-                    default_value=1,
+                (
+                    "degraded_state",
+                    MonitoringState(
+                        title=_("Resulting state if disk is degraded"),
+                        default_value=1,
+                    ),
                 ),
-            ),
-            (
-                "offline_state",
-                MonitoringState(
-                    title=_("Resulting state if disk is offline"),
-                    default_value=2,
+                (
+                    "offline_state",
+                    MonitoringState(
+                        title=_("Resulting state if disk is offline"),
+                        default_value=2,
+                    ),
                 ),
-            ),
-            (
-                "excluded_state",
-                MonitoringState(
-                    title=_("Resulting state if disk is excluded"),
-                    default_value=2,
+                (
+                    "excluded_state",
+                    MonitoringState(
+                        title=_("Resulting state if disk is excluded"),
+                        default_value=2,
+                    ),
                 ),
-            ),
-            (
-                "managed_mode",
-                MonitoringState(
-                    title=_("Resulting state if disk is in managed mode"),
-                    default_value=0,
+                (
+                    "managed_mode",
+                    MonitoringState(
+                        title=_("Resulting state if disk is in managed mode"),
+                        default_value=0,
+                    ),
                 ),
-            ),
-            (
-                "array_mode",
-                MonitoringState(
-                    title=_("Resulting state if disk is in array mode"),
-                    default_value=0,
+                (
+                    "array_mode",
+                    MonitoringState(
+                        title=_("Resulting state if disk is in array mode"),
+                        default_value=0,
+                    ),
                 ),
-            ),
-            (
-                "image_mode",
-                MonitoringState(
-                    title=_("Resulting state if disk is in image mode"),
-                    default_value=0,
+                (
+                    "image_mode",
+                    MonitoringState(
+                        title=_("Resulting state if disk is in image mode"),
+                        default_value=0,
+                    ),
                 ),
-            ),
-            (
-                "unmanaged_mode",
-                MonitoringState(
-                    title=_("Resulting state if disk is in unmanaged mode"),
-                    default_value=1,
+                (
+                    "unmanaged_mode",
+                    MonitoringState(
+                        title=_("Resulting state if disk is in unmanaged mode"),
+                        default_value=1,
+                    ),
                 ),
-            ),
-        ]),
-    TextAscii(
-        title=_("IBM SVC disk"),
-        help=_("Name of the disk, e.g. mdisk0"),
-    ),
-    "dict",
-)
+            ],
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(
+            title=_("IBM SVC disk"),
+            help=_("Name of the disk, e.g. mdisk0"),
+        )

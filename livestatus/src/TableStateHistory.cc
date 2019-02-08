@@ -152,46 +152,46 @@ TableStateHistory::TableStateHistory(MonitoringCore *mc, LogCache *log_cache)
     addColumn(std::make_unique<OffsetSStringColumn>(
         "log_output", "Logfile output relevant for this state", -1, -1, -1,
         DANGEROUS_OFFSETOF(HostServiceState, _log_output)));
+
     addColumn(std::make_unique<OffsetIntColumn>(
         "duration_ok", "OK duration of state ( until - from )", -1, -1, -1,
-        DANGEROUS_OFFSETOF(HostServiceState, _duration_state_OK)));
+        DANGEROUS_OFFSETOF(HostServiceState, _duration_ok)));
     addColumn(std::make_unique<OffsetDoubleColumn>(
         "duration_part_ok", "OK duration part in regard to the query timeframe",
-        -1, -1, -1, DANGEROUS_OFFSETOF(HostServiceState, _duration_part_OK)));
+        -1, -1, -1, DANGEROUS_OFFSETOF(HostServiceState, _duration_part_ok)));
 
     addColumn(std::make_unique<OffsetIntColumn>(
         "duration_warning", "WARNING duration of state (until - from)", -1, -1,
-        -1, DANGEROUS_OFFSETOF(HostServiceState, _duration_state_WARNING)));
+        -1, DANGEROUS_OFFSETOF(HostServiceState, _duration_warning)));
     addColumn(std::make_unique<OffsetDoubleColumn>(
         "duration_part_warning",
         "WARNING duration part in regard to the query timeframe", -1, -1, -1,
-        DANGEROUS_OFFSETOF(HostServiceState, _duration_part_WARNING)));
+        DANGEROUS_OFFSETOF(HostServiceState, _duration_part_warning)));
 
     addColumn(std::make_unique<OffsetIntColumn>(
         "duration_critical", "CRITICAL duration of state (until - from)", -1,
-        -1, -1,
-        DANGEROUS_OFFSETOF(HostServiceState, _duration_state_CRITICAL)));
+        -1, -1, DANGEROUS_OFFSETOF(HostServiceState, _duration_critical)));
     addColumn(std::make_unique<OffsetDoubleColumn>(
         "duration_part_critical",
         "CRITICAL duration part in regard to the query timeframe", -1, -1, -1,
-        DANGEROUS_OFFSETOF(HostServiceState, _duration_part_CRITICAL)));
+        DANGEROUS_OFFSETOF(HostServiceState, _duration_part_critical)));
 
     addColumn(std::make_unique<OffsetIntColumn>(
         "duration_unknown", "UNKNOWN duration of state (until - from)", -1, -1,
-        -1, DANGEROUS_OFFSETOF(HostServiceState, _duration_state_UNKNOWN)));
+        -1, DANGEROUS_OFFSETOF(HostServiceState, _duration_unknown)));
     addColumn(std::make_unique<OffsetDoubleColumn>(
         "duration_part_unknown",
         "UNKNOWN duration part in regard to the query timeframe", -1, -1, -1,
-        DANGEROUS_OFFSETOF(HostServiceState, _duration_part_UNKNOWN)));
+        DANGEROUS_OFFSETOF(HostServiceState, _duration_part_unknown)));
 
     addColumn(std::make_unique<OffsetIntColumn>(
         "duration_unmonitored", "UNMONITORED duration of state (until - from)",
         -1, -1, -1,
-        DANGEROUS_OFFSETOF(HostServiceState, _duration_state_UNMONITORED)));
+        DANGEROUS_OFFSETOF(HostServiceState, _duration_unmonitored)));
     addColumn(std::make_unique<OffsetDoubleColumn>(
         "duration_part_unmonitored",
         "UNMONITORED duration part in regard to the query timeframe", -1, -1,
-        -1, DANGEROUS_OFFSETOF(HostServiceState, _duration_part_UNMONITORED)));
+        -1, DANGEROUS_OFFSETOF(HostServiceState, _duration_part_unmonitored)));
 
     // join host and service tables
     TableHosts::addColumns(this, "current_host_",
@@ -845,41 +845,41 @@ void TableStateHistory::process(Query *query, HostServiceState *hs_state) {
     hs_state->_duration_part = static_cast<double>(hs_state->_duration) /
                                static_cast<double>(_query_timeframe);
 
-    hs_state->_duration_state_UNMONITORED = 0;
-    hs_state->_duration_part_UNMONITORED = 0;
+    hs_state->_duration_unmonitored = 0;
+    hs_state->_duration_part_unmonitored = 0;
 
-    hs_state->_duration_state_OK = 0;
-    hs_state->_duration_part_OK = 0;
+    hs_state->_duration_ok = 0;
+    hs_state->_duration_part_ok = 0;
 
-    hs_state->_duration_state_WARNING = 0;
-    hs_state->_duration_part_WARNING = 0;
+    hs_state->_duration_warning = 0;
+    hs_state->_duration_part_warning = 0;
 
-    hs_state->_duration_state_CRITICAL = 0;
-    hs_state->_duration_part_CRITICAL = 0;
+    hs_state->_duration_critical = 0;
+    hs_state->_duration_part_critical = 0;
 
-    hs_state->_duration_state_UNKNOWN = 0;
-    hs_state->_duration_part_UNKNOWN = 0;
+    hs_state->_duration_unknown = 0;
+    hs_state->_duration_part_unknown = 0;
 
     switch (hs_state->_state) {
         case -1:
-            hs_state->_duration_state_UNMONITORED = hs_state->_duration;
-            hs_state->_duration_part_UNMONITORED = hs_state->_duration_part;
+            hs_state->_duration_unmonitored = hs_state->_duration;
+            hs_state->_duration_part_unmonitored = hs_state->_duration_part;
             break;
         case STATE_OK:
-            hs_state->_duration_state_OK = hs_state->_duration;
-            hs_state->_duration_part_OK = hs_state->_duration_part;
+            hs_state->_duration_ok = hs_state->_duration;
+            hs_state->_duration_part_ok = hs_state->_duration_part;
             break;
         case STATE_WARNING:
-            hs_state->_duration_state_WARNING = hs_state->_duration;
-            hs_state->_duration_part_WARNING = hs_state->_duration_part;
+            hs_state->_duration_warning = hs_state->_duration;
+            hs_state->_duration_part_warning = hs_state->_duration_part;
             break;
         case STATE_CRITICAL:
-            hs_state->_duration_state_CRITICAL = hs_state->_duration;
-            hs_state->_duration_part_CRITICAL = hs_state->_duration_part;
+            hs_state->_duration_critical = hs_state->_duration;
+            hs_state->_duration_part_critical = hs_state->_duration_part;
             break;
         case STATE_UNKNOWN:
-            hs_state->_duration_state_UNKNOWN = hs_state->_duration;
-            hs_state->_duration_part_UNKNOWN = hs_state->_duration_part;
+            hs_state->_duration_unknown = hs_state->_duration;
+            hs_state->_duration_part_unknown = hs_state->_duration_part;
             break;
         default:
             break;

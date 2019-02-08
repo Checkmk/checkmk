@@ -54,20 +54,20 @@ public:
     time_t _duration;
     double _duration_part;
 
-    time_t _duration_state_UNMONITORED;
-    double _duration_part_UNMONITORED;
+    time_t _duration_unmonitored;
+    double _duration_part_unmonitored;
 
-    time_t _duration_state_OK;
-    double _duration_part_OK;
+    time_t _duration_ok;
+    double _duration_part_ok;
 
-    time_t _duration_state_WARNING;
-    double _duration_part_WARNING;
+    time_t _duration_warning;
+    double _duration_part_warning;
 
-    time_t _duration_state_CRITICAL;
-    double _duration_part_CRITICAL;
+    time_t _duration_critical;
+    double _duration_part_critical;
 
-    time_t _duration_state_UNKNOWN;
-    double _duration_part_UNKNOWN;
+    time_t _duration_unknown;
+    double _duration_part_unknown;
 
     // State information
     int _host_down;  // used if service

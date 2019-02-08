@@ -33,11 +33,12 @@ from cmk.gui.valuespec import (
     Transform,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
     RulespecGroupCheckParametersDiscovery,
-    register_check_parameters,
-    rulespec_registry,
     HostRulespec,
 )
 
@@ -90,32 +91,50 @@ class RulespecWinperfMsxQueuesInventory(HostRulespec):
         )
 
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications, "msx_queues", _("MS Exchange Message Queues"),
-    Transform(
-        Dictionary(
-            title=_("Set Levels"),
-            elements=[
-                ('levels',
-                 Tuple(
-                     title=_("Maximum Number of E-Mails in Queue"),
-                     elements=[
-                         Integer(title=_("Warning at"), unit=_("E-Mails")),
-                         Integer(title=_("Critical at"), unit=_("E-Mails"))
-                     ])),
-                ('offset',
-                 Integer(
-                     title=_("Offset"),
-                     help=
-                     _("Use this only if you want to overwrite the postion of the information in the agent "
-                       "output. Also refer to the rule <i>Microsoft Exchange Queues Discovery</i> "
-                      ))),
-            ],
-            optional_keys=["offset"],
-        ),
-        forth=transform_msx_queues,
-    ),
-    TextAscii(
-        title=_("Explicit Queue Names"),
-        help=_("Specify queue names that the rule should apply to"),
-    ), "first")
+@rulespec_registry.register
+class RulespecCheckgroupParametersMsxQueues(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "msx_queues"
+
+    @property
+    def title(self):
+        return _("MS Exchange Message Queues")
+
+    @property
+    def parameter_valuespec(self):
+        return Transform(
+            Dictionary(
+                title=_("Set Levels"),
+                elements=[
+                    ('levels',
+                     Tuple(
+                         title=_("Maximum Number of E-Mails in Queue"),
+                         elements=[
+                             Integer(title=_("Warning at"), unit=_("E-Mails")),
+                             Integer(title=_("Critical at"), unit=_("E-Mails"))
+                         ],
+                     )),
+                    ('offset',
+                     Integer(
+                         title=_("Offset"),
+                         help=
+                         _("Use this only if you want to overwrite the postion of the information in the agent "
+                           "output. Also refer to the rule <i>Microsoft Exchange Queues Discovery</i> "
+                          ))),
+                ],
+                optional_keys=["offset"],
+            ),
+            forth=transform_msx_queues,
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(
+            title=_("Explicit Queue Names"),
+            help=_("Specify queue names that the rule should apply to"),
+        )

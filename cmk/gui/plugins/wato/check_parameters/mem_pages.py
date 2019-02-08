@@ -30,19 +30,42 @@ from cmk.gui.valuespec import (
     Integer,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersOperatingSystem,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersOperatingSystem, "mem_pages", _("Memory Pages Statistics"),
-    Dictionary(elements=[(
-        "pages_per_second",
-        Tuple(
-            title=_("Pages per second"),
-            elements=[
-                Integer(title=_("Warning at"), unit=_("pages/s")),
-                Integer(title=_("Critical at"), unit=_("pages/s")),
-            ]),
-    )]), None, "dict")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersMemPages(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersOperatingSystem
+
+    @property
+    def check_group_name(self):
+        return "mem_pages"
+
+    @property
+    def title(self):
+        return _("Memory Pages Statistics")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[(
+                "pages_per_second",
+                Tuple(
+                    title=_("Pages per second"),
+                    elements=[
+                        Integer(title=_("Warning at"), unit=_("pages/s")),
+                        Integer(title=_("Critical at"), unit=_("pages/s")),
+                    ],
+                ),
+            )],)

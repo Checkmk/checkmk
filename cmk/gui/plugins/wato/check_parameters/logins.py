@@ -29,21 +29,34 @@ from cmk.gui.valuespec import (
     Integer,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersOperatingSystem,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersOperatingSystem,
-    "logins",
-    _("Number of Logins on System"),
-    Tuple(
-        help=_("This rule defines upper limits for the number of logins on a system."),
-        elements=[
-            Integer(title=_("Warning at"), unit=_("users"), default_value=20),
-            Integer(title=_("Critical at"), unit=_("users"), default_value=30)
-        ]),
-    None,
-    match_type="first",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersLogins(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersOperatingSystem
+
+    @property
+    def check_group_name(self):
+        return "logins"
+
+    @property
+    def title(self):
+        return _("Number of Logins on System")
+
+    @property
+    def parameter_valuespec(self):
+        return Tuple(
+            help=_("This rule defines upper limits for the number of logins on a system."),
+            elements=[
+                Integer(title=_("Warning at"), unit=_("users"), default_value=20),
+                Integer(title=_("Critical at"), unit=_("users"), default_value=30)
+            ],
+        )

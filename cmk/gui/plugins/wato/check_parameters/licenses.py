@@ -35,7 +35,8 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
 )
 
 vs_license = Alternative(
@@ -67,35 +68,107 @@ vs_license = Alternative(
         )
     ])
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications, "citrix_licenses",
-    _("Number of used Citrix licenses"), vs_license,
-    TextAscii(
-        title=_("ID of the license, e.g. <tt>PVSD_STD_CCS</tt>"),
-        allow_empty=False,
-    ), "first")
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications, "esx_licenses", _("Number of used VMware licenses"),
-    vs_license,
-    TextAscii(
-        title=_("Name of the license"),
-        help=_("For example <tt>VMware vSphere 5 Standard</tt>"),
-        allow_empty=False,
-    ), "first")
+@rulespec_registry.register
+class RulespecCheckgroupParametersCitrixLicenses(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications, "ibmsvc_licenses",
-    _("Number of used IBM SVC licenses"), vs_license,
-    TextAscii(
-        title=_("ID of the license, e.g. <tt>virtualization</tt>"),
-        allow_empty=False,
-    ), "first")
+    @property
+    def check_group_name(self):
+        return "citrix_licenses"
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications, "rds_licenses",
-    _("Number of used Remote Desktop Licenses"), vs_license,
-    TextAscii(
-        title=_("ID of the license, e.g. <tt>Windows Server 2008 R2</tt>"),
-        allow_empty=False,
-    ), "first")
+    @property
+    def title(self):
+        return _("Number of used Citrix licenses")
+
+    @property
+    def parameter_valuespec(self):
+        return vs_license
+
+    @property
+    def item_spec(self):
+        return TextAscii(
+            title=_("ID of the license, e.g. <tt>PVSD_STD_CCS</tt>"),
+            allow_empty=False,
+        )
+
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersEsxLicenses(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "esx_licenses"
+
+    @property
+    def title(self):
+        return _("Number of used VMware licenses")
+
+    @property
+    def parameter_valuespec(self):
+        return vs_license
+
+    @property
+    def item_spec(self):
+        return TextAscii(
+            title=_("Name of the license"),
+            help=_("For example <tt>VMware vSphere 5 Standard</tt>"),
+            allow_empty=False,
+        )
+
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersIbmsvcLicenses(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "ibmsvc_licenses"
+
+    @property
+    def title(self):
+        return _("Number of used IBM SVC licenses")
+
+    @property
+    def parameter_valuespec(self):
+        return vs_license
+
+    @property
+    def item_spec(self):
+        return TextAscii(
+            title=_("ID of the license, e.g. <tt>virtualization</tt>"),
+            allow_empty=False,
+        )
+
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersRdsLicenses(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "rds_licenses"
+
+    @property
+    def title(self):
+        return _("Number of used Remote Desktop Licenses")
+
+    @property
+    def parameter_valuespec(self):
+        return vs_license
+
+    @property
+    def item_spec(self):
+        return TextAscii(
+            title=_("ID of the license, e.g. <tt>Windows Server 2008 R2</tt>"),
+            allow_empty=False,
+        )

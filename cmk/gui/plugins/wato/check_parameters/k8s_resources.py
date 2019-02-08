@@ -30,44 +30,61 @@ from cmk.gui.valuespec import (
     Tuple,
     Percentage,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    "k8s_resources",
-    _("Kubernetes resources"),
-    Dictionary(elements=[
-        ('pods',
-         Tuple(
-             title=_('Pods'),
-             default_value=(80.0, 90.0),
-             elements=[
-                 Percentage(title=_("Warning above")),
-                 Percentage(title=_("Critical above")),
-             ],
-         )),
-        ('cpu',
-         Tuple(
-             title=_('CPU'),
-             default_value=(80.0, 90.0),
-             elements=[
-                 Percentage(title=_("Warning above")),
-                 Percentage(title=_("Critical above")),
-             ],
-         )),
-        ('memory',
-         Tuple(
-             title=_('Memory'),
-             default_value=(80.0, 90.0),
-             elements=[
-                 Percentage(title=_("Warning above")),
-                 Percentage(title=_("Critical above")),
-             ],
-         )),
-    ]),
-    None,
-    match_type="dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersK8SResources(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "k8s_resources"
+
+    @property
+    def title(self):
+        return _("Kubernetes resources")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ('pods',
+                 Tuple(
+                     title=_('Pods'),
+                     default_value=(80.0, 90.0),
+                     elements=[
+                         Percentage(title=_("Warning above")),
+                         Percentage(title=_("Critical above")),
+                     ],
+                 )),
+                ('cpu',
+                 Tuple(
+                     title=_('CPU'),
+                     default_value=(80.0, 90.0),
+                     elements=[
+                         Percentage(title=_("Warning above")),
+                         Percentage(title=_("Critical above")),
+                     ],
+                 )),
+                ('memory',
+                 Tuple(
+                     title=_('Memory'),
+                     default_value=(80.0, 90.0),
+                     elements=[
+                         Percentage(title=_("Warning above")),
+                         Percentage(title=_("Critical above")),
+                     ],
+                 )),
+            ],)

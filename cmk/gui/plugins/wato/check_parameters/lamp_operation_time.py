@@ -29,19 +29,40 @@ from cmk.gui.valuespec import (
     Age,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersEnvironment,
-    "lamp_operation_time",
-    _("Beamer lamp operation time"),
-    Tuple(elements=[
-        Age(title=_("Warning at"), default_value=1000 * 3600, display=["hours"]),
-        Age(title=_("Critical at"), default_value=1500 * 3600, display=["hours"]),
-    ]),
-    None,
-    match_type="first",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersLampOperationTime(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersEnvironment
+
+    @property
+    def check_group_name(self):
+        return "lamp_operation_time"
+
+    @property
+    def title(self):
+        return _("Beamer lamp operation time")
+
+    @property
+    def parameter_valuespec(self):
+        return Tuple(
+            elements=[
+                Age(
+                    title=_("Warning at"),
+                    default_value=1000 * 3600,
+                    display=["hours"],
+                ),
+                Age(
+                    title=_("Critical at"),
+                    default_value=1500 * 3600,
+                    display=["hours"],
+                ),
+            ],)

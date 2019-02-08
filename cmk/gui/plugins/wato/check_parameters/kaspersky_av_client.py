@@ -30,34 +30,50 @@ from cmk.gui.valuespec import (
     Dictionary,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    "kaspersky_av_client",
-    _("Kaspersky Anti-Virus Time Settings"),
-    Dictionary(
-        elements=[
-            ("signature_age",
-             Tuple(
-                 title=_("Time Settings for Signature"),
-                 elements=[
-                     Age(title=_("Warning at"), default_value=86400),
-                     Age(title=_("Critical at"), default_value=7 * 86400),
-                 ],
-             )),
-            ("fullscan_age",
-             Tuple(
-                 title=_("Time Settings for Fullscan"),
-                 elements=[
-                     Age(title=_("Warning at"), default_value=86400),
-                     Age(title=_("Critical at"), default_value=7 * 86400),
-                 ],
-             )),
-        ],),
-    None,
-    match_type="dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersKasperskyAvClient(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "kaspersky_av_client"
+
+    @property
+    def title(self):
+        return _("Kaspersky Anti-Virus Time Settings")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ("signature_age",
+                 Tuple(
+                     title=_("Time Settings for Signature"),
+                     elements=[
+                         Age(title=_("Warning at"), default_value=86400),
+                         Age(title=_("Critical at"), default_value=7 * 86400),
+                     ],
+                 )),
+                ("fullscan_age",
+                 Tuple(
+                     title=_("Time Settings for Fullscan"),
+                     elements=[
+                         Age(title=_("Warning at"), default_value=86400),
+                         Age(title=_("Critical at"), default_value=7 * 86400),
+                     ],
+                 )),
+            ],)

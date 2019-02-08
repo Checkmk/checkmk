@@ -46,8 +46,8 @@ from cmk.gui.valuespec import (
     Tuple,
 )
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
     rulespec_registry,
     HostRulespec,
     ServiceRulespec,
@@ -238,10 +238,25 @@ class RulespecLogwatchGroups(HostRulespec):
             add_label=_("Add pattern group"),
         )
 
-register_check_parameters(RulespecGroupCheckParametersApplications,
-    "logwatch_ec",
-    _('Logwatch Event Console Forwarding'),
-    Alternative(
+
+# wmic_process does not support inventory at the moment
+@rulespec_registry.register
+class RulespecCheckgroupParametersLogwatchEc(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "logwatch_ec"
+
+    @property
+    def title(self):
+        return _("Logwatch Event Console Forwarding")
+
+    @property
+    def parameter_valuespec(self):
+        return Alternative(
         title = _("Forwarding"),
         help = _("Instead of using the regular logwatch check all lines received by logwatch can "
                  "be forwarded to a Check_MK event console daemon to be processed. The target event "
@@ -413,7 +428,4 @@ register_check_parameters(RulespecGroupCheckParametersApplications,
             ),
         ],
         default_value = '',
-    ),
-    None,
-    'first',
-                         )# wmic_process does not support inventory at the moment
+        )

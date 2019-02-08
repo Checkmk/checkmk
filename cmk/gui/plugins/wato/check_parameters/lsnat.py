@@ -32,20 +32,40 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersNetworking,
-    register_check_parameters,
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersNetworking, "lsnat", _("Enterasys LSNAT Bindings"),
-    Dictionary(
-        elements=[
-            ("current_bindings",
-             Tuple(
-                 title=_("Number of current LSNAT bindings"),
-                 elements=[
-                     Integer(title=_("Warning at"), size=10, unit=_("bindings")),
-                     Integer(title=_("Critical at"), size=10, unit=_("bindings")),
-                 ])),
-        ],
-        optional_keys=False,
-    ), None, "dict")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersLsnat(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersNetworking
+
+    @property
+    def check_group_name(self):
+        return "lsnat"
+
+    @property
+    def title(self):
+        return _("Enterasys LSNAT Bindings")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ("current_bindings",
+                 Tuple(
+                     title=_("Number of current LSNAT bindings"),
+                     elements=[
+                         Integer(title=_("Warning at"), size=10, unit=_("bindings")),
+                         Integer(title=_("Critical at"), size=10, unit=_("bindings")),
+                     ])),
+            ],
+            optional_keys=False,
+        )

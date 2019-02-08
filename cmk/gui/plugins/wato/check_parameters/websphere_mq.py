@@ -36,9 +36,11 @@ from cmk.gui.valuespec import (
     Transform,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
 websphere_mq_common_elements = [
@@ -82,37 +84,57 @@ def transform_websphere_mq_queues(source):
     return source
 
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    "websphere_mq",
-    _("Websphere MQ"),
-    Transform(
-        Dictionary(
-            elements=websphere_mq_common_elements + [
-                ("messages_not_processed",
-                 Dictionary(
-                     title=_("Settings for messages not processed"),
-                     help=_("With this rule you can determine the warn and crit age "
-                            "if LGETTIME and LGETDATE is available in the agent data. "
-                            "Note that if LGETTIME and LGETDATE are available but not set "
-                            "you can set the service state which is default WARN. "
-                            "This rule applies only if the current depth is greater than zero."),
-                     elements=[
-                         ("age",
-                          Tuple(
-                              title=_("Upper levels for the age"),
-                              elements=[
-                                  Age(title=_("Warning at")),
-                                  Age(title=_("Critical at")),
-                              ],
-                          )),
-                         ("state",
-                          MonitoringState(
-                              title=_("State if LGETTIME and LGETDATE are available but not set"),
-                              default_value=1)),
-                     ])),
-            ],),
-        forth=transform_websphere_mq_queues),
-    TextAscii(title=_("Name of queue")),
-    match_type="dict",
-)
+@rulespec_registry.register
+class RulespecCheckgroupParametersWebsphereMq(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "websphere_mq"
+
+    @property
+    def title(self):
+        return _("Websphere MQ")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Transform(
+            Dictionary(
+                elements=websphere_mq_common_elements + [
+                    ("messages_not_processed",
+                     Dictionary(
+                         title=_("Settings for messages not processed"),
+                         help=_(
+                             "With this rule you can determine the warn and crit age "
+                             "if LGETTIME and LGETDATE is available in the agent data. "
+                             "Note that if LGETTIME and LGETDATE are available but not set "
+                             "you can set the service state which is default WARN. "
+                             "This rule applies only if the current depth is greater than zero."),
+                         elements=[
+                             ("age",
+                              Tuple(
+                                  title=_("Upper levels for the age"),
+                                  elements=[
+                                      Age(title=_("Warning at")),
+                                      Age(title=_("Critical at")),
+                                  ],
+                              )),
+                             ("state",
+                              MonitoringState(
+                                  title=_(
+                                      "State if LGETTIME and LGETDATE are available but not set"),
+                                  default_value=1)),
+                         ],
+                     )),
+                ],),
+            forth=transform_websphere_mq_queues)
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Name of queue"))

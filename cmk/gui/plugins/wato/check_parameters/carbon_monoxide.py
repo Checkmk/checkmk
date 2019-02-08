@@ -30,19 +30,42 @@ from cmk.gui.valuespec import (
     Integer,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersEnvironment, "carbon_monoxide", ("Carbon monoxide"),
-    Dictionary(elements=[
-        ("levels_ppm",
-         Tuple(
-             title="Levels in parts per million",
-             elements=[
-                 Integer(title=_("Warning at"), unit=_("ppm"), default=10),
-                 Integer(title=_("Critical at"), unit=_("ppm"), default=25),
-             ])),
-    ]), None, "dict")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersCarbonMonoxide(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersEnvironment
+
+    @property
+    def check_group_name(self):
+        return "carbon_monoxide"
+
+    @property
+    def title(self):
+        return _("Carbon monoxide")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ("levels_ppm",
+                 Tuple(
+                     title="Levels in parts per million",
+                     elements=[
+                         Integer(title=_("Warning at"), unit=_("ppm"), default=10),
+                         Integer(title=_("Critical at"), unit=_("ppm"), default=25),
+                     ],
+                 )),
+            ],)

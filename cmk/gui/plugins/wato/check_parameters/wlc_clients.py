@@ -32,17 +32,31 @@ from cmk.gui.valuespec import (
     Transform,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersNetworking,
-    register_check_parameters,
 )
 
 
-register_check_parameters(
-    RulespecGroupCheckParametersNetworking,
-    "wlc_clients",
-    _("WLC WiFi client connections"),
-    Transform(
+@rulespec_registry.register
+class RulespecCheckgroupParametersWlcClients(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersNetworking
+
+    @property
+    def check_group_name(self):
+        return "wlc_clients"
+
+    @property
+    def title(self):
+        return _("WLC WiFi client connections")
+
+    @property
+    def parameter_valuespec(self):
+        return Transform(
         Dictionary(
             title = _("Number of connections"),
             elements = [
@@ -65,7 +79,9 @@ register_check_parameters(
             ]
         ),
         # old params = (crit_low, warn_low, warn, crit)
-        forth = lambda v: isinstance(v, tuple) and { "levels" : (v[2], v[3]), "levels_lower" : (v[1], v[0]) } or v,
-    ),
-    TextAscii( title = _("Name of Wifi")),
-    "first")
+        forth = lambda v: isinstance(v, tuple) and { "levels" : (v[2], v[3],), "levels_lower" : (v[1], v[0],) } or v,
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Name of Wifi"))

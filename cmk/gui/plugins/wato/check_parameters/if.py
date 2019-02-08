@@ -50,10 +50,10 @@ from cmk.gui.plugins.wato import (
     PredictiveLevels,
     RulespecGroupCheckParametersDiscovery,
     RulespecGroupCheckParametersNetworking,
-    register_check_parameters,
     rulespec_registry,
     HostRulespec,
     BinaryHostRulespec,
+    CheckParameterRulespecWithItem,
 )
 
 
@@ -384,15 +384,248 @@ class RulespecIfDisableIf64Hosts(BinaryHostRulespec):
                  "instead.")
 
 
-register_check_parameters(
-    RulespecGroupCheckParametersNetworking,
-    "if",
-    _("Network interfaces and switch ports"),
-    # Transform old traffic related levels which used "traffic" and "traffic_minimum"
-    # keys where each was configured with an Alternative valuespec
-    Transform(
-        Dictionary(
-            ignored_keys=["aggregate"],  # Created by discovery when using interface grouping
+@rulespec_registry.register
+class RulespecCheckgroupParametersIf(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersNetworking
+
+    @property
+    def check_group_name(self):
+        return "if"
+
+    @property
+    def title(self):
+        return _("Network interfaces and switch ports")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        # Transform old traffic related levels which used "traffic" and "traffic_minimum"
+        # keys where each was configured with an Alternative valuespec
+        return Transform(
+            Dictionary(
+                ignored_keys=["aggregate"],  # Created by discovery when using interface grouping
+                elements=[
+                    ("errors",
+                     Alternative(
+                         title=_("Levels for error rates"),
+                         help=
+                         _("These levels make the check go warning or critical whenever the "
+                           "<b>percentual error rate</b> or the <b>absolute error rate</b> of the monitored interface reaches "
+                           "the given bounds. The percentual error rate is computed by dividing number of "
+                           "errors by the total number of packets (successful plus errors)."),
+                         elements=[
+                             Tuple(
+                                 title=_("Percentual levels for error rates"),
+                                 elements=[
+                                     Percentage(
+                                         title=_("Warning at"),
+                                         unit=_("percent errors"),
+                                         default_value=0.01,
+                                         display_format='%.3f'),
+                                     Percentage(
+                                         title=_("Critical at"),
+                                         unit=_("percent errors"),
+                                         default_value=0.1,
+                                         display_format='%.3f')
+                                 ]),
+                             Tuple(
+                                 title=_("Absolute levels for error rates"),
+                                 elements=[
+                                     Integer(title=_("Warning at"), unit=_("errors")),
+                                     Integer(title=_("Critical at"), unit=_("errors"))
+                                 ])
+                         ])),
+                    ("speed",
+                     OptionalDropdownChoice(
+                         title=_("Operating speed"),
+                         help=_("If you use this parameter then the check goes warning if the "
+                                "interface is not operating at the expected speed (e.g. it "
+                                "is working with 100Mbit/s instead of 1Gbit/s.<b>Note:</b> "
+                                "some interfaces do not provide speed information. In such cases "
+                                "this setting is used as the assumed speed when it comes to "
+                                "traffic monitoring (see below)."),
+                         choices=[
+                             (None, _("ignore speed")),
+                             (10000000, "10 Mbit/s"),
+                             (100000000, "100 Mbit/s"),
+                             (1000000000, "1 Gbit/s"),
+                             (10000000000, "10 Gbit/s"),
+                         ],
+                         otherlabel=_("specify manually ->"),
+                         explicit=Integer(
+                             title=_("Other speed in bits per second"),
+                             label=_("Bits per second")))),
+                    ("state",
+                     Optional(
+                         ListChoice(
+                             title=_("Allowed states:"), choices=defines.interface_oper_states()),
+                         title=_("Operational state"),
+                         help=
+                         _("If you activate the monitoring of the operational state (<tt>ifOperStatus</tt>) "
+                           "the check will get warning or critical if the current state "
+                           "of the interface does not match one of the expected states. Note: the status 9 (<i>admin down</i>) "
+                           "is only visible if you activate this status during switch port inventory or if you manually "
+                           "use the check plugin <tt>if64adm</tt> instead of <tt>if64</tt>."),
+                         label=_("Ignore the operational state"),
+                         none_label=_("ignore"),
+                         negate=True)),
+                    ("map_operstates",
+                     ListOf(
+                         Tuple(
+                             orientation="horizontal",
+                             elements=[
+                                 DropdownChoice(choices=defines.interface_oper_states()),
+                                 MonitoringState()
+                             ]),
+                         title=_('Map operational states'),
+                     )),
+                    ("assumed_speed_in",
+                     OptionalDropdownChoice(
+                         title=_("Assumed input speed"),
+                         help=_(
+                             "If the automatic detection of the link speed does not work "
+                             "or the switch's capabilities are throttled because of the network setup "
+                             "you can set the assumed speed here."),
+                         choices=[
+                             (None, _("ignore speed")),
+                             (10000000, "10 Mbit/s"),
+                             (100000000, "100 Mbit/s"),
+                             (1000000000, "1 Gbit/s"),
+                             (10000000000, "10 Gbit/s"),
+                         ],
+                         otherlabel=_("specify manually ->"),
+                         default_value=16000000,
+                         explicit=Integer(
+                             title=_("Other speed in bits per second"),
+                             label=_("Bits per second"),
+                             size=10))),
+                    ("assumed_speed_out",
+                     OptionalDropdownChoice(
+                         title=_("Assumed output speed"),
+                         help=_(
+                             "If the automatic detection of the link speed does not work "
+                             "or the switch's capabilities are throttled because of the network setup "
+                             "you can set the assumed speed here."),
+                         choices=[
+                             (None, _("ignore speed")),
+                             (10000000, "10 Mbit/s"),
+                             (100000000, "100 Mbit/s"),
+                             (1000000000, "1 Gbit/s"),
+                             (10000000000, "10 Gbit/s"),
+                         ],
+                         otherlabel=_("specify manually ->"),
+                         default_value=1500000,
+                         explicit=Integer(
+                             title=_("Other speed in bits per second"),
+                             label=_("Bits per second"),
+                             size=12))),
+                    ("unit",
+                     RadioChoice(
+                         title=_("Measurement unit"),
+                         help=_(
+                             "Here you can specifiy the measurement unit of the network interface"),
+                         default_value="byte",
+                         choices=[
+                             ("bit", _("Bits")),
+                             ("byte", _("Bytes")),
+                         ],
+                     )),
+                    ("infotext_format",
+                     DropdownChoice(
+                         title=_("Change infotext in check output"),
+                         help=
+                         _("This setting allows you to modify the information text which is displayed between "
+                           "the two brackets in the check output. Please note that this setting does not work for "
+                           "grouped interfaces, since the additional information of grouped interfaces is different"
+                          ),
+                         choices=[
+                             ("alias", _("Show alias")),
+                             ("description", _("Show description")),
+                             ("alias_and_description", _("Show alias and description")),
+                             ("alias_or_description", _("Show alias if set, else description")),
+                             ("desription_or_alias", _("Show description if set, else alias")),
+                             ("hide", _("Hide infotext")),
+                         ])),
+                    ("traffic",
+                     ListOf(
+                         CascadingDropdown(
+                             title=_("Direction"),
+                             orientation="horizontal",
+                             choices=[
+                                 ('both', _("In / Out"), vs_interface_traffic()),
+                                 ('in', _("In"), vs_interface_traffic()),
+                                 ('out', _("Out"), vs_interface_traffic()),
+                             ]),
+                         title=_("Used bandwidth (minimum or maximum traffic)"),
+                         help=_("Setting levels on the used bandwidth is optional. If you do set "
+                                "levels you might also consider using averaging."),
+                     )),
+                    (
+                        "nucasts",
+                        Tuple(
+                            title=_("Non-unicast packet rates"),
+                            help=_(
+                                "Setting levels on non-unicast packet rates is optional. This may help "
+                                "to detect broadcast storms and other unwanted traffic."),
+                            elements=[
+                                Integer(title=_("Warning at"), unit=_("pkts / sec")),
+                                Integer(title=_("Critical at"), unit=_("pkts / sec")),
+                            ]),
+                    ),
+                    ("discards",
+                     Tuple(
+                         title=_("Absolute levels for discards rates"),
+                         elements=[
+                             Integer(title=_("Warning at"), unit=_("discards")),
+                             Integer(title=_("Critical at"), unit=_("discards"))
+                         ])),
+                    ("average",
+                     Integer(
+                         title=_("Average values"),
+                         help=_("By activating the computation of averages, the levels on "
+                                "errors and traffic are applied to the averaged value. That "
+                                "way you can make the check react only on long-time changes, "
+                                "not on one-minute events."),
+                         unit=_("minutes"),
+                         minvalue=1,
+                         default_value=15,
+                     )),
+                ],
+            ),
+            forth=transform_if,
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("port specification"), allow_empty=False)
+
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersK8SIf(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersNetworking
+
+    @property
+    def check_group_name(self):
+        return "k8s_if"
+
+    @property
+    def title(self):
+        return _("Kubernetes Network interfaces")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
             elements=[
                 ("errors",
                  Alternative(
@@ -424,209 +657,16 @@ register_check_parameters(
                                  Integer(title=_("Critical at"), unit=_("errors"))
                              ])
                      ])),
-                ("speed",
-                 OptionalDropdownChoice(
-                     title=_("Operating speed"),
-                     help=_("If you use this parameter then the check goes warning if the "
-                            "interface is not operating at the expected speed (e.g. it "
-                            "is working with 100Mbit/s instead of 1Gbit/s.<b>Note:</b> "
-                            "some interfaces do not provide speed information. In such cases "
-                            "this setting is used as the assumed speed when it comes to "
-                            "traffic monitoring (see below)."),
-                     choices=[
-                         (None, _("ignore speed")),
-                         (10000000, "10 Mbit/s"),
-                         (100000000, "100 Mbit/s"),
-                         (1000000000, "1 Gbit/s"),
-                         (10000000000, "10 Gbit/s"),
-                     ],
-                     otherlabel=_("specify manually ->"),
-                     explicit=Integer(
-                         title=_("Other speed in bits per second"), label=_("Bits per second")))),
-                ("state",
-                 Optional(
-                     ListChoice(
-                         title=_("Allowed states:"), choices=defines.interface_oper_states()),
-                     title=_("Operational state"),
-                     help=
-                     _("If you activate the monitoring of the operational state (<tt>ifOperStatus</tt>) "
-                       "the check will get warning or critical if the current state "
-                       "of the interface does not match one of the expected states. Note: the status 9 (<i>admin down</i>) "
-                       "is only visible if you activate this status during switch port inventory or if you manually "
-                       "use the check plugin <tt>if64adm</tt> instead of <tt>if64</tt>."),
-                     label=_("Ignore the operational state"),
-                     none_label=_("ignore"),
-                     negate=True)),
-                ("map_operstates",
-                 ListOf(
-                     Tuple(
-                         orientation="horizontal",
-                         elements=[
-                             DropdownChoice(choices=defines.interface_oper_states()),
-                             MonitoringState()
-                         ]),
-                     title=_('Map operational states'),
-                 )),
-                ("assumed_speed_in",
-                 OptionalDropdownChoice(
-                     title=_("Assumed input speed"),
-                     help=_(
-                         "If the automatic detection of the link speed does not work "
-                         "or the switch's capabilities are throttled because of the network setup "
-                         "you can set the assumed speed here."),
-                     choices=[
-                         (None, _("ignore speed")),
-                         (10000000, "10 Mbit/s"),
-                         (100000000, "100 Mbit/s"),
-                         (1000000000, "1 Gbit/s"),
-                         (10000000000, "10 Gbit/s"),
-                     ],
-                     otherlabel=_("specify manually ->"),
-                     default_value=16000000,
-                     explicit=Integer(
-                         title=_("Other speed in bits per second"),
-                         label=_("Bits per second"),
-                         size=10))),
-                ("assumed_speed_out",
-                 OptionalDropdownChoice(
-                     title=_("Assumed output speed"),
-                     help=_(
-                         "If the automatic detection of the link speed does not work "
-                         "or the switch's capabilities are throttled because of the network setup "
-                         "you can set the assumed speed here."),
-                     choices=[
-                         (None, _("ignore speed")),
-                         (10000000, "10 Mbit/s"),
-                         (100000000, "100 Mbit/s"),
-                         (1000000000, "1 Gbit/s"),
-                         (10000000000, "10 Gbit/s"),
-                     ],
-                     otherlabel=_("specify manually ->"),
-                     default_value=1500000,
-                     explicit=Integer(
-                         title=_("Other speed in bits per second"),
-                         label=_("Bits per second"),
-                         size=12))),
-                ("unit",
-                 RadioChoice(
-                     title=_("Measurement unit"),
-                     help=_("Here you can specifiy the measurement unit of the network interface"),
-                     default_value="byte",
-                     choices=[
-                         ("bit", _("Bits")),
-                         ("byte", _("Bytes")),
-                     ],
-                 )),
-                ("infotext_format",
-                 DropdownChoice(
-                     title=_("Change infotext in check output"),
-                     help=
-                     _("This setting allows you to modify the information text which is displayed between "
-                       "the two brackets in the check output. Please note that this setting does not work for "
-                       "grouped interfaces, since the additional information of grouped interfaces is different"
-                      ),
-                     choices=[
-                         ("alias", _("Show alias")),
-                         ("description", _("Show description")),
-                         ("alias_and_description", _("Show alias and description")),
-                         ("alias_or_description", _("Show alias if set, else description")),
-                         ("desription_or_alias", _("Show description if set, else alias")),
-                         ("hide", _("Hide infotext")),
-                     ])),
-                ("traffic",
-                 ListOf(
-                     CascadingDropdown(
-                         title=_("Direction"),
-                         orientation="horizontal",
-                         choices=[
-                             ('both', _("In / Out"), vs_interface_traffic()),
-                             ('in', _("In"), vs_interface_traffic()),
-                             ('out', _("Out"), vs_interface_traffic()),
-                         ]),
-                     title=_("Used bandwidth (minimum or maximum traffic)"),
-                     help=_("Setting levels on the used bandwidth is optional. If you do set "
-                            "levels you might also consider using averaging."),
-                 )),
-                (
-                    "nucasts",
-                    Tuple(
-                        title=_("Non-unicast packet rates"),
-                        help=_(
-                            "Setting levels on non-unicast packet rates is optional. This may help "
-                            "to detect broadcast storms and other unwanted traffic."),
-                        elements=[
-                            Integer(title=_("Warning at"), unit=_("pkts / sec")),
-                            Integer(title=_("Critical at"), unit=_("pkts / sec")),
-                        ]),
-                ),
                 ("discards",
                  Tuple(
                      title=_("Absolute levels for discards rates"),
                      elements=[
                          Integer(title=_("Warning at"), unit=_("discards")),
                          Integer(title=_("Critical at"), unit=_("discards"))
-                     ])),
-                ("average",
-                 Integer(
-                     title=_("Average values"),
-                     help=_("By activating the computation of averages, the levels on "
-                            "errors and traffic are applied to the averaged value. That "
-                            "way you can make the check react only on long-time changes, "
-                            "not on one-minute events."),
-                     unit=_("minutes"),
-                     minvalue=1,
-                     default_value=15,
+                     ],
                  )),
-            ]),
-        forth=transform_if,
-    ),
-    TextAscii(title=_("port specification"), allow_empty=False),
-    "dict",
-)
+            ],)
 
-register_check_parameters(
-    RulespecGroupCheckParametersNetworking,
-    "k8s_if",
-    _("Kubernetes Network interfaces"),
-    Dictionary(elements=[
-        ("errors",
-         Alternative(
-             title=_("Levels for error rates"),
-             help=
-             _("These levels make the check go warning or critical whenever the "
-               "<b>percentual error rate</b> or the <b>absolute error rate</b> of the monitored interface reaches "
-               "the given bounds. The percentual error rate is computed by dividing number of "
-               "errors by the total number of packets (successful plus errors)."),
-             elements=[
-                 Tuple(
-                     title=_("Percentual levels for error rates"),
-                     elements=[
-                         Percentage(
-                             title=_("Warning at"),
-                             unit=_("percent errors"),
-                             default_value=0.01,
-                             display_format='%.3f'),
-                         Percentage(
-                             title=_("Critical at"),
-                             unit=_("percent errors"),
-                             default_value=0.1,
-                             display_format='%.3f')
-                     ]),
-                 Tuple(
-                     title=_("Absolute levels for error rates"),
-                     elements=[
-                         Integer(title=_("Warning at"), unit=_("errors")),
-                         Integer(title=_("Critical at"), unit=_("errors"))
-                     ])
-             ])),
-        ("discards",
-         Tuple(
-             title=_("Absolute levels for discards rates"),
-             elements=[
-                 Integer(title=_("Warning at"), unit=_("discards")),
-                 Integer(title=_("Critical at"), unit=_("discards"))
-             ])),
-    ]),
-    TextAscii(title=_("port specification"), allow_empty=False),
-    "dict",
-)
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("port specification"), allow_empty=False)

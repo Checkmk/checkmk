@@ -31,45 +31,68 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    "webserver",
-    _("Azure web servers (IIS)"),
-    Dictionary(
-        elements=[
-            (
-                "avg_response_time_levels",
-                Tuple(
-                    title=_("Upper levels for average response time"),
-                    elements=[
-                        Float(title=_("Warning at"), default_value=1.00, unit="s"),
-                        Float(title=_("Critical at"), default_value=10.0, unit="s"),
-                    ]),
-            ),
-            (
-                "error_rate_levels",
-                Tuple(
-                    title=_("Upper levels for rate of server errors"),
-                    elements=[
-                        Float(title=_("Warning at"), default_value=0.01, unit="1/s"),
-                        Float(title=_("Critical at"), default_value=0.04, unit="1/s"),
-                    ]),
-            ),
-            (
-                "cpu_time_percent_levels",
-                Tuple(
-                    title=_("Upper levels for CPU time"),
-                    elements=[
-                        Float(title=_("Warning at"), default_value=85., unit="%"),
-                        Float(title=_("Critical at"), default_value=95., unit="%"),
-                    ]),
-            ),
-        ],),
-    TextAscii(title=_("Name of the service")),
-    match_type="dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersWebserver(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "webserver"
+
+    @property
+    def title(self):
+        return _("Azure web servers (IIS)")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                (
+                    "avg_response_time_levels",
+                    Tuple(
+                        title=_("Upper levels for average response time"),
+                        elements=[
+                            Float(title=_("Warning at"), default_value=1.00, unit="s"),
+                            Float(title=_("Critical at"), default_value=10.0, unit="s"),
+                        ],
+                    ),
+                ),
+                (
+                    "error_rate_levels",
+                    Tuple(
+                        title=_("Upper levels for rate of server errors"),
+                        elements=[
+                            Float(title=_("Warning at"), default_value=0.01, unit="1/s"),
+                            Float(title=_("Critical at"), default_value=0.04, unit="1/s"),
+                        ],
+                    ),
+                ),
+                (
+                    "cpu_time_percent_levels",
+                    Tuple(
+                        title=_("Upper levels for CPU time"),
+                        elements=[
+                            Float(title=_("Warning at"), default_value=85., unit="%"),
+                            Float(title=_("Critical at"), default_value=95., unit="%"),
+                        ],
+                    ),
+                ),
+            ],)
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Name of the service"))

@@ -29,25 +29,42 @@ from cmk.gui.valuespec import (
     Percentage,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersOperatingSystem,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersOperatingSystem, "juniper_mem", _("Juniper Memory Usage"),
-    Tuple(
-        title=_("Specify levels in percentage of total memory usage"),
-        elements=[
-            Percentage(
-                title=_("Warning at a usage of"),
-                unit=_("% of RAM"),
-                default_value=80.0,
-                maxvalue=100.0),
-            Percentage(
-                title=_("Critical at a usage of"),
-                unit=_("% of RAM"),
-                default_value=90.0,
-                maxvalue=100.0)
-        ]), None,
-    "first")  # TODO: Remove situations where a rule is used once with and once without items
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersJuniperMem(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersOperatingSystem
+
+    @property
+    def check_group_name(self):
+        return "juniper_mem"
+
+    @property
+    def title(self):
+        return _("Juniper Memory Usage")
+
+    @property
+    def parameter_valuespec(self):
+        return Tuple(
+            title=_("Specify levels in percentage of total memory usage"),
+            elements=[
+                Percentage(
+                    title=_("Warning at a usage of"),
+                    unit=_("% of RAM"),
+                    default_value=80.0,
+                    maxvalue=100.0),
+                Percentage(
+                    title=_("Critical at a usage of"),
+                    unit=_("% of RAM"),
+                    default_value=90.0,
+                    maxvalue=100.0)
+            ],
+        )

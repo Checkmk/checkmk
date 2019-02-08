@@ -31,30 +31,56 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersStorage,
-    register_check_parameters,
 )
 from cmk.gui.plugins.wato.check_parameters.utils import filesystem_elements
 
-register_check_parameters(
-    RulespecGroupCheckParametersStorage, "ibm_svc_mdiskgrp", _("IBM SVC Pool Capacity"),
-    Dictionary(
-        elements=filesystem_elements + [
-            ("provisioning_levels",
-             Tuple(
-                 title=_("Provisioning Levels"),
-                 help=_("A provisioning of over 100% means over provisioning."),
-                 elements=[
-                     Percentage(
-                         title=_("Warning at a provisioning of"),
-                         default_value=110.0,
-                         maxvalue=None),
-                     Percentage(
-                         title=_("Critical at a provisioning of"),
-                         default_value=120.0,
-                         maxvalue=None),
-                 ])),
-        ],
-        hidden_keys=["flex_levels"],
-    ), TextAscii(title=_("Name of the pool"), allow_empty=False), "dict")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersIbmSvcMdiskgrp(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersStorage
+
+    @property
+    def check_group_name(self):
+        return "ibm_svc_mdiskgrp"
+
+    @property
+    def title(self):
+        return _("IBM SVC Pool Capacity")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=filesystem_elements + [
+                ("provisioning_levels",
+                 Tuple(
+                     title=_("Provisioning Levels"),
+                     help=_("A provisioning of over 100% means over provisioning."),
+                     elements=[
+                         Percentage(
+                             title=_("Warning at a provisioning of"),
+                             default_value=110.0,
+                             maxvalue=None),
+                         Percentage(
+                             title=_("Critical at a provisioning of"),
+                             default_value=120.0,
+                             maxvalue=None),
+                     ],
+                 )),
+            ],
+            hidden_keys=["flex_levels"],
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Name of the pool"), allow_empty=False)

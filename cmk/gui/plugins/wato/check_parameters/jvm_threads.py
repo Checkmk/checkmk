@@ -30,30 +30,51 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications, "jvm_threads", _("JVM threads"),
-    Tuple(
-        help=_("This rule sets the warn and crit levels for the number of threads "
-               "running in a JVM."),
-        elements=[
-            Integer(
-                title=_("Warning at"),
-                unit=_("threads"),
-                default_value=80,
-            ),
-            Integer(
-                title=_("Critical at"),
-                unit=_("threads"),
-                default_value=100,
-            ),
-        ]),
-    TextAscii(
-        title=_("Name of the virtual machine"),
-        help=_("The name of the application server"),
-        allow_empty=False,
-    ), "first")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersJvmThreads(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "jvm_threads"
+
+    @property
+    def title(self):
+        return _("JVM threads")
+
+    @property
+    def parameter_valuespec(self):
+        return Tuple(
+            help=_("This rule sets the warn and crit levels for the number of threads "
+                   "running in a JVM."),
+            elements=[
+                Integer(
+                    title=_("Warning at"),
+                    unit=_("threads"),
+                    default_value=80,
+                ),
+                Integer(
+                    title=_("Critical at"),
+                    unit=_("threads"),
+                    default_value=100,
+                ),
+            ],
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(
+            title=_("Name of the virtual machine"),
+            help=_("The name of the application server"),
+            allow_empty=False,
+        )

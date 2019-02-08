@@ -32,35 +32,58 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    "job",
-    _("Age of jobs controlled by mk-job"),
-    Dictionary(elements=[
-        ("age",
-         Tuple(
-             title=_("Maximum time since last start of job execution"),
-             elements=[
-                 Age(title=_("Warning at"), default_value=0),
-                 Age(title=_("Critical at"), default_value=0)
-             ])),
-        ("outcome_on_cluster",
-         DropdownChoice(
-             title=_("Clusters: Prefered check result of local checks"),
-             help=_("If you're running local checks on clusters via clustered services rule "
-                    "you can influence the check result with this rule. You can choose between "
-                    "best or worst state. Default setting is worst state."),
-             choices=[
-                 ("worst", _("Worst state")),
-                 ("best", _("Best state")),
-             ],
-             default_value="worst")),
-    ]),
-    TextAscii(title=_("Job name"),),
-    match_type="dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersJob(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "job"
+
+    @property
+    def title(self):
+        return _("Age of jobs controlled by mk-job")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ("age",
+                 Tuple(
+                     title=_("Maximum time since last start of job execution"),
+                     elements=[
+                         Age(title=_("Warning at"), default_value=0),
+                         Age(title=_("Critical at"), default_value=0)
+                     ],
+                 )),
+                ("outcome_on_cluster",
+                 DropdownChoice(
+                     title=_("Clusters: Prefered check result of local checks"),
+                     help=_(
+                         "If you're running local checks on clusters via clustered services rule "
+                         "you can influence the check result with this rule. You can choose between "
+                         "best or worst state. Default setting is worst state."),
+                     choices=[
+                         ("worst", _("Worst state")),
+                         ("best", _("Best state")),
+                     ],
+                     default_value="worst")),
+            ],)
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Job name"),)

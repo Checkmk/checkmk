@@ -32,29 +32,47 @@ from cmk.gui.valuespec import (
     Transform,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersNetworking,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersNetworking,
-    "ipsecvpn",
-    _(u"Fortigate IPSec VPN Tunnels"),
-    Transform(
-        Dictionary(
-            elements=[("levels",
-                       Tuple(
-                           title=_("Levels for number of down channels"),
-                           elements=[
-                               Integer(title=_("Warning at"), default_value=1),
-                               Integer(title=_("Critical at"), default_value=2),
-                           ])),
-                      ("tunnels_ignore_levels",
-                       ListOfStrings(title=_("Tunnels which ignore levels")))],
-            optional_keys=[]),
-        forth=lambda params: isinstance(params, dict) and params or {"levels": params},
-    ),
-    None,
-    "dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersIpsecvpn(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersNetworking
+
+    @property
+    def check_group_name(self):
+        return "ipsecvpn"
+
+    @property
+    def title(self):
+        return _("Fortigate IPSec VPN Tunnels")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Transform(
+            Dictionary(
+                elements=[("levels",
+                           Tuple(
+                               title=_("Levels for number of down channels"),
+                               elements=[
+                                   Integer(title=_("Warning at"), default_value=1),
+                                   Integer(title=_("Critical at"), default_value=2),
+                               ],
+                           )),
+                          ("tunnels_ignore_levels",
+                           ListOfStrings(title=_("Tunnels which ignore levels")))],
+                optional_keys=[],
+            ),
+            forth=lambda params: isinstance(params, dict) and params or {"levels": params},
+        )

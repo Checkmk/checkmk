@@ -32,43 +32,70 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersNetworking,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersNetworking, "docsis_cm_status", _("Docsis Cable Modem Status"),
-    Dictionary(elements=[
-        ("error_states",
-         ListChoice(
-             title=_("Modem States that lead to a critical state"),
-             help=_(
-                 "If one of the selected states occurs the check will repsond with a critical state "
-             ),
-             choices=[
-                 (1, "other"),
-                 (2, "notReady"),
-                 (3, "notSynchronized"),
-                 (4, "phySynchronized"),
-                 (5, "usParametersAcquired"),
-                 (6, "rangingComplete"),
-                 (7, "ipComplete"),
-                 (8, "todEstablished"),
-                 (9, "securityEstablished"),
-                 (10, "paramTransferComplete"),
-                 (11, "registrationComplete"),
-                 (12, "operational"),
-                 (13, "accessDenied"),
-             ],
-             default_value=[1, 2, 13],
-         )),
-        ("tx_power",
-         Tuple(
-             title=_("Transmit Power"),
-             help=_("The operational transmit power"),
-             elements=[
-                 Float(title=_("warning at"), unit="dBmV", default_value=20.0),
-                 Float(title=_("critical at"), unit="dBmV", default_value=10.0),
-             ])),
-    ]), TextAscii(title=_("ID of the Entry")), "dict")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersDocsisCmStatus(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersNetworking
+
+    @property
+    def check_group_name(self):
+        return "docsis_cm_status"
+
+    @property
+    def title(self):
+        return _("Docsis Cable Modem Status")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ("error_states",
+                 ListChoice(
+                     title=_("Modem States that lead to a critical state"),
+                     help=
+                     _("If one of the selected states occurs the check will repsond with a critical state "
+                      ),
+                     choices=[
+                         (1, "other"),
+                         (2, "notReady"),
+                         (3, "notSynchronized"),
+                         (4, "phySynchronized"),
+                         (5, "usParametersAcquired"),
+                         (6, "rangingComplete"),
+                         (7, "ipComplete"),
+                         (8, "todEstablished"),
+                         (9, "securityEstablished"),
+                         (10, "paramTransferComplete"),
+                         (11, "registrationComplete"),
+                         (12, "operational"),
+                         (13, "accessDenied"),
+                     ],
+                     default_value=[1, 2, 13],
+                 )),
+                ("tx_power",
+                 Tuple(
+                     title=_("Transmit Power"),
+                     help=_("The operational transmit power"),
+                     elements=[
+                         Float(title=_("warning at"), unit="dBmV", default_value=20.0),
+                         Float(title=_("critical at"), unit="dBmV", default_value=10.0),
+                     ],
+                 )),
+            ],)
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("ID of the Entry"))

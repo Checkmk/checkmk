@@ -29,21 +29,34 @@ from cmk.gui.valuespec import (
     Integer,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    "domino_users",
-    _("Lotus Domino Users"),
-    Tuple(
-        title=_("Number of Lotus Domino Users"),
-        elements=[
-            Integer(title=_("warning at"), default_value=1000),
-            Integer(title=_("critical at"), default_value=1500),
-        ]),
-    None,
-    match_type="first",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersDominoUsers(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "domino_users"
+
+    @property
+    def title(self):
+        return _("Lotus Domino Users")
+
+    @property
+    def parameter_valuespec(self):
+        return Tuple(
+            title=_("Number of Lotus Domino Users"),
+            elements=[
+                Integer(title=_("warning at"), default_value=1000),
+                Integer(title=_("critical at"), default_value=1500),
+            ],
+        )

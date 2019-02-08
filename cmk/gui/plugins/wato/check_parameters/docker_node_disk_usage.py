@@ -32,49 +32,78 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications, "docker_node_disk_usage", _("Docker node disk usage"),
-    Dictionary(
-        help=
-        _("Allows to define levels for the counts and size of Docker Containers, Images, Local Volumes, and the Build Cache."
-         ),
-        elements=[
-            ("size",
-             Tuple(
-                 title=_("Size"),
-                 elements=[
-                     Filesize(title=_("Warning at"), allow_empty=False),
-                     Filesize(title=_("Critical at"), allow_empty=False),
-                 ])),
-            ("reclaimable",
-             Tuple(
-                 title=_("Reclaimable"),
-                 elements=[
-                     Filesize(title=_("Warning at"), allow_empty=False),
-                     Filesize(title=_("Critical at"), allow_empty=False),
-                 ])),
-            ("count",
-             Tuple(
-                 title=_("Total count"),
-                 elements=[
-                     Integer(title=_("Warning at"), allow_empty=False),
-                     Integer(title=_("Critical at"), allow_empty=False),
-                 ])),
-            ("active",
-             Tuple(
-                 title=_("Active"),
-                 elements=[
-                     Integer(title=_("Warning at"), allow_empty=False),
-                     Integer(title=_("Critical at"), allow_empty=False),
-                 ])),
-        ]),
-    TextAscii(
-        title=_("Type"),
-        help=_("Either Containers, Images, Local Volumes or Build Cache"),
-        allow_empty=True,
-    ), "dict")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersDockerNodeDiskUsage(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "docker_node_disk_usage"
+
+    @property
+    def title(self):
+        return _("Docker node disk usage")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            help=
+            _("Allows to define levels for the counts and size of Docker Containers, Images, Local Volumes, and the Build Cache."
+             ),
+            elements=[
+                ("size",
+                 Tuple(
+                     title=_("Size"),
+                     elements=[
+                         Filesize(title=_("Warning at"), allow_empty=False),
+                         Filesize(title=_("Critical at"), allow_empty=False),
+                     ],
+                 )),
+                ("reclaimable",
+                 Tuple(
+                     title=_("Reclaimable"),
+                     elements=[
+                         Filesize(title=_("Warning at"), allow_empty=False),
+                         Filesize(title=_("Critical at"), allow_empty=False),
+                     ],
+                 )),
+                ("count",
+                 Tuple(
+                     title=_("Total count"),
+                     elements=[
+                         Integer(title=_("Warning at"), allow_empty=False),
+                         Integer(title=_("Critical at"), allow_empty=False),
+                     ],
+                 )),
+                ("active",
+                 Tuple(
+                     title=_("Active"),
+                     elements=[
+                         Integer(title=_("Warning at"), allow_empty=False),
+                         Integer(title=_("Critical at"), allow_empty=False),
+                     ],
+                 )),
+            ],
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(
+            title=_("Type"),
+            help=_("Either Containers, Images, Local Volumes or Build Cache"),
+            allow_empty=True,
+        )

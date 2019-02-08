@@ -30,22 +30,35 @@ from cmk.gui.valuespec import (
     Optional,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    "vms_procs",
-    _("Number of processes on OpenVMS"),
-    Optional(
-        Tuple(elements=[
-            Integer(title=_("Warning at"), unit=_("processes"), default_value=100),
-            Integer(title=_("Critical at"), unit=_("processes"), default_value=200)
-        ]),
-        title=_("Impose levels on number of processes"),
-    ),
-    None,
-    match_type="first",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersVmsProcs(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "vms_procs"
+
+    @property
+    def title(self):
+        return _("Number of processes on OpenVMS")
+
+    @property
+    def parameter_valuespec(self):
+        return Optional(
+            Tuple(
+                elements=[
+                    Integer(title=_("Warning at"), unit=_("processes"), default_value=100),
+                    Integer(title=_("Critical at"), unit=_("processes"), default_value=200)
+                ],),
+            title=_("Impose levels on number of processes"),
+        )

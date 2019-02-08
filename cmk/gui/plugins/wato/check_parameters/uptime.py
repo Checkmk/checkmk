@@ -30,31 +30,50 @@ from cmk.gui.valuespec import (
     Dictionary,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersOperatingSystem,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersOperatingSystem,
-    "uptime",
-    _("Uptime since last reboot"),
-    Dictionary(elements=[
-        ("min",
-         Tuple(
-             title=_("Minimum required uptime"),
-             elements=[
-                 Age(title=_("Warning if below")),
-                 Age(title=_("Critical if below")),
-             ])),
-        ("max",
-         Tuple(
-             title=_("Maximum allowed uptime"),
-             elements=[
-                 Age(title=_("Warning at")),
-                 Age(title=_("Critical at")),
-             ])),
-    ]),
-    None,
-    match_type="dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersUptime(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersOperatingSystem
+
+    @property
+    def check_group_name(self):
+        return "uptime"
+
+    @property
+    def title(self):
+        return _("Uptime since last reboot")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ("min",
+                 Tuple(
+                     title=_("Minimum required uptime"),
+                     elements=[
+                         Age(title=_("Warning if below")),
+                         Age(title=_("Critical if below")),
+                     ],
+                 )),
+                ("max",
+                 Tuple(
+                     title=_("Maximum allowed uptime"),
+                     elements=[
+                         Age(title=_("Warning at")),
+                         Age(title=_("Critical at")),
+                     ],
+                 )),
+            ],)

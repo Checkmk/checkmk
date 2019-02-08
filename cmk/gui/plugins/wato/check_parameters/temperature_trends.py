@@ -34,53 +34,78 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersEnvironment,
-    register_check_parameters,
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersEnvironment,
-    "temperature_trends",
-    _("Temperature trends for devices with builtin levels"),
-    Dictionary(
-        title=_("Temperature Trend Analysis"),
-        help=_(
-            "This rule enables and configures a trend analysis and corresponding limits for devices, "
-            "which have their own limits configured on the device. It will only work for supported "
-            "checks, right now the <tt>adva_fsp_temp</tt> check."),
-        elements=[
-            ("trend_range",
-             Optional(
-                 Integer(
-                     title=_("Time range for temperature trend computation"),
-                     default_value=30,
-                     minvalue=5,
-                     unit=_("minutes")),
-                 title=_("Trend computation"),
-                 label=_("Enable trend computation"))),
-            ("trend_c",
-             Tuple(
-                 title=_("Levels on trends in degrees Celsius per time range"),
-                 elements=[
-                     Integer(title=_("Warning at"), unit=u"°C / " + _("range"), default_value=5),
-                     Integer(title=_("Critical at"), unit=u"°C / " + _("range"), default_value=10)
-                 ])),
-            ("trend_timeleft",
-             Tuple(
-                 title=_("Levels on the time left until limit is reached"),
-                 elements=[
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersTemperatureTrends(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersEnvironment
+
+    @property
+    def check_group_name(self):
+        return "temperature_trends"
+
+    @property
+    def title(self):
+        return _("Temperature trends for devices with builtin levels")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def is_deprecated(self):
+        return True
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            title=_("Temperature Trend Analysis"),
+            help=
+            _("This rule enables and configures a trend analysis and corresponding limits for devices, "
+              "which have their own limits configured on the device. It will only work for supported "
+              "checks, right now the <tt>adva_fsp_temp</tt> check."),
+            elements=[
+                ("trend_range",
+                 Optional(
                      Integer(
-                         title=_("Warning if below"),
-                         unit=_("minutes"),
-                         default_value=240,
-                     ),
-                     Integer(
-                         title=_("Critical if below"),
-                         unit=_("minutes"),
-                         default_value=120,
-                     ),
-                 ])),
-        ]),
-    TextAscii(title=_("Sensor ID"), help=_("The identifier of the thermal sensor.")),
-    "dict",
-    deprecated=True,
-)
+                         title=_("Time range for temperature trend computation"),
+                         default_value=30,
+                         minvalue=5,
+                         unit=_("minutes")),
+                     title=_("Trend computation"),
+                     label=_("Enable trend computation"))),
+                ("trend_c",
+                 Tuple(
+                     title=_("Levels on trends in degrees Celsius per time range"),
+                     elements=[
+                         Integer(
+                             title=_("Warning at"), unit=u"°C / " + _("range"), default_value=5),
+                         Integer(
+                             title=_("Critical at"), unit=u"°C / " + _("range"), default_value=10)
+                     ])),
+                ("trend_timeleft",
+                 Tuple(
+                     title=_("Levels on the time left until limit is reached"),
+                     elements=[
+                         Integer(
+                             title=_("Warning if below"),
+                             unit=_("minutes"),
+                             default_value=240,
+                         ),
+                         Integer(
+                             title=_("Critical if below"),
+                             unit=_("minutes"),
+                             default_value=120,
+                         ),
+                     ])),
+            ],
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Sensor ID"), help=_("The identifier of the thermal sensor."))

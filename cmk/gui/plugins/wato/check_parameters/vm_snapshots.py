@@ -30,31 +30,50 @@ from cmk.gui.valuespec import (
     Dictionary,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    "vm_snapshots",
-    _("Virtual Machine Snapshots"),
-    Dictionary(elements=[
-        ("age",
-         Tuple(
-             title=_("Age of the last snapshot"),
-             elements=[
-                 Age(title=_("Warning if older than")),
-                 Age(title=_("Critical if older than"))
-             ])),
-        ("age_oldest",
-         Tuple(
-             title=_("Age of the oldest snapshot"),
-             elements=[
-                 Age(title=_("Warning if older than")),
-                 Age(title=_("Critical if older than"))
-             ])),
-    ]),
-    None,
-    match_type="dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersVmSnapshots(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "vm_snapshots"
+
+    @property
+    def title(self):
+        return _("Virtual Machine Snapshots")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ("age",
+                 Tuple(
+                     title=_("Age of the last snapshot"),
+                     elements=[
+                         Age(title=_("Warning if older than")),
+                         Age(title=_("Critical if older than"))
+                     ],
+                 )),
+                ("age_oldest",
+                 Tuple(
+                     title=_("Age of the oldest snapshot"),
+                     elements=[
+                         Age(title=_("Warning if older than")),
+                         Age(title=_("Critical if older than"))
+                     ],
+                 )),
+            ],)

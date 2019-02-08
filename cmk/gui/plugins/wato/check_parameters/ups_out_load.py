@@ -30,16 +30,37 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersEnvironment, "ups_out_load",
-    _("Parameters for output loads of UPSs and PDUs"),
-    Tuple(elements=[
-        Integer(title=_("warning at"), unit=u"%", default_value=85),
-        Integer(title=_("critical at"), unit=u"%", default_value=90),
-    ]), TextAscii(title=_("Phase"), help=_("The identifier of the phase the power is related to.")),
-    "first")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersUpsOutLoad(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersEnvironment
+
+    @property
+    def check_group_name(self):
+        return "ups_out_load"
+
+    @property
+    def title(self):
+        return _("Parameters for output loads of UPSs and PDUs")
+
+    @property
+    def parameter_valuespec(self):
+        return Tuple(
+            elements=[
+                Integer(title=_("warning at"), unit=u"%", default_value=85),
+                Integer(title=_("critical at"), unit=u"%", default_value=90),
+            ],)
+
+    @property
+    def item_spec(self):
+        return TextAscii(
+            title=_("Phase"), help=_("The identifier of the phase the power is related to."))

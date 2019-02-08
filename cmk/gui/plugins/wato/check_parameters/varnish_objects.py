@@ -30,27 +30,50 @@ from cmk.gui.valuespec import (
     Float,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications, "varnish_objects", _("Varnish Objects"),
-    Dictionary(
-        elements=[
-            ("expired",
-             Tuple(
-                 title=_("Upper levels for \"expired objects\" per second"),
-                 elements=[
-                     Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
-                     Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
-                 ])),
-            ("lru_nuked",
-             Tuple(
-                 title=_("Upper levels for \"LRU nuked objects\" per second"),
-                 elements=[
-                     Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
-                     Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
-                 ])),
-        ],), None, "dict")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersVarnishObjects(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "varnish_objects"
+
+    @property
+    def title(self):
+        return _("Varnish Objects")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ("expired",
+                 Tuple(
+                     title=_("Upper levels for \"expired objects\" per second"),
+                     elements=[
+                         Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
+                         Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
+                     ],
+                 )),
+                ("lru_nuked",
+                 Tuple(
+                     title=_("Upper levels for \"LRU nuked objects\" per second"),
+                     elements=[
+                         Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
+                         Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
+                     ],
+                 )),
+            ],)

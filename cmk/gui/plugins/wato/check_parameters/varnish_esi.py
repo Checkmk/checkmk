@@ -30,27 +30,50 @@ from cmk.gui.valuespec import (
     Float,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications, "varnish_esi", _("Varnish ESI"),
-    Dictionary(
-        elements=[
-            ("errors",
-             Tuple(
-                 title=_("Upper levels for \"ESI errors\" per second"),
-                 elements=[
-                     Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
-                     Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
-                 ])),
-            ("warnings",
-             Tuple(
-                 title=_("Upper levels for \"ESI warnings\" per second"),
-                 elements=[
-                     Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
-                     Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
-                 ])),
-        ],), None, "dict")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersVarnishEsi(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "varnish_esi"
+
+    @property
+    def title(self):
+        return _("Varnish ESI")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ("errors",
+                 Tuple(
+                     title=_("Upper levels for \"ESI errors\" per second"),
+                     elements=[
+                         Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
+                         Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
+                     ],
+                 )),
+                ("warnings",
+                 Tuple(
+                     title=_("Upper levels for \"ESI warnings\" per second"),
+                     elements=[
+                         Float(title=_("Warning at"), default_value=1.0, allow_empty=False),
+                         Float(title=_("Critical at"), default_value=2.0, allow_empty=False)
+                     ],
+                 )),
+            ],)

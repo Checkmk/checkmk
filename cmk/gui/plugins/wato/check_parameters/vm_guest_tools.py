@@ -29,39 +29,56 @@ from cmk.gui.valuespec import (
     Dictionary,
     MonitoringState,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersOperatingSystem,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersOperatingSystem,
-    "vm_guest_tools",
-    _("Virtual machine (for example ESX) guest tools status"),
-    Dictionary(
-        optional_keys=False,
-        elements=[
-            ("guestToolsCurrent",
-             MonitoringState(
-                 title=_("VMware Tools is installed, and the version is current"),
-                 default_value=0,
-             )),
-            ("guestToolsNeedUpgrade",
-             MonitoringState(
-                 title=_("VMware Tools is installed, but the version is not current"),
-                 default_value=1,
-             )),
-            ("guestToolsNotInstalled",
-             MonitoringState(
-                 title=_("VMware Tools have never been installed"),
-                 default_value=2,
-             )),
-            ("guestToolsUnmanaged",
-             MonitoringState(
-                 title=_("VMware Tools is installed, but it is not managed by VMWare"),
-                 default_value=1,
-             )),
-        ]),
-    None,
-    "dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersVmGuestTools(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersOperatingSystem
+
+    @property
+    def check_group_name(self):
+        return "vm_guest_tools"
+
+    @property
+    def title(self):
+        return _("Virtual machine (for example ESX) guest tools status")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            optional_keys=False,
+            elements=[
+                ("guestToolsCurrent",
+                 MonitoringState(
+                     title=_("VMware Tools is installed, and the version is current"),
+                     default_value=0,
+                 )),
+                ("guestToolsNeedUpgrade",
+                 MonitoringState(
+                     title=_("VMware Tools is installed, but the version is not current"),
+                     default_value=1,
+                 )),
+                ("guestToolsNotInstalled",
+                 MonitoringState(
+                     title=_("VMware Tools have never been installed"),
+                     default_value=2,
+                 )),
+                ("guestToolsUnmanaged",
+                 MonitoringState(
+                     title=_("VMware Tools is installed, but it is not managed by VMWare"),
+                     default_value=1,
+                 )),
+            ],
+        )

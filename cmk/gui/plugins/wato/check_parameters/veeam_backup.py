@@ -31,22 +31,44 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    "veeam_backup",
-    _("Veeam: Time since last Backup"),
-    Dictionary(elements=[("age",
-                          Tuple(
-                              title=_("Time since end of last backup"),
-                              elements=[
-                                  Age(title=_("Warning if older than"), default_value=108000),
-                                  Age(title=_("Critical if older than"), default_value=172800)
-                              ]))]),
-    TextAscii(title=_("Job name")),
-    match_type="dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersVeeamBackup(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "veeam_backup"
+
+    @property
+    def title(self):
+        return _("Veeam: Time since last Backup")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[("age",
+                       Tuple(
+                           title=_("Time since end of last backup"),
+                           elements=[
+                               Age(title=_("Warning if older than"), default_value=108000),
+                               Age(title=_("Critical if older than"), default_value=172800)
+                           ],
+                       ))],)
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Job name"))

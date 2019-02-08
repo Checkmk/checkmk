@@ -29,23 +29,36 @@ from cmk.gui.valuespec import (
     Integer,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersOperatingSystem,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersOperatingSystem,
-    "threads",
-    _("Number of threads"),
-    Tuple(
-        help=_(
-            "These levels check the number of currently existing threads on the system. Each process has at "
-            "least one thread."),
-        elements=[
-            Integer(title=_("Warning at"), unit=_("threads"), default_value=1000),
-            Integer(title=_("Critical at"), unit=_("threads"), default_value=2000)
-        ]),
-    None,
-    match_type="first",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersThreads(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersOperatingSystem
+
+    @property
+    def check_group_name(self):
+        return "threads"
+
+    @property
+    def title(self):
+        return _("Number of threads")
+
+    @property
+    def parameter_valuespec(self):
+        return Tuple(
+            help=_(
+                "These levels check the number of currently existing threads on the system. Each process has at "
+                "least one thread."),
+            elements=[
+                Integer(title=_("Warning at"), unit=_("threads"), default_value=1000),
+                Integer(title=_("Critical at"), unit=_("threads"), default_value=2000)
+            ],
+        )

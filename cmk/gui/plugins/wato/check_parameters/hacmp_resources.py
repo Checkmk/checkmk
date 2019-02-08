@@ -31,31 +31,47 @@ from cmk.gui.valuespec import (
     TextAscii,
     Transform,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    "hacmp_resources",
-    _("AIX HACMP Resource Groups"),
-    Transform(
-        Dictionary(
-            elements=[
-                ("expect_online_on",
-                 DropdownChoice(
-                     title=_(u"Expect resource to be online on"),
-                     choices=[
-                         ("first", _(u"the first node")),
-                         ("any", _(u"any node")),
-                     ],
-                 )),
-            ],
-            optional_keys=[],
-        ),
-        forth=lambda x: {"expect_online_on": "first"},
-    ),
-    TextAscii(title=_(u"Resource Group")),
-    match_type="first",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersHacmpResources(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "hacmp_resources"
+
+    @property
+    def title(self):
+        return _("AIX HACMP Resource Groups")
+
+    @property
+    def parameter_valuespec(self):
+        return Transform(
+            Dictionary(
+                elements=[
+                    ("expect_online_on",
+                     DropdownChoice(
+                         title=_(u"Expect resource to be online on"),
+                         choices=[
+                             ("first", _(u"the first node")),
+                             ("any", _(u"any node")),
+                         ],
+                     )),
+                ],
+                optional_keys=[],
+            ),
+            forth=lambda x: {"expect_online_on": "first"},
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_(u"Resource Group"))

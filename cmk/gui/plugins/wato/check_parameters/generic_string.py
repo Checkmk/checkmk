@@ -32,18 +32,44 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications, "generic_string", _("Generic string"),
-    Dictionary(elements=[
-        ("default_status", MonitoringState(title=_("Default Status"))),
-        ("match_strings",
-         ListOf(Tuple(elements=[
-             TextAscii(title=_("Search string")),
-             MonitoringState(),
-         ]))),
-    ]), TextAscii(title=_("Item"),), "dict")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersGenericString(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "generic_string"
+
+    @property
+    def title(self):
+        return _("Generic string")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ("default_status", MonitoringState(title=_("Default Status"))),
+                ("match_strings",
+                 ListOf(Tuple(elements=[
+                     TextAscii(title=_("Search string")),
+                     MonitoringState(),
+                 ],))),
+            ],)
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Item"),)

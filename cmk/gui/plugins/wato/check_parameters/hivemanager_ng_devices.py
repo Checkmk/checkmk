@@ -31,25 +31,47 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersNetworking,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersNetworking,
-    "hivemanager_ng_devices",
-    _("HiveManager NG Devices"),
-    Dictionary(elements=[
-        ('max_clients',
-         Tuple(
-             title=_("Number of clients"),
-             help=_("Number of clients connected to a Device."),
-             elements=[
-                 Integer(title=_("Warning at"), unit=_("clients")),
-                 Integer(title=_("Critical at"), unit=_("clients")),
-             ])),
-    ]),
-    TextAscii(title=_("Hostname of the Device")),
-    match_type="dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersHivemanagerNgDevices(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersNetworking
+
+    @property
+    def check_group_name(self):
+        return "hivemanager_ng_devices"
+
+    @property
+    def title(self):
+        return _("HiveManager NG Devices")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ('max_clients',
+                 Tuple(
+                     title=_("Number of clients"),
+                     help=_("Number of clients connected to a Device."),
+                     elements=[
+                         Integer(title=_("Warning at"), unit=_("clients")),
+                         Integer(title=_("Critical at"), unit=_("clients")),
+                     ],
+                 )),
+            ],)
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Hostname of the Device"))

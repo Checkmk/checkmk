@@ -29,22 +29,41 @@ from cmk.gui.valuespec import (
     Optional,
     TextAscii,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersStorage,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersStorage, "heartbeat_crm_resources",
-    _("Heartbeat CRM resource status"),
-    Optional(
-        TextAscii(allow_empty=False),
-        title=_("Expected node"),
-        help=_("The hostname of the expected node to hold this resource."),
-        none_label=_("Do not enforce the resource to be hold by a specific node."),
-    ),
-    TextAscii(
-        title=_("Resource Name"),
-        help=_("The name of the cluster resource as shown in the service description."),
-        allow_empty=False,
-    ), "first")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersHeartbeatCrmResources(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersStorage
+
+    @property
+    def check_group_name(self):
+        return "heartbeat_crm_resources"
+
+    @property
+    def title(self):
+        return _("Heartbeat CRM resource status")
+
+    @property
+    def parameter_valuespec(self):
+        return Optional(
+            TextAscii(allow_empty=False),
+            title=_("Expected node"),
+            help=_("The hostname of the expected node to hold this resource."),
+            none_label=_("Do not enforce the resource to be hold by a specific node."),
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(
+            title=_("Resource Name"),
+            help=_("The name of the cluster resource as shown in the service description."),
+            allow_empty=False,
+        )

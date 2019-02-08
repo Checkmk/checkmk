@@ -33,11 +33,12 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersDiscovery,
     RulespecGroupCheckParametersStorage,
-    register_check_parameters,
-    rulespec_registry,
     HostRulespec,
 )
 
@@ -83,33 +84,43 @@ class RulespecInventoryHeartbeatCrmRules(HostRulespec):
         )
 
 
-register_check_parameters(
-    RulespecGroupCheckParametersStorage,
-    "heartbeat_crm",
-    _("Heartbeat CRM general status"),
-    Tuple(elements=[
-        Integer(
-            title=_("Maximum age"),
-            help=_("Maximum accepted age of the reported data in seconds"),
-            unit=_("seconds"),
-            default_value=60,
-        ),
-        Optional(
-            TextAscii(allow_empty=False),
-            title=_("Expected DC"),
-            help=_("The hostname of the expected distinguished controller of the cluster"),
-        ),
-        Optional(
-            Integer(min_value=2, default_value=2),
-            title=_("Number of Nodes"),
-            help=_("The expected number of nodes in the cluster"),
-        ),
-        Optional(
-            Integer(min_value=0,),
-            title=_("Number of Resources"),
-            help=_("The expected number of resources in the cluster"),
-        ),
-    ]),
-    None,
-    match_type="first",
-)
+@rulespec_registry.register
+class RulespecCheckgroupParametersHeartbeatCrm(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersStorage
+
+    @property
+    def check_group_name(self):
+        return "heartbeat_crm"
+
+    @property
+    def title(self):
+        return _("Heartbeat CRM general status")
+
+    @property
+    def parameter_valuespec(self):
+        return Tuple(
+            elements=[
+                Integer(
+                    title=_("Maximum age"),
+                    help=_("Maximum accepted age of the reported data in seconds"),
+                    unit=_("seconds"),
+                    default_value=60,
+                ),
+                Optional(
+                    TextAscii(allow_empty=False),
+                    title=_("Expected DC"),
+                    help=_("The hostname of the expected distinguished controller of the cluster"),
+                ),
+                Optional(
+                    Integer(min_value=2, default_value=2),
+                    title=_("Number of Nodes"),
+                    help=_("The expected number of nodes in the cluster"),
+                ),
+                Optional(
+                    Integer(min_value=0,),
+                    title=_("Number of Resources"),
+                    help=_("The expected number of resources in the cluster"),
+                ),
+            ],)

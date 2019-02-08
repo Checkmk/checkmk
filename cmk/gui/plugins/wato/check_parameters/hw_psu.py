@@ -31,25 +31,46 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersEnvironment,
-    "hw_psu",
-    _("Power Supply Unit"),
-    Dictionary(
-        elements=[
-            ("levels",
-             Tuple(
-                 title=_("PSU Capacity Levels"),
-                 elements=[
-                     Percentage(title=_("Warning at"), default_value=80.0),
-                     Percentage(title=_("Critical at"), default_value=90.0),
-                 ],
-             )),
-        ],),
-    TextAscii(title=_("PSU (Chassis/Bay)")),
-    match_type="dict")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersHwPsu(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersEnvironment
+
+    @property
+    def check_group_name(self):
+        return "hw_psu"
+
+    @property
+    def title(self):
+        return _("Power Supply Unit")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ("levels",
+                 Tuple(
+                     title=_("PSU Capacity Levels"),
+                     elements=[
+                         Percentage(title=_("Warning at"), default_value=80.0),
+                         Percentage(title=_("Critical at"), default_value=90.0),
+                     ],
+                 )),
+            ],)
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("PSU (Chassis/Bay)"))

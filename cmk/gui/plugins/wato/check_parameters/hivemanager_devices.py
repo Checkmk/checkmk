@@ -34,9 +34,11 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersNetworking,
-    register_check_parameters,
 )
 
 hivemanger_states = [
@@ -46,44 +48,66 @@ hivemanger_states = [
     ("Minor", "Minor"),
 ]
 
-register_check_parameters(
-    RulespecGroupCheckParametersNetworking,
-    "hivemanager_devices",
-    _("Hivemanager Devices"),
-    Dictionary(elements=[
-        ('max_clients',
-         Tuple(
-             title=_("Number of clients"),
-             help=_("Number of clients connected to a Device."),
-             elements=[
-                 Integer(title=_("Warning at"), unit=_("clients")),
-                 Integer(title=_("Critical at"), unit=_("clients")),
-             ])),
-        ('max_uptime',
-         Tuple(
-             title=_("Maximum uptime of Device"),
-             elements=[
-                 Age(title=_("Warning at")),
-                 Age(title=_("Critical at")),
-             ])),
-        ('alert_on_loss', FixedValue(
-            False,
-            totext="",
-            title=_("Do not alert on connection loss"),
-        )),
-        ("warn_states",
-         ListChoice(
-             title=_("States treated as warning"),
-             choices=hivemanger_states,
-             default_value=['Maybe', 'Major', 'Minor'],
-         )),
-        ("crit_states",
-         ListChoice(
-             title=_("States treated as critical"),
-             choices=hivemanger_states,
-             default_value=['Critical'],
-         )),
-    ]),
-    TextAscii(title=_("Hostname of the Device")),
-    match_type="dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersHivemanagerDevices(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersNetworking
+
+    @property
+    def check_group_name(self):
+        return "hivemanager_devices"
+
+    @property
+    def title(self):
+        return _("Hivemanager Devices")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ('max_clients',
+                 Tuple(
+                     title=_("Number of clients"),
+                     help=_("Number of clients connected to a Device."),
+                     elements=[
+                         Integer(title=_("Warning at"), unit=_("clients")),
+                         Integer(title=_("Critical at"), unit=_("clients")),
+                     ],
+                 )),
+                ('max_uptime',
+                 Tuple(
+                     title=_("Maximum uptime of Device"),
+                     elements=[
+                         Age(title=_("Warning at")),
+                         Age(title=_("Critical at")),
+                     ],
+                 )),
+                ('alert_on_loss',
+                 FixedValue(
+                     False,
+                     totext="",
+                     title=_("Do not alert on connection loss"),
+                 )),
+                ("warn_states",
+                 ListChoice(
+                     title=_("States treated as warning"),
+                     choices=hivemanger_states,
+                     default_value=['Maybe', 'Major', 'Minor'],
+                 )),
+                ("crit_states",
+                 ListChoice(
+                     title=_("States treated as critical"),
+                     choices=hivemanger_states,
+                     default_value=['Critical'],
+                 )),
+            ],)
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Hostname of the Device"))

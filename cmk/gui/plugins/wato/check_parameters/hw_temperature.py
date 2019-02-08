@@ -32,23 +32,41 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersEnvironment,
-    register_check_parameters,
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersEnvironment,
-    "hw_temperature",
-    _("Hardware temperature, multiple sensors"),
-    Tuple(
-        help=_("Temperature levels for hardware devices like "
-               "Brocade switches with (potentially) several "
-               "temperature sensors. Sensor IDs can be selected "
-               "in the rule."),
-        elements=[
-            Integer(title=_("warning at"), unit=u"°C", default_value=35),
-            Integer(title=_("critical at"), unit=u"°C", default_value=40),
-        ]),
-    TextAscii(title=_("Sensor ID"), help=_("The identifier of the thermal sensor.")),
-    "first",
-    deprecated=True,
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersHwTemperature(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersEnvironment
+
+    @property
+    def check_group_name(self):
+        return "hw_temperature"
+
+    @property
+    def title(self):
+        return _("Hardware temperature, multiple sensors")
+
+    @property
+    def is_deprecated(self):
+        return True
+
+    @property
+    def parameter_valuespec(self):
+        return Tuple(
+            help=_("Temperature levels for hardware devices like "
+                   "Brocade switches with (potentially) several "
+                   "temperature sensors. Sensor IDs can be selected "
+                   "in the rule."),
+            elements=[
+                Integer(title=_("warning at"), unit=u"°C", default_value=35),
+                Integer(title=_("critical at"), unit=u"°C", default_value=40),
+            ])
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Sensor ID"), help=_("The identifier of the thermal sensor."))

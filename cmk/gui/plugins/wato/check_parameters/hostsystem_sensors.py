@@ -31,29 +31,47 @@ from cmk.gui.valuespec import (
     MonitoringState,
     TextAscii,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersEnvironment, "hostsystem_sensors", _("Hostsystem sensor alerts"),
-    ListOf(
-        Dictionary(
-            help=_("This rule allows to override alert levels for the given sensor names."),
-            elements=[
-                ("name", TextAscii(title=_("Sensor name"))),
-                ("states",
-                 Dictionary(
-                     title=_("Custom states"),
-                     elements=[(element,
-                                MonitoringState(
-                                    title="Sensor %s" % description,
-                                    label=_("Set state to"),
-                                    default_value=int(element)))
-                               for (element, description) in [("0", _("OK")), (
-                                   "1", _("WARNING")), ("2", _("CRITICAL")), ("3", _("UNKNOWN"))]],
-                 ))
-            ],
-            optional_keys=False),
-        add_label=_("Add sensor name")), None, "first")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersHostsystemSensors(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersEnvironment
+
+    @property
+    def check_group_name(self):
+        return "hostsystem_sensors"
+
+    @property
+    def title(self):
+        return _("Hostsystem sensor alerts")
+
+    @property
+    def parameter_valuespec(self):
+        return ListOf(
+            Dictionary(
+                help=_("This rule allows to override alert levels for the given sensor names."),
+                elements=[
+                    ("name", TextAscii(title=_("Sensor name"))),
+                    ("states",
+                     Dictionary(
+                         title=_("Custom states"),
+                         elements=[(element,
+                                    MonitoringState(
+                                        title="Sensor %s" % description,
+                                        label=_("Set state to"),
+                                        default_value=int(element)))
+                                   for (element, description) in [("0", _("OK")), (
+                                       "1", _("WARNING")), ("2", _("CRITICAL")), ("3",
+                                                                                  _("UNKNOWN"))]],
+                     ))
+                ],
+                optional_keys=False),
+            add_label=_("Add sensor name"))

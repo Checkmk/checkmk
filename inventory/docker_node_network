@@ -26,14 +26,14 @@
 
 
 def inv_docker_node_network_networks(info, inventory_tree, status_data_tree):
-    parsed = parse_docker_network_inspect(info)
+    parsed = parse_legacy_docker_network_inspect(info)
     for network in parsed:
 
         containers = []
         for container_id, container in network["Containers"].items():
             containers.append({
                 "name": container["Name"],
-                "id": _docker_trunc_id(container_id),
+                "id": _legacy_docker_trunk_id(container_id),
                 "ipv4_address": container["IPv4Address"],
                 "ipv6_address": container["IPv6Address"],
                 "mac_address": container["MacAddress"],
@@ -53,7 +53,7 @@ def inv_docker_node_network_networks(info, inventory_tree, status_data_tree):
 
         network_ = {
             "name": network_name,
-            "network_id": _docker_trunc_id(network["Id"]),
+            "network_id": _legacy_docker_trunk_id(network["Id"]),
             "scope": network["Scope"],
         }
 

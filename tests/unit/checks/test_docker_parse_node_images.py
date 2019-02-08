@@ -6184,7 +6184,7 @@ EXPECTED_IMAGES3 = {
     (INFO2, EXPECTED_IMAGES2, EXPECTED_CONTAINERS2),
     (INFO3, EXPECTED_IMAGES3, EXPECTED_CONTAINERS3),
 ])
-def test_parse_docker_node_images(info, ex_img, ex_cont):
+def test_parse_legacy_docker_node_images(info, ex_img, ex_cont):
     def assert_contains(dic, key, value):
         assert isinstance(dic, dict)
         assert key in dic, "key missing in output: %r" % key
@@ -6194,7 +6194,7 @@ def test_parse_docker_node_images(info, ex_img, ex_cont):
         else:
             assert dic[key] == value, "expected: %r, got: %r" % (value, dic[key])
 
-    parsed = parse_docker_node_images(info)
+    parsed = parse_legacy_docker_node_images(info)
     assert_contains(parsed, "images", ex_img)
     assert_contains(parsed, "containers", ex_cont)
 
@@ -6211,8 +6211,8 @@ def test_parse_docker_node_images(info, ex_img, ex_cont):
 
 def test_compare_2_3():
 
-    parsed2 = parse_docker_node_images(INFO2)
-    parsed3 = parse_docker_node_images(INFO3)
+    parsed2 = parse_legacy_docker_node_images(INFO2)
+    parsed3 = parse_legacy_docker_node_images(INFO3)
 
     for k in ("images", "containers"):
         assert set(parsed2[k].keys()) == set(parsed3[k].keys())

@@ -161,6 +161,6 @@ regex = re.compile
 ]
           ),
 ])
-def test_parse_docker_network_inspect(indata, outdata):
-    parsed = parse_docker_network_inspect(indata)
+def test_parse_legacy_docker_network_inspect(indata, outdata):
+    parsed = parse_legacy_docker_network_inspect(indata)
     assert parsed == outdata, "expected: %r, got %r" % (outdata, parsed)

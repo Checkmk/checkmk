@@ -30,11 +30,12 @@ from cmk.gui.valuespec import (
     Dictionary,
     TextAscii,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
     RulespecGroupCheckParametersDiscovery,
-    register_check_parameters,
-    rulespec_registry,
     HostRulespec,
 )
 from cmk.gui.plugins.wato.check_parameters.mssql_datafiles import levels_absolute_or_dynamic
@@ -69,17 +70,40 @@ class RulespecMssqlTransactionlogsDiscovery(HostRulespec):
             optional_keys=[])
 
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications, "mssql_transactionlogs",
-    _("MSSQL Transactionlog Sizes"),
-    Dictionary(
-        title=_("File Size Levels"),
-        help=_("Specify levels for transactionlogs of a database. Please note that relative "
-               "levels will only work if there is a max_size set for the file on the database "
-               "side."),
-        elements=[
-            ("used_levels", levels_absolute_or_dynamic(_("Transactionlog"), _("used"))),
-            ("allocated_used_levels",
-             levels_absolute_or_dynamic(_("Transactionlog"), _("used of allocation"))),
-            ("allocated_levels", levels_absolute_or_dynamic(_("Transactionlog"), _("allocated"))),
-        ]), TextAscii(title=_("Database Name"), allow_empty=False), "dict")
+@rulespec_registry.register
+class RulespecCheckgroupParametersMssqlTransactionlogs(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "mssql_transactionlogs"
+
+    @property
+    def title(self):
+        return _("MSSQL Transactionlog Sizes")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            title=_("File Size Levels"),
+            help=_("Specify levels for transactionlogs of a database. Please note that relative "
+                   "levels will only work if there is a max_size set for the file on the database "
+                   "side."),
+            elements=[
+                ("used_levels", levels_absolute_or_dynamic(_("Transactionlog"), _("used"))),
+                ("allocated_used_levels",
+                 levels_absolute_or_dynamic(_("Transactionlog"), _("used of allocation"))),
+                ("allocated_levels", levels_absolute_or_dynamic(
+                    _("Transactionlog"), _("allocated"))),
+            ],
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Database Name"), allow_empty=False)

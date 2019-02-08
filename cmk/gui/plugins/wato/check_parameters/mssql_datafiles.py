@@ -35,9 +35,11 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
 
@@ -86,16 +88,39 @@ def levels_absolute_or_dynamic(name, value):
         ])
 
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications, "mssql_datafiles", _("MSSQL Datafile Sizes"),
-    Dictionary(
-        title=_("File Size Levels"),
-        help=_("Specify levels for datafiles of a database. Please note that relative "
-               "levels will only work if there is a max_size set for the file on the database "
-               "side."),
-        elements=[
-            ("used_levels", levels_absolute_or_dynamic(_("Datafile"), _("used"))),
-            ("allocated_used_levels",
-             levels_absolute_or_dynamic(_("Datafile"), _("used of allocation"))),
-            ("allocated_levels", levels_absolute_or_dynamic(_("Datafile"), _("allocated"))),
-        ]), TextAscii(title=_("Database Name"), allow_empty=False), "dict")
+@rulespec_registry.register
+class RulespecCheckgroupParametersMssqlDatafiles(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "mssql_datafiles"
+
+    @property
+    def title(self):
+        return _("MSSQL Datafile Sizes")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            title=_("File Size Levels"),
+            help=_("Specify levels for datafiles of a database. Please note that relative "
+                   "levels will only work if there is a max_size set for the file on the database "
+                   "side."),
+            elements=[
+                ("used_levels", levels_absolute_or_dynamic(_("Datafile"), _("used"))),
+                ("allocated_used_levels",
+                 levels_absolute_or_dynamic(_("Datafile"), _("used of allocation"))),
+                ("allocated_levels", levels_absolute_or_dynamic(_("Datafile"), _("allocated"))),
+            ],
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Database Name"), allow_empty=False)

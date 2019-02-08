@@ -31,23 +31,43 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications, "mysql_db_size", _("Size of MySQL databases"),
-    Optional(
-        Tuple(elements=[
-            Filesize(title=_("warning at")),
-            Filesize(title=_("critical at")),
-        ]),
-        help=_("The check will trigger a warning or critical state if the size of the "
-               "database exceeds these levels."),
-        title=_("Impose limits on the size of the database"),
-    ),
-    TextAscii(
-        title=_("Name of the database"),
-        help=_("Don't forget the instance: instance:dbname"),
-    ), "first")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersMysqlDbSize(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "mysql_db_size"
+
+    @property
+    def title(self):
+        return _("Size of MySQL databases")
+
+    @property
+    def parameter_valuespec(self):
+        return Optional(
+            Tuple(elements=[
+                Filesize(title=_("warning at")),
+                Filesize(title=_("critical at")),
+            ],),
+            help=_("The check will trigger a warning or critical state if the size of the "
+                   "database exceeds these levels."),
+            title=_("Impose limits on the size of the database"),
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(
+            title=_("Name of the database"),
+            help=_("Don't forget the instance: instance:dbname"),
+        )

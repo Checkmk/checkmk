@@ -30,49 +30,71 @@ from cmk.gui.valuespec import (
     MonitoringState,
     TextAscii,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    "mssql_databases",
-    _("MSSQL Databases properties"),
-    Dictionary(elements=[
-        ("map_db_states",
-         Dictionary(
-             elements=[
-                 ("ONLINE", MonitoringState(title=_("Database Online"))),
-                 ("OFFLINE", MonitoringState(title=_("Database Offline"))),
-                 ("RESTORING", MonitoringState(title=_("Database Files are restored"))),
-                 ("RECOVERING", MonitoringState(title=_("Database is being recovered"))),
-                 ("RECOVERY_PENDING", MonitoringState(title=_("Database must be recovered"))),
-                 ("SUSPECT", MonitoringState(title=_("Database Suspect"))),
-                 ("EMERGENCY", MonitoringState(title=_("Database changed to emergency"))),
-             ],
-             title=_('Map Database States'),
-             optional_keys=[],
-         )),
-        ("map_auto_close_state",
-         Dictionary(
-             elements=[
-                 ("on", MonitoringState(title=_("Auto close on"), default_value=1)),
-                 ("off", MonitoringState(title=_("Auto close off"))),
-             ],
-             title=_('Map auto close status'),
-             optional_keys=[],
-         )),
-        ("map_auto_shrink_state",
-         Dictionary(
-             elements=[
-                 ("on", MonitoringState(title=_("Auto shrink on"), default_value=1)),
-                 ("off", MonitoringState(title=_("Auto shrink off"))),
-             ],
-             title=_('Map auto shrink status'),
-             optional_keys=[],
-         )),
-    ]),
-    TextAscii(title=_("Database identifier"),),
-    "dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersMssqlDatabases(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "mssql_databases"
+
+    @property
+    def title(self):
+        return _("MSSQL Databases properties")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ("map_db_states",
+                 Dictionary(
+                     elements=[
+                         ("ONLINE", MonitoringState(title=_("Database Online"))),
+                         ("OFFLINE", MonitoringState(title=_("Database Offline"))),
+                         ("RESTORING", MonitoringState(title=_("Database Files are restored"))),
+                         ("RECOVERING", MonitoringState(title=_("Database is being recovered"))),
+                         ("RECOVERY_PENDING",
+                          MonitoringState(title=_("Database must be recovered"))),
+                         ("SUSPECT", MonitoringState(title=_("Database Suspect"))),
+                         ("EMERGENCY", MonitoringState(title=_("Database changed to emergency"))),
+                     ],
+                     title=_('Map Database States'),
+                     optional_keys=[],
+                 )),
+                ("map_auto_close_state",
+                 Dictionary(
+                     elements=[
+                         ("on", MonitoringState(title=_("Auto close on"), default_value=1)),
+                         ("off", MonitoringState(title=_("Auto close off"))),
+                     ],
+                     title=_('Map auto close status'),
+                     optional_keys=[],
+                 )),
+                ("map_auto_shrink_state",
+                 Dictionary(
+                     elements=[
+                         ("on", MonitoringState(title=_("Auto shrink on"), default_value=1)),
+                         ("off", MonitoringState(title=_("Auto shrink off"))),
+                     ],
+                     title=_('Map auto shrink status'),
+                     optional_keys=[],
+                 )),
+            ],)
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Database identifier"),)

@@ -31,33 +31,54 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    "mysql_slave",
-    _("MySQL Slave"),
-    Dictionary(
-        elements=[
-            ("seconds_behind_master",
-             Tuple(
-                 title=_("Max. time behind the master"),
-                 help=_(
-                     "Compares the time which the slave can be behind the master. "
-                     "This rule makes the check raise warning/critical states if the time is equal to "
-                     "or above the configured levels."),
-                 elements=[
-                     Age(title=_("Warning at")),
-                     Age(title=_("Critical at")),
-                 ])),
-        ],
-        optional_keys=None),
-    TextAscii(
-        title=_("Instance"),
-        help=_("Only needed if you have multiple MySQL Instances on one server"),
-    ),
-    "dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersMysqlSlave(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "mysql_slave"
+
+    @property
+    def title(self):
+        return _("MySQL Slave")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ("seconds_behind_master",
+                 Tuple(
+                     title=_("Max. time behind the master"),
+                     help=_(
+                         "Compares the time which the slave can be behind the master. "
+                         "This rule makes the check raise warning/critical states if the time is equal to "
+                         "or above the configured levels."),
+                     elements=[
+                         Age(title=_("Warning at")),
+                         Age(title=_("Critical at")),
+                     ],
+                 )),
+            ],
+            optional_keys=None)
+
+    @property
+    def item_spec(self):
+        return TextAscii(
+            title=_("Instance"),
+            help=_("Only needed if you have multiple MySQL Instances on one server"),
+        )

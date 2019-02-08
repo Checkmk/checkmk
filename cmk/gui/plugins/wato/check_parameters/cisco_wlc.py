@@ -32,27 +32,49 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersNetworking,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersNetworking,
-    "cisco_wlc",
-    _("Cisco WLAN AP"),
-    Dictionary(
-        help=_("Here you can set which alert type is set when the given "
-               "access point is missing (might be powered off). The access point "
-               "can be specified by the AP name or the AP model"),
-        elements=[("ap_name",
-                   ListOf(
-                       Tuple(elements=[
-                           TextAscii(title=_("AP name")),
-                           MonitoringState(title=_("State when missing"), default_value=2)
-                       ]),
-                       title=_("Access point name"),
-                       add_label=_("Add name")))]),
-    TextAscii(title=_("Access Point")),
-    match_type="dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersCiscoWlc(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersNetworking
+
+    @property
+    def check_group_name(self):
+        return "cisco_wlc"
+
+    @property
+    def title(self):
+        return _("Cisco WLAN AP")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            help=_("Here you can set which alert type is set when the given "
+                   "access point is missing (might be powered off). The access point "
+                   "can be specified by the AP name or the AP model"),
+            elements=[("ap_name",
+                       ListOf(
+                           Tuple(
+                               elements=[
+                                   TextAscii(title=_("AP name")),
+                                   MonitoringState(title=_("State when missing"), default_value=2)
+                               ],),
+                           title=_("Access point name"),
+                           add_label=_("Add name")))],
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Access Point"))

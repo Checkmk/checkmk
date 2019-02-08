@@ -29,24 +29,36 @@ from cmk.gui.valuespec import (
     Integer,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    "checkpoint_connections",
-    _("Checkpoint Firewall Connections"),
-    Tuple(
-        help=_("This rule sets limits to the current number of connections through "
-               "a Checkpoint firewall."),
-        title=_("Maximum number of firewall connections"),
-        elements=[
-            Integer(title=_("Warning at"), default_value=40000),
-            Integer(title=_("Critical at"), default_value=50000),
-        ],
-    ),
-    None,
-    match_type="first",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersCheckpointConnections(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "checkpoint_connections"
+
+    @property
+    def title(self):
+        return _("Checkpoint Firewall Connections")
+
+    @property
+    def parameter_valuespec(self):
+        return Tuple(
+            help=_("This rule sets limits to the current number of connections through "
+                   "a Checkpoint firewall."),
+            title=_("Maximum number of firewall connections"),
+            elements=[
+                Integer(title=_("Warning at"), default_value=40000),
+                Integer(title=_("Critical at"), default_value=50000),
+            ],
+        )

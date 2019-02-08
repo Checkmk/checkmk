@@ -37,7 +37,8 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersOperatingSystem,
-    register_check_parameters,
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     Levels,
 )
 
@@ -149,17 +150,30 @@ def transform_legacy_cpu_utilization_os(params):
     return params
 
 
-register_check_parameters(
-    RulespecGroupCheckParametersOperatingSystem,
-    "cpu_utilization_os",
-    _("CPU utilization"),
-    Transform(
-        cpu_util_common_dict,
-        forth=transform_legacy_cpu_utilization_os,
-    ),
-    None,
-    match_type="dict",
-)
+@rulespec_registry.register
+class RulespecCheckgroupParametersCpuUtilizationOs(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersOperatingSystem
+
+    @property
+    def check_group_name(self):
+        return "cpu_utilization_os"
+
+    @property
+    def title(self):
+        return _("CPU utilization")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Transform(
+            cpu_util_common_dict,
+            forth=transform_legacy_cpu_utilization_os,
+        )
 
 
 def transform_cpu_iowait(params):
@@ -168,32 +182,55 @@ def transform_cpu_iowait(params):
     return params
 
 
-register_check_parameters(
-    RulespecGroupCheckParametersOperatingSystem,
-    "cpu_iowait",
-    _("CPU utilization (legacy)"),
-    Transform(
-        cpu_util_common_dict,
-        forth=transform_cpu_iowait,
-    ),
-    None,
-    "dict",
-)
+@rulespec_registry.register
+class RulespecCheckgroupParametersCpuIowait(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersOperatingSystem
 
-register_check_parameters(
-    RulespecGroupCheckParametersOperatingSystem,
-    "cpu_utilization",
-    _("CPU utilization for Appliances"),
-    Optional(
-        Tuple(elements=[
-            Percentage(title=_("Warning at a utilization of")),
-            Percentage(title=_("Critical at a utilization of"))
-        ]),
-        label=_("Alert on too high CPU utilization"),
-        help=_("The CPU utilization sums up the percentages of CPU time that is used "
-               "for user processes and kernel routines over all available cores within "
-               "the last check interval. The possible range is from 0% to 100%"),
-        default_value=(90.0, 95.0)),
-    None,
-    match_type="first",
-)
+    @property
+    def check_group_name(self):
+        return "cpu_iowait"
+
+    @property
+    def title(self):
+        return _("CPU utilization (legacy)")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Transform(
+            cpu_util_common_dict,
+            forth=transform_cpu_iowait,
+        )
+
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersCpuUtilization(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersOperatingSystem
+
+    @property
+    def check_group_name(self):
+        return "cpu_utilization"
+
+    @property
+    def title(self):
+        return _("CPU utilization for Appliances")
+
+    @property
+    def parameter_valuespec(self):
+        return Optional(
+            Tuple(elements=[
+                Percentage(title=_("Warning at a utilization of")),
+                Percentage(title=_("Critical at a utilization of"))
+            ]),
+            label=_("Alert on too high CPU utilization"),
+            help=_("The CPU utilization sums up the percentages of CPU time that is used "
+                   "for user processes and kernel routines over all available cores within "
+                   "the last check interval. The possible range is from 0% to 100%"),
+            default_value=(90.0, 95.0))

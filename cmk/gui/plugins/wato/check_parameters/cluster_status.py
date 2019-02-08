@@ -30,34 +30,58 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     MonitoringState,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications, "cluster_status", _("Cluster status"),
-    Dictionary(
-        elements=[
-            ("type",
-             DropdownChoice(
-                 title=_("Cluster type"),
-                 help=_("Expected cluster type."),
-                 choices=[
-                     ("active_standby", _("active / standby")),
-                     ("active_active", _("active / active")),
-                 ],
-                 default_value="active_standby")),
-            ("v11_2_states",
-             Dictionary(
-                 title=_("Interpretation of failover cluster state"),
-                 help=_("Here you can set the failover state for BIG-IP system of version 11.2.0"),
-                 elements=[
-                     ("0", MonitoringState(title="Unknown", default_value=3)),
-                     ("1", MonitoringState(title="Offline", default_value=2)),
-                     ("2", MonitoringState(title="Forced offline", default_value=2)),
-                     ("3", MonitoringState(title="Standby", default_value=0)),
-                     ("4", MonitoringState(title="Active", default_value=0)),
-                 ]))
-        ],
-        required_keys=["type"]), None, "dict")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersClusterStatus(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "cluster_status"
+
+    @property
+    def title(self):
+        return _("Cluster status")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ("type",
+                 DropdownChoice(
+                     title=_("Cluster type"),
+                     help=_("Expected cluster type."),
+                     choices=[
+                         ("active_standby", _("active / standby")),
+                         ("active_active", _("active / active")),
+                     ],
+                     default_value="active_standby")),
+                ("v11_2_states",
+                 Dictionary(
+                     title=_("Interpretation of failover cluster state"),
+                     help=_(
+                         "Here you can set the failover state for BIG-IP system of version 11.2.0"),
+                     elements=[
+                         ("0", MonitoringState(title="Unknown", default_value=3)),
+                         ("1", MonitoringState(title="Offline", default_value=2)),
+                         ("2", MonitoringState(title="Forced offline", default_value=2)),
+                         ("3", MonitoringState(title="Standby", default_value=0)),
+                         ("4", MonitoringState(title="Active", default_value=0)),
+                     ],
+                 ))
+            ],
+            required_keys=["type"],
+        )

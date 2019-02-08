@@ -30,33 +30,51 @@ from cmk.gui.valuespec import (
     Percentage,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersStorage,
-    register_check_parameters,
 )
 from cmk.gui.plugins.wato.check_parameters.ceph_mgrs import ceph_epoch_element
 
-register_check_parameters(
-    RulespecGroupCheckParametersStorage,
-    "ceph_osds",
-    _("Ceph OSDs"),
-    Dictionary(
-        elements=[
-            ("num_out_osds",
-             Tuple(
-                 title=_("Upper levels for number of OSDs which are out"),
-                 elements=[
-                     Percentage(title=_("Warning at")),
-                     Percentage(title=_("Critical at")),
-                 ])),
-            ("num_down_osds",
-             Tuple(
-                 title=_("Upper levels for number of OSDs which are down"),
-                 elements=[
-                     Percentage(title=_("Warning at")),
-                     Percentage(title=_("Critical at")),
-                 ])),
-        ] + ceph_epoch_element(_("OSDs epoch levels and average")),),
-    None,
-    "dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersCephOsds(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersStorage
+
+    @property
+    def check_group_name(self):
+        return "ceph_osds"
+
+    @property
+    def title(self):
+        return _("Ceph OSDs")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ("num_out_osds",
+                 Tuple(
+                     title=_("Upper levels for number of OSDs which are out"),
+                     elements=[
+                         Percentage(title=_("Warning at")),
+                         Percentage(title=_("Critical at")),
+                     ],
+                 )),
+                ("num_down_osds",
+                 Tuple(
+                     title=_("Upper levels for number of OSDs which are down"),
+                     elements=[
+                         Percentage(title=_("Warning at")),
+                         Percentage(title=_("Critical at")),
+                     ],
+                 )),
+            ] + ceph_epoch_element(_("OSDs epoch levels and average")),)

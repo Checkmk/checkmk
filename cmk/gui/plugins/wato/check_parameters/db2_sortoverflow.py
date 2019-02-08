@@ -31,30 +31,52 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    "db2_sortoverflow",
-    _("DB2 Sort Overflow"),
-    Dictionary(
-        help=_("This rule allows you to set percentual limits for sort overflows."),
-        elements=[
-            (
-                "levels_perc",
-                Tuple(
-                    title=_("Overflows"),
-                    elements=[
-                        Percentage(title=_("Warning at"), unit=_("%"), default_value=2.0),
-                        Percentage(title=_("Critical at"), unit=_("%"), default_value=4.0),
-                    ],
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersDb2Sortoverflow(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "db2_sortoverflow"
+
+    @property
+    def title(self):
+        return _("DB2 Sort Overflow")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            help=_("This rule allows you to set percentual limits for sort overflows."),
+            elements=[
+                (
+                    "levels_perc",
+                    Tuple(
+                        title=_("Overflows"),
+                        elements=[
+                            Percentage(title=_("Warning at"), unit=_("%"), default_value=2.0),
+                            Percentage(title=_("Critical at"), unit=_("%"), default_value=4.0),
+                        ],
+                    ),
                 ),
-            ),
-        ]),
-    TextAscii(
-        title=_("Instance"), help=_("DB2 instance followed by database name, e.g db2taddm:CMDBS1")),
-    "dict",
-)
+            ],
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(
+            title=_("Instance"),
+            help=_("DB2 instance followed by database name, e.g db2taddm:CMDBS1"))

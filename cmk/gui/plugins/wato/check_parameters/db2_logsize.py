@@ -30,25 +30,50 @@ from cmk.gui.valuespec import (
     TextAscii,
     Transform,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 from cmk.gui.plugins.wato.check_parameters.utils import (
     get_free_used_dynamic_valuespec,
     transform_filesystem_free,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications, "db2_logsize", _("DB2 logfile usage"),
-    Dictionary(elements=[(
-        "levels",
-        Transform(
-            get_free_used_dynamic_valuespec("free", "logfile", default_value=(20.0, 10.0)),
-            title=_("Logfile levels"),
-            allow_empty=False,
-            forth=transform_filesystem_free,
-            back=transform_filesystem_free))]),
-    TextAscii(
-        title=_("Instance"), help=_("DB2 instance followed by database name, e.g db2taddm:CMDBS1")),
-    "dict")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersDb2Logsize(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "db2_logsize"
+
+    @property
+    def title(self):
+        return _("DB2 logfile usage")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[("levels",
+                       Transform(
+                           get_free_used_dynamic_valuespec(
+                               "free", "logfile", default_value=(20.0, 10.0)),
+                           title=_("Logfile levels"),
+                           allow_empty=False,
+                           forth=transform_filesystem_free,
+                           back=transform_filesystem_free))],)
+
+    @property
+    def item_spec(self):
+        return TextAscii(
+            title=_("Instance"),
+            help=_("DB2 instance followed by database name, e.g db2taddm:CMDBS1"))

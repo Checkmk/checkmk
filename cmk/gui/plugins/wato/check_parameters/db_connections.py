@@ -32,30 +32,57 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications, "db_connections",
-    _("Database Connections (PostgreSQL/MongoDB)"),
-    Dictionary(
-        help=_("This rule allows you to configure the number of maximum concurrent "
-               "connections for a given database."),
-        elements=[
-            ("levels_perc",
-             Tuple(
-                 title=_("Percentage of maximum available connections"),
-                 elements=[
-                     Percentage(title=_("Warning at"), unit=_("% of maximum connections")),
-                     Percentage(title=_("Critical at"), unit=_("% of maximum connections")),
-                 ])),
-            ("levels_abs",
-             Tuple(
-                 title=_("Absolute number of connections"),
-                 elements=[
-                     Integer(title=_("Warning at"), minvalue=0, unit=_("connections")),
-                     Integer(title=_("Critical at"), minvalue=0, unit=_("connections")),
-                 ])),
-        ]), TextAscii(title=_("Name of the database"),), "dict")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersDbConnections(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "db_connections"
+
+    @property
+    def title(self):
+        return _("Database Connections (PostgreSQL/MongoDB)")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            help=_("This rule allows you to configure the number of maximum concurrent "
+                   "connections for a given database."),
+            elements=[
+                ("levels_perc",
+                 Tuple(
+                     title=_("Percentage of maximum available connections"),
+                     elements=[
+                         Percentage(title=_("Warning at"), unit=_("% of maximum connections")),
+                         Percentage(title=_("Critical at"), unit=_("% of maximum connections")),
+                     ],
+                 )),
+                ("levels_abs",
+                 Tuple(
+                     title=_("Absolute number of connections"),
+                     elements=[
+                         Integer(title=_("Warning at"), minvalue=0, unit=_("connections")),
+                         Integer(title=_("Critical at"), minvalue=0, unit=_("connections")),
+                     ],
+                 )),
+            ],
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Name of the database"),)

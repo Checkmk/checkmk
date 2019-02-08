@@ -36,9 +36,11 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
 db_levels_common = [
@@ -114,17 +116,39 @@ db_levels_common = [
          ]))
 ]
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications, "db2_tablespaces", _("DB2 Tablespaces"),
-    Dictionary(
-        help=_("A tablespace is a container for segments (tables, indexes, etc). A "
-               "database consists of one or more tablespaces, each made up of one or "
-               "more data files. Tables and indexes are created within a particular "
-               "tablespace. "
-               "This rule allows you to define checks on the size of tablespaces."),
-        elements=db_levels_common,
-    ),
-    TextAscii(
-        title=_("Instance"),
-        help=_("The instance name, the database name and the tablespace name combined "
-               "like this db2wps8:WPSCOMT8.USERSPACE1")), "dict")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersDb2Tablespaces(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "db2_tablespaces"
+
+    @property
+    def title(self):
+        return _("DB2 Tablespaces")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            help=_("A tablespace is a container for segments (tables, indexes, etc). A "
+                   "database consists of one or more tablespaces, each made up of one or "
+                   "more data files. Tables and indexes are created within a particular "
+                   "tablespace. "
+                   "This rule allows you to define checks on the size of tablespaces."),
+            elements=db_levels_common,
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(
+            title=_("Instance"),
+            help=_("The instance name, the database name and the tablespace name combined "
+                   "like this db2wps8:WPSCOMT8.USERSPACE1"))

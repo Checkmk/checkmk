@@ -26,21 +26,34 @@
 
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (Integer, Tuple)
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersStorage,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersStorage,
-    "disk_failures",
-    _("Number of disk failures"),
-    Tuple(
-        title=_("Number of disk failures"),
-        elements=[
-            Integer(title="Warning at", default_value=1),
-            Integer(title="Critical at", default_value=2),
-        ]),
-    None,
-    "first",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersDiskFailures(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersStorage
+
+    @property
+    def check_group_name(self):
+        return "disk_failures"
+
+    @property
+    def title(self):
+        return _("Number of disk failures")
+
+    @property
+    def parameter_valuespec(self):
+        return Tuple(
+            title=_("Number of disk failures"),
+            elements=[
+                Integer(title="Warning at", default_value=1),
+                Integer(title="Critical at", default_value=2),
+            ],
+        )

@@ -30,24 +30,37 @@ from cmk.gui.valuespec import (
     Transform,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    "citrix_load",
-    _("Load of Citrix Server"),
-    Transform(
-        Tuple(
-            title=_("Citrix Server load"),
-            elements=[
-                Percentage(title=_("Warning at"), default_value=85.0, unit="percent"),
-                Percentage(title=_("Critical at"), default_value=95.0, unit="percent"),
-            ]),
-        forth=lambda x: (x[0] / 100.0, x[1] / 100.0),
-        back=lambda x: (int(x[0] * 100), int(x[1] * 100))),
-    None,
-    match_type="first",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersCitrixLoad(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "citrix_load"
+
+    @property
+    def title(self):
+        return _("Load of Citrix Server")
+
+    @property
+    def parameter_valuespec(self):
+        return Transform(
+            Tuple(
+                title=_("Citrix Server load"),
+                elements=[
+                    Percentage(title=_("Warning at"), default_value=85.0, unit="percent"),
+                    Percentage(title=_("Critical at"), default_value=95.0, unit="percent"),
+                ],
+            ),
+            forth=lambda x: (x[0] / 100.0, x[1] / 100.0),
+            back=lambda x: (int(x[0] * 100), int(x[1] * 100)))

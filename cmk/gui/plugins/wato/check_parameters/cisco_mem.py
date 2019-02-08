@@ -34,45 +34,64 @@ from cmk.gui.valuespec import (
     Transform,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersOperatingSystem,
-    register_check_parameters,
 )
 from cmk.gui.plugins.wato.check_parameters.utils import (
     size_trend_elements,)
 
-register_check_parameters(
-    RulespecGroupCheckParametersOperatingSystem,
-    "cisco_mem",
-    _("Cisco Memory Usage"),
-    Transform(
-        Dictionary(elements=[
-            ("levels",
-             Alternative(
-                 title=_("Levels for memory usage"),
-                 elements=[
-                     Tuple(
-                         title=_("Specify levels in percentage of total RAM"),
-                         elements=[
-                             Percentage(
-                                 title=_("Warning at a usage of"),
-                                 unit=_("% of RAM"),
-                                 maxvalue=None),
-                             Percentage(
-                                 title=_("Critical at a usage of"),
-                                 unit=_("% of RAM"),
-                                 maxvalue=None)
-                         ]),
-                     Tuple(
-                         title=_("Specify levels in absolute usage values"),
-                         elements=[
-                             Integer(title=_("Warning at"), unit=_("MB")),
-                             Integer(title=_("Critical at"), unit=_("MB"))
-                         ]),
-                 ])),
-        ] + size_trend_elements),
-        forth=lambda spec: spec if isinstance(spec, dict) else {"levels": spec},
-    ),
-    TextAscii(title=_("Memory Pool Name"), allow_empty=False),
-    match_type="first",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersCiscoMem(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersOperatingSystem
+
+    @property
+    def check_group_name(self):
+        return "cisco_mem"
+
+    @property
+    def title(self):
+        return _("Cisco Memory Usage")
+
+    @property
+    def parameter_valuespec(self):
+        return Transform(
+            Dictionary(elements=[
+                ("levels",
+                 Alternative(
+                     title=_("Levels for memory usage"),
+                     elements=[
+                         Tuple(
+                             title=_("Specify levels in percentage of total RAM"),
+                             elements=[
+                                 Percentage(
+                                     title=_("Warning at a usage of"),
+                                     unit=_("% of RAM"),
+                                     maxvalue=None),
+                                 Percentage(
+                                     title=_("Critical at a usage of"),
+                                     unit=_("% of RAM"),
+                                     maxvalue=None)
+                             ],
+                         ),
+                         Tuple(
+                             title=_("Specify levels in absolute usage values"),
+                             elements=[
+                                 Integer(title=_("Warning at"), unit=_("MB")),
+                                 Integer(title=_("Critical at"), unit=_("MB"))
+                             ],
+                         ),
+                     ],
+                 )),
+            ] + size_trend_elements),
+            forth=lambda spec: spec if isinstance(spec, dict) else {"levels": spec},
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Memory Pool Name"), allow_empty=False)

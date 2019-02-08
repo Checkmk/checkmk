@@ -30,34 +30,58 @@ from cmk.gui.valuespec import (
     Integer,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications, "citrix_sessions",
-    _("Citrix Terminal Server Sessions"),
-    Dictionary(elements=[
-        ("total",
-         Tuple(
-             title=_("Total number of Sessions"),
-             elements=[
-                 Integer(title=_("warning at"), unit="Sessions"),
-                 Integer(title=_("critical at"), unit="Session"),
-             ])),
-        ("active",
-         Tuple(
-             title=_("Number of Active Sessions"),
-             elements=[
-                 Integer(title=_("warning at"), unit="Sessions"),
-                 Integer(title=_("critical at"), unit="Session"),
-             ])),
-        ("inactive",
-         Tuple(
-             title=_("Number of Inactive Sessions"),
-             elements=[
-                 Integer(title=_("warning at"), unit="Sessions"),
-                 Integer(title=_("critical at"), unit="Session"),
-             ])),
-    ]), None, "dict")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersCitrixSessions(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "citrix_sessions"
+
+    @property
+    def title(self):
+        return _("Citrix Terminal Server Sessions")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ("total",
+                 Tuple(
+                     title=_("Total number of Sessions"),
+                     elements=[
+                         Integer(title=_("warning at"), unit="Sessions"),
+                         Integer(title=_("critical at"), unit="Session"),
+                     ],
+                 )),
+                ("active",
+                 Tuple(
+                     title=_("Number of Active Sessions"),
+                     elements=[
+                         Integer(title=_("warning at"), unit="Sessions"),
+                         Integer(title=_("critical at"), unit="Session"),
+                     ],
+                 )),
+                ("inactive",
+                 Tuple(
+                     title=_("Number of Inactive Sessions"),
+                     elements=[
+                         Integer(title=_("warning at"), unit="Sessions"),
+                         Integer(title=_("critical at"), unit="Session"),
+                     ],
+                 )),
+            ],)

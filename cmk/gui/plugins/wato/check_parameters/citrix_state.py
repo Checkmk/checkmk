@@ -29,28 +29,45 @@ from cmk.gui.valuespec import (
     Dictionary,
     MonitoringState,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    "citrix_state",
-    _("State of Citrix VMs"),
-    Dictionary(elements=[(
-        "registrationstate",
-        Dictionary(
-            title=_("Interpretation of Registration States"),
-            elements=[
-                ("Unregistered", MonitoringState(title=_("Unregistered"), default_value=2)),
-                ("Initializing", MonitoringState(title=_("Initializing"), default_value=1)),
-                ("Registered", MonitoringState(title=_("Registered"), default_value=0)),
-                ("AgentError", MonitoringState(title=_("Agent Error"), default_value=2)),
-            ],
-            optional_keys=False,
-        ),
-    )]),
-    None,
-    match_type="dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersCitrixState(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "citrix_state"
+
+    @property
+    def title(self):
+        return _("State of Citrix VMs")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[(
+                "registrationstate",
+                Dictionary(
+                    title=_("Interpretation of Registration States"),
+                    elements=[
+                        ("Unregistered", MonitoringState(title=_("Unregistered"), default_value=2)),
+                        ("Initializing", MonitoringState(title=_("Initializing"), default_value=1)),
+                        ("Registered", MonitoringState(title=_("Registered"), default_value=0)),
+                        ("AgentError", MonitoringState(title=_("Agent Error"), default_value=2)),
+                    ],
+                    optional_keys=False,
+                ),
+            )],)

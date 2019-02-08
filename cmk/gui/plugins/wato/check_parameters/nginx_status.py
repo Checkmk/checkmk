@@ -31,26 +31,48 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    "nginx_status",
-    ("Nginx Status"),
-    Dictionary(elements=[("active_connections",
-                          Tuple(
-                              title=_("Active Connections"),
-                              help=_("You can configure upper thresholds for the currently active "
-                                     "connections handled by the web server."),
-                              elements=[
-                                  Integer(title=_("Warning at"), unit=_("connections")),
-                                  Integer(title=_("Critical at"), unit=_("connections"))
-                              ]))]),
-    TextAscii(
-        title=_("Nginx Server"),
-        help=_("A string-combination of servername and port, e.g. 127.0.0.1:80.")),
-    match_type="dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersNginxStatus(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "nginx_status"
+
+    @property
+    def title(self):
+        return _("Nginx Status")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[("active_connections",
+                       Tuple(
+                           title=_("Active Connections"),
+                           help=_("You can configure upper thresholds for the currently active "
+                                  "connections handled by the web server."),
+                           elements=[
+                               Integer(title=_("Warning at"), unit=_("connections")),
+                               Integer(title=_("Critical at"), unit=_("connections"))
+                           ],
+                       ))],)
+
+    @property
+    def item_spec(self):
+        return TextAscii(
+            title=_("Nginx Server"),
+            help=_("A string-combination of servername and port, e.g. 127.0.0.1:80."))

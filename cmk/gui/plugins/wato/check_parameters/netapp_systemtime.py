@@ -31,29 +31,51 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    "netapp_systemtime",
-    _("Netapp systemtime"),
-    Dictionary(elements=[
-        ("levels",
-         Tuple(
-             title=_("Set upper levels for the time difference"),
-             help=_("Here you can Set upper levels for the time difference "
-                    "between agent and system time."),
-             elements=[
-                 Age(title=_("Warning if at")),
-                 Age(title=_("Critical if at")),
-             ])),
-    ]),
-    TextAscii(
-        title=_("Name of the node"),
-        allow_empty=False,
-    ),
-    match_type="dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersNetappSystemtime(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "netapp_systemtime"
+
+    @property
+    def title(self):
+        return _("Netapp systemtime")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ("levels",
+                 Tuple(
+                     title=_("Set upper levels for the time difference"),
+                     help=_("Here you can Set upper levels for the time difference "
+                            "between agent and system time."),
+                     elements=[
+                         Age(title=_("Warning if at")),
+                         Age(title=_("Critical if at")),
+                     ],
+                 )),
+            ],)
+
+    @property
+    def item_spec(self):
+        return TextAscii(
+            title=_("Name of the node"),
+            allow_empty=False,
+        )

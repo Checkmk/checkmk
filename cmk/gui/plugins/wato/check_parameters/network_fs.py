@@ -30,27 +30,50 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     TextAscii,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersStorage,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersStorage, "network_fs",
-    _("Network filesystem - overall status (e.g. NFS)"),
-    Dictionary(
-        elements=[
-            (
-                "has_perfdata",
-                DropdownChoice(
-                    title=_("Performance data settings"),
-                    choices=[
-                        (True, _("Enable performance data")),
-                        (False, _("Disable performance data")),
-                    ],
-                    default_value=False),
-            ),
-        ],),
-    TextAscii(
-        title=_("Name of the mount point"), help=_("For NFS enter the name of the mount point.")),
-    "dict")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersNetworkFs(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersStorage
+
+    @property
+    def check_group_name(self):
+        return "network_fs"
+
+    @property
+    def title(self):
+        return _("Network filesystem - overall status (e.g. NFS)")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                (
+                    "has_perfdata",
+                    DropdownChoice(
+                        title=_("Performance data settings"),
+                        choices=[
+                            (True, _("Enable performance data")),
+                            (False, _("Disable performance data")),
+                        ],
+                        default_value=False),
+                ),
+            ],)
+
+    @property
+    def item_spec(self):
+        return TextAscii(
+            title=_("Name of the mount point"),
+            help=_("For NFS enter the name of the mount point."))

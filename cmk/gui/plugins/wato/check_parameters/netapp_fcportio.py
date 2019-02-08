@@ -31,29 +31,52 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersStorage,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersStorage,
-    "netapp_fcportio",
-    _("Netapp FC Port throughput"),
-    Dictionary(elements=[("read",
-                          Tuple(
-                              title=_("Read"),
-                              elements=[
-                                  Filesize(title=_("Warning if below")),
-                                  Filesize(title=_("Critical if below")),
-                              ])),
-                         ("write",
-                          Tuple(
-                              title=_("Write"),
-                              elements=[
-                                  Filesize(title=_("Warning at")),
-                                  Filesize(title=_("Critical at")),
-                              ]))]),
-    TextAscii(title=_("File name"), allow_empty=True),
-    match_type="dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersNetappFcportio(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersStorage
+
+    @property
+    def check_group_name(self):
+        return "netapp_fcportio"
+
+    @property
+    def title(self):
+        return _("Netapp FC Port throughput")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[("read",
+                       Tuple(
+                           title=_("Read"),
+                           elements=[
+                               Filesize(title=_("Warning if below")),
+                               Filesize(title=_("Critical if below")),
+                           ],
+                       )),
+                      ("write",
+                       Tuple(
+                           title=_("Write"),
+                           elements=[
+                               Filesize(title=_("Warning at")),
+                               Filesize(title=_("Critical at")),
+                           ],
+                       ))],)
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("File name"), allow_empty=True)

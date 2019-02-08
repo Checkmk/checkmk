@@ -30,43 +30,66 @@ from cmk.gui.valuespec import (
     Integer,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications, "netscaler_tcp_conns",
-    _("Citrix Netscaler Loadbalancer TCP Connections"),
-    Dictionary(elements=[
-        (
-            "client_conns",
-            Tuple(
-                title=_("Max. number of client connections"),
-                elements=[
-                    Integer(
-                        title=_("Warning at"),
-                        default_value=25000,
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersNetscalerTcpConns(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "netscaler_tcp_conns"
+
+    @property
+    def title(self):
+        return _("Citrix Netscaler Loadbalancer TCP Connections")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                (
+                    "client_conns",
+                    Tuple(
+                        title=_("Max. number of client connections"),
+                        elements=[
+                            Integer(
+                                title=_("Warning at"),
+                                default_value=25000,
+                            ),
+                            Integer(
+                                title=_("Critical at"),
+                                default_value=30000,
+                            ),
+                        ],
                     ),
-                    Integer(
-                        title=_("Critical at"),
-                        default_value=30000,
+                ),
+                (
+                    "server_conns",
+                    Tuple(
+                        title=_("Max. number of server connections"),
+                        elements=[
+                            Integer(
+                                title=_("Warning at"),
+                                default_value=25000,
+                            ),
+                            Integer(
+                                title=_("Critical at"),
+                                default_value=30000,
+                            ),
+                        ],
                     ),
-                ]),
-        ),
-        (
-            "server_conns",
-            Tuple(
-                title=_("Max. number of server connections"),
-                elements=[
-                    Integer(
-                        title=_("Warning at"),
-                        default_value=25000,
-                    ),
-                    Integer(
-                        title=_("Critical at"),
-                        default_value=30000,
-                    ),
-                ]),
-        ),
-    ]), None, "dict")
+                ),
+            ],)

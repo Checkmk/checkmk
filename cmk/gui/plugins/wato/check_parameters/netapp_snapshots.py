@@ -32,26 +32,47 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersStorage,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersStorage,
-    "netapp_snapshots",
-    _("NetApp Snapshot Reserve"),
-    Dictionary(
-        elements=[
-            ("levels",
-             Tuple(
-                 title=_("Levels for used configured reserve"),
-                 elements=[
-                     Percentage(title=_("Warning at or above"), unit="%", default_value=85.0),
-                     Percentage(title=_("Critical at or above"), unit="%", default_value=90.0),
-                 ])),
-            ("state_noreserve", MonitoringState(title=_("State if no reserve is configured"),)),
-        ],),
-    TextAscii(title=_("Volume name")),
-    match_type="dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersNetappSnapshots(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersStorage
+
+    @property
+    def check_group_name(self):
+        return "netapp_snapshots"
+
+    @property
+    def title(self):
+        return _("NetApp Snapshot Reserve")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ("levels",
+                 Tuple(
+                     title=_("Levels for used configured reserve"),
+                     elements=[
+                         Percentage(title=_("Warning at or above"), unit="%", default_value=85.0),
+                         Percentage(title=_("Critical at or above"), unit="%", default_value=90.0),
+                     ],
+                 )),
+                ("state_noreserve", MonitoringState(title=_("State if no reserve is configured"),)),
+            ],)
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Volume name"))

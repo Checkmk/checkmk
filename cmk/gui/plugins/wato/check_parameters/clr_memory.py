@@ -31,29 +31,53 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications, "clr_memory",
-    _("DotNet (.Net) runtime memory levels"),
-    Dictionary(
-        help=_("This rule allows to set the warn and crit levels of the memory "
-               "metrics of the DotNet (.Net) Runtime"),
-        elements=[
-            ("upper",
-             Tuple(
-                 title=_("Percent time spent in garbage collection"),
-                 elements=[
-                     Percentage(title=_("Warning at"), label=_("% time"), default_value=10.0),
-                     Percentage(title=_("Critical at"), label=_("% time"), default_value=15.0),
-                 ])),
-        ],
-    ),
-    TextAscii(
-        title=_("Name of the Application"),
-        help=_("The name of the DotNet (.Net) application or _Global_"),
-        allow_empty=False,
-    ), "dict")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersClrMemory(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "clr_memory"
+
+    @property
+    def title(self):
+        return _("DotNet (.Net) runtime memory levels")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            help=_("This rule allows to set the warn and crit levels of the memory "
+                   "metrics of the DotNet (.Net) Runtime"),
+            elements=[
+                ("upper",
+                 Tuple(
+                     title=_("Percent time spent in garbage collection"),
+                     elements=[
+                         Percentage(title=_("Warning at"), label=_("% time"), default_value=10.0),
+                         Percentage(title=_("Critical at"), label=_("% time"), default_value=15.0),
+                     ],
+                 )),
+            ],
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(
+            title=_("Name of the Application"),
+            help=_("The name of the DotNet (.Net) application or _Global_"),
+            allow_empty=False,
+        )

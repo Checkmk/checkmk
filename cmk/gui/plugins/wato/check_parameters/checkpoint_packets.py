@@ -27,38 +27,59 @@
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,)
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     Levels,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications, "checkpoint_packets",
-    _("Checkpoint Firewall Packet Rates"),
-    Dictionary(elements=[
-        ("accepted",
-         Levels(
-             title=_("Maximum Rate of Accepted Packets"),
-             default_value=None,
-             default_levels=(100000, 200000),
-             unit="pkts/sec")),
-        ("rejected",
-         Levels(
-             title=_("Maximum Rate of Rejected Packets"),
-             default_value=None,
-             default_levels=(100000, 200000),
-             unit="pkts/sec")),
-        ("dropped",
-         Levels(
-             title=_("Maximum Rate of Dropped Packets"),
-             default_value=None,
-             default_levels=(100000, 200000),
-             unit="pkts/sec")),
-        ("logged",
-         Levels(
-             title=_("Maximum Rate of Logged Packets"),
-             default_value=None,
-             default_levels=(100000, 200000),
-             unit="pkts/sec")),
-    ]), None, "dict")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersCheckpointPackets(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "checkpoint_packets"
+
+    @property
+    def title(self):
+        return _("Checkpoint Firewall Packet Rates")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ("accepted",
+                 Levels(
+                     title=_("Maximum Rate of Accepted Packets"),
+                     default_value=None,
+                     default_levels=(100000, 200000),
+                     unit="pkts/sec")),
+                ("rejected",
+                 Levels(
+                     title=_("Maximum Rate of Rejected Packets"),
+                     default_value=None,
+                     default_levels=(100000, 200000),
+                     unit="pkts/sec")),
+                ("dropped",
+                 Levels(
+                     title=_("Maximum Rate of Dropped Packets"),
+                     default_value=None,
+                     default_levels=(100000, 200000),
+                     unit="pkts/sec")),
+                ("logged",
+                 Levels(
+                     title=_("Maximum Rate of Logged Packets"),
+                     default_value=None,
+                     default_levels=(100000, 200000),
+                     unit="pkts/sec")),
+            ],)

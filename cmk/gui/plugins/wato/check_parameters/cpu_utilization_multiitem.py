@@ -31,31 +31,52 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersOperatingSystem,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersOperatingSystem,
-    "cpu_utilization_multiitem",
-    _("CPU utilization of Devices with Modules"),
-    Dictionary(
-        help=_("The CPU utilization sums up the percentages of CPU time that is used "
-               "for user processes and kernel routines over all available cores within "
-               "the last check interval. The possible range is from 0% to 100%"),
-        elements=[
-            (
-                "levels",
-                Tuple(
-                    title=_("Alert on too high CPU utilization"),
-                    elements=[
-                        Percentage(title=_("Warning at a utilization of"), default_value=90.0),
-                        Percentage(title=_("Critical at a utilization of"), default_value=95.0)
-                    ],
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersCpuUtilizationMultiitem(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersOperatingSystem
+
+    @property
+    def check_group_name(self):
+        return "cpu_utilization_multiitem"
+
+    @property
+    def title(self):
+        return _("CPU utilization of Devices with Modules")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            help=_("The CPU utilization sums up the percentages of CPU time that is used "
+                   "for user processes and kernel routines over all available cores within "
+                   "the last check interval. The possible range is from 0% to 100%"),
+            elements=[
+                (
+                    "levels",
+                    Tuple(
+                        title=_("Alert on too high CPU utilization"),
+                        elements=[
+                            Percentage(title=_("Warning at a utilization of"), default_value=90.0),
+                            Percentage(title=_("Critical at a utilization of"), default_value=95.0)
+                        ],
+                    ),
                 ),
-            ),
-        ]),
-    TextAscii(title=_("Module name"), allow_empty=False),
-    match_type="dict",
-)
+            ],
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Module name"), allow_empty=False)

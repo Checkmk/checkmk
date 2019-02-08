@@ -31,9 +31,11 @@ from cmk.gui.valuespec import (
     Integer,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersStorage,
-    register_check_parameters,
 )
 
 
@@ -48,11 +50,24 @@ def ceph_epoch_element(title):
                  ]))]
 
 
-register_check_parameters(
-    RulespecGroupCheckParametersStorage,
-    "ceph_mgrs",
-    _("Ceph MGRs"),
-    Dictionary(elements=ceph_epoch_element(_("MGRs epoch levels and average")),),
-    None,
-    "dict",
-)
+@rulespec_registry.register
+class RulespecCheckgroupParametersCephMgrs(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersStorage
+
+    @property
+    def check_group_name(self):
+        return "ceph_mgrs"
+
+    @property
+    def title(self):
+        return _("Ceph MGRs")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(elements=ceph_epoch_element(_("MGRs epoch levels and average")),)

@@ -247,9 +247,13 @@ def convert_legacy_configuration():
         else:
             config.notification_spooling = "remote"
 
-    # transform deprecated value 0 to 1
-    if config.notification_logging == 0:
-        config.notification_logging = 1
+    # The former values 1 and 2 are mapped to the values 20 (default) and 10 (debug)
+    # which agree with the values used in cmk/utils/log.py.
+    # The decprecated value 0 is transformed to the default logging value.
+    if config.notification_logging in [0, 1]:
+        config.notification_logging = 20
+    elif config.notification_logging == 2:
+        config.notification_logging = 10
 
 
 # This function processes one raw notification and decides wether it
@@ -269,13 +273,11 @@ def notify_notify(raw_context, analyse=False):
 
     # Add some further variable for the conveniance of the plugins
 
-    if config.notification_logging >= 2:
-        notify_log(events.render_context_dump(raw_context))
+    notify_log_debug(events.render_context_dump(raw_context))
 
     _complete_raw_context_with_notification_vars(raw_context)
-    events.complete_raw_context(raw_context,
-                                with_dump=config.notification_logging >= 2,
-                                event_log=notify_log)
+    events.complete_raw_context(
+        raw_context, with_dump=config.notification_logging <= 10, event_log=notify_log)
 
     # Spool notification to remote host, if this is enabled
     if config.notification_spooling in ("remote", "both"):
@@ -1895,12 +1897,12 @@ def dead_nagios_variable(value):
 
 
 def notify_log(message):
-    if config.notification_logging >= 1:
+    if config.notification_logging <= 20:
         events.event_log(notification_log, message)
 
 
 def notify_log_debug(message):
-    if config.notification_logging >= 2:
+    if config.notification_logging <= 10:
         events.event_log(notification_log, message)
 
 

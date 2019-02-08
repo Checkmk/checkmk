@@ -27,11 +27,11 @@
 import cmk as _cmk
 
 # Log level of notifications
-# 0 -> deprecated (transformed to 1)
-# 1 -> normal logging
-# 2 -> full dump of all variables and command
-notification_logging = 1
-notification_backlog = 10 # keep the last 10 notification contexts for reference
+# 0, 1, 2 -> deprecated (transformed to 20, 20, and 10)
+# 20 -> normal logging
+# 10 -> full dump of all variables and command
+notification_logging = 20
+notification_backlog = 10  # keep the last 10 notification contexts for reference
 
 # Settings for new rule based notifications
 enable_rulebased_notifications = False

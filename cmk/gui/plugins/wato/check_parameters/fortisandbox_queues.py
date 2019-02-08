@@ -31,25 +31,46 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersNetworking,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersNetworking,
-    "fortisandbox_queues",
-    _("Fortinet FortiSandbox Queue Length"),
-    Dictionary(
-        elements=[
-            ("length",
-             Tuple(
-                 title=_("Levels for queue length"),
-                 elements=[
-                     Integer(title=_("Warning at"), unit=_("files")),
-                     Integer(title=_("Critical at"), unit=_("files")),
-                 ])),
-        ],),
-    TextAscii(title=_("Queue name"),),
-    "dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersFortisandboxQueues(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersNetworking
+
+    @property
+    def check_group_name(self):
+        return "fortisandbox_queues"
+
+    @property
+    def title(self):
+        return _("Fortinet FortiSandbox Queue Length")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ("length",
+                 Tuple(
+                     title=_("Levels for queue length"),
+                     elements=[
+                         Integer(title=_("Warning at"), unit=_("files")),
+                         Integer(title=_("Critical at"), unit=_("files")),
+                     ],
+                 )),
+            ],)
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Queue name"),)

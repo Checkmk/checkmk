@@ -29,21 +29,34 @@ from cmk.gui.valuespec import (
     Integer,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersEnvironment,
-    "fan_failures",
-    _("Number of fan failures"),
-    Tuple(
-        title=_("Number of fan failures"),
-        elements=[
-            Integer(title="Warning at", default_value=1),
-            Integer(title="Critical at", default_value=2),
-        ]),
-    None,
-    "first",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersFanFailures(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersEnvironment
+
+    @property
+    def check_group_name(self):
+        return "fan_failures"
+
+    @property
+    def title(self):
+        return _("Number of fan failures")
+
+    @property
+    def parameter_valuespec(self):
+        return Tuple(
+            title=_("Number of fan failures"),
+            elements=[
+                Integer(title="Warning at", default_value=1),
+                Integer(title="Critical at", default_value=2),
+            ],
+        )

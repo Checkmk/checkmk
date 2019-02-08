@@ -26,9 +26,11 @@
 
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import Tuple, Integer
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersNetworking,
-    register_check_parameters,
 )
 
 fortigate_sessions_element = Tuple(
@@ -38,11 +40,21 @@ fortigate_sessions_element = Tuple(
         Integer(title=_(u"Critical at"), default_value=150000, size=10),
     ])
 
-register_check_parameters(
-    RulespecGroupCheckParametersNetworking,
-    "fortigate_sessions",
-    _(u"Fortigate Active Sessions"),
-    fortigate_sessions_element,
-    None,
-    "first",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersFortigateSessions(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersNetworking
+
+    @property
+    def check_group_name(self):
+        return "fortigate_sessions"
+
+    @property
+    def title(self):
+        return _("Fortigate Active Sessions")
+
+    @property
+    def parameter_valuespec(self):
+        return fortigate_sessions_element

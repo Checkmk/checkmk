@@ -27,6 +27,49 @@ import json
 import re
 
 
+class DeprecatedDict(dict):
+    pass
+
+
+class DeprecatedList(list):
+    pass
+
+
+def append_deprecation_warning(check_function):
+    '''A wrapper to WARN if legacy code is used
+
+    If the parse result is of one of the legacy Types the decorated
+    check function will yield an additional WARNING state.
+
+    These legacy parse results correspond to agents/plugins from version
+    1.5.0b1 to 1.5.0p12
+    '''
+
+    @functools.wraps(check_function)
+    def wrapper(item, params, parsed):
+
+        is_deprecated = isinstance(parsed, (DeprecatedDict, DeprecatedList))
+        catch_these = Exception if is_deprecated else ()
+
+        try:
+            results = check_function(item, params, parsed)
+            if isinstance(results, tuple):
+                yield results
+            else:
+                for result in results:
+                    yield result
+        except catch_these:
+            yield 3, "Could not handle data"
+        finally:
+            if is_deprecated:
+                yield 1, ("Deprecated plugin/agent (see long output)(!)\n"
+                          "You are using legacy code, which may lead to crashes and/or"
+                          " incomplete information. Please upgrade the monitored host to"
+                          " use the plugin 'mk_docker.py'.")
+
+    return wrapper
+
+
 def _legacy_docker_get_bytes(string):
     '''get number of bytes from string
 
@@ -77,20 +120,20 @@ def _get_repo_tag(string):
 
 def parse_legacy_docker_node_info(info):
     '''parse output of "docker info"'''
+    parsed = DeprecatedDict()
     if not info:
-        return {}
+        return parsed
 
     # parse legacy json output (verisons 1.5.0 - 1.5.0p6)
     joined = " ".join(info[0])
     if joined.endswith("permission denied"):
-        return {}
+        return parsed
     try:
         # this may contain a certificate containing newlines.
         return json.loads(joined.replace("\n", "\\n"))
     except ValueError:
         pass
 
-    parsed = {}
     prefix = ""
     for row in info:
         if not row:
@@ -193,12 +236,12 @@ def parse_legacy_docker_system_df(info):
     except ValueError:
         table = _legacy_docker_parse_table(info, field_map[0], field_map[1])
 
-    parsed = {}
+    parsed = DeprecatedDict()
     for line in table:
         for key, type_ in zip(field_map[1], field_map[2]):
-            v = line.get(key)
-            if v is not None:
-                line[key] = type_(v)
+            val = line.get(key)
+            if val is not None:
+                line[key] = type_(val)
         parsed[line.get("Type").lower()] = line
 
     return parsed
@@ -221,11 +264,11 @@ def parse_legacy_docker_subsection_images(info):
 
     table = _get_json_list(info)
 
-    parsed = {}
+    parsed = DeprecatedDict()
     for item in table:
-        v = item.get("VirtualSize")
-        if v is not None:
-            item["VirtualSize"] = _legacy_docker_get_bytes(v)
+        val = item.get("VirtualSize")
+        if val is not None:
+            item["VirtualSize"] = _legacy_docker_get_bytes(val)
         parsed[item.get("ID")] = item
 
     return parsed
@@ -235,22 +278,29 @@ def parse_legacy_docker_subsection_image_labels(info):
 
     table = _get_json_list(info)
 
-    return {_legacy_docker_trunk_id(long_id): data for long_id, data in table if data is not None}
+    parsed = DeprecatedDict()
+    for long_id, data in table:
+        if data is not None:
+            parsed[_legacy_docker_trunk_id(long_id)] = data
+    return parsed
 
 
 def parse_legacy_docker_subsection_image_inspect(info):
+    parsed = DeprecatedDict()
     try:
         table = json.loads(' '.join(' '.join(row) for row in info if row))
     except ValueError:
-        return {}
-    return {_legacy_docker_trunk_id(image["Id"]): image for image in table}
+        return parsed
+    for image in table:
+        parsed[_legacy_docker_trunk_id(image["Id"])] = image
+    return parsed
 
 
 def parse_legacy_docker_subsection_containers(info):
 
     table = _get_json_list(info)
 
-    parsed = {}
+    parsed = DeprecatedDict()
     for item in table:
         image_name = item.get("Image", "")
         item["Repository"], item["Tag"] = _get_repo_tag(image_name)
@@ -332,11 +382,12 @@ def parse_legacy_docker_node_images(info):
         if isinstance(labels, (str, unicode)):
             cont["Labels"] = parse_legacy_docker_messed_up_labels(labels)
 
-    return {"images": images, "containers": containers}
+    return DeprecatedDict((("images", images), ("containers", containers)))
 
 
 def parse_legacy_docker_network_inspect(info):
     try:
-        return json.loads(''.join(row[0] for row in info if row))
+        raw = json.loads(''.join(row[0] for row in info if row))
     except ValueError:
-        return []
+        raw = []
+    return DeprecatedList(raw)

@@ -35,6 +35,7 @@ def parse_docker_node_disk_usage(info):
     return {r.get('type'): r for r in table_rows if r is not None}
 
 
+@append_deprecation_warning  # pylint: disable=undefined-variable
 @get_parsed_item_data
 def check_docker_node_disk_usage(_no_item, params, data):
 

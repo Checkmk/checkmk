@@ -30,58 +30,86 @@ from cmk.gui.valuespec import (
     Integer,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications, "skype_mediation_server",
-    _("Skype for Business Mediation Server"),
-    Dictionary(
-        elements=[
-            ('load_call_failure_index',
-             Dictionary(
-                 title=_("Load Call Failure Index"),
-                 elements=[
-                     ("upper",
-                      Tuple(elements=[
-                          Integer(title=_("Warning at"), default_value=10),
-                          Integer(title=_("Critical at"), default_value=20),
-                      ])),
-                 ],
-                 optional_keys=[])),
-            ('failed_calls_because_of_proxy',
-             Dictionary(
-                 title=_("Failed calls caused by unexpected interaction from proxy"),
-                 elements=[
-                     ("upper",
-                      Tuple(elements=[
-                          Integer(title=_("Warning at"), default_value=10),
-                          Integer(title=_("Critical at"), default_value=20),
-                      ])),
-                 ],
-                 optional_keys=[])),
-            ('failed_calls_because_of_gateway',
-             Dictionary(
-                 title=_("Failed calls caused by unexpected interaction from gateway"),
-                 elements=[
-                     ("upper",
-                      Tuple(elements=[
-                          Integer(title=_("Warning at"), default_value=10),
-                          Integer(title=_("Critical at"), default_value=20),
-                      ])),
-                 ],
-                 optional_keys=[])),
-            ('media_connectivity_failure',
-             Dictionary(
-                 title=_("Media Connectivity Check Failure"),
-                 elements=[
-                     ("upper",
-                      Tuple(elements=[
-                          Integer(title=_("Warning at"), default_value=1),
-                          Integer(title=_("Critical at"), default_value=2),
-                      ])),
-                 ],
-                 optional_keys=[])),
-        ],), None, "dict")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersSkypeMediationServer(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "skype_mediation_server"
+
+    @property
+    def title(self):
+        return _("Skype for Business Mediation Server")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ('load_call_failure_index',
+                 Dictionary(
+                     title=_("Load Call Failure Index"),
+                     elements=[
+                         ("upper",
+                          Tuple(
+                              elements=[
+                                  Integer(title=_("Warning at"), default_value=10),
+                                  Integer(title=_("Critical at"), default_value=20),
+                              ],)),
+                     ],
+                     optional_keys=[],
+                 )),
+                ('failed_calls_because_of_proxy',
+                 Dictionary(
+                     title=_("Failed calls caused by unexpected interaction from proxy"),
+                     elements=[
+                         ("upper",
+                          Tuple(
+                              elements=[
+                                  Integer(title=_("Warning at"), default_value=10),
+                                  Integer(title=_("Critical at"), default_value=20),
+                              ],)),
+                     ],
+                     optional_keys=[],
+                 )),
+                ('failed_calls_because_of_gateway',
+                 Dictionary(
+                     title=_("Failed calls caused by unexpected interaction from gateway"),
+                     elements=[
+                         ("upper",
+                          Tuple(
+                              elements=[
+                                  Integer(title=_("Warning at"), default_value=10),
+                                  Integer(title=_("Critical at"), default_value=20),
+                              ],)),
+                     ],
+                     optional_keys=[],
+                 )),
+                ('media_connectivity_failure',
+                 Dictionary(
+                     title=_("Media Connectivity Check Failure"),
+                     elements=[
+                         ("upper",
+                          Tuple(
+                              elements=[
+                                  Integer(title=_("Warning at"), default_value=1),
+                                  Integer(title=_("Critical at"), default_value=2),
+                              ],)),
+                     ],
+                     optional_keys=[],
+                 )),
+            ],)

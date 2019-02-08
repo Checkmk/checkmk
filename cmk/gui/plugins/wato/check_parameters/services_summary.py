@@ -30,33 +30,55 @@ from cmk.gui.valuespec import (
     ListOfStrings,
     MonitoringState,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications, "services_summary", _("Windows Service Summary"),
-    Dictionary(
-        title=_('Autostart Services'),
-        elements=[
-            ('ignored',
-             ListOfStrings(
-                 title=_("Ignored autostart services"),
-                 help=_('Regular expressions matching the begining of the internal name '
-                        'or the description of the service. '
-                        'If no name is given then this rule will match all services. The '
-                        'match is done on the <i>beginning</i> of the service name. It '
-                        'is done <i>case sensitive</i>. You can do a case insensitive match '
-                        'by prefixing the regular expression with <tt>(?i)</tt>. Example: '
-                        '<tt>(?i).*mssql</tt> matches all services which contain <tt>MSSQL</tt> '
-                        'or <tt>MsSQL</tt> or <tt>mssql</tt> or...'),
-                 orientation="horizontal",
-             )),
-            ('state_if_stopped',
-             MonitoringState(
-                 title=_("Default state if stopped autostart services are found"),
-                 default_value=0,
-             )),
-        ],
-    ), None, "dict")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersServicesSummary(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "services_summary"
+
+    @property
+    def title(self):
+        return _("Windows Service Summary")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            title=_('Autostart Services'),
+            elements=[
+                ('ignored',
+                 ListOfStrings(
+                     title=_("Ignored autostart services"),
+                     help=_(
+                         'Regular expressions matching the begining of the internal name '
+                         'or the description of the service. '
+                         'If no name is given then this rule will match all services. The '
+                         'match is done on the <i>beginning</i> of the service name. It '
+                         'is done <i>case sensitive</i>. You can do a case insensitive match '
+                         'by prefixing the regular expression with <tt>(?i)</tt>. Example: '
+                         '<tt>(?i).*mssql</tt> matches all services which contain <tt>MSSQL</tt> '
+                         'or <tt>MsSQL</tt> or <tt>mssql</tt> or...'),
+                     orientation="horizontal",
+                 )),
+                ('state_if_stopped',
+                 MonitoringState(
+                     title=_("Default state if stopped autostart services are found"),
+                     default_value=0,
+                 )),
+            ],
+        )

@@ -31,30 +31,50 @@ from cmk.gui.valuespec import (
     Percentage,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersOperatingSystem,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersOperatingSystem,
-    "statgrab_mem",
-    _("Statgrab Memory Usage"),
-    Alternative(elements=[
-        Tuple(
-            title=_("Specify levels in percentage of total RAM"),
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersStatgrabMem(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersOperatingSystem
+
+    @property
+    def check_group_name(self):
+        return "statgrab_mem"
+
+    @property
+    def title(self):
+        return _("Statgrab Memory Usage")
+
+    @property
+    def is_deprecated(self):
+        return True
+
+    @property
+    def parameter_valuespec(self):
+        return Alternative(
             elements=[
-                Percentage(title=_("Warning at a usage of"), unit=_("% of RAM"), maxvalue=None),
-                Percentage(title=_("Critical at a usage of"), unit=_("% of RAM"), maxvalue=None)
-            ]),
-        Tuple(
-            title=_("Specify levels in absolute usage values"),
-            elements=[
-                Integer(title=_("Warning at"), unit=_("MB")),
-                Integer(title=_("Critical at"), unit=_("MB"))
-            ]),
-    ]),
-    None,
-    "first",
-    deprecated=True,
-)
+                Tuple(
+                    title=_("Specify levels in percentage of total RAM"),
+                    elements=[
+                        Percentage(
+                            title=_("Warning at a usage of"), unit=_("% of RAM"), maxvalue=None),
+                        Percentage(
+                            title=_("Critical at a usage of"), unit=_("% of RAM"), maxvalue=None)
+                    ],
+                ),
+                Tuple(
+                    title=_("Specify levels in absolute usage values"),
+                    elements=[
+                        Integer(title=_("Warning at"), unit=_("MB")),
+                        Integer(title=_("Critical at"), unit=_("MB"))
+                    ],
+                ),
+            ],)

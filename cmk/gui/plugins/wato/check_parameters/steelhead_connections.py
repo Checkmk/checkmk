@@ -30,74 +30,90 @@ from cmk.gui.valuespec import (
     Integer,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersNetworking,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersNetworking,
-    "steelhead_connections",
-    _("Steelhead connections"),
-    Dictionary(
-        elements=[
-            ("total",
-             Tuple(
-                 title=_("Levels for total amount of connections"),
-                 elements=[
-                     Integer(title=_("Warning at")),
-                     Integer(title=_("Critical at")),
-                 ],
-             )),
-            ("optimized",
-             Tuple(
-                 title=_("Levels for optimized connections"),
-                 elements=[
-                     Integer(title=_("Warning at")),
-                     Integer(title=_("Critical at")),
-                 ],
-             )),
-            ("passthrough",
-             Tuple(
-                 title=_("Levels for passthrough connections"),
-                 elements=[
-                     Integer(title=_("Warning at")),
-                     Integer(title=_("Critical at")),
-                 ],
-             )),
-            ("halfOpened",
-             Tuple(
-                 title=_("Levels for half opened connections"),
-                 elements=[
-                     Integer(title=_("Warning at")),
-                     Integer(title=_("Critical at")),
-                 ],
-             )),
-            ("halfClosed",
-             Tuple(
-                 title=_("Levels for half closed connections"),
-                 elements=[
-                     Integer(title=_("Warning at")),
-                     Integer(title=_("Critical at")),
-                 ],
-             )),
-            ("established",
-             Tuple(
-                 title=_("Levels for established connections"),
-                 elements=[
-                     Integer(title=_("Warning at")),
-                     Integer(title=_("Critical at")),
-                 ],
-             )),
-            ("active",
-             Tuple(
-                 title=_("Levels for active connections"),
-                 elements=[
-                     Integer(title=_("Warning at")),
-                     Integer(title=_("Critical at")),
-                 ],
-             )),
-        ],),
-    None,
-    "dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersSteelheadConnections(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersNetworking
+
+    @property
+    def check_group_name(self):
+        return "steelhead_connections"
+
+    @property
+    def title(self):
+        return _("Steelhead connections")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ("total",
+                 Tuple(
+                     title=_("Levels for total amount of connections"),
+                     elements=[
+                         Integer(title=_("Warning at")),
+                         Integer(title=_("Critical at")),
+                     ],
+                 )),
+                ("optimized",
+                 Tuple(
+                     title=_("Levels for optimized connections"),
+                     elements=[
+                         Integer(title=_("Warning at")),
+                         Integer(title=_("Critical at")),
+                     ],
+                 )),
+                ("passthrough",
+                 Tuple(
+                     title=_("Levels for passthrough connections"),
+                     elements=[
+                         Integer(title=_("Warning at")),
+                         Integer(title=_("Critical at")),
+                     ],
+                 )),
+                ("halfOpened",
+                 Tuple(
+                     title=_("Levels for half opened connections"),
+                     elements=[
+                         Integer(title=_("Warning at")),
+                         Integer(title=_("Critical at")),
+                     ],
+                 )),
+                ("halfClosed",
+                 Tuple(
+                     title=_("Levels for half closed connections"),
+                     elements=[
+                         Integer(title=_("Warning at")),
+                         Integer(title=_("Critical at")),
+                     ],
+                 )),
+                ("established",
+                 Tuple(
+                     title=_("Levels for established connections"),
+                     elements=[
+                         Integer(title=_("Warning at")),
+                         Integer(title=_("Critical at")),
+                     ],
+                 )),
+                ("active",
+                 Tuple(
+                     title=_("Levels for active connections"),
+                     elements=[
+                         Integer(title=_("Warning at")),
+                         Integer(title=_("Critical at")),
+                     ],
+                 )),
+            ],)

@@ -33,11 +33,12 @@ from cmk.gui.valuespec import (
     MonitoringState,
     TextAscii,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
     RulespecGroupCheckParametersDiscovery,
-    register_check_parameters,
-    rulespec_registry,
     HostRulespec,
 )
 
@@ -81,32 +82,49 @@ class RulespecDiscoverySystemdUnitsServicesRules(HostRulespec):
         )
 
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    "systemd_services",
-    _("Systemd Services"),
-    Dictionary(
-        elements=[
-            ("states",
-             Dictionary(
-                 elements=[
-                     ("active",
-                      MonitoringState(
-                          title=_("Monitoring state if service is active"),
-                          default_value=0,
-                      )),
-                 ],)),
-            ("states_default",
-             MonitoringState(
-                 title=_("Monitoring state for any other service state"),
-                 default_value=2,
-             )),
-            ("else",
-             MonitoringState(
-                 title=_("Monitoring state if a monitored service is not found at all."),
-                 default_value=2,
-             )),
-        ],),
-    TextAscii(title=_("Name of the service")),
-    match_type="dict",
-)
+@rulespec_registry.register
+class RulespecCheckgroupParametersSystemdServices(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "systemd_services"
+
+    @property
+    def title(self):
+        return _("Systemd Services")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ("states",
+                 Dictionary(
+                     elements=[
+                         ("active",
+                          MonitoringState(
+                              title=_("Monitoring state if service is active"),
+                              default_value=0,
+                          )),
+                     ],)),
+                ("states_default",
+                 MonitoringState(
+                     title=_("Monitoring state for any other service state"),
+                     default_value=2,
+                 )),
+                ("else",
+                 MonitoringState(
+                     title=_("Monitoring state if a monitored service is not found at all."),
+                     default_value=2,
+                 )),
+            ],)
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Name of the service"))

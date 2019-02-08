@@ -30,24 +30,42 @@ from cmk.gui.valuespec import (
     Dictionary,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    "saprouter_cert_age",
-    _("SAP router certificate time settings"),
-    Dictionary(elements=[
-        ("validity_age",
-         Tuple(
-             title=_('Lower levels for certificate age'),
-             elements=[
-                 Age(title=_("Warning below"), default_value=30 * 86400),
-                 Age(title=_("Critical below"), default_value=7 * 86400),
-             ])),
-    ]),
-    None,
-    "dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersSaprouterCertAge(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "saprouter_cert_age"
+
+    @property
+    def title(self):
+        return _("SAP router certificate time settings")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ("validity_age",
+                 Tuple(
+                     title=_('Lower levels for certificate age'),
+                     elements=[
+                         Age(title=_("Warning below"), default_value=30 * 86400),
+                         Age(title=_("Critical below"), default_value=7 * 86400),
+                     ],
+                 )),
+            ],)

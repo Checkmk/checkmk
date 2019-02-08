@@ -30,47 +30,85 @@ from cmk.gui.valuespec import (
     Float,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications, "skype_conferencing",
-    _("Skype for Business Conferencing"),
-    Dictionary(
-        elements=[
-            ('incomplete_calls',
-             Dictionary(
-                 title=_("Incomplete Calls"),
-                 elements=[
-                     ("upper",
-                      Tuple(elements=[
-                          Float(title=_("Warning at"), unit=_("per second"), default_value=20.0),
-                          Float(title=_("Critical at"), unit=_("per second"), default_value=40.0),
-                      ])),
-                 ],
-                 optional_keys=[])),
-            ('create_conference_latency',
-             Dictionary(
-                 title=_("Create Conference Latency"),
-                 elements=[
-                     ("upper",
-                      Tuple(elements=[
-                          Float(title=_("Warning at"), unit=_("seconds"), default_value=5.0),
-                          Float(title=_("Critical at"), unit=_("seconds"), default_value=10.0),
-                      ])),
-                 ],
-                 optional_keys=[])),
-            ('allocation_latency',
-             Dictionary(
-                 title=_("Conference Allocation Latency"),
-                 elements=[
-                     ("upper",
-                      Tuple(elements=[
-                          Float(title=_("Warning at"), unit=_("seconds"), default_value=5.0),
-                          Float(title=_("Critical at"), unit=_("seconds"), default_value=10.0),
-                      ])),
-                 ],
-                 optional_keys=[])),
-        ],), None, "dict")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersSkypeConferencing(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "skype_conferencing"
+
+    @property
+    def title(self):
+        return _("Skype for Business Conferencing")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ('incomplete_calls',
+                 Dictionary(
+                     title=_("Incomplete Calls"),
+                     elements=[
+                         ("upper",
+                          Tuple(
+                              elements=[
+                                  Float(
+                                      title=_("Warning at"),
+                                      unit=_("per second"),
+                                      default_value=20.0),
+                                  Float(
+                                      title=_("Critical at"),
+                                      unit=_("per second"),
+                                      default_value=40.0),
+                              ],)),
+                     ],
+                     optional_keys=[],
+                 )),
+                ('create_conference_latency',
+                 Dictionary(
+                     title=_("Create Conference Latency"),
+                     elements=[
+                         ("upper",
+                          Tuple(
+                              elements=[
+                                  Float(
+                                      title=_("Warning at"), unit=_("seconds"), default_value=5.0),
+                                  Float(
+                                      title=_("Critical at"), unit=_("seconds"),
+                                      default_value=10.0),
+                              ],)),
+                     ],
+                     optional_keys=[],
+                 )),
+                ('allocation_latency',
+                 Dictionary(
+                     title=_("Conference Allocation Latency"),
+                     elements=[
+                         ("upper",
+                          Tuple(
+                              elements=[
+                                  Float(
+                                      title=_("Warning at"), unit=_("seconds"), default_value=5.0),
+                                  Float(
+                                      title=_("Critical at"), unit=_("seconds"),
+                                      default_value=10.0),
+                              ],)),
+                     ],
+                     optional_keys=[],
+                 )),
+            ],)

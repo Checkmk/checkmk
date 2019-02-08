@@ -29,24 +29,40 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     TextAscii,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersEnvironment,
-    "switch_contact",
-    _("Switch contact state"),
-    DropdownChoice(
-        help=_("This rule sets the required state of a switch contact"),
-        label=_("Required switch contact state"),
-        choices=[
-            ("open", "Switch contact is <b>open</b>"),
-            ("closed", "Switch contact is <b>closed</b>"),
-            ("ignore", "Ignore switch contact state"),
-        ],
-    ),
-    TextAscii(title=_("Sensor"), allow_empty=False),
-    match_type="first",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersSwitchContact(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersEnvironment
+
+    @property
+    def check_group_name(self):
+        return "switch_contact"
+
+    @property
+    def title(self):
+        return _("Switch contact state")
+
+    @property
+    def parameter_valuespec(self):
+        return DropdownChoice(
+            help=_("This rule sets the required state of a switch contact"),
+            label=_("Required switch contact state"),
+            choices=[
+                ("open", "Switch contact is <b>open</b>"),
+                ("closed", "Switch contact is <b>closed</b>"),
+                ("ignore", "Ignore switch contact state"),
+            ],
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Sensor"), allow_empty=False)

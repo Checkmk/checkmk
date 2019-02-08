@@ -30,24 +30,53 @@ from cmk.gui.valuespec import (
     Integer,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications, "skype_mobile", _("Skype for Business Mobile"),
-    Dictionary(
-        elements=[(
-            'requests_processing',
-            Dictionary(
-                title=_("Requests in Processing"),
-                elements=[
-                    ("upper",
-                     Tuple(elements=[
-                         Integer(title=_("Warning at"), unit=_("per second"), default_value=10000),
-                         Integer(title=_("Critical at"), unit=_("per second"), default_value=20000),
-                     ])),
-                ],
-                optional_keys=[]))],
-        optional_keys=[]), None, "dict")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersSkypeMobile(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "skype_mobile"
+
+    @property
+    def title(self):
+        return _("Skype for Business Mobile")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[('requests_processing',
+                       Dictionary(
+                           title=_("Requests in Processing"),
+                           elements=[
+                               ("upper",
+                                Tuple(
+                                    elements=[
+                                        Integer(
+                                            title=_("Warning at"),
+                                            unit=_("per second"),
+                                            default_value=10000),
+                                        Integer(
+                                            title=_("Critical at"),
+                                            unit=_("per second"),
+                                            default_value=20000),
+                                    ],)),
+                           ],
+                           optional_keys=[],
+                       ))],
+            optional_keys=[],
+        )

@@ -29,9 +29,11 @@ from cmk.gui.valuespec import (
     Dictionary,
     ListChoice,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
 synology_update_states = [
@@ -41,31 +43,48 @@ synology_update_states = [
     (5, "Others"),
 ]
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    "synology_update",
-    _("Synology Updates"),
-    Dictionary(
-        title=_("Update State"),
-        elements=[
-            ("ok_states",
-             ListChoice(
-                 title=_("States which result in OK"),
-                 choices=synology_update_states,
-                 default_value=[2])),
-            ("warn_states",
-             ListChoice(
-                 title=_("States which result in Warning"),
-                 choices=synology_update_states,
-                 default_value=[5])),
-            ("crit_states",
-             ListChoice(
-                 title=_("States which result in Critical"),
-                 choices=synology_update_states,
-                 default_value=[1, 4])),
-        ],
-        optional_keys=None,
-    ),
-    None,
-    match_type="dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersSynologyUpdate(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "synology_update"
+
+    @property
+    def title(self):
+        return _("Synology Updates")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            title=_("Update State"),
+            elements=[
+                ("ok_states",
+                 ListChoice(
+                     title=_("States which result in OK"),
+                     choices=synology_update_states,
+                     default_value=[2],
+                 )),
+                ("warn_states",
+                 ListChoice(
+                     title=_("States which result in Warning"),
+                     choices=synology_update_states,
+                     default_value=[5],
+                 )),
+                ("crit_states",
+                 ListChoice(
+                     title=_("States which result in Critical"),
+                     choices=synology_update_states,
+                     default_value=[1, 4],
+                 )),
+            ],
+            optional_keys=None,
+        )

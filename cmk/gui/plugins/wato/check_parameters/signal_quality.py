@@ -30,19 +30,36 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersNetworking,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersNetworking,
-    "signal_quality",
-    _("Signal quality of Wireless device"),
-    Tuple(elements=[
-        Percentage(title=_("Warning if under"), maxvalue=100),
-        Percentage(title=_("Critical if under"), maxvalue=100),
-    ]),
-    TextAscii(title=_("Network specification"), allow_empty=True),
-    "first",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersSignalQuality(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersNetworking
+
+    @property
+    def check_group_name(self):
+        return "signal_quality"
+
+    @property
+    def title(self):
+        return _("Signal quality of Wireless device")
+
+    @property
+    def parameter_valuespec(self):
+        return Tuple(
+            elements=[
+                Percentage(title=_("Warning if under"), maxvalue=100),
+                Percentage(title=_("Critical if under"), maxvalue=100),
+            ],)
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Network specification"), allow_empty=True)

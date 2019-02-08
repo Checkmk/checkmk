@@ -31,41 +31,61 @@ from cmk.gui.valuespec import (
     Integer,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    "sles_license",
-    ("SLES License"),
-    Dictionary(elements=[
-        ("status",
-         DropdownChoice(
-             title=_("Status"),
-             help=_("Status of the SLES license"),
-             choices=[
-                 ('Registered', _('Registered')),
-                 ('Ignore', _('Do not check')),
-             ])),
-        ("subscription_status",
-         DropdownChoice(
-             title=_("Subscription"),
-             help=_("Status of the SLES subscription"),
-             choices=[
-                 ('ACTIVE', _('ACTIVE')),
-                 ('Ignore', _('Do not check')),
-             ])),
-        ("days_left",
-         Tuple(
-             title=_("Time until license expiration"),
-             help=_("Remaining days until the SLES license expires"),
-             elements=[
-                 Integer(title=_("Warning at"), unit=_("days")),
-                 Integer(title=_("Critical at"), unit=_("days"))
-             ])),
-    ]),
-    None,
-    match_type="dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersSlesLicense(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "sles_license"
+
+    @property
+    def title(self):
+        return _("SLES License")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ("status",
+                 DropdownChoice(
+                     title=_("Status"),
+                     help=_("Status of the SLES license"),
+                     choices=[
+                         ('Registered', _('Registered')),
+                         ('Ignore', _('Do not check')),
+                     ],
+                 )),
+                ("subscription_status",
+                 DropdownChoice(
+                     title=_("Subscription"),
+                     help=_("Status of the SLES subscription"),
+                     choices=[
+                         ('ACTIVE', _('ACTIVE')),
+                         ('Ignore', _('Do not check')),
+                     ],
+                 )),
+                ("days_left",
+                 Tuple(
+                     title=_("Time until license expiration"),
+                     help=_("Remaining days until the SLES license expires"),
+                     elements=[
+                         Integer(title=_("Warning at"), unit=_("days")),
+                         Integer(title=_("Critical at"), unit=_("days"))
+                     ],
+                 )),
+            ],)

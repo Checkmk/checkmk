@@ -29,23 +29,36 @@ from cmk.gui.valuespec import (
     Integer,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersEnvironment,
-    "single_humidity",
-    _("Humidity Levels for devices with a single sensor"),
-    Tuple(
-        help=_("This Ruleset sets the threshold limits for humidity sensors"),
-        elements=[
-            Integer(title=_("Critical at or below"), unit="%"),
-            Integer(title=_("Warning at or below"), unit="%"),
-            Integer(title=_("Warning at or above"), unit="%"),
-            Integer(title=_("Critical at or above"), unit="%"),
-        ]),
-    None,
-    match_type="first",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersSingleHumidity(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersEnvironment
+
+    @property
+    def check_group_name(self):
+        return "single_humidity"
+
+    @property
+    def title(self):
+        return _("Humidity Levels for devices with a single sensor")
+
+    @property
+    def parameter_valuespec(self):
+        return Tuple(
+            help=_("This Ruleset sets the threshold limits for humidity sensors"),
+            elements=[
+                Integer(title=_("Critical at or below"), unit="%"),
+                Integer(title=_("Warning at or below"), unit="%"),
+                Integer(title=_("Warning at or above"), unit="%"),
+                Integer(title=_("Critical at or above"), unit="%"),
+            ],
+        )

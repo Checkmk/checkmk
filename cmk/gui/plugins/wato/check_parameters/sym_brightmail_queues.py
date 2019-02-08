@@ -31,63 +31,89 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    "sym_brightmail_queues",
-    "Symantec Brightmail Queues",
-    Dictionary(
-        help=_("This check is used to monitor successful email delivery through "
-               "Symantec Brightmail Scanner appliances."),
-        elements=[
-            ("connections",
-             Tuple(
-                 title=_("Number of connections"),
-                 elements=[
-                     Integer(title=_("Warning at")),
-                     Integer(title=_("Critical at")),
-                 ])),
-            ("messageRate",
-             Tuple(
-                 title=_("Number of messages delivered"),
-                 elements=[
-                     Integer(title=_("Warning at")),
-                     Integer(title=_("Critical at")),
-                 ])),
-            ("dataRate",
-             Tuple(
-                 title=_("Amount of data processed"),
-                 elements=[
-                     Integer(title=_("Warning at")),
-                     Integer(title=_("Cricital at")),
-                 ])),
-            ("queuedMessages",
-             Tuple(
-                 title=_("Number of messages currently queued"),
-                 elements=[
-                     Integer(title=_("Warning at")),
-                     Integer(title=_("Critical at")),
-                 ])),
-            ("queueSize",
-             Tuple(
-                 title=_("Size of the queue"),
-                 elements=[
-                     Integer(title=_("Warning at")),
-                     Integer(title=_("Critical at")),
-                 ])),
-            ("deferredMessages",
-             Tuple(
-                 title=_("Number of messages in deferred state"),
-                 elements=[
-                     Integer(title=_("Warning at")),
-                     Integer(title=_("Critical at")),
-                 ])),
-        ],
-    ),
-    TextAscii(title=_("Instance name"), allow_empty=True),
-    "dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersSymBrightmailQueues(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "sym_brightmail_queues"
+
+    @property
+    def title(self):
+        return _("Symantec Brightmail Queues")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            help=_("This check is used to monitor successful email delivery through "
+                   "Symantec Brightmail Scanner appliances."),
+            elements=[
+                ("connections",
+                 Tuple(
+                     title=_("Number of connections"),
+                     elements=[
+                         Integer(title=_("Warning at")),
+                         Integer(title=_("Critical at")),
+                     ],
+                 )),
+                ("messageRate",
+                 Tuple(
+                     title=_("Number of messages delivered"),
+                     elements=[
+                         Integer(title=_("Warning at")),
+                         Integer(title=_("Critical at")),
+                     ],
+                 )),
+                ("dataRate",
+                 Tuple(
+                     title=_("Amount of data processed"),
+                     elements=[
+                         Integer(title=_("Warning at")),
+                         Integer(title=_("Cricital at")),
+                     ],
+                 )),
+                ("queuedMessages",
+                 Tuple(
+                     title=_("Number of messages currently queued"),
+                     elements=[
+                         Integer(title=_("Warning at")),
+                         Integer(title=_("Critical at")),
+                     ],
+                 )),
+                ("queueSize",
+                 Tuple(
+                     title=_("Size of the queue"),
+                     elements=[
+                         Integer(title=_("Warning at")),
+                         Integer(title=_("Critical at")),
+                     ],
+                 )),
+                ("deferredMessages",
+                 Tuple(
+                     title=_("Number of messages in deferred state"),
+                     elements=[
+                         Integer(title=_("Warning at")),
+                         Integer(title=_("Critical at")),
+                     ],
+                 )),
+            ],
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Instance name"), allow_empty=True)

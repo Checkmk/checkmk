@@ -29,19 +29,39 @@ from cmk.gui.valuespec import (
     Dictionary,
     MonitoringState,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications, "solaris_services_summary",
-    _("Solaris Services Summary"),
-    Dictionary(
-        elements=[
-            ('maintenance_state',
-             MonitoringState(
-                 title=_("State if 'maintenance' services are found"),
-                 default_value=0,
-             )),
-        ],), None, "dict")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersSolarisServicesSummary(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "solaris_services_summary"
+
+    @property
+    def title(self):
+        return _("Solaris Services Summary")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ('maintenance_state',
+                 MonitoringState(
+                     title=_("State if 'maintenance' services are found"),
+                     default_value=0,
+                 )),
+            ],)

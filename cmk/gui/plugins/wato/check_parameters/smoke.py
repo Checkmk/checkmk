@@ -30,21 +30,38 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersEnvironment,
-    "smoke",
-    _("Smoke Detection"),
-    Tuple(
-        help=_("For devices which measure smoke in percent"),
-        elements=[
-            Percentage(title=_("Warning at"), allow_int=True, default_value=1),
-            Percentage(title=_("Critical at"), allow_int=True, default_value=5),
-        ]),
-    TextAscii(title=_("Sensor ID"), help=_("The identifier of the sensor.")),
-    "first",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersSmoke(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersEnvironment
+
+    @property
+    def check_group_name(self):
+        return "smoke"
+
+    @property
+    def title(self):
+        return _("Smoke Detection")
+
+    @property
+    def parameter_valuespec(self):
+        return Tuple(
+            help=_("For devices which measure smoke in percent"),
+            elements=[
+                Percentage(title=_("Warning at"), allow_int=True, default_value=1),
+                Percentage(title=_("Critical at"), allow_int=True, default_value=5),
+            ],
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Sensor ID"), help=_("The identifier of the sensor."))

@@ -1,3 +1,0 @@
-[{'function_name': 'top_heading_left',
-  'input': {'arguments': {'title': 'TEST'}},
-  'output': {'html_code': '<table class="header"><tr><td width="*" class="heading"><a href="#" onfocus="if (this.blur) this.blur();" onclick="this.innerHTML=\'Reloading...\'; document.location.reload();">TEST</a></td>'}}]

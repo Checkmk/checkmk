@@ -1,3 +1,0 @@
-[{'function_name': 'stylesheet',
-  'input': {'arguments': {'href': 'www.test.de'}},
-  'output': {'html_code': '<link rel="stylesheet" type="text/css" href="www.test.de" />\n'}}]

@@ -1,3 +1,0 @@
-[{'function_name': 'empty_icon',
-  'input': {'arguments': {}},
-  'output': {'html_code': '<img src="images/trans.png" class="icon" align=absmiddle />'}}]

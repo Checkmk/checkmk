@@ -198,15 +198,28 @@ class ConfigVariableNotificationLogging(ConfigVariable):
     def valuespec(self):
         return Transform(
             DropdownChoice(
-                choices=[(1, _("Normal logging")), (2,
-                                                    _("Full dump of all variables and command"))],),
-            forth=lambda x: x == 0 and 1 or x,  # transform deprecated value 0 (no logging) to 1
+                choices=[
+                    (20, _("Normal logging")),
+                    (10, _("Full dump of all variables and command")),
+                ],),
+            forth=self._transform_log_level,
             title=_("Notification log level"),
             help=_("You can configure the notification mechanism to log more details about "
                    "the notifications into the notification log. This information are logged "
                    "into the file <tt>%s</tt>") %
             site_neutral_path(cmk.utils.paths.log_dir + "/notify.log"),
         )
+
+    @staticmethod
+    def _transform_log_level(level):
+        # The former values 1 and 2 are mapped to the values 20 (default) and 10 (debug)
+        # which agree with the values used in cmk/utils/log.py.
+        # The decprecated value 0 is transformed to the default logging value.
+        if level in [0, 1]:
+            return 20
+        elif level == 2:
+            return 10
+        return level
 
 
 @config_variable_registry.register

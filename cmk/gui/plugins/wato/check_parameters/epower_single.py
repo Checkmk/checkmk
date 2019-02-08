@@ -29,17 +29,34 @@ from cmk.gui.valuespec import (
     Integer,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersEnvironment, "epower_single",
-    _("Electrical Power for Devices with only one phase"),
-    Tuple(
-        help=_("Levels for the electrical power consumption of a device "),
-        elements=[
-            Integer(title=_("warning if at"), unit="Watt", default_value=300),
-            Integer(title=_("critical if at"), unit="Watt", default_value=400),
-        ]), None, "first")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersEpowerSingle(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersEnvironment
+
+    @property
+    def check_group_name(self):
+        return "epower_single"
+
+    @property
+    def title(self):
+        return _("Electrical Power for Devices with only one phase")
+
+    @property
+    def parameter_valuespec(self):
+        return Tuple(
+            help=_("Levels for the electrical power consumption of a device "),
+            elements=[
+                Integer(title=_("warning if at"), unit="Watt", default_value=300),
+                Integer(title=_("critical if at"), unit="Watt", default_value=400),
+            ],
+        )

@@ -32,32 +32,53 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersEnvironment,
-    register_check_parameters,
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersEnvironment, "eaton_enviroment",
-    _("Temperature and Humidity for Eaton UPS"),
-    Dictionary(elements=[
-        ("temp",
-         Tuple(
-             title=_("Temperature"),
-             elements=[
-                 Integer(title=_("warning at"), unit=u"°C", default_value=26),
-                 Integer(title=_("critical at"), unit=u"°C", default_value=30),
-             ])),
-        ("remote_temp",
-         Tuple(
-             title=_("Remote Temperature"),
-             elements=[
-                 Integer(title=_("warning at"), unit=u"°C", default_value=26),
-                 Integer(title=_("critical at"), unit=u"°C", default_value=30),
-             ])),
-        ("humidity",
-         Tuple(
-             title=_("Humidity"),
-             elements=[
-                 Integer(title=_("warning at"), unit=u"%", default_value=60),
-                 Integer(title=_("critical at"), unit=u"%", default_value=75),
-             ])),
-    ]), None, "dict")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersEatonEnviroment(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersEnvironment
+
+    @property
+    def check_group_name(self):
+        return "eaton_enviroment"
+
+    @property
+    def title(self):
+        return _("Temperature and Humidity for Eaton UPS")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ("temp",
+                 Tuple(
+                     title=_("Temperature"),
+                     elements=[
+                         Integer(title=_("warning at"), unit=u"°C", default_value=26),
+                         Integer(title=_("critical at"), unit=u"°C", default_value=30),
+                     ])),
+                ("remote_temp",
+                 Tuple(
+                     title=_("Remote Temperature"),
+                     elements=[
+                         Integer(title=_("warning at"), unit=u"°C", default_value=26),
+                         Integer(title=_("critical at"), unit=u"°C", default_value=30),
+                     ])),
+                ("humidity",
+                 Tuple(
+                     title=_("Humidity"),
+                     elements=[
+                         Integer(title=_("warning at"), unit=u"%", default_value=60),
+                         Integer(title=_("critical at"), unit=u"%", default_value=75),
+                     ],
+                 )),
+            ],)

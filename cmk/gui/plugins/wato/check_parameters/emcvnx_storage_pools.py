@@ -31,24 +31,46 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersStorage,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersStorage,
-    "emcvnx_storage_pools",
-    _("EMC VNX storage pools"),
-    Dictionary(elements=[
-        ("percent_full",
-         Tuple(
-             title=_("Upper levels for physical capacity in percent"),
-             elements=[
-                 Percentage(title=_("Warning at"), default_value=70.0),
-                 Percentage(title=_("Critical at"), default_value=90.0),
-             ])),
-    ]),
-    TextAscii(title=_("Pool name")),
-    match_type="dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersEmcvnxStoragePools(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersStorage
+
+    @property
+    def check_group_name(self):
+        return "emcvnx_storage_pools"
+
+    @property
+    def title(self):
+        return _("EMC VNX storage pools")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ("percent_full",
+                 Tuple(
+                     title=_("Upper levels for physical capacity in percent"),
+                     elements=[
+                         Percentage(title=_("Warning at"), default_value=70.0),
+                         Percentage(title=_("Critical at"), default_value=90.0),
+                     ],
+                 )),
+            ],)
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Pool name"))

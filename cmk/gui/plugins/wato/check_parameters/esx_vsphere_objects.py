@@ -30,60 +30,85 @@ from cmk.gui.valuespec import (
     MonitoringState,
     TextAscii,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    "esx_vsphere_objects",
-    _("State of ESX hosts and virtual machines"),
-    Dictionary(
-        help=_("Usually the check goes to WARN if a VM or host is powered off and OK otherwise. "
-               "You can change this behaviour on a per-state-basis here."),
-        optional_keys=False,
-        elements=[
-            ("states",
-             Dictionary(
-                 title=_("Target states"),
-                 optional_keys=False,
-                 elements=[
-                     ("poweredOn",
-                      MonitoringState(
-                          title=_("Powered ON"),
-                          help=_("Check result if the host or VM is powered on"),
-                          default_value=0,
-                      )),
-                     ("poweredOff",
-                      MonitoringState(
-                          title=_("Powered OFF"),
-                          help=_("Check result if the host or VM is powered off"),
-                          default_value=1,
-                      )),
-                     ("suspended",
-                      MonitoringState(
-                          title=_("Suspended"),
-                          help=_("Check result if the host or VM is suspended"),
-                          default_value=1,
-                      )),
-                     ("unknown",
-                      MonitoringState(
-                          title=_("Unknown"),
-                          help=_(
-                              "Check result if the host or VM state is reported as <i>unknown</i>"),
-                          default_value=3,
-                      )),
-                 ])),
-        ]),
-    TextAscii(
-        title=_("Name of the VM/HostSystem"),
-        help=_(
-            "Please do not forget to specify either <tt>VM</tt> or <tt>HostSystem</tt>. Example: <tt>VM abcsrv123</tt>. Also note, "
-            "that we match the <i>beginning</i> of the name."),
-        regex="(^VM|HostSystem)( .*|$)",
-        regex_error=_("The name of the system must begin with <tt>VM</tt> or <tt>HostSystem</tt>."),
-        allow_empty=False,
-    ),
-    "dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersEsxVsphereObjects(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "esx_vsphere_objects"
+
+    @property
+    def title(self):
+        return _("State of ESX hosts and virtual machines")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            help=_(
+                "Usually the check goes to WARN if a VM or host is powered off and OK otherwise. "
+                "You can change this behaviour on a per-state-basis here."),
+            optional_keys=False,
+            elements=[
+                ("states",
+                 Dictionary(
+                     title=_("Target states"),
+                     optional_keys=False,
+                     elements=[
+                         ("poweredOn",
+                          MonitoringState(
+                              title=_("Powered ON"),
+                              help=_("Check result if the host or VM is powered on"),
+                              default_value=0,
+                          )),
+                         ("poweredOff",
+                          MonitoringState(
+                              title=_("Powered OFF"),
+                              help=_("Check result if the host or VM is powered off"),
+                              default_value=1,
+                          )),
+                         ("suspended",
+                          MonitoringState(
+                              title=_("Suspended"),
+                              help=_("Check result if the host or VM is suspended"),
+                              default_value=1,
+                          )),
+                         ("unknown",
+                          MonitoringState(
+                              title=_("Unknown"),
+                              help=
+                              _("Check result if the host or VM state is reported as <i>unknown</i>"
+                               ),
+                              default_value=3,
+                          )),
+                     ],
+                 )),
+            ],
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(
+            title=_("Name of the VM/HostSystem"),
+            help=_(
+                "Please do not forget to specify either <tt>VM</tt> or <tt>HostSystem</tt>. Example: <tt>VM abcsrv123</tt>. Also note, "
+                "that we match the <i>beginning</i> of the name."),
+            regex="(^VM|HostSystem)( .*|$)",
+            regex_error=_(
+                "The name of the system must begin with <tt>VM</tt> or <tt>HostSystem</tt>."),
+            allow_empty=False,
+        )

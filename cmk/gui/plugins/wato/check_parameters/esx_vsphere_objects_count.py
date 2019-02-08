@@ -32,34 +32,53 @@ from cmk.gui.valuespec import (
     ListOfStrings,
     MonitoringState,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    "esx_vsphere_objects_count",
-    _("Distribution of virtual machines over ESX hosts"),
-    Dictionary(
-        optional_keys=False,
-        elements=[
-            ("distribution",
-             ListOf(
-                 Dictionary(
-                     optional_keys=False,
-                     elements=[("vm_names", ListOfStrings(title=_("VMs"))),
-                               ("hosts_count", Integer(title=_("Number of hosts"),
-                                                       default_value=2)),
-                               ("state",
-                                MonitoringState(title=_("State if violated"), default_value=1))]),
-                 title=_("VM distribution"),
-                 help=_(
-                     "You can specify lists of VM names and a number of hosts,"
-                     " to make sure the specfied VMs are distributed across at least so many hosts."
-                     " E.g. provide two VM names and set 'Number of hosts' to two,"
-                     " to make sure those VMs are not running on the same host."))),
-        ]),
-    None,
-    "dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersEsxVsphereObjectsCount(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "esx_vsphere_objects_count"
+
+    @property
+    def title(self):
+        return _("Distribution of virtual machines over ESX hosts")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            optional_keys=False,
+            elements=[
+                ("distribution",
+                 ListOf(
+                     Dictionary(
+                         optional_keys=False,
+                         elements=[("vm_names", ListOfStrings(title=_("VMs"))),
+                                   ("hosts_count",
+                                    Integer(title=_("Number of hosts"), default_value=2)),
+                                   ("state",
+                                    MonitoringState(title=_("State if violated"),
+                                                    default_value=1))],
+                     ),
+                     title=_("VM distribution"),
+                     help=_(
+                         "You can specify lists of VM names and a number of hosts,"
+                         " to make sure the specfied VMs are distributed across at least so many hosts."
+                         " E.g. provide two VM names and set 'Number of hosts' to two,"
+                         " to make sure those VMs are not running on the same host."))),
+            ],
+        )

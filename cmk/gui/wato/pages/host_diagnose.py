@@ -222,13 +222,10 @@ class ModeDiagHost(WatoMode):
 
             html.open_td(class_="icons")
             html.open_div()
-            html.img("images/icon_reload.png", class_="icon", id_="%s_img" % ident)
+            html.icon(title=None, icon="reload", id_="%s_img" % ident)
             html.open_a(href="")
-            html.img(
-                "images/icon_reload.png",
-                class_=["icon", "retry"],
-                id_="%s_retry" % ident,
-                title=_('Retry this test'))
+            html.icon(
+                title=_('Retry this test'), icon="reload", cssclass="retry", id_="%s_retry" % ident)
             html.close_a()
             html.close_div()
             html.close_td()

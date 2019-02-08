@@ -817,7 +817,7 @@ class Overridable(Base):
 
         cls.need_overriding_permission("edit")
 
-        html.header(cls.phrase("title_plural"), stylesheets=["pages", "views", "status"])
+        html.header(cls.phrase("title_plural"))
         html.begin_context_buttons()
         html.context_button(cls.phrase("new"), cls.create_url(), "new_" + cls.type_name())
 
@@ -1071,8 +1071,7 @@ class Overridable(Base):
                                       _("The requested %s does not exist") % cls.phrase("title"))
             page_dict = page.internal_representation()
 
-        ### TODO: extra stylesheets for BI. Move bi.css into views.css , stylesheets=["pages", "views", "status", "bi"])
-        html.header(title, stylesheets=["pages", "views", "status"])
+        html.header(title)
         html.begin_context_buttons()
         html.context_button(_("Back"), back_url, "back")
         html.end_context_buttons()

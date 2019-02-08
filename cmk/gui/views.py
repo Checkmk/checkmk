@@ -413,7 +413,7 @@ def page_create_view(next_url=None):
 
     ds = 'services'  # Default selection
 
-    html.header(_('Create View'), stylesheets=["pages"])
+    html.header(_('Create View'))
     html.begin_context_buttons()
     html.context_button(_("Back"), html.get_url_input("back", "edit_views.py"), "back")
     html.end_context_buttons()
@@ -1306,8 +1306,7 @@ def render_view(view, rows, datasource, group_painters, painters, show_heading, 
     if show_heading:
         # Show/Hide the header with page title, MK logo, etc.
         if display_options.enabled(display_options.H):
-            # FIXME: view/layout/module related stylesheets/javascripts e.g. in case of BI?
-            html.body_start(view_title(view), stylesheets=["pages", "views", "status", "bi"])
+            html.body_start(view_title(view))
 
         if display_options.enabled(display_options.T):
             html.top_heading(view_title(view))

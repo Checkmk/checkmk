@@ -1,6 +1,6 @@
 const path = require("path");
-const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const FixStyleOnlyEntriesPlugin = require("webpack-fix-style-only-entries");
+const webpack = require("webpack");
 
 module.exports = {
     mode: "production",
@@ -10,6 +10,7 @@ module.exports = {
         side: "./web/htdocs/js/side_index.js",
         themes: [
             "./web/htdocs/themes/facelift/theme.scss",
+            "./web/htdocs/themes/classic/theme.scss",
         ],
     },
     output: {
@@ -42,20 +43,6 @@ module.exports = {
                 }
             },
 
-            // needed for plugin styles (like select2)
-            {
-                test: /\.css$/,
-                use: [
-                    {
-                        loader: MiniCssExtractPlugin.loader,
-                        options: {
-                            //publicPath: "../../"
-                        }
-                    },
-                    "css-loader"
-                ]
-            },
-
             // needed for theme CSS files
             {
                 test: /\.scss$/,
@@ -64,8 +51,8 @@ module.exports = {
                     {
                         loader: "file-loader",
                         options: {
-                            regExp: /\/([a-z0-9_-]+)\/theme\.scss$/,
-                            name: '../themes/[1]/theme.css'
+                            regExp: /\/([a-z0-9_-]+)\/([a-z0-9_-]+)\.scss$/,
+                            name: "../themes/[1]/[2].css"
                         }
                     },
                     // 4. Extract CSS definitions from JS wrapped CSS
@@ -90,6 +77,10 @@ module.exports = {
                     {
                         loader: "sass-loader",
                         options: {
+                            // Hand over build options from webpack to SASS
+                            data: "$ENTERPRISE: " + process.env.ENTERPRISE + ";\n"
+                                + "$MANAGED: " + process.env.MANAGED + ";",
+                            "includePaths": ["node_modules"],
                             // See https://github.com/sass/node-sass/blob/master/README.md#options
                             outputStyle: "expanded",
                             precision: 10
@@ -101,8 +92,6 @@ module.exports = {
     },
     plugins: [
         new FixStyleOnlyEntriesPlugin(),
-        new MiniCssExtractPlugin({
-            filename: "../[name]_min.css",
-        })
+        new webpack.EnvironmentPlugin(["ENTERPRISE", "MANAGED"]),
     ]
 };

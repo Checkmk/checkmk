@@ -40,7 +40,6 @@ import cmk.utils.render as render
 
 from cmk.gui.plugins.wato.utils import mode_registry, sort_sites
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode, WatoWebApiMode
-from cmk.gui.plugins.wato.utils.html_elements import wato_styles
 from cmk.gui.plugins.wato.utils.context_buttons import home_button
 import cmk.gui.watolib.snapshots
 import cmk.gui.watolib.changes
@@ -143,7 +142,6 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
 
         html.header(
             self.title(),
-            stylesheets=wato_styles,
             show_body_start=display_options.enabled(display_options.H),
             show_top_heading=display_options.enabled(display_options.T))
         html.open_div(class_="wato")

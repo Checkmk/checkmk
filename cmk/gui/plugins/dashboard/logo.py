@@ -59,5 +59,5 @@ class MKLogoDashlet(Dashlet):
 
     def show(self):
         html.open_a(href="https://mathias-kettner.com/check_mk.html")
-        html.img("images/check_mk.trans.120.png", style="margin-right: 30px;")
+        html.img(html.theme_url("images/check_mk.trans.120.png"), style="margin-right: 30px;")
         html.close_a()

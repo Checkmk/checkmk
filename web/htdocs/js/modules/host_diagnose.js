@@ -69,7 +69,7 @@ export function start_test(ident, hostname, transid) {
         vars += "&datasource_program=" + encodeURIComponent(document.getElementsByName("vs_rules_p_datasource_program")[0].value);
     }
 
-    img.src = "images/icon_reload.png";
+    img.src = img.src.replace(/(.*\/icon_).*(\.png$)/i, "$1reload$2");
     utils.add_class(img, "reloading");
 
     log.innerHTML = "...";
@@ -87,25 +87,27 @@ function handle_host_diag_result(data, response_json) {
     utils.remove_class(img, "reloading");
 
     var text = "";
+    var new_icon = "";
     if (response.result_code == 1) {
-        img.src = "images/icon_failed.png";
+        new_icon = "failed";
         log.className = "log diag_failed";
         text = "API Error:" + response.result;
 
     } else {
         if (response.result.status_code == 1) {
-            img.src = "images/icon_failed.png";
+            new_icon = "failed";
             log.className = "log diag_failed";
         } else {
-            img.src = "images/icon_success.png";
+            new_icon = "success";
             log.className = "log diag_success";
         }
         text = response.result.output;
     }
 
+    img.src = img.src.replace(/(.*\/icon_).*(\.png$)/i, "$1"+new_icon+"$2");
     log.innerText = text;
 
-    retry.src = "images/icon_reload.png";
+    retry.src = retry.src.replace(/(.*\/icon_).*(\.png$)/i, "$1reload$2");
     retry.style.display = "inline";
     retry.parentNode.href = "javascript:cmk.host_diagnose.start_test('"+data.ident+"', '"+data.hostname+"', '"+response.result.next_transid+"');";
 }

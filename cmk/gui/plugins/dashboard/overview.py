@@ -62,7 +62,7 @@ class OverviewDashlet(Dashlet):
         html.open_tr()
         html.open_td(valign="top")
         html.open_a(href="https://mathias-kettner.com/check_mk.html")
-        html.img("images/check_mk.trans.120.png", style="margin-right: 30px;")
+        html.img(html.theme_url("images/check_mk.trans.120.png"), style="margin-right: 30px;")
         html.close_a()
         html.close_td()
 

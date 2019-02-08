@@ -27,8 +27,6 @@
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 
-wato_styles = ["pages", "wato", "status"]
-
 # TODO: Refactor to context handler or similar?
 _html_head_open = False
 
@@ -52,7 +50,7 @@ def wato_html_head(title, *args, **kwargs):
         return
 
     _html_head_open = True
-    html.header(title, *args, stylesheets=wato_styles, **kwargs)
+    html.header(title, *args, **kwargs)
     html.open_div(class_="wato")
 
 

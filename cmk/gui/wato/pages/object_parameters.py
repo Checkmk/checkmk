@@ -394,12 +394,8 @@ class ModeObjectParameters(WatoMode):
 
             # Binary rule, no valuespec, outcome is True or False
             else:
-                html.img(
-                    "images/rule_%s%s.png" % ("yes" if setting else "no",
-                                              "_off" if not rules else ''),
-                    class_="icon",
-                    align="absmiddle",
-                    title=_("yes") if setting else _("no"))
+                icon_name = "rule_%s%s" % ("yes" if setting else "no", "_off" if not rules else '')
+                html.icon(title=_("yes") if setting else _("no"), icon=icon_name)
         html.close_td()
         html.close_tr()
         html.close_table()

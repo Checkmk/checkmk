@@ -54,9 +54,6 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.watolib.users import delete_users, edit_users
 
-from cmk.gui.plugins.wato.utils.html_elements import (
-    wato_styles,)
-
 from cmk.gui.plugins.wato import (
     WatoMode,
     mode_registry,
@@ -142,7 +139,7 @@ class ModeUsers(WatoMode):
             return self._bulk_delete_users_after_confirm()
 
         elif html.check_transaction():
-            action_handler = gui_background_job.ActionHandler(stylesheets=wato_styles)
+            action_handler = gui_background_job.ActionHandler()
             action_handler.handle_actions()
             if action_handler.did_acknowledge_job():
                 self._job_snapshot = userdb.UserSyncBackgroundJob().get_status_snapshot()

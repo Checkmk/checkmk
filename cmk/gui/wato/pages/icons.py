@@ -95,7 +95,8 @@ class ModeIcons(WatoMode):
 
     def _validate_icon(self, value, varprefix):
         file_name = value[0]
-        if os.path.exists("%s/share/check_mk/web/htdocs/images/icon_%s" % (cmk.utils.paths.omd_root, file_name)) \
+        browser_url = html.theme_url("images/icon_%s" % file_name)
+        if os.path.exists("%s/share/check_mk/web/htdocs/%s" % (cmk.utils.paths.omd_root, browser_url)) \
            or os.path.exists("%s/share/check_mk/web/htdocs/images/icons/%s" % (cmk.utils.paths.omd_root, file_name)):
             raise MKUserError(
                 varprefix,

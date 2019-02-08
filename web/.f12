@@ -10,7 +10,8 @@ make -C .. \
     web/htdocs/js/main_min.js \
     web/htdocs/js/mobile_min.js \
     web/htdocs/js/side_min.js \
-    web/htdocs/themes/facelift/theme.css
+    web/htdocs/themes/facelift/theme.css \
+    web/htdocs/themes/classic/theme.css
 
 echo "Update site $SITE..."
 

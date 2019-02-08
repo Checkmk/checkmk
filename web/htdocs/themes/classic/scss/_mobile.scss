@@ -1,0 +1,230 @@
+/*
++------------------------------------------------------------------+
+|             ____ _               _        __  __ _  __           |
+|            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+|           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+|           | |___| | | |  __/ (__|   <    | |  | | . \            |
+|            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+|                                                                  |
+| Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
++------------------------------------------------------------------+
+
+This file is part of Check_MK.
+The official homepage is at http://mathias-kettner.de/check_mk.
+
+check_mk is free software;  you can redistribute it and/or modify it
+under the  terms of the  GNU General Public License  as published by
+the Free Software Foundation in version 2.  check_mk is  distributed
+in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+ails.  You should have  received  a copy of the  GNU  General Public
+License along with GNU Make; see the file  COPYING.  If  not,  write
+to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+Boston, MA 02110-1301 USA.
+
+*/
+
+/* Styles for Check_MK mobile interface */
+
+body.mobile {
+    div.really,
+    div.success,
+    div.error,
+    div.message,
+    div.warning {
+        width: 80%;
+        margin: 1em 0px 3em 0px;
+        padding: 0.5ex 1em;
+        border-width: 2px;
+        border-style: solid;
+        border-radius: 0.5ex;
+        text-align: center;
+    }
+
+    div.error {
+        background-color: #fcc;
+    }
+
+    div.command_group a {
+         color: black;
+    }
+
+    table.data {
+        border-collapse: collapse;
+        empty-cells: show;
+    }
+
+    table.data td {
+        padding: 1px;
+        border: 1px solid #ddd;
+        padding: 2px 3px;
+        overflow: hidden;
+    }
+
+
+    table.dataset {
+        width: 100%;
+    }
+
+    table.dataset tr.header {
+        color: black;
+    }
+
+    table.dataset > tbody > tr.data > td {
+        border-radius: 5px;
+        border: 1px solid #aaa;
+        padding: 4px 6px;
+        font-size: 10pt;
+    }
+
+    td.nonstatus {
+        background-color: #fff;
+    }
+
+    /* Forms for filters and commands */
+    table.form {
+        width: 100%;
+    }
+    table.form > tbody > tr > * {
+        width: 100%;
+    }
+    table.form th {
+        border-style: none;
+    }
+
+    table.filtertime td {
+        vertical-align: middle;
+    }
+    table.filtertime div {
+    }
+    table.filtertime div.ui-select {
+        width: auto;
+    }
+    table.alertstatefilter td {
+        vertical-align: top;
+    }
+    table.alertstatefilter .ui-checkbox {
+        margin: 0;
+    }
+
+    /* Perfometers */
+
+    td.perfometer {
+        height: 14px;
+        width: 70px;
+    }
+
+    td.perfometer * {
+        color: #333;
+        font-weight: normal;
+        font-size: 7pt;
+        padding: 0px;
+    }
+
+    td.perfometer div.content {
+       width: 69px;
+       background-color: yellow;
+    }
+
+    td.perfometer div.title {
+       top: 2px;
+       width: 70px;
+    }
+
+    td.perfometer div.glass {
+       width: 69px;
+       height: 14px;
+    }
+
+    td.perfometer table {
+        width: 70px;
+        height: 14px;
+    }
+
+    table.data td.perfometer td.inner {
+        height: 14px;
+    }
+
+    .ui-header .ui-title, .ui-footer .ui-title {
+            margin: .6em 46px .8em;
+    }
+
+    .ui-li-aside.state {
+        width: 4.5em;
+        text-align: center;
+        border-radius: 5px;
+        box-shadow: 0 0 2px #444444;
+    }
+
+    td.pnpgraph img {
+         max-width: 97%;
+    }
+
+    table.dataset tr.data td.state {
+        font-size: 25px;
+    }
+
+    #loginhead, #loginfoot {
+        text-align: center;
+        font-color: #444;
+    }
+    #loginhead {
+        margin: 1em;
+    }
+    #loginfoot {
+        margin-top: 1em;
+    }
+    #loginfoot.copyright {
+        margin-top: 1em;
+    }
+    img.logomk {
+        width: 25px;
+        height: 25px;
+        margin-bottom: 10px;
+    }
+
+
+    td.icons {
+        vertical-align: middle;
+    }
+
+    div.popup_trigger {
+        display: inline-block;
+    }
+
+    td.icons img {
+        height: 40px;
+        width: 40px;
+        margin-left: 5px;
+    }
+
+    td.icons a {
+        padding-left: 8px;
+    }
+
+    div.popup_trigger > div.popup_menu {
+        display: inline-block;
+    }
+
+    div.popup_trigger > div.popup_menu a {
+        width: 40px;
+        display: inline-block;
+        overflow: hidden;
+        color: black;
+    }
+    div.popup_trigger > div.popup_menu a img {
+        margin-left: 0px;
+    }
+
+    div.popup_trigger > div.popup_menu ul {
+        padding: 0;
+        margin: 0;
+    }
+
+    div.popup_trigger > div.popup_menu li {
+        display: inline-block;
+        margin: 0px;
+    }
+
+}

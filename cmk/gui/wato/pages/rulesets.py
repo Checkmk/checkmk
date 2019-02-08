@@ -773,15 +773,13 @@ class ModeEditRuleset(WatoMode):
                 except Exception as e:
                     reason = "%s" % e
 
-                value_html = '<img src="images/icon_alert.png" class=icon>' \
+                value_html = html.render_icon("alert") \
                            + _("The value of this rule is not valid. ") \
                            + reason
         else:
-            img = "yes" if value else "no"
             title = _("This rule results in a positive outcome.") if value else _(
                 "this rule results in a negative outcome.")
-            value_html = '<img align=absmiddle class=icon title="%s" src="images/rule_%s.png">' \
-                            % (title, img)
+            value_html = html.render_icon("rule_%s" % ("yes" if value else "no"), title=title)
         html.write(value_html)
 
         # Comment
@@ -1418,7 +1416,7 @@ class EditRuleMode(WatoMode):
             forms.section("")
             for posneg, img in [("positive", "yes"), ("negative", "no")]:
                 val = img == "yes"
-                html.img("images/rule_%s.png" % img, class_="ruleyesno", align="top")
+                html.icon(title=None, icon="rule_%s" % img)
                 html.radiobutton("value", img, self._rule.value == val,
                                  _("Make the outcome of the ruleset <b>%s</b><br>") % posneg)
         # Conditions

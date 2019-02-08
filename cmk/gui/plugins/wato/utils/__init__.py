@@ -96,7 +96,6 @@ from cmk.gui.plugins.wato.utils.context_buttons import (
     host_status_button,
 )
 from cmk.gui.plugins.wato.utils.html_elements import (
-    wato_styles,
     wato_confirm,
     search_form,
 )

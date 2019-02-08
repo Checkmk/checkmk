@@ -48,9 +48,7 @@ def page_graph():
     service = html.request.var("service")
     dsname = html.request.var("dsname")
 
-    html.header(
-        _("Prediction for %s - %s - %s") % (host, service, dsname),
-        stylesheets=["pages", "prediction"])
+    html.header(_("Prediction for %s - %s - %s") % (host, service, dsname))
 
     # Get current value from perf_data via Livestatus
     current_value = get_current_perfdata(host, service, dsname)

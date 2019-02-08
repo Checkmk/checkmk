@@ -442,7 +442,8 @@ def page_login(no_html_output=False):
 
 def normal_login_page(called_directly=True):
     html.set_render_headfoot(False)
-    html.header(config.get_page_heading(), javascripts=[], stylesheets=["pages", "login"])
+    html.add_body_css_class("login")
+    html.header(config.get_page_heading(), javascripts=[])
 
     default_origtarget = "index.py" if html.myfile in ["login", "logout"] else html.makeuri([])
     origtarget = html.get_url_input("_origtarget", default_origtarget)

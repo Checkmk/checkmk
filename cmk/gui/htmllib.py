@@ -951,7 +951,6 @@ class html(HTMLGenerator):
 
         # style options
         self._body_classes = ['main']
-        self._default_stylesheets = ["main_min", "check_mk", "graphs"]
         self._default_javascripts = ["main"]
 
         # behaviour options
@@ -980,7 +979,7 @@ class html(HTMLGenerator):
 
         # Settings
         self.mobile = False
-        self._theme = None
+        self._theme = "facelift"
 
         # Forms
         self.form_name = None
@@ -1044,6 +1043,10 @@ class html(HTMLGenerator):
     def get_theme(self):
         # type: () -> str
         return self._theme
+
+    def theme_url(self, rel_url):
+        # type: (str) -> str
+        return "themes/%s/%s" % (self._theme, rel_url)
 
     def _verify_not_using_threaded_mpm(self):
         if self.request.is_multithreaded:
@@ -1378,13 +1381,6 @@ class html(HTMLGenerator):
         self.browser_reload = secs
         self.browser_redirect = url
 
-    def clear_default_stylesheet(self):
-        del self._default_javascripts[:]
-
-    def add_default_stylesheet(self, name):
-        if name not in self._default_stylesheets:
-            self._default_stylesheets.append(name)
-
     def clear_default_javascript(self):
         del self._default_javascripts[:]
 
@@ -1584,14 +1580,12 @@ class html(HTMLGenerator):
             self._render_opening_tag(
                 'link',
                 rel="shortcut icon",
-                href=self._detect_themed_image_path("images/favicon.ico"),
+                href="themes/%s/images/favicon.ico" % self._theme,
                 type_="image/ico",
                 close_tag=True))
 
-    def _head(self, title, javascripts=None, stylesheets=None):
-
+    def _head(self, title, javascripts=None):
         javascripts = javascripts if javascripts else []
-        stylesheets = stylesheets if stylesheets else ["pages"]
 
         self.open_head()
 
@@ -1604,18 +1598,9 @@ class html(HTMLGenerator):
         if self.link_target:
             self.base(target=self.link_target)
 
-        # Load all specified style sheets and all user style sheets in htdocs/css
-        for css in self._default_stylesheets + stylesheets:
-            fname = self._css_filename_for_browser(css)
-            if fname is not None:
-                self.stylesheet(fname)
-
-        # write css for internet explorer
-        fname = self._css_filename_for_browser("ie")
+        fname = self._css_filename_for_browser("themes/%s/theme" % self._theme)
         if fname is not None:
-            self.write_html("<!--[if IE]>\n")
             self.stylesheet(fname)
-            self.write_html("<![endif]-->\n")
 
         self._add_custom_style_sheet()
 
@@ -1642,11 +1627,7 @@ class html(HTMLGenerator):
             self.write(
                 '<link rel="stylesheet" type="text/css" href="%s">\n' % config.custom_style_sheet)
 
-        if self._theme and self._theme != "classic":
-            fname = self._css_filename_for_browser("themes/%s/theme" % self._theme)
-            self.stylesheet(fname)
-
-        elif cmk.is_managed_edition():
+        if self._theme == "classic" and cmk.is_managed_edition():
             import cmk.gui.cme.gui_colors as gui_colors
             gui_colors.GUIColors().render_html()
 
@@ -1688,7 +1669,7 @@ class html(HTMLGenerator):
             os.path.exists(cmk.utils.paths.omd_root + "/local" + rel_path):
             return '%s-%s.css' % (css, cmk.__version__)
 
-    def html_head(self, title, javascripts=None, stylesheets=None, force=False):
+    def html_head(self, title, javascripts=None, force=False):
 
         force_new_document = force  # for backward stability and better readability
 
@@ -1698,29 +1679,27 @@ class html(HTMLGenerator):
         if not self._header_sent:
             self.write_html('<!DOCTYPE HTML>\n')
             self.open_html()
-            self._head(title, javascripts, stylesheets)
+            self._head(title, javascripts)
             self._header_sent = True
 
     def header(self,
                title='',
                javascripts=None,
-               stylesheets=None,
                force=False,
                show_body_start=True,
                show_top_heading=True):
         if self.output_format == "html":
             if not self._header_sent:
                 if show_body_start:
-                    self.body_start(
-                        title, javascripts=javascripts, stylesheets=stylesheets, force=force)
+                    self.body_start(title, javascripts=javascripts, force=force)
 
                 self._header_sent = True
 
                 if self.render_headfoot and show_top_heading:
                     self.top_heading(title)
 
-    def body_start(self, title='', javascripts=None, stylesheets=None, force=False):
-        self.html_head(title, javascripts, stylesheets, force)
+    def body_start(self, title='', javascripts=None, force=False):
+        self.html_head(title, javascripts, force)
         self.open_body(class_=self._get_body_css_classes())
 
     def _get_body_css_classes(self):
@@ -1776,7 +1755,7 @@ class html(HTMLGenerator):
             style="display:none",
             cssclass=cssclass)
         self.open_a(href="https://mathias-kettner.com", class_="head_logo")
-        self.img(src=self._detect_themed_image_path("images/logo_cmk_small.png"))
+        self.img(src="themes/%s/images/logo_cmk_small.png" % self._theme)
         self.close_a()
         self.close_td()
         self.close_tr()
@@ -2036,7 +2015,7 @@ class html(HTMLGenerator):
         return config.user.get_button_counts()
 
     def empty_icon_button(self):
-        self.write(self.render_icon("images/trans.png", cssclass="iconbutton trans"))
+        self.write(self.render_icon("trans", cssclass="iconbutton trans"))
 
     def disabled_icon_button(self, icon):
         self.write(self.render_icon(icon, cssclass="iconbutton"))
@@ -2343,7 +2322,7 @@ class html(HTMLGenerator):
                 text,
                 value=value if value else "",
                 selected='' if selected else None,
-                style="background-image:url(images/icon_%s.png);" % icon)
+                style="background-image:url(themes/%s/images/icon_%s.png);" % (self._theme, icon))
         self.close_select()
 
     # Wrapper for DualListChoice
@@ -2497,12 +2476,14 @@ class html(HTMLGenerator):
             self.open_tr(class_="heading")
             self.open_td(id_="nform.%s.%s" % (treename, id_), onclick=onclick, colspan="2")
             if icon:
-                self.img(class_=["treeangle", "title"], src="images/icon_%s.png" % icon)
+                self.img(
+                    class_=["treeangle", "title"],
+                    src="themes/%s/images/icon_%s.png" % (self._theme, icon))
             else:
                 self.img(
                     id_=img_id,
                     class_=["treeangle", "nform", "open" if isopen else "closed"],
-                    src="images/%s_closed.png" % tree_img,
+                    src="themes/%s/images/%s_closed.png" % (self._theme, tree_img),
                     align="absbottom")
             self.write_text(title)
             self.close_td()
@@ -2514,14 +2495,14 @@ class html(HTMLGenerator):
                 self.img(
                     id_="treeimg.%s.%s" % (treename, id_),
                     class_=["treeangle", "open" if isopen else "closed"],
-                    src="images/%s_closed.png" % tree_img,
+                    src="themes/%s/images/%s_closed.png" % (self._theme, tree_img),
                     align="absbottom",
                     onclick=onclick)
             if isinstance(title, HTML):  # custom HTML code
                 if icon:
                     self.img(
                         class_=["treeangle", "title"],
-                        src="images/icon_%s.png" % icon,
+                        src="themes/%s/images/icon_%s.png" % (self._theme, icon),
                         onclick=onclick)
                 self.write_text(title)
                 if indent != "form":
@@ -2529,7 +2510,9 @@ class html(HTMLGenerator):
             else:
                 self.open_b(class_=["treeangle", "title"], onclick=None if title_url else onclick)
                 if icon:
-                    self.img(class_=["treeangle", "title"], src="images/icon_%s.png" % icon)
+                    self.img(
+                        class_=["treeangle", "title"],
+                        src="themes/%s/images/icon_%s.png" % (self._theme, icon))
                 if title_url:
                     self.a(title, href=title_url)
                 else:
@@ -2697,7 +2680,7 @@ class html(HTMLGenerator):
         self.write_html(self.render_icon(icon_name=icon_name, title=title, **kwargs))
 
     def empty_icon(self):
-        self.write_html(self.render_icon("images/trans.png"))
+        self.write_html(self.render_icon("trans"))
 
     def render_icon(self, icon_name, title=None, middle=True, id_=None, cssclass=None, class_=None):
 
@@ -2719,46 +2702,20 @@ class html(HTMLGenerator):
  htdocs/
 
         Priority:
-        1. In case a theme is active: themes/images/icon_[name].png in site local hierarc
-hy
+        1. In case a theme is active: themes/images/icon_[name].png in site local hierarchy
         2. In case a theme is active: themes/images/icon_[name].png in standard hierarchy
-        3. images/icon_[name].png in site local hierarchy
-        4. images/icon_[name].png in standard hierarchy
-        5. images/icons/[name].png in site local hierarchy
-        6. images/icons/[name].png in standard hierarchy
+        3. images/icons/[name].png in site local hierarchy
+        4. images/icons/[name].png in standard hierarchy
         """
 
-        if self._theme and self._theme != "classic":
-            rel_path = "share/check_mk/web/htdocs/themes/%s/images/icon_%s.png" % (self._theme,
-                                                                                   icon_name)
-            if os.path.exists(cmk.utils.paths.omd_root + "/" + rel_path) or os.path.exists(
-                    cmk.utils.paths.omd_root + "/local/" + rel_path):
-                return "themes/%s/images/icon_%s.png" % (self._theme, icon_name)
-
-        rel_path = "share/check_mk/web/htdocs/images/icon_" + icon_name + ".png"
+        rel_path = "share/check_mk/web/htdocs/themes/%s/images/icon_%s.png" % (self._theme,
+                                                                               icon_name)
         if os.path.exists(cmk.utils.paths.omd_root + "/" + rel_path) or os.path.exists(
                 cmk.utils.paths.omd_root + "/local/" + rel_path):
-            return "images/icon_%s.png" % icon_name
+            return "themes/%s/images/icon_%s.png" % (self._theme, icon_name)
 
+        # TODO: This fallback is odd. Find use cases and clean this up
         return "images/icons/%s.png" % icon_name
-
-    def _detect_themed_image_path(self, img_path):
-        """Detect whether or not the original file or a themed image should be loaded by the client
-
-        Priority:
-        1. In case a theme is active: themes/[img_path] in site local hierarchy
-        2. In case a theme is active: themes/[img_path] in standard hierarchy
-        3. [img_path] in site local hierarchy
-        4. [img_path] in standard hierarchy
-        """
-
-        if self._theme and self._theme != "classic":
-            rel_path = "share/check_mk/web/htdocs/themes/%s/%s" % (self._theme, img_path)
-            if os.path.exists(cmk.utils.paths.omd_root + "/" + rel_path) or os.path.exists(
-                    cmk.utils.paths.omd_root + "/local/" + rel_path):
-                return "themes/%s/%s" % (self._theme, img_path)
-
-        return img_path
 
     def render_icon_button(self,
                            url,

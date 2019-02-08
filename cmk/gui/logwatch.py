@@ -86,7 +86,7 @@ def button_all_logfiles():
 
 # Shows a list of all problematic logfiles grouped by host
 def show_log_list():
-    html.header(_("All Problematic Logfiles"), stylesheets=stylesheets)
+    html.header(_("All Problematic Logfiles"))
 
     html.begin_context_buttons()
     html.context_button(
@@ -129,7 +129,7 @@ def analyse_url(site, host_name, file_name='', match=''):
 
 # Shows all problematic logfiles of a host
 def show_host_log_list(site, host_name):
-    html.header(_("Logfiles of host %s") % host_name, stylesheets=stylesheets)
+    html.header(_("Logfiles of host %s") % host_name)
 
     html.begin_context_buttons()
     html.context_button(_("Services"), services_url(site, host_name), 'services')
@@ -182,7 +182,7 @@ def list_logs(site, host_name, logfile_names):
 def show_file(site, host_name, file_name):
     int_filename = form_file_to_int(file_name)
 
-    html.header(_("Logfiles of Host %s: %s") % (host_name, file_name), stylesheets=stylesheets)
+    html.header(_("Logfiles of Host %s: %s") % (host_name, file_name))
     html.begin_context_buttons()
     html.context_button(_("Services"), services_url(site, host_name), 'services')
     html.context_button(_("All Logfiles of Host"), html.makeuri([('file', '')]))
@@ -304,7 +304,7 @@ def do_log_ack(site, host_name, file_name):
                 logs_to_ack.append((this_site, this_host, file_name, file_display))
         ack_msg = html.render_text(_('log file %s on all hosts') % file_name)
 
-    html.header(_("Acknowledge %s") % ack_msg, stylesheets=stylesheets)
+    html.header(_("Acknowledge %s") % ack_msg)
 
     html.begin_context_buttons()
     button_all_logfiles()
@@ -481,8 +481,6 @@ def get_last_chunk(log_chunks):
 #   +----------------------------------------------------------------------+
 #   | Definition of various constants - also used by WATO                  |
 #   '----------------------------------------------------------------------'
-
-stylesheets = ['pages', 'status', 'logwatch']
 
 nagios_illegal_chars = '`;~!$%^&*|\'"<>?,()='
 

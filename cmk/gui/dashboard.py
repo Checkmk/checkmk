@@ -668,7 +668,8 @@ def draw_dashboard(name):
     elif wato_folder is not None:
         title = watolib.get_folder_title(wato_folder) + " - " + title
 
-    html.header(title, stylesheets=["pages", "dashboard", "status", "views"])
+    html.add_body_css_class("dashboard")
+    html.header(title)
 
     html.open_div(class_=["dashboard_%s" % name], id_="dashboard")  # Container of all dashlets
 
@@ -820,7 +821,7 @@ def dashboard_edit_controls(name, board):
             style="display:%s;" % ("block" if html.request.var("edit") == '1' else "none"),
             onmouseover="cmk.dashboard.show_submenu(\'control_add\');")
         html.open_a(href="javascript:void(0)")
-        html.img("images/dashboard_menuarrow.png")
+        html.icon(title=_("Add dashlet"), icon="dashboard_menuarrow")
         html.write_text(_("Add dashlet"))
         html.close_a()
 
@@ -844,7 +845,7 @@ def dashboard_edit_controls(name, board):
                 url = dashlet_type.add_url()
                 html.open_li()
                 html.open_a(href=url)
-                html.img("images/dashlet_%s.png" % ty)
+                html.icon(title=dashlet_type.title(), icon="dashlet_%s" % ty)
                 html.write(dashlet_type.title())
                 html.close_a()
                 html.close_li()
@@ -860,7 +861,7 @@ def dashboard_edit_controls(name, board):
             href="edit_dashboard.py?load_name=%s&back=%s" % (name, html.urlencode(html.makeuri(
                 []))),
             onmouseover="cmk.dashboard.hide_submenus();")
-        html.img(src="images/trans.png")
+        html.icon(title="", icon="trans")
         html.write(_('Properties'))
         html.close_a()
         html.close_li()
@@ -875,7 +876,7 @@ def dashboard_edit_controls(name, board):
             href="javascript:void(0)",
             onclick="cmk.dashboard.toggle_dashboard_edit(false)",
             onmouseover="cmk.dashboard.hide_submenus();")
-        html.img(src="images/trans.png")
+        html.icon(title="", icon="trans")
         html.write(_('Stop Editing'))
         html.close_a()
         html.close_li()
@@ -887,7 +888,7 @@ def dashboard_edit_controls(name, board):
             style="display:%s;" % ("none" if html.request.var("edit") == '1' else "block"),
             id_="control_edit")
         html.open_a(href="javascript:void(0)", onclick="cmk.dashboard.toggle_dashboard_edit(true);")
-        html.img("images/trans.png")
+        html.icon(title="", icon="trans")
         html.write(_('Edit Dashboard'))
         html.close_a()
         html.close_li()
@@ -1206,7 +1207,7 @@ def choose_view(name):
         sorted=True,
     )
 
-    html.header(_('Create Dashlet from existing View'), stylesheets=["pages"])
+    html.header(_('Create Dashlet from existing View'))
     html.begin_context_buttons()
     back_url = html.get_url_input(
         "back", "dashboard.py?edit=1&name=%s" % html.urlencode(html.request.var('name')))
@@ -1315,7 +1316,7 @@ def page_edit_dashlet():
         dashlet_type = dashlet_registry[ty]
         single_infos = dashlet['single_infos']
 
-    html.header(title, stylesheets=["pages", "views"])
+    html.header(title)
 
     html.begin_context_buttons()
     back_url = html.get_url_input('back', 'dashboard.py?name=%s&edit=1' % board)
@@ -1476,7 +1477,7 @@ def page_delete_dashlet():
     except IndexError:
         raise MKUserError("id", _('The dashlet does not exist.'))
 
-    html.header(_('Confirm Dashlet Deletion'), stylesheets=["pages", "views"])
+    html.header(_('Confirm Dashlet Deletion'))
 
     html.begin_context_buttons()
     back_url = html.get_url_input('back', 'dashboard.py?name=%s&edit=1' % board)

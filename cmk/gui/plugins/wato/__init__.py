@@ -155,7 +155,6 @@ from cmk.gui.plugins.wato.utils import (
     SimpleListMode,
     SimpleEditMode,
     wato_root_dir,
-    wato_styles,
     ConfigHostname,
     SiteBackupJobs,
     HostTagCondition,

@@ -341,11 +341,8 @@ class SidebarRenderer(object):
             interval = config.sidebar_notify_interval
         else:
             interval = 'null'
-        html.clear_default_stylesheet()
-        html.html_head(
-            _("Check_MK Sidebar"),
-            javascripts=["side"],
-            stylesheets=["side_min", "sidebar", "status"])
+        html.clear_default_javascript()
+        html.html_head(_("Check_MK Sidebar"), javascripts=["side"])
         html.write('<body class="side')
         if config.screenshotmode:
             html.write(" screenshotmode")
@@ -492,7 +489,7 @@ class SidebarRenderer(object):
             href=config.user.get_attribute("start_url") or config.start_url,
             target="main",
             title=_("Go to main overview"))
-        html.img(src="images/sidebar_top.png", id_="side_bg")
+        html.div("", id_="side_bg")
 
         if config.sidebar_show_version_in_sidebar:
             html.open_div(id_="side_version")
@@ -804,7 +801,7 @@ class PageAddSnapin(object):
         if not config.user.may("general.configure_sidebar"):
             raise MKGeneralException(_("You are not allowed to change the sidebar."))
 
-        html.header(_("Available snapins"), stylesheets=["pages", "sidebar", "status"])
+        html.header(_("Available snapins"))
 
         html.begin_context_buttons()
         CustomSnapins.context_button_list()

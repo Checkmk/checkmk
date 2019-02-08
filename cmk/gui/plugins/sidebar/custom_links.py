@@ -81,11 +81,13 @@ class CustomLinks(SidebarSnapin):
                             # Old configs used files named "link_<name>.gif". Those .gif files have
                             # been removed from Check_MK. Replacing such images with the default icon
                             if icon_file.endswith(".gif"):
-                                icon_file = "icon_link.png"
+                                icon_name = "link"
+                            else:
+                                icon_name = icon_file.rsplit(".", 1)[0].replace("icon_", "")
                         else:
-                            icon_file = "icon_link.png"
+                            icon_name = "link"
 
-                        linktext = HTML(html.render_icon("images/%s" % icon_file) + " " + entry[0])
+                        linktext = HTML(html.render_icon(icon_name) + " " + entry[0])
 
                         simplelink(linktext, entry[1], frame)
                     else:

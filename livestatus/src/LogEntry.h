@@ -63,7 +63,7 @@ inline bool worse(HostState state1, HostState state2) {
     return badness(state1) > badness(state2);
 }
 
-enum class LogEntryType {
+enum class LogEntryKind {
     none,
     alert_host,
     alert_service,
@@ -106,19 +106,19 @@ public:
     // OffsetIntColumn, should be size_t
     int _lineno;  // line number in file
     time_t _time;
-    Class _logclass;
-    LogEntryType _type;
-    std::string _complete;  // copy of complete unsplit message
-    const char *_options;   // points into _complete after ':'
-    const char *_text;      // points into _complete or into static data
+    Class _class;
+    LogEntryKind _kind;
+    std::string _message;  // copy of complete unsplit message
+    const char *_options;  // points into _complete after ':'
+    const char *_type;     // points into _complete or into static data
     std::string _host_name;
-    std::string _svc_desc;
+    std::string _service_description;
     std::string _command_name;
     std::string _contact_name;
     int _state;
     std::string _state_type;
     int _attempt;
-    std::string _check_output;
+    std::string _plugin_output;
     std::string _comment;
 
     host *_host;
@@ -135,7 +135,7 @@ public:
 private:
     enum class Param {
         HostName,
-        SvcDesc,
+        ServiceDescription,
         CommandName,
         ContactName,
         HostState,
@@ -144,13 +144,13 @@ private:
         StateType,
         Attempt,
         Comment,
-        CheckOutput
+        PluginOutput
     };
 
     struct LogDef {
         std::string prefix;
         Class log_class;
-        LogEntryType log_type;
+        LogEntryKind log_type;
         std::vector<Param> params;
     };
 

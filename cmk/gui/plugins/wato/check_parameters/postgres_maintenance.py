@@ -31,38 +31,67 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications, "postgres_maintenance",
-    _("PostgreSQL VACUUM and ANALYZE"),
-    Dictionary(
-        help=_("With this rule you can set limits for the VACUUM and ANALYZE operation of "
-               "a PostgreSQL database. Keep in mind that each table within a database is checked "
-               "with this limits."),
-        elements=[
-            ("last_vacuum",
-             Tuple(
-                 title=_("Time since the last VACUUM"),
-                 elements=[
-                     Age(title=_("Warning if older than"), default_value=86400 * 7),
-                     Age(title=_("Critical if older than"), default_value=86400 * 14)
-                 ])),
-            ("last_analyze",
-             Tuple(
-                 title=_("Time since the last ANALYZE"),
-                 elements=[
-                     Age(title=_("Warning if older than"), default_value=86400 * 7),
-                     Age(title=_("Critical if older than"), default_value=86400 * 14)
-                 ])),
-            ("never_analyze_vacuum",
-             Tuple(
-                 title=_("Age of never analyzed/vacuumed tables"),
-                 elements=[
-                     Age(title=_("Warning if older than"), default_value=86400 * 7),
-                     Age(title=_("Critical if older than"), default_value=86400 * 14)
-                 ])),
-        ]), TextAscii(title=_("Name of the database"),), "dict")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersPostgresMaintenance(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "postgres_maintenance"
+
+    @property
+    def title(self):
+        return _("PostgreSQL VACUUM and ANALYZE")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            help=_(
+                "With this rule you can set limits for the VACUUM and ANALYZE operation of "
+                "a PostgreSQL database. Keep in mind that each table within a database is checked "
+                "with this limits."),
+            elements=[
+                ("last_vacuum",
+                 Tuple(
+                     title=_("Time since the last VACUUM"),
+                     elements=[
+                         Age(title=_("Warning if older than"), default_value=86400 * 7),
+                         Age(title=_("Critical if older than"), default_value=86400 * 14)
+                     ],
+                 )),
+                ("last_analyze",
+                 Tuple(
+                     title=_("Time since the last ANALYZE"),
+                     elements=[
+                         Age(title=_("Warning if older than"), default_value=86400 * 7),
+                         Age(title=_("Critical if older than"), default_value=86400 * 14)
+                     ],
+                 )),
+                ("never_analyze_vacuum",
+                 Tuple(
+                     title=_("Age of never analyzed/vacuumed tables"),
+                     elements=[
+                         Age(title=_("Warning if older than"), default_value=86400 * 7),
+                         Age(title=_("Critical if older than"), default_value=86400 * 14)
+                     ],
+                 )),
+            ],
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Name of the database"),)

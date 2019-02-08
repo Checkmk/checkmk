@@ -30,29 +30,46 @@ from cmk.gui.valuespec import (
     Integer,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersOperatingSystem,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersOperatingSystem,
-    "pf_used_states",
-    _("Number of used states of OpenBSD PF engine"),
-    Dictionary(
-        elements=[
-            (
-                "used",
-                Tuple(
-                    title=_("Limits for the number of used states"),
-                    elements=[
-                        Integer(title=_("warning at")),
-                        Integer(title=_("critical at")),
-                    ]),
-            ),
-        ],
-        optional_keys=[None],
-    ),
-    None,
-    match_type="dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersPfUsedStates(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersOperatingSystem
+
+    @property
+    def check_group_name(self):
+        return "pf_used_states"
+
+    @property
+    def title(self):
+        return _("Number of used states of OpenBSD PF engine")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                (
+                    "used",
+                    Tuple(
+                        title=_("Limits for the number of used states"),
+                        elements=[
+                            Integer(title=_("warning at")),
+                            Integer(title=_("critical at")),
+                        ],
+                    ),
+                ),
+            ],
+            optional_keys=[None],
+        )

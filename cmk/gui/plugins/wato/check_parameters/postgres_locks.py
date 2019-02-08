@@ -31,30 +31,58 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications, "postgres_locks", _("PostgreSQL Locks"),
-    Dictionary(
-        help=_(
-            "This rule allows you to configure the limits for the SharedAccess and Exclusive Locks "
-            "for a PostgreSQL database."),
-        elements=[
-            ("levels_shared",
-             Tuple(
-                 title=_("Shared Access Locks"),
-                 elements=[
-                     Integer(title=_("Warning at"), minvalue=0),
-                     Integer(title=_("Critical at"), minvalue=0),
-                 ])),
-            ("levels_exclusive",
-             Tuple(
-                 title=_("Exclusive Locks"),
-                 elements=[
-                     Integer(title=_("Warning at"), minvalue=0),
-                     Integer(title=_("Critical at"), minvalue=0),
-                 ])),
-        ]), TextAscii(title=_("Name of the database"),), "dict")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersPostgresLocks(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "postgres_locks"
+
+    @property
+    def title(self):
+        return _("PostgreSQL Locks")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            help=_(
+                "This rule allows you to configure the limits for the SharedAccess and Exclusive Locks "
+                "for a PostgreSQL database."),
+            elements=[
+                ("levels_shared",
+                 Tuple(
+                     title=_("Shared Access Locks"),
+                     elements=[
+                         Integer(title=_("Warning at"), minvalue=0),
+                         Integer(title=_("Critical at"), minvalue=0),
+                     ],
+                 )),
+                ("levels_exclusive",
+                 Tuple(
+                     title=_("Exclusive Locks"),
+                     elements=[
+                         Integer(title=_("Warning at"), minvalue=0),
+                         Integer(title=_("Critical at"), minvalue=0),
+                     ],
+                 )),
+            ],
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Name of the database"),)

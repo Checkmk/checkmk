@@ -29,19 +29,36 @@ from cmk.gui.valuespec import (
     Integer,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
-    register_check_parameters,
 )
 
-register_check_parameters(RulespecGroupCheckParametersEnvironment, "plug_count",
-                          _("Number of active Plugs"),
-                          Tuple(
-                              help=_("Levels for the number of active plugs in a device."),
-                              elements=[
-                                  Integer(title=_("critical if below or equal"), default_value=30),
-                                  Integer(title=_("warning if below or equal"), default_value=32),
-                                  Integer(title=_("warning if above or equal"), default_value=38),
-                                  Integer(title=_("critical if above or equal"), default_value=40),
-                              ]), None,
-                          "first")  # Rules for configuring parameters of checks (services)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersPlugCount(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersEnvironment
+
+    @property
+    def check_group_name(self):
+        return "plug_count"
+
+    @property
+    def title(self):
+        return _("Number of active Plugs")
+
+    @property
+    def parameter_valuespec(self):
+        return Tuple(
+            help=_("Levels for the number of active plugs in a device."),
+            elements=[
+                Integer(title=_("critical if below or equal"), default_value=30),
+                Integer(title=_("warning if below or equal"), default_value=32),
+                Integer(title=_("warning if above or equal"), default_value=38),
+                Integer(title=_("critical if above or equal"), default_value=40),
+            ],
+        )

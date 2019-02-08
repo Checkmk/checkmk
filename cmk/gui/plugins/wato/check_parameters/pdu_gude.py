@@ -31,52 +31,78 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersEnvironment,
-    "pdu_gude",
-    _("Levels for Gude PDU Devices"),
-    Dictionary(elements=[
-        ("kWh",
-         Tuple(
-             title=_("Total accumulated Active Energy of Power Channel"),
-             elements=[
-                 Integer(title=_("warning at"), unit=_("kW")),
-                 Integer(title=_("critical at"), unit=_("kW")),
-             ])),
-        ("W",
-         Tuple(
-             title=_("Active Power"),
-             elements=[
-                 Integer(title=_("warning at"), unit=_("W")),
-                 Integer(title=_("critical at"), unit=_("W")),
-             ])),
-        ("A",
-         Tuple(
-             title=_("Current on Power Channel"),
-             elements=[
-                 Integer(title=_("warning at"), unit=_("A")),
-                 Integer(title=_("critical at"), unit=_("A")),
-             ])),
-        ("V",
-         Tuple(
-             title=_("Voltage on Power Channel"),
-             elements=[
-                 Integer(title=_("warning if below"), unit=_("V")),
-                 Integer(title=_("critical if below"), unit=_("V")),
-             ])),
-        ("VA",
-         Tuple(
-             title=_("Line Mean Apparent Power"),
-             elements=[
-                 Integer(title=_("warning at"), unit=_("VA")),
-                 Integer(title=_("critical at"), unit=_("VA")),
-             ])),
-    ]),
-    TextAscii(title=_("Phase Number"), help=_("The Number of the power Phase.")),
-    match_type="dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersPduGude(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersEnvironment
+
+    @property
+    def check_group_name(self):
+        return "pdu_gude"
+
+    @property
+    def title(self):
+        return _("Levels for Gude PDU Devices")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ("kWh",
+                 Tuple(
+                     title=_("Total accumulated Active Energy of Power Channel"),
+                     elements=[
+                         Integer(title=_("warning at"), unit=_("kW")),
+                         Integer(title=_("critical at"), unit=_("kW")),
+                     ],
+                 )),
+                ("W",
+                 Tuple(
+                     title=_("Active Power"),
+                     elements=[
+                         Integer(title=_("warning at"), unit=_("W")),
+                         Integer(title=_("critical at"), unit=_("W")),
+                     ],
+                 )),
+                ("A",
+                 Tuple(
+                     title=_("Current on Power Channel"),
+                     elements=[
+                         Integer(title=_("warning at"), unit=_("A")),
+                         Integer(title=_("critical at"), unit=_("A")),
+                     ],
+                 )),
+                ("V",
+                 Tuple(
+                     title=_("Voltage on Power Channel"),
+                     elements=[
+                         Integer(title=_("warning if below"), unit=_("V")),
+                         Integer(title=_("critical if below"), unit=_("V")),
+                     ],
+                 )),
+                ("VA",
+                 Tuple(
+                     title=_("Line Mean Apparent Power"),
+                     elements=[
+                         Integer(title=_("warning at"), unit=_("VA")),
+                         Integer(title=_("critical at"), unit=_("VA")),
+                     ],
+                 )),
+            ],)
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Phase Number"), help=_("The Number of the power Phase."))

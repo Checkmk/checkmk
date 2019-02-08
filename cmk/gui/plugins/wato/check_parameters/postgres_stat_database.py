@@ -31,81 +31,102 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    "postgres_stat_database",
-    _("PostgreSQL Database Statistics"),
-    Dictionary(
-        help=_(
-            "This check monitors how often database objects in a PostgreSQL Database are accessed"),
-        elements=[
-            (
-                "blocks_read",
-                Tuple(
-                    title=_("Blocks read"),
-                    elements=[
-                        Float(title=_("Warning at"), unit=_("blocks/s")),
-                        Float(title=_("Critical at"), unit=_("blocks/s")),
-                    ],
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersPostgresStatDatabase(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "postgres_stat_database"
+
+    @property
+    def title(self):
+        return _("PostgreSQL Database Statistics")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            help=
+            _("This check monitors how often database objects in a PostgreSQL Database are accessed"
+             ),
+            elements=[
+                (
+                    "blocks_read",
+                    Tuple(
+                        title=_("Blocks read"),
+                        elements=[
+                            Float(title=_("Warning at"), unit=_("blocks/s")),
+                            Float(title=_("Critical at"), unit=_("blocks/s")),
+                        ],
+                    ),
                 ),
-            ),
-            (
-                "xact_commit",
-                Tuple(
-                    title=_("Commits"),
-                    elements=[
-                        Float(title=_("Warning at"), unit=_("/s")),
-                        Float(title=_("Critical at"), unit=_("/s")),
-                    ],
+                (
+                    "xact_commit",
+                    Tuple(
+                        title=_("Commits"),
+                        elements=[
+                            Float(title=_("Warning at"), unit=_("/s")),
+                            Float(title=_("Critical at"), unit=_("/s")),
+                        ],
+                    ),
                 ),
-            ),
-            (
-                "tup_fetched",
-                Tuple(
-                    title=_("Fetches"),
-                    elements=[
-                        Float(title=_("Warning at"), unit=_("/s")),
-                        Float(title=_("Critical at"), unit=_("/s")),
-                    ],
+                (
+                    "tup_fetched",
+                    Tuple(
+                        title=_("Fetches"),
+                        elements=[
+                            Float(title=_("Warning at"), unit=_("/s")),
+                            Float(title=_("Critical at"), unit=_("/s")),
+                        ],
+                    ),
                 ),
-            ),
-            (
-                "tup_deleted",
-                Tuple(
-                    title=_("Deletes"),
-                    elements=[
-                        Float(title=_("Warning at"), unit=_("/s")),
-                        Float(title=_("Critical at"), unit=_("/s")),
-                    ],
+                (
+                    "tup_deleted",
+                    Tuple(
+                        title=_("Deletes"),
+                        elements=[
+                            Float(title=_("Warning at"), unit=_("/s")),
+                            Float(title=_("Critical at"), unit=_("/s")),
+                        ],
+                    ),
                 ),
-            ),
-            (
-                "tup_updated",
-                Tuple(
-                    title=_("Updates"),
-                    elements=[
-                        Float(title=_("Warning at"), unit=_("/s")),
-                        Float(title=_("Critical at"), unit=_("/s")),
-                    ],
+                (
+                    "tup_updated",
+                    Tuple(
+                        title=_("Updates"),
+                        elements=[
+                            Float(title=_("Warning at"), unit=_("/s")),
+                            Float(title=_("Critical at"), unit=_("/s")),
+                        ],
+                    ),
                 ),
-            ),
-            (
-                "tup_inserted",
-                Tuple(
-                    title=_("Inserts"),
-                    elements=[
-                        Float(title=_("Warning at"), unit=_("/s")),
-                        Float(title=_("Critical at"), unit=_("/s")),
-                    ],
+                (
+                    "tup_inserted",
+                    Tuple(
+                        title=_("Inserts"),
+                        elements=[
+                            Float(title=_("Warning at"), unit=_("/s")),
+                            Float(title=_("Critical at"), unit=_("/s")),
+                        ],
+                    ),
                 ),
-            ),
-        ],
-    ),
-    TextAscii(title=_("Database name"), allow_empty=False),
-    match_type="dict",
-)
+            ],
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Database name"), allow_empty=False)

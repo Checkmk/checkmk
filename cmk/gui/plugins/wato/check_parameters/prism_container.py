@@ -33,39 +33,64 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersStorage,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersStorage,
-    "prism_container",
-    _("Nutanix Prism"),
-    Dictionary(
-        elements=[("levels",
-                   Alternative(
-                       title=_("Usage levels"),
-                       default_value=(80.0, 90.0),
-                       elements=[
-                           Tuple(
-                               title=_("Specify levels in percentage of total space"),
-                               elements=[
-                                   Percentage(title=_("Warning at"), unit=_("%")),
-                                   Percentage(title=_("Critical at"), unit=_("%"))
-                               ]),
-                           Tuple(
-                               title=_("Specify levels in absolute usage"),
-                               elements=[
-                                   Filesize(
-                                       title=_("Warning at"), default_value=1000 * 1024 * 1024),
-                                   Filesize(
-                                       title=_("Critical at"), default_value=5000 * 1024 * 1024)
-                               ]),
-                       ]))],
-        optional_keys=[]),
-    TextAscii(
-        title=_("Container Name"),
-        help=_("Name of the container"),
-    ),
-    match_type="dict")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersPrismContainer(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersStorage
+
+    @property
+    def check_group_name(self):
+        return "prism_container"
+
+    @property
+    def title(self):
+        return _("Nutanix Prism")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[("levels",
+                       Alternative(
+                           title=_("Usage levels"),
+                           default_value=(80.0, 90.0),
+                           elements=[
+                               Tuple(
+                                   title=_("Specify levels in percentage of total space"),
+                                   elements=[
+                                       Percentage(title=_("Warning at"), unit=_("%")),
+                                       Percentage(title=_("Critical at"), unit=_("%"))
+                                   ],
+                               ),
+                               Tuple(
+                                   title=_("Specify levels in absolute usage"),
+                                   elements=[
+                                       Filesize(
+                                           title=_("Warning at"), default_value=1000 * 1024 * 1024),
+                                       Filesize(
+                                           title=_("Critical at"), default_value=5000 * 1024 * 1024)
+                                   ],
+                               ),
+                           ],
+                       ))],
+            optional_keys=[],
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(
+            title=_("Container Name"),
+            help=_("Name of the container"),
+        )

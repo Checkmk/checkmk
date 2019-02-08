@@ -32,51 +32,71 @@ from cmk.gui.valuespec import (
     ListOf,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersEnvironment,
-    "pll_lock_voltage",
-    _("Lock Voltage for PLLs"),
-    Dictionary(
-        help=_("PLL lock voltages by freqency"),
-        elements=[
-            ("rx",
-             ListOf(
-                 Tuple(
-                     elements=[
-                         Float(title=_("Frequencies up to"), unit=u"MHz"),
-                         Float(title=_("Warning below"), unit=u"V"),
-                         Float(title=_("Critical below"), unit=u"V"),
-                         Float(title=_("Warning at or above"), unit=u"V"),
-                         Float(title=_("Critical at or above"), unit=u"V"),
-                     ],),
-                 title=_("Lock voltages for RX PLL"),
-                 help=_("Specify frequency ranges by the upper boundary of the range "
-                        "to which the voltage levels are to apply. The list is sorted "
-                        "automatically when saving."),
-                 movable=False)),
-            ("tx",
-             ListOf(
-                 Tuple(
-                     elements=[
-                         Float(title=_("Frequencies up to"), unit=u"MHz"),
-                         Float(title=_("Warning below"), unit=u"V"),
-                         Float(title=_("Critical below"), unit=u"V"),
-                         Float(title=_("Warning at or above"), unit=u"V"),
-                         Float(title=_("Critical at or above"), unit=u"V"),
-                     ],),
-                 title=_("Lock voltages for TX PLL"),
-                 help=_("Specify frequency ranges by the upper boundary of the range "
-                        "to which the voltage levels are to apply. The list is sorted "
-                        "automatically when saving."),
-                 movable=False)),
-        ],
-        optional_keys=["rx", "tx"],
-    ),
-    DropdownChoice(title=_("RX/TX"), choices=[("RX", _("RX")), ("TX", _("TX"))]),
-    match_type="dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersPllLockVoltage(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersEnvironment
+
+    @property
+    def check_group_name(self):
+        return "pll_lock_voltage"
+
+    @property
+    def title(self):
+        return _("Lock Voltage for PLLs")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            help=_("PLL lock voltages by freqency"),
+            elements=[
+                ("rx",
+                 ListOf(
+                     Tuple(
+                         elements=[
+                             Float(title=_("Frequencies up to"), unit=u"MHz"),
+                             Float(title=_("Warning below"), unit=u"V"),
+                             Float(title=_("Critical below"), unit=u"V"),
+                             Float(title=_("Warning at or above"), unit=u"V"),
+                             Float(title=_("Critical at or above"), unit=u"V"),
+                         ],),
+                     title=_("Lock voltages for RX PLL"),
+                     help=_("Specify frequency ranges by the upper boundary of the range "
+                            "to which the voltage levels are to apply. The list is sorted "
+                            "automatically when saving."),
+                     movable=False)),
+                ("tx",
+                 ListOf(
+                     Tuple(
+                         elements=[
+                             Float(title=_("Frequencies up to"), unit=u"MHz"),
+                             Float(title=_("Warning below"), unit=u"V"),
+                             Float(title=_("Critical below"), unit=u"V"),
+                             Float(title=_("Warning at or above"), unit=u"V"),
+                             Float(title=_("Critical at or above"), unit=u"V"),
+                         ],),
+                     title=_("Lock voltages for TX PLL"),
+                     help=_("Specify frequency ranges by the upper boundary of the range "
+                            "to which the voltage levels are to apply. The list is sorted "
+                            "automatically when saving."),
+                     movable=False)),
+            ],
+            optional_keys=["rx", "tx"],
+        )
+
+    @property
+    def item_spec(self):
+        return DropdownChoice(title=_("RX/TX"), choices=[("RX", _("RX")), ("TX", _("TX"))])

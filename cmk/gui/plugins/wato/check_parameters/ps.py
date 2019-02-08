@@ -48,10 +48,10 @@ from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersApplications,
     RulespecGroupCheckParametersDiscovery,
     UserIconOrAction,
-    register_check_parameters,
     rulespec_registry,
     HostRulespec,
     ManualCheckParameterRulespec,
+    CheckParameterRulespecWithItem,
 )
 
 process_level_elements = [
@@ -346,22 +346,39 @@ def user_match_options(extra_elements=None):
 
 
 # Rule for discovered process checks
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    "ps",
-    _("State and count of processes"),
-    Transform(
-        Dictionary(
-            elements=process_level_elements,
-            ignored_keys=["match_groups"],
-            required_keys=["cpu_rescale_max"]),
-        forth=ps_convert_inventorized_from_singlekeys,
-    ),
-    TextAscii(title=_("Process name as defined at discovery"),),
-    "dict",
-    has_inventory=True,
-    register_static_check=False,
-)
+@rulespec_registry.register
+class RulespecCheckgroupParametersPs(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "ps"
+
+    @property
+    def title(self):
+        return _("State and count of processes")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Transform(
+            Dictionary(
+                elements=process_level_elements,
+                ignored_keys=["match_groups"],
+                required_keys=["cpu_rescale_max"]),
+            forth=ps_convert_inventorized_from_singlekeys,
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Process name as defined at discovery"),)
+
+    #del rulespec_registry["static_checks:ps"]      # register_static_check = False
 
 
 # Rule for static process checks

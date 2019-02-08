@@ -428,15 +428,17 @@ def notify_rulebased(raw_context, analyse=False):
 
     for rule in config.notification_rules + user_notification_rules():
         if "contact" in rule:
-            notify_log("User %s's rule '%s'..." % (rule["contact"], rule["description"]))
+            contact_info = "User %s's rule '%s'..." % (rule["contact"], rule["description"])
         else:
-            notify_log("Global rule '%s'..." % rule["description"])
+            contact_info = "Global rule '%s'..." % rule["description"]
 
         why_not = rbn_match_rule(rule, raw_context)  # also checks disabling
         if why_not:
-            notify_log(" -> does not match: %s" % why_not)
+            notify_log_verbose(contact_info)
+            notify_log_verbose(" -> does not match: %s" % why_not)
             rule_info.append(("miss", rule, why_not))
         else:
+            notify_log(contact_info)
             notify_log(" -> matches!")
             num_rule_matches += 1
             contacts = rbn_rule_contacts(rule, raw_context)
@@ -1912,6 +1914,11 @@ def dead_nagios_variable(value):
 
 def notify_log(message):
     if config.notification_logging <= 20:
+        events.event_log(notification_log, message)
+
+
+def notify_log_verbose(message):
+    if config.notification_logging <= 15:
         events.event_log(notification_log, message)
 
 

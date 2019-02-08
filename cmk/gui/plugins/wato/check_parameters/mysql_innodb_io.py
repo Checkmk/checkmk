@@ -32,43 +32,65 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    "mysql_innodb_io",
-    _("MySQL InnoDB Throughput"),
-    Dictionary(
-        elements=[("read",
-                   Tuple(
-                       title=_("Read throughput"),
-                       elements=[
-                           Float(title=_("warning at"), unit=_("MB/s")),
-                           Float(title=_("critical at"), unit=_("MB/s"))
-                       ])),
-                  ("write",
-                   Tuple(
-                       title=_("Write throughput"),
-                       elements=[
-                           Float(title=_("warning at"), unit=_("MB/s")),
-                           Float(title=_("critical at"), unit=_("MB/s"))
-                       ])),
-                  ("average",
-                   Integer(
-                       title=_("Average"),
-                       help=_("When averaging is set, a floating average value "
-                              "of the disk throughput is computed and the levels for read "
-                              "and write will be applied to the average instead of the current "
-                              "value."),
-                       minvalue=1,
-                       default_value=5,
-                       unit=_("minutes")))]),
-    TextAscii(
-        title=_("Instance"),
-        help=_("Only needed if you have multiple MySQL Instances on one server"),
-    ),
-    "dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersMysqlInnodbIo(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "mysql_innodb_io"
+
+    @property
+    def title(self):
+        return _("MySQL InnoDB Throughput")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[("read",
+                       Tuple(
+                           title=_("Read throughput"),
+                           elements=[
+                               Float(title=_("warning at"), unit=_("MB/s")),
+                               Float(title=_("critical at"), unit=_("MB/s"))
+                           ],
+                       )),
+                      ("write",
+                       Tuple(
+                           title=_("Write throughput"),
+                           elements=[
+                               Float(title=_("warning at"), unit=_("MB/s")),
+                               Float(title=_("critical at"), unit=_("MB/s"))
+                           ],
+                       )),
+                      ("average",
+                       Integer(
+                           title=_("Average"),
+                           help=_("When averaging is set, a floating average value "
+                                  "of the disk throughput is computed and the levels for read "
+                                  "and write will be applied to the average instead of the current "
+                                  "value."),
+                           minvalue=1,
+                           default_value=5,
+                           unit=_("minutes")))],)
+
+    @property
+    def item_spec(self):
+        return TextAscii(
+            title=_("Instance"),
+            help=_("Only needed if you have multiple MySQL Instances on one server"),
+        )

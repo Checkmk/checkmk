@@ -32,11 +32,12 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
     RulespecGroupCheckParametersDiscovery,
-    register_check_parameters,
-    rulespec_registry,
     HostRulespec,
 )
 
@@ -66,62 +67,81 @@ class RulespecInventoryMssqlCountersRules(HostRulespec):
         )
 
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    "mssql_counters_locks",
-    _("MSSQL Locks"),
-    Dictionary(
-        help=_("This check monitors locking related information of MSSQL tablespaces."),
-        elements=[
-            (
-                "lock_requests/sec",
-                Tuple(
-                    title=_("Lock Requests / sec"),
-                    help=
-                    _("Number of new locks and lock conversions per second requested from the lock manager."
-                     ),
-                    elements=[
-                        Float(title=_("Warning at"), unit=_("requests/sec")),
-                        Float(title=_("Critical at"), unit=_("requests/sec")),
-                    ],
+@rulespec_registry.register
+class RulespecCheckgroupParametersMssqlCountersLocks(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "mssql_counters_locks"
+
+    @property
+    def title(self):
+        return _("MSSQL Locks")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            help=_("This check monitors locking related information of MSSQL tablespaces."),
+            elements=[
+                (
+                    "lock_requests/sec",
+                    Tuple(
+                        title=_("Lock Requests / sec"),
+                        help=
+                        _("Number of new locks and lock conversions per second requested from the lock manager."
+                         ),
+                        elements=[
+                            Float(title=_("Warning at"), unit=_("requests/sec")),
+                            Float(title=_("Critical at"), unit=_("requests/sec")),
+                        ],
+                    ),
                 ),
-            ),
-            (
-                "lock_timeouts/sec",
-                Tuple(
-                    title=_("Lock Timeouts / sec"),
-                    help=
-                    _("Number of lock requests per second that timed out, including requests for NOWAIT locks."
-                     ),
-                    elements=[
-                        Float(title=_("Warning at"), unit=_("timeouts/sec")),
-                        Float(title=_("Critical at"), unit=_("timeouts/sec")),
-                    ],
+                (
+                    "lock_timeouts/sec",
+                    Tuple(
+                        title=_("Lock Timeouts / sec"),
+                        help=
+                        _("Number of lock requests per second that timed out, including requests for NOWAIT locks."
+                         ),
+                        elements=[
+                            Float(title=_("Warning at"), unit=_("timeouts/sec")),
+                            Float(title=_("Critical at"), unit=_("timeouts/sec")),
+                        ],
+                    ),
                 ),
-            ),
-            (
-                "number_of_deadlocks/sec",
-                Tuple(
-                    title=_("Number of Deadlocks / sec"),
-                    help=_("Number of lock requests per second that resulted in a deadlock."),
-                    elements=[
-                        Float(title=_("Warning at"), unit=_("deadlocks/sec")),
-                        Float(title=_("Critical at"), unit=_("deadlocks/sec")),
-                    ],
+                (
+                    "number_of_deadlocks/sec",
+                    Tuple(
+                        title=_("Number of Deadlocks / sec"),
+                        help=_("Number of lock requests per second that resulted in a deadlock."),
+                        elements=[
+                            Float(title=_("Warning at"), unit=_("deadlocks/sec")),
+                            Float(title=_("Critical at"), unit=_("deadlocks/sec")),
+                        ],
+                    ),
                 ),
-            ),
-            (
-                "lock_waits/sec",
-                Tuple(
-                    title=_("Lock Waits / sec"),
-                    help=_("Number of lock requests per second that required the caller to wait."),
-                    elements=[
-                        Float(title=_("Warning at"), unit=_("waits/sec")),
-                        Float(title=_("Critical at"), unit=_("waits/sec")),
-                    ],
+                (
+                    "lock_waits/sec",
+                    Tuple(
+                        title=_("Lock Waits / sec"),
+                        help=_(
+                            "Number of lock requests per second that required the caller to wait."),
+                        elements=[
+                            Float(title=_("Warning at"), unit=_("waits/sec")),
+                            Float(title=_("Critical at"), unit=_("waits/sec")),
+                        ],
+                    ),
                 ),
-            ),
-        ]),
-    TextAscii(title=_("Service descriptions"), allow_empty=False),
-    match_type="dict",
-)
+            ],
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Service descriptions"), allow_empty=False)

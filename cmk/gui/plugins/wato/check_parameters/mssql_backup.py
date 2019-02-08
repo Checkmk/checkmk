@@ -36,11 +36,12 @@ from cmk.gui.valuespec import (
     Transform,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
     RulespecGroupCheckParametersDiscovery,
-    register_check_parameters,
-    rulespec_registry,
     HostRulespec,
 )
 
@@ -94,11 +95,24 @@ class RulespecDiscoveryMssqlBackup(HostRulespec):
             ],
         )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    "mssql_backup",
-    _("MSSQL Backup summary"),
-    Transform(
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersMssqlBackup(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "mssql_backup"
+
+    @property
+    def title(self):
+        return _("MSSQL Backup summary")
+
+    @property
+    def parameter_valuespec(self):
+        return Transform(
         Dictionary(
             help = _("This rule allows you to set limits on the age of backups for "
                      "different backup types. If your agent does not support "
@@ -118,9 +132,9 @@ register_check_parameters(
             ]
         ),
         forth = lambda params: (params if isinstance(params, dict)
-                                else {'database': (params[0], params[1])})
-    ),
-    TextAscii(
-        title = _("Service descriptions"),
-        allow_empty = False),
-    "first",)
+                                else {'database': (params[0], params[1],)})
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Service descriptions"), allow_empty=False)

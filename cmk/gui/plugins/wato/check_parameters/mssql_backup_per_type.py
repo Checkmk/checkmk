@@ -29,19 +29,40 @@ from cmk.gui.valuespec import (
     Dictionary,
     TextAscii,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 from cmk.gui.plugins.wato.check_parameters.mssql_backup import _vs_mssql_backup_age
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    "mssql_backup_per_type",
-    _("MSSQL Backup"),
-    Dictionary(elements=[
-        ("levels", _vs_mssql_backup_age("Upper levels for the backup age")),
-    ]),
-    TextAscii(title=_("Backup name"), allow_empty=False),
-    "dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersMssqlBackupPerType(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "mssql_backup_per_type"
+
+    @property
+    def title(self):
+        return _("MSSQL Backup")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ("levels", _vs_mssql_backup_age("Upper levels for the backup age")),
+            ],)
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Backup name"), allow_empty=False)

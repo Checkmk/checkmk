@@ -31,32 +31,55 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    "mysql_connections",
-    _("MySQL Connections"),
-    Dictionary(elements=[
-        ("perc_used",
-         Tuple(
-             title=_("Max. parallel connections"),
-             help=_("Compares the maximum number of connections that have been "
-                    "in use simultaneously since the server started with the maximum simultaneous "
-                    "connections allowed by the configuration of the server. This threshold "
-                    "makes the check raise warning/critical states if the percentage is equal to "
-                    "or above the configured levels."),
-             elements=[
-                 Percentage(title=_("Warning at")),
-                 Percentage(title=_("Critical at")),
-             ])),
-    ]),
-    TextAscii(
-        title=_("Instance"),
-        help=_("Only needed if you have multiple MySQL Instances on one server"),
-    ),
-    "dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersMysqlConnections(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "mysql_connections"
+
+    @property
+    def title(self):
+        return _("MySQL Connections")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ("perc_used",
+                 Tuple(
+                     title=_("Max. parallel connections"),
+                     help=
+                     _("Compares the maximum number of connections that have been "
+                       "in use simultaneously since the server started with the maximum simultaneous "
+                       "connections allowed by the configuration of the server. This threshold "
+                       "makes the check raise warning/critical states if the percentage is equal to "
+                       "or above the configured levels."),
+                     elements=[
+                         Percentage(title=_("Warning at")),
+                         Percentage(title=_("Critical at")),
+                     ],
+                 )),
+            ],)
+
+    @property
+    def item_spec(self):
+        return TextAscii(
+            title=_("Instance"),
+            help=_("Only needed if you have multiple MySQL Instances on one server"),
+        )

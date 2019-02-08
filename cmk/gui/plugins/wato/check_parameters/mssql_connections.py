@@ -31,24 +31,46 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    "mssql_connections",
-    _("MSSQL Connections"),
-    Dictionary(elements=[(
-        "levels",
-        Tuple(
-            title=_("Upper levels for the number of active database connections"),
-            elements=[
-                Integer(title=_("Warning if over"), default_value=20),
-                Integer(title=_("Critical if over"), default_value=50),
-            ]),
-    )]),
-    TextAscii(title=_("Database identifier"), allow_empty=True),
-    'dict',
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersMssqlConnections(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "mssql_connections"
+
+    @property
+    def title(self):
+        return _("MSSQL Connections")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[(
+                "levels",
+                Tuple(
+                    title=_("Upper levels for the number of active database connections"),
+                    elements=[
+                        Integer(title=_("Warning if over"), default_value=20),
+                        Integer(title=_("Critical if over"), default_value=50),
+                    ],
+                ),
+            )],)
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Database identifier"), allow_empty=True)

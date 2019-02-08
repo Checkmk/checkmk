@@ -33,108 +33,144 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    "mssql_tablespaces",
-    _("MSSQL Size of Tablespace"),
-    Dictionary(
-        elements=[
-            ("size",
-             Tuple(
-                 title=_("Upper levels for size"),
-                 elements=[Filesize(title=_("Warning at")),
-                           Filesize(title=_("Critical at"))])),
-            ("reserved",
-             Alternative(
-                 title=_("Upper levels for reserved space"),
-                 elements=[
-                     Tuple(
-                         title=_("Absolute levels"),
-                         elements=[
-                             Filesize(title=_("Warning at")),
-                             Filesize(title=_("Critical at"))
-                         ]),
-                     Tuple(
-                         title=_("Percentage levels"),
-                         elements=[
-                             Percentage(title=_("Warning at")),
-                             Percentage(title=_("Critical at"))
-                         ]),
-                 ])),
-            ("data",
-             Alternative(
-                 title=_("Upper levels for data"),
-                 elements=[
-                     Tuple(
-                         title=_("Absolute levels"),
-                         elements=[
-                             Filesize(title=_("Warning at")),
-                             Filesize(title=_("Critical at"))
-                         ]),
-                     Tuple(
-                         title=_("Percentage levels"),
-                         elements=[
-                             Percentage(title=_("Warning at")),
-                             Percentage(title=_("Critical at"))
-                         ]),
-                 ])),
-            ("indexes",
-             Alternative(
-                 title=_("Upper levels for indexes"),
-                 elements=[
-                     Tuple(
-                         title=_("Absolute levels"),
-                         elements=[
-                             Filesize(title=_("Warning at")),
-                             Filesize(title=_("Critical at"))
-                         ]),
-                     Tuple(
-                         title=_("Percentage levels"),
-                         elements=[
-                             Percentage(title=_("Warning at")),
-                             Percentage(title=_("Critical at"))
-                         ]),
-                 ])),
-            ("unused",
-             Alternative(
-                 title=_("Upper levels for unused space"),
-                 elements=[
-                     Tuple(
-                         title=_("Absolute levels"),
-                         elements=[
-                             Filesize(title=_("Warning at")),
-                             Filesize(title=_("Critical at"))
-                         ]),
-                     Tuple(
-                         title=_("Percentage levels"),
-                         elements=[
-                             Percentage(title=_("Warning at")),
-                             Percentage(title=_("Critical at"))
-                         ]),
-                 ])),
-            ("unallocated",
-             Alternative(
-                 title=_("Lower levels for unallocated space"),
-                 elements=[
-                     Tuple(
-                         title=_("Absolute levels"),
-                         elements=[
-                             Filesize(title=_("Warning below")),
-                             Filesize(title=_("Critical below"))
-                         ]),
-                     Tuple(
-                         title=_("Percentage levels"),
-                         elements=[
-                             Percentage(title=_("Warning below")),
-                             Percentage(title=_("Critical below"))
-                         ]),
-                 ])),
-        ],),
-    TextAscii(title=_("Tablespace name"), allow_empty=False),
-    match_type="dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersMssqlTablespaces(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "mssql_tablespaces"
+
+    @property
+    def title(self):
+        return _("MSSQL Size of Tablespace")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ("size",
+                 Tuple(
+                     title=_("Upper levels for size"),
+                     elements=[Filesize(title=_("Warning at")),
+                               Filesize(title=_("Critical at"))],
+                 )),
+                ("reserved",
+                 Alternative(
+                     title=_("Upper levels for reserved space"),
+                     elements=[
+                         Tuple(
+                             title=_("Absolute levels"),
+                             elements=[
+                                 Filesize(title=_("Warning at")),
+                                 Filesize(title=_("Critical at"))
+                             ],
+                         ),
+                         Tuple(
+                             title=_("Percentage levels"),
+                             elements=[
+                                 Percentage(title=_("Warning at")),
+                                 Percentage(title=_("Critical at"))
+                             ],
+                         ),
+                     ],
+                 )),
+                ("data",
+                 Alternative(
+                     title=_("Upper levels for data"),
+                     elements=[
+                         Tuple(
+                             title=_("Absolute levels"),
+                             elements=[
+                                 Filesize(title=_("Warning at")),
+                                 Filesize(title=_("Critical at"))
+                             ],
+                         ),
+                         Tuple(
+                             title=_("Percentage levels"),
+                             elements=[
+                                 Percentage(title=_("Warning at")),
+                                 Percentage(title=_("Critical at"))
+                             ],
+                         ),
+                     ],
+                 )),
+                ("indexes",
+                 Alternative(
+                     title=_("Upper levels for indexes"),
+                     elements=[
+                         Tuple(
+                             title=_("Absolute levels"),
+                             elements=[
+                                 Filesize(title=_("Warning at")),
+                                 Filesize(title=_("Critical at"))
+                             ],
+                         ),
+                         Tuple(
+                             title=_("Percentage levels"),
+                             elements=[
+                                 Percentage(title=_("Warning at")),
+                                 Percentage(title=_("Critical at"))
+                             ],
+                         ),
+                     ],
+                 )),
+                ("unused",
+                 Alternative(
+                     title=_("Upper levels for unused space"),
+                     elements=[
+                         Tuple(
+                             title=_("Absolute levels"),
+                             elements=[
+                                 Filesize(title=_("Warning at")),
+                                 Filesize(title=_("Critical at"))
+                             ],
+                         ),
+                         Tuple(
+                             title=_("Percentage levels"),
+                             elements=[
+                                 Percentage(title=_("Warning at")),
+                                 Percentage(title=_("Critical at"))
+                             ],
+                         ),
+                     ],
+                 )),
+                ("unallocated",
+                 Alternative(
+                     title=_("Lower levels for unallocated space"),
+                     elements=[
+                         Tuple(
+                             title=_("Absolute levels"),
+                             elements=[
+                                 Filesize(title=_("Warning below")),
+                                 Filesize(title=_("Critical below"))
+                             ],
+                         ),
+                         Tuple(
+                             title=_("Percentage levels"),
+                             elements=[
+                                 Percentage(title=_("Warning below")),
+                                 Percentage(title=_("Critical below"))
+                             ],
+                         ),
+                     ],
+                 )),
+            ],)
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Tablespace name"), allow_empty=False)

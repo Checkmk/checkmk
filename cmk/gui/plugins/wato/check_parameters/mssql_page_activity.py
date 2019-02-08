@@ -31,39 +31,64 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    "mssql_page_activity",
-    _("MSSQL Page Activity"),
-    Dictionary(
-        title=_("Page Activity Levels"),
-        elements=[
-            ("page_reads/sec",
-             Tuple(
-                 title=_("Reads/sec"),
-                 elements=[
-                     Float(title=_("warning at"), unit=_("/sec")),
-                     Float(title=_("critical at"), unit=_("/sec")),
-                 ])),
-            ("page_writes/sec",
-             Tuple(
-                 title=_("Writes/sec"),
-                 elements=[
-                     Float(title=_("warning at"), unit=_("/sec")),
-                     Float(title=_("critical at"), unit=_("/sec")),
-                 ])),
-            ("page_lookups/sec",
-             Tuple(
-                 title=_("Lookups/sec"),
-                 elements=[
-                     Float(title=_("warning at"), unit=_("/sec")),
-                     Float(title=_("critical at"), unit=_("/sec")),
-                 ])),
-        ]),
-    TextAscii(title=_("Service descriptions"), allow_empty=False),
-    match_type="dict")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersMssqlPageActivity(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "mssql_page_activity"
+
+    @property
+    def title(self):
+        return _("MSSQL Page Activity")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            title=_("Page Activity Levels"),
+            elements=[
+                ("page_reads/sec",
+                 Tuple(
+                     title=_("Reads/sec"),
+                     elements=[
+                         Float(title=_("warning at"), unit=_("/sec")),
+                         Float(title=_("critical at"), unit=_("/sec")),
+                     ],
+                 )),
+                ("page_writes/sec",
+                 Tuple(
+                     title=_("Writes/sec"),
+                     elements=[
+                         Float(title=_("warning at"), unit=_("/sec")),
+                         Float(title=_("critical at"), unit=_("/sec")),
+                     ],
+                 )),
+                ("page_lookups/sec",
+                 Tuple(
+                     title=_("Lookups/sec"),
+                     elements=[
+                         Float(title=_("warning at"), unit=_("/sec")),
+                         Float(title=_("critical at"), unit=_("/sec")),
+                     ],
+                 )),
+            ],
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Service descriptions"), allow_empty=False)

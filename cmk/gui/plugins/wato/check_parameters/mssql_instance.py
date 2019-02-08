@@ -30,18 +30,38 @@ from cmk.gui.valuespec import (
     MonitoringState,
     TextAscii,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    "mssql_instance",
-    _("MSSQL Instance"),
-    Dictionary(
-        elements=[("map_connection_state",
-                   MonitoringState(title=_("Connection status"), default_value=2))],),
-    TextAscii(title=_("Instance identifier"),),
-    "dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersMssqlInstance(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "mssql_instance"
+
+    @property
+    def title(self):
+        return _("MSSQL Instance")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[("map_connection_state",
+                       MonitoringState(title=_("Connection status"), default_value=2))],)
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Instance identifier"),)

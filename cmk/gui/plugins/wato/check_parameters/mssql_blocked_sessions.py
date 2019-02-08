@@ -32,9 +32,11 @@ from cmk.gui.valuespec import (
     MonitoringState,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
 mssql_waittypes = [
@@ -446,37 +448,55 @@ mssql_waittypes = [
     "XTPPROC_PARTITIONED_STACK_CREATE",
 ]
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    "mssql_blocked_sessions",
-    _("MSSQL Blocked Sessions"),
-    Dictionary(
-        elements=[
-            ("state",
-             MonitoringState(
-                 title=_("State of MSSQL Blocked Sessions is treated as"),
-                 help=_("The default state if there is at least one "
-                        "blocked session."),
-                 default_value=2,
-             )),
-            ("waittime",
-             Tuple(
-                 title=_("Levels for wait"),
-                 help=_("The threshholds for wait_duration_ms. Will "
-                        "overwrite the default state set above."),
-                 default_value=(0, 0),
-                 elements=[
-                     Float(title=_("Warning at"), unit=_("seconds"), display_format="%.3f"),
-                     Float(title=_("Critical at"), unit=_("seconds"), display_format="%.3f"),
-                 ])),
-            ("ignore_waittypes",
-             DualListChoice(
-                 title=_("Ignore wait types"),
-                 rows=40,
-                 choices=[(entry, entry) for entry in mssql_waittypes],
-             )),
-        ],),
-    None,
-    "dict",
-    deprecated=True,
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersMssqlBlockedSessions(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "mssql_blocked_sessions"
+
+    @property
+    def title(self):
+        return _("MSSQL Blocked Sessions")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def is_deprecated(self):
+        return True
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ("state",
+                 MonitoringState(
+                     title=_("State of MSSQL Blocked Sessions is treated as"),
+                     help=_("The default state if there is at least one "
+                            "blocked session."),
+                     default_value=2,
+                 )),
+                ("waittime",
+                 Tuple(
+                     title=_("Levels for wait"),
+                     help=_("The threshholds for wait_duration_ms. Will "
+                            "overwrite the default state set above."),
+                     default_value=(0, 0),
+                     elements=[
+                         Float(title=_("Warning at"), unit=_("seconds"), display_format="%.3f"),
+                         Float(title=_("Critical at"), unit=_("seconds"), display_format="%.3f"),
+                     ],
+                 )),
+                ("ignore_waittypes",
+                 DualListChoice(
+                     title=_("Ignore wait types"),
+                     rows=40,
+                     choices=[(entry, entry) for entry in mssql_waittypes],
+                 )),
+            ],)

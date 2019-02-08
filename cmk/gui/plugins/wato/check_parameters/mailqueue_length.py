@@ -31,9 +31,11 @@ from cmk.gui.valuespec import (
     Transform,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
 mailqueue_params = Dictionary(
@@ -66,15 +68,33 @@ mailqueue_params = Dictionary(
     ],
     optional_keys=["active"],
 )
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    "mailqueue_length",
-    _("Number of mails in outgoing mail queue"),
-    Transform(
-        mailqueue_params,
-        forth=lambda old: not isinstance(old, dict) and {"deferred": old} or old,
-    ),
-    None,
-    match_type="dict",
-    deprecated=True,
-)
+
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersMailqueueLength(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "mailqueue_length"
+
+    @property
+    def title(self):
+        return _("Number of mails in outgoing mail queue")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def is_deprecated(self):
+        return True
+
+    @property
+    def parameter_valuespec(self):
+        return Transform(
+            mailqueue_params,
+            forth=lambda old: not isinstance(old, dict) and {"deferred": old} or old,
+        )

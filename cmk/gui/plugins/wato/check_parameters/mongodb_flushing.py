@@ -32,33 +32,51 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersStorage,
-    register_check_parameters,
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersStorage,
-    "mongodb_flushing",
-    _("MongoDB Flushes"),
-    Dictionary(elements=[
-        (
-            "average_time",
-            Tuple(
-                title=_("Average flush time"),
-                elements=[
-                    Integer(title=_("Warning at"), unit="ms", default_value=50),
-                    Integer(title=_("Critical at"), unit="ms", default_value=100),
-                    Integer(title=_("Time interval"), unit="minutes", default_value=10),
-                ]),
-        ),
-        (
-            "last_time",
-            Tuple(
-                title=_("Last flush time"),
-                elements=[
-                    Integer(title=_("Warning at"), unit="ms", default_value=50),
-                    Integer(title=_("Critical at"), unit="ms", default_value=100),
-                ]),
-        ),
-    ]),
-    None,
-    match_type="dict")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersMongodbFlushing(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersStorage
+
+    @property
+    def check_group_name(self):
+        return "mongodb_flushing"
+
+    @property
+    def title(self):
+        return _("MongoDB Flushes")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                (
+                    "average_time",
+                    Tuple(
+                        title=_("Average flush time"),
+                        elements=[
+                            Integer(title=_("Warning at"), unit="ms", default_value=50),
+                            Integer(title=_("Critical at"), unit="ms", default_value=100),
+                            Integer(title=_("Time interval"), unit="minutes", default_value=10),
+                        ]),
+                ),
+                (
+                    "last_time",
+                    Tuple(
+                        title=_("Last flush time"),
+                        elements=[
+                            Integer(title=_("Warning at"), unit="ms", default_value=50),
+                            Integer(title=_("Critical at"), unit="ms", default_value=100),
+                        ],
+                    ),
+                ),
+            ],)

@@ -32,9 +32,11 @@ from cmk.gui.valuespec import (
     Percentage,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersOperatingSystem,
-    register_check_parameters,
 )
 
 # Beware: This is not yet implemented in the check.
@@ -119,15 +121,28 @@ def DualMemoryLevels(what, default_percents=None):
         ])
 
 
-register_check_parameters(
-    RulespecGroupCheckParametersOperatingSystem,
-    "memory_arbor",
-    _("Memory and Swap usage on Arbor devices"),
-    Dictionary(
-        elements=[
-            ("levels_ram", DualMemoryLevels(_("RAM"))),
-            ("levels_swap", DualMemoryLevels(_("Swap"))),
-        ],),
-    None,
-    "dict",
-)
+@rulespec_registry.register
+class RulespecCheckgroupParametersMemoryArbor(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersOperatingSystem
+
+    @property
+    def check_group_name(self):
+        return "memory_arbor"
+
+    @property
+    def title(self):
+        return _("Memory and Swap usage on Arbor devices")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ("levels_ram", DualMemoryLevels(_("RAM"))),
+                ("levels_swap", DualMemoryLevels(_("Swap"))),
+            ],)

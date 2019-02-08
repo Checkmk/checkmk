@@ -30,19 +30,36 @@ from cmk.gui.valuespec import (
     OptionalDropdownChoice,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersOperatingSystem,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersOperatingSystem, "memory_relative",
-    _("Main memory usage for Brocade fibre channel switches"),
-    OptionalDropdownChoice(
-        title=_("Memory usage"),
-        choices=[(None, _("Do not impose levels"))],
-        otherlabel=_("Percentual levels ->"),
-        explicit=Tuple(elements=[
-            Integer(title=_("Warning at"), default_value=85, unit="%"),
-            Integer(title=_("Critical at"), default_value=90, unit="%"),
-        ])), None, "first")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersMemoryRelative(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersOperatingSystem
+
+    @property
+    def check_group_name(self):
+        return "memory_relative"
+
+    @property
+    def title(self):
+        return _("Main memory usage for Brocade fibre channel switches")
+
+    @property
+    def parameter_valuespec(self):
+        return OptionalDropdownChoice(
+            title=_("Memory usage"),
+            choices=[(None, _("Do not impose levels"))],
+            otherlabel=_("Percentual levels ->"),
+            explicit=Tuple(
+                elements=[
+                    Integer(title=_("Warning at"), default_value=85, unit="%"),
+                    Integer(title=_("Critical at"), default_value=90, unit="%"),
+                ],))

@@ -34,52 +34,75 @@ from cmk.gui.valuespec import (
     Transform,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersOperatingSystem,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersOperatingSystem,
-    "memory_simple",
-    _("Main memory usage of simple devices"),
-    Transform(
-        Dictionary(
-            help=_("Memory levels for simple devices not running more complex OSs"),
-            elements=[
-                ("levels",
-                 CascadingDropdown(
-                     title=_("Levels for memory usage"),
-                     choices=[
-                         ("perc_used", _("Percentual levels for used memory"),
-                          Tuple(elements=[
-                              Percentage(
-                                  title=_("Warning at a memory usage of"),
-                                  default_value=80.0,
-                                  maxvalue=None),
-                              Percentage(
-                                  title=_("Critical at a memory usage of"),
-                                  default_value=90.0,
-                                  maxvalue=None)
-                          ])),
-                         ("abs_free", _("Absolute levels for free memory"),
-                          Tuple(elements=[
-                              Filesize(title=_("Warning below")),
-                              Filesize(title=_("Critical below"))
-                          ])),
-                         ("ignore", _("Do not impose levels")),
-                     ])),
-            ],
-            optional_keys=[],
-        ),
-        # Convert default levels from discovered checks
-        forth=lambda v: not isinstance(v, dict) and {"levels": ("perc_used", v)} or v,
-    ),
-    TextAscii(
-        title=_("Module name or empty"),
-        help=_("Leave this empty for systems without modules, which just "
-               "have one global memory usage."),
-        allow_empty=True,
-    ),
-    "dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersMemorySimple(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersOperatingSystem
+
+    @property
+    def check_group_name(self):
+        return "memory_simple"
+
+    @property
+    def title(self):
+        return _("Main memory usage of simple devices")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Transform(
+            Dictionary(
+                help=_("Memory levels for simple devices not running more complex OSs"),
+                elements=[
+                    ("levels",
+                     CascadingDropdown(
+                         title=_("Levels for memory usage"),
+                         choices=[
+                             ("perc_used", _("Percentual levels for used memory"),
+                              Tuple(
+                                  elements=[
+                                      Percentage(
+                                          title=_("Warning at a memory usage of"),
+                                          default_value=80.0,
+                                          maxvalue=None),
+                                      Percentage(
+                                          title=_("Critical at a memory usage of"),
+                                          default_value=90.0,
+                                          maxvalue=None)
+                                  ],)),
+                             ("abs_free", _("Absolute levels for free memory"),
+                              Tuple(
+                                  elements=[
+                                      Filesize(title=_("Warning below")),
+                                      Filesize(title=_("Critical below"))
+                                  ],)),
+                             ("ignore", _("Do not impose levels")),
+                         ],
+                     )),
+                ],
+                optional_keys=[],
+            ),
+            # Convert default levels from discovered checks
+            forth=lambda v: not isinstance(v, dict) and {"levels": ("perc_used", v)} or v,
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(
+            title=_("Module name or empty"),
+            help=_("Leave this empty for systems without modules, which just "
+                   "have one global memory usage."),
+            allow_empty=True,
+        )

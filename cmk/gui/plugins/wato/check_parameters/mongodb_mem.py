@@ -32,52 +32,69 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersStorage,
-    register_check_parameters,
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersStorage,
-    "mongodb_mem",
-    _("MongoDB Memory"),
-    Dictionary(
-        title=_("MongoDB Memory"),
-        elements=[
-            ("resident_levels",
-             Tuple(
-                 title=_("Resident memory usage"),
-                 help=
-                 _("The value of resident is roughly equivalent to the amount of RAM, "
-                   "currently used by the database process. In normal use this value tends to grow. "
-                   "In dedicated database servers this number tends to approach the total amount of system memory."
-                  ),
-                 elements=[
-                     Filesize(title=_("Warning at"), default_value=1 * 1024**3),
-                     Filesize(title=_("Critical at"), default_value=2 * 1024**3),
-                 ],
-             )),
-            ("mapped_levels",
-             Tuple(
-                 title=_("Mapped memory usage"),
-                 help=_(
-                     "The value of mapped shows the amount of mapped memory by the database. "
-                     "Because MongoDB uses memory-mapped files, this value is likely to be to be "
-                     "roughly equivalent to the total size of your database or databases."),
-                 elements=[
-                     Filesize(title=_("Warning at"), default_value=1 * 1024**3),
-                     Filesize(title=_("Critical at"), default_value=2 * 1024**3),
-                 ],
-             )),
-            ("virtual_levels",
-             Tuple(
-                 title=_("Virtual memory usage"),
-                 help=_(
-                     "Virtual displays the quantity of virtual memory used by the mongod process. "
-                 ),
-                 elements=[
-                     Filesize(title=_("Warning at"), default_value=2 * 1024**3),
-                     Filesize(title=_("Critical at"), default_value=4 * 1024**3),
-                 ],
-             )),
-        ]),
-    None,
-    match_type="dict")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersMongodbMem(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersStorage
+
+    @property
+    def check_group_name(self):
+        return "mongodb_mem"
+
+    @property
+    def title(self):
+        return _("MongoDB Memory")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            title=_("MongoDB Memory"),
+            elements=[
+                ("resident_levels",
+                 Tuple(
+                     title=_("Resident memory usage"),
+                     help=
+                     _("The value of resident is roughly equivalent to the amount of RAM, "
+                       "currently used by the database process. In normal use this value tends to grow. "
+                       "In dedicated database servers this number tends to approach the total amount of system memory."
+                      ),
+                     elements=[
+                         Filesize(title=_("Warning at"), default_value=1 * 1024**3),
+                         Filesize(title=_("Critical at"), default_value=2 * 1024**3),
+                     ],
+                 )),
+                ("mapped_levels",
+                 Tuple(
+                     title=_("Mapped memory usage"),
+                     help=_(
+                         "The value of mapped shows the amount of mapped memory by the database. "
+                         "Because MongoDB uses memory-mapped files, this value is likely to be to be "
+                         "roughly equivalent to the total size of your database or databases."),
+                     elements=[
+                         Filesize(title=_("Warning at"), default_value=1 * 1024**3),
+                         Filesize(title=_("Critical at"), default_value=2 * 1024**3),
+                     ],
+                 )),
+                ("virtual_levels",
+                 Tuple(
+                     title=_("Virtual memory usage"),
+                     help=
+                     _("Virtual displays the quantity of virtual memory used by the mongod process. "
+                      ),
+                     elements=[
+                         Filesize(title=_("Warning at"), default_value=2 * 1024**3),
+                         Filesize(title=_("Critical at"), default_value=4 * 1024**3),
+                     ],
+                 )),
+            ],
+        )

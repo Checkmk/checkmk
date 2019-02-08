@@ -30,31 +30,50 @@ from cmk.gui.valuespec import (
     Integer,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    "mcafee_web_gateway_misc",
-    _("McAfee web gateway miscellaneous"),
-    Dictionary(elements=[
-        ("clients",
-         Tuple(
-             title=_("Upper levels for clients"),
-             elements=[
-                 Integer(title=_("Warning at")),
-                 Integer(title=_("Critical at")),
-             ])),
-        ("network_sockets",
-         Tuple(
-             title=_("Upper levels for open network sockets"),
-             elements=[
-                 Integer(title=_("Warning at")),
-                 Integer(title=_("Critical at")),
-             ])),
-    ]),
-    None,
-    match_type="dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersMcafeeWebGatewayMisc(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "mcafee_web_gateway_misc"
+
+    @property
+    def title(self):
+        return _("McAfee web gateway miscellaneous")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ("clients",
+                 Tuple(
+                     title=_("Upper levels for clients"),
+                     elements=[
+                         Integer(title=_("Warning at")),
+                         Integer(title=_("Critical at")),
+                     ],
+                 )),
+                ("network_sockets",
+                 Tuple(
+                     title=_("Upper levels for open network sockets"),
+                     elements=[
+                         Integer(title=_("Warning at")),
+                         Integer(title=_("Critical at")),
+                     ],
+                 )),
+            ],)

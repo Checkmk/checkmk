@@ -30,38 +30,58 @@ from cmk.gui.valuespec import (
     Float,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    "mcafee_emailgateway_bridge",
-    _("McAfee email gateway bridge"),
-    Dictionary(elements=[
-        ("tcp",
-         Tuple(
-             title=_("TCP packets"),
-             elements=[
-                 Float(title=_("Warning at"), unit=_("packets/s")),
-                 Float(title=_("Critical at"), unit=_("packets/s")),
-             ])),
-        ("udp",
-         Tuple(
-             title=_("UDP packets"),
-             elements=[
-                 Float(title=_("Warning at"), unit=_("packets/s")),
-                 Float(title=_("Critical at"), unit=_("packets/s")),
-             ])),
-        ("icmp",
-         Tuple(
-             title=_("ICMP packets"),
-             elements=[
-                 Float(title=_("Warning at"), unit=_("packets/s")),
-                 Float(title=_("Critical at"), unit=_("packets/s")),
-             ])),
-    ]),
-    None,
-    match_type="dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersMcafeeEmailgatewayBridge(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "mcafee_emailgateway_bridge"
+
+    @property
+    def title(self):
+        return _("McAfee email gateway bridge")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ("tcp",
+                 Tuple(
+                     title=_("TCP packets"),
+                     elements=[
+                         Float(title=_("Warning at"), unit=_("packets/s")),
+                         Float(title=_("Critical at"), unit=_("packets/s")),
+                     ],
+                 )),
+                ("udp",
+                 Tuple(
+                     title=_("UDP packets"),
+                     elements=[
+                         Float(title=_("Warning at"), unit=_("packets/s")),
+                         Float(title=_("Critical at"), unit=_("packets/s")),
+                     ],
+                 )),
+                ("icmp",
+                 Tuple(
+                     title=_("ICMP packets"),
+                     elements=[
+                         Float(title=_("Warning at"), unit=_("packets/s")),
+                         Float(title=_("Critical at"), unit=_("packets/s")),
+                     ],
+                 )),
+            ],)

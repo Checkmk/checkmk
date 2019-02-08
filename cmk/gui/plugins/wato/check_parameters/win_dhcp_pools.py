@@ -35,11 +35,12 @@ from cmk.gui.valuespec import (
     Transform,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
     RulespecGroupCheckParametersDiscovery,
-    register_check_parameters,
-    rulespec_registry,
     HostRulespec,
 )
 
@@ -73,11 +74,24 @@ class RulespecDiscoveryWinDhcpPools(HostRulespec):
             ],
         )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    "win_dhcp_pools",
-    _("DHCP Pools for Windows and Linux"),
-    Transform(
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersWinDhcpPools(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "win_dhcp_pools"
+
+    @property
+    def title(self):
+        return _("DHCP Pools for Windows and Linux")
+
+    @property
+    def parameter_valuespec(self):
+        return Transform(
         Dictionary(
             elements = [
                 ("free_leases",
@@ -124,10 +138,12 @@ register_check_parameters(
                 ),
             ]
         ),
-        forth = lambda params: isinstance(params, tuple) and {"free_leases" : (float(params[0]), float(params[1]))} or params,
-    ),
-    TextAscii(
-        title = _("Pool name"),
-        allow_empty = False,
-    ),
-    match_type = "first",)
+        forth = lambda params: isinstance(params, tuple) and {"free_leases" : (float(params[0],), float(params[1],))} or params,
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(
+            title=_("Pool name"),
+            allow_empty=False,
+        )

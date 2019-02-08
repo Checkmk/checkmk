@@ -33,9 +33,11 @@ from cmk.gui.valuespec import (
     Transform,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersPrinters,
-    register_check_parameters,
 )
 
 
@@ -51,66 +53,81 @@ def windows_printer_queues_forth(old):
     return default
 
 
-register_check_parameters(
-    RulespecGroupCheckParametersPrinters,
-    "windows_printer_queues",
-    _("Number of open jobs of a printer on windows"),
-    Transform(
-        Dictionary(
-            title=_("Windows Printer Configuration"),
-            elements=[
-                (
-                    "levels",
-                    Tuple(
-                        title=_("Levels for the number of print jobs"),
-                        help=_("This rule is applied to the number of print jobs "
-                               "currently waiting in windows printer queue."),
-                        elements=[
-                            Integer(title=_("Warning at"), unit=_("jobs"), default_value=40),
-                            Integer(title=_("Critical at"), unit=_("jobs"), default_value=60),
-                        ]),
-                ),
-                ("crit_states",
-                 ListChoice(
-                     title=_("States who should lead to critical"),
-                     choices=[
-                         (0, "Unkown"),
-                         (1, "Other"),
-                         (2, "No Error"),
-                         (3, "Low Paper"),
-                         (4, "No Paper"),
-                         (5, "Low Toner"),
-                         (6, "No Toner"),
-                         (7, "Door Open"),
-                         (8, "Jammed"),
-                         (9, "Offline"),
-                         (10, "Service Requested"),
-                         (11, "Output Bin Full"),
-                     ],
-                     default_value=[9, 10],
-                 )),
-                ("warn_states",
-                 ListChoice(
-                     title=_("States who should lead to warning"),
-                     choices=[
-                         (0, "Unkown"),
-                         (1, "Other"),
-                         (2, "No Error"),
-                         (3, "Low Paper"),
-                         (4, "No Paper"),
-                         (5, "Low Toner"),
-                         (6, "No Toner"),
-                         (7, "Door Open"),
-                         (8, "Jammed"),
-                         (9, "Offline"),
-                         (10, "Service Requested"),
-                         (11, "Output Bin Full"),
-                     ],
-                     default_value=[8, 11],
-                 )),
-            ]),
-        forth=windows_printer_queues_forth,
-    ),
-    TextAscii(title=_("Printer Name"), allow_empty=True),
-    match_type="first",
-)
+@rulespec_registry.register
+class RulespecCheckgroupParametersWindowsPrinterQueues(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersPrinters
+
+    @property
+    def check_group_name(self):
+        return "windows_printer_queues"
+
+    @property
+    def title(self):
+        return _("Number of open jobs of a printer on windows")
+
+    @property
+    def parameter_valuespec(self):
+        return Transform(
+            Dictionary(
+                title=_("Windows Printer Configuration"),
+                elements=[
+                    (
+                        "levels",
+                        Tuple(
+                            title=_("Levels for the number of print jobs"),
+                            help=_("This rule is applied to the number of print jobs "
+                                   "currently waiting in windows printer queue."),
+                            elements=[
+                                Integer(title=_("Warning at"), unit=_("jobs"), default_value=40),
+                                Integer(title=_("Critical at"), unit=_("jobs"), default_value=60),
+                            ],
+                        ),
+                    ),
+                    ("crit_states",
+                     ListChoice(
+                         title=_("States who should lead to critical"),
+                         choices=[
+                             (0, "Unkown"),
+                             (1, "Other"),
+                             (2, "No Error"),
+                             (3, "Low Paper"),
+                             (4, "No Paper"),
+                             (5, "Low Toner"),
+                             (6, "No Toner"),
+                             (7, "Door Open"),
+                             (8, "Jammed"),
+                             (9, "Offline"),
+                             (10, "Service Requested"),
+                             (11, "Output Bin Full"),
+                         ],
+                         default_value=[9, 10],
+                     )),
+                    ("warn_states",
+                     ListChoice(
+                         title=_("States who should lead to warning"),
+                         choices=[
+                             (0, "Unkown"),
+                             (1, "Other"),
+                             (2, "No Error"),
+                             (3, "Low Paper"),
+                             (4, "No Paper"),
+                             (5, "Low Toner"),
+                             (6, "No Toner"),
+                             (7, "Door Open"),
+                             (8, "Jammed"),
+                             (9, "Offline"),
+                             (10, "Service Requested"),
+                             (11, "Output Bin Full"),
+                         ],
+                         default_value=[8, 11],
+                     )),
+                ],
+            ),
+            forth=windows_printer_queues_forth,
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Printer Name"), allow_empty=True)

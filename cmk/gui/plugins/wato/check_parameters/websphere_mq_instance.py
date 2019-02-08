@@ -33,30 +33,53 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    'websphere_mq_instance',
-    _("Websphere MQ Instance"),
-    Dictionary(elements=[
-        ("map_instance_states",
-         ListOf(
-             Tuple(
-                 orientation="horizontal",
-                 elements=[
-                     DropdownChoice(choices=[
-                         ('active', _('Active')),
-                         ('standby', _('Standby')),
-                     ]),
-                     MonitoringState(),
-                 ]),
-             title=_('Map instance state'),
-         )),
-    ]),
-    TextAscii(title=_("Name of manager or instance")),
-    "dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersWebsphereMqInstance(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "websphere_mq_instance"
+
+    @property
+    def title(self):
+        return _("Websphere MQ Instance")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ("map_instance_states",
+                 ListOf(
+                     Tuple(
+                         orientation="horizontal",
+                         elements=[
+                             DropdownChoice(
+                                 choices=[
+                                     ('active', _('Active')),
+                                     ('standby', _('Standby')),
+                                 ],),
+                             MonitoringState(),
+                         ],
+                     ),
+                     title=_('Map instance state'),
+                 )),
+            ],)
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Name of manager or instance"))

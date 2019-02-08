@@ -30,41 +30,58 @@ from cmk.gui.valuespec import (
     Integer,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    "winperf_ts_sessions",
-    _("Windows Terminal Server Sessions"),
-    Dictionary(
-        help=_("This check monitors number of active and inactive terminal "
-               "server sessions."),
-        elements=[
-            (
-                "active",
-                Tuple(
-                    title=_("Number of active sessions"),
-                    elements=[
-                        Integer(title=_("Warning at"), unit=_("sessions"), default_value=100),
-                        Integer(title=_("Critical at"), unit=_("sessions"), default_value=200),
-                    ],
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersWinperfTsSessions(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "winperf_ts_sessions"
+
+    @property
+    def title(self):
+        return _("Windows Terminal Server Sessions")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            help=_("This check monitors number of active and inactive terminal "
+                   "server sessions."),
+            elements=[
+                (
+                    "active",
+                    Tuple(
+                        title=_("Number of active sessions"),
+                        elements=[
+                            Integer(title=_("Warning at"), unit=_("sessions"), default_value=100),
+                            Integer(title=_("Critical at"), unit=_("sessions"), default_value=200),
+                        ],
+                    ),
                 ),
-            ),
-            (
-                "inactive",
-                Tuple(
-                    title=_("Number of inactive sessions"),
-                    help=_("Levels for the number of sessions that are currently inactive"),
-                    elements=[
-                        Integer(title=_("Warning at"), unit=_("sessions"), default_value=10),
-                        Integer(title=_("Critical at"), unit=_("sessions"), default_value=20),
-                    ],
+                (
+                    "inactive",
+                    Tuple(
+                        title=_("Number of inactive sessions"),
+                        help=_("Levels for the number of sessions that are currently inactive"),
+                        elements=[
+                            Integer(title=_("Warning at"), unit=_("sessions"), default_value=10),
+                            Integer(title=_("Critical at"), unit=_("sessions"), default_value=20),
+                        ],
+                    ),
                 ),
-            ),
-        ]),
-    None,
-    match_type="dict",
-)
+            ],
+        )

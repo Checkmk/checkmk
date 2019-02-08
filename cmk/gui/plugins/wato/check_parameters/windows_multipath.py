@@ -31,28 +31,42 @@ from cmk.gui.valuespec import (
     Percentage,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersStorage,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersStorage,
-    "windows_multipath",
-    _("Windows Multipath Count"),
-    Alternative(
-        help=_("This rules sets the expected number of active paths for a multipath LUN."),
-        title=_("Expected number of active paths"),
-        elements=[
-            Integer(title=_("Expected number of active paths")),
-            Tuple(
-                title=_("Expected percentage of active paths"),
-                elements=[
-                    Integer(title=_("Expected number of active paths")),
-                    Percentage(title=_("Warning if less then")),
-                    Percentage(title=_("Critical if less then")),
-                ]),
-        ]),
-    None,
-    "first",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersWindowsMultipath(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersStorage
+
+    @property
+    def check_group_name(self):
+        return "windows_multipath"
+
+    @property
+    def title(self):
+        return _("Windows Multipath Count")
+
+    @property
+    def parameter_valuespec(self):
+        return Alternative(
+            help=_("This rules sets the expected number of active paths for a multipath LUN."),
+            title=_("Expected number of active paths"),
+            elements=[
+                Integer(title=_("Expected number of active paths")),
+                Tuple(
+                    title=_("Expected percentage of active paths"),
+                    elements=[
+                        Integer(title=_("Expected number of active paths")),
+                        Percentage(title=_("Warning if less then")),
+                        Percentage(title=_("Critical if less then")),
+                    ],
+                ),
+            ],
+        )

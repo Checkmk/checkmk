@@ -31,24 +31,45 @@ from cmk.gui.valuespec import (
     Integer,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications, "windows_updates", _("WSUS (Windows Updates)"),
-    Tuple(
-        title=_("Parameters for the Windows Update Check with WSUS"),
-        help=_("Set the according numbers to 0 if you want to disable alerting."),
-        elements=[
-            Integer(title=_("Warning if at least this number of important updates are pending")),
-            Integer(title=_("Critical if at least this number of important updates are pending")),
-            Integer(title=_("Warning if at least this number of optional updates are pending")),
-            Integer(title=_("Critical if at least this number of optional updates are pending")),
-            Age(title=_("Warning if time until forced reboot is less then"), default_value=604800),
-            Age(title=_("Critical if time time until forced reboot is less then"),
-                default_value=172800),
-            Checkbox(title=_("display all important updates verbosely"), default_value=True),
-        ],
-    ), None, "first")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersWindowsUpdates(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "windows_updates"
+
+    @property
+    def title(self):
+        return _("WSUS (Windows Updates)")
+
+    @property
+    def parameter_valuespec(self):
+        return Tuple(
+            title=_("Parameters for the Windows Update Check with WSUS"),
+            help=_("Set the according numbers to 0 if you want to disable alerting."),
+            elements=[
+                Integer(
+                    title=_("Warning if at least this number of important updates are pending")),
+                Integer(
+                    title=_("Critical if at least this number of important updates are pending")),
+                Integer(title=_("Warning if at least this number of optional updates are pending")),
+                Integer(
+                    title=_("Critical if at least this number of optional updates are pending")),
+                Age(title=_("Warning if time until forced reboot is less then"),
+                    default_value=604800),
+                Age(title=_("Critical if time time until forced reboot is less then"),
+                    default_value=172800),
+                Checkbox(title=_("display all important updates verbosely"), default_value=True),
+            ],
+        )

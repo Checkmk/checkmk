@@ -31,31 +31,52 @@ from cmk.gui.valuespec import (
     Integer,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    "msx_rpcclientaccess",
-    _("MS Exchange RPC Client Access"),
-    Dictionary(
-        title=_("Set Levels"),
-        elements=[('latency',
-                   Tuple(
-                       title=_("Average latency for RPC requests"),
-                       elements=[
-                           Float(title=_("Warning at"), unit=_('ms'), default_value=200.0),
-                           Float(title=_("Critical at"), unit=_('ms'), default_value=250.0)
-                       ])),
-                  ('requests',
-                   Tuple(
-                       title=_("Maximum number of RPC requests per second"),
-                       elements=[
-                           Integer(title=_("Warning at"), unit=_('requests'), default_value=30),
-                           Integer(title=_("Critical at"), unit=_('requests'), default_value=40)
-                       ]))],
-        optional_keys=[]),
-    None,
-    match_type='dict')
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersMsxRpcclientaccess(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "msx_rpcclientaccess"
+
+    @property
+    def title(self):
+        return _("MS Exchange RPC Client Access")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            title=_("Set Levels"),
+            elements=[('latency',
+                       Tuple(
+                           title=_("Average latency for RPC requests"),
+                           elements=[
+                               Float(title=_("Warning at"), unit=_('ms'), default_value=200.0),
+                               Float(title=_("Critical at"), unit=_('ms'), default_value=250.0)
+                           ],
+                       )),
+                      ('requests',
+                       Tuple(
+                           title=_("Maximum number of RPC requests per second"),
+                           elements=[
+                               Integer(title=_("Warning at"), unit=_('requests'), default_value=30),
+                               Integer(
+                                   title=_("Critical at"), unit=_('requests'), default_value=40)
+                           ],
+                       ))],
+            optional_keys=[],
+        )

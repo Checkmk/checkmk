@@ -31,28 +31,51 @@ from cmk.gui.valuespec import (
     ListOfTimeRanges,
     TextAscii,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersEnvironment,
-    "motion",
-    _("Motion Detectors"),
-    Dictionary(elements=[
-        ("time_periods",
-         Dictionary(
-             title=_("Time periods"),
-             help=_("Specifiy time ranges during which no motion is expected. "
-                    "Outside these times, the motion detector will always be in "
-                    "state OK"),
-             elements=[(day_id, ListOfTimeRanges(title=day_str))
-                       for day_id, day_str in defines.weekdays_by_name()],
-             optional_keys=[])),
-    ]),
-    TextAscii(
-        title=_("Sensor name"),
-        help=_("The identifier of the sensor."),
-    ),
-    match_type="dict")
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersMotion(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersEnvironment
+
+    @property
+    def check_group_name(self):
+        return "motion"
+
+    @property
+    def title(self):
+        return _("Motion Detectors")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            elements=[
+                ("time_periods",
+                 Dictionary(
+                     title=_("Time periods"),
+                     help=_("Specifiy time ranges during which no motion is expected. "
+                            "Outside these times, the motion detector will always be in "
+                            "state OK"),
+                     elements=[(day_id, ListOfTimeRanges(title=day_str))
+                               for day_id, day_str in defines.weekdays_by_name()],
+                     optional_keys=[],
+                 )),
+            ],)
+
+    @property
+    def item_spec(self):
+        return TextAscii(
+            title=_("Sensor name"),
+            help=_("The identifier of the sensor."),
+        )

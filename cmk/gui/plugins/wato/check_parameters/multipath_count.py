@@ -34,14 +34,31 @@ from cmk.gui.valuespec import (
     Transform,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersStorage,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersStorage, "multipath_count", _("ESX Multipath Count"),
-    Alternative(
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersMultipathCount(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersStorage
+
+    @property
+    def check_group_name(self):
+        return "multipath_count"
+
+    @property
+    def title(self):
+        return _("ESX Multipath Count")
+
+    @property
+    def parameter_valuespec(self):
+        return Alternative(
         help=_("This rules sets the expected number of active paths for a multipath LUN "
                "on ESX servers"),
         title=_("Match type"),
@@ -63,13 +80,17 @@ register_check_parameters(
                                  Integer(title=_("Warning if less than")),
                                  Integer(title=_("Warning if more than")),
                                  Integer(title=_("Critical if more than")),
-                             ]),
-                         forth=lambda x: len(x) == 2 and (0, 0, x[0], x[1]) or x))
+                             ],),
+                         forth=lambda x: len(x) == 2 and (0, 0, x[0], x[1],) or x))
                     for (element,
                          description) in [("active", _("Active paths")), (
                              "dead", _("Dead paths")), (
                                  "disabled", _("Disabled paths")), (
                                      "standby", _("Standby paths")), ("unknown",
                                                                       _("Unknown paths"))]
-                ]),
-        ]), TextAscii(title=_("Path ID")), "first")
+                ],),
+        ],)
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Path ID"))

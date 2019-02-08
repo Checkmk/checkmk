@@ -30,47 +30,66 @@ from cmk.gui.valuespec import (
     Integer,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    "mbg_lantime_state",
-    _("Meinberg Lantime State"),
-    Dictionary(
-        title=_("Meinberg Lantime State"),
-        elements=[
-            ("stratum",
-             Tuple(
-                 title=_("Warning levels for Stratum"),
-                 elements=[
-                     Integer(
-                         title=_("Warning at"),
-                         default_value=2,
-                     ),
-                     Integer(
-                         title=_("Critical at"),
-                         default_value=3,
-                     ),
-                 ])),
-            ("offset",
-             Tuple(
-                 title=_("Warning levels for Time Offset"),
-                 elements=[
-                     Integer(
-                         title=_("Warning at"),
-                         unit=_("microseconds"),
-                         default_value=10,
-                     ),
-                     Integer(
-                         title=_("Critical at"),
-                         unit=_("microseconds"),
-                         default_value=20,
-                     ),
-                 ])),
-        ]),
-    None,
-    match_type="dict",
-)
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersMbgLantimeState(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "mbg_lantime_state"
+
+    @property
+    def title(self):
+        return _("Meinberg Lantime State")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            title=_("Meinberg Lantime State"),
+            elements=[
+                ("stratum",
+                 Tuple(
+                     title=_("Warning levels for Stratum"),
+                     elements=[
+                         Integer(
+                             title=_("Warning at"),
+                             default_value=2,
+                         ),
+                         Integer(
+                             title=_("Critical at"),
+                             default_value=3,
+                         ),
+                     ],
+                 )),
+                ("offset",
+                 Tuple(
+                     title=_("Warning levels for Time Offset"),
+                     elements=[
+                         Integer(
+                             title=_("Warning at"),
+                             unit=_("microseconds"),
+                             default_value=10,
+                         ),
+                         Integer(
+                             title=_("Critical at"),
+                             unit=_("microseconds"),
+                             default_value=20,
+                         ),
+                     ],
+                 )),
+            ],
+        )

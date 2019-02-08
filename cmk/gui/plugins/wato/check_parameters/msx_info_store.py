@@ -32,40 +32,66 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    register_check_parameters,
 )
 
-register_check_parameters(
-    RulespecGroupCheckParametersApplications,
-    "msx_info_store",
-    _("MS Exchange Information Store"),
-    Dictionary(
-        title=_("Set Levels"),
-        elements=[('store_latency',
-                   Tuple(
-                       title=_("Average latency for store requests"),
-                       elements=[
-                           Float(title=_("Warning at"), unit=_('ms'), default_value=40.0),
-                           Float(title=_("Critical at"), unit=_('ms'), default_value=50.0)
-                       ])),
-                  ('clienttype_latency',
-                   Tuple(
-                       title=_("Average latency for client type requests"),
-                       elements=[
-                           Float(title=_("Warning at"), unit=_('ms'), default_value=40.0),
-                           Float(title=_("Critical at"), unit=_('ms'), default_value=50.0)
-                       ])),
-                  ('clienttype_requests',
-                   Tuple(
-                       title=_("Maximum number of client type requests per second"),
-                       elements=[
-                           Integer(title=_("Warning at"), unit=_('requests'), default_value=60),
-                           Integer(title=_("Critical at"), unit=_('requests'), default_value=70)
-                       ]))],
-        optional_keys=[]),
-    TextAscii(
-        title=_("Store"),
-        help=_("Specify the name of a store (This is either a mailbox or public folder)")),
-    match_type='dict')
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersMsxInfoStore(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "msx_info_store"
+
+    @property
+    def title(self):
+        return _("MS Exchange Information Store")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(
+            title=_("Set Levels"),
+            elements=[('store_latency',
+                       Tuple(
+                           title=_("Average latency for store requests"),
+                           elements=[
+                               Float(title=_("Warning at"), unit=_('ms'), default_value=40.0),
+                               Float(title=_("Critical at"), unit=_('ms'), default_value=50.0)
+                           ],
+                       )),
+                      ('clienttype_latency',
+                       Tuple(
+                           title=_("Average latency for client type requests"),
+                           elements=[
+                               Float(title=_("Warning at"), unit=_('ms'), default_value=40.0),
+                               Float(title=_("Critical at"), unit=_('ms'), default_value=50.0)
+                           ],
+                       )),
+                      ('clienttype_requests',
+                       Tuple(
+                           title=_("Maximum number of client type requests per second"),
+                           elements=[
+                               Integer(title=_("Warning at"), unit=_('requests'), default_value=60),
+                               Integer(
+                                   title=_("Critical at"), unit=_('requests'), default_value=70)
+                           ],
+                       ))],
+            optional_keys=[],
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(
+            title=_("Store"),
+            help=_("Specify the name of a store (This is either a mailbox or public folder)"))

@@ -34,10 +34,11 @@ from cmk.gui.valuespec import (
     TextAscii,
     Tuple,
 )
+
 from cmk.gui.plugins.wato import (
-    RulespecGroupCheckParametersStorage,
-    register_check_parameters,
+    CheckParameterRulespecWithItem,
     rulespec_registry,
+    RulespecGroupCheckParametersStorage,
     HostRulespec,
 )
 
@@ -76,23 +77,42 @@ class RulespecInventoryMultipathRules(HostRulespec):
         )
 
 
-register_check_parameters(
-    RulespecGroupCheckParametersStorage, "multipath", _("Linux and Solaris Multipath Count"),
-    Alternative(
-        help=_("This rules sets the expected number of active paths for a multipath LUN "
-               "on Linux and Solaris hosts"),
-        title=_("Expected number of active paths"),
-        elements=[
-            Integer(title=_("Expected number of active paths")),
-            Tuple(
-                title=_("Expected percentage of active paths"),
-                elements=[
-                    Percentage(title=_("Warning if less then")),
-                    Percentage(title=_("Critical if less then")),
-                ]),
-        ]),
-    TextAscii(
-        title=_("Name of the MP LUN"),
-        help=_("For Linux multipathing this is either the UUID (e.g. "
-               "60a9800043346937686f456f59386741), or the configured "
-               "alias.")), "first")
+@rulespec_registry.register
+class RulespecCheckgroupParametersMultipath(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersStorage
+
+    @property
+    def check_group_name(self):
+        return "multipath"
+
+    @property
+    def title(self):
+        return _("Linux and Solaris Multipath Count")
+
+    @property
+    def parameter_valuespec(self):
+        return Alternative(
+            help=_("This rules sets the expected number of active paths for a multipath LUN "
+                   "on Linux and Solaris hosts"),
+            title=_("Expected number of active paths"),
+            elements=[
+                Integer(title=_("Expected number of active paths")),
+                Tuple(
+                    title=_("Expected percentage of active paths"),
+                    elements=[
+                        Percentage(title=_("Warning if less then")),
+                        Percentage(title=_("Critical if less then")),
+                    ],
+                ),
+            ],
+        )
+
+    @property
+    def item_spec(self):
+        return TextAscii(
+            title=_("Name of the MP LUN"),
+            help=_("For Linux multipathing this is either the UUID (e.g. "
+                   "60a9800043346937686f456f59386741), or the configured "
+                   "alias."))

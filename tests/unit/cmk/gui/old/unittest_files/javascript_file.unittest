@@ -1,3 +1,0 @@
-[{'function_name': 'javascript_file',
-  'input': {'arguments': {'src': 'js/test.js'}},
-  'output': {'html_code': '<script type="text/javascript" src="js/test.js"/></script>\n'}}]

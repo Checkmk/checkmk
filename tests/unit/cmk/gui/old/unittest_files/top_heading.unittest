@@ -1,3 +1,0 @@
-[{'function_name': 'top_heading',
-  'input': {'arguments': {'title': 'TEST'}},
-  'output': {'html_code': '<table class="header"><tr><td width="*" class="heading"><a href="#" onfocus="if (this.blur) this.blur();" onclick="this.innerHTML=\'Reloading...\'; document.location.reload();">TEST</a></td><a id=\'helpbutton\' onclick="cmk.help.toggle()" style="display:none" class="passive" onfocus="if (this.blur) this.blur();" href="javascript:void(0)" title="Toggle context help texts"><img src="images/icons/help.png" class="icon iconbutton" align=absmiddle /></a><a class=head_logo href="https://mathias-kettner.com"><img src="images/logo_cmk_small.png"/></a></td></tr></table><hr class="header">\n'}}]

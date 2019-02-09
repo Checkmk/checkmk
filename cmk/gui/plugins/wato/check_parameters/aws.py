@@ -26,12 +26,14 @@
 
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
+    Alternative,
     Dictionary,
     Integer,
     Tuple,
     Float,
     Percentage,
     Age,
+    FixedValue,
 )
 from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersApplications,
@@ -43,11 +45,22 @@ register_check_parameters(
     'aws_ec2_cpu_credits',
     _("AWS/EC2 CPU Credits"),
     Dictionary(elements=[('balance_levels_lower',
-                          Tuple(
+                          Alternative(
                               title=_("Lower levels for CPU balance"),
+                              style="dropdown",
                               elements=[
-                                  Integer(title=_("Warning below")),
-                                  Integer(title=_("Critical below")),
+                                  Tuple(
+                                      title=_("Set levels"),
+                                      elements=[
+                                          Integer(title=_("Warning at or below")),
+                                          Integer(title=_("Critical at or below")),
+                                      ]),
+                                  Tuple(
+                                      title=_("No levels"),
+                                      elements=[
+                                          FixedValue(None, totext=""),
+                                          FixedValue(None, totext=""),
+                                      ]),
                               ]))]),
     None,
     match_type='dict',

@@ -46,6 +46,10 @@ AWSRegions = {
     "us-west-2": "US West Oregon",
 }
 
+factory_settings['aws_cpu_credits'] = {
+    'balance_levels_lower': (10, 5),
+}
+
 
 def parse_aws(info):
     import json

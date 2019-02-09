@@ -112,7 +112,7 @@ def check_aws_ec2_cpu_credits(item, params, parsed):
         return
 
     yield 0, "Usage: %.2f" % metrics['CPUCreditUsage']
-    warn, crit = params.get("levels_lower", (None, None))
+    warn, crit = params["balance_levels_lower"]
     yield check_levels(
         metrics['CPUCreditBalance'],
         "aws_ec2_credit_balance", (None, None, warn, crit),
@@ -127,6 +127,7 @@ check_info['aws_ec2.cpu_credits'] = {
     'service_description': 'AWS/EC2 CPU Credits',
     'group': 'aws_ec2_cpu_credits',
     'includes': ['aws.include'],
+    'default_levels_variable': 'aws_cpu_credits',
 }
 
 #.

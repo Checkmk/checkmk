@@ -1532,7 +1532,7 @@ def declare_invtable_column(infoname, name, topic, title, short_title, sortfunc,
 
 # One master function that does all
 def declare_invtable_view(infoname, invpath, title_singular, title_plural):
-    def inv_table(columns, add_headers, only_sites, limit, filters):
+    def inv_table(self, columns, add_headers, only_sites, limit, filters):
         return inv_multisite_table(infoname, invpath, columns, add_headers, only_sites, limit,
                                    filters)
 

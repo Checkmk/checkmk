@@ -181,6 +181,8 @@ class AWSSection(object):
             assert isinstance(
                 result,
                 AWSSectionResult), "%s: Result mut be of type 'AWSSectionResult'" % self.name
+            if result.content is None:
+                continue
             # In the related check plugin aws.include we parse these results and
             # extend list of json-loaded results.
             assert isinstance(result.content,
@@ -609,6 +611,14 @@ class S3Summary(AWSSectionGeneric):
             if location is None or location != self._region:
                 continue
             bucket['LocationConstraint'] = location
+
+            #TODO
+            # Why do we get the following error while calling these methods:
+            #_response = self._client.get_public_access_block(Bucket=bucket_name)
+            #_response = self._client.get_bucket_policy_status(Bucket=bucket_name)
+            # 'S3' object has no attribute 'get_bucket_policy_status'
+            # 'list' object has no attribute 'iterkeys'
+
             try:
                 response = self._client.get_bucket_tagging(Bucket=bucket_name)
                 tagging = response['TagSet']

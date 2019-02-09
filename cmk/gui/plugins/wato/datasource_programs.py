@@ -1879,12 +1879,12 @@ class RulespecSpecialAgentsAws(HostRulespec):
         return Dictionary(
             title=_('Amazon Web Services (AWS)'),
             elements=[
-                ("aws_access_key_id",
+                ("access_key_id",
                  TextAscii(
                      title=_("The access key for your AWS account"),
                      allow_empty=False,
                  )),
-                ("aws_secret_access_key",
+                ("secret_access_key",
                  IndividualOrStoredPassword(
                      title=_("The secret key for your AWS account"),
                      allow_empty=False,
@@ -1915,14 +1915,20 @@ class RulespecSpecialAgentsAws(HostRulespec):
                      ],
                                     key=lambda x: x[1]),
                  )),
-                ("services",
+                ("global_services",
                  Dictionary(
-                     title=_("Services to monitor"),
+                     title=_("Global services to monitor"),
                      elements=[
                          ("ce",
                           FixedValue(
                               None, totext=_("Monitor costs and usage"),
                               title=_("Costs and usage"))),
+                     ],
+                 )),
+                ("services",
+                 Dictionary(
+                     title=_("Services per region to monitor"),
+                     elements=[
                          ("ec2", _vs_aws_service_selection(_("Elastic Compute Cloud (EC2)"))),
                          ("ebs", _vs_aws_service_selection(_("Elastic Block Storage (EBS)"))),
                          ("s3", _vs_aws_service_selection(_("Simple Storage Service (S3)"))),

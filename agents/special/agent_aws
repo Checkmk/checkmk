@@ -72,11 +72,6 @@ def _chunks(list_, length=100):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-
-class AWSSectionError(Exception):
-    pass
-
-
 #   ---result distributor---------------------------------------------------
 
 
@@ -165,17 +160,32 @@ class AWSSection(object):
 
     def run(self, use_cache=False):
         colleague_contents = self._get_colleague_contents()
-        assert isinstance(colleague_contents, AWSColleagueContents)
+        assert isinstance(
+            colleague_contents, AWSColleagueContents
+        ), "%s: Colleague contents must be of type 'AWSColleagueContents'" % self.name
 
         raw_content = self._get_raw_content(colleague_contents, use_cache=use_cache)
-        assert isinstance(raw_content, AWSRawContent)
+        assert isinstance(
+            raw_content,
+            AWSRawContent), "%s: Raw content must be of type 'AWSRawContent'" % self.name
 
         computed_content = self._compute_content(raw_content, colleague_contents)
-        assert isinstance(computed_content, AWSComputedContent)
+        assert isinstance(computed_content, AWSComputedContent
+                         ), "%s: Computed content must be of type 'AWSComputedContent'" % self.name
 
         self._send(computed_content)
-        return AWSSectionResults(
-            self._create_results(computed_content), computed_content.cache_timestamp)
+        created_results = self._create_results(computed_content)
+        assert isinstance(created_results,
+                          list), "%s: Created results must be fo type 'list'" % self.name
+        for result in created_results:
+            assert isinstance(
+                result,
+                AWSSectionResult), "%s: Result mut be of type 'AWSSectionResult'" % self.name
+            # In the related check plugin aws.include we parse these results and
+            # extend list of json-loaded results.
+            assert isinstance(result.content,
+                              list), "%s: Result content must be of type 'list'" % self.name
+        return AWSSectionResults(created_results, computed_content.cache_timestamp)
 
     def _get_raw_content(self, colleague_contents, use_cache=False):
         # Cache is only used if the age is lower than section interval AND
@@ -226,7 +236,7 @@ class AWSSection(object):
         try:
             content = json.loads(raw_content)
         except ValueError as e:
-            logging.debug(e)
+            logging.info(e)
             content = None
         return content, self._cache_file.stat().st_mtime
 
@@ -1060,84 +1070,6 @@ class EBS(AWSSectionCloudwatch):
 
 
 #.
-#   .--glacier-------------------------------------------------------------.
-#   |                         _            _                               |
-#   |                    __ _| | __ _  ___(_) ___ _ __                     |
-#   |                   / _` | |/ _` |/ __| |/ _ \ '__|                    |
-#   |                  | (_| | | (_| | (__| |  __/ |                       |
-#   |                   \__, |_|\__,_|\___|_|\___|_|                       |
-#   |                   |___/                                              |
-#   '----------------------------------------------------------------------'
-
-#class Glacier(AWSSectionGeneric):
-#    @property
-#    def name(self):
-#        return "glacier"
-#
-#    @property
-#    def interval(self):
-#        return 300
-#
-#    def _fetch_raw_content(self, colleague_contents):
-#        response = self._client.list_vaults()
-#        try:
-#            vaults = {r['VaultName']: r for r in response['VaultList']}
-#        except KeyError as e:
-#            logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
-#            vaults = {}
-#
-#        for vault_name, vault in vaults.iteritems():
-#            response = self._client.list_jobs(vaultName=vault_name)
-#            try:
-#                jobs = response['JobList']
-#            except KeyError as e:
-#                logging.info("%s/%s: KeyError %s; Available are %s", self.name, vault_name, e,
-#                             response.keys())
-#                jobs = []
-#            vault['Jobs'] = jobs
-#        return vaults
-#
-#    def _create_results(self, computed_content):
-#        return [AWSSectionResult("", computed_content)]
-
-#.
-#   .--cloud trail---------------------------------------------------------.
-#   |                 _                 _   _             _ _              |
-#   |             ___| | ___  _   _  __| | | |_ _ __ __ _(_) |             |
-#   |            / __| |/ _ \| | | |/ _` | | __| '__/ _` | | |             |
-#   |           | (__| | (_) | |_| | (_| | | |_| | | (_| | | |             |
-#   |            \___|_|\___/ \__,_|\__,_|  \__|_|  \__,_|_|_|             |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-# AWS eigener Monitoring service
-
-#class CloudTrail(AWSSectionGeneric):
-#    @property
-#    def name(self):
-#        return "cloud_trail"
-#
-#    @property
-#    def interval(self):
-#        return 300
-#
-#    def _fetch_raw_content(self, colleague_contents):
-#        response = self._client.describe_trails()
-#        try:
-#            trails = {trail['Name']: trail for trail in response['trailList']}
-#        except KeyError as e:
-#            logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
-#            trails = {}
-#
-#        for trail_name, trail in trails.iteritems():
-#            response = self._client.get_trail_status(Name=trail_name)
-#            trail['Status'] = response
-#        return trails
-#
-#    def _create_results(self, computed_content):
-#        return [AWSSectionResult("", computed_content)]
-
-#.
 #   .--sections------------------------------------------------------------.
 #   |                               _   _                                  |
 #   |                 ___  ___  ___| |_(_) ___  _ __  ___                  |
@@ -1151,9 +1083,10 @@ class EBS(AWSSectionCloudwatch):
 class AWSSections(object):
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, hostname, session):
+    def __init__(self, hostname, session, debug=False):
         self._hostname = hostname
         self._session = session
+        self._debug = debug
         self._sections = []
 
     @abc.abstractmethod
@@ -1164,7 +1097,7 @@ class AWSSections(object):
         try:
             return self._session.client(client_key)
         except (ValueError, botocore.exceptions.ClientError,
-                botocore.exceptions.UnknownServiceError) as e:
+                botocore.exceptions.UnknownServiceError):
             # If region name is not valid we get a ValueError
             # but not in all cases, eg.:
             # 1. 'eu-central-' raises a ValueError
@@ -1172,7 +1105,7 @@ class AWSSections(object):
             # In the second case we get an exception raised by botocore
             # during we execute an operation, eg. cloudwatch.get_metrics(**kwargs):
             # - botocore.exceptions.EndpointConnectionError
-            logging.info(e)
+            raise
 
     def run(self, use_cache=True):
         exceptions = []
@@ -1180,9 +1113,15 @@ class AWSSections(object):
         for section in self._sections:
             try:
                 section_result = section.run(use_cache=use_cache)
+            except AssertionError as e:
+                logging.info(e)
+                if self._debug:
+                    raise
             except Exception as e:
                 logging.info(e)
                 exceptions.append(e)
+                if self._debug:
+                    raise
             else:
                 results.setdefault((section.name, section_result.cache_timestamp, section.interval),
                                    section_result.results)
@@ -1200,16 +1139,18 @@ class AWSSections(object):
 
     def _write_section_results(self, results):
         if not results:
-            logging.info("No results or cached data")
+            logging.info("%s: No results or cached data", self.__class__.__name__)
             return
 
         for (section_name, cache_timestamp, section_interval), result in results.iteritems():
             if not result:
-                logging.info("No results of %s", section_name)
+                logging.info("%s: No results of %s", section_name, self.__class__.__name__)
                 continue
 
             if not isinstance(result, list):
-                logging.info("Section result must be formatted as a list of 'AWSSectionResult's")
+                logging.info(
+                    "%s: Section result must be formatted as a list of 'AWSSectionResult's",
+                    self.__class__.__name__)
                 continue
 
             cached_suffix = ""
@@ -1365,15 +1306,16 @@ AWSRegions = [
 AWSServiceAttributes = NamedTuple("AWSServiceAttributes", [
     ("key", str),
     ("title", str),
+    ("global_service", bool),
     ("filter_by_names_or_tags", bool),
 ])
 
 AWSServices = [
-    AWSServiceAttributes("ce", "Costs and usage", False),
-    AWSServiceAttributes("ec2", "Elastic Compute Cloud (EC2)", True),
-    AWSServiceAttributes("ebs", "Elastic Block Storage (EBS)", True),
-    AWSServiceAttributes("s3", "Simple Storage Service (S3)", True),
-    AWSServiceAttributes("elb", "Elastic Load Balancing (ELB)", True),
+    AWSServiceAttributes("ce", "Costs and usage", True, False),
+    AWSServiceAttributes("ec2", "Elastic Compute Cloud (EC2)", False, True),
+    AWSServiceAttributes("ebs", "Elastic Block Storage (EBS)", False, True),
+    AWSServiceAttributes("s3", "Simple Storage Service (S3)", False, True),
+    AWSServiceAttributes("elb", "Elastic Load Balancing (ELB)", False, True),
 ]
 
 
@@ -1382,21 +1324,33 @@ def parse_arguments(argv):
         description=__doc__, formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument("--debug", action="store_true", help="Raise Python exceptions.")
     parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="Log messages from AWS library 'boto3' and 'botocore'.")
+    parser.add_argument(
         "--no-cache", action="store_true", help="Execute all sections, do not rely on cached data.")
 
     parser.add_argument(
-        "--aws-access-key-id", required=True, help="The access key for your AWS account.")
+        "--access-key-id", required=True, help="The access key for your AWS account.")
     parser.add_argument(
-        "--aws-secret-access-key", required=True, help="The secret key for your AWS account.")
+        "--secret-access-key", required=True, help="The secret key for your AWS account.")
     parser.add_argument(
         "--regions",
         nargs='+',
         required=True,
         help="Regions to use:\n%s" % "\n".join(["%-15s %s" % e for e in AWSRegions]))
 
-    parser.add_argument('--overall-tag-key', nargs=1, action='append', help="Overall tag key")
     parser.add_argument(
-        '--overall-tag-values', nargs='+', action='append', help="Overall tag values")
+        "--global-services",
+        nargs='+',
+        help="Global services to monitor:\n%s" % "\n".join(
+            ["%-15s %s" % (e.key, e.title) for e in AWSServices if e.global_service]))
+
+    parser.add_argument(
+        "--services",
+        nargs='+',
+        help="Services per region to monitor:\n%s" % "\n".join(
+            ["%-15s %s" % (e.key, e.title) for e in AWSServices if not e.global_service]))
 
     for service in AWSServices:
         if service.filter_by_names_or_tags:
@@ -1413,23 +1367,24 @@ def parse_arguments(argv):
                 action='append',
                 help="Tag values for %s" % service.title)
 
+    parser.add_argument('--overall-tag-key', nargs=1, action='append', help="Overall tag key")
     parser.add_argument(
-        "--services",
-        nargs='+',
-        required=True,
-        help="Services to monitor:\n%s" % "\n".join(
-            ["%-15s %s" % (e[0], e[1]) for e in AWSServices]))
+        '--overall-tag-values', nargs='+', action='append', help="Overall tag values")
 
     parser.add_argument("--hostname", required=True)
     return parser.parse_args(argv)
 
 
-def setup_logging(opt_debug):
+def setup_logging(opt_debug, opt_verbose):
+    logger = logging.getLogger()
+    logger.disabled = True
     fmt = '%(levelname)s: %(name)s: %(filename)s: %(lineno)s: %(message)s'
-    if opt_debug:
+    lvl = logging.INFO
+    if opt_verbose:
+        logger.disabled = False
         lvl = logging.DEBUG
-    else:
-        lvl = logging.INFO
+    elif opt_debug:
+        logger.disabled = False
     logging.basicConfig(level=lvl, format=fmt)
 
 
@@ -1476,49 +1431,40 @@ def main(args=None):
         args = sys.argv[1:]
 
     args = parse_arguments(args)
-    setup_logging(args.debug)
-
+    setup_logging(args.debug, args.verbose)
     hostname = args.hostname
-    access_key_id = args.aws_access_key_id
-    secret_access_key = args.aws_secret_access_key
-    use_cache = not args.no_cache
-    services = args.services
 
     aws_config = AWSConfig(hostname, (args.overall_tag_key, args.overall_tag_values))
     for service_key, service_names, service_tags in [
         ("ec2", args.ec2_names, (args.ec2_tag_key, args.ec2_tag_values)),
         ("ebs", args.ebs_names, (args.ebs_tag_key, args.ebs_tag_values)),
-        ("s3", args.s3_names, (None, None)),
-        ("elb", args.elb_names, (None, None)),
+        ("s3", args.s3_names, (args.s3_tag_key, args.s3_tag_values)),
+        ("elb", args.elb_names, (args.elb_tag_key, args.elb_tag_values)),
     ]:
         aws_config.add_service_config(service_key, service_names, service_tags)
 
-    exceptions = []
-    try:
-        region_us_east_1 = "us-east-1"
-        session = create_session(access_key_id, secret_access_key, region_us_east_1)
-        aws_sections_us_east = AWSSectionsUSEast(hostname, session)
-        aws_sections_us_east.init_sections(services, region_us_east_1, aws_config)
-        aws_sections_us_east.run(use_cache=use_cache)
-    except Exception as e:
-        if args.debug:
-            raise
-        exceptions.append(e)
-
-    for region in args.regions:
-        try:
-            session = create_session(access_key_id, secret_access_key, region)
-            aws_sections = AWSSectionsGeneric(hostname, session)
-            aws_sections.init_sections(services, region, aws_config)
-            aws_sections.run(use_cache=use_cache)
-        except Exception as e:
-            if args.debug:
-                raise
-            exceptions.append(e)
-
-    if exceptions:
-        for e in exceptions:
-            sys.stderr.write("%s\n" % e)
+    has_exceptions = False
+    for aws_services, aws_regions, aws_sections in [
+        (args.global_services, ["us-east-1"], AWSSectionsUSEast),
+        (args.services, args.regions, AWSSectionsGeneric),
+    ]:
+        if not aws_services:
+            continue
+        for region in aws_regions:
+            try:
+                session = create_session(args.access_key_id, args.secret_access_key, region)
+                aws_sections = aws_sections(hostname, session, debug=args.debug)
+                aws_sections.init_sections(aws_services, region, aws_config)
+                aws_sections.run(use_cache=not args.no_cache)
+            except AssertionError:
+                if args.debug:
+                    return 1
+            except Exception as e:
+                logging.info(e)
+                has_exceptions = True
+                if args.debug:
+                    return 1
+    if has_exceptions:
         return 1
     return 0
 

@@ -617,7 +617,6 @@ class S3Summary(AWSSectionGeneric):
             #_response = self._client.get_public_access_block(Bucket=bucket_name)
             #_response = self._client.get_bucket_policy_status(Bucket=bucket_name)
             # 'S3' object has no attribute 'get_bucket_policy_status'
-            # 'list' object has no attribute 'iterkeys'
 
             try:
                 response = self._client.get_bucket_tagging(Bucket=bucket_name)
@@ -675,7 +674,7 @@ class S3(AWSSectionCloudwatch):
         if colleague and colleague.content:
             return AWSColleagueContents({bucket['Name']: bucket for bucket in colleague.content},
                                         colleague.cache_timestamp)
-        return AWSColleagueContents([], 0)
+        return AWSColleagueContents({}, 0)
 
     def _get_metrics(self, colleague_contents):
         metrics = []

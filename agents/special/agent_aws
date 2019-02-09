@@ -416,8 +416,7 @@ class EC2Summary(AWSSectionGeneric):
         response = self._describe_instances()
         try:
             return {
-                self._extract_instance_name_from_tags(instance): instance
-                for reservation in response['Reservations']
+                instance["PrivateDnsName"]: instance for reservation in response['Reservations']
                 for instance in reservation.get('Instances', [])
             }
         except KeyError as e:
@@ -431,12 +430,6 @@ class EC2Summary(AWSSectionGeneric):
             return self._client.describe_instances(Filters=self._tags)
         return self._client.describe_instances()
 
-    def _extract_instance_name_from_tags(self, instance):
-        for tag in instance.get('Tags', []):
-            if tag.get('Key') == 'Name':
-                return tag['Value']
-        return instance['InstanceId']
-
     def _compute_content(self, raw_content, colleague_contents):
         return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
 
@@ -445,6 +438,11 @@ class EC2Summary(AWSSectionGeneric):
 
 
 class EC2SecurityGroups(AWSSectionGeneric):
+    def __init__(self, client, region, config, distributor=None):
+        super(EC2SecurityGroups, self).__init__(client, region, config, distributor=distributor)
+        self._names = self._config.service_config['ec2']['names']
+        self._tags = self._config.service_config['ec2']['tags']
+
     @property
     def name(self):
         return "ec2_security_groups"
@@ -460,13 +458,19 @@ class EC2SecurityGroups(AWSSectionGeneric):
         return AWSColleagueContents({}, 0)
 
     def _fetch_raw_content(self, colleague_contents):
-        # TODO Filter
-        response = self._client.describe_security_groups()
+        response = self._describe_security_groups()
         try:
             return {group['GroupId']: group for group in response['SecurityGroups']}
         except KeyError as e:
             logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
             return {}
+
+    def _describe_security_groups(self):
+        if self._names is not None:
+            return self._client.describe_security_groups(InstanceIds=self._names)
+        elif self._tags is not None:
+            return self._client.describe_security_groups(Filters=self._tags)
+        return self._client.describe_security_groups()
 
     def _compute_content(self, raw_content, colleague_contents):
         content_by_piggyback_hosts = {}

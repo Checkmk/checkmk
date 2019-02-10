@@ -10,6 +10,7 @@ def test_registered_api_call_collections():
                               for action in cls().get_api_calls().iterkeys())
     assert sorted(registered_api_actions) == sorted([
         'activate_changes',
+        'execute_remote_automation',
         'add_contactgroup',
         'add_folder',
         'add_host',

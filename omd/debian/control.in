@@ -2,7 +2,7 @@ Source: check-mk-###EDITION###-###PKG_VERSION###
 Section: admin
 Priority: optional
 Maintainer: Check_MK Team <feedback@check-mk.org>
-Build-Depends:@dpatch,@debhelper@(>=@7),@###BUILD_PACKAGES###
+Build-Depends:@dpatch,@debhelper@(>=@7)
 Standards-Version: 3.8.3
 Homepage: http://mathias-kettner.de
 

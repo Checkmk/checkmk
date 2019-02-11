@@ -1,49 +1,7 @@
 DISTRO_CODE       = stretch
-BUILD_PACKAGES    =
-BUILD_PACKAGES   += build-essential
-BUILD_PACKAGES   += dpatch
-BUILD_PACKAGES   += smbclient # otherwise missing path in util.pm
-BUILD_PACKAGES   += rpcbind # otherwise missing path in util.pm
-BUILD_PACKAGES   += dnsutils # nagios-plugins check_dns
-BUILD_PACKAGES   += git-buildpackage
-BUILD_PACKAGES   += libboost-all-dev
-BUILD_PACKAGES   += libcurl4-openssl-dev # needed by perl modules / thruk
-BUILD_PACKAGES   += libcloog-ppl1      # needed by libgearman
-BUILD_PACKAGES   += libncurses5-dev    # needed by mod-gearman
-BUILD_PACKAGES   += libdbi-dev
-BUILD_PACKAGES   += libevent-dev
-BUILD_PACKAGES   += libgd-dev
-BUILD_PACKAGES   += libglib2.0-dev
-BUILD_PACKAGES   += libgnutls28-dev
-BUILD_PACKAGES   += libldap2-dev
-BUILD_PACKAGES   += libltdl-dev
-BUILD_PACKAGES   += libmcrypt-dev
-BUILD_PACKAGES   += default-libmysqlclient-dev
-BUILD_PACKAGES   += libpq-dev
-BUILD_PACKAGES   += libpango1.0-dev
-BUILD_PACKAGES   += libperl-dev
-BUILD_PACKAGES   += libreadline-dev
-BUILD_PACKAGES   += libxml2-dev
-BUILD_PACKAGES   += libsqlite3-dev # needed by Python (for sqlite3 module)
-BUILD_PACKAGES   += tk-dev # needed by Python (for Tkinter module)
-BUILD_PACKAGES   += patch
-BUILD_PACKAGES   += uuid-dev
-BUILD_PACKAGES   += apache2-dev  # compiling mod_python
-BUILD_PACKAGES   += apache2      # compiling mod_python
-BUILD_PACKAGES   += libfreeradius-dev
 #
 # Check_MK build specific packages below
 #
-BUILD_PACKAGES   += dietlibc-dev # is not really needed, but useful for cmk components
-BUILD_PACKAGES   += libpcap-dev # needed for CMC
-BUILD_PACKAGES   += gettext # needed for german l10n
-BUILD_PACKAGES   += libgsf-1-dev # needed for msitools
-BUILD_PACKAGES   += librrd-dev # needed for CMC
-BUILD_PACKAGES   += libffi-dev # needed for pyOpenSSL (and dependant) compilations
-BUILD_PACKAGES   += libkrb5-dev # Needed for pykerberos
-BUILD_PACKAGES   += libssl1.0-dev # Needed for net-snmp (https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=828449)
-BUILD_PACKAGES   += flex # needed for heirloom-pkgtools
-BUILD_PACKAGES   += openssh-client # needed for check_by_ssh
 OS_PACKAGES       =
 OS_PACKAGES      += cron # needed for sites cron jobs
 OS_PACKAGES      += time # needed for mk-job

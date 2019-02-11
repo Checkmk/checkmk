@@ -530,8 +530,7 @@ class EC2(AWSSectionCloudwatch):
 
     def _get_metrics(self, colleague_contents):
         metrics = []
-        idx = 0
-        for instance_name, instance in colleague_contents.content.iteritems():
+        for idx, (instance_name, instance) in enumerate(colleague_contents.content.iteritems()):
             instance_id = instance['InstanceId']
             for metric_name, unit in [
                 ("CPUCreditUsage", "Count"),
@@ -563,7 +562,6 @@ class EC2(AWSSectionCloudwatch):
                         'Unit': unit,
                     },
                 })
-                idx += 1
         return metrics
 
     def _compute_content(self, raw_content, colleague_contents):
@@ -700,8 +698,7 @@ class S3(AWSSectionCloudwatch):
 
     def _get_metrics(self, colleague_contents):
         metrics = []
-        idx = 0
-        for bucket_name in colleague_contents.content.iterkeys():
+        for idx, bucket_name in enumerate(colleague_contents.content.iterkeys()):
             for metric_name, unit, storage_classes in [
                 ("BucketSizeBytes", "Bytes", [
                     "StandardStorage",
@@ -731,7 +728,6 @@ class S3(AWSSectionCloudwatch):
                             'Unit': unit,
                         },
                     })
-                    idx += 1
         return metrics
 
     def _compute_content(self, raw_content, colleague_contents):
@@ -890,8 +886,8 @@ class ELB(AWSSectionCloudwatch):
 
     def _get_metrics(self, colleague_contents):
         metrics = []
-        idx = 0
-        for load_balancer_dns_name, load_balancer in colleague_contents.content.iteritems():
+        for idx, (load_balancer_dns_name,
+                  load_balancer) in enumerate(colleague_contents.content.iteritems()):
             load_balancer_name = load_balancer['LoadBalancerName']
             for metric_name, stat in [
                 ("RequestCount", "Sum"),
@@ -924,7 +920,6 @@ class ELB(AWSSectionCloudwatch):
                         'Stat': stat,
                     },
                 })
-                idx += 1
         return metrics
 
     def _compute_content(self, raw_content, colleague_contents):
@@ -1049,8 +1044,7 @@ class EBS(AWSSectionCloudwatch):
 
     def _get_metrics(self, colleague_contents):
         metrics = []
-        idx = 0
-        for instance_name, volume_name, volume_type in colleague_contents.content:
+        for idx, (instance_name, volume_name, volume_type) in enumerate(colleague_contents.content):
             for metric_name, unit, volume_types in [
                 ("VolumeReadOps", "Count", []),
                 ("VolumeWriteOps", "Count", []),
@@ -1087,7 +1081,6 @@ class EBS(AWSSectionCloudwatch):
                 if unit:
                     metric['MetricStat']['Unit'] = unit
                 metrics.append(metric)
-                idx += 1
         return metrics
 
     def _compute_content(self, raw_content, colleague_contents):
@@ -1101,6 +1094,136 @@ class EBS(AWSSectionCloudwatch):
             AWSSectionResult(piggyback_hostname, rows)
             for piggyback_hostname, rows in computed_content.content.iteritems()
         ]
+
+
+#.
+#   .--RDS-----------------------------------------------------------------.
+#   |                          ____  ____  ____                            |
+#   |                         |  _ \|  _ \/ ___|                           |
+#   |                         | |_) | | | \___ \                           |
+#   |                         |  _ <| |_| |___) |                          |
+#   |                         |_| \_\____/|____/                           |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
+class RDSSummary(AWSSectionGeneric):
+    def __init__(self, client, region, config, distributor=None):
+        super(RDSSummary, self).__init__(client, region, config, distributor=distributor)
+        self._names = self._config.service_config['rds']['names']
+        self._tags = self._config.service_config['rds']['tags']
+
+    @property
+    def name(self):
+        return "rds_summary"
+
+    @property
+    def interval(self):
+        return 300
+
+    def _get_colleague_contents(self):
+        return AWSColleagueContents(None, 0.0)
+
+    def _fetch_raw_content(self, colleague_contents):
+        response = self._describe_db_instances()
+        try:
+            return response['DBInstances']
+        except KeyError as e:
+            logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
+            return []
+
+    def _describe_db_instances(self):
+        if self._names is not None:
+            return [
+                self._client.describe_db_instances(DBInstanceIdentifier=name)
+                for name in self._names
+            ]
+        elif self._tags is not None:
+            return [self._client.describe_db_instances(Filters=self._tags) for name in self._names]
+        return self._client.describe_db_instances()
+
+    def _compute_content(self, raw_content, colleague_contents):
+        return AWSComputedContent(
+            {instance['DBInstanceIdentifier']: instance for instance in raw_content.content},
+            raw_content.cache_timestamp)
+
+    def _create_results(self, computed_content):
+        return [AWSSectionResult("", computed_content.content.values())]
+
+
+class RDS(AWSSectionCloudwatch):
+    @property
+    def name(self):
+        return "rds"
+
+    @property
+    def interval(self):
+        return 300
+
+    def _get_colleague_contents(self):
+        colleague = self._received_results.get('rds_summary')
+        if colleague and colleague.content:
+            return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
+        return AWSColleagueContents({}, 0.0)
+
+    def _get_metrics(self, colleague_contents):
+        metrics = []
+        for idx, instance_id in enumerate(colleague_contents.content.iterkeys()):
+            for metric_name, unit in [
+                ("BinLogDiskUsage", "Bytes"),
+                ("BurstBalance", "Percent"),
+                ("CPUUtilization", "Percent"),
+                ("CPUCreditUsage", "Count"),
+                ("CPUCreditBalance", "Count"),
+                ("DatabaseConnections", "Count"),
+                ("DiskQueueDepth", "Count"),
+                ("FailedSQLServerAgentJobsCount", "Count/Second"),
+                ("NetworkReceiveThroughput", "Bytes/Second"),
+                ("NetworkTransmitThroughput", "Bytes/Second"),
+                ("OldestReplicationSlotLag", "Megabytes"),
+                ("ReadIOPS", "Count/Second"),
+                ("ReadLatency", "Seconds"),
+                ("ReadThroughput", "Bytes/Second"),
+                ("ReplicaLag", "Seconds"),
+                ("ReplicationSlotDiskUsage", "Megabytes"),
+                ("TransactionLogsDiskUsage", "Megabytes"),
+                ("TransactionLogsGeneration", "Megabytes/Second"),
+                ("WriteIOPS", "Count/Second"),
+                ("WriteLatency", "Seconds"),
+                ("WriteThroughput", "Bytes/Second"),
+                    #("FreeableMemory", "Bytes"),
+                    #("SwapUsage", "Bytes"),
+                    #("FreeStorageSpace", "Bytes"),
+                    #("MaximumUsedTransactionIDs", "Count"),
+            ]:
+                metric = {
+                    'Id': "%s_%s" % (metric_name.lower(), idx),
+                    'Label': instance_id,
+                    'MetricStat': {
+                        'Metric': {
+                            'Namespace': 'AWS/RDS',
+                            'MetricName': metric_name,
+                            'Dimensions': [{
+                                'Name': "DBInstanceIdentifier",
+                                'Value': instance_id,
+                            }]
+                        },
+                        'Period': self.period,
+                        'Stat': 'Average',
+                    },
+                }
+                if unit:
+                    metric['MetricStat']['Unit'] = unit
+                metrics.append(metric)
+        return metrics
+
+    def _compute_content(self, raw_content, colleague_contents):
+        for row in raw_content.content:
+            row.update(colleague_contents.content.get(row['Label'], {}))
+        return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
+
+    def _create_results(self, computed_content):
+        return [AWSSectionResult("", computed_content.content)]
 
 
 #.
@@ -1237,6 +1360,7 @@ class AWSSectionsGeneric(AWSSections):
         ec2_client = self._init_client('ec2')
         elb_client = self._init_client('elb')
         s3_client = self._init_client('s3')
+        rds_client = self._init_client('rds')
         cloudwatch_client = self._init_client('cloudwatch')
 
         #---distributors----------------------------------------------------
@@ -1244,12 +1368,14 @@ class AWSSectionsGeneric(AWSSections):
         elb_summary_distributor = ResultDistributor()
         ebs_summary_distributor = ResultDistributor()
         s3_summary_distributor = ResultDistributor()
+        rds_summary_distributor = ResultDistributor()
 
         #---sections with distributors--------------------------------------
         ec2_summary = EC2Summary(ec2_client, region, config, ec2_summary_distributor)
         ebs_summary = EBSSummary(ec2_client, region, config, ebs_summary_distributor)
         elb_summary = ELBSummary(elb_client, region, config, elb_summary_distributor)
         s3_summary = S3Summary(s3_client, region, config, s3_summary_distributor)
+        rds_summary = RDSSummary(rds_client, region, config, rds_summary_distributor)
 
         #---sections--------------------------------------------------------
         elb_health = ELBHealth(elb_client, region, config)
@@ -1258,6 +1384,7 @@ class AWSSectionsGeneric(AWSSections):
         ebs = EBS(cloudwatch_client, region, config)
         elb = ELB(cloudwatch_client, region, config)
         s3 = S3(cloudwatch_client, region, config)
+        rds = RDS(cloudwatch_client, region, config)
 
         #---register sections to distributors-------------------------------
         ec2_summary_distributor.add(ec2_security_groups)
@@ -1268,6 +1395,7 @@ class AWSSectionsGeneric(AWSSections):
         elb_summary_distributor.add(elb_health)
         elb_summary_distributor.add(elb)
         s3_summary_distributor.add(s3)
+        rds_summary_distributor.add(rds)
 
         #---register sections for execution---------------------------------
         # Dependencies: First append sections which distribute their results:
@@ -1303,6 +1431,10 @@ class AWSSectionsGeneric(AWSSections):
         if 's3' in services:
             self._sections.append(s3_summary)
             self._sections.append(s3)
+
+        if 'rds' in services:
+            self._sections.append(rds_summary)
+            self._sections.append(rds)
 
 
 #.
@@ -1350,6 +1482,7 @@ AWSServices = [
     AWSServiceAttributes("ebs", "Elastic Block Storage (EBS)", False, True),
     AWSServiceAttributes("s3", "Simple Storage Service (S3)", False, True),
     AWSServiceAttributes("elb", "Elastic Load Balancing (ELB)", False, True),
+    AWSServiceAttributes("rds", "Relational Database Service (RDS)", False, True),
 ]
 
 
@@ -1476,6 +1609,7 @@ def main(args=None):
         ("ebs", args.ebs_names, (args.ebs_tag_key, args.ebs_tag_values)),
         ("s3", args.s3_names, (args.s3_tag_key, args.s3_tag_values)),
         ("elb", args.elb_names, (args.elb_tag_key, args.elb_tag_values)),
+        ("rds", args.rds_names, (args.rds_tag_key, args.rds_tag_values)),
     ]:
         aws_config.add_service_config(service_key, service_names, service_tags)
 

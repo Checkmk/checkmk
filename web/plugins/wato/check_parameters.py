@@ -16502,6 +16502,117 @@ register_check_parameters(
 )
 
 register_check_parameters(
+    subgroup_applications,
+    'aws_rds_cpu_credits',
+    _("AWS/RDS CPU Credits"),
+    Dictionary(elements=[_vs_cpu_credits_balance(), _vs_burst_balance()]),
+    TextAscii(title=_("Database identifier")),
+    match_type='dict',
+)
+
+register_check_parameters(
+    subgroup_applications,
+    'aws_rds_disk_usage',
+    _("AWS/RDS Disk Usage"),
+    Dictionary(elements=[
+            ('levels',
+             Alternative(
+                 title=_("Upper levels for disk usage"),
+                 style="dropdown",
+                 elements=[
+                     Tuple(
+                         title=_("Set levels"),
+                         elements=[
+                             Percentage(title=_("Warning at")),
+                             Percentage(title=_("Critical at")),
+                         ]),
+                     Tuple(
+                         title=_("No levels"),
+                         elements=[
+                             FixedValue(None, totext=""),
+                             FixedValue(None, totext=""),
+                         ]),
+                 ])),
+    ]),
+    TextAscii(title=_("Database identifier")),
+    match_type='dict',
+)
+
+register_check_parameters(
+    subgroup_applications,
+    'aws_rds_connections',
+    _("AWS/RDS Connections"),
+    Dictionary(elements=[
+            ('levels',
+             Alternative(
+                 title=_("Upper levels for connections in use"),
+                 style="dropdown",
+                 elements=[
+                     Tuple(
+                         title=_("Set levels"),
+                         elements=[
+                             Percentage(title=_("Warning at")),
+                             Percentage(title=_("Critical at")),
+                         ]),
+                     Tuple(
+                         title=_("No levels"),
+                         elements=[
+                             FixedValue(None, totext=""),
+                             FixedValue(None, totext=""),
+                         ]),
+                 ])),
+    ]),
+    TextAscii(title=_("Database identifier")),
+    match_type='dict',
+)
+
+register_check_parameters(
+    subgroup_applications,
+    'aws_rds_replica_lag',
+    _("AWS/RDS Replica Lag"),
+    Dictionary(elements=[
+            ('lag_levels',
+             Alternative(
+                 title=_("Upper levels replica lag"),
+                 style="dropdown",
+                 elements=[
+                     Tuple(
+                         title=_("Set levels"),
+                         elements=[
+                             Age(title=_("Warning at")),
+                             Age(title=_("Critical at")),
+                         ]),
+                     Tuple(
+                         title=_("No levels"),
+                         elements=[
+                             FixedValue(None, totext=""),
+                             FixedValue(None, totext=""),
+                         ]),
+                 ])),
+            ('slot_levels',
+             Alternative(
+                 title=_("Upper levels the oldest replication slot lag"),
+                 style="dropdown",
+                 elements=[
+                     Tuple(
+                         title=_("Set levels"),
+                         elements=[
+                             Filesize(title=_("Warning at")),
+                             Filesize(title=_("Critical at")),
+                         ]),
+                     Tuple(
+                         title=_("No levels"),
+                         elements=[
+                             FixedValue(None, totext=""),
+                             FixedValue(None, totext=""),
+                         ]),
+                 ])),
+    ]),
+    TextAscii(title=_("Database identifier")),
+    match_type='dict',
+)
+
+register_check_parameters(
     subgroup_environment,
     "siemens_plc_flag",
     _("State of Siemens PLC Flags"),

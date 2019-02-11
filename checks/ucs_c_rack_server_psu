@@ -1,0 +1,153 @@
+#!/usr/bin/env python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# exemplary output of special agent agent_ucs_bladecenter (<TAB> is tabulator):
+#
+# <<<ucsc_psu:sep(9)>>>
+# equipmentPsu<TAB>dn  sys/rack-unit-1/psu-1<TAB>id 1<TAB>model blabla<TAB>operability operable<TAB>voltage upper-critical
+# equipmentPsu<TAB>dn sys/rack-unit-1/psu-2 <TAB>id 2<TAB>model blabla<TAB>operability inoperable<TAB>voltage ok
+
+
+def parse_ucs_c_rack_server_psu(info):
+    """
+    Returns dict with indexed PSUs mapped to keys and operability, voltage values mapped to dicts.
+    """
+    parsed = {}
+    for psu in info:
+        try:
+            key_value_pairs = [kv.split(" ", 1) for kv in psu[1:]]
+            psu = key_value_pairs[0][1].replace("sys/", "").replace("rack-unit-",
+                                                                    "Rack Unit ").replace(
+                                                                        "/psu-", " PSU ")
+            parsed[psu] = {
+                'operability': key_value_pairs[3][1],
+                'voltage': key_value_pairs[4][1],
+            }
+        except IndexError:
+            continue  # skip info line in case agent output is incomplete or invalid
+    return parsed
+
+
+def inventory_ucs_c_rack_server_psu(parsed):
+    """
+    Yields indexed PSUs as items (e.g. Rack Unit 1 PSU 1).
+    """
+    for key in parsed.keys():
+        yield key, {}
+
+
+#########################
+# ucs_c_rack_server_psu #
+#########################
+
+# maps XML API v2.0 XML entity values to check function status values
+operability_to_status_mapping = {
+    "unknown": 3,
+    "operable": 0,
+    "inoperable": 2,
+    "degraded": 2,
+    "powered-off": 1,
+    "power-problem": 2,
+    "removed": 1,
+    "voltage-problem": 2,
+    "thermal-problem": 2,
+    "performance-problem": 2,
+    "accessibility-problem": 2,
+    "identity-unestablishable": 1,
+    "bios-post-timeout": 1,
+    "disabled": 1,
+    "malformed-fru": 1,
+    "fabric-conn-problem": 2,
+    "fabric-unsupported-conn": 1,
+    "config": 1,
+    "equipment-problem": 2,
+    "decomissioning": 1,
+    "chassis-limit-exceeded": 1,
+    "not-supported": 1,
+    "discovery": 1,
+    "discovery-failed": 1,
+    "identify": 1,
+    "post-failure": 1,
+    "upgrade-problem": 1,
+    "peer-comm-problem": 2,
+    "auto-upgrade": 1,
+}
+
+
+@get_parsed_item_data
+def check_ucs_c_rack_server_psu(item, _no_params, data):
+    operability = data["operability"]
+    try:
+        status = operability_to_status_mapping[operability]
+        status_readable = operability
+    except KeyError:
+        status = 3
+        status_readable = "unknown[%s]" % operability
+    yield status, "Status: %s" % status_readable
+
+
+check_info["ucs_c_rack_server_psu"] = {
+    'parse_function': parse_ucs_c_rack_server_psu,
+    'inventory_function': inventory_ucs_c_rack_server_psu,
+    'check_function': check_ucs_c_rack_server_psu,
+    'service_description': 'Output Power %s',
+}
+
+#################################
+# ucs_c_rack_server_psu.voltage #
+#################################
+
+# maps XML API v2.0 XML entity values to check function status values
+voltage_to_status_mapping = {
+    "unknown": 3,
+    "ok": 0,
+    "upper-non-recoverable": 2,
+    "upper-critical": 2,
+    "upper-non-critical": 1,
+    "lower-non-critical": 1,
+    "lower-critical": 2,
+    "lower-non-recoverable": 2,
+    "not-supported": 1,
+}
+
+
+@get_parsed_item_data
+def check_ucs_c_rack_server_psu_voltage(item, _no_params, data):
+    voltage_status = data["voltage"]
+    try:
+        status = voltage_to_status_mapping[voltage_status]
+        status_readable = voltage_status
+    except KeyError:
+        status = 3
+        status_readable = "unknown[%s]" % voltage_status
+    yield status, "Status: %s" % status_readable
+
+
+check_info["ucs_c_rack_server_psu.voltage"] = {
+    'inventory_function': inventory_ucs_c_rack_server_psu,
+    'check_function': check_ucs_c_rack_server_psu_voltage,
+    'service_description': 'Output Voltage %s',
+}

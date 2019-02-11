@@ -1,0 +1,19 @@
+Title: ucs_c_rack_server_psu: Power supply unit (PSU)
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1549906713
+Class: feature
+
+This werk adds support for monitoring of Cisco UCS C-Series Rack Server power supply units (PSUs).
+
+Main check:
+- ucs_c_rack_server_psu: Overall operability status
+
+Sub checks:
+- ucs_c_rack_server_psu.voltage: Voltage status
+
+CMK-1067
+

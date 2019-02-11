@@ -25,7 +25,7 @@
 import * as ajax from "ajax";
 import $ from "jquery";
 
-export function fetch_replication_status()
+export function fetch_site_status()
 {
     ajax.call_ajax("wato_ajax_fetch_site_status.py", {
         response_handler : function (handler_data, response_json) {

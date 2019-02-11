@@ -649,9 +649,7 @@ class ModeDistributedMonitoring(WatoMode):
                 self._show_livestatus_status(table, site_id, site)
                 self._show_replication_status(table, site_id, site)
 
-        has_replication_sites = any(e[1]["replication"] for e in sites)
-        if has_replication_sites:
-            html.javascript("cmk.sites.fetch_replication_status();")
+        html.javascript("cmk.sites.fetch_site_status();")
 
     def _show_buttons(self, table, site_id, site):
         table.cell(_("Actions"), css="buttons")
@@ -794,8 +792,8 @@ class ModeAjaxFetchSiteStatus(WatoWebApiMode):
             return html.drain()
 
 
-cmk.gui.pages.register_page_handler("wato_ajax_fetch_site_status",
-                                    lambda: ModeAjaxFetchSiteStatus().handle_page())
+cmk.gui.pages.register_page_handler(
+    "wato_ajax_fetch_site_status", lambda: ModeAjaxFetchSiteStatus().handle_page())
 
 PingResult = NamedTuple("PingResult", [
     ("version", str),

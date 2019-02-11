@@ -25,15 +25,8 @@
 # Boston, MA 02110-1301 USA.
 
 
-def inventory_docker_node_disk_usage(parsed):
-    for item in parsed:
-        yield item, {}
-
-
-def check_docker_node_disk_usage(item, params, parsed):
-    data = parsed.get(item)
-    if data is None:
-        return
+@get_parsed_item_data
+def check_docker_node_disk_usage(_no_item, params, data):
 
     for key, param, conversion_func in (
         ('Size', 'size', get_filesize_human_readable),
@@ -59,7 +52,7 @@ def check_docker_node_disk_usage(item, params, parsed):
 
 check_info["docker_node_disk_usage"] = {
     "parse_function": parse_legacy_docker_system_df,
-    "inventory_function": inventory_docker_node_disk_usage,
+    "inventory_function": discover(),
     "check_function": check_docker_node_disk_usage,
     "service_description": "Docker disk usage - %s",
     "includes": ["legacy_docker.include"],

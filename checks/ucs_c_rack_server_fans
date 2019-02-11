@@ -1,0 +1,73 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# exemplary agent output (separator is <TAB> and is tabulator):
+# <<<ucs_c_rack_server_fans:sep(9)>>>
+# equipmentFan<TAB>dn sys/rack-unit-1/fan-module-1-1/fan-1<TAB>id 1<TAB>operability operable
+
+
+def parse_ucs_c_rack_server_fans(info):
+    parsed = {}
+
+    for fan in info:
+        try:
+            key_value_pairs = [kv.split(" ", 1) for kv in fan[1:]]
+            fan = key_value_pairs[0][1].replace("sys/",
+                                                "").replace("rack-unit-", "Rack Unit ").replace(
+                                                    "/fan-module-", " Module ").replace(
+                                                        "/fan-", " ")
+            parsed[fan] = {'operability': key_value_pairs[2][1]}
+        except (IndexError, ValueError):
+            pass
+
+    return parsed
+
+
+operability_to_status_mapping = {
+    "unknown": 3,
+    "operable": 0,
+    "inoperable": 2,
+}
+
+
+@get_parsed_item_data
+def check_ucs_c_rack_server_fans(item, _no_params, data):
+    operability = data["operability"]
+    try:
+        status = operability_to_status_mapping[operability]
+        status_readable = "Operability Status is %s" % operability
+    except KeyError:
+        status = 3
+        status_readable = "Unknown Operability Status: %s" % operability
+    yield status, status_readable
+
+
+check_info["ucs_c_rack_server_fans"] = {
+    'parse_function': parse_ucs_c_rack_server_fans,
+    'inventory_function': discover(),
+    'check_function': check_ucs_c_rack_server_fans,
+    'service_description': 'Fan %s',
+}

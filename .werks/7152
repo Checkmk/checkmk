@@ -1,0 +1,12 @@
+Title: ucs_c_rack_server_fans: New check for monitoring ucs c series
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1549881126
+Class: feature
+
+This werk adds a check reporting the state of ucs c series fans.
+
+CMK-1067

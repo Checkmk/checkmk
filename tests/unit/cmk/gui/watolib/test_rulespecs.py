@@ -351,6 +351,7 @@ def test_grouped_rulespecs():
             'static_checks:webserver',
             'static_checks:aws_costs_and_usage',
             'static_checks:aws_ec2_cpu_credits',
+            'static_checks:aws_rds_cpu_credits',
             'static_checks:aws_elb_backend_connection_errors',
             'static_checks:aws_elb_healthy_hosts',
             'static_checks:aws_elb_http',
@@ -870,6 +871,7 @@ def test_grouped_rulespecs():
             'checkgroup_parameters:webserver',
             'checkgroup_parameters:aws_costs_and_usage',
             'checkgroup_parameters:aws_ec2_cpu_credits',
+            'checkgroup_parameters:aws_rds_cpu_credits',
             'checkgroup_parameters:aws_elb_backend_connection_errors',
             'checkgroup_parameters:aws_elb_healthy_hosts',
             'checkgroup_parameters:aws_elb_http',
@@ -3734,6 +3736,21 @@ expected_rulespecs = {
         'item_type': None,
         'match_type': 'dict',
         'title': u'AWS/EC2 CPU Credits',
+        'valuespec_class_name': 'TimeperiodValuespec'
+    },
+    'checkgroup_parameters:aws_rds_cpu_credits': {
+        'factory_default': [],
+        'group_name': 'checkparams/applications',
+        'help': None,
+        'is_deprecated': False,
+        'is_optional': False,
+        'item_enum': None,
+        'item_help': None,
+        'item_name': 'The DB identifier',
+        'item_spec_class_name': 'TextAscii',
+        'item_type': 'item',
+        'match_type': 'dict',
+        'title': u'AWS/RDS CPU Credits',
         'valuespec_class_name': 'TimeperiodValuespec'
     },
     'checkgroup_parameters:aws_elb_backend_connection_errors': {
@@ -11875,6 +11892,21 @@ expected_rulespecs = {
         'item_type': None,
         'match_type': 'all',
         'title': u'AWS/EC2 CPU Credits',
+        'valuespec_class_name': 'Tuple'
+    },
+    'static_checks:aws_rds_cpu_credits': {
+        'factory_default': [],
+        'group_name': 'static/applications',
+        'help': None,
+        'is_deprecated': False,
+        'is_optional': False,
+        'item_enum': None,
+        'item_help': None,
+        'item_name': None,
+        'item_spec_class_name': 'TextAscii',
+        'item_type': None,
+        'match_type': 'all',
+        'title': u'AWS/RDS CPU Credits',
         'valuespec_class_name': 'Tuple'
     },
     'static_checks:aws_elb_backend_connection_errors': {

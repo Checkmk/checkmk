@@ -88,7 +88,7 @@ def check_aws_elb_statistics(item, params, parsed):
 check_info['aws_elb'] = {
     'parse_function': parse_aws_elb,
     'inventory_function':
-        lambda p: inventory_aws_elb_generic(p, ['RequestCount', 'SurgeQueueLength', 'SpilloverCount']),
+        lambda p: inventory_aws_elb_generic(p, ['SurgeQueueLength', 'SpilloverCount']),
     'check_function': check_aws_elb_statistics,
     'service_description': 'AWS/ELB Statistics',
     'includes': ['aws.include'],
@@ -113,7 +113,7 @@ def check_aws_elb_latency(item, params, parsed):
     if latency is not None:
         yield check_levels(
             latency,
-            'server_latency',
+            'aws_load_balancer_latency',
             params.get('levels_latency'),
             human_readable_func=get_age_human_readable,
             infoname="Latency")

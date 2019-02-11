@@ -186,12 +186,17 @@ class AWSSection(object):
         created_results = self._create_results(computed_content)
         assert isinstance(created_results,
                           list), "%s: Created results must be fo type 'list'" % self.name
+
+        final_results = []
         for result in created_results:
             assert isinstance(
                 result,
-                AWSSectionResult), "%s: Result mut be of type 'AWSSectionResult'" % self.name
-            if result.content is None:
+                AWSSectionResult), "%s: Result must be of type 'AWSSectionResult'" % self.name
+
+            if not result.content:
+                logging.info("%s: Result is empty or None", self.name)
                 continue
+
             assert isinstance(
                 result.piggyback_hostname,
                 str), "%s: Piggyback hostname of created result must be of type 'str'" % self.name
@@ -199,7 +204,9 @@ class AWSSection(object):
             # extend list of json-loaded results.
             assert isinstance(result.content,
                               list), "%s: Result content must be of type 'list'" % self.name
-        return AWSSectionResults(created_results, computed_content.cache_timestamp)
+
+            final_results.append(result)
+        return AWSSectionResults(final_results, computed_content.cache_timestamp)
 
     def _get_raw_content(self, colleague_contents, use_cache=False):
         # Cache is only used if the age is lower than section interval AND
@@ -630,6 +637,7 @@ class S3Summary(AWSSectionGeneric):
             #_response = self._client.get_bucket_policy_status(Bucket=bucket_name)
             # 'S3' object has no attribute 'get_bucket_policy_status'
 
+            tagging = []
             try:
                 response = self._client.get_bucket_tagging(Bucket=bucket_name)
                 tagging = response['TagSet']
@@ -639,10 +647,9 @@ class S3Summary(AWSSectionGeneric):
             except KeyError as e:
                 logging.info("%s/%s: KeyError %s; Available are %s", self.name, bucket_name, e,
                              response.keys())
-            else:
-                if self._matches_conditions(tagging):
-                    bucket['Tagging'] = tagging
-                    found_buckets.append(bucket)
+            if self._matches_conditions(tagging):
+                bucket['Tagging'] = tagging
+                found_buckets.append(bucket)
         return found_buckets
 
     def _list_buckets(self):
@@ -776,6 +783,7 @@ class ELBSummary(AWSSectionGeneric):
         found_load_balancers = []
         for load_balancer in self._describe_load_balancers():
             load_balancer_name = load_balancer['LoadBalancerName']
+            tag_descrs = []
             try:
                 response = self._client.describe_tags(LoadBalancerNames=[load_balancer_name])
                 tag_descrs = response['TagDescriptions']
@@ -785,10 +793,9 @@ class ELBSummary(AWSSectionGeneric):
             except KeyError as e:
                 logging.info("%s/%s: KeyError %s; Available are %s", self.name, load_balancer_name,
                              e, response.keys())
-            else:
-                if self._matches_conditions(tag_descrs):
-                    load_balancer['TagDescriptions'] = tag_descrs
-                    found_load_balancers.append(load_balancer)
+            if self._matches_conditions(tag_descrs):
+                load_balancer['TagDescriptions'] = tag_descrs
+                found_load_balancers.append(load_balancer)
         return found_load_balancers
 
     def _describe_load_balancers(self):
@@ -880,20 +887,18 @@ class ELB(AWSSectionCloudwatch):
         idx = 0
         for load_balancer_name in colleague_contents.content.iterkeys():
             for metric_name, stat in [
-                    # Load balancer metrics
                 ("RequestCount", "Sum"),
                 ("SurgeQueueLength", "Maximum"),
                 ("SpilloverCount", "Sum"),
+                ("Latency", "Average"),
                 ("HTTPCode_ELB_4XX", "Sum"),
                 ("HTTPCode_ELB_5XX", "Sum"),
-                    # Backend metrics
-                ("HealthyHostCount", "Average"),
-                ("UnHealthyHostCount", "Average"),
-                ("Latency", "Average"),
                 ("HTTPCode_Backend_2XX", "Sum"),
                 ("HTTPCode_Backend_3XX", "Sum"),
                 ("HTTPCode_Backend_4XX", "Sum"),
                 ("HTTPCode_Backend_5XX", "Sum"),
+                ("HealthyHostCount", "Average"),
+                ("UnHealthyHostCount", "Average"),
                 ("BackendConnectionErrors", "Sum"),
             ]:
                 metrics.append({
@@ -1040,23 +1045,19 @@ class EBS(AWSSectionCloudwatch):
         idx = 0
         for instance_name, volume_name, volume_type in colleague_contents.content:
             for metric_name, unit, volume_types in [
-                    # Disk IO
                 ("VolumeReadOps", "Count", []),
                 ("VolumeWriteOps", "Count", []),
                 ("VolumeReadBytes", "Bytes", []),
                 ("VolumeWriteBytes", "Bytes", []),
-                ("VolumeThroughputPercentage", "Percent", ["io1"]),
-                ("VolumeConsumedReadWriteOps", "Count", ["io1"]),
-                    # Latency
-                ("VolumeTotalReadTime", "Seconds", []),
-                ("VolumeTotalWriteTime", "Seconds", []),
-                    # Disk activity
                 ("VolumeQueueLength", "Count", []),
-                ("VolumeIdleTime", "Seconds", []),
-                ("BurstBalance", "Percent", ["gp2", "st1", "sc1"]),
-                    # Status checks
-                ("VolumeStatus", None, []),
-                ("IOPerformance", None, ["io1"]),
+                    #("VolumeThroughputPercentage", "Percent", ["io1"]),
+                    #("VolumeConsumedReadWriteOps", "Count", ["io1"]),
+                    #("VolumeTotalReadTime", "Seconds", []),
+                    #("VolumeTotalWriteTime", "Seconds", []),
+                    #("VolumeIdleTime", "Seconds", []),
+                    #("BurstBalance", "Percent", ["gp2", "st1", "sc1"]),
+                    #("VolumeStatus", None, []),
+                    #("IOPerformance", None, ["io1"]),
             ]:
                 if volume_types and volume_type not in volume_types:
                     continue
@@ -1145,9 +1146,9 @@ class AWSSections(object):
                     raise
             except Exception as e:
                 logging.info(e)
-                exceptions.append(e)
                 if self._debug:
                     raise
+                exceptions.append(e)
             else:
                 results.setdefault((section.name, section_result.cache_timestamp, section.interval),
                                    section_result.results)
@@ -1170,13 +1171,13 @@ class AWSSections(object):
 
         for (section_name, cache_timestamp, section_interval), result in results.iteritems():
             if not result:
-                logging.info("%s: No results of %s", section_name, self.__class__.__name__)
+                logging.info("%s: No results", section_name)
                 continue
 
             if not isinstance(result, list):
                 logging.info(
-                    "%s: Section result must be formatted as a list of 'AWSSectionResult's",
-                    self.__class__.__name__)
+                    "%s: Section result must be of type 'list' containing 'AWSSectionResults'",
+                    section_name)
                 continue
 
             cached_suffix = ""
@@ -1479,9 +1480,9 @@ def main(args=None):
         for region in aws_regions:
             try:
                 session = create_session(args.access_key_id, args.secret_access_key, region)
-                aws_sections = aws_sections(hostname, session, debug=args.debug)
-                aws_sections.init_sections(aws_services, region, aws_config)
-                aws_sections.run(use_cache=not args.no_cache)
+                sections = aws_sections(hostname, session, debug=args.debug)
+                sections.init_sections(aws_services, region, aws_config)
+                sections.run(use_cache=not args.no_cache)
             except AssertionError:
                 if args.debug:
                     return 1

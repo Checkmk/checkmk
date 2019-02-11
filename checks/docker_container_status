@@ -36,10 +36,9 @@ def parse_docker_container_status(info):
     if not info or not info[0]:
         return
 
-    json_raw_data = " ".join(info[0])
+    parsed = docker_json_get_obj(info[0]) or {}
 
-    import json
-    return json.loads(json_raw_data)
+    return parsed
 
 
 #.
@@ -78,6 +77,7 @@ check_info["docker_container_status.health"] = {
     "inventory_function": inventory_docker_container_status_health,
     "check_function": check_docker_container_status_health,
     "service_description": "Docker container health",
+    'includes': ['docker.include'],
 }
 
 #.
@@ -108,4 +108,5 @@ check_info['docker_container_status'] = {
     'inventory_function': discover_single,
     'check_function': check_docker_container_status,
     'service_description': 'Docker container status',
+    'includes': ['docker.include'],
 }

@@ -75,7 +75,9 @@ def _extract_aws_metrics(expected_metric_names, parsed):
     return values
 
 
-def _extract_aws_metrics_by_labels(expected_metric_names, parsed):
+def _extract_aws_metrics_by_labels(expected_metric_names, parsed, extra_keys=None):
+    if extra_keys is None:
+        extra_keys = []
     values_by_labels = {}
     for row in parsed:
         row_id = row['Id']
@@ -92,4 +94,16 @@ def _extract_aws_metrics_by_labels(expected_metric_names, parsed):
             else:
                 values_by_labels.setdefault(row_label, {})\
                                 .setdefault(expected_metric_name, value)
+        for extra_key in extra_keys:
+            extra_value = row.get(extra_key)
+            if extra_value is None:
+                continue
+            values_by_labels.setdefault(row_label, {})\
+                            .setdefault(extra_key, extra_value)
     return values_by_labels
+
+
+def inventory_aws_generic(parsed, required_metrics):
+    for instance_name, instance in parsed.iteritems():
+        if all(required_metric in instance for required_metric in required_metrics):
+            yield instance_name, {}

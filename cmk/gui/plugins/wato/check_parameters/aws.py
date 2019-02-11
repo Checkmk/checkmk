@@ -66,6 +66,58 @@ def _vs_s3_buckets():
                 ]))
 
 
+def _vs_burst_balance():
+    return ('burst_balance_levels_lower',
+            Alternative(
+                title=_("Lower levels for burst balance"),
+                style="dropdown",
+                elements=[
+                    Tuple(
+                        title=_("Set levels"),
+                        elements=[
+                            Percentage(title=_("Warning at or below")),
+                            Percentage(title=_("Critical at or below")),
+                        ]),
+                    Tuple(
+                        title=_("No levels"),
+                        elements=[
+                            FixedValue(None, totext=""),
+                            FixedValue(None, totext=""),
+                        ]),
+                ]))
+
+
+def _vs_cpu_credits_balance():
+    return ('balance_levels_lower',
+            Alternative(
+                title=_("Lower levels for CPU balance"),
+                style="dropdown",
+                elements=[
+                    Tuple(
+                        title=_("Set levels"),
+                        elements=[
+                            Integer(title=_("Warning at or below")),
+                            Integer(title=_("Critical at or below")),
+                        ]),
+                    Tuple(
+                        title=_("No levels"),
+                        elements=[
+                            FixedValue(None, totext=""),
+                            FixedValue(None, totext=""),
+                        ]),
+                ]))
+
+
+#   .--S3------------------------------------------------------------------.
+#   |                             ____ _____                               |
+#   |                            / ___|___ /                               |
+#   |                            \___ \ |_ \                               |
+#   |                             ___) |__) |                              |
+#   |                            |____/____/                               |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
 @rulespec_registry.register
 class RulespecCheckgroupParametersAwsS3BucketsObjects(CheckParameterRulespecWithItem):
     @property
@@ -116,25 +168,15 @@ class RulespecCheckgroupParametersAwsS3Buckets(CheckParameterRulespecWithoutItem
         return Dictionary(elements=[_vs_s3_buckets()])
 
 
-def _vs_burst_balance():
-    return ('burst_balance_levels_lower',
-            Alternative(
-                title=_("Lower levels for burst balance"),
-                style="dropdown",
-                elements=[
-                    Tuple(
-                        title=_("Set levels"),
-                        elements=[
-                            Percentage(title=_("Warning at or below")),
-                            Percentage(title=_("Critical at or below")),
-                        ]),
-                    Tuple(
-                        title=_("No levels"),
-                        elements=[
-                            FixedValue(None, totext=""),
-                            FixedValue(None, totext=""),
-                        ]),
-                ]))
+#.
+#   .--EC2-----------------------------------------------------------------.
+#   |                          _____ ____ ____                             |
+#   |                         | ____/ ___|___ \                            |
+#   |                         |  _|| |     __) |                           |
+#   |                         | |__| |___ / __/                            |
+#   |                         |_____\____|_____|                           |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
 
 
 @rulespec_registry.register
@@ -157,27 +199,18 @@ class RulespecCheckgroupParametersAwsEc2CpuCredits(CheckParameterRulespecWithout
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ('balance_levels_lower',
-                 Alternative(
-                     title=_("Lower levels for CPU balance"),
-                     style="dropdown",
-                     elements=[
-                         Tuple(
-                             title=_("Set levels"),
-                             elements=[
-                                 Integer(title=_("Warning at or below")),
-                                 Integer(title=_("Critical at or below")),
-                             ]),
-                         Tuple(
-                             title=_("No levels"),
-                             elements=[
-                                 FixedValue(None, totext=""),
-                                 FixedValue(None, totext=""),
-                             ]),
-                     ])),
-            ],)
+        return Dictionary(elements=[_vs_cpu_credits_balance()])
+
+
+#.
+#   .--CE------------------------------------------------------------------.
+#   |                              ____ _____                              |
+#   |                             / ___| ____|                             |
+#   |                            | |   |  _|                               |
+#   |                            | |___| |___                              |
+#   |                             \____|_____|                             |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
 
 
 @rulespec_registry.register
@@ -211,6 +244,17 @@ class RulespecCheckgroupParametersAwsCostsAndUsage(CheckParameterRulespecWithout
                     ],
                 ),
             )],)
+
+
+#.
+#   .--ELB-----------------------------------------------------------------.
+#   |                          _____ _     ____                            |
+#   |                         | ____| |   | __ )                           |
+#   |                         |  _| | |   |  _ \                           |
+#   |                         | |___| |___| |_) |                          |
+#   |                         |_____|_____|____/                           |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
 
 
 @rulespec_registry.register
@@ -328,8 +372,7 @@ class RulespecCheckgroupParametersAwsElbHttp(CheckParameterRulespecWithoutItem):
                      elements=[
                          Percentage(title=_("Warning at")),
                          Percentage(title=_("Critical at")),
-                     ],
-                 )),
+                     ])),
             ],)
 
 
@@ -402,6 +445,17 @@ class RulespecCheckgroupParametersAwsElbBackendConnectionErrors(CheckParameterRu
             )],)
 
 
+#.
+#   .--EBS-----------------------------------------------------------------.
+#   |                          _____ ____ ____                             |
+#   |                         | ____| __ ) ___|                            |
+#   |                         |  _| |  _ \___ \                            |
+#   |                         | |___| |_) |__) |                           |
+#   |                         |_____|____/____/                            |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
 @rulespec_registry.register
 class RulespecCheckgroupParametersAwsEbsBurstBalance(CheckParameterRulespecWithItem):
     @property
@@ -427,3 +481,197 @@ class RulespecCheckgroupParametersAwsEbsBurstBalance(CheckParameterRulespecWithI
     @property
     def item_spec(self):
         return TextAscii(title=_("Block storage name"))
+
+
+#.
+#   .--RDS-----------------------------------------------------------------.
+#   |                          ____  ____  ____                            |
+#   |                         |  _ \|  _ \/ ___|                           |
+#   |                         | |_) | | | \___ \                           |
+#   |                         |  _ <| |_| |___) |                          |
+#   |                         |_| \_\____/|____/                           |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersAwsRdsCpuCredits(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "aws_rds_cpu_credits"
+
+    @property
+    def title(self):
+        return _("AWS/RDS CPU Credits")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(elements=[_vs_cpu_credits_balance(), _vs_burst_balance()])
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Database identifier"))
+
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersAwsRdsDiskUsage(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "aws_rds_disk_usage"
+
+    @property
+    def title(self):
+        return _("AWS/RDS Disk Usage")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(elements=[
+            ('levels',
+             Alternative(
+                 title=_("Upper levels for disk usage"),
+                 style="dropdown",
+                 elements=[
+                     Tuple(
+                         title=_("Set levels"),
+                         elements=[
+                             Percentage(title=_("Warning at")),
+                             Percentage(title=_("Critical at")),
+                         ]),
+                     Tuple(
+                         title=_("No levels"),
+                         elements=[
+                             FixedValue(None, totext=""),
+                             FixedValue(None, totext=""),
+                         ]),
+                 ])),
+        ])
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Database identifier"))
+
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersAwsRdsConnections(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "aws_rds_connections"
+
+    @property
+    def title(self):
+        return _("AWS/RDS Connections")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(elements=[
+            ('levels',
+             Alternative(
+                 title=_("Upper levels for connections in use"),
+                 style="dropdown",
+                 elements=[
+                     Tuple(
+                         title=_("Set levels"),
+                         elements=[
+                             Percentage(title=_("Warning at")),
+                             Percentage(title=_("Critical at")),
+                         ]),
+                     Tuple(
+                         title=_("No levels"),
+                         elements=[
+                             FixedValue(None, totext=""),
+                             FixedValue(None, totext=""),
+                         ]),
+                 ])),
+        ])
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Database identifier"))
+
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersAwsRdsReplicaLag(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "aws_rds_replica_lag"
+
+    @property
+    def title(self):
+        return _("AWS/RDS Replica lag")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(elements=[
+            ('lag_levels',
+             Alternative(
+                 title=_("Upper levels replica lag"),
+                 style="dropdown",
+                 elements=[
+                     Tuple(
+                         title=_("Set levels"),
+                         elements=[
+                             Age(title=_("Warning at")),
+                             Age(title=_("Critical at")),
+                         ]),
+                     Tuple(
+                         title=_("No levels"),
+                         elements=[
+                             FixedValue(None, totext=""),
+                             FixedValue(None, totext=""),
+                         ]),
+                 ])),
+            ('slot_levels',
+             Alternative(
+                 title=_("Upper levels the oldest replication slot lag"),
+                 style="dropdown",
+                 elements=[
+                     Tuple(
+                         title=_("Set levels"),
+                         elements=[
+                             Filesize(title=_("Warning at")),
+                             Filesize(title=_("Critical at")),
+                         ]),
+                     Tuple(
+                         title=_("No levels"),
+                         elements=[
+                             FixedValue(None, totext=""),
+                             FixedValue(None, totext=""),
+                         ]),
+                 ])),
+        ])
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Database identifier"))

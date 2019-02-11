@@ -43,17 +43,6 @@ def parse_aws_ebs(info):
         parse_aws(info))
 
 
-def inventory_aws_ebs_generic(parsed, required_metrics):
-    for instance_name, instance in parsed.iteritems():
-        discover = True
-        for required_metric in required_metrics:
-            if required_metric not in instance:
-                discover = False
-                break
-        if discover:
-            yield instance_name, {}
-
-
 #   .--Disk IO-------------------------------------------------------------.
 #   |                     ____  _     _      ___ ___                       |
 #   |                    |  _ \(_)___| | __ |_ _/ _ \                      |
@@ -89,7 +78,7 @@ def check_aws_ebs(item, params, parsed):
 check_info['aws_ebs'] = {
     'parse_function': parse_aws_ebs,
     'inventory_function': lambda p:\
-        inventory_aws_ebs_generic(p, ['VolumeReadOps', 'VolumeWriteOps', 'VolumeReadBytes', 'VolumeWriteBytes', 'VolumeQueueLength']),
+        inventory_aws_generic(p, ['VolumeReadOps', 'VolumeWriteOps', 'VolumeReadBytes', 'VolumeWriteBytes', 'VolumeQueueLength']),
     'check_function': check_aws_ebs,
     'service_description': 'AWS/EBS Disk IO %s',
     'includes': ['diskstat.include', 'aws.include'],
@@ -120,7 +109,7 @@ def check_aws_ebs_burst_balance(item, params, metrics):
 
 check_info['aws_ebs.burst_balance'] = {
     'inventory_function': lambda p:\
-        inventory_aws_ebs_generic(p, ['BurstBalance']),
+        inventory_aws_generic(p, ['BurstBalance']),
     'check_function': check_aws_ebs_burst_balance,
     'service_description': 'AWS/EBS Burst Balance %s',
     'group': 'aws_ebs_burst_balance',

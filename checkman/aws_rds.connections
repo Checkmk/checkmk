@@ -1,0 +1,14 @@
+title: AWS RDS Connections
+agents: aws
+catalog: cloud/aws
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the number of database connections in use.
+ To make this check work you have to configure the related
+ special agent {Amazon Web Services (AWS)}.
+
+ No default levels are set. Upper levels are configurable.
+
+inventory:
+ One service per databse will be created.

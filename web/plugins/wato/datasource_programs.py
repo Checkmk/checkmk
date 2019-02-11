@@ -1327,12 +1327,14 @@ register_rule(
                  ],
              )),
             ("sequential",
-             FixedValue(
-                 True,
-                 title=_("Run agent in single thread"),
+             DropdownChoice(
+                 title=_("Force agent to run in single thread"),
                  help=_("Check this to turn off multiprocessing."
                         " Recommended for debugging purposes only."),
-
+                 choices=[
+                         (False, _("Run agent multithreaded")),
+                         (True, _("Run agent in single thread")),
+                     ],
              )),
         ],
         optional_keys=["piggyback_vms", "sequential"],

@@ -448,10 +448,7 @@ class EC2Summary(AWSSectionGeneric):
         }, raw_content.cache_timestamp)
 
     def _create_results(self, computed_content):
-        return [
-            AWSSectionResult(instance_name, [instance])
-            for instance_name, instance in computed_content.content.iteritems()
-        ]
+        return [AWSSectionResult("", computed_content.content.values())]
 
 
 class EC2SecurityGroups(AWSSectionGeneric):

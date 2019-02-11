@@ -300,3 +300,31 @@ std::string extractIPAddress(const std::string &inputAddr) {
 
     return inputAddr;  // no match, return original input
 }
+
+// Windows Native Conversion from Unicode to UTF8.
+// Not standart, but works good for Windows with UTF-16
+// Tested in new windows agent
+// returns empty string in the case of any error
+// no logging support still, this is not so trivial task here
+std::string ConvertToUTF8(const std::wstring &Src) noexcept {
+    using namespace std;
+
+    if (Src.empty()) return {};
+    // Windows only
+    auto in_len = static_cast<int>(Src.length());
+    auto out_len =
+        ::WideCharToMultiByte(CP_UTF8, 0, Src.c_str(), in_len, NULL, 0, 0, 0);
+    if (out_len == 0) return {};
+
+    std::string str;
+    try {
+        str.resize(out_len);
+    } catch (const std::exception &) {
+        return {};
+    }
+
+    // convert
+    ::WideCharToMultiByte(CP_UTF8, 0, Src.c_str(), -1, str.data(), out_len, 0,
+                          0);
+    return str;
+}

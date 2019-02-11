@@ -15963,8 +15963,8 @@ register_check_parameters(
          Tuple(
              title=_("Lower levels for remaining API reads"),
              elements=[
-                 Integer(title=_("Warning below"), default_value=1000),
-                 Integer(title=_("Critical below"), default_value=100),
+                 Integer(title=_("Warning below"), default_value=6000),
+                 Integer(title=_("Critical below"), default_value=3000),
              ],
          )),
         ("remaining_reads_unknown_state",

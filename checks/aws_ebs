@@ -38,6 +38,7 @@ def parse_aws_ebs(info):
         "VolumeTotalWriteTime",
         "VolumeIdleTime",
         "BurstBalance",
+        "VolumeStatus",
         "IOPerformance",
     ], parse_aws(info))
 

@@ -72,10 +72,10 @@ def check_aws_s3_objects(item, params, metrics):
     sum_size = sum(bucket_sizes.values())
     yield (0,
            'Bucket size: %s (%s)' % (get_bytes_human_readable(sum_size), ", ".join(storage_infos)),
-           [('bucket_size', sum_size)])
+           [('aws_bucket_size', sum_size)])
 
     num_objects = sum(metrics['numberofobjects'].values())
-    yield 0, 'Number of objects: %s' % int(num_objects), [('num_objects', num_objects)]
+    yield 0, 'Number of objects: %s' % int(num_objects), [('aws_num_objects', num_objects)]
 
     location = metrics.get('LocationConstraint')
     if location:
@@ -118,15 +118,16 @@ def check_aws_s3_summary(item, params, parsed):
         if bucket_size >= largest_bucket_size:
             largest_bucket = bucket_name
             largest_bucket_size = bucket_size
-    yield 0, 'Total size: %s' % get_bytes_human_readable(sum_size)
+    yield 0, 'Total size: %s' % get_bytes_human_readable(sum_size), [('aws_bucket_size', sum_size)]
 
     if largest_bucket:
         yield 0, 'Largest bucket: %s (%s)' % \
-                 (largest_bucket, get_bytes_human_readable(largest_bucket_size))
+                 (largest_bucket, get_bytes_human_readable(largest_bucket_size)), [('aws_largest_bucket_size', largest_bucket_size)]
 
 
 check_info['aws_s3.summary'] = {
     'inventory_function': discover_single,
     'check_function': check_aws_s3_summary,
     'service_description': 'AWS/S3 Summary',
+    'has_perfdata': True,
 }

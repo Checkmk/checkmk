@@ -29,8 +29,6 @@ EC2DefaultItemName = "DEFAULT"
 
 def parse_aws_ec2(info):
     metrics = _extract_aws_metrics([
-        'StatusCheckFailed_Instance',
-        'StatusCheckFailed_System',
         'CPUCreditUsage',
         'CPUCreditBalance',
         'CPUUtilization',
@@ -40,6 +38,8 @@ def parse_aws_ec2(info):
         'DiskWriteBytes',
         'NetworkIn',
         'NetworkOut',
+        'StatusCheckFailed_Instance',
+        'StatusCheckFailed_System',
     ], parse_aws(info))
     if metrics:
         return {EC2DefaultItemName: metrics}

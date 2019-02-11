@@ -3923,34 +3923,10 @@ metric_info["failed_ad_requests"] = {
     "color": "42/a"
 }
 
-metric_info["http_4xx_rate"] = {
-    "title": _("HTTP 400 errors"),
-    "unit": "1/s",
-    "color": "32/a",
-}
-
-metric_info["http_5xx_rate"] = {
+metric_info["http_5xx"] = {
     "title": _("HTTP 500 errors"),
     "unit": "1/s",
     "color": "42/a",
-}
-
-metric_info["http_4xx_perc"] = {
-    "title": _("Percentage of HTTP 400 errors"),
-    "unit": "%",
-    "color": "32/a",
-}
-
-metric_info["http_5xx_perc"] = {
-    "title": _("Percentage of HTTP 500 errors"),
-    "unit": "%",
-    "color": "42/a",
-}
-
-metric_info["aws_overall_hosts_health_perc"] = {
-    "title": _("Proportion of healthy host"),
-    "unit": "%",
-    "color": "35/a",
 }
 
 metric_info["sip_message_processing_time"] = {
@@ -4801,21 +4777,27 @@ metric_info['write_avg_exe_ms'] = {
 }
 
 metric_info['aws_costs_unblended'] = {
-    'title': _('AWS Unblended costs'),
+    'title': _('Unblended costs'),
     'unit': 'count',
     'color': '11/a',
 }
 
-metric_info['num_objects'] = {
+metric_info['aws_num_objects'] = {
     'title': _('Numer of objects'),
     'unit': 'count',
     'color': '21/a',
 }
 
-metric_info['bucket_size'] = {
+metric_info['aws_bucket_size'] = {
     'title': _('Bucket size'),
     'unit': 'bytes',
     'color': '15/a',
+}
+
+metric_info['aws_largest_bucket_size'] = {
+    'title': _('Largest bucket size'),
+    'unit': 'bytes',
+    'color': '21/a',
 }
 
 metric_info['aws_surge_queue_length'] = {
@@ -4830,7 +4812,43 @@ metric_info['aws_spillover'] = {
     'color': '13/a',
 }
 
-metric_info['backend_connection_errors_rate'] = {
+metric_info["aws_load_balancer_latency"] = {
+    "title": _("Load balancer latency"),
+    "unit": "s",
+    "color": "21/a",
+}
+
+metric_info["aws_http_4xx_rate"] = {
+    "title": _("HTTP 400 errors"),
+    "unit": "1/s",
+    "color": "32/a",
+}
+
+metric_info["aws_http_5xx_rate"] = {
+    "title": _("HTTP 500 errors"),
+    "unit": "1/s",
+    "color": "42/a",
+}
+
+metric_info["aws_http_4xx_perc"] = {
+    "title": _("Percentage of HTTP 400 errors"),
+    "unit": "%",
+    "color": "32/a",
+}
+
+metric_info["aws_http_5xx_perc"] = {
+    "title": _("Percentage of HTTP 500 errors"),
+    "unit": "%",
+    "color": "42/a",
+}
+
+metric_info["aws_overall_hosts_health_perc"] = {
+    "title": _("Proportion of healthy host"),
+    "unit": "%",
+    "color": "35/a",
+}
+
+metric_info['aws_backend_connection_errors_rate'] = {
     'title': _('Backend connection errors'),
     'unit': '1/s',
     'color': '15/a',

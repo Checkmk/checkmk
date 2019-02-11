@@ -25,8 +25,27 @@
 # Boston, MA 02110-1301 USA.
 
 
+def _split_subsections(info):
+    subname = ''
+    subsections = {}
+    for row in info:
+        if not row:
+            continue
+        if row[0].startswith('[[[') and row[0].endswith(']]]'):
+            subname = row[0].strip('[]')
+            continue
+        subsections.setdefault(subname, []).append(row)
+    return subsections
+
+
+def parse_docker_node_images(info):
+
+    subsections = _split_subsections(info)
+    return parse_legacy_docker_node_images(subsections)  # pylint: disable=undefined-variable
+
+
 def inv_docker_node_images(info, inventory_tree, status_data_tree):
-    parsed = parse_legacy_docker_node_images(info)
+    parsed = parse_docker_node_images(info)
     images = parsed.get("images", {})
     path = "software.applications.docker.images:"
     inv_node = inventory_tree.get_list(path)
@@ -39,7 +58,7 @@ def inv_docker_node_images(info, inventory_tree, status_data_tree):
             "id": image["ID"],
             "creation": image["CreatedAt"],
             "size": image["VirtualSize"],
-            "labels": docker_format_labels(image),
+            "labels": docker_format_labels(image),  # pylint: disable=undefined-variable
         })
 
         status_node.append({
@@ -59,12 +78,12 @@ def inv_docker_node_images(info, inventory_tree, status_data_tree):
             "tag": container["Tag"],
             "name": container["Names"],
             "creation": container["CreatedAt"],
-            "labels": docker_format_labels(container),
+            "labels": docker_format_labels(container),  # pylint: disable=undefined-variable
             "status": container["Status"],
         })
 
 
-inv_info['docker_node_images'] = {
+inv_info['docker_node_images'] = {  # pylint: disable=undefined-variable
     'includes': ['docker.include', 'legacy_docker.include'],
     'inv_function': inv_docker_node_images,
     'has_status_data': True,

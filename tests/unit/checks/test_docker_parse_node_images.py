@@ -25,8 +25,8 @@ REQUIRED_CONTAINER_KEYS = (
 )
 
 
-INFO1 = [
-    ['[[[images]]]'],
+SUBSECTIONS1 = {
+        'images': [
     [
         '{"Containers":"N/A","CreatedAt":"2018-10-12', '11:13:11', '+0200',
         'CEST","CreatedSince":"5', 'hours',
@@ -126,8 +126,8 @@ INFO1 = [
         '{"Containers":"N/A","CreatedAt":"2018-08-06', '21:21:48', '+0200',
         'CEST","CreatedSince":"2', 'months',
         'ago","Digest":"\u003cnone\u003e","ID":"5182e96772bf","Repository":"centos","SharedSize":"N/A","Size":"200MB","Tag":"7","UniqueSize":"N/A","VirtualSize":"199.7MB"}'
-    ],
-    ['[[[image_labels]]]'],
+    ]],
+    'image_labels': [
     [
         '[', '"sha256:ed55e8b953366b628773629b98dba9adc07a9c1543efbb04c18f0052e26ee719",',
         '{"org.label-schema.build-date":"20180804","org.label-schema.license":"GPLv2","org.label-schema.name":"CentOS',
@@ -258,8 +258,8 @@ INFO1 = [
         '{"org.label-schema.build-date":"20180804","org.label-schema.license":"GPLv2","org.label-schema.name":"CentOS',
         'Base',
         'Image","org.label-schema.schema-version":"1.0","org.label-schema.vendor":"CentOS"}', ']'
-    ],
-    ['[[[containers]]]'],
+    ]],
+    'containers': [
     [
         '{"Command":"\\"/usr/sbin/init\\"","CreatedAt":"2018-10-12', '11:13:24', '+0200',
         'CEST","ID":"f1641e401237","Image":"local/c7-systemd-httpd","Labels":"org.label-schema.build-date=20180804,org.label-schema.license=GPLv2,org.label-schema.name=CentOS',
@@ -463,8 +463,8 @@ INFO1 = [
         'Base',
         'Image,org.label-schema.schema-version=1.0,org.label-schema.vendor=CentOS,org.label-schema.build-date=20180804","LocalVolumes":"0","Mounts":"","Names":"vigorous_pare","Networks":"bridge","Ports":"","RunningFor":"2',
         'weeks', 'ago","Size":"0B","Status":"Exited', '(137)', '2', 'weeks', 'ago"}'
-    ],
-]
+    ]],
+}
 
 EXPECTED_IMAGES1 = {
     u'096300fde75d': {
@@ -1247,8 +1247,8 @@ EXPECTED_CONTAINERS1 = {
 }
 
 
-INFO2 = [
-        ['[[[images]]]'],
+SUBSECTIONS2 = {
+        'images': [
         [
         '{"Containers":"N/A","CreatedAt":"2018-10-12', '16:12:03', '+0200', 'CEST","CreatedSince":"3',
         'days',
@@ -1337,7 +1337,9 @@ INFO2 = [
         '{"Containers":"N/A","CreatedAt":"2018-08-06', '21:21:48', '+0200', 'CEST","CreatedSince":"2',
         'months',
         'ago","Digest":"\\u003cnone\\u003e","ID":"5182e96772bf","Repository":"centos","SharedSize":"N/A","Size":"200MB","Tag":"7","UniqueSize":"N/A","VirtualSize":"199.7MB"}'
-    ], ['[[[image_labels]]]'], [
+    ]],
+    'image_labels': [
+    [
         '[', '"sha256:485933207afd6e390c5e91f37b49b8610f483299de0bcff4b6fadca1cdb641b6",',
         '{"maintainer":"feedback@check-mk.org","org.opencontainers.image.description":"Check_MK', 'is',
         'a', 'leading', 'tool', 'for', 'Infrastructure', '&', 'Application',
@@ -1455,7 +1457,9 @@ INFO2 = [
         '{"org.label-schema.build-date":"20180804","org.label-schema.license":"GPLv2","org.label-schema.name":"CentOS',
         'Base', 'Image","org.label-schema.schema-version":"1.0","org.label-schema.vendor":"CentOS"}',
         ']'
-    ], ['[[[containers]]]'], [
+    ]],
+    'containers': [
+    [
         '{"Command":"\\"/bin/sh', '-c', "'set", '-e', '\xe2\x80\xa6\\"","CreatedAt":"2018-10-12',
         '16:12:19', '+0200',
         'CEST","ID":"802786d33cfb","Image":"010bad2c964b","Labels":"maintainer=feedback@check-mk.org","LocalVolumes":"0","Mounts":"","Names":"boring_cori","Networks":"bridge","Ports":"","RunningFor":"3',
@@ -1696,7 +1700,8 @@ INFO2 = [
         'Base',
         'Image,org.label-schema.schema-version=1.0,org.label-schema.vendor=CentOS","LocalVolumes":"0","Mounts":"","Names":"vigorous_pare","Networks":"bridge","Ports":"","RunningFor":"2',
         'weeks', 'ago","Size":"0B","Status":"Exited', '(137)', '2', 'weeks', 'ago"}'
-    ]]
+    ]],
+}
 
 EXPECTED_CONTAINERS2 = {
     u'0d7e34ebb911': {
@@ -3147,9 +3152,10 @@ EXPECTED_IMAGES2 = {
 }
 
 
-INFO3 = [
-    ['[[[images]]]'], [
-        '{"Containers":"N/A","CreatedAt":"2018-10-12', '16:12:03', '+0200',
+SUBSECTIONS3 = {
+        'images': [
+    [
+           '{"Containers":"N/A","CreatedAt":"2018-10-12', '16:12:03', '+0200',
         'CEST","CreatedSince":"3', 'days',
         'ago","Digest":"\\u003cnone\\u003e","ID":"485933207afd","Repository":"docker-tests/check-mk-enterprise-master-1.5.0p5","SharedSize":"N/A","Size":"818MB","Tag":"latest","UniqueSize":"N/A","VirtualSize":"817.6MB"}'
     ], [
@@ -3236,7 +3242,9 @@ INFO3 = [
         '{"Containers":"N/A","CreatedAt":"2018-08-06', '21:21:48', '+0200',
         'CEST","CreatedSince":"2', 'months',
         'ago","Digest":"\\u003cnone\\u003e","ID":"5182e96772bf","Repository":"centos","SharedSize":"N/A","Size":"200MB","Tag":"7","UniqueSize":"N/A","VirtualSize":"199.7MB"}'
-    ], ['[[[image_inspect]]]'], ['['], ['{'],
+    ]],
+    'image_inspect': [
+    ['['], ['{'],
     ['"Id":', '"sha256:485933207afd6e390c5e91f37b49b8610f483299de0bcff4b6fadca1cdb641b6",'],
     ['"RepoTags":', '['], ['"docker-tests/check-mk-enterprise-master-1.5.0p5:latest"'], ['],'],
     ['"RepoDigests":', '[],'],
@@ -5369,9 +5377,10 @@ INFO3 = [
         '"Layers":', '['
     ], ['"sha256:1d31b5806ba40b5f67bde96f18a181668348934a44c9253b420d5f04cfb4e37a"'], [']'], [
         '},'
-    ], ['"Metadata":', '{'], ['"LastTagTime":', '"0001-01-01T00:00:00Z"'], ['}'], ['}'], [']'], [
-        '[[[containers]]]'
-    ], [
+    ], ['"Metadata":', '{'], ['"LastTagTime":', '"0001-01-01T00:00:00Z"'], ['}'], ['}'], [']'],
+    ],
+    'containers': [
+    [
         '{"Command":"\\"/bin/sh', '-c', "'set", '-e', '\xe2\x80\xa6\\"","CreatedAt":"2018-10-12',
         '16:12:19', '+0200',
         'CEST","ID":"802786d33cfb","Image":"010bad2c964b","Labels":"maintainer=feedback@check-mk.org","LocalVolumes":"0","Mounts":"","Names":"boring_cori","Networks":"bridge","Ports":"","RunningFor":"3',
@@ -5612,8 +5621,8 @@ INFO3 = [
         'Base',
         'Image","LocalVolumes":"0","Mounts":"","Names":"vigorous_pare","Networks":"bridge","Ports":"","RunningFor":"2',
         'weeks', 'ago","Size":"0B","Status":"Exited', '(137)', '2', 'weeks', 'ago"}'
-    ], []
-]
+    ], []]
+}
 
 EXPECTED_CONTAINERS3 = EXPECTED_CONTAINERS2
 
@@ -6180,9 +6189,9 @@ EXPECTED_IMAGES3 = {
 
 
 @pytest.mark.parametrize("info,ex_img,ex_cont", [
-    (INFO1, EXPECTED_IMAGES1, EXPECTED_CONTAINERS1),
-    (INFO2, EXPECTED_IMAGES2, EXPECTED_CONTAINERS2),
-    (INFO3, EXPECTED_IMAGES3, EXPECTED_CONTAINERS3),
+    (SUBSECTIONS1, EXPECTED_IMAGES1, EXPECTED_CONTAINERS1),
+    (SUBSECTIONS2, EXPECTED_IMAGES2, EXPECTED_CONTAINERS2),
+    (SUBSECTIONS3, EXPECTED_IMAGES3, EXPECTED_CONTAINERS3),
 ])
 def test_parse_legacy_docker_node_images(info, ex_img, ex_cont):
     def assert_contains(dic, key, value):
@@ -6194,7 +6203,7 @@ def test_parse_legacy_docker_node_images(info, ex_img, ex_cont):
         else:
             assert dic[key] == value, "expected: %r, got: %r" % (value, dic[key])
 
-    parsed = parse_legacy_docker_node_images(info)
+    parsed = parse_legacy_docker_node_images(info)  # pylint: disable=undefined-variable
     assert_contains(parsed, "images", ex_img)
     assert_contains(parsed, "containers", ex_cont)
 
@@ -6211,8 +6220,8 @@ def test_parse_legacy_docker_node_images(info, ex_img, ex_cont):
 
 def test_compare_2_3():
 
-    parsed2 = parse_legacy_docker_node_images(INFO2)
-    parsed3 = parse_legacy_docker_node_images(INFO3)
+    parsed2 = parse_legacy_docker_node_images(SUBSECTIONS2)  # pylint: disable=undefined-variable
+    parsed3 = parse_legacy_docker_node_images(SUBSECTIONS3)  # pylint: disable=undefined-variable
 
     for k in ("images", "containers"):
         assert set(parsed2[k].keys()) == set(parsed3[k].keys())

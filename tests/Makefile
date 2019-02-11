@@ -1,5 +1,6 @@
 SHELL    := /bin/bash -e
 VENV     := ../.venv
+NODE_MODULES := ../node_modules
 PIPENV   := PIPENV_VENV_IN_PROJECT=true pipenv
 BANDIT   := $(PIPENV) run bandit
 COVERAGE := $(PIPENV) run coverage
@@ -32,6 +33,9 @@ help:
 $(VENV):
 	$(MAKE) -C $(dir $(VENV)) $(notdir $(VENV))
 
+$(NODE_MODULES):
+	$(MAKE) -C $(dir $(NODE_MODULES)) $(notdir $(NODE_MODULES))
+
 bandit.ini:
 	echo -e "[bandit]\ntargets: $$(./find-python-files | tr '\n' ',' | sed 's/,$$//')" > bandit.ini
 
@@ -59,7 +63,7 @@ test-format-python: $(VENV) ../.style.yapf
 	grep '^+++ .*(reformatted)$$' | \
 	sed -e 's/^+++ //' -e 's/[[:blank:]]*(reformatted)$$/:1:1: error: file needs formatting/'
 
-test-gui-crawl: $(VENV)
+test-gui-crawl: $(VENV) $(NODE_MODULES)
 	$(PYTEST) -T gui_crawl $(realpath integration/cmk/gui/test_crawl.py)
 
 test-integration: $(VENV)

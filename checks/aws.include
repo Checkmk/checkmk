@@ -1,0 +1,95 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2018             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+AWSRegions = {
+    "ap-south-1": "Asia Pacific Mumbai",
+    "ap-northeast-3": "Asia Pacific Osaka-Local",
+    "ap-northeast-2": "Asia Pacific Seoul",
+    "ap-southeast-1": "Asia Pacific Singapore",
+    "ap-southeast-2": "Asia Pacific Sydney",
+    "ap-northeast-1": "Asia Pacific Tokyo",
+    "ca-central-1": "Canada Central",
+    "cn-north-1": "China Beijing",
+    "cn-northwest-1": "China Ningxia",
+    "eu-central-1": "EU Frankfurt",
+    "eu-west-1": "EU Ireland",
+    "eu-west-2": "EU London",
+    "eu-west-3": "EU Paris",
+    "eu-north-1": "EU Stockholm",
+    "sa-east-1": "South America Sao Paulo",
+    "us-east-2": "US East Ohio",
+    "us-east-1": "US East N. Virginia",
+    "us-west-1": "US West N. California",
+    "us-west-2": "US West Oregon",
+}
+
+factory_settings['aws_cpu_credits'] = {
+    'balance_levels_lower': (10, 5),
+}
+
+
+def parse_aws(info):
+    import json
+    loaded = []
+    for row in info:
+        try:
+            loaded.extend(json.loads(" ".join(row)))
+        except (TypeError, IndexError):
+            pass
+    return loaded
+
+
+def _extract_aws_metrics(expected_metric_names, parsed):
+    values = {}
+    for row in parsed:
+        for expected_metric_name in expected_metric_names:
+            if row['Id'].startswith(expected_metric_name.lower()):
+                try:
+                    values.setdefault(expected_metric_name, row['Values'][0])
+                except IndexError:
+                    pass
+                break
+    return values
+
+
+def _extract_aws_metrics_by_labels(expected_metric_names, parsed):
+    values_by_labels = {}
+    for row in parsed:
+        row_id = row['Id']
+        row_label = row['Label']
+        row_values = row['Values']
+        for expected_metric_name in expected_metric_names:
+            if not row_id.startswith(expected_metric_name.lower()):
+                continue
+
+            try:
+                value = row_values[0]
+            except IndexError:
+                continue
+            else:
+                values_by_labels.setdefault(row_label, {})\
+                                .setdefault(expected_metric_name, value)
+    return values_by_labels

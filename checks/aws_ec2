@@ -1,0 +1,249 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2018             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+EC2DefaultItemName = "DEFAULT"
+
+
+def parse_aws_ec2(info):
+    metrics = _extract_aws_metrics([
+        'CPUCreditUsage',
+        'CPUCreditBalance',
+        'CPUUtilization',
+        'DiskReadOps',
+        'DiskWriteOps',
+        'DiskReadBytes',
+        'DiskWriteBytes',
+        'NetworkIn',
+        'NetworkOut',
+        'StatusCheckFailed_Instance',
+        'StatusCheckFailed_System',
+    ], parse_aws(info))
+    if metrics:
+        return {EC2DefaultItemName: metrics}
+    return
+
+
+def inventory_aws_ec2_generic(parsed, required_metrics):
+    metrics = parsed.get(EC2DefaultItemName, {})
+    for required_metric in required_metrics:
+        if required_metric not in metrics:
+            return []
+    return [(None, {})]
+
+
+#   .--status check--------------------------------------------------------.
+#   |           _        _                    _               _            |
+#   |       ___| |_ __ _| |_ _   _ ___    ___| |__   ___  ___| | __        |
+#   |      / __| __/ _` | __| | | / __|  / __| '_ \ / _ \/ __| |/ /        |
+#   |      \__ \ || (_| | |_| |_| \__ \ | (__| | | |  __/ (__|   <         |
+#   |      |___/\__\__,_|\__|\__,_|___/  \___|_| |_|\___|\___|_|\_\        |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |                            main check                                |
+#   '----------------------------------------------------------------------'
+
+
+def _get_status_check_readable(value):
+    if int(value) == 0:
+        return 0, "passed"
+    return 2, "failed"
+
+
+def check_aws_ec2_status_check(item, params, parsed):
+    metrics = parsed.get(EC2DefaultItemName)
+    if metrics is None:
+        return
+
+    for title, key in [
+        ('System', 'StatusCheckFailed_System'),
+        ('Instance', 'StatusCheckFailed_Instance'),
+    ]:
+        state, state_readable =\
+            _get_status_check_readable(metrics[key])
+        yield state, "%s: %s" % (title, state_readable)
+
+
+check_info['aws_ec2'] = {
+    'parse_function': parse_aws_ec2,
+    'inventory_function':
+        lambda p: inventory_aws_ec2_generic(p, ['StatusCheckFailed_System', 'StatusCheckFailed_Instance']),
+    'check_function': check_aws_ec2_status_check,
+    'service_description': 'AWS/EC2 Status Check',
+    'includes': ['aws.include'],
+}
+
+#.
+#   .--CPU credits---------------------------------------------------------.
+#   |           ____ ____  _   _                     _ _ _                 |
+#   |          / ___|  _ \| | | |   ___ _ __ ___  __| (_) |_ ___           |
+#   |         | |   | |_) | | | |  / __| '__/ _ \/ _` | | __/ __|          |
+#   |         | |___|  __/| |_| | | (__| | |  __/ (_| | | |_\__ \          |
+#   |          \____|_|    \___/   \___|_|  \___|\__,_|_|\__|___/          |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
+def check_aws_ec2_cpu_credits(item, params, parsed):
+    metrics = parsed.get(EC2DefaultItemName)
+    if metrics is None:
+        return
+
+    yield 0, "Usage: %.2f" % metrics['CPUCreditUsage']
+    warn, crit = params["balance_levels_lower"]
+    yield check_levels_backport(
+        metrics['CPUCreditBalance'],
+        "aws_ec2_credit_balance", (None, None, warn, crit),
+        human_readable_func=lambda x: "%.2f" % x,
+        infoname='Balance')
+
+
+check_info['aws_ec2.cpu_credits'] = {
+    'inventory_function':
+        lambda p: inventory_aws_ec2_generic(p, ['CPUCreditUsage', 'CPUCreditBalance']),
+    'check_function': check_aws_ec2_cpu_credits,
+    'service_description': 'AWS/EC2 CPU Credits',
+    'group': 'aws_ec2_cpu_credits',
+    'includes': ['aws.include'],
+    'default_levels_variable': 'aws_cpu_credits',
+}
+
+#.
+#   .--CPU utilization-----------------------------------------------------.
+#   |    ____ ____  _   _         _   _ _ _          _   _                 |
+#   |   / ___|  _ \| | | |  _   _| |_(_) (_)______ _| |_(_) ___  _ __      |
+#   |  | |   | |_) | | | | | | | | __| | | |_  / _` | __| |/ _ \| '_ \     |
+#   |  | |___|  __/| |_| | | |_| | |_| | | |/ / (_| | |_| | (_) | | | |    |
+#   |   \____|_|    \___/   \__,_|\__|_|_|_/___\__,_|\__|_|\___/|_| |_|    |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+factory_settings['aws_ec2_cpu_util_default_levels'] = {
+    "levels": (90.0, 95.0),
+}
+
+
+def check_aws_ec2_cpu_util(item, params, parsed):
+    metrics = parsed.get(EC2DefaultItemName)
+    if metrics is None:
+        return
+    return check_cpu_util(metrics['CPUUtilization'], params, time.time())
+
+
+check_info['aws_ec2.cpu_util'] = {
+    'inventory_function': lambda p: inventory_aws_ec2_generic(p, ['CPUUtilization']),
+    'check_function': check_aws_ec2_cpu_util,
+    'service_description': 'AWS/EC2 CPU utilization',
+    'group': 'cpu_utilization',
+    'default_levels_variable': 'aws_ec2_cpu_util_default_levels',
+    'has_perfdata': True,
+    'includes': ['cpu_util.include', 'aws.include'],
+}
+
+#.
+#   .--disk IO-------------------------------------------------------------.
+#   |                         _ _     _      ___ ___                       |
+#   |                      __| (_)___| | __ |_ _/ _ \                      |
+#   |                     / _` | / __| |/ /  | | | | |                     |
+#   |                    | (_| | \__ \   <   | | |_| |                     |
+#   |                     \__,_|_|___/_|\_\ |___\___/                      |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
+def check_aws_ec2_disk_io(item, params, parsed):
+    now = time.time()
+    disks = {}
+    for disk_name, metrics in parsed.iteritems():
+        disks.setdefault(
+            disk_name, {
+                "read_ios": get_rate("aws_ebs_disk_io_read_ios.%s" % item, now,
+                                     metrics['DiskReadOps']),
+                "write_ios": get_rate("aws_ebs_disk_io_write_ios.%s" % item, now,
+                                      metrics['DiskWriteOps']),
+                "read_throughput": get_rate("aws_ebs_disk_io_read_throughput.%s" % item, now,
+                                            metrics['DiskReadBytes']),
+                "write_throughput": get_rate("aws_ebs_disk_io_write_throughput.%s" % item, now,
+                                             metrics['DiskWriteBytes']),
+            })
+    return check_diskstat_dict(item, params, disks)
+
+
+check_info['aws_ec2.disk_io'] = {
+    'inventory_function': discover(),
+    'check_function': check_aws_ec2_disk_io,
+    'service_description': 'AWS/EC2 Disk IO %s',
+    'includes': ['diskstat.include', 'aws.include'],
+    'group': 'diskstat',
+    'has_perfdata': True,
+}
+
+#.
+#   .--network IO----------------------------------------------------------.
+#   |                     _                      _      ___ ___            |
+#   |          _ __   ___| |___      _____  _ __| | __ |_ _/ _ \           |
+#   |         | '_ \ / _ \ __\ \ /\ / / _ \| '__| |/ /  | | | | |          |
+#   |         | | | |  __/ |_ \ V  V / (_) | |  |   <   | | |_| |          |
+#   |         |_| |_|\___|\__| \_/\_/ \___/|_|  |_|\_\ |___\___/           |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
+@get_parsed_item_data
+def check_aws_ec2_network_io(item, params, metrics):
+    interfaces = [[
+        "0",
+        EC2DefaultItemName,
+        "1",
+        "",
+        "1",
+        metrics['NetworkIn'],
+        "",
+        "",
+        "",
+        "",
+        "",
+        metrics['NetworkOut'],
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        EC2DefaultItemName,
+        "",
+    ]]
+    return check_if_common_single("", params, interfaces)
+
+
+check_info['aws_ec2.network_io'] = {
+    'inventory_function': discover(),
+    'check_function': check_aws_ec2_network_io,
+    'service_description': 'AWS/EC2 Interface %s',
+    'includes': ["if.include", 'aws.include'],
+    'default_levels_variable': "if_default_levels",
+    'group': 'if',
+    'has_perfdata': True,
+}

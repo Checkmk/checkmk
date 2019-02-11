@@ -1,0 +1,17 @@
+Title: Introduced monitoring of AWS services
+Level: 2
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0p12
+Date: 1549881372
+Class: feature
+
+The following AWS services are supported:
+<ul>
+<li>Cost Explorer</li>
+<li>Elastic Compute Cloud (EC2)</li>
+<li>Elastic Block Storage (EBS)</li>
+<li>Simple Storage Service (S3)</li>
+<li>Elastic Load Balancing (ELB)</li>
+</ul>

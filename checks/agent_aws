@@ -1,0 +1,106 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+def _get_tag_options(tag_values, prefix):
+    options = []
+    for key, values in tag_values:
+        options.append('--%s-tag-key' % prefix)
+        options.append(key)
+        options.append('--%s-tag-values' % prefix)
+        options += values
+    return options
+
+
+def _get_services_selection(services):
+    # '--services': {
+    #   's3': {'selection': ('tags', [('KEY', ['VAL1', 'VAL2'])])},
+    #   'ec2': {'selection': 'all'},
+    #   'ebs': {'selection': ('names', ['ebs1', 'ebs2'])},
+    # }
+    service_args = []
+    for service_name, service_selection in services.iteritems():
+        if service_selection is None:
+            continue
+
+        selection = service_selection.get('selection')
+        if not isinstance(selection, tuple):
+            # 'all' is handled by services.keys()
+            continue
+
+        selection_type, selection_values = selection
+        if not selection_values:
+            continue
+
+        if selection_type == "names":
+            service_args.append("--%s-names" % service_name)
+            service_args += selection_values
+
+        elif selection_type == "tags":
+            service_args += _get_tag_options(selection_values, service_name)
+    return service_args
+
+
+def agent_aws_arguments(params, hostname, ipaddress):
+    args = [
+        "--access-key-id",
+        quote_shell_string(params["access_key_id"]),
+        "--secret-access-key",
+        passwordstore_get_cmdline("%s", params["secret_access_key"]),
+    ]
+    args.append("--regions")
+    for region in params["regions"]:
+        args.append(quote_shell_string(region))
+
+    global_services = params.get("global_services", {})
+    if global_services:
+        args.append("--global-services")
+        # We need to sort the inner services-as-a-dict-params
+        # in order to create reliable tests
+        for global_service in global_services.keys():
+            args.append(quote_shell_string(global_service))
+
+    services = params.get("services", {})
+    if services:
+        args.append("--services")
+        # We need to sort the inner services-as-a-dict-params
+        # in order to create reliable tests
+        for service in services.keys():
+            args.append(quote_shell_string(service))
+        for entry in _get_services_selection(services):
+            args.append(quote_shell_string(entry))
+
+    # '--overall-tags': [('KEY_1', ['VAL_1', 'VAL_2']), ...)],
+    for entry in _get_tag_options(params.get('overall_tags', []), 'overall'):
+        args.append(quote_shell_string(entry))
+    args += [
+        "--hostname",
+        quote_shell_string(hostname),
+    ]
+    return " ".join(args)
+
+
+special_agent_info['aws'] = agent_aws_arguments

@@ -25,15 +25,21 @@
 # Boston, MA 02110-1301 USA.
 
 
+def parse_docker_network(info):
+
+    networks = parse_legacy_docker_network_inspect(info)  # pylint: disable=undefined-variable
+    return dict((n["Id"], n) for n in networks)
+
+
 def inv_docker_node_network_networks(info, inventory_tree, status_data_tree):
-    parsed = parse_legacy_docker_network_inspect(info)
-    for network in parsed:
+    parsed = parse_docker_network(info)
+    for network_id, network in parsed.iteritems():
 
         containers = []
-        for container_id, container in network["Containers"].items():
+        for container_id, container in network["Containers"].iteritems():
             containers.append({
                 "name": container["Name"],
-                "id": _legacy_docker_trunk_id(container_id),
+                "id": docker_get_short_id(container_id),  # pylint: disable=undefined-variable
                 "ipv4_address": container["IPv4Address"],
                 "ipv6_address": container["IPv6Address"],
                 "mac_address": container["MacAddress"],
@@ -53,7 +59,7 @@ def inv_docker_node_network_networks(info, inventory_tree, status_data_tree):
 
         network_ = {
             "name": network_name,
-            "network_id": _legacy_docker_trunk_id(network["Id"]),
+            "network_id": docker_get_short_id(network_id),  # pylint: disable=undefined-variable
             "scope": network["Scope"],
         }
 
@@ -62,13 +68,13 @@ def inv_docker_node_network_networks(info, inventory_tree, status_data_tree):
         except KeyError:
             pass
 
-        labels = sorted(["%s: %s" % (k, v) for k, v in network.get("Labels", {}).items()])
+        labels = docker_format_labels(network.get("Labels", {}))
         if labels:
-            network_["labels"] = ", ".join(labels)
+            network_["labels"] = labels
         inventory_networks.update(network_)
 
 
-inv_info["docker_node_network.networks"] = {
-    "includes": ["legacy_docker.include"],
+inv_info["docker_node_network.networks"] = {  # pylint: disable=undefined-variable
+    "includes": ["docker.include", "legacy_docker.include"],
     "inv_function": inv_docker_node_network_networks,
 }

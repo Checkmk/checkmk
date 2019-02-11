@@ -1341,3 +1341,147 @@ register_rule(
     ),
     match='first',
 )
+
+
+def _validate_aws_tags(value, varprefix):
+    used_keys = []
+    # KEY:
+    # ve_p_services_p_ec2_p_choice_1_IDX_0
+    # VALUES:
+    # ve_p_services_p_ec2_p_choice_1_IDX_1_IDX
+    for idx_tag, (tag_key, tag_values) in enumerate(value):
+        tag_field = "%s_%s_0" % (varprefix, idx_tag + 1)
+        if tag_key not in used_keys:
+            used_keys.append(tag_key)
+        else:
+            raise MKUserError(tag_field,
+                              _("Each tag must be unique and cannot be used multiple times"))
+        if tag_key.startswith('aws:'):
+            raise MKUserError(tag_field, _("Do not use 'aws:' prefix for the key."))
+        if len(tag_key) > 128:
+            raise MKUserError(tag_field, _("The maximum key length is 128 characters."))
+        if len(tag_values) > 50:
+            raise MKUserError(tag_field, _("The maximum number of tags per resource is 50."))
+
+        for idx_values, v in enumerate(tag_values):
+            values_field = "%s_%s_1_%s" % (varprefix, idx_tag + 1, idx_values + 1)
+            if len(v) > 256:
+                raise MKUserError(values_field, _("The maximum value length is 256 characters."))
+            if v.startswith('aws:'):
+                raise MKUserError(values_field, _("Do not use 'aws:' prefix for the values."))
+
+
+def _vs_aws_tags(title):
+    return ListOf(
+        Tuple(
+            help=_("How to configure AWS tags please see "
+                   "https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Using_Tags.html"),
+            orientation="horizontal",
+            elements=[
+                TextAscii(title=_("Key")),
+                ListOfStrings(title=_("Values"), orientation="horizontal")
+            ]),
+        add_label=_("Add new tag"),
+        movable=False,
+        title=title,
+        validate=_validate_aws_tags)
+
+
+def _vs_aws_service_selection(title):
+    return Dictionary(
+        title=title,
+        elements=[(
+            'selection',
+            CascadingDropdown(
+                title=_("Selection of service instances"),
+                help=_(
+                    "<i>Gather all service instances and restrict by overall tags</i> means that "
+                    "if overall tags are stated above then all service instances are filtered "
+                    "by these tags. Otherwise all instances are gathered.<br>"
+                    "With <i>Use explicit service tags and overwrite overall tags</i> you can "
+                    "specify explicit tags for these services. The overall tags are ignored for "
+                    "these services.<br>"
+                    "<i>Use explicit service names and ignore overall tags</i>: With this selection "
+                    "you can state explicit names. The overall tags are ignored for these service."
+                ),
+                choices=[
+                    ('all', _("Gather all service instances and restrict by overall tags")),
+                    ('tags', _("Use explicit service tags and overrule overall tags"),
+                     _vs_aws_tags(_("Tags"))),
+                    ('names', _("Use explicit service names and ignore overall tags"),
+                     ListOfStrings()),
+                ]))],
+        optional_keys=[],
+    )
+
+
+register_rule(
+    "datasource_programs",
+    "special_agents:aws",
+    Dictionary(
+            title=_('Amazon Web Services (AWS)'),
+            elements=[
+                ("access_key_id",
+                 TextAscii(
+                     title=_("The access key for your AWS account"),
+                     allow_empty=False,
+                 )),
+                ("secret_access_key",
+                 IndividualOrStoredPassword(
+                     title=_("The secret key for your AWS account"),
+                     allow_empty=False,
+                 )),
+                ("regions",
+                 ListChoice(
+                     title=_("Regions to use"),
+                     choices=sorted([
+                         ("ap-south-1", _("Asia Pacific (Mumbai)")),
+                         ("ap-northeast-3", _("Asia Pacific (Osaka-Local)")),
+                         ("ap-northeast-2", _("Asia Pacific (Seoul)")),
+                         ("ap-southeast-1", _("Asia Pacific (Singapore)")),
+                         ("ap-southeast-2", _("Asia Pacific (Sydney)")),
+                         ("ap-northeast-1", _("Asia Pacific (Tokyo)")),
+                         ("ca-central-1", _("Canada (Central)")),
+                         ("cn-north-1", _("China (Beijing)")),
+                         ("cn-northwest-1", _("China (Ningxia)")),
+                         ("eu-central-1", _("EU (Frankfurt)")),
+                         ("eu-west-1", _("EU (Ireland)")),
+                         ("eu-west-2", _("EU (London)")),
+                         ("eu-west-3", _("EU (Paris)")),
+                         ("eu-north-1", _("EU (Stockholm)")),
+                         ("sa-east-1", _("South America (Sao Paulo)")),
+                         ("us-east-2", _("US East (Ohio)")),
+                         ("us-east-1", _("US East (N. Virginia)")),
+                         ("us-west-1", _("US West (N. California)")),
+                         ("us-west-2", _("US West (Oregon)")),
+                     ],
+                                    key=lambda x: x[1]),
+                 )),
+                ("global_services",
+                 Dictionary(
+                     title=_("Global services to monitor"),
+                     elements=[
+                         ("ce",
+                          FixedValue(
+                              None, totext=_("Monitor costs and usage"),
+                              title=_("Costs and usage"))),
+                     ],
+                 )),
+                ("services",
+                 Dictionary(
+                     title=_("Services per region to monitor"),
+                     elements=[
+                         ("ec2", _vs_aws_service_selection(_("Elastic Compute Cloud (EC2)"))),
+                         ("ebs", _vs_aws_service_selection(_("Elastic Block Storage (EBS)"))),
+                         ("s3", _vs_aws_service_selection(_("Simple Storage Service (S3)"))),
+                         ("elb", _vs_aws_service_selection(_("Elastic Load Balancing (ELB)"))),
+                     ],
+                 )),
+                ("overall_tags", _vs_aws_tags(
+                    _("Restrict monitoring services by one of these tags"))),
+            ],
+            optional_keys=["overall_tags"],
+        ),
+    match='first',
+)
+

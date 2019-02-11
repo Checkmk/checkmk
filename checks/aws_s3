@@ -1,0 +1,133 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2018             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+def parse_aws_s3(info):
+    parsed = {}
+    for row in parse_aws(info):
+        splitted_row = row['Id'].split("_")
+        bucket = parsed.setdefault(row['Label'], {})
+        try:
+            bucket['LocationConstraint'] = row['LocationConstraint']
+        except KeyError:
+            pass
+        try:
+            bucket['Tagging'] = row['Tagging']
+        except KeyError:
+            pass
+        inst = bucket.setdefault(splitted_row[0], {})
+        try:
+            inst.setdefault(splitted_row[1], row['Values'][0])
+        except (IndexError, ValueError):
+            pass
+    return parsed
+
+
+#   .--S3 objects----------------------------------------------------------.
+#   |            ____ _____         _     _           _                    |
+#   |           / ___|___ /    ___ | |__ (_) ___  ___| |_ ___              |
+#   |           \___ \ |_ \   / _ \| '_ \| |/ _ \/ __| __/ __|             |
+#   |            ___) |__) | | (_) | |_) | |  __/ (__| |_\__ \             |
+#   |           |____/____/   \___/|_.__// |\___|\___|\__|___/             |
+#   |                                  |__/                                |
+#   '----------------------------------------------------------------------'
+
+aws_s3_storage_mapping = {
+    "standardstorage": "Standard",
+    "standardiastorage": "IA",
+    "reducedredundancystorage": "Redundancy",
+}
+
+
+@get_parsed_item_data
+def check_aws_s3_objects(item, params, metrics):
+    bucket_sizes = metrics['bucketsizebytes']
+    storage_infos = []
+    for storage_type, value in bucket_sizes.iteritems():
+        storage_infos.append(
+            "%s: %s" % (aws_s3_storage_mapping[storage_type], get_bytes_human_readable(value)))
+    sum_size = sum(bucket_sizes.values())
+    yield (0,
+           'Bucket size: %s (%s)' % (get_bytes_human_readable(sum_size), ", ".join(storage_infos)),
+           [('aws_bucket_size', sum_size)])
+
+    num_objects = sum(metrics['numberofobjects'].values())
+    yield 0, 'Number of objects: %s' % int(num_objects), [('aws_num_objects', num_objects)]
+
+    location = metrics.get('LocationConstraint')
+    if location:
+        yield 0, 'Location: %s' % location
+
+    tag_infos = []
+    for tag in metrics.get('Tagging', {}):
+        tag_infos.append("%s: %s" % (tag['Key'], tag['Value']))
+    if tag_infos:
+        yield 0, '[Tags] %s' % ", ".join(tag_infos)
+
+
+check_info['aws_s3'] = {
+    'parse_function': parse_aws_s3,
+    'inventory_function': discover(),
+    'check_function': check_aws_s3_objects,
+    'service_description': 'AWS/S3 Objects %s',
+    'has_perfdata': True,
+    'includes': ['aws.include'],
+}
+
+#.
+#   .--summary-------------------------------------------------------------.
+#   |                                                                      |
+#   |           ___ _   _ _ __ ___  _ __ ___   __ _ _ __ _   _             |
+#   |          / __| | | | '_ ` _ \| '_ ` _ \ / _` | '__| | | |            |
+#   |          \__ \ |_| | | | | | | | | | | | (_| | |  | |_| |            |
+#   |          |___/\__,_|_| |_| |_|_| |_| |_|\__,_|_|   \__, |            |
+#   |                                                    |___/             |
+#   '----------------------------------------------------------------------'
+
+
+def check_aws_s3_summary(item, params, parsed):
+    sum_size = 0
+    largest_bucket = None
+    largest_bucket_size = 0
+    for bucket_name, bucket in parsed.iteritems():
+        bucket_size = sum(bucket['bucketsizebytes'].values())
+        sum_size += bucket_size
+        if bucket_size >= largest_bucket_size:
+            largest_bucket = bucket_name
+            largest_bucket_size = bucket_size
+    yield 0, 'Total size: %s' % get_bytes_human_readable(sum_size), [('aws_bucket_size', sum_size)]
+
+    if largest_bucket:
+        yield 0, 'Largest bucket: %s (%s)' % \
+                 (largest_bucket, get_bytes_human_readable(largest_bucket_size)), [('aws_largest_bucket_size', largest_bucket_size)]
+
+
+check_info['aws_s3.summary'] = {
+    'inventory_function': discover_single,
+    'check_function': check_aws_s3_summary,
+    'service_description': 'AWS/S3 Summary',
+    'has_perfdata': True,
+}

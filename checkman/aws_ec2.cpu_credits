@@ -1,0 +1,17 @@
+title: AWS EC2 Instance Credit Usage
+agents: aws
+catalog: cloud/aws
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the number of CPU credits spent by the instance for CPU
+ utilization and the number of earned CPU credits that an instance has accrued
+ since it was launched or started.
+ To make this check work you have to configure the related
+ special agent {Amazon Web Services (AWS)}.
+
+ Lower default levels for balance are set to 10, 5.
+ These are configurable.
+
+inventory:
+ One service will be created.

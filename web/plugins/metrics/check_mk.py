@@ -4479,6 +4479,84 @@ metric_info["s2s_bandwidth"] = {
     "color": "#00c080",
 }
 
+metric_info['aws_costs_unblended'] = {
+    'title': _('Unblended costs'),
+    'unit': 'count',
+    'color': '11/a',
+}
+
+metric_info['aws_num_objects'] = {
+    'title': _('Numer of objects'),
+    'unit': 'count',
+    'color': '21/a',
+}
+
+metric_info['aws_bucket_size'] = {
+    'title': _('Bucket size'),
+    'unit': 'bytes',
+    'color': '15/a',
+}
+
+metric_info['aws_largest_bucket_size'] = {
+    'title': _('Largest bucket size'),
+    'unit': 'bytes',
+    'color': '21/a',
+}
+
+metric_info['aws_surge_queue_length'] = {
+    'title': _('Surge queue length'),
+    'unit': 'count',
+    'color': '12/a',
+}
+
+metric_info['aws_spillover'] = {
+    'title': _('The number of requests that were rejected (spillover)'),
+    'unit': 'count',
+    'color': '13/a',
+}
+
+metric_info["aws_load_balancer_latency"] = {
+    "title": _("Load balancer latency"),
+    "unit": "s",
+    "color": "21/a",
+}
+
+metric_info["aws_http_4xx_rate"] = {
+    "title": _("HTTP 400 errors"),
+    "unit": "1/s",
+    "color": "32/a",
+}
+
+metric_info["aws_http_5xx_rate"] = {
+    "title": _("HTTP 500 errors"),
+    "unit": "1/s",
+    "color": "42/a",
+}
+
+metric_info["aws_http_4xx_perc"] = {
+    "title": _("Percentage of HTTP 400 errors"),
+    "unit": "%",
+    "color": "32/a",
+}
+
+metric_info["aws_http_5xx_perc"] = {
+    "title": _("Percentage of HTTP 500 errors"),
+    "unit": "%",
+    "color": "42/a",
+}
+
+metric_info["aws_overall_hosts_health_perc"] = {
+    "title": _("Proportion of healthy host"),
+    "unit": "%",
+    "color": "35/a",
+}
+
+metric_info['aws_backend_connection_errors_rate'] = {
+    'title': _('Backend connection errors'),
+    'unit': '1/s',
+    'color': '15/a',
+}
+
 #.
 #   .--Checks--------------------------------------------------------------.
 #   |                    ____ _               _                            |
@@ -6799,6 +6877,12 @@ perfometer_info.append({
     "exponent": 2,
 })
 
+perfometer_info.append({
+    "type": "logarithmic",
+    "metric": "aws_overall_hosts_health_perc",
+    "half_value": 100,
+    "exponent": 2,
+})
 
 #.
 #   .--Graphs--------------------------------------------------------------.

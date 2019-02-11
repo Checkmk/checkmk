@@ -346,7 +346,7 @@ def user_match_options(extra_elements=None):
 
 
 # Rule for discovered process checks
-@rulespec_registry.register
+@rulespec_registry.register_without_manual_check_rulespec
 class RulespecCheckgroupParametersPs(CheckParameterRulespecWithItem):
     @property
     def group(self):
@@ -377,8 +377,6 @@ class RulespecCheckgroupParametersPs(CheckParameterRulespecWithItem):
     @property
     def item_spec(self):
         return TextAscii(title=_("Process name as defined at discovery"),)
-
-    #del rulespec_registry["static_checks:ps"]      # register_static_check = False
 
 
 # Rule for static process checks

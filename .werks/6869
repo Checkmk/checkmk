@@ -1,0 +1,15 @@
+Title: Fixed all crashes in Windows Agent caused by UTF-16 to UTF-8 conversion
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0p12
+Date: 1549887562
+Class: fix
+
+Some Windows checks may produce invalid UTF-16 symbols or symbols
+which are difficult to convert into UTF-8 using standard library. 
+As a result the Agent may crash with exception 'range_error' during 'to_bytes' call.
+
+Now in such cases the Agent uses native Win32 API call avoiding the crash.
+Provided output from above mentioned Win32 API call  conforms to the UTF-8 standard.

@@ -1139,7 +1139,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
         with table_element("certificate_chain", _("Certificate chain")) as table:
             for cert_detail in reversed(cert_details[1:]):
                 table.row()
-                table.cell("", css="buttons")
+                table.cell(_("Actions"), css="buttons")
                 if cert_detail.is_ca:
                     url = html.makeactionuri([
                         ("_action", "trust"),

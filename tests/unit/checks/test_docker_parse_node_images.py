@@ -13,7 +13,7 @@ execfile(os.path.join(os.path.dirname(__file__), '../../../checks/legacy_docker.
 REQUIRED_IMAGE_KEYS = (
     ("ID", (str, unicode)), ("Repository", (str, unicode)),
     ("Tag",(str, unicode)), ("CreatedAt", (str, unicode)),
-    ("VirtualSize", int), ("__labels__", dict), ("amount_containers", int),
+    ("VirtualSize", int), ("Labels", dict), ("amount_containers", int),
 )
 
 
@@ -473,7 +473,7 @@ EXPECTED_IMAGES1 = {
         u'Tag': u'1.5.0-2018.09.13',
         u'VirtualSize': 818000000,
         u'amount_containers': 0,
-        u'__labels__': {
+        u'Labels': {
             "maintainer":
                 "feedback@check-mk.org",
             "org.opencontainers.image.description":
@@ -496,7 +496,7 @@ EXPECTED_IMAGES1 = {
         u'Tag': u'latest',
         u'VirtualSize': 831400000,
         u'amount_containers': 0,
-        u'__labels__': {
+        u'Labels': {
             "maintainer":
                 "feedback@check-mk.org",
             "org.opencontainers.image.description":
@@ -519,7 +519,7 @@ EXPECTED_IMAGES1 = {
         u'Tag': u'1.5.0-daily',
         u'VirtualSize': 818000000,
         u'amount_containers': 0,
-        u'__labels__': {
+        u'Labels': {
             "maintainer":
                 "feedback@check-mk.org",
             "org.opencontainers.image.description":
@@ -549,7 +549,7 @@ EXPECTED_IMAGES1 = {
         u'Tag': u'1.5.0p5',
         u'VirtualSize': 751900000,
         u'amount_containers': 1,
-        u'__labels__': {
+        u'Labels': {
             "maintainer":
                 "feedback@check-mk.org",
             "org.opencontainers.image.description":
@@ -572,7 +572,7 @@ EXPECTED_IMAGES1 = {
         u'Tag': u'7',
         u'VirtualSize': 199700000,
         u'amount_containers': 0,
-        u'__labels__': {
+        u'Labels': {
             "org.label-schema.build-date": "20180804",
             "org.label-schema.license": "GPLv2",
             "org.label-schema.name": "CentOS Base Image",
@@ -593,7 +593,7 @@ EXPECTED_IMAGES1 = {
         u'Tag': u'latest',
         u'VirtualSize': 199700000,
         u'amount_containers': 0,
-        u'__labels__': {
+        u'Labels': {
             "org.label-schema.build-date": "20180804",
             "org.label-schema.license": "GPLv2",
             "org.label-schema.name": "CentOS Base Image",
@@ -607,7 +607,7 @@ EXPECTED_IMAGES1 = {
         u'Tag': u'daily',
         u'VirtualSize': 972300000,
         u'amount_containers': 0,
-        u'__labels__': {
+        u'Labels': {
             "maintainer":
                 "feedback@check-mk.org",
             "org.opencontainers.image.description":
@@ -630,7 +630,7 @@ EXPECTED_IMAGES1 = {
         u'Tag': u'1.5.0-2018.09.12',
         u'VirtualSize': 814900000,
         u'amount_containers': 0,
-        u'__labels__': {
+        u'Labels': {
             "maintainer":
                 "feedback@check-mk.org",
             "org.opencontainers.image.description":
@@ -653,7 +653,7 @@ EXPECTED_IMAGES1 = {
         u'Tag': u'latest',
         u'VirtualSize': 831400000,
         u'amount_containers': 0,
-        u'__labels__': {
+        u'Labels': {
             "maintainer":
                 "feedback@check-mk.org",
             "org.opencontainers.image.description":
@@ -676,7 +676,7 @@ EXPECTED_IMAGES1 = {
         u'Tag': u'latest',
         u'VirtualSize': 828400000,
         u'amount_containers': 0,
-        u'__labels__': {
+        u'Labels': {
             "maintainer":
                 "feedback@check-mk.org",
             "org.opencontainers.image.description":
@@ -699,7 +699,7 @@ EXPECTED_IMAGES1 = {
         u'Tag': u'2018.09.14',
         u'VirtualSize': 831400000,
         u'amount_containers': 0,
-        u'__labels__': {
+        u'Labels': {
             "maintainer":
                 "feedback@check-mk.org",
             "org.opencontainers.image.description":
@@ -722,7 +722,7 @@ EXPECTED_IMAGES1 = {
         u'Tag': u'latest',
         u'VirtualSize': 817600000,
         u'amount_containers': 0,
-        u'__labels__': {
+        u'Labels': {
             "maintainer":
                 "feedback@check-mk.org",
             "org.opencontainers.image.description":
@@ -745,7 +745,7 @@ EXPECTED_IMAGES1 = {
         u'Tag': u'latest',
         u'VirtualSize': 254200000,
         u'amount_containers': 2,
-        u'__labels__': {
+        u'Labels': {
             "org.label-schema.build-date": "20180804",
             "org.label-schema.license": "GPLv2",
             "org.label-schema.name": "CentOS Base Image",
@@ -759,7 +759,7 @@ EXPECTED_IMAGES1 = {
         u'Tag': u'latest',
         u'VirtualSize': 844300000,
         u'amount_containers': 0,
-        u'__labels__': {
+        u'Labels': {
             "maintainer":
                 "feedback@check-mk.org",
             "org.opencontainers.image.description":
@@ -782,7 +782,7 @@ EXPECTED_IMAGES1 = {
         u'Tag': u'latest',
         u'VirtualSize': 828400000,
         u'amount_containers': 0,
-        u'__labels__': {
+        u'Labels': {
             "maintainer":
                 "feedback@check-mk.org",
             "org.opencontainers.image.description":
@@ -805,7 +805,7 @@ EXPECTED_IMAGES1 = {
         u'Tag': u'latest',
         u'VirtualSize': 817400000,
         u'amount_containers': 0,
-        u'__labels__': {
+        u'Labels': {
             "maintainer":
                 "feedback@check-mk.org",
             "org.opencontainers.image.description":
@@ -828,7 +828,7 @@ EXPECTED_IMAGES1 = {
         u'Tag': u'latest',
         u'VirtualSize': 831400000,
         u'amount_containers': 0,
-        u'__labels__': {
+        u'Labels': {
             "maintainer":
                 "feedback@check-mk.org",
             "org.opencontainers.image.description":
@@ -2598,7 +2598,7 @@ EXPECTED_IMAGES2 = {
         u'Tag': u'1.5.0-2018.09.13',
         u'UniqueSize': u'N/A',
         u'VirtualSize': 818000000,
-        '__labels__': {
+        'Labels': {
             u'maintainer':
                 u'feedback@check-mk.org',
             u'org.opencontainers.image.description':
@@ -2628,7 +2628,7 @@ EXPECTED_IMAGES2 = {
         u'Tag': u'<none>',
         u'UniqueSize': u'N/A',
         u'VirtualSize': 312400000,
-        '__labels__': {
+        'Labels': {
             u'maintainer': u'feedback@check-mk.org'
         },
         'amount_containers': 0
@@ -2645,7 +2645,7 @@ EXPECTED_IMAGES2 = {
         u'Tag': u'latest',
         u'UniqueSize': u'N/A',
         u'VirtualSize': 831400000,
-        '__labels__': {
+        'Labels': {
             u'maintainer':
                 u'feedback@check-mk.org',
             u'org.opencontainers.image.description':
@@ -2675,7 +2675,7 @@ EXPECTED_IMAGES2 = {
         u'Tag': u'1.5.0-daily',
         u'UniqueSize': u'N/A',
         u'VirtualSize': 818000000,
-        '__labels__': {
+        'Labels': {
             u'maintainer':
                 u'feedback@check-mk.org',
             u'org.opencontainers.image.description':
@@ -2719,7 +2719,7 @@ EXPECTED_IMAGES2 = {
         u'Tag': u'latest',
         u'UniqueSize': u'N/A',
         u'VirtualSize': 817600000,
-        '__labels__': {
+        'Labels': {
             u'maintainer':
                 u'feedback@check-mk.org',
             u'org.opencontainers.image.description':
@@ -2749,7 +2749,7 @@ EXPECTED_IMAGES2 = {
         u'Tag': u'1.5.0p5',
         u'UniqueSize': u'N/A',
         u'VirtualSize': 751900000,
-        '__labels__': {
+        'Labels': {
             u'maintainer':
                 u'feedback@check-mk.org',
             u'org.opencontainers.image.description':
@@ -2779,7 +2779,7 @@ EXPECTED_IMAGES2 = {
         u'Tag': u'7',
         u'UniqueSize': u'N/A',
         u'VirtualSize': 199700000,
-        '__labels__': {
+        'Labels': {
             u'org.label-schema.build-date': u'20180804',
             u'org.label-schema.license': u'GPLv2',
             u'org.label-schema.name': u'CentOS Base Image',
@@ -2814,7 +2814,7 @@ EXPECTED_IMAGES2 = {
         u'Tag': u'latest',
         u'UniqueSize': u'N/A',
         u'VirtualSize': 199700000,
-        '__labels__': {
+        'Labels': {
             u'org.label-schema.build-date': u'20180804',
             u'org.label-schema.license': u'GPLv2',
             u'org.label-schema.name': u'CentOS Base Image',
@@ -2835,7 +2835,7 @@ EXPECTED_IMAGES2 = {
         u'Tag': u'daily',
         u'UniqueSize': u'N/A',
         u'VirtualSize': 972300000,
-        '__labels__': {
+        'Labels': {
             u'maintainer':
                 u'feedback@check-mk.org',
             u'org.opencontainers.image.description':
@@ -2865,7 +2865,7 @@ EXPECTED_IMAGES2 = {
         u'Tag': u'1.5.0-2018.09.12',
         u'UniqueSize': u'N/A',
         u'VirtualSize': 814900000,
-        '__labels__': {
+        'Labels': {
             u'maintainer':
                 u'feedback@check-mk.org',
             u'org.opencontainers.image.description':
@@ -2895,7 +2895,7 @@ EXPECTED_IMAGES2 = {
         u'Tag': u'latest',
         u'UniqueSize': u'N/A',
         u'VirtualSize': 831400000,
-        '__labels__': {
+        'Labels': {
             u'maintainer':
                 u'feedback@check-mk.org',
             u'org.opencontainers.image.description':
@@ -2925,7 +2925,7 @@ EXPECTED_IMAGES2 = {
         u'Tag': u'latest',
         u'UniqueSize': u'N/A',
         u'VirtualSize': 828400000,
-        '__labels__': {
+        'Labels': {
             u'maintainer':
                 u'feedback@check-mk.org',
             u'org.opencontainers.image.description':
@@ -2955,7 +2955,7 @@ EXPECTED_IMAGES2 = {
         u'Tag': u'2018.09.14',
         u'UniqueSize': u'N/A',
         u'VirtualSize': 831400000,
-        '__labels__': {
+        'Labels': {
             u'maintainer':
                 u'feedback@check-mk.org',
             u'org.opencontainers.image.description':
@@ -2985,7 +2985,7 @@ EXPECTED_IMAGES2 = {
         u'Tag': u'<none>',
         u'UniqueSize': u'N/A',
         u'VirtualSize': 817600000,
-        '__labels__': {
+        'Labels': {
             u'maintainer':
                 u'feedback@check-mk.org',
             u'org.opencontainers.image.description':
@@ -3015,7 +3015,7 @@ EXPECTED_IMAGES2 = {
         u'Tag': u'latest',
         u'UniqueSize': u'N/A',
         u'VirtualSize': 254200000,
-        '__labels__': {
+        'Labels': {
             u'org.label-schema.build-date': u'20180804',
             u'org.label-schema.license': u'GPLv2',
             u'org.label-schema.name': u'CentOS Base Image',
@@ -3036,7 +3036,7 @@ EXPECTED_IMAGES2 = {
         u'Tag': u'latest',
         u'UniqueSize': u'N/A',
         u'VirtualSize': 844300000,
-        '__labels__': {
+        'Labels': {
             u'maintainer':
                 u'feedback@check-mk.org',
             u'org.opencontainers.image.description':
@@ -3066,7 +3066,7 @@ EXPECTED_IMAGES2 = {
         u'Tag': u'latest',
         u'UniqueSize': u'N/A',
         u'VirtualSize': 828400000,
-        '__labels__': {
+        'Labels': {
             u'maintainer':
                 u'feedback@check-mk.org',
             u'org.opencontainers.image.description':
@@ -3096,7 +3096,7 @@ EXPECTED_IMAGES2 = {
         u'Tag': u'latest',
         u'UniqueSize': u'N/A',
         u'VirtualSize': 817400000,
-        '__labels__': {
+        'Labels': {
             u'maintainer':
                 u'feedback@check-mk.org',
             u'org.opencontainers.image.description':
@@ -3126,7 +3126,7 @@ EXPECTED_IMAGES2 = {
         u'Tag': u'latest',
         u'UniqueSize': u'N/A',
         u'VirtualSize': 831400000,
-        '__labels__': {
+        'Labels': {
             u'maintainer':
                 u'feedback@check-mk.org',
             u'org.opencontainers.image.description':
@@ -5630,7 +5630,7 @@ EXPECTED_IMAGES3 = {
         u'Tag': u'1.5.0-2018.09.13',
         u'UniqueSize': u'N/A',
         u'VirtualSize': 817961530,
-        '__labels__': {
+        'Labels': {
             u'maintainer':
                 u'feedback@check-mk.org',
             u'org.opencontainers.image.description':
@@ -5660,7 +5660,7 @@ EXPECTED_IMAGES3 = {
         u'Tag': u'latest',
         u'UniqueSize': u'N/A',
         u'VirtualSize': 312404556,
-        '__labels__': {
+        'Labels': {
             u'maintainer': u'feedback@check-mk.org'
         },
         'amount_containers': 0
@@ -5677,7 +5677,7 @@ EXPECTED_IMAGES3 = {
         u'Tag': u'latest',
         u'UniqueSize': u'N/A',
         u'VirtualSize': 831418094,
-        '__labels__': {
+        'Labels': {
             u'maintainer':
                 u'feedback@check-mk.org',
             u'org.opencontainers.image.description':
@@ -5707,7 +5707,7 @@ EXPECTED_IMAGES3 = {
         u'Tag': u'1.5.0-daily',
         u'UniqueSize': u'N/A',
         u'VirtualSize': 817965472,
-        '__labels__': {
+        'Labels': {
             u'maintainer':
                 u'feedback@check-mk.org',
             u'org.opencontainers.image.description':
@@ -5751,7 +5751,7 @@ EXPECTED_IMAGES3 = {
         u'Tag': u'latest',
         u'UniqueSize': u'N/A',
         u'VirtualSize': 817562729,
-        '__labels__': {
+        'Labels': {
             u'maintainer':
                 u'feedback@check-mk.org',
             u'org.opencontainers.image.description':
@@ -5781,7 +5781,7 @@ EXPECTED_IMAGES3 = {
         u'Tag': u'1.5.0p5',
         u'UniqueSize': u'N/A',
         u'VirtualSize': 751885817,
-        '__labels__': {
+        'Labels': {
             u'maintainer':
                 u'feedback@check-mk.org',
             u'org.opencontainers.image.description':
@@ -5811,7 +5811,7 @@ EXPECTED_IMAGES3 = {
         u'Tag': u'7',
         u'UniqueSize': u'N/A',
         u'VirtualSize': 199723824,
-        '__labels__': {
+        'Labels': {
             u'org.label-schema.build-date': u'20180804',
             u'org.label-schema.license': u'GPLv2',
             u'org.label-schema.name': u'CentOS Base Image',
@@ -5846,7 +5846,7 @@ EXPECTED_IMAGES3 = {
         u'Tag': u'latest',
         u'UniqueSize': u'N/A',
         u'VirtualSize': 199723824,
-        '__labels__': {
+        'Labels': {
             u'org.label-schema.build-date': u'20180804',
             u'org.label-schema.license': u'GPLv2',
             u'org.label-schema.name': u'CentOS Base Image',
@@ -5867,7 +5867,7 @@ EXPECTED_IMAGES3 = {
         u'Tag': u'daily',
         u'UniqueSize': u'N/A',
         u'VirtualSize': 972256089,
-        '__labels__': {
+        'Labels': {
             u'maintainer':
                 u'feedback@check-mk.org',
             u'org.opencontainers.image.description':
@@ -5897,7 +5897,7 @@ EXPECTED_IMAGES3 = {
         u'Tag': u'1.5.0-2018.09.12',
         u'UniqueSize': u'N/A',
         u'VirtualSize': 814907653,
-        '__labels__': {
+        'Labels': {
             u'maintainer':
                 u'feedback@check-mk.org',
             u'org.opencontainers.image.description':
@@ -5927,7 +5927,7 @@ EXPECTED_IMAGES3 = {
         u'Tag': u'latest',
         u'UniqueSize': u'N/A',
         u'VirtualSize': 831425899,
-        '__labels__': {
+        'Labels': {
             u'maintainer':
                 u'feedback@check-mk.org',
             u'org.opencontainers.image.description':
@@ -5957,7 +5957,7 @@ EXPECTED_IMAGES3 = {
         u'Tag': u'latest',
         u'UniqueSize': u'N/A',
         u'VirtualSize': 828361723,
-        '__labels__': {
+        'Labels': {
             u'maintainer':
                 u'feedback@check-mk.org',
             u'org.opencontainers.image.description':
@@ -5987,7 +5987,7 @@ EXPECTED_IMAGES3 = {
         u'Tag': u'2018.09.14',
         u'UniqueSize': u'N/A',
         u'VirtualSize': 831425908,
-        '__labels__': {
+        'Labels': {
             u'maintainer':
                 u'feedback@check-mk.org',
             u'org.opencontainers.image.description':
@@ -6017,7 +6017,7 @@ EXPECTED_IMAGES3 = {
         u'Tag': u'latest',
         u'UniqueSize': u'N/A',
         u'VirtualSize': 817561911,
-        '__labels__': {
+        'Labels': {
             u'maintainer':
                 u'feedback@check-mk.org',
             u'org.opencontainers.image.description':
@@ -6047,7 +6047,7 @@ EXPECTED_IMAGES3 = {
         u'Tag': u'latest',
         u'UniqueSize': u'N/A',
         u'VirtualSize': 254189650,
-        '__labels__': {
+        'Labels': {
             u'org.label-schema.build-date': u'20180804',
             u'org.label-schema.license': u'GPLv2',
             u'org.label-schema.name': u'CentOS Base Image',
@@ -6068,7 +6068,7 @@ EXPECTED_IMAGES3 = {
         u'Tag': u'latest',
         u'UniqueSize': u'N/A',
         u'VirtualSize': 844317793,
-        '__labels__': {
+        'Labels': {
             u'maintainer':
                 u'feedback@check-mk.org',
             u'org.opencontainers.image.description':
@@ -6098,7 +6098,7 @@ EXPECTED_IMAGES3 = {
         u'Tag': u'latest',
         u'UniqueSize': u'N/A',
         u'VirtualSize': 828358667,
-        '__labels__': {
+        'Labels': {
             u'maintainer':
                 u'feedback@check-mk.org',
             u'org.opencontainers.image.description':
@@ -6128,7 +6128,7 @@ EXPECTED_IMAGES3 = {
         u'Tag': u'latest',
         u'UniqueSize': u'N/A',
         u'VirtualSize': 817394362,
-        '__labels__': {
+        'Labels': {
             u'maintainer':
                 u'feedback@check-mk.org',
             u'org.opencontainers.image.description':
@@ -6158,7 +6158,7 @@ EXPECTED_IMAGES3 = {
         u'Tag': u'latest',
         u'UniqueSize': u'N/A',
         u'VirtualSize': 831431070,
-        '__labels__': {
+        'Labels': {
             u'maintainer':
                 u'feedback@check-mk.org',
             u'org.opencontainers.image.description':

@@ -1476,6 +1476,7 @@ register_rule(
                          ("ebs", _vs_aws_service_selection(_("Elastic Block Storage (EBS)"))),
                          ("s3", _vs_aws_service_selection(_("Simple Storage Service (S3)"))),
                          ("elb", _vs_aws_service_selection(_("Elastic Load Balancing (ELB)"))),
+                         ("rds", _vs_aws_service_selection(_("Relational Database Service (RDS)"))),
                      ],
                  )),
                 ("overall_tags", _vs_aws_tags(

@@ -4563,6 +4563,36 @@ metric_info['aws_burst_balance'] = {
     'color': '11/a',
 }
 
+metric_info['aws_rds_bin_log_disk_usage'] = {
+    'title': _('Bin Log Disk Usage'),
+    'unit': '%',
+    'color': '11/a',
+}
+
+metric_info['aws_rds_transaction_logs_disk_usage'] = {
+    'title': _('Transaction Logs Disk Usage'),
+    'unit': '%',
+    'color': '12/a',
+}
+
+metric_info['aws_rds_replication_slot_disk_usage'] = {
+    'title': _('Replication Slot Disk Usage'),
+    'unit': '%',
+    'color': '13/a',
+}
+
+metric_info['aws_rds_oldest_replication_slot_lag'] = {
+    'title': _('Oldest Replication Slot Lag Size'),
+    'unit': 'bytes',
+    'color': '14/a',
+}
+
+metric_info['aws_rds_connections'] = {
+    'title': _('Connections in use'),
+    'unit': 'count',
+    'color': '21/a',
+}
+
 #.
 #   .--Checks--------------------------------------------------------------.
 #   |                    ____ _               _                            |
@@ -5031,6 +5061,7 @@ check_metrics["check_mk-if_fortigate"]              = if_translation
 check_metrics["check_mk-aix_if"]                    = if_translation
 check_metrics["check_mk-k8s_stats.network"]         = if_translation
 check_metrics["check_mk-aws_ec2.network_io"]        = if_translation
+check_metrics["check_mk-aws_rds.network_io"]        = if_translation
 
 check_metrics["check_mk-brocade_fcport"] = {
     "in"             : { "name": "fc_rx_bytes", },

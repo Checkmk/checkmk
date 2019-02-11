@@ -33,12 +33,15 @@ from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersNetworking,
 )
 
-fortigate_sessions_element = Tuple(
-    title=_(u"Levels for active sessions"),
-    elements=[
-        Integer(title=_(u"Warning at"), default_value=100000, size=10),
-        Integer(title=_(u"Critical at"), default_value=150000, size=10),
-    ])
+
+def fortigate_sessions_element():
+    return Tuple(
+        title=_(u"Levels for active sessions"),
+        elements=[
+            Integer(title=_(u"Warning at"), default_value=100000, size=10),
+            Integer(title=_(u"Critical at"), default_value=150000, size=10),
+        ],
+    )
 
 
 @rulespec_registry.register
@@ -57,4 +60,4 @@ class RulespecCheckgroupParametersFortigateSessions(CheckParameterRulespecWithou
 
     @property
     def parameter_valuespec(self):
-        return fortigate_sessions_element
+        return fortigate_sessions_element()

@@ -41,29 +41,31 @@ from cmk.gui.plugins.wato import (
     rulespec_registry,
 )
 
-ntp_params = Tuple(
-    title=_("Thresholds for quality of time"),
-    elements=[
-        Integer(
-            title=_("Critical at stratum"),
-            default_value=10,
-            help=_(
-                "The stratum (\"distance\" to the reference clock) at which the check gets critical."
+
+def _ntp_params():
+    return Tuple(
+        title=_("Thresholds for quality of time"),
+        elements=[
+            Integer(
+                title=_("Critical at stratum"),
+                default_value=10,
+                help=
+                _("The stratum (\"distance\" to the reference clock) at which the check gets critical."
+                 ),
             ),
-        ),
-        Float(
-            title=_("Warning at"),
-            unit=_("ms"),
-            default_value=200.0,
-            help=_("The offset in ms at which a warning state is triggered."),
-        ),
-        Float(
-            title=_("Critical at"),
-            unit=_("ms"),
-            default_value=500.0,
-            help=_("The offset in ms at which a critical state is triggered."),
-        ),
-    ])
+            Float(
+                title=_("Warning at"),
+                unit=_("ms"),
+                default_value=200.0,
+                help=_("The offset in ms at which a warning state is triggered."),
+            ),
+            Float(
+                title=_("Critical at"),
+                unit=_("ms"),
+                default_value=500.0,
+                help=_("The offset in ms at which a critical state is triggered."),
+            ),
+        ])
 
 
 @rulespec_registry.register
@@ -82,7 +84,7 @@ class RulespecCheckgroupParametersNtpPeer(CheckParameterRulespecWithItem):
 
     @property
     def parameter_valuespec(self):
-        return ntp_params
+        return _ntp_params()
 
     @property
     def item_spec(self):
@@ -114,7 +116,7 @@ class RulespecCheckgroupParametersNtpTime(CheckParameterRulespecWithoutItem):
                 elements=[
                     (
                         "ntp_levels",
-                        ntp_params,
+                        _ntp_params(),
                     ),
                     ("alert_delay",
                      Tuple(

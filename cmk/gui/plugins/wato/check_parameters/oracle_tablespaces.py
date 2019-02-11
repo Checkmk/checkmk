@@ -68,7 +68,7 @@ class RulespecCheckgroupParametersOracleTablespaces(CheckParameterRulespecWithIt
                    "more data files. Tables and indexes are created within a particular "
                    "tablespace. "
                    "This rule allows you to define checks on the size of tablespaces."),
-            elements=db_levels_common + [
+            elements=db_levels_common() + [
                 ("autoextend",
                  DropdownChoice(
                      title=_("Expected autoextend setting"),

@@ -97,7 +97,7 @@ class ResultDistributor(object):
 
 AWSSectionResults = NamedTuple("AWSSectionResults", [
     ("results", List),
-    ("cache_timestamp", int),
+    ("cache_timestamp", float),
 ])
 
 AWSSectionResult = NamedTuple("AWSSectionResult", [
@@ -163,15 +163,24 @@ class AWSSection(object):
         assert isinstance(
             colleague_contents, AWSColleagueContents
         ), "%s: Colleague contents must be of type 'AWSColleagueContents'" % self.name
+        assert isinstance(
+            colleague_contents.cache_timestamp,
+            float), "%s: Cache timestamp of colleague contents must be of type 'float'" % self.name
 
         raw_content = self._get_raw_content(colleague_contents, use_cache=use_cache)
         assert isinstance(
             raw_content,
             AWSRawContent), "%s: Raw content must be of type 'AWSRawContent'" % self.name
+        assert isinstance(
+            raw_content.cache_timestamp,
+            float), "%s: Cache timestamp of raw content must be of type 'float'" % self.name
 
         computed_content = self._compute_content(raw_content, colleague_contents)
         assert isinstance(computed_content, AWSComputedContent
                          ), "%s: Computed content must be of type 'AWSComputedContent'" % self.name
+        assert isinstance(
+            computed_content.cache_timestamp,
+            float), "%s: Cache timestamp of computed content must be of type 'float'" % self.name
 
         self._send(computed_content)
         created_results = self._create_results(computed_content)
@@ -183,6 +192,9 @@ class AWSSection(object):
                 AWSSectionResult), "%s: Result mut be of type 'AWSSectionResult'" % self.name
             if result.content is None:
                 continue
+            assert isinstance(
+                result.piggyback_hostname,
+                str), "%s: Piggyback hostname of created result must be of type 'str'" % self.name
             # In the related check plugin aws.include we parse these results and
             # extend list of json-loaded results.
             assert isinstance(result.content,
@@ -232,7 +244,7 @@ class AWSSection(object):
                 raw_content = f.read().strip()
         except IOError as e:
             if e.errno == errno.ENOENT:  # No such file or directory
-                return None, time.time()
+                return None, 0.0
             else:
                 raise
         try:
@@ -353,7 +365,7 @@ class CostsAndUsage(AWSSectionGeneric):
         return 86400
 
     def _get_colleague_contents(self):
-        return AWSColleagueContents(None, 0)
+        return AWSColleagueContents(None, 0.0)
 
     def _fetch_raw_content(self, colleague_contents):
         fmt = "%Y-%m-%d"
@@ -412,7 +424,7 @@ class EC2Summary(AWSSectionGeneric):
         return 300
 
     def _get_colleague_contents(self):
-        return AWSColleagueContents(None, 0)
+        return AWSColleagueContents(None, 0.0)
 
     def _fetch_raw_content(self, colleague_contents):
         response = self._describe_instances()
@@ -460,7 +472,7 @@ class EC2SecurityGroups(AWSSectionGeneric):
         colleague = self._received_results.get('ec2_summary')
         if colleague and colleague.content:
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
-        return AWSColleagueContents({}, 0)
+        return AWSColleagueContents({}, 0.0)
 
     def _fetch_raw_content(self, colleague_contents):
         response = self._describe_security_groups()
@@ -507,7 +519,7 @@ class EC2(AWSSectionCloudwatch):
         colleague = self._received_results.get('ec2_summary')
         if colleague and colleague.content:
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
-        return AWSColleagueContents({}, 0)
+        return AWSColleagueContents({}, 0.0)
 
     def _get_metrics(self, colleague_contents):
         metrics = []
@@ -595,7 +607,7 @@ class S3Summary(AWSSectionGeneric):
         return 86400
 
     def _get_colleague_contents(self):
-        return AWSColleagueContents(None, 0)
+        return AWSColleagueContents(None, 0.0)
 
     def _fetch_raw_content(self, colleague_contents):
         found_buckets = []
@@ -658,7 +670,7 @@ class S3Summary(AWSSectionGeneric):
 
     def _compute_content(self, raw_content, colleague_contents):
         return AWSComputedContent({bucket['Name']: bucket for bucket in raw_content.content},
-                                  raw_content.content)
+                                  raw_content.cache_timestamp)
 
     def _create_results(self, computed_content):
         return [AWSSectionResult("", None)]
@@ -677,7 +689,7 @@ class S3(AWSSectionCloudwatch):
         colleague = self._received_results.get('s3_summary')
         if colleague and colleague.content:
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
-        return AWSColleagueContents({}, 0)
+        return AWSColleagueContents({}, 0.0)
 
     def _get_metrics(self, colleague_contents):
         metrics = []
@@ -761,7 +773,7 @@ class ELBSummary(AWSSectionGeneric):
         return 300
 
     def _get_colleague_contents(self):
-        return AWSColleagueContents(None, 0)
+        return AWSColleagueContents(None, 0.0)
 
     def _fetch_raw_content(self, colleague_contents):
         found_load_balancers = []
@@ -826,7 +838,7 @@ class ELBHealth(AWSSectionGeneric):
         colleague = self._received_results.get('elb_summary')
         if colleague and colleague.content:
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
-        return AWSColleagueContents({}, 0)
+        return AWSColleagueContents({}, 0.0)
 
     def _fetch_raw_content(self, colleague_contents):
         load_balancers = {}
@@ -864,7 +876,7 @@ class ELB(AWSSectionCloudwatch):
         colleague = self._received_results.get('elb_summary')
         if colleague and colleague.content:
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
-        return AWSColleagueContents({}, 0)
+        return AWSColleagueContents({}, 0.0)
 
     def _get_metrics(self, colleague_contents):
         metrics = []
@@ -951,7 +963,7 @@ class EBSSummary(AWSSectionGeneric):
         colleague = self._received_results.get('ec2_summary')
         if colleague and colleague.content:
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
-        return AWSColleagueContents({}, 0)
+        return AWSColleagueContents({}, 0.0)
 
     def _fetch_raw_content(self, colleague_contents):
         response_volumes, response_volume_stats = self._describe_volumes()
@@ -1024,7 +1036,7 @@ class EBS(AWSSectionCloudwatch):
             return AWSColleagueContents([(instance_name, row['VolumeId'], row['VolumeType'])
                                          for instance_name, rows in colleague.content.iteritems()
                                          for row in rows], colleague.cache_timestamp)
-        return AWSColleagueContents([], 0)
+        return AWSColleagueContents([], 0.0)
 
     def _get_metrics(self, colleague_contents):
         metrics = []

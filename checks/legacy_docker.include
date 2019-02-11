@@ -351,7 +351,7 @@ def parse_legacy_docker_node_images(info):
         image["ID"] = image_id
         labels = pref_info.get("Config", {}).get("Labels")
         if labels is not None:
-            image.setdefault("__labels__", {}).update(labels)
+            image.setdefault("Labels", {}).update(labels)
         image["CreatedAt"] = pref_info["Created"]
         image["VirtualSize"] = pref_info["VirtualSize"]
         repotags = pref_info.get("RepoTags")
@@ -363,12 +363,12 @@ def parse_legacy_docker_node_images(info):
 
     for image in images.itervalues():
         image["amount_containers"] = 0
-        image.setdefault("__labels__", {})
+        image.setdefault("Labels", {})
 
     for image_id, labels in image_labels.iteritems():
         image = images.get(_legacy_docker_trunk_id(image_id))
         if image is not None and labels is not None:
-            image["__labels__"].update(labels)
+            image["Labels"].update(labels)
 
     mapping = {(i['Repository'], i['Tag']): i['ID'] for i in images.itervalues()}
 

@@ -68,7 +68,7 @@ def inv_docker_node_network_networks(info, inventory_tree, status_data_tree):
         except KeyError:
             pass
 
-        labels = docker_format_labels(network.get("Labels", {}))
+        labels = docker_format_labels(network)
         if labels:
             network_["labels"] = labels
         inventory_networks.update(network_)

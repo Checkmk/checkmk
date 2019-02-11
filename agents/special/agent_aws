@@ -417,13 +417,10 @@ class EC2Summary(AWSSectionGeneric):
     def _fetch_raw_content(self, colleague_contents):
         response = self._describe_instances()
         try:
-            return {
-                instance["PrivateDnsName"]: instance for reservation in response['Reservations']
-                for instance in reservation.get('Instances', [])
-            }
+            return response['Reservations']
         except KeyError as e:
             logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
-            return {}
+            return []
 
     def _describe_instances(self):
         if self._names is not None:
@@ -433,10 +430,16 @@ class EC2Summary(AWSSectionGeneric):
         return self._client.describe_instances()
 
     def _compute_content(self, raw_content, colleague_contents):
-        return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
+        return AWSComputedContent({
+            instance["PrivateDnsName"]: instance for reservation in raw_content.content
+            for instance in reservation.get('Instances', [])
+        }, raw_content.cache_timestamp)
 
     def _create_results(self, computed_content):
-        return [AWSSectionResult("", [computed_content.content])]
+        return [
+            AWSSectionResult(instance_name, [instance])
+            for instance_name, instance in computed_content.content.iteritems()
+        ]
 
 
 class EC2SecurityGroups(AWSSectionGeneric):
@@ -509,8 +512,8 @@ class EC2(AWSSectionCloudwatch):
     def _get_metrics(self, colleague_contents):
         metrics = []
         idx = 0
-        for instance_name, attrs in colleague_contents.content.iteritems():
-            instance_id = attrs['InstanceId']
+        for instance_name, instance in colleague_contents.content.iteritems():
+            instance_id = instance['InstanceId']
             for metric_name, unit in [
                 ("CPUCreditUsage", "Count"),
                 ("CPUCreditBalance", "Count"),
@@ -654,7 +657,8 @@ class S3Summary(AWSSectionGeneric):
         return False
 
     def _compute_content(self, raw_content, colleague_contents):
-        return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
+        return AWSComputedContent({bucket['Name']: bucket for bucket in raw_content.content},
+                                  raw_content.content)
 
     def _create_results(self, computed_content):
         return [AWSSectionResult("", None)]
@@ -672,8 +676,7 @@ class S3(AWSSectionCloudwatch):
     def _get_colleague_contents(self):
         colleague = self._received_results.get('s3_summary')
         if colleague and colleague.content:
-            return AWSColleagueContents({bucket['Name']: bucket for bucket in colleague.content},
-                                        colleague.cache_timestamp)
+            return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
         return AWSColleagueContents({}, 0)
 
     def _get_metrics(self, colleague_contents):
@@ -807,10 +810,7 @@ class ELBSummary(AWSSectionGeneric):
         return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
 
     def _create_results(self, computed_content):
-        return [
-            AWSSectionResult(piggyback_hostname, [content])
-            for piggyback_hostname, content in computed_content.content.iteritems()
-        ]
+        return [AWSSectionResult("", computed_content.content.values())]
 
 
 class ELBHealth(AWSSectionGeneric):
@@ -950,8 +950,7 @@ class EBSSummary(AWSSectionGeneric):
     def _get_colleague_contents(self):
         colleague = self._received_results.get('ec2_summary')
         if colleague and colleague.content:
-            mapping = {v['InstanceId']: k for k, v in colleague.content.iteritems()}
-            return AWSColleagueContents(mapping, colleague.cache_timestamp)
+            return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
         return AWSColleagueContents({}, 0)
 
     def _fetch_raw_content(self, colleague_contents):
@@ -990,11 +989,16 @@ class EBSSummary(AWSSectionGeneric):
             volume.update(volume_states.get(volume_id, {}))
             content.append(volume)
 
+        instance_name_mapping = {
+            v['InstanceId']: k for k, v in colleague_contents.content.iteritems()
+        }
         content_by_piggyback_hosts = {}
         for row in content:
             for attachment in row['Attachments']:
                 attachment_id = attachment['InstanceId']
-                instance_name = colleague_contents.content.get(attachment_id, attachment_id)
+                instance_name = instance_name_mapping.get(attachment_id)
+                if instance_name is None:
+                    instance_name = ""
                 content_by_piggyback_hosts.setdefault(instance_name, []).append(row)
         return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
 

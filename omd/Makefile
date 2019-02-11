@@ -286,7 +286,6 @@ deb: debian/changelog
 	sed -e 's/###OMD_VERSION###/$(OMD_VERSION)/' \
 	    -e "s/###PKG_VERSION###/$(PKG_VERSION)/" \
 	    -e 's/###EDITION###/$(EDITION)/' \
-	    -e 's/###BUILD_PACKAGES###/$(BUILD_PACKAGES)/' \
 	    -e 's/###OS_PACKAGES###/$(OS_PACKAGES)/' \
 	    -e '/Depends:/s/\> /, /g' \
 	    -e '/Depends:/s/@/ /g' \
@@ -365,18 +364,5 @@ xzf:
 	$(APACHE_CTL) -k graceful
 
 setup:
-	@echo "Packages needed for compilation:"
-	@echo "$(BUILD_PACKAGES)"
-	@CMD="$(PACKAGE_INSTALL) $(BUILD_PACKAGES)" ; \
-	if [ $$(id -u) != 0 ]; then \
-	    CMD="$(BECOME_ROOT) '$$CMD'" ; \
-	fi ; \
-	echo "Going to run >>> $$CMD <<<..." ; \
-	\
-	if eval "$$CMD"; then \
-	    echo "OK - You are now ready for 'make rpm' or 'make deb'" ; \
-	else \
-	    echo "ERROR: Some packages could not be installed. You will get " ; \
-	    echo "problems while compiling if something is missing." ; \
-	    exit 1 ; \
-	fi
+	echo "Please run the build in a docker container."
+	echo "Dockerfiles for all Distros can be found under 'buildscripts/infrastructure/build-nodes/'."

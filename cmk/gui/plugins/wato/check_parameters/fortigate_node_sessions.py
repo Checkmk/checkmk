@@ -25,11 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Tuple,
-    Integer,
-    TextAscii,
-)
+from cmk.gui.valuespec import TextAscii
 
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
@@ -37,12 +33,7 @@ from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersNetworking,
 )
 
-fortigate_sessions_element = Tuple(
-    title=_(u"Levels for active sessions"),
-    elements=[
-        Integer(title=_(u"Warning at"), default_value=100000, size=10),
-        Integer(title=_(u"Critical at"), default_value=150000, size=10),
-    ])
+from cmk.gui.plugins.wato.check_parameters.fortigate_sessions import fortigate_sessions_element
 
 
 @rulespec_registry.register
@@ -61,7 +52,7 @@ class RulespecCheckgroupParametersFortigateNodeSessions(CheckParameterRulespecWi
 
     @property
     def parameter_valuespec(self):
-        return fortigate_sessions_element
+        return fortigate_sessions_element()
 
     @property
     def item_spec(self):

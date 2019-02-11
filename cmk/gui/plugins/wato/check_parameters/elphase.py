@@ -40,66 +40,68 @@ from cmk.gui.plugins.wato import (
     rulespec_registry,
 )
 
-phase_elements = [
-    ("voltage",
-     Tuple(
-         title=_("Voltage"),
-         elements=[
-             Integer(title=_("warning if below"), unit=u"V", default_value=210),
-             Integer(title=_("critical if below"), unit=u"V", default_value=200),
-         ],
-     )),
-    ("power",
-     Tuple(
-         title=_("Power"),
-         elements=[
-             Integer(title=_("warning at"), unit=u"W", default_value=1000),
-             Integer(title=_("critical at"), unit=u"W", default_value=1200),
-         ],
-     )),
-    ("appower",
-     Tuple(
-         title=_("Apparent Power"),
-         elements=[
-             Integer(title=_("warning at"), unit=u"VA", default_value=1100),
-             Integer(title=_("critical at"), unit=u"VA", default_value=1300),
-         ],
-     )),
-    ("current",
-     Tuple(
-         title=_("Current"),
-         elements=[
-             Integer(title=_("warning at"), unit=u"A", default_value=5),
-             Integer(title=_("critical at"), unit=u"A", default_value=10),
-         ],
-     )),
-    ("frequency",
-     Tuple(
-         title=_("Frequency"),
-         elements=[
-             Integer(title=_("warning if below"), unit=u"Hz", default_value=45),
-             Integer(title=_("critical if below"), unit=u"Hz", default_value=40),
-             Integer(title=_("warning if above"), unit=u"Hz", default_value=55),
-             Integer(title=_("critical if above"), unit=u"Hz", default_value=60),
-         ],
-     )),
-    ("differential_current_ac",
-     Tuple(
-         title=_("Differential current AC"),
-         elements=[
-             Float(title=_("warning at"), unit=u"mA", default_value=3.5),
-             Float(title=_("critical at"), unit=u"mA", default_value=30),
-         ],
-     )),
-    ("differential_current_dc",
-     Tuple(
-         title=_("Differential current DC"),
-         elements=[
-             Float(title=_("warning at"), unit=u"mA", default_value=70),
-             Float(title=_("critical at"), unit=u"mA", default_value=100),
-         ],
-     )),
-]
+
+def _phase_elements():
+    return [
+        ("voltage",
+         Tuple(
+             title=_("Voltage"),
+             elements=[
+                 Integer(title=_("warning if below"), unit=u"V", default_value=210),
+                 Integer(title=_("critical if below"), unit=u"V", default_value=200),
+             ],
+         )),
+        ("power",
+         Tuple(
+             title=_("Power"),
+             elements=[
+                 Integer(title=_("warning at"), unit=u"W", default_value=1000),
+                 Integer(title=_("critical at"), unit=u"W", default_value=1200),
+             ],
+         )),
+        ("appower",
+         Tuple(
+             title=_("Apparent Power"),
+             elements=[
+                 Integer(title=_("warning at"), unit=u"VA", default_value=1100),
+                 Integer(title=_("critical at"), unit=u"VA", default_value=1300),
+             ],
+         )),
+        ("current",
+         Tuple(
+             title=_("Current"),
+             elements=[
+                 Integer(title=_("warning at"), unit=u"A", default_value=5),
+                 Integer(title=_("critical at"), unit=u"A", default_value=10),
+             ],
+         )),
+        ("frequency",
+         Tuple(
+             title=_("Frequency"),
+             elements=[
+                 Integer(title=_("warning if below"), unit=u"Hz", default_value=45),
+                 Integer(title=_("critical if below"), unit=u"Hz", default_value=40),
+                 Integer(title=_("warning if above"), unit=u"Hz", default_value=55),
+                 Integer(title=_("critical if above"), unit=u"Hz", default_value=60),
+             ],
+         )),
+        ("differential_current_ac",
+         Tuple(
+             title=_("Differential current AC"),
+             elements=[
+                 Float(title=_("warning at"), unit=u"mA", default_value=3.5),
+                 Float(title=_("critical at"), unit=u"mA", default_value=30),
+             ],
+         )),
+        ("differential_current_dc",
+         Tuple(
+             title=_("Differential current DC"),
+             elements=[
+                 Float(title=_("warning at"), unit=u"mA", default_value=70),
+                 Float(title=_("critical at"), unit=u"mA", default_value=100),
+             ],
+         )),
+    ]
 
 
 @rulespec_registry.register
@@ -127,7 +129,7 @@ class RulespecCheckgroupParametersElInphase(CheckParameterRulespecWithItem):
                 "This rule allows you to specify levels for the voltage, current, power "
                 "and apparent power of your device. The levels will only be applied if the device "
                 "actually supplies values for these parameters."),
-            elements=phase_elements + [
+            elements=_phase_elements() + [
                 ("map_device_states",
                  ListOf(
                      Tuple(elements=[TextAscii(size=10), MonitoringState()]),
@@ -169,7 +171,7 @@ class RulespecCheckgroupParametersUpsOutphase(CheckParameterRulespecWithItem):
                 "This rule allows you to specify levels for the voltage, current, load, power "
                 "and apparent power of your device. The levels will only be applied if the device "
                 "actually supplies values for these parameters."),
-            elements=phase_elements + [
+            elements=_phase_elements() + [
                 ("load",
                  Tuple(
                      title=_("Load"),

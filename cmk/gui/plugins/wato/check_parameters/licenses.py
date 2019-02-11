@@ -39,34 +39,36 @@ from cmk.gui.plugins.wato import (
     rulespec_registry,
 )
 
-vs_license = Alternative(
-    title=_("Levels for Number of Licenses"),
-    style="dropdown",
-    default_value=None,
-    elements=[
-        Tuple(
-            title=_("Absolute levels for unused licenses"),
-            elements=[
-                Integer(title=_("Warning below"), default_value=5, unit=_("unused licenses")),
-                Integer(title=_("Critical below"), default_value=0, unit=_("unused licenses")),
-            ]),
-        Tuple(
-            title=_("Percentual levels for unused licenses"),
-            elements=[
-                Percentage(title=_("Warning below"), default_value=10.0),
-                Percentage(title=_("Critical below"), default_value=0),
-            ]),
-        FixedValue(
-            None,
-            totext=_("Critical when all licenses are used"),
-            title=_("Go critical if all licenses are used"),
-        ),
-        FixedValue(
-            False,
-            title=_("Always report OK"),
-            totext=_("Alerting depending on the number of used licenses is disabled"),
-        )
-    ])
+
+def _vs_license():
+    return Alternative(
+        title=_("Levels for Number of Licenses"),
+        style="dropdown",
+        default_value=None,
+        elements=[
+            Tuple(
+                title=_("Absolute levels for unused licenses"),
+                elements=[
+                    Integer(title=_("Warning below"), default_value=5, unit=_("unused licenses")),
+                    Integer(title=_("Critical below"), default_value=0, unit=_("unused licenses")),
+                ]),
+            Tuple(
+                title=_("Percentual levels for unused licenses"),
+                elements=[
+                    Percentage(title=_("Warning below"), default_value=10.0),
+                    Percentage(title=_("Critical below"), default_value=0),
+                ]),
+            FixedValue(
+                None,
+                totext=_("Critical when all licenses are used"),
+                title=_("Go critical if all licenses are used"),
+            ),
+            FixedValue(
+                False,
+                title=_("Always report OK"),
+                totext=_("Alerting depending on the number of used licenses is disabled"),
+            )
+        ])
 
 
 @rulespec_registry.register
@@ -85,7 +87,7 @@ class RulespecCheckgroupParametersCitrixLicenses(CheckParameterRulespecWithItem)
 
     @property
     def parameter_valuespec(self):
-        return vs_license
+        return _vs_license()
 
     @property
     def item_spec(self):
@@ -111,7 +113,7 @@ class RulespecCheckgroupParametersEsxLicenses(CheckParameterRulespecWithItem):
 
     @property
     def parameter_valuespec(self):
-        return vs_license
+        return _vs_license()
 
     @property
     def item_spec(self):
@@ -138,7 +140,7 @@ class RulespecCheckgroupParametersIbmsvcLicenses(CheckParameterRulespecWithItem)
 
     @property
     def parameter_valuespec(self):
-        return vs_license
+        return _vs_license()
 
     @property
     def item_spec(self):
@@ -164,7 +166,7 @@ class RulespecCheckgroupParametersRdsLicenses(CheckParameterRulespecWithItem):
 
     @property
     def parameter_valuespec(self):
-        return vs_license
+        return _vs_license()
 
     @property
     def item_spec(self):

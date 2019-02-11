@@ -60,7 +60,7 @@ class RulespecCheckgroupParametersWebsphereMqChannels(CheckParameterRulespecWith
     @property
     def parameter_valuespec(self):
         return Dictionary(
-            elements=websphere_mq_common_elements + [
+            elements=websphere_mq_common_elements() + [
                 ("status",
                  Dictionary(
                      title=_('Override check state based on channel state'),

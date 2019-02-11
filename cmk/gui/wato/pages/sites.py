@@ -792,8 +792,8 @@ class ModeAjaxFetchSiteStatus(WatoWebApiMode):
             return html.drain()
 
 
-cmk.gui.pages.register_page_handler(
-    "wato_ajax_fetch_site_status", lambda: ModeAjaxFetchSiteStatus().handle_page())
+cmk.gui.pages.register_page_handler("wato_ajax_fetch_site_status",
+                                    lambda: ModeAjaxFetchSiteStatus().handle_page())
 
 PingResult = NamedTuple("PingResult", [
     ("version", str),

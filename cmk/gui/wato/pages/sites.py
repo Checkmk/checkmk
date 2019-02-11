@@ -1084,7 +1084,15 @@ class ModeSiteLivestatusEncryption(WatoMode):
         trusted = global_settings.get(
             "trusted_certificate_authorities",
             watolib.ConfigDomain.get_all_default_globals()["trusted_certificate_authorities"])
-        trusted.setdefault("trusted_cas", []).append(cert_pem)
+        trusted_cas = trusted.setdefault("trusted_cas", [])
+
+        if cert_pem in trusted_cas:
+            raise MKUserError(
+                None,
+                _("The CA is already a <a href=\"%s\">trusted CA</a>.") %
+                "wato.py?mode=edit_configvar&varname=trusted_certificate_authorities")
+
+        trusted_cas.append(cert_pem)
         global_settings["trusted_certificate_authorities"] = trusted
 
         watolib.add_change(

@@ -309,19 +309,6 @@ def parse_legacy_docker_subsection_containers(info):
     return parsed
 
 
-def _split_subsections(info):
-    subname = ''
-    subsections = {}
-    for row in info:
-        if not row:
-            continue
-        if row[0].startswith('[[[') and row[0].endswith(']]]'):
-            subname = row[0].strip('[]')
-            continue
-        subsections.setdefault(subname, []).append(row)
-    return subsections
-
-
 def parse_legacy_docker_messed_up_labels(string):
     '''yield key value pairs
 
@@ -338,8 +325,7 @@ def parse_legacy_docker_messed_up_labels(string):
     return dict(zip(toggler, toggler))
 
 
-def parse_legacy_docker_node_images(info):
-    subsections = _split_subsections(info)
+def parse_legacy_docker_node_images(subsections):
     images = parse_legacy_docker_subsection_images(subsections.get("images", []))
     image_labels = parse_legacy_docker_subsection_image_labels(subsections.get("image_labels", []))
     image_inspect = parse_legacy_docker_subsection_image_inspect(

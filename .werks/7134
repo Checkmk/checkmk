@@ -1,7 +1,7 @@
 Title: mk_jolokia: now requires requests library
 Level: 1
 Component: checks
-Compatible: compat
+Compatible: incomp
 Edition: cre
 Version: 1.6.0i1
 Date: 1548680628

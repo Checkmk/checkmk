@@ -66,7 +66,7 @@ test-format-python: $(VENV) ../.style.yapf
 test-gui-crawl: $(VENV) $(NODE_MODULES)
 	$(PYTEST) -T gui_crawl $(realpath integration/cmk/gui/test_crawl.py)
 
-test-integration: $(VENV)
+test-integration: $(VENV) $(NODE_MODULES)
 	$(PYTEST) -T integration $(realpath integration)
 
 test-packaging: $(VENV)

@@ -476,6 +476,22 @@ def check_diskstat_dict(item, params, disks):
             statemarkers=False,
             infoname='Latency')
 
+    # Read/write disk latency
+    for what in ["read", "write"]:
+        latency_key = "%s_latency"
+        if latency_key not in disk:
+            continue
+        latency = disk.pop(latency_key)
+        if latency is not None:
+            yield check_levels(
+                latency,
+                "disk_%s" % latency_key,
+                params.get(latency_key),
+                unit="ms",
+                scale=0.001,
+                statemarkers=False,
+                infoname='%s latency' % what.title())
+
     # Queue lengths
     for what, plugin_text in [
         ("queue_length", "Queue Length"),

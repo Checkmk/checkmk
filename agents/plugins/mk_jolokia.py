@@ -494,9 +494,10 @@ def generate_values(inst, var_list):
                 yield item, title, value
 
 
-def yield_configured_instances():
+def yield_configured_instances(custom_config=None):
 
-    custom_config = copy.deepcopy(DEFAULT_CONFIG)
+    if custom_config is None:
+        custom_config = copy.deepcopy(DEFAULT_CONFIG)
 
     conffile = os.path.join(os.getenv("MK_CONFDIR", "/etc/check_mk"), "jolokia.cfg")
     if os.path.exists(conffile):
@@ -507,7 +508,10 @@ def yield_configured_instances():
     individual_configs = custom_config.pop("instances", [{}])
     for cfg in individual_configs:
         keys = set(cfg.keys() + custom_config.keys())
-        yield {k: cfg.get(k, custom_config[k]) for k in keys}
+        conf_dict = {k: cfg.get(k, custom_config.get(k)) for k in keys}
+        if VERBOSE:
+            sys.stderr.write("DEBUG: configuration: %r\n" % conf_dict)
+        yield conf_dict
 
 
 def main(configs_iterable=None):

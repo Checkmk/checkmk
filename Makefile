@@ -311,11 +311,11 @@ optimize-images:
 	    echo "Missing pngcrush, not optimizing images! (run \"make setup\" to fix this)" ; \
 	fi
 
-# TODO: The --unsafe-perms was added because the CI executes this as root during
+# TODO: The --unsafe-perm was added because the CI executes this as root during
 # tests and building versions. Once we have the then build system this should not
 # be necessary anymore.
 node_modules: package.json
-	npm install --unsafe-perms
+	npm install --unsafe-perm
 
 web/htdocs/js/%_min.js: node_modules webpack.config.js $(JAVASCRIPT_SOURCES)
 	ENTERPRISE=$(ENTERPRISE) MANAGED=$(MANAGED) node_modules/.bin/webpack --mode=development

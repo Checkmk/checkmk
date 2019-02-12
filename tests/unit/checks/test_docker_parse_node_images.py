@@ -15,8 +15,7 @@ execfile(os.path.join(os.path.dirname(__file__), '../../../checks/legacy_docker.
 
 REQUIRED_IMAGE_KEYS = (
     ("ID", (str, unicode)),
-    ("Repository", (str, unicode)),
-    ("Tag", (str, unicode)),
+    ("RepoTags", list),
     ("CreatedAt", (str, unicode)),
     ("VirtualSize", int),
     ("Labels", dict),
@@ -26,8 +25,7 @@ REQUIRED_IMAGE_KEYS = (
 
 REQUIRED_CONTAINER_KEYS = (
     ("ID", (str, unicode)),
-    ("Repository", (str, unicode)),
-    ("Tag", (str, unicode)),
+    ("Image", (str, unicode)),
     ("CreatedAt", (str, unicode)),
     ("Labels", dict),
     ("Names", (str, unicode)),
@@ -36,7 +34,7 @@ REQUIRED_CONTAINER_KEYS = (
 
 
 SUBSECTIONS1 = {
-        'images': [
+    'images': [
     [
         '{"Containers":"N/A","CreatedAt":"2018-10-12', '11:13:11', '+0200',
         'CEST","CreatedSince":"5', 'hours',
@@ -479,8 +477,7 @@ SUBSECTIONS1 = {
 EXPECTED_IMAGES1 = {
     u'096300fde75d': {
         u'CreatedAt': u'2018-09-13 08:15:30 +0200 CEST',
-        u'Repository': u'checkmk/check-mk-enterprise',
-        u'Tag': u'1.5.0-2018.09.13',
+        u'RepoTags': [u'checkmk/check-mk-enterprise:1.5.0-2018.09.13'],
         u'VirtualSize': 818000000,
         u'amount_containers': 0,
         u'Labels': {
@@ -502,8 +499,7 @@ EXPECTED_IMAGES1 = {
     },
     u'2e89feac7533': {
         u'CreatedAt': u'2018-09-13 08:27:42 +0200 CEST',
-        u'Repository': u'docker-tests/check-mk-enterprise-master-2018.09.13',
-        u'Tag': u'latest',
+        u'RepoTags': ['docker-tests/check-mk-enterprise-master-2018.09.13:latest'],
         u'VirtualSize': 831400000,
         u'amount_containers': 0,
         u'Labels': {
@@ -525,8 +521,7 @@ EXPECTED_IMAGES1 = {
     },
     u'44a5d6d15272': {
         u'CreatedAt': u'2018-09-14 12:45:50 +0200 CEST',
-        u'Repository': u'checkmk/check-mk-enterprise',
-        u'Tag': u'1.5.0-daily',
+        u'RepoTags': [u'checkmk/check-mk-enterprise:1.5.0-daily'],
         u'VirtualSize': 818000000,
         u'amount_containers': 0,
         u'Labels': {
@@ -548,15 +543,13 @@ EXPECTED_IMAGES1 = {
     },
     u'44e19a16bde1': {
         u'CreatedAt': u'2018-09-04 23:21:34 +0200 CEST',
-        u'Repository': u'debian',
-        u'Tag': u'stretch-slim',
+        u'RepoTags': ['debian:stretch-slim'],
         u'VirtualSize': 55270000,
         u'amount_containers': 0,
     },
     u'4a77be28f8e5': {
         u'CreatedAt': u'2018-09-28 23:54:16 +0200 CEST',
-        u'Repository': u'checkmk/check-mk-raw',
-        u'Tag': u'1.5.0p5',
+        u'RepoTags': ['checkmk/check-mk-raw:1.5.0p5'],
         u'VirtualSize': 751900000,
         u'amount_containers': 1,
         u'Labels': {
@@ -578,8 +571,7 @@ EXPECTED_IMAGES1 = {
     },
     u'5182e96772bf': {
         u'CreatedAt': u'2018-08-06 21:21:48 +0200 CEST',
-        u'Repository': u'centos',
-        u'Tag': u'7',
+        u'RepoTags': ['centos:7'],
         u'VirtualSize': 199700000,
         u'amount_containers': 0,
         u'Labels': {
@@ -592,15 +584,13 @@ EXPECTED_IMAGES1 = {
     },
     u'6143303a8e14': {
         u'CreatedAt': u'2018-09-10 17:36:25 +0200 CEST',
-        u'Repository': u'hadolint/hadolint',
-        u'Tag': u'latest',
+        u'RepoTags': ['hadolint/hadolint:latest'],
         u'VirtualSize': 3645000,
         u'amount_containers': 0,
     },
     u'6c97da45403a': {
         u'CreatedAt': u'2018-10-12 11:12:15 +0200 CEST',
-        u'Repository': u'local/c7-systemd',
-        u'Tag': u'latest',
+        u'RepoTags': ['local/c7-systemd:latest'],
         u'VirtualSize': 199700000,
         u'amount_containers': 0,
         u'Labels': {
@@ -613,8 +603,7 @@ EXPECTED_IMAGES1 = {
     },
     u'8ca14ae84dd9': {
         u'CreatedAt': u'2018-09-14 13:08:54 +0200 CEST',
-        u'Repository': u'checkmk/check-mk-enterprise',
-        u'Tag': u'daily',
+        u'RepoTags': ['checkmk/check-mk-enterprise:daily'],
         u'VirtualSize': 972300000,
         u'amount_containers': 0,
         u'Labels': {
@@ -636,8 +625,7 @@ EXPECTED_IMAGES1 = {
     },
     u'8d463a5f7635': {
         u'CreatedAt': u'2018-09-12 21:15:47 +0200 CEST',
-        u'Repository': u'checkmk/check-mk-enterprise',
-        u'Tag': u'1.5.0-2018.09.12',
+        u'RepoTags': ['checkmk/check-mk-enterprise:1.5.0-2018.09.12'],
         u'VirtualSize': 814900000,
         u'amount_containers': 0,
         u'Labels': {
@@ -659,8 +647,7 @@ EXPECTED_IMAGES1 = {
     },
     u'91152cc1c4bc': {
         u'CreatedAt': u'2018-09-14 14:47:41 +0200 CEST',
-        u'Repository': u'docker-tests/check-mk-enterprise-master-2018.09.14',
-        u'Tag': u'latest',
+        u'RepoTags': ['docker-tests/check-mk-enterprise-master-2018.09.14:latest'],
         u'VirtualSize': 831400000,
         u'amount_containers': 0,
         u'Labels': {
@@ -682,8 +669,7 @@ EXPECTED_IMAGES1 = {
     },
     u'a1f15f9a2b16': {
         u'CreatedAt': u'2018-09-12 19:49:54 +0200 CEST',
-        u'Repository': u'docker-tests/check-mk-enterprise-master-2018.09.12',
-        u'Tag': u'latest',
+        u'RepoTags': ['docker-tests/check-mk-enterprise-master-2018.09.12:latest'],
         u'VirtualSize': 828400000,
         u'amount_containers': 0,
         u'Labels': {
@@ -705,8 +691,7 @@ EXPECTED_IMAGES1 = {
     },
     u'c0582f734ad1': {
         u'CreatedAt': u'2018-09-14 16:52:00 +0200 CEST',
-        u'Repository': u'checkmk/check-mk-enterprise',
-        u'Tag': u'2018.09.14',
+        u'RepoTags': ['checkmk/check-mk-enterprise:2018.09.14'],
         u'VirtualSize': 831400000,
         u'amount_containers': 0,
         u'Labels': {
@@ -728,8 +713,7 @@ EXPECTED_IMAGES1 = {
     },
     u'df118e583614': {
         u'CreatedAt': u'2018-10-10 08:37:26 +0200 CEST',
-        u'Repository': u'docker-tests/check-mk-enterprise-master-1.5.0p5',
-        u'Tag': u'latest',
+        u'RepoTags': ['docker-tests/check-mk-enterprise-master-1.5.0p5:latest'],
         u'VirtualSize': 817600000,
         u'amount_containers': 0,
         u'Labels': {
@@ -751,8 +735,7 @@ EXPECTED_IMAGES1 = {
     },
     u'ed55e8b95336': {
         u'CreatedAt': u'2018-10-12 11:13:11 +0200 CEST',
-        u'Repository': u'local/c7-systemd-httpd',
-        u'Tag': u'latest',
+        u'RepoTags': ['local/c7-systemd-httpd:latest'],
         u'VirtualSize': 254200000,
         u'amount_containers': 2,
         u'Labels': {
@@ -765,8 +748,7 @@ EXPECTED_IMAGES1 = {
     },
     u'ed5d6b154e97': {
         u'CreatedAt': u'2018-10-10 08:40:21 +0200 CEST',
-        u'Repository': u'docker-tests/check-mk-enterprise-master-2018.10.10',
-        u'Tag': u'latest',
+        u'RepoTags': ['docker-tests/check-mk-enterprise-master-2018.10.10:latest'],
         u'VirtualSize': 844300000,
         u'amount_containers': 0,
         u'Labels': {
@@ -788,8 +770,7 @@ EXPECTED_IMAGES1 = {
     },
     u'ee5124a3adb5': {
         u'CreatedAt': u'2018-09-12 09:33:22 +0200 CEST',
-        u'Repository': u'docker-tests/check-mk-enterprise-master-2018.09.11',
-        u'Tag': u'latest',
+        u'RepoTags': ['docker-tests/check-mk-enterprise-master-2018.09.11:latest'],
         u'VirtualSize': 828400000,
         u'amount_containers': 0,
         u'Labels': {
@@ -811,8 +792,7 @@ EXPECTED_IMAGES1 = {
     },
     u'f4bfbb70768f': {
         u'CreatedAt': u'2018-09-17 09:47:56 +0200 CEST',
-        u'Repository': u'docker-tests/check-mk-enterprise-master-1.5.0p3',
-        u'Tag': u'latest',
+        u'RepoTags': ['docker-tests/check-mk-enterprise-master-1.5.0p3:latest'],
         u'VirtualSize': 817400000,
         u'amount_containers': 0,
         u'Labels': {
@@ -834,8 +814,7 @@ EXPECTED_IMAGES1 = {
     },
     u'ff19a3911e0a': {
         u'CreatedAt': u'2018-09-17 09:45:08 +0200 CEST',
-        u'Repository': u'docker-tests/check-mk-enterprise-master-2018.09.17',
-        u'Tag': u'latest',
+        u'RepoTags': ['docker-tests/check-mk-enterprise-master-2018.09.17:latest'],
         u'VirtualSize': 831400000,
         u'amount_containers': 0,
         u'Labels': {
@@ -877,9 +856,7 @@ EXPECTED_CONTAINERS1 = {
                 u'2018.10.10'
         },
         u'Names': u'youthful_pare',
-        'Repository': u'03d98e475cd6',
         u'Status': u'Created',
-        'Tag': 'latest'
     },
     u'10d6b884f348': {
         u'CreatedAt': u'2018-10-10 08:34:55 +0200 CEST',
@@ -887,9 +864,7 @@ EXPECTED_CONTAINERS1 = {
             u'maintainer': u'feedback@check-mk.org'
         },
         u'Names': u'wizardly_ritchie',
-        'Repository': u'a0a951b126eb',
         u'Status': u'Created',
-        'Tag': 'latest'
     },
     u'24772268cc09': {
         u'CreatedAt': u'2018-10-10 08:37:25 +0200 CEST',
@@ -910,9 +885,7 @@ EXPECTED_CONTAINERS1 = {
                 u'1.5.0p5'
         },
         u'Names': u'zen_bartik',
-        'Repository': u'6e66f5473958',
         u'Status': u'Created',
-        'Tag': 'latest'
     },
     u'4a6806b168b1': {
         u'CreatedAt': u'2018-10-10 08:39:29 +0200 CEST',
@@ -920,9 +893,7 @@ EXPECTED_CONTAINERS1 = {
             u'maintainer': u'feedback@check-mk.org'
         },
         u'Names': u'festive_fermi',
-        'Repository': u'089108b69108',
         u'Status': u'Exited (0) 2 days ago',
-        'Tag': 'latest'
     },
     u'4d4d9f3be74b': {
         u'CreatedAt': u'2018-10-10 08:34:58 +0200 CEST',
@@ -930,9 +901,7 @@ EXPECTED_CONTAINERS1 = {
             u'maintainer': u'feedback@check-mk.org'
         },
         u'Names': u'pensive_spence',
-        'Repository': u'b16a30c66821',
         u'Status': u'Exited (0) 2 days ago',
-        'Tag': 'latest'
     },
     u'55632dca94c8': {
         u'CreatedAt': u'2018-10-10 08:34:55 +0200 CEST',
@@ -940,9 +909,7 @@ EXPECTED_CONTAINERS1 = {
             u'maintainer': u'feedback@check-mk.org'
         },
         u'Names': u'stoic_perlman',
-        'Repository': u'1919d446eafa',
         u'Status': u'Created',
-        'Tag': 'latest'
     },
     u'580a7b4bd20a': {
         u'CreatedAt': u'2018-10-10 08:40:20 +0200 CEST',
@@ -963,9 +930,7 @@ EXPECTED_CONTAINERS1 = {
                 u'https://git.mathias-kettner.de/'
         },
         u'Names': u'reverent_proskuriakova',
-        'Repository': u'3e0dd44b22e4',
         u'Status': u'Created',
-        'Tag': 'latest'
     },
     u'6cae82f879ff': {
         u'CreatedAt': u'2018-10-10 08:34:57 +0200 CEST',
@@ -973,9 +938,7 @@ EXPECTED_CONTAINERS1 = {
             u'maintainer': u'feedback@check-mk.org'
         },
         u'Names': u'elated_poitras',
-        'Repository': u'1d9b21b9e019',
         u'Status': u'Created',
-        'Tag': 'latest'
     },
     u'6fe73b950209': {
         u'CreatedAt': u'2018-10-10 08:37:26 +0200 CEST',
@@ -996,9 +959,7 @@ EXPECTED_CONTAINERS1 = {
                 u'https://git.mathias-kettner.de/'
         },
         u'Names': u'admiring_haibt',
-        'Repository': u'd4c95e27986c',
         u'Status': u'Created',
-        'Tag': 'latest'
     },
     u'73237ecc5183': {
         u'CreatedAt': u'2018-10-10 08:40:20 +0200 CEST',
@@ -1019,9 +980,7 @@ EXPECTED_CONTAINERS1 = {
                 u'Check_MK'
         },
         u'Names': u'festive_stallman',
-        'Repository': u'd27276979703',
         u'Status': u'Created',
-        'Tag': 'latest'
     },
     u'7d32581dd10f': {
         u'CreatedAt': u'2018-10-12 11:13:18 +0200 CEST',
@@ -1033,9 +992,7 @@ EXPECTED_CONTAINERS1 = {
             u'org.label-schema.schema-version': u'1.0'
         },
         u'Names': u'sad_austin',
-        'Repository': u'local/c7-systemd-httpd',
         u'Status': u'Created',
-        'Tag': 'latest'
     },
     u'860d8dfff4f6': {
         u'CreatedAt': u'2018-10-10 08:34:58 +0200 CEST',
@@ -1043,9 +1000,7 @@ EXPECTED_CONTAINERS1 = {
             u'maintainer': u'feedback@check-mk.org'
         },
         u'Names': u'dazzling_meninsky',
-        'Repository': u'7e7f944ba518',
         u'Status': u'Created',
-        'Tag': 'latest'
     },
     u'8f8ded35fc90': {
         u'CreatedAt': u'2018-10-10 08:37:25 +0200 CEST',
@@ -1066,9 +1021,7 @@ EXPECTED_CONTAINERS1 = {
                 u'Mathias Kettner GmbH'
         },
         u'Names': u'keen_cori',
-        'Repository': u'6bccd8c3ed71',
         u'Status': u'Created',
-        'Tag': 'latest'
     },
     u'93e0c88a69fa': {
         u'CreatedAt': u'2018-10-10 08:37:43 +0200 CEST',
@@ -1076,9 +1029,7 @@ EXPECTED_CONTAINERS1 = {
             u'maintainer': u'feedback@check-mk.org'
         },
         u'Names': u'objective_darwin',
-        'Repository': u'b16a30c66821',
         u'Status': u'Exited (0) 2 days ago',
-        'Tag': 'latest'
     },
     u'9b08cf26da8c': {
         u'CreatedAt': u'2018-10-10 08:34:56 +0200 CEST',
@@ -1086,9 +1037,7 @@ EXPECTED_CONTAINERS1 = {
             u'maintainer': u'feedback@check-mk.org'
         },
         u'Names': u'pensive_swartz',
-        'Repository': u'164429e47a3f',
         u'Status': u'Created',
-        'Tag': 'latest'
     },
     u'a073bb9adfbe': {
         u'CreatedAt': u'2018-10-10 08:36:45 +0200 CEST',
@@ -1096,9 +1045,7 @@ EXPECTED_CONTAINERS1 = {
             u'maintainer': u'feedback@check-mk.org'
         },
         u'Names': u'jovial_archimedes',
-        'Repository': u'7aa4b82c92ae',
         u'Status': u'Exited (0) 2 days ago',
-        'Tag': 'latest'
     },
     u'a17f21f95383': {
         u'CreatedAt': u'2018-10-10 08:34:57 +0200 CEST',
@@ -1106,9 +1053,7 @@ EXPECTED_CONTAINERS1 = {
             u'maintainer': u'feedback@check-mk.org'
         },
         u'Names': u'serene_poincare',
-        'Repository': u'a2a187fcaa76',
         u'Status': u'Created',
-        'Tag': 'latest'
     },
     u'aad80d524200': {
         u'CreatedAt': u'2018-10-10 08:34:57 +0200 CEST',
@@ -1116,9 +1061,7 @@ EXPECTED_CONTAINERS1 = {
             u'maintainer': u'feedback@check-mk.org'
         },
         u'Names': u'competent_keller',
-        'Repository': u'e002e37aec84',
         u'Status': u'Created',
-        'Tag': 'latest'
     },
     u'b17185d5dcc5': {
         u'CreatedAt': u'2018-10-10 08:40:21 +0200 CEST',
@@ -1139,9 +1082,7 @@ EXPECTED_CONTAINERS1 = {
                 u'Check_MK'
         },
         u'Names': u'friendly_banach',
-        'Repository': u'94f49a7afedb',
         u'Status': u'Created',
-        'Tag': 'latest'
     },
     u'bfdb64ccf0ba': {
         u'CreatedAt': u'2018-10-10 08:37:26 +0200 CEST',
@@ -1162,9 +1103,7 @@ EXPECTED_CONTAINERS1 = {
                 u'Check_MK is a leading tool for Infrastructure & Application Monitoring'
         },
         u'Names': u'lucid_bohr',
-        'Repository': u'21b2f3d5e6c0',
         u'Status': u'Created',
-        'Tag': 'latest'
     },
     u'c04099ed3f18': {
         u'CreatedAt': u'2018-10-10 08:34:56 +0200 CEST',
@@ -1172,9 +1111,7 @@ EXPECTED_CONTAINERS1 = {
             u'maintainer': u'feedback@check-mk.org'
         },
         u'Names': u'dreamy_thompson',
-        'Repository': u'd1a41c564864',
         u'Status': u'Created',
-        'Tag': 'latest'
     },
     u'cdc7e1e4a24e': {
         u'CreatedAt': u'2018-10-10 08:34:56 +0200 CEST',
@@ -1182,9 +1119,7 @@ EXPECTED_CONTAINERS1 = {
             u'maintainer': u'feedback@check-mk.org'
         },
         u'Names': u'lucid_brown',
-        'Repository': u'999fc035fc76',
         u'Status': u'Created',
-        'Tag': 'latest'
     },
     u'd1c70f4690b5': {
         u'CreatedAt': u'2018-10-10 08:34:56 +0200 CEST',
@@ -1192,9 +1127,7 @@ EXPECTED_CONTAINERS1 = {
             u'maintainer': u'feedback@check-mk.org'
         },
         u'Names': u'trusting_panini',
-        'Repository': u'0b5da1249a04',
         u'Status': u'Created',
-        'Tag': 'latest'
     },
     u'd37198a74c08': {
         u'CreatedAt': u'2018-10-10 08:34:55 +0200 CEST',
@@ -1202,9 +1135,7 @@ EXPECTED_CONTAINERS1 = {
             u'maintainer': u'feedback@check-mk.org'
         },
         u'Names': u'distracted_mccarthy',
-        'Repository': u'caac4aa6ac57',
         u'Status': u'Created',
-        'Tag': 'latest'
     },
     u'df44340ed121': {
         u'CreatedAt': u'2018-10-10 08:34:58 +0200 CEST',
@@ -1212,9 +1143,7 @@ EXPECTED_CONTAINERS1 = {
             u'maintainer': u'feedback@check-mk.org'
         },
         u'Names': u'unruffled_hopper',
-        'Repository': u'1b013e043efa',
         u'Status': u'Created',
-        'Tag': 'latest'
     },
     u'f1641e401237': {
         u'CreatedAt': u'2018-10-12 11:13:24 +0200 CEST',
@@ -1227,9 +1156,7 @@ EXPECTED_CONTAINERS1 = {
             u'org.label-schema.vendor': u'CentOS'
         },
         u'Names': u'sad_stonebraker',
-        'Repository': u'local/c7-systemd-httpd',
         u'Status': u'Up 5 hours',
-        'Tag': 'latest'
     },
     u'fdd04795069e': {
         u'CreatedAt': u'2018-10-12 09:17:54 +0200 CEST',
@@ -1250,19 +1177,18 @@ EXPECTED_CONTAINERS1 = {
                 u'feedback@check-mk.org'
         },
         u'Names': u'monitoringx',
-        'Repository': u'checkmk/check-mk-raw',
         u'Status': u'Created',
-        'Tag': u'1.5.0p5'
     }
 }
 
 
 SUBSECTIONS2 = {
-        'images': [
+    'images': [
         [
-        '{"Containers":"N/A","CreatedAt":"2018-10-12', '16:12:03', '+0200', 'CEST","CreatedSince":"3',
-        'days',
-        'ago","Digest":"\\u003cnone\\u003e","ID":"485933207afd","Repository":"docker-tests/check-mk-enterprise-master-1.5.0p5","SharedSize":"N/A","Size":"818MB","Tag":"latest","UniqueSize":"N/A","VirtualSize":"817.6MB"}'
+            '{"Containers":"N/A","CreatedAt":"2018-10-12', '16:12:03', '+0200', 'CEST","CreatedSince":"3',
+            'days',
+            'ago","Digest":"\\u003cnone\\u003e","ID":"485933207afd","Repository":"docker-tests/check-mk-enterprise-master-1.5.0p5"'
+            ',"SharedSize":"N/A","Size":"818MB","Tag":"latest","UniqueSize":"N/A","VirtualSize":"817.6MB"}'
     ], [
         '{"Containers":"N/A","CreatedAt":"2018-10-12', '16:07:29', '+0200', 'CEST","CreatedSince":"3',
         'days',
@@ -1349,13 +1275,13 @@ SUBSECTIONS2 = {
         'ago","Digest":"\\u003cnone\\u003e","ID":"5182e96772bf","Repository":"centos","SharedSize":"N/A","Size":"200MB","Tag":"7","UniqueSize":"N/A","VirtualSize":"199.7MB"}'
     ]],
     'image_labels': [
-    [
-        '[', '"sha256:485933207afd6e390c5e91f37b49b8610f483299de0bcff4b6fadca1cdb641b6",',
-        '{"maintainer":"feedback@check-mk.org","org.opencontainers.image.description":"Check_MK', 'is',
-        'a', 'leading', 'tool', 'for', 'Infrastructure', '&', 'Application',
-        'Monitoring","org.opencontainers.image.source":"https://git.mathias-kettner.de/","org.opencontainers.image.title":"Check_MK","org.opencontainers.image.url":"https://mathias-kettner.com/","org.opencontainers.image.vendor":"Mathias',
-        'Kettner', 'GmbH","org.opencontainers.image.version":"1.5.0p5"}', ']'
-    ], [
+        [
+            '[', '"sha256:485933207afd6e390c5e91f37b49b8610f483299de0bcff4b6fadca1cdb641b6",',
+            '{"maintainer":"feedback@check-mk.org","org.opencontainers.image.description":"Check_MK', 'is',
+            'a', 'leading', 'tool', 'for', 'Infrastructure', '&', 'Application',
+            'Monitoring","org.opencontainers.image.source":"https://git.mathias-kettner.de/","org.opencontainers.image.title":"Check_MK","org.opencontainers.image.url":"https://mathias-kettner.com/","org.opencontainers.image.vendor":"Mathias',
+            'Kettner', 'GmbH","org.opencontainers.image.version":"1.5.0p5"}', ']'
+        ], [
         '[', '"sha256:0983f5184ce73305dbba6b15bdb5ce90cb07790177690f4ce09e4a16b388842c",',
         '{"maintainer":"feedback@check-mk.org"}', ']'
     ], [
@@ -1710,7 +1636,7 @@ SUBSECTIONS2 = {
         'Base',
         'Image,org.label-schema.schema-version=1.0,org.label-schema.vendor=CentOS","LocalVolumes":"0","Mounts":"","Names":"vigorous_pare","Networks":"bridge","Ports":"","RunningFor":"2',
         'weeks', 'ago","Size":"0B","Status":"Exited', '(137)', '2', 'weeks', 'ago"}'
-    ]],
+    ]]
 }
 
 EXPECTED_CONTAINERS2 = {
@@ -1740,11 +1666,9 @@ EXPECTED_CONTAINERS2 = {
         u'Names': u'youthful_pare',
         u'Networks': u'bridge',
         u'Ports': u'',
-        'Repository': u'03d98e475cd6',
         u'RunningFor': u'6 days ago',
         u'Size': u'0B',
         u'Status': u'Created',
-        'Tag': 'latest'
     },
     u'10d6b884f348': {
         u'Command': u'"/bin/sh -c \'#(nop) \u2026"',
@@ -1759,11 +1683,9 @@ EXPECTED_CONTAINERS2 = {
         u'Names': u'wizardly_ritchie',
         u'Networks': u'bridge',
         u'Ports': u'',
-        'Repository': u'a0a951b126eb',
         u'RunningFor': u'6 days ago',
         u'Size': u'0B',
         u'Status': u'Created',
-        'Tag': 'latest'
     },
     u'11893c5d9694': {
         u'Command': u'"/docker-entrypoint.\u2026"',
@@ -1791,11 +1713,9 @@ EXPECTED_CONTAINERS2 = {
         u'Names': u'affectionate_shannon',
         u'Networks': u'bridge',
         u'Ports': u'',
-        'Repository': u'559214f8c758',
         u'RunningFor': u'3 days ago',
         u'Size': u'0B',
         u'Status': u'Created',
-        'Tag': 'latest'
     },
     u'24772268cc09': {
         u'Command': u'"/bin/sh -c \'#(nop) \u2026"',
@@ -1823,11 +1743,9 @@ EXPECTED_CONTAINERS2 = {
         u'Names': u'zen_bartik',
         u'Networks': u'bridge',
         u'Ports': u'',
-        'Repository': u'6e66f5473958',
         u'RunningFor': u'6 days ago',
         u'Size': u'0B',
         u'Status': u'Created',
-        'Tag': 'latest'
     },
     u'249ca074445f': {
         u'Command': u'"/bin/sh -c \'set -e \u2026"',
@@ -1842,11 +1760,9 @@ EXPECTED_CONTAINERS2 = {
         u'Names': u'infallible_goodall',
         u'Networks': u'bridge',
         u'Ports': u'',
-        'Repository': u'010bad2c964b',
         u'RunningFor': u'3 days ago',
         u'Size': u'0B',
         u'Status': u'Exited (0) 3 days ago',
-        'Tag': 'latest'
     },
     u'4a6806b168b1': {
         u'Command': u'"/bin/sh -c \'set -e \u2026"',
@@ -1861,11 +1777,9 @@ EXPECTED_CONTAINERS2 = {
         u'Names': u'festive_fermi',
         u'Networks': u'bridge',
         u'Ports': u'',
-        'Repository': u'089108b69108',
         u'RunningFor': u'6 days ago',
         u'Size': u'0B',
         u'Status': u'Exited (0) 6 days ago',
-        'Tag': 'latest'
     },
     u'4d4d9f3be74b': {
         u'Command': u'"/bin/sh -c \'set -e \u2026"',
@@ -1880,11 +1794,9 @@ EXPECTED_CONTAINERS2 = {
         u'Names': u'pensive_spence',
         u'Networks': u'bridge',
         u'Ports': u'',
-        'Repository': u'b16a30c66821',
         u'RunningFor': u'6 days ago',
         u'Size': u'0B',
         u'Status': u'Exited (0) 6 days ago',
-        'Tag': 'latest'
     },
     u'55632dca94c8': {
         u'Command': u'"/bin/sh -c \'#(nop) \u2026"',
@@ -1899,11 +1811,9 @@ EXPECTED_CONTAINERS2 = {
         u'Names': u'stoic_perlman',
         u'Networks': u'bridge',
         u'Ports': u'',
-        'Repository': u'1919d446eafa',
         u'RunningFor': u'6 days ago',
         u'Size': u'0B',
         u'Status': u'Created',
-        'Tag': 'latest'
     },
     u'580a7b4bd20a': {
         u'Command': u'"/bin/sh -c \'#(nop) \u2026"',
@@ -1931,11 +1841,9 @@ EXPECTED_CONTAINERS2 = {
         u'Names': u'reverent_proskuriakova',
         u'Networks': u'bridge',
         u'Ports': u'',
-        'Repository': u'3e0dd44b22e4',
         u'RunningFor': u'6 days ago',
         u'Size': u'0B',
         u'Status': u'Created',
-        'Tag': 'latest'
     },
     u'58ea2160fe8f': {
         u'Command': u'"/bin/sh -c \'#(nop) \u2026"',
@@ -1963,11 +1871,9 @@ EXPECTED_CONTAINERS2 = {
         u'Names': u'lucid_kowalevski',
         u'Networks': u'bridge',
         u'Ports': u'',
-        'Repository': u'3bd4e802a09f',
         u'RunningFor': u'3 days ago',
         u'Size': u'0B',
         u'Status': u'Created',
-        'Tag': 'latest'
     },
     u'63c0ad8e9eb7': {
         u'Command': u'"/bin/sh -c \'set -e \u2026"',
@@ -1982,11 +1888,9 @@ EXPECTED_CONTAINERS2 = {
         u'Names': u'ecstatic_babbage',
         u'Networks': u'bridge',
         u'Ports': u'',
-        'Repository': u'0983f5184ce7',
         u'RunningFor': u'3 days ago',
         u'Size': u'0B',
         u'Status': u'Exited (1) 3 days ago',
-        'Tag': 'latest'
     },
     u'6cae82f879ff': {
         u'Command': u'"/bin/sh -c \'#(nop) \u2026"',
@@ -2001,11 +1905,9 @@ EXPECTED_CONTAINERS2 = {
         u'Names': u'elated_poitras',
         u'Networks': u'bridge',
         u'Ports': u'',
-        'Repository': u'1d9b21b9e019',
         u'RunningFor': u'6 days ago',
         u'Size': u'0B',
         u'Status': u'Created',
-        'Tag': 'latest'
     },
     u'6fe73b950209': {
         u'Command': u'"/docker-entrypoint.\u2026"',
@@ -2033,11 +1935,9 @@ EXPECTED_CONTAINERS2 = {
         u'Names': u'admiring_haibt',
         u'Networks': u'bridge',
         u'Ports': u'',
-        'Repository': u'd4c95e27986c',
         u'RunningFor': u'6 days ago',
         u'Size': u'0B',
         u'Status': u'Created',
-        'Tag': 'latest'
     },
     u'73237ecc5183': {
         u'Command': u'"/bin/sh -c \'#(nop) \u2026"',
@@ -2065,11 +1965,9 @@ EXPECTED_CONTAINERS2 = {
         u'Names': u'festive_stallman',
         u'Networks': u'bridge',
         u'Ports': u'',
-        'Repository': u'd27276979703',
         u'RunningFor': u'6 days ago',
         u'Size': u'0B',
         u'Status': u'Created',
-        'Tag': 'latest'
     },
     u'74ee5065acb2': {
         u'Command': u'"/bin/sh -c \'#(nop) \u2026"',
@@ -2097,11 +1995,9 @@ EXPECTED_CONTAINERS2 = {
         u'Names': u'peaceful_joliot',
         u'Networks': u'bridge',
         u'Ports': u'',
-        'Repository': u'a0529d041d12',
         u'RunningFor': u'3 days ago',
         u'Size': u'0B',
         u'Status': u'Created',
-        'Tag': 'latest'
     },
     u'7d32581dd10f': {
         u'Command': u'"/usr/sbin/init"',
@@ -2120,11 +2016,9 @@ EXPECTED_CONTAINERS2 = {
         u'Names': u'sad_austin',
         u'Networks': u'bridge',
         u'Ports': u'',
-        'Repository': u'local/c7-systemd-httpd',
         u'RunningFor': u'4 days ago',
         u'Size': u'0B',
         u'Status': u'Created',
-        'Tag': 'latest'
     },
     u'7db7baa17fee': {
         u'Command': u'"/bin/sh -c \'set -e \u2026"',
@@ -2139,11 +2033,9 @@ EXPECTED_CONTAINERS2 = {
         u'Names': u'stoic_jennings',
         u'Networks': u'bridge',
         u'Ports': u'',
-        'Repository': u'fd98c3cc9762',
         u'RunningFor': u'3 days ago',
         u'Size': u'0B',
         u'Status': u'Exited (0) 3 days ago',
-        'Tag': 'latest'
     },
     u'802786d33cfb': {
         u'Command': u'"/bin/sh -c \'set -e \u2026"',
@@ -2158,11 +2050,9 @@ EXPECTED_CONTAINERS2 = {
         u'Names': u'boring_cori',
         u'Networks': u'bridge',
         u'Ports': u'',
-        'Repository': u'010bad2c964b',
         u'RunningFor': u'3 days ago',
         u'Size': u'0B',
         u'Status': u'Exited (100) 3 days ago',
-        'Tag': 'latest'
     },
     u'85a41e54b0cc': {
         u'Command': u'"/bin/bash"',
@@ -2181,11 +2071,9 @@ EXPECTED_CONTAINERS2 = {
         u'Names': u'vigorous_pare',
         u'Networks': u'bridge',
         u'Ports': u'',
-        'Repository': u'centos',
         u'RunningFor': u'2 weeks ago',
         u'Size': u'0B',
         u'Status': u'Exited (137) 2 weeks ago',
-        'Tag': u'7'
     },
     u'860d8dfff4f6': {
         u'Command': u'"/bin/sh -c \'#(nop) \u2026"',
@@ -2200,11 +2088,9 @@ EXPECTED_CONTAINERS2 = {
         u'Names': u'dazzling_meninsky',
         u'Networks': u'bridge',
         u'Ports': u'',
-        'Repository': u'7e7f944ba518',
         u'RunningFor': u'6 days ago',
         u'Size': u'0B',
         u'Status': u'Created',
-        'Tag': 'latest'
     },
     u'8f8ded35fc90': {
         u'Command': u'"/bin/sh -c \'#(nop) \u2026"',
@@ -2232,11 +2118,9 @@ EXPECTED_CONTAINERS2 = {
         u'Names': u'keen_cori',
         u'Networks': u'bridge',
         u'Ports': u'',
-        'Repository': u'6bccd8c3ed71',
         u'RunningFor': u'6 days ago',
         u'Size': u'0B',
         u'Status': u'Created',
-        'Tag': 'latest'
     },
     u'93e0c88a69fa': {
         u'Command': u'"/bin/sh -c \'set -e \u2026"',
@@ -2251,11 +2135,9 @@ EXPECTED_CONTAINERS2 = {
         u'Names': u'objective_darwin',
         u'Networks': u'bridge',
         u'Ports': u'',
-        'Repository': u'b16a30c66821',
         u'RunningFor': u'6 days ago',
         u'Size': u'0B',
         u'Status': u'Exited (0) 6 days ago',
-        'Tag': 'latest'
     },
     u'95796d6d26db': {
         u'Command': u'"/bin/sh -c \'#(nop) \u2026"',
@@ -2283,11 +2165,9 @@ EXPECTED_CONTAINERS2 = {
         u'Names': u'distracted_heisenberg',
         u'Networks': u'bridge',
         u'Ports': u'',
-        'Repository': u'fcd54dfcb5b8',
         u'RunningFor': u'3 days ago',
         u'Size': u'0B',
         u'Status': u'Created',
-        'Tag': 'latest'
     },
     u'9b08cf26da8c': {
         u'Command': u'"/bin/sh -c \'#(nop) \u2026"',
@@ -2302,11 +2182,9 @@ EXPECTED_CONTAINERS2 = {
         u'Names': u'pensive_swartz',
         u'Networks': u'bridge',
         u'Ports': u'',
-        'Repository': u'164429e47a3f',
         u'RunningFor': u'6 days ago',
         u'Size': u'0B',
         u'Status': u'Created',
-        'Tag': 'latest'
     },
     u'a073bb9adfbe': {
         u'Command': u'"/bin/sh -c \'set -e \u2026"',
@@ -2321,11 +2199,9 @@ EXPECTED_CONTAINERS2 = {
         u'Names': u'jovial_archimedes',
         u'Networks': u'bridge',
         u'Ports': u'',
-        'Repository': u'7aa4b82c92ae',
         u'RunningFor': u'6 days ago',
         u'Size': u'0B',
         u'Status': u'Exited (0) 6 days ago',
-        'Tag': 'latest'
     },
     u'a17f21f95383': {
         u'Command': u'"/bin/sh -c \'#(nop) \u2026"',
@@ -2340,11 +2216,9 @@ EXPECTED_CONTAINERS2 = {
         u'Names': u'serene_poincare',
         u'Networks': u'bridge',
         u'Ports': u'',
-        'Repository': u'a2a187fcaa76',
         u'RunningFor': u'6 days ago',
         u'Size': u'0B',
         u'Status': u'Created',
-        'Tag': 'latest'
     },
     u'aad80d524200': {
         u'Command': u'"/bin/sh -c \'#(nop) \u2026"',
@@ -2359,11 +2233,9 @@ EXPECTED_CONTAINERS2 = {
         u'Names': u'competent_keller',
         u'Networks': u'bridge',
         u'Ports': u'',
-        'Repository': u'e002e37aec84',
         u'RunningFor': u'6 days ago',
         u'Size': u'0B',
         u'Status': u'Created',
-        'Tag': 'latest'
     },
     u'b17185d5dcc5': {
         u'Command': u'"/docker-entrypoint.\u2026"',
@@ -2391,11 +2263,9 @@ EXPECTED_CONTAINERS2 = {
         u'Names': u'friendly_banach',
         u'Networks': u'bridge',
         u'Ports': u'',
-        'Repository': u'94f49a7afedb',
         u'RunningFor': u'6 days ago',
         u'Size': u'0B',
         u'Status': u'Created',
-        'Tag': 'latest'
     },
     u'bfdb64ccf0ba': {
         u'Command': u'"/bin/sh -c \'#(nop) \u2026"',
@@ -2423,11 +2293,9 @@ EXPECTED_CONTAINERS2 = {
         u'Names': u'lucid_bohr',
         u'Networks': u'bridge',
         u'Ports': u'',
-        'Repository': u'21b2f3d5e6c0',
         u'RunningFor': u'6 days ago',
         u'Size': u'0B',
         u'Status': u'Created',
-        'Tag': 'latest'
     },
     u'c04099ed3f18': {
         u'Command': u'"/bin/sh -c \'#(nop) \u2026"',
@@ -2442,11 +2310,9 @@ EXPECTED_CONTAINERS2 = {
         u'Names': u'dreamy_thompson',
         u'Networks': u'bridge',
         u'Ports': u'',
-        'Repository': u'd1a41c564864',
         u'RunningFor': u'6 days ago',
         u'Size': u'0B',
         u'Status': u'Created',
-        'Tag': 'latest'
     },
     u'cdc7e1e4a24e': {
         u'Command': u'"/bin/sh -c \'#(nop) \u2026"',
@@ -2461,11 +2327,9 @@ EXPECTED_CONTAINERS2 = {
         u'Names': u'lucid_brown',
         u'Networks': u'bridge',
         u'Ports': u'',
-        'Repository': u'999fc035fc76',
         u'RunningFor': u'6 days ago',
         u'Size': u'0B',
         u'Status': u'Created',
-        'Tag': 'latest'
     },
     u'd1c70f4690b5': {
         u'Command': u'"/bin/sh -c \'#(nop) \u2026"',
@@ -2480,11 +2344,9 @@ EXPECTED_CONTAINERS2 = {
         u'Names': u'trusting_panini',
         u'Networks': u'bridge',
         u'Ports': u'',
-        'Repository': u'0b5da1249a04',
         u'RunningFor': u'6 days ago',
         u'Size': u'0B',
         u'Status': u'Created',
-        'Tag': 'latest'
     },
     u'd37198a74c08': {
         u'Command': u'"/bin/sh -c \'#(nop) \u2026"',
@@ -2499,11 +2361,9 @@ EXPECTED_CONTAINERS2 = {
         u'Names': u'distracted_mccarthy',
         u'Networks': u'bridge',
         u'Ports': u'',
-        'Repository': u'caac4aa6ac57',
         u'RunningFor': u'6 days ago',
         u'Size': u'0B',
         u'Status': u'Created',
-        'Tag': 'latest'
     },
     u'd91a2be75e8b': {
         u'Command': u'"/bin/sh -c \'set -e \u2026"',
@@ -2518,11 +2378,9 @@ EXPECTED_CONTAINERS2 = {
         u'Names': u'jovial_bardeen',
         u'Networks': u'bridge',
         u'Ports': u'',
-        'Repository': u'010bad2c964b',
         u'RunningFor': u'3 days ago',
         u'Size': u'0B',
         u'Status': u'Exited (0) 3 days ago',
-        'Tag': 'latest'
     },
     u'df44340ed121': {
         u'Command': u'"/bin/sh -c \'#(nop) \u2026"',
@@ -2537,11 +2395,9 @@ EXPECTED_CONTAINERS2 = {
         u'Names': u'unruffled_hopper',
         u'Networks': u'bridge',
         u'Ports': u'',
-        'Repository': u'1b013e043efa',
         u'RunningFor': u'6 days ago',
         u'Size': u'0B',
         u'Status': u'Created',
-        'Tag': 'latest'
     },
     u'f1641e401237': {
         u'Command': u'"/usr/sbin/init"',
@@ -2560,11 +2416,9 @@ EXPECTED_CONTAINERS2 = {
         u'Names': u'sad_stonebraker',
         u'Networks': u'bridge',
         u'Ports': u'',
-        'Repository': u'local/c7-systemd-httpd',
         u'RunningFor': u'4 days ago',
         u'Size': u'0B',
         u'Status': u'Exited (137) 3 days ago',
-        'Tag': 'latest'
     },
     u'fdd04795069e': {
         u'Command': u'"/docker-entrypoint.\u2026"',
@@ -2592,11 +2446,9 @@ EXPECTED_CONTAINERS2 = {
         u'Names': u'monitoringx',
         u'Networks': u'bridge',
         u'Ports': u'6557/tcp, 0.0.0.0:8080->5000/tcp',
-        'Repository': u'checkmk/check-mk-raw',
         u'RunningFor': u'4 days ago',
         u'Size': u'0B',
         u'Status': u'Up 6 hours (healthy)',
-        'Tag': u'1.5.0p5'
     }
 }
 
@@ -2607,10 +2459,9 @@ EXPECTED_IMAGES2 = {
         u'CreatedSince': u'4 weeks ago',
         u'Digest': u'<none>',
         u'ID': u'096300fde75d',
-        u'Repository': u'checkmk/check-mk-enterprise',
+        u'RepoTags': ['checkmk/check-mk-enterprise:1.5.0-2018.09.13'],
         u'SharedSize': u'N/A',
         u'Size': u'818MB',
-        u'Tag': u'1.5.0-2018.09.13',
         u'UniqueSize': u'N/A',
         u'VirtualSize': 818000000,
         'Labels': {
@@ -2637,16 +2488,14 @@ EXPECTED_IMAGES2 = {
         u'CreatedSince': u'3 days ago',
         u'Digest': u'<none>',
         u'ID': u'0983f5184ce7',
-        u'Repository': u'<none>',
         u'SharedSize': u'N/A',
         u'Size': u'312MB',
-        u'Tag': u'<none>',
         u'UniqueSize': u'N/A',
         u'VirtualSize': 312400000,
         'Labels': {
             u'maintainer': u'feedback@check-mk.org'
         },
-        'amount_containers': 0
+        'amount_containers': 1
     },
     u'2e89feac7533': {
         u'Containers': u'N/A',
@@ -2654,10 +2503,9 @@ EXPECTED_IMAGES2 = {
         u'CreatedSince': u'4 weeks ago',
         u'Digest': u'<none>',
         u'ID': u'2e89feac7533',
-        u'Repository': u'docker-tests/check-mk-enterprise-master-2018.09.13',
+        u'RepoTags': ['docker-tests/check-mk-enterprise-master-2018.09.13:latest'],
         u'SharedSize': u'N/A',
         u'Size': u'831MB',
-        u'Tag': u'latest',
         u'UniqueSize': u'N/A',
         u'VirtualSize': 831400000,
         'Labels': {
@@ -2684,10 +2532,9 @@ EXPECTED_IMAGES2 = {
         u'CreatedSince': u'4 weeks ago',
         u'Digest': u'<none>',
         u'ID': u'44a5d6d15272',
-        u'Repository': u'checkmk/check-mk-enterprise',
+        u'RepoTags': ['checkmk/check-mk-enterprise:1.5.0-daily'],
         u'SharedSize': u'N/A',
         u'Size': u'818MB',
-        u'Tag': u'1.5.0-daily',
         u'UniqueSize': u'N/A',
         u'VirtualSize': 818000000,
         'Labels': {
@@ -2714,10 +2561,9 @@ EXPECTED_IMAGES2 = {
         u'CreatedSince': u'5 weeks ago',
         u'Digest': u'<none>',
         u'ID': u'44e19a16bde1',
-        u'Repository': u'debian',
+        u'RepoTags': ['debian:stretch-slim'],
         u'SharedSize': u'N/A',
         u'Size': u'55.3MB',
-        u'Tag': u'stretch-slim',
         u'UniqueSize': u'N/A',
         u'VirtualSize': 55270000,
         'amount_containers': 0
@@ -2728,10 +2574,9 @@ EXPECTED_IMAGES2 = {
         u'CreatedSince': u'3 days ago',
         u'Digest': u'<none>',
         u'ID': u'485933207afd',
-        u'Repository': u'docker-tests/check-mk-enterprise-master-1.5.0p5',
+        u'RepoTags': ['docker-tests/check-mk-enterprise-master-1.5.0p5:latest'],
         u'SharedSize': u'N/A',
         u'Size': u'818MB',
-        u'Tag': u'latest',
         u'UniqueSize': u'N/A',
         u'VirtualSize': 817600000,
         'Labels': {
@@ -2758,10 +2603,9 @@ EXPECTED_IMAGES2 = {
         u'CreatedSince': u'2 weeks ago',
         u'Digest': u'<none>',
         u'ID': u'4a77be28f8e5',
-        u'Repository': u'checkmk/check-mk-raw',
+        u'RepoTags': ['checkmk/check-mk-raw:1.5.0p5'],
         u'SharedSize': u'N/A',
         u'Size': u'752MB',
-        u'Tag': u'1.5.0p5',
         u'UniqueSize': u'N/A',
         u'VirtualSize': 751900000,
         'Labels': {
@@ -2788,10 +2632,9 @@ EXPECTED_IMAGES2 = {
         u'CreatedSince': u'2 months ago',
         u'Digest': u'<none>',
         u'ID': u'5182e96772bf',
-        u'Repository': u'centos',
+        u'RepoTags': ['centos:7'],
         u'SharedSize': u'N/A',
         u'Size': u'200MB',
-        u'Tag': u'7',
         u'UniqueSize': u'N/A',
         u'VirtualSize': 199700000,
         'Labels': {
@@ -2809,10 +2652,9 @@ EXPECTED_IMAGES2 = {
         u'CreatedSince': u'5 weeks ago',
         u'Digest': u'<none>',
         u'ID': u'6143303a8e14',
-        u'Repository': u'hadolint/hadolint',
+        u'RepoTags': ['hadolint/hadolint:latest'],
         u'SharedSize': u'N/A',
         u'Size': u'3.64MB',
-        u'Tag': u'latest',
         u'UniqueSize': u'N/A',
         u'VirtualSize': 3645000,
         'amount_containers': 0
@@ -2823,10 +2665,9 @@ EXPECTED_IMAGES2 = {
         u'CreatedSince': u'4 days ago',
         u'Digest': u'<none>',
         u'ID': u'6c97da45403a',
-        u'Repository': u'local/c7-systemd',
+        u'RepoTags': ['local/c7-systemd:latest'],
         u'SharedSize': u'N/A',
         u'Size': u'200MB',
-        u'Tag': u'latest',
         u'UniqueSize': u'N/A',
         u'VirtualSize': 199700000,
         'Labels': {
@@ -2844,10 +2685,9 @@ EXPECTED_IMAGES2 = {
         u'CreatedSince': u'4 weeks ago',
         u'Digest': u'<none>',
         u'ID': u'8ca14ae84dd9',
-        u'Repository': u'checkmk/check-mk-enterprise',
+        u'RepoTags': ['checkmk/check-mk-enterprise:daily'],
         u'SharedSize': u'N/A',
         u'Size': u'972MB',
-        u'Tag': u'daily',
         u'UniqueSize': u'N/A',
         u'VirtualSize': 972300000,
         'Labels': {
@@ -2874,10 +2714,9 @@ EXPECTED_IMAGES2 = {
         u'CreatedSince': u'4 weeks ago',
         u'Digest': u'<none>',
         u'ID': u'8d463a5f7635',
-        u'Repository': u'checkmk/check-mk-enterprise',
+        u'RepoTags': ['checkmk/check-mk-enterprise:1.5.0-2018.09.12'],
         u'SharedSize': u'N/A',
         u'Size': u'815MB',
-        u'Tag': u'1.5.0-2018.09.12',
         u'UniqueSize': u'N/A',
         u'VirtualSize': 814900000,
         'Labels': {
@@ -2904,10 +2743,9 @@ EXPECTED_IMAGES2 = {
         u'CreatedSince': u'4 weeks ago',
         u'Digest': u'<none>',
         u'ID': u'91152cc1c4bc',
-        u'Repository': u'docker-tests/check-mk-enterprise-master-2018.09.14',
+        u'RepoTags': ['docker-tests/check-mk-enterprise-master-2018.09.14:latest'],
         u'SharedSize': u'N/A',
         u'Size': u'831MB',
-        u'Tag': u'latest',
         u'UniqueSize': u'N/A',
         u'VirtualSize': 831400000,
         'Labels': {
@@ -2928,244 +2766,13 @@ EXPECTED_IMAGES2 = {
         },
         'amount_containers': 0
     },
-    u'a1f15f9a2b16': {
-        u'Containers': u'N/A',
-        u'CreatedAt': u'2018-09-12 19:49:54 +0200 CEST',
-        u'CreatedSince': u'4 weeks ago',
-        u'Digest': u'<none>',
-        u'ID': u'a1f15f9a2b16',
-        u'Repository': u'docker-tests/check-mk-enterprise-master-2018.09.12',
-        u'SharedSize': u'N/A',
-        u'Size': u'828MB',
-        u'Tag': u'latest',
-        u'UniqueSize': u'N/A',
-        u'VirtualSize': 828400000,
-        'Labels': {
-            u'maintainer':
-                u'feedback@check-mk.org',
-            u'org.opencontainers.image.description':
-                u'Check_MK is a leading tool for Infrastructure & Application Monitoring',
-            u'org.opencontainers.image.source':
-                u'https://git.mathias-kettner.de/',
-            u'org.opencontainers.image.title':
-                u'Check_MK',
-            u'org.opencontainers.image.url':
-                u'https://mathias-kettner.com/',
-            u'org.opencontainers.image.vendor':
-                u'Mathias Kettner GmbH',
-            u'org.opencontainers.image.version':
-                u'2018.09.12'
-        },
-        'amount_containers': 0
-    },
-    u'c0582f734ad1': {
-        u'Containers': u'N/A',
-        u'CreatedAt': u'2018-09-14 16:52:00 +0200 CEST',
-        u'CreatedSince': u'4 weeks ago',
-        u'Digest': u'<none>',
-        u'ID': u'c0582f734ad1',
-        u'Repository': u'checkmk/check-mk-enterprise',
-        u'SharedSize': u'N/A',
-        u'Size': u'831MB',
-        u'Tag': u'2018.09.14',
-        u'UniqueSize': u'N/A',
-        u'VirtualSize': 831400000,
-        'Labels': {
-            u'maintainer':
-                u'feedback@check-mk.org',
-            u'org.opencontainers.image.description':
-                u'Check_MK is a leading tool for Infrastructure & Application Monitoring',
-            u'org.opencontainers.image.source':
-                u'https://git.mathias-kettner.de/',
-            u'org.opencontainers.image.title':
-                u'Check_MK',
-            u'org.opencontainers.image.url':
-                u'https://mathias-kettner.com/',
-            u'org.opencontainers.image.vendor':
-                u'Mathias Kettner GmbH',
-            u'org.opencontainers.image.version':
-                u'2018.09.14'
-        },
-        'amount_containers': 0
-    },
-    u'df118e583614': {
-        u'Containers': u'N/A',
-        u'CreatedAt': u'2018-10-10 08:37:26 +0200 CEST',
-        u'CreatedSince': u'6 days ago',
-        u'Digest': u'<none>',
-        u'ID': u'df118e583614',
-        u'Repository': u'<none>',
-        u'SharedSize': u'N/A',
-        u'Size': u'818MB',
-        u'Tag': u'<none>',
-        u'UniqueSize': u'N/A',
-        u'VirtualSize': 817600000,
-        'Labels': {
-            u'maintainer':
-                u'feedback@check-mk.org',
-            u'org.opencontainers.image.description':
-                u'Check_MK is a leading tool for Infrastructure & Application Monitoring',
-            u'org.opencontainers.image.source':
-                u'https://git.mathias-kettner.de/',
-            u'org.opencontainers.image.title':
-                u'Check_MK',
-            u'org.opencontainers.image.url':
-                u'https://mathias-kettner.com/',
-            u'org.opencontainers.image.vendor':
-                u'Mathias Kettner GmbH',
-            u'org.opencontainers.image.version':
-                u'1.5.0p5'
-        },
-        'amount_containers': 0
-    },
-    u'ed55e8b95336': {
-        u'Containers': u'N/A',
-        u'CreatedAt': u'2018-10-12 11:13:11 +0200 CEST',
-        u'CreatedSince': u'4 days ago',
-        u'Digest': u'<none>',
-        u'ID': u'ed55e8b95336',
-        u'Repository': u'local/c7-systemd-httpd',
-        u'SharedSize': u'N/A',
-        u'Size': u'254MB',
-        u'Tag': u'latest',
-        u'UniqueSize': u'N/A',
-        u'VirtualSize': 254200000,
-        'Labels': {
-            u'org.label-schema.build-date': u'20180804',
-            u'org.label-schema.license': u'GPLv2',
-            u'org.label-schema.name': u'CentOS Base Image',
-            u'org.label-schema.schema-version': u'1.0',
-            u'org.label-schema.vendor': u'CentOS'
-        },
-        'amount_containers': 2
-    },
-    u'ed5d6b154e97': {
-        u'Containers': u'N/A',
-        u'CreatedAt': u'2018-10-10 08:40:21 +0200 CEST',
-        u'CreatedSince': u'6 days ago',
-        u'Digest': u'<none>',
-        u'ID': u'ed5d6b154e97',
-        u'Repository': u'docker-tests/check-mk-enterprise-master-2018.10.10',
-        u'SharedSize': u'N/A',
-        u'Size': u'844MB',
-        u'Tag': u'latest',
-        u'UniqueSize': u'N/A',
-        u'VirtualSize': 844300000,
-        'Labels': {
-            u'maintainer':
-                u'feedback@check-mk.org',
-            u'org.opencontainers.image.description':
-                u'Check_MK is a leading tool for Infrastructure & Application Monitoring',
-            u'org.opencontainers.image.source':
-                u'https://git.mathias-kettner.de/',
-            u'org.opencontainers.image.title':
-                u'Check_MK',
-            u'org.opencontainers.image.url':
-                u'https://mathias-kettner.com/',
-            u'org.opencontainers.image.vendor':
-                u'Mathias Kettner GmbH',
-            u'org.opencontainers.image.version':
-                u'2018.10.10'
-        },
-        'amount_containers': 0
-    },
-    u'ee5124a3adb5': {
-        u'Containers': u'N/A',
-        u'CreatedAt': u'2018-09-12 09:33:22 +0200 CEST',
-        u'CreatedSince': u'4 weeks ago',
-        u'Digest': u'<none>',
-        u'ID': u'ee5124a3adb5',
-        u'Repository': u'docker-tests/check-mk-enterprise-master-2018.09.11',
-        u'SharedSize': u'N/A',
-        u'Size': u'828MB',
-        u'Tag': u'latest',
-        u'UniqueSize': u'N/A',
-        u'VirtualSize': 828400000,
-        'Labels': {
-            u'maintainer':
-                u'feedback@check-mk.org',
-            u'org.opencontainers.image.description':
-                u'Check_MK is a leading tool for Infrastructure & Application Monitoring',
-            u'org.opencontainers.image.source':
-                u'https://git.mathias-kettner.de/',
-            u'org.opencontainers.image.title':
-                u'Check_MK',
-            u'org.opencontainers.image.url':
-                u'https://mathias-kettner.com/',
-            u'org.opencontainers.image.vendor':
-                u'Mathias Kettner GmbH',
-            u'org.opencontainers.image.version':
-                u'2018.09.11'
-        },
-        'amount_containers': 0
-    },
-    u'f4bfbb70768f': {
-        u'Containers': u'N/A',
-        u'CreatedAt': u'2018-09-17 09:47:56 +0200 CEST',
-        u'CreatedSince': u'4 weeks ago',
-        u'Digest': u'<none>',
-        u'ID': u'f4bfbb70768f',
-        u'Repository': u'docker-tests/check-mk-enterprise-master-1.5.0p3',
-        u'SharedSize': u'N/A',
-        u'Size': u'817MB',
-        u'Tag': u'latest',
-        u'UniqueSize': u'N/A',
-        u'VirtualSize': 817400000,
-        'Labels': {
-            u'maintainer':
-                u'feedback@check-mk.org',
-            u'org.opencontainers.image.description':
-                u'Check_MK is a leading tool for Infrastructure & Application Monitoring',
-            u'org.opencontainers.image.source':
-                u'https://git.mathias-kettner.de/',
-            u'org.opencontainers.image.title':
-                u'Check_MK',
-            u'org.opencontainers.image.url':
-                u'https://mathias-kettner.com/',
-            u'org.opencontainers.image.vendor':
-                u'Mathias Kettner GmbH',
-            u'org.opencontainers.image.version':
-                u'1.5.0p3'
-        },
-        'amount_containers': 0
-    },
-    u'ff19a3911e0a': {
-        u'Containers': u'N/A',
-        u'CreatedAt': u'2018-09-17 09:45:08 +0200 CEST',
-        u'CreatedSince': u'4 weeks ago',
-        u'Digest': u'<none>',
-        u'ID': u'ff19a3911e0a',
-        u'Repository': u'docker-tests/check-mk-enterprise-master-2018.09.17',
-        u'SharedSize': u'N/A',
-        u'Size': u'831MB',
-        u'Tag': u'latest',
-        u'UniqueSize': u'N/A',
-        u'VirtualSize': 831400000,
-        'Labels': {
-            u'maintainer':
-                u'feedback@check-mk.org',
-            u'org.opencontainers.image.description':
-                u'Check_MK is a leading tool for Infrastructure & Application Monitoring',
-            u'org.opencontainers.image.source':
-                u'https://git.mathias-kettner.de/',
-            u'org.opencontainers.image.title':
-                u'Check_MK',
-            u'org.opencontainers.image.url':
-                u'https://mathias-kettner.com/',
-            u'org.opencontainers.image.vendor':
-                u'Mathias Kettner GmbH',
-            u'org.opencontainers.image.version':
-                u'2018.09.17'
-        },
-        'amount_containers': 0
-    }
 }
 
 
 SUBSECTIONS3 = {
-        'images': [
-    [
-           '{"Containers":"N/A","CreatedAt":"2018-10-12', '16:12:03', '+0200',
+    'images': [
+         [
+        '{"Containers":"N/A","CreatedAt":"2018-10-12', '16:12:03', '+0200',
         'CEST","CreatedSince":"3', 'days',
         'ago","Digest":"\\u003cnone\\u003e","ID":"485933207afd","Repository":"docker-tests/check-mk-enterprise-master-1.5.0p5","SharedSize":"N/A","Size":"818MB","Tag":"latest","UniqueSize":"N/A","VirtualSize":"817.6MB"}'
     ], [
@@ -5387,8 +4994,8 @@ SUBSECTIONS3 = {
         '"Layers":', '['
     ], ['"sha256:1d31b5806ba40b5f67bde96f18a181668348934a44c9253b420d5f04cfb4e37a"'], [']'], [
         '},'
-    ], ['"Metadata":', '{'], ['"LastTagTime":', '"0001-01-01T00:00:00Z"'], ['}'], ['}'], [']'],
-    ],
+    ], ['"Metadata":', '{'], ['"LastTagTime":', '"0001-01-01T00:00:00Z"'], ['}'], ['}'], [']'], [
+    ]],
     'containers': [
     [
         '{"Command":"\\"/bin/sh', '-c', "'set", '-e', '\xe2\x80\xa6\\"","CreatedAt":"2018-10-12',
@@ -5643,10 +5250,9 @@ EXPECTED_IMAGES3 = {
         u'CreatedSince': u'4 weeks ago',
         u'Digest': u'<none>',
         u'ID': u'096300fde75d',
-        u'Repository': u'checkmk/check-mk-enterprise',
+        u'RepoTags': ['checkmk/check-mk-enterprise:1.5.0-2018.09.13'],
         u'SharedSize': u'N/A',
         u'Size': u'818MB',
-        u'Tag': u'1.5.0-2018.09.13',
         u'UniqueSize': u'N/A',
         u'VirtualSize': 817961530,
         'Labels': {
@@ -5673,16 +5279,14 @@ EXPECTED_IMAGES3 = {
         u'CreatedSince': u'3 days ago',
         u'Digest': u'<none>',
         u'ID': u'0983f5184ce7',
-        u'Repository': u'',
         u'SharedSize': u'N/A',
         u'Size': u'312MB',
-        u'Tag': u'latest',
         u'UniqueSize': u'N/A',
         u'VirtualSize': 312404556,
         'Labels': {
             u'maintainer': u'feedback@check-mk.org'
         },
-        'amount_containers': 0
+        'amount_containers': 1
     },
     u'2e89feac7533': {
         u'Containers': u'N/A',
@@ -5690,10 +5294,8 @@ EXPECTED_IMAGES3 = {
         u'CreatedSince': u'4 weeks ago',
         u'Digest': u'<none>',
         u'ID': u'2e89feac7533',
-        u'Repository': u'docker-tests/check-mk-enterprise-master-2018.09.13',
         u'SharedSize': u'N/A',
         u'Size': u'831MB',
-        u'Tag': u'latest',
         u'UniqueSize': u'N/A',
         u'VirtualSize': 831418094,
         'Labels': {
@@ -5720,10 +5322,8 @@ EXPECTED_IMAGES3 = {
         u'CreatedSince': u'4 weeks ago',
         u'Digest': u'<none>',
         u'ID': u'44a5d6d15272',
-        u'Repository': u'checkmk/check-mk-enterprise',
         u'SharedSize': u'N/A',
         u'Size': u'818MB',
-        u'Tag': u'1.5.0-daily',
         u'UniqueSize': u'N/A',
         u'VirtualSize': 817965472,
         'Labels': {
@@ -5750,10 +5350,8 @@ EXPECTED_IMAGES3 = {
         u'CreatedSince': u'5 weeks ago',
         u'Digest': u'<none>',
         u'ID': u'44e19a16bde1',
-        u'Repository': u'debian',
         u'SharedSize': u'N/A',
         u'Size': u'55.3MB',
-        u'Tag': u'stretch-slim',
         u'UniqueSize': u'N/A',
         u'VirtualSize': 55270217,
         'amount_containers': 0
@@ -5764,10 +5362,8 @@ EXPECTED_IMAGES3 = {
         u'CreatedSince': u'3 days ago',
         u'Digest': u'<none>',
         u'ID': u'485933207afd',
-        u'Repository': u'docker-tests/check-mk-enterprise-master-1.5.0p5',
         u'SharedSize': u'N/A',
         u'Size': u'818MB',
-        u'Tag': u'latest',
         u'UniqueSize': u'N/A',
         u'VirtualSize': 817562729,
         'Labels': {
@@ -5794,10 +5390,8 @@ EXPECTED_IMAGES3 = {
         u'CreatedSince': u'2 weeks ago',
         u'Digest': u'<none>',
         u'ID': u'4a77be28f8e5',
-        u'Repository': u'checkmk/check-mk-raw',
         u'SharedSize': u'N/A',
         u'Size': u'752MB',
-        u'Tag': u'1.5.0p5',
         u'UniqueSize': u'N/A',
         u'VirtualSize': 751885817,
         'Labels': {
@@ -5824,10 +5418,8 @@ EXPECTED_IMAGES3 = {
         u'CreatedSince': u'2 months ago',
         u'Digest': u'<none>',
         u'ID': u'5182e96772bf',
-        u'Repository': u'centos',
         u'SharedSize': u'N/A',
         u'Size': u'200MB',
-        u'Tag': u'7',
         u'UniqueSize': u'N/A',
         u'VirtualSize': 199723824,
         'Labels': {
@@ -5845,10 +5437,8 @@ EXPECTED_IMAGES3 = {
         u'CreatedSince': u'5 weeks ago',
         u'Digest': u'<none>',
         u'ID': u'6143303a8e14',
-        u'Repository': u'hadolint/hadolint',
         u'SharedSize': u'N/A',
         u'Size': u'3.64MB',
-        u'Tag': u'latest',
         u'UniqueSize': u'N/A',
         u'VirtualSize': 3644760,
         'amount_containers': 0
@@ -5859,10 +5449,8 @@ EXPECTED_IMAGES3 = {
         u'CreatedSince': u'4 days ago',
         u'Digest': u'<none>',
         u'ID': u'6c97da45403a',
-        u'Repository': u'local/c7-systemd',
         u'SharedSize': u'N/A',
         u'Size': u'200MB',
-        u'Tag': u'latest',
         u'UniqueSize': u'N/A',
         u'VirtualSize': 199723824,
         'Labels': {
@@ -5874,336 +5462,15 @@ EXPECTED_IMAGES3 = {
         },
         'amount_containers': 0
     },
-    u'8ca14ae84dd9': {
-        u'Containers': u'N/A',
-        u'CreatedAt': u'2018-09-14T11:08:54.79214559Z',
-        u'CreatedSince': u'4 weeks ago',
-        u'Digest': u'<none>',
-        u'ID': u'8ca14ae84dd9',
-        u'Repository': u'checkmk/check-mk-enterprise',
-        u'SharedSize': u'N/A',
-        u'Size': u'972MB',
-        u'Tag': u'daily',
-        u'UniqueSize': u'N/A',
-        u'VirtualSize': 972256089,
-        'Labels': {
-            u'maintainer':
-                u'feedback@check-mk.org',
-            u'org.opencontainers.image.description':
-                u'Check_MK is a leading tool for Infrastructure & Application Monitoring',
-            u'org.opencontainers.image.source':
-                u'https://git.mathias-kettner.de/',
-            u'org.opencontainers.image.title':
-                u'Check_MK',
-            u'org.opencontainers.image.url':
-                u'https://mathias-kettner.com/',
-            u'org.opencontainers.image.vendor':
-                u'Mathias Kettner GmbH',
-            u'org.opencontainers.image.version':
-                u'2018.09.14'
-        },
-        'amount_containers': 0
-    },
-    u'8d463a5f7635': {
-        u'Containers': u'N/A',
-        u'CreatedAt': u'2018-09-12T19:15:47.455944537Z',
-        u'CreatedSince': u'4 weeks ago',
-        u'Digest': u'<none>',
-        u'ID': u'8d463a5f7635',
-        u'Repository': u'checkmk/check-mk-enterprise',
-        u'SharedSize': u'N/A',
-        u'Size': u'815MB',
-        u'Tag': u'1.5.0-2018.09.12',
-        u'UniqueSize': u'N/A',
-        u'VirtualSize': 814907653,
-        'Labels': {
-            u'maintainer':
-                u'feedback@check-mk.org',
-            u'org.opencontainers.image.description':
-                u'Check_MK is a leading tool for Infrastructure & Application Monitoring',
-            u'org.opencontainers.image.source':
-                u'https://git.mathias-kettner.de/',
-            u'org.opencontainers.image.title':
-                u'Check_MK',
-            u'org.opencontainers.image.url':
-                u'https://mathias-kettner.com/',
-            u'org.opencontainers.image.vendor':
-                u'Mathias Kettner GmbH',
-            u'org.opencontainers.image.version':
-                u'1.5.0-2018.09.12'
-        },
-        'amount_containers': 0
-    },
-    u'91152cc1c4bc': {
-        u'Containers': u'N/A',
-        u'CreatedAt': u'2018-09-14T12:47:41.138435628Z',
-        u'CreatedSince': u'4 weeks ago',
-        u'Digest': u'<none>',
-        u'ID': u'91152cc1c4bc',
-        u'Repository': u'docker-tests/check-mk-enterprise-master-2018.09.14',
-        u'SharedSize': u'N/A',
-        u'Size': u'831MB',
-        u'Tag': u'latest',
-        u'UniqueSize': u'N/A',
-        u'VirtualSize': 831425899,
-        'Labels': {
-            u'maintainer':
-                u'feedback@check-mk.org',
-            u'org.opencontainers.image.description':
-                u'Check_MK is a leading tool for Infrastructure & Application Monitoring',
-            u'org.opencontainers.image.source':
-                u'https://git.mathias-kettner.de/',
-            u'org.opencontainers.image.title':
-                u'Check_MK',
-            u'org.opencontainers.image.url':
-                u'https://mathias-kettner.com/',
-            u'org.opencontainers.image.vendor':
-                u'Mathias Kettner GmbH',
-            u'org.opencontainers.image.version':
-                u'2018.09.14'
-        },
-        'amount_containers': 0
-    },
-    u'a1f15f9a2b16': {
-        u'Containers': u'N/A',
-        u'CreatedAt': u'2018-09-12T17:49:54.487390036Z',
-        u'CreatedSince': u'4 weeks ago',
-        u'Digest': u'<none>',
-        u'ID': u'a1f15f9a2b16',
-        u'Repository': u'docker-tests/check-mk-enterprise-master-2018.09.12',
-        u'SharedSize': u'N/A',
-        u'Size': u'828MB',
-        u'Tag': u'latest',
-        u'UniqueSize': u'N/A',
-        u'VirtualSize': 828361723,
-        'Labels': {
-            u'maintainer':
-                u'feedback@check-mk.org',
-            u'org.opencontainers.image.description':
-                u'Check_MK is a leading tool for Infrastructure & Application Monitoring',
-            u'org.opencontainers.image.source':
-                u'https://git.mathias-kettner.de/',
-            u'org.opencontainers.image.title':
-                u'Check_MK',
-            u'org.opencontainers.image.url':
-                u'https://mathias-kettner.com/',
-            u'org.opencontainers.image.vendor':
-                u'Mathias Kettner GmbH',
-            u'org.opencontainers.image.version':
-                u'2018.09.12'
-        },
-        'amount_containers': 0
-    },
-    u'c0582f734ad1': {
-        u'Containers': u'N/A',
-        u'CreatedAt': u'2018-09-14T14:52:00.394955469Z',
-        u'CreatedSince': u'4 weeks ago',
-        u'Digest': u'<none>',
-        u'ID': u'c0582f734ad1',
-        u'Repository': u'checkmk/check-mk-enterprise',
-        u'SharedSize': u'N/A',
-        u'Size': u'831MB',
-        u'Tag': u'2018.09.14',
-        u'UniqueSize': u'N/A',
-        u'VirtualSize': 831425908,
-        'Labels': {
-            u'maintainer':
-                u'feedback@check-mk.org',
-            u'org.opencontainers.image.description':
-                u'Check_MK is a leading tool for Infrastructure & Application Monitoring',
-            u'org.opencontainers.image.source':
-                u'https://git.mathias-kettner.de/',
-            u'org.opencontainers.image.title':
-                u'Check_MK',
-            u'org.opencontainers.image.url':
-                u'https://mathias-kettner.com/',
-            u'org.opencontainers.image.vendor':
-                u'Mathias Kettner GmbH',
-            u'org.opencontainers.image.version':
-                u'2018.09.14'
-        },
-        'amount_containers': 0
-    },
-    u'df118e583614': {
-        u'Containers': u'N/A',
-        u'CreatedAt': u'2018-10-10T06:37:26.88476067Z',
-        u'CreatedSince': u'6 days ago',
-        u'Digest': u'<none>',
-        u'ID': u'df118e583614',
-        u'Repository': u'',
-        u'SharedSize': u'N/A',
-        u'Size': u'818MB',
-        u'Tag': u'latest',
-        u'UniqueSize': u'N/A',
-        u'VirtualSize': 817561911,
-        'Labels': {
-            u'maintainer':
-                u'feedback@check-mk.org',
-            u'org.opencontainers.image.description':
-                u'Check_MK is a leading tool for Infrastructure & Application Monitoring',
-            u'org.opencontainers.image.source':
-                u'https://git.mathias-kettner.de/',
-            u'org.opencontainers.image.title':
-                u'Check_MK',
-            u'org.opencontainers.image.url':
-                u'https://mathias-kettner.com/',
-            u'org.opencontainers.image.vendor':
-                u'Mathias Kettner GmbH',
-            u'org.opencontainers.image.version':
-                u'1.5.0p5'
-        },
-        'amount_containers': 0
-    },
-    u'ed55e8b95336': {
-        u'Containers': u'N/A',
-        u'CreatedAt': u'2018-10-12T09:13:11.560711878Z',
-        u'CreatedSince': u'4 days ago',
-        u'Digest': u'<none>',
-        u'ID': u'ed55e8b95336',
-        u'Repository': u'local/c7-systemd-httpd',
-        u'SharedSize': u'N/A',
-        u'Size': u'254MB',
-        u'Tag': u'latest',
-        u'UniqueSize': u'N/A',
-        u'VirtualSize': 254189650,
-        'Labels': {
-            u'org.label-schema.build-date': u'20180804',
-            u'org.label-schema.license': u'GPLv2',
-            u'org.label-schema.name': u'CentOS Base Image',
-            u'org.label-schema.schema-version': u'1.0',
-            u'org.label-schema.vendor': u'CentOS'
-        },
-        'amount_containers': 2
-    },
-    u'ed5d6b154e97': {
-        u'Containers': u'N/A',
-        u'CreatedAt': u'2018-10-10T06:40:21.695138758Z',
-        u'CreatedSince': u'6 days ago',
-        u'Digest': u'<none>',
-        u'ID': u'ed5d6b154e97',
-        u'Repository': u'docker-tests/check-mk-enterprise-master-2018.10.10',
-        u'SharedSize': u'N/A',
-        u'Size': u'844MB',
-        u'Tag': u'latest',
-        u'UniqueSize': u'N/A',
-        u'VirtualSize': 844317793,
-        'Labels': {
-            u'maintainer':
-                u'feedback@check-mk.org',
-            u'org.opencontainers.image.description':
-                u'Check_MK is a leading tool for Infrastructure & Application Monitoring',
-            u'org.opencontainers.image.source':
-                u'https://git.mathias-kettner.de/',
-            u'org.opencontainers.image.title':
-                u'Check_MK',
-            u'org.opencontainers.image.url':
-                u'https://mathias-kettner.com/',
-            u'org.opencontainers.image.vendor':
-                u'Mathias Kettner GmbH',
-            u'org.opencontainers.image.version':
-                u'2018.10.10'
-        },
-        'amount_containers': 0
-    },
-    u'ee5124a3adb5': {
-        u'Containers': u'N/A',
-        u'CreatedAt': u'2018-09-12T07:33:22.502880318Z',
-        u'CreatedSince': u'4 weeks ago',
-        u'Digest': u'<none>',
-        u'ID': u'ee5124a3adb5',
-        u'Repository': u'docker-tests/check-mk-enterprise-master-2018.09.11',
-        u'SharedSize': u'N/A',
-        u'Size': u'828MB',
-        u'Tag': u'latest',
-        u'UniqueSize': u'N/A',
-        u'VirtualSize': 828358667,
-        'Labels': {
-            u'maintainer':
-                u'feedback@check-mk.org',
-            u'org.opencontainers.image.description':
-                u'Check_MK is a leading tool for Infrastructure & Application Monitoring',
-            u'org.opencontainers.image.source':
-                u'https://git.mathias-kettner.de/',
-            u'org.opencontainers.image.title':
-                u'Check_MK',
-            u'org.opencontainers.image.url':
-                u'https://mathias-kettner.com/',
-            u'org.opencontainers.image.vendor':
-                u'Mathias Kettner GmbH',
-            u'org.opencontainers.image.version':
-                u'2018.09.11'
-        },
-        'amount_containers': 0
-    },
-    u'f4bfbb70768f': {
-        u'Containers': u'N/A',
-        u'CreatedAt': u'2018-09-17T07:47:56.00338337Z',
-        u'CreatedSince': u'4 weeks ago',
-        u'Digest': u'<none>',
-        u'ID': u'f4bfbb70768f',
-        u'Repository': u'docker-tests/check-mk-enterprise-master-1.5.0p3',
-        u'SharedSize': u'N/A',
-        u'Size': u'817MB',
-        u'Tag': u'latest',
-        u'UniqueSize': u'N/A',
-        u'VirtualSize': 817394362,
-        'Labels': {
-            u'maintainer':
-                u'feedback@check-mk.org',
-            u'org.opencontainers.image.description':
-                u'Check_MK is a leading tool for Infrastructure & Application Monitoring',
-            u'org.opencontainers.image.source':
-                u'https://git.mathias-kettner.de/',
-            u'org.opencontainers.image.title':
-                u'Check_MK',
-            u'org.opencontainers.image.url':
-                u'https://mathias-kettner.com/',
-            u'org.opencontainers.image.vendor':
-                u'Mathias Kettner GmbH',
-            u'org.opencontainers.image.version':
-                u'1.5.0p3'
-        },
-        'amount_containers': 0
-    },
-    u'ff19a3911e0a': {
-        u'Containers': u'N/A',
-        u'CreatedAt': u'2018-09-17T07:45:08.855991864Z',
-        u'CreatedSince': u'4 weeks ago',
-        u'Digest': u'<none>',
-        u'ID': u'ff19a3911e0a',
-        u'Repository': u'docker-tests/check-mk-enterprise-master-2018.09.17',
-        u'SharedSize': u'N/A',
-        u'Size': u'831MB',
-        u'Tag': u'latest',
-        u'UniqueSize': u'N/A',
-        u'VirtualSize': 831431070,
-        'Labels': {
-            u'maintainer':
-                u'feedback@check-mk.org',
-            u'org.opencontainers.image.description':
-                u'Check_MK is a leading tool for Infrastructure & Application Monitoring',
-            u'org.opencontainers.image.source':
-                u'https://git.mathias-kettner.de/',
-            u'org.opencontainers.image.title':
-                u'Check_MK',
-            u'org.opencontainers.image.url':
-                u'https://mathias-kettner.com/',
-            u'org.opencontainers.image.vendor':
-                u'Mathias Kettner GmbH',
-            u'org.opencontainers.image.version':
-                u'2018.09.17'
-        },
-        'amount_containers': 0
-    }
 }
 
 
-@pytest.mark.parametrize("info,ex_img,ex_cont", [
+@pytest.mark.parametrize("subsections,ex_img,ex_cont", [
     (SUBSECTIONS1, EXPECTED_IMAGES1, EXPECTED_CONTAINERS1),
     (SUBSECTIONS2, EXPECTED_IMAGES2, EXPECTED_CONTAINERS2),
     (SUBSECTIONS3, EXPECTED_IMAGES3, EXPECTED_CONTAINERS3),
 ])
-def test_parse_legacy_docker_node_images(info, ex_img, ex_cont):
+def test_parse_legacy_docker_node_images(subsections, ex_img, ex_cont):
     def assert_contains(dic, key, value):
         assert isinstance(dic, dict)
         assert key in dic, "key missing in output: %r" % key
@@ -6213,30 +5480,17 @@ def test_parse_legacy_docker_node_images(info, ex_img, ex_cont):
         else:
             assert dic[key] == value, "expected: %r, got: %r" % (value, dic[key])
 
-    parsed = parse_legacy_docker_node_images(info)  # pylint: disable=undefined-variable
+    parsed = parse_legacy_docker_node_images(subsections)  # pylint: disable=undefined-variable
     assert_contains(parsed, "images", ex_img)
     assert_contains(parsed, "containers", ex_cont)
 
     for image in parsed["images"].itervalues():
-        for k, t in REQUIRED_IMAGE_KEYS:
-            assert k in image
-            assert isinstance(image[k], t)
+        for key, type_ in REQUIRED_IMAGE_KEYS:
+            assert key in image
+            assert isinstance(image[key], type_)
 
     for container in parsed["containers"].itervalues():
-        for k, t in REQUIRED_CONTAINER_KEYS:
-            assert k in container
-            assert isinstance(container[k], t)
-
-
-def test_compare_2_3():
-
-    parsed2 = parse_legacy_docker_node_images(SUBSECTIONS2)  # pylint: disable=undefined-variable
-    parsed3 = parse_legacy_docker_node_images(SUBSECTIONS3)  # pylint: disable=undefined-variable
-
-    for k in ("images", "containers"):
-        assert set(parsed2[k].keys()) == set(parsed3[k].keys())
-        for k2 in parsed2[k]:
-            assert set(parsed2[k][k2].keys()) == set(parsed3[k][k2].keys())
-
-
+        for key, type_ in REQUIRED_CONTAINER_KEYS:
+            assert key in container
+            assert isinstance(container[key], type_)
 

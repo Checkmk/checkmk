@@ -113,12 +113,6 @@ def _legacy_docker_trunk_id(hash_string):
     return long_id[:12]
 
 
-def _get_repo_tag(string):
-    if ":" in string:
-        return tuple(string.rsplit(":", 1))
-    return string, "latest"
-
-
 def parse_legacy_docker_node_info(info):  # pylint: disable=too-many-branches
     '''parse output of "docker info"'''
     parsed = DeprecatedDict()
@@ -270,6 +264,11 @@ def parse_legacy_docker_subsection_images(info):
         val = item.get("VirtualSize")
         if val is not None:
             item["VirtualSize"] = _legacy_docker_get_bytes(val)
+
+        repotags = item.setdefault("RepoTags", [])
+        if not repotags and item.get("Repository"):
+            repotags.append('%s:%s' % (item["Repository"], item.get("Tag", "latest")))
+
         parsed[item.get("ID")] = item
 
     return parsed
@@ -303,8 +302,6 @@ def parse_legacy_docker_subsection_containers(info):
 
     parsed = DeprecatedDict()
     for item in table:
-        image_name = item.get("Image", "")
-        item["Repository"], item["Tag"] = _get_repo_tag(image_name)
         parsed[item.get("ID")] = item
 
     return parsed
@@ -336,34 +333,43 @@ def parse_legacy_docker_node_images(subsections):
     for image_id, pref_info in image_inspect.iteritems():
         image = images.setdefault(image_id, {})
         image["ID"] = image_id
-        labels = pref_info.get("Config", {}).get("Labels")
-        if labels is not None:
-            image.setdefault("Labels", {}).update(labels)
+        labels = pref_info.get("Config", {}).get("Labels") or {}
+        image.setdefault("Labels", {}).update(labels)
         image["CreatedAt"] = pref_info["Created"]
         image["VirtualSize"] = pref_info["VirtualSize"]
+
         repotags = pref_info.get("RepoTags")
         if repotags:
-            image["Repository"], image["Tag"] = _get_repo_tag(repotags[-1])
-        else:
-            repo = pref_info.get("RepoDigest", "").split('@', 1)[0]
-            image["Repository"], image["Tag"] = _get_repo_tag(repo)
+            image["RepoTags"] = repotags
 
-    for image in images.itervalues():
+        repodigests = pref_info.get("RepoDigests") or []
+        if 'RepoDigest' in pref_info:
+            # Singular? I think this was a bug, and never existed.
+            # But better safe than sorry.
+            repodigests.append(pref_info['RepoDigest'])
+        image["RepoDigests"] = repodigests
+
+    images_lookup = {}
+    for image_id, image in images.iteritems():
         image["amount_containers"] = 0
         image.setdefault("Labels", {})
+        for reta in image.get("RepoTags", []):
+            images_lookup[reta] = image
+            images_lookup[_legacy_docker_trunk_id(image_id) + ':latest'] = image
 
     for image_id, labels in image_labels.iteritems():
         image = images.get(_legacy_docker_trunk_id(image_id))
         if image is not None and labels is not None:
             image["Labels"].update(labels)
 
-    mapping = {(i['Repository'], i['Tag']): i['ID'] for i in images.itervalues()}
-
     for cont in containers.itervalues():
-        image_id = mapping.get((cont["Repository"], cont["Tag"]))
-        image = images.get(image_id)
-        if image is not None:
-            image["amount_containers"] += 1
+        if 'Image' in cont:
+            image_repotag = cont["Image"]
+            if ':' not in image_repotag:
+                image_repotag += ':latest'
+            image = images_lookup.get(image_repotag)
+            if image is not None:
+                image["amount_containers"] += 1
 
         labels = cont.get("Labels")
         if isinstance(labels, (str, unicode)):

@@ -51,19 +51,17 @@ def inv_docker_node_images(info, inventory_tree, status_data_tree):
     inv_node = inventory_tree.get_list(path)
     status_node = status_data_tree.get_list(path)
 
-    for image in sorted(images.itervalues(), key=lambda i: i["ID"]):
+    for image_id, image in sorted(images.iteritems()):
         inv_node.append({
-            "repository": image["Repository"],
-            "tag": image["Tag"],
-            "id": image["ID"],
+            "repotags": image.get("RepoTags", []),
+            "repodigests": image.get("RepoDigests", []),
+            "id": docker_get_short_id(image_id),  # pylint: disable=undefined-variable
             "creation": image["CreatedAt"],
             "size": image["VirtualSize"],
             "labels": docker_format_labels(image),  # pylint: disable=undefined-variable
         })
 
         status_node.append({
-            "repository": image["Repository"],
-            "tag": image["Tag"],
             "id": image["ID"],
             "amount_containers": image["amount_containers"],
         })
@@ -71,11 +69,9 @@ def inv_docker_node_images(info, inventory_tree, status_data_tree):
     containers = parsed.get("containers", {})
     status_node = status_data_tree.get_list("software.applications.docker.containers:")
 
-    for container in sorted(containers.itervalues(), key=lambda c: c["ID"]):
+    for container_id, container in sorted(containers.iteritems()):
         status_node.append({
-            "id": container["ID"],
-            "repository": container["Repository"],
-            "tag": container["Tag"],
+            "id": docker_get_short_id(container_id),  # pylint: disable=undefined-variable
             "name": container["Names"],
             "creation": container["CreatedAt"],
             "labels": docker_format_labels(container),  # pylint: disable=undefined-variable

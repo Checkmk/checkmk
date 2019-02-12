@@ -16305,13 +16305,41 @@ def _vs_cpu_credits_balance():
                         ]),
                 ]))
 
-
 register_check_parameters(
     subgroup_applications,
     'aws_ec2_cpu_credits',
     _("AWS/EC2 CPU Credits"),
     Dictionary(elements=[_vs_cpu_credits_balance()]),
     None,
+    match_type='dict',
+)
+
+def _vs_burst_balance():
+    return ('burst_balance_levels_lower',
+            Alternative(
+                title=_("Lower levels for burst balance"),
+                style="dropdown",
+                elements=[
+                    Tuple(
+                        title=_("Set levels"),
+                        elements=[
+                            Percentage(title=_("Warning at or below")),
+                            Percentage(title=_("Critical at or below")),
+                        ]),
+                    Tuple(
+                        title=_("No levels"),
+                        elements=[
+                            FixedValue(None, totext=""),
+                            FixedValue(None, totext=""),
+                        ]),
+                ]))
+
+register_check_parameters(
+    subgroup_applications,
+    'aws_ebs_burst_balance',
+    _("AWS/EBS Burst Balance"),
+    Dictionary(elements=[_vs_burst_balance()]),
+    TextAscii(title=_("Block storage name")),
     match_type='dict',
 )
 

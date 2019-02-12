@@ -1,0 +1,17 @@
+Title: Apache sends out minimal information about the running software and platform to HTTP clients
+Level: 1
+Component: omd
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1549992283
+Class: security
+
+The site apache reports information about the running software and platform to
+the HTTP clients with each HTTP response using the "Server" HTTP header. It is
+common practice to minmize this information using the apache configuration
+option "ServerTokens Prod" which we do now for the site apache by default.
+
+We don't modify this setting for the system wide apache. You'll have to
+configure the system apache on your own in case you want to configure it to
+work in the same way.

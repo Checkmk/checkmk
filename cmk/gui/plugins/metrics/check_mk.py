@@ -4854,6 +4854,12 @@ metric_info['aws_backend_connection_errors_rate'] = {
     'color': '15/a',
 }
 
+metric_info['aws_burst_balance'] = {
+    'title': _('Burst Balance'),
+    'unit': '%',
+    'color': '11/a',
+}
+
 metric_info["elapsed_time"] = {
     "title": _("Elapsed time"),
     "unit": "s",

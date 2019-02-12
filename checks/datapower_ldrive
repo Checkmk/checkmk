@@ -58,16 +58,20 @@ def check_datapower_ldrive(item, _no_params, info):
                     % (state_txt, raid_level, num_drives)
             return state, infotext
 
+
 check_info['datapower_ldrive'] = {
-    "inventory_function"      : inventory_datapower_ldrive,
-    "check_function"          : check_datapower_ldrive,
-    "service_description"     : "Logical Drive %s",
-    "snmp_info"               : ( ".1.3.6.1.4.1.14685.3.1.259.1", [
-                                  "1", # dpStatusRaidLogicaldrivetatusControllerID
-                                  "2", # dpStatusRaidLogicaldrivetatusLogicalDriveID
-                                  "4", # dpStatusRaidLogicaldrivetatusRaidLevel
-                                  "5", # dpStatusRaidLogicaldrivetatusNumPhysicalDrives
-                                  "6", # dpStatusRaidLogicaldrivetatusState
-                              ]),
-    "snmp_scan_function"      : lambda oid: oid(".1.3.6.1.2.1.1.2.0") in [ ".1.3.6.1.4.1.14685.1.7",  ".1.3.6.1.4.1.14685.1.3" ],
+    "inventory_function": inventory_datapower_ldrive,
+    "check_function": check_datapower_ldrive,
+    "service_description": "Logical Drive %s",
+    "snmp_info": (
+        ".1.3.6.1.4.1.14685.3.1.259.1",
+        [
+            "1",  # dpStatusRaidLogicaldrivetatusControllerID
+            "2",  # dpStatusRaidLogicaldrivetatusLogicalDriveID
+            "4",  # dpStatusRaidLogicaldrivetatusRaidLevel
+            "5",  # dpStatusRaidLogicaldrivetatusNumPhysicalDrives
+            "6",  # dpStatusRaidLogicaldrivetatusState
+        ]),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0") in
+                          [".1.3.6.1.4.1.14685.1.7", ".1.3.6.1.4.1.14685.1.3"],
 }

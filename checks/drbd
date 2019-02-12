@@ -287,9 +287,8 @@ def check_drbd_general(item, params, info):
     if isinstance(params, tuple):
         params_conv = {}
         params_conv.update({"roles_inventory": params[0] and params[0] or None})
-        params_conv.update({
-            "diskstates_inventory": (params[0] and params[1]) and params[1] or None
-        })
+        params_conv.update(
+            {"diskstates_inventory": (params[0] and params[1]) and params[1] or None})
         params = params_conv
 
     if not parsed is None:

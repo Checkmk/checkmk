@@ -55,8 +55,8 @@ check_info['hp_webmgmt_status'] = {
     'check_function': check_hp_webmgmt_status,
     'inventory_function': inventory_hp_webmgmt_status,
     'service_description': "Status %s",
-    'snmp_scan_function':
-        lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.11") and oid(".1.3.6.1.4.1.11.2.36.1.1.5.1.1.*"),
+    'snmp_scan_function': lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.11") and
+                          oid(".1.3.6.1.4.1.11.2.36.1.1.5.1.1.*"),
     'snmp_info': [
         (
             '.1.3.6.1.4.1.11.2.36.1.1.5.1.1',

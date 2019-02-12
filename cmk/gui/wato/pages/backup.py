@@ -189,8 +189,8 @@ class ModeAjaxBackupJobState(WatoWebApiMode):
         page.show_job_details()
 
 
-cmk.gui.pages.register_page_handler("ajax_backup_job_state",
-                                    lambda: ModeAjaxBackupJobState().page())
+cmk.gui.pages.register_page_handler(
+    "ajax_backup_job_state", lambda: ModeAjaxBackupJobState().page())
 
 
 class SiteBackupKeypairStore(backup.BackupKeypairStore):

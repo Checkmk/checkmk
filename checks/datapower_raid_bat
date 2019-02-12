@@ -65,16 +65,20 @@ def check_datapower_raid_bat(item, _no_params, info):
                     % (state_txt, name, type_txt, serial)
             return state, infotext
 
+
 check_info['datapower_raid_bat'] = {
-    "inventory_function"      : inventory_datapower_raid_bat,
-    "check_function"          : check_datapower_raid_bat,
-    "service_description"     : "Raid Battery %s",
-    "snmp_info"               : ( ".1.3.6.1.4.1.14685.3.1.258.1", [
-                                  "1",  # dpStatusRaidBatteryBackUpStatusControllerID
-                                  "2",  # dpStatusRaidBatteryBackUpStatusBatteryType
-                                  "3",  # dpStatusRaidBatteryBackUpStatusSerial
-                                  "4",  # dpStatusRaidBatteryBackUpStatusName
-                                  "5",  # dpStatusRaidBatteryBackUpStatusStatus
-                              ]),
-    "snmp_scan_function"      : lambda oid: oid(".1.3.6.1.2.1.1.2.0") in [ ".1.3.6.1.4.1.14685.1.7",  ".1.3.6.1.4.1.14685.1.3" ],
+    "inventory_function": inventory_datapower_raid_bat,
+    "check_function": check_datapower_raid_bat,
+    "service_description": "Raid Battery %s",
+    "snmp_info": (
+        ".1.3.6.1.4.1.14685.3.1.258.1",
+        [
+            "1",  # dpStatusRaidBatteryBackUpStatusControllerID
+            "2",  # dpStatusRaidBatteryBackUpStatusBatteryType
+            "3",  # dpStatusRaidBatteryBackUpStatusSerial
+            "4",  # dpStatusRaidBatteryBackUpStatusName
+            "5",  # dpStatusRaidBatteryBackUpStatusStatus
+        ]),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0") in
+                          [".1.3.6.1.4.1.14685.1.7", ".1.3.6.1.4.1.14685.1.3"],
 }

@@ -484,8 +484,8 @@ def register_legacy_command(spec):
             "permission": property(lambda s: permission_registry[s._spec["permission"]]),
             "tables": property(lambda s: s._spec["tables"]),
             "render": lambda s: s._spec["render"](),
-            "action":
-                lambda s, cmdtag, spec, row, row_index, num_rows: s._spec["action"](cmdtag, spec, row),
+            "action": lambda s, cmdtag, spec, row, row_index, num_rows: s._spec["action"]
+                      (cmdtag, spec, row),
             "group": lambda s: command_group_registry[s._spec.get("group", "various")],
             "only_view": lambda s: s._spec.get("only_view"),
         })

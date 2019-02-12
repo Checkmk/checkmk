@@ -79,14 +79,15 @@ def check_netapp_api_snapshots(item, params, parsed):
                                                  get_bytes_human_readable(volume_total)),\
                                                  [("bytes", snapshot_total, 0, 0, 0, reserved_bytes)]
 
+
 check_info["netapp_api_snapshots"] = {
-    'parse_function'          : lambda info: netapp_api_parse_lines(info,
-                                custom_keys = ["volume_snapshot"], as_dict_list = True),
-    'check_function'          : check_netapp_api_snapshots,
-    'inventory_function'      : inventory_netapp_api_snapshots,
-    "default_levels_variable" : "netapp_api_snapshots_default_levels",
-    'service_description'     : 'Snapshots Volume %s',
-    'group'                   : "netapp_snapshots",
-    'has_perfdata'            : True,
-    'includes'                : ["netapp_api.include"]
+    'parse_function': lambda info: netapp_api_parse_lines(
+        info, custom_keys=["volume_snapshot"], as_dict_list=True),
+    'check_function': check_netapp_api_snapshots,
+    'inventory_function': inventory_netapp_api_snapshots,
+    "default_levels_variable": "netapp_api_snapshots_default_levels",
+    'service_description': 'Snapshots Volume %s',
+    'group': "netapp_snapshots",
+    'has_perfdata': True,
+    'includes': ["netapp_api.include"]
 }

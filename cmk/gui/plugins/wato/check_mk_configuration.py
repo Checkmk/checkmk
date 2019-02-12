@@ -1022,23 +1022,23 @@ class ConfigVariableUserLocalizations(ConfigVariable):
 
     def valuespec(self):
         return Transform(
-        ListOf(
-            Tuple(
-                elements=[
-                    TextUnicode(title=_("Original Text"), size=40),
-                    Dictionary(
-                        title=_("Translations"),
-                        elements=lambda: [(l or "en", TextUnicode(title=a, size=32))
-                                          for (l, a) in cmk.gui.i18n.get_languages()],
-                        columns=2,
-                    ),
-                ],),
-            title=_("Custom localizations"),
-            movable=False,
-            totext=_("%d translations"),
-        ),
-        forth=lambda d: sorted(d.items()),
-        back=dict,
+            ListOf(
+                Tuple(
+                    elements=[
+                        TextUnicode(title=_("Original Text"), size=40),
+                        Dictionary(
+                            title=_("Translations"),
+                            elements=lambda: [(l or "en", TextUnicode(title=a, size=32))
+                                              for (l, a) in cmk.gui.i18n.get_languages()],
+                            columns=2,
+                        ),
+                    ],),
+                title=_("Custom localizations"),
+                movable=False,
+                totext=_("%d translations"),
+            ),
+            forth=lambda d: sorted(d.items()),
+            back=dict,
         )
 
 
@@ -4694,8 +4694,8 @@ class RulespecCheckMkAgentTargetVersions(HostRulespec):
             ),
             # In the past, this was a OptionalDropdownChoice() which values could be strings:
             # ignore, site or a custom string representing a version number.
-            forth=
-            lambda x: isinstance(x, str) and x not in ["ignore", "site"] and ("specific", x) or x,
+            forth=lambda x: isinstance(x, str) and x not in ["ignore", "site"] and ("specific", x)
+            or x,
         )
 
 

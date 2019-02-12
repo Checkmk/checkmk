@@ -311,7 +311,8 @@ def execute_check(multi_host_sections, hostname, ipaddress, check_plugin_name, i
 
         check_function = config.check_info[check_plugin_name].get("check_function")
         if check_function is None:
-            check_function = lambda item, params, section_content: (3, 'UNKNOWN - Check not implemented')
+            check_function = lambda item, params, section_content: (
+                3, 'UNKNOWN - Check not implemented')
 
         # Call the actual check function
         item_state.reset_wrapped_counters()

@@ -197,173 +197,177 @@ class RulespecSpecialAgentsVsphere(HostRulespec):
     @property
     def valuespec(self):
         return Transform(
-        valuespec=Dictionary(
-            elements=[
-                ("user", TextAscii(
-                    title=_("vSphere User name"),
-                    allow_empty=False,
-                )),
-                ("secret", Password(
-                    title=_("vSphere secret"),
-                    allow_empty=False,
-                )),
-                ("direct",
-                 DropdownChoice(
-                     title=_("Type of query"),
-                     choices=[
-                         (True, _("Queried host is a host system")),
-                         ("hostsystem_agent",
-                          _("Queried host is a host system with Check_MK Agent installed")),
-                         (False, _("Queried host is the vCenter")),
-                         ("agent", _("Queried host is the vCenter with Check_MK Agent installed")),
-                     ],
-                     default=True,
-                 )),
-                ("tcp_port",
-                 Integer(
-                     title=_("TCP Port number"),
-                     help=_("Port number for HTTPS connection to vSphere"),
-                     default_value=443,
-                     minvalue=1,
-                     maxvalue=65535,
-                 )),
-                ("ssl",
-                 Alternative(
-                     title=_("SSL certificate checking"),
-                     elements=[
-                         FixedValue(False, title=_("Deactivated"), totext=""),
-                         FixedValue(True, title=_("Use hostname"), totext=""),
-                         TextAscii(
-                             title=_("Use other hostname"),
-                             help=
-                             _("The IP of the other hostname needs to be the same IP as the host address"
-                              ))
-                     ],
-                     default_value=False)),
-                ("timeout",
-                 Integer(
-                     title=_("Connect Timeout"),
-                     help=_(
-                         "The network timeout in seconds when communicating with vSphere or "
-                         "to the Check_MK Agent. The default is 60 seconds. Please note that this "
-                         "is not a total timeout but is applied to each individual network transation."
-                     ),
-                     default_value=60,
-                     minvalue=1,
-                     unit=_("seconds"),
-                 )),
-                ("use_pysphere",
-                 Checkbox(
-                     title=_("Compatibility mode"),
-                     label=_("Support ESX 4.1 (using slower PySphere implementation)"),
-                     true_label=_("Support 4.1"),
-                     false_label=_("fast"),
-                     help=_("The current very performant implementation of the ESX special agent "
-                            "does not support older ESX versions than 5.0. Please use the slow "
-                            "compatibility mode for those old hosts."),
-                 )),
-                ("infos",
-                 Transform(
-                     ListChoice(
+            valuespec=Dictionary(
+                elements=[
+                    ("user", TextAscii(
+                        title=_("vSphere User name"),
+                        allow_empty=False,
+                    )),
+                    ("secret", Password(
+                        title=_("vSphere secret"),
+                        allow_empty=False,
+                    )),
+                    ("direct",
+                     DropdownChoice(
+                         title=_("Type of query"),
                          choices=[
-                             ("hostsystem", _("Host Systems")),
-                             ("virtualmachine", _("Virtual Machines")),
-                             ("datastore", _("Datastores")),
-                             ("counters", _("Performance Counters")),
-                             ("licenses", _("License Usage")),
+                             (True, _("Queried host is a host system")),
+                             ("hostsystem_agent",
+                              _("Queried host is a host system with Check_MK Agent installed")),
+                             (False, _("Queried host is the vCenter")),
+                             ("agent",
+                              _("Queried host is the vCenter with Check_MK Agent installed")),
                          ],
-                         default_value=["hostsystem", "virtualmachine", "datastore", "counters"],
-                         allow_empty=False,
-                     ),
-                     forth=lambda v: [x.replace("storage", "datastore") for x in v],
-                     title=_("Retrieve information about..."),
-                 )),
-                ("skip_placeholder_vms",
-                 Checkbox(
-                     title=_("Placeholder VMs"),
-                     label=_("Do no monitor placeholder VMs"),
-                     default_value=True,
-                     true_label=_("ignore"),
-                     false_label=_("monitor"),
-                     help=
-                     _("Placeholder VMs are created by the Site Recovery Manager(SRM) and act as backup "
-                       "virtual machines in case the default vm is unable to start. This option tells the "
-                       "vsphere agent to exclude placeholder vms in its output."))),
-                ("host_pwr_display",
-                 DropdownChoice(
-                     title=_("Display ESX Host power state on"),
-                     choices=[
-                         (None, _("The queried ESX system (vCenter / Host)")),
-                         ("esxhost", _("The ESX Host")),
-                         ("vm", _("The Virtual Machine")),
-                     ],
-                     default=None,
-                 )),
-                ("vm_pwr_display",
-                 DropdownChoice(
-                     title=_("Display VM power state <i>additionally</i> on"),
-                     help=_("The power state can be displayed additionally either "
-                            "on the ESX host or the VM. This will result in services "
-                            "for <i>both</i> the queried system and the ESX host / VM. "
-                            "By disabling the unwanted services it is then possible "
-                            "to configure where the services are displayed."),
-                     choices=[
-                         (None, _("The queried ESX system (vCenter / Host)")),
-                         ("esxhost", _("The ESX Host")),
-                         ("vm", _("The Virtual Machine")),
-                     ],
-                     default=None,
-                 )),
-                ("snapshot_display",
-                 DropdownChoice(
-                     title=_("<i>Additionally</i> display snapshots on"),
-                     help=_("The created snapshots can be displayed additionally either "
-                            "on the ESX host or the vCenter. This will result in services "
-                            "for <i>both</i> the queried system and the ESX host / vCenter. "
-                            "By disabling the unwanted services it is then possible "
-                            "to configure where the services are displayed."),
-                     choices=[
-                         (None, _("The Virtual Machine")),
-                         ("esxhost", _("The ESX Host")),
-                         ("vCenter", _("The queried ESX system (vCenter / Host)")),
-                     ],
-                     default=None,
-                 )),
-                ("vm_piggyname",
-                 DropdownChoice(
-                     title=_("Piggyback name of virtual machines"),
-                     choices=[
-                         ("alias", _("Use the name specified in the ESX system")),
-                         ("hostname",
-                          _("Use the VMs hostname if set, otherwise fall back to ESX name")),
-                     ],
-                     default="alias",
-                 )),
-                ("spaces",
-                 DropdownChoice(
-                     title=_("Spaces in hostnames"),
-                     choices=[
-                         ("cut", _("Cut everything after first space")),
-                         ("underscore", _("Replace with underscores")),
-                     ],
-                     default="underscore",
-                 )),
-            ],
-            optional_keys=[
-                "tcp_port",
-                "timeout",
-                "vm_pwr_display",
-                "host_pwr_display",
-                "snapshot_display",
-                "vm_piggyname",
-            ],
-        ),
-        title=_("Check state of VMWare ESX via vSphere"),
-        help=_("This rule selects the vSphere agent instead of the normal Check_MK Agent "
-               "and allows monitoring of VMWare ESX via the vSphere API. You can configure "
-               "your connection settings here."),
-        forth=lambda a: dict([("skip_placeholder_vms", True), ("ssl", False), ("use_pysphere" , False), ("spaces", "underscore")] + a.items())
-        )
+                         default=True,
+                     )),
+                    ("tcp_port",
+                     Integer(
+                         title=_("TCP Port number"),
+                         help=_("Port number for HTTPS connection to vSphere"),
+                         default_value=443,
+                         minvalue=1,
+                         maxvalue=65535,
+                     )),
+                    ("ssl",
+                     Alternative(
+                         title=_("SSL certificate checking"),
+                         elements=[
+                             FixedValue(False, title=_("Deactivated"), totext=""),
+                             FixedValue(True, title=_("Use hostname"), totext=""),
+                             TextAscii(
+                                 title=_("Use other hostname"),
+                                 help=
+                                 _("The IP of the other hostname needs to be the same IP as the host address"
+                                  ))
+                         ],
+                         default_value=False)),
+                    ("timeout",
+                     Integer(
+                         title=_("Connect Timeout"),
+                         help=
+                         _("The network timeout in seconds when communicating with vSphere or "
+                           "to the Check_MK Agent. The default is 60 seconds. Please note that this "
+                           "is not a total timeout but is applied to each individual network transation."
+                          ),
+                         default_value=60,
+                         minvalue=1,
+                         unit=_("seconds"),
+                     )),
+                    ("use_pysphere",
+                     Checkbox(
+                         title=_("Compatibility mode"),
+                         label=_("Support ESX 4.1 (using slower PySphere implementation)"),
+                         true_label=_("Support 4.1"),
+                         false_label=_("fast"),
+                         help=_(
+                             "The current very performant implementation of the ESX special agent "
+                             "does not support older ESX versions than 5.0. Please use the slow "
+                             "compatibility mode for those old hosts."),
+                     )),
+                    ("infos",
+                     Transform(
+                         ListChoice(
+                             choices=[
+                                 ("hostsystem", _("Host Systems")),
+                                 ("virtualmachine", _("Virtual Machines")),
+                                 ("datastore", _("Datastores")),
+                                 ("counters", _("Performance Counters")),
+                                 ("licenses", _("License Usage")),
+                             ],
+                             default_value=[
+                                 "hostsystem", "virtualmachine", "datastore", "counters"
+                             ],
+                             allow_empty=False,
+                         ),
+                         forth=lambda v: [x.replace("storage", "datastore") for x in v],
+                         title=_("Retrieve information about..."),
+                     )),
+                    ("skip_placeholder_vms",
+                     Checkbox(
+                         title=_("Placeholder VMs"),
+                         label=_("Do no monitor placeholder VMs"),
+                         default_value=True,
+                         true_label=_("ignore"),
+                         false_label=_("monitor"),
+                         help=
+                         _("Placeholder VMs are created by the Site Recovery Manager(SRM) and act as backup "
+                           "virtual machines in case the default vm is unable to start. This option tells the "
+                           "vsphere agent to exclude placeholder vms in its output."))),
+                    ("host_pwr_display",
+                     DropdownChoice(
+                         title=_("Display ESX Host power state on"),
+                         choices=[
+                             (None, _("The queried ESX system (vCenter / Host)")),
+                             ("esxhost", _("The ESX Host")),
+                             ("vm", _("The Virtual Machine")),
+                         ],
+                         default=None,
+                     )),
+                    ("vm_pwr_display",
+                     DropdownChoice(
+                         title=_("Display VM power state <i>additionally</i> on"),
+                         help=_("The power state can be displayed additionally either "
+                                "on the ESX host or the VM. This will result in services "
+                                "for <i>both</i> the queried system and the ESX host / VM. "
+                                "By disabling the unwanted services it is then possible "
+                                "to configure where the services are displayed."),
+                         choices=[
+                             (None, _("The queried ESX system (vCenter / Host)")),
+                             ("esxhost", _("The ESX Host")),
+                             ("vm", _("The Virtual Machine")),
+                         ],
+                         default=None,
+                     )),
+                    ("snapshot_display",
+                     DropdownChoice(
+                         title=_("<i>Additionally</i> display snapshots on"),
+                         help=_("The created snapshots can be displayed additionally either "
+                                "on the ESX host or the vCenter. This will result in services "
+                                "for <i>both</i> the queried system and the ESX host / vCenter. "
+                                "By disabling the unwanted services it is then possible "
+                                "to configure where the services are displayed."),
+                         choices=[
+                             (None, _("The Virtual Machine")),
+                             ("esxhost", _("The ESX Host")),
+                             ("vCenter", _("The queried ESX system (vCenter / Host)")),
+                         ],
+                         default=None,
+                     )),
+                    ("vm_piggyname",
+                     DropdownChoice(
+                         title=_("Piggyback name of virtual machines"),
+                         choices=[
+                             ("alias", _("Use the name specified in the ESX system")),
+                             ("hostname",
+                              _("Use the VMs hostname if set, otherwise fall back to ESX name")),
+                         ],
+                         default="alias",
+                     )),
+                    ("spaces",
+                     DropdownChoice(
+                         title=_("Spaces in hostnames"),
+                         choices=[
+                             ("cut", _("Cut everything after first space")),
+                             ("underscore", _("Replace with underscores")),
+                         ],
+                         default="underscore",
+                     )),
+                ],
+                optional_keys=[
+                    "tcp_port",
+                    "timeout",
+                    "vm_pwr_display",
+                    "host_pwr_display",
+                    "snapshot_display",
+                    "vm_piggyname",
+                ],
+            ),
+            title=_("Check state of VMWare ESX via vSphere"),
+            help=_("This rule selects the vSphere agent instead of the normal Check_MK Agent "
+                   "and allows monitoring of VMWare ESX via the vSphere API. You can configure "
+                   "your connection settings here."),
+            forth=lambda a: dict([("skip_placeholder_vms", True), ("ssl", False),
+                                  ("use_pysphere", False), ("spaces", "underscore")] + a.items()))
 
 
 @rulespec_registry.register

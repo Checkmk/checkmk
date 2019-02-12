@@ -388,5 +388,5 @@ class ModeAjaxProfileReplication(WatoWebApiMode):
         return result
 
 
-cmk.gui.pages.register_page_handler("wato_ajax_profile_repl",
-                                    lambda: ModeAjaxProfileReplication().handle_page())
+cmk.gui.pages.register_page_handler(
+    "wato_ajax_profile_repl", lambda: ModeAjaxProfileReplication().handle_page())

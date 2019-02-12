@@ -92,53 +92,44 @@ class RulespecCheckgroupParametersWinDhcpPools(CheckParameterRulespecWithItem):
     @property
     def parameter_valuespec(self):
         return Transform(
-        Dictionary(
-            elements = [
+            Dictionary(elements=[
                 ("free_leases",
-                    Alternative(
-                        title = _("Free leases levels"),
-                        elements = [
-                            Tuple(
-                                title = _("Free leases levels in percent"),
-                                elements = [
-                                    Percentage(title = _("Warning if below"),  default_value = 10.0),
-                                    Percentage(title = _("Critical if below"), default_value = 5.0)
-                                ]
-                            ),
-                            Tuple(
-                                title = _("Absolute free leases levels"),
-                                elements = [
-                                    Integer(title = _("Warning if below"),  unit = _("free leases")),
-                                    Integer(title = _("Critical if below"), unit = _("free leases"))
-                                ]
-                            )
-                        ]
-                    )
-                ),
+                 Alternative(
+                     title=_("Free leases levels"),
+                     elements=[
+                         Tuple(
+                             title=_("Free leases levels in percent"),
+                             elements=[
+                                 Percentage(title=_("Warning if below"), default_value=10.0),
+                                 Percentage(title=_("Critical if below"), default_value=5.0)
+                             ]),
+                         Tuple(
+                             title=_("Absolute free leases levels"),
+                             elements=[
+                                 Integer(title=_("Warning if below"), unit=_("free leases")),
+                                 Integer(title=_("Critical if below"), unit=_("free leases"))
+                             ])
+                     ])),
                 ("used_leases",
-                    Alternative(
-                        title = _("Used leases levels"),
-                        elements = [
-                            Tuple(
-                                title = _("Used leases levels in percent"),
-                                elements = [
-                                    Percentage(title = _("Warning if below")),
-                                    Percentage(title = _("Critical if below"))
-                                ]
-                            ),
-                            Tuple(
-                                title = _("Absolute used leases levels"),
-                                elements = [
-                                    Integer(title = _("Warning if below"),  unit = _("used leases")),
-                                    Integer(title = _("Critical if below"), unit = _("used leases"))
-                                ]
-                            )
-                        ]
-                    )
-                ),
-            ]
-        ),
-        forth = lambda params: isinstance(params, tuple) and {"free_leases" : (float(params[0],), float(params[1],))} or params,
+                 Alternative(
+                     title=_("Used leases levels"),
+                     elements=[
+                         Tuple(
+                             title=_("Used leases levels in percent"),
+                             elements=[
+                                 Percentage(title=_("Warning if below")),
+                                 Percentage(title=_("Critical if below"))
+                             ]),
+                         Tuple(
+                             title=_("Absolute used leases levels"),
+                             elements=[
+                                 Integer(title=_("Warning if below"), unit=_("used leases")),
+                                 Integer(title=_("Critical if below"), unit=_("used leases"))
+                             ])
+                     ])),
+            ]),
+            forth=lambda params: isinstance(params, tuple) and
+            {"free_leases": (float(params[0],), float(params[1],))} or params,
         )
 
     @property

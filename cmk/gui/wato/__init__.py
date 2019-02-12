@@ -739,8 +739,8 @@ class PageDownloadAgentOutput(AgentOutputPage):
         html.write(file(preview_filepath).read())
 
 
-cmk.gui.pages.register_page_handler("download_agent_output",
-                                    lambda: PageDownloadAgentOutput().page())
+cmk.gui.pages.register_page_handler(
+    "download_agent_output", lambda: PageDownloadAgentOutput().page())
 
 #.
 #   .--Network Scan--------------------------------------------------------.

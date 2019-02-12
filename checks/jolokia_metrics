@@ -1018,40 +1018,57 @@ def check_jolokia_metrics_cache(metrics, totals, item, params, info):
 
 check_info["jolokia_metrics.cache_hits"] = {
     "includes": ["jolokia.include"],
-    "service_description" : "JVM %s Cache Usage",
-    "check_function"      : lambda item, params, parsed: check_jolokia_metrics_cache(["CacheHitPercentage", "ObjectCount"], ["CacheHits", "CacheMisses"], item, params, parsed),
-    "inventory_function"  : lambda info: inventory_jolokia_metrics_cache("cache_hits", ["CacheHitPercentage", "ObjectCount", "CacheHits", "CacheMisses"], info),
-    "has_perfdata"        : True,
+    "service_description": "JVM %s Cache Usage",
+    "check_function": lambda item, params, parsed: check_jolokia_metrics_cache(
+        ["CacheHitPercentage", "ObjectCount"], ["CacheHits", "CacheMisses"], item, params, parsed),
+    "inventory_function": lambda info: inventory_jolokia_metrics_cache(
+        "cache_hits", ["CacheHitPercentage", "ObjectCount", "CacheHits", "CacheMisses"], info),
+    "has_perfdata": True,
 }
 
 check_info["jolokia_metrics.in_memory"] = {
     "includes": ["jolokia.include"],
-    "service_description" : "JVM %s In Memory",
-    "check_function"      : lambda item, params, parsed: check_jolokia_metrics_cache(["InMemoryHitPercentage", "MemoryStoreObjectCount"], ["InMemoryHits", "InMemoryMisses"], item, params, parsed),
-    "inventory_function"  : lambda info: inventory_jolokia_metrics_cache("cache_hits", ["InMemoryHitPercentage", "MemoryStoreObjectCount", "InMemoryHits", "InMemoryMisses"], info),
-    "has_perfdata"        : True,
+    "service_description": "JVM %s In Memory",
+    "check_function": lambda item, params, parsed: check_jolokia_metrics_cache([
+        "InMemoryHitPercentage", "MemoryStoreObjectCount"
+    ], ["InMemoryHits", "InMemoryMisses"], item, params, parsed),
+    "inventory_function": lambda info: inventory_jolokia_metrics_cache(
+        "cache_hits", [
+            "InMemoryHitPercentage", "MemoryStoreObjectCount", "InMemoryHits", "InMemoryMisses"
+        ], info),
+    "has_perfdata": True,
 }
 
 check_info["jolokia_metrics.on_disk"] = {
     "includes": ["jolokia.include"],
-    "service_description" : "JVM %s On Disk",
-    "check_function"      : lambda item, params, parsed: check_jolokia_metrics_cache(["OnDiskHitPercentage", "DiskStoreObjectCount"], ["OnDiskHits", "OnDiskMisses"], item, params, parsed),
-    "inventory_function"  : lambda info: inventory_jolokia_metrics_cache("cache_hits", ["OnDiskHitPercentage", "DiskStoreObjectCount", "OnDiskHits", "OnDiskMisses"], info),
-    "has_perfdata"        : True,
+    "service_description": "JVM %s On Disk",
+    "check_function": lambda item, params, parsed: check_jolokia_metrics_cache([
+        "OnDiskHitPercentage", "DiskStoreObjectCount"
+    ], ["OnDiskHits", "OnDiskMisses"], item, params, parsed),
+    "inventory_function": lambda info: inventory_jolokia_metrics_cache(
+        "cache_hits", ["OnDiskHitPercentage", "DiskStoreObjectCount", "OnDiskHits", "OnDiskMisses"],
+        info),
+    "has_perfdata": True,
 }
 
 check_info["jolokia_metrics.off_heap"] = {
     "includes": ["jolokia.include"],
-    "service_description" : "JVM %s Off Heap",
-    "check_function"      : lambda item, params, parsed: check_jolokia_metrics_cache(["OffHeapHitPercentage", "OffHeapStoreObjectCount"], ["OffHeapHits", "OffHeapMisses"], item, params, parsed),
-    "inventory_function"  : lambda info: inventory_jolokia_metrics_cache("cache_hits", ["OffHeapHitPercentage", "OffHeapStoreObjectCount", "OffHeapHits", "OffHeapMisses"], info),
-    "has_perfdata"        : True,
+    "service_description": "JVM %s Off Heap",
+    "check_function": lambda item, params, parsed: check_jolokia_metrics_cache([
+        "OffHeapHitPercentage", "OffHeapStoreObjectCount"
+    ], ["OffHeapHits", "OffHeapMisses"], item, params, parsed),
+    "inventory_function": lambda info: inventory_jolokia_metrics_cache(
+        "cache_hits",
+        ["OffHeapHitPercentage", "OffHeapStoreObjectCount", "OffHeapHits", "OffHeapMisses"], info),
+    "has_perfdata": True,
 }
 
 check_info["jolokia_metrics.writer"] = {
     "includes": ["jolokia.include"],
-    "service_description" : "JVM %s Cache Writer",
-    "check_function"      : lambda item, params, parsed: check_jolokia_metrics_cache(["WriterQueueLength", "WriterMaxQueueSize"], [], item, params, parsed),
-    "inventory_function"  : lambda info: inventory_jolokia_metrics_cache("cache_hits", ["WriterQueueLength", "WriterMaxQueueSize"], info),
-    "has_perfdata"        : True,
+    "service_description": "JVM %s Cache Writer",
+    "check_function": lambda item, params, parsed: check_jolokia_metrics_cache(
+        ["WriterQueueLength", "WriterMaxQueueSize"], [], item, params, parsed),
+    "inventory_function": lambda info: inventory_jolokia_metrics_cache(
+        "cache_hits", ["WriterQueueLength", "WriterMaxQueueSize"], info),
+    "has_perfdata": True,
 }

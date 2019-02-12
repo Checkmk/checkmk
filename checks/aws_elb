@@ -87,8 +87,8 @@ def check_aws_elb_statistics(item, params, parsed):
 
 check_info['aws_elb'] = {
     'parse_function': parse_aws_elb,
-    'inventory_function':
-        lambda p: inventory_aws_elb_generic(p, ['SurgeQueueLength', 'SpilloverCount']),
+    'inventory_function': lambda p: inventory_aws_elb_generic(
+        p, ['SurgeQueueLength', 'SpilloverCount']),
     'check_function': check_aws_elb_statistics,
     'service_description': 'AWS/ELB Statistics',
     'includes': ['aws.include'],
@@ -170,8 +170,8 @@ def check_aws_elb_http_elb(item, params, parsed):
 
 
 check_info['aws_elb.http_elb'] = {
-    'inventory_function':
-        lambda p: inventory_aws_elb_generic(p, ['RequestCount', 'HTTPCode_ELB_4XX', 'HTTPCode_ELB_5XX']),
+    'inventory_function': lambda p: inventory_aws_elb_generic(
+        p, ['RequestCount', 'HTTPCode_ELB_4XX', 'HTTPCode_ELB_5XX']),
     'check_function': check_aws_elb_http_elb,
     'service_description': 'AWS/ELB HTTP ELB',
     'has_perfdata': True,
@@ -229,7 +229,10 @@ def check_aws_elb_http_backend(item, params, parsed):
 
 
 check_info['aws_elb.http_backend'] = {
-    'inventory_function': lambda p: inventory_aws_elb_generic(p, ['RequestCount', 'HTTPCode_Backend_2XX', 'HTTPCode_Backend_3XX', 'HTTPCode_Backend_4XX', 'HTTPCode_Backend_5XX']),
+    'inventory_function': lambda p: inventory_aws_elb_generic(p, [
+        'RequestCount', 'HTTPCode_Backend_2XX', 'HTTPCode_Backend_3XX', 'HTTPCode_Backend_4XX',
+        'HTTPCode_Backend_5XX'
+    ]),
     'check_function': check_aws_elb_http_backend,
     'service_description': 'AWS/ELB HTTP Backend',
     'has_perfdata': True,
@@ -283,8 +286,8 @@ def check_aws_elb_healthy_hosts(item, params, parsed):
 
 
 check_info['aws_elb.healthy_hosts'] = {
-    'inventory_function':
-        lambda p: inventory_aws_elb_generic(p, ['HealthyHostCount', 'UnHealthyHostCount']),
+    'inventory_function': lambda p: inventory_aws_elb_generic(
+        p, ['HealthyHostCount', 'UnHealthyHostCount']),
     'check_function': check_aws_elb_healthy_hosts,
     'service_description': 'AWS/ELB Healthy Hosts',
     'group': 'aws_elb_healthy_hosts',

@@ -1,0 +1,11 @@
+Title: Fixed problem where persistent information of hosts was randomly missing, causing services to go stale
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1549970984
+
+

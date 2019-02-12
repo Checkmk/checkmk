@@ -35,32 +35,32 @@ def _get_tag_options(tag_values, prefix):
     return options
 
 
-def _get_services_choice(services):
+def _get_services_selection(services):
     # '--services': {
-    #   's3': {'choice': ('tags', [('KEY', ['VAL1', 'VAL2'])])},
-    #   'ec2': {'choice': 'all'},
-    #   'ebs': {'choice': ('names', ['ebs1', 'ebs2'])},
+    #   's3': {'selection': ('tags', [('KEY', ['VAL1', 'VAL2'])])},
+    #   'ec2': {'selection': 'all'},
+    #   'ebs': {'selection': ('names', ['ebs1', 'ebs2'])},
     # }
     service_args = []
-    for service_name, service_choice in services.iteritems():
-        if service_choice is None:
+    for service_name, service_selection in services.iteritems():
+        if service_selection is None:
             continue
 
-        choice = service_choice.get('choice')
-        if not isinstance(choice, tuple):
+        selection = service_selection.get('selection')
+        if not isinstance(selection, tuple):
             # 'all' is handled by services.keys()
             continue
 
-        choice_type, choice_values = choice
-        if not choice_values:
+        selection_type, selection_values = selection
+        if not selection_values:
             continue
 
-        if choice_type == "names":
+        if selection_type == "names":
             service_args.append("--%s-names" % service_name)
-            service_args += choice_values
+            service_args += selection_values
 
-        elif choice_type == "tags":
-            service_args += _get_tag_options(choice_values, service_name)
+        elif selection_type == "tags":
+            service_args += _get_tag_options(selection_values, service_name)
     return service_args
 
 
@@ -87,7 +87,7 @@ def agent_aws_arguments(params, hostname, ipaddress):
         # We need to sort the inner services-as-a-dict-params
         # in order to create reliable tests
         args += sorted(services.keys())
-        args += _get_services_choice(services)
+        args += _get_services_selection(services)
 
     # '--overall-tags': [('KEY_1', ['VAL_1', 'VAL_2']), ...)],
     args += _get_tag_options(params.get('overall_tags', []), 'overall')

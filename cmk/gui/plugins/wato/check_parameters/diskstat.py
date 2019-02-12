@@ -126,6 +126,18 @@ class RulespecCheckgroupParametersDiskstat(CheckParameterRulespecWithItem):
                      unit=_("ms"),
                      default_levels=(80.0, 160.0),
                  )),
+                ("read_latency",
+                 Levels(
+                     title=_("Disk Read Latency"),
+                     unit=_("ms"),
+                     default_levels=(80.0, 160.0),
+                 )),
+                ("write_latency",
+                 Levels(
+                     title=_("Disk Write Latency"),
+                     unit=_("ms"),
+                     default_levels=(80.0, 160.0),
+                 )),
                 ("read_wait", Levels(
                     title=_("Read wait"), unit=_("ms"), default_levels=(30.0, 50.0))),
                 ("write_wait",

@@ -1,0 +1,12 @@
+Title: diskstat.include: Read/write latency are configurable now
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1549986859
+Class: feature
+
+Nearly all check plugins which use the diskstat.include in order to check
+disk IO provide an average value for the disk latency. Newer checks may
+provide values for disk read and write latency.

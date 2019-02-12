@@ -1057,12 +1057,12 @@ class EBS(AWSSectionCloudwatch):
                 ("VolumeReadBytes", "Bytes", []),
                 ("VolumeWriteBytes", "Bytes", []),
                 ("VolumeQueueLength", "Count", []),
+                ("BurstBalance", "Percent", ["gp2", "st1", "sc1"]),
                     #("VolumeThroughputPercentage", "Percent", ["io1"]),
                     #("VolumeConsumedReadWriteOps", "Count", ["io1"]),
                     #("VolumeTotalReadTime", "Seconds", []),
                     #("VolumeTotalWriteTime", "Seconds", []),
                     #("VolumeIdleTime", "Seconds", []),
-                    #("BurstBalance", "Percent", ["gp2", "st1", "sc1"]),
                     #("VolumeStatus", None, []),
                     #("IOPerformance", None, ["io1"]),
             ]:

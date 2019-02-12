@@ -217,7 +217,8 @@ class AWSSection(object):
         else:
             raw_content = self._fetch_raw_content(colleague_contents)
             # TODO: Write cache only when _compute_section_content succeeded?
-            self._write_to_cache(raw_content)
+            if use_cache:
+                self._write_to_cache(raw_content)
             cache_timestamp = time.time()
         return AWSRawContent(raw_content, cache_timestamp)
 
@@ -1355,7 +1356,10 @@ def parse_arguments(argv):
         action="store_true",
         help="Log messages from AWS library 'boto3' and 'botocore'.")
     parser.add_argument(
-        "--no-cache", action="store_true", help="Execute all sections, do not rely on cached data.")
+        "--no-cache",
+        action="store_true",
+        help="Execute all sections, do not rely on cached data. Cached data will not be overwritten."
+    )
 
     parser.add_argument(
         "--access-key-id", required=True, help="The access key for your AWS account.")

@@ -169,8 +169,8 @@ def check_openhardwaremonitor(sensor_type, item, params, parsed):
 
 check_info['openhardwaremonitor'] = {
     'inventory_function': lambda parsed: inventory_openhardwaremonitor('Clock', parsed),
-    'check_function':
-        lambda item, params, parsed: check_openhardwaremonitor('Clock', item, params, parsed),
+    'check_function': lambda item, params, parsed: check_openhardwaremonitor(
+        'Clock', item, params, parsed),
     'parse_function': parse_openhardwaremonitor,
     'has_perfdata': True,
     'service_description': "Clock %s",
@@ -205,8 +205,8 @@ check_info['openhardwaremonitor.temperature'] = {
 
 check_info['openhardwaremonitor.power'] = {
     'inventory_function': lambda parsed: inventory_openhardwaremonitor('Power', parsed),
-    'check_function':
-        lambda item, params, parsed: check_openhardwaremonitor('Power', item, params, parsed),
+    'check_function': lambda item, params, parsed: check_openhardwaremonitor(
+        'Power', item, params, parsed),
     'has_perfdata': True,
     'service_description': "Power %s",
 }

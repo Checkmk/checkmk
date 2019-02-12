@@ -93,6 +93,5 @@ class RulespecCheckgroupParametersNetappDisks(CheckParameterRulespecWithoutItem)
                          ],
                      )),
                 ],),
-            forth=
-            lambda a: "broken_spare_ratio" in a and {"failed_spare_ratio": a["broken_spare_ratio"]} or a
-        )
+            forth=lambda a: "broken_spare_ratio" in a and
+            {"failed_spare_ratio": a["broken_spare_ratio"]} or a)

@@ -237,20 +237,19 @@ def check_skype(item, params, parsed):
 
 
 check_info['skype'] = {
-    'inventory_function'      : lambda table: inventory_wmi_table(table, required_tables=[
-        "LS:WEB - Address Book Web Query",
-        "LS:WEB - Location Information Service",
-        "LS:WEB - Distribution List Expansion",
-        "LS:WEB - UCWA",
-        "ASP.NET Apps v4.0.30319"
-    ]),
-    'check_function'          : check_skype,
-    'parse_function'          : lambda info: parse_wmi_table(info, key="instance"),
-    'has_perfdata'            : True,
-    'service_description'     : "Skype Web Components",
-    'includes'                : ['wmi.include'],
-    'group'                   : 'skype',
-    'default_levels_variable' : 'skype_defaultlevels'
+    'inventory_function': lambda table: inventory_wmi_table(
+        table,
+        required_tables=[
+            "LS:WEB - Address Book Web Query", "LS:WEB - Location Information Service",
+            "LS:WEB - Distribution List Expansion", "LS:WEB - UCWA", "ASP.NET Apps v4.0.30319"
+        ]),
+    'check_function': check_skype,
+    'parse_function': lambda info: parse_wmi_table(info, key="instance"),
+    'has_perfdata': True,
+    'service_description': "Skype Web Components",
+    'includes': ['wmi.include'],
+    'group': 'skype',
+    'default_levels_variable': 'skype_defaultlevels'
 }
 
 
@@ -284,15 +283,18 @@ def check_skype_mcu(item, params, parsed):
     yield health(parsed["LS:ImMcu - MCU Health And Performance"].get(0, "IMMCU - MCU Health State"),
                  "IMMCU")
 
+
 check_info['skype.mcu'] = {
-    'inventory_function'  : lambda parsed: inventory_wmi_table(parsed, required_tables = [
-        "LS:DATAMCU - MCU Health And Performance",
-        "LS:AVMCU - MCU Health And Performance",
-        "LS:AsMcu - MCU Health And Performance",
-        "LS:ImMcu - MCU Health And Performance",
-    ]),
-    'check_function'      : check_skype_mcu,
-    'service_description' : "Skype MCU Health",
+    'inventory_function': lambda parsed: inventory_wmi_table(
+        parsed,
+        required_tables=[
+            "LS:DATAMCU - MCU Health And Performance",
+            "LS:AVMCU - MCU Health And Performance",
+            "LS:AsMcu - MCU Health And Performance",
+            "LS:ImMcu - MCU Health And Performance",
+        ]),
+    'check_function': check_skype_mcu,
+    'service_description': "Skype MCU Health",
 }
 
 
@@ -327,17 +329,18 @@ def check_skype_conferencing(item, params, parsed):
 
 
 check_info['skype.conferencing'] = {
-    'inventory_function'      : lambda table: inventory_wmi_table(table, required_tables=[
-        "LS:CAA - Operations",
-        "LS:USrv - Conference Mcu Allocator",
-    ]),
-    'check_function'          : check_skype_conferencing,
-    'parse_function'          : lambda info: parse_wmi_table(info, key="instance"),
-    'has_perfdata'            : True,
-    'service_description'     : "Skype Conferencing",
-    'includes'                : ['wmi.include'],
-    'group'                   : 'skype_conferencing',
-    'default_levels_variable' : 'skype_conferencing_defaultlevels'
+    'inventory_function': lambda table: inventory_wmi_table(
+        table, required_tables=[
+            "LS:CAA - Operations",
+            "LS:USrv - Conference Mcu Allocator",
+        ]),
+    'check_function': check_skype_conferencing,
+    'parse_function': lambda info: parse_wmi_table(info, key="instance"),
+    'has_perfdata': True,
+    'service_description': "Skype Conferencing",
+    'includes': ['wmi.include'],
+    'group': 'skype_conferencing',
+    'default_levels_variable': 'skype_conferencing_defaultlevels'
 }
 
 
@@ -464,18 +467,20 @@ def check_skype_sip_stack(item, params, parsed):
 
 
 check_info['skype.sip_stack'] = {
-    'inventory_function'      : lambda parsed: inventory_wmi_table(parsed, required_tables=[
-        "LS:SIP - Protocol",
-        "LS:USrv - DBStore",
-        "LS:SIP - Responses",
-        "LS:SIP - Load Management",
-        "LS:SIP - Peers",
-    ]),
-    'check_function'          : check_skype_sip_stack,
-    'has_perfdata'            : True,
-    'service_description'     : "Skype SIP Stack",
-    'group'                   : 'skype_sip',
-    'default_levels_variable' : 'skype_sip_defaultlevels'
+    'inventory_function': lambda parsed: inventory_wmi_table(
+        parsed,
+        required_tables=[
+            "LS:SIP - Protocol",
+            "LS:USrv - DBStore",
+            "LS:SIP - Responses",
+            "LS:SIP - Load Management",
+            "LS:SIP - Peers",
+        ]),
+    'check_function': check_skype_sip_stack,
+    'has_perfdata': True,
+    'service_description': "Skype SIP Stack",
+    'group': 'skype_sip',
+    'default_levels_variable': 'skype_sip_defaultlevels'
 }
 
 
@@ -519,17 +524,19 @@ def check_skype_mediation_server(item, params, parsed):
 
 
 check_info['skype.mediation_server'] = {
-    'inventory_function'      : lambda parsed: inventory_wmi_table(parsed, required_tables=[
-        "LS:MediationServer - Health Indices",
-        "LS:MediationServer - Global Counters",
-        "LS:MediationServer - Global Per Gateway Counters",
-        "LS:MediationServer - Media Relay",
-    ]),
-    'check_function'          : check_skype_mediation_server,
-    'has_perfdata'            : True,
-    'service_description'     : "Skype Mediation Server",
-    'group'                   : 'skype_mediation_server',
-    'default_levels_variable' : 'skype_mediation_server_defaultlevels'
+    'inventory_function': lambda parsed: inventory_wmi_table(
+        parsed,
+        required_tables=[
+            "LS:MediationServer - Health Indices",
+            "LS:MediationServer - Global Counters",
+            "LS:MediationServer - Global Per Gateway Counters",
+            "LS:MediationServer - Media Relay",
+        ]),
+    'check_function': check_skype_mediation_server,
+    'has_perfdata': True,
+    'service_description': "Skype Mediation Server",
+    'group': 'skype_mediation_server',
+    'default_levels_variable': 'skype_mediation_server_defaultlevels'
 }
 
 
@@ -545,8 +552,8 @@ def check_skype_edge_auth(item, params, parsed):
 
 
 check_info['skype.edge_auth'] = {
-    'inventory_function':
-        lambda parsed: inventory_wmi_table(parsed, required_tables=["LS:A/V Auth - Requests"]),
+    'inventory_function': lambda parsed: inventory_wmi_table(
+        parsed, required_tables=["LS:A/V Auth - Requests"]),
     'check_function': check_skype_edge_auth,
     'has_perfdata': True,
     'service_description': "Skype Edge Authentification",
@@ -612,14 +619,13 @@ def check_skype_av_edge(item, params, parsed):
 
 
 check_info['skype.edge'] = {
-    'inventory_function'      : lambda parsed: inventory_wmi_table(parsed, required_tables=[
-        "LS:A/V Edge - TCP Counters",
-        "LS:A/V Edge - UDP Counters"]),
-    'check_function'          : check_skype_av_edge,
-    'has_perfdata'            : True,
-    'service_description'     : "Skype AV Edge %s",
-    'group'                   : 'skype_edge',
-    'default_levels_variable' : 'skype_edge_defaultlevels'
+    'inventory_function': lambda parsed: inventory_wmi_table(
+        parsed, required_tables=["LS:A/V Edge - TCP Counters", "LS:A/V Edge - UDP Counters"]),
+    'check_function': check_skype_av_edge,
+    'has_perfdata': True,
+    'service_description': "Skype AV Edge %s",
+    'group': 'skype_edge',
+    'default_levels_variable': 'skype_edge_defaultlevels'
 }
 
 
@@ -642,13 +648,13 @@ def check_skype_data_proxy(item, params, parsed):
 
 
 check_info['skype.data_proxy'] = {
-    'inventory_function'      : lambda parsed: inventory_wmi_table_instances(parsed, required_tables=[
-        "LS:DATAPROXY - Server Connections"]),
-    'check_function'          : check_skype_data_proxy,
-    'has_perfdata'            : True,
-    'service_description'     : "Skype Data Proxy %s",
-    'group'                   : 'skype_proxy',
-    'default_levels_variable' : 'skype_proxy_defaultlevels'
+    'inventory_function': lambda parsed: inventory_wmi_table_instances(
+        parsed, required_tables=["LS:DATAPROXY - Server Connections"]),
+    'check_function': check_skype_data_proxy,
+    'has_perfdata': True,
+    'service_description': "Skype Data Proxy %s",
+    'group': 'skype_proxy',
+    'default_levels_variable': 'skype_proxy_defaultlevels'
 }
 
 
@@ -673,13 +679,13 @@ def check_skype_xmpp_proxy(item, params, parsed):
 
 
 check_info['skype.xmpp_proxy'] = {
-    'inventory_function'      : lambda parsed: inventory_wmi_table(parsed, required_tables=[
-        "LS:XmppFederationProxy - Streams"]),
-    'check_function'          : check_skype_xmpp_proxy,
-    'has_perfdata'            : True,
-    'service_description'     : "Skype XMPP Proxy",
-    'group'                   : 'skype_xmpp',
-    'default_levels_variable' : 'skype_xmpp_defaultlevels'
+    'inventory_function': lambda parsed: inventory_wmi_table(
+        parsed, required_tables=["LS:XmppFederationProxy - Streams"]),
+    'check_function': check_skype_xmpp_proxy,
+    'has_perfdata': True,
+    'service_description': "Skype XMPP Proxy",
+    'group': 'skype_xmpp',
+    'default_levels_variable': 'skype_xmpp_defaultlevels'
 }
 
 
@@ -715,14 +721,16 @@ def check_skype_mobile(item, params, parsed):
         perfvar="web_requests_processing",
         levels=params['requests_processing'])
 
+
 check_info['skype.mobile'] = {
-    'inventory_function'      : lambda parsed: inventory_wmi_table(parsed, required_tables=[
-        "LS:WEB - UCWA",
-        "LS:WEB - Throttling and Authentication",
-    ]),
-    'check_function'          : check_skype_mobile,
-    'has_perfdata'            : True,
-    'service_description'     : "Skype Mobile Sessions",
-    'group'                   : 'skype_mobile',
-    'default_levels_variable' : 'skype_mobile_defaultlevels'
+    'inventory_function': lambda parsed: inventory_wmi_table(
+        parsed, required_tables=[
+            "LS:WEB - UCWA",
+            "LS:WEB - Throttling and Authentication",
+        ]),
+    'check_function': check_skype_mobile,
+    'has_perfdata': True,
+    'service_description': "Skype Mobile Sessions",
+    'group': 'skype_mobile',
+    'default_levels_variable': 'skype_mobile_defaultlevels'
 }

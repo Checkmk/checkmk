@@ -126,8 +126,8 @@ check_info["ups_cps_battery"] = {
     "inventory_function": inventory_ups_cps_battery,
     "check_function": check_ups_cps_battery,
     "service_description": "UPS Battery",
-    "snmp_scan_function":
-        lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.3808.1.1.1"),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.3808.1.1.1"
+                                                                          ),
     "snmp_info": (
         ".1.3.6.1.4.1.3808.1.1.1.2.2",
         [

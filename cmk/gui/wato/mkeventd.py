@@ -2513,8 +2513,8 @@ class ModeEventConsoleMIBs(EventConsoleMode):
         html.end_form()
 
         if not os.path.exists(cmk.gui.mkeventd.mib_upload_dir):
-            os.makedirs(cmk.gui.mkeventd.
-                        mib_upload_dir)  # Let exception happen if this fails. Never happens on OMD
+            os.makedirs(cmk.gui.mkeventd.mib_upload_dir
+                       )  # Let exception happen if this fails. Never happens on OMD
 
         for path, title in cmk.gui.mkeventd.mib_dirs:
             self._show_mib_table(path, title)
@@ -3527,8 +3527,9 @@ class ConfigVariableEventConsoleLogLevel(ConfigVariable):
             # Transform old values:
             # 0 -> normal logging
             # 1 -> verbose logging
-            forth=
-            lambda x: {"cmk.mkeventd": (cmk.utils.log.INFO if x == 0 else cmk.utils.log.VERBOSE)} if x in (0, 1) else x,
+            forth=lambda x: {
+                "cmk.mkeventd": (cmk.utils.log.INFO if x == 0 else cmk.utils.log.VERBOSE)
+            } if x in (0, 1) else x,
         )
 
     def _ec_log_level_elements(self):

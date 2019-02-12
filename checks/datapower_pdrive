@@ -74,21 +74,24 @@ def check_datapower_pdrive(item, _no_params, info):
             if fail:
                 yield datapower_pdrive_fail[fail]
 
-check_info['datapower_pdrive'] = {
-    "inventory_function"      : inventory_datapower_pdrive,
-    "check_function"          : check_datapower_pdrive,
-    "service_description"     : "Physical Drive %s",
-    "snmp_info"               : ( ".1.3.6.1.4.1.14685.3.1.260.1", [
-                                  "1",  # dpStatusRaidPhysicaldrivetatusControllerID
-                                  "2",  # dpStatusRaidPhysicaldrivetatusDeviceID
-                                  "4",  # dpStatusRaidPhysicaldrivetatusLogicalDriveID
-                                  "6",  # dpStatusRaidPhysicaldrivetatusPosition
-                                  "7",  # dpStatusRaidPhysicaldrivetatusState
-                                  "8",  # dpStatusRaidPhysicaldrivetatusProgressPercent
-                                  "14",  # dpStatusRaidPhysicaldrivetatusVendorID
-                                  "15",  # dpStatusRaidPhysicaldrivetatusProductID
-                                  "18",  # dpStatusRaidPhysicaldrivetatusFailure
-                              ]),
-    "snmp_scan_function"      : lambda oid: oid(".1.3.6.1.2.1.1.2.0") in [ ".1.3.6.1.4.1.14685.1.7",  ".1.3.6.1.4.1.14685.1.3" ],
 
+check_info['datapower_pdrive'] = {
+    "inventory_function": inventory_datapower_pdrive,
+    "check_function": check_datapower_pdrive,
+    "service_description": "Physical Drive %s",
+    "snmp_info": (
+        ".1.3.6.1.4.1.14685.3.1.260.1",
+        [
+            "1",  # dpStatusRaidPhysicaldrivetatusControllerID
+            "2",  # dpStatusRaidPhysicaldrivetatusDeviceID
+            "4",  # dpStatusRaidPhysicaldrivetatusLogicalDriveID
+            "6",  # dpStatusRaidPhysicaldrivetatusPosition
+            "7",  # dpStatusRaidPhysicaldrivetatusState
+            "8",  # dpStatusRaidPhysicaldrivetatusProgressPercent
+            "14",  # dpStatusRaidPhysicaldrivetatusVendorID
+            "15",  # dpStatusRaidPhysicaldrivetatusProductID
+            "18",  # dpStatusRaidPhysicaldrivetatusFailure
+        ]),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0") in
+                          [".1.3.6.1.4.1.14685.1.7", ".1.3.6.1.4.1.14685.1.3"],
 }

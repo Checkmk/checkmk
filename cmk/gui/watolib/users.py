@@ -359,8 +359,8 @@ def get_vs_flexible_notifications():
                                     ),
                                 ),
                             ]),
-                        title_function=
-                        lambda v: _("Notify by: ") + notification_script_title(v["plugin"]),
+                        title_function=lambda v: _("Notify by: ") + notification_script_title(v[
+                            "plugin"]),
                     ),
                     title=_("Flexible Custom Notifications"),
                     add_label=_("Add notification"),

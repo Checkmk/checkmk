@@ -93,6 +93,6 @@ check_info['emerson_stat'] = {
     "check_function": check_emerson_stat,
     "service_description": "Status",
     "snmp_info": (".1.3.6.1.4.1.6302.2.1.2.1", ["0"]),
-    "snmp_scan_function":
-        lambda oid: oid('.1.3.6.1.4.1.6302.2.1.1.1.0', "").startswith('Emerson Network Power'),
+    "snmp_scan_function": lambda oid: oid('.1.3.6.1.4.1.6302.2.1.1.1.0', "").startswith(
+        'Emerson Network Power'),
 }

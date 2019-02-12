@@ -197,8 +197,8 @@ unit_info["bytes/d"] = {
     "title": _("Bytes per day"),
     "symbol": _("B/d"),
     "render": lambda v: cmk.utils.render.fmt_bytes(v * 86400.0) + "/d",
-    "graph_unit":
-        lambda values: bytes_human_readable_list([v * 86400.0 for v in values], unit=_("B/d")),
+    "graph_unit": lambda values: bytes_human_readable_list([v * 86400.0 for v in values],
+                                                           unit=_("B/d")),
     "stepping": "binary",  # for vertical graph labels
 }
 

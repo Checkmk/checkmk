@@ -47,8 +47,8 @@ check_info["ups_cps_outphase"] = {
     "inventory_function": inventory_ups_cps_outphase,
     "check_function": check_elphase,
     "service_description": "UPS Output Phase %s",
-    "snmp_scan_function":
-        lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.3808.1.1.1"),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.3808.1.1.1"
+                                                                          ),
     "snmp_info": (
         ".1.3.6.1.4.1.3808.1.1.1.4.2",
         [

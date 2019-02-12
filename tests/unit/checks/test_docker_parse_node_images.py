@@ -14,9 +14,9 @@ execfile(os.path.join(os.path.dirname(__file__), '../../../checks/legacy_docker.
 
 
 REQUIRED_IMAGE_KEYS = (
-    ("ID", (str, unicode)),
+    ("Id", (str, unicode)),
     ("RepoTags", list),
-    ("CreatedAt", (str, unicode)),
+    ("Created", (str, unicode)),
     ("VirtualSize", int),
     ("Labels", dict),
     ("amount_containers", int),
@@ -24,11 +24,11 @@ REQUIRED_IMAGE_KEYS = (
 
 
 REQUIRED_CONTAINER_KEYS = (
-    ("ID", (str, unicode)),
+    ("Id", (str, unicode)),
     ("Image", (str, unicode)),
-    ("CreatedAt", (str, unicode)),
+    ("Created", (str, unicode)),
     ("Labels", dict),
-    ("Names", (str, unicode)),
+    ("Name", (str, unicode)),
     ("Status", (str, unicode)),
 )
 
@@ -476,7 +476,7 @@ SUBSECTIONS1 = {
 
 EXPECTED_IMAGES1 = {
     u'096300fde75d': {
-        u'CreatedAt': u'2018-09-13 08:15:30 +0200 CEST',
+        u'Created': u'2018-09-13 08:15:30 +0200 CEST',
         u'RepoTags': [u'checkmk/check-mk-enterprise:1.5.0-2018.09.13'],
         u'VirtualSize': 818000000,
         u'amount_containers': 0,
@@ -498,7 +498,7 @@ EXPECTED_IMAGES1 = {
         },
     },
     u'2e89feac7533': {
-        u'CreatedAt': u'2018-09-13 08:27:42 +0200 CEST',
+        u'Created': u'2018-09-13 08:27:42 +0200 CEST',
         u'RepoTags': ['docker-tests/check-mk-enterprise-master-2018.09.13:latest'],
         u'VirtualSize': 831400000,
         u'amount_containers': 0,
@@ -520,7 +520,7 @@ EXPECTED_IMAGES1 = {
         },
     },
     u'44a5d6d15272': {
-        u'CreatedAt': u'2018-09-14 12:45:50 +0200 CEST',
+        u'Created': u'2018-09-14 12:45:50 +0200 CEST',
         u'RepoTags': [u'checkmk/check-mk-enterprise:1.5.0-daily'],
         u'VirtualSize': 818000000,
         u'amount_containers': 0,
@@ -542,13 +542,13 @@ EXPECTED_IMAGES1 = {
         },
     },
     u'44e19a16bde1': {
-        u'CreatedAt': u'2018-09-04 23:21:34 +0200 CEST',
+        u'Created': u'2018-09-04 23:21:34 +0200 CEST',
         u'RepoTags': ['debian:stretch-slim'],
         u'VirtualSize': 55270000,
         u'amount_containers': 0,
     },
     u'4a77be28f8e5': {
-        u'CreatedAt': u'2018-09-28 23:54:16 +0200 CEST',
+        u'Created': u'2018-09-28 23:54:16 +0200 CEST',
         u'RepoTags': ['checkmk/check-mk-raw:1.5.0p5'],
         u'VirtualSize': 751900000,
         u'amount_containers': 1,
@@ -570,7 +570,7 @@ EXPECTED_IMAGES1 = {
         },
     },
     u'5182e96772bf': {
-        u'CreatedAt': u'2018-08-06 21:21:48 +0200 CEST',
+        u'Created': u'2018-08-06 21:21:48 +0200 CEST',
         u'RepoTags': ['centos:7'],
         u'VirtualSize': 199700000,
         u'amount_containers': 0,
@@ -583,13 +583,13 @@ EXPECTED_IMAGES1 = {
         },
     },
     u'6143303a8e14': {
-        u'CreatedAt': u'2018-09-10 17:36:25 +0200 CEST',
+        u'Created': u'2018-09-10 17:36:25 +0200 CEST',
         u'RepoTags': ['hadolint/hadolint:latest'],
         u'VirtualSize': 3645000,
         u'amount_containers': 0,
     },
     u'6c97da45403a': {
-        u'CreatedAt': u'2018-10-12 11:12:15 +0200 CEST',
+        u'Created': u'2018-10-12 11:12:15 +0200 CEST',
         u'RepoTags': ['local/c7-systemd:latest'],
         u'VirtualSize': 199700000,
         u'amount_containers': 0,
@@ -602,7 +602,7 @@ EXPECTED_IMAGES1 = {
         },
     },
     u'8ca14ae84dd9': {
-        u'CreatedAt': u'2018-09-14 13:08:54 +0200 CEST',
+        u'Created': u'2018-09-14 13:08:54 +0200 CEST',
         u'RepoTags': ['checkmk/check-mk-enterprise:daily'],
         u'VirtualSize': 972300000,
         u'amount_containers': 0,
@@ -624,7 +624,7 @@ EXPECTED_IMAGES1 = {
         },
     },
     u'8d463a5f7635': {
-        u'CreatedAt': u'2018-09-12 21:15:47 +0200 CEST',
+        u'Created': u'2018-09-12 21:15:47 +0200 CEST',
         u'RepoTags': ['checkmk/check-mk-enterprise:1.5.0-2018.09.12'],
         u'VirtualSize': 814900000,
         u'amount_containers': 0,
@@ -646,7 +646,7 @@ EXPECTED_IMAGES1 = {
         },
     },
     u'91152cc1c4bc': {
-        u'CreatedAt': u'2018-09-14 14:47:41 +0200 CEST',
+        u'Created': u'2018-09-14 14:47:41 +0200 CEST',
         u'RepoTags': ['docker-tests/check-mk-enterprise-master-2018.09.14:latest'],
         u'VirtualSize': 831400000,
         u'amount_containers': 0,
@@ -668,7 +668,7 @@ EXPECTED_IMAGES1 = {
         },
     },
     u'a1f15f9a2b16': {
-        u'CreatedAt': u'2018-09-12 19:49:54 +0200 CEST',
+        u'Created': u'2018-09-12 19:49:54 +0200 CEST',
         u'RepoTags': ['docker-tests/check-mk-enterprise-master-2018.09.12:latest'],
         u'VirtualSize': 828400000,
         u'amount_containers': 0,
@@ -690,7 +690,7 @@ EXPECTED_IMAGES1 = {
         },
     },
     u'c0582f734ad1': {
-        u'CreatedAt': u'2018-09-14 16:52:00 +0200 CEST',
+        u'Created': u'2018-09-14 16:52:00 +0200 CEST',
         u'RepoTags': ['checkmk/check-mk-enterprise:2018.09.14'],
         u'VirtualSize': 831400000,
         u'amount_containers': 0,
@@ -712,7 +712,7 @@ EXPECTED_IMAGES1 = {
         },
     },
     u'df118e583614': {
-        u'CreatedAt': u'2018-10-10 08:37:26 +0200 CEST',
+        u'Created': u'2018-10-10 08:37:26 +0200 CEST',
         u'RepoTags': ['docker-tests/check-mk-enterprise-master-1.5.0p5:latest'],
         u'VirtualSize': 817600000,
         u'amount_containers': 0,
@@ -734,7 +734,7 @@ EXPECTED_IMAGES1 = {
         },
     },
     u'ed55e8b95336': {
-        u'CreatedAt': u'2018-10-12 11:13:11 +0200 CEST',
+        u'Created': u'2018-10-12 11:13:11 +0200 CEST',
         u'RepoTags': ['local/c7-systemd-httpd:latest'],
         u'VirtualSize': 254200000,
         u'amount_containers': 2,
@@ -747,7 +747,7 @@ EXPECTED_IMAGES1 = {
         },
     },
     u'ed5d6b154e97': {
-        u'CreatedAt': u'2018-10-10 08:40:21 +0200 CEST',
+        u'Created': u'2018-10-10 08:40:21 +0200 CEST',
         u'RepoTags': ['docker-tests/check-mk-enterprise-master-2018.10.10:latest'],
         u'VirtualSize': 844300000,
         u'amount_containers': 0,
@@ -769,7 +769,7 @@ EXPECTED_IMAGES1 = {
         },
     },
     u'ee5124a3adb5': {
-        u'CreatedAt': u'2018-09-12 09:33:22 +0200 CEST',
+        u'Created': u'2018-09-12 09:33:22 +0200 CEST',
         u'RepoTags': ['docker-tests/check-mk-enterprise-master-2018.09.11:latest'],
         u'VirtualSize': 828400000,
         u'amount_containers': 0,
@@ -791,7 +791,7 @@ EXPECTED_IMAGES1 = {
         },
     },
     u'f4bfbb70768f': {
-        u'CreatedAt': u'2018-09-17 09:47:56 +0200 CEST',
+        u'Created': u'2018-09-17 09:47:56 +0200 CEST',
         u'RepoTags': ['docker-tests/check-mk-enterprise-master-1.5.0p3:latest'],
         u'VirtualSize': 817400000,
         u'amount_containers': 0,
@@ -813,7 +813,7 @@ EXPECTED_IMAGES1 = {
         },
     },
     u'ff19a3911e0a': {
-        u'CreatedAt': u'2018-09-17 09:45:08 +0200 CEST',
+        u'Created': u'2018-09-17 09:45:08 +0200 CEST',
         u'RepoTags': ['docker-tests/check-mk-enterprise-master-2018.09.17:latest'],
         u'VirtualSize': 831400000,
         u'amount_containers': 0,
@@ -838,7 +838,7 @@ EXPECTED_IMAGES1 = {
 
 EXPECTED_CONTAINERS1 = {
     u'0d7e34ebb911': {
-        u'CreatedAt': u'2018-10-10 08:40:20 +0200 CEST',
+        u'Created': u'2018-10-10 08:40:20 +0200 CEST',
         u'Labels': {
             u'maintainer':
                 u'feedback@check-mk.org',
@@ -855,19 +855,19 @@ EXPECTED_CONTAINERS1 = {
             u'org.opencontainers.image.version':
                 u'2018.10.10'
         },
-        u'Names': u'youthful_pare',
+        u'Name': u'youthful_pare',
         u'Status': u'Created',
     },
     u'10d6b884f348': {
-        u'CreatedAt': u'2018-10-10 08:34:55 +0200 CEST',
+        u'Created': u'2018-10-10 08:34:55 +0200 CEST',
         u'Labels': {
             u'maintainer': u'feedback@check-mk.org'
         },
-        u'Names': u'wizardly_ritchie',
+        u'Name': u'wizardly_ritchie',
         u'Status': u'Created',
     },
     u'24772268cc09': {
-        u'CreatedAt': u'2018-10-10 08:37:25 +0200 CEST',
+        u'Created': u'2018-10-10 08:37:25 +0200 CEST',
         u'Labels': {
             u'maintainer':
                 u'feedback@check-mk.org',
@@ -884,35 +884,35 @@ EXPECTED_CONTAINERS1 = {
             u'org.opencontainers.image.version':
                 u'1.5.0p5'
         },
-        u'Names': u'zen_bartik',
+        u'Name': u'zen_bartik',
         u'Status': u'Created',
     },
     u'4a6806b168b1': {
-        u'CreatedAt': u'2018-10-10 08:39:29 +0200 CEST',
+        u'Created': u'2018-10-10 08:39:29 +0200 CEST',
         u'Labels': {
             u'maintainer': u'feedback@check-mk.org'
         },
-        u'Names': u'festive_fermi',
+        u'Name': u'festive_fermi',
         u'Status': u'Exited (0) 2 days ago',
     },
     u'4d4d9f3be74b': {
-        u'CreatedAt': u'2018-10-10 08:34:58 +0200 CEST',
+        u'Created': u'2018-10-10 08:34:58 +0200 CEST',
         u'Labels': {
             u'maintainer': u'feedback@check-mk.org'
         },
-        u'Names': u'pensive_spence',
+        u'Name': u'pensive_spence',
         u'Status': u'Exited (0) 2 days ago',
     },
     u'55632dca94c8': {
-        u'CreatedAt': u'2018-10-10 08:34:55 +0200 CEST',
+        u'Created': u'2018-10-10 08:34:55 +0200 CEST',
         u'Labels': {
             u'maintainer': u'feedback@check-mk.org'
         },
-        u'Names': u'stoic_perlman',
+        u'Name': u'stoic_perlman',
         u'Status': u'Created',
     },
     u'580a7b4bd20a': {
-        u'CreatedAt': u'2018-10-10 08:40:20 +0200 CEST',
+        u'Created': u'2018-10-10 08:40:20 +0200 CEST',
         u'Labels': {
             u'org.opencontainers.image.title':
                 u'Check_MK',
@@ -929,19 +929,19 @@ EXPECTED_CONTAINERS1 = {
             u'org.opencontainers.image.source':
                 u'https://git.mathias-kettner.de/'
         },
-        u'Names': u'reverent_proskuriakova',
+        u'Name': u'reverent_proskuriakova',
         u'Status': u'Created',
     },
     u'6cae82f879ff': {
-        u'CreatedAt': u'2018-10-10 08:34:57 +0200 CEST',
+        u'Created': u'2018-10-10 08:34:57 +0200 CEST',
         u'Labels': {
             u'maintainer': u'feedback@check-mk.org'
         },
-        u'Names': u'elated_poitras',
+        u'Name': u'elated_poitras',
         u'Status': u'Created',
     },
     u'6fe73b950209': {
-        u'CreatedAt': u'2018-10-10 08:37:26 +0200 CEST',
+        u'Created': u'2018-10-10 08:37:26 +0200 CEST',
         u'Labels': {
             u'org.opencontainers.image.title':
                 u'Check_MK',
@@ -958,11 +958,11 @@ EXPECTED_CONTAINERS1 = {
             u'org.opencontainers.image.source':
                 u'https://git.mathias-kettner.de/'
         },
-        u'Names': u'admiring_haibt',
+        u'Name': u'admiring_haibt',
         u'Status': u'Created',
     },
     u'73237ecc5183': {
-        u'CreatedAt': u'2018-10-10 08:40:20 +0200 CEST',
+        u'Created': u'2018-10-10 08:40:20 +0200 CEST',
         u'Labels': {
             u'org.opencontainers.image.url':
                 u'https://mathias-kettner.com/',
@@ -979,11 +979,11 @@ EXPECTED_CONTAINERS1 = {
             u'org.opencontainers.image.title':
                 u'Check_MK'
         },
-        u'Names': u'festive_stallman',
+        u'Name': u'festive_stallman',
         u'Status': u'Created',
     },
     u'7d32581dd10f': {
-        u'CreatedAt': u'2018-10-12 11:13:18 +0200 CEST',
+        u'Created': u'2018-10-12 11:13:18 +0200 CEST',
         u'Labels': {
             u'org.label-schema.vendor': u'CentOS',
             u'org.label-schema.build-date': u'20180804',
@@ -991,19 +991,19 @@ EXPECTED_CONTAINERS1 = {
             u'org.label-schema.name': u'CentOS Base Image',
             u'org.label-schema.schema-version': u'1.0'
         },
-        u'Names': u'sad_austin',
+        u'Name': u'sad_austin',
         u'Status': u'Created',
     },
     u'860d8dfff4f6': {
-        u'CreatedAt': u'2018-10-10 08:34:58 +0200 CEST',
+        u'Created': u'2018-10-10 08:34:58 +0200 CEST',
         u'Labels': {
             u'maintainer': u'feedback@check-mk.org'
         },
-        u'Names': u'dazzling_meninsky',
+        u'Name': u'dazzling_meninsky',
         u'Status': u'Created',
     },
     u'8f8ded35fc90': {
-        u'CreatedAt': u'2018-10-10 08:37:25 +0200 CEST',
+        u'Created': u'2018-10-10 08:37:25 +0200 CEST',
         u'Labels': {
             u'org.opencontainers.image.version':
                 u'1.5.0p5',
@@ -1020,51 +1020,51 @@ EXPECTED_CONTAINERS1 = {
             u'org.opencontainers.image.vendor':
                 u'Mathias Kettner GmbH'
         },
-        u'Names': u'keen_cori',
+        u'Name': u'keen_cori',
         u'Status': u'Created',
     },
     u'93e0c88a69fa': {
-        u'CreatedAt': u'2018-10-10 08:37:43 +0200 CEST',
+        u'Created': u'2018-10-10 08:37:43 +0200 CEST',
         u'Labels': {
             u'maintainer': u'feedback@check-mk.org'
         },
-        u'Names': u'objective_darwin',
+        u'Name': u'objective_darwin',
         u'Status': u'Exited (0) 2 days ago',
     },
     u'9b08cf26da8c': {
-        u'CreatedAt': u'2018-10-10 08:34:56 +0200 CEST',
+        u'Created': u'2018-10-10 08:34:56 +0200 CEST',
         u'Labels': {
             u'maintainer': u'feedback@check-mk.org'
         },
-        u'Names': u'pensive_swartz',
+        u'Name': u'pensive_swartz',
         u'Status': u'Created',
     },
     u'a073bb9adfbe': {
-        u'CreatedAt': u'2018-10-10 08:36:45 +0200 CEST',
+        u'Created': u'2018-10-10 08:36:45 +0200 CEST',
         u'Labels': {
             u'maintainer': u'feedback@check-mk.org'
         },
-        u'Names': u'jovial_archimedes',
+        u'Name': u'jovial_archimedes',
         u'Status': u'Exited (0) 2 days ago',
     },
     u'a17f21f95383': {
-        u'CreatedAt': u'2018-10-10 08:34:57 +0200 CEST',
+        u'Created': u'2018-10-10 08:34:57 +0200 CEST',
         u'Labels': {
             u'maintainer': u'feedback@check-mk.org'
         },
-        u'Names': u'serene_poincare',
+        u'Name': u'serene_poincare',
         u'Status': u'Created',
     },
     u'aad80d524200': {
-        u'CreatedAt': u'2018-10-10 08:34:57 +0200 CEST',
+        u'Created': u'2018-10-10 08:34:57 +0200 CEST',
         u'Labels': {
             u'maintainer': u'feedback@check-mk.org'
         },
-        u'Names': u'competent_keller',
+        u'Name': u'competent_keller',
         u'Status': u'Created',
     },
     u'b17185d5dcc5': {
-        u'CreatedAt': u'2018-10-10 08:40:21 +0200 CEST',
+        u'Created': u'2018-10-10 08:40:21 +0200 CEST',
         u'Labels': {
             u'org.opencontainers.image.url':
                 u'https://mathias-kettner.com/',
@@ -1081,11 +1081,11 @@ EXPECTED_CONTAINERS1 = {
             u'org.opencontainers.image.title':
                 u'Check_MK'
         },
-        u'Names': u'friendly_banach',
+        u'Name': u'friendly_banach',
         u'Status': u'Created',
     },
     u'bfdb64ccf0ba': {
-        u'CreatedAt': u'2018-10-10 08:37:26 +0200 CEST',
+        u'Created': u'2018-10-10 08:37:26 +0200 CEST',
         u'Labels': {
             u'org.opencontainers.image.source':
                 u'https://git.mathias-kettner.de/',
@@ -1102,51 +1102,51 @@ EXPECTED_CONTAINERS1 = {
             u'org.opencontainers.image.description':
                 u'Check_MK is a leading tool for Infrastructure & Application Monitoring'
         },
-        u'Names': u'lucid_bohr',
+        u'Name': u'lucid_bohr',
         u'Status': u'Created',
     },
     u'c04099ed3f18': {
-        u'CreatedAt': u'2018-10-10 08:34:56 +0200 CEST',
+        u'Created': u'2018-10-10 08:34:56 +0200 CEST',
         u'Labels': {
             u'maintainer': u'feedback@check-mk.org'
         },
-        u'Names': u'dreamy_thompson',
+        u'Name': u'dreamy_thompson',
         u'Status': u'Created',
     },
     u'cdc7e1e4a24e': {
-        u'CreatedAt': u'2018-10-10 08:34:56 +0200 CEST',
+        u'Created': u'2018-10-10 08:34:56 +0200 CEST',
         u'Labels': {
             u'maintainer': u'feedback@check-mk.org'
         },
-        u'Names': u'lucid_brown',
+        u'Name': u'lucid_brown',
         u'Status': u'Created',
     },
     u'd1c70f4690b5': {
-        u'CreatedAt': u'2018-10-10 08:34:56 +0200 CEST',
+        u'Created': u'2018-10-10 08:34:56 +0200 CEST',
         u'Labels': {
             u'maintainer': u'feedback@check-mk.org'
         },
-        u'Names': u'trusting_panini',
+        u'Name': u'trusting_panini',
         u'Status': u'Created',
     },
     u'd37198a74c08': {
-        u'CreatedAt': u'2018-10-10 08:34:55 +0200 CEST',
+        u'Created': u'2018-10-10 08:34:55 +0200 CEST',
         u'Labels': {
             u'maintainer': u'feedback@check-mk.org'
         },
-        u'Names': u'distracted_mccarthy',
+        u'Name': u'distracted_mccarthy',
         u'Status': u'Created',
     },
     u'df44340ed121': {
-        u'CreatedAt': u'2018-10-10 08:34:58 +0200 CEST',
+        u'Created': u'2018-10-10 08:34:58 +0200 CEST',
         u'Labels': {
             u'maintainer': u'feedback@check-mk.org'
         },
-        u'Names': u'unruffled_hopper',
+        u'Name': u'unruffled_hopper',
         u'Status': u'Created',
     },
     u'f1641e401237': {
-        u'CreatedAt': u'2018-10-12 11:13:24 +0200 CEST',
+        u'Created': u'2018-10-12 11:13:24 +0200 CEST',
         u'Labels': {
             u'org.label-schema.build-date': u'20180804',
             u'org.label-schema.license': u'GPLv2',
@@ -1155,11 +1155,11 @@ EXPECTED_CONTAINERS1 = {
             u'org.label-schema.schema-version': u'1.0',
             u'org.label-schema.vendor': u'CentOS'
         },
-        u'Names': u'sad_stonebraker',
+        u'Name': u'sad_stonebraker',
         u'Status': u'Up 5 hours',
     },
     u'fdd04795069e': {
-        u'CreatedAt': u'2018-10-12 09:17:54 +0200 CEST',
+        u'Created': u'2018-10-12 09:17:54 +0200 CEST',
         u'Labels': {
             u'org.opencontainers.image.description':
                 u'Check_MK is a leading tool for Infrastructure & Application Monitoring',
@@ -1176,7 +1176,7 @@ EXPECTED_CONTAINERS1 = {
             u'maintainer':
                 u'feedback@check-mk.org'
         },
-        u'Names': u'monitoringx',
+        u'Name': u'monitoringx',
         u'Status': u'Created',
     }
 }
@@ -1642,8 +1642,8 @@ SUBSECTIONS2 = {
 EXPECTED_CONTAINERS2 = {
     u'0d7e34ebb911': {
         u'Command': u'"/bin/sh -c \'#(nop) \u2026"',
-        u'CreatedAt': u'2018-10-10 08:40:20 +0200 CEST',
-        u'ID': u'0d7e34ebb911',
+        u'Created': u'2018-10-10 08:40:20 +0200 CEST',
+        u'Id': u'0d7e34ebb911',
         u'Image': u'03d98e475cd6',
         u'Labels': {
             u'maintainer':
@@ -1663,7 +1663,7 @@ EXPECTED_CONTAINERS2 = {
         },
         u'LocalVolumes': u'0',
         u'Mounts': u'',
-        u'Names': u'youthful_pare',
+        u'Name': u'youthful_pare',
         u'Networks': u'bridge',
         u'Ports': u'',
         u'RunningFor': u'6 days ago',
@@ -1672,15 +1672,15 @@ EXPECTED_CONTAINERS2 = {
     },
     u'10d6b884f348': {
         u'Command': u'"/bin/sh -c \'#(nop) \u2026"',
-        u'CreatedAt': u'2018-10-10 08:34:55 +0200 CEST',
-        u'ID': u'10d6b884f348',
+        u'Created': u'2018-10-10 08:34:55 +0200 CEST',
+        u'Id': u'10d6b884f348',
         u'Image': u'a0a951b126eb',
         u'Labels': {
             u'maintainer': u'feedback@check-mk.org'
         },
         u'LocalVolumes': u'0',
         u'Mounts': u'',
-        u'Names': u'wizardly_ritchie',
+        u'Name': u'wizardly_ritchie',
         u'Networks': u'bridge',
         u'Ports': u'',
         u'RunningFor': u'6 days ago',
@@ -1689,8 +1689,8 @@ EXPECTED_CONTAINERS2 = {
     },
     u'11893c5d9694': {
         u'Command': u'"/docker-entrypoint.\u2026"',
-        u'CreatedAt': u'2018-10-12 16:12:02 +0200 CEST',
-        u'ID': u'11893c5d9694',
+        u'Created': u'2018-10-12 16:12:02 +0200 CEST',
+        u'Id': u'11893c5d9694',
         u'Image': u'559214f8c758',
         u'Labels': {
             u'maintainer':
@@ -1710,7 +1710,7 @@ EXPECTED_CONTAINERS2 = {
         },
         u'LocalVolumes': u'0',
         u'Mounts': u'',
-        u'Names': u'affectionate_shannon',
+        u'Name': u'affectionate_shannon',
         u'Networks': u'bridge',
         u'Ports': u'',
         u'RunningFor': u'3 days ago',
@@ -1719,8 +1719,8 @@ EXPECTED_CONTAINERS2 = {
     },
     u'24772268cc09': {
         u'Command': u'"/bin/sh -c \'#(nop) \u2026"',
-        u'CreatedAt': u'2018-10-10 08:37:25 +0200 CEST',
-        u'ID': u'24772268cc09',
+        u'Created': u'2018-10-10 08:37:25 +0200 CEST',
+        u'Id': u'24772268cc09',
         u'Image': u'6e66f5473958',
         u'Labels': {
             u'maintainer':
@@ -1740,7 +1740,7 @@ EXPECTED_CONTAINERS2 = {
         },
         u'LocalVolumes': u'0',
         u'Mounts': u'',
-        u'Names': u'zen_bartik',
+        u'Name': u'zen_bartik',
         u'Networks': u'bridge',
         u'Ports': u'',
         u'RunningFor': u'6 days ago',
@@ -1749,15 +1749,15 @@ EXPECTED_CONTAINERS2 = {
     },
     u'249ca074445f': {
         u'Command': u'"/bin/sh -c \'set -e \u2026"',
-        u'CreatedAt': u'2018-10-12 16:09:34 +0200 CEST',
-        u'ID': u'249ca074445f',
+        u'Created': u'2018-10-12 16:09:34 +0200 CEST',
+        u'Id': u'249ca074445f',
         u'Image': u'010bad2c964b',
         u'Labels': {
             u'maintainer': u'feedback@check-mk.org'
         },
         u'LocalVolumes': u'0',
         u'Mounts': u'',
-        u'Names': u'infallible_goodall',
+        u'Name': u'infallible_goodall',
         u'Networks': u'bridge',
         u'Ports': u'',
         u'RunningFor': u'3 days ago',
@@ -1766,15 +1766,15 @@ EXPECTED_CONTAINERS2 = {
     },
     u'4a6806b168b1': {
         u'Command': u'"/bin/sh -c \'set -e \u2026"',
-        u'CreatedAt': u'2018-10-10 08:39:29 +0200 CEST',
-        u'ID': u'4a6806b168b1',
+        u'Created': u'2018-10-10 08:39:29 +0200 CEST',
+        u'Id': u'4a6806b168b1',
         u'Image': u'089108b69108',
         u'Labels': {
             u'maintainer': u'feedback@check-mk.org'
         },
         u'LocalVolumes': u'0',
         u'Mounts': u'',
-        u'Names': u'festive_fermi',
+        u'Name': u'festive_fermi',
         u'Networks': u'bridge',
         u'Ports': u'',
         u'RunningFor': u'6 days ago',
@@ -1783,15 +1783,15 @@ EXPECTED_CONTAINERS2 = {
     },
     u'4d4d9f3be74b': {
         u'Command': u'"/bin/sh -c \'set -e \u2026"',
-        u'CreatedAt': u'2018-10-10 08:34:58 +0200 CEST',
-        u'ID': u'4d4d9f3be74b',
+        u'Created': u'2018-10-10 08:34:58 +0200 CEST',
+        u'Id': u'4d4d9f3be74b',
         u'Image': u'b16a30c66821',
         u'Labels': {
             u'maintainer': u'feedback@check-mk.org'
         },
         u'LocalVolumes': u'0',
         u'Mounts': u'',
-        u'Names': u'pensive_spence',
+        u'Name': u'pensive_spence',
         u'Networks': u'bridge',
         u'Ports': u'',
         u'RunningFor': u'6 days ago',
@@ -1800,15 +1800,15 @@ EXPECTED_CONTAINERS2 = {
     },
     u'55632dca94c8': {
         u'Command': u'"/bin/sh -c \'#(nop) \u2026"',
-        u'CreatedAt': u'2018-10-10 08:34:55 +0200 CEST',
-        u'ID': u'55632dca94c8',
+        u'Created': u'2018-10-10 08:34:55 +0200 CEST',
+        u'Id': u'55632dca94c8',
         u'Image': u'1919d446eafa',
         u'Labels': {
             u'maintainer': u'feedback@check-mk.org'
         },
         u'LocalVolumes': u'0',
         u'Mounts': u'',
-        u'Names': u'stoic_perlman',
+        u'Name': u'stoic_perlman',
         u'Networks': u'bridge',
         u'Ports': u'',
         u'RunningFor': u'6 days ago',
@@ -1817,8 +1817,8 @@ EXPECTED_CONTAINERS2 = {
     },
     u'580a7b4bd20a': {
         u'Command': u'"/bin/sh -c \'#(nop) \u2026"',
-        u'CreatedAt': u'2018-10-10 08:40:20 +0200 CEST',
-        u'ID': u'580a7b4bd20a',
+        u'Created': u'2018-10-10 08:40:20 +0200 CEST',
+        u'Id': u'580a7b4bd20a',
         u'Image': u'3e0dd44b22e4',
         u'Labels': {
             u'maintainer':
@@ -1838,7 +1838,7 @@ EXPECTED_CONTAINERS2 = {
         },
         u'LocalVolumes': u'0',
         u'Mounts': u'',
-        u'Names': u'reverent_proskuriakova',
+        u'Name': u'reverent_proskuriakova',
         u'Networks': u'bridge',
         u'Ports': u'',
         u'RunningFor': u'6 days ago',
@@ -1847,8 +1847,8 @@ EXPECTED_CONTAINERS2 = {
     },
     u'58ea2160fe8f': {
         u'Command': u'"/bin/sh -c \'#(nop) \u2026"',
-        u'CreatedAt': u'2018-10-12 16:12:01 +0200 CEST',
-        u'ID': u'58ea2160fe8f',
+        u'Created': u'2018-10-12 16:12:01 +0200 CEST',
+        u'Id': u'58ea2160fe8f',
         u'Image': u'3bd4e802a09f',
         u'Labels': {
             u'maintainer':
@@ -1868,7 +1868,7 @@ EXPECTED_CONTAINERS2 = {
         },
         u'LocalVolumes': u'0',
         u'Mounts': u'',
-        u'Names': u'lucid_kowalevski',
+        u'Name': u'lucid_kowalevski',
         u'Networks': u'bridge',
         u'Ports': u'',
         u'RunningFor': u'3 days ago',
@@ -1877,15 +1877,15 @@ EXPECTED_CONTAINERS2 = {
     },
     u'63c0ad8e9eb7': {
         u'Command': u'"/bin/sh -c \'set -e \u2026"',
-        u'CreatedAt': u'2018-10-12 16:07:29 +0200 CEST',
-        u'ID': u'63c0ad8e9eb7',
+        u'Created': u'2018-10-12 16:07:29 +0200 CEST',
+        u'Id': u'63c0ad8e9eb7',
         u'Image': u'0983f5184ce7',
         u'Labels': {
             u'maintainer': u'feedback@check-mk.org'
         },
         u'LocalVolumes': u'0',
         u'Mounts': u'',
-        u'Names': u'ecstatic_babbage',
+        u'Name': u'ecstatic_babbage',
         u'Networks': u'bridge',
         u'Ports': u'',
         u'RunningFor': u'3 days ago',
@@ -1894,15 +1894,15 @@ EXPECTED_CONTAINERS2 = {
     },
     u'6cae82f879ff': {
         u'Command': u'"/bin/sh -c \'#(nop) \u2026"',
-        u'CreatedAt': u'2018-10-10 08:34:57 +0200 CEST',
-        u'ID': u'6cae82f879ff',
+        u'Created': u'2018-10-10 08:34:57 +0200 CEST',
+        u'Id': u'6cae82f879ff',
         u'Image': u'1d9b21b9e019',
         u'Labels': {
             u'maintainer': u'feedback@check-mk.org'
         },
         u'LocalVolumes': u'0',
         u'Mounts': u'',
-        u'Names': u'elated_poitras',
+        u'Name': u'elated_poitras',
         u'Networks': u'bridge',
         u'Ports': u'',
         u'RunningFor': u'6 days ago',
@@ -1911,8 +1911,8 @@ EXPECTED_CONTAINERS2 = {
     },
     u'6fe73b950209': {
         u'Command': u'"/docker-entrypoint.\u2026"',
-        u'CreatedAt': u'2018-10-10 08:37:26 +0200 CEST',
-        u'ID': u'6fe73b950209',
+        u'Created': u'2018-10-10 08:37:26 +0200 CEST',
+        u'Id': u'6fe73b950209',
         u'Image': u'd4c95e27986c',
         u'Labels': {
             u'maintainer':
@@ -1932,7 +1932,7 @@ EXPECTED_CONTAINERS2 = {
         },
         u'LocalVolumes': u'0',
         u'Mounts': u'',
-        u'Names': u'admiring_haibt',
+        u'Name': u'admiring_haibt',
         u'Networks': u'bridge',
         u'Ports': u'',
         u'RunningFor': u'6 days ago',
@@ -1941,8 +1941,8 @@ EXPECTED_CONTAINERS2 = {
     },
     u'73237ecc5183': {
         u'Command': u'"/bin/sh -c \'#(nop) \u2026"',
-        u'CreatedAt': u'2018-10-10 08:40:20 +0200 CEST',
-        u'ID': u'73237ecc5183',
+        u'Created': u'2018-10-10 08:40:20 +0200 CEST',
+        u'Id': u'73237ecc5183',
         u'Image': u'd27276979703',
         u'Labels': {
             u'maintainer':
@@ -1962,7 +1962,7 @@ EXPECTED_CONTAINERS2 = {
         },
         u'LocalVolumes': u'0',
         u'Mounts': u'',
-        u'Names': u'festive_stallman',
+        u'Name': u'festive_stallman',
         u'Networks': u'bridge',
         u'Ports': u'',
         u'RunningFor': u'6 days ago',
@@ -1971,8 +1971,8 @@ EXPECTED_CONTAINERS2 = {
     },
     u'74ee5065acb2': {
         u'Command': u'"/bin/sh -c \'#(nop) \u2026"',
-        u'CreatedAt': u'2018-10-12 16:12:01 +0200 CEST',
-        u'ID': u'74ee5065acb2',
+        u'Created': u'2018-10-12 16:12:01 +0200 CEST',
+        u'Id': u'74ee5065acb2',
         u'Image': u'a0529d041d12',
         u'Labels': {
             u'maintainer':
@@ -1992,7 +1992,7 @@ EXPECTED_CONTAINERS2 = {
         },
         u'LocalVolumes': u'0',
         u'Mounts': u'',
-        u'Names': u'peaceful_joliot',
+        u'Name': u'peaceful_joliot',
         u'Networks': u'bridge',
         u'Ports': u'',
         u'RunningFor': u'3 days ago',
@@ -2001,8 +2001,8 @@ EXPECTED_CONTAINERS2 = {
     },
     u'7d32581dd10f': {
         u'Command': u'"/usr/sbin/init"',
-        u'CreatedAt': u'2018-10-12 11:13:18 +0200 CEST',
-        u'ID': u'7d32581dd10f',
+        u'Created': u'2018-10-12 11:13:18 +0200 CEST',
+        u'Id': u'7d32581dd10f',
         u'Image': u'local/c7-systemd-httpd',
         u'Labels': {
             u'org.label-schema.build-date': u'20180804',
@@ -2013,7 +2013,7 @@ EXPECTED_CONTAINERS2 = {
         },
         u'LocalVolumes': u'0',
         u'Mounts': u'/sys/fs/cgroup',
-        u'Names': u'sad_austin',
+        u'Name': u'sad_austin',
         u'Networks': u'bridge',
         u'Ports': u'',
         u'RunningFor': u'4 days ago',
@@ -2022,15 +2022,15 @@ EXPECTED_CONTAINERS2 = {
     },
     u'7db7baa17fee': {
         u'Command': u'"/bin/sh -c \'set -e \u2026"',
-        u'CreatedAt': u'2018-10-12 16:11:24 +0200 CEST',
-        u'ID': u'7db7baa17fee',
+        u'Created': u'2018-10-12 16:11:24 +0200 CEST',
+        u'Id': u'7db7baa17fee',
         u'Image': u'fd98c3cc9762',
         u'Labels': {
             u'maintainer': u'feedback@check-mk.org'
         },
         u'LocalVolumes': u'0',
         u'Mounts': u'',
-        u'Names': u'stoic_jennings',
+        u'Name': u'stoic_jennings',
         u'Networks': u'bridge',
         u'Ports': u'',
         u'RunningFor': u'3 days ago',
@@ -2039,15 +2039,15 @@ EXPECTED_CONTAINERS2 = {
     },
     u'802786d33cfb': {
         u'Command': u'"/bin/sh -c \'set -e \u2026"',
-        u'CreatedAt': u'2018-10-12 16:12:19 +0200 CEST',
-        u'ID': u'802786d33cfb',
+        u'Created': u'2018-10-12 16:12:19 +0200 CEST',
+        u'Id': u'802786d33cfb',
         u'Image': u'010bad2c964b',
         u'Labels': {
             u'maintainer': u'feedback@check-mk.org'
         },
         u'LocalVolumes': u'0',
         u'Mounts': u'',
-        u'Names': u'boring_cori',
+        u'Name': u'boring_cori',
         u'Networks': u'bridge',
         u'Ports': u'',
         u'RunningFor': u'3 days ago',
@@ -2056,8 +2056,8 @@ EXPECTED_CONTAINERS2 = {
     },
     u'85a41e54b0cc': {
         u'Command': u'"/bin/bash"',
-        u'CreatedAt': u'2018-09-27 19:06:07 +0200 CEST',
-        u'ID': u'85a41e54b0cc',
+        u'Created': u'2018-09-27 19:06:07 +0200 CEST',
+        u'Id': u'85a41e54b0cc',
         u'Image': u'centos:7',
         u'Labels': {
             u'org.label-schema.build-date': u'20180804',
@@ -2068,7 +2068,7 @@ EXPECTED_CONTAINERS2 = {
         },
         u'LocalVolumes': u'0',
         u'Mounts': u'',
-        u'Names': u'vigorous_pare',
+        u'Name': u'vigorous_pare',
         u'Networks': u'bridge',
         u'Ports': u'',
         u'RunningFor': u'2 weeks ago',
@@ -2077,15 +2077,15 @@ EXPECTED_CONTAINERS2 = {
     },
     u'860d8dfff4f6': {
         u'Command': u'"/bin/sh -c \'#(nop) \u2026"',
-        u'CreatedAt': u'2018-10-10 08:34:58 +0200 CEST',
-        u'ID': u'860d8dfff4f6',
+        u'Created': u'2018-10-10 08:34:58 +0200 CEST',
+        u'Id': u'860d8dfff4f6',
         u'Image': u'7e7f944ba518',
         u'Labels': {
             u'maintainer': u'feedback@check-mk.org'
         },
         u'LocalVolumes': u'0',
         u'Mounts': u'',
-        u'Names': u'dazzling_meninsky',
+        u'Name': u'dazzling_meninsky',
         u'Networks': u'bridge',
         u'Ports': u'',
         u'RunningFor': u'6 days ago',
@@ -2094,8 +2094,8 @@ EXPECTED_CONTAINERS2 = {
     },
     u'8f8ded35fc90': {
         u'Command': u'"/bin/sh -c \'#(nop) \u2026"',
-        u'CreatedAt': u'2018-10-10 08:37:25 +0200 CEST',
-        u'ID': u'8f8ded35fc90',
+        u'Created': u'2018-10-10 08:37:25 +0200 CEST',
+        u'Id': u'8f8ded35fc90',
         u'Image': u'6bccd8c3ed71',
         u'Labels': {
             u'maintainer':
@@ -2115,7 +2115,7 @@ EXPECTED_CONTAINERS2 = {
         },
         u'LocalVolumes': u'0',
         u'Mounts': u'',
-        u'Names': u'keen_cori',
+        u'Name': u'keen_cori',
         u'Networks': u'bridge',
         u'Ports': u'',
         u'RunningFor': u'6 days ago',
@@ -2124,15 +2124,15 @@ EXPECTED_CONTAINERS2 = {
     },
     u'93e0c88a69fa': {
         u'Command': u'"/bin/sh -c \'set -e \u2026"',
-        u'CreatedAt': u'2018-10-10 08:37:43 +0200 CEST',
-        u'ID': u'93e0c88a69fa',
+        u'Created': u'2018-10-10 08:37:43 +0200 CEST',
+        u'Id': u'93e0c88a69fa',
         u'Image': u'b16a30c66821',
         u'Labels': {
             u'maintainer': u'feedback@check-mk.org'
         },
         u'LocalVolumes': u'0',
         u'Mounts': u'',
-        u'Names': u'objective_darwin',
+        u'Name': u'objective_darwin',
         u'Networks': u'bridge',
         u'Ports': u'',
         u'RunningFor': u'6 days ago',
@@ -2141,8 +2141,8 @@ EXPECTED_CONTAINERS2 = {
     },
     u'95796d6d26db': {
         u'Command': u'"/bin/sh -c \'#(nop) \u2026"',
-        u'CreatedAt': u'2018-10-12 16:12:02 +0200 CEST',
-        u'ID': u'95796d6d26db',
+        u'Created': u'2018-10-12 16:12:02 +0200 CEST',
+        u'Id': u'95796d6d26db',
         u'Image': u'fcd54dfcb5b8',
         u'Labels': {
             u'maintainer':
@@ -2162,7 +2162,7 @@ EXPECTED_CONTAINERS2 = {
         },
         u'LocalVolumes': u'0',
         u'Mounts': u'',
-        u'Names': u'distracted_heisenberg',
+        u'Name': u'distracted_heisenberg',
         u'Networks': u'bridge',
         u'Ports': u'',
         u'RunningFor': u'3 days ago',
@@ -2171,15 +2171,15 @@ EXPECTED_CONTAINERS2 = {
     },
     u'9b08cf26da8c': {
         u'Command': u'"/bin/sh -c \'#(nop) \u2026"',
-        u'CreatedAt': u'2018-10-10 08:34:56 +0200 CEST',
-        u'ID': u'9b08cf26da8c',
+        u'Created': u'2018-10-10 08:34:56 +0200 CEST',
+        u'Id': u'9b08cf26da8c',
         u'Image': u'164429e47a3f',
         u'Labels': {
             u'maintainer': u'feedback@check-mk.org'
         },
         u'LocalVolumes': u'0',
         u'Mounts': u'',
-        u'Names': u'pensive_swartz',
+        u'Name': u'pensive_swartz',
         u'Networks': u'bridge',
         u'Ports': u'',
         u'RunningFor': u'6 days ago',
@@ -2188,15 +2188,15 @@ EXPECTED_CONTAINERS2 = {
     },
     u'a073bb9adfbe': {
         u'Command': u'"/bin/sh -c \'set -e \u2026"',
-        u'CreatedAt': u'2018-10-10 08:36:45 +0200 CEST',
-        u'ID': u'a073bb9adfbe',
+        u'Created': u'2018-10-10 08:36:45 +0200 CEST',
+        u'Id': u'a073bb9adfbe',
         u'Image': u'7aa4b82c92ae',
         u'Labels': {
             u'maintainer': u'feedback@check-mk.org'
         },
         u'LocalVolumes': u'0',
         u'Mounts': u'',
-        u'Names': u'jovial_archimedes',
+        u'Name': u'jovial_archimedes',
         u'Networks': u'bridge',
         u'Ports': u'',
         u'RunningFor': u'6 days ago',
@@ -2205,15 +2205,15 @@ EXPECTED_CONTAINERS2 = {
     },
     u'a17f21f95383': {
         u'Command': u'"/bin/sh -c \'#(nop) \u2026"',
-        u'CreatedAt': u'2018-10-10 08:34:57 +0200 CEST',
-        u'ID': u'a17f21f95383',
+        u'Created': u'2018-10-10 08:34:57 +0200 CEST',
+        u'Id': u'a17f21f95383',
         u'Image': u'a2a187fcaa76',
         u'Labels': {
             u'maintainer': u'feedback@check-mk.org'
         },
         u'LocalVolumes': u'0',
         u'Mounts': u'',
-        u'Names': u'serene_poincare',
+        u'Name': u'serene_poincare',
         u'Networks': u'bridge',
         u'Ports': u'',
         u'RunningFor': u'6 days ago',
@@ -2222,15 +2222,15 @@ EXPECTED_CONTAINERS2 = {
     },
     u'aad80d524200': {
         u'Command': u'"/bin/sh -c \'#(nop) \u2026"',
-        u'CreatedAt': u'2018-10-10 08:34:57 +0200 CEST',
-        u'ID': u'aad80d524200',
+        u'Created': u'2018-10-10 08:34:57 +0200 CEST',
+        u'Id': u'aad80d524200',
         u'Image': u'e002e37aec84',
         u'Labels': {
             u'maintainer': u'feedback@check-mk.org'
         },
         u'LocalVolumes': u'0',
         u'Mounts': u'',
-        u'Names': u'competent_keller',
+        u'Name': u'competent_keller',
         u'Networks': u'bridge',
         u'Ports': u'',
         u'RunningFor': u'6 days ago',
@@ -2239,8 +2239,8 @@ EXPECTED_CONTAINERS2 = {
     },
     u'b17185d5dcc5': {
         u'Command': u'"/docker-entrypoint.\u2026"',
-        u'CreatedAt': u'2018-10-10 08:40:21 +0200 CEST',
-        u'ID': u'b17185d5dcc5',
+        u'Created': u'2018-10-10 08:40:21 +0200 CEST',
+        u'Id': u'b17185d5dcc5',
         u'Image': u'94f49a7afedb',
         u'Labels': {
             u'maintainer':
@@ -2260,7 +2260,7 @@ EXPECTED_CONTAINERS2 = {
         },
         u'LocalVolumes': u'0',
         u'Mounts': u'',
-        u'Names': u'friendly_banach',
+        u'Name': u'friendly_banach',
         u'Networks': u'bridge',
         u'Ports': u'',
         u'RunningFor': u'6 days ago',
@@ -2269,8 +2269,8 @@ EXPECTED_CONTAINERS2 = {
     },
     u'bfdb64ccf0ba': {
         u'Command': u'"/bin/sh -c \'#(nop) \u2026"',
-        u'CreatedAt': u'2018-10-10 08:37:26 +0200 CEST',
-        u'ID': u'bfdb64ccf0ba',
+        u'Created': u'2018-10-10 08:37:26 +0200 CEST',
+        u'Id': u'bfdb64ccf0ba',
         u'Image': u'21b2f3d5e6c0',
         u'Labels': {
             u'maintainer':
@@ -2290,7 +2290,7 @@ EXPECTED_CONTAINERS2 = {
         },
         u'LocalVolumes': u'0',
         u'Mounts': u'',
-        u'Names': u'lucid_bohr',
+        u'Name': u'lucid_bohr',
         u'Networks': u'bridge',
         u'Ports': u'',
         u'RunningFor': u'6 days ago',
@@ -2299,15 +2299,15 @@ EXPECTED_CONTAINERS2 = {
     },
     u'c04099ed3f18': {
         u'Command': u'"/bin/sh -c \'#(nop) \u2026"',
-        u'CreatedAt': u'2018-10-10 08:34:56 +0200 CEST',
-        u'ID': u'c04099ed3f18',
+        u'Created': u'2018-10-10 08:34:56 +0200 CEST',
+        u'Id': u'c04099ed3f18',
         u'Image': u'd1a41c564864',
         u'Labels': {
             u'maintainer': u'feedback@check-mk.org'
         },
         u'LocalVolumes': u'0',
         u'Mounts': u'',
-        u'Names': u'dreamy_thompson',
+        u'Name': u'dreamy_thompson',
         u'Networks': u'bridge',
         u'Ports': u'',
         u'RunningFor': u'6 days ago',
@@ -2316,15 +2316,15 @@ EXPECTED_CONTAINERS2 = {
     },
     u'cdc7e1e4a24e': {
         u'Command': u'"/bin/sh -c \'#(nop) \u2026"',
-        u'CreatedAt': u'2018-10-10 08:34:56 +0200 CEST',
-        u'ID': u'cdc7e1e4a24e',
+        u'Created': u'2018-10-10 08:34:56 +0200 CEST',
+        u'Id': u'cdc7e1e4a24e',
         u'Image': u'999fc035fc76',
         u'Labels': {
             u'maintainer': u'feedback@check-mk.org'
         },
         u'LocalVolumes': u'0',
         u'Mounts': u'',
-        u'Names': u'lucid_brown',
+        u'Name': u'lucid_brown',
         u'Networks': u'bridge',
         u'Ports': u'',
         u'RunningFor': u'6 days ago',
@@ -2333,15 +2333,15 @@ EXPECTED_CONTAINERS2 = {
     },
     u'd1c70f4690b5': {
         u'Command': u'"/bin/sh -c \'#(nop) \u2026"',
-        u'CreatedAt': u'2018-10-10 08:34:56 +0200 CEST',
-        u'ID': u'd1c70f4690b5',
+        u'Created': u'2018-10-10 08:34:56 +0200 CEST',
+        u'Id': u'd1c70f4690b5',
         u'Image': u'0b5da1249a04',
         u'Labels': {
             u'maintainer': u'feedback@check-mk.org'
         },
         u'LocalVolumes': u'0',
         u'Mounts': u'',
-        u'Names': u'trusting_panini',
+        u'Name': u'trusting_panini',
         u'Networks': u'bridge',
         u'Ports': u'',
         u'RunningFor': u'6 days ago',
@@ -2350,15 +2350,15 @@ EXPECTED_CONTAINERS2 = {
     },
     u'd37198a74c08': {
         u'Command': u'"/bin/sh -c \'#(nop) \u2026"',
-        u'CreatedAt': u'2018-10-10 08:34:55 +0200 CEST',
-        u'ID': u'd37198a74c08',
+        u'Created': u'2018-10-10 08:34:55 +0200 CEST',
+        u'Id': u'd37198a74c08',
         u'Image': u'caac4aa6ac57',
         u'Labels': {
             u'maintainer': u'feedback@check-mk.org'
         },
         u'LocalVolumes': u'0',
         u'Mounts': u'',
-        u'Names': u'distracted_mccarthy',
+        u'Name': u'distracted_mccarthy',
         u'Networks': u'bridge',
         u'Ports': u'',
         u'RunningFor': u'6 days ago',
@@ -2367,15 +2367,15 @@ EXPECTED_CONTAINERS2 = {
     },
     u'd91a2be75e8b': {
         u'Command': u'"/bin/sh -c \'set -e \u2026"',
-        u'CreatedAt': u'2018-10-12 16:05:44 +0200 CEST',
-        u'ID': u'd91a2be75e8b',
+        u'Created': u'2018-10-12 16:05:44 +0200 CEST',
+        u'Id': u'd91a2be75e8b',
         u'Image': u'010bad2c964b',
         u'Labels': {
             u'maintainer': u'feedback@check-mk.org'
         },
         u'LocalVolumes': u'0',
         u'Mounts': u'',
-        u'Names': u'jovial_bardeen',
+        u'Name': u'jovial_bardeen',
         u'Networks': u'bridge',
         u'Ports': u'',
         u'RunningFor': u'3 days ago',
@@ -2384,15 +2384,15 @@ EXPECTED_CONTAINERS2 = {
     },
     u'df44340ed121': {
         u'Command': u'"/bin/sh -c \'#(nop) \u2026"',
-        u'CreatedAt': u'2018-10-10 08:34:58 +0200 CEST',
-        u'ID': u'df44340ed121',
+        u'Created': u'2018-10-10 08:34:58 +0200 CEST',
+        u'Id': u'df44340ed121',
         u'Image': u'1b013e043efa',
         u'Labels': {
             u'maintainer': u'feedback@check-mk.org'
         },
         u'LocalVolumes': u'0',
         u'Mounts': u'',
-        u'Names': u'unruffled_hopper',
+        u'Name': u'unruffled_hopper',
         u'Networks': u'bridge',
         u'Ports': u'',
         u'RunningFor': u'6 days ago',
@@ -2401,8 +2401,8 @@ EXPECTED_CONTAINERS2 = {
     },
     u'f1641e401237': {
         u'Command': u'"/usr/sbin/init"',
-        u'CreatedAt': u'2018-10-12 11:13:24 +0200 CEST',
-        u'ID': u'f1641e401237',
+        u'Created': u'2018-10-12 11:13:24 +0200 CEST',
+        u'Id': u'f1641e401237',
         u'Image': u'local/c7-systemd-httpd',
         u'Labels': {
             u'org.label-schema.build-date': u'20180804',
@@ -2413,7 +2413,7 @@ EXPECTED_CONTAINERS2 = {
         },
         u'LocalVolumes': u'0',
         u'Mounts': u'/sys/fs/cgroup',
-        u'Names': u'sad_stonebraker',
+        u'Name': u'sad_stonebraker',
         u'Networks': u'bridge',
         u'Ports': u'',
         u'RunningFor': u'4 days ago',
@@ -2422,8 +2422,8 @@ EXPECTED_CONTAINERS2 = {
     },
     u'fdd04795069e': {
         u'Command': u'"/docker-entrypoint.\u2026"',
-        u'CreatedAt': u'2018-10-12 09:17:54 +0200 CEST',
-        u'ID': u'fdd04795069e',
+        u'Created': u'2018-10-12 09:17:54 +0200 CEST',
+        u'Id': u'fdd04795069e',
         u'Image': u'checkmk/check-mk-raw:1.5.0p5',
         u'Labels': {
             u'maintainer':
@@ -2443,7 +2443,7 @@ EXPECTED_CONTAINERS2 = {
         },
         u'LocalVolumes': u'1',
         u'Mounts': u'/etc/localtime,10b7c962177bf2\u2026',
-        u'Names': u'monitoringx',
+        u'Name': u'monitoringx',
         u'Networks': u'bridge',
         u'Ports': u'6557/tcp, 0.0.0.0:8080->5000/tcp',
         u'RunningFor': u'4 days ago',
@@ -2455,10 +2455,10 @@ EXPECTED_CONTAINERS2 = {
 EXPECTED_IMAGES2 = {
     u'096300fde75d': {
         u'Containers': u'N/A',
-        u'CreatedAt': u'2018-09-13 08:15:30 +0200 CEST',
+        u'Created': u'2018-09-13 08:15:30 +0200 CEST',
         u'CreatedSince': u'4 weeks ago',
         u'Digest': u'<none>',
-        u'ID': u'096300fde75d',
+        u'Id': u'096300fde75d',
         u'RepoTags': ['checkmk/check-mk-enterprise:1.5.0-2018.09.13'],
         u'SharedSize': u'N/A',
         u'Size': u'818MB',
@@ -2484,10 +2484,10 @@ EXPECTED_IMAGES2 = {
     },
     u'0983f5184ce7': {
         u'Containers': u'N/A',
-        u'CreatedAt': u'2018-10-12 16:07:29 +0200 CEST',
+        u'Created': u'2018-10-12 16:07:29 +0200 CEST',
         u'CreatedSince': u'3 days ago',
         u'Digest': u'<none>',
-        u'ID': u'0983f5184ce7',
+        u'Id': u'0983f5184ce7',
         u'SharedSize': u'N/A',
         u'Size': u'312MB',
         u'UniqueSize': u'N/A',
@@ -2499,10 +2499,10 @@ EXPECTED_IMAGES2 = {
     },
     u'2e89feac7533': {
         u'Containers': u'N/A',
-        u'CreatedAt': u'2018-09-13 08:27:42 +0200 CEST',
+        u'Created': u'2018-09-13 08:27:42 +0200 CEST',
         u'CreatedSince': u'4 weeks ago',
         u'Digest': u'<none>',
-        u'ID': u'2e89feac7533',
+        u'Id': u'2e89feac7533',
         u'RepoTags': ['docker-tests/check-mk-enterprise-master-2018.09.13:latest'],
         u'SharedSize': u'N/A',
         u'Size': u'831MB',
@@ -2528,10 +2528,10 @@ EXPECTED_IMAGES2 = {
     },
     u'44a5d6d15272': {
         u'Containers': u'N/A',
-        u'CreatedAt': u'2018-09-14 12:45:50 +0200 CEST',
+        u'Created': u'2018-09-14 12:45:50 +0200 CEST',
         u'CreatedSince': u'4 weeks ago',
         u'Digest': u'<none>',
-        u'ID': u'44a5d6d15272',
+        u'Id': u'44a5d6d15272',
         u'RepoTags': ['checkmk/check-mk-enterprise:1.5.0-daily'],
         u'SharedSize': u'N/A',
         u'Size': u'818MB',
@@ -2557,10 +2557,10 @@ EXPECTED_IMAGES2 = {
     },
     u'44e19a16bde1': {
         u'Containers': u'N/A',
-        u'CreatedAt': u'2018-09-04 23:21:34 +0200 CEST',
+        u'Created': u'2018-09-04 23:21:34 +0200 CEST',
         u'CreatedSince': u'5 weeks ago',
         u'Digest': u'<none>',
-        u'ID': u'44e19a16bde1',
+        u'Id': u'44e19a16bde1',
         u'RepoTags': ['debian:stretch-slim'],
         u'SharedSize': u'N/A',
         u'Size': u'55.3MB',
@@ -2570,10 +2570,10 @@ EXPECTED_IMAGES2 = {
     },
     u'485933207afd': {
         u'Containers': u'N/A',
-        u'CreatedAt': u'2018-10-12 16:12:03 +0200 CEST',
+        u'Created': u'2018-10-12 16:12:03 +0200 CEST',
         u'CreatedSince': u'3 days ago',
         u'Digest': u'<none>',
-        u'ID': u'485933207afd',
+        u'Id': u'485933207afd',
         u'RepoTags': ['docker-tests/check-mk-enterprise-master-1.5.0p5:latest'],
         u'SharedSize': u'N/A',
         u'Size': u'818MB',
@@ -2599,10 +2599,10 @@ EXPECTED_IMAGES2 = {
     },
     u'4a77be28f8e5': {
         u'Containers': u'N/A',
-        u'CreatedAt': u'2018-09-28 23:54:16 +0200 CEST',
+        u'Created': u'2018-09-28 23:54:16 +0200 CEST',
         u'CreatedSince': u'2 weeks ago',
         u'Digest': u'<none>',
-        u'ID': u'4a77be28f8e5',
+        u'Id': u'4a77be28f8e5',
         u'RepoTags': ['checkmk/check-mk-raw:1.5.0p5'],
         u'SharedSize': u'N/A',
         u'Size': u'752MB',
@@ -2628,10 +2628,10 @@ EXPECTED_IMAGES2 = {
     },
     u'5182e96772bf': {
         u'Containers': u'N/A',
-        u'CreatedAt': u'2018-08-06 21:21:48 +0200 CEST',
+        u'Created': u'2018-08-06 21:21:48 +0200 CEST',
         u'CreatedSince': u'2 months ago',
         u'Digest': u'<none>',
-        u'ID': u'5182e96772bf',
+        u'Id': u'5182e96772bf',
         u'RepoTags': ['centos:7'],
         u'SharedSize': u'N/A',
         u'Size': u'200MB',
@@ -2648,10 +2648,10 @@ EXPECTED_IMAGES2 = {
     },
     u'6143303a8e14': {
         u'Containers': u'N/A',
-        u'CreatedAt': u'2018-09-10 17:36:25 +0200 CEST',
+        u'Created': u'2018-09-10 17:36:25 +0200 CEST',
         u'CreatedSince': u'5 weeks ago',
         u'Digest': u'<none>',
-        u'ID': u'6143303a8e14',
+        u'Id': u'6143303a8e14',
         u'RepoTags': ['hadolint/hadolint:latest'],
         u'SharedSize': u'N/A',
         u'Size': u'3.64MB',
@@ -2661,10 +2661,10 @@ EXPECTED_IMAGES2 = {
     },
     u'6c97da45403a': {
         u'Containers': u'N/A',
-        u'CreatedAt': u'2018-10-12 11:12:15 +0200 CEST',
+        u'Created': u'2018-10-12 11:12:15 +0200 CEST',
         u'CreatedSince': u'4 days ago',
         u'Digest': u'<none>',
-        u'ID': u'6c97da45403a',
+        u'Id': u'6c97da45403a',
         u'RepoTags': ['local/c7-systemd:latest'],
         u'SharedSize': u'N/A',
         u'Size': u'200MB',
@@ -2681,10 +2681,10 @@ EXPECTED_IMAGES2 = {
     },
     u'8ca14ae84dd9': {
         u'Containers': u'N/A',
-        u'CreatedAt': u'2018-09-14 13:08:54 +0200 CEST',
+        u'Created': u'2018-09-14 13:08:54 +0200 CEST',
         u'CreatedSince': u'4 weeks ago',
         u'Digest': u'<none>',
-        u'ID': u'8ca14ae84dd9',
+        u'Id': u'8ca14ae84dd9',
         u'RepoTags': ['checkmk/check-mk-enterprise:daily'],
         u'SharedSize': u'N/A',
         u'Size': u'972MB',
@@ -2710,10 +2710,10 @@ EXPECTED_IMAGES2 = {
     },
     u'8d463a5f7635': {
         u'Containers': u'N/A',
-        u'CreatedAt': u'2018-09-12 21:15:47 +0200 CEST',
+        u'Created': u'2018-09-12 21:15:47 +0200 CEST',
         u'CreatedSince': u'4 weeks ago',
         u'Digest': u'<none>',
-        u'ID': u'8d463a5f7635',
+        u'Id': u'8d463a5f7635',
         u'RepoTags': ['checkmk/check-mk-enterprise:1.5.0-2018.09.12'],
         u'SharedSize': u'N/A',
         u'Size': u'815MB',
@@ -2739,10 +2739,10 @@ EXPECTED_IMAGES2 = {
     },
     u'91152cc1c4bc': {
         u'Containers': u'N/A',
-        u'CreatedAt': u'2018-09-14 14:47:41 +0200 CEST',
+        u'Created': u'2018-09-14 14:47:41 +0200 CEST',
         u'CreatedSince': u'4 weeks ago',
         u'Digest': u'<none>',
-        u'ID': u'91152cc1c4bc',
+        u'Id': u'91152cc1c4bc',
         u'RepoTags': ['docker-tests/check-mk-enterprise-master-2018.09.14:latest'],
         u'SharedSize': u'N/A',
         u'Size': u'831MB',
@@ -5246,10 +5246,10 @@ EXPECTED_CONTAINERS3 = EXPECTED_CONTAINERS2
 EXPECTED_IMAGES3 = {
     u'096300fde75d': {
         u'Containers': u'N/A',
-        u'CreatedAt': u'2018-09-13T06:15:30.34090448Z',
+        u'Created': u'2018-09-13T06:15:30.34090448Z',
         u'CreatedSince': u'4 weeks ago',
         u'Digest': u'<none>',
-        u'ID': u'096300fde75d',
+        u'Id': u'096300fde75d',
         u'RepoTags': ['checkmk/check-mk-enterprise:1.5.0-2018.09.13'],
         u'SharedSize': u'N/A',
         u'Size': u'818MB',
@@ -5275,10 +5275,10 @@ EXPECTED_IMAGES3 = {
     },
     u'0983f5184ce7': {
         u'Containers': u'N/A',
-        u'CreatedAt': u'2018-10-12T14:07:29.732808446Z',
+        u'Created': u'2018-10-12T14:07:29.732808446Z',
         u'CreatedSince': u'3 days ago',
         u'Digest': u'<none>',
-        u'ID': u'0983f5184ce7',
+        u'Id': u'0983f5184ce7',
         u'SharedSize': u'N/A',
         u'Size': u'312MB',
         u'UniqueSize': u'N/A',
@@ -5290,10 +5290,10 @@ EXPECTED_IMAGES3 = {
     },
     u'2e89feac7533': {
         u'Containers': u'N/A',
-        u'CreatedAt': u'2018-09-13T06:27:42.955259674Z',
+        u'Created': u'2018-09-13T06:27:42.955259674Z',
         u'CreatedSince': u'4 weeks ago',
         u'Digest': u'<none>',
-        u'ID': u'2e89feac7533',
+        u'Id': u'2e89feac7533',
         u'SharedSize': u'N/A',
         u'Size': u'831MB',
         u'UniqueSize': u'N/A',
@@ -5318,10 +5318,10 @@ EXPECTED_IMAGES3 = {
     },
     u'44a5d6d15272': {
         u'Containers': u'N/A',
-        u'CreatedAt': u'2018-09-14T10:45:50.232853938Z',
+        u'Created': u'2018-09-14T10:45:50.232853938Z',
         u'CreatedSince': u'4 weeks ago',
         u'Digest': u'<none>',
-        u'ID': u'44a5d6d15272',
+        u'Id': u'44a5d6d15272',
         u'SharedSize': u'N/A',
         u'Size': u'818MB',
         u'UniqueSize': u'N/A',
@@ -5346,10 +5346,10 @@ EXPECTED_IMAGES3 = {
     },
     u'44e19a16bde1': {
         u'Containers': u'N/A',
-        u'CreatedAt': u'2018-09-04T21:21:34.566479261Z',
+        u'Created': u'2018-09-04T21:21:34.566479261Z',
         u'CreatedSince': u'5 weeks ago',
         u'Digest': u'<none>',
-        u'ID': u'44e19a16bde1',
+        u'Id': u'44e19a16bde1',
         u'SharedSize': u'N/A',
         u'Size': u'55.3MB',
         u'UniqueSize': u'N/A',
@@ -5358,10 +5358,10 @@ EXPECTED_IMAGES3 = {
     },
     u'485933207afd': {
         u'Containers': u'N/A',
-        u'CreatedAt': u'2018-10-12T14:12:03.009245184Z',
+        u'Created': u'2018-10-12T14:12:03.009245184Z',
         u'CreatedSince': u'3 days ago',
         u'Digest': u'<none>',
-        u'ID': u'485933207afd',
+        u'Id': u'485933207afd',
         u'SharedSize': u'N/A',
         u'Size': u'818MB',
         u'UniqueSize': u'N/A',
@@ -5386,10 +5386,10 @@ EXPECTED_IMAGES3 = {
     },
     u'4a77be28f8e5': {
         u'Containers': u'N/A',
-        u'CreatedAt': u'2018-09-28T21:54:16.702903575Z',
+        u'Created': u'2018-09-28T21:54:16.702903575Z',
         u'CreatedSince': u'2 weeks ago',
         u'Digest': u'<none>',
-        u'ID': u'4a77be28f8e5',
+        u'Id': u'4a77be28f8e5',
         u'SharedSize': u'N/A',
         u'Size': u'752MB',
         u'UniqueSize': u'N/A',
@@ -5414,10 +5414,10 @@ EXPECTED_IMAGES3 = {
     },
     u'5182e96772bf': {
         u'Containers': u'N/A',
-        u'CreatedAt': u'2018-08-06T19:21:48.235227329Z',
+        u'Created': u'2018-08-06T19:21:48.235227329Z',
         u'CreatedSince': u'2 months ago',
         u'Digest': u'<none>',
-        u'ID': u'5182e96772bf',
+        u'Id': u'5182e96772bf',
         u'SharedSize': u'N/A',
         u'Size': u'200MB',
         u'UniqueSize': u'N/A',
@@ -5433,10 +5433,10 @@ EXPECTED_IMAGES3 = {
     },
     u'6143303a8e14': {
         u'Containers': u'N/A',
-        u'CreatedAt': u'2018-09-10T15:36:25.80531779Z',
+        u'Created': u'2018-09-10T15:36:25.80531779Z',
         u'CreatedSince': u'5 weeks ago',
         u'Digest': u'<none>',
-        u'ID': u'6143303a8e14',
+        u'Id': u'6143303a8e14',
         u'SharedSize': u'N/A',
         u'Size': u'3.64MB',
         u'UniqueSize': u'N/A',
@@ -5445,10 +5445,10 @@ EXPECTED_IMAGES3 = {
     },
     u'6c97da45403a': {
         u'Containers': u'N/A',
-        u'CreatedAt': u'2018-10-12T09:12:15.613593451Z',
+        u'Created': u'2018-10-12T09:12:15.613593451Z',
         u'CreatedSince': u'4 days ago',
         u'Digest': u'<none>',
-        u'ID': u'6c97da45403a',
+        u'Id': u'6c97da45403a',
         u'SharedSize': u'N/A',
         u'Size': u'200MB',
         u'UniqueSize': u'N/A',

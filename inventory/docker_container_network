@@ -25,9 +25,9 @@
 # Boston, MA 02110-1301 USA.
 
 
-def _parse_docker_container_network(info):
-    import json
-    return json.loads(" ".join(info[0]))
+def parse_docker_container_network(info):
+    parsed = docker_json_get_obj(info[0]) or {}  # pylint: disable=undefined-variable
+    return parsed
 
 
 def inv_docker_container_network_networks(parsed, inventory_tree):
@@ -68,11 +68,12 @@ def inv_docker_container_network_ports(parsed, inventory_tree):
 
 
 def inv_docker_container_network(info, inventory_tree):
-    parsed = _parse_docker_container_network(info)
+    parsed = parse_docker_container_network(info)
     inv_docker_container_network_networks(parsed, inventory_tree)
     inv_docker_container_network_ports(parsed, inventory_tree)
 
 
 inv_info["docker_container_network"] = {  # pylint: disable=undefined-variable
+    "includes": ['docker.include'],
     "inv_function": inv_docker_container_network,
 }

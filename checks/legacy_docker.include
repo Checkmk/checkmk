@@ -178,7 +178,7 @@ def parse_legacy_docker_node_info(info):  # pylint: disable=too-many-branches
     return parsed
 
 
-def _legacy_docker_parse_table(rows, fields, keys):
+def _legacy_docker_parse_table(rows, keys):
     '''docker provides us with space separated tables with field containing spaces
 
     e.g.:
@@ -192,7 +192,8 @@ def _legacy_docker_parse_table(rows, fields, keys):
         return []
 
     indices = []
-    for field in fields:
+    for key in keys:
+        field = key.upper()
         rex = regex(field + r'\ *')
         match = rex.search(rows[0][0])
         if match is not None:
@@ -216,28 +217,36 @@ def _legacy_docker_parse_table(rows, fields, keys):
     return table
 
 
+def _legacy_map_keys(dictionary, map_keys):
+    for old, new in map_keys:
+        if old in dictionary:
+            dictionary[new] = dictionary.pop(old)
+
+
 def parse_legacy_docker_system_df(info):
     def int_or_zero(string):
         return int(string.strip() or 0)
 
-    field_map = (
-        ('TYPE', 'TOTAL', 'ACTIVE', 'SIZE', 'RECLAIMABLE'),
-        ('Type', 'TotalCount', 'Active', 'Size', 'Reclaimable'),
+    type_map = (
+        ('type', 'total', 'active', 'size', 'reclaimable'),
         (str, int_or_zero, int_or_zero, _legacy_docker_get_bytes, _legacy_docker_get_bytes),
     )
 
     try:  # parse legacy json output: from 1.5.0 - 1.5.0p6
         table = [json.loads(",".join(row)) for row in info if row]
     except ValueError:
-        table = _legacy_docker_parse_table(info, field_map[0], field_map[1])
+        table = _legacy_docker_parse_table(info, type_map[0])
 
     parsed = DeprecatedDict()
     for line in table:
-        for key, type_ in zip(field_map[1], field_map[2]):
-            val = line.get(key)
+        sane_line = {k.lower(): v for k, v in line.items()}
+        _legacy_map_keys(sane_line, (('totalcount', 'total'),))
+        for key, type_ in zip(type_map[0], type_map[1]):
+            val = sane_line.get(key)
             if val is not None:
-                line[key] = type_(val)
-        parsed[line.get("Type").lower()] = line
+                sane_line[key] = type_(val)
+        _legacy_map_keys(sane_line, (('total', 'count'),))
+        parsed[sane_line.get("type").lower()] = sane_line
 
     return parsed
 
@@ -259,8 +268,12 @@ def parse_legacy_docker_subsection_images(info):
 
     table = _get_json_list(info)
 
+    map_keys = (("ID", "Id"), ("CreatedAt", "Created"))
+
     parsed = DeprecatedDict()
     for item in table:
+        _legacy_map_keys(item, map_keys)
+
         val = item.get("VirtualSize")
         if val is not None:
             item["VirtualSize"] = _legacy_docker_get_bytes(val)
@@ -269,7 +282,7 @@ def parse_legacy_docker_subsection_images(info):
         if not repotags and item.get("Repository"):
             repotags.append('%s:%s' % (item["Repository"], item.get("Tag", "latest")))
 
-        parsed[item.get("ID")] = item
+        parsed[item.get("Id")] = item
 
     return parsed
 
@@ -300,9 +313,15 @@ def parse_legacy_docker_subsection_containers(info):
 
     table = _get_json_list(info)
 
+    map_keys = (("ID", "Id"), ("CreatedAt", "Created"), ("Names", "Name"))
+
     parsed = DeprecatedDict()
     for item in table:
-        parsed[item.get("ID")] = item
+        _legacy_map_keys(item, map_keys)
+        if "Status" in item:
+            item["State"] = {"Status": item["Status"]}
+
+        parsed[item.get("Id")] = item
 
     return parsed
 
@@ -332,10 +351,10 @@ def parse_legacy_docker_node_images(subsections):
 
     for image_id, pref_info in image_inspect.iteritems():
         image = images.setdefault(image_id, {})
-        image["ID"] = image_id
+        image["Id"] = image_id
         labels = pref_info.get("Config", {}).get("Labels") or {}
         image.setdefault("Labels", {}).update(labels)
-        image["CreatedAt"] = pref_info["Created"]
+        image["Created"] = pref_info["Created"]
         image["VirtualSize"] = pref_info["VirtualSize"]
 
         repotags = pref_info.get("RepoTags")
@@ -384,3 +403,10 @@ def parse_legacy_docker_network_inspect(info):
     except ValueError:
         raw = []
     return DeprecatedList(raw)
+
+
+def parse_legacy_docker_container_node_name(info):
+    try:
+        return info[0][0]
+    except IndexError:
+        return None

@@ -86,3 +86,13 @@ def test_config_legacy_cert_path_to_verify():
 def test_jolokia_instance_base_url(config, base_url):
     joloi = mk_jolokia.JolokiaInstance(config)
     assert joloi._get_base_url() == base_url
+
+
+def test_jolokia_yield_configured_instances():
+    yci = mk_jolokia.yield_configured_instances({
+        "instances": [{"server": "s1"}, {"server": "s2"}],
+        "port": 1234,
+    })
+
+    assert next(yci) == {"server": "s1", "port": 1234}
+    assert next(yci) == {"server": "s2", "port": 1234}

@@ -1,7 +1,10 @@
 # *--encoding: UTF-8--*
-import pytest
+# pylint: disable=too-many-lines
+# pylint: disable=line-too-long
+# pylint: disable=invalid-name
 import os
 import re
+import pytest
 
 pytestmark = pytest.mark.checks
 
@@ -11,16 +14,23 @@ execfile(os.path.join(os.path.dirname(__file__), '../../../checks/legacy_docker.
 
 
 REQUIRED_IMAGE_KEYS = (
-    ("ID", (str, unicode)), ("Repository", (str, unicode)),
-    ("Tag",(str, unicode)), ("CreatedAt", (str, unicode)),
-    ("VirtualSize", int), ("Labels", dict), ("amount_containers", int),
+    ("ID", (str, unicode)),
+    ("Repository", (str, unicode)),
+    ("Tag", (str, unicode)),
+    ("CreatedAt", (str, unicode)),
+    ("VirtualSize", int),
+    ("Labels", dict),
+    ("amount_containers", int),
 )
 
 
 REQUIRED_CONTAINER_KEYS = (
-    ("ID", (str, unicode)), ("Repository", (str, unicode)),
-    ("Tag", (str, unicode)), ("CreatedAt", (str, unicode)),
-    ("Labels", dict), ("Names", (str, unicode)),
+    ("ID", (str, unicode)),
+    ("Repository", (str, unicode)),
+    ("Tag", (str, unicode)),
+    ("CreatedAt", (str, unicode)),
+    ("Labels", dict),
+    ("Names", (str, unicode)),
     ("Status", (str, unicode)),
 )
 

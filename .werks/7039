@@ -1,0 +1,11 @@
+Title: ucs_c_rack_server_health: Storage controller health
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1549987107
+Class: feature
+
+This werk adds support for monitoring the storage controller
+health of an Cisco UCS C-Series Rack Servers racks.

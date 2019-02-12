@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 import json
 import re
+import functools
 
 
 class DeprecatedDict(dict):
@@ -118,7 +119,7 @@ def _get_repo_tag(string):
     return string, "latest"
 
 
-def parse_legacy_docker_node_info(info):
+def parse_legacy_docker_node_info(info):  # pylint: disable=too-many-branches
     '''parse output of "docker info"'''
     parsed = DeprecatedDict()
     if not info:
@@ -199,9 +200,9 @@ def _legacy_docker_parse_table(rows, fields, keys):
     indices = []
     for field in fields:
         rex = regex(field + r'\ *')
-        m = rex.search(rows[0][0])
-        if m is not None:
-            start, end = m.start(), m.end()
+        match = rex.search(rows[0][0])
+        if match is not None:
+            start, end = match.start(), match.end()
             if end - start == len(field):
                 end = None
             indices.append((start, end))
@@ -222,8 +223,8 @@ def _legacy_docker_parse_table(rows, fields, keys):
 
 
 def parse_legacy_docker_system_df(info):
-    def int_or_zero(s):
-        return int(s.strip() or 0)
+    def int_or_zero(string):
+        return int(string.strip() or 0)
 
     field_map = (
         ('TYPE', 'TOTAL', 'ACTIVE', 'SIZE', 'RECLAIMABLE'),

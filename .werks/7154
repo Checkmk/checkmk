@@ -1,0 +1,11 @@
+Title: OpenSSL update on our build platform
+Level: 1
+Component: omd
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p12
+Date: 1549958118
+
+Centos 6, Suse Enterprise 11 SP2 and SP3 updated OpenSSL. Therefore, we updated our build systems and python packages. In case you experience SSL problems on one of these systems, please update your OS.

@@ -30,6 +30,7 @@ import os
 import pprint
 import re
 
+import cmk.gui.config as config
 import cmk.gui.forms as forms
 from cmk.gui.table import table_element
 import cmk.gui.userdb as userdb
@@ -39,7 +40,6 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
 from cmk.gui.watolib.host_attributes import (
-    declare_custom_host_attrs,
     host_attribute_topic_registry,
     transform_pre_16_host_topics,
 )
@@ -52,8 +52,8 @@ def update_user_custom_attrs():
     userdb.rewrite_users()
 
 
-def update_host_custom_attrs():
-    declare_custom_host_attrs()
+def _update_host_custom_attrs():
+    config.load_config()
     Folder.invalidate_caches()
     Folder.root_folder().rewrite_hosts_files()
 
@@ -367,7 +367,7 @@ class ModeEditCustomHostAttr(ModeEditCustomAttr):
                  "e.g. in check commands or in notifications.")
 
     def _update_config(self):
-        update_host_custom_attrs()
+        _update_host_custom_attrs()
 
     def title(self):
         if self._new:
@@ -486,7 +486,7 @@ class ModeCustomHostAttrs(ModeCustomAttrs):
         return 'host'
 
     def _update_config(self):
-        update_host_custom_attrs()
+        _update_host_custom_attrs()
 
     def title(self):
         return _("Custom Host Attributes")

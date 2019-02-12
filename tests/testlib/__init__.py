@@ -15,7 +15,7 @@ import pipes
 import subprocess
 import sys
 import shutil
-import lockfile
+import fasteners
 import ast
 import abc
 import urllib3
@@ -243,7 +243,7 @@ class CMKVersion(object):
 
         # Improve the protection against other test runs installing packages
         print("Getting install file lock (/tmp/cmk-test-install-version.lock)...")
-        with lockfile.FileLock("/tmp/cmk-test-install-version"):
+        with fasteners.InterProcessLock("/tmp/cmk-test-install-version"):
             print("Have install file lock")
             cmd = "sudo /usr/bin/gdebi --non-interactive %s" % package_path
             print(cmd)
@@ -521,7 +521,7 @@ class Site(object):
 
         if not self.exists():
             print("Getting site create lock (/tmp/cmk-test-create-site.lock)...")
-            with lockfile.FileLock("/tmp/cmk-test-create-site"):
+            with fasteners.InterProcessLock("/tmp/cmk-test-create-site"):
                 print("Have site create lock")
 
                 print("[%0.2f] Creating site '%s'" % (time.time(), self.id))
@@ -891,7 +891,7 @@ class Site(object):
             self.stop()
 
         sys.stdout.write("Getting livestatus port lock (/tmp/cmk-test-open-livestatus-port)...\n")
-        with lockfile.FileLock("/tmp/cmk-test-livestatus-port"):
+        with fasteners.InterProcessLock("/tmp/cmk-test-livestatus-port"):
             sys.stdout.write("Have livestatus port lock\n")
             self.set_config("LIVESTATUS_TCP", "on")
             self._gather_livestatus_port()

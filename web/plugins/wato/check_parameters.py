@@ -11799,6 +11799,18 @@ register_check_parameters(
                   unit = _("ms"),
                   default_levels = (80.0, 160.0),
             )),
+            ("read_latency",
+             Levels(
+                 title=_("Disk Read Latency"),
+                 unit=_("ms"),
+                 default_levels=(80.0, 160.0),
+             )),
+            ("write_latency",
+             Levels(
+                 title=_("Disk Write Latency"),
+                 unit=_("ms"),
+                 default_levels=(80.0, 160.0),
+             )),
             ( "read_wait",
               Levels(
                   title = _("Read wait"),

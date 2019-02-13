@@ -101,7 +101,7 @@ AWSSectionResults = NamedTuple("AWSSectionResults", [
 ])
 
 AWSSectionResult = NamedTuple("AWSSectionResult", [
-    ("piggyback_hostname", str),
+    ("piggyback_hostname", Any),
     ("content", Any),
 ])
 
@@ -198,8 +198,8 @@ class AWSSection(object):
                 continue
 
             assert isinstance(
-                result.piggyback_hostname,
-                str), "%s: Piggyback hostname of created result must be of type 'str'" % self.name
+                result.piggyback_hostname, (unicode, str)
+            ), "%s: Piggyback hostname of created result must be of type 'unicode' or 'str'" % self.name
             # In the related check plugin aws.include we parse these results and
             # extend list of json-loaded results.
             assert isinstance(result.content,

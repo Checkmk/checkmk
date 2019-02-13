@@ -46,6 +46,7 @@ from cmk.gui.valuespec import (
     TextAscii,
 )
 
+from cmk.gui.watolib.groups import load_group_information
 from cmk.gui.plugins.wato.utils.main_menu import (
     MainMenu,
     MenuItem,
@@ -72,7 +73,7 @@ class ModeGroups(WatoMode):
         self._load_groups()
 
     def _load_groups(self):
-        all_groups = userdb.load_group_information()
+        all_groups = load_group_information()
         self._groups = all_groups.setdefault(self.type_name, {})
 
     def buttons(self):
@@ -159,7 +160,7 @@ class ModeEditGroup(WatoMode):
         super(ModeEditGroup, self).__init__()
 
     def _load_groups(self):
-        all_groups = userdb.load_group_information()
+        all_groups = load_group_information()
         self._groups = all_groups.setdefault(self.type_name, {})
 
     def _from_vars(self):

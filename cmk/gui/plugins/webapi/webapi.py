@@ -40,6 +40,7 @@ from cmk.gui.globals import html
 from cmk.gui.exceptions import MKUserError, MKAuthException, MKException
 from cmk.gui.plugins.userdb.htpasswd import hash_password
 import cmk.gui.watolib.users
+from cmk.gui.watolib.groups import load_group_information
 
 import cmk.gui.bi as bi
 
@@ -447,7 +448,7 @@ class APICallGroups(APICallCollection):
         }
 
     def _get_all_groups(self, group_type, request):
-        return userdb.load_group_information().get(group_type, {})
+        return load_group_information().get(group_type, {})
 
     def _delete_group(self, group_type, request):
         groupname = request.get("groupname")

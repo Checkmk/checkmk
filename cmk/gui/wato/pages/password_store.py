@@ -36,6 +36,7 @@ from cmk.gui.valuespec import (
     DualListChoice,
 )
 
+from cmk.gui.watolib.groups import load_group_information
 from cmk.gui.watolib.password_store import PasswordStore
 from cmk.gui.plugins.wato import (
     ConfigDomainCore,
@@ -78,7 +79,7 @@ class ModePasswords(SimpleListMode):
             mode_type=PasswordStoreModeType(),
             store=PasswordStore(),
         )
-        self._contact_groups = userdb.load_group_information().get("contact", {})
+        self._contact_groups = load_group_information().get("contact", {})
 
     def title(self):
         return _("Passwords")
@@ -190,7 +191,7 @@ class ModeEditPassword(SimpleEditMode):
         ]
 
     def _contact_group_choices(self, only_own=False):
-        contact_groups = userdb.load_group_information().get("contact", {})
+        contact_groups = load_group_information().get("contact", {})
 
         if only_own:
             user_groups = userdb.contactgroups_of_user(config.user.id)

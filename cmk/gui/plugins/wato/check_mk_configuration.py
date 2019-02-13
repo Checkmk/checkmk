@@ -99,6 +99,7 @@ from cmk.gui.plugins.wato import (
 from cmk.gui.plugins.wato.omd_configuration import ConfigVariableGroupSiteManagement
 from cmk.gui.plugins.views.icons import icon_and_action_registry
 from cmk.gui.watolib.bulk_discovery import vs_bulk_discovery
+from cmk.gui.watolib.groups import load_group_information
 
 #   .--Global Settings-----------------------------------------------------.
 #   |  ____ _       _           _   ____       _   _   _                   |
@@ -1913,7 +1914,7 @@ class ConfigVariableDefaultUserProfile(ConfigVariable):
         return [(i, r["alias"]) for i, r in roles.items()]
 
     def _list_contactgroups(self):
-        contact_groups = userdb.load_group_information().get("contact", {})
+        contact_groups = load_group_information().get("contact", {})
         entries = [(c, g['alias']) for c, g in contact_groups.items()]
         return sorted(entries)
 

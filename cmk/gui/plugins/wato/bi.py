@@ -71,6 +71,7 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 
+from cmk.gui.watolib.groups import load_group_information
 from cmk.gui.plugins.wato import (
     WatoMode,
     mode_registry,
@@ -977,7 +978,7 @@ class ModeBIPacks(ModeBI):
 
     def __init__(self):
         ModeBI.__init__(self)
-        self._contact_group_names = userdb.load_group_information().get("contact", {})
+        self._contact_group_names = load_group_information().get("contact", {})
 
     def buttons(self):
         ModeBI.buttons(self)

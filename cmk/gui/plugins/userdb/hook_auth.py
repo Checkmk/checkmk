@@ -224,13 +224,14 @@ function permitted_maps($username) {
 
 
 def create_auth_file(callee, users=None):
+    from cmk.gui.watolib.groups import load_group_information
     import cmk.gui.userdb as userdb  # TODO: Cleanup
     if users is None:
         users = userdb.load_users()
 
     store.mkdir(g_auth_base_dir)
 
-    contactgroups = userdb.load_group_information().get('contact', {})
+    contactgroups = load_group_information().get('contact', {})
     groups = {}
     for gid, group in contactgroups.items():
         if 'nagvis_maps' in group and group['nagvis_maps']:

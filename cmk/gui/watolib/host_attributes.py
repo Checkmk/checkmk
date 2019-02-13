@@ -32,22 +32,17 @@ import six
 
 import cmk.utils.plugin_registry
 
-import cmk.gui.userdb as userdb
 import cmk.gui.config as config
 from cmk.gui.globals import html
 from cmk.gui.i18n import _, _u
 from cmk.gui.exceptions import MKUserError, MKGeneralException
 from cmk.gui.valuespec import (
     TextAscii,
-    DualListChoice,
     Checkbox,
     DropdownChoice,
 )
 from cmk.gui.watolib.host_tags import group_hosttags_by_topic
-from cmk.gui.watolib.utils import (
-    host_attribute_matches,
-    convert_cgroups_from_tuple,
-)
+from cmk.gui.watolib.utils import host_attribute_matches
 
 
 class HostAttributeTopic(object):
@@ -903,144 +898,6 @@ class ABCHostAttributeNagiosValueSpec(ABCHostAttributeValueSpec):
         if value:
             return value
         return None
-
-
-@host_attribute_registry.register
-class HostAttributeContactGroups(ABCHostAttribute):
-    """Attribute needed for folder permissions"""
-
-    def __init__(self):
-        ABCHostAttribute.__init__(self)
-        self._contactgroups = None
-        self._loaded_at = None
-
-    def name(self):
-        return "contactgroups"
-
-    def title(self):
-        return _("Permissions")
-
-    def topic(self):
-        return HostAttributeTopicBasicSettings
-
-    def help(self):
-        url = "wato.py?mode=rulesets&group=grouping"
-        return _("Only members of the contact groups listed here have WATO permission "
-                 "to the host / folder. If you want, you can make those contact groups "
-                 "automatically also <b>monitoring contacts</b>. This is completely "
-                 "optional. Assignment of host and services to contact groups "
-                 "can be done by <a href='%s'>rules</a> as well.") % url
-
-    def show_in_table(self):
-        return False
-
-    def show_in_folder(self):
-        return True
-
-    def default_value(self):
-        return (True, [])
-
-    def paint(self, value, hostname):
-        value = convert_cgroups_from_tuple(value)
-        texts = []
-        self.load_data()
-        items = self._contactgroups.items()
-        items.sort(cmp=lambda a, b: cmp(a[1]['alias'], b[1]['alias']))
-        for name, cgroup in items:
-            if name in value["groups"]:
-                display_name = cgroup.get("alias", name)
-                texts.append('<a href="wato.py?mode=edit_contact_group&edit=%s">%s</a>' %
-                             (name, display_name))
-        result = ", ".join(texts)
-        if texts and value["use"]:
-            result += html.render_span(
-                html.render_b("*"),
-                title=_("These contact groups are also used in the monitoring configuration."))
-        return "", result
-
-    def render_input(self, varprefix, value):
-        value = convert_cgroups_from_tuple(value)
-
-        # If we're just editing a host, then some of the checkboxes will be missing.
-        # This condition is not very clean, but there is no other way to savely determine
-        # the context.
-        is_host = bool(html.request.var("host")) or html.request.var("mode") == "newhost"
-        is_search = varprefix == "host_search"
-
-        # Only show contact groups I'm currently in and contact
-        # groups already listed here.
-        self.load_data()
-        self._vs_contactgroups().render_input(varprefix + self.name(), value['groups'])
-
-        html.hr()
-
-        if is_host:
-            html.checkbox(
-                varprefix + self.name() + "_use",
-                value["use"],
-                label=_("Add these contact groups to the host"))
-
-        elif not is_search:
-            html.checkbox(
-                varprefix + self.name() + "_recurse_perms",
-                value["recurse_perms"],
-                label=_("Give these groups also <b>permission on all subfolders</b>"))
-            html.hr()
-            html.checkbox(
-                varprefix + self.name() + "_use",
-                value["use"],
-                label=_("Add these groups as <b>contacts</b> to all hosts in this folder"))
-            html.br()
-            html.checkbox(
-                varprefix + self.name() + "_recurse_use",
-                value["recurse_use"],
-                label=_("Add these groups as <b>contacts in all subfolders</b>"))
-
-        html.hr()
-        html.help(
-            _("With this option contact groups that are added to hosts are always "
-              "being added to services, as well. This only makes a difference if you have "
-              "assigned other contact groups to services via rules in <i>Host & Service Parameters</i>. "
-              "As long as you do not have any such rule a service always inherits all contact groups "
-              "from its host."))
-        html.checkbox(
-            varprefix + self.name() + "_use_for_services",
-            value.get("use_for_services", False),
-            label=_("Always add host contact groups also to its services"))
-
-    def load_data(self):
-        # Make cache valid only during this HTTP request
-        if self._loaded_at == id(html):
-            return
-        self._loaded_at = id(html)
-        self._contactgroups = userdb.load_group_information().get("contact", {})
-
-    def from_html_vars(self, varprefix):
-        self.load_data()
-
-        cgs = self._vs_contactgroups().from_html_vars(varprefix + self.name())
-
-        return {
-            "groups": cgs,
-            "recurse_perms": html.get_checkbox(varprefix + self.name() + "_recurse_perms"),
-            "use": html.get_checkbox(varprefix + self.name() + "_use"),
-            "use_for_services": html.get_checkbox(varprefix + self.name() + "_use_for_services"),
-            "recurse_use": html.get_checkbox(varprefix + self.name() + "_recurse_use"),
-        }
-
-    def filter_matches(self, crit, value, hostname):
-        value = convert_cgroups_from_tuple(value)
-        # Just use the contact groups for searching
-        for contact_group in crit["groups"]:
-            if contact_group not in value["groups"]:
-                return False
-        return True
-
-    def _vs_contactgroups(self):
-        cg_choices = sorted([(cg_id, cg_attrs.get("alias", cg_id))
-                             for cg_id, cg_attrs in self._contactgroups.items()],
-                            key=lambda x: x[1])
-        return DualListChoice(choices=cg_choices, rows=20, size=100)
 
 
 # TODO: Kept for pre 1.6 plugin compatibility

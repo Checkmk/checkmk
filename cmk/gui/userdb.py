@@ -47,7 +47,6 @@ import cmk.gui.gui_background_job as gui_background_job
 from cmk.gui.exceptions import MKUserError, MKInternalError
 from cmk.gui.log import logger
 from cmk.gui.valuespec import (
-    DualListChoice,
     TextAscii,
     DropdownChoice,
 )
@@ -1087,69 +1086,6 @@ def _get_builtin_roles():
             "builtin": True,
         } for rid in config.builtin_role_ids
     }
-
-
-#.
-#   .-Groups---------------------------------------------------------------.
-#   |                    ____                                              |
-#   |                   / ___|_ __ ___  _   _ _ __  ___                    |
-#   |                  | |  _| '__/ _ \| | | | '_ \/ __|                   |
-#   |                  | |_| | | | (_) | |_| | |_) \__ \                   |
-#   |                   \____|_|  \___/ \__,_| .__/|___/                   |
-#   |                                        |_|                           |
-#   +----------------------------------------------------------------------+
-# TODO: Contact groups are fine here, but service / host groups?
-
-
-def load_group_information():
-    cmk_base_groups = _load_cmk_base_groups()
-    gui_groups = _load_gui_groups()
-
-    # Merge information from Check_MK and Multisite worlds together
-    groups = {}
-    for what in ["host", "service", "contact"]:
-        groups[what] = {}
-        for gid, alias in cmk_base_groups['define_%sgroups' % what].items():
-            groups[what][gid] = {'alias': alias}
-
-            if gid in gui_groups['multisite_%sgroups' % what]:
-                groups[what][gid].update(gui_groups['multisite_%sgroups' % what][gid])
-
-    return groups
-
-
-def _load_cmk_base_groups():
-    """Load group information from Check_MK world"""
-    group_specs = {
-        "define_hostgroups": {},
-        "define_servicegroups": {},
-        "define_contactgroups": {},
-    }
-
-    return store.load_mk_file(root_dir + "groups.mk", default=group_specs)
-
-
-def _load_gui_groups():
-    # Now load information from the Web world
-    group_specs = {
-        "multisite_hostgroups": {},
-        "multisite_servicegroups": {},
-        "multisite_contactgroups": {},
-    }
-
-    return store.load_mk_file(multisite_dir + "groups.mk", default=group_specs)
-
-
-class GroupChoice(DualListChoice):
-    def __init__(self, what, **kwargs):
-        super(GroupChoice, self).__init__(choices=self._load_groups, **kwargs)
-        self.what = what
-
-    def _load_groups(self):
-        all_groups = load_group_information()
-        this_group = all_groups.get(self.what, {})
-        return sorted([(k, t['alias'] and t['alias'] or k) for (k, t) in this_group.items()],
-                      key=lambda x: x[1].lower())
 
 
 #.

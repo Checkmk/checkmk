@@ -116,6 +116,7 @@ from cmk.gui.watolib.password_store import PasswordStore
 from cmk.gui.watolib.host_tags import group_hosttags_by_topic
 from cmk.gui.watolib.timeperiods import TimeperiodSelection
 from cmk.gui.watolib.users import notification_script_title
+from cmk.gui.watolib.groups import load_group_information
 from cmk.gui.watolib.rulespecs import (
     TimeperiodValuespec,
     rulespec_registry,
@@ -525,6 +526,8 @@ def _translation_elements(what):
 
 
 class GroupSelection(ElementSelection):
+    """Select a single group"""
+
     def __init__(self, what, **kwargs):
         kwargs.setdefault(
             'empty_text',
@@ -536,7 +539,7 @@ class GroupSelection(ElementSelection):
         self._no_selection = kwargs.get("no_selection")
 
     def get_elements(self):
-        all_groups = userdb.load_group_information()
+        all_groups = load_group_information()
         this_group = all_groups.get(self._what, {})
         # replace the title with the key if the title is empty
         elements = [(k, t['alias'] if t['alias'] else k) for (k, t) in this_group.items()]
@@ -545,6 +548,20 @@ class GroupSelection(ElementSelection):
             # keys, so we cannot take 'None' as a value.
             elements.append(('', self._no_selection))
         return dict(elements)
+
+
+class GroupChoice(DualListChoice):
+    """Select multiple groups"""
+
+    def __init__(self, what, **kwargs):
+        super(GroupChoice, self).__init__(choices=self._load_groups, **kwargs)
+        self.what = what
+
+    def _load_groups(self):
+        all_groups = load_group_information()
+        this_group = all_groups.get(self.what, {})
+        return sorted([(k, t['alias'] and t['alias'] or k) for (k, t) in this_group.items()],
+                      key=lambda x: x[1].lower())
 
 
 def passwordstore_choices():
@@ -1151,7 +1168,7 @@ class EventsMode(WatoMode):
     def _generic_rule_match_conditions(cls):
         return _simple_host_rule_match_conditions() + [
             ( "match_servicegroups",
-              userdb.GroupChoice("service",
+              GroupChoice("service",
                   title = _("Match Service Groups"),
                   help = _("The service must be in one of the selected service groups. For host events this condition "
                            "never matches as soon as at least one group is selected."),
@@ -1159,7 +1176,7 @@ class EventsMode(WatoMode):
               )
             ),
             ( "match_exclude_servicegroups",
-              userdb.GroupChoice("service",
+              GroupChoice("service",
                   title = _("Exclude Service Groups"),
                   help = _("The service must not be in one of the selected service groups. For host events this condition "
                            "is simply ignored."),
@@ -1263,7 +1280,7 @@ class EventsMode(WatoMode):
               )
             ),
             ( "match_contactgroups",
-              userdb.GroupChoice("contact",
+              GroupChoice("contact",
                   title = _("Match Contact Groups"),
                   help = _("The host/service must be in one of the selected contact groups. This only works with Check_MK Micro Core. " \
                            "If you don't use the CMC that filter will not apply"),
@@ -1952,7 +1969,7 @@ def _common_host_rule_match_conditions():
     return [
         ("match_hosttags", HostTagCondition(title=_("Match Host Tags"))),
         ("match_hostgroups",
-         userdb.GroupChoice(
+         GroupChoice(
              "host",
              title=_("Match Host Groups"),
              help=_("The host must be in one of the selected host groups"),

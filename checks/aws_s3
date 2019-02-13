@@ -70,8 +70,11 @@ def check_aws_s3_objects(item, params, metrics):
         storage_infos.append(
             "%s: %s" % (aws_s3_storage_mapping[storage_type], get_bytes_human_readable(value)))
     sum_size = sum(bucket_sizes.values())
-    yield (0,
-           'Bucket size: %s (%s)' % (get_bytes_human_readable(sum_size), ", ".join(storage_infos)),
+    if storage_infos:
+        storage_infos_str = " (%s)" % ", ".join(storage_infos)
+    else:
+        storage_infos_str = ""
+    yield (0, 'Bucket size: %s%s' % (get_bytes_human_readable(sum_size), storage_infos_str),
            [('aws_bucket_size', sum_size)])
 
     num_objects = sum(metrics['numberofobjects'].values())

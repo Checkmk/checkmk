@@ -138,7 +138,7 @@ MODULES += typing-3.6.6.tar.gz
 MODULES += scandir-1.9.0.tar.gz
 MODULES += pathlib2-2.3.2.tar.gz
 # Added for scheduling (cmk/schedule.py)
-MODULES += python-dateutil-2.7.5.tar.gz
+MODULES += python-dateutil-2.6.1.tar.gz
 MODULES += python-snap7-0.10.tar.gz
 # Added for azure special agent
 MODULES += PyJWT-1.6.4.tar.gz

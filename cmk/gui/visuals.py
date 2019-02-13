@@ -47,9 +47,11 @@ from cmk.gui.valuespec import (
     TextUnicode,
     TextAscii,
     TextAreaUnicode,
+    DualListChoice,
 )
 import cmk.gui.config as config
 import cmk.gui.forms as forms
+import cmk.gui.sites as sites
 from cmk.gui.table import table_element
 import cmk.gui.userdb as userdb
 import cmk.gui.pagetypes as pagetypes
@@ -993,8 +995,7 @@ class PublishTo(CascadingDropdown):
             choices=[
                 (True, _("Publish to all users")),
                 ("contact_groups", _("Publish to members of contact groups"),
-                 userdb.GroupChoice(
-                     "contact",
+                 ContactGroupChoice(
                      with_foreign_groups=with_foreign_groups,
                      title=_("Publish to members of contact groups"),
                      rows=5,
@@ -1003,6 +1004,20 @@ class PublishTo(CascadingDropdown):
             ],
             title=_('Make this %s available for other users') % type_title,
             **kwargs)
+
+
+class ContactGroupChoice(DualListChoice):
+    """A multiple selection of contact groups that are part of the current active config"""
+
+    def __init__(self, with_foreign_groups=True, **kwargs):
+        super(ContactGroupChoice, self).__init__(choices=self._load_groups, **kwargs)
+        self._with_foreign_groups = with_foreign_groups
+
+    def _load_groups(self):
+        contact_group_choices = sites.all_groups("contact")
+        return [(group_id, alias)
+                for (group_id, alias) in contact_group_choices
+                if self._with_foreign_groups or group_id in config.user.contact_groups()]
 
 
 #.

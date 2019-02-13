@@ -32,26 +32,75 @@ import cmk.utils.store as store
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
 import cmk.gui.hooks as hooks
+from cmk.gui.globals import html
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 
+from cmk.gui.watolib.utils import convert_cgroups_from_tuple
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
 from cmk.gui.watolib.global_settings import load_configuration_settings
 from cmk.gui.watolib.utils import format_config_value
 from cmk.gui.watolib.rulesets import AllRulesets
+from cmk.gui.watolib.host_attributes import (
+    host_attribute_registry,
+    ABCHostAttribute,
+    HostAttributeTopicBasicSettings,
+)
 from cmk.gui.plugins.watolib.utils import (
     config_variable_registry,
     wato_fileheader,
 )
+from cmk.gui.valuespec import DualListChoice
 
 if cmk.is_managed_edition():
     import cmk.gui.cme.managed as managed
 
 
+def load_group_information():
+    cmk_base_groups = _load_cmk_base_groups()
+    gui_groups = _load_gui_groups()
+
+    # Merge information from Check_MK and Multisite worlds together
+    groups = {}
+    for what in ["host", "service", "contact"]:
+        groups[what] = {}
+        for gid, alias in cmk_base_groups['define_%sgroups' % what].items():
+            groups[what][gid] = {'alias': alias}
+
+            if gid in gui_groups['multisite_%sgroups' % what]:
+                groups[what][gid].update(gui_groups['multisite_%sgroups' % what][gid])
+
+    return groups
+
+
+def _load_cmk_base_groups():
+    """Load group information from Check_MK world"""
+    group_specs = {
+        "define_hostgroups": {},
+        "define_servicegroups": {},
+        "define_contactgroups": {},
+    }
+
+    return store.load_mk_file(
+        cmk.utils.paths.check_mk_config_dir + "/wato/groups.mk", default=group_specs)
+
+
+def _load_gui_groups():
+    # Now load information from the Web world
+    group_specs = {
+        "multisite_hostgroups": {},
+        "multisite_servicegroups": {},
+        "multisite_contactgroups": {},
+    }
+
+    return store.load_mk_file(
+        cmk.utils.paths.default_config_dir + "/multisite.d/wato/groups.mk", default=group_specs)
+
+
 def add_group(name, group_type, extra_info):
     _check_modify_group_permissions(group_type)
-    all_groups = userdb.load_group_information()
+    all_groups = load_group_information()
     groups = all_groups.get(group_type, {})
 
     # Check group name
@@ -73,7 +122,7 @@ def add_group(name, group_type, extra_info):
 
 def edit_group(name, group_type, extra_info):
     _check_modify_group_permissions(group_type)
-    all_groups = userdb.load_group_information()
+    all_groups = load_group_information()
     groups = all_groups.get(group_type, {})
 
     if name not in groups:
@@ -106,7 +155,7 @@ def delete_group(name, group_type):
     _check_modify_group_permissions(group_type)
 
     # Check if group exists
-    all_groups = userdb.load_group_information()
+    all_groups = load_group_information()
     groups = all_groups.get(group_type, {})
     if name not in groups:
         raise MKUserError(None, _("Unknown %s group: %s") % (group_type, name))
@@ -290,7 +339,7 @@ def _find_usages_of_group_in_rules(name, varnames):
 
 def is_alias_used(my_what, my_name, my_alias):
     # Host / Service / Contact groups
-    all_groups = userdb.load_group_information()
+    all_groups = load_group_information()
     for what, groups in all_groups.items():
         for gid, group in groups.items():
             if group['alias'] == my_alias and (my_what != what or my_name != gid):
@@ -309,3 +358,141 @@ def is_alias_used(my_what, my_name, my_alias):
             return False, _("This alias is already used in the role %s.") % key
 
     return True, None
+
+
+@host_attribute_registry.register
+class HostAttributeContactGroups(ABCHostAttribute):
+    """Attribute needed for folder permissions"""
+
+    def __init__(self):
+        ABCHostAttribute.__init__(self)
+        self._contactgroups = None
+        self._loaded_at = None
+
+    def name(self):
+        return "contactgroups"
+
+    def title(self):
+        return _("Permissions")
+
+    def topic(self):
+        return HostAttributeTopicBasicSettings
+
+    def help(self):
+        url = "wato.py?mode=rulesets&group=grouping"
+        return _("Only members of the contact groups listed here have WATO permission "
+                 "to the host / folder. If you want, you can make those contact groups "
+                 "automatically also <b>monitoring contacts</b>. This is completely "
+                 "optional. Assignment of host and services to contact groups "
+                 "can be done by <a href='%s'>rules</a> as well.") % url
+
+    def show_in_table(self):
+        return False
+
+    def show_in_folder(self):
+        return True
+
+    def default_value(self):
+        return (True, [])
+
+    def paint(self, value, hostname):
+        value = convert_cgroups_from_tuple(value)
+        texts = []
+        self.load_data()
+        items = self._contactgroups.items()
+        items.sort(cmp=lambda a, b: cmp(a[1]['alias'], b[1]['alias']))
+        for name, cgroup in items:
+            if name in value["groups"]:
+                display_name = cgroup.get("alias", name)
+                texts.append('<a href="wato.py?mode=edit_contact_group&edit=%s">%s</a>' %
+                             (name, display_name))
+        result = ", ".join(texts)
+        if texts and value["use"]:
+            result += html.render_span(
+                html.render_b("*"),
+                title=_("These contact groups are also used in the monitoring configuration."))
+        return "", result
+
+    def render_input(self, varprefix, value):
+        value = convert_cgroups_from_tuple(value)
+
+        # If we're just editing a host, then some of the checkboxes will be missing.
+        # This condition is not very clean, but there is no other way to savely determine
+        # the context.
+        is_host = bool(html.request.var("host")) or html.request.var("mode") == "newhost"
+        is_search = varprefix == "host_search"
+
+        # Only show contact groups I'm currently in and contact
+        # groups already listed here.
+        self.load_data()
+        self._vs_contactgroups().render_input(varprefix + self.name(), value['groups'])
+
+        html.hr()
+
+        if is_host:
+            html.checkbox(
+                varprefix + self.name() + "_use",
+                value["use"],
+                label=_("Add these contact groups to the host"))
+
+        elif not is_search:
+            html.checkbox(
+                varprefix + self.name() + "_recurse_perms",
+                value["recurse_perms"],
+                label=_("Give these groups also <b>permission on all subfolders</b>"))
+            html.hr()
+            html.checkbox(
+                varprefix + self.name() + "_use",
+                value["use"],
+                label=_("Add these groups as <b>contacts</b> to all hosts in this folder"))
+            html.br()
+            html.checkbox(
+                varprefix + self.name() + "_recurse_use",
+                value["recurse_use"],
+                label=_("Add these groups as <b>contacts in all subfolders</b>"))
+
+        html.hr()
+        html.help(
+            _("With this option contact groups that are added to hosts are always "
+              "being added to services, as well. This only makes a difference if you have "
+              "assigned other contact groups to services via rules in <i>Host & Service Parameters</i>. "
+              "As long as you do not have any such rule a service always inherits all contact groups "
+              "from its host."))
+        html.checkbox(
+            varprefix + self.name() + "_use_for_services",
+            value.get("use_for_services", False),
+            label=_("Always add host contact groups also to its services"))
+
+    def load_data(self):
+        # Make cache valid only during this HTTP request
+        if self._loaded_at == id(html):
+            return
+        self._loaded_at = id(html)
+        self._contactgroups = load_group_information().get("contact", {})
+
+    def from_html_vars(self, varprefix):
+        self.load_data()
+
+        cgs = self._vs_contactgroups().from_html_vars(varprefix + self.name())
+
+        return {
+            "groups": cgs,
+            "recurse_perms": html.get_checkbox(varprefix + self.name() + "_recurse_perms"),
+            "use": html.get_checkbox(varprefix + self.name() + "_use"),
+            "use_for_services": html.get_checkbox(varprefix + self.name() + "_use_for_services"),
+            "recurse_use": html.get_checkbox(varprefix + self.name() + "_recurse_use"),
+        }
+
+    def filter_matches(self, crit, value, hostname):
+        value = convert_cgroups_from_tuple(value)
+        # Just use the contact groups for searching
+        for contact_group in crit["groups"]:
+            if contact_group not in value["groups"]:
+                return False
+        return True
+
+    def _vs_contactgroups(self):
+        cg_choices = sorted([(cg_id, cg_attrs.get("alias", cg_id))
+                             for cg_id, cg_attrs in self._contactgroups.items()],
+                            key=lambda x: x[1])
+        return DualListChoice(choices=cg_choices, rows=20, size=100)

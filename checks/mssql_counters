@@ -201,12 +201,12 @@ def check_mssql_counters_cache_hits(item, params, parsed):
 
 
 check_info['mssql_counters.cache_hits'] = {
-    'inventory_function'    : lambda parsed: inventory_mssql_counters_cache_hits(parsed,
-                              ['cache_hit_ratio', 'log_cache_hit_ratio', 'buffer_cache_hit_ratio']),
-    'check_function'        : check_mssql_counters_cache_hits,
-    'service_description'   : "MSSQL %s",
-    'has_perfdata'          : True,
-    'node_info'             : True,
+    'inventory_function': lambda parsed: inventory_mssql_counters_cache_hits(
+        parsed, ['cache_hit_ratio', 'log_cache_hit_ratio', 'buffer_cache_hit_ratio']),
+    'check_function': check_mssql_counters_cache_hits,
+    'service_description': "MSSQL %s",
+    'has_perfdata': True,
+    'node_info': True,
 }
 
 #.
@@ -257,12 +257,12 @@ def check_mssql_counters_transactions(item, params, parsed):
 
 
 check_info['mssql_counters.transactions'] = {
-    'inventory_function'    : lambda parsed: inventory_mssql_counters_generic(parsed,
-                              ['transactions/sec', 'write_transactions/sec', 'tracked_transactions/sec']),
-    'check_function'        : check_mssql_counters_transactions,
-    'service_description'   : "MSSQL %s Transactions",
-    'has_perfdata'          : True,
-    'node_info'             : True,
+    'inventory_function': lambda parsed: inventory_mssql_counters_generic(
+        parsed, ['transactions/sec', 'write_transactions/sec', 'tracked_transactions/sec']),
+    'check_function': check_mssql_counters_transactions,
+    'service_description': "MSSQL %s Transactions",
+    'has_perfdata': True,
+    'node_info': True,
 }
 
 #   ---locks----------------------------------------------------------------
@@ -314,14 +314,15 @@ def check_mssql_counters_locks(item, params, parsed):
 
 
 check_info['mssql_counters.locks'] = {
-    'inventory_function'    : lambda parsed: inventory_mssql_counters_generic(parsed,
-                              ['number_of_deadlocks/sec', 'lock_requests/sec', 'lock_timeouts/sec', 'lock_waits/sec'],
-                              dflt={}),
-    'check_function'        : check_mssql_counters_locks,
-    'service_description'   : "MSSQL %s Locks",
-    'has_perfdata'          : True,
-    'group'                 : 'mssql_counters_locks',
-    'node_info'             : True,
+    'inventory_function': lambda parsed: inventory_mssql_counters_generic(
+        parsed,
+        ['number_of_deadlocks/sec', 'lock_requests/sec', 'lock_timeouts/sec', 'lock_waits/sec'],
+        dflt={}),
+    'check_function': check_mssql_counters_locks,
+    'service_description': "MSSQL %s Locks",
+    'has_perfdata': True,
+    'group': 'mssql_counters_locks',
+    'node_info': True,
 }
 
 #   ---sql stats------------------------------------------------------------
@@ -373,14 +374,13 @@ def check_mssql_counters_sqlstats(item, params, parsed):
 
 
 check_info["mssql_counters.sqlstats"] = {
-    "inventory_function"    : lambda parsed: inventory_mssql_counters_sqlstats(parsed,
-                              ["batch_requests/sec", "sql_compilations/sec", "sql_re-compilations/sec"],
-                              dflt={}),
-    "check_function"        : check_mssql_counters_sqlstats,
-    "service_description"   : "MSSQL %s",
-    "has_perfdata"          : True,
-    "group"                 : "mssql_stats",
-    'node_info'             : True,
+    "inventory_function": lambda parsed: inventory_mssql_counters_sqlstats(
+        parsed, ["batch_requests/sec", "sql_compilations/sec", "sql_re-compilations/sec"], dflt={}),
+    "check_function": check_mssql_counters_sqlstats,
+    "service_description": "MSSQL %s",
+    "has_perfdata": True,
+    "group": "mssql_stats",
+    'node_info': True,
 }
 
 #   ---page activity--------------------------------------------------------
@@ -431,14 +431,13 @@ def check_mssql_counters_pageactivity(item, params, parsed):
 
 
 check_info['mssql_counters.pageactivity'] = {
-    'inventory_function'    : lambda parsed: inventory_mssql_counters_generic(parsed,
-                              ["page_reads/sec", "page_writes/sec", "page_lookups/sec"],
-                              dflt={}),
-    'check_function'        : check_mssql_counters_pageactivity,
-    'service_description'   : "MSSQL %s Page Activity",
-    'has_perfdata'          : True,
-    'group'                 : "mssql_page_activity",
-    'node_info'             : True,
+    'inventory_function': lambda parsed: inventory_mssql_counters_generic(
+        parsed, ["page_reads/sec", "page_writes/sec", "page_lookups/sec"], dflt={}),
+    'check_function': check_mssql_counters_pageactivity,
+    'service_description': "MSSQL %s Page Activity",
+    'has_perfdata': True,
+    'group': "mssql_page_activity",
+    'node_info': True,
 }
 
 #   ---locks per batch------------------------------------------------------
@@ -595,12 +594,12 @@ def check_mssql_file_sizes(item, params, parsed):
 
 
 check_info['mssql_counters.file_sizes'] = {
-    'inventory_function'    : lambda parsed: inventory_mssql_counters_generic(parsed,
-                              ['data_file(s)_size_(kb)', 'log_file(s)_size_(kb)', 'log_file(s)_used_size_(kb)'],
-                              dflt={}),
-    'check_function'        : check_mssql_file_sizes,
-    'service_description'   : "MSSQL %s File Sizes",
-    'has_perfdata'          : True,
-    'group'                 : "mssql_file_sizes",
-    'node_info'             : True,
+    'inventory_function': lambda parsed: inventory_mssql_counters_generic(
+        parsed, ['data_file(s)_size_(kb)', 'log_file(s)_size_(kb)', 'log_file(s)_used_size_(kb)'],
+        dflt={}),
+    'check_function': check_mssql_file_sizes,
+    'service_description': "MSSQL %s File Sizes",
+    'has_perfdata': True,
+    'group': "mssql_file_sizes",
+    'node_info': True,
 }

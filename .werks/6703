@@ -1,0 +1,19 @@
+Title: Remove SLA painter from default services view
+Level: 1
+Component: multisite
+Class: feature
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.6.0i1
+Date: 1549970622
+
+The SLA information is no longer shown per default, since its empty most of the time.
+If you want to reenable this painter, just edit the view and add one of the following columns.
+
+<ul>
+<li>Host/Services: SLA column specific</li>
+<li>Host/Services: SLA service specific</li>
+</ul>
+
+Keep in mind that you still have to configure a SLA configuration before this column can display any meaningful data.

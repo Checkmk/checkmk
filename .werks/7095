@@ -1,0 +1,59 @@
+Title: oracle_sql: New check for monitoring custom SQLs
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1548170306
+Class: feature
+
+The mk_oracle allows the execution of parametrizable custom SQLs. Note that
+the following configuration is not bakeable.
+
+First of all you have to register sections and configure their options.  This
+can be done in the {{mk_oracle.cfg}} via
+<code>
+SQLS_SECTIONS=sec_a,...
+sec_a () {
+    #OPTIONS
+}
+</code>
+
+In general there are two types of check plugins which handle the output of the
+custom SQLs:
+<ol>
+<li>{{oracle_sql}} for generic custom SQLs</li>
+<li>own check plugins if {{SQLS_SECTION_NAME}} is used (see below)</li>
+</ol>
+
+The following configuration variables can be stated globally or locally (within
+a section definition; this overwrites the global variable).
+<code>
+SQLS_SIDS=sid1,sid2,...    (comma separated)
+SQLS_DIR=/path/to/dir      (no trailing '/')
+SQLS_SQL=name.sql          (the SQL name which must exist in SQLS_DIR)
+SQLS_PARAMETERS=params     (parameters as string, double quotes are removed)
+SQLS_MAX_CACHE_AGE=X       (x in seconds)
+SQLS_SECTION_NAME=sec_name (optional, for own check plugins; if not stated, 'oracle_sql' is used; generic check plugin)
+SQLS_SECTION_SEP=separator (optional; only useful if SQLS_SECTION_NAME is stated; ASCII code, eg. '58' means ':')
+</code>
+
+<ul>
+<li>{{SQLS_SIDS}: For which SIDs the SQL is executed.</li>
+<li>{{SQLS_DIR}}: The folder of the SQLs.</li>
+<li>{{SQLS_SQL}}: The SQL name within SQLS_DIR.</li>
+<li>{{SQLS_PARAMETERS}}: Declare parameters if needed. Mostly they are declare
+within double quotes. In this case you have to escape them if yu need them as
+characters within the parameters.</li>
+<li>{{SQLS_MAX_CACHE_AGE}}: How long the cached data is recent enough.</li>
+<li>{{SQLS_SECTION_NAME}}: The output of the SQL is stored below this section.
+That means you have to build your own check plugin.</li>
+<li>{{SQLS_SECTION_SEP}}: At which character the output is separated.</li>
+</ul>
+
+If the generic {{oracle_sql}} section header is used then the item within the
+custom SQL service can be influenced by {{SQLS_ITEM_NAME}}:
+<code>
+SQLS_ITEM_NAME=item_name   (optional, if not stated, sql name is used)
+</code>
+Otherwise the SQL name {{SQLS_SQL}} is used.

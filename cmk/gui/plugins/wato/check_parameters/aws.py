@@ -34,12 +34,35 @@ from cmk.gui.valuespec import (
     Percentage,
     Age,
     FixedValue,
+    TextAscii,
 )
 from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersApplications,
     CheckParameterRulespecWithoutItem,
+    CheckParameterRulespecWithItem,
     rulespec_registry,
 )
+
+
+def _vs_burst_balance():
+    return ('burst_balance_levels_lower',
+            Alternative(
+                title=_("Lower levels for burst balance"),
+                style="dropdown",
+                elements=[
+                    Tuple(
+                        title=_("Set levels"),
+                        elements=[
+                            Percentage(title=_("Warning at or below")),
+                            Percentage(title=_("Critical at or below")),
+                        ]),
+                    Tuple(
+                        title=_("No levels"),
+                        elements=[
+                            FixedValue(None, totext=""),
+                            FixedValue(None, totext=""),
+                        ]),
+                ]))
 
 
 @rulespec_registry.register
@@ -111,8 +134,8 @@ class RulespecCheckgroupParametersAwsCostsAndUsage(CheckParameterRulespecWithout
                 Tuple(
                     title=_("Upper levels for unblended costs"),
                     elements=[
-                        Integer(title=_("Warning at")),
-                        Integer(title=_("Critical at")),
+                        Integer(title=_("Warning at"), unit=_("USD per day")),
+                        Integer(title=_("Critical at"), unit=_("USD per day")),
                     ],
                 ),
             )],)
@@ -305,3 +328,30 @@ class RulespecCheckgroupParametersAwsElbBackendConnectionErrors(CheckParameterRu
                     ],
                 ),
             )],)
+
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersAwsEbsBurstBalance(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "aws_ebs_burst_balance"
+
+    @property
+    def title(self):
+        return _("AWS/EBS Burst Balance")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(elements=[_vs_burst_balance()])
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("Block storage name"))

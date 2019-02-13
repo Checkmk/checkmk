@@ -64,11 +64,11 @@ def inv_docker_node_network_networks(info, inventory_tree, status_data_tree):
         }
 
         try:
-            network["host_ifname"] = network["Options"]["com.docker.network.bridge.name"]
+            network_["host_ifname"] = network["Options"]["com.docker.network.bridge.name"]
         except KeyError:
             pass
 
-        labels = docker_format_labels(network)
+        labels = docker_format_labels(network)  # pylint: disable=undefined-variable
         if labels:
             network_["labels"] = labels
         inventory_networks.update(network_)

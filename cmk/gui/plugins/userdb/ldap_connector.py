@@ -1657,8 +1657,8 @@ class LDAPConnectionValuespec(Transform):
                    "<tt>(&(objectclass=user)(objectcategory=person)(memberof:1.2.840.113556.1.4.1941:=CN=cmk-users,OU=groups,DC=example,DC=com))</tt><br>"
                   ),
                  size=80,
-                 default_value=
-                 lambda: ldap_filter_of_connection(self._connection_id, 'users', False),
+                 default_value=lambda: ldap_filter_of_connection(self._connection_id, 'users', False
+                                                                ),
                  attrencode=True,
              )),
             ("user_filter_group",
@@ -1755,8 +1755,8 @@ class LDAPConnectionValuespec(Transform):
                         "subset of the groups below the given base DN.<br><br>"
                         "e.g. <tt>(objectclass=group)</tt>"),
                  size=80,
-                 default_value=
-                 lambda: ldap_filter_of_connection(self._connection_id, 'groups', False),
+                 default_value=lambda: ldap_filter_of_connection(self._connection_id, 'groups',
+                                                                 False),
                  attrencode=True,
              )),
             ("group_member",

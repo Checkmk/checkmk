@@ -37,13 +37,12 @@ def check_dotnet_clrmemory(item, params, parsed):
 
 
 check_info['dotnet_clrmemory'] = {
-    'parse_function'      : parse_wmi_table,
-    'inventory_function'  : lambda parsed: inventory_wmi_table(parsed,
-                                                               filt=wmi_filter_global_only,
-                                                               levels="dotnet_clrmemory_defaultlevels"),
-    'check_function'      : check_dotnet_clrmemory,
-    'has_perfdata'        : True,
-    'service_description' : "DotNet Memory Management %s",
-    'includes'            : ['wmi.include'],
-    'group'               : "clr_memory"
+    'parse_function': parse_wmi_table,
+    'inventory_function': lambda parsed: inventory_wmi_table(
+        parsed, filt=wmi_filter_global_only, levels="dotnet_clrmemory_defaultlevels"),
+    'check_function': check_dotnet_clrmemory,
+    'has_perfdata': True,
+    'service_description': "DotNet Memory Management %s",
+    'includes': ['wmi.include'],
+    'group': "clr_memory"
 }

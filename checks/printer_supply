@@ -183,8 +183,9 @@ check_info["printer_supply"] = {
             '12.1.1.4',  # Printer-MIB::prtMarkerColorantValue
         ]),
     'snmp_scan_function': lambda oid: all((
-            oid(".1.3.6.1.2.1.43.11.1.1.6.1.1") is not None,
-            oid(".1.3.6.1.2.1.1.2.0") != ".1.3.6.1.4.1.367.1.1",)),  # exclude ricoh printer
+        oid(".1.3.6.1.2.1.43.11.1.1.6.1.1") is not None,
+        oid(".1.3.6.1.2.1.1.2.0") != ".1.3.6.1.4.1.367.1.1",
+    )),  # exclude ricoh printer
     'has_perfdata': True,
     'group': 'printer_supply',
     'default_levels_variable': 'printer_supply_default_levels',

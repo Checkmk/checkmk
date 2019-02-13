@@ -103,8 +103,8 @@ def check_netapp_api_cpu_utilization(item, params, parsed, mode):
 check_info["netapp_api_cpu"] = {
     "parse_function": parse_netapp_api_cpu,
     "inventory_function": inventory_netapp_api_cpu,
-    "check_function":
-        lambda item, params, parsed: check_netapp_api_cpu_utilization(item, params, parsed, "clustermode"),
+    "check_function": lambda item, params, parsed: check_netapp_api_cpu_utilization(
+        item, params, parsed, "clustermode"),
     "service_description": "CPU utilization Node %s",
     "has_perfdata": True,
     "group": "cpu_utilization_multiitem",
@@ -114,8 +114,8 @@ check_info["netapp_api_cpu"] = {
 # 7Mode CPU utilization
 check_info["netapp_api_cpu.utilization"] = {
     "inventory_function": inventory_netapp_api_cpu_utilization,
-    "check_function":
-        lambda item, params, parsed: check_netapp_api_cpu_utilization(item, params, parsed, "7mode"),
+    "check_function": lambda item, params, parsed: check_netapp_api_cpu_utilization(
+        item, params, parsed, "7mode"),
     "service_description": "CPU utilization",
     "default_levels_variable": "netapp_api_cpu_cm_default_levels",
     "has_perfdata": True,

@@ -31,6 +31,8 @@ At 'agents/cfg_examples/mk_docker.cfg' (relative to the check_mk
 source code directory ) you should find some example configuration
 files. For more information on possible configurations refer to the
 file docker.cfg in said directory.
+The docker-py library must be installed on the system executing the
+plugin ("pip install docker").
 
 This plugin it will be called by the agent without any arguments.
 """

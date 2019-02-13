@@ -25,12 +25,20 @@
 # Boston, MA 02110-1301 USA.
 
 
+def parse_docker_container_node_name(info):
+    # pylint: disable=undefined-variable
+    return {"NodeName": parse_legacy_docker_container_node_name(info)}
+
+
 def inv_docker_container_node_name(info, inventory_tree):
-    node_name = info[0][0]
+    parsed = parse_docker_container_node_name(info)
     container = inventory_tree.get_dict("software.applications.docker.container.")
-    container["node_name"] = node_name
+
+    if parsed.get("NodeName") is not None:
+        container["node_name"] = parsed["NodeName"]
 
 
-inv_info['docker_container_node_name'] = {
+inv_info['docker_container_node_name'] = {  # pylint: disable=undefined-variable
+    'includes': ['legacy_docker.include'],
     'inv_function': inv_docker_container_node_name,
 }

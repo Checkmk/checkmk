@@ -218,8 +218,8 @@ check_info["bluenet2_powerrail"] = {
     'check_function': lambda item, params, parsed: check_elphase(item, params, parsed["phases"]),
     'service_description': 'Inlet %s',
     "has_perfdata": True,
-    "snmp_scan_function":
-        lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.31770.2.1"),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.31770.2.1"
+                                                                          ),
     "snmp_info": [
         (
             ".1.3.6.1.4.1.31770.2.2.6.2.1",
@@ -272,8 +272,8 @@ factory_settings["bluenet2_powerrail_rcm_default_levels"] = {
 
 check_info["bluenet2_powerrail.rcm"] = {
     'inventory_function': lambda parsed: inventory_elphase(parsed["rcm_phases"]),
-    'check_function':
-        lambda item, params, parsed: check_elphase(item, params, parsed["rcm_phases"]),
+    'check_function': lambda item, params, parsed: check_elphase(item, params, parsed["rcm_phases"]
+                                                                ),
     "service_description": "Inlet %s",
     "has_perfdata": True,
     "default_levels_variable": "bluenet2_powerrail_rcm_default_levels",

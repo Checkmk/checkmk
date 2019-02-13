@@ -45,10 +45,10 @@ def check_netapp_api_psu(item, _no_params, parsed):
 
 
 check_info["netapp_api_psu"] = {
-    'check_function'      : check_netapp_api_psu,
-    'inventory_function'  : inventory_netapp_api_psu,
-    'parse_function'      : lambda info: netapp_api_parse_lines(info,
-                                custom_keys = ["power-supply-list", "power-supply-element-number"]),
-    'service_description' : 'Power Supply Shelf %s',
-    'includes'            : ["netapp_api.include"]
+    'check_function': check_netapp_api_psu,
+    'inventory_function': inventory_netapp_api_psu,
+    'parse_function': lambda info: netapp_api_parse_lines(
+        info, custom_keys=["power-supply-list", "power-supply-element-number"]),
+    'service_description': 'Power Supply Shelf %s',
+    'includes': ["netapp_api.include"]
 }

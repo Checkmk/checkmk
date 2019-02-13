@@ -197,8 +197,8 @@ unit_info["bytes/d"] = {
     "title": _("Bytes per day"),
     "symbol": _("B/d"),
     "render": lambda v: cmk.utils.render.fmt_bytes(v * 86400.0) + "/d",
-    "graph_unit":
-        lambda values: bytes_human_readable_list([v * 86400.0 for v in values], unit=_("B/d")),
+    "graph_unit": lambda values: bytes_human_readable_list([v * 86400.0 for v in values],
+                                                           unit=_("B/d")),
     "stepping": "binary",  # for vertical graph labels
 }
 
@@ -4854,6 +4854,18 @@ metric_info['aws_backend_connection_errors_rate'] = {
     'color': '15/a',
 }
 
+metric_info['aws_burst_balance'] = {
+    'title': _('Burst Balance'),
+    'unit': '%',
+    'color': '11/a',
+}
+
+metric_info["elapsed_time"] = {
+    "title": _("Elapsed time"),
+    "unit": "s",
+    "color": "11/a",
+}
+
 #.
 #   .--Checks--------------------------------------------------------------.
 #   |                    ____ _               _                            |
@@ -5764,6 +5776,7 @@ check_metrics["check_mk-huawei_osn_if"] = if_translation
 check_metrics["check_mk-if_fortigate"] = if_translation
 check_metrics["check_mk-aix_if"] = if_translation
 check_metrics["check_mk-k8s_stats.network"] = if_translation
+check_metrics["check_mk-aws_ec2.network_io"] = if_translation
 
 check_metrics["check_mk-brocade_fcport"] = {
     "in": {
@@ -8186,6 +8199,14 @@ perfometer_info.append({
     "half_value": 100,
     "exponent": 2,
 })
+
+perfometer_info.append({
+    'type': 'logarithmic',
+    'metric': 'elapsed_time',
+    'half_value': 1.0,
+    'exponent': 2.0,
+})
+
 #.
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |

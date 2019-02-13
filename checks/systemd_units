@@ -63,8 +63,11 @@ _SYSTEMD_UNITS = [
 
 
 def parse_systemd_units(info):
-
     parsed = {}
+
+    if not info:
+        return {}
+
     # second to last line (see above): "X loaded units listed."
     count = int(info[-2][0])
     if count == 0:

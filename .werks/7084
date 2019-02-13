@@ -1,0 +1,17 @@
+Title: Add option to delete contact groups with members
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0p12
+Date: 1550044081
+Class: fix
+
+When using the LDAP synchronization to populate contact groups in Check_MK,
+it was not possible to remove a contact group using the configuration GUI
+as long as LDAP users are synchronized to the group.
+
+We have now added a dedicated action to the contact group list which can
+be used to remove all members from a contact group. Once you have used
+this action, you will be able to remove the contact group from the
+configuration.

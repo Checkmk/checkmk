@@ -7561,6 +7561,7 @@ class ModeGroups(WatoMode):
     def __init__(self):
         super(ModeGroups, self).__init__()
         self._load_groups()
+        self._collect_additional_data()
 
 
     def _load_groups(self):
@@ -7597,7 +7598,6 @@ class ModeGroups(WatoMode):
 
         return None
 
-
     def _page_no_groups(self):
         html.div(_("No groups are defined yet."), class_="info")
 
@@ -7608,15 +7608,17 @@ class ModeGroups(WatoMode):
 
     def _show_row_cells(self, name, group):
         table.cell(_("Actions"), css="buttons")
+        self._action_buttons(name)
+        table.cell(_("Name"), html.attrencode(name))
+        table.cell(_("Alias"), html.attrencode(group['alias']))
+
+    def _action_buttons(self, name):
         edit_url   = watolib.folder_preserving_link([("mode", "edit_%s_group" % self.type_name), ("edit", name)])
         delete_url = html.makeactionuri([("_delete", name)])
         clone_url  = watolib.folder_preserving_link([("mode", "edit_%s_group" % self.type_name), ("clone", name)])
         html.icon_button(edit_url, _("Properties"), "edit")
         html.icon_button(clone_url, _("Create a copy of this group"), "clone")
         html.icon_button(delete_url, _("Delete"), "delete")
-
-        table.cell(_("Name"), html.attrencode(name))
-        table.cell(_("Alias"), html.attrencode(group['alias']))
 
 
     def page(self):
@@ -7626,8 +7628,6 @@ class ModeGroups(WatoMode):
 
         sorted_groups = self._groups.items()
         sorted_groups.sort(cmp = lambda a,b: cmp(a[1]['alias'], b[1]['alias']))
-
-        self._collect_additional_data()
 
         table.begin(self.type_name + "groups")
         for name, group in sorted_groups:
@@ -7799,9 +7799,7 @@ class ModeServicegroups(ModeGroups):
 class ModeContactgroups(ModeGroups):
     type_name = "contact"
 
-
     def title(self):
-        self._members = {}
         return _("Contact Groups")
 
 
@@ -7811,6 +7809,32 @@ class ModeContactgroups(ModeGroups):
         html.context_button(_("Rules"), watolib.folder_preserving_link([("mode", "rulesets"),
                              ("filled_in", "search"), ("search", "contactgroups")]), "rulesets")
 
+    def action(self):
+        if html.var('_remove_members'):
+            return self._action_remove_members()
+        return super(ModeContactgroups, self).action()
+
+    def _action_remove_members(self):
+        delname = html.var("_remove_members")
+        if not self._members:
+            return
+
+        confirm_txt = _('Do you really want to remove all %d members from "%s"?') % (len(self._members), delname)
+        c = wato_confirm(_("Confirm removal of all members from \"%s\"") % delname, confirm_txt)
+        if c:
+            self._remove_all_members_of(delname)
+            self._collect_additional_data()
+        elif c == False:
+            return ""
+
+    def _remove_all_members_of(self, delname):
+        users = userdb.load_users(lock=True)
+        for user in users.values():
+            try:
+                user.get("contactgroups", []).remove(delname)
+            except ValueError:
+                pass
+        userdb.save_users(users)
 
     def _page_no_groups(self):
         menu = MainMenu()
@@ -7831,6 +7855,13 @@ class ModeContactgroups(ModeGroups):
             cgs = user.get("contactgroups", [])
             for cg in cgs:
                 self._members.setdefault(cg, []).append((userid, user.get('alias', userid)))
+
+
+    def _action_buttons(self, name):
+        super(ModeContactgroups, self)._action_buttons(name)
+        if self._members.get(name, []):
+            remove_users_url = html.makeactionuri([("_remove_members", name)])
+            html.icon_button(remove_users_url, _("Remove all members"), "remove_members", ty="icon")
 
 
     def _show_row_cells(self, name, group):

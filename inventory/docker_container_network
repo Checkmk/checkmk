@@ -47,7 +47,7 @@ def inv_docker_container_network_networks(parsed, inventory_tree):
 
 
 def inv_docker_container_network_ports(parsed, inventory_tree):
-    port_data = parsed.get("Ports") or None
+    port_data = parsed.get("Ports") or {}
 
     ports = inventory_tree.get_list("software.applications.docker.container.ports:")
 

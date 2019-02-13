@@ -1,0 +1,11 @@
+Title: cisco_ip_sla: Now discovers C891F-K9 from Cisco 890 Integrated Services Router series
+Level: 1
+Component: checks
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p12
+Date: 1550044552
+
+

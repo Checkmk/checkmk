@@ -98,25 +98,31 @@ MODULES += ipaddress-1.0.22.tar.gz
 MODULES += netifaces-0.10.7.tar.gz # needed for LDAP (nearest DC detection)
 MODULES += dnspython-1.15.0.zip # needed for LDAP (nearest DC detection)
 MODULES += python-ad-0.9.tar.gz # needed for LDAP (nearest DC detection)
+# Added for NetApp special agent, but may be used in other components too in future
+MODULES += requests-2.20.1.tar.gz
 
 MODULES += idna-2.7.tar.gz
 ifneq ($(filter $(DISTRO_CODE),el5 lucid sles11sp1 sles11sp2 sles11sp3 sles11sp4 squeeze),)
     MODULES += cryptography-1.4.tar.gz
+    # Has requests as dependency -> must be built after
+    MODULES += pyOpenSSL-16.2.0.tar.gz
+    MODULES += paramiko-2.1.2.tar.gz
+    MODULES += pyghmi-1.2.4.tar.gz
     PATCHES += patches/0005-NID_ecdsa_with_SHA-fix.patch
     PATCHES += patches/0009-cryptography-1.4-disable-version-warning.patch
 else
     MODULES += asn1crypto-0.24.0.tar.gz
     MODULES += cryptography-2.4.1.tar.gz
+    # Has requests as dependency -> must be built after
+    MODULES += pyOpenSSL-18.0.0.tar.gz
+    MODULES += paramiko-2.4.2.tar.gz
+    MODULES += pyghmi-1.2.14.tar.gz
     PATCHES += patches/0009-cryptography-2.4.1-disable-version-warning.patch
 endif
 
 MODULES += certifi-2018.10.15.tar.gz
 MODULES += chardet-3.0.4.tar.gz
 MODULES += urllib3-1.24.1.tar.gz
-# Added for NetApp special agent, but may be used in other components too in future
-MODULES += requests-2.20.1.tar.gz
-# Has requests as dependency -> must be built after
-MODULES += pyOpenSSL-18.0.0.tar.gz
 # Added for check_bi_aggr with kerberos support
 MODULES += pykerberos-1.2.1.tar.gz
 MODULES += requests-kerberos-0.12.0.tar.gz
@@ -125,10 +131,8 @@ MODULES += tinkerforge-2.1.19.tar.gz
 # Added for check_sftp
 MODULES += bcrypt-3.1.4.tar.gz
 MODULES += PyNaCl-1.3.0.tar.gz
-MODULES += paramiko-2.4.2.tar.gz
 # Added for IPMI monitoring of management interface
 MODULES += pbr-5.1.0.tar.gz
-MODULES += pyghmi-1.2.14.tar.gz
 
 MODULES += typing-3.6.6.tar.gz
 MODULES += scandir-1.9.0.tar.gz

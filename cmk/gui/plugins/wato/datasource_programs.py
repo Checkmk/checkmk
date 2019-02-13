@@ -1890,11 +1890,23 @@ class RulespecSpecialAgentsAws(HostRulespec):
                  TextAscii(
                      title=_("The access key for your AWS account"),
                      allow_empty=False,
+                     size=50,
                  )),
                 ("secret_access_key",
                  IndividualOrStoredPassword(
                      title=_("The secret key for your AWS account"),
                      allow_empty=False,
+                 )),
+                ("global_services",
+                 Dictionary(
+                     title=_("Global services to monitor"),
+                     elements=[
+                         ("ce",
+                          FixedValue(
+                              None,
+                              totext=_("Monitor costs and usage"),
+                              title=_("Costs and usage (CE)"))),
+                     ],
                  )),
                 ("regions",
                  ListChoice(
@@ -1921,16 +1933,6 @@ class RulespecSpecialAgentsAws(HostRulespec):
                          ("us-west-2", _("US West (Oregon)")),
                      ],
                                     key=lambda x: x[1]),
-                 )),
-                ("global_services",
-                 Dictionary(
-                     title=_("Global services to monitor"),
-                     elements=[
-                         ("ce",
-                          FixedValue(
-                              None, totext=_("Monitor costs and usage"),
-                              title=_("Costs and usage"))),
-                     ],
                  )),
                 ("services",
                  Dictionary(

@@ -478,7 +478,7 @@ def check_diskstat_dict(item, params, disks):
 
     # Read/write disk latency
     for what in ["read", "write"]:
-        latency_key = "%s_latency"
+        latency_key = "%s_latency" % what
         if latency_key not in disk:
             continue
         latency = disk.pop(latency_key)

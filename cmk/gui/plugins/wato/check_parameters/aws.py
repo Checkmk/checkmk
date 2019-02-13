@@ -111,8 +111,8 @@ class RulespecCheckgroupParametersAwsCostsAndUsage(CheckParameterRulespecWithout
                 Tuple(
                     title=_("Upper levels for unblended costs"),
                     elements=[
-                        Integer(title=_("Warning at")),
-                        Integer(title=_("Critical at")),
+                        Integer(title=_("Warning at"), unit=_("USD per day")),
+                        Integer(title=_("Critical at"), unit=_("USD per day")),
                     ],
                 ),
             )],)

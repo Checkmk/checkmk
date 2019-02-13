@@ -71,8 +71,10 @@ def agent_aws_arguments(params, hostname, ipaddress):
         "--secret-access-key",
         passwordstore_get_cmdline("%s", params["secret_access_key"]),
     ]
-    args.append("--regions")
-    args += params["regions"]
+    regions = params.get("regions")
+    if regions:
+        args.append("--regions")
+        args += regions
 
     global_services = params.get("global_services", {})
     if global_services:

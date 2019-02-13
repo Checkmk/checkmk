@@ -188,6 +188,7 @@ check_info['cisco_ip_sla'] = {
     'has_perfdata': True,
     'snmp_scan_function': lambda oid: oid('.1.3.6.1.2.1.1.2.0') in [
         '.1.3.6.1.4.1.9.1.2068',
+        '.1.3.6.1.4.1.9.1.1858',
     ],
     'snmp_info': [
         (

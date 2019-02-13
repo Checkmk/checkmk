@@ -42,6 +42,7 @@ warnings.filterwarnings("ignore")
 #
 #ssl.wrap_socket = sslwrap(ssl.wrap_socket)
 
+
 def usage():
     sys.stderr.write("""Check_MK NetApp Agent
 
@@ -655,7 +656,7 @@ def query(what, return_toplevel_node = False):
         while tag_string:
             # We need to start additinal query until all data is fetched
             tag_response = server.get_response([what, [["max-records", max_records],["tag", tag_string]]])
-            if tag_response.result_status() != "passed":
+            if tag_response.results_status() != "passed":
                 return
             if tag_response.get_results().child_get_string("num-records") == "0":
                 break
@@ -719,7 +720,7 @@ def query_counters(what):
                 # We need to start additinal query until all data is fetched
                 tag_response = server.get_response(["perf-object-instance-list-info-iter",
                                                    [["objectname", what], ["max-records", max_records], ["tag", tag_string]]])
-                if tag_response.result_status() != "passed":
+                if tag_response.results_status() != "passed":
                     return
                 if tag_response.get_results().child_get_string("num-records") == "0":
                     break

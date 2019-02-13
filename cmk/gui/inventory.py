@@ -311,8 +311,9 @@ def _get_permitted_inventory_paths():
     cache_varname = "permitted_inventory_paths"
     if cache_varname in current_app.g:
         return current_app.g[cache_varname]
-    contact_groups = userdb.load_group_information().get("contact", {})
+
     user_groups = userdb.contactgroups_of_user(config.user.id)
+
     if not user_groups:
         current_app.g[cache_varname] = None
         return None
@@ -320,7 +321,7 @@ def _get_permitted_inventory_paths():
     forbid_whole_tree = False
     permitted_paths = []
     for user_group in user_groups:
-        inventory_paths = contact_groups.get(user_group, {}).get('inventory_paths')
+        inventory_paths = config.multisite_contactgroups.get(user_group, {}).get('inventory_paths')
         if inventory_paths is None:
             # Old configuration: no paths configured means 'allow_all'
             current_app.g[cache_varname] = None

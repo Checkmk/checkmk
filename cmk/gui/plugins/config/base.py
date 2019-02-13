@@ -56,8 +56,10 @@ log_levels = {
     "cmk.web.automations": 30,
 }
 
-# New style, used by WATO
 multisite_users = {}
+multisite_hostgroups = {}
+multisite_servicegroups = {}
+multisite_contactgroups = {}
 
 #    ____  _     _      _
 #   / ___|(_) __| | ___| |__   __ _ _ __

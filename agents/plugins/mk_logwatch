@@ -837,7 +837,7 @@ def main():
                 sys.stdout.write('[[[%s:cannotopen]]]' % logfile)
             else:
                 LOGGER.debug("Invalid logfile processing result %s", process_result)
-        elif isinstance(meta_data, None):
+        elif meta_data is None:
             sys.stdout.write('[[[%s:missing]]]\n' % logfile)
         else:
             LOGGER.debug("Invalid parse metadata %s", meta_data)

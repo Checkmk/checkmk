@@ -126,7 +126,7 @@ check_info['aws_ec2.cpu_credits'] = {
     'check_function': check_aws_ec2_cpu_credits,
     'service_description': 'AWS/EC2 CPU Credits',
     'group': 'aws_ec2_cpu_credits',
-    'includes': ['aws.include'],
+    'includes': ['backport.include', 'aws.include'],
     'default_levels_variable': 'aws_cpu_credits',
 }
 

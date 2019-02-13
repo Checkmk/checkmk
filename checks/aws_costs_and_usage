@@ -84,7 +84,7 @@ check_info['aws_costs_and_usage'] = {
     'inventory_function': inventory_aws_costs_and_usage_summary,
     'check_function': check_aws_costs_and_usage_summary,
     'service_description': 'AWS/CE %s',
-    'includes': ['aws.include'],
+    'includes': ['backport.include', 'aws.include'],
     'group': 'aws_costs_and_usage',
     'has_perfdata': True,
 }
@@ -129,5 +129,6 @@ check_info['aws_costs_and_usage.per_service'] = {
     'check_function': check_aws_costs_and_usage_per_service,
     'service_description': 'AWS/CE %s',
     'group': 'aws_costs_and_usage',
+    'includes': ['backport.include'],
     'has_perfdata': True,
 }

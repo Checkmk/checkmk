@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 import json
 import re
+import functools
 
 
 class DeprecatedDict(dict):
@@ -112,13 +113,7 @@ def _legacy_docker_trunk_id(hash_string):
     return long_id[:12]
 
 
-def _get_repo_tag(string):
-    if ":" in string:
-        return tuple(string.rsplit(":", 1))
-    return string, "latest"
-
-
-def parse_legacy_docker_node_info(info):
+def parse_legacy_docker_node_info(info):  # pylint: disable=too-many-branches
     '''parse output of "docker info"'''
     parsed = DeprecatedDict()
     if not info:
@@ -183,7 +178,7 @@ def parse_legacy_docker_node_info(info):
     return parsed
 
 
-def _legacy_docker_parse_table(rows, fields, keys):
+def _legacy_docker_parse_table(rows, keys):
     '''docker provides us with space separated tables with field containing spaces
 
     e.g.:
@@ -197,11 +192,12 @@ def _legacy_docker_parse_table(rows, fields, keys):
         return []
 
     indices = []
-    for field in fields:
+    for key in keys:
+        field = key.upper()
         rex = regex(field + r'\ *')
-        m = rex.search(rows[0][0])
-        if m is not None:
-            start, end = m.start(), m.end()
+        match = rex.search(rows[0][0])
+        if match is not None:
+            start, end = match.start(), match.end()
             if end - start == len(field):
                 end = None
             indices.append((start, end))
@@ -221,28 +217,36 @@ def _legacy_docker_parse_table(rows, fields, keys):
     return table
 
 
-def parse_legacy_docker_system_df(info):
-    def int_or_zero(s):
-        return int(s.strip() or 0)
+def _legacy_map_keys(dictionary, map_keys):
+    for old, new in map_keys:
+        if old in dictionary:
+            dictionary[new] = dictionary.pop(old)
 
-    field_map = (
-        ('TYPE', 'TOTAL', 'ACTIVE', 'SIZE', 'RECLAIMABLE'),
-        ('Type', 'TotalCount', 'Active', 'Size', 'Reclaimable'),
+
+def parse_legacy_docker_system_df(info):
+    def int_or_zero(string):
+        return int(string.strip() or 0)
+
+    type_map = (
+        ('type', 'total', 'active', 'size', 'reclaimable'),
         (str, int_or_zero, int_or_zero, _legacy_docker_get_bytes, _legacy_docker_get_bytes),
     )
 
     try:  # parse legacy json output: from 1.5.0 - 1.5.0p6
         table = [json.loads(",".join(row)) for row in info if row]
     except ValueError:
-        table = _legacy_docker_parse_table(info, field_map[0], field_map[1])
+        table = _legacy_docker_parse_table(info, type_map[0])
 
     parsed = DeprecatedDict()
     for line in table:
-        for key, type_ in zip(field_map[1], field_map[2]):
-            val = line.get(key)
+        sane_line = {k.lower(): v for k, v in line.items()}
+        _legacy_map_keys(sane_line, (('totalcount', 'total'),))
+        for key, type_ in zip(type_map[0], type_map[1]):
+            val = sane_line.get(key)
             if val is not None:
-                line[key] = type_(val)
-        parsed[line.get("Type").lower()] = line
+                sane_line[key] = type_(val)
+        _legacy_map_keys(sane_line, (('total', 'count'),))
+        parsed[sane_line.get("type").lower()] = sane_line
 
     return parsed
 
@@ -264,12 +268,21 @@ def parse_legacy_docker_subsection_images(info):
 
     table = _get_json_list(info)
 
+    map_keys = (("ID", "Id"), ("CreatedAt", "Created"))
+
     parsed = DeprecatedDict()
     for item in table:
+        _legacy_map_keys(item, map_keys)
+
         val = item.get("VirtualSize")
         if val is not None:
             item["VirtualSize"] = _legacy_docker_get_bytes(val)
-        parsed[item.get("ID")] = item
+
+        repotags = item.setdefault("RepoTags", [])
+        if not repotags and item.get("Repository"):
+            repotags.append('%s:%s' % (item["Repository"], item.get("Tag", "latest")))
+
+        parsed[item.get("Id")] = item
 
     return parsed
 
@@ -300,26 +313,17 @@ def parse_legacy_docker_subsection_containers(info):
 
     table = _get_json_list(info)
 
+    map_keys = (("ID", "Id"), ("CreatedAt", "Created"), ("Names", "Name"))
+
     parsed = DeprecatedDict()
     for item in table:
-        image_name = item.get("Image", "")
-        item["Repository"], item["Tag"] = _get_repo_tag(image_name)
-        parsed[item.get("ID")] = item
+        _legacy_map_keys(item, map_keys)
+        if "Status" in item:
+            item["State"] = {"Status": item["Status"]}
+
+        parsed[item.get("Id")] = item
 
     return parsed
-
-
-def _split_subsections(info):
-    subname = ''
-    subsections = {}
-    for row in info:
-        if not row:
-            continue
-        if row[0].startswith('[[[') and row[0].endswith(']]]'):
-            subname = row[0].strip('[]')
-            continue
-        subsections.setdefault(subname, []).append(row)
-    return subsections
 
 
 def parse_legacy_docker_messed_up_labels(string):
@@ -338,8 +342,7 @@ def parse_legacy_docker_messed_up_labels(string):
     return dict(zip(toggler, toggler))
 
 
-def parse_legacy_docker_node_images(info):
-    subsections = _split_subsections(info)
+def parse_legacy_docker_node_images(subsections):
     images = parse_legacy_docker_subsection_images(subsections.get("images", []))
     image_labels = parse_legacy_docker_subsection_image_labels(subsections.get("image_labels", []))
     image_inspect = parse_legacy_docker_subsection_image_inspect(
@@ -348,35 +351,44 @@ def parse_legacy_docker_node_images(info):
 
     for image_id, pref_info in image_inspect.iteritems():
         image = images.setdefault(image_id, {})
-        image["ID"] = image_id
-        labels = pref_info.get("Config", {}).get("Labels")
-        if labels is not None:
-            image.setdefault("Labels", {}).update(labels)
-        image["CreatedAt"] = pref_info["Created"]
+        image["Id"] = image_id
+        labels = pref_info.get("Config", {}).get("Labels") or {}
+        image.setdefault("Labels", {}).update(labels)
+        image["Created"] = pref_info["Created"]
         image["VirtualSize"] = pref_info["VirtualSize"]
+
         repotags = pref_info.get("RepoTags")
         if repotags:
-            image["Repository"], image["Tag"] = _get_repo_tag(repotags[-1])
-        else:
-            repo = pref_info.get("RepoDigest", "").split('@', 1)[0]
-            image["Repository"], image["Tag"] = _get_repo_tag(repo)
+            image["RepoTags"] = repotags
 
-    for image in images.itervalues():
+        repodigests = pref_info.get("RepoDigests") or []
+        if 'RepoDigest' in pref_info:
+            # Singular? I think this was a bug, and never existed.
+            # But better safe than sorry.
+            repodigests.append(pref_info['RepoDigest'])
+        image["RepoDigests"] = repodigests
+
+    images_lookup = {}
+    for image_id, image in images.iteritems():
         image["amount_containers"] = 0
         image.setdefault("Labels", {})
+        for reta in image.get("RepoTags", []):
+            images_lookup[reta] = image
+            images_lookup[_legacy_docker_trunk_id(image_id) + ':latest'] = image
 
     for image_id, labels in image_labels.iteritems():
         image = images.get(_legacy_docker_trunk_id(image_id))
         if image is not None and labels is not None:
             image["Labels"].update(labels)
 
-    mapping = {(i['Repository'], i['Tag']): i['ID'] for i in images.itervalues()}
-
     for cont in containers.itervalues():
-        image_id = mapping.get((cont["Repository"], cont["Tag"]))
-        image = images.get(image_id)
-        if image is not None:
-            image["amount_containers"] += 1
+        if 'Image' in cont:
+            image_repotag = cont["Image"]
+            if ':' not in image_repotag:
+                image_repotag += ':latest'
+            image = images_lookup.get(image_repotag)
+            if image is not None:
+                image["amount_containers"] += 1
 
         labels = cont.get("Labels")
         if isinstance(labels, (str, unicode)):
@@ -391,3 +403,10 @@ def parse_legacy_docker_network_inspect(info):
     except ValueError:
         raw = []
     return DeprecatedList(raw)
+
+
+def parse_legacy_docker_container_node_name(info):
+    try:
+        return info[0][0]
+    except IndexError:
+        return None

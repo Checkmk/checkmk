@@ -111,7 +111,7 @@ PYTHON_MODULES_LIST += dnspython-1.15.0.zip # needed for LDAP (nearest DC detect
 PYTHON_MODULES_LIST += python-ad-0.9.tar.gz # needed for LDAP (nearest DC detection)
 
 PYTHON_MODULES_LIST += idna-2.7.tar.gz
-ifneq ($(filter $(DISTRO_CODE),el5 sles11sp1 lucid squeeze),)
+ifneq ($(filter $(DISTRO_CODE),el5 lucid sles11sp1 sles11sp2 sles11sp3 sles11sp4 squeeze),)
     PYTHON_MODULES_LIST += cryptography-1.4.tar.gz
     PYTHON_MODULES_PATCHES += $(PACKAGE_DIR)/$(PYTHON_MODULES)/patches/0005-NID_ecdsa_with_SHA-fix.patch
     PYTHON_MODULES_PATCHES += $(PACKAGE_DIR)/$(PYTHON_MODULES)/patches/0009-cryptography-1.4-disable-version-warning.patch

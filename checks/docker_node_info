@@ -25,6 +25,11 @@
 # Boston, MA 02110-1301 USA.
 
 
+def parse_docker_node_info(info):
+
+    return parse_legacy_docker_node_info(info)  # pylint: disable=undefined-variable
+
+
 def check_docker_node_info(_no_item, _no_params, parsed):
     if "Name" in parsed:
         yield 0, 'Daemon running on host %s' % parsed["Name"]
@@ -36,7 +41,7 @@ def check_docker_node_info(_no_item, _no_params, parsed):
 
 check_info['docker_node_info'] = {
     'includes': ['legacy_docker.include'],
-    'parse_function': parse_legacy_docker_node_info,
+    'parse_function': parse_docker_node_info,
     'inventory_function': discover_single,
     'check_function': check_docker_node_info,
     'service_description': 'Docker node info',

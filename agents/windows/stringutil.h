@@ -120,8 +120,20 @@ inline std::vector<std::basic_string<CharT>> tokenizePossiblyQuoted(
 
 int parse_boolean(const char *value);
 
+// returns empty string on any error.
+std::string ConvertToUTF8(const std::wstring &Src) noexcept;
+
 inline std::string to_utf8(const std::wstring &input) {
-    return std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(input);
+    if (input.empty()) return {};
+
+    try {
+        return std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(
+            input);
+    } catch (const std::exception &) {
+        // in the case of error we try to use Windows Conversion
+        // not nice, but effective.
+        return ConvertToUTF8(input);
+    }
 }
 
 inline std::wstring to_utf16(const std::string &input) {

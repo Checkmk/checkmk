@@ -59,37 +59,46 @@ class RulespecCheckgroupParametersMultipathCount(CheckParameterRulespecWithItem)
     @property
     def parameter_valuespec(self):
         return Alternative(
-        help=_("This rules sets the expected number of active paths for a multipath LUN "
-               "on ESX servers"),
-        title=_("Match type"),
-        elements=[
-            FixedValue(
-                None,
-                title=_("OK if standby count is zero or equals active paths."),
-                totext="",
-            ),
-            Dictionary(
-                title=_("Custom settings"),
-                elements=[
-                    (element,
-                     Transform(
-                         Tuple(
-                             title=description,
-                             elements=[
-                                 Integer(title=_("Critical if less than")),
-                                 Integer(title=_("Warning if less than")),
-                                 Integer(title=_("Warning if more than")),
-                                 Integer(title=_("Critical if more than")),
-                             ],),
-                         forth=lambda x: len(x) == 2 and (0, 0, x[0], x[1],) or x))
-                    for (element,
-                         description) in [("active", _("Active paths")), (
-                             "dead", _("Dead paths")), (
-                                 "disabled", _("Disabled paths")), (
-                                     "standby", _("Standby paths")), ("unknown",
-                                                                      _("Unknown paths"))]
-                ],),
-        ],)
+            help=_("This rules sets the expected number of active paths for a multipath LUN "
+                   "on ESX servers"),
+            title=_("Match type"),
+            elements=[
+                FixedValue(
+                    None,
+                    title=_("OK if standby count is zero or equals active paths."),
+                    totext="",
+                ),
+                Dictionary(
+                    title=_("Custom settings"),
+                    elements=[
+                        (element,
+                         Transform(
+                             Tuple(
+                                 title=description,
+                                 elements=[
+                                     Integer(title=_("Critical if less than")),
+                                     Integer(title=_("Warning if less than")),
+                                     Integer(title=_("Warning if more than")),
+                                     Integer(title=_("Critical if more than")),
+                                 ],
+                             ),
+                             forth=lambda x: len(x) == 2 and (
+                                 0,
+                                 0,
+                                 x[0],
+                                 x[1],
+                             ) or x))
+                        for (element,
+                             description) in [("active", _("Active paths")
+                                              ), ("dead",
+                                                  _("Dead paths")), ("disabled",
+                                                                     _("Disabled paths")),
+                                              ("standby",
+                                               _("Standby paths")), ("unknown", _("Unknown paths"))]
+                    ],
+                ),
+            ],
+        )
 
     @property
     def item_spec(self):

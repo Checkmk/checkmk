@@ -583,7 +583,8 @@ class HTMLGenerator(OutputFunnel):
 
         # generating the shortcut tag calls
         if len(parts) == 1 and name in self._shortcut_tags:
-            return lambda content, **attrs: self.write_html(self._render_content_tag(name, content, **attrs))
+            return lambda content, **attrs: self.write_html(
+                self._render_content_tag(name, content, **attrs))
 
         # generating the open, close and render calls
         elif len(parts) == 2:
@@ -596,7 +597,8 @@ class HTMLGenerator(OutputFunnel):
                 return lambda: self.write_html(self._render_closing_tag(tag_name))
 
             elif what == "render" and tag_name in self._tag_names:
-                return lambda content, **attrs: HTML(self._render_content_tag(tag_name, content, **attrs))
+                return lambda content, **attrs: HTML(
+                    self._render_content_tag(tag_name, content, **attrs))
 
         else:
             # FIXME: This returns None, which is not a very informative error message

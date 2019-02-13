@@ -559,7 +559,8 @@ class RulespecActiveChecksDns(HostRulespec):
                                         "IP address then the answer will be host names, that end "
                                         "with a dot."),
                                 ),
-                                forth=lambda old: isinstance(old, six.string_types) and [old] or old,
+                                forth=lambda old: isinstance(old, six.string_types) and [old] or
+                                old,
                             ),
                         ),
                         ("expected_authority",
@@ -1162,8 +1163,8 @@ class RulespecActiveChecksHttp(HostRulespec):
                                                             "return CRITICAL if found, OK if not")),
                                                     Checkbox(label=_("Multiline string matching")),
                                                 ]),
-                                            forth=
-                                            lambda x: len(x) == 3 and tuple(list(x) + [False]) or x,
+                                            forth=lambda x: len(x) == 3 and tuple(
+                                                list(x) + [False]) or x,
                                             title=_("Regular expression to expect in content"),
                                         ),
                                     ),
@@ -2281,9 +2282,9 @@ class RulespecActiveChecksMail(HostRulespec):
                                                     back=lambda x: "spool:" + x,  # add prefix
                                                 ),
                                             ],
-                                            match=
-                                            lambda x: x and (x == 'spool:' and 2 or x.startswith('spool:') and 3 or 1) or 0
-                                        ),
+                                            match=lambda x: x and
+                                            (x == 'spool:' and 2 or x.startswith('spool:') and 3 or
+                                             1) or 0),
                                         Tuple(
                                             title=_("Send events to remote syslog host"),
                                             elements=[

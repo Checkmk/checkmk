@@ -90,8 +90,8 @@ def check_oracle_diva_csm_status(name, idx, item, params, info):
 
 
 check_info['oracle_diva_csm'] = {
-    "check_function":
-        lambda item, params, info: check_oracle_diva_csm_status("Library", 0, item, params, info),
+    "check_function": lambda item, params, info: check_oracle_diva_csm_status(
+        "Library", 0, item, params, info),
     "inventory_function": lambda info: inventory_oracle_diva_csm_status("Library", 0, info),
     "service_description": "DIVA Status %s",
     "snmp_info": [
@@ -112,22 +112,22 @@ check_info['oracle_diva_csm'] = {
 }
 
 check_info['oracle_diva_csm.drive'] = {
-    "check_function":
-        lambda item, params, info: check_oracle_diva_csm_status("Drive", 1, item, params, info),
+    "check_function": lambda item, params, info: check_oracle_diva_csm_status(
+        "Drive", 1, item, params, info),
     "inventory_function": lambda info: inventory_oracle_diva_csm_status("Drive", 1, info),
     "service_description": "DIVA Status %s",
 }
 
 check_info['oracle_diva_csm.actor'] = {
-    "check_function":
-        lambda item, params, info: check_oracle_diva_csm_status("Actor", 2, item, params, info),
+    "check_function": lambda item, params, info: check_oracle_diva_csm_status(
+        "Actor", 2, item, params, info),
     "inventory_function": lambda info: inventory_oracle_diva_csm_status("Actor", 2, info),
     "service_description": "DIVA Status %s",
 }
 
 check_info['oracle_diva_csm.archive'] = {
-    "check_function":
-        lambda item, params, info: check_oracle_diva_csm_status("Manager", 3, item, params, info),
+    "check_function": lambda item, params, info: check_oracle_diva_csm_status(
+        "Manager", 3, item, params, info),
     "inventory_function": lambda info: inventory_oracle_diva_csm_status("Manager", 3, info),
     "service_description": "DIVA Status %s",
 }

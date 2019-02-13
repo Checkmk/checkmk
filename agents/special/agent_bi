@@ -166,9 +166,7 @@ class AggregationRawdataGenerator(object):
             data={
                 "_username": self._username,
                 "_secret": self._secret,
-                "request": repr({
-                    "filter": self._config.get("filter", {})
-                }),
+                "request": repr({"filter": self._config.get("filter", {})}),
                 "request_format": "python",
                 "output_format": "python"
             })

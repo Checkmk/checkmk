@@ -139,8 +139,8 @@ def check_emcvnx_mirrorview(item, params, parsed):
         state, state_readable = map_state[parsed[item]["MirrorView State"].lower()]
         yield state, "Status: %s" % state_readable
 
-        _state_faulted, state_readable_faulted = map_state[parsed[item]["MirrorView Faulted"].
-                                                           lower()]
+        _state_faulted, state_readable_faulted = map_state[parsed[item]
+                                                           ["MirrorView Faulted"].lower()]
         yield state, "Faulted: %s" % state_readable_faulted
 
 

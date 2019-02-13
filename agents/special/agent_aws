@@ -35,7 +35,7 @@ import logging
 import sys
 import time
 import errno
-from typing import NamedTuple, Any, List
+from typing import NamedTuple, Any, List, AnyStr
 from pathlib2 import Path
 import boto3  # type: ignore
 import botocore  # type: ignore
@@ -101,7 +101,7 @@ AWSSectionResults = NamedTuple("AWSSectionResults", [
 ])
 
 AWSSectionResult = NamedTuple("AWSSectionResult", [
-    ("piggyback_hostname", str),
+    ("piggyback_hostname", AnyStr),
     ("content", Any),
 ])
 
@@ -198,8 +198,8 @@ class AWSSection(object):
                 continue
 
             assert isinstance(
-                result.piggyback_hostname,
-                str), "%s: Piggyback hostname of created result must be of type 'str'" % self.name
+                result.piggyback_hostname, (unicode, str)
+            ), "%s: Piggyback hostname of created result must be of type 'unicode' or 'str'" % self.name
             # In the related check plugin aws.include we parse these results and
             # extend list of json-loaded results.
             assert isinstance(result.content,
@@ -217,7 +217,8 @@ class AWSSection(object):
         else:
             raw_content = self._fetch_raw_content(colleague_contents)
             # TODO: Write cache only when _compute_section_content succeeded?
-            self._write_to_cache(raw_content)
+            if use_cache:
+                self._write_to_cache(raw_content)
             cache_timestamp = time.time()
         return AWSRawContent(raw_content, cache_timestamp)
 
@@ -449,8 +450,10 @@ class EC2Summary(AWSSectionGeneric):
         return self._client.describe_instances()
 
     def _compute_content(self, raw_content, colleague_contents):
+        # PrivateIpAddress and InstanceId is available although the instance is stopped
         return AWSComputedContent({
-            instance["PrivateDnsName"]: instance for reservation in raw_content.content
+            "%s-%s-%s" % (instance['PrivateIpAddress'], self._region, instance['InstanceId']):
+            instance for reservation in raw_content.content
             for instance in reservation.get('Instances', [])
         }, raw_content.cache_timestamp)
 
@@ -783,18 +786,20 @@ class ELBSummary(AWSSectionGeneric):
         found_load_balancers = []
         for load_balancer in self._describe_load_balancers():
             load_balancer_name = load_balancer['LoadBalancerName']
-            tag_descrs = []
+            tagging = []
             try:
                 response = self._client.describe_tags(LoadBalancerNames=[load_balancer_name])
-                tag_descrs = response['TagDescriptions']
+                tagging = [
+                    tag for tag_descr in response['TagDescriptions'] for tag in tag_descr['Tags']
+                ]
             except botocore.exceptions.ClientError as e:
                 # If there are no tags attached to a bucket we receive a 'ClientError'
                 logging.info("%s/%s: No tags set, %s", self.name, load_balancer_name, e)
             except KeyError as e:
                 logging.info("%s/%s: KeyError %s; Available are %s", self.name, load_balancer_name,
                              e, response.keys())
-            if self._matches_conditions(tag_descrs):
-                load_balancer['TagDescriptions'] = tag_descrs
+            if self._matches_conditions(tagging):
+                load_balancer['TagDescriptions'] = tagging
                 found_load_balancers.append(load_balancer)
         return found_load_balancers
 
@@ -822,7 +827,7 @@ class ELBSummary(AWSSectionGeneric):
     def _compute_content(self, raw_content, colleague_contents):
         content_by_piggyback_hosts = {}
         for load_balancer in raw_content.content:
-            content_by_piggyback_hosts.setdefault(load_balancer['LoadBalancerName'], load_balancer)
+            content_by_piggyback_hosts.setdefault(load_balancer['DNSName'], load_balancer)
         return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
 
     def _create_results(self, computed_content):
@@ -846,7 +851,8 @@ class ELBHealth(AWSSectionGeneric):
 
     def _fetch_raw_content(self, colleague_contents):
         load_balancers = {}
-        for load_balancer_name in colleague_contents.content.iterkeys():
+        for load_balancer_dns_name, load_balancer in colleague_contents.content.iteritems():
+            load_balancer_name = load_balancer['LoadBalancerName']
             response = self._client.describe_instance_health(LoadBalancerName=load_balancer_name)
             try:
                 states = response['InstanceStates']
@@ -854,7 +860,7 @@ class ELBHealth(AWSSectionGeneric):
                 logging.info("%s/%s: KeyError %s; Available are %s", self.name, load_balancer_name,
                              e, response.keys())
             else:
-                load_balancers.setdefault(load_balancer_name, states)
+                load_balancers.setdefault(load_balancer_dns_name, states)
         return load_balancers
 
     def _compute_content(self, raw_content, colleague_contents):
@@ -885,7 +891,8 @@ class ELB(AWSSectionCloudwatch):
     def _get_metrics(self, colleague_contents):
         metrics = []
         idx = 0
-        for load_balancer_name in colleague_contents.content.iterkeys():
+        for load_balancer_dns_name, load_balancer in colleague_contents.content.iteritems():
+            load_balancer_name = load_balancer['LoadBalancerName']
             for metric_name, stat in [
                 ("RequestCount", "Sum"),
                 ("SurgeQueueLength", "Maximum"),
@@ -903,7 +910,7 @@ class ELB(AWSSectionCloudwatch):
             ]:
                 metrics.append({
                     'Id': "%s_%s" % (metric_name.lower(), idx),
-                    'Label': load_balancer_name,
+                    'Label': load_balancer_dns_name,
                     'MetricStat': {
                         'Metric': {
                             'Namespace': 'AWS/ELB',
@@ -1050,12 +1057,12 @@ class EBS(AWSSectionCloudwatch):
                 ("VolumeReadBytes", "Bytes", []),
                 ("VolumeWriteBytes", "Bytes", []),
                 ("VolumeQueueLength", "Count", []),
+                ("BurstBalance", "Percent", ["gp2", "st1", "sc1"]),
                     #("VolumeThroughputPercentage", "Percent", ["io1"]),
                     #("VolumeConsumedReadWriteOps", "Count", ["io1"]),
                     #("VolumeTotalReadTime", "Seconds", []),
                     #("VolumeTotalWriteTime", "Seconds", []),
                     #("VolumeIdleTime", "Seconds", []),
-                    #("BurstBalance", "Percent", ["gp2", "st1", "sc1"]),
                     #("VolumeStatus", None, []),
                     #("IOPerformance", None, ["io1"]),
             ]:
@@ -1355,7 +1362,10 @@ def parse_arguments(argv):
         action="store_true",
         help="Log messages from AWS library 'boto3' and 'botocore'.")
     parser.add_argument(
-        "--no-cache", action="store_true", help="Execute all sections, do not rely on cached data.")
+        "--no-cache",
+        action="store_true",
+        help="Execute all sections, do not rely on cached data. Cached data will not be overwritten."
+    )
 
     parser.add_argument(
         "--access-key-id", required=True, help="The access key for your AWS account.")
@@ -1364,7 +1374,6 @@ def parse_arguments(argv):
     parser.add_argument(
         "--regions",
         nargs='+',
-        required=True,
         help="Regions to use:\n%s" % "\n".join(["%-15s %s" % e for e in AWSRegions]))
 
     parser.add_argument(

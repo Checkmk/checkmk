@@ -24,10 +24,18 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# pylint: disable=undefined-variable
+
+
+def parse_docker_container_labels(info):
+    data = docker_json_get_obj(info[0]) if info[0:] else None
+    return data
+
 
 def inv_docker_container_labels(info, inventory_tree):
-    import json
-    data = json.loads(" ".join(info[0]))
+    data = parse_docker_container_labels(info)
+    if data is None:
+        return
     container = inventory_tree.get_dict("software.applications.docker.container.")
     container["labels"] = docker_format_labels({"Labels": data})
 

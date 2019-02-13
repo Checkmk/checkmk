@@ -95,8 +95,8 @@ def check_f5_bigip_snat(item, params, parsed):
                 value,
                 param_var,
                 levels,
-                human_readable_func=
-                lambda x, p=param_var: get_bytes_human_readable(x, base=1000.0) if "octets" in p else str(x),
+                human_readable_func=lambda x, p=param_var: get_bytes_human_readable(x, base=1000.0)
+                if "octets" in p else str(x),
                 infoname=map_paramvar_to_text[param_var.rstrip("_lower")])
             if state:
                 yield state, infotext

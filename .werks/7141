@@ -1,0 +1,10 @@
+Title: mk_docker: Inventorize RepoTags and RepoDigests unprocessed
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1549981996
+Class: fix
+
+Previously, the last RepoTag was picked, and inventorized as 'Repository' and 'Tag' separately. This was somewhat arbitrary, so we now inventorize all RepoTags and RepoDigests without any further interpretation.

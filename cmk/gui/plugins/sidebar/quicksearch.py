@@ -467,9 +467,8 @@ class LivestatusQuicksearch(LivestatusSearchBase):
             # Use configured quicksearch search order
             for (filter_name, filter_behaviour) in config.quicksearch_search_order:
                 self._search_objects.append(
-                    LivestatusSearchConductor({
-                        filter_name: [_to_regex(self._query)]
-                    }, filter_behaviour))
+                    LivestatusSearchConductor({filter_name: [_to_regex(self._query)]},
+                                              filter_behaviour))
 
     # Collect the raw data from livestatus
     def _conduct_search(self):

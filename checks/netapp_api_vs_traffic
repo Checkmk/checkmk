@@ -120,8 +120,8 @@ def check_netapp_api_vs_traffic(item, _no_params, parsed):
 
 
 check_info["netapp_api_vs_traffic"] = {
-    'parse_function':
-        lambda info: netapp_api_parse_lines(info, custom_keys=["protocol", "instance_name"]),
+    'parse_function': lambda info: netapp_api_parse_lines(
+        info, custom_keys=["protocol", "instance_name"]),
     'inventory_function': lambda parsed: inventory_netapp_api_vs_traffic(parsed, "lif:vserver"),
     'check_function': check_netapp_api_vs_traffic,
     'service_description': 'Traffic vServer %s',

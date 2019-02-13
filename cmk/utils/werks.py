@@ -256,13 +256,11 @@ _COMPATIBLE_SORTING_VALUE = {
 # sort by version and within one version by component
 def sort_by_version_and_component(werks):
     translator = WerkTranslator()
-    return sorted(werks,
-                  key=lambda w: (-parse_check_mk_version(w["version"]),
-                                 translator.component_of(w),
-                                 _CLASS_SORTING_VALUE.get(w["class"], 99),
-                                 -w["level"],
-                                 _COMPATIBLE_SORTING_VALUE.get(w["compatible"], 99),
-                                 w["title"]))
+    return sorted(
+        werks,
+        key=lambda w: (-parse_check_mk_version(w["version"]), translator.component_of(w),
+                       _CLASS_SORTING_VALUE.get(w["class"], 99), -w["level"],
+                       _COMPATIBLE_SORTING_VALUE.get(w["compatible"], 99), w["title"]))
 
 
 def sort_by_date(werks):

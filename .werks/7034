@@ -1,0 +1,15 @@
+Title: mk_logwatch: Parse files only
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1549471042
+Class: fix
+
+Previously the configuration of logfile patterns (like e.g. /var/log/*) which
+matched directories lead to errors during parsing of logfiles because directories
+have not been skipped. This werk adds filtering of directories and limiting of parsing
+to files (inlcuding soft linked and hard linked ones).
+
+CMK-1633

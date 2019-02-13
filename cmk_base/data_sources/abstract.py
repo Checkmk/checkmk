@@ -122,6 +122,9 @@ class DataSource(object):
         try:
             cpu_tracking.push_phase(self._cpu_tracking_id())
 
+            persisted_sections_from_disk = self._load_persisted_sections()
+            self._persisted_sections = persisted_sections_from_disk
+
             raw_data, is_cached_data = self._get_raw_data()
 
             self._host_sections = host_sections = self._convert_to_sections(raw_data)
@@ -131,7 +134,8 @@ class DataSource(object):
                 return raw_data
 
             # Add information from previous persisted infos
-            host_sections = self._update_info_with_persisted_sections(host_sections, is_cached_data)
+            host_sections = self._update_info_with_persisted_sections(persisted_sections_from_disk,
+                                                                      host_sections, is_cached_data)
             self._persisted_sections = host_sections.persisted_sections
 
             return host_sections
@@ -427,9 +431,10 @@ class DataSource(object):
         store.save_data_to_file(file_path, persisted_sections, pretty=False)
         self._logger.debug("Stored persisted sections: %s" % (", ".join(persisted_sections.keys())))
 
-    def _update_info_with_persisted_sections(self, host_sections, is_cached_data):
+    def _update_info_with_persisted_sections(self, persisted_sections_from_disk, host_sections,
+                                             is_cached_data):
+        persisted_sections = persisted_sections_from_disk
         persisted_sections_from_raw = host_sections.persisted_sections
-        persisted_sections = self._load_persisted_sections()
 
         if persisted_sections_from_raw and not is_cached_data:
             persisted_sections.update(persisted_sections_from_raw)

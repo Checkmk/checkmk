@@ -1141,17 +1141,14 @@ def _load_gui_groups():
 
 
 class GroupChoice(DualListChoice):
-    def __init__(self, what, with_foreign_groups=True, **kwargs):
-        DualListChoice.__init__(self, **kwargs)
+    def __init__(self, what, **kwargs):
+        super(GroupChoice, self).__init__(choices=self._load_groups, **kwargs)
         self.what = what
-        self._choices = lambda: self.load_groups(with_foreign_groups)
 
-    def load_groups(self, with_foreign_groups):
+    def _load_groups(self):
         all_groups = load_group_information()
         this_group = all_groups.get(self.what, {})
-        return sorted([(k, t['alias'] and t['alias'] or k)
-                       for (k, t) in this_group.items()
-                       if with_foreign_groups or k in config.user.contact_groups()],
+        return sorted([(k, t['alias'] and t['alias'] or k) for (k, t) in this_group.items()],
                       key=lambda x: x[1].lower())
 
 

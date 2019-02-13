@@ -120,7 +120,6 @@ discovery_systemd_units_services_rules = []
 
 
 def discovery_systemd_units_services(parsed):
-
     services = parsed.get('service', {})
 
     def regex_match(what, name):
@@ -151,7 +150,6 @@ def discovery_systemd_units_services(parsed):
 
 
 def check_systemd_units_services(item, params, parsed):
-
     services = parsed.get('service', {})
     service = services.get(item, None)
     if service is None:
@@ -172,8 +170,9 @@ check_info['systemd_units.services'] = {
 }
 
 
-def discovery_systemd_units_services_summary(_no_parsed):
-    yield 'Summary', {}
+def discovery_systemd_units_services_summary(parsed):
+    if parsed:
+        yield 'Summary', {}
 
 
 def check_systemd_units_services_summary(_no_item, params, parsed):

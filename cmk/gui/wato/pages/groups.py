@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import os
+import abc
 
 import cmk.utils.paths
 
@@ -58,10 +59,13 @@ from cmk.gui.plugins.wato import (
 )
 
 
-# TODO: abc.ABCMeta
 class ModeGroups(WatoMode):
-    # TODO: Refactore to abc.abstractmethod
-    type_name = None
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractproperty
+    def type_name(self):
+        # type: () -> str
+        raise NotImplementedError()
 
     def __init__(self):
         super(ModeGroups, self).__init__()
@@ -136,10 +140,13 @@ class ModeGroups(WatoMode):
                 self._show_row_cells(table, name, group)
 
 
-# TODO: abc.ABCMeta
 class ModeEditGroup(WatoMode):
-    # TODO: Reimplement as abc.abstactmethod
-    type_name = None
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractproperty
+    def type_name(self):
+        # type: () -> str
+        raise NotImplementedError()
 
     def __init__(self):
         self._name = None
@@ -237,7 +244,9 @@ class ModeEditGroup(WatoMode):
 
 @mode_registry.register
 class ModeHostgroups(ModeGroups):
-    type_name = "host"
+    @property
+    def type_name(self):
+        return "host"
 
     @classmethod
     def name(cls):
@@ -278,7 +287,9 @@ class ModeHostgroups(ModeGroups):
 
 @mode_registry.register
 class ModeServicegroups(ModeGroups):
-    type_name = "service"
+    @property
+    def type_name(self):
+        return "service"
 
     @classmethod
     def name(cls):
@@ -320,7 +331,9 @@ class ModeServicegroups(ModeGroups):
 
 @mode_registry.register
 class ModeContactgroups(ModeGroups):
-    type_name = "contact"
+    @property
+    def type_name(self):
+        return "contact"
 
     @classmethod
     def name(cls):
@@ -379,7 +392,9 @@ class ModeContactgroups(ModeGroups):
 
 @mode_registry.register
 class ModeEditServicegroup(ModeEditGroup):
-    type_name = "service"
+    @property
+    def type_name(self):
+        return "service"
 
     @classmethod
     def name(cls):
@@ -397,7 +412,9 @@ class ModeEditServicegroup(ModeEditGroup):
 
 @mode_registry.register
 class ModeEditHostgroup(ModeEditGroup):
-    type_name = "host"
+    @property
+    def type_name(self):
+        return "host"
 
     @classmethod
     def name(cls):
@@ -415,7 +432,9 @@ class ModeEditHostgroup(ModeEditGroup):
 
 @mode_registry.register
 class ModeEditContactgroup(ModeEditGroup):
-    type_name = "contact"
+    @property
+    def type_name(self):
+        return "contact"
 
     @classmethod
     def name(cls):

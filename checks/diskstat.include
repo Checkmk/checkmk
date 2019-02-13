@@ -449,8 +449,7 @@ def check_diskstat_dict(item, params, disks):
                 params.get(latency_key),
                 unit="ms",
                 scale=0.001,
-                statemarkers=False,
-                infoname='%s latency' % what.title())
+                statemarkers=False)
 
     # Queue lengths
     for what, plugin_text in [ ("queue_length", "Queue Length"),

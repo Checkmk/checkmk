@@ -6,7 +6,9 @@ distribution: check_mk
 description:
  This check monitors the status of the docker application.
  If the daemon is running, the check is OK, otherwise it is
- CRIT and displays the error message.
+ CRIT and displays an error message.
+
+ To make this check work the agent plugin {{mk_docker.py}} has to be installed.
 
 inventory:
  One service is created.

@@ -8,5 +8,7 @@ description:
  of running, paused, and stopped containers. Absolute levels can be defined
  for each of these values.
 
+ To make this check work the agent plugin {{mk_docker.py}} has to be installed.
+
 inventory:
  One service is created.

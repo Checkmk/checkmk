@@ -35,7 +35,7 @@ import logging
 import sys
 import time
 import errno
-from typing import NamedTuple, Any, List
+from typing import NamedTuple, Any, List, AnyStr
 from pathlib2 import Path
 import boto3  # type: ignore
 import botocore  # type: ignore
@@ -101,7 +101,7 @@ AWSSectionResults = NamedTuple("AWSSectionResults", [
 ])
 
 AWSSectionResult = NamedTuple("AWSSectionResult", [
-    ("piggyback_hostname", Any),
+    ("piggyback_hostname", AnyStr),
     ("content", Any),
 ])
 

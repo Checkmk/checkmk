@@ -35,6 +35,21 @@ def event_creator():
             },
         ),
         (
+            "Feb 13 08:41:07 pfsp: The configuration was changed on leader blatldc1-xxx to version 1.1366 by blatldc1-xxx/admin at 2019-02-13 09:41:02 CET",
+            {
+                'application': 'pfsp',
+                'core_host': '',
+                'facility': 1,
+                'host': '127.0.0.1',
+                'host_in_downtime': False,
+                'ipaddress': '127.0.0.1',
+                'pid': 0,
+                'priority': 5,
+                'text': 'The configuration was changed on leader blatldc1-xxx to version 1.1366 by blatldc1-xxx/admin at 2019-02-13 09:41:02 CET',
+                'time': 1550043667.0
+            },
+        ),
+        (
             # Variant 2: syslog message including facility (RFC 3164)
             "<78>May 26 13:45:01 Klapprechner CRON[8046]:  message",
             {

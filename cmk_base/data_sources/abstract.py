@@ -431,7 +431,8 @@ class DataSource(object):
         store.save_data_to_file(file_path, persisted_sections, pretty=False)
         self._logger.debug("Stored persisted sections: %s" % (", ".join(persisted_sections.keys())))
 
-    def _update_info_with_persisted_sections(self, persisted_sections_from_disk,  host_sections, is_cached_data):
+    def _update_info_with_persisted_sections(self, persisted_sections_from_disk, host_sections,
+                                             is_cached_data):
         persisted_sections = persisted_sections_from_disk
         persisted_sections_from_raw = host_sections.persisted_sections
 

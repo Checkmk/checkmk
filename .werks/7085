@@ -1,0 +1,46 @@
+Title: Fixed parsing of special syslog messages which don't contain a host name
+Level: 1
+Component: ec
+Class: fix
+Compatible: incomp
+Edition: cre
+State: unknown
+Version: 1.5.0p13
+Date: 1550050614
+
+The Event Console is now able to process syslog messages that don't contain the
+host name field. An example for such a message is this one:
+
+C+:
+Feb 13 08:41:07 pfsp: The configuration was changed on leader blatldc1-xxx to version 1.1366 by blatldc1-xxx/admin at 2019-02-13 09:41:02 CET</tt>
+C-:
+
+In previous versions messages like this resulted in log messages like this in
+the event console log (var/log/mkeventd.log):
+
+C+:
+2019-02-13 09:41:07,338 [40] [cmk.mkeventd.EventServer] Got non-syslog message "Feb 13 08:41:07 pfsp: The configuration was changed on leader blatldc1-xxx to version 1.1366 by blatldc1-xxx/admin at 2019-02-13 09:41:02 CET" (need more than 1 value to unpack)
+Traceback (most recent call last):
+  File "/omd/sites/ggmcmpp1/lib/python/cmk/ec/main.py", line 2916, in create_event_from_line
+    event.update(self.parse_syslog_info(rest))
+  File "/omd/sites/ggmcmpp1/lib/python/cmk/ec/main.py", line 2667, in parse_syslog_info
+    tag, message = line.split(": ", 1)
+ValueError: need more than 1 value to unpack
+2019-02-13 09:41:07,338 [20] [cmk.mkeventd.EventServer] Parsed message:
+ application:
+ core_host:
+ facility:       1
+ host:
+ host_in_downtime: False
+ ipaddress:      1.23.45.67
+ pid:            0
+ priority:       0
+ text:           Feb 13 08:41:07 pfsp: The configuration was changed on leader blatldc1-xxx to version 1.1366 by blatldc1-xxx/admin at 2019-02-13 09:41
+:02 CET
+ time:           1550047267.34
+C-:
+
+A fallback event was created that had no syslog fields set and contained the
+whole unparsed syslog message in the text field.  If you have EC rules matching
+on this fallback event, you will have to change these rules to match the parsed
+event fields.

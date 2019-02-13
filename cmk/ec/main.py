@@ -2801,6 +2801,9 @@ class EventServer(ECServerThread):
             # Variant 1: plain syslog message without priority/facility:
             # May 26 13:45:01 Klapprechner CRON[8046]:  message....
 
+            # Variant 1a: plain syslog message without priority/facility/host:
+            # May 26 13:45:01 Klapprechner CRON[8046]:  message....
+
             # Variant 2: syslog message including facility (RFC 3164)
             # <78>May 26 13:45:01 Klapprechner CRON[8046]:  message....
 
@@ -2849,7 +2852,7 @@ class EventServer(ECServerThread):
                 event["facility"] = prio >> 3
                 event["priority"] = prio & 7
 
-            # Variant 1
+            # Variant 1,1a
             else:
                 event["facility"] = 1  # user
                 event["priority"] = 5  # notice
@@ -2905,9 +2908,20 @@ class EventServer(ECServerThread):
                 event["text"] = line
                 event['time'] = time.mktime(time.strptime(time_part, '%Y %b %d %H:%M:%S'))
 
-            # Variant 1,2,4
+            # Variant 1,1a,2,4
             else:
-                month_name, day, timeofday, host, rest = line.split(None, 4)
+                month_name, day, timeofday, rest = line.split(None, 3)
+
+                # Special handling for variant 1a. Detect whether or not host
+                # is a hostname or syslog tag
+                host, tmp_rest = rest.split(None, 1)
+                if host.endswith(":"):
+                    # There is no host information sent, use the source address as "host"
+                    host = address[0]
+                else:
+                    # Use the extracted host and continue with the remaining message text
+                    rest = tmp_rest
+
                 event["host"] = host
 
                 # Variant 4

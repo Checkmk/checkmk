@@ -5,11 +5,6 @@ import pytest
 from testlib import cmk_path  # pylint: disable=import-error
 from re import compile
 
-import imp
-mk_logwatch = imp.load_source("mk_logwatch",
-                              os.path.join(cmk_path(), 'agents', 'plugins', 'mk_logwatch'))
-import mk_logwatch  # pylint: disable=import-error,wrong-import-position
-
 # consistent to check_mk/agents/cfg_examples/logwatch.cfg
 LOGWATCH_CONFIG_CONTENT = """
 # +------------------------------------------------------------------+
@@ -94,7 +89,39 @@ CLUSTER another_cluster
  1762:0:0:0:0:B03:1:AF18"""
 
 
-def test_get_config_files(tmpdir):
+@pytest.fixture(scope="module")
+def agent_plugin_as_module(request):
+    """
+    Fixture to inject source code of agent as module. Removes <source-code-file>c during teardown.
+    """
+    # - setup - start
+    agent_path = os.path.abspath(os.path.join(cmk_path(), 'agents', 'plugins', 'mk_logwatch'))
+    # To make this setup fail safe and to prevent from potentially loading the module from a
+    # left-over mk_logwtachc file from previous test runs try to remove it.
+    try:
+        os.remove(agent_path + "c")
+    except OSError:
+        pass  # it's ok if the file is not there
+
+    # import the agent source file as module
+    # (imp.load_source() has the side effect of creating mk_logwatchc)
+    import imp
+    mk_logwatch = imp.load_source("mk_logwatch", agent_path)
+    import mk_logwatch  # pylint: disable=import-error,wrong-import-position
+
+    assert "get_config_files" in mk_logwatch.__dict__
+    # - setup - end
+    yield mk_logwatch  # inject module
+    # - teardown - start
+    try:
+        os.remove(agent_path + "c")
+    except OSError:
+        pass  # it's ok if the file is not there
+    # - teardown - end
+
+
+def test_get_config_files(agent_plugin_as_module, tmpdir):
+    mk_logwatch = agent_plugin_as_module
     fake_config_dir = tmpdir.mkdir("test")
     fake_custom_config_file = fake_config_dir.mkdir("logwatch.d").join("custom.cfg")
     fake_custom_config_file.write("blub")
@@ -107,8 +134,9 @@ def test_get_config_files(tmpdir):
     assert paths == ['/logwatch.cfg', '/logwatch.d/custom.cfg']
 
 
-def test_read_config(tmpdir):
+def test_read_config(agent_plugin_as_module, tmpdir):
     """Fakes a single logwatch config files and checks if the agent plugin reads the configuration appropriately."""
+    mk_logwatch = agent_plugin_as_module
     # setup
     fake_config_file = tmpdir.mkdir("test").join("logwatch.cfg")
     fake_config_file.write(LOGWATCH_CONFIG_CONTENT)
@@ -162,11 +190,12 @@ def test_read_config(tmpdir):
         ("", True, "/path/to/config/logwatch.state.local"),
         ("", False, "/path/to/config/logwatch.state"),
     ])
-def test_get_status_filename(env_var, istty, statusfile, monkeypatch, mocker):
+def test_get_status_filename(agent_plugin_as_module, env_var, istty, statusfile, monkeypatch, mocker):
     """
     May not be executed with pytest option -s set. pytest stdout redirection would colide
     with stdout mock.
     """
+    mk_logwatch = agent_plugin_as_module
     monkeypatch.setenv("REMOTE", env_var)
     monkeypatch.setenv("MK_VARDIR", '/path/to/config')
     stdout_mock = mocker.patch("mk_logwatch.sys.stdout")
@@ -182,8 +211,9 @@ def test_get_status_filename(env_var, istty, statusfile, monkeypatch, mocker):
     assert status_filename == statusfile
 
 
-def test_read_status(tmpdir):
+def test_read_status(agent_plugin_as_module, tmpdir):
     # setup
+    mk_logwatch = agent_plugin_as_module
     fake_status_file = tmpdir.mkdir("test").join("logwatch.state.another_cluster")
     fake_status_file.write("""/var/log/messages|7767698|32455445
 /var/test/x12134.log|12345|32444355""")
@@ -198,7 +228,8 @@ def test_read_status(tmpdir):
     }
 
 
-def test_save_status(tmpdir):
+def test_save_status(agent_plugin_as_module, tmpdir):
+    mk_logwatch = agent_plugin_as_module
     fake_status_file = tmpdir.mkdir("test").join("logwatch.state.another_cluster")
     fake_status_file.write("")
     file_path = str(fake_status_file)
@@ -213,12 +244,15 @@ def test_save_status(tmpdir):
 
 
 @pytest.mark.parametrize("pattern_suffix, file_suffixes", [
-    ("/*", ["/file.log", "/hard_linked_file_a.log", "/hard_linked_file_b.log", "/symlinked_file.log"]),
-    ("/**", ["/file.log", "/hard_linked_file_a.log", "/hard_linked_file_b.log", "/symlinked_file.log"]),
+    ("/*",
+     ["/file.log", "/hard_linked_file_a.log", "/hard_linked_file_b.log", "/symlinked_file.log"]),
+    ("/**",
+     ["/file.log", "/hard_linked_file_a.log", "/hard_linked_file_b.log", "/symlinked_file.log"]),
     ("/subdir/*", ["/subdir/another_symlinked_file.log"]),
     ("/symlink_to_dir/*", ["/symlink_to_dir/yet_another_file.log"]),
 ])
-def test_find_matching_logfiles(fake_filesystem, pattern_suffix, file_suffixes):
+def test_find_matching_logfiles(agent_plugin_as_module, fake_filesystem, pattern_suffix, file_suffixes):
+    mk_logwatch = agent_plugin_as_module
     fake_fs_path = str(fake_filesystem)
     files = mk_logwatch.find_matching_logfiles(fake_fs_path + pattern_suffix)
     assert sorted(files) == [fake_fs_path + fs for fs in file_suffixes]

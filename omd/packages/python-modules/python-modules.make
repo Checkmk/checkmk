@@ -113,13 +113,15 @@ PYTHON_MODULES_LIST += python-ad-0.9.tar.gz # needed for LDAP (nearest DC detect
 PYTHON_MODULES_LIST += idna-2.7.tar.gz
 # Added for NetApp special agent, but may be used in other components too in future
 PYTHON_MODULES_LIST += requests-2.20.1.tar.gz
+# Added for IPMI monitoring of management interface
+PYTHON_MODULES_LIST += pbr-5.1.0.tar.gz
 
 ifneq ($(filter $(DISTRO_CODE),el5 lucid sles11sp1 sles11sp2 sles11sp3 sles11sp4 squeeze),)
     PYTHON_MODULES_LIST += cryptography-1.4.tar.gz
     # Has requests as dependency -> must be built after
     PYTHON_MODULES_LIST += pyOpenSSL-16.2.0.tar.gz
     PYTHON_MODULES_LIST += paramiko-2.1.2.tar.gz
-    PYTHON_MODULES_LIST += pyghmi-1.2.4.tar.gz
+    PYTHON_MODULES_LIST += pyghmi-1.1.0.tar.gz
     PYTHON_MODULES_PATCHES += $(PACKAGE_DIR)/$(PYTHON_MODULES)/patches/0005-NID_ecdsa_with_SHA-fix.patch
     PYTHON_MODULES_PATCHES += $(PACKAGE_DIR)/$(PYTHON_MODULES)/patches/0009-cryptography-1.4-disable-version-warning.patch
 else
@@ -143,8 +145,6 @@ PYTHON_MODULES_LIST += tinkerforge-2.1.19.tar.gz
 # Added for check_sftp
 PYTHON_MODULES_LIST += bcrypt-3.1.4.tar.gz
 PYTHON_MODULES_LIST += PyNaCl-1.3.0.tar.gz
-# Added for IPMI monitoring of management interface
-PYTHON_MODULES_LIST += pbr-5.1.0.tar.gz
 
 PYTHON_MODULES_LIST += typing-3.6.6.tar.gz
 PYTHON_MODULES_LIST += scandir-1.9.0.tar.gz

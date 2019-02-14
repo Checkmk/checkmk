@@ -29,15 +29,14 @@ def inv_docker_node_network_networks(info, inventory_tree, status_data_tree):
     parsed = parse_docker_network_inspect(info)
     for network in parsed:
 
-        containers = []
-        for container_id, container in network["Containers"].items():
-            containers.append({
-                "name"         : container["Name"],
-                "id"           : _docker_trunc_id(container_id),
-                "ipv4_address" : container["IPv4Address"],
-                "ipv6_address" : container["IPv6Address"],
-                "mac_address"  : container["MacAddress"],
-            })
+        sorted_container_items = sorted(network["Containers"].items())
+
+        containers = [{"name": container["Name"],
+                       "id": _docker_trunc_id(container_id),
+                       "ipv4_address": container["IPv4Address"],
+                       "ipv6_address": container["IPv6Address"],
+                       "mac_address": container["MacAddress"],
+                      } for container_id, container in sorted_container_items]
 
         network_name = network["Name"]
         path = "software.applications.docker.networks.%s." % network_name
@@ -45,8 +44,8 @@ def inv_docker_node_network_networks(info, inventory_tree, status_data_tree):
         status_networks = status_data_tree.get_dict(path)
 
         status_networks.update({
-            "name"              : network_name,
-            "containers"        : [{"name": 1}],
+            "name": network_name,
+            "containers": containers,
         })
 
         network_ = {
@@ -56,7 +55,7 @@ def inv_docker_node_network_networks(info, inventory_tree, status_data_tree):
         }
 
         try:
-            network["host_ifname"] = network["Options"]["com.docker.network.bridge.name"]
+            network_["host_ifname"] = network["Options"]["com.docker.network.bridge.name"]
         except KeyError:
             pass
 

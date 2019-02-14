@@ -143,7 +143,6 @@ def _clear_other_hosts_oid_cache(hostname):
 #   '----------------------------------------------------------------------'
 
 
-# TODO: OID_END_OCTET_STRING is not used at all. Drop it.
 def get_snmp_table(access_data, check_plugin_name, oid_info, use_snmpwalk_cache):
     hostname = access_data["hostname"]
     # oid_info is either ( oid, columns ) or

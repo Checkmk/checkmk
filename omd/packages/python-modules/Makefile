@@ -14,12 +14,12 @@ MODULES += setuptools_scm-3.1.0.tar.gz
 
 # Modules really needed on all platforms
 MODULES += pysphere-0.1.7.zip
-MODULES += pyasn1-0.4.4.tar.gz
+MODULES += pyasn1-0.4.2.tar.gz
 MODULES += pyasn1-modules-0.2.2.tar.gz
-MODULES += pycryptodomex-3.6.6.tar.gz
+MODULES += pycryptodomex-3.4.7.tar.gz
 MODULES += ordereddict-1.1.tar.gz # needed by pysmi
 MODULES += ply-3.11.tar.gz # needed by pysmi
-MODULES += pysmi-0.3.2.tar.gz # needed by EC (for trap translation)
+MODULES += pysmi-0.3.0.tar.gz # needed by EC (for trap translation)
 MODULES += pysnmp-4.4.4.tar.gz # needed by EC (for trap translation)
 
 MODULES += setuptools-git-1.2.tar.gz # needed for pymssql
@@ -28,32 +28,40 @@ MODULES += pymssql-2.1.3.tar.gz # needed for check_sql (together with freetds)
 LEGACY_LDAP=0
 ifeq ($(DISTRO_CODE),el5)
     LEGACY_LDAP=1
-    PATCHES += patches/0018-mysqlclient-fortify-source.patch
     PATCHES += patches/0019-PyNaCl-fortify-source.patch
 endif
 
 ifeq ($(LEGACY_LDAP), 1)
     MODULES += python-ldap-2.3.13.tar.gz
 else
-    MODULES += python-ldap-3.1.0.tar.gz
-    PATCHES += patches/0001-python-ldap-3.1.0-disable-sasl.patch
+    MODULES += python-ldap-2.4.32.tar.gz
+    PATCHES += patches/0001-python-ldap-2.4.32-disable-sasl.patch
 endif
 
 # Check_MK Edition specific
-MODULES += simplejson-3.16.0.tar.gz
-MODULES += mysqlclient-1.3.13.tar.gz  # needed by check_sql
+MODULES += simplejson-3.15.0.tar.gz
+
+ifeq ($(DISTRO_CODE),sles15)
+    # Partial backport of 716eebb7de600a32300cc391ac9ecb67dd1aabf6 (specific for sles15)
+    # Since 1.6 all distros use mysqlclient. Better keep the old module for the other
+    # distros to reduce risk of breaking things
+    MODULES += mysqlclient-1.3.13.tar.gz # needed by check_sql
+else
+    MODULES += MySQL-python-1.2.5.zip # needed by check_sql
+    PATCHES += patches/0002_MySQL-python-use-distutils.patch
+endif
 MODULES += psycopg2-2.6.2.tar.gz # needed by check_sql
 MODULES += dicttoxml-1.7.4.tar.gz # needed by inventory XML export
-MODULES += pycparser-2.19.tar.gz # needed for cffi and azure
+MODULES += pycparser-2.18.tar.gz # needed for cffi
 MODULES += enum34-1.1.6.tar.gz # needed for cffi
 MODULES += cffi-1.11.5.tar.gz # needed by e.g. Pillow
-MODULES += Pillow-5.3.0.tar.gz # needed by reportlab (pillow>=2.4.0)
-MODULES += pip-18.1.tar.gz # needed by reportlab (pip>=1.4.1)
-MODULES += reportlab-3.5.9.tar.gz # needed by reporting
+MODULES += Pillow-5.0.0.tar.gz # needed by reportlab (pillow>=2.4.0)
+MODULES += pip-10.0.1.tar.gz # needed by reportlab (pip>=1.4.1)
+MODULES += reportlab-3.4.0.tar.gz # needed by reporting
 MODULES += PyPDF2-1.26.0.tar.gz # needed by reporting
 
 MODULES += npyscreen-4.10.5.tar.gz # needed for mkbench
-MODULES += psutil-5.4.7.tar.gz # needed for mkbench
+MODULES += psutil-5.4.3.tar.gz # needed for mkbench
 
 # OpenSSL versions shipped:
 #    0x0090802f (OpenSSL 0.9.8e-rhel5 01 Jul 2008): centos55
@@ -98,44 +106,46 @@ MODULES += ipaddress-1.0.22.tar.gz
 MODULES += netifaces-0.10.7.tar.gz # needed for LDAP (nearest DC detection)
 MODULES += dnspython-1.15.0.zip # needed for LDAP (nearest DC detection)
 MODULES += python-ad-0.9.tar.gz # needed for LDAP (nearest DC detection)
-# Added for NetApp special agent, but may be used in other components too in future
-MODULES += requests-2.20.1.tar.gz
 
-MODULES += idna-2.7.tar.gz
-# Added for IPMI monitoring of management interface
-MODULES += pbr-5.1.0.tar.gz
+MODULES += idna-2.6.tar.gz
 ifneq ($(filter $(DISTRO_CODE),el5 lucid sles11sp1 sles11sp2 sles11sp3 sles11sp4 squeeze),)
     MODULES += cryptography-1.4.tar.gz
-    # Has requests as dependency -> must be built after
-    MODULES += pyOpenSSL-16.2.0.tar.gz
-    MODULES += paramiko-2.1.2.tar.gz
-    MODULES += pyghmi-1.1.0.tar.gz
     PATCHES += patches/0005-NID_ecdsa_with_SHA-fix.patch
     PATCHES += patches/0009-cryptography-1.4-disable-version-warning.patch
+else ifneq ($(filter $(DISTRO_CODE),el6),)
+# Cryptography dropped support for OpenSSL 1.0.0 with release 1.7
+# (https://github.com/pyca/cryptography/blob/master/CHANGELOG.rst),
+# so we stick with 1.5.3.
+    MODULES += cryptography-1.5.3.tar.gz
+    PATCHES += patches/0004-CMS_DEBUG_DECRYPT-fix.patch
+    PATCHES += patches/0009-cryptography-1.5.3-disable-version-warning.patch
 else
     MODULES += asn1crypto-0.24.0.tar.gz
-    MODULES += cryptography-2.4.1.tar.gz
-    # Has requests as dependency -> must be built after
-    MODULES += pyOpenSSL-18.0.0.tar.gz
-    MODULES += paramiko-2.4.2.tar.gz
-    MODULES += pyghmi-1.2.14.tar.gz
-    PATCHES += patches/0009-cryptography-2.4.1-disable-version-warning.patch
+    MODULES += cryptography-2.3.1.tar.gz
 endif
 
 MODULES += certifi-2018.10.15.tar.gz
 MODULES += chardet-3.0.4.tar.gz
 MODULES += urllib3-1.24.1.tar.gz
+# Added for NetApp special agent, but may be used in other components too in future
+MODULES += requests-2.13.0.tar.gz
+# Has requests as dependency -> must be built after
+MODULES += pyOpenSSL-16.2.0.tar.gz
 # Added for check_bi_aggr with kerberos support
 MODULES += pykerberos-1.2.1.tar.gz
-MODULES += requests-kerberos-0.12.0.tar.gz
+MODULES += requests-kerberos-0.11.0.tar.gz
 # Added for tinkerforge special agent
-MODULES += tinkerforge-2.1.19.tar.gz
+MODULES += tinkerforge-2.1.15.tar.gz
 # Added for check_sftp
 MODULES += bcrypt-3.1.4.tar.gz
 MODULES += PyNaCl-1.3.0.tar.gz
+MODULES += paramiko-2.1.2.tar.gz
+# Added for IPMI monitoring of management interface
+MODULES += pbr-4.0.0.tar.gz
+MODULES += pyghmi-1.2.14.tar.gz
 
-MODULES += typing-3.6.6.tar.gz
-MODULES += scandir-1.9.0.tar.gz
+MODULES += typing-3.6.4.tar.gz
+MODULES += scandir-1.7.tar.gz
 MODULES += pathlib2-2.3.2.tar.gz
 # Added for scheduling (cmk/schedule.py)
 MODULES += python-dateutil-2.6.1.tar.gz
@@ -181,8 +191,6 @@ MODULES += kubernetes-8.0.0.tar.gz
 
 .PHONY: build check-freetds install skel clean dump-Pipfile
 
-# NOTE: Cruel hack below! We need to have a recent GCC visible in the PATH
-# because the SSSE3 detection in pycryptodomex is slightly broken. :-/
 build: check-python check-freetds unpack
 	set -e ; cd dest && \
 	    mkdir -p $(PACKAGE_PYTHON_MODULES_PYTHONPATH) || true; \
@@ -191,7 +199,6 @@ build: check-python check-freetds unpack
 	    export CPATH="$(PACKAGE_FREETDS_DESTDIR)/include" ; \
 	    export LDFLAGS="$(PACKAGE_PYTHON_LDFLAGS) $(PACKAGE_FREETDS_LDFLAGS)" ; \
 	    export LD_LIBRARY_PATH="$(PACKAGE_PYTHON_LD_LIBRARY_PATH)" ; \
-	    PATH="$(abspath ../python/bin):$$PATH" ; \
 	    for M in $(MODULES); do \
 		echo "Building $$M..." ; \
 		PKG=$${M//.tar.gz/} ; \

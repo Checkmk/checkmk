@@ -119,7 +119,8 @@ def get_config(cfg_file):
     LOGGER.debug("trying to read %r", cfg_file)
     files_read = config.read(cfg_file)
     LOGGER.info("read configration file(s): %r", files_read)
-    return dict(config.items("DOCKER"))
+    section_name = "DOCKER" if config.sections() else "DEFAULT"
+    return dict(config.items(section_name))
 
 
 class Section(list):
@@ -176,16 +177,28 @@ class AgentDispatcher(object):
     '''
 
     @staticmethod
-    def iter_socket(sock):
+    def iter_socket(sock, descriptor):
         header = sock.recv(8)
         while header:
-            _descriptor, length = struct.unpack('>BxxxL', header)
+            actual_descriptor, length = struct.unpack('>BxxxL', header)
             while length:
                 data = sock.recv(length)
                 length -= len(data)
                 LOGGER.debug("Received data: %r", data)
-                yield data
+                if actual_descriptor == descriptor:
+                    yield data
             header = sock.recv(8)
+
+    def get_stdout(self, exec_return_val):
+        if isinstance(exec_return_val, tuple):
+            # it's a tuple since version 3.0.0
+            exit_code, sock = exec_return_val
+            if exit_code not in (0, None):
+                return ''
+        else:
+            sock = exec_return_val
+
+        return ''.join(self.iter_socket(sock, 1))
 
     def __init__(self):
         remote = os.getenv("REMOTE", "")
@@ -214,26 +227,31 @@ class AgentDispatcher(object):
         '''run check_mk agent in container or container context'''
 
         LOGGER.debug("trying to run containers check_mk_agent")
-        result = container.exec_run('check_mk_agent', environment=self.env, demux=True)
-        if result.exit_code == 0:
+        result = container.exec_run('check_mk_agent', environment=self.env, socket=True)
+        output = self.get_stdout(result)
+        if output:
             LOGGER.info("successfully ran containers check_mk_agent")
-            return result.output[0]
+            return output
         LOGGER.info("container has no agent or executing agent failed")
 
         # check for agent code and bash:
         if not self.agent_code:
             LOGGER.info("failed to load agent code: %s", self.agent_code_exc)
             return None
-        result = container.exec_run('bash')
-        if result.exit_code != 0:
+        result = container.exec_run('bash', socket=True)
+        if not self.get_stdout(result):
             LOGGER.info("failed to run bash in container: %s", container.short_id)
             return None
 
-        _exit_code, dock_sock = container.exec_run(
+        result = container.exec_run(
             'bash', environment=self.env_from_node, socket=True, stdin=True, stderr=False)
-        nbytes = dock_sock.sendall(self.agent_code)
+        try:
+            nbytes = result.sendall(self.agent_code)
+        except AttributeError:
+            # it's a tuple since version 3.0.0
+            nbytes = result[1].sendall(self.agent_code)
         LOGGER.debug("sent agent to container (%d bytes)", nbytes)
-        agent_ouput = ''.join(self.iter_socket(dock_sock))
+        agent_ouput = self.get_stdout(result)
         LOGGER.info("successfully ran check_mk_agent that was sent to container")
         return agent_ouput
 

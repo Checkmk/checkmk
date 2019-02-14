@@ -2972,7 +2972,9 @@ class RulespecHostCheckCommands(HostRulespec):
             help=_(
                 "Usually Check_MK uses a series of PING (ICMP echo request) in order to determine "
                 "whether a host is up. In some cases this is not possible, however. With this rule "
-                "you can specify an alternative way of determining the host's state."),
+                "you can specify an alternative way of determining the host's state.") + _(
+                    "The option to use a custom command can only be configured with the permission "
+                    "\"Can add or modify executables\"."),
             choices=self._host_check_command_choices,
             default_value="ping",
             orientation="horizontal",

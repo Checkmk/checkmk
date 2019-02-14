@@ -266,7 +266,8 @@ class ModeDiagHost(WatoMode):
                              "program that should be called by Check_MK instead of connecting the agent "
                              "via TCP. That program must output the agent's data on standard output in "
                              "the same format the agent would do. This is for example useful for monitoring "
-                             "via SSH.") + monitoring_macro_help(),
+                             "via SSH.") + monitoring_macro_help() + " "
+                         + _("This option can only be used with the permission \"Can add or modify executables\"."),
                 ))
             ]
         else:

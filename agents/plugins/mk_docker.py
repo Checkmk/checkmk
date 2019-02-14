@@ -124,7 +124,10 @@ def get_config(cfg_file):
 
 class Section(list):
     '''a very basic agent section class'''
-    version_info = {'PluginVersion': VERSION}
+    version_info = {
+        'PluginVersion': VERSION,
+        'DockerPyVersion': docker.version,
+    }
 
     # Should we need to parallelize one day, change this to be
     # more like the Section class in agent_azure, for instance

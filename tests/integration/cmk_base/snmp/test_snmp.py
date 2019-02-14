@@ -3,7 +3,7 @@ import logging
 import os
 import pytest  # type: ignore
 from pathlib2 import Path
-from testlib import cmk_path
+from testlib import cmk_path, wait_until
 
 from cmk.utils.exceptions import MKGeneralException
 import cmk.utils.paths
@@ -24,14 +24,29 @@ logger = logging.getLogger(__name__)
 # SNMP device and back.
 
 
-@pytest.fixture()
-def snmpsim(site, request, tmp_path, monkeypatch):
+# Found no other way to archieve this
+# https://github.com/pytest-dev/pytest/issues/363
+@pytest.fixture(scope="module")
+def monkeymodule(request):
+    from _pytest.monkeypatch import MonkeyPatch
+    mpatch = MonkeyPatch()
+    yield mpatch
+    mpatch.undo()
+
+
+@pytest.fixture(scope="module")
+def snmpsim(site, request, tmp_path_factory, monkeymodule):
+    tmp_path = tmp_path_factory.getbasetemp()
+
     cmd = "%s/.venv/bin/snmpsimd.py" % cmk_path()
     source_data_dir = Path(request.fspath.dirname) / "snmp_data"
 
-    monkeypatch.setattr(config, "snmp_port_of", lambda h: 1337)
+    monkeymodule.setattr(config, "snmp_port_of", lambda h: 1337)
     log.set_verbosity(2)
     debug.enable()
+
+    # TODO: Use SNMPv2 over v1 for the moment
+    monkeymodule.setattr(config, "is_snmpv2c_host", lambda h: True)
 
     p = subprocess.Popen(
         [
@@ -51,8 +66,8 @@ def snmpsim(site, request, tmp_path, monkeypatch):
         ],
         close_fds=True,
         # Silence the very noisy output. May be useful to enable this for debugging tests
-        stdout=open(os.devnull, "w"),
-        stderr=subprocess.STDOUT,
+        #stdout=open(os.devnull, "w"),
+        #stderr=subprocess.STDOUT,
     )
 
     access_data = {
@@ -60,6 +75,19 @@ def snmpsim(site, request, tmp_path, monkeypatch):
         "hostname": "localhost",
         "credentials": "public",
     }
+
+    # Ensure that snmpsim is ready for clients before starting with the tests
+    def is_listening():
+        num_sockets = 0
+        for e in os.listdir("/proc/%d/fd" % p.pid):
+            try:
+                if os.readlink("/proc/%d/fd/%s" % (p.pid, e)).startswith("socket:"):
+                    num_sockets += 1
+            except OSError:
+                pass
+        return num_sockets >= 2
+
+    wait_until(is_listening, timeout=20)
 
     yield p, access_data
 
@@ -74,7 +102,7 @@ def snmpsim(site, request, tmp_path, monkeypatch):
 
 # Execute all tests for all SNMP backends
 @pytest.fixture(params=["inline_snmp", "classic_snmp", "stored_snmp"], autouse=True)
-def backend(request, monkeypatch, tmp_path):
+def backend(request, monkeypatch):
     backend_name = request.param
     source_data_dir = Path(request.fspath.dirname) / "snmp_data" / "cmk-walk"
 

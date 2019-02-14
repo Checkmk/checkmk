@@ -10,7 +10,6 @@ MODULES =
 
 # Modules needed because of own packed python (would be available in OS)
 MODULES += setuptools-40.6.2.zip  # needed by rrdtool bindings
-MODULES += setuptools_scm-3.1.0.tar.gz
 
 # Modules really needed on all platforms
 MODULES += pysphere-0.1.7.zip
@@ -149,45 +148,6 @@ MODULES += scandir-1.7.tar.gz
 MODULES += pathlib2-2.3.2.tar.gz
 # Added for scheduling (cmk/schedule.py)
 MODULES += python-dateutil-2.6.1.tar.gz
-MODULES += python-snap7-0.10.tar.gz
-# Added for azure special agent
-MODULES += PyJWT-1.6.4.tar.gz
-MODULES += SecretStorage-2.3.1.tar.gz
-MODULES += adal-1.2.0.tar.gz
-MODULES += azure-nspkg-3.0.2.zip
-MODULES += azure-common-1.1.16.zip
-MODULES += azure-mgmt-nspkg-3.0.2.zip
-MODULES += isodate-0.6.0.tar.gz
-MODULES += oauthlib-2.1.0.tar.gz
-MODULES += requests-oauthlib-1.0.0.tar.gz
-MODULES += msrest-0.6.1.tar.gz
-# use azure-mgmt-monitor 0.4.0 and its dependency
-# msrestazure 0.4.34 since the monitor version 0.5.0
-# will not deliver all metrics.
-MODULES += msrestazure-0.4.34.tar.gz
-MODULES += azure-mgmt-monitor-0.4.0.zip
-MODULES += azure-mgmt-resource-2.0.0.zip
-MODULES += azure-mgmt-compute-4.3.1.zip
-MODULES += configparser-3.5.0.tar.gz
-MODULES += entrypoints-0.2.3.tar.gz
-MODULES += keyring-15.1.0.tar.gz
-# Added for the GUI
-MODULES += Werkzeug-0.14.1.tar.gz
-MODULES += passlib-1.7.1.tar.gz
-# Added for AWS special agent
-MODULES += docutils-0.14.tar.gz
-MODULES += futures-3.2.0.tar.gz
-MODULES += jmespath-0.9.3.tar.gz
-MODULES += botocore-1.12.43.tar.gz
-MODULES += s3transfer-0.1.13.tar.gz
-MODULES += boto3-1.9.42.tar.gz
-# Added for kubernetes monitoring
-MODULES += cachetools-3.0.0.tar.gz
-MODULES += rsa-4.0.tar.gz
-MODULES += google-auth-1.6.1.tar.gz
-MODULES += PyYAML-3.13.tar.gz
-MODULES += websocket_client-0.54.0.tar.gz
-MODULES += kubernetes-8.0.0.tar.gz
 
 .PHONY: build check-freetds install skel clean dump-Pipfile
 

@@ -1,0 +1,24 @@
+--- dest/MySQL-python-1.2.5/setup.py.orig	2016-03-29 13:14:46.285150371 +0200
++++ dest/MySQL-python-1.2.5/setup.py	2016-03-29 13:14:54.084943460 +0200
+@@ -4,7 +4,11 @@
+ import sys
+ 
+ import distutils.errors
+-import setuptools
++
++try:
++    from setuptools import setup, Extension
++except ImportError:
++    from distutils.core import setup, Extension
+ 
+ if not hasattr(sys, "hexversion") or sys.hexversion < 0x02040000:
+     raise distutils.errors.DistutilsError("Python 2.4 or newer is required")
+@@ -16,6 +20,6 @@
+ 
+ metadata, options = get_config()
+ metadata['ext_modules'] = [
+-    setuptools.Extension(sources=['_mysql.c'], **options)]
++    Extension(sources=['_mysql.c'], **options)]
+ metadata['long_description'] = metadata['long_description'].replace(r'\n', '')
+-setuptools.setup(**metadata)
++setup(**metadata)

@@ -170,6 +170,8 @@ MODULES += azure-mgmt-resource-2.0.0.zip
 MODULES += azure-mgmt-compute-4.3.1.zip
 MODULES += configparser-3.5.0.tar.gz
 MODULES += entrypoints-0.2.3.tar.gz
+# setuptools_scm>=1.15.0 is required by keyring but not declared correctly
+MODULES += setuptools_scm-3.2.0.tar.gz
 MODULES += keyring-15.1.0.tar.gz
 # Added for AWS special agent
 MODULES += docutils-0.14.tar.gz

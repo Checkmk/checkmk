@@ -1691,7 +1691,9 @@ class RulespecCustomChecks(HostRulespec):
                    "to be executed directly on your monitoring server. These checks "
                    "will not use Check_MK. It is also possible to configure passive "
                    "checks that are fed with data from external sources via the "
-                   "command pipe of the monitoring core."),
+                   "command pipe of the monitoring core.") +
+            _("This option can only be used with the permission \"Can add or modify executables\"."
+             ),
             elements=[
                 ("service_description",
                  TextUnicode(

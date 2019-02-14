@@ -69,8 +69,8 @@ def inv_docker_node_images(info, inventory_tree, status_data_tree):
 
     for image_id, image in sorted(images.iteritems()):
         inv_node.append({
-            "repotags": image.get("RepoTags", []),
-            "repodigests": image.get("RepoDigests", []),
+            "repotags": ", ".join(image.get("RepoTags", [])),
+            "repodigests": ", ".join(image.get("RepoDigests", [])),
             "id": docker_get_short_id(image_id),  # pylint: disable=undefined-variable
             "creation": image["Created"],
             "size": image["VirtualSize"],

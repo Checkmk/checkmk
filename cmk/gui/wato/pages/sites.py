@@ -689,6 +689,10 @@ class ModeDistributedMonitoring(WatoMode):
     def _show_status_connection_status(self, table, site_id, site):
         table.text_cell("")
 
+        encrypted_url = watolib.folder_preserving_link([("mode", "site_livestatus_encryption"),
+                                                        ("site", site_id)])
+        html.icon_button(encrypted_url, _("Show details about livestatus encryption"), "encrypted")
+
         # The status is fetched asynchronously for all sites. Show a temporary loading icon.
         html.open_div(id_="livestatus_status_%s" % site_id, class_="connection_status")
         html.icon(
@@ -697,25 +701,31 @@ class ModeDistributedMonitoring(WatoMode):
             class_=["reloading", "replication_status_loading"])
         html.close_div()
 
-        encrypted_url = watolib.folder_preserving_link([("mode", "site_livestatus_encryption"),
-                                                        ("site", site_id)])
-        html.icon_button(encrypted_url, _("Show details about livestatus encryption"), "encrypted")
-
     def _show_config_connection_config(self, table, site_id, site):
         table.text_cell(_("Configuration connection"))
         if not site["replication"]:
-            html.icon(_("Configuration connection not enabled for this site"), "disabled")
+            html.write_text(_("Not enabled"))
             return
 
-        html.icon(_("Replication enabled for this site"), "enabled")
-
+        html.write_text(_("Enabled"))
+        parts = []
         if site.get("replicate_ec"):
-            html.icon(_("Replicate Event Console configuration to this site"), "mkeventd")
+            parts.append("EC")
         if site.get("replicate_mkps"):
-            html.icon(_("Replicate extensions"), "mkps")
+            parts.append("MKPs")
+        if parts:
+            html.write_text(" (%s)" % ", ".join(parts))
 
     def _show_config_connection_status(self, table, site_id, site):
         table.text_cell("")
+
+        if site["replication"]:
+            if site.get("secret"):
+                logout_url = watolib.make_action_link([("mode", "sites"), ("_logout", site_id)])
+                html.icon_button(logout_url, _("Logout"), "autherr")
+            else:
+                login_url = watolib.make_action_link([("mode", "sites"), ("_login", site_id)])
+                html.icon_button(login_url, _("Login"), "authok")
 
         html.open_div(id_="replication_status_%s" % site_id, class_="connection_status")
         if site.get("replication"):
@@ -725,16 +735,6 @@ class ModeDistributedMonitoring(WatoMode):
                 "reload",
                 class_=["reloading", "replication_status_loading"])
         html.close_div()
-
-        if not site["replication"]:
-            return
-
-        if site.get("secret"):
-            logout_url = watolib.make_action_link([("mode", "sites"), ("_logout", site_id)])
-            html.icon_button(logout_url, _("Logout"), "autherr")
-        else:
-            login_url = watolib.make_action_link([("mode", "sites"), ("_login", site_id)])
-            html.icon_button(login_url, _("Login"), "authok")
 
 
 class ModeAjaxFetchSiteStatus(WatoWebApiMode):
@@ -751,12 +751,13 @@ class ModeAjaxFetchSiteStatus(WatoWebApiMode):
 
         for site_id, site in sites:
             site_states[site_id] = {
-                "livestatus": self._render_livestatus_status(site_id, site),
-                "replication": self._render_replication_status(site_id, site, replication_status),
+                "livestatus": self._render_status_connection_status(site_id, site),
+                "replication": self._render_configuration_connection_status(
+                    site_id, site, replication_status),
             }
         return site_states
 
-    def _render_replication_status(self, site_id, site, replication_status):
+    def _render_configuration_connection_status(self, site_id, site, replication_status):
         """Check whether or not the replication connection is possible.
 
         This deals with these situations:
@@ -770,12 +771,17 @@ class ModeAjaxFetchSiteStatus(WatoWebApiMode):
 
         status = replication_status[site_id]
         if status.success:
-            msg = _("Site is reachable (Version: %s, Edition: %s)") % (status.response.version,
-                                                                       status.response.edition)
-            return html.render_icon("success", title=msg)
-        return html.render_icon("failed", title="%s" % status.response)
+            icon = "success"
+            msg = _("Online (Version: %s, Edition: %s)") % (status.response.version,
+                                                            status.response.edition)
+        else:
+            icon = "failed"
+            msg = "%s" % status.response
 
-    def _render_livestatus_status(self, site_id, site):
+        return (html.render_icon(icon, title=msg) + html.render_span(
+            msg, style="vertical-align:middle"))
+
+    def _render_status_connection_status(self, site_id, site):
         site_status = cmk.gui.sites.state(site_id, {})
         if site.get("disabled", False) is True:
             status = status_msg = "disabled"
@@ -785,14 +791,11 @@ class ModeAjaxFetchSiteStatus(WatoWebApiMode):
         if "exception" in site_status:
             message = "%s" % site_status["exception"]
         else:
-            message = _("This site is %s") % status_msg
+            message = status_msg.title()
 
-        if message.startswith("[SSL:"):
-            status_msg = "TLS error"
-
-        with html.plugged():
-            html.status_label(content=status_msg, status=status, title=message)
-            return html.drain()
+        icon = "success" if status == "online" else "failed"
+        return (html.render_icon(icon, title=message) + html.render_span(
+            message, style="vertical-align:middle"))
 
 
 cmk.gui.pages.register_page_handler(

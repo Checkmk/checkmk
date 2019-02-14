@@ -1,10 +1,11 @@
-diff -ur dest/requests-2.13.0.orig/requests/__init__.py dest/requests-2.13.0/requests/__init__.py
---- dest/requests-2.13.0.orig/requests/__init__.py	2016-12-01 11:46:15.000000000 +0100
-+++ dest/requests-2.13.0/requests/__init__.py	2017-01-16 08:41:43.665427860 +0100
-@@ -47,12 +47,22 @@
- __license__ = 'Apache 2.0'
- __copyright__ = 'Copyright 2016 Kenneth Reitz'
+diff -Nur dest/requests-2.16.0.orig/requests/__init__.py dest/requests-2.16.0/requests/__init__.py
+--- dest/requests-2.16.0.orig/requests/__init__.py	2017-05-27 05:37:03.000000000 +0200
++++ dest/requests-2.16.0/requests/__init__.py	2019-02-14 17:13:28.305182818 +0100
+@@ -69,12 +69,23 @@
+ except AssertionError:
+     raise RuntimeError('Requests dependency \'chardet\' must be version >= 3.0.2, < 3.1.0!')
  
++
 +# LM: Importing the requests module in mod_python breaks the OpenSSL module.
 +# e.g. when creating keys for the backup or the agent bakery an error like
 +# this occurs:
@@ -17,12 +18,12 @@ diff -ur dest/requests-2.13.0.orig/requests/__init__.py dest/requests-2.13.0/req
 +#
  # Attempt to enable urllib3's SNI support, if possible
 -try:
--    from .packages.urllib3.contrib import pyopenssl
+-    from urllib3.contrib import pyopenssl
 -    pyopenssl.inject_into_urllib3()
 -except ImportError:
 -    pass
 +#try:
-+#    from .packages.urllib3.contrib import pyopenssl
++#    from urllib3.contrib import pyopenssl
 +#    pyopenssl.inject_into_urllib3()
 +#except ImportError:
 +#    pass

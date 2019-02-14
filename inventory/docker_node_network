@@ -26,13 +26,14 @@
 
 
 def parse_docker_network(info):
-    version = docker_get_version(info)  # pylint: disable=undefined-variable
+    # pylint: disable=undefined-variable
+    version = docker_get_version(info)
 
     if version is None:
-        networks = parse_legacy_docker_network_inspect(info)  # pylint: disable=undefined-variable
+        networks = parse_legacy_docker_network_inspect(info)
         return DeprecatedDict((n["Id"], n) for n in networks)
 
-    networks = (docker_json_get_obj(line) for line in info[1:])  # pylint: disable=undefined-variable
+    networks = (docker_json_get_obj(line) for line in info[1:])
     return {n["Id"]: n for n in networks if n is not None}
 
 
@@ -41,43 +42,42 @@ def inv_docker_node_network_networks(info, inventory_tree, status_data_tree):
 
     for network_id, network in parsed.iteritems():
 
-        containers = []
-        for container_id, container in network["Containers"].iteritems():
-            containers.append({
+        sorted_container_items = sorted(network["Containers"].items())
+
+        containers = [
+            {
                 "name": container["Name"],
                 "id": docker_get_short_id(container_id),  # pylint: disable=undefined-variable
                 "ipv4_address": container["IPv4Address"],
                 "ipv6_address": container["IPv6Address"],
                 "mac_address": container["MacAddress"],
-            })
+            } for container_id, container in sorted_container_items
+        ]
 
         network_name = network["Name"]
         path = "software.applications.docker.networks.%s." % network_name
-        inventory_networks = inventory_tree.get_dict(path)
-        status_networks = status_data_tree.get_dict(path)
+        inventory_network = inventory_tree.get_dict(path)
+        status_network = status_data_tree.get_dict(path)
 
-        status_networks.update({
+        status_network.update({
             "name": network_name,
-            "containers": [{
-                "name": 1
-            }],
+            "containers": containers,
         })
 
-        network_ = {
+        inventory_network.update({
             "name": network_name,
             "network_id": docker_get_short_id(network_id),  # pylint: disable=undefined-variable
             "scope": network["Scope"],
-        }
+        })
 
         try:
-            network_["host_ifname"] = network["Options"]["com.docker.network.bridge.name"]
+            inventory_network["host_ifname"] = network["Options"]["com.docker.network.bridge.name"]
         except KeyError:
             pass
 
         labels = docker_format_labels(network)  # pylint: disable=undefined-variable
         if labels:
-            network_["labels"] = labels
-        inventory_networks.update(network_)
+            inventory_network["labels"] = labels
 
 
 inv_info["docker_node_network.networks"] = {  # pylint: disable=undefined-variable

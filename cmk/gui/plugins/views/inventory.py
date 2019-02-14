@@ -535,6 +535,11 @@ def inv_paint_docker_labels(labels):
     return "labels", html.render_br().join(sorted(labels.split(", ")))
 
 
+@decorate_inv_paint
+def inv_paint_lines_csv(lines):
+    return "", lines.replace(",", "<br>")
+
+
 #.
 #   .--display hints-------------------------------------------------------.
 #   |           _ _           _               _     _       _              |
@@ -1033,17 +1038,19 @@ inventory_displayhints.update({
     ".software.applications.docker.num_images": {"title": _("# Images")},
     ".software.applications.docker.images:": {
         "title": _("Images"),
-        "keyorder": ["id", "repository", "tag", "creation", "size", "labels", "amount_containers"],
+        "keyorder": ["id", "creation", "size", "labels", "amount_containers", "repotags", "repodigests"],
         "view": "invdockerimages_of_host",
     },
     ".software.applications.docker.images:*.id": {"title": _("ID")},
     ".software.applications.docker.images:*.labels": {"paint": "docker_labels"},
     ".software.applications.docker.images:*.amount_containers": {"title": _("# Containers")},
+    ".software.applications.docker.images:*.repotags": {"title": _("Repository/Tag"), "paint": "lines_csv"},
+    ".software.applications.docker.images:*.repodigests": {"title": _("Digests"), "paint": "lines_csv"},
 
     # Node containers
     ".software.applications.docker.containers:": {
         "title": _("Containers"),
-        "keyorder": ["id", "repository", "tag", "creation", "name", "creation", "labels", "status"],
+        "keyorder": ["id", "creation", "name", "labels", "status", "image"],
         "view": "invdockercontainers_of_host",
     },
     ".software.applications.docker.containers:*.id": {"title": _("ID")},

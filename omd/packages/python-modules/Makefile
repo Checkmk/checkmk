@@ -102,12 +102,14 @@ MODULES += python-ad-0.9.tar.gz # needed for LDAP (nearest DC detection)
 MODULES += requests-2.20.1.tar.gz
 
 MODULES += idna-2.7.tar.gz
+# Added for IPMI monitoring of management interface
+MODULES += pbr-5.1.0.tar.gz
 ifneq ($(filter $(DISTRO_CODE),el5 lucid sles11sp1 sles11sp2 sles11sp3 sles11sp4 squeeze),)
     MODULES += cryptography-1.4.tar.gz
     # Has requests as dependency -> must be built after
     MODULES += pyOpenSSL-16.2.0.tar.gz
     MODULES += paramiko-2.1.2.tar.gz
-    MODULES += pyghmi-1.2.4.tar.gz
+    MODULES += pyghmi-1.1.0.tar.gz
     PATCHES += patches/0005-NID_ecdsa_with_SHA-fix.patch
     PATCHES += patches/0009-cryptography-1.4-disable-version-warning.patch
 else
@@ -131,8 +133,6 @@ MODULES += tinkerforge-2.1.19.tar.gz
 # Added for check_sftp
 MODULES += bcrypt-3.1.4.tar.gz
 MODULES += PyNaCl-1.3.0.tar.gz
-# Added for IPMI monitoring of management interface
-MODULES += pbr-5.1.0.tar.gz
 
 MODULES += typing-3.6.6.tar.gz
 MODULES += scandir-1.9.0.tar.gz

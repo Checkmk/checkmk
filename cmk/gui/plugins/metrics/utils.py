@@ -109,24 +109,52 @@ scale_symbols = {
 }
 
 
-# Convert perf_data_string into perf_data, extract check_command
-# This methods must not return None or anything else. It mustr strictly
-# return a tuple of perf_data list and the check_command. In case of
-# errors during parsing it returns an empty list for the perf_data.
-def parse_perf_data(perf_data_string, check_command=None):
-    # Strip away arguments like in "check_http!-H mathias-kettner.de"
-    # FIXME: check_command=None? Fails here!
-    check_command = check_command.split("!")[0]
+def parse_perf_values(data_str):
+    "convert perf str into a tuple with values"
+    varname, values = data_str.split("=", 1)
+    varname = cmk.utils.pnp_cleanup(varname.replace("\"", "").replace("\'", ""))
 
-    if not perf_data_string:
-        return [], check_command
+    value_parts = values.split(";")
+    while len(value_parts) < 5:
+        value_parts.append(None)
+
+    return varname, value_parts[0], value_parts[1:]
+
+
+def split_unit(value_text):
+    "separate value from unit"
+
+    if not value_text.strip():
+        return None, None
+
+    def digit_unit_split(value_text):
+        for i, char in enumerate(value_text):
+            if char not in '0123456789.,-':
+                return i
+        return len(value_text)
+
+    cut_unit = digit_unit_split(value_text)
+
+    unit_name = value_text[cut_unit:]
+    if value_text[:cut_unit]:
+        return _float_or_int(value_text[:cut_unit]), unit_name
+
+    return None, unit_name
+
+
+def parse_perf_data(perf_data_string, check_command=None):
+    """ Convert perf_data_string into perf_data, extract check_command
+
+This methods must not return None or anything else. It must strictly
+return a tuple of perf_data list and the check_command. In case of
+errors during parsing it returns an empty list for the perf_data.
+"""
+    # Strip away arguments like in "check_http!-H mathias-kettner.de"
+    if hasattr(check_command, 'split'):
+        check_command = check_command.split("!")[0]
 
     # Split the perf data string into parts. Preserve quoted strings!
-    try:
-        parts = _split_perf_data(perf_data_string)
-    except ValueError:
-        logger.exception("Failed to parse perfdata string: %s", perf_data_string)
-        return [], check_command
+    parts = _split_perf_data(perf_data_string)
 
     if not parts:
         return [], check_command
@@ -137,72 +165,49 @@ def parse_perf_data(perf_data_string, check_command=None):
         check_command = parts[-1][1:-1]
         del parts[-1]
 
-    # Python's isdigit() works only on str. We deal with unicode since
-    # we deal with data coming from Livestatus
-    def isdigit(x):
-        return x in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
-
     # Parse performance data, at least try
     perf_data = []
+
     for part in parts:
         try:
-            varname, values = part.split("=", 1)
-            varname = cmk.utils.pnp_cleanup(varname.replace("\"", "").replace("\'", ""))
+            varname, value_text, value_parts = parse_perf_values(part)
 
-            # Enforce varname to be a byte string for the moment. The plugins currently register
-            # the plugins with byte string varnames. In the long term this needs to be cleaned up
-            # to be unicode strings just like all internal strings. But for the moment the mixup
-            # would confuse e.g. dict lookups etc.
-            varname = varname.encode("utf-8")
-
-            value_parts = values.split(";")
-            while len(value_parts) < 5:
-                value_parts.append(None)
-            value_text, warn, crit, min_, max_ = value_parts[0:5]
-            if value_text.strip() == "":
+            value, unit_name = split_unit(value_text)
+            if value is None:
                 continue  # ignore useless empty variable
 
-            # separate value from unit
-            i = 0
-            while i < len(value_text) and (isdigit(value_text[i]) or
-                                           value_text[i] in ['.', ',', '-']):
-                i += 1
-
-            unit_name = value_text[i:]
-            if value_text[:i] == "":
-                continue
-            value = _float_or_int(value_text[:i])
-
-            perf_data_tuple = (varname, value, unit_name)
-            for val in [warn, crit, min_, max_]:
-                if val is not None:
-                    try:
-                        val = _float_or_int(val)
-                    except ValueError:
-                        val = None
-                perf_data_tuple += (val,)
-
+            perf_data_tuple = (varname, value, unit_name) + tuple(map(_float_or_int, value_parts))
             perf_data.append(perf_data_tuple)
-        except:
+        except Exception as exc:
             logger.exception("Failed to parse perfdata '%s'", perf_data_string)
             if config.debug:
-                raise
+                raise exc
 
     return perf_data, check_command
 
 
-def _float_or_int(v):
+def _float_or_int(val):
     """"45.0" -> 45.0, "45" -> 45"""
+    if val is None:
+        return None
+
     try:
-        return int(v)
-    except:
-        return float(v)
+        return int(val)
+    except ValueError:
+        try:
+            return float(val)
+        except ValueError:
+            return None
 
 
 def _split_perf_data(perf_data_string):
-    # In python < 2.5 shlex.split can not deal with unicode strings. But we always
-    # have unicode strings. So encode and decode again.
-    return [s.decode('utf-8') for s in shlex.split(perf_data_string.encode('utf-8'))]
+    "Split the perf data string into parts. Preserve quoted strings!"
+    try:  # python3
+        return shlex.split(perf_data_string)
+    except UnicodeEncodeError:
+        # In python 2 shlex.split can not deal with unicode strings. But we always
+        # have unicode strings. So encode and decode again.
+        return [s.decode('utf-8') for s in shlex.split(perf_data_string.encode('utf-8'))]
 
 
 def perfvar_translation(perfvar_nr, perfvar_name, check_command):

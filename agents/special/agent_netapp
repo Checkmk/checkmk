@@ -683,7 +683,7 @@ def query(what, return_toplevel_node=False):
             # We need to start additinal query until all data is fetched
             tag_response = server.get_response(
                 [what, [["max-records", max_records], ["tag", tag_string]]])
-            if tag_response.result_status() != "passed":
+            if tag_response.results_status() != "passed":
                 return
             if tag_response.get_results().child_get_string("num-records") == "0":
                 break
@@ -751,7 +751,7 @@ def query_counters(what):
                     "perf-object-instance-list-info-iter",
                     [["objectname", what], ["max-records", max_records], ["tag", tag_string]]
                 ])
-                if tag_response.result_status() != "passed":
+                if tag_response.results_status() != "passed":
                     return
                 if tag_response.get_results().child_get_string("num-records") == "0":
                     break

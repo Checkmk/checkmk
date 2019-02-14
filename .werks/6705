@@ -1,0 +1,11 @@
+Title: agent_netapp: fixed typo in agent which caused the agent to fail on bigger netapp server responses
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1550056924
+
+

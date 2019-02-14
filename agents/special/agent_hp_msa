@@ -28,11 +28,8 @@
 import getopt, sys, socket, traceback, re, hashlib
 
 import requests
-try:
-    from requests.packages.urllib3.exceptions import InsecureRequestWarning # pylint: disable=import-error
-    requests.packages.urllib3.disable_warnings(InsecureRequestWarning)      # pylint: disable=no-member
-except:
-    pass
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 def usage():

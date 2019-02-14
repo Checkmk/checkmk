@@ -22,8 +22,8 @@ from urlparse import urlparse
 from bs4 import BeautifulSoup
 
 # Disable insecure requests warning message during SSL testing
-from requests.packages.urllib3.exceptions import InsecureRequestWarning
-requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 try:
     import simplejson as json

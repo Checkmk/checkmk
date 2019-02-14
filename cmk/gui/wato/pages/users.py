@@ -53,7 +53,7 @@ from cmk.gui.valuespec import (
     FixedValue,
 )
 from cmk.gui.watolib.users import delete_users, edit_users
-from cmk.gui.watolib.groups import load_group_information
+from cmk.gui.watolib.groups import load_contact_group_information
 
 from cmk.gui.plugins.wato import (
     WatoMode,
@@ -227,7 +227,7 @@ class ModeUsers(WatoMode):
 
         roles = userdb.load_roles()
         timeperiods = watolib.timeperiods.load_timeperiods()
-        contact_groups = load_group_information().get("contact", {})
+        contact_groups = load_contact_group_information()
 
         with table_element("users", None, empty_text=_("No users are defined yet.")) as table:
             online_threshold = time.time() - config.user_online_maxage
@@ -405,7 +405,7 @@ class ModeUsers(WatoMode):
         html.hidden_fields()
         html.end_form()
 
-        if not load_group_information().get("contact", {}):
+        if not load_contact_group_information():
             url = "wato.py?mode=contact_groups"
             html.open_div(class_="info")
             html.write(
@@ -437,7 +437,7 @@ class ModeEditUser(WatoMode):
 
         # Load data that is referenced - in order to display dropdown
         # boxes and to check for validity.
-        self._contact_groups = load_group_information().get("contact", {})
+        self._contact_groups = load_contact_group_information()
         self._timeperiods = watolib.timeperiods.load_timeperiods()
         self._roles = userdb.load_roles()
 

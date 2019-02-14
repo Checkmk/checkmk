@@ -18,7 +18,9 @@ def patch_config_paths(monkeypatch, tmp_path):
 
 
 def test_load_group_information_empty(tmp_path):
-    assert groups.load_group_information() == {'contact': {}, 'host': {}, 'service': {}}
+    assert groups.load_contact_group_information() == {}
+    assert groups.load_host_group_information() == {}
+    assert groups.load_service_group_information() == {}
 
 
 def test_load_group_information(tmp_path):
@@ -60,7 +62,7 @@ multisite_contactgroups = {
 }
 """)
 
-    assert groups.load_group_information() == {
+    assert groups._load_group_information() == {
         'contact': {
             'all': {
                 'alias': u'Everything',
@@ -79,4 +81,25 @@ multisite_contactgroups = {
                 "d1ng": "dong",
             }
         },
+    }
+
+    assert groups.load_contact_group_information() == {
+        'all': {
+            'alias': u'Everything',
+            "d!ng": "dong",
+        }
+    }
+
+    assert groups.load_host_group_information() == {
+        'all_hosts': {
+            'alias': u'All hosts :-)',
+            "ding": "dong",
+        }
+    }
+
+    assert groups.load_service_group_information() == {
+        'all_services': {
+            'alias': u'All s\xe4rvices',
+            "d1ng": "dong",
+        }
     }

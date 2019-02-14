@@ -2406,8 +2406,8 @@ class LDAPAttributePluginGroupsToContactgroups(LDAPBuiltinAttributePlugin):
 
     def sync_func(self, connection, plugin, params, user_id, ldap_user, user):
         # Gather all group names to search for in LDAP
-        from cmk.gui.watolib.groups import load_group_information
-        cg_names = load_group_information().get("contact", {}).keys()
+        from cmk.gui.watolib.groups import load_contact_group_information
+        cg_names = load_contact_group_information().keys()
 
         return {
             "contactgroups": get_groups_of_user(connection, user_id, ldap_user, cg_names,

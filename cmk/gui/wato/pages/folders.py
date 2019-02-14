@@ -37,7 +37,7 @@ import cmk.gui.forms as forms
 
 from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.host_attributes import host_attribute_registry
-from cmk.gui.watolib.groups import load_group_information
+from cmk.gui.watolib.groups import load_contact_group_information
 from cmk.gui.plugins.wato.utils import (
     mode_registry,
     configure_attributes,
@@ -339,7 +339,7 @@ class ModeFolder(WatoMode):
     def _show_subfolder_infos(self, subfolder):
         html.open_div(class_="infos")
         html.open_div(class_="infos_content")
-        groups = load_group_information().get("contact", {})
+        groups = load_contact_group_information()
         permitted_groups, _folder_contact_groups, _use_for_services = subfolder.groups()
         for num, pg in enumerate(permitted_groups):
             cgalias = groups.get(pg, {'alias': pg})['alias']
@@ -490,7 +490,7 @@ class ModeFolder(WatoMode):
                 bulk_actions(table, at_least_one_imported, True, True, colspan, show_checkboxes)
                 search_shown = True
 
-            contact_group_names = load_group_information().get("contact", {})
+            contact_group_names = load_contact_group_information()
 
             def render_contact_group(c):
                 display_name = contact_group_names.get(c, {'alias': c})['alias']

@@ -10312,7 +10312,7 @@ expected_rulespecs = {
         'item_type': None,
         'match_type': 'all',
         'title': u'Assignment of hosts to contact groups',
-        'valuespec_class_name': 'GroupSelection'
+        'valuespec_class_name': 'ContactGroupSelection'
     },
     'host_groups': {
         'factory_default': [],
@@ -10327,7 +10327,7 @@ expected_rulespecs = {
         'item_type': None,
         'match_type': 'all',
         'title': u'Assignment of hosts to host groups',
-        'valuespec_class_name': 'GroupSelection'
+        'valuespec_class_name': 'HostGroupSelection'
     },
     'host_icons_and_actions': {
         'factory_default': [],
@@ -10942,7 +10942,7 @@ expected_rulespecs = {
         'item_type': 'service',
         'match_type': 'all',
         'title': u'Assignment of services to contact groups',
-        'valuespec_class_name': 'GroupSelection'
+        'valuespec_class_name': 'ContactGroupSelection'
     },
     'service_description_translation': {
         'factory_default': [],
@@ -10972,7 +10972,7 @@ expected_rulespecs = {
         'item_type': 'service',
         'match_type': 'all',
         'title': u'Assignment of services to service groups',
-        'valuespec_class_name': 'GroupSelection'
+        'valuespec_class_name': 'ServiceGroupSelection'
     },
     'service_icons_and_actions': {
         'factory_default': [],

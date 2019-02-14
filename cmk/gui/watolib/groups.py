@@ -57,7 +57,19 @@ if cmk.is_managed_edition():
     import cmk.gui.cme.managed as managed
 
 
-def load_group_information():
+def load_host_group_information():
+    return _load_group_information()["host"]
+
+
+def load_service_group_information():
+    return _load_group_information()["service"]
+
+
+def load_contact_group_information():
+    return _load_group_information()["contact"]
+
+
+def _load_group_information():
     cmk_base_groups = _load_cmk_base_groups()
     gui_groups = _load_gui_groups()
 
@@ -100,7 +112,7 @@ def _load_gui_groups():
 
 def add_group(name, group_type, extra_info):
     _check_modify_group_permissions(group_type)
-    all_groups = load_group_information()
+    all_groups = _load_group_information()
     groups = all_groups.get(group_type, {})
 
     # Check group name
@@ -122,7 +134,7 @@ def add_group(name, group_type, extra_info):
 
 def edit_group(name, group_type, extra_info):
     _check_modify_group_permissions(group_type)
-    all_groups = load_group_information()
+    all_groups = _load_group_information()
     groups = all_groups.get(group_type, {})
 
     if name not in groups:
@@ -155,7 +167,7 @@ def delete_group(name, group_type):
     _check_modify_group_permissions(group_type)
 
     # Check if group exists
-    all_groups = load_group_information()
+    all_groups = _load_group_information()
     groups = all_groups.get(group_type, {})
     if name not in groups:
         raise MKUserError(None, _("Unknown %s group: %s") % (group_type, name))
@@ -339,7 +351,7 @@ def _find_usages_of_group_in_rules(name, varnames):
 
 def is_alias_used(my_what, my_name, my_alias):
     # Host / Service / Contact groups
-    all_groups = load_group_information()
+    all_groups = _load_group_information()
     for what, groups in all_groups.items():
         for gid, group in groups.items():
             if group['alias'] == my_alias and (my_what != what or my_name != gid):
@@ -468,7 +480,7 @@ class HostAttributeContactGroups(ABCHostAttribute):
         if self._loaded_at == id(html):
             return
         self._loaded_at = id(html)
-        self._contactgroups = load_group_information().get("contact", {})
+        self._contactgroups = load_contact_group_information()
 
     def from_html_vars(self, varprefix):
         self.load_data()

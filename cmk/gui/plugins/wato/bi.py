@@ -71,11 +71,11 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 
-from cmk.gui.watolib.groups import load_group_information
+from cmk.gui.watolib.groups import load_contact_group_information
 from cmk.gui.plugins.wato import (
     WatoMode,
     mode_registry,
-    GroupSelection,
+    ContactGroupSelection,
     MainMenu,
     MenuItem,
     main_module_registry,
@@ -978,7 +978,7 @@ class ModeBIPacks(ModeBI):
 
     def __init__(self):
         ModeBI.__init__(self)
-        self._contact_group_names = load_group_information().get("contact", {})
+        self._contact_group_names = load_contact_group_information()
 
     def buttons(self):
         ModeBI.buttons(self)
@@ -1128,7 +1128,7 @@ class ModeBIEditPack(ModeBI):
               )),
              ("contact_groups",
               ListOf(
-                  GroupSelection("contact"),
+                  ContactGroupSelection(),
                   title=_("Permitted Contact Groups"),
                   help=_(
                       "The rules and aggregations in this pack can be edited by all members of the "

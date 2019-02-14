@@ -289,7 +289,6 @@ from cmk.gui.plugins.wato import (
     UserIconOrAction,
     SNMPCredentials,
     HostnameTranslation,
-    GroupSelection,
     rule_option_elements,
     register_check_parameters,
     sort_sites,

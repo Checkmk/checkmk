@@ -40,7 +40,11 @@ from cmk.gui.globals import html
 from cmk.gui.exceptions import MKUserError, MKAuthException, MKException
 from cmk.gui.plugins.userdb.htpasswd import hash_password
 import cmk.gui.watolib.users
-from cmk.gui.watolib.groups import load_group_information
+from cmk.gui.watolib.groups import (
+    load_contact_group_information,
+    load_host_group_information,
+    load_service_group_information,
+)
 
 import cmk.gui.bi as bi
 
@@ -392,7 +396,7 @@ class APICallGroups(APICallCollection):
     def get_api_calls(self):
         return {
             "get_all_contactgroups": {
-                "handler": partial(self._get_all_groups, "contact"),
+                "handler": self._get_all_contactgroups,
                 "locking": False,
             },
             "delete_contactgroup": {
@@ -410,7 +414,7 @@ class APICallGroups(APICallCollection):
                 "optional_keys": ["customer", "nagvis_maps"],
             },
             "get_all_hostgroups": {
-                "handler": partial(self._get_all_groups, "host"),
+                "handler": self._get_all_hostgroups,
                 "locking": False,
             },
             "delete_hostgroup": {
@@ -428,7 +432,7 @@ class APICallGroups(APICallCollection):
                 "optional_keys": ["customer"],
             },
             "get_all_servicegroups": {
-                "handler": partial(self._get_all_groups, "service"),
+                "handler": self._get_all_servicegroups,
                 "locking": False,
             },
             "delete_servicegroup": {
@@ -447,8 +451,14 @@ class APICallGroups(APICallCollection):
             },
         }
 
-    def _get_all_groups(self, group_type, request):
-        return load_group_information().get(group_type, {})
+    def _get_all_servicegroups(self, request):
+        return load_service_group_information()
+
+    def _get_all_contactgroups(self, request):
+        return load_contact_group_information()
+
+    def _get_all_hostgroups(self, request):
+        return load_host_group_information()
 
     def _delete_group(self, group_type, request):
         groupname = request.get("groupname")

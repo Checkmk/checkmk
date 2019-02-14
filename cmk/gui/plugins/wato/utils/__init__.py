@@ -116,7 +116,11 @@ from cmk.gui.watolib.password_store import PasswordStore
 from cmk.gui.watolib.host_tags import group_hosttags_by_topic
 from cmk.gui.watolib.timeperiods import TimeperiodSelection
 from cmk.gui.watolib.users import notification_script_title
-from cmk.gui.watolib.groups import load_group_information
+from cmk.gui.watolib.groups import (
+    load_service_group_information,
+    load_host_group_information,
+    load_contact_group_information,
+)
 from cmk.gui.watolib.rulespecs import (
     TimeperiodValuespec,
     rulespec_registry,
@@ -525,24 +529,22 @@ def _translation_elements(what):
     ]
 
 
-class GroupSelection(ElementSelection):
-    """Select a single group"""
-
-    def __init__(self, what, **kwargs):
+# TODO: Refactor this and all other childs of ElementSelection() to base on
+#       DropdownChoice(). Then remove ElementSelection()
+class _GroupSelection(ElementSelection):
+    def __init__(self, what, choices, **kwargs):
         kwargs.setdefault(
             'empty_text',
             _('You have not defined any %s group yet. Please '
               '<a href="wato.py?mode=edit_%s_group">create</a> at least one first.') % (what, what))
-        super(GroupSelection, self).__init__(**kwargs)
+        super(_GroupSelection, self).__init__(**kwargs)
         self._what = what
+        self._choices = choices
         # Allow to have "none" entry with the following title
         self._no_selection = kwargs.get("no_selection")
 
     def get_elements(self):
-        all_groups = load_group_information()
-        this_group = all_groups.get(self._what, {})
-        # replace the title with the key if the title is empty
-        elements = [(k, t['alias'] if t['alias'] else k) for (k, t) in this_group.items()]
+        elements = self._choices()
         if self._no_selection:
             # Beware: ElementSelection currently can only handle string
             # keys, so we cannot take 'None' as a value.
@@ -550,18 +552,44 @@ class GroupSelection(ElementSelection):
         return dict(elements)
 
 
-class GroupChoice(DualListChoice):
-    """Select multiple groups"""
+def ContactGroupSelection(**kwargs):
+    """Select a single contact group"""
+    return _GroupSelection(
+        "contact", choices=lambda: _group_choices(load_contact_group_information()), **kwargs)
 
-    def __init__(self, what, **kwargs):
-        super(GroupChoice, self).__init__(choices=self._load_groups, **kwargs)
-        self.what = what
 
-    def _load_groups(self):
-        all_groups = load_group_information()
-        this_group = all_groups.get(self.what, {})
-        return sorted([(k, t['alias'] and t['alias'] or k) for (k, t) in this_group.items()],
-                      key=lambda x: x[1].lower())
+def ServiceGroupSelection(**kwargs):
+    """Select a single service group"""
+    return _GroupSelection(
+        "service", choices=lambda: _group_choices(load_service_group_information()), **kwargs)
+
+
+def HostGroupSelection(**kwargs):
+    """Select a single host group"""
+    return _GroupSelection(
+        "host", choices=lambda: _group_choices(load_host_group_information()), **kwargs)
+
+
+def ContactGroupChoice(**kwargs):
+    """Select multiple contact groups"""
+    return DualListChoice(
+        choices=lambda: _group_choices(load_contact_group_information()), **kwargs)
+
+
+def ServiceGroupChoice(**kwargs):
+    """Select multiple service groups"""
+    return DualListChoice(
+        choices=lambda: _group_choices(load_service_group_information()), **kwargs)
+
+
+def HostGroupChoice(**kwargs):
+    """Select multiple host groups"""
+    return DualListChoice(choices=lambda: _group_choices(load_host_group_information()), **kwargs)
+
+
+def _group_choices(group_information):
+    return sorted([(k, t['alias'] and t['alias'] or k) for (k, t) in group_information.items()],
+                  key=lambda x: x[1].lower())
 
 
 def passwordstore_choices():
@@ -1168,7 +1196,7 @@ class EventsMode(WatoMode):
     def _generic_rule_match_conditions(cls):
         return _simple_host_rule_match_conditions() + [
             ( "match_servicegroups",
-              GroupChoice("service",
+              ServiceGroupChoice(
                   title = _("Match Service Groups"),
                   help = _("The service must be in one of the selected service groups. For host events this condition "
                            "never matches as soon as at least one group is selected."),
@@ -1176,7 +1204,7 @@ class EventsMode(WatoMode):
               )
             ),
             ( "match_exclude_servicegroups",
-              GroupChoice("service",
+              ServiceGroupChoice(
                   title = _("Exclude Service Groups"),
                   help = _("The service must not be in one of the selected service groups. For host events this condition "
                            "is simply ignored."),
@@ -1280,7 +1308,7 @@ class EventsMode(WatoMode):
               )
             ),
             ( "match_contactgroups",
-              GroupChoice("contact",
+              ContactGroupChoice(
                   title = _("Match Contact Groups"),
                   help = _("The host/service must be in one of the selected contact groups. This only works with Check_MK Micro Core. " \
                            "If you don't use the CMC that filter will not apply"),
@@ -1969,8 +1997,7 @@ def _common_host_rule_match_conditions():
     return [
         ("match_hosttags", HostTagCondition(title=_("Match Host Tags"))),
         ("match_hostgroups",
-         GroupChoice(
-             "host",
+         HostGroupChoice(
              title=_("Match Host Groups"),
              help=_("The host must be in one of the selected host groups"),
              allow_empty=False,

@@ -949,7 +949,7 @@ class EditNotificationRuleMode(NotificationsMode):
                  )),
                 ("contact_groups",
                  ListOf(
-                     cmk.gui.plugins.wato.GroupSelection("contact"),
+                     cmk.gui.plugins.wato.ContactGroupSelection(),
                      title=_("The members of certain contact groups"),
                      movable=False,
                  )),
@@ -986,7 +986,7 @@ class EditNotificationRuleMode(NotificationsMode):
                  )),
                 ("contact_match_groups",
                  ListOf(
-                     cmk.gui.plugins.wato.GroupSelection("contact"),
+                     cmk.gui.plugins.wato.ContactGroupSelection(),
                      title=_("Restrict by contact groups"),
                      help=_(
                          "Here you can <i>restrict</i> the list of contacts that has been "

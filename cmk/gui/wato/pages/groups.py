@@ -46,7 +46,11 @@ from cmk.gui.valuespec import (
     TextAscii,
 )
 
-from cmk.gui.watolib.groups import load_group_information
+from cmk.gui.watolib.groups import (
+    load_host_group_information,
+    load_service_group_information,
+    load_contact_group_information,
+)
 from cmk.gui.plugins.wato.utils.main_menu import (
     MainMenu,
     MenuItem,
@@ -68,13 +72,14 @@ class ModeGroups(WatoMode):
         # type: () -> str
         raise NotImplementedError()
 
+    @abc.abstractmethod
+    def _load_groups(self):
+        # type: () -> Dict
+        raise NotImplementedError()
+
     def __init__(self):
         super(ModeGroups, self).__init__()
-        self._load_groups()
-
-    def _load_groups(self):
-        all_groups = load_group_information()
-        self._groups = all_groups.setdefault(self.type_name, {})
+        self._groups = self._load_groups()
 
     def buttons(self):
         global_buttons()
@@ -99,7 +104,7 @@ class ModeGroups(WatoMode):
             c = wato_confirm(_("Confirm deletion of group \"%s\"") % delname, confirm_txt)
             if c:
                 watolib.delete_group(delname, self.type_name)
-                self._load_groups()
+                self._groups = self._load_groups()
             elif c is False:
                 return ""
 
@@ -149,19 +154,18 @@ class ModeEditGroup(WatoMode):
         # type: () -> str
         raise NotImplementedError()
 
+    @abc.abstractmethod
+    def _load_groups(self):
+        # type: () -> Dict
+        raise NotImplementedError()
+
     def __init__(self):
         self._name = None
         self._new = False
-        self._groups = {}
         self.group = {}
-
-        self._load_groups()
+        self._groups = self._load_groups()
 
         super(ModeEditGroup, self).__init__()
-
-    def _load_groups(self):
-        all_groups = load_group_information()
-        self._groups = all_groups.setdefault(self.type_name, {})
 
     def _from_vars(self):
         self._name = html.request.var("edit")  # missing -> new group
@@ -257,6 +261,9 @@ class ModeHostgroups(ModeGroups):
     def permissions(cls):
         return ["groups"]
 
+    def _load_groups(self):
+        return load_host_group_information()
+
     def title(self):
         return _("Host Groups")
 
@@ -299,6 +306,9 @@ class ModeServicegroups(ModeGroups):
     @classmethod
     def permissions(cls):
         return ["groups"]
+
+    def _load_groups(self):
+        return load_service_group_information()
 
     def title(self):
         return _("Service Groups")
@@ -343,6 +353,9 @@ class ModeContactgroups(ModeGroups):
     @classmethod
     def permissions(cls):
         return ["users"]
+
+    def _load_groups(self):
+        return load_contact_group_information()
 
     def title(self):
         self._members = {}
@@ -405,6 +418,9 @@ class ModeEditServicegroup(ModeEditGroup):
     def permissions(cls):
         return ["groups"]
 
+    def _load_groups(self):
+        return load_service_group_information()
+
     def title(self):
         if self._new:
             return _("Create new service group")
@@ -425,6 +441,9 @@ class ModeEditHostgroup(ModeEditGroup):
     def permissions(cls):
         return ["groups"]
 
+    def _load_groups(self):
+        return load_service_group_information()
+
     def title(self):
         if self._new:
             return _("Create new host group")
@@ -444,6 +463,9 @@ class ModeEditContactgroup(ModeEditGroup):
     @classmethod
     def permissions(cls):
         return ["users"]
+
+    def _load_groups(self):
+        return load_contact_group_information()
 
     def title(self):
         if self._new:

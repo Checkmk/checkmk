@@ -111,7 +111,7 @@ from cmk.gui.plugins.wato.utils import (
     mode_registry,
     SNMPCredentials,
     HostnameTranslation,
-    GroupSelection,
+    ContactGroupSelection,
     ConfigDomainEventConsole,
     rule_option_elements,
     get_search_expression,
@@ -385,7 +385,7 @@ def vs_mkeventd_rule(customer=None):
              elements=[
                  ("groups",
                   ListOf(
-                      GroupSelection("contact"),
+                      ContactGroupSelection(),
                       title=_("Contact groups"),
                       movable=False,
                   )),
@@ -3642,8 +3642,7 @@ class ConfigVariableEventConsoleNotifyContactgroup(ConfigVariable):
         return "mkeventd_notify_contactgroup"
 
     def valuespec(self):
-        return GroupSelection(
-            "contact",
+        return ContactGroupSelection(
             title=_("Send notifications to Event Console"),
             no_selection=_("(don't send notifications to Event Console)"),
             label=_("send notifications of contactgroup:"),

@@ -90,7 +90,9 @@ from cmk.gui.plugins.wato import (
     IPMIParameters,
     HostnameTranslation,
     ServiceDescriptionTranslation,
-    GroupSelection,
+    ContactGroupSelection,
+    HostGroupSelection,
+    ServiceGroupSelection,
     CheckTypeSelection,
     TimeperiodSelection,
     HTTPProxyInput,
@@ -99,7 +101,7 @@ from cmk.gui.plugins.wato import (
 from cmk.gui.plugins.wato.omd_configuration import ConfigVariableGroupSiteManagement
 from cmk.gui.plugins.views.icons import icon_and_action_registry
 from cmk.gui.watolib.bulk_discovery import vs_bulk_discovery
-from cmk.gui.watolib.groups import load_group_information
+from cmk.gui.watolib.groups import load_contact_group_information
 
 #   .--Global Settings-----------------------------------------------------.
 #   |  ____ _       _           _   ____       _   _   _                   |
@@ -1914,7 +1916,7 @@ class ConfigVariableDefaultUserProfile(ConfigVariable):
         return [(i, r["alias"]) for i, r in roles.items()]
 
     def _list_contactgroups(self):
-        contact_groups = load_group_information().get("contact", {})
+        contact_groups = load_contact_group_information()
         entries = [(c, g['alias']) for c, g in contact_groups.items()]
         return sorted(entries)
 
@@ -2528,8 +2530,7 @@ class RulespecHostGroups(HostRulespec):
 
     @property
     def valuespec(self):
-        return GroupSelection(
-            "host",
+        return HostGroupSelection(
             title=_("Assignment of hosts to host groups"),
             help=_("Hosts can be grouped together into host groups. The most common use case "
                    "is to put hosts which belong together in a host group to make it possible "
@@ -2557,10 +2558,7 @@ class RulespecServiceGroups(ServiceRulespec):
 
     @property
     def valuespec(self):
-        return GroupSelection(
-            "service",
-            title=_("Assignment of services to service groups"),
-        )
+        return ServiceGroupSelection(title=_("Assignment of services to service groups"),)
 
 
 @rulespec_registry.register
@@ -2579,10 +2577,7 @@ class RulespecHostContactgroups(HostRulespec):
 
     @property
     def valuespec(self):
-        return GroupSelection(
-            "contact",
-            title=_("Assignment of hosts to contact groups"),
-        )
+        return ContactGroupSelection(title=_("Assignment of hosts to contact groups"),)
 
 
 @rulespec_registry.register
@@ -2605,10 +2600,7 @@ class RulespecServiceContactgroups(ServiceRulespec):
 
     @property
     def valuespec(self):
-        return GroupSelection(
-            "contact",
-            title=_("Assignment of services to contact groups"),
-        )
+        return ContactGroupSelection(title=_("Assignment of services to contact groups"),)
 
 
 @rulespec_group_registry.register

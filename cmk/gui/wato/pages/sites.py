@@ -90,7 +90,7 @@ def _site_detail_buttons(site_id, site, current_mode):
     if current_mode != "site_livestatus_encryption":
         encrypted_url = watolib.folder_preserving_link([("mode", "site_livestatus_encryption"),
                                                         ("site", site_id)])
-        html.context_button(_("Livestatus TLS"), encrypted_url, "encrypted")
+        html.context_button(_("Status encryption"), encrypted_url, "encrypted")
 
 
 def _site_globals_editable(site_id, site):
@@ -240,8 +240,8 @@ class ModeEditSite(WatoMode):
             elements=basic_elements + livestatus_elements + replication_elements,
             headers=[
                 (_("Basic settings"), [key for key, _vs in basic_elements]),
-                (_("Livestatus settings"), [key for key, _vs in livestatus_elements]),
-                (_("Configuration Replication"), [key for key, _vs in replication_elements]),
+                (_("Status connection"), [key for key, _vs in livestatus_elements]),
+                (_("Configuration connection"), [key for key, _vs in replication_elements]),
             ],
             render="form",
             form_narrow=True,
@@ -644,10 +644,10 @@ class ModeDistributedMonitoring(WatoMode):
 
                 self._show_buttons(table, site_id, site)
                 self._show_basic_settings(table, site_id, site)
-                self._show_livestatus_settings(table, site_id, site)
-                self._show_replication_configuration(table, site_id, site)
-                self._show_livestatus_status(table, site_id, site)
-                self._show_replication_status(table, site_id, site)
+                self._show_status_connection_config(table, site_id, site)
+                self._show_status_connection_status(table, site_id, site)
+                self._show_config_connection_config(table, site_id, site)
+                self._show_config_connection_status(table, site_id, site)
 
         html.javascript("cmk.sites.fetch_site_status();")
 
@@ -663,10 +663,6 @@ class ModeDistributedMonitoring(WatoMode):
         delete_url = html.makeactionuri([("_delete", site_id)])
         html.icon_button(delete_url, _("Delete"), "delete")
 
-        encrypted_url = watolib.folder_preserving_link([("mode", "site_livestatus_encryption"),
-                                                        ("site", site_id)])
-        html.icon_button(encrypted_url, _("Show details about livestatus encryption"), "encrypted")
-
         if _site_globals_editable(site_id, site):
             globals_url = watolib.folder_preserving_link([("mode", "edit_site_globals"),
                                                           ("site", site_id)])
@@ -681,27 +677,34 @@ class ModeDistributedMonitoring(WatoMode):
 
             html.icon_button(globals_url, title, icon)
 
-        if site["replication"]:
-            if site.get("secret"):
-                logout_url = watolib.make_action_link([("mode", "sites"), ("_logout", site_id)])
-                html.icon_button(logout_url, _("Logout"), "autherr")
-            else:
-                login_url = watolib.make_action_link([("mode", "sites"), ("_login", site_id)])
-                html.icon_button(login_url, _("Login"), "authok")
-
     def _show_basic_settings(self, table, site_id, site):
         table.text_cell(_("ID"), site_id)
         table.text_cell(_("Alias"), site.get("alias", ""))
 
-    def _show_livestatus_settings(self, table, site_id, site):
-        table.cell(_("Connection"))
+    def _show_status_connection_config(self, table, site_id, site):
+        table.cell(_("Status connection"))
         vs_connection = self._site_mgmt.connection_method_valuespec()
         html.write(vs_connection.value_to_text(site["socket"]))
 
-    def _show_replication_configuration(self, table, site_id, site):
-        table.text_cell(_("Replication"))
+    def _show_status_connection_status(self, table, site_id, site):
+        table.text_cell("")
+
+        # The status is fetched asynchronously for all sites. Show a temporary loading icon.
+        html.open_div(id_="livestatus_status_%s" % site_id, class_="connection_status")
+        html.icon(
+            _("Fetching livestatus status"),
+            "reload",
+            class_=["reloading", "replication_status_loading"])
+        html.close_div()
+
+        encrypted_url = watolib.folder_preserving_link([("mode", "site_livestatus_encryption"),
+                                                        ("site", site_id)])
+        html.icon_button(encrypted_url, _("Show details about livestatus encryption"), "encrypted")
+
+    def _show_config_connection_config(self, table, site_id, site):
+        table.text_cell(_("Configuration connection"))
         if not site["replication"]:
-            html.icon(_("Replication not enabled for this site"), "disabled")
+            html.icon(_("Configuration connection not enabled for this site"), "disabled")
             return
 
         html.icon(_("Replication enabled for this site"), "enabled")
@@ -711,20 +714,10 @@ class ModeDistributedMonitoring(WatoMode):
         if site.get("replicate_mkps"):
             html.icon(_("Replicate extensions"), "mkps")
 
-    def _show_livestatus_status(self, table, site_id, site):
-        table.text_cell(_("Livestatus"))
+    def _show_config_connection_status(self, table, site_id, site):
+        table.text_cell("")
 
-        # The status is fetched asynchronously for all sites. Show a temporary loading icon.
-        html.open_div(id_="livestatus_status_%s" % site_id)
-        html.icon(
-            _("Fetching livestatus status"),
-            "reload",
-            class_=["reloading", "replication_status_loading"])
-        html.close_div()
-
-    def _show_replication_status(self, table, site_id, site):
-        table.text_cell(_("Repl. status"))
-        html.open_div(id_="replication_status_%s" % site_id)
+        html.open_div(id_="replication_status_%s" % site_id, class_="connection_status")
         if site.get("replication"):
             # The status is fetched asynchronously for all sites. Show a temporary loading icon.
             html.icon(
@@ -732,6 +725,16 @@ class ModeDistributedMonitoring(WatoMode):
                 "reload",
                 class_=["reloading", "replication_status_loading"])
         html.close_div()
+
+        if not site["replication"]:
+            return
+
+        if site.get("secret"):
+            logout_url = watolib.make_action_link([("mode", "sites"), ("_logout", site_id)])
+            html.icon_button(logout_url, _("Logout"), "autherr")
+        else:
+            login_url = watolib.make_action_link([("mode", "sites"), ("_login", site_id)])
+            html.icon_button(login_url, _("Login"), "authok")
 
 
 class ModeAjaxFetchSiteStatus(WatoWebApiMode):

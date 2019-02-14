@@ -49,13 +49,13 @@ ipaddress = "==1.0.22"
 netifaces = "==0.10.7"
 dnspython = "==1.15.0"
 # python-ad = "==0.9"  This seems to be dead and is not on PyPi!
-idna = "==2.6"
+idna = "==2.5"
 asn1crypto = "==0.24.0"
 cryptography = "==2.3.1"
 certifi = "==2018.10.15"
 chardet = "==3.0.4"
-urllib3 = "==1.24.1"
-requests = { version = "==2.13.0", extras = ["security", "socks"] }
+urllib3 = "==1.21.1"
+requests = { version = "==2.16.0", extras = ["security", "socks"] }
 pyOpenSSL = "==16.2.0"
 pykerberos = "==1.2.1"
 requests-kerberos = "==0.11.0"
@@ -70,6 +70,39 @@ scandir = "==1.7"
 pathlib2 = "==2.3.2"
 python-dateutil = "==2.6.1"
 python-snap7 = "==0.5"  # actually some unknown version between 0.4 and 0.5... >:-(
+
+PyJWT = "==1.6.4"
+SecretStorage = {version = "==2.3.1", markers = "sys_platform == 'linux2' and python_version < '3.5'"}
+adal = "==1.2.0"
+azure-nspkg = "==3.0.2"
+azure-common = "==1.1.16"
+azure-mgmt-nspkg = "==3.0.2"
+isodate = "==0.6.0"
+oauthlib = "==2.1.0"
+requests-oauthlib = "==1.0.0"
+msrest = "==0.6.1"
+# use azure-mgmt-monitor 0.4.0 and its dependency
+# msrestazure 0.4.34 since the monitor version 0.5.0
+# will not deliver all metrics.
+msrestazure = "==0.4.34"
+azure-mgmt-monitor = "==0.4.0"
+azure-mgmt-resource = "==2.0.0"
+azure-mgmt-compute = "==4.3.1"
+configparser = "==3.5.0"
+entrypoints = "==0.2.3"
+keyring = "==15.1.0"
+docutils = "==0.14"
+futures = "==3.2.0"
+jmespath = "==0.9.3"
+botocore = "==1.12.43"
+s3transfer = "==0.1.13"
+boto3 = "==1.9.42"
+cachetools = "==3.0.0"
+rsa = "==4.0"
+google-auth = "==1.6.1"
+PyYAML = "==3.13"
+websocket_client = "==0.54.0"
+kubernetes = "==8.0.0"
 
 [requires]
 python_version = "2.7"

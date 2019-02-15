@@ -1,0 +1,13 @@
+Title: mknotifyd: Fixed crash if the mknotify check sends no data
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1550247640
+Class: fix
+
+The check previously crashed, if the agent sends a site name but no data for
+this site. If there is no data, this will be displayed now in the service
+output. Additionally the service will change it's state to WARN because
+there is no data for the last update time of mknotify state file.

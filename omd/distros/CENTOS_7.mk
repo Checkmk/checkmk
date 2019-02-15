@@ -63,7 +63,6 @@ OS_PACKAGES      += graphviz-gd
 OS_PACKAGES      += httpd
 OS_PACKAGES      += libevent
 OS_PACKAGES      += libdbi
-OS_PACKAGES      += libmcrypt
 OS_PACKAGES      += libtool-ltdl
 OS_PACKAGES      += rpcbind
 OS_PACKAGES      += net-snmp

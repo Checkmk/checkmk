@@ -235,14 +235,14 @@ def check_aws_ec2_network_io(item, params, metrics):
         EC2DefaultItemName,
         "",
     ]]
-    return check_if_common_single("", params, interfaces)
+    return check_if_common_single(EC2DefaultItemName, params, interfaces)
 
 
 check_info['aws_ec2.network_io'] = {
     'inventory_function': discover(),
     'check_function': check_aws_ec2_network_io,
-    'service_description': 'AWS/EC2 Interface %s',
-    'includes': ["if.include", 'aws.include'],
+    'service_description': 'AWS/EC2 Network IO %s',
+    'includes': ['if.include'],
     'default_levels_variable': "if_default_levels",
     'group': 'if',
     'has_perfdata': True,

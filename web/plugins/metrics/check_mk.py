@@ -5030,6 +5030,7 @@ check_metrics["check_mk-huawei_osn_if"]             = if_translation
 check_metrics["check_mk-if_fortigate"]              = if_translation
 check_metrics["check_mk-aix_if"]                    = if_translation
 check_metrics["check_mk-k8s_stats.network"]         = if_translation
+check_metrics["check_mk-aws_ec2.network_io"]        = if_translation
 
 check_metrics["check_mk-brocade_fcport"] = {
     "in"             : { "name": "fc_rx_bytes", },

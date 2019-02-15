@@ -1,0 +1,18 @@
+title: AWS S3 HTTP Errors
+agents: aws
+catalog: cloud/aws
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the number of HTTP 4xx client error status
+ code requests made to an Amazon S3 bucket.
+ To make this check work you have to configure the related
+ special agent {Amazon Web Services (AWS)}.
+
+ No default levels are set. Upper levels are configurable.
+
+ You have to enable requests metrics in AWS/S3 console. This
+ is a paid feature
+
+inventory:
+ One service per bucket will be created.

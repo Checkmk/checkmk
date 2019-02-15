@@ -1,0 +1,19 @@
+title: AWS S3 Requests
+agents: aws
+catalog: cloud/aws
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the number of get, put, delete, head,
+ post, select and list requests made for objects in an AWS
+ S3 bucket.
+ To make this check work you have to configure the related
+ special agent {Amazon Web Services (AWS)}.
+
+ No default levels are set. Upper levels are configurable.
+
+ You have to enable requests metrics in AWS/S3 console. This
+ is a paid feature
+
+inventory:
+ One service per bucket will be created.

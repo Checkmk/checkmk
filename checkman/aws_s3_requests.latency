@@ -1,0 +1,21 @@
+title: AWS S3 Requests
+agents: aws
+catalog: cloud/aws
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the elapsed per-request time from the
+ first byte received to the last byte sent to an Amazon S3
+ bucket and  per-request time from the complete request being
+ received by an Amazon S3 bucket to when the response starts
+ to be returned.
+ To make this check work you have to configure the related
+ special agent {Amazon Web Services (AWS)}.
+
+ No default levels are set. Upper levels are configurable.
+
+ You have to enable requests metrics in AWS/S3 console. This
+ is a paid feature
+
+inventory:
+ One service per bucket will be created.

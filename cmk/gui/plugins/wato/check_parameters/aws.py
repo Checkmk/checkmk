@@ -108,6 +108,41 @@ def _vs_cpu_credits_balance():
                 ]))
 
 
+def _vs_elements_http_errors():
+    return [
+        ('levels_http_4xx_perc',
+         Tuple(
+             title=_("Upper percentual levels for HTTP 400 errors"),
+             help=_("Specify levels for HTTP 400 errors in percentage "
+                    "which refer to the total number of requests"),
+             elements=[
+                 Percentage(title=_("Warning at")),
+                 Percentage(title=_("Critical at")),
+             ],
+         )),
+        ('levels_http_5xx_perc',
+         Tuple(
+             title=_("Upper percentual levels for HTTP 500 errors"),
+             help=_("Specify levels for HTTP 500 errors in percentage "
+                    "which refer to the total number of requests"),
+             elements=[
+                 Percentage(title=_("Warning at")),
+                 Percentage(title=_("Critical at")),
+             ])),
+    ]
+
+
+def _vs_latency():
+    return ('levels_latency',
+            Tuple(
+                title=_("Upper levels for latency"),
+                elements=[
+                    Age(title=_("Warning at")),
+                    Age(title=_("Critical at")),
+                ],
+            ))
+
+
 #   .--S3------------------------------------------------------------------.
 #   |                             ____ _____                               |
 #   |                            / ___|___ /                               |
@@ -166,6 +201,187 @@ class RulespecCheckgroupParametersAwsS3Buckets(CheckParameterRulespecWithoutItem
     @property
     def parameter_valuespec(self):
         return Dictionary(elements=[_vs_s3_buckets()])
+
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersAwsS3Requests(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "aws_s3_requests"
+
+    @property
+    def title(self):
+        return _("AWS/S3 Bucket Requests")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(elements=[
+            ('get_requests_perc',
+             Alternative(
+                 title=_("Upper percentual levels for GET requests"),
+                 style="dropdown",
+                 elements=[
+                     Tuple(
+                         title=_("Set levels"),
+                         elements=[
+                             Percentage(title=_("Warning at")),
+                             Percentage(title=_("Critical at")),
+                         ]),
+                     Tuple(
+                         title=_("No levels"),
+                         elements=[
+                             FixedValue(None, totext=""),
+                             FixedValue(None, totext=""),
+                         ]),
+                 ])),
+            ('put_requests_perc',
+             Alternative(
+                 title=_("Upper percentual levels for PUT requests"),
+                 style="dropdown",
+                 elements=[
+                     Tuple(
+                         title=_("Set levels"),
+                         elements=[
+                             Percentage(title=_("Warning at")),
+                             Percentage(title=_("Critical at")),
+                         ]),
+                     Tuple(
+                         title=_("No levels"),
+                         elements=[
+                             FixedValue(None, totext=""),
+                             FixedValue(None, totext=""),
+                         ]),
+                 ])),
+            ('delete_requests_perc',
+             Alternative(
+                 title=_("Upper percentual levels for DELETE requests"),
+                 style="dropdown",
+                 elements=[
+                     Tuple(
+                         title=_("Set levels"),
+                         elements=[
+                             Percentage(title=_("Warning at")),
+                             Percentage(title=_("Critical at")),
+                         ]),
+                     Tuple(
+                         title=_("No levels"),
+                         elements=[
+                             FixedValue(None, totext=""),
+                             FixedValue(None, totext=""),
+                         ]),
+                 ])),
+            ('head_requests_perc',
+             Alternative(
+                 title=_("Upper percentual levels for HEAD requests"),
+                 style="dropdown",
+                 elements=[
+                     Tuple(
+                         title=_("Set levels"),
+                         elements=[
+                             Percentage(title=_("Warning at")),
+                             Percentage(title=_("Critical at")),
+                         ]),
+                     Tuple(
+                         title=_("No levels"),
+                         elements=[
+                             FixedValue(None, totext=""),
+                             FixedValue(None, totext=""),
+                         ]),
+                 ])),
+            ('post_requests_perc',
+             Alternative(
+                 title=_("Upper percentual levels for POST requests"),
+                 style="dropdown",
+                 elements=[
+                     Tuple(
+                         title=_("Set levels"),
+                         elements=[
+                             Percentage(title=_("Warning at")),
+                             Percentage(title=_("Critical at")),
+                         ]),
+                     Tuple(
+                         title=_("No levels"),
+                         elements=[
+                             FixedValue(None, totext=""),
+                             FixedValue(None, totext=""),
+                         ]),
+                 ])),
+            ('select_requests_perc',
+             Alternative(
+                 title=_("Upper percentual levels for SELECT requests"),
+                 style="dropdown",
+                 elements=[
+                     Tuple(
+                         title=_("Set levels"),
+                         elements=[
+                             Percentage(title=_("Warning at")),
+                             Percentage(title=_("Critical at")),
+                         ]),
+                     Tuple(
+                         title=_("No levels"),
+                         elements=[
+                             FixedValue(None, totext=""),
+                             FixedValue(None, totext=""),
+                         ]),
+                 ])),
+            ('list_requests_perc',
+             Alternative(
+                 title=_("Upper percentual levels for LIST requests"),
+                 style="dropdown",
+                 elements=[
+                     Tuple(
+                         title=_("Set levels"),
+                         elements=[
+                             Percentage(title=_("Warning at")),
+                             Percentage(title=_("Critical at")),
+                         ]),
+                     Tuple(
+                         title=_("No levels"),
+                         elements=[
+                             FixedValue(None, totext=""),
+                             FixedValue(None, totext=""),
+                         ]),
+                 ])),
+        ])
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("The bucket name"))
+
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersAwsS3Latency(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "aws_s3_latency"
+
+    @property
+    def title(self):
+        return _("AWS/S3 Latency")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(elements=[_vs_latency()])
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("The bucket name"))
 
 
 #.
@@ -319,17 +535,7 @@ class RulespecCheckgroupParametersAwsElbLatency(CheckParameterRulespecWithoutIte
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[(
-                'levels_latency',
-                Tuple(
-                    title=_("Upper levels for latency"),
-                    elements=[
-                        Age(title=_("Warning at")),
-                        Age(title=_("Critical at")),
-                    ],
-                ),
-            )],)
+        return Dictionary(elements=[_vs_latency()])
 
 
 @rulespec_registry.register
@@ -352,28 +558,7 @@ class RulespecCheckgroupParametersAwsElbHttp(CheckParameterRulespecWithoutItem):
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(
-            elements=[
-                ('levels_http_4xx_perc',
-                 Tuple(
-                     title=_("Upper percentual levels for HTTP 400 errors"),
-                     help=_("Specify levels for HTTP 400 errors in percentage "
-                            "which refer to the total number of requests"),
-                     elements=[
-                         Percentage(title=_("Warning at")),
-                         Percentage(title=_("Critical at")),
-                     ],
-                 )),
-                ('levels_http_5xx_perc',
-                 Tuple(
-                     title=_("Upper percentual levels for HTTP 500 errors"),
-                     help=_("Specify levels for HTTP 500 errors in percentage "
-                            "which refer to the total number of requests"),
-                     elements=[
-                         Percentage(title=_("Warning at")),
-                         Percentage(title=_("Critical at")),
-                     ])),
-            ],)
+        return Dictionary(elements=_vs_elements_http_errors())
 
 
 @rulespec_registry.register

@@ -697,6 +697,8 @@ class S3(AWSSectionCloudwatch):
 
     @property
     def interval(self):
+        # BucketSizeBytes and NumberOfObjects are available per day
+        # and must include 00:00h
         return 86400
 
     def _get_colleague_contents(self):
@@ -738,6 +740,72 @@ class S3(AWSSectionCloudwatch):
                             'Unit': unit,
                         },
                     })
+        return metrics
+
+    def _compute_content(self, raw_content, colleague_contents):
+        for row in raw_content.content:
+            bucket = colleague_contents.content.get(row['Label'])
+            if bucket:
+                row.update(bucket)
+        return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
+
+    def _create_results(self, computed_content):
+        return [AWSSectionResult("", computed_content.content)]
+
+
+class S3Requests(AWSSectionCloudwatch):
+    @property
+    def name(self):
+        return "s3_requests"
+
+    @property
+    def interval(self):
+        return 300
+
+    def _get_colleague_contents(self):
+        colleague = self._received_results.get('s3_summary')
+        if colleague and colleague.content:
+            return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
+        return AWSColleagueContents({}, 0.0)
+
+    def _get_metrics(self, colleague_contents):
+        metrics = []
+        for idx, bucket_name in enumerate(colleague_contents.content.iterkeys()):
+            for metric_name, unit in [
+                ("AllRequests", "Count"),
+                ("GetRequests", "Count"),
+                ("PutRequests", "Count"),
+                ("DeleteRequests", "Count"),
+                ("HeadRequests", "Count"),
+                ("PostRequests", "Count"),
+                ("SelectRequests", "Count"),
+                ("SelectScannedBytes", "Bytes"),
+                ("SelectReturnedBytes", "Bytes"),
+                ("ListRequests", "Count"),
+                ("BytesDownloaded", "Bytes"),
+                ("BytesUploaded", "Bytes"),
+                ("4xxErrors", "Count"),
+                ("5xxErrors", "Count"),
+                ("FirstByteLatency", "Milliseconds"),
+                ("TotalRequestLatency", "Milliseconds"),
+            ]:
+                metrics.append({
+                    'Id': self._create_id_for_metric_data_query(idx, metric_name),
+                    'Label': bucket_name,
+                    'MetricStat': {
+                        'Metric': {
+                            'Namespace': 'AWS/S3',
+                            'MetricName': metric_name,
+                            'Dimensions': [{
+                                'Name': "BucketName",
+                                'Value': bucket_name,
+                            }]
+                        },
+                        'Period': self.period,
+                        'Stat': 'Sum',  #reports per period
+                        'Unit': unit,
+                    },
+                })
         return metrics
 
     def _compute_content(self, raw_content, colleague_contents):
@@ -1394,6 +1462,7 @@ class AWSSectionsGeneric(AWSSections):
         ebs = EBS(cloudwatch_client, region, config)
         elb = ELB(cloudwatch_client, region, config)
         s3 = S3(cloudwatch_client, region, config)
+        s3_requests = S3Requests(cloudwatch_client, region, config)
         rds = RDS(cloudwatch_client, region, config)
 
         #---register sections to distributors-------------------------------
@@ -1405,6 +1474,7 @@ class AWSSectionsGeneric(AWSSections):
         elb_summary_distributor.add(elb_health)
         elb_summary_distributor.add(elb)
         s3_summary_distributor.add(s3)
+        s3_summary_distributor.add(s3_requests)
         rds_summary_distributor.add(rds)
 
         #---register sections for execution---------------------------------
@@ -1441,6 +1511,8 @@ class AWSSectionsGeneric(AWSSections):
         if 's3' in services:
             self._sections.append(s3_summary)
             self._sections.append(s3)
+            if config.service_config['s3_requests']:
+                self._sections.append(s3_requests)
 
         if 'rds' in services:
             self._sections.append(rds_summary)
@@ -1546,6 +1618,11 @@ def parse_arguments(argv):
                 action='append',
                 help="Tag values for %s" % service.title)
 
+    parser.add_argument(
+        "--s3-requests",
+        action="store_true",
+        help="You have to enable requests metrics in AWS/S3 console. This is a paid feature.")
+
     parser.add_argument('--overall-tag-key', nargs=1, action='append', help="Overall tag key")
     parser.add_argument(
         '--overall-tag-values', nargs='+', action='append', help="Overall tag values")
@@ -1603,6 +1680,9 @@ class AWSConfig(object):
             } for k, v in zip([k[0] for k in keys], values)]
         return
 
+    def add_single_service_config(self, key, value):
+        self.service_config.setdefault(key, value)
+
 
 def main(args=None):
     if args is None:
@@ -1622,6 +1702,8 @@ def main(args=None):
         ("rds", args.rds_names, (args.rds_tag_key, args.rds_tag_values)),
     ]:
         aws_config.add_service_config(service_key, service_names, service_tags)
+
+    aws_config.add_single_service_config("s3_requests", args.s3_requests)
 
     has_exceptions = False
     for aws_services, aws_regions, aws_sections in [

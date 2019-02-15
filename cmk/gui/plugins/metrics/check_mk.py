@@ -4896,6 +4896,78 @@ metric_info['aws_rds_connections'] = {
     'color': '21/a',
 }
 
+metric_info['aws_request_latency'] = {
+    'title': _('Request latency'),
+    'unit': 's',
+    'color': '21/a',
+}
+
+metric_info['get_requests'] = {
+    'title': _('GET Requests'),
+    'unit': '1/s',
+    'color': '11/a',
+}
+
+metric_info['put_requests'] = {
+    'title': _('PUT Requests'),
+    'unit': '1/s',
+    'color': '13/a',
+}
+
+metric_info['delete_requests'] = {
+    'title': _('DELETE Requests'),
+    'unit': '1/s',
+    'color': '15/a',
+}
+
+metric_info['head_requests'] = {
+    'title': _('HEAD Requests'),
+    'unit': '1/s',
+    'color': '21/a',
+}
+
+metric_info['post_requests'] = {
+    'title': _('POST Requests'),
+    'unit': '1/s',
+    'color': '23/a',
+}
+
+metric_info['select_requests'] = {
+    'title': _('SELECT Requests'),
+    'unit': '1/s',
+    'color': '25/a',
+}
+
+metric_info['list_requests'] = {
+    'title': _('LIST Requests'),
+    'unit': '1/s',
+    'color': '31/a',
+}
+
+metric_info['aws_s3_downloads'] = {
+    'title': _('Download'),
+    'unit': 'bytes',
+    'color': '21/a',
+}
+
+metric_info['aws_s3_uploads'] = {
+    'title': _('Upload'),
+    'unit': 'bytes',
+    'color': '31/a',
+}
+
+metric_info['aws_s3_select_object_scanned'] = {
+    'title': _('SELECT Object Scanned'),
+    'unit': 'bytes',
+    'color': '31/a',
+}
+
+metric_info['aws_s3_select_object_returned'] = {
+    'title': _('SELECT Object Returned'),
+    'unit': 'bytes',
+    'color': '41/a',
+}
+
 metric_info["elapsed_time"] = {
     "title": _("Elapsed time"),
     "unit": "s",

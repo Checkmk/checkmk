@@ -98,13 +98,13 @@ def get_languages():
         try:
             languages.update([(val, _("%s") % get_language_alias(val))
                               for val in os.listdir(lang_dir)
-                              if not '.' in val])
+                              if not '.' in val and os.path.isdir(lang_dir + "/" + val)])
         except OSError:
             # Catch "OSError: [Errno 2] No such file or
             # directory:" when directory not exists
             pass
 
-    return list(languages)
+    return sorted(list(languages), key=lambda x: x[1])
 
 
 def unlocalize():

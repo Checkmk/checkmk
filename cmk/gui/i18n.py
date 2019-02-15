@@ -70,7 +70,30 @@ def get_current_language():
 
 def _get_language_dirs():
     # type: () -> List[str]
+    return _get_base_language_dirs() + _get_package_language_dirs()
+
+
+def _get_base_language_dirs():
+    # type: () -> List[str]
     return [cmk.utils.paths.locale_dir, cmk.utils.paths.local_locale_dir]
+
+
+def _get_package_language_dirs():
+    # type: () -> List[str]
+    """Return a list of extension package specific localization directories
+
+    It's possible for extension packages to provide custom localization files
+    which are meant for localizing extension specific texts. These localizations
+    are then used in addition to the builtin and local localization files.
+    """
+    package_locale_dir = cmk.utils.paths.local_locale_dir + "/packages"
+    if not os.path.exists(package_locale_dir):
+        return []
+
+    dirs = []
+    for package_name in os.listdir(package_locale_dir):
+        dirs.append(package_locale_dir + "/" + package_name)
+    return dirs
 
 
 def get_language_alias(lang):
@@ -79,7 +102,7 @@ def get_language_alias(lang):
         return _("English")
 
     alias = lang
-    for lang_dir in _get_language_dirs():
+    for lang_dir in _get_base_language_dirs():
         try:
             alias = open('%s/%s/alias' % (lang_dir, lang), 'r').read().strip()
         except (OSError, IOError):
@@ -98,7 +121,7 @@ def get_languages():
         try:
             languages.update([(val, _("%s") % get_language_alias(val))
                               for val in os.listdir(lang_dir)
-                              if not '.' in val and os.path.isdir(lang_dir + "/" + val)])
+                              if val != "packages" and os.path.isdir(lang_dir + "/" + val)])
         except OSError:
             # Catch "OSError: [Errno 2] No such file or
             # directory:" when directory not exists
@@ -138,8 +161,7 @@ def _init_language(lang):
     for locale_base_dir in _get_language_dirs():
         try:
             translation = gettext_module.translation(
-                "multisite", locale_base_dir, languages=[lang],
-                codeset='UTF-8')  # type: gettext_module.NullTranslations
+                "multisite", locale_base_dir, languages=[lang], codeset='UTF-8')
 
         except IOError:
             continue

@@ -27,11 +27,13 @@ def compile_builtin_po_files(locale_paths):
 
 @pytest.fixture()
 def local_translation():
-    _add_local_translation("de", u"Äxtended German")
-    _add_local_translation("xz", "Xz")
+    _add_local_translation("de", u"Äxtended German", texts={"bla": "blub"})
+    _add_local_translation("xz", "Xz", texts={"bla": "blub"})
+    # Add one package localization
+    _add_local_translation("packages/pkg_name/de", "pkg_name German", texts={"pkg1": "lala"})
 
 
-def _add_local_translation(lang, alias):
+def _add_local_translation(lang, alias, texts):
     local_dir = Path(cmk.utils.paths.local_locale_dir) / lang / "LC_MESSAGES"
     local_dir.mkdir(parents=True)  # pylint: disable=no-member
     po_file = local_dir / "multisite.po"
@@ -52,10 +54,13 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\\n"
 "Content-Transfer-Encoding: 8bit\\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\\n"
-
-msgid "bla"
-msgstr "blub"
 ''')
+
+        for key, val in texts.items():
+            f.write(u"""
+msgid "%s"
+msgstr "%s"
+""" % (key, val))
 
     subprocess.call(['msgfmt', str(po_file), '-o', str(mo_file)])
 
@@ -116,6 +121,14 @@ def test_init_language_with_local_modification_fallback(local_translation):
     translated = trans.ugettext("Age")
     assert isinstance(translated, unicode)
     assert translated == "Alter"
+
+
+def test_init_language_with_package_localization(local_translation):
+    trans = i18n._init_language("de")
+
+    translated = trans.ugettext("pkg1")
+    assert isinstance(translated, unicode)
+    assert translated == "lala"
 
 
 def test_get_language_alias():

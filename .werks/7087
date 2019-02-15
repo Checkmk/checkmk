@@ -1,0 +1,23 @@
+Title: Extension packages can now provide individual localizations
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1550243073
+Class: feature
+
+Extension packages (MKPs) can now ship their own localization files in addition
+to the standard localization file. With this change it is possible to split
+different localization parts into separate files.
+
+The GUI now recognizes the following localization file paths:
+
+C+:
+share/check_mk/locale/[LANG]/LC_MESSAGES/multisite.mo - Builtin, shipped with Check_MK.
+local/share/check_mk/locale/[LANG]/LC_MESSAGES/multisite.mo - Site specific override, extension of builtin localization
+local/share/check_mk/locale/packages/[PKG_NAME]/[LANG]/LC_MESSAGES/multisite.mo - Extension localization
+C-:
+
+The GUI searches these localization files from bottom to top when it searches for
+a text to be localized.

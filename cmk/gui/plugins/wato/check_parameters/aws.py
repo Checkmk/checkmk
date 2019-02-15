@@ -35,6 +35,7 @@ from cmk.gui.valuespec import (
     Age,
     FixedValue,
     TextAscii,
+    Filesize,
 )
 from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersApplications,
@@ -42,6 +43,77 @@ from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
 )
+
+
+def _vs_s3_buckets():
+    return ('bucket_size_levels',
+            Alternative(
+                title=_("Upper levels for the bucket size"),
+                style="dropdown",
+                elements=[
+                    Tuple(
+                        title=_("Set levels"),
+                        elements=[
+                            Filesize(title=_("Warning at")),
+                            Filesize(title=_("Critical at")),
+                        ]),
+                    Tuple(
+                        title=_("No levels"),
+                        elements=[
+                            FixedValue(None, totext=""),
+                            FixedValue(None, totext=""),
+                        ]),
+                ]))
+
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersAwsS3BucketsObjects(CheckParameterRulespecWithItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "aws_s3_buckets_objects"
+
+    @property
+    def title(self):
+        return _("AWS/S3 Bucket Objects")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(elements=[_vs_s3_buckets()])
+
+    @property
+    def item_spec(self):
+        return TextAscii(title=_("The bucket name"))
+
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersAwsS3Buckets(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "aws_s3_buckets"
+
+    @property
+    def title(self):
+        return _("AWS/S3 Buckets")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(elements=[_vs_s3_buckets()])
 
 
 def _vs_burst_balance():

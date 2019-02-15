@@ -70,12 +70,14 @@ def check_aws_s3_objects(item, params, metrics):
         storage_infos.append(
             "%s: %s" % (aws_s3_storage_mapping[storage_type], get_bytes_human_readable(value)))
     sum_size = sum(bucket_sizes.values())
+    yield check_levels(
+        sum_size,
+        "aws_bucket_size",
+        params.get('bucket_size_levels', (None, None)),
+        human_readable_func=get_bytes_human_readable,
+        infoname='Bucket size')
     if storage_infos:
-        storage_infos_str = " (%s)" % ", ".join(storage_infos)
-    else:
-        storage_infos_str = ""
-    yield (0, 'Bucket size: %s%s' % (get_bytes_human_readable(sum_size), storage_infos_str),
-           [('aws_bucket_size', sum_size)])
+        yield 0, ", ".join(storage_infos)
 
     num_objects = sum(metrics['numberofobjects'].values())
     yield 0, 'Number of objects: %s' % int(num_objects), [('aws_num_objects', num_objects)]
@@ -98,6 +100,7 @@ check_info['aws_s3'] = {
     'service_description': 'AWS/S3 Objects %s',
     'has_perfdata': True,
     'includes': ['aws.include'],
+    'group': 'aws_s3_buckets_objects',
 }
 
 #.
@@ -121,7 +124,12 @@ def check_aws_s3_summary(item, params, parsed):
         if bucket_size >= largest_bucket_size:
             largest_bucket = bucket_name
             largest_bucket_size = bucket_size
-    yield 0, 'Total size: %s' % get_bytes_human_readable(sum_size), [('aws_bucket_size', sum_size)]
+    yield check_levels(
+        sum_size,
+        "aws_bucket_size",
+        params.get('bucket_size_levels', (None, None)),
+        human_readable_func=get_bytes_human_readable,
+        infoname='Total size')
 
     if largest_bucket:
         yield 0, 'Largest bucket: %s (%s)' % \
@@ -133,4 +141,5 @@ check_info['aws_s3.summary'] = {
     'check_function': check_aws_s3_summary,
     'service_description': 'AWS/S3 Summary',
     'has_perfdata': True,
+    'group': 'aws_s3_buckets',
 }

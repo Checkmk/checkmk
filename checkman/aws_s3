@@ -10,5 +10,8 @@ description:
  To make this check work you have to configure the related
  special agent {Amazon Web Services (AWS)}.
 
+ There are no default levels set for the bucket size. Upper
+ levels are configurable.
+
 inventory:
  One service per bucket will be created.

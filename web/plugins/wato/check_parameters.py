@@ -16383,7 +16383,7 @@ register_check_parameters(
 register_check_parameters(
     subgroup_applications,
     'aws_costs_and_usage',
-    _("AWS Costs and Usage"),
+    _("AWS/CE Costs and Usage"),
     Dictionary(elements=[('levels_unblended',
                           Tuple(
                               title=_("Upper levels for unblended costs"),

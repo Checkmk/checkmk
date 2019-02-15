@@ -75,15 +75,6 @@ def test_underscore_localization():
     assert i18n.get_current_language() is None
 
 
-def test_get_locale_path():
-    assert i18n._get_cmk_locale_path("de") == "%s/enterprise/locale" % cmk_path()
-    assert i18n._get_cmk_locale_path("xz") == "%s/enterprise/locale" % cmk_path()
-
-
-def test_get_locale_path_with_local_modification(local_translation):
-    assert i18n._get_cmk_locale_path("de") == cmk.utils.paths.local_locale_dir
-
-
 def test_init_language_not_existing():
     assert i18n._init_language("xz") is None
 
@@ -110,18 +101,21 @@ def test_init_language_with_local_modification(local_translation):
     assert translated == "blub"
 
 
-# Will be enabled soon
-#def test_init_language_with_local_modification_fallback(local_translation):
-#    trans = i18n._init_language("de")
-#    assert isinstance(trans, gettext.GNUTranslations)
-#    assert trans.info()["language"] == "de"
-#    assert trans.info()["project-id-version"] == "Locally modified Check_MK translation"
-#
-#    # This string is localized in the standard file, not in the locally
-#    # overridden file
-#    translated = trans.ugettext("Age")
-#    assert isinstance(translated, unicode)
-#    assert translated == "Alter"
+def test_init_language_with_local_modification_fallback(local_translation):
+    trans = i18n._init_language("de")
+    assert isinstance(trans, gettext.GNUTranslations)
+    assert trans.info()["language"] == "de"
+    assert trans.info()["project-id-version"] == "Locally modified Check_MK translation"
+
+    translated = trans.ugettext("bla")
+    assert isinstance(translated, unicode)
+    assert translated == "blub"
+
+    # This string is localized in the standard file, not in the locally
+    # overridden file
+    translated = trans.ugettext("Age")
+    assert isinstance(translated, unicode)
+    assert translated == "Alter"
 
 
 def test_get_language_alias():

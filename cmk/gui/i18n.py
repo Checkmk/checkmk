@@ -130,22 +130,29 @@ def localize(lang):
 
 def _init_language(lang):
     # type: (str) -> Optional[gettext_module.NullTranslations]
-    try:
-        translation = gettext_module.translation(
-            "multisite", _get_cmk_locale_path(lang), languages=[lang],
-            codeset='UTF-8')  # type: Optional[gettext_module.NullTranslations]
-    except IOError:
-        translation = None
+    """Load all available "multisite" translation files. All are loaded first.
+    The builtin ones are used as "fallback" for the local files which means that
+    the texts in the local files have precedence.
+    """
+    translations = []  # type: List[gettext_module.NullTranslations]
+    for locale_base_dir in _get_language_dirs():
+        try:
+            translation = gettext_module.translation(
+                "multisite", locale_base_dir, languages=[lang],
+                codeset='UTF-8')  # type: gettext_module.NullTranslations
 
-    return translation
+        except IOError:
+            continue
 
+        # Create a chain of fallback translations
+        if translations:
+            translation.add_fallback(translations[-1])
+        translations.append(translation)
 
-def _get_cmk_locale_path(lang):
-    # type: (str) -> str
-    po_path = '/%s/LC_MESSAGES/multisite.mo' % lang
-    if os.path.exists(cmk.utils.paths.local_locale_dir + po_path):
-        return cmk.utils.paths.local_locale_dir
-    return cmk.utils.paths.locale_dir
+    if not translations:
+        return None
+
+    return translations[-1]
 
 
 def initialize():

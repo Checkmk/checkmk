@@ -1,0 +1,19 @@
+Title: Localizations now extend shipped localizations
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1550238596
+Class: feature
+
+Locally installed localization files (local/share/check_mk/locale) may
+now extend the builtin localizations instead of overriding them.
+
+In previous versions the local locale file had to contain all texts that
+we ship with our standard localizations, for example the german localization
+in case one wanted to extend / change a single text.
+
+Now both, the builtin and local localization files are loaded. All texts
+are searched in the local file and looked up in the builtin file as fallback
+in case the text can not be found in the local file.

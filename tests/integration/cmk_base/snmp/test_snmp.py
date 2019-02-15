@@ -1,6 +1,7 @@
 import subprocess
 import logging
 import os
+import copy
 import pytest  # type: ignore
 from pathlib2 import Path
 from testlib import cmk_path, wait_until
@@ -85,7 +86,17 @@ def snmpsim(site, request, tmp_path_factory, monkeymodule):
                     num_sockets += 1
             except OSError:
                 pass
-        return num_sockets >= 2
+
+        if num_sockets < 2:
+            return False
+
+        import netsnmp
+        var = netsnmp.Varbind("sysDescr.0")
+        value = netsnmp.snmpget(var, Version=2, DestHost="127.0.0.1:1337", Community="public")[0]
+        if value is None:
+            return False
+
+        return True
 
     wait_until(is_listening, timeout=20)
 
@@ -106,10 +117,6 @@ def backend(request, monkeypatch):
     backend_name = request.param
     source_data_dir = Path(request.fspath.dirname) / "snmp_data" / "cmk-walk"
 
-    monkeypatch.setattr(snmp, "_g_single_oid_hostname", None)
-    monkeypatch.setattr(snmp, "_g_single_oid_ipaddress", None)
-    monkeypatch.setattr(snmp, "_g_single_oid_cache", {})
-
     if backend_name == "stored_snmp":
         monkeypatch.setattr(config, "is_usewalk_host", lambda h: True)
         monkeypatch.setattr(cmk.utils.paths, "snmpwalks_dir", str(source_data_dir))
@@ -117,6 +124,13 @@ def backend(request, monkeypatch):
         monkeypatch.setattr(config, "is_inline_snmp_host", lambda h: backend_name == "inline_snmp")
 
     return backend_name
+
+
+@pytest.fixture(autouse=True)
+def clear_cache(monkeypatch):
+    monkeypatch.setattr(snmp, "_g_single_oid_hostname", None)
+    monkeypatch.setattr(snmp, "_g_single_oid_ipaddress", None)
+    monkeypatch.setattr(snmp, "_g_single_oid_cache", {})
 
 
 def test_get_single_oid_ipv6(snmpsim, backend, monkeypatch):
@@ -150,7 +164,7 @@ def test_get_single_oid_wrong_credentials(snmpsim, backend):
     if backend == "stored_snmp":
         pytest.skip("Not relevant")
 
-    access_data = snmpsim[1]
+    access_data = copy.deepcopy(snmpsim[1])
     access_data["credentials"] = "dingdong"
     result = snmp.get_single_oid(access_data, ".1.3.6.1.2.1.1.1.0")
     assert result is None
@@ -245,7 +259,7 @@ def test_get_simple_snmp_table_not_resolvable(snmpsim, backend):
     if backend == "stored_snmp":
         pytest.skip("Not relevant")
 
-    access_data = snmpsim[1]
+    access_data = copy.deepcopy(snmpsim[1])
     access_data["ipaddress"] = "bla.local"
 
     # TODO: Unify different error messages
@@ -272,7 +286,7 @@ def test_get_simple_snmp_table_wrong_credentials(snmpsim, backend):
     if backend == "stored_snmp":
         pytest.skip("Not relevant")
 
-    access_data = snmpsim[1]
+    access_data = copy.deepcopy(snmpsim[1])
     access_data["credentials"] = "dingdong"
 
     # TODO: Unify different error messages

@@ -45,6 +45,7 @@ except ImportError as import_error:
 try:
     import requests
     from requests.auth import HTTPDigestAuth
+    from requests.packages import urllib3
 except ImportError as import_error:
     sys.stdout.write("<<<jolokia_info>>>\n"
                      "Error: mk_jolokia requires the requests library."
@@ -279,6 +280,8 @@ class JolokiaInstance(object):
     def _initialize_http_session(self):
         session = requests.Session()
         session.verify = self._config["verify"]
+        if session.verify is False:
+            urllib3.disable_warnings(category=urllib3.exceptions.InsecureRequestWarning)
         session.timeout = self._config["timeout"]
 
         auth_method = self._config.get("mode")

@@ -2,7 +2,6 @@
 # pylint: disable=protected-access
 import os
 import sys
-import copy
 import pytest
 from testlib import cmk_path  # pylint: disable=import-error
 
@@ -15,7 +14,7 @@ SANITIZE = mk_jolokia.JolokiaInstance._sanitize_config
 
 @pytest.mark.parametrize("removed", ["protocol", "server", "port", "suburi", "timeout"])
 def test_missing_config_basic(removed):
-    config = copy.deepcopy(mk_jolokia.DEFAULT_CONFIG)
+    config = mk_jolokia.get_default_config_dict()
     config.pop(removed)
     with pytest.raises(ValueError):
         SANITIZE(config)
@@ -26,7 +25,7 @@ def test_missing_config_auth():
         msg_pattern = r'Missing key\(s\): %s in configuration for UnitTest' % key_string
         return pytest.raises(ValueError, match=msg_pattern)
 
-    config = copy.deepcopy(mk_jolokia.DEFAULT_CONFIG)
+    config = mk_jolokia.get_default_config_dict()
     for key in ("password", "user", "service_password", "client_cert", "client_key"):
         config.pop(key)
     config["instance"] = "UnitTest"
@@ -53,20 +52,20 @@ def test_missing_config_auth():
 
 
 def test_config_instance():
-    config = copy.deepcopy(mk_jolokia.DEFAULT_CONFIG)
+    config = mk_jolokia.get_default_config_dict()
     assert SANITIZE(config).get("instance") == "8080"
     config["instance"] = "some spaces in string"
     assert SANITIZE(config).get("instance") == "some_spaces_in_string"
 
 
 def test_config_timeout():
-    config = copy.deepcopy(mk_jolokia.DEFAULT_CONFIG)
+    config = mk_jolokia.get_default_config_dict()
     config["timeout"] = '23'
     assert isinstance(SANITIZE(config).get("timeout"), float)
 
 
 def test_config_legacy_cert_path_to_verify():
-    config = copy.deepcopy(mk_jolokia.DEFAULT_CONFIG)
+    config = mk_jolokia.get_default_config_dict()
     config["verify"] = None
     assert SANITIZE(config).get("verify") is True
     config["cert_path"] = "_default"

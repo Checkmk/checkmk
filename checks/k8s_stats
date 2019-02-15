@@ -28,7 +28,7 @@
 @discover
 def discover_k8s_stats_network(key, value):
     if key == 'network':
-        return [interface.get('name') for interface in value['interfaces']]
+        return set([interface.get('name') for interface in value['interfaces']])
 
 
 @discover
@@ -36,7 +36,7 @@ def discover_k8s_stats_fs(key, value):
     ignore_fs = ['tmpfs', 'rootfs']
     if key == 'filesystem':
         devices = [disk.get('device') for disk in value]
-        return [x for x in devices if x not in ignore_fs]
+        return set([x for x in devices if x not in ignore_fs])
 
 
 def k8s_network_err_pac(device, params, now):
@@ -63,14 +63,18 @@ def k8s_network_err_pac(device, params, now):
 
 
 def check_k8s_stats_network(item, params, metrics):
-    def get_if():
-        for device in metrics['network']['interfaces']:
-            if device.get('name') == item:
-                return device
 
-    device = get_if()
-    now = time.strptime(metrics['timestamp'][:-4], "%Y-%m-%dT%H:%M:%S.%f")
-    now = time.mktime(now) - time.timezone
+    device = sum([
+        collections.Counter(device)
+        for device in metrics['network']['interfaces']
+        if device.get('name') == item
+    ], collections.Counter())
+
+    now = [
+        time.mktime(time.strptime(x[:-3], "%Y-%m-%dT%H:%M:%S.%f"))
+        for x in metrics['timestamp'].strip(u'Z').split(u'Z')
+    ]
+    now = sum(now) / float(len(now)) - time.timezone
 
     # Bandwidth
     for name, met, dsname in [('In', 'rx_bytes', 'in'), ('Out', 'tx_bytes', 'out')]:
@@ -97,12 +101,11 @@ def check_k8s_stats_network(item, params, metrics):
 
 
 def check_k8s_stats_fs(item, params, metrics):
-    def get_disk():
-        for disk in metrics['filesystem']:
-            if disk.get('device') == item:
-                return disk
-
-    disk = get_disk()
+    disk = sum([
+        collections.Counter(device)
+        for device in metrics['filesystem']
+        if device.get('device') == item
+    ], collections.Counter())
 
     yield df_check_filesystem_single(
         item,

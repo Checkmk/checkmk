@@ -25,6 +25,42 @@
 # Boston, MA 02110-1301 USA.
 
 
+# TODO: see why it's not enough to have it in legacy_docker.include
+def append_deprecation_warning(check_function):
+    '''A wrapper to WARN if legacy code is used
+
+    If the parse result is of one of the legacy Types the decorated
+    check function will yield an additional WARNING state.
+
+    These legacy parse results correspond to agents/plugins from version
+    1.5.0b1 to 1.5.0p12
+    '''
+
+    @functools.wraps(check_function)
+    def wrapper(item, params, parsed):
+
+        is_deprecated = isinstance(parsed, (DeprecatedDict, DeprecatedList))
+        catch_these = Exception if is_deprecated else ()
+
+        try:
+            results = check_function(item, params, parsed)
+            if isinstance(results, tuple):
+                yield results
+            else:
+                for result in results:
+                    yield result
+        except catch_these:
+            yield 3, "Could not handle data"
+        finally:
+            if is_deprecated:
+                yield 1, ("Deprecated plugin/agent (see long output)(!)\n"
+                          "You are using legacy code, which may lead to crashes and/or"
+                          " incomplete information. Please upgrade the monitored host to"
+                          " use the plugin 'mk_docker.py'.")
+
+    return wrapper
+
+
 def parse_docker_container_status(info):
     '''process the first line to a JSON object
 

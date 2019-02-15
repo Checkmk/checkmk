@@ -1,0 +1,13 @@
+Title: jolokia_info: Also discover if server is not responding
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1550231470
+Class: feature
+
+Every instance that is contacted has been explicitly configured by the user.
+We can assume they want to monitor it, even if an error occurs at the time
+of discovery.
+

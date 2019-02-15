@@ -37,8 +37,8 @@ try:
 except ImportError as import_error:
     sys.stdout.write(
         "<<<jolokia_info>>>\n"
-        "Error: mk_jolokia requires either the json or simplejson library.\n"
-        "Please either use a Python version that contains the json library or install the"
+        "Error: mk_jolokia requires either the json or simplejson library."
+        " Please either use a Python version that contains the json library or install the"
         " simplejson library on the monitored system.")
     sys.exit(1)
 
@@ -47,8 +47,8 @@ try:
     from requests.auth import HTTPDigestAuth
 except ImportError as import_error:
     sys.stdout.write("<<<jolokia_info>>>\n"
-                     "Error: mk_jolokia requires the requests library.\n"
-                     "Please install it on the monitored system.")
+                     "Error: mk_jolokia requires the requests library."
+                     " Please install it on the monitored system.")
     sys.exit(1)
 
 VERBOSE = '--verbose' in sys.argv

@@ -225,7 +225,7 @@ class RulespecCheckgroupParametersAwsCostsAndUsage(CheckParameterRulespecWithout
 
     @property
     def title(self):
-        return _("AWS Costs and Usage")
+        return _("AWS/CE Costs and Usage")
 
     @property
     def match_type(self):

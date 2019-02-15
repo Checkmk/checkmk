@@ -50,6 +50,7 @@ def parse_jolokia_generic(info):
 #   |                                           |___/                      |
 #   '----------------------------------------------------------------------'
 
+
 def inventory_jolokia_generic_string(parsed):
     for item in parsed:
         if parsed[item]["type"] == "string":
@@ -71,10 +72,10 @@ def check_jolokia_generic_string(item, params, parsed):
 
 
 check_info["jolokia_generic.string"] = {
-    "inventory_function"    : inventory_jolokia_generic_string,
-    "check_function"        : check_jolokia_generic_string,
-    "service_description"   : "MBean %s",
-    "group"                 : "generic_string",
+    "inventory_function": inventory_jolokia_generic_string,
+    "check_function": check_jolokia_generic_string,
+    "service_description": "MBean %s",
+    "group": "generic_string",
 }
 
 
@@ -87,6 +88,7 @@ check_info["jolokia_generic.string"] = {
 #   |                        |_| \_\__,_|\__\___|                          |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
+
 
 def inventory_jolokia_generic_rate(parsed):
     for item, data in parsed.iteritems():
@@ -118,7 +120,7 @@ def check_jolokia_generic_rate(item, params, parsed):
         if params.get("levels"):
             status = 0
             warn, crit = params["levels"]
-            perfdata = [ ("generic_rate", rate, warn, crit) ]
+            perfdata = [("generic_rate", rate, warn, crit)]
             levelstext = "(warn/crit at %.1f/%.1f)" % (warn, crit)
 
             if rate >= crit:
@@ -143,17 +145,17 @@ def check_jolokia_generic_rate(item, params, parsed):
             yield status, levelstext_lower
 
     if not perfdata:
-        perfdata = [ ("generic_rate", rate) ]
+        perfdata = [("generic_rate", rate)]
 
     yield 0, infotext, perfdata
 
 
 check_info["jolokia_generic.rate"] = {
-    "inventory_function"    : inventory_jolokia_generic_rate,
-    "check_function"        : check_jolokia_generic_rate,
-    "service_description"   : "MBean %s",
-    "has_perfdata"          : True,
-    "group"                 : "generic_rate",
+    "inventory_function": inventory_jolokia_generic_rate,
+    "check_function": check_jolokia_generic_rate,
+    "service_description": "MBean %s",
+    "has_perfdata": True,
+    "group": "generic_rate",
 }
 
 
@@ -166,6 +168,7 @@ check_info["jolokia_generic.rate"] = {
 #   |               |_| \_|\__,_|_| |_| |_|_.__/ \___|_|                   |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
+
 
 def inventory_jolokia_generic(parsed):
     for item, data in parsed.iteritems():
@@ -195,7 +198,7 @@ def check_jolokia_generic(item, params, parsed):
         if params.get("levels"):
             status = 0
             warn, crit = params["levels"]
-            perfdata = [ ("generic_number", value, warn, crit) ]
+            perfdata = [("generic_number", value, warn, crit)]
             levelstext = "(warn/crit at %.1f/%.1f)" % (warn, crit)
 
             if value >= crit:
@@ -220,16 +223,16 @@ def check_jolokia_generic(item, params, parsed):
             yield status, levelstext_lower
 
     if not perfdata:
-        perfdata = [ ("generic_number", value) ]
+        perfdata = [("generic_number", value)]
 
     yield 0, infotext, perfdata
 
 
 check_info["jolokia_generic"] = {
-    "parse_function"        : parse_jolokia_generic,
-    "inventory_function"    : inventory_jolokia_generic,
-    "check_function"        : check_jolokia_generic,
-    "service_description"   : "MBean %s",
-    "has_perfdata"          : True,
-    "group"                 : "generic_number",
+    "parse_function": parse_jolokia_generic,
+    "inventory_function": inventory_jolokia_generic,
+    "check_function": check_jolokia_generic,
+    "service_description": "MBean %s",
+    "has_perfdata": True,
+    "group": "generic_number",
 }

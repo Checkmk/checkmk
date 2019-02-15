@@ -24,8 +24,10 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 def inventory_jolokia_info(info):
-    return [ (line[0], None) for line in info if line[1] != 'ERROR' ]
+    return [(line[0], None) for line in info if line[1] != 'ERROR']
+
 
 def check_jolokia_info(item, _no_params, info):
 
@@ -44,14 +46,13 @@ def check_jolokia_info(item, _no_params, info):
                 version = " ".join(line[2:-1])
             else:
                 product, version, jolokia_version = line[1:]
-            return (0, "%s %s (Jolokia version %s)" % (
-                product.title(), version, jolokia_version))
+            return (0, "%s %s (Jolokia version %s)" % (product.title(), version, jolokia_version))
 
     return (3, "No data from agent, server might be down")
 
-check_info["jolokia_info"] = {
-    "service_description" : "JVM %s",
-    "check_function"      : check_jolokia_info,
-    "inventory_function"  : inventory_jolokia_info,
-}
 
+check_info["jolokia_info"] = {
+    "service_description": "JVM %s",
+    "check_function": check_jolokia_info,
+    "inventory_function": inventory_jolokia_info,
+}

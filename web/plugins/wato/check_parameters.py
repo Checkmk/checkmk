@@ -16284,6 +16284,43 @@ register_check_parameters(
     match_type='dict',
 )
 
+def _vs_s3_buckets():
+    return ('bucket_size_levels',
+            Alternative(
+                title=_("Upper levels for the bucket size"),
+                style="dropdown",
+                elements=[
+                    Tuple(
+                        title=_("Set levels"),
+                        elements=[
+                            Filesize(title=_("Warning at")),
+                            Filesize(title=_("Critical at")),
+                        ]),
+                    Tuple(
+                        title=_("No levels"),
+                        elements=[
+                            FixedValue(None, totext=""),
+                            FixedValue(None, totext=""),
+                        ]),
+                ]))
+
+register_check_parameters(
+    subgroup_applications,
+    'aws_s3_buckets_objects',
+    _("AWS/S3 Bucket Objects"),
+    Dictionary(elements=[_vs_s3_buckets()]),
+    TextAscii(title=_("The bucket name")),
+    match_type='dict',
+)
+
+register_check_parameters(
+    subgroup_applications,
+    'aws_s3_buckets',
+    _("AWS/S3 Buckets"),
+    Dictionary(elements=[_vs_s3_buckets()]),
+    None,
+    match_type='dict',
+)
 
 def _vs_cpu_credits_balance():
     return ('balance_levels_lower',

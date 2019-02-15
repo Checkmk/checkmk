@@ -73,7 +73,6 @@ OS_PACKAGES    += php-fastcgi
 OS_PACKAGES    += php-gd
 OS_PACKAGES    += php-iconv
 OS_PACKAGES    += php-mbstring
-OS_PACKAGES    += php-mcrypt
 OS_PACKAGES    += php-pear
 OS_PACKAGES    += php-sockets
 OS_PACKAGES    += php-sqlite

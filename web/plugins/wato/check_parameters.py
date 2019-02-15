@@ -16551,8 +16551,8 @@ register_check_parameters(
                      Tuple(
                          title=_("Set levels"),
                          elements=[
-                             Percentage(title=_("Warning at")),
-                             Percentage(title=_("Critical at")),
+                             Integer(title=_("Warning at")),
+                             Integer(title=_("Critical at")),
                          ]),
                      Tuple(
                          title=_("No levels"),

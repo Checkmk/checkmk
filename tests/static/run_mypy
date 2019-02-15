@@ -1,5 +1,14 @@
-#! /bin/sh
+#!/bin/sh
 # mypy_path in mypy.ini doesn't support relative paths, so we need this wrapper... :-/
 cd $(dirname $0)
+
+make --silent .venv
+
+if [ ! -f ./.venv/bin/mypy ]; then
+    for LAST_ARG; do :; done
+    echo "$LAST_ARG:1: error: Could not find ./.venv/bin/mypy"
+    exit 1
+fi
+
 REPO_PATH=$(realpath ../..)
 MYPYPATH=$REPO_PATH:$REPO_PATH/livestatus/api/python:$REPO_PATH/omd/packages/omd:$REPO_PATH/tests:$(realpath typeshed) exec ./.venv/bin/mypy "$@"

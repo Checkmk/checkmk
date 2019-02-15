@@ -227,7 +227,9 @@ class AgentDispatcher(object):
         '''run check_mk agent in container or container context'''
 
         LOGGER.debug("trying to run containers check_mk_agent")
-        result = container.exec_run('check_mk_agent', environment=self.env, socket=True)
+        result = container.exec_run(['sh', '-c', 'check_mk_agent'],
+                                    environment=self.env,
+                                    socket=True)
         output = self.get_stdout(result)
         if output:
             LOGGER.info("successfully ran containers check_mk_agent")
@@ -238,7 +240,7 @@ class AgentDispatcher(object):
         if not self.agent_code:
             LOGGER.info("failed to load agent code: %s", self.agent_code_exc)
             return None
-        result = container.exec_run('bash', socket=True)
+        result = container.exec_run(['sh', '-c', 'bash -c echo'], socket=True)
         if not self.get_stdout(result):
             LOGGER.info("failed to run bash in container: %s", container.short_id)
             return None

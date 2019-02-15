@@ -24,23 +24,32 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+AWSNoExceptionsText = "No exceptions"
 
-def inventory_aws_exceptions(info):
-    if info:
+
+def parse_aws_exceptions(info):
+    parsed = {}
+    for line in info:
+        parsed.setdefault(line[0], set()).add(" ".join(line[1:]))
+    return parsed
+
+
+def inventory_aws_exceptions(parsed):
+    if parsed:
         return [(None, {})]
 
 
-def check_aws_exceptions(item, params, info):
-    for line in info:
-        joined_line = " ".join(line)
-        if joined_line.endswith('No exceptions'):
-            state = 0
+def check_aws_exceptions(item, params, parsed):
+    for title, messages in parsed.iteritems():
+        errors = [message for message in messages if message != AWSNoExceptionsText]
+        if errors:
+            yield 2, "%s %s" % (title, ", ".join(errors))
         else:
-            state = 2
-        yield state, joined_line
+            yield 0, '%s %s' % (title, AWSNoExceptionsText)
 
 
 check_info['aws_exceptions'] = {
+    'parse_function': parse_aws_exceptions,
     'inventory_function': inventory_aws_exceptions,
     'check_function': check_aws_exceptions,
     'service_description': 'AWS Exceptions',

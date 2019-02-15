@@ -91,6 +91,9 @@ def agent_aws_arguments(params, hostname, ipaddress):
         args += sorted(services.keys())
         args += _get_services_selection(services)
 
+    if 'requests' in services.get('s3', {}):
+        args += ["--s3-requests"]
+
     # '--overall-tags': [('KEY_1', ['VAL_1', 'VAL_2']), ...)],
     args += _get_tag_options(params.get('overall_tags', []), 'overall')
     args += [

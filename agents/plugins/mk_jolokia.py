@@ -28,7 +28,6 @@ import os
 import socket
 import sys
 import urllib2
-import copy
 
 try:
     try:
@@ -54,30 +53,6 @@ except ImportError as import_error:
 
 VERBOSE = '--verbose' in sys.argv
 DEBUG = '--debug' in sys.argv
-
-DEFAULT_CONFIG = {
-    # Default global configuration values
-    "protocol": "http",
-    "server": "localhost",
-    "port": 8080,
-    "timeout": 1.0,
-    "user": "monitoring",
-    "password": None,
-    "mode": "digest",
-    "suburi": "jolokia",
-    "instance": None,
-    "verify": None,  # if not set, we change it to True
-    "client_cert": None,
-    "client_key": None,
-    "service_url": None,
-    "service_user": None,
-    "service_password": None,
-    "product": None,
-    "custom_vars": [],
-    # List of instances to monitor. Each instance is a dict where
-    # the global configuration values can be overridden.
-    "instances": [{}],
-}
 
 QUERY_SPECS_GENERIC = [
     ("java.lang:type=Memory", "NonHeapMemoryUsage/used", "NonHeapMemoryUsage", [], False),
@@ -162,6 +137,31 @@ QUERY_SPECS_SPECIFIC = {
                False),],
 }
 
+# Default global configuration: key, value [, help]
+DEFAULT_CONFIG_TUPLES = (
+    ("protocol", "http", "Protocol to use (http/https)."),
+    ("server", "localhost", "Host name or IP address of the Jolokia server."),
+    ("port", 8080, "TCP Port of the Jolokia server."),
+    ("suburi", "jolokia", "Path-component of the URI to query."),
+    ("user", "monitoring", "Username to use for connecting."),
+    ("password", None, "Password to use for connecting."),
+    ("mode", "digest", "Authentication mode. Can be \"basic\", \"digest\" or \"https\"."),
+    ("instance", None, "Name of the instance in the monitoring. Defaults to port."),
+    ("verify", None),
+    ("client_cert", None, "Path to client cert for https authentication."),
+    ("client_key", None, "Client cert secret for https authentication."),
+    ("service_url", None),
+    ("service_user", None),
+    ("service_password", None),
+    ("product", None, "Product description. Available: %s" % \
+                      ", ".join(QUERY_SPECS_SPECIFIC.keys())),
+    ("timeout", 1.0, "Connection/read timeout for requests."),
+    ("custom_vars", []),
+    # List of instances to monitor. Each instance is a dict where
+    # the global configuration values can be overridden.
+    ("instances", [{}]),
+)
+
 
 class SkipInstance(RuntimeError):
     pass
@@ -169,6 +169,10 @@ class SkipInstance(RuntimeError):
 
 class SkipMBean(RuntimeError):
     pass
+
+
+def get_default_config_dict():
+    return {t[0]: t[1] for t in DEFAULT_CONFIG_TUPLES}
 
 
 def write_section(name, iterable):
@@ -497,7 +501,7 @@ def generate_values(inst, var_list):
 def yield_configured_instances(custom_config=None):
 
     if custom_config is None:
-        custom_config = copy.deepcopy(DEFAULT_CONFIG)
+        custom_config = get_default_config_dict()
 
     conffile = os.path.join(os.getenv("MK_CONFDIR", "/etc/check_mk"), "jolokia.cfg")
     if os.path.exists(conffile):

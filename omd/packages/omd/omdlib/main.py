@@ -45,6 +45,7 @@ import termios
 import traceback
 import subprocess
 import signal
+import contextlib
 from typing import Dict  # pylint: disable=unused-import
 from passlib.hash import sha256_crypt  # type: ignore
 import psutil  # type: ignore
@@ -180,6 +181,17 @@ def show_success(exit_code):
     else:
         sys.stdout.write(tty_error + "\n")
     return exit_code
+
+
+@contextlib.contextmanager
+def chdir(path):
+    """Change working directory and return on exit"""
+    prev_cwd = os.getcwd()
+    os.chdir(path)
+    try:
+        yield
+    finally:
+        os.chdir(prev_cwd)
 
 
 #.
@@ -739,17 +751,17 @@ def create_skeleton_files(site, directory):
     # Hack: exclude tmp if dir is '.'
     exclude_tmp = directory == "."
     skelroot = "/omd/versions/%s/skel" % omdlib.__version__
-    os.chdir(skelroot)  # make relative paths
-    for dirpath, dirnames, filenames in os.walk(directory):
-        if dirpath.startswith("./"):
-            dirpath = dirpath[2:]
-        for entry in dirnames + filenames:
-            if exclude_tmp:
-                if dirpath == "." and entry == "tmp":
-                    continue
-                if dirpath == "tmp" or dirpath.startswith("tmp/"):
-                    continue
-            create_skeleton_file(skelroot, site.dir, dirpath + "/" + entry, replacements)
+    with chdir(skelroot):  # make relative paths
+        for dirpath, dirnames, filenames in os.walk(directory):
+            if dirpath.startswith("./"):
+                dirpath = dirpath[2:]
+            for entry in dirnames + filenames:
+                if exclude_tmp:
+                    if dirpath == "." and entry == "tmp":
+                        continue
+                    if dirpath == "tmp" or dirpath.startswith("tmp/"):
+                        continue
+                create_skeleton_file(skelroot, site.dir, dirpath + "/" + entry, replacements)
 
 
 def save_version_meta_data(site, version):
@@ -854,61 +866,60 @@ def instantiate_skel(site, path):
 
 # The function returns a set of already handled files.
 def walk_skel(root, handler, args, depth_first, exclude_if_in=None, relbase='.'):
-    os.chdir(root)
-
-    # Note: os.walk first finds level 1 directories, then deeper
-    # layers. If we need a real depth search instead, where we first
-    # handle deep directories and files, then the top level ones.
-    walk_entries = list(os.walk(relbase))
-    if depth_first:
-        walk_entries.reverse()
-
-    for dirpath, dirnames, filenames in walk_entries:
-        if dirpath.startswith("./"):
-            dirpath = dirpath[2:]
-        if dirpath.startswith("tmp"):
-            continue
-
-        # In depth first search first handle files, then directories
+    with chdir(root):
+        # Note: os.walk first finds level 1 directories, then deeper
+        # layers. If we need a real depth search instead, where we first
+        # handle deep directories and files, then the top level ones.
+        walk_entries = list(os.walk(relbase))
         if depth_first:
-            entries = filenames + dirnames
-        else:
-            entries = dirnames + filenames
-        for entry in entries:
-            path = dirpath + "/" + entry
-            if path.startswith("./"):
-                path = path[2:]
+            walk_entries.reverse()
 
-            if exclude_if_in and os.path.exists(exclude_if_in + "/" + path):
+        for dirpath, dirnames, filenames in walk_entries:
+            if dirpath.startswith("./"):
+                dirpath = dirpath[2:]
+            if dirpath.startswith("tmp"):
                 continue
 
-            todo = True
-            while todo:
-                try:
-                    handler(path, *args)
-                    todo = False
-                except Exception:
-                    todo = False
-                    sys.stderr.write(StateMarkers.error * 40 + "\n")
-                    sys.stderr.write(StateMarkers.error + " Exception      %s\n" % (path))
-                    sys.stderr.write(StateMarkers.error + " " + traceback.format_exc().replace(
-                        '\n', "\n" + StateMarkers.error + " ") + "\n")
-                    sys.stderr.write(StateMarkers.error * 40 + "\n")
+            # In depth first search first handle files, then directories
+            if depth_first:
+                entries = filenames + dirnames
+            else:
+                entries = dirnames + filenames
+            for entry in entries:
+                path = dirpath + "/" + entry
+                if path.startswith("./"):
+                    path = path[2:]
 
-                    # If running in interactive mode ask the user to terminate or retry
-                    # In case of non interactive mode just throw the exception
-                    if opt_conflict == 'ask':
-                        options = [("retry", "Retry the operation"),
-                                   ("continue", "Continue with next files"),
-                                   ("abort", "Stop here and abort update!")]
-                        choice = ask_user_choices(
-                            'Problem occured',
-                            'We detected an exception (printed above). You have the '
-                            'chance to fix things and retry the operation now.', options)
-                        if choice == 'abort':
-                            bail_out("Update aborted.")
-                        elif choice == 'retry':
-                            todo = True  # Try again
+                if exclude_if_in and os.path.exists(exclude_if_in + "/" + path):
+                    continue
+
+                todo = True
+                while todo:
+                    try:
+                        handler(path, *args)
+                        todo = False
+                    except Exception:
+                        todo = False
+                        sys.stderr.write(StateMarkers.error * 40 + "\n")
+                        sys.stderr.write(StateMarkers.error + " Exception      %s\n" % (path))
+                        sys.stderr.write(StateMarkers.error + " " + traceback.format_exc().replace(
+                            '\n', "\n" + StateMarkers.error + " ") + "\n")
+                        sys.stderr.write(StateMarkers.error * 40 + "\n")
+
+                        # If running in interactive mode ask the user to terminate or retry
+                        # In case of non interactive mode just throw the exception
+                        if opt_conflict == 'ask':
+                            options = [("retry", "Retry the operation"),
+                                       ("continue", "Continue with next files"),
+                                       ("abort", "Stop here and abort update!")]
+                            choice = ask_user_choices(
+                                'Problem occured',
+                                'We detected an exception (printed above). You have the '
+                                'chance to fix things and retry the operation now.', options)
+                            if choice == 'abort':
+                                bail_out("Update aborted.")
+                            elif choice == 'retry':
+                                todo = True  # Try again
 
 
 #.
@@ -928,22 +939,22 @@ def walk_skel(root, handler, args, depth_first, exclude_if_in=None, relbase='.')
 # skeleton files. Skip files below tmp/
 def patch_skeleton_files(old_site, new_site):
     skelroot = "/omd/versions/%s/skel" % omdlib.__version__
-    os.chdir(skelroot)  # make relative paths
-    for dirpath, _dirnames, filenames in os.walk("."):
-        if dirpath.startswith("./"):
-            dirpath = dirpath[2:]
-        targetdir = new_site.dir + "/" + dirpath
-        if targetdir.startswith(new_site.tmp_dir):
-            continue  # Skip files below tmp
-        for fn in filenames:
-            src = dirpath + "/" + fn
-            dst = targetdir + "/" + fn
-            if os.path.isfile(src) and not os.path.islink(src) \
-                and os.path.exists(dst): # not deleted by user
-                try:
-                    patch_template_file(src, dst, old_site, new_site)
-                except Exception as e:
-                    sys.stderr.write("Error patching template file '%s': %s\n" % (dst, e))
+    with chdir(skelroot):  # make relative paths
+        for dirpath, _dirnames, filenames in os.walk("."):
+            if dirpath.startswith("./"):
+                dirpath = dirpath[2:]
+            targetdir = new_site.dir + "/" + dirpath
+            if targetdir.startswith(new_site.tmp_dir):
+                continue  # Skip files below tmp
+            for fn in filenames:
+                src = dirpath + "/" + fn
+                dst = targetdir + "/" + fn
+                if os.path.isfile(src) and not os.path.islink(src) \
+                    and os.path.exists(dst): # not deleted by user
+                    try:
+                        patch_template_file(src, dst, old_site, new_site)
+                    except Exception as e:
+                        sys.stderr.write("Error patching template file '%s': %s\n" % (dst, e))
 
 
 def patch_template_file(src, dst, old_site, new_site):
@@ -1798,25 +1809,24 @@ def call_init_scripts(site, command, daemon=None, exclude_daemons=None):
         return
 
     # OMD guarantees OMD_ROOT to be the current directory
-    os.chdir(site.dir)
+    with chdir(site.dir):
+        if daemon:
+            success = call_init_script("%s/etc/init.d/%s" % (site.dir, daemon), command)
 
-    if daemon:
-        success = call_init_script("%s/etc/init.d/%s" % (site.dir, daemon), command)
+        else:
+            # Call stop scripts in reverse order. If daemon is set,
+            # then only that start script will be affected
+            rc_dir, scripts = init_scripts(site.name)
+            if command == "stop":
+                scripts.reverse()
+            success = True
 
-    else:
-        # Call stop scripts in reverse order. If daemon is set,
-        # then only that start script will be affected
-        rc_dir, scripts = init_scripts(site.name)
-        if command == "stop":
-            scripts.reverse()
-        success = True
+            for script in scripts:
+                if exclude_daemons and script in exclude_daemons:
+                    continue
 
-        for script in scripts:
-            if exclude_daemons and script in exclude_daemons:
-                continue
-
-            if not call_init_script("%s/%s" % (rc_dir, script), command):
-                success = False
+                if not call_init_script("%s/%s" % (rc_dir, script), command):
+                    success = False
 
     if success:
         return 0
@@ -2304,11 +2314,10 @@ def init_action(site, command, args, options):
         daemon = None
 
     # OMD guarantees that we are in OMD_ROOT
-    os.chdir(site.dir)
-
-    if command == "status":
-        return check_status(site, display=True, daemon=daemon, bare="bare" in options)
-    return call_init_scripts(site, command, daemon)
+    with chdir(site.dir):
+        if command == "status":
+            return check_status(site, display=True, daemon=daemon, bare="bare" in options)
+        return call_init_scripts(site, command, daemon)
 
 
 #.

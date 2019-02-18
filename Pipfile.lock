@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "b7582263a29ca3412cb32be72abb8c1a4e1d9c242e66c1c37035783a078a0aa2"
+            "sha256": "5f0ef0315dbce868e4e10eff6cb2dc680c2ff8af2aabd2056e80cd094909d8ce"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -639,7 +639,6 @@
                 "sha256:7779a3bbb74e79db234af6a08775568c6769b5821faecf6e2f4143edb227516e"
             ],
             "index": "pypi",
-            "markers": "extra == 'security'",
             "version": "==16.2.0"
         },
         "pypdf2": {
@@ -669,7 +668,6 @@
             "hashes": [
                 "sha256:3fe52c55890a248676fd69dc9e3c4e811718b777834bcaab7a8125cf9deac672"
             ],
-            "markers": "extra == 'socks'",
             "version": "==1.6.8"
         },
         "pysphere": {
@@ -1347,10 +1345,10 @@
         },
         "soupsieve": {
             "hashes": [
-                "sha256:466910df7561796a60748826781ebe9a888f7a1668a636ae86783f44d10aae73",
-                "sha256:87db12ae79194f0ff9808d2b1641c4f031ae39ffa3cab6b907ea7c1e5e5ed445"
+                "sha256:afa56bf14907bb09403e5d15fbed6275caa4174d36b975226e3b67a3bb6e2c4b",
+                "sha256:eaed742b48b1f3e2d45ba6f79401b2ed5dc33b2123dfe216adb90d4bfa0ade26"
             ],
-            "version": "==1.7.3"
+            "version": "==1.8"
         },
         "stevedore": {
             "hashes": [

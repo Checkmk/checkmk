@@ -1,0 +1,11 @@
+Title: check_sftp: Fixed definition of other ports than TCP 22
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0p13
+Date: 1550503277
+Class: fix
+
+The option to specify a port other than TCP 22 has not been working since
+the introduction of this active check plugin.

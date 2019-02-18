@@ -1,0 +1,20 @@
+Title: cmk-update-agent: Add timeout handling for connection to server
+Level: 1
+Component: agents
+Compatible: compat
+Edition: cee
+Version: 1.6.0i1
+Date: 1550475651
+Class: fix
+
+Previously, the connection from the agent updater to the Check_MK Server did
+not handle timeouts. This could lead to situations where the agent updater
+would run forever waiting for a response.
+
+This was particularly noticeable when running the agent updater under Windows,
+because the agent updater would fail to start over again, showing an error
+like <code>copying plugins\cmk-update-agent.exe to temp\cmk-update-agent.exe failed</code>.
+
+The agent updater now will cancel the connection if there is a connection timeout detected
+or if the connection freezes. The timeout limit is set to 120 seconds.<br>
+This timeout handling does not limit the overall connection time.

@@ -1,0 +1,17 @@
+Title: lnx_thermal: Fixed crash caused to unusual outputs
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1550502831
+Class: fix
+
+Previously the check crashed in case the agent delivered thermal zone data with
+various degrees of details. This werk takes into account that these
+heterogeneous formats can occur and prevents the check additionally to crash
+due to invalid or currently unknown data formats.
+
+CMK-1506
+Commit ab8068a5a45
+

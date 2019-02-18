@@ -1,0 +1,16 @@
+Title: agent_aws: Removed password store in special agent configuration
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0p13
+Date: 1550491058
+Class: fix
+
+In the AWS agent configuration you can use the password store but
+in Check_MK versions <=1.5.0 the usage of password store in special agents
+is not implemented yet.
+
+If you still use the password store in 1.5.0 in the special agent AWS you
+get the following error:
+TypeError: sequence item 1: expected string, tuple found

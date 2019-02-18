@@ -1074,52 +1074,10 @@ def patch_template_file(src, dst, old_site, new_site):
 def merge_update_file(site, relpath, old_version, new_version):
     fn = tty_bold + relpath + tty_normal
 
-    replacements = site.replacements
     user_path = site.dir + "/" + relpath
     permissions = os.stat(user_path).st_mode
 
-    def try_merge():
-        for version, skelroot in [(old_version, site.version_skel_dir),
-                                  (new_version, "/omd/versions/%s/skel" % version)]:
-            p = "%s/%s" % (skelroot, relpath)
-            while True:
-                try:
-                    skel_content = file(p).read()
-                    break
-                except:
-                    # Do not ask the user in non-interactive mode.
-                    if opt_conflict in ["abort", "install"]:
-                        bail_out("Skeleton file '%s' of version %s not readable." % (p, version))
-                    elif opt_conflict == "keepold" or not user_confirms(
-                            site, "Skeleton file of version %s not readable" % version,
-                            "The file '%s' is not readable for the site user. "
-                            "This is most probably due a bug in release 0.42. "
-                            "You can either fix that problem by making the file "
-                            "readable with doing as root: chmod +r '%s' "
-                            "or assume the file as empty. In that case you might "
-                            "damage your configuration file "
-                            "in case you have made changes to it in your site. What shall we do?" %
-                        (p, p), relpath, "retry", "Retry reading the file (after you've fixed it)",
-                            "ignore", "Assume the file to be empty"):
-                        skel_content = ""
-                        break
-            file("%s-%s" % (user_path, version), "w").write(
-                replace_tags(skel_content, replacements))
-        version_patch = os.popen(  # nosec
-            "diff -u %s-%s %s-%s" % (user_path, old_version, user_path, new_version)).read()
-
-        # First try to merge the changes in the version into the users' file
-        merge = '--merge' if patch_has_merge() else ''
-        f = os.popen(  # nosec
-            "PATH=/omd/versions/default/bin:$PATH patch --force --backup --forward --silent %s %s >/dev/null"
-            % (merge, user_path), "w")
-        f.write(version_patch)
-        status = f.close()
-        if status:
-            return status / 256
-        return 0
-
-    if try_merge() == 0:
+    if _try_merge(site, relpath, old_version, new_version) == 0:
         # ACHTUNG: Hier müssen die Dateien $DATEI-alt, $DATEI-neu und $DATEI.orig
         # gelöscht werden
         sys.stdout.write(StateMarkers.good + " Merged         %s\n" % fn)
@@ -1202,7 +1160,7 @@ def merge_update_file(site, relpath, old_version, new_version):
         elif choice == "try again":
             os.rename(user_path + ".orig", user_path)
             os.system("%s '%s'" % (editor, user_path))  # nosec
-            if try_merge() == 0:
+            if _try_merge(site, relpath, old_version, new_version) == 0:
                 sys.stdout.write("Successfully merged changes from %s -> %s into %s\n" %
                                  (old_version, new_version, fn))
                 return
@@ -1226,6 +1184,50 @@ def merge_update_file(site, relpath, old_version, new_version):
             os.remove(p)
         except:
             pass
+
+
+def _try_merge(site, relpath, old_version, new_version):
+    user_path = site.dir + "/" + relpath
+
+    for version, skelroot in [(old_version, site.version_skel_dir),
+                              (new_version, "/omd/versions/%s/skel" % new_version)]:
+        p = "%s/%s" % (skelroot, relpath)
+        while True:
+            try:
+                skel_content = file(p).read()
+                break
+            except:
+                # Do not ask the user in non-interactive mode.
+                if opt_conflict in ["abort", "install"]:
+                    bail_out("Skeleton file '%s' of version %s not readable." % (p, version))
+                elif opt_conflict == "keepold" or not user_confirms(
+                        site, "Skeleton file of version %s not readable" % version,
+                        "The file '%s' is not readable for the site user. "
+                        "This is most probably due a bug in release 0.42. "
+                        "You can either fix that problem by making the file "
+                        "readable with doing as root: chmod +r '%s' "
+                        "or assume the file as empty. In that case you might "
+                        "damage your configuration file "
+                        "in case you have made changes to it in your site. What shall we do?" %
+                    (p, p), relpath, "retry", "Retry reading the file (after you've fixed it)",
+                        "ignore", "Assume the file to be empty"):
+                    skel_content = ""
+                    break
+        file("%s-%s" % (user_path, version), "w").write(
+            replace_tags(skel_content, site.replacements))
+    version_patch = os.popen(  # nosec
+        "diff -u %s-%s %s-%s" % (user_path, old_version, user_path, new_version)).read()
+
+    # First try to merge the changes in the version into the users' file
+    merge = '--merge' if patch_has_merge() else ''
+    f = os.popen(  # nosec
+        "PATH=/omd/versions/default/bin:$PATH patch --force --backup --forward --silent %s %s >/dev/null"
+        % (merge, user_path), "w")
+    f.write(version_patch)
+    status = f.close()
+    if status:
+        return status / 256
+    return 0
 
 
 # Compares two files and returns infos wether the file type or contants have changed """

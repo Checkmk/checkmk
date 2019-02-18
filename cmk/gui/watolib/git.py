@@ -31,21 +31,19 @@ import subprocess
 import cmk.utils
 
 import cmk.gui.config as config
+from cmk.gui.globals import current_app
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.log import logger
 
-# TODO: Clean this up
-_messages = []  # type: List[str]
-
-
-def prepare_git_commit():
-    global _messages
-    _messages = []
-
 
 def add_message(message):
-    _messages.append(message)
+    _git_messages().append(message)
+
+
+def _git_messages():
+    """Initializes the request global data structure and returns it"""
+    return current_app.g.setdefault("wato_git_messages", [])
 
 
 def do_git_commit():
@@ -77,7 +75,7 @@ def do_git_commit():
         logger.debug("GIT: Still has pending changes")
         _git_add_files()
 
-        message = ", ".join(_messages)
+        message = ", ".join(_git_messages())
         if not message:
             message = _("Unknown configuration change")
 

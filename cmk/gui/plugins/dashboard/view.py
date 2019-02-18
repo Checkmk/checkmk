@@ -27,6 +27,7 @@
 import cmk.gui.views as views
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
+from cmk.gui.plugins.views import PainterOptions
 
 from cmk.gui.plugins.dashboard import (
     IFrameDashlet,
@@ -88,5 +89,6 @@ class ViewDashlet(IFrameDashlet):
         html.request.set_var('_display_options', display_options)
         html.add_body_css_class('dashlet')
 
-        views.painter_options.load(self._dashlet_spec["name"])
+        painter_options = PainterOptions.get_instance()
+        painter_options.load(self._dashlet_spec["name"])
         views.show_view(self._dashlet_spec, show_heading=True, show_buttons=False, show_footer=True)

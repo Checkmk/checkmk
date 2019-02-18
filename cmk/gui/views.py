@@ -91,6 +91,7 @@ from cmk.gui.plugins.views.utils import (
     sorter_registry,
     get_permitted_views,
     get_all_views,
+    PainterOptions,
 )
 
 # Needed for legacy (pre 1.6) plugins
@@ -102,10 +103,10 @@ from cmk.gui.plugins.views.utils import (  # pylint: disable=unused-import
     declare_1to1_sorter, declare_simple_sorter, cmp_simple_number, cmp_simple_string,
     cmp_insensitive_string, cmp_num_split, cmp_custom_variable, cmp_service_name_equiv,
     cmp_string_list, cmp_ip_address, get_custom_var, get_perfdata_nth_value, get_tag_group,
-    query_data, do_query_data, PainterOptions, join_row, get_view_infos, replace_action_url_macros,
-    Cell, JoinCell, get_cells, get_group_cells, get_sorter_name_of_painter, get_separated_sorters,
-    get_primary_sorter_order, parse_url_sorters, substract_sorters, painter_options,
-    register_legacy_command, register_painter, register_sorter,
+    query_data, do_query_data, join_row, get_view_infos, replace_action_url_macros, Cell, JoinCell,
+    get_cells, get_group_cells, get_sorter_name_of_painter, get_separated_sorters,
+    get_primary_sorter_order, parse_url_sorters, substract_sorters, register_legacy_command,
+    register_painter, register_sorter,
 )
 
 # Needed for legacy (pre 1.6) plugins
@@ -920,6 +921,7 @@ def page_view():
     context.update(visuals.get_singlecontext_html_vars(view))
     html.set_page_context(context)
 
+    painter_options = PainterOptions.get_instance()
     painter_options.load(view_name)
     painter_options.update_from_url(view_name, view)
 
@@ -939,6 +941,7 @@ def show_view(view,
     display_options.load_from_html()
 
     # Load from hard painter options > view > hard coded default
+    painter_options = PainterOptions.get_instance()
     num_columns = painter_options.get("num_columns", view.get("num_columns", 1))
     browser_reload = painter_options.get("refresh", view.get("browser_reload", None))
 
@@ -1390,6 +1393,7 @@ def render_view(view, rows, datasource, group_painters, painters, show_heading, 
         except:
             pass  # currently no feed back on webservice
 
+    painter_options = PainterOptions.get_instance()
     painter_options.show_form(view)
 
     # The refreshing content container
@@ -1556,6 +1560,7 @@ def view_optiondial(view, option, choices, help_txt):
 
     # Take either the first option of the choices, the view value or the
     # configured painter option.
+    painter_options = PainterOptions.get_instance()
     value = painter_options.get(option, dflt=view.get(name, choices[0][0]))
 
     title = dict(choices).get(value, value)
@@ -1591,10 +1596,10 @@ def ajax_set_viewoption():
         except:
             pass
 
-    po = PainterOptions()
-    po.load(view_name)
-    po.set(option, value)
-    po.save_to_config(view_name)
+    painter_options = PainterOptions.get_instance()
+    painter_options.load(view_name)
+    painter_options.set(option, value)
+    painter_options.save_to_config(view_name)
 
 
 def _show_context_links(thisview, show_filters, enable_commands, enable_checkboxes, show_checkboxes,
@@ -1621,6 +1626,7 @@ def _show_context_links(thisview, show_filters, enable_commands, enable_checkbox
         html.toggle_button("filters", filter_isopen, icon, help_txt, disabled=not show_filters)
 
     if display_options.enabled(display_options.D):
+        painter_options = PainterOptions.get_instance()
         html.toggle_button(
             "painteroptions",
             False,

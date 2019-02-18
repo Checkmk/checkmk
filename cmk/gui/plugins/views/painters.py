@@ -55,7 +55,7 @@ from cmk.gui.plugins.views import (
     Painter,
     painter_option_registry,
     PainterOption,
-    painter_options,
+    PainterOptions,
     transform_action_url,
     is_stale,
     paint_stalified,
@@ -1430,6 +1430,7 @@ def paint_time_graph_pnp(row):
     else:
         with_link = 'false'
 
+    painter_options = PainterOptions.get_instance()
     pnp_timerange = painter_options.get("pnp_timerange")
 
     pnpview = '1'

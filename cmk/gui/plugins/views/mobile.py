@@ -32,7 +32,7 @@ from cmk.gui.plugins.views import (
     multisite_builtin_views,
     layout_registry,
     Layout,
-    painter_options,
+    PainterOptions,
 )
 
 #   .--Views---------------------------------------------------------------.
@@ -742,6 +742,7 @@ def render_mobile_table(rows, view, group_cells, cells, num_columns, show_checkb
         return
 
     # Force relative timestamp always. This saves space.
+    painter_options = PainterOptions.get_instance()
     painter_options.set("ts_format", "rel")
 
     odd = "odd"
@@ -802,6 +803,7 @@ def render_mobile_list(rows, view, group_cells, cells, num_columns, show_checkbo
         return
 
     # Force relative timestamp always. This saves space.
+    painter_options = PainterOptions.get_instance()
     painter_options.set("ts_format", "rel")
 
     html.open_ul(class_="mobilelist", **{"data-role": "listview"})
@@ -865,6 +867,7 @@ def render_mobile_dataset(rows, view, group_cells, cells, num_columns, show_chec
         html.show_error(_("This view can only be used in mobile mode."))
         return
 
+    painter_options = PainterOptions.get_instance()
     painter_options.set("ts_format", "both")
 
     for row in rows:

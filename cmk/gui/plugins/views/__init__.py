@@ -79,7 +79,7 @@ from cmk.gui.plugins.views.utils import (
     multisite_builtin_views,
     output_csv_headers,
     paint_age,
-    painter_options,
+    PainterOptions,
     paint_host_list,
     paint_nagiosflag,
     paint_stalified,

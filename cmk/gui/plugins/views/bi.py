@@ -35,7 +35,7 @@ from cmk.gui.globals import html
 from cmk.gui.plugins.views import (
     data_source_registry,
     DataSource,
-    painter_options,
+    PainterOptions,
     painter_option_registry,
     PainterOption,
     painter_registry,
@@ -549,6 +549,7 @@ def paint_aggregated_tree_state(row, force_renderer_cls=None):
     if html.is_api_call():
         return bi.render_tree_json(row)
 
+    painter_options = PainterOptions.get_instance()
     treetype = painter_options.get("aggr_treetype")
     expansion_level = int(painter_options.get("aggr_expand"))
     only_problems = painter_options.get("aggr_onlyproblems") == "1"

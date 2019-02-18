@@ -50,6 +50,7 @@ OS_PACKAGES      += dialog
 OS_PACKAGES      += dnsutils
 OS_PACKAGES      += fping
 OS_PACKAGES      += graphviz
+OS_PACKAGES      += apache2
 OS_PACKAGES      += libapache2-mod-proxy-html
 OS_PACKAGES      += libdbi1
 OS_PACKAGES      += libevent-2.0-5

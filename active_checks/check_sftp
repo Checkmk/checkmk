@@ -31,7 +31,6 @@ import getopt
 import paramiko
 
 
-client = None
 sftp = None
 
 def usage():
@@ -92,7 +91,7 @@ for opt, arg in opts:
     elif opt in [ '--private-key' ]:
         opt_pass = arg
     elif opt in [ '--port' ]:
-        opt_port = arg
+        opt_port = int(arg)
     elif opt in [ '--timeout' ]:
         opt_timeout = float(arg)
     elif opt in [ '--put-local' ]:

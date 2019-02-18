@@ -314,9 +314,6 @@ def load_watolib_plugins():
 # robust way for doing something like this. If it is locked before, it can now happen
 # that this call unlocks the wider locking when calling this funktion in a wrong way.
 def init_wato_datastructures(with_wato_lock=False):
-    if config.wato_use_git:
-        cmk.gui.watolib.git.prepare_git_commit()
-
     cmk.gui.watolib.sidebar_reload.reset()
 
     if os.path.exists(ConfigDomainCACertificates.trusted_cas_file) and\
@@ -356,10 +353,6 @@ def _create_sample_config():
     """
     if not _need_to_create_sample_config():
         return
-
-    # Just in case. If any of the following functions try to write Git messages
-    if config.wato_use_git:
-        cmk.gui.watolib.git.prepare_git_commit()
 
     # Global configuration settings
     save_global_settings({

@@ -37,7 +37,7 @@ from cmk.gui.globals import html
 from cmk.gui.exceptions import MKGeneralException
 
 from cmk.gui.plugins.views import (
-    painter_options,
+    PainterOptions,
     is_stale,
     row_id,
     layout_registry,
@@ -788,6 +788,7 @@ class LayoutMatrix(Layout):
             create_matrices(rows, group_cells, cells, num_columns=None))[0]
         value_counts, _row_majorities = self._matrix_find_majorities(rows, cells)
 
+        painter_options = PainterOptions.get_instance()
         with table_element(output_format="csv") as table:
             for cell_nr, cell in enumerate(group_cells):
                 table.row()
@@ -825,6 +826,7 @@ class LayoutMatrix(Layout):
         header_majorities = self._matrix_find_majorities_for_header(rows, group_cells)
         value_counts, row_majorities = self._matrix_find_majorities(rows, cells)
 
+        painter_options = PainterOptions.get_instance()
         for groups, unique_row_ids, matrix_cells in \
                  create_matrices(rows, group_cells, cells, num_columns):
 

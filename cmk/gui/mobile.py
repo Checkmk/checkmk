@@ -30,7 +30,10 @@ import cmk.gui.visuals as visuals
 import cmk.gui.metrics as metrics
 import cmk.gui.utils
 import cmk.gui.view_utils
-import cmk.gui.plugins.views.utils
+from cmk.gui.plugins.views.utils import (
+    PainterOptions,
+    command_registry,
+)
 
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
@@ -235,7 +238,8 @@ def page_index():
             url = "mobile_view.py?view_name=%s" % view_name
             count = ""
             if not view.get("mustsearch"):
-                cmk.gui.plugins.views.utils.painter_options.load(view_name)
+                painter_options = PainterOptions.get_instance()
+                painter_options.load(view_name)
                 count = views.show_view(view, only_count=True)
                 count = '<span class="ui-li-count">%d</span>' % count
             items.append((view.get("topic"), url,
@@ -277,7 +281,8 @@ def page_view():
     title = views.view_title(view)
     mobile_html_head(title)
 
-    cmk.gui.plugins.views.utils.painter_options.load(view_name)
+    painter_options = PainterOptions.get_instance()
+    painter_options.load(view_name)
 
     try:
         views.show_view(
@@ -408,7 +413,7 @@ def show_command_form(view, datasource, rows):
 
     one_shown = False
     html.open_div(**{"data-role": "collapsible-set"})
-    for command_class in cmk.gui.plugins.views.utils.command_registry.values():
+    for command_class in command_registry.values():
         command = command_class()
         if what in command.tables and config.user.may(command.permission.name):
             html.open_div(class_=["command_group"], **{"data-role": "collapsible"})

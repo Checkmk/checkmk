@@ -66,10 +66,19 @@ class PainterOptions(object):
     is accessible through the small monitor icon on the top left of the
     views."""
 
+    # TODO: We should have some View instance that uses an object of this class as helper instead,
+    #       but this would be a bigger change involving a lot of view rendering code.
+    @classmethod
+    def get_instance(cls):
+        """Use the request globals to prevent multiple instances during a request"""
+        if "painter_options" not in current_app.g:
+            current_app.g["painter_options"] = cls()
+        return current_app.g["painter_options"]
+
     def __init__(self):
         super(PainterOptions, self).__init__()
         # The names of the painter options used by the current view
-        self._used_option_names = None
+        self._used_option_names = []
         # The effective options for this view
         self._options = {}
 
@@ -78,9 +87,6 @@ class PainterOptions(object):
 
     # Load the options to be used for this view
     def _load_used_options(self, view):
-        if self._used_option_names is not None:
-            return  # only load once per request
-
         options = set([])
 
         for cell in get_group_cells(view) + get_cells(view):
@@ -870,11 +876,6 @@ def view_title(view):
     return visuals.visual_title('view', view)
 
 
-# TODO: Move this to view processing code. This must not be module global as
-# it contains request specific information
-painter_options = PainterOptions()
-
-
 def transform_action_url(url_spec):
     if isinstance(url_spec, tuple):
         return url_spec
@@ -975,6 +976,7 @@ def get_host_tags(row):
 
 
 def get_graph_timerange_from_painter_options():
+    painter_options = PainterOptions.get_instance()
     value = painter_options.get("pnp_timerange")
     vs = painter_options.get_valuespec_of("pnp_timerange")
     return map(int, vs.compute_range(value)[0])
@@ -984,6 +986,7 @@ def paint_age(timestamp, has_been_checked, bold_if_younger_than, mode=None, what
     if not has_been_checked:
         return "age", "-"
 
+    painter_options = PainterOptions.get_instance()
     if mode is None:
         mode = painter_options.get("ts_format")
 

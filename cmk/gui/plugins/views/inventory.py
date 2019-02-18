@@ -67,10 +67,10 @@ from cmk.gui.plugins.views import (
     Painter,
     register_painter,
     register_sorter,
-    painter_options,
     display_options,
     painter_option_registry,
     PainterOption,
+    PainterOptions,
     inventory_displayhints,
     multisite_builtin_views,
     view_is_enabled,
@@ -86,6 +86,7 @@ def paint_host_inventory_tree(row, invpath=".", column="host_inventory"):
         return "", ""
 
     if column == "host_inventory":
+        painter_options = PainterOptions.get_instance()
         tree_renderer = AttributeRenderer(
             row["site"],
             row["host_name"],

@@ -291,6 +291,28 @@ bool Variant::get() const {
     }
 }
 
+// this is original and weird function from the Agent.
+// Used to avoid negative numbers in output. Sometimes.
+// And satisfy integration tests.
+// Microsoft is stupid, because VT_I4 must be interpreted as UNSIGNED sometimes.
+// ******************************************************************
+// We will use this function in LA just to satisfy integration tests.
+// #TODO rename this function to something more clear
+template <>
+int64_t Variant::get() const {
+    switch (_value.vt) {
+        case VT_I1:                // has a char
+            return _value.iVal;    // load short
+        case VT_I2:                // has a short
+            return _value.intVal;  // load int32
+        case VT_I4:                // has a int32
+            return _value.llVal;   // load in64
+        default:
+            throw ComTypeException(string("wrong value type requested: ") +
+                                   to_string(_value.vt));
+    }
+}
+
 template <>
 int32_t Variant::get() const {
     switch (_value.vt) {
@@ -385,7 +407,11 @@ wstring Variant::get() const {
         case VT_I1:
         case VT_I2:
         case VT_I4:
-            return std::to_wstring(get<int32_t>());
+            // call of *weird* function:
+            // in fact it is abs(_value) with extremely high probability
+            // We have to use by default uint64_t, because almost all WMI are
+            // defined as unsigned.
+            return std::to_wstring(get<int64_t>());
         case VT_UI1:
         case VT_UI2:
         case VT_UI4:

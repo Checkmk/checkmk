@@ -24,19 +24,12 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# TODO: Cleanup this module level state
-_need_sidebar_reload = None
-
-
-def reset():
-    global _need_sidebar_reload
-    _need_sidebar_reload = None
+from cmk.gui.globals import current_app
 
 
 def need_sidebar_reload():
-    global _need_sidebar_reload
-    _need_sidebar_reload = True
+    current_app.g["need_sidebar_reload"] = True
 
 
 def is_sidebar_reload_needed():
-    return _need_sidebar_reload
+    return current_app.g.get("need_sidebar_reload", False)

@@ -314,8 +314,6 @@ def load_watolib_plugins():
 # robust way for doing something like this. If it is locked before, it can now happen
 # that this call unlocks the wider locking when calling this funktion in a wrong way.
 def init_wato_datastructures(with_wato_lock=False):
-    cmk.gui.watolib.sidebar_reload.reset()
-
     if os.path.exists(ConfigDomainCACertificates.trusted_cas_file) and\
         not _need_to_create_sample_config():
         return

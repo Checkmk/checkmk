@@ -422,6 +422,7 @@ def _create_sample_config():
         ],
         "enable_rulebased_notifications": True,
         "ui_theme": "facelift",
+        "lock_on_logon_failures": 10,
     })
 
     # A contact group for all hosts and services

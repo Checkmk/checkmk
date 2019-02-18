@@ -1,0 +1,22 @@
+Title: Automatically lock users after 10 subsequent logon failures
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1550523202
+Class: security
+
+Sites created with Check_MK 1.6 will be configured to automatically lock user
+accounts that fail to log in 10 times in a row. Existing sites will not be
+affected by this change.
+
+Check_MK already had the option to configure this feature for a long time. It
+can be customized using the global setting "Lock user accounts after N logon
+failures". If you have configured this in your setup, your setting is left
+untouched.
+
+To unlock automatically locked users, you need to login as administrative user
+and disable the option "Disable password" for this user. In case your
+administrative account was locked out, you will have to reset the password
+of your account (using <tt>htpasswd -m ~/etc/htpasswd [user-id]</tt>).

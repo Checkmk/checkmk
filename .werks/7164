@@ -1,0 +1,27 @@
+Title: cmk-update-agent: Add timeout handling for connection to server
+Level: 1
+Component: agents
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.4.0p39
+Date: 1550475651
+
+Previously, the connection from the agent updater to the Check_MK Server did
+not handle timeouts. This could lead to situations where the agent updater
+would run forever waiting for a response.
+
+This was particularly noticeable when running the agent updater under Windows,
+because the agent updater would fail to start over again, showing an error
+like <code>copying plugins\cmk-update-agent.exe to temp\cmk-update-agent.exe failed</code>.
+
+The agent updater now will cancel the connection if it freezes. The timeout
+limit is set to 120 seconds. This handling does not limit the overall connection time.<br>
+For a detailled explenation have a look at the <i>Timeouts</i> paragraph at the
+<a href="http://docs.python-requests.org">requests documentation</a>!
+
+Please note: This timeout is only active for connections handled by python-requests.<br>
+This fix won't apply if you are running the agent updater using cURL.
+(i.e. you are running the Check_MK Agent Updater 1.4 on a Linux/UNIX host and
+there is no python-requests module installed.)

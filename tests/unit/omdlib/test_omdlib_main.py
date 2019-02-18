@@ -18,13 +18,13 @@ def test_read_skel_permissions(monkeypatch, tmpdir):
 def test_initialize_site_ca(monkeypatch, tmpdir):
     site_id = "tested"
     ca_path = Path("%s" % tmpdir) / site_id / "etc" / "ssl"
-    ca_path.mkdir(parents=True, exist_ok=True)
+    ca_path.mkdir(parents=True, exist_ok=True)  # pylint: disable=no-member
 
     monkeypatch.setattr(omdlib.certs.CertificateAuthority, "ca_path", property(lambda x: ca_path))
 
     omdlib.main.initialize_site_ca(omdlib.main.SiteContext(site_id))
-    assert (ca_path / "ca.pem").exists()
-    assert (ca_path / "sites" / ("%s.pem" % site_id)).exists()
+    assert (ca_path / "ca.pem").exists()  # pylint: disable=no-member
+    assert (ca_path / "sites" / ("%s.pem" % site_id)).exists()  # pylint: disable=no-member
 
 
 @pytest.fixture()

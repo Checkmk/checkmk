@@ -665,9 +665,13 @@ def read_skel_permissions():
 
 
 def load_skel_permissions(version):
+    return load_skel_permissions_from(skel_permissions_file_path(version))
+
+
+def load_skel_permissions_from(path):
     perms = {}
-    try:
-        for line in file(skel_permissions_file_path(version)):
+    with open(path) as f:
+        for line in f:
             line = line.strip()
             if line == "" or line[0] == "#":
                 continue
@@ -675,19 +679,17 @@ def load_skel_permissions(version):
             mode = int(perm, 8)
             perms[path] = mode
         return perms
-    except:
-        return None
 
 
 def skel_permissions_file_path(version):
     return "/omd/versions/%s/share/omd/skel.permissions" % version
 
 
-def get_skel_permissions(version, perms, relpath):
+def get_skel_permissions(skel_path, perms, relpath):
     try:
         return perms[relpath]
-    except:
-        return get_file_permissions("/omd/versions/%s/skel/%s" % (version, relpath))
+    except KeyError:
+        return get_file_permissions("%s/%s" % (skel_path, relpath))
 
 
 def get_file_permissions(path):
@@ -706,9 +708,9 @@ def get_file_owner(path):
 
 def create_version_symlink(site, version):
     linkname = site.dir + "/version"
-    if os.path.exists(linkname):
+    if os.path.lexists(linkname):
         os.remove(linkname)
-    os.symlink("../../versions/%s" % omdlib.__version__, linkname)
+    os.symlink("../../versions/%s" % version, linkname)
 
 
 def calculate_admin_password(options):
@@ -748,6 +750,29 @@ def create_skeleton_files(site, directory):
                 if dirpath == "tmp" or dirpath.startswith("tmp/"):
                     continue
             create_skeleton_file(skelroot, site.dir, dirpath + "/" + entry, replacements)
+
+
+def save_version_meta_data(site, version):
+    """Make meta information from the version available in the site directory
+
+    Currently it holds the following information
+    A) A copy of the versions skel/ directory
+    B) A copy of the skel.permissions file
+    C) A version file containing the version number of the meta data
+    """
+    try:
+        shutil.rmtree(site.version_meta_dir)
+    except OSError as e:
+        if e.errno != errno.ENOENT:
+            raise
+
+    skelroot = "/omd/versions/%s/skel" % version
+    shutil.copytree(skelroot, "%s/skel" % site.version_meta_dir, symlinks=True)
+
+    shutil.copy(skel_permissions_file_path(version), "%s/skel.permissions" % site.version_meta_dir)
+
+    with open("%s/version" % site.version_meta_dir, "w") as f:
+        f.write("%s\n" % version)
 
 
 def delete_user_file(user_path):
@@ -1043,8 +1068,9 @@ def merge_update_file(site, relpath, old_version, new_version):
     permissions = os.stat(user_path).st_mode
 
     def try_merge():
-        for version in [old_version, new_version]:
-            p = "/omd/versions/%s/skel/%s" % (version, relpath)
+        for version, skelroot in [(old_version, site.version_skel_dir),
+                                  (new_version, "/omd/versions/%s/skel" % version)]:
+            p = "%s/%s" % (skelroot, relpath)
             while True:
                 try:
                     skel_content = file(p).read()
@@ -1216,7 +1242,7 @@ def file_status(site, source_path, target_path):
 
 
 def update_file(relpath, site, old_version, new_version, old_perms):
-    old_skel = "/omd/versions/%s/skel" % old_version
+    old_skel = site.version_skel_dir
     new_skel = "/omd/versions/%s/skel" % new_version
 
     replacements = site.replacements
@@ -1454,8 +1480,8 @@ def update_file(relpath, site, old_version, new_version, old_perms):
     # something himself.
 
     user_type = filetype(user_path)
-    old_perm = get_skel_permissions(old_version, old_perms, relpath)
-    new_perm = get_skel_permissions(new_version, g_skel_permissions, relpath)
+    old_perm = get_skel_permissions(old_skel, old_perms, relpath)
+    new_perm = get_skel_permissions(new_skel, g_skel_permissions, relpath)
     user_perm = get_file_permissions(user_path)
 
     # Fix permissions not for links and only if the new type is as expected
@@ -2767,6 +2793,9 @@ def init_site(site, config_settings=None, options=False):
     # Create skeleton files of non-tmp directories
     create_skeleton_files(site, '.')
 
+    # Save the skeleton files used to initialize this site
+    save_version_meta_data(site, omdlib.__version__)
+
     # Set the initial password of the default admin user
     admin_password = calculate_admin_password(options)
     set_admin_password(site, admin_password)
@@ -3076,7 +3105,7 @@ def main_diff(site, args, options=None):
         options = {}
 
     from_version = site.version
-    from_skelroot = "/omd/versions/%s/skel" % from_version
+    from_skelroot = site.version_skel_dir
 
     # If arguments are added and those arguments are directories,
     # then we just output the general state of the file. If only
@@ -3100,7 +3129,8 @@ def diff_list(options, site, from_skelroot, from_version, orig_path):
     # handled at all.
 
     read_skel_permissions()
-    old_perms = load_skel_permissions(from_version)
+
+    old_perms = site.skel_permissions
 
     # Prepare paths:
     # orig_path: this was specified by the user
@@ -3148,7 +3178,7 @@ def print_diff(rel_path, options, site, source_path, target_path, source_version
     source_file = source_path + '/' + rel_path
     target_file = target_path + '/' + rel_path
 
-    source_perm = get_skel_permissions(source_version, source_perms, rel_path)
+    source_perm = get_skel_permissions(source_path, source_perms, rel_path)
     target_perm = get_file_permissions(target_file)
 
     source_type = filetype(source_file)
@@ -3272,9 +3302,13 @@ def main_update(site, args, options=None):
 
     # read permissions
     read_skel_permissions()
-    old_perms = load_skel_permissions(from_version)
 
-    from_skelroot = "/omd/versions/%s/skel" % from_version
+    # In case the version_meta is stored in the site and it's the data of the
+    # old version we are facing, use these files instead of the files from the
+    # version directory. This makes updates possible without the old version.
+    old_perms = site.skel_permissions
+
+    from_skelroot = site.version_skel_dir
     to_skelroot = "/omd/versions/%s/skel" % to_version
 
     # First walk through skeleton files of new version
@@ -3290,6 +3324,7 @@ def main_update(site, args, options=None):
 
     # Change symbolic link pointing to new version
     create_version_symlink(site, to_version)
+    save_version_meta_data(site, to_version)
 
     # Let hooks do their work and update configuration.
     config_set_all(site)
@@ -4180,6 +4215,10 @@ class AbstractSiteContext(object):
         raise NotImplementedError()
 
     @property
+    def version_meta_dir(self):
+        return "%s/.version_meta" % self.dir
+
+    @property
     def conf(self):
         """{ "CORE" : "nagios", ... } (contents of etc/omd/site.conf plus defaults from hooks)"""
         if not self._config_loaded:
@@ -4211,7 +4250,7 @@ class SiteContext(AbstractSiteContext):
 
     @property
     def tmp_dir(self):
-        return "/omd/sites/%s/tmp" % self._sitename
+        return "%s/tmp" % self.dir
 
     # TODO: Clean up the None case!
     @property
@@ -4303,6 +4342,38 @@ class SiteContext(AbstractSiteContext):
     @staticmethod
     def is_site_context():
         return True
+
+    @property
+    def skel_permissions(self):
+        # type: () -> Dict[str, int]
+        """Returns the skeleton permissions. Load either from version meta directory
+        or from the original version skel.permissions file"""
+        if not self._has_version_meta_data():
+            return load_skel_permissions(self.version)
+
+        return load_skel_permissions_from(self.version_meta_dir + "/skel.permissions")
+
+    @property
+    def version_skel_dir(self):
+        """Returns the current version skel directory. In case the meta data is
+        available and fits the sites version use that one instead of the version
+        skel directory."""
+        if not self._has_version_meta_data():
+            return "/omd/versions/%s/skel" % self.version
+        return self.version_meta_dir + "/skel"
+
+    def _has_version_meta_data(self):
+        if not os.path.exists(self.version_meta_dir):
+            return False
+
+        if self._version_meta_data_version() != self.version:
+            return False
+
+        return True
+
+    def _version_meta_data_version(self):
+        with open(self.version_meta_dir + "/version") as f:
+            return f.read().strip()
 
 
 class RootContext(AbstractSiteContext):

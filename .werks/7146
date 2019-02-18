@@ -1,0 +1,13 @@
+Title: mk_docker.py: Optionally use container names as identifier
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1550501351
+Class: feature
+
+You can now configure the plugin mk_docker.py to use the containers
+name or long ID as host name. You can do this either using the 
+agent bakery rule "Docker node and containers", or via configuration
+file.

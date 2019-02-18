@@ -18,3 +18,8 @@ like <code>copying plugins\cmk-update-agent.exe to temp\cmk-update-agent.exe fai
 The agent updater now will cancel the connection if there is a connection timeout detected
 or if the connection freezes. The timeout limit is set to 120 seconds.<br>
 This timeout handling does not limit the overall connection time.
+
+Please note: This timeout is only active for connections handled by python-requests.<br>
+This fix won't apply if you are running the agent updater using cURL.
+(i.e. you are running the Check_MK Agent Updater 1.4 on a Linux/UNIX host and
+there is no python-requests module installed.)

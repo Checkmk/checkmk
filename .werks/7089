@@ -1,0 +1,19 @@
+Title: Docker container: Simplified update procedure
+Level: 2
+Component: omd
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1550474576
+Class: feature
+
+The update procedure of the official Check_MK containers was a bit complicated
+compared to the update procedure on other servers. The root cause for this was
+that the update always required both, the old and the new versions, while the
+containers are only allowed to have one version installed. This made it
+necessary to create an intermediate container for the update.
+
+The werk #7088 made it possible to perform an update without having access to
+the old version. Once we have this functionality it is now possible to replace
+one container with a another container. In case the version has changed, the
+container is performing the update during startup of the new container.

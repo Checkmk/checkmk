@@ -326,41 +326,28 @@ def test_update(request, client, version):
     assert c_orig.exec_run(["touch", "pre-update-marker"], user="cmk",
                            workdir="/omd/sites/cmk")[0] == 0
 
+    # Until we have a "old version" with .version_meta directory that we can update
+    # from produce this directory manually here.
+    # TODO: Once we update from a 1.6 version this can be dropped
+    assert c_orig.exec_run(["mkdir", ".version_meta"], user="cmk", workdir="/omd/sites/cmk")[0] == 0
+    assert c_orig.exec_run(["cp", "-pr", "version/skel", ".version_meta/"],
+                           user="cmk",
+                           workdir="/omd/sites/cmk")[0] == 0
+    assert c_orig.exec_run(["cp", "-pr", "version/share/omd/skel.permissions", ".version_meta/"],
+                           user="cmk",
+                           workdir="/omd/sites/cmk")[0] == 0
+    assert c_orig.exec_run(
+        ["bash", "-c", "echo '%s' > .version_meta/version" % old_version.version],
+        user="cmk",
+        workdir="/omd/sites/cmk")[0] == 0
+
     # 2. stop the container
     c_orig.stop()
 
-    # 3. start intermediate container in the background and keep it running.
-    # Don't use the regular startup procedure (which would start the site). Use
-    # read to wait for termination of the container
-    image, _build_logs = _build(request, client, version)
-    c_tmp = client.containers.run(
-        name="%s-update" % container_name,
-        image=image.id,
-        detach=True,
-        command=["bash", "-c", "echo HI ; read"],
-        stdin_open=True,
-        volumes_from=c_orig.id,
-    )
-    request.addfinalizer(lambda: c_tmp.remove(force=True))
-    testlib.wait_until(lambda: "HI" in c_tmp.logs(), timeout=30)
-
-    # 4. Copy old version to intermediate container
-    stream = c_orig.get_archive("/omd/versions/%s" % old_version.omd_version())[0]
-    c_tmp.put_archive(path="/omd/versions", data=stream)
-
-    # 5. update volume in intermediate container
-    exit_code, output = c_tmp.exec_run(["omd", "-f", "update", "--conflict=install"], user="cmk")
-    assert "Finished update." in output
-    assert exit_code == 0
-
-    # Verify result and stop the temporary container
-    c_tmp.exec_run(["omd", "version"], user="cmk")[1].endswith("%s\n" % version.omd_version())
-    c_tmp.stop()
-
-    # 6. rename old container
+    # 3. rename old container
     c_orig.rename("%s-old" % container_name)
 
-    # 7. create new container
+    # 4. create new container
     c_new = _start(
         request,
         client,
@@ -369,7 +356,7 @@ def test_update(request, client, version):
         name=container_name,
         volumes_from=c_orig.id)
 
-    # 8. verify result
+    # 5. verify result
     c_new.exec_run(["omd", "version"], user="cmk")[1].endswith("%s\n" % version.omd_version())
     assert c_new.exec_run(["test", "-f", "pre-update-marker"], user="cmk",
                           workdir="/omd/sites/cmk")[0] == 0

@@ -58,6 +58,15 @@ if [ ! -f "/omd/apache/$CMK_SITE_ID.conf" ]; then
     echo "Include /omd/sites/$CMK_SITE_ID/etc/apache/mode.conf" > "/omd/apache/$CMK_SITE_ID.conf"
 fi
 
+# In case the version symlink is dangling we are in an update situation: The
+# volume was previously attached to a container with another Check_MK version.
+# We now have to perform the "omd update" to be able to bring the site back
+# to life.
+if [ ! -e "/omd/sites/$CMK_SITE_ID/version" ]; then
+    echo "### UPDATING SITE"
+    omd -f update --conflict=install "$CMK_SITE_ID"
+fi
+
 # When a command is given via "docker run" use it instead of this script
 if [ -n "$1" ]; then
     exec "$@"

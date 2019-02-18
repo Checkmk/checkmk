@@ -754,6 +754,31 @@ def create_skeleton_files(sitename, dir):
                     continue
 	    create_skeleton_file(skelroot, sitedir, dirpath + "/" + entry, replacements)
 
+def save_version_meta_data(sitename, version):
+    """Make meta information from the version available in the site directory
+
+    Currently it holds the following information
+    A) A copy of the versions skel/ directory
+    B) A copy of the skel.permissions file
+    C) A version file containing the version number of the meta data
+    """
+    version_meta_dir = "%s/.version_meta" % site_dir(sitename)
+
+    try:
+        shutil.rmtree(version_meta_dir)
+    except OSError as e:
+        if e.errno != errno.ENOENT:
+            raise
+
+    skelroot = "/omd/versions/%s/skel" % version
+    shutil.copytree(skelroot, "%s/skel" % version_meta_dir, symlinks=True)
+
+    skel_permissions_file_path = "/omd/versions/%s/share/omd/skel.permissions" % version
+    shutil.copy(skel_permissions_file_path, "%s/skel.permissions" % version_meta_dir)
+
+    with open("%s/version" % version_meta_dir, "w") as f:
+        f.write("%s\n" % version)
+
 def delete_user_file(user_path):
     if not os.path.islink(user_path) and os.path.isdir(user_path):
         shutil.rmtree(user_path)
@@ -2804,6 +2829,9 @@ def init_site(config_settings=None, options=False):
     # Create skeleton files of non-tmp directories
     create_skeleton_files(g_sitename, '.')
 
+    # Save the skeleton files used to initialize this site
+    save_version_meta_data(g_sitename, OMD_VERSION)
+
     # Set the initial password of the default admin user
     admin_password = calculate_admin_password(options)
     set_admin_password(admin_password)
@@ -3318,6 +3346,7 @@ def main_update(args, options={}):
 
     # Change symbolic link pointing to new version
     create_version_symlink(g_sitename, to_version)
+    save_version_meta_data(g_sitename, to_version)
 
     # Let hooks do their work and update configuration.
     config_set_all()

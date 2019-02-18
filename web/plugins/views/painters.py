@@ -1627,7 +1627,7 @@ def paint_host_addresses(row):
 
 
 multisite_painters["host_addresses"] = {
-    "title"   : _("Host addresses"),
+    "title"   : _("Host addresses (IPv4/IPv6)"),
     "short"   : _("IP addresses"),
     "columns" : [ "host_address", "host_custom_variable_names", "host_custom_variable_values" ],
     "paint"   : paint_host_addresses,

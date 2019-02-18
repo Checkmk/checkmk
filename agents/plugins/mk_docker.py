@@ -73,6 +73,7 @@ DEFAULT_CFG_SECTION = {
     "base_url": "unix://var/run/docker.sock",
     "api_version": "auto",
     "skip_sections": "",
+    "container_id": "short",
 }
 
 LOGGER = logging.getLogger(__name__)
@@ -159,9 +160,15 @@ def report_exception_to_server(exc):
 class MKDockerClient(docker.DockerClient):
     '''a docker.DockerClient that caches containers and node info'''
 
-    def __init__(self, *args, **kwargs):
-        super(MKDockerClient, self).__init__(*args, **kwargs)
-        self.all_containers = self.containers.list(all=True)
+    def __init__(self, config):
+        super(MKDockerClient, self).__init__(config['base_url'], version=config['api_version'])
+        all_containers = self.containers.list(all=True)
+        if config['container_id'] == "name":
+            self.all_containers = [(c.attrs["Name"].lstrip('/'), c) for c in all_containers]
+        elif config['container_id'] == "long":
+            self.all_containers = [(c.attrs["Id"], c) for c in all_containers]
+        else:
+            self.all_containers = [(c.attrs["Id"][:12], c) for c in all_containers]
         self.node_info = self.info()
 
 
@@ -242,7 +249,7 @@ class AgentDispatcher(object):
             return None
         result = container.exec_run(['sh', '-c', 'bash -c echo'], socket=True)
         if not self.get_stdout(result):
-            LOGGER.info("failed to run bash in container: %s", container.short_id)
+            LOGGER.info("failed to run bash in container")
             return None
 
         result = container.exec_run(
@@ -277,15 +284,6 @@ def set_version_info(client):
     data = client.version()
     LOGGER.debug(data)
     Section.version_info['ApiVersion'] = data.get('ApiVersion')
-
-
-def short_id(container):
-    '''return a shortened id
-
-    We do not use container.short_id for compatibility reasons.
-    Also we are dealing with trust issues.
-    '''
-    return container.attrs["Id"][:12]
 
 
 #.
@@ -381,7 +379,7 @@ def section_node_images(client, _config):
 
     LOGGER.debug(client.all_containers)
     section.append('[[[containers]]]')
-    for container in client.all_containers:
+    for __, container in client.all_containers:
         section.append(json.dumps(container.attrs))
 
     section.write()
@@ -403,8 +401,7 @@ def section_container_client(client, _config):
     node_name = client.node_info.get("Name")
 
     # For the container status, we want information about *all* containers
-    for container in client.all_containers:
-        container_id = short_id(container)
+    for container_id, container in client.all_containers:
         LOGGER.info("container (via client): %s", container_id)
 
         section = Section('container_node_name', piggytarget=container_id)
@@ -422,13 +419,12 @@ def section_container_client(client, _config):
 @skippable
 def section_container_agent(client, _config):
 
-    running_containers = [c for c in client.all_containers if c.status == "running"]
+    running_containers = [c for c in client.all_containers if c[1].status == "running"]
     if not running_containers:
         return
 
     dispatcher = AgentDispatcher()
-    for container in running_containers:
-        container_id = short_id(container)
+    for container_id, container in running_containers:
         LOGGER.info("container(via agent): %s", container_id)
 
         result = dispatcher.check_container(container)
@@ -466,7 +462,7 @@ def main():
     config = get_config(args.config_file)
 
     try:  # first calls by docker-daemon: report failure
-        client = MKDockerClient(config['base_url'], version=config['api_version'])
+        client = MKDockerClient(config)
     except () if DEBUG else Exception as exc:
         report_exception_to_server(exc)
         sys.exit(1)

@@ -1428,7 +1428,7 @@ register_rule(
                      size=50,
                  )),
                 ("secret_access_key",
-                 IndividualOrStoredPassword(
+                 Password(
                      title=_("The secret key for your AWS account"),
                      allow_empty=False,
                  )),

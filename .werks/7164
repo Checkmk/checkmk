@@ -15,9 +15,8 @@ This was particularly noticeable when running the agent updater under Windows,
 because the agent updater would fail to start over again, showing an error
 like <code>copying plugins\cmk-update-agent.exe to temp\cmk-update-agent.exe failed</code>.
 
-The agent updater now will cancel the connection if it freezes.<br>
-or if the connection freezes. The timeout limit is set to 120 seconds.<br>
-This timeout handling does not limit the overall connection time.<br>
+The agent updater now will cancel the connection if it freezes. The timeout
+limit is set to 120 seconds. This handling does not limit the overall connection time.<br>
 For a detailled explenation have a look at the <i>Timeouts</i> paragraph at the
 <a href="http://docs.python-requests.org">requests documentation</a>!
 

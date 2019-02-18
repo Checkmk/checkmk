@@ -181,17 +181,20 @@ std::vector<LogEntry::LogDef> LogEntry::log_definitions{
            {Param::HostName, Param::ServiceDescription, Param::StateType,
             Param::Comment}},
     ////////////////
+    // NOTE: We ignore the trailing name/from/to fields.
     LogDef{"TIMEPERIOD TRANSITION",
            Class::state,
            LogEntryKind::timeperiod_transition,
            {}},
     ////////////////
+    // NOTE: We ignore the trailing author/comment fields.
     LogDef{"HOST NOTIFICATION",
            Class::hs_notification,
            LogEntryKind::none,
            {Param::ContactName, Param::HostName, Param::StateType,
             Param::CommandName, Param::PluginOutput}},
     ////////////////
+    // NOTE: We ignore the trailing author/comment fields.
     LogDef{"SERVICE NOTIFICATION",
            Class::hs_notification,
            LogEntryKind::none,
@@ -245,17 +248,20 @@ std::vector<LogEntry::LogDef> LogEntry::log_definitions{
            {Param::HostName, Param::ServiceDescription, Param::CommandName,
             Param::ServiceState, Param::PluginOutput}},
     ////////////////
+    // NOTE: Nobody seems to write such lines?!
     LogDef{"PASSIVE SERVICE CHECK",
            Class::passivecheck,
            LogEntryKind::none,
            {Param::HostName, Param::ServiceDescription, Param::State,
             Param::PluginOutput}},
     ////////////////
+    // NOTE: Nobody seems to write such lines?!
     LogDef{"PASSIVE HOST CHECK",
            Class::passivecheck,
            LogEntryKind::none,
            {Param::HostName, Param::State, Param::PluginOutput}},
     ////////////////
+    // NOTE: We ignore the trailing command field.
     LogDef{"EXTERNAL COMMAND", Class::ext_command, LogEntryKind::none, {}}};
 
 // A bit verbose, but we avoid unnecessary string copies below.

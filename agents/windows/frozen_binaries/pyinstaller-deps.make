@@ -1,6 +1,4 @@
-# Python 2.7.13 yields a bug concerning the LoadLibrary() function on windows,
-# see http://bugs.python.org/issue29082 . Use 2.7.12 instead.
-PYTHON_VERSION = 2.7.12
+PYTHON_VERSION = 2.7.15
 BUILD_DIR := $(shell realpath ./../../winbuild)
 PLUGINS_DIR := $(shell realpath ./../../plugins)
 
@@ -13,28 +11,30 @@ endif
 # in favor of providing a working setup for a pyinstaller build with python 2.7
 
 # Match package names with their filenames in order to reference them
-altgraph = $(SRC_DIR)/pip/altgraph-0.15-py2.py3-none-any.whl
+altgraph = $(SRC_DIR)/pip/altgraph-0.16.1-py2.py3-none-any.whl
 asn1crypto = $(SRC_DIR)/pip/asn1crypto-0.24.0-py2.py3-none-any.whl
-certifi = $(SRC_DIR)/pip/certifi-2018.4.16-py2.py3-none-any.whl
-cffi = $(SRC_DIR)/pip/cffi-1.11.5-cp27-cp27m-win32.whl
-dis3 = $(SRC_DIR)/pip/dis3-0.1.2.tar.gz
+certifi = $(SRC_DIR)/pip/certifi-2018.11.29-py2.py3-none-any.whl
+cffi = $(SRC_DIR)/pip/cffi-1.12.1-cp27-cp27m-win32.whl
 chardet = $(SRC_DIR)/pip/chardet-3.0.4-py2.py3-none-any.whl
-crytography = $(SRC_DIR)/pip/cryptography-2.2.2-cp27-cp27m-win32.whl
+cryptography = $(SRC_DIR)/pip/cryptography-2.5-cp27-cp27m-win32.whl
+dis3 = $(SRC_DIR)/pip/dis3-0.1.3-py2-none-any.whl
 enum34 = $(SRC_DIR)/pip/enum34-1.1.6-py2-none-any.whl
-future = $(SRC_DIR)/pip/future-0.16.0.tar.gz
-idna = $(SRC_DIR)/pip/idna-2.6-py2.py3-none-any.whl
+future = $(SRC_DIR)/pip/future-0.17.1.tar.gz
+idna = $(SRC_DIR)/pip/idna-2.8-py2.py3-none-any.whl
 ipaddress = $(SRC_DIR)/pip/ipaddress-1.0.22-py2.py3-none-any.whl
-macholib = $(SRC_DIR)/pip/macholib-1.9-py2.py3-none-any.whl
-pefile = $(SRC_DIR)/pip/pefile-2017.11.5.tar.gz
-pycparser = $(SRC_DIR)/pip/pycparser-2.18.tar.gz
-PyInstaller = $(SRC_DIR)/pip/PyInstaller-3.3.1.tar.gz
+macholib = $(SRC_DIR)/pip/macholib-1.11-py2.py3-none-any.whl
+pefile = $(SRC_DIR)/pip/pefile-2018.8.8.tar.gz
+pycparser = $(SRC_DIR)/pip/pycparser-2.19.tar.gz
+PyInstaller = $(SRC_DIR)/pip/PyInstaller-3.4.tar.gz
+pyOpenSSL = $(SRC_DIR)/pip/pyOpenSSL-19.0.0-py2.py3-none-any.whl
+pypiwin32 = $(SRC_DIR)/pip/pypiwin32-223.tar.gz
 PySocks = $(SRC_DIR)/pip/PySocks-1.6.8.tar.gz
-pyOpenSSL = $(SRC_DIR)/pip/pyOpenSSL-17.5.0-py2.py3-none-any.whl
-pypiwin32 = $(SRC_DIR)/pip/pywin32-223-cp27-cp27m-win32.whl
-requests = $(SRC_DIR)/pip/requests-2.18.4-py2.py3-none-any.whl
-setuptools = $(SRC_DIR)/pip/setuptools-39.1.0-py2.py3-none-any.whl
-six = $(SRC_DIR)/pip/six-1.11.0-py2.py3-none-any.whl
-urllib3 = $(SRC_DIR)/pip/urllib3-1.22-py2.py3-none-any.whl
+pywin32 = $(SRC_DIR)/pip/pywin32-224-cp27-cp27m-win32.whl
+pywin32_ctypes = $(SRC_DIR)/pip/pywin32_ctypes-0.2.0-py2.py3-none-any.whl
+requests = $(SRC_DIR)/pip/requests-2.21.0-py2.py3-none-any.whl
+setuptools = $(SRC_DIR)/pip/setuptools-40.8.0-py2.py3-none-any.whl
+six = $(SRC_DIR)/pip/six-1.12.0-py2.py3-none-any.whl
+urllib3 = $(SRC_DIR)/pip/urllib3-1.24.1-py2.py3-none-any.whl
 win_inet_pton = $(SRC_DIR)/pip/win_inet_pton-1.0.1.tar.gz
 
 # This list expands to filenames and is meant to be used
@@ -45,9 +45,9 @@ PYTHON_PACKAGE_FILES = \
 	$(asn1crypto) \
 	$(certifi) \
 	$(cffi) \
-	$(dis3) \
 	$(chardet) \
-	$(crytography) \
+	$(cryptography) \
+	$(dis3) \
 	$(enum34) \
 	$(future) \
 	$(idna) \
@@ -56,9 +56,11 @@ PYTHON_PACKAGE_FILES = \
 	$(pefile) \
 	$(pycparser) \
 	$(PyInstaller) \
-	$(PySocks) \
 	$(pyOpenSSL) \
 	$(pypiwin32) \
+	$(PySocks) \
+	$(pywin32) \
+	$(pywin32_ctypes) \
 	$(requests) \
 	$(setuptools) \
 	$(six) \
@@ -71,9 +73,9 @@ PYTHON_PACKAGES = \
 	asn1crypto \
 	certifi \
 	cffi \
-	dis3 \
 	chardet \
-	crytography \
+	cryptography \
+	dis3 \
 	enum34 \
 	future \
 	idna \
@@ -82,9 +84,11 @@ PYTHON_PACKAGES = \
 	pefile \
 	pycparser \
 	PyInstaller \
-	PySocks \
 	pyOpenSSL \
 	pypiwin32 \
+	PySocks \
+	pywin32 \
+	pywin32_ctypes \
 	requests \
 	setuptools \
 	six \
@@ -95,30 +99,31 @@ PYTHON_PACKAGES = \
 # When used as target, the target variable
 # must be extended two times in order to obtain the desired download-string.
 # E.g. make PyInstaller -> pip download $($($@))
-$(altgraph) := asn1crypto==0.15
+$(altgraph) := altgraph==0.16.1
 $(asn1crypto) := asn1crypto==0.24.0
-$(certifi) := certifi==2018.4.16
-$(cffi) := cffi==1.11.5
-$(dis3) := dis3==0.1.2
+$(certifi) := certifi==2018.11.29
+$(cffi) := cffi==1.12.1
 $(chardet) := chardet==3.0.4
-$(crytography) := cryptography==2.2.2
+$(cryptography) := cryptography==2.5
+$(dis3) := dis3==0.1.3
 $(enum34) := enum34==1.1.6
-$(future) := future==0.16.0
-$(idna) := idna==2.6
+$(future) := future==0.17.1
+$(idna) := idna==2.8
 $(ipaddress) := ipaddress==1.0.22
-$(macholib) := macholib==1.9
-$(pefile) := pefile==2017.11.5
-$(pycparser) := pycparser==2.18
-$(PyInstaller) := PyInstaller==3.3.1
-$(PySocks) := PySocks==1.6.8
-$(pyOpenSSL) := pyOpenSSL==17.5.0
+$(macholib) := macholib==1.11
+$(pefile) := pefile==2018.8.8
+$(pycparser) := pycparser==2.19
+$(PyInstaller) := PyInstaller==3.4
+$(pyOpenSSL) := pyOpenSSL==19.0.0
 $(pypiwin32) := pypiwin32==223
-$(requests) := requests==2.18.4
-$(setuptools) := setuptools==39.1.0
-$(six) := six==1.11.0
-$(urllib3) := urllib3==1.22
+$(PySocks) := PySocks==1.6.8
+$(pywin32) := pywin32==224
+$(pywin32_ctypes) := pywin32_ctypes==0.2.0
+$(requests) := requests==2.21.0
+$(setuptools) := setuptools==40.8.0
+$(six) := six==1.12
+$(urllib3) := urllib3==1.24.1
 $(win_inet_pton) := win_inet_pton==1.0.1
-
 
 $(BUILD_DIR)/drive_c/Python27/python.exe: $(SRC_DIR)/python-$(PYTHON_VERSION).msi
 	mkdir -p $(BUILD_DIR) && \

@@ -1323,7 +1323,7 @@ register_rule(
                         " to the VM itself."),
                  choices=[
                      ("grouphost", _("Map data to group host")),
-                     ("all", _("Map data to the VM itself")),
+                     ("self", _("Map data to the VM itself")),
                  ],
              )),
             ("sequential",

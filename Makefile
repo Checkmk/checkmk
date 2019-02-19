@@ -66,7 +66,10 @@ export BEAR        := bear
 
 M4_DEPS            := $(wildcard m4/*) configure.ac
 CONFIGURE_DEPS     := $(M4_DEPS) aclocal.m4
-DIST_DEPS          := ar-lib compile config.guess config.sub install-sh missing depcomp configure omd/packages/openhardwaremonitor/OpenHardwareMonitorCLI.exe omd/packages/openhardwaremonitor/OpenHardwareMonitorLib.dll
+CONFIG_DEPS        := ar-lib compile config.guess config.sub install-sh missing depcomp configure
+DIST_DEPS          := $(CONFIG_DEPS) \
+                      omd/packages/openhardwaremonitor/OpenHardwareMonitorCLI.exe \
+                      omd/packages/openhardwaremonitor/OpenHardwareMonitorLib.dll
 
 
 LIVESTATUS_SOURCES := Makefile.am api/c++/{Makefile,*.{h,cc}} api/perl/* \
@@ -385,7 +388,7 @@ ar-lib compile config.guess config.sub install-sh missing depcomp: configure.ac
 	touch ar-lib compile config.guess config.sub install-sh missing depcomp
 
 # TODO(sp): We should really detect and use our own packages in a less hacky way...
-config.status: $(DIST_DEPS)
+config.status: $(CONFIG_DEPS)
 	@echo "Build $@ (newer targets: $?)"
 	@if test -f config.status; then \
 	  echo "update config.status by reconfiguring in the same conditions" ; \

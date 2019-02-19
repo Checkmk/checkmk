@@ -1,0 +1,11 @@
+Title: gude_temo, gude_humidity: Added support for Gude Sensor Box 7213
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1550582721
+Class: feature
+
+Check_MK is now able to monitor also the Gude Sensor Box 7213 beginning with
+this werk release.

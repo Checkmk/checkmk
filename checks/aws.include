@@ -86,7 +86,7 @@ def _extract_aws_metrics_by_labels(expected_metric_names, parsed, extra_keys=Non
         for expected_metric_name in expected_metric_names:
             expected_metric_name_lower = expected_metric_name.lower()
             if not row_id.startswith(expected_metric_name_lower)\
-               and not row_id.startswith(expected_metric_name_lower):
+               and not row_id.endswith(expected_metric_name_lower):
                 continue
 
             try:

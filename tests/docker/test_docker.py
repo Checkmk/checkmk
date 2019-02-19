@@ -337,7 +337,8 @@ def test_update(request, client, version):
                            user="cmk",
                            workdir="/omd/sites/cmk")[0] == 0
     assert c_orig.exec_run(
-        ["bash", "-c", "echo '%s' > .version_meta/version" % old_version.version],
+        ["bash", "-c",
+         "echo '%s' > .version_meta/version" % old_version.omd_version()],
         user="cmk",
         workdir="/omd/sites/cmk")[0] == 0
 

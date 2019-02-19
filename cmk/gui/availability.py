@@ -820,6 +820,10 @@ def compute_availability(what, av_rawdata, avoptions):
                     s = "unmonitored"
                     if not avoptions["consider"]["unmonitored"]:
                         consider = False
+                elif state is None:
+                    # state is None means that this element was not known at this given time
+                    # So there is no reason for creating a fake pending state
+                    consider = False
                 elif span["in_notification_period"] == 0 and avoptions[
                         "notification_period"] == "exclude":
                     consider = False

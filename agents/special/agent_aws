@@ -345,6 +345,15 @@ class AWSSectionCloudwatch(AWSSection):
     def _get_metrics(self, colleague_contents):
         pass
 
+    def _create_id_for_metric_data_query(self, index, metric_name, *args):
+        """
+        ID field must be unique in a single call.
+        The valid characters are letters, numbers, and underscore.
+        The first character must be a lowercase letter.
+        Regex: ^[a-z][a-zA-Z0-9_]*$
+        """
+        return "_".join(["id", str(index)] + list(args) + [metric_name])
+
 
 #.
 #   .--costs/usage---------------------------------------------------------.
@@ -546,7 +555,7 @@ class EC2(AWSSectionCloudwatch):
                 ("StatusCheckFailed_System", "Count"),
             ]:
                 metrics.append({
-                    'Id': "%s_%s" % (metric_name.lower(), idx),
+                    'Id': self._create_id_for_metric_data_query(idx, metric_name),
                     'Label': instance_name,
                     'MetricStat': {
                         'Metric': {
@@ -709,7 +718,8 @@ class S3(AWSSectionCloudwatch):
             ]:
                 for storage_class in storage_classes:
                     metrics.append({
-                        'Id': "%s_%s_%s" % (metric_name.lower(), storage_class.lower(), idx),
+                        'Id': self._create_id_for_metric_data_query(idx, metric_name,
+                                                                    storage_class),
                         'Label': bucket_name,
                         'MetricStat': {
                             'Metric': {
@@ -905,7 +915,7 @@ class ELB(AWSSectionCloudwatch):
                 ("BackendConnectionErrors", "Sum"),
             ]:
                 metrics.append({
-                    'Id': "%s_%s" % (metric_name.lower(), idx),
+                    'Id': self._create_id_for_metric_data_query(idx, metric_name),
                     'Label': load_balancer_dns_name,
                     'MetricStat': {
                         'Metric': {
@@ -1063,7 +1073,7 @@ class EBS(AWSSectionCloudwatch):
                 if volume_types and volume_type not in volume_types:
                     continue
                 metric = {
-                    'Id': "%s_%s" % (metric_name.lower(), idx),
+                    'Id': self._create_id_for_metric_data_query(idx, metric_name),
                     'Label': instance_name,
                     'MetricStat': {
                         'Metric': {
@@ -1197,7 +1207,7 @@ class RDS(AWSSectionCloudwatch):
                     #("MaximumUsedTransactionIDs", "Count"),
             ]:
                 metric = {
-                    'Id': "%s_%s" % (metric_name.lower(), idx),
+                    'Id': self._create_id_for_metric_data_query(idx, metric_name),
                     'Label': instance_id,
                     'MetricStat': {
                         'Metric': {

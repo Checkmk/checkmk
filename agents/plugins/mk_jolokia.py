@@ -326,7 +326,7 @@ class JolokiaInstance(object):
     def post(self, data):
         post_data = json.dumps(data)
         if VERBOSE:
-            sys.stderr.write("DEBUG: POST data: %r\n" % post_data)
+            sys.stderr.write("\nDEBUG: POST data: %r\n" % post_data)
         try:
             raw_response = self._session.post(self.base_url, data=post_data)
         except () if DEBUG else Exception, exc:
@@ -342,7 +342,7 @@ class JolokiaInstance(object):
 
         response = raw_response.json()
         if VERBOSE:
-            sys.stderr.write("DEBUG: Result: %r\n\n" % response)
+            sys.stderr.write("DEBUG: Result: %r\n" % response)
         return response
 
 

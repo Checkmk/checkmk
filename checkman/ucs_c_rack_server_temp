@@ -1,0 +1,32 @@
+title: UCS C-Series Rack Server: Processor Temperature
+agents: agent_ucs_bladecenter
+catalog: hw/server/cisco
+license: GPL
+distribution: check_mk
+description:
+ This check provides information about the temperatures of processors, motherboards and
+ memory array dimms of rack units of an UCS C-Series Rack Server compute.
+
+ This check supports the following C-Series Rack Server models providing XML API 2.0
+ [Cisco UCS Rack-Mount Servers Cisco IMC XML API 2.0]:
+ - Cisco UCS C220 M5 Rack Server
+ - Cisco UCS C240 M5 Rack Server
+ - Cisco UCS C480 M5 Rack Server
+ - Cisco UCS C480 ML M5 Rack Server
+ - Cisco UCS C220 M4 Rack Server
+ - Cisco UCS C240 M4 Rack Server
+ - Cisco UCS C460 M4 Rack Server
+
+ This check does not support the C-Series Rack Server model "Cisco UCS C125 M5 Rack Server Node"
+ which is used as part of a "Cisco UCS C4200 Series Rack Server Chassis".
+
+ Check status:
+ - {OK} in case the monitored temperature is within the configured valid temperature range.
+ - {WARN} in case the monitored temperature is equal or higher than the configured warn value.
+ - {CRIT} in case the monitored temperature is equal or higher than the configured crit value.
+
+inventory:
+  All rack units of the rack server are found automatically.
+
+item:
+  One service for every rack unit temperature of the rack server.

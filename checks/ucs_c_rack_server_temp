@@ -1,0 +1,91 @@
+#!/usr/bin/env python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# exemplary output of special agent agent_ucs_bladecenter (<TAB> is tabulator):
+#
+# <<<ucsc_server_temp:sep(9)>>>
+# processorEnvStats<TAB>dn sys/rack-unit-1/board/cpu-1/env-stats<TAB>id 1<TAB>description blalub<TAB>temperature 58.4
+# processorEnvStats<TAB>dn sys/rack-unit-1/board/cpu-2/env-stats<TAB>id 2<TAB>description blalub<TAB>temperature 50.4
+# memoryUnitEnvStats<TAB>dn sys/rack-unit-1/board/memarray-1/mem-1/dimm-env-stats<TAB>id 1<TAB>description blalub<TAB>temperature 40.4
+# memoryUnitEnvStats<TAB>dn sys/rack-unit-1/board/memarray-1/mem-2/dimm-env-stats<TAB>id 2<TAB>description blalub<TAB>temperature 41.4
+# computeRackUnitMbTempStats<TAB>dn sys/rack-unit-1/board/temp-stats<TAB>ambientTemp 50.0<TAB>frontTemp 50.0<TAB>ioh1Temp 50.0<TAB>ioh2Temp 50.0<TAB>rearTemp 50.0
+# computeRackUnitMbTempStats<TAB>dn sys/rack-unit-2/board/temp-stats<TAB>ambientTemp 50.0<TAB>frontTemp 50.0<TAB>ioh1Temp 50.0<TAB>ioh2Temp 50.0<TAB>rearTemp 50.0
+
+
+def parse_ucs_c_rack_server_temp(info):
+    """
+    Returns dict with indexed processors, memory units and motherboards mapped to keys and
+    temperature as value.
+    """
+    parsed = {}
+    for line in info:
+        key_value_pairs = [kv.split(" ", 1) for kv in line[1:]]
+        if "cpu-" in key_value_pairs[0][1]:
+            cpu = key_value_pairs[0][1].replace("sys/",
+                                                "").replace("rack-unit-", "Rack Unit ").replace(
+                                                    "/board", "").replace("/cpu-", " CPU ").replace(
+                                                        "/env-stats", "")
+            try:
+                parsed[cpu] = float(key_value_pairs[3][1])
+            except (ValueError, KeyError):
+                continue  # skip potentially invalid agent output
+        elif "mem-" in key_value_pairs[0][1]:
+            mem = key_value_pairs[0][1].replace("sys/", "").replace(
+                "rack-unit-", "Rack Unit ").replace("/board", "").replace(
+                    "/memarray-", " Memory Array ").replace("/mem-", " Memory DIMM ").replace(
+                        "/dimm-env-stats", "")
+            try:
+                parsed[mem] = float(key_value_pairs[3][1])
+            except (ValueError, KeyError):
+                continue  # skip potentially invalid agent output
+        elif "board" in key_value_pairs[0][1]:
+            mb = key_value_pairs[0][1].replace("sys/",
+                                               "").replace("rack-unit-", "Rack Unit ").replace(
+                                                   "/board/temp-stats", " Motherboard")
+            try:
+                parsed[mb] = float(key_value_pairs[2][1])
+            except (ValueError, KeyError):
+                continue  # skip potentially invalid agent output
+        else:
+            continue  # skip potentially invalid agent output
+    return parsed
+
+
+@get_parsed_item_data
+def check_ucs_c_rack_server_temp(item, params, temperature):
+    yield check_temperature(temperature, params,
+                            'ucs_c_rack_server_%s' % item.lower().replace(" ", "_"))
+
+
+check_info["ucs_c_rack_server_temp"] = {
+    'parse_function': parse_ucs_c_rack_server_temp,
+    'inventory_function': discover(),
+    'check_function': check_ucs_c_rack_server_temp,
+    'group': 'temperature',
+    'service_description': 'Temperature %s',
+    'has_perfdata': True,
+    'includes': ['temperature.include'],
+}

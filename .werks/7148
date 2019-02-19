@@ -1,0 +1,13 @@
+Title: agent_azure: Fix sending data to VM itself
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0p13
+Date: 1550559480
+Class: fix
+
+This fixes the option "Map data relating to VMs" in the datasource program
+"Microsoft Azure". Previously the choice "Map data to the VM itself" could
+not be used, as the agent failed whenever it was enabled. 
+

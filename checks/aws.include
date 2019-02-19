@@ -80,11 +80,13 @@ def _extract_aws_metrics_by_labels(expected_metric_names, parsed, extra_keys=Non
         extra_keys = []
     values_by_labels = {}
     for row in parsed:
-        row_id = row['Id']
+        row_id = row['Id'].lower()
         row_label = row['Label']
         row_values = row['Values']
         for expected_metric_name in expected_metric_names:
-            if not row_id.startswith(expected_metric_name.lower()):
+            expected_metric_name_lower = expected_metric_name.lower()
+            if not row_id.startswith(expected_metric_name_lower)\
+               and not row_id.startswith(expected_metric_name_lower):
                 continue
 
             try:

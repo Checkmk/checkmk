@@ -1,0 +1,14 @@
+Title: ucs_c_rack_server_temp: Temperatures
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1550572115
+Class: feature
+
+This werk adds support for monitoring of Cisco UCS C-Series Rack Server
+temperatures. This check considers the temperatures of processors, memory
+units and the motherboards ambient temperature.
+
+CMK-1067

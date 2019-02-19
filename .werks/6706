@@ -1,0 +1,17 @@
+Title: BI availability no longer creates N/A periods if a element within the BI was not known at the time
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.5.0p12
+Date: 1550580832
+Class: fix
+
+WK:4202 introduced some special handling for BI aggregations:
+
+<tt>
+When computing the availability of a BI aggregation for a time range during which new hosts or services were added to the monitoring the state of these objects would be displayed as PEND before point of time they were added. But this is not correct. These objects where not pending but simply not yet existing and thus not contained in the aggregation tree at all at that time.
+</tt> 
+
+This introduced an side effect, so that some availability reports of an aggregation still shows N/A even when the
+user has explicitly switched off <tt>Include unmonitored time</tt>.

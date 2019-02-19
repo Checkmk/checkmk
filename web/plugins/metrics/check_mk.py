@@ -4942,6 +4942,7 @@ df_translation = {
     "fs_size" : { "scale" : MB },
     "growth"  : { "name"  : "fs_growth", "scale" : MB / 86400.0 },
     "trend"   : { "name"  : "fs_trend", "scale" : MB / 86400.0 },
+    "trend_hoursleft" : {"scale": 3600},
 }
 
 check_metrics["check_mk-df"]                                    = df_translation
@@ -8762,3 +8763,13 @@ graph_info['amount_of_mails_in_secondary_queues'] = {
     ],
 }
 
+graph_info['inodes_used'] = {
+    'title': _('Used inodes'),
+    'metrics': [('inodes_used', 'area'),],
+    'scalars': [
+        'inodes_used:warn',
+        'inodes_used:crit',
+        ('inodes_used:max', _('Maximum inodes')),
+    ],
+    'range': (0, 'inodes_used:max'),
+}

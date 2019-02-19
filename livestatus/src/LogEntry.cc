@@ -248,14 +248,14 @@ std::vector<LogEntry::LogDef> LogEntry::log_definitions{
            {Param::HostName, Param::ServiceDescription, Param::CommandName,
             Param::ServiceState, Param::PluginOutput}},
     ////////////////
-    // NOTE: Nobody seems to write such lines?!
+    // NOTE: Only Nagios writes such lines if configured to do so.
     LogDef{"PASSIVE SERVICE CHECK",
            Class::passivecheck,
            LogEntryKind::none,
            {Param::HostName, Param::ServiceDescription, Param::State,
             Param::PluginOutput}},
     ////////////////
-    // NOTE: Nobody seems to write such lines?!
+    // NOTE: Only Nagios writes such lines if configured to do so.
     LogDef{"PASSIVE HOST CHECK",
            Class::passivecheck,
            LogEntryKind::none,

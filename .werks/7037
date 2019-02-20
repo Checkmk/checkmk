@@ -1,0 +1,13 @@
+Title: ucs_c_rack_server_power: Motherboard Power Status
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1550657804
+Class: feature
+
+This werk adds support for monitoring of Cisco UCS C-Series Rack Server motherboard output power,
+input current and input voltage.
+
+CMK-1067

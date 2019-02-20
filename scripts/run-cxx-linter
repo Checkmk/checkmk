@@ -1,0 +1,27 @@
+#! /bin/sh
+set -e
+TARGET=$1
+PATCHSET_REVISION=$2
+
+# ATTENTION! Extremely cunning hack ahead! Find out which files have been
+# changed in the current directory for the given commit. Transform those file
+# names into --what-if=... options for make and do a dry run with them. This
+# outputs the compilation commands needed, which we massage a bit with grep and
+# sed to finally find out which C/C++ we need to check. Brilliant!  :-D  ;-)
+FILES_TO_CHECK=$(make --dry-run \
+                      $(git diff-tree --no-commit-id --name-only -r --relative "${PATCHSET_REVISION}" | \
+                            sed 's/\(.*\)/--what-if=\1/') \
+                      all-am | \
+                     grep " || echo './'\`" | \
+                     sed "s,.* || echo '\\./'\`,,")
+
+if test -z "${FILES_TO_CHECK}"; then
+    echo "==================== nothing to do"
+    exit 0
+fi
+
+echo "==================== files to check:"
+echo "${FILES_TO_CHECK}"
+
+echo "==================== ${TARGET}"
+make ${TARGET} FILES_TO_CHECK="$(echo ${FILES_TO_CHECK})"

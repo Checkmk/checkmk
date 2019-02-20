@@ -178,11 +178,12 @@ compile_commands.json: Makefile $(wildcard *.cc *.h)
 	$(BEAR) $(MAKE) -j4
 
 tidy: compile_commands.json
-	$(RUN_CLANG_TIDY) -quiet -j6
+	$(RUN_CLANG_TIDY) -quiet -j6 $(FILES_TO_CHECK)
 
 iwyu: compile_commands.json
-	$(IWYU_TOOL) --output-format=clang -p . -- --mapping_file=$(abs_top_srcdir)/livestatus/iwyu-mappings/check_mk.imp
+	$(IWYU_TOOL) --output-format=clang -p . $(FILES_TO_CHECK) -- --mapping_file=$(abs_top_srcdir)/livestatus/iwyu-mappings/check_mk.imp
 
+# NOTE: cppcheck seems to ignore files on the command line when --project=... is given.  :-P
 cppcheck: compile_commands.json
 	$(CPPCHECK) -UCMC --enable=all --suppressions-list=cppcheck-suppressions.txt --inline-suppr --project=compile_commands.json --quiet --template=gcc
 

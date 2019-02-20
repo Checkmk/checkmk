@@ -101,6 +101,7 @@ check_info['aws_rds'] = {
     'includes': ['cpu_util.include', 'aws.include'],
     'group': 'cpu_utilization_multiitem',
     'default_levels_variable': 'aws_rds_cpu_util',
+    'has_perfdata': True,
 }
 
 #.
@@ -120,7 +121,7 @@ def check_aws_rds_cpu_credits(item, params, metrics):
     warn, crit = params.get("balance_levels_lower", (None, None))
     yield check_levels_backport(
         metrics['CPUCreditBalance'],
-        "aws_rds_credit_balance", (None, None, warn, crit),
+        "aws_cpu_credit_balance", (None, None, warn, crit),
         human_readable_func=lambda x: "%.2f" % x,
         infoname='Balance')
 
@@ -141,6 +142,7 @@ check_info['aws_rds.cpu_credits'] = {
     'service_description': 'AWS/RDS %s CPU Credits',
     'group': 'aws_rds_cpu_credits',
     'includes': ['backport.include'],
+    'has_perfdata': True,
 }
 
 #.

@@ -112,8 +112,7 @@ check_info['aws_ebs.burst_balance'] = {
         inventory_aws_generic(p, ['BurstBalance']),
     'check_function': check_aws_ebs_burst_balance,
     'service_description': 'AWS/EBS Burst Balance %s',
-    'includes': ['aws.include'],
+    'includes': ['aws.include', 'backport.include'],
     'group': 'aws_ebs_burst_balance',
-    'includes': ['backport.include'],
     'has_perfdata': True
 }

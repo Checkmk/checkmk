@@ -28,6 +28,7 @@ import abc
 import subprocess
 
 import requests
+import urllib3
 
 import cmk.gui.userdb as userdb
 import cmk.gui.sites as sites
@@ -49,6 +50,10 @@ from cmk.gui.plugins.wato import (
     ConfigDomainOMD,
     SiteBackupJobs,
 )
+
+# Disable python warnings in background job output or logs like "Unverified
+# HTTPS request is being made". We warn the user using analyze configuration.
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 @ac_test_registry.register

@@ -53,6 +53,7 @@ import traceback
 from typing import NamedTuple, List  # pylint: disable=unused-import
 
 import requests
+import urllib3
 from pathlib2 import Path
 import six
 
@@ -304,6 +305,10 @@ import cmk.gui.plugins.watolib
 
 if not cmk.is_raw_edition():
     import cmk.gui.cee.plugins.watolib
+
+# Disable python warnings in background job output or logs like "Unverified
+# HTTPS request is being made". We warn the user using analyze configuration.
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 def load_watolib_plugins():

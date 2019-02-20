@@ -1,0 +1,15 @@
+Title: Fixed "insecure request warning" message during distributed site remote calls
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1550666883
+
+When executing a remote automation call, for example to rename a host on a remote site
+in distributed setups, the message "InsecureRequestWarning: Unverified HTTPS request is
+being made" could be visible in the background job output which we don't want to display
+there. Insecure configurations are made visibile in the analyze configuration results
+instead.

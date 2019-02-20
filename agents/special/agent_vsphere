@@ -1243,6 +1243,139 @@ def fetch_counters_syntax(connection):
     return counters_syntax
 
 
+def fetch_extra_interface_counters(connection):
+    # Get additional interface counter info, this only works when querying ESX hosts
+    # TODO: get this info from the vcenter
+    if not opt_direct:
+        return []
+
+    net_extra_info = []
+    networksystem_response = connection.query_server(telegram_list["networksystem"])[1]
+    nic_objects = get_pattern('<pnic><key>(.*?)</pnic>', networksystem_response)
+    for nic in nic_objects:
+        nic_if = get_pattern('(.*?)</key><device>(.*?)</device>(.*)<mac>(.*?)</mac>', nic)
+        try:
+            bandwidth_block = nic_if[0][2]
+            bandwidth = get_pattern('</driver><linkSpeed><speedMb>(.*?)</speedMb>', bandwidth_block)
+            net_extra_info.append("net.macaddress|%s|%s|mac" % (nic_if[0][1], nic_if[0][3]))
+            if bandwidth:
+                net_extra_info.append(
+                    "net.bandwidth|%s|%s|bytes" % (nic_if[0][1], int(bandwidth[0]) * 1000000))
+                net_extra_info.append("net.state|%s|1|state" % nic_if[0][1])
+            else:
+                net_extra_info.append("net.state|%s|2|state" % nic_if[0][1])
+        except Exception:
+            # TODO: This is way too generic. What should be catched here?
+            return []
+
+    return net_extra_info
+
+
+def get_max_samples(connection):
+    # Determine the needed number of real-time samples
+    # One real-time sample is 20 seconds -> With a check interval of 1 minute we need the last 3 samples
+    # Longer check intervals require even more samples... n-minutes * 3
+    # We set the max_samples hard cap to 180 (1 hour)
+    # An ESX system does not offer more than one hour of real time samples, anyway.
+    max_samples = 3
+    if connection.last_cookie_access_time:
+        timedelta = time.time() - connection.last_cookie_access_time
+        max_samples = min(180, max(1, int(timedelta) / 20))
+    return max_samples
+
+
+def eval_sensor_info(hostname, current_propname, sensor_propset):
+    sensor_pattern = ""
+    for key in [
+            "name", "label", "summary", "key", "currentReading", "unitModifier", "baseUnits",
+            "sensorType"
+    ]:
+        sensor_pattern += "<%(name)s>(.*?)</%(name)s>.*?" % {"name": key}
+
+    sensor_data = get_pattern(sensor_pattern, sensor_propset)
+    properties, sensors = {}, {}
+    for name, label, summary, key, currentReading, unitModifier, baseUnits, sensorType in sensor_data:
+        sensors[name] = {
+            "name": name,
+            "label": label,
+            "summary": summary,
+            "key": key,
+            "currentReading": currentReading,
+            "unitModifier": unitModifier,
+            "baseUnits": baseUnits,
+            "sensorType": sensorType
+        }
+
+    return properties, sensors
+
+
+def eval_hardwarestatus_info(hostname, current_propname, sensor_propset):
+    sensor_pattern = ""
+    for key in ["name", "label", "summary", "key"]:
+        sensor_pattern += "<%(name)s>(.*?)</%(name)s>.*?" % {"name": key}
+
+    sensor_data = get_pattern(sensor_pattern, sensor_propset)
+    properties, sensors = {}, {}
+    for name, label, summary, key in sensor_data:
+        sensors[name] = {"name": name, "label": label, "summary": summary, "key": key}
+    return properties, sensors
+
+
+def eval_multipath_info(hostname, current_propname, multipath_propset):
+    multipath_infos = get_pattern("<id>(.*?)</id>.*?((?:<path>.*?</path>)+)", multipath_propset)
+    properties, sensors = {}, {}
+    for vml_id, xml_paths in multipath_infos:
+        # The Lun ID is part of the VML ID: https://kb.vmware.com/s/article/2078730
+        lun_id = vml_id[10:-12]
+        for path_name, path_state in get_pattern("<name>(.*?)</name>.*?<state>(.*?)</state>",
+                                                 xml_paths):
+            properties.setdefault(current_propname,
+                                  []).append("%s %s %s" % (lun_id, path_name, path_state))
+    return properties, sensors
+
+
+def eval_propset_block(hostname, current_propname, elements, id_key, propset):
+    pattern = ""
+    for key in elements:
+        pattern += "<%(name)s>(.*?)</%(name)s>.*?" % {"name": key}
+
+    data = get_pattern(pattern, propset)
+    properties, sensors = {}, {}
+    for match_groups in data:
+        entries = dict(zip(elements, match_groups))
+        for key, value in entries.items():
+            properties.setdefault("%s.%s.%s" % (current_propname, key, entries[id_key]),
+                                  []).append(value)
+    return properties, sensors
+
+
+def eval_cpu_pkg(hostname, current_propname, cpu_pkg_propset):
+    return eval_propset_block(hostname, current_propname,
+                              ["index", "vendor", "hz", "busHz", "description"], "index",
+                              cpu_pkg_propset)
+
+
+def eval_pci_device(hostname, current_propname, pci_propset):
+    return eval_propset_block(hostname, current_propname, ["id", "vendorName", "deviceName"], "id",
+                              pci_propset)
+
+
+def eval_systeminfo_other(hostname, current_propname, otherinfo_propset):
+    data = get_pattern("<identifierValue>(.*?)</identifierValue>.*?<key>(.*?)</key>",
+                       otherinfo_propset)
+    keys_index = {}
+
+    properties, sensors = {}, {}
+    for value, key in data:
+        idx = 0
+        if key in keys_index:
+            keys_index[key] = keys_index[key] + 1
+            idx = keys_index[key]
+        properties["hardware.systemInfo.otherIdentifyingInfo.%s.%d" % (key, idx)] = [value]
+        keys_index[key] = idx
+    return properties, sensors
+
+
 # TODO: Cleanup this function and remove the supression
 def fetch_data(connection):  # pylint: disable=too-many-branches
     output("<<<esx_systeminfo>>>")
@@ -1291,40 +1424,9 @@ def fetch_data(connection):  # pylint: disable=too-many-branches
     # Counters
     ###########################
     if "counters" in query_objects:
-        # Get additional interface counter info, this only works when querying ESX hosts
-        # TODO: get this info from the vcenter
-        net_extra_info = []
-        if opt_direct:
-            networksystem_response = connection.query_server(telegram_list["networksystem"])[1]
-            nic_objects = get_pattern('<pnic><key>(.*?)</pnic>', networksystem_response)
-            for nic in nic_objects:
-                nic_if = get_pattern('(.*?)</key><device>(.*?)</device>(.*)<mac>(.*?)</mac>', nic)
-                try:
-                    bandwidth_block = nic_if[0][2]
-                    bandwidth = get_pattern('</driver><linkSpeed><speedMb>(.*?)</speedMb>',
-                                            bandwidth_block)
-                    net_extra_info.append("net.macaddress|%s|%s|mac" % (nic_if[0][1], nic_if[0][3]))
-                    if bandwidth:
-                        net_extra_info.append("net.bandwidth|%s|%s|bytes" %
-                                              (nic_if[0][1], int(bandwidth[0]) * 1000000))
-                        net_extra_info.append("net.state|%s|1|state" % nic_if[0][1])
-                    else:
-                        net_extra_info.append("net.state|%s|2|state" % nic_if[0][1])
-                except Exception:
-                    # TODO: This is way too generic. What should be catched here?
-                    continue
-
+        net_extra_info = fetch_extra_interface_counters(connection)
         counters_syntax = fetch_counters_syntax(connection)
-
-        # Determine the needed number of real-time samples
-        # One real-time sample is 20 seconds -> With a check interval of 1 minute we need the last 3 samples
-        # Longer check intervals require even more samples... n-minutes * 3
-        # We set the max_samples hard cap to 180 (1 hour)
-        # An ESX system does not offer more than one hour of real time samples, anyway.
-        max_samples = 3
-        if connection.last_cookie_access_time:
-            timedelta = time.time() - connection.last_cookie_access_time
-            max_samples = min(180, max(1, int(timedelta) / 20))
+        max_samples = get_max_samples(connection)
 
         hostnames = hostsystems.keys()
         counter_data_payload = telegram_list["perfcounterdata"]
@@ -1414,89 +1516,6 @@ def fetch_data(connection):  # pylint: disable=too-many-branches
             hostsystems_properties[hostname] = {}
             hostsystems_sensors[hostname] = {}
 
-            current_propname = ""
-
-            def eval_sensor_info(hostname, current_propname, sensor_propset):
-                sensor_pattern = ""
-                for key in [
-                        "name", "label", "summary", "key", "currentReading", "unitModifier",
-                        "baseUnits", "sensorType"
-                ]:
-                    sensor_pattern += "<%(name)s>(.*?)</%(name)s>.*?" % {"name": key}
-
-                sensor_data = get_pattern(sensor_pattern, sensor_propset)
-                for name, label, summary, key, currentReading, unitModifier, baseUnits, sensorType in sensor_data:
-                    hostsystems_sensors[hostname][name] = {
-                        "name": name,
-                        "label": label,
-                        "summary": summary,
-                        "key": key,
-                        "currentReading": currentReading,
-                        "unitModifier": unitModifier,
-                        "baseUnits": baseUnits,
-                        "sensorType": sensorType
-                    }
-
-            def eval_hardwarestatus_info(hostname, current_propname, sensor_propset):
-                sensor_pattern = ""
-                for key in ["name", "label", "summary", "key"]:
-                    sensor_pattern += "<%(name)s>(.*?)</%(name)s>.*?" % {"name": key}
-
-                sensor_data = get_pattern(sensor_pattern, sensor_propset)
-                for name, label, summary, key in sensor_data:
-                    hostsystems_sensors[hostname][name] = {
-                        "name": name,
-                        "label": label,
-                        "summary": summary,
-                        "key": key
-                    }
-
-            def eval_multipath_info(hostname, current_propname, multipath_propset):
-                multipath_infos = get_pattern("<id>(.*?)</id>.*?((?:<path>.*?</path>)+)",
-                                              multipath_propset)
-                for vml_id, xml_paths in multipath_infos:
-                    # The Lun ID is part of the VML ID: https://kb.vmware.com/s/article/2078730
-                    lun_id = vml_id[10:-12]
-                    for path_name, path_state in get_pattern(
-                            "<name>(.*?)</name>.*?<state>(.*?)</state>", xml_paths):
-                        hostsystems_properties[hostname].setdefault(current_propname, []).append(
-                            "%s %s %s" % (lun_id, path_name, path_state))
-
-            def eval_propset_block(hostname, current_propname, elements, id_key, propset):
-                pattern = ""
-                for key in elements:
-                    pattern += "<%(name)s>(.*?)</%(name)s>.*?" % {"name": key}
-
-                data = get_pattern(pattern, propset)
-                for match_groups in data:
-                    entries = dict(zip(elements, match_groups))
-                    for key, value in entries.items():
-                        hostsystems_properties[hostname].setdefault("%s.%s.%s" % \
-                            (current_propname, key, entries[id_key]), []).append(value)
-
-            def eval_cpu_pkg(hostname, current_propname, cpu_pkg_propset):
-                eval_propset_block(hostname, current_propname,
-                                   ["index", "vendor", "hz", "busHz", "description"], "index",
-                                   cpu_pkg_propset)
-
-            def eval_pci_device(hostname, current_propname, pci_propset):
-                eval_propset_block(hostname, current_propname, ["id", "vendorName", "deviceName"],
-                                   "id", pci_propset)
-
-            def eval_systeminfo_other(hostname, current_propname, otherinfo_propset):
-                data = get_pattern("<identifierValue>(.*?)</identifierValue>.*?<key>(.*?)</key>",
-                                   otherinfo_propset)
-                keys_index = {}
-
-                for value, key in data:
-                    idx = 0
-                    if key in keys_index:
-                        keys_index[key] = keys_index[key] + 1
-                        idx = keys_index[key]
-                    hostsystems_properties[hostname][
-                        "hardware.systemInfo.otherIdentifyingInfo.%s.%d" % (key, idx)] = [value]
-                    keys_index[key] = idx
-
             eval_functions = {
                 "config.storageDevice.multipathInfo": eval_multipath_info,
                 "runtime.healthSystemRuntime.systemHealthInfo.numericSensorInfo": eval_sensor_info,
@@ -1512,7 +1531,10 @@ def fetch_data(connection):  # pylint: disable=too-many-branches
                                    entry)
             for current_propname, value in elements:
                 if eval_functions.get(current_propname):
-                    eval_functions[current_propname](hostname, current_propname, value)
+                    properties, sensors = eval_functions[current_propname](hostname,
+                                                                           current_propname, value)
+                    hostsystems_properties[hostname].update(properties)
+                    hostsystems_sensors[hostname].update(sensors)
                 else:
                     hostsystems_properties[hostname].setdefault(current_propname, []).append(value)
 

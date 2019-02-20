@@ -1,0 +1,22 @@
+Title: Apache: Disable TRACE and OPTIONS methods
+Level: 1
+Component: omd
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1550645011
+Class: security
+
+The HTTP method TRACE makes some kind of reflection attacks possible and is not
+used at all. It has been enabled for the site apache using the option
+<tt>TraceEnable Off</tt> in etc/apache/conf.d/security.conf.
+
+The similar TRACK method is not supported by the site apache at all, so it does
+not have to be disabled.
+
+A lot of guides recommend to also disable the OPTIONS method for production
+servers.  This HTTP method basically reports which HTTP Methods that are
+allowed on the web server. In reality, this is rarely used for legitimate
+purposes, but it may grant a potential attacker a little bit of help and it
+can be considered a shortcut to find another hole. For this reason we also
+disabled the OPTIONS method.

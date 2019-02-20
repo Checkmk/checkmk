@@ -38,11 +38,6 @@ def parse_aws_elb_health(info):
         return {}
 
 
-def inventory_aws_elb_health(parsed):
-    if parsed:
-        return [(None, {})]
-
-
 def check_aws_elb_health(item, params, parsed):
     state_readable = AWSELBHealthMap[parsed['State']]
     if state_readable == "in service":
@@ -65,7 +60,7 @@ def check_aws_elb_health(item, params, parsed):
 
 check_info['aws_elb_health'] = {
     'parse_function': parse_aws_elb_health,
-    'inventory_function': inventory_aws_elb_health,
+    'inventory_function': discover_single,
     'check_function': check_aws_elb_health,
     'service_description': 'AWS/ELB Health ',
     'includes': ['aws.include'],

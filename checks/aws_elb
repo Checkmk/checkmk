@@ -26,7 +26,7 @@
 
 
 def parse_aws_elb(info):
-    return _extract_aws_metrics([
+    metrics = _extract_aws_metrics_by_labels([
         "RequestCount",
         "SurgeQueueLength",
         "SpilloverCount",
@@ -41,13 +41,12 @@ def parse_aws_elb(info):
         "UnHealthyHostCount",
         "BackendConnectionErrors",
     ], parse_aws(info))
-
-
-def inventory_aws_elb_generic(parsed, required_metrics):
-    for required_metric in required_metrics:
-        if required_metric not in parsed:
-            return []
-    return [(None, {})]
+    # We get exactly one entry: {INST-ID: METRICS}
+    # INST-ID is the piggyback host name
+    try:
+        return metrics.values()[-1]
+    except IndexError:
+        return {}
 
 
 #   .--statistics----------------------------------------------------------.
@@ -87,11 +86,11 @@ def check_aws_elb_statistics(item, params, parsed):
 
 check_info['aws_elb'] = {
     'parse_function': parse_aws_elb,
-    'inventory_function':
-        lambda p: inventory_aws_elb_generic(p, ['SurgeQueueLength', 'SpilloverCount']),
+    'inventory_function': lambda p: inventory_aws_generic_single(
+        p, ['SurgeQueueLength', 'SpilloverCount']),
     'check_function': check_aws_elb_statistics,
     'service_description': 'AWS/ELB Statistics',
-    'includes': ['aws.include', 'backport.include'],                                
+    'includes': ['aws.include', 'backport.include'],
     'has_perfdata': True,
     'default_levels_variable': 'aws_elb_statistics',
     'group': 'aws_elb_statistics',
@@ -120,10 +119,10 @@ def check_aws_elb_latency(item, params, parsed):
 
 
 check_info['aws_elb.latency'] = {
-    'inventory_function': lambda p: inventory_aws_elb_generic(p, ['Latency']),
+    'inventory_function': lambda p: inventory_aws_generic_single(p, ['Latency']),
     'check_function': check_aws_elb_latency,
     'service_description': 'AWS/ELB Latency',
-    'includes': ['backport.include'],                                
+    'includes': ['aws.include', 'backport.include'],
     'has_perfdata': True,
     'group': 'aws_elb_latency',
 }
@@ -171,11 +170,11 @@ def check_aws_elb_http_elb(item, params, parsed):
 
 
 check_info['aws_elb.http_elb'] = {
-    'inventory_function':
-        lambda p: inventory_aws_elb_generic(p, ['RequestCount', 'HTTPCode_ELB_4XX', 'HTTPCode_ELB_5XX']),
+    'inventory_function': lambda p: inventory_aws_generic_single(
+        p, ['RequestCount', 'HTTPCode_ELB_4XX', 'HTTPCode_ELB_5XX']),
     'check_function': check_aws_elb_http_elb,
     'service_description': 'AWS/ELB HTTP ELB',
-    'includes': ['backport.include'],                                
+    'includes': ['aws.include', 'backport.include'],
     'has_perfdata': True,
     'group': 'aws_elb_http',
 }
@@ -231,10 +230,13 @@ def check_aws_elb_http_backend(item, params, parsed):
 
 
 check_info['aws_elb.http_backend'] = {
-    'inventory_function': lambda p: inventory_aws_elb_generic(p, ['RequestCount', 'HTTPCode_Backend_2XX', 'HTTPCode_Backend_3XX', 'HTTPCode_Backend_4XX', 'HTTPCode_Backend_5XX']),
+    'inventory_function': lambda p: inventory_aws_generic_single(p, [
+        'RequestCount', 'HTTPCode_Backend_2XX', 'HTTPCode_Backend_3XX', 'HTTPCode_Backend_4XX',
+        'HTTPCode_Backend_5XX'
+    ]),
     'check_function': check_aws_elb_http_backend,
     'service_description': 'AWS/ELB HTTP Backend',
-    'includes': ['backport.include'],                                
+    'includes': ['aws.include', 'backport.include'],
     'has_perfdata': True,
     'group': 'aws_elb_http',
 }
@@ -286,11 +288,11 @@ def check_aws_elb_healthy_hosts(item, params, parsed):
 
 
 check_info['aws_elb.healthy_hosts'] = {
-    'inventory_function':
-        lambda p: inventory_aws_elb_generic(p, ['HealthyHostCount', 'UnHealthyHostCount']),
+    'inventory_function': lambda p: inventory_aws_generic_single(
+        p, ['HealthyHostCount', 'UnHealthyHostCount']),
     'check_function': check_aws_elb_healthy_hosts,
     'service_description': 'AWS/ELB Healthy Hosts',
-    'includes': ['backport.include'],                                
+    'includes': ['aws.include', 'backport.include'],
     'group': 'aws_elb_healthy_hosts',
 }
 
@@ -321,10 +323,10 @@ def check_aws_elb_backend_connection_errors(item, params, parsed):
 
 
 check_info['aws_elb.backend_connection_errors'] = {
-    'inventory_function': lambda p: inventory_aws_elb_generic(p, ['BackendConnectionErrors']),
+    'inventory_function': lambda p: inventory_aws_generic_single(p, ['BackendConnectionErrors']),
     'check_function': check_aws_elb_backend_connection_errors,
     'service_description': 'AWS/ELB Backend Connection Errors',
-    'includes': ['backport.include'],                                
+    'includes': ['aws.include', 'backport.include'],
     'has_perfdata': True,
     'group': 'aws_elb_backend_connection_errors',
 }

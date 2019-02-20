@@ -28,7 +28,7 @@ EC2DefaultItemName = "Summary"
 
 
 def parse_aws_ec2(info):
-    metrics = _extract_aws_metrics([
+    metrics = _extract_aws_metrics_by_labels([
         'CPUCreditUsage',
         'CPUCreditBalance',
         'CPUUtilization',
@@ -41,17 +41,13 @@ def parse_aws_ec2(info):
         'StatusCheckFailed_Instance',
         'StatusCheckFailed_System',
     ], parse_aws(info))
-    if metrics:
-        return {EC2DefaultItemName: metrics}
-    return
-
-
-def inventory_aws_ec2_generic(parsed, required_metrics):
-    metrics = parsed.get(EC2DefaultItemName, {})
-    for required_metric in required_metrics:
-        if required_metric not in metrics:
-            return []
-    return [(None, {})]
+    # We get exactly one entry: {INST-ID: METRICS}
+    # INST-ID is the piggyback host name
+    try:
+        inst_metrics = metrics.values()[-1]
+    except IndexError:
+        inst_metrics = {}
+    return {EC2DefaultItemName: inst_metrics}
 
 
 #   .--status check--------------------------------------------------------.
@@ -66,13 +62,8 @@ def inventory_aws_ec2_generic(parsed, required_metrics):
 #   '----------------------------------------------------------------------'
 
 
-def _get_status_check_readable(value):
-    if int(value) == 0:
-        return 0, "passed"
-    return 2, "failed"
-
-
 def check_aws_ec2_status_check(item, params, parsed):
+    # item is None, therefore we cannot use @get_parsed_item_data
     metrics = parsed.get(EC2DefaultItemName)
     if metrics is None:
         return
@@ -86,10 +77,16 @@ def check_aws_ec2_status_check(item, params, parsed):
         yield state, "%s: %s" % (title, state_readable)
 
 
+def _get_status_check_readable(value):
+    if int(value) == 0:
+        return 0, "passed"
+    return 2, "failed"
+
+
 check_info['aws_ec2'] = {
     'parse_function': parse_aws_ec2,
-    'inventory_function':
-        lambda p: inventory_aws_ec2_generic(p, ['StatusCheckFailed_System', 'StatusCheckFailed_Instance']),
+    'inventory_function': lambda p: inventory_aws_generic_single(p[
+        EC2DefaultItemName], ['StatusCheckFailed_System', 'StatusCheckFailed_Instance']),
     'check_function': check_aws_ec2_status_check,
     'service_description': 'AWS/EC2 Status Check',
     'includes': ['aws.include'],
@@ -107,6 +104,7 @@ check_info['aws_ec2'] = {
 
 
 def check_aws_ec2_cpu_credits(item, params, parsed):
+    # item is None, therefore we cannot use @get_parsed_item_data
     metrics = parsed.get(EC2DefaultItemName)
     if metrics is None:
         return
@@ -121,8 +119,8 @@ def check_aws_ec2_cpu_credits(item, params, parsed):
 
 
 check_info['aws_ec2.cpu_credits'] = {
-    'inventory_function':
-        lambda p: inventory_aws_ec2_generic(p, ['CPUCreditUsage', 'CPUCreditBalance']),
+    'inventory_function': lambda p: inventory_aws_generic_single(p[
+        EC2DefaultItemName], ['CPUCreditUsage', 'CPUCreditBalance']),
     'check_function': check_aws_ec2_cpu_credits,
     'service_description': 'AWS/EC2 CPU Credits',
     'group': 'aws_ec2_cpu_credits',
@@ -146,6 +144,7 @@ factory_settings['aws_ec2_cpu_util_default_levels'] = {
 
 
 def check_aws_ec2_cpu_util(item, params, parsed):
+    # item is None, therefore we cannot use @get_parsed_item_data
     metrics = parsed.get(EC2DefaultItemName)
     if metrics is None:
         return
@@ -153,7 +152,8 @@ def check_aws_ec2_cpu_util(item, params, parsed):
 
 
 check_info['aws_ec2.cpu_util'] = {
-    'inventory_function': lambda p: inventory_aws_ec2_generic(p, ['CPUUtilization']),
+    'inventory_function': lambda p: inventory_aws_generic_single(p[EC2DefaultItemName],
+                                                                 ['CPUUtilization']),
     'check_function': check_aws_ec2_cpu_util,
     'service_description': 'AWS/EC2 CPU utilization',
     'group': 'cpu_utilization',
@@ -173,26 +173,26 @@ check_info['aws_ec2.cpu_util'] = {
 #   '----------------------------------------------------------------------'
 
 
-def check_aws_ec2_disk_io(item, params, parsed):
+@get_parsed_item_data
+def check_aws_ec2_disk_io(item, params, metrics):
     now = time.time()
-    disks = {}
-    for disk_name, metrics in parsed.iteritems():
-        disks.setdefault(
-            disk_name, {
-                "read_ios": get_rate("aws_ebs_disk_io_read_ios.%s" % item, now,
-                                     metrics['DiskReadOps']),
-                "write_ios": get_rate("aws_ebs_disk_io_write_ios.%s" % item, now,
-                                      metrics['DiskWriteOps']),
-                "read_throughput": get_rate("aws_ebs_disk_io_read_throughput.%s" % item, now,
-                                            metrics['DiskReadBytes']),
-                "write_throughput": get_rate("aws_ebs_disk_io_write_throughput.%s" % item, now,
-                                             metrics['DiskWriteBytes']),
-            })
+    disks = {
+        item: {
+            "read_ios": get_rate("aws_ebs_disk_io_read_ios.%s" % item, now, metrics['DiskReadOps']),
+            "write_ios": get_rate("aws_ebs_disk_io_write_ios.%s" % item, now,
+                                  metrics['DiskWriteOps']),
+            "read_throughput": get_rate("aws_ebs_disk_io_read_throughput.%s" % item, now,
+                                        metrics['DiskReadBytes']),
+            "write_throughput": get_rate("aws_ebs_disk_io_write_throughput.%s" % item, now,
+                                         metrics['DiskWriteBytes']),
+        }
+    }
     return check_diskstat_dict(item, params, disks)
 
 
 check_info['aws_ec2.disk_io'] = {
-    'inventory_function': discover(),
+    'inventory_function': lambda p:\
+        inventory_aws_generic(p, ['DiskReadOps', 'DiskWriteOps', 'DiskReadBytes', 'DiskWriteBytes']),
     'check_function': check_aws_ec2_disk_io,
     'service_description': 'AWS/EC2 Disk IO %s',
     'includes': ['diskstat.include', 'aws.include'],
@@ -215,7 +215,7 @@ check_info['aws_ec2.disk_io'] = {
 def check_aws_ec2_network_io(item, params, metrics):
     interfaces = [[
         "0",
-        EC2DefaultItemName,
+        item,
         "1",
         "",
         "1",
@@ -232,17 +232,18 @@ def check_aws_ec2_network_io(item, params, metrics):
         "",
         "",
         "",
-        EC2DefaultItemName,
+        item,
         "",
     ]]
-    return check_if_common_single(EC2DefaultItemName, params, interfaces)
+    return check_if_common_single(item, params, interfaces)
 
 
 check_info['aws_ec2.network_io'] = {
-    'inventory_function': discover(),
+    'inventory_function': lambda p:\
+        inventory_aws_generic(p, ['NetworkIn', 'NetworkOut']),
     'check_function': check_aws_ec2_network_io,
     'service_description': 'AWS/EC2 Network IO %s',
-    'includes': ['if.include'],
+    'includes': ['aws.include', 'if.include'],
     'default_levels_variable': "if_default_levels",
     'group': 'if',
     'has_perfdata': True,

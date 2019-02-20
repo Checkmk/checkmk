@@ -28,7 +28,6 @@
 def parse_aws_s3(info):
     parsed = {}
     for row in parse_aws(info):
-        splitted_row = row['Id'].split("_")
         bucket = parsed.setdefault(row['Label'], {})
         try:
             bucket['LocationConstraint'] = row['LocationConstraint']
@@ -38,9 +37,10 @@ def parse_aws_s3(info):
             bucket['Tagging'] = row['Tagging']
         except KeyError:
             pass
-        inst = bucket.setdefault(splitted_row[0], {})
+        storage_key, size_key = row['Id'].split("_")[-2:]
+        inst = bucket.setdefault(size_key, {})
         try:
-            inst.setdefault(splitted_row[1], row['Values'][0])
+            inst.setdefault(storage_key, row['Values'][0])
         except (IndexError, ValueError):
             pass
     return parsed
@@ -55,20 +55,13 @@ def parse_aws_s3(info):
 #   |                                  |__/                                |
 #   '----------------------------------------------------------------------'
 
-aws_s3_storage_mapping = {
-    "standardstorage": "Standard",
-    "standardiastorage": "IA",
-    "reducedredundancystorage": "Redundancy",
-}
-
 
 @get_parsed_item_data
 def check_aws_s3_objects(item, params, metrics):
-    bucket_sizes = metrics['bucketsizebytes']
+    bucket_sizes = metrics['BucketSizeBytes']
     storage_infos = []
     for storage_type, value in bucket_sizes.iteritems():
-        storage_infos.append(
-            "%s: %s" % (aws_s3_storage_mapping[storage_type], get_bytes_human_readable(value)))
+        storage_infos.append("%s: %s" % (storage_type, get_bytes_human_readable(value)))
     sum_size = sum(bucket_sizes.values())
     yield check_levels_backport(
         sum_size,
@@ -79,7 +72,7 @@ def check_aws_s3_objects(item, params, metrics):
     if storage_infos:
         yield 0, ", ".join(storage_infos)
 
-    num_objects = sum(metrics['numberofobjects'].values())
+    num_objects = sum(metrics['NumberOfObjects'].values())
     yield 0, 'Number of objects: %s' % int(num_objects), [('aws_num_objects', num_objects)]
 
     location = metrics.get('LocationConstraint')
@@ -95,7 +88,8 @@ def check_aws_s3_objects(item, params, metrics):
 
 check_info['aws_s3'] = {
     'parse_function': parse_aws_s3,
-    'inventory_function': discover(),
+    'inventory_function': lambda p:\
+        inventory_aws_generic(p, ['BucketSizeBytes', 'NumberOfObjects']),
     'check_function': check_aws_s3_objects,
     'service_description': 'AWS/S3 Objects %s',
     'has_perfdata': True,
@@ -119,7 +113,7 @@ def check_aws_s3_summary(item, params, parsed):
     largest_bucket = None
     largest_bucket_size = 0
     for bucket_name, bucket in parsed.iteritems():
-        bucket_size = sum(bucket['bucketsizebytes'].values())
+        bucket_size = sum(bucket['BucketSizeBytes'].values())
         sum_size += bucket_size
         if bucket_size >= largest_bucket_size:
             largest_bucket = bucket_name

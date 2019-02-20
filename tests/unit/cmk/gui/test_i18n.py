@@ -12,7 +12,7 @@ import cmk.gui.i18n as i18n
 
 @pytest.fixture(autouse=True)
 def locale_paths(tmp_path, monkeypatch):
-    monkeypatch.setattr(cmk.utils.paths, "locale_dir", "%s/enterprise/locale" % cmk_path())
+    monkeypatch.setattr(cmk.utils.paths, "locale_dir", "%s/locale" % cmk_path())
     monkeypatch.setattr(cmk.utils.paths, "local_locale_dir", str(tmp_path / "locale"))
 
 

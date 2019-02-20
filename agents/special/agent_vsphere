@@ -42,6 +42,11 @@ from xml.dom import minidom  # type: ignore
 
 from dateutil import tz
 
+
+class MKQueryServerException(Exception):
+    pass
+
+
 # Great article how to get additional information
 # http://www.veeam.com/kb1007
 
@@ -841,113 +846,6 @@ OPTIONS:
 """)
 
 
-short_options = "hi:u:s:Dat:H:Pp:S:"
-long_options = [
-    "help", "user=", "secret=", "direct", "agent", "debug", "modules=", "timeout=", "no-cert-check",
-    "hostname=", "tracefile=", "pysphere", "port=", "spaces=", "host_pwr_display=",
-    "vm_pwr_display=", "snapshot_display=", "vm_piggyname="
-]
-
-opt_debug = False
-opt_direct = False
-opt_agent = False
-opt_timeout = 60
-opt_port = 443
-opt_hostname = None
-opt_skip_placeholder_vm = False
-opt_pysphere = False
-opt_tracefile = None
-opt_host_pwr_display = None
-opt_vm_pwr_display = None
-opt_snapshot_display = None
-opt_vm_piggyname = "alias"
-opt_spaces = "underscore"
-opt_no_cert = False
-
-error = None
-error_exit = 1
-
-host_address = None
-user = None
-secret = None
-tracefile = None
-query_objects = ['hostsystem', 'virtualmachine', 'datastore', 'counters', 'licenses']
-
-try:
-    opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
-except getopt.GetoptError, err:
-    sys.stderr.write("%s\n" % err)
-    sys.exit(1)
-
-for o, a in opts:
-    if o in ['--debug']:
-        opt_debug = True
-    elif o in ['--tracefile']:
-        opt_tracefile = a
-    elif o in ['-D', '--direct']:
-        opt_direct = True
-    elif o in ['-a', '--agent']:
-        opt_agent = True
-    elif o == '-P':
-        opt_skip_placeholder_vm = True
-    elif o in ['-p', '--port']:
-        opt_port = a
-    elif o in ['--no-cert-check']:
-        opt_no_cert = True
-    elif o == '--pysphere':
-        opt_pysphere = True
-    elif o in ['-u', '--user']:
-        user = a
-    elif o in ['-s', '--secret']:
-        secret = a
-    elif o in ['-i', '--modules']:
-        query_objects = a.split(',')
-    elif o in ['-t', '--timeout']:
-        opt_timeout = int(a)
-    elif o in ['-H', '--hostname']:
-        opt_hostname = a
-    elif o in ['--vm_piggyname']:
-        opt_vm_piggyname = a
-    elif o in ['--vm_pwr_display']:
-        opt_vm_pwr_display = a
-    elif o in ['--host_pwr_display']:
-        opt_host_pwr_display = a
-    elif o in ['--snapshot_display']:
-        opt_snapshot_display = a
-    elif o in ['-S', '--spaces']:
-        if a not in ["cut", "underscore"]:
-            usage()
-            sys.exit(1)
-        opt_spaces = a
-    elif o in ['-h', '--help']:
-        usage()
-        sys.exit(0)
-
-# If the --pysphere option is set we use the legacy pysphere agent, though 50 times slower...
-if opt_pysphere:
-    path_vsphere_pysphere = os.path.dirname(os.path.abspath(__file__))
-    cmd = ["%s/agent_vsphere.pysphere" % path_vsphere_pysphere]
-    import subprocess
-    p = subprocess.Popen(cmd + sys.argv[1:], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    out, err = p.communicate()
-    if out:
-        sys.stdout.write(out)
-    if err:
-        sys.stderr.write(err)
-    sys.exit(p.returncode)
-
-if len(args) == 1:
-    host_address = args[0]
-elif not args:
-    sys.stderr.write("ERROR: No host given.\n")
-    sys.exit(1)
-else:
-    sys.stderr.write("ERROR: Please specify exactly one host.\n")
-    sys.exit(1)
-
-vsphere_output = []
-
-
 def output(ln):
     vsphere_output.append(ln)
 
@@ -960,9 +858,6 @@ def write_output(lines, fetch_agent, address):
     for ln in lines:
         sys.stdout.write((ln.encode("utf-8") if isinstance(ln, unicode) else ln) + "\n")
     sys.stdout.flush()
-
-
-socket.setdefaulttimeout(opt_timeout)
 
 
 def get_agent_info_tcp(address):
@@ -1000,32 +895,6 @@ def get_agent_info_tcp(address):
     return raw_response
 
 
-# Globals of ESX System. These settings are available after the first "systeminfo" query
-systemfields = [
-    "apiVersion",
-    "name",
-    "rootFolder",
-    "perfManager",
-    "sessionManager",
-    "licenseManager",
-    "propertyCollector",
-    "version",
-    "build",
-    "vendor",
-    "osType",
-]
-
-systeminfo = {}
-
-if opt_tracefile:
-    tracefile_dir = os.path.dirname(opt_tracefile) or "."
-    if os.path.exists(tracefile_dir):
-        tracefile = file(opt_tracefile, "w")
-    elif opt_debug:
-        sys.stderr.write("Path for tracefile %s does not exist" % opt_tracefile)
-        sys.stderr.flush()
-
-
 # Create a search pattern for the get_pattern function
 # create_search_pattern(["label", "summary", "startConnected", "allowGuestControl", "connected", "status"])
 def create_search_pattern(tokens):
@@ -1040,30 +909,6 @@ def get_pattern(pattern, line):
         return []
     p = re.compile(pattern, re.MULTILINE)
     return p.findall(line)
-
-
-if tracefile:
-    tracefile.write("Tracefile %s Host address: %s\n" %
-                    (datetime.datetime.now().strftime("%Y-%m-%d %H:%M"), host_address))
-
-host_cookie_path = None
-last_cookie_access_time = None
-server_cookie = None
-server_handle = None
-
-
-class MKQueryServerException(Exception):
-    pass
-
-
-# Cookie storage is only available in OMD setups
-if "OMD_SITE" in os.environ:
-    cookie_path = os.path.expanduser("~/tmp/check_mk/agents/agent_vsphere")
-
-    if not os.path.exists(cookie_path):
-        os.makedirs(cookie_path)
-
-    host_cookie_path = "%s/cookie.%s" % (cookie_path, host_address)
 
 
 def delete_server_cookie():
@@ -1306,6 +1151,157 @@ def eval_datastores(info):
 #   |                       |_|  |_|\__,_|_|_| |_|                         |
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
+
+short_options = "hi:u:s:Dat:H:Pp:S:"
+long_options = [
+    "help", "user=", "secret=", "direct", "agent", "debug", "modules=", "timeout=", "no-cert-check",
+    "hostname=", "tracefile=", "pysphere", "port=", "spaces=", "host_pwr_display=",
+    "vm_pwr_display=", "snapshot_display=", "vm_piggyname="
+]
+
+opt_debug = False
+opt_direct = False
+opt_agent = False
+opt_timeout = 60
+opt_port = 443
+opt_hostname = None
+opt_skip_placeholder_vm = False
+opt_pysphere = False
+opt_tracefile = None
+opt_host_pwr_display = None
+opt_vm_pwr_display = None
+opt_snapshot_display = None
+opt_vm_piggyname = "alias"
+opt_spaces = "underscore"
+opt_no_cert = False
+
+error = None
+error_exit = 1
+
+host_address = None
+user = None
+secret = None
+tracefile = None
+query_objects = ['hostsystem', 'virtualmachine', 'datastore', 'counters', 'licenses']
+
+try:
+    opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
+except getopt.GetoptError, err:
+    sys.stderr.write("%s\n" % err)
+    sys.exit(1)
+
+for o, a in opts:
+    if o in ['--debug']:
+        opt_debug = True
+    elif o in ['--tracefile']:
+        opt_tracefile = a
+    elif o in ['-D', '--direct']:
+        opt_direct = True
+    elif o in ['-a', '--agent']:
+        opt_agent = True
+    elif o == '-P':
+        opt_skip_placeholder_vm = True
+    elif o in ['-p', '--port']:
+        opt_port = a
+    elif o in ['--no-cert-check']:
+        opt_no_cert = True
+    elif o == '--pysphere':
+        opt_pysphere = True
+    elif o in ['-u', '--user']:
+        user = a
+    elif o in ['-s', '--secret']:
+        secret = a
+    elif o in ['-i', '--modules']:
+        query_objects = a.split(',')
+    elif o in ['-t', '--timeout']:
+        opt_timeout = int(a)
+    elif o in ['-H', '--hostname']:
+        opt_hostname = a
+    elif o in ['--vm_piggyname']:
+        opt_vm_piggyname = a
+    elif o in ['--vm_pwr_display']:
+        opt_vm_pwr_display = a
+    elif o in ['--host_pwr_display']:
+        opt_host_pwr_display = a
+    elif o in ['--snapshot_display']:
+        opt_snapshot_display = a
+    elif o in ['-S', '--spaces']:
+        if a not in ["cut", "underscore"]:
+            usage()
+            sys.exit(1)
+        opt_spaces = a
+    elif o in ['-h', '--help']:
+        usage()
+        sys.exit(0)
+
+# If the --pysphere option is set we use the legacy pysphere agent, though 50 times slower...
+if opt_pysphere:
+    path_vsphere_pysphere = os.path.dirname(os.path.abspath(__file__))
+    cmd = ["%s/agent_vsphere.pysphere" % path_vsphere_pysphere]
+    import subprocess
+    p = subprocess.Popen(cmd + sys.argv[1:], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    out, err = p.communicate()
+    if out:
+        sys.stdout.write(out)
+    if err:
+        sys.stderr.write(err)
+    sys.exit(p.returncode)
+
+if len(args) == 1:
+    host_address = args[0]
+elif not args:
+    sys.stderr.write("ERROR: No host given.\n")
+    sys.exit(1)
+else:
+    sys.stderr.write("ERROR: Please specify exactly one host.\n")
+    sys.exit(1)
+
+vsphere_output = []
+
+socket.setdefaulttimeout(opt_timeout)
+
+# Globals of ESX System. These settings are available after the first "systeminfo" query
+systemfields = [
+    "apiVersion",
+    "name",
+    "rootFolder",
+    "perfManager",
+    "sessionManager",
+    "licenseManager",
+    "propertyCollector",
+    "version",
+    "build",
+    "vendor",
+    "osType",
+]
+
+systeminfo = {}
+
+if opt_tracefile:
+    tracefile_dir = os.path.dirname(opt_tracefile) or "."
+    if os.path.exists(tracefile_dir):
+        tracefile = file(opt_tracefile, "w")
+    elif opt_debug:
+        sys.stderr.write("Path for tracefile %s does not exist" % opt_tracefile)
+        sys.stderr.flush()
+
+if tracefile:
+    tracefile.write("Tracefile %s Host address: %s\n" %
+                    (datetime.datetime.now().strftime("%Y-%m-%d %H:%M"), host_address))
+
+host_cookie_path = None
+last_cookie_access_time = None
+server_cookie = None
+server_handle = None
+
+# Cookie storage is only available in OMD setups
+if "OMD_SITE" in os.environ:
+    cookie_path = os.path.expanduser("~/tmp/check_mk/agents/agent_vsphere")
+
+    if not os.path.exists(cookie_path):
+        os.makedirs(cookie_path)
+
+    host_cookie_path = "%s/cookie.%s" % (cookie_path, host_address)
 
 connect_to_server()
 retrieve_systeminfo()

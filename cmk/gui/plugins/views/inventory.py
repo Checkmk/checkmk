@@ -515,13 +515,8 @@ def inv_paint_timestamp_as_age_days(timestamp):
 
 
 @decorate_inv_paint
-def inv_paint_docker_labels(labels):
-    return "labels", html.render_br().join(sorted(labels.split(", ")))
-
-
-@decorate_inv_paint
-def inv_paint_lines_csv(lines):
-    return "", lines.replace(",", "<br>")
+def inv_paint_csv_labels(csv_list):
+    return "labels", html.render_br().join(csv_list.split(","))
 
 
 #.
@@ -1026,10 +1021,10 @@ inventory_displayhints.update({
         "view": "invdockerimages_of_host",
     },
     ".software.applications.docker.images:*.id": {"title": _("ID")},
-    ".software.applications.docker.images:*.labels": {"paint": "docker_labels"},
+    ".software.applications.docker.images:*.labels": {"paint": "csv_labels"},
     ".software.applications.docker.images:*.amount_containers": {"title": _("# Containers")},
-    ".software.applications.docker.images:*.repotags": {"title": _("Repository/Tag"), "paint": "lines_csv"},
-    ".software.applications.docker.images:*.repodigests": {"title": _("Digests"), "paint": "lines_csv"},
+    ".software.applications.docker.images:*.repotags": {"title": _("Repository/Tag"), "paint": "csv_labels"},
+    ".software.applications.docker.images:*.repodigests": {"title": _("Digests"), "paint": "csv_labels"},
 
     # Node containers
     ".software.applications.docker.containers:": {
@@ -1038,7 +1033,7 @@ inventory_displayhints.update({
         "view": "invdockercontainers_of_host",
     },
     ".software.applications.docker.containers:*.id": {"title": _("ID")},
-    ".software.applications.docker.containers:*.labels": {"paint": "docker_labels"},
+    ".software.applications.docker.containers:*.labels": {"paint": "csv_labels"},
     ".software.applications.docker.networks.*.": {"title": "Network %s"},
     ".software.applications.docker.networks.*.network_id": {"title": "Network ID"},
     ".software.applications.docker.container.": {"title": _("Container")},

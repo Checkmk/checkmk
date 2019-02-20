@@ -51,6 +51,7 @@ import tarfile
 import cStringIO
 import re
 import requests
+import urllib3
 from lib import *
 from log import logger
 from valuespec import *
@@ -73,6 +74,11 @@ from htmllib import RequestTimeout
 
 if cmk.is_managed_edition():
     import managed
+
+# Disable python warnings in background job output or logs like "Unverified
+# HTTPS request is being made". We warn the user using analyze configuration.
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
 
 replication_paths = []
 backup_paths = []

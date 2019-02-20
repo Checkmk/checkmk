@@ -1,0 +1,13 @@
+Title: Fixed exception when trying to export agent output for non WATO hosts
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1550661767
+
+The actions "Fetch agent output" and "Fetch SNMP walk" can only be used for hosts
+managed by WATO for distributed sites. The error message for non WATO hosts could
+not be displayed correctly and resulted in a crash which is fixed now.

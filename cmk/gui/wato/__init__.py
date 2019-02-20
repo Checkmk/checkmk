@@ -617,7 +617,7 @@ class AgentOutputPage(object):
         if not host:
             raise MKGeneralException(
                 _("Host is not managed by WATO. "
-                  "Click <a href=\"%s\">here</a> to go back.") % html.escape_attribute(
+                  "Click <a href=\"%s\">here</a> to go back.") % html.escaper.escape_attribute(
                       self._back_url))
         host.need_permission("read")
         self._host = host

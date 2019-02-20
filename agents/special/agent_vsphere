@@ -39,8 +39,9 @@ import socket
 import sys
 import time
 from xml.dom import minidom  # type: ignore
-
 from dateutil import tz
+
+import cmk.utils.paths
 
 
 class MKQueryServerException(Exception):
@@ -332,10 +333,6 @@ telegram_list = {
          '<ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>rpToVm</ns1:name><ns1:type>ResourcePool</ns1:type>'\
          '<ns1:path>vm</ns1:path><ns1:skip>false</ns1:skip></ns1:selectSet>'\
          '</ns1:objectSet></ns1:specSet><ns1:options></ns1:options></ns1:RetrievePropertiesEx>',
-
-     "logout":
-         '<ns1:Logout xsi:type="ns1:LogoutRequestType">'\
-         '<ns1:_this type="SessionManager">%(sessionManager)s</ns1:_this></ns1:Logout>',
 
      "continuetoken":
          '<ns1:ContinueRetrievePropertiesEx xsi:type="ns1:ContinueRetrievePropertiesExRequestType">'\
@@ -912,7 +909,7 @@ def get_pattern(pattern, line):
 
 
 def delete_server_cookie():
-    if host_cookie_path and os.path.exists(host_cookie_path):
+    if os.path.exists(host_cookie_path):
         os.unlink(host_cookie_path)
 
 
@@ -1028,7 +1025,7 @@ def retrieve_systeminfo():
 def login():
     global server_cookie
 
-    if host_cookie_path and os.path.exists(host_cookie_path):
+    if os.path.exists(host_cookie_path):
         server_cookie = file(host_cookie_path, "r").read()
     else:
         payload = telegram_list["login"]
@@ -1040,7 +1037,10 @@ def login():
             error = "Cannot login to vSphere Server. Login response is not 'OK'. Please check the credentials"
         else:
             server_cookie = reply_headers.get("Set-Cookie")
-            if host_cookie_path and server_cookie:
+            if server_cookie:
+                if not os.path.exists(os.path.dirname(host_cookie_path)):
+                    os.makedirs(os.path.dirname(host_cookie_path))
+
                 cookie_file = file(host_cookie_path, "w")
                 os.chmod(host_cookie_path, 0600)
                 cookie_file.write(server_cookie)
@@ -1289,19 +1289,10 @@ if tracefile:
     tracefile.write("Tracefile %s Host address: %s\n" %
                     (datetime.datetime.now().strftime("%Y-%m-%d %H:%M"), host_address))
 
-host_cookie_path = None
 last_cookie_access_time = None
 server_cookie = None
 server_handle = None
-
-# Cookie storage is only available in OMD setups
-if "OMD_SITE" in os.environ:
-    cookie_path = os.path.expanduser("~/tmp/check_mk/agents/agent_vsphere")
-
-    if not os.path.exists(cookie_path):
-        os.makedirs(cookie_path)
-
-    host_cookie_path = "%s/cookie.%s" % (cookie_path, host_address)
+host_cookie_path = "%s/agents/agent_vsphere/cookie.%s" % (cmk.utils.paths.tmp_dir, host_address)
 
 connect_to_server()
 retrieve_systeminfo()
@@ -1313,7 +1304,7 @@ if not systeminfo:
 # The cookie access time is required to determine the agents check interval
 # This is required later on by the performancecounters. Depending on the
 # interval we need more or less real-time samples
-if host_cookie_path and os.path.exists(host_cookie_path):
+if os.path.exists(host_cookie_path):
     last_cookie_access_time = os.stat(host_cookie_path).st_mtime
     os.utime(host_cookie_path, None)  # Touch the cookie file, whenever it is accessed
 
@@ -1805,10 +1796,6 @@ if not error:
             output("<<<<>>>>")
 
             section_systemtime()
-
-            # We only logout in non OMD-setups
-            if not host_cookie_path:
-                query_server(telegram_list["logout"])
 
             break
         except MKQueryServerException, e:

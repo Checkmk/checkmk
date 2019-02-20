@@ -32,6 +32,7 @@ import re
 import subprocess
 import time
 import requests
+import urllib3
 
 import cmk.utils
 
@@ -47,6 +48,10 @@ from cmk.gui.exceptions import (
     MKGeneralException,
     MKUserError,
 )
+
+# Disable python warnings in background job output or logs like "Unverified
+# HTTPS request is being made". We warn the user using analyze configuration.
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 class MKAutomationException(MKGeneralException):

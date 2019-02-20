@@ -157,6 +157,7 @@ check_info['aws_rds.cpu_credits'] = {
         inventory_aws_generic(p, ['CPUCreditUsage', 'CPUCreditBalance']),
     'check_function': check_aws_rds_cpu_credits,
     'service_description': 'AWS/RDS %s CPU Credits',
+    'includes': ['aws.include'],
     'group': 'aws_rds_cpu_credits',
     'has_perfdata': True,
 }
@@ -204,7 +205,7 @@ check_info['aws_rds.network_io'] = {
         inventory_aws_generic(p, ['NetworkReceiveThroughput', 'NetworkTransmitThroughput']),
     'check_function': check_aws_rds_network_io,
     'service_description': 'AWS/RDS %s Network IO',
-    'includes': ["if.include"],
+    'includes': ['aws.include', "if.include"],
     'default_levels_variable': "if_default_levels",
     'group': 'if',
     'has_perfdata': True,
@@ -243,6 +244,7 @@ check_info['aws_rds.bin_log_usage'] = {
         inventory_aws_generic(p, ['BinLogDiskUsage', 'AllocatedStorage']),
     'check_function': check_aws_rds_bin_log_usage,
     'service_description': 'AWS/RDS %s Binary Log Usage',
+    'includes': ['aws.include'],
     'has_perfdata': True,
     'group': 'aws_rds_disk_usage',
 }
@@ -290,6 +292,7 @@ check_info['aws_rds.transaction_logs_usage'] = {
         inventory_aws_generic(p, ['TransactionLogsDiskUsage', 'AllocatedStorage']),
     'check_function': check_aws_rds_transaction_logs_usage,
     'service_description': 'AWS/RDS %s Transaction Logs Usage',
+    'includes': ['aws.include'],
     'has_perfdata': True,
     'group': 'aws_rds_disk_usage',
 }
@@ -333,6 +336,7 @@ check_info['aws_rds.replication_slot_usage'] = {
         inventory_aws_generic(p, ['ReplicationSlotDiskUsage', 'AllocatedStorage']),
     'check_function': check_aws_rds_replication_slot_usage,
     'service_description': 'AWS/RDS %s Replication Slot Usage',
+    'includes': ['aws.include'],
     'has_perfdata': True,
     'group': 'aws_rds_disk_usage',
 }
@@ -373,7 +377,7 @@ check_info['aws_rds.disk_io'] = {
         inventory_aws_generic(p, ['DiskQueueDepth', 'ReadIOPS', 'ReadLatency', 'ReadThroughput', 'WriteIOPS', 'WriteLatency', 'WriteThroughput']),
     'check_function': check_aws_rds_disk_io,
     'service_description': 'AWS/RDS %s Disk IO',
-    'includes': ['diskstat.include'],
+    'includes': ['aws.include', 'diskstat.include'],
     'group': 'diskstat',
     'has_perfdata': True,
 }
@@ -403,6 +407,7 @@ check_info['aws_rds.connections'] = {
         inventory_aws_generic(p, ['DatabaseConnections']),
     'check_function': check_aws_rds_connections,
     'service_description': 'AWS/RDS %s Connections',
+    'includes': ['aws.include'],
     'has_perfdata': True,
     'group': 'aws_rds_connections',
 }
@@ -433,6 +438,7 @@ check_info['aws_rds.agent_jobs'] = {
         inventory_aws_generic(p, ['FailedSQLServerAgentJobsCount']),
     'check_function': check_aws_rds_agent_jobs,
     'service_description': 'AWS/RDS %s SQL Server Agent Jobs',
+    'includes': ['aws.include'],
 }
 
 #.
@@ -470,6 +476,7 @@ check_info['aws_rds.replica_lag'] = {
         inventory_aws_generic(p, ['ReplicaLag']),
     'check_function': check_aws_rds_replica_lag,
     'service_description': 'AWS/RDS %s Replica Lag',
+    'includes': ['aws.include'],
     'has_perfdata': True,
     'group': 'aws_rds_replica_lag',
 }

@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-from testlib import CMKWebSession, web
+from testlib import CMKWebSession
+
 
 def test_www_dir(site):
     web = CMKWebSession(site)
@@ -82,3 +83,21 @@ def test_cmk_ajax_graph_images(site):
     web = CMKWebSession(site)
     response = web.get("/%s/check_mk/ajax_graph_images.py" % site.id)
     assert response.text == ""
+
+
+def test_trace_disabled(site):
+    web = CMKWebSession(site)
+    # TRACE is disabled by using "TraceEnable Off" in apache config
+    web._request("TRACE", "/", expected_code=405)
+
+
+def test_track_disabled(site):
+    web = CMKWebSession(site)
+    # TRACE is not supported by apache at all by apache, so there is no need to
+    # disable this. The HTTP code is just different from TRACE.
+    web._request("TRACK", "/", expected_code=403)
+
+
+def test_options_disabled(site):
+    web = CMKWebSession(site)
+    web._request("OPTIONS", "/", expected_code=403)

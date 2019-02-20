@@ -976,11 +976,6 @@ class WebSession(requests.Session):
         if expect_redirect:
             kwargs["allow_redirects"] = False
 
-        if method == "post":
-            func = super(WebSession, self).post
-        else:
-            func = super(WebSession, self).get
-
         # May raise "requests.exceptions.ConnectionError: ('Connection aborted.', BadStatusLine("''",))"
         # suddenly without known reason. This may be related to some
         # apache or HTTP/1.1 issue when working with keepalive connections. See
@@ -988,10 +983,10 @@ class WebSession(requests.Session):
         #   https://github.com/mikem23/keepalive-race
         # Trying to workaround this by trying the problematic request a second time.
         try:
-            response = func(url, **kwargs)
+            response = super(WebSession, self).request(method, url, **kwargs)
         except requests.ConnectionError as e:
             if allow_retry and "Connection aborted" in "%s" % e:
-                response = func(url, **kwargs)
+                response = super(WebSession, self).request(method, url, **kwargs)
             else:
                 raise
 
@@ -1506,9 +1501,7 @@ class CMKWebSession(WebSession):
     def get_site(self, site_id):
         result = self._api_request(
             "webapi.py?action=get_site&request_format=python&output_format=python",
-            {"request": json.dumps({
-                "site_id": site_id
-            })},
+            {"request": json.dumps({"site_id": site_id})},
             output_format="python")
 
         assert result != None
@@ -1523,9 +1516,7 @@ class CMKWebSession(WebSession):
     def delete_site(self, site_id):
         result = self._api_request(
             "webapi.py?action=delete_site&output_format=python",
-            {"request": json.dumps({
-                "site_id": site_id
-            })},
+            {"request": json.dumps({"site_id": site_id})},
             output_format="python")
 
         assert result is None
@@ -1571,24 +1562,18 @@ class CMKWebSession(WebSession):
 
     def add_htpasswd_users(self, users):
         result = self._api_request("webapi.py?action=add_users",
-                                   {"request": json.dumps({
-                                       "users": users
-                                   })})
+                                   {"request": json.dumps({"users": users})})
         assert result is None
 
     def edit_htpasswd_users(self, users):
         result = self._api_request("webapi.py?action=edit_users",
-                                   {"request": json.dumps({
-                                       "users": users
-                                   })})
+                                   {"request": json.dumps({"users": users})})
 
         assert result is None
 
     def delete_htpasswd_users(self, userlist):
         result = self._api_request("webapi.py?action=delete_users", {
-            "request": json.dumps({
-                "users": userlist
-            }),
+            "request": json.dumps({"users": userlist}),
         })
         assert result is None
 

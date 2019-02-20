@@ -1,0 +1,118 @@
+#!/usr/bin/python
+
+import os
+import subprocess
+import sys
+import time
+import polib
+
+
+def update_po_file(lang):
+    cmd = ["make", "update-%s" % lang]
+    p = subprocess.Popen(cmd, stdout=file("/dev/null", "w"))
+    if p.wait() != 0:
+        raise Exception("Command failed: %s" % " ".join(cmd))
+
+
+def cleanup_po_file(lang):
+    cmd = ["make", "cleanup-%s" % lang]
+    p = subprocess.Popen(cmd, stdout=file("/dev/null", "w"))
+    if p.wait() != 0:
+        raise Exception("Command failed: %s" % " ".join(cmd))
+
+
+def get_localizations_of_type_raw(po_file, ty):
+    p = subprocess.Popen(
+        ["msgattrib", "--%s" % ty, "--no-obsolete", "--no-wrap", po_file],
+        stdout=subprocess.PIPE,
+        stderr=file("/dev/null", "w"))
+    stdout = p.communicate()[0]
+    if p.returncode != 0:
+        raise Exception("Command failed!")
+
+    return stdout
+
+
+def base_path():
+    return os.path.dirname(os.path.realpath(__file__))
+
+
+def repo_path():
+    return os.path.dirname(base_path())
+
+
+def update_untranslated_with_last_commits(po_file):
+    po = polib.pofile(po_file)
+
+    entries = po.fuzzy_entries()
+    entries += po.untranslated_entries()
+
+    repo_basedir = repo_path()
+
+    for po_entry in entries:
+        for rel_path, line in po_entry.occurrences:
+            path = os.path.realpath(os.path.join(os.path.dirname(po_file), rel_path))
+
+            try:
+                commit = get_last_commit_of(repo_basedir, path, int(line))
+            except Exception, e:
+                print "ERROR", po_entry.msgid, po_entry.linenum
+                raise
+
+            if not hasattr(po_entry, "commits"):
+                po_entry.commits = set()
+
+            po_entry.commits.add(commit)
+
+        if not hasattr(po_entry, "commits"):
+            continue
+
+        commit_comment = []
+        for commit_id, name, summary_msg in po_entry.commits:
+            commit_comment.append("%s - %s: %s" % (name, commit_id, summary_msg))
+        po_entry.comment = "\n".join(commit_comment)
+
+    po.save()
+
+
+def get_last_commit_of(repo_path, path, line):
+    env = os.environ.copy()
+    env["GIT_DIR"] = repo_path + "/.git"
+    env["GIT_WORK_TREE"] = repo_path
+
+    cmd = ["git", "blame", "-p", "-L%d,+1" % line, path]
+
+    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, env=env)
+    stdout = p.communicate()[0].decode("utf-8")
+    if p.returncode != 0:
+        raise Exception("Command failed: %s" % " ".join(cmd))
+
+    commit_id = stdout.split("\n",)[0].split(" ", 1)[0]
+
+    msg, name, mail = None, None, None
+    for line in stdout.split("\n"):
+        if line.startswith("summary "):
+            msg = line.split(" ", 1)[1].strip()
+        elif line.startswith("author "):
+            name = line.split(" ", 1)[1].strip()
+        elif line.startswith("author-mail "):
+            mail = line.split(" ", 1)[1].strip("<>\n")
+
+    return commit_id, name, msg
+
+
+def main():
+    try:
+        lang = sys.argv[1]
+    except IndexError:
+        raise Exception("Call it like this: ./blame [LANG]")
+
+    po_file = "%s/LC_MESSAGES/multisite.po" % lang
+    if not os.path.exists(po_file):
+        raise Exception("Language file does not exist: %s" % po_file)
+
+    update_po_file(lang)
+    update_untranslated_with_last_commits(po_file)
+
+
+main()

@@ -19,6 +19,7 @@ $(REPO_PATH)/$(DISTNAME).tar.gz:
 # The build step just extracts the archive
 # which was created in the step before
 $(CHECK_MK_BUILD): $(REPO_PATH)/$(DISTNAME).tar.gz
+	$(MAKE) -C $(REPO_PATH)/locale all
 	$(TAR_GZ) $(REPO_PATH)/$(DISTNAME).tar.gz
 	cd $(DISTNAME) ; \
 	  $(MKDIR) bin ; \
@@ -90,7 +91,14 @@ $(CHECK_MK_INSTALL): $(CHECK_MK_BUILD)
 	$(RM) $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins/Makefile
 	$(RM) $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins/*.cc
 	chmod 755 $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins/*
-	
+
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/check_mk/locale/de/LC_MESSAGES
+	install -m 644 $(REPO_PATH)/locale/de/LC_MESSAGES/multisite.mo $(DESTDIR)$(OMD_ROOT)/share/check_mk/locale/de/LC_MESSAGES
+	install -m 644 $(REPO_PATH)/locale/de/alias $(DESTDIR)$(OMD_ROOT)/share/check_mk/locale/de
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/check_mk/locale/ro/LC_MESSAGES
+	install -m 644 $(REPO_PATH)/locale/ro/LC_MESSAGES/multisite.mo $(DESTDIR)$(OMD_ROOT)/share/check_mk/locale/ro/LC_MESSAGES
+	install -m 644 $(REPO_PATH)/locale/ro/alias $(DESTDIR)$(OMD_ROOT)/share/check_mk/locale/ro
+
 	# Install hooks
 	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/MKEVENTD $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
 	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/MKEVENTD_SNMPTRAP $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/

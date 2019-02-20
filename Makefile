@@ -376,9 +376,7 @@ setup:
 	$(MAKE) -C omd setup
 	$(MAKE) -C omd openhardwaremonitor-setup
 	$(MAKE) -C docker setup
-ifeq ($(ENTERPRISE),yes)
-	$(MAKE) -C enterprise/locale setup
-endif
+	$(MAKE) -C locale setup
 
 linesofcode:
 	@wc -l $$(find -type f -name "*.py" -o -name "*.js" -o -name "*.cc" -o -name "*.h" -o -name "*.css" | grep -v openhardwaremonitor | grep -v jquery | grep -v livestatus/src ) | sort -n

@@ -152,6 +152,9 @@ class BackgroundProcess(BackgroundProcessInterface, multiprocessing.Process):
         # Detach from parent and cleanup inherited file descriptors
         os.setsid()
         daemon.set_procname(BackgroundJobDefines.process_name)
+        sys.stdin.close()
+        sys.stdout.close()
+        sys.stderr.close()
         daemon.closefrom(0)
 
         try:

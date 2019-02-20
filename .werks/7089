@@ -17,3 +17,6 @@ The werk #7088 made it possible to perform an update without having access to
 the old version. Once we have this functionality it is now possible to replace
 one container with a another container. In case the version has changed, the
 container is performing the update during startup of the new container.
+
+The simplified update procedure can be used for Docker container updates to
+version 1.6 or newer when the previous version is 1.5.0p13 or newer.

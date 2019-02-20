@@ -1,0 +1,12 @@
+Title: MKP manager: Changes to extension packages now mark the agent bakery to bake the agents
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cee
+Version: 1.5.0p13
+Date: 1550677922
+Class: fix
+
+Changes to MKP packages in the extension packages module of WATO now tell the
+agent bakery that software changes have been made and the agents should be
+baked again.

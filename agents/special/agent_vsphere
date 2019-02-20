@@ -38,8 +38,11 @@ import re
 import socket
 import sys
 import time
+import errno
+from typing import Optional, Text  # pylint: disable=unused-import
 from xml.dom import minidom  # type: ignore
 from dateutil import tz
+from pathlib2 import Path
 
 import cmk.utils.paths
 
@@ -909,8 +912,11 @@ def get_pattern(pattern, line):
 
 
 def delete_server_cookie():
-    if os.path.exists(host_cookie_path):
-        os.unlink(host_cookie_path)
+    try:
+        host_cookie_path.unlink()
+    except OSError as e:
+        if e.errno != errno.ENOENT:
+            raise
 
 
 def query_server(payload, payload_params=None):
@@ -1023,27 +1029,29 @@ def retrieve_systeminfo():
 
 
 def login():
-    global server_cookie
+    # type: () -> Optional[Text]
+    if host_cookie_path.exists():
+        return host_cookie_path.open(encoding="utf-8").read()
 
-    if os.path.exists(host_cookie_path):
-        server_cookie = file(host_cookie_path, "r").read()
-    else:
-        payload = telegram_list["login"]
-        _reply_code, _repy_msg, reply_headers, reply_data = \
-                    query_server(payload, payload_params = {"username": encode_url(user),
-                                                            "password": encode_url(secret)})
-        if "InvalidLogin" in reply_data:
-            global error
-            error = "Cannot login to vSphere Server. Login response is not 'OK'. Please check the credentials"
-        else:
-            server_cookie = reply_headers.get("Set-Cookie")
-            if server_cookie:
-                if not os.path.exists(os.path.dirname(host_cookie_path)):
-                    os.makedirs(os.path.dirname(host_cookie_path))
+    payload = telegram_list["login"]
+    _reply_code, _repy_msg, reply_headers, reply_data = \
+                query_server(payload, payload_params = {"username": encode_url(user),
+                                                        "password": encode_url(secret)})
 
-                cookie_file = file(host_cookie_path, "w")
-                os.chmod(host_cookie_path, 0600)
-                cookie_file.write(server_cookie)
+    # TODO: Refactor to exception
+    if "InvalidLogin" in reply_data:
+        global error
+        error = "Cannot login to vSphere Server. Login response is not 'OK'. Please check the credentials"
+        return None
+
+    server_cookie = reply_headers.get("Set-Cookie", "").decode("utf-8")
+
+    if server_cookie:
+        host_cookie_path.mkdir(parents=True, exist_ok=True)
+        with host_cookie_path.open("w", encoding="utf-8") as f:
+            f.write(server_cookie)
+
+    return server_cookie
 
 
 def output_aggregated_snapshots(vms, hostsystems=None):
@@ -1292,7 +1300,8 @@ if tracefile:
 last_cookie_access_time = None
 server_cookie = None
 server_handle = None
-host_cookie_path = "%s/agents/agent_vsphere/cookie.%s" % (cmk.utils.paths.tmp_dir, host_address)
+host_cookie_path = Path(
+    "%s/agents/agent_vsphere/cookie.%s" % (cmk.utils.paths.tmp_dir, host_address))
 
 connect_to_server()
 retrieve_systeminfo()
@@ -1304,11 +1313,12 @@ if not systeminfo:
 # The cookie access time is required to determine the agents check interval
 # This is required later on by the performancecounters. Depending on the
 # interval we need more or less real-time samples
-if os.path.exists(host_cookie_path):
-    last_cookie_access_time = os.stat(host_cookie_path).st_mtime
-    os.utime(host_cookie_path, None)  # Touch the cookie file, whenever it is accessed
+# TODO: Decouple login secret and perfcounter timer
+if host_cookie_path.exists():
+    last_cookie_access_time = host_cookie_path.stat().st_mtime
+    os.utime(str(host_cookie_path), None)  # Touch the cookie file, whenever it is accessed
 
-login()
+server_cookie = login()
 
 if not error:
     # If the data aquisition fails, e.g. invalid cookie we try another run
@@ -1804,7 +1814,7 @@ if not error:
             # We are delete the cookie and start a second run
             vsphere_output = []  # Reset current output
             delete_server_cookie()
-            login()
+            server_cookie = login()
             continue  # do a second run
         except Exception, e:
             if opt_debug:

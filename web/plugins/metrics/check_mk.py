@@ -4563,6 +4563,12 @@ metric_info['aws_burst_balance'] = {
     'color': '11/a',
 }
 
+metric_info['aws_cpu_credit_balance'] = {
+    'title': _('CPU Credit Balance'),
+    'unit': 'count',
+    'color': '11/a',
+}
+
 metric_info['aws_rds_bin_log_disk_usage'] = {
     'title': _('Bin Log Disk Usage'),
     'unit': '%',

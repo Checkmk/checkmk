@@ -45,6 +45,7 @@ from dateutil import tz
 from pathlib2 import Path
 
 import cmk.utils.paths
+from cmk.utils.exceptions import MKGeneralException
 
 
 class MKQueryServerException(Exception):
@@ -992,7 +993,6 @@ def encode_url(text):
 def connect_to_server():
     # Initialize server connection
     try:
-        global server_handle
         netloc = host_address + ":" + str(opt_port)
 
         if opt_no_cert:
@@ -1010,12 +1010,12 @@ def connect_to_server():
             sys.stderr.flush()
 
         server_handle.connect()
+        return server_handle
     except Exception, e:
         if opt_debug:
             raise
-        global error
-        error = "Cannot connect to vSphere Server. Please check the IP and SSL certificate (if applicable) "\
-                "and try again. This error is not related to the login credentials. Error message: %r" % e
+        raise MKGeneralException("Cannot connect to vSphere Server. Please check the IP and SSL certificate (if applicable) "\
+                "and try again. This error is not related to the login credentials. Error message: %r" % e)
 
 
 def retrieve_systeminfo():
@@ -1038,11 +1038,10 @@ def login():
                 query_server(payload, payload_params = {"username": encode_url(user),
                                                         "password": encode_url(secret)})
 
-    # TODO: Refactor to exception
     if "InvalidLogin" in reply_data:
-        global error
-        error = "Cannot login to vSphere Server. Login response is not 'OK'. Please check the credentials"
-        return None
+        raise MKGeneralException(
+            "Cannot login to vSphere Server. Login response is not 'OK'. Please check the credentials"
+        )
 
     server_cookie = reply_headers.get("Set-Cookie", "").decode("utf-8")
 
@@ -1183,9 +1182,6 @@ opt_vm_piggyname = "alias"
 opt_spaces = "underscore"
 opt_no_cert = False
 
-error = None
-error_exit = 1
-
 host_address = None
 user = None
 secret = None
@@ -1241,6 +1237,8 @@ for o, a in opts:
     elif o in ['-h', '--help']:
         usage()
         sys.exit(0)
+
+error_exit = 0 if opt_agent else 1
 
 # If the --pysphere option is set we use the legacy pysphere agent, though 50 times slower...
 if opt_pysphere:
@@ -1299,28 +1297,27 @@ if tracefile:
 
 last_cookie_access_time = None
 server_cookie = None
-server_handle = None
 host_cookie_path = Path(
     "%s/agents/agent_vsphere/cookie.%s" % (cmk.utils.paths.tmp_dir, host_address))
 
-connect_to_server()
-retrieve_systeminfo()
+try:
+    server_handle = connect_to_server()
+    retrieve_systeminfo()
 
-if not systeminfo:
-    sys.stderr.write("Unable to get data from Web API" + "\n")
-    sys.exit(1)
+    if not systeminfo:
+        sys.stderr.write("Unable to get data from Web API" + "\n")
+        sys.exit(1)
 
-# The cookie access time is required to determine the agents check interval
-# This is required later on by the performancecounters. Depending on the
-# interval we need more or less real-time samples
-# TODO: Decouple login secret and perfcounter timer
-if host_cookie_path.exists():
-    last_cookie_access_time = host_cookie_path.stat().st_mtime
-    os.utime(str(host_cookie_path), None)  # Touch the cookie file, whenever it is accessed
+    # The cookie access time is required to determine the agents check interval
+    # This is required later on by the performancecounters. Depending on the
+    # interval we need more or less real-time samples
+    # TODO: Decouple login secret and perfcounter timer
+    if host_cookie_path.exists():
+        last_cookie_access_time = host_cookie_path.stat().st_mtime
+        os.utime(str(host_cookie_path), None)  # Touch the cookie file, whenever it is accessed
 
-server_cookie = login()
+    server_cookie = login()
 
-if not error:
     # If the data aquisition fails, e.g. invalid cookie we try another run
     run_count = 0
     while run_count < 2:
@@ -1819,16 +1816,11 @@ if not error:
         except Exception, e:
             if opt_debug:
                 raise
-            error = "Error while processing received data"
+            raise MKGeneralException("Error while processing received data")
+
+except MKGeneralException as e:
+    sys.stderr.write("%s\n" % e)
+    sys.exit(error_exit)
 
 write_output(vsphere_output, opt_agent, host_address)
-
-if opt_agent:
-    error_exit = 0
-
-if tracefile:
-    tracefile.close()
-
-if error:
-    sys.stderr.write(error + "\n")
-    sys.exit(error_exit)
+sys.exit(0)

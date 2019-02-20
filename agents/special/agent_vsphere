@@ -1080,31 +1080,17 @@ def query_server(payload, payload_params=None):
     soapdata = put_in_envelope(payload)
     soapdata = soapdata % payload_params
 
-    def init_headers(soapdata):
-        server_handle.putrequest("POST", "/sdk")
-        server_handle.putheader("Content-Length", "%d" % len(soapdata))
-        server_handle.putheader("Content-Type", 'text/xml; charset="utf-8"')
-        server_handle.putheader("SOAPAction", "urn:vim25/5.0")
-        server_handle.putheader("User-Agent", "VMware VI Client/5.0.0")  # TODO: set client version?
-        if server_cookie:
-            server_handle.putheader("Cookie", server_cookie)
-        server_handle.endheaders()
-
-    init_headers(soapdata)
+    _init_headers(soapdata)
 
     response_data = []
 
     time_sent = time.time()
     server_handle.send(soapdata)
 
-    def check_not_authenticated(text):
-        if "NotAuthenticatedFault" in text:
-            raise MKQueryServerException("No longer authenticated")
-
     response = server_handle.getresponse()
     response_data.append(response.read())
 
-    check_not_authenticated(response_data[0][:512])
+    _check_not_authenticated(response_data[0][:512])
 
     while True:
         # Look for a <token>0</token> field.
@@ -1114,11 +1100,11 @@ def query_server(payload, payload_params=None):
         if token:
             payload_params.update({"token": token[0]})
             soapdata = put_in_envelope(telegram_list["continuetoken"]) % payload_params
-            init_headers(soapdata)
+            _init_headers(soapdata)
             server_handle.send(soapdata)
             response = server_handle.getresponse()
             response_data.append(response.read())
-            check_not_authenticated(response_data[-1][:512])
+            _check_not_authenticated(response_data[-1][:512])
         else:
             break
 
@@ -1130,6 +1116,22 @@ def query_server(payload, payload_params=None):
         tracefile.write("\n#### Received #### %s\n%s\n" % (timing_info, "".join(response_data)))
 
     return response.status, response.reason, response.msg, "".join(response_data)
+
+
+def _init_headers(soapdata):
+    server_handle.putrequest("POST", "/sdk")
+    server_handle.putheader("Content-Length", "%d" % len(soapdata))
+    server_handle.putheader("Content-Type", 'text/xml; charset="utf-8"')
+    server_handle.putheader("SOAPAction", "urn:vim25/5.0")
+    server_handle.putheader("User-Agent", "VMware VI Client/5.0.0")  # TODO: set client version?
+    if server_cookie:
+        server_handle.putheader("Cookie", server_cookie)
+    server_handle.endheaders()
+
+
+def _check_not_authenticated(text):
+    if "NotAuthenticatedFault" in text:
+        raise MKQueryServerException("No longer authenticated")
 
 
 def encode_url(text):
@@ -1231,6 +1233,69 @@ def section_systemtime():
     except:
         if opt_debug:
             raise
+
+
+def find_host(search_hostname):
+    for vm_host_name, attributes in hostsystems_properties.items():
+        if attributes.get("name")[0] == search_hostname:
+            return vm_host_name
+
+
+def is_placeholder_vm(devices):
+    elements = get_pattern("<VirtualDevice xsi:type=\"([^\"]+)", devices)
+    if "VirtualDisk" not in elements:
+        return True
+    return False
+
+
+def eval_virtual_device(info):
+    response = []
+    virtual_devices = get_pattern("<VirtualDevice (.*?)</VirtualDevice>", info)
+    show_fields = ["label", "summary", "startConnected", "allowGuestControl", "connected", "status"]
+    search_pattern = create_search_pattern(show_fields)
+    for virtual_device in virtual_devices:
+        type_info = get_pattern("type=\"(.*?)\"", virtual_device)
+        device_info = get_pattern(search_pattern, virtual_device)
+        if device_info:
+            response.append("virtualDeviceType %s|%s" % (type_info[0], "|".join(
+                "%s %s" % x for x in zip(show_fields, device_info[0]))))
+
+    return "@@".join(response)
+
+
+def eval_snapshot_list(info):
+    response = []
+    snapshot_info = get_pattern(
+        "<name>(.*?)</name>.*?<id>(.*?)</id><createTime>(.*?)</createTime><state>(.*?)</state>",
+        info)
+    for entry in snapshot_info:
+        try:
+            # 2013-11-06T15:39:39.347543Z
+            creation_time = int(time.mktime(time.strptime(entry[2][:19], "%Y-%m-%dT%H:%M:%S")))
+        except:
+            creation_time = 0
+        response.append(
+            "%s %s %s %s" % (entry[1], creation_time, entry[3], entry[0].replace("|", " ")))
+    return "|".join(response)
+
+
+def eval_datastores(info):
+    datastore_urls = get_pattern("<name>(.*?)</name><url>(.*?)</url>", info)
+    response = []
+    for name, _url in datastore_urls:
+        for datastore in datastores.values():
+            if name == datastore["name"]:
+                vm_datastore = []
+                for key, value in datastore.items():
+                    if key != "name":
+                        key = key.split(".")[1]
+                    vm_datastore.append("%s %s" % (key, value))
+                response.append("|".join(vm_datastore))
+                break
+        else:
+            # No matching datastore was found. At least add the name
+            response.append("name %s" % name)
+    return "@@".join(response)
 
 
 #   .--Main----------------------------------------------------------------.
@@ -1610,12 +1675,6 @@ if not error:
             if "virtualmachine" in query_objects:
                 vms = {}
 
-                def is_placeholder_vm(devices):
-                    elements = get_pattern("<VirtualDevice xsi:type=\"([^\"]+)", devices)
-                    if "VirtualDisk" not in elements:
-                        return True
-                    return False
-
                 # <objects><propSet><name>...</name><val ..>...</val></propSet></objects>
                 reply_code, reply_msg, reply_headers, vmdetails_response = query_server(
                     telegram_list["vmdetails"])
@@ -1632,57 +1691,6 @@ if not error:
                                                                   vm_data["runtime.host"])
 
                     vm_esx_host.setdefault(vm_data["runtime.host"], []).append(vm_data["name"])
-
-                    def eval_virtual_device(info):
-                        response = []
-                        virtual_devices = get_pattern("<VirtualDevice (.*?)</VirtualDevice>", info)
-                        show_fields = [
-                            "label", "summary", "startConnected", "allowGuestControl", "connected",
-                            "status"
-                        ]
-                        search_pattern = create_search_pattern(show_fields)
-                        for virtual_device in virtual_devices:
-                            type_info = get_pattern("type=\"(.*?)\"", virtual_device)
-                            device_info = get_pattern(search_pattern, virtual_device)
-                            if device_info:
-                                response.append("virtualDeviceType %s|%s" % (type_info[0], "|".join(
-                                    "%s %s" % x for x in zip(show_fields, device_info[0]))))
-
-                        return "@@".join(response)
-
-                    def eval_snapshot_list(info):
-                        response = []
-                        snapshot_info = get_pattern(
-                            "<name>(.*?)</name>.*?<id>(.*?)</id><createTime>(.*?)</createTime><state>(.*?)</state>",
-                            info)
-                        for entry in snapshot_info:
-                            try:
-                                # 2013-11-06T15:39:39.347543Z
-                                creation_time = int(
-                                    time.mktime(time.strptime(entry[2][:19], "%Y-%m-%dT%H:%M:%S")))
-                            except:
-                                creation_time = 0
-                            response.append("%s %s %s %s" % (entry[1], creation_time, entry[3],
-                                                             entry[0].replace("|", " ")))
-                        return "|".join(response)
-
-                    def eval_datastores(info):
-                        datastore_urls = get_pattern("<name>(.*?)</name><url>(.*?)</url>", info)
-                        response = []
-                        for name, _url in datastore_urls:
-                            for datastore in datastores.values():
-                                if name == datastore["name"]:
-                                    vm_datastore = []
-                                    for key, value in datastore.items():
-                                        if key != "name":
-                                            key = key.split(".")[1]
-                                        vm_datastore.append("%s %s" % (key, value))
-                                    response.append("|".join(vm_datastore))
-                                    break
-                            else:
-                                # No matching datastore was found. At least add the name
-                                response.append("name %s" % name)
-                        return "@@".join(response)
 
                     transform_functions = {
                         "snapshot.rootSnapshotList": eval_snapshot_list,
@@ -1780,11 +1788,6 @@ if not error:
                     output(vm_info)
 
             if "virtualmachine" in query_objects and "hostsystem" in query_objects and opt_host_pwr_display == "vm":
-
-                def find_host(hostname):
-                    for key, value in hostsystems_properties.items():
-                        if value.get("name")[0] == hostname:
-                            return key
 
                 for key in vms:
                     data = vms[key]

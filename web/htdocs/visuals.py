@@ -1202,10 +1202,10 @@ def get_context_from_uri_vars(only_infos=None, single_infos=None):
 
 # Compute Livestatus-Filters based on a given context. Returns
 # the only_sites list and a string with the filter headers
+# TODO: Untangle only_sites and filter headers
 def get_filter_headers(datasource, context):
     # Prepare Filter headers for Livestatus
     filter_headers = ""
-    only_sites = None
     html.stash_vars()
     for filter_name, filter_vars in context.items():
         # first set the HTML variables. Sorry - the filters need this
@@ -1215,15 +1215,18 @@ def get_filter_headers(datasource, context):
         else:
             html.set_var(filter_name, filter_vars)
 
+    # Apply the site hint / filter (Same logic as in views.py)
+    if html.var("site"):
+        only_sites = [html.var("site")]
+    else:
+        only_sites = None
+
     # Now compute filter headers for all infos of the used datasource
     our_infos = datasource["infos"]
     for filter_name, filter_object in multisite_filters.items():
         if filter_object.info in our_infos:
             header = filter_object.filter(datasource["table"])
-            if header.startswith("Sites:"):
-                only_sites = header.strip().split(" ")[1:]
-            else:
-                filter_headers += header
+            filter_headers += header
     html.unstash_vars()
     return filter_headers, only_sites
 

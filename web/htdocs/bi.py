@@ -3470,8 +3470,7 @@ def singlehost_table(columns, add_headers, only_sites, limit, filters, joinbynam
     filter_code = ""
     for filt in filters:
         header = filt.filter("bi_host_aggregations")
-        if not header.startswith("Sites:"):
-            filter_code += header
+        filter_code += header
 
     log("* Getting status information about hosts...")
     host_columns = filter(lambda c: c.startswith("host_"), columns)

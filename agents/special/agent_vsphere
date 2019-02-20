@@ -912,75 +912,183 @@ def get_pattern(pattern, line):
     return p.findall(line)
 
 
-def delete_server_cookie():
-    try:
-        host_cookie_path.unlink()
-    except OSError as e:
-        if e.errno != errno.ENOENT:
-            raise
+# TODO: Refactor to requests
+class ESXConnection(object):
+    """Encapsulates the API calls to the ESX system"""
 
+    def __init__(self, host_address, port, no_cert, debug):
+        super(ESXConnection, self).__init__()
+        self._server_handle = self._connect_to_server(host_address, port, no_cert, debug)
 
-def query_server(payload, payload_params=None):
-    if payload_params is None:
-        payload_params = {}
+        self._host_cookie_path = Path(
+            "%s/agents/agent_vsphere/cookie.%s" % (cmk.utils.paths.tmp_dir, host_address))
 
-    # Finalize payload
-    payload_params.update(systeminfo)
-    soapdata = put_in_envelope(payload)
-    soapdata = soapdata % payload_params
+        self.last_cookie_access_time = None
+        self.system_info = None
+        self._server_cookie = None
 
-    _init_headers(soapdata)
+        self.system_info = self._fetch_systeminfo()
+        self._server_cookie = self.login()
 
-    response_data = []
+    def _connect_to_server(self, host_address, port, no_cert, debug):
+        """Initialize server connection"""
+        try:
+            netloc = host_address + ":" + str(port)
 
-    time_sent = time.time()
-    server_handle.send(soapdata)
+            if no_cert:
+                try:
+                    import ssl
+                    server_handle = httplib.HTTPSConnection(
+                        netloc, context=ssl._create_unverified_context())
+                except:
+                    server_handle = httplib.HTTPSConnection(netloc)
+            else:
+                server_handle = httplib.HTTPSConnection(netloc)
 
-    response = server_handle.getresponse()
-    response_data.append(response.read())
+            if debug:
+                sys.stderr.write("Connecting to %s..." % netloc)
+                sys.stderr.flush()
 
-    _check_not_authenticated(response_data[0][:512])
+            server_handle.connect()
+            return server_handle
+        except Exception as e:
+            if debug:
+                raise
+            raise MKGeneralException(
+                "Cannot connect to vSphere Server. Please check the IP and SSL certificate (if applicable) "
+                "and try again. This error is not related to the login credentials. Error message: %r"
+                % e)
 
-    while True:
-        # Look for a <token>0</token> field.
-        # If it exists not all data was transmitted and we need to start a
-        # ContinueRetrievePropertiesExResponse query...
-        token = re.findall("<token>(.*)</token>", response_data[-1][:512])
-        if token:
-            payload_params.update({"token": token[0]})
-            soapdata = put_in_envelope(telegram_list["continuetoken"]) % payload_params
-            _init_headers(soapdata)
-            server_handle.send(soapdata)
-            response = server_handle.getresponse()
-            response_data.append(response.read())
-            _check_not_authenticated(response_data[-1][:512])
-        else:
-            break
+    def _fetch_systeminfo(self):
+        """Retrieve basic data, which requires no login"""
+        system_info = {}
 
-    time_response = time.time()
+        # Globals of ESX System. These settings are available after the first "systeminfo" query
+        systemfields = [
+            "apiVersion",
+            "name",
+            "rootFolder",
+            "perfManager",
+            "sessionManager",
+            "licenseManager",
+            "propertyCollector",
+            "version",
+            "build",
+            "vendor",
+            "osType",
+        ]
 
-    if tracefile:
-        tracefile.write("####   Sent  ####\n%s" % soapdata)
-        timing_info = "Response took: %f" % (time_response - time_sent)
-        tracefile.write("\n#### Received #### %s\n%s\n" % (timing_info, "".join(response_data)))
+        reply_data = self.query_server(telegram_list["systeminfo"])[-1]
+        for entry in systemfields:
+            element = get_pattern("<%(entry)s.*>(.*)</%(entry)s>" % {"entry": entry}, reply_data)
+            if element:
+                system_info[entry] = element[0]
 
-    return response.status, response.reason, response.msg, "".join(response_data)
+        if not system_info:
+            raise MKGeneralException("Unable to get data from Web API" + "\n")
 
+        return system_info
 
-def _init_headers(soapdata):
-    server_handle.putrequest("POST", "/sdk")
-    server_handle.putheader("Content-Length", "%d" % len(soapdata))
-    server_handle.putheader("Content-Type", 'text/xml; charset="utf-8"')
-    server_handle.putheader("SOAPAction", "urn:vim25/5.0")
-    server_handle.putheader("User-Agent", "VMware VI Client/5.0.0")  # TODO: set client version?
-    if server_cookie:
-        server_handle.putheader("Cookie", server_cookie)
-    server_handle.endheaders()
+    def query_server(self, payload, payload_params=None):
+        if payload_params is None:
+            payload_params = {}
 
+        # Finalize payload
+        if self.system_info:
+            payload_params.update(self.system_info)
+        soapdata = put_in_envelope(payload)
+        soapdata = soapdata % payload_params
 
-def _check_not_authenticated(text):
-    if "NotAuthenticatedFault" in text:
-        raise MKQueryServerException("No longer authenticated")
+        self._init_headers(soapdata)
+
+        response_data = []
+
+        time_sent = time.time()
+        self._server_handle.send(soapdata)
+
+        response = self._server_handle.getresponse()
+        response_data.append(response.read())
+
+        self._check_not_authenticated(response_data[0][:512])
+
+        while True:
+            # Look for a <token>0</token> field.
+            # If it exists not all data was transmitted and we need to start a
+            # ContinueRetrievePropertiesExResponse query...
+            token = re.findall("<token>(.*)</token>", response_data[-1][:512])
+            if token:
+                payload_params.update({"token": token[0]})
+                soapdata = put_in_envelope(telegram_list["continuetoken"]) % payload_params
+                self._init_headers(soapdata)
+                self._server_handle.send(soapdata)
+                response = self._server_handle.getresponse()
+                response_data.append(response.read())
+                self._check_not_authenticated(response_data[-1][:512])
+            else:
+                break
+
+        time_response = time.time()
+
+        if tracefile:
+            tracefile.write("####   Sent  ####\n%s" % soapdata)
+            timing_info = "Response took: %f" % (time_response - time_sent)
+            tracefile.write("\n#### Received #### %s\n%s\n" % (timing_info, "".join(response_data)))
+
+        return response.status, response.reason, response.msg, "".join(response_data)
+
+    def _init_headers(self, soapdata):
+        self._server_handle.putrequest("POST", "/sdk")
+        self._server_handle.putheader("Content-Length", "%d" % len(soapdata))
+        self._server_handle.putheader("Content-Type", 'text/xml; charset="utf-8"')
+        self._server_handle.putheader("SOAPAction", "urn:vim25/5.0")
+        self._server_handle.putheader("User-Agent",
+                                      "VMware VI Client/5.0.0")  # TODO: set client version?
+        if self._server_cookie:
+            self._server_handle.putheader("Cookie", self._server_cookie)
+        self._server_handle.endheaders()
+
+    def _check_not_authenticated(self, text):
+        if "NotAuthenticatedFault" in text:
+            raise MKQueryServerException("No longer authenticated")
+
+    def login(self):
+        # type: () -> Optional[Text]
+        if self._host_cookie_path.exists():
+            # The cookie access time is required to determine the agents check interval
+            # This is required later on by the performancecounters. Depending on the
+            # interval we need more or less real-time samples
+            # TODO: Decouple login secret and perfcounter timer
+            self.last_cookie_access_time = self._host_cookie_path.stat().st_mtime
+            os.utime(str(self._host_cookie_path),
+                     None)  # Touch the cookie file, whenever it is accessed
+
+            return self._host_cookie_path.open(encoding="utf-8").read()
+
+        payload = telegram_list["login"]
+        _reply_code, _repy_msg, reply_headers, reply_data = \
+                    self.query_server(payload, payload_params = {"username": encode_url(user),
+                                                            "password": encode_url(secret)})
+
+        if "InvalidLogin" in reply_data:
+            raise MKGeneralException(
+                "Cannot login to vSphere Server. Login response is not 'OK'. Please check the credentials"
+            )
+
+        server_cookie = reply_headers.get("Set-Cookie", "").decode("utf-8")
+
+        if server_cookie:
+            self._host_cookie_path.parent.mkdir(parents=True, exist_ok=True)  # pylint: disable=no-member
+            with self._host_cookie_path.open("w", encoding="utf-8") as f:
+                f.write(server_cookie)
+
+        return server_cookie
+
+    def delete_server_cookie(self):
+        try:
+            self._host_cookie_path.unlink()
+        except OSError as e:
+            if e.errno != errno.ENOENT:
+                raise
 
 
 def encode_url(text):
@@ -988,71 +1096,6 @@ def encode_url(text):
                               ("\"", "&quot;")]:
         text = text.replace(char, replacement)
     return text
-
-
-def connect_to_server():
-    # Initialize server connection
-    try:
-        netloc = host_address + ":" + str(opt_port)
-
-        if opt_no_cert:
-            try:
-                import ssl
-                server_handle = httplib.HTTPSConnection(
-                    netloc, context=ssl._create_unverified_context())
-            except:
-                server_handle = httplib.HTTPSConnection(netloc)
-        else:
-            server_handle = httplib.HTTPSConnection(netloc)
-
-        if opt_debug:
-            sys.stderr.write("Connecting to %s..." % netloc)
-            sys.stderr.flush()
-
-        server_handle.connect()
-        return server_handle
-    except Exception, e:
-        if opt_debug:
-            raise
-        raise MKGeneralException("Cannot connect to vSphere Server. Please check the IP and SSL certificate (if applicable) "\
-                "and try again. This error is not related to the login credentials. Error message: %r" % e)
-
-
-def retrieve_systeminfo():
-    """Retrieve basic data, which requires no login"""
-    system_info = {}
-    payload = telegram_list["systeminfo"]
-    _reply_code, _reply_msg, _reply_headers, reply_data = query_server(payload)
-    for entry in systemfields:
-        element = get_pattern("<%(entry)s.*>(.*)</%(entry)s>" % {"entry": entry}, reply_data)
-        if element:
-            system_info[entry] = element[0]
-    return system_info
-
-
-def login():
-    # type: () -> Optional[Text]
-    if host_cookie_path.exists():
-        return host_cookie_path.open(encoding="utf-8").read()
-
-    payload = telegram_list["login"]
-    _reply_code, _repy_msg, reply_headers, reply_data = \
-                query_server(payload, payload_params = {"username": encode_url(user),
-                                                        "password": encode_url(secret)})
-
-    if "InvalidLogin" in reply_data:
-        raise MKGeneralException(
-            "Cannot login to vSphere Server. Login response is not 'OK'. Please check the credentials"
-        )
-
-    server_cookie = reply_headers.get("Set-Cookie", "").decode("utf-8")
-
-    if server_cookie:
-        host_cookie_path.mkdir(parents=True, exist_ok=True)
-        with host_cookie_path.open("w", encoding="utf-8") as f:
-            f.write(server_cookie)
-
-    return server_cookie
 
 
 def output_aggregated_snapshots(vms, hostsystems=None):
@@ -1074,9 +1117,9 @@ def output_aggregated_snapshots(vms, hostsystems=None):
         output('<<<<>>>>')
 
 
-def section_systemtime():
+def section_systemtime(connection):
     try:
-        __, __, __, response = query_server(telegram_list["systemtime"])
+        __, __, __, response = connection.query_server(telegram_list["systemtime"])
         elements = get_pattern('<returnval>(.*)</returnval>', response)
         if elements:
             naive = datetime.datetime.strptime(elements[0], "%Y-%m-%dT%H:%M:%S.%fZ")
@@ -1268,21 +1311,6 @@ vsphere_output = []
 
 socket.setdefaulttimeout(opt_timeout)
 
-# Globals of ESX System. These settings are available after the first "systeminfo" query
-systemfields = [
-    "apiVersion",
-    "name",
-    "rootFolder",
-    "perfManager",
-    "sessionManager",
-    "licenseManager",
-    "propertyCollector",
-    "version",
-    "build",
-    "vendor",
-    "osType",
-]
-
 if opt_tracefile:
     tracefile_dir = os.path.dirname(opt_tracefile) or "."
     if os.path.exists(tracefile_dir):
@@ -1295,28 +1323,8 @@ if tracefile:
     tracefile.write("Tracefile %s Host address: %s\n" %
                     (datetime.datetime.now().strftime("%Y-%m-%d %H:%M"), host_address))
 
-last_cookie_access_time = None
-server_cookie = None
-host_cookie_path = Path(
-    "%s/agents/agent_vsphere/cookie.%s" % (cmk.utils.paths.tmp_dir, host_address))
-
 try:
-    server_handle = connect_to_server()
-    systeminfo = retrieve_systeminfo()
-
-    if not systeminfo:
-        sys.stderr.write("Unable to get data from Web API" + "\n")
-        sys.exit(1)
-
-    # The cookie access time is required to determine the agents check interval
-    # This is required later on by the performancecounters. Depending on the
-    # interval we need more or less real-time samples
-    # TODO: Decouple login secret and perfcounter timer
-    if host_cookie_path.exists():
-        last_cookie_access_time = host_cookie_path.stat().st_mtime
-        os.utime(str(host_cookie_path), None)  # Touch the cookie file, whenever it is accessed
-
-    server_cookie = login()
+    connection = ESXConnection(host_address, opt_port, opt_no_cert, opt_debug)
 
     # If the data aquisition fails, e.g. invalid cookie we try another run
     run_count = 0
@@ -1326,7 +1334,7 @@ try:
         # Note: If the cookie fails inbetween these calls, we also start a second run
         try:
             output("<<<esx_systeminfo>>>")
-            for entry in systeminfo.items():
+            for entry in connection.system_info.items():
                 output("%s %s" % entry)
 
             #############################
@@ -1334,7 +1342,7 @@ try:
             #############################
             hostsystems = {}
 
-            reply_code, reply_msg, reply_headers, hostsystems_response = query_server(
+            reply_code, reply_msg, reply_headers, hostsystems_response = connection.query_server(
                 telegram_list["hostsystems"])
             elements = get_pattern(
                 '<obj type="HostSystem">(.*?)</obj>.*?<val xsi:type="xsd:string">(.*?)</val>',
@@ -1355,7 +1363,7 @@ try:
             # Licenses
             ###########################
             if "licenses" in query_objects:
-                reply_code, reply_msg, reply_headers, licenses_response = query_server(
+                reply_code, reply_msg, reply_headers, licenses_response = connection.query_server(
                     telegram_list["licensesused"])
 
                 output("<<<esx_vsphere_licenses:sep(9)>>>")
@@ -1374,7 +1382,7 @@ try:
             ###########################
             datastores = {
             }  # We need the datastore info later on in the virtualmachines and counter sections
-            reply_code, reply_msg, reply_headers, datastores_response = query_server(
+            reply_code, reply_msg, reply_headers, datastores_response = connection.query_server(
                 telegram_list["datastores"])
             elements = get_pattern('<objects><obj type="Datastore">(.*?)</obj>(.*?)</objects>',
                                    datastores_response)
@@ -1402,7 +1410,7 @@ try:
                 # TODO: get this info from the vcenter
                 net_extra_info = []
                 if opt_direct:
-                    reply_code, reply_msg, reply_headers, networksystem_response = query_server(
+                    reply_code, reply_msg, reply_headers, networksystem_response = connection.query_server(
                         telegram_list["networksystem"])
                     nic_objects = get_pattern('<pnic><key>(.*?)</pnic>', networksystem_response)
                     for nic in nic_objects:
@@ -1430,7 +1438,7 @@ try:
                     counter_data.append("<ns1:counterId>%s</ns1:counterId>" % entry)
 
                 reply_code, reply_msg, reply_headers, counters_syntax_response = \
-                    query_server(counter_syntax_payload, payload_params = { "counters": "".join(counter_data)})
+                    connection.query_server(counter_syntax_payload, payload_params = { "counters": "".join(counter_data)})
 
                 counters_syntax = {}
                 elements = get_pattern('<returnval><key>(.*?)</key>.*?<key>(.*?)</key>.*?'\
@@ -1445,8 +1453,8 @@ try:
                 # We set the max_samples hard cap to 180 (1 hour)
                 # An ESX system does not offer more than one hour of real time samples, anyway.
                 max_samples = 3
-                if last_cookie_access_time:
-                    timedelta = time.time() - last_cookie_access_time
+                if connection.last_cookie_access_time:
+                    timedelta = time.time() - connection.last_cookie_access_time
                     max_samples = min(180, max(1, int(timedelta) / 20))
 
                 hostnames = hostsystems.keys()
@@ -1458,7 +1466,7 @@ try:
                     ### TODO: check if this host supports perfdata
                     ### TODO: try to get esx hosts perfdata from vCenter
                     counter_avail = telegram_list["perfcounteravail"]
-                    reply_code, reply_msg, reply_headers, counter_avail_response = query_server(
+                    reply_code, reply_msg, reply_headers, counter_avail_response = connection.query_server(
                         counter_avail, payload_params={"esxhost": host})
 
                     counters_avail = {}
@@ -1476,7 +1484,7 @@ try:
                                 % (entry, instance))
                     counters_value = {}
                     reply_code, reply_msg, reply_headers, counter_data_response = \
-                        query_server(counter_data_payload, payload_params = { "esxhost": host, "counters": "".join(counter_data), "samples": max_samples })
+                        connection.query_server(counter_data_payload, payload_params = { "esxhost": host, "counters": "".join(counter_data), "samples": max_samples })
                     # Python regex only supports up to 100 match groups in a regex..
                     # We are only extracting the whole value line and split it later on
                     # This is a perfect candidate for "Catastrophic Backtracking" :)
@@ -1525,7 +1533,7 @@ try:
                 hostsystems_sensors = {}
 
                 # Propsets
-                reply_code, reply_msg, reply_headers, esxhostdetails_response = query_server(
+                reply_code, reply_msg, reply_headers, esxhostdetails_response = connection.query_server(
                     telegram_list["esxhostdetails"])
                 hostsystems_objects = get_pattern('<objects>(.*?)</objects>',
                                                   esxhostdetails_response)
@@ -1670,7 +1678,7 @@ try:
                 vms = {}
 
                 # <objects><propSet><name>...</name><val ..>...</val></propSet></objects>
-                reply_code, reply_msg, reply_headers, vmdetails_response = query_server(
+                reply_code, reply_msg, reply_headers, vmdetails_response = connection.query_server(
                     telegram_list["vmdetails"])
 
                 elements = get_pattern("<objects>(.*?)</objects>", vmdetails_response)
@@ -1716,11 +1724,11 @@ try:
             output("<<<<>>>>")
 
             if not opt_direct:
-                reply_code, reply_msg, reply_headers, response = query_server(
+                reply_code, reply_msg, reply_headers, response = connection.query_server(
                     telegram_list["datacenters"])
                 datacenters = get_pattern('<objects><obj type="Datacenter">(.*?)</obj>', response)
                 for datacenter in datacenters:
-                    reply_code, reply_msg, reply_headers, response = query_server(
+                    reply_code, reply_msg, reply_headers, response = connection.query_server(
                         telegram_list["clustersofdatacenter"],
                         payload_params={"datacenter": datacenter})
                     clusters = get_pattern(
@@ -1729,7 +1737,7 @@ try:
 
                     output("<<<esx_vsphere_clusters:sep(9)>>>")
                     for cluster in clusters:
-                        reply_code, reply_msg, reply_headers, response = query_server(
+                        reply_code, reply_msg, reply_headers, response = connection.query_server(
                             telegram_list["esxhostsofcluster"],
                             payload_params={"clustername": cluster[0]})
                         cluster_vms = []
@@ -1802,7 +1810,7 @@ try:
                     output("\n".join(values))
             output("<<<<>>>>")
 
-            section_systemtime()
+            section_systemtime(connection)
 
             break
         except MKQueryServerException, e:
@@ -1810,8 +1818,8 @@ try:
             # It is possible that the server cookie got invalid.
             # We are delete the cookie and start a second run
             vsphere_output = []  # Reset current output
-            delete_server_cookie()
-            server_cookie = login()
+            connection.delete_server_cookie()
+            connection.login()
             continue  # do a second run
         except Exception, e:
             if opt_debug:

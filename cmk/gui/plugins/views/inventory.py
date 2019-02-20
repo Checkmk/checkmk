@@ -305,8 +305,6 @@ def inv_paint_generic(v):
 
 @decorate_inv_paint
 def inv_paint_hz(hz):
-    if hz is None:
-        return "", ""
     if hz < 10:
         return "number", "%.2f" % hz
     elif hz < 100:
@@ -386,9 +384,7 @@ def _nic_speed_human_readable(bits_per_second):
 
 @decorate_inv_paint
 def inv_paint_nic_speed(bits_per_second):
-    if bits_per_second:
-        return "number", _nic_speed_human_readable(int(bits_per_second))
-    return "", ""
+    return "number", _nic_speed_human_readable(int(bits_per_second))
 
 
 @decorate_inv_paint
@@ -458,38 +454,28 @@ def inv_paint_route_type(rt):
 
 @decorate_inv_paint
 def inv_paint_volt(volt):
-    if volt:
-        return "number", "%.1f V" % volt
-    return "", ""
+    return "number", "%.1f V" % volt
 
 
 @decorate_inv_paint
 def inv_paint_date(timestamp):
-    if timestamp:
-        date_painted = time.strftime("%Y-%m-%d", time.localtime(timestamp))
-        return "number", "%s" % date_painted
-    return "", ""
+    date_painted = time.strftime("%Y-%m-%d", time.localtime(timestamp))
+    return "number", "%s" % date_painted
 
 
 @decorate_inv_paint
 def inv_paint_date_and_time(timestamp):
-    if timestamp:
-        date_painted = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(timestamp))
-        return "number", "%s" % date_painted
-    return "", ""
+    date_painted = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(timestamp))
+    return "number", "%s" % date_painted
 
 
 @decorate_inv_paint
 def inv_paint_age(age):
-    if age:
-        return "number", cmk.utils.render.approx_age(age)
-    return "", ""
+    return "number", cmk.utils.render.approx_age(age)
 
 
 @decorate_inv_paint
 def inv_paint_bool(value):
-    if value is None:
-        return "", ""
     return "", (_("Yes") if value else _("No"))
 
 
@@ -530,9 +516,6 @@ def inv_paint_timestamp_as_age_days(timestamp):
 
 @decorate_inv_paint
 def inv_paint_docker_labels(labels):
-    if labels is None:
-        return "", ""
-
     return "labels", html.render_br().join(sorted(labels.split(", ")))
 
 

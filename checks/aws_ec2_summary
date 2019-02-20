@@ -25,16 +25,6 @@
 # Boston, MA 02110-1301 USA.
 
 
-def inventory_aws_ec2_summary(parsed):
-    if parsed:
-        return [(None, {})]
-
-
-def _extract_aws_ec2_tags(metrics):
-    # metrics is dict with key 'Tags'
-    return ", ".join(["%s: %s" % (pair['Key'], pair['Value']) for pair in metrics.get('Tags', [])])
-
-
 def check_aws_ec2_summary(item, params, parsed):
     instances_by_state = {}
     long_output = []
@@ -60,9 +50,14 @@ def check_aws_ec2_summary(item, params, parsed):
         yield 0, "\n%s" % "\n".join(long_output)
 
 
+def _extract_aws_ec2_tags(metrics):
+    # metrics is dict with key 'Tags'
+    return ", ".join(["%s: %s" % (pair['Key'], pair['Value']) for pair in metrics.get('Tags', [])])
+
+
 check_info['aws_ec2_summary'] = {
     'parse_function': parse_aws,
-    'inventory_function': inventory_aws_ec2_summary,
+    'inventory_function': discover_single,
     'check_function': check_aws_ec2_summary,
     'service_description': 'AWS/EC2 Summary',
     'includes': ['aws.include'],

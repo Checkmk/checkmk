@@ -32,9 +32,14 @@ def parse_aws_rds_summary(info):
         return {}
 
 
-def inventory_aws_rds_summary(parsed):
-    if parsed:
-        return [(None, {})]
+#   .--summary-------------------------------------------------------------.
+#   |                                                                      |
+#   |           ___ _   _ _ __ ___  _ __ ___   __ _ _ __ _   _             |
+#   |          / __| | | | '_ ` _ \| '_ ` _ \ / _` | '__| | | |            |
+#   |          \__ \ |_| | | | | | | | | | | | (_| | |  | |_| |            |
+#   |          |___/\__,_|_| |_| |_|_| |_| |_|\__,_|_|   \__, |            |
+#   |                                                    |___/             |
+#   '----------------------------------------------------------------------'
 
 
 def check_aws_rds_summary(item, params, parsed):
@@ -51,37 +56,48 @@ def check_aws_rds_summary(item, params, parsed):
 
 check_info['aws_rds_summary'] = {
     'parse_function': parse_aws_rds_summary,
-    'inventory_function': inventory_aws_rds_summary,
+    'inventory_function': discover_single,
     'check_function': check_aws_rds_summary,
     'service_description': 'AWS/RDS Summary',
     'includes': ['aws.include'],
 }
 
-
-def inventory_aws_rds_summary_db(parsed):
-    for instance_name in parsed.iterkeys():
-        yield instance_name, {}
+#.
+#   .--DB status-----------------------------------------------------------.
+#   |              ____  ____        _        _                            |
+#   |             |  _ \| __ )   ___| |_ __ _| |_ _   _ ___                |
+#   |             | | | |  _ \  / __| __/ _` | __| | | / __|               |
+#   |             | |_| | |_) | \__ \ || (_| | |_| |_| \__ \               |
+#   |             |____/|____/  |___/\__\__,_|\__|\__,_|___/               |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
 
 
 @get_parsed_item_data
 def check_aws_rds_summary_db(item, params, data):
-    yield 0, '[%s] Status: %s' % (data['DBInstanceIdentifier'], data['DBInstanceStatus'])
+    db_id = data['DBInstanceIdentifier']
+    pre_info = ""
+    if db_id is not None:
+        pre_info = "[%s] " % db_id
+    yield 0, '%sStatus: %s' % (pre_info, data['DBInstanceStatus'])
 
-    multi_az = data['MultiAZ']
-    if multi_az:
-        multi_az_readable = "yes"
-    else:
-        multi_az_readable = "no"
-    yield 0, 'Multi AZ: %s' % multi_az_readable
+    multi_az = data.get('MultiAZ')
+    if multi_az is not None:
+        if multi_az:
+            multi_az_readable = "yes"
+        else:
+            multi_az_readable = "no"
+        yield 0, 'Multi AZ: %s' % multi_az_readable
 
-    zone = data['AvailabilityZone']
-    region = zone[:-1]
-    zone_info = zone[-1]
-    yield 0, 'Availability zone: %s (%s)' % (AWSRegions[region], zone_info)
+    zone = data.get('AvailabilityZone')
+    if zone is not None:
+        region = zone[:-1]
+        zone_info = zone[-1]
+        yield 0, 'Availability zone: %s (%s)' % (AWSRegions[region], zone_info)
 
 
 check_info['aws_rds_summary.db_status'] = {
-    'inventory_function': inventory_aws_rds_summary_db,
+    'inventory_function': lambda p: inventory_aws_generic(p, ['DBInstanceStatus']),
     'check_function': check_aws_rds_summary_db,
     'service_description': 'AWS/RDS %s Info',
     'includes': ['aws.include'],

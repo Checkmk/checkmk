@@ -1,0 +1,19 @@
+Title: Fix background job warning "IOError: [Errno 9] Bad file descriptor"
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0p13
+Date: 1550667579
+Class: fix
+
+When starting a background job an unproblematic error message like this could
+occur in the output of the background job log:
+
+<code>
+sys.stdin.close()
+IOError: [Errno 9] Bad file descriptor
+</code>
+
+This was caused by an unclean stdin/stdout/stderr handling during job startup
+since commit b15dfeb619c14c925b66f2a3437d213852204975.

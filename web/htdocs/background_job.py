@@ -182,6 +182,9 @@ class BackgroundProcess(multiprocessing.Process):
         os.setsid()
 
         daemon.set_procname(BackgroundJobDefines.process_name)
+        sys.stdin.close()
+        sys.stdout.close()
+        sys.stderr.close()
         daemon.closefrom(0)
 
         ##################### ALL HANDLES HAVE BEEN CLOSED BOUNDARY ###########################

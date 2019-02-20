@@ -1,0 +1,113 @@
+Übersetzung bestimmter Worte
+
+Vorschlag für Umbenennungen (noch nicht gemacht):
+
+Englisch                  jetzt                  besser
+-----------------------   ---------------------- ---------
+Alert                     Alarm                  Alert
+
+
+Englisch                  Deutsch
+-----------------------   -------------------------------------------
+Dynamic Configuration     Dynamische Konfiguration
+Connection (DCD)          Verbindung
+DOWN                      unten
+Event Log                 Ereignisprotokoll
+GUI / Multisite           Weboberfläche, Oberfläche, Check_MK-Oberfläche
+Check_MK helpers          Check_MK-Hilfsprozesse
+PENDING                   PENDING
+SNMP Community            SNMP Community
+UNREACHABLE               unerreichbar
+UP                        oben
+account                   Konto
+acknowledgement           Quittierung
+alert                     Vorfall
+alert handler             Alerthandler
+automation secret         Automatisierungspasswort
+bulk notification         Sammelalarm
+button                    Knopf (nicht Schaltfläche)
+cancel (events)           aufheben
+cancelling rule           Aufhebungsregel
+check                     Check
+child (host)              Childhost
+cluster                   Cluster
+combined graphs           Kombigraphen, kombinierter Graph
+command                   Befehl (z.B. Acknowledge, Downtime, ...)
+core (monitoring)         Kern
+crash debugging           Absturzanalyse
+custom graph              Benutzergraph
+custom macro              Benutzermakro
+custom notification       manueller Alarm
+custom notification table Benutzer-Alarmtabelle
+custom variable           Benutzervariable
+daily build               Tagesversion
+daily build               Tagesversion
+dashboard                 Dashboard - Übersicht
+dashlet                   (Übersichts-) Element, Element in der Übersicht
+deploy                    ausrollen
+downtime, scheduled       Wartungszeit
+event                     Ereigniss
+flapping                  unstetig
+folder                    Ordner
+freshness                 Aktualität
+hard state                harter Zustand
+home directory            Homeverzeichnis
+host                      Host
+host tag                  Hostmerkmal
+inline SNMP               einbebautes SNMP
+identifier                Bezeichner
+icon                      Symbol
+item (check)              Item
+levels                    Schwellwerte, Schwellen
+local check               lokaler Check
+log file                  Logdatei
+lower level               Untergrenze
+Master Control            Hauptsteuerung
+match (rule)              greifen, zulassen
+match foobar              Foobar matchen
+match group               Matchgruppe (bei Regex match)
+match option              Regelbedingung
+notification              Alarm (tatsächliche Notification)
+notification bulk         Sammelalarm
+notification period       Alarmierungsperiode
+notification spooler      Alarmspooler
+notifications             Alarmierung (WATO-Module, Konzept)
+overhead                  Overhead
+parent (host)             Parenthost
+parent relation           Parent-Beziehung
+pending changes           aufgelaufene Änderungen
+performance data          Messdaten, Metriken
+performance graph         Verlaufsgraph
+piggy back                huckepack
+predictive monitoring     prognosebasierte Überwachung
+remote site               Satellit (ohne Site, einfach nur Satellit)
+report                    Bericht
+report scheduler          Berichtsplaner
+rule based notification   regelbasierte Alarmierung
+rule pack                 Regelpaket
+rule set                  Regelkette
+service                   Service
+service level             Servicelevel
+severity                  Schwere
+site                      Instanz
+site user                 Instanz-Benutzer
+snapin                    Seitenleistenelement, Element
+snapshot                  Sicherung (WATO)
+socket                    Socket
+soft state                weicher Zustand (hat hier einer eine bessere Idee?)
+stale                     veraltet
+suspend                   anhalten
+system uptime             Systemlaufzeit
+tablesspace               Tablesspace
+tag                       Merkmal (host tag)
+timeperiod                Zeitperiode
+topic                     Thema
+upper level               Obergrenze
+uptime                    Laufzeit
+utilization               Auslastung
+user account              Benutzerkonto
+view                      Ansicht, Tabellenansicht
+visual                    Anzeigeobjekt
+workgroup                 Arbeitsgruppe
+password                  Passwort
+reschedule                neu ansetzen

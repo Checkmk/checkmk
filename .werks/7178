@@ -1,0 +1,11 @@
+Title: German translation is now available in all Check_MK Editions
+Level: 2
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1550669488
+Class: feature
+
+The German translation of the the Check_MK user interface is now available to the users
+of all Check_MK editions.

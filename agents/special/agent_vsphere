@@ -1019,13 +1019,15 @@ def connect_to_server():
 
 
 def retrieve_systeminfo():
-    # Retrieve basic data, which requires no login
+    """Retrieve basic data, which requires no login"""
+    system_info = {}
     payload = telegram_list["systeminfo"]
     _reply_code, _reply_msg, _reply_headers, reply_data = query_server(payload)
     for entry in systemfields:
         element = get_pattern("<%(entry)s.*>(.*)</%(entry)s>" % {"entry": entry}, reply_data)
         if element:
-            systeminfo[entry] = element[0]
+            system_info[entry] = element[0]
+    return system_info
 
 
 def login():
@@ -1281,8 +1283,6 @@ systemfields = [
     "osType",
 ]
 
-systeminfo = {}
-
 if opt_tracefile:
     tracefile_dir = os.path.dirname(opt_tracefile) or "."
     if os.path.exists(tracefile_dir):
@@ -1302,7 +1302,7 @@ host_cookie_path = Path(
 
 try:
     server_handle = connect_to_server()
-    retrieve_systeminfo()
+    systeminfo = retrieve_systeminfo()
 
     if not systeminfo:
         sys.stderr.write("Unable to get data from Web API" + "\n")

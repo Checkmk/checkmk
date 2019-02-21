@@ -3,6 +3,13 @@ set -e
 TARGET=$1
 PATCHSET_REVISION=$2
 
+# To really compute *only* the files which need checking, we better make sure
+# that our project is up-to-date without any further changes first (i.e. target
+# "all-am"). Having an up-to-date project file before running a linter is a good
+# idea, too (i.e. target "compile_commands.json"). The latter target implies the
+# former, so we just do that.
+make compile_commands.json
+
 # ATTENTION! Extremely cunning hack ahead! Find out which files have been
 # changed in the current directory for the given commit. Transform those file
 # names into --what-if=... options for make and do a dry run with them. This

@@ -8,6 +8,7 @@ from cmk.gui.globals import html
 import cmk.gui.main
 import cmk.gui.config
 
+
 def test_get_start_url_default(register_builtin_html):
     assert cmk.gui.main._get_start_url() == "dashboard.py"
 

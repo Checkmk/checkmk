@@ -1,16 +1,13 @@
-
-
 checkname = 'raritan_pdu_plugs'
 
+info = [[u'1', u'', u'7'], [u'36', u'FooName', u'7']]
 
-info = [[u'1', u'', u'7'],
-        [u'36', u'FooName', u'7']]
-
-
-discovery = {'': [(u'1', 7),
-                  (u'36', 7),
-                  ]}
-
+discovery = {
+    '': [
+        (u'1', 7),
+        (u'36', 7),
+    ]
+}
 
 checks = {
     '': [

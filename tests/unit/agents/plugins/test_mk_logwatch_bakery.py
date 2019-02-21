@@ -13,7 +13,7 @@ def test_get_logfiles_config_lines():
     with open(path, "r") as f:
         source = f.read()
     extended_source = 'from cmk_base.cee.agent_bakery_plugins import bakery_info' + '\n' + source
-    exec(extended_source)
+    exec (extended_source)
 
     config = [
         {

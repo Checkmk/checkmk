@@ -35,7 +35,8 @@ def test_HTMLGenerator(register_builtin_html):
 
         with html.plugged():
             html.div("test", **{"</div>malicious_code<div>": "trends"})
-            assert tools.compare_html(html.drain(), "<div &lt;/div&gt;malicious_code&lt;div&gt;=trends>test</div>")
+            assert tools.compare_html(
+                html.drain(), "<div &lt;/div&gt;malicious_code&lt;div&gt;=trends>test</div>")
 
         a = u"\u2665"
         with html.plugged():
@@ -44,7 +45,11 @@ def test_HTMLGenerator(register_builtin_html):
             html.render_a("test", href=u"www.test.case")
             html.render_a(u"test", href=u"www.test.case")
             try:
-                assert html.render_a(u"test", href=unicode("www.test.case"), id_=unicode("something"), class_=unicode("test_%s") % a)
+                assert html.render_a(
+                    u"test",
+                    href=unicode("www.test.case"),
+                    id_=unicode("something"),
+                    class_=unicode("test_%s") % a)
             except Exception as e:
                 print traceback.print_exc()
                 print e

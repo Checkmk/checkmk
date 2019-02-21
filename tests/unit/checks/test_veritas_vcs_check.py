@@ -4,7 +4,6 @@ from checktestlib import DiscoveryResult, assertDiscoveryResultsEqual, \
 
 pytestmark = pytest.mark.checks
 
-
 #   .--Test info sections--------------------------------------------------.
 #   |                _____         _     _        __                       |
 #   |               |_   _|__  ___| |_  (_)_ __  / _| ___                  |
@@ -21,7 +20,7 @@ pytestmark = pytest.mark.checks
 #   '----------------------------------------------------------------------'
 
 info_1 = [
-    [None, 'ClusState', 'RUNNING'],#   .
+    [None, 'ClusState', 'RUNNING'],  #   .
     [None, 'ClusterName', 'minions'],
     [None, '#System', 'Attribute', 'Value'],
     [None, 'dave', 'SysState', 'RUNNING'],
@@ -69,10 +68,10 @@ info_1 = [
     [None, 'agnes-nic', 'State', 'stuart', 'ONLINE'],
     [None, 'agnes-phantom', 'State', 'stuart', 'ONLINE'],
     [None, 'webip', 'State', 'stuart', 'OFFLINE'],
-]#.
+]  #.
 
 info_2 = [
-    [None, 'ClusState', 'RUNNING'],#   .
+    [None, 'ClusState', 'RUNNING'],  #   .
     [None, 'ClusterName', 'minions'],
     [None, '#System', 'Attribute', 'Value'],
     [None, 'dave', 'SysState', 'RUNNING'],
@@ -120,10 +119,10 @@ info_2 = [
     [None, 'agnes-nic', 'State', 'dave', 'ONLINE'],
     [None, 'agnes-phantom', 'State', 'dave', 'ONLINE'],
     [None, 'webip', 'State', 'dave', 'ONLINE']
-]#.
+]  #.
 
 info_3 = [
-    [None, 'ClusState', 'RUNNING'],#   .
+    [None, 'ClusState', 'RUNNING'],  #   .
     [None, 'ClusterName', 'minions'],
     [None, '#System', 'Attribute', 'Value'],
     [None, 'dave', 'SysState', 'RUNNING'],
@@ -160,91 +159,95 @@ info_3 = [
     [None, '#'],
     [None, 'omd', 'Frozen', 'global', '1'],
     [None, 'omd', 'TFrozen', 'global', '0'],
-]#.
+]  #.
 
 items_1 = {
-    '.resource': [u'gru',#   .
-                  u'bob1-db',
-                  u'bob1-dg',
-                  u'bob1-ip',
-                  u'bob1-mnt',
-                  u'bob1-nic-proxy',
-                  u'bob1-vol',
-                  u'bob2-db',
-                  u'bob2-dg',
-                  u'bob2-ip',
-                  u'bob2-mnt',
-                  u'bob2-nic-proxy',
-                  u'bob2-vol',
-                  u'bob3-db',
-                  u'bob3-dg',
-                  u'bob3-ip',
-                  u'bob3-mnt',
-                  u'bob3-nic-proxy',
-                  u'bob3-vol',
-                  u'bob4-db',
-                  u'bob4-dg',
-                  u'bob4-ip',
-                  u'bob4-mnt',
-                  u'bob4-nic-proxy',
-                  u'bob4-vol',
-                  u'bob5-db',
-                  u'bob5-dg',
-                  u'bob5-ip',
-                  u'bob5-mnt',
-                  u'bob5-nic-proxy',
-                  u'bob5-vol',
-                  u'agnes-nic',
-                  u'agnes-phantom',
-                  u'webip',
-                 ],
-    '.servicegroup': [u'ClusterService',
-                      u'bob1',
-                      u'bob2',
-                      u'bob3',
-                      u'bob4',
-                      u'bob5',
-                      u'agnes',
-                     ],
-    '.system': [u'dave',
-                u'stuart',
-               ],
-    '': ['minions',
-        ],
-}#.
+    '.resource': [
+        u'gru',  #   .
+        u'bob1-db',
+        u'bob1-dg',
+        u'bob1-ip',
+        u'bob1-mnt',
+        u'bob1-nic-proxy',
+        u'bob1-vol',
+        u'bob2-db',
+        u'bob2-dg',
+        u'bob2-ip',
+        u'bob2-mnt',
+        u'bob2-nic-proxy',
+        u'bob2-vol',
+        u'bob3-db',
+        u'bob3-dg',
+        u'bob3-ip',
+        u'bob3-mnt',
+        u'bob3-nic-proxy',
+        u'bob3-vol',
+        u'bob4-db',
+        u'bob4-dg',
+        u'bob4-ip',
+        u'bob4-mnt',
+        u'bob4-nic-proxy',
+        u'bob4-vol',
+        u'bob5-db',
+        u'bob5-dg',
+        u'bob5-ip',
+        u'bob5-mnt',
+        u'bob5-nic-proxy',
+        u'bob5-vol',
+        u'agnes-nic',
+        u'agnes-phantom',
+        u'webip',
+    ],
+    '.servicegroup': [
+        u'ClusterService',
+        u'bob1',
+        u'bob2',
+        u'bob3',
+        u'bob4',
+        u'bob5',
+        u'agnes',
+    ],
+    '.system': [
+        u'dave',
+        u'stuart',
+    ],
+    '': ['minions',],
+}  #.
 
-items_2 = items_1 
+items_2 = items_1
 
 items_3 = {
-    '.resource': [u'nepharius_mrs',#   .
-                  u'nepharius_dr',
-                  u'cs_ip',
-                  u'cs_proxy',
-                  u'lan_nic',
-                  u'lan_phantom',
-                  u'omd_apache',
-                  u'omd_appl',
-                  u'omd_dg',
-                  u'omd_proxy',
-                  u'omd_srdf',
-                  u'omd_uc4ps1_agt',
-                  u'omdp_ip',
-                  u'omdp_mnt',
-                 ],
-    '.servicegroup': [u'ClusterService',
-                      u'nepharius',
-                      u'lan',
-                      u'omd',
-                     ],
-    '.system': [u'dave',
-                u'stuart',
-               ],
-    '': ['minions',
-        ],
-}#.
+    '.resource': [
+        u'nepharius_mrs',  #   .
+        u'nepharius_dr',
+        u'cs_ip',
+        u'cs_proxy',
+        u'lan_nic',
+        u'lan_phantom',
+        u'omd_apache',
+        u'omd_appl',
+        u'omd_dg',
+        u'omd_proxy',
+        u'omd_srdf',
+        u'omd_uc4ps1_agt',
+        u'omdp_ip',
+        u'omdp_mnt',
+    ],
+    '.servicegroup': [
+        u'ClusterService',
+        u'nepharius',
+        u'lan',
+        u'omd',
+    ],
+    '.system': [
+        u'dave',
+        u'stuart',
+    ],
+    '': ['minions',],
+}  #.
 
 results_1 = {
-    '.resource': [#   .
+    '.resource': [  #   .
         [(0, 'online, cluster: minions')],
         [(1, 'offline, cluster: minions')],
         [(1, 'offline, cluster: minions')],
@@ -293,13 +296,11 @@ results_1 = {
         [(0, 'running, cluster: minions')],
         [(0, 'running, cluster: minions')],
     ],
-    '': [
-        [(0, 'running')],
-    ],
-}#.
+    '': [[(0, 'running')],],
+}  #.
 
 results_2 = {
-    '.resource': [#   .
+    '.resource': [  #   .
         [(0, 'online, cluster: minions')],
         [(0, 'online, cluster: minions')],
         [(0, 'online, cluster: minions')],
@@ -348,13 +349,11 @@ results_2 = {
         [(0, 'running, cluster: minions')],
         [(0, 'running, cluster: minions')],
     ],
-    '': [
-        [(0, 'running')]
-    ],
-}#.
+    '': [[(0, 'running')]],
+}  #.
 
 results_3 = {
-    '.resource': [#   .
+    '.resource': [  #   .
         [(0, 'online, cluster: minions')],
         [(0, 'online, cluster: minions')],
         [(1, 'offline, cluster: minions')],
@@ -380,11 +379,8 @@ results_3 = {
         [(0, 'running, cluster: minions')],
         [(0, 'running, cluster: minions')],
     ],
-    '': [
-        [(0, 'running')],
-    ],
-}#.
-
+    '': [[(0, 'running')],],
+}  #.
 
 #.
 #   .--Test functions------------------------------------------------------.
@@ -402,7 +398,6 @@ results_3 = {
 def _parse(check_manager, info):
     check = check_manager.get_check("veritas_vcs")
     return check.run_parse(info)
-
 
 
 # DICSCOVERY
@@ -424,11 +419,11 @@ def test_veritas_vcs_discovery_with_parse(check_manager, info, items):
 
 
 #   . CHECK resource
-@pytest.mark.parametrize("item,params,info,expected_result", [
-    (i, "default", info_1, r) for i, r in zip(items_1['.resource'], results_1['.resource'])] + [
-    (i, "default", info_2, r) for i, r in zip(items_2['.resource'], results_2['.resource'])] + [
-    (i, "default", info_3, r) for i, r in zip(items_3['.resource'], results_3['.resource'])
-])
+@pytest.mark.parametrize(
+    "item,params,info,expected_result",
+    [(i, "default", info_1, r) for i, r in zip(items_1['.resource'], results_1['.resource'])] + [
+        (i, "default", info_2, r) for i, r in zip(items_2['.resource'], results_2['.resource'])
+    ] + [(i, "default", info_3, r) for i, r in zip(items_3['.resource'], results_3['.resource'])])
 def test_veritas_vcs_resource_with_parse(check_manager, item, params, info, expected_result):
     check = check_manager.get_check("veritas_vcs.resource")
 
@@ -439,15 +434,18 @@ def test_veritas_vcs_resource_with_parse(check_manager, item, params, info, expe
     result = CheckResult(check.run_check(item, params, parsed))
     e_result = CheckResult(expected_result)
     assertCheckResultsEqual(result, e_result)
+
+
 #.
 
 
 #   . CHECK servicegroup
 @pytest.mark.parametrize("item,params,info,expected_result", [
-    (i, "default", info_1, r) for i, r in zip(items_1['.servicegroup'], results_1['.servicegroup'])] + [
-    (i, "default", info_2, r) for i, r in zip(items_2['.servicegroup'], results_2['.servicegroup'])] + [
-    (i, "default", info_3, r) for i, r in zip(items_3['.servicegroup'], results_3['.servicegroup'])
-])
+    (i, "default", info_1, r) for i, r in zip(items_1['.servicegroup'], results_1['.servicegroup'])
+] + [
+    (i, "default", info_2, r) for i, r in zip(items_2['.servicegroup'], results_2['.servicegroup'])
+] + [(i, "default", info_3, r) for i, r in zip(items_3['.servicegroup'], results_3['.servicegroup'])
+    ])
 def test_veritas_vcs_servicegroup_with_parse(check_manager, item, params, info, expected_result):
     check = check_manager.get_check("veritas_vcs.servicegroup")
 
@@ -459,15 +457,17 @@ def test_veritas_vcs_servicegroup_with_parse(check_manager, item, params, info, 
     result = CheckResult(raw_result)
     result_expected = CheckResult(expected_result)
     assertCheckResultsEqual(result, result_expected)
+
+
 #.
 
 
 #   . CHECK system
-@pytest.mark.parametrize("item,params,info,expected_result", [
-    (i, "default", info_1, r) for i, r in zip(items_1['.system'], results_1['.system'])] + [
-    (i, "default", info_2, r) for i, r in zip(items_2['.system'], results_2['.system'])] + [
-    (i, "default", info_3, r) for i, r in zip(items_3['.system'], results_3['.system'])
-])
+@pytest.mark.parametrize(
+    "item,params,info,expected_result",
+    [(i, "default", info_1, r) for i, r in zip(items_1['.system'], results_1['.system'])] + [
+        (i, "default", info_2, r) for i, r in zip(items_2['.system'], results_2['.system'])
+    ] + [(i, "default", info_3, r) for i, r in zip(items_3['.system'], results_3['.system'])])
 def test_veritas_vcs_system_with_parse(check_manager, item, params, info, expected_result):
     check = check_manager.get_check("veritas_vcs.system")
 
@@ -479,15 +479,17 @@ def test_veritas_vcs_system_with_parse(check_manager, item, params, info, expect
     result = CheckResult(raw_result)
     result_expected = CheckResult(expected_result)
     assertCheckResultsEqual(result, result_expected)
+
+
 #.
 
 
 #   . CHECK main
-@pytest.mark.parametrize("item,params,info,expected_result", [
-    (i, "default", info_1, r) for i, r in zip(items_1[''], results_1[''])] + [
-    (i, "default", info_2, r) for i, r in zip(items_2[''], results_2[''])] + [
-    (i, "default", info_3, r) for i, r in zip(items_3[''], results_3[''])
-])
+@pytest.mark.parametrize(
+    "item,params,info,expected_result",
+    [(i, "default", info_1, r) for i, r in zip(items_1[''], results_1[''])] + [
+        (i, "default", info_2, r) for i, r in zip(items_2[''], results_2[''])
+    ] + [(i, "default", info_3, r) for i, r in zip(items_3[''], results_3[''])])
 def test_veritas_vcs_with_parse(check_manager, item, params, info, expected_result):
     check = check_manager.get_check("veritas_vcs")
 
@@ -499,6 +501,6 @@ def test_veritas_vcs_with_parse(check_manager, item, params, info, expected_resu
     result = CheckResult(raw_result)
     result_expected = CheckResult(expected_result)
     assertCheckResultsEqual(result, result_expected)
+
+
 #.
-
-

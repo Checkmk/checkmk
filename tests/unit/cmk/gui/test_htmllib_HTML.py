@@ -4,11 +4,14 @@
 import json
 from cmk.gui.htmllib import HTML
 
+
 # Monkey patch in order to make the HTML class below json-serializable without changing the default json calls.
 def _default(self, obj):
     return getattr(obj.__class__, "to_json", _default.default)(obj)
-_default.default = json.JSONEncoder().default # Save unmodified default.
-json.JSONEncoder.default = _default # replacement
+
+
+_default.default = json.JSONEncoder().default  # Save unmodified default.
+json.JSONEncoder.default = _default  # replacement
 
 
 # TODO: Split this up into multiple tests
@@ -42,7 +45,6 @@ def test_class_HTML():
     assert HTML("jo").join([a, b]) == a + "jo" + b
     assert ''.join(map(unicode, [A, B])) == A + B
 
-
     assert isinstance(A, HTML), type(A)
     #    assert isinstance(A, unicode), type(A)
     assert not isinstance(A, str), type(A)
@@ -55,7 +57,7 @@ def test_class_HTML():
     assert isinstance(HTML('').join([a, b]), HTML)
     assert isinstance("TEST" + HTML(), HTML)
     assert isinstance(HTML() + "TEST", HTML)
-    assert isinstance("TEST" + HTML() + "TEST" , HTML)
+    assert isinstance("TEST" + HTML() + "TEST", HTML)
 
     #assert "<div>" + HTML("content") + "</div>" == "&lt;div&gt;content&lt;/div&gt;"
     #assert HTML().join(["<div>", HTML("</br>"), HTML("<input/>"), "</div>"]) ==\
@@ -95,7 +97,7 @@ def test_class_HTML():
     A += (" JO PICASSO! ")
     assert isinstance(A, HTML)
 
-    assert isinstance(A + "TEST" , HTML)
+    assert isinstance(A + "TEST", HTML)
 
     assert isinstance("TEST%s" % A, unicode)
 

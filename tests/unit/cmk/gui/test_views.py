@@ -4071,6 +4071,7 @@ def test_legacy_register_painter(monkeypatch):
     assert painter.printable is False
     assert painter.render(row={}, cell=None) == "xyz"
 
+
 # These tests make adding new elements needlessly painful.
 # Skip pending discussion with development team.
 @pytest.mark.skip

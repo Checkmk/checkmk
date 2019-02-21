@@ -1,5 +1,6 @@
 import cmk_base.caching
 
+
 def test_cache_manager():
     cache = cmk_base.caching.CacheManager()
 
@@ -47,9 +48,8 @@ def test_clear_all():
     assert list_cache.is_empty()
 
     list_cache.append("123")
-    list_cache += [ "1", "2" ]
+    list_cache += ["1", "2"]
     assert not list_cache.is_empty()
-
 
     dict_cache = mgr.get_dict("test_dict")
     assert dict_cache.is_empty()
@@ -57,7 +57,6 @@ def test_clear_all():
     dict_cache["asd"] = 1
     dict_cache.update({"a": 1, "b": 3})
     assert not dict_cache.is_empty()
-
 
     set_cache = mgr.get_set("test_set")
     assert set_cache.is_empty()

@@ -10,7 +10,6 @@ class OutputFunnelTester(OutputFunnel):
         super(OutputFunnelTester, self).__init__()
         self.written = ""
 
-
     def _lowlevel_write(self, text):
         self.written += text
 

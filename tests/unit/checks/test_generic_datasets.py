@@ -20,17 +20,15 @@ import pytest
 import generictests
 from importlib import import_module
 
-
 pytestmark = pytest.mark.checks
-
 
 EXCLUDES = ('', '__init__', 'conftest', '__pycache__')
 
 DATASET_DIR = os.path.join(os.path.dirname(__file__), 'generictests', 'datasets')
 
-DATASET_NAMES = {os.path.splitext(_f)[0] for _f
-                 in os.listdir(DATASET_DIR)
-                 if _f.split('.')[0] not in EXCLUDES}
+DATASET_NAMES = {
+    os.path.splitext(_f)[0] for _f in os.listdir(DATASET_DIR) if _f.split('.')[0] not in EXCLUDES
+}
 
 
 @pytest.mark.parametrize("datasetname", DATASET_NAMES)

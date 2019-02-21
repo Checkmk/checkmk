@@ -69,13 +69,9 @@ checks = {
             [(0, u'27.0 \xb0C', [('temp', 27.0, 70.0, 80.0, None, None)])],
         ),
         # test for an unknown item
-        (
-            'Zone 6',
-            {
-                'device_levels_handling': 'devdefault',
-                'levels': (70.0, 80.0)
-            },
-            None
-        ),
+        ('Zone 6', {
+            'device_levels_handling': 'devdefault',
+            'levels': (70.0, 80.0)
+        }, None),
     ]
 }

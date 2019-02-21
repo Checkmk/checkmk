@@ -1,4 +1,4 @@
-import pytest # type: ignore
+import pytest  # type: ignore
 import cmk.utils.log
 
 

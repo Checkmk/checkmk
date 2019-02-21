@@ -6,6 +6,7 @@ import cmk.utils.store as store
 import cmk.utils.daemon as daemon
 from cmk.utils.exceptions import MKGeneralException
 
+
 @pytest.fixture(autouse=True)
 def cleanup_locks():
     yield

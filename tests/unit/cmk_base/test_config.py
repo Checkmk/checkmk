@@ -95,7 +95,6 @@ def test_management_address_of(monkeypatch, attrs, result):
     ("testhost", ["ping"], False),
     ("testhost", ["no-agent", "no-snmp"], False),
 ])
-
 def test_is_tcp_host(monkeypatch, hostname, tags, result):
     _setup_host(monkeypatch, hostname, tags)
     config.get_config_cache().initialize()
@@ -202,7 +201,7 @@ def test_http_proxy(http_proxy, result, monkeypatch):
 
     assert config.get_http_proxy(http_proxy) == result
 
+
 def _setup_host(monkeypatch, hostname, tags):
     monkeypatch.setattr(config, "all_hosts", ["%s|%s" % (hostname, "|".join(tags))])
     monkeypatch.setattr(config, "host_paths", {hostname: "/"})
-

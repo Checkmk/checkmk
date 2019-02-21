@@ -104,7 +104,8 @@ def test_start_job():
     job.finish_hello_event.set()
 
     testlib.wait_until(
-        lambda: job.get_status()["state"] not in [ background_job.JobStatus.state_initialized, background_job.JobStatus.state_running ],
+        lambda: job.get_status()["state"] not in
+        [background_job.JobStatus.state_initialized, background_job.JobStatus.state_running],
         timeout=5,
         interval=0.1)
 

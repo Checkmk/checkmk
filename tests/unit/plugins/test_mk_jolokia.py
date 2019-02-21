@@ -89,7 +89,11 @@ def test_jolokia_instance_base_url(config, base_url):
 
 def test_jolokia_yield_configured_instances():
     yci = mk_jolokia.yield_configured_instances({
-        "instances": [{"server": "s1"}, {"server": "s2"}],
+        "instances": [{
+            "server": "s1"
+        }, {
+            "server": "s2"
+        }],
         "port": 1234,
     })
 

@@ -8,8 +8,10 @@ from checktestlib import DiscoveryResult, assertDiscoveryResultsEqual
 # Mark all tests in this file as check related tests
 pytestmark = pytest.mark.checks
 
+
 def splitter(text, split_symbol=None):
     return [line.split(split_symbol) for line in text.split("\n")]
+
 
 agent_info = [
     splitter("""thermal_zone0 enabled acpitz 57000 127000 critical
@@ -51,6 +53,7 @@ result_check = [
         (0, '61.0 °C', [('temp', 61.0, 99.0, 127.0)]),
     ],
 ]
+
 
 @pytest.mark.parametrize("info, discovered, checked", zip(agent_info, result_discovery,
                                                           result_check))

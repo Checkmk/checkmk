@@ -94,15 +94,15 @@ def write_single_oid_cache(host_config):
     store.save_data_to_file(cache_path, _g_single_oid_cache, pretty=False)
 
 
-def set_single_oid_cache(hostname, oid, value):
+def set_single_oid_cache(host_config, oid, value):
     _g_single_oid_cache[oid] = value
 
 
-def _is_in_single_oid_cache(hostname, oid):
+def _is_in_single_oid_cache(host_config, oid):
     return oid in _g_single_oid_cache
 
 
-def _get_oid_from_single_oid_cache(hostname, oid):
+def _get_oid_from_single_oid_cache(host_config, oid):
     return _g_single_oid_cache.get(oid)
 
 
@@ -258,9 +258,9 @@ def get_single_oid(host_config, oid, check_plugin_name=None, do_snmp_scan=True):
             oid = '.' + oid
 
     # TODO: Use generic cache mechanism
-    if _is_in_single_oid_cache(host_config.hostname, oid):
+    if _is_in_single_oid_cache(host_config, oid):
         console.vverbose("       Using cached OID %s: " % oid)
-        value = _get_oid_from_single_oid_cache(host_config.hostname, oid)
+        value = _get_oid_from_single_oid_cache(host_config, oid)
         console.vverbose("%s%s%s%s\n" % (tty.bold, tty.green, value, tty.normal))
         return value
 
@@ -287,12 +287,7 @@ def get_single_oid(host_config, oid, check_plugin_name=None, do_snmp_scan=True):
         for context_name in snmp_contexts:
             try:
                 if config.is_inline_snmp_host(host_config.hostname):
-                    value = inline_snmp.get(
-                        host_config.hostname,
-                        oid,
-                        ipaddress=host_config.ipaddress,
-                        context_name=context_name,
-                        credentials=host_config.credentials)
+                    value = inline_snmp.get(host_config, oid, context_name=context_name)
                 else:
                     value = classic_snmp.get(host_config, oid, context_name=context_name)
 
@@ -308,18 +303,13 @@ def get_single_oid(host_config, oid, check_plugin_name=None, do_snmp_scan=True):
     else:
         console.vverbose("failed.\n")
 
-    set_single_oid_cache(host_config.hostname, oid, value)
+    set_single_oid_cache(host_config, oid, value)
     return value
 
 
 def walk_for_export(host_config, oid):
     if config.is_inline_snmp_host(host_config.hostname):
-        rows = inline_snmp.walk(
-            host_config.hostname,
-            None,
-            oid,
-            ipaddress=host_config.ipaddress,
-            credentials=host_config.credentials)
+        rows = inline_snmp.walk(host_config, None, oid)
         return inline_snmp.convert_rows_for_stored_walk(rows)
 
     return classic_snmp.walk(host_config, oid, hex_plain=True)
@@ -404,13 +394,7 @@ def _perform_snmpwalk(host_config, check_plugin_name, base_oid, fetchoid):
     for context_name in snmp_contexts:
         if config.is_inline_snmp_host(host_config.hostname):
             rows = inline_snmp.walk(
-                host_config.hostname,
-                check_plugin_name,
-                fetchoid,
-                base_oid,
-                context_name=context_name,
-                ipaddress=host_config.ipaddress,
-                credentials=host_config.credentials)
+                host_config, check_plugin_name, fetchoid, base_oid, context_name=context_name)
         else:
             rows = classic_snmp.walk(host_config, fetchoid, context_name=context_name)
 

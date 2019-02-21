@@ -51,8 +51,8 @@ from cmk_base.exceptions import MKSNMPError
 
 
 def walk(host_config, oid, hex_plain=False, context_name=None):
-    protospec = _snmp_proto_spec(host_config.hostname)
-    portspec = _snmp_port_spec(host_config.hostname)
+    protospec = _snmp_proto_spec(host_config)
+    portspec = _snmp_port_spec(host_config)
     command = _snmp_walk_command(host_config, context_name)
     command += [
         "-OQ", "-OU", "-On", "-Ot",
@@ -144,8 +144,8 @@ def get(host_config, oid, context_name=None):
         oid_prefix = oid
         commandtype = "get"
 
-    protospec = _snmp_proto_spec(host_config.hostname)
-    portspec = _snmp_port_spec(host_config.hostname)
+    protospec = _snmp_proto_spec(host_config)
+    portspec = _snmp_port_spec(host_config)
     command = _snmp_base_command(commandtype, host_config, context_name) + \
                [ "-On", "-OQ", "-Oe", "-Ot",
                  "%s%s%s" % (protospec, host_config.ipaddress, portspec),
@@ -183,16 +183,16 @@ def get(host_config, oid, context_name=None):
     return value
 
 
-def _snmp_port_spec(hostname):
-    port = config.snmp_port_of(hostname)
+def _snmp_port_spec(host_config):
+    port = config.snmp_port_of(host_config.hostname)
     if port is None:
         return ""
 
     return ":%d" % port
 
 
-def _snmp_proto_spec(hostname):
-    if config.is_ipv6_primary(hostname):
+def _snmp_proto_spec(host_config):
+    if config.is_ipv6_primary(host_config.hostname):
         return "udp6:"
 
     return ""

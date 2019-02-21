@@ -24,12 +24,9 @@ from cmk.notification_plugins.slack import slack_msg
     }, {
         "attachments": [
             {
-                "color":
-                    "#EE0000",
-                "title":
-                    "Service PROBLEM notification",
-                "text":
-                    "Host: <http://localhost/testsite/view?key=val|site1> (IP: 127.0.0.1)\nService: <http://localhost/testsite/view?key=val2|first>\nState: CRITICAL",
+                "color": "#EE0000",
+                "title": "Service PROBLEM notification",
+                "text": "Host: <http://localhost/testsite/view?key=val|site1> (IP: 127.0.0.1)\nService: <http://localhost/testsite/view?key=val2|first>\nState: CRITICAL",
             },
             {
                 "color": "#EE0000",

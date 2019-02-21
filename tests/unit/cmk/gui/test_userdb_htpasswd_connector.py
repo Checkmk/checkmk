@@ -7,19 +7,22 @@ from passlib.hash import sha256_crypt
 
 import cmk.gui.plugins.userdb.htpasswd as htpasswd
 
+
 @pytest.fixture()
 def htpasswd_file(tmpdir):
     htpasswd_file = tmpdir.join("htpasswd")
-    htpasswd_file.write((
-        # Pre 1.6 hashing formats (see cmk.gui.plugins.userdb.htpasswd for more details)
-        u"bärnd:$apr1$/FU.SwEZ$Ye0XG1Huf2j7Jws7KD.h2/\n"
-        u"cmkadmin:NEr3kqi287FQc\n"
-        u"harry:$1$478020$ldQUQ3RIwRYk5wjKfsWPD.\n"
-        # A disabled user
-        u"locked:!NEr3kqi287FQc\n"
-        # A >= 1.6 sha256 hashed password
-        u"sha256user:$5$rounds=535000$5IFtH0zYpQ6STBre$Nkem2taHfBFswWj3xERRpmEI.20G5is0VBcPpUuf3J2\n"
-    ).encode("utf-8"), mode="wb")
+    htpasswd_file.write(
+        (
+            # Pre 1.6 hashing formats (see cmk.gui.plugins.userdb.htpasswd for more details)
+            u"bärnd:$apr1$/FU.SwEZ$Ye0XG1Huf2j7Jws7KD.h2/\n"
+            u"cmkadmin:NEr3kqi287FQc\n"
+            u"harry:$1$478020$ldQUQ3RIwRYk5wjKfsWPD.\n"
+            # A disabled user
+            u"locked:!NEr3kqi287FQc\n"
+            # A >= 1.6 sha256 hashed password
+            u"sha256user:$5$rounds=535000$5IFtH0zYpQ6STBre$Nkem2taHfBFswWj3xERRpmEI.20G5is0VBcPpUuf3J2\n"
+        ).encode("utf-8"),
+        mode="wb")
     return pathlib.Path(htpasswd_file)
 
 

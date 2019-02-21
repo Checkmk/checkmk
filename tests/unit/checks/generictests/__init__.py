@@ -52,4 +52,3 @@ Some more advanced ones are
 """
 from generictests.checkhandler import checkhandler
 from generictests.run import run
-

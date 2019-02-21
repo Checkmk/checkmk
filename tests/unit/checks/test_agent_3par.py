@@ -1,22 +1,23 @@
 import pytest
 
+
 @pytest.mark.parametrize("params,result", [
     ({
         "user": "user",
         "password": "d1ng",
         "verify_cert": False,
-        "values": ["x","y"],
+        "values": ["x", "y"],
     }, ['-u', 'user', '-pd1ng', '--verify-certs=no', '-v', 'x,y', "address"]),
     ({
         "user": "user",
         "password": "d1ng",
-        "values": ["x","y"],
+        "values": ["x", "y"],
     }, ['-u', 'user', '-pd1ng', '--verify-certs=no', '-v', 'x,y', "address"]),
     ({
         "user": "user",
         "password": "d1ng",
         "verify_cert": True,
-        "values": ["x","y"],
+        "values": ["x", "y"],
     }, ['-u', 'user', '-pd1ng', '--verify-certs=yes', '-v', 'x,y', "address"]),
     ({
         "user": "user",

@@ -338,7 +338,8 @@ def test_process_matches(check_manager, ps_line, ps_pattern, user_pattern, resul
     (["test", "123_foo"], "~.*\\\\(.*)_foo", None, ['123'], False),
     (["test", "c:\\a\\b\\123_foo"], "~.*\\\\(.*)_foo", None, ['123'], True),
 ])
-def test_process_matches_match_groups(check_manager, ps_line, ps_pattern, user_pattern, match_groups, result):
+def test_process_matches_match_groups(check_manager, ps_line, ps_pattern, user_pattern,
+                                      match_groups, result):
     check = check_manager.get_check("ps")
     assert check.context["process_matches"]([check.context["ps_info"](ps_line[0])] + ps_line[1:],
                                             ps_pattern, user_pattern, match_groups) == result
@@ -625,10 +626,9 @@ def test_check_ps_common_cpu(check_manager, monkeypatch, data):
      CheckResult([
          (2, "0 processes: (ok from 1 to 99999)", [("count", 0, 100000, 100000, 0)]),
      ])),
-    ((0, 0, 99999, 99999),
-     CheckResult([
-         (0, "0 processes", [("count", 0, 100000, 100000, 0)]),
-     ])),
+    ((0, 0, 99999, 99999), CheckResult([
+        (0, "0 processes", [("count", 0, 100000, 100000, 0)]),
+    ])),
 ])
 def test_check_ps_common_count(check_manager, levels, reference):
     check = check_manager.get_check("ps")

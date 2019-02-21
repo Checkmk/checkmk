@@ -7,6 +7,7 @@ import cmk.gui.http as http
 from cmk.gui.globals import html
 import cmk.gui.htmllib as htmllib
 
+
 @pytest.fixture()
 def tm():
     request = http.Request({"wsgi.input": "", "SCRIPT_NAME": ""})
@@ -69,6 +70,7 @@ def test_is_transaction(tm):
 
 def test_check_transaction_invalid(tm, monkeypatch):
     assert tm.check_transaction() == False
+
 
 def test_check_transaction_valid(tm, monkeypatch, mocker):
     valid_transid = "%d/abc" % time.time()

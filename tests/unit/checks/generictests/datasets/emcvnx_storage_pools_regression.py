@@ -107,19 +107,20 @@ discovery = {
 }
 
 checks = {
-    '': [(u'backup', {'percent_full': (70.0, 90.0)}, [(
+    '': [(u'backup', {
+        'percent_full': (70.0, 90.0)
+    }, [(
         0,
         u'State: Ready, Status: OK(0x0), [Phys. capacity] User capacity: 15.04 TB, Consumed capacity: 12.75 TB, Available capacity: 2.29 TB',
-        []
-    ), (1, 'Percent full: 84.8% (warn/crit at 70.00 B/90.00 B)', []), (
-        0,
-        '[Virt. capacity] Percent subscribed: 84.8%, Oversubscribed by: 0.00 B, Total subscribed capacity: 12.75 TB',
-        [('emcvnx_consumed_capacity', 14021409290321.92, None, None, None,
-          None), ('emcvnx_avail_capacity', 2520422100762.624, None, None, None,
-                  None), ('emcvnx_perc_full', 84.763, None, None, None,
-                          None), ('emcvnx_perc_subscribed', 84.76, None, None, None,
-                                  None), ('emcvnx_over_subscribed', 0.0, None, None, None, None),
-         ('emcvnx_total_subscribed_capacity', 14020871345668.096, None, None, None, None)])])],
+        []), (1, 'Percent full: 84.8% (warn/crit at 70.00 B/90.00 B)', []),
+        (0,
+         '[Virt. capacity] Percent subscribed: 84.8%, Oversubscribed by: 0.00 B, Total subscribed capacity: 12.75 TB',
+         [('emcvnx_consumed_capacity', 14021409290321.92, None, None, None, None),
+          ('emcvnx_avail_capacity', 2520422100762.624, None, None, None, None),
+          ('emcvnx_perc_full', 84.763, None, None, None, None),
+          ('emcvnx_perc_subscribed', 84.76, None, None, None, None),
+          ('emcvnx_over_subscribed', 0.0, None, None, None, None),
+          ('emcvnx_total_subscribed_capacity', 14020871345668.096, None, None, None, None)])])],
     'deduplication': [(u'backup', {}, [
         (0, u'State: Idle (No Deduplicated LUNs)', []),
         (0, u'Status: OK', []),
@@ -129,31 +130,33 @@ checks = {
         (0, u'Remaining size: N/A', []),
         (0, u'Shared capacity: N/A', []),
     ]),],
-    'tiering': [(u'backup', {'time_to_complete': (1814400, 2419200)}, [(
+    'tiering': [(u'backup', {
+        'time_to_complete': (1814400, 2419200)
+    }, [(
         0,
         u'Fast cache: Disabled, Relocation status: Inactive, Relocation rate: Medium, Move up: 17.03 GB, Move down: 17.03 GB, Move within: 0.00 B, Movement completed: 102.70 GB',
-        [('emcvnx_move_up', 18285823262.72, None, None, None,
-          None), ('emcvnx_move_down', 18285823262.72, None, None, None,
-                  None), ('emcvnx_move_within', 0.0, None, None, None, None),
-         ('emcvnx_move_completed', 110273285324.8, None, None, None,
-          None)]), (0, u'Estimated time to complete: 4 minutes', [('emcvnx_time_to_complete', 240,
-                                                                   None, None, None, None)])])],
+        [('emcvnx_move_up', 18285823262.72, None, None, None, None),
+         ('emcvnx_move_down', 18285823262.72, None, None, None, None),
+         ('emcvnx_move_within', 0.0, None, None, None, None),
+         ('emcvnx_move_completed', 110273285324.8, None, None, None, None)]),
+        (0, u'Estimated time to complete: 4 minutes', [('emcvnx_time_to_complete', 240, None, None,
+                                                        None, None)])])],
     'tieringtypes': [(u'backup Capacity', {}, [(
         0,
         'User capacity: 10.75 TB, Consumed capacity: 8.88 TB, Available capacity: 1.86 TB, Percent subscribed: 82.7%, Move up: 17.03 GB, Move down: 0.00 B, Move within: 0.00 B',
-        [('emcvnx_consumed_capacity', 9767807898091.52, None, None, None,
-          None), ('emcvnx_avail_capacity', 2048667187937.28, None, None, None,
-                  None), ('emcvnx_perc_subscribed', 82.66, None, None, None,
-                          None), ('emcvnx_targeted_higher', 18285823262.72, None, None, None, None),
-         ('emcvnx_targeted_lower', 0.0, None, None, None, None), ('emcvnx_targeted_within', 0.0,
-                                                                  None, None, None, None)]
-    )]), (u'backup Performance', {}, [(
-        0,
-        'User capacity: 4.30 TB, Consumed capacity: 3.87 TB, Available capacity: 439.86 GB, Percent subscribed: 90.0%, Move up: 0.00 B, Move down: 17.03 GB, Move within: 0.00 B',
-        [('emcvnx_consumed_capacity', 4253059152609.28, None, None, None,
-          None), ('emcvnx_avail_capacity', 472296078704.64, None, None, None,
-                  None), ('emcvnx_perc_subscribed', 90.01, None, None, None,
-                          None), ('emcvnx_targeted_higher', 0.0, None, None, None, None),
-         ('emcvnx_targeted_lower', 18285823262.72, None, None, None,
-          None), ('emcvnx_targeted_within', 0.0, None, None, None, None)])])]
+        [('emcvnx_consumed_capacity', 9767807898091.52, None, None, None, None),
+         ('emcvnx_avail_capacity', 2048667187937.28, None, None, None, None),
+         ('emcvnx_perc_subscribed', 82.66, None, None, None, None),
+         ('emcvnx_targeted_higher', 18285823262.72, None, None, None, None),
+         ('emcvnx_targeted_lower', 0.0, None, None, None, None),
+         ('emcvnx_targeted_within', 0.0, None, None, None, None)])]),
+                     (u'backup Performance', {},
+                      [(0,
+                        'User capacity: 4.30 TB, Consumed capacity: 3.87 TB, Available capacity: 439.86 GB, Percent subscribed: 90.0%, Move up: 0.00 B, Move down: 17.03 GB, Move within: 0.00 B',
+                        [('emcvnx_consumed_capacity', 4253059152609.28, None, None, None, None),
+                         ('emcvnx_avail_capacity', 472296078704.64, None, None, None, None),
+                         ('emcvnx_perc_subscribed', 90.01, None, None, None, None),
+                         ('emcvnx_targeted_higher', 0.0, None, None, None, None),
+                         ('emcvnx_targeted_lower', 18285823262.72, None, None, None, None),
+                         ('emcvnx_targeted_within', 0.0, None, None, None, None)])])]
 }

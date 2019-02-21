@@ -11,13 +11,16 @@ from cmk.gui.globals import html
 
 
 def test_http_request_allowed_vars():
-    environ = dict(create_environ(method="POST",
-                                  content_type="application/x-www-form-urlencoded",
-                                  input_stream=io.BytesIO("asd=x&_Y21rYWRtaW4%3D=aaa")),
-                   REQUEST_URI='')
+    environ = dict(
+        create_environ(
+            method="POST",
+            content_type="application/x-www-form-urlencoded",
+            input_stream=io.BytesIO("asd=x&_Y21rYWRtaW4%3D=aaa")),
+        REQUEST_URI='')
     req = http.Request(environ)
     assert req.var("asd") == "x"
     assert req.var("_Y21rYWRtaW4=") == "aaa"
+
 
 def test_cookie_handling(register_builtin_html, monkeypatch):
     monkeypatch.setattr(html.request, "cookies", {"cookie1": {"key": "1a"}})
@@ -33,7 +36,7 @@ def test_request_processing(register_builtin_html):
     html.request.set_var("varname", "1a")
     html.request.set_var("varname2", "1")
 
-    html.get_unicode_input("varname", deflt = "lol")
+    html.get_unicode_input("varname", deflt="lol")
     html.get_integer_input("varname2")
     html.get_request(exclude_vars=["varname2"])
     # TODO: Make a test which works:
@@ -72,8 +75,10 @@ def test_response_del_cookie(register_builtin_html, monkeypatch):
 # We dropped the old format during 1.6 development. It would be a good time to drop the
 # compatibility with the old format earliest with 1.7.
 def test_pre_16_format_cookie_handling(monkeypatch):
-    environ = dict(create_environ(),
-                   HTTP_COOKIE="xyz=123; auth_stable=lärs:1534272374.61:1f59cac3fcd5bcc389e4f8397bed315b; abc=123")
+    environ = dict(
+        create_environ(),
+        HTTP_COOKIE=
+        "xyz=123; auth_stable=lärs:1534272374.61:1f59cac3fcd5bcc389e4f8397bed315b; abc=123")
     request = http.Request(environ)
 
     assert isinstance(request.cookie("auth_stable"), bytes)

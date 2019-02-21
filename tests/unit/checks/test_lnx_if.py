@@ -1,4 +1,4 @@
-import pytest # type: ignore
+import pytest  # type: ignore
 from cmk_base.check_api import MKCounterWrapped
 from checktestlib import CheckResult, assertCheckResultsEqual
 

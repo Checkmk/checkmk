@@ -190,7 +190,8 @@ def test_read_config(agent_plugin_as_module, tmpdir):
         ("", True, "/path/to/config/logwatch.state.local"),
         ("", False, "/path/to/config/logwatch.state"),
     ])
-def test_get_status_filename(agent_plugin_as_module, env_var, istty, statusfile, monkeypatch, mocker):
+def test_get_status_filename(agent_plugin_as_module, env_var, istty, statusfile, monkeypatch,
+                             mocker):
     """
     May not be executed with pytest option -s set. pytest stdout redirection would colide
     with stdout mock.
@@ -251,7 +252,8 @@ def test_save_status(agent_plugin_as_module, tmpdir):
     ("/subdir/*", ["/subdir/another_symlinked_file.log"]),
     ("/symlink_to_dir/*", ["/symlink_to_dir/yet_another_file.log"]),
 ])
-def test_find_matching_logfiles(agent_plugin_as_module, fake_filesystem, pattern_suffix, file_suffixes):
+def test_find_matching_logfiles(agent_plugin_as_module, fake_filesystem, pattern_suffix,
+                                file_suffixes):
     mk_logwatch = agent_plugin_as_module
     fake_fs_path = str(fake_filesystem)
     files = mk_logwatch.find_matching_logfiles(fake_fs_path + pattern_suffix)

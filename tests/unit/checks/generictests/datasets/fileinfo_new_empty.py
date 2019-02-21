@@ -1,7 +1,4 @@
-
-
 checkname = 'fileinfo'
-
 
 info = [
     ['1536557964'],
@@ -10,6 +7,4 @@ info = [
     ['[[[content]]]'],
 ]
 
-
 discovery = {'': [], 'groups': []}
-

@@ -10,6 +10,7 @@ import pytest
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
 
+
 def test_load_data_from_file_not_existing(tmpdir):
     data = store.load_data_from_file("%s/x" % tmpdir)
     assert data is None
@@ -207,13 +208,12 @@ def test_release_all_locks_already_closed(tmpdir):
 
 class LockTestThread(threading.Thread):
     def __init__(self, store, path):
-        self.store     = store
-        self.path      = path
-        self.do        = None
+        self.store = store
+        self.path = path
+        self.do = None
         self.is_locked = False
         super(LockTestThread, self).__init__()
-        self.daemon    = True
-
+        self.daemon = True
 
     def run(self):
         while True:
@@ -231,7 +231,6 @@ class LockTestThread(threading.Thread):
 
             else:
                 time.sleep(0.1)
-
 
 
 def test_locking(tmpdir):

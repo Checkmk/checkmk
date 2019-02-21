@@ -3,6 +3,7 @@ import os
 
 import cmk
 
+
 def test_version():
     assert type(cmk.__version__) == str
 

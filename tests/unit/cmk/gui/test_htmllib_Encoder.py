@@ -6,6 +6,7 @@ import pytest
 import cmk.gui.htmllib as htmllib
 from cmk.gui.globals import html
 
+
 def test_htmllib_integration(register_builtin_html):
     assert type(html.encoder) == htmllib.Encoder
 
@@ -31,17 +32,19 @@ def test_urlencode_vars(inp, out):
     assert result == out
 
 
-@pytest.mark.parametrize("inp,out", [
-    (u"välue", "v%C3%A4lue"),
-    # TODO: None / int handling inconsistent with urlencode_vars()
-    (None, ""),
-    ("ä", "%C3%A4"),
-    ("_-.", "_-."),
-    ("#", "%23"),
-    ("+", "%2B"),
-    (" ", "+"),
-    ("/", "%2F"),
-])
+@pytest.mark.parametrize(
+    "inp,out",
+    [
+        (u"välue", "v%C3%A4lue"),
+        # TODO: None / int handling inconsistent with urlencode_vars()
+        (None, ""),
+        ("ä", "%C3%A4"),
+        ("_-.", "_-."),
+        ("#", "%23"),
+        ("+", "%2B"),
+        (" ", "+"),
+        ("/", "%2F"),
+    ])
 def test_urlencode(inp, out):
     result = htmllib.Encoder().urlencode(inp)
     assert type(result) == str

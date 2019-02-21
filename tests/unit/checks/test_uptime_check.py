@@ -4,11 +4,13 @@ import pytest
 pytestmark = pytest.mark.checks
 
 
-@pytest.mark.parametrize("info,result", [
-    # Discover the service once non-empty agent output is available
-    ([], None),
-    ([[]], [ (None, {}) ]),
-])
+@pytest.mark.parametrize(
+    "info,result",
+    [
+        # Discover the service once non-empty agent output is available
+        ([], None),
+        ([[]], [(None, {})]),
+    ])
 def test_uptime_discovery2(check_manager, info, result):
     check = check_manager.get_check("uptime")
     assert check.run_discovery(info) == result

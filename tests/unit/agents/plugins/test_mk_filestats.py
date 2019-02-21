@@ -33,19 +33,24 @@ def test_lazy_file():
     assert isinstance(ast.literal_eval(lfile.dumps()), dict)
 
 
-@pytest.mark.parametrize("config", [
-    ({}),
-    ({"input_unknown": None}),
-    ({"input_one": None, "input_two": None})
-])
+@pytest.mark.parametrize("config", [({}), ({
+    "input_unknown": None
+}), ({
+    "input_one": None,
+    "input_two": None
+})])
 def test_get_file_iterator_invalid(config):
     with pytest.raises(ValueError):
         mk_filestats.get_file_iterator(config)
 
 
 @pytest.mark.parametrize("config,pat_list", [
-    ({"input_patterns": "foo"}, ["foo"]),
-    ({"input_patterns": '"foo bar" gee*'}, ["foo bar", "gee*"]),
+    ({
+        "input_patterns": "foo"
+    }, ["foo"]),
+    ({
+        "input_patterns": '"foo bar" gee*'
+    }, ["foo bar", "gee*"]),
 ])
 def test_get_file_iterator_pattern(config, pat_list):
     iter_obj = mk_filestats.get_file_iterator(config)
@@ -72,14 +77,13 @@ def test_numeric_filter_raises(invalid_arg):
         mk_filestats.AbstractNumericFilter(invalid_arg)
 
 
-@pytest.mark.parametrize("reg_pat,paths,results", [
-    (r'.*\.txt',
-     ("/path/to/some.txt", "to/sometxt", "/path/to/some.TXT"),
-     (True, False, False),
-    ),
-    (r'/.*', ("relative/path/should/be/resolved",), (True,)),
-    (u'[^ð]*ð{2}[^ð]*', (u'foðbar', u'fððbar'), (False, True))
-])
+@pytest.mark.parametrize("reg_pat,paths,results", [(
+    r'.*\.txt',
+    ("/path/to/some.txt", "to/sometxt", "/path/to/some.TXT"),
+    (True, False, False),
+), (r'/.*', ("relative/path/should/be/resolved",), (True,)),
+                                                   (u'[^ð]*ð{2}[^ð]*', (u'foðbar', u'fððbar'),
+                                                    (False, True))])
 def test_path_filter(reg_pat, paths, results):
     path_filter = mk_filestats.RegexFilter(reg_pat)
     for path, result in zip(paths, results):
@@ -88,8 +92,12 @@ def test_path_filter(reg_pat, paths, results):
 
 
 @pytest.mark.parametrize("config", [
-    {"filter_foo": None},
-    {"filter_size": "!=käse"},
+    {
+        "filter_foo": None
+    },
+    {
+        "filter_size": "!=käse"
+    },
 ])
 def test_get_file_filters_invalid(config):
     with pytest.raises(ValueError):

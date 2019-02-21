@@ -5,10 +5,8 @@ pytestmark = pytest.mark.checks
 
 RA32E_POWER = "ra32e_power"
 
-@pytest.mark.parametrize("info,result", [
-    ([[u'']], None),
-    ([[u'0']], [(None, {})])
-])
+
+@pytest.mark.parametrize("info,result", [([[u'']], None), ([[u'0']], [(None, {})])])
 def test_ra32e_power_discovery(check_manager, info, result):
     check = check_manager.get_check(RA32E_POWER)
     assert check.run_discovery(info) == result

@@ -27,7 +27,10 @@
 import sys
 from typing import Tuple  # pylint: disable=unused-import
 import random
-from pathlib2 import Path  # pylint: disable=unused-import
+try:
+    from pathlib import Path  # pylint: disable=unused-import
+except ImportError:
+    from pathlib2 import Path  # pylint: disable=unused-import
 from OpenSSL import crypto
 from OpenSSL.SSL import FILETYPE_PEM  # type: ignore
 
@@ -72,9 +75,9 @@ class CertificateAuthority(object):
         cert.set_issuer(cert.get_subject())
         cert.set_pubkey(key)
         cert.add_extensions([
-            crypto.X509Extension("subjectKeyIdentifier", False, "hash", subject=cert),
-            crypto.X509Extension("basicConstraints", True, "CA:TRUE, pathlen:0"),
-            crypto.X509Extension("keyUsage", True, "keyCertSign, cRLSign"),
+            crypto.X509Extension(b"subjectKeyIdentifier", False, b"hash", subject=cert),
+            crypto.X509Extension(b"basicConstraints", True, b"CA:TRUE, pathlen:0"),
+            crypto.X509Extension(b"keyUsage", True, b"keyCertSign, cRLSign"),
         ])
         cert.sign(key, "sha512")
 

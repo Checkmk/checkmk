@@ -46,7 +46,7 @@ import generictests.run
 
 class WritableDataset(object):
     def __init__(self, filename, init_dict):
-        self.comments = ['']
+        self.comments = ['', 'yapf: disable']
         self.filename = filename
         self.writelist = (
             'checkname',

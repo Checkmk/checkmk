@@ -23,10 +23,7 @@ SEARCH+=" omd/packages/cma"
 SEARCH+=" omd/packages/maintenance"
 SEARCH+=" omd/packages/omd"
 SEARCH+=" scripts"
-# Tests contain some very large data structures (e.g.
-# tests/unit/checks/test_docker_parse_node_images.py).  Skip them for the
-# moment because they make YAPF run more than 60 minutes instead of 8 minutes
-#SEARCH+=" tests"
+SEARCH+=" tests"
 SEARCH+=" web/app"
 SEARCH+=" werk"
 
@@ -34,7 +31,12 @@ SEARCH+=" werk"
 REAL_SEARCH=$(realpath $SEARCH)
 
 # while read F is used to deal with files containing whitespaces
-find $REAL_SEARCH -name .venv -prune -o -type f -print | sort | while read F; do
+find $REAL_SEARCH \
+     -name .mypy_cache -prune -o \
+     -name .venv -prune -o \
+     -name test_docker_parse_node_images.py -prune -o \
+     -name typeshed -prune -o \
+     -type f -print | sort | while read F; do
     if [[ "$F" == *.py ]] || head -n 1 "$F" | grep -q '^#!.*python$' >/dev/null 2>&1; then
         echo "$F"
     fi

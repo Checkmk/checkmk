@@ -1,3 +1,4 @@
+# yapf: disable
 checkname = 'lnx_thermal'
 
 info = [['thermal_zone0', 'enabled', 'acpitz', '57000', '127000', 'critical'],

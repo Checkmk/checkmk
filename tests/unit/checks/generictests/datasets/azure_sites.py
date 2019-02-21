@@ -1,3 +1,4 @@
+# yapf: disable
 checkname = 'azure_sites'
 
 info = [

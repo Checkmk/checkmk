@@ -1,3 +1,4 @@
+# yapf: disable
 checkname = 'netapp_api_luns'
 
 info = [[

@@ -1,3 +1,4 @@
+# yapf: disable
 checkname = 'brocade'
 
 info = [['1', '24', 'SLOT #0: TEMP #1'], ['2', '12', 'SLOT #0: TEMP #2'],

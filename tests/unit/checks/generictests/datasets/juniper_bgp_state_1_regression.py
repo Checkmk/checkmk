@@ -1,3 +1,4 @@
+# yapf: disable
 checkname = 'juniper_bgp_state'
 
 info = [

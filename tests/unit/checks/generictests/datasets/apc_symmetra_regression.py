@@ -1,3 +1,4 @@
+# yapf: disable
 checkname = 'apc_symmetra'
 
 info = [[

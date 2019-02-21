@@ -1,3 +1,4 @@
+# yapf: disable
 checkname = 'esx_vsphere_sensors'
 
 info = [['Dummy sensor', '', '', '', '', '', 'green', 'all is good', 'the sun is shining']]

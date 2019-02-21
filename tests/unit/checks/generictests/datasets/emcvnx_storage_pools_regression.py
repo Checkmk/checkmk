@@ -1,3 +1,4 @@
+# yapf: disable
 checkname = 'emcvnx_storage_pools'
 
 parsed = {

@@ -1,3 +1,4 @@
+# yapf: disable
 # pylint: disable=invalid-name
 
 checkname = 'filestats'

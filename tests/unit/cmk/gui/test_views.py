@@ -1,3 +1,4 @@
+# yapf: disable
 import copy
 import pytest
 from pathlib2 import Path

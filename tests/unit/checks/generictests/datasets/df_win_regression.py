@@ -1,3 +1,4 @@
+# yapf: disable
 checkname = 'df'
 
 info = [[u'C:\\', u'NTFS', u'8192620', u'7724268', u'468352', u'95%', u'C:\\'],

@@ -1,3 +1,4 @@
+# yapf: disable
 checkname = 'raritan_pdu_outletcount'
 
 info = [['36']]

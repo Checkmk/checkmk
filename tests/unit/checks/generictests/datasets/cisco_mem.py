@@ -1,3 +1,4 @@
+# yapf: disable
 checkname = 'cisco_mem'
 
 info = [['Processor', '27086628', '46835412', '29817596'],

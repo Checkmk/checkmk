@@ -1,3 +1,4 @@
+# yapf: disable
 checkname = 'aix_hacmp_resources'
 
 info = [

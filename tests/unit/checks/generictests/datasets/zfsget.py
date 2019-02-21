@@ -1,3 +1,4 @@
+# yapf: disable
 checkname = 'zfsget'
 
 info = [['bpool', 'name', 'bpool', '-'], ['bpool', 'quota', '0', 'default'],

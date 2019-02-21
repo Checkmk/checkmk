@@ -1,3 +1,4 @@
+# yapf: disable
 checkname = 'poseidon_temp'
 
 info = [[u'Bezeichnung Sensor 1', u'1', u'16.8 C']]

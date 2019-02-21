@@ -1,3 +1,4 @@
+# yapf: disable
 checkname = 'esx_vsphere_sensors'
 
 info = [

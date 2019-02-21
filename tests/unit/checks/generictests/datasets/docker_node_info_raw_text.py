@@ -1,3 +1,4 @@
+# yapf: disable
 checkname = 'docker_node_info'
 
 info = [['|Containers', ' 0'], ['| Running', ' 0'], ['| Paused', ' 0'], ['| Stopped', ' 0'],

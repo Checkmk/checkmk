@@ -1,3 +1,4 @@
+# yapf: disable
 from itertools import izip_longest
 from collections import namedtuple
 import pytest

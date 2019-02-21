@@ -1,3 +1,4 @@
+# yapf: disable
 checkname = 'msexch_activesync'
 
 info = [[

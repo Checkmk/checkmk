@@ -1,3 +1,4 @@
+# yapf: disable
 checkname = 'varnish'
 
 info = [[u'client_conn', u'13688122', u'4.41', u'Client', u'connections', u'accepted'],

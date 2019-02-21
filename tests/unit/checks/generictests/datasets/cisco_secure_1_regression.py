@@ -1,3 +1,4 @@
+# yapf: disable
 checkname = 'cisco_secure'
 
 info = [[[u'83886080', u'mgmt0', u'2'], [u'101191680', u'sup-fc0', u'1'],

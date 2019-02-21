@@ -1,3 +1,4 @@
+# yapf: disable
 checkname = 'jolokia_info'
 
 info = [[

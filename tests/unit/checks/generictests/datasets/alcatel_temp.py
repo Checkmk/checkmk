@@ -1,3 +1,4 @@
+# yapf: disable
 checkname = 'alcatel_temp'
 
 info = [['10', '20'], ['11', '21'], ['12', '22']]

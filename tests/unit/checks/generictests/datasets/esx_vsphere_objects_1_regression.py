@@ -1,3 +1,4 @@
+# yapf: disable
 checkname = 'esx_vsphere_objects'
 
 info = [['hostsystem', '10.1.1.112', '', 'poweredOn'],

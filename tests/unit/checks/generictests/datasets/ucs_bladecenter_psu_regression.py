@@ -1,3 +1,4 @@
+# yapf: disable
 checkname = 'ucs_bladecenter_psu'
 
 info = [[

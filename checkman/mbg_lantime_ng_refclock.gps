@@ -14,7 +14,12 @@ description:
 
  When the refclock state is "not available" CRIT is raised and a WARN state is issued
  if the refclock state is "not synchronized".
- If the number of good satellites drops below 3, a CRIT state is raised.
+ If the number of good satellites drops below 3 and the device substate indicates that
+ a satellite connection is necessary, a CRIT state is raised. If the substate indicates
+ that no satellite connection is necessary no information about satellites is shown.
+ Substates that require a satellite connection are "GPS sync", "GPS tracking",
+ "GPS antenna disconnected", "GPS warm boot", "GPS cold boot",
+ "GPS antenna short circuit" and "MRS GPS sync".
 
 inventory:
  One service per GPS refclock is created.

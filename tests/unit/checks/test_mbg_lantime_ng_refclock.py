@@ -7,6 +7,7 @@ pytestmark = pytest.mark.checks
 meinberg_lantime_1 = [[u'1', u'14', u'3', u'2', u'3', u'0', u'12', u'0', u'0', u'0', u'2012-06-30']]
 meinberg_lantime_2 = [[u'1', u'28', u'3', u'1', u'52', u'62', u'100', u'101', u'127', u'0', u'0']]
 meinberg_lantime_5 = [[u'1', u'14', u'3', u'1', u'150', u'6', u'8', u'0', u'0', u'1', u'not announced']]
+meinberg_lantime_6 = [[u'1', u'30', u'3', u'1', u'155', u'0', u'8', u'0', u'0', u'0', u'2016-12-31']]
 
 
 @pytest.mark.parametrize("info,expected", [
@@ -36,6 +37,7 @@ def test_check_mbg_lantime_ng_refclock(check_manager, info, item, params, expect
     (meinberg_lantime_1, [('1', 'mbg_lantime_refclock_default_levels')]),
     (meinberg_lantime_2, []),  # don't discover GPS clocks
     (meinberg_lantime_5, [('1', 'mbg_lantime_refclock_default_levels')]),
+    (meinberg_lantime_6, [('1', 'mbg_lantime_refclock_default_levels')]),
 ])
 def test_discovery_mbg_lantime_ng_refclock_gps(check_manager, info, expected):
     check = check_manager.get_check("mbg_lantime_ng_refclock.gps")
@@ -53,6 +55,11 @@ def test_discovery_mbg_lantime_ng_refclock_gps(check_manager, info, expected):
         BasicCheckResult(0, 'Type: gps170, Usage: primary, State: synchronized (MRS GPS sync)', None),
         BasicCheckResult(0, 'Next leap second: not announced', None),
         BasicCheckResult(0, 'Satellites: 6/8', None)
+    ])),
+    (meinberg_lantime_6, '1', (3, 3), CheckResult([
+        BasicCheckResult(0, 'Type: gps180, Usage: primary, State: synchronized (MRS NTP sync)', None),
+        BasicCheckResult(0, 'Next leap second: 2016-12-31', None),
+        # satellites are not checked here
     ])),
 ])
 def test_check_mbg_lantime_ng_refclock_gps(check_manager, info, item, params, expected):

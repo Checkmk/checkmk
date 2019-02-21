@@ -1048,10 +1048,6 @@ def snmp_port_of(hostname):
     return ports[0]
 
 
-def is_snmpv3_host(hostname):
-    return isinstance(snmp_credentials_of(hostname), tuple)
-
-
 def is_bulkwalk_host(hostname):
     # type: (str) -> bool
     if bulkwalk_hosts:

@@ -1226,6 +1226,7 @@ class AutomationDiagHost(Automation):
 
                 #TODO: What about SNMP management boards?
                 host_config = snmp_utils.SNMPHostConfig(
+                    is_ipv6_primary=ipv6_primary,
                     hostname=hostname,
                     ipaddress=ipaddress,
                     credentials=credentials,

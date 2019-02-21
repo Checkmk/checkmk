@@ -144,6 +144,7 @@ def _clear_other_hosts_oid_cache(hostname):
 def create_snmp_host_config(hostname):
     # type: (str) -> cmk_base.snmp_utils.SNMPHostConfig
     return cmk_base.snmp_utils.SNMPHostConfig(
+        is_ipv6_primary=config.is_ipv6_primary(hostname),
         hostname=hostname,
         ipaddress=ip_lookup.lookup_ipv4_address(hostname),
         credentials=config.snmp_credentials_of(hostname),
@@ -293,7 +294,7 @@ def get_single_oid(host_config, oid, check_plugin_name=None, do_snmp_scan=True):
     else:
         # get_single_oid() can only return a single value. When SNMPv3 is used with multiple
         # SNMP contexts, all contextes will be queried until the first answer is received.
-        if check_plugin_name is not None and config.is_snmpv3_host(host_config.hostname):
+        if check_plugin_name is not None and cmk_base.snmp_utils.is_snmpv3_host(host_config):
             snmp_contexts = _snmpv3_contexts_of(host_config.hostname, check_plugin_name)
         else:
             snmp_contexts = [None]
@@ -400,7 +401,7 @@ def _get_snmpwalk(host_config, check_plugin_name, oid, fetchoid, column, use_snm
 def _perform_snmpwalk(host_config, check_plugin_name, base_oid, fetchoid):
     added_oids = set([])
     rowinfo = []
-    if config.is_snmpv3_host(host_config.hostname):
+    if cmk_base.snmp_utils.is_snmpv3_host(host_config):
         snmp_contexts = _snmpv3_contexts_of(host_config.hostname, check_plugin_name)
     else:
         snmp_contexts = [None]

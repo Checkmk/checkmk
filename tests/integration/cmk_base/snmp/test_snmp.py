@@ -67,6 +67,7 @@ def snmpsim(site, request, tmp_path_factory):
     )
 
     host_config = snmp_utils.SNMPHostConfig(
+        is_ipv6_primary=False,
         ipaddress="127.0.0.1",
         hostname="localhost",
         credentials="public",
@@ -134,11 +135,12 @@ def clear_cache(monkeypatch):
     monkeypatch.setattr(snmp, "_g_single_oid_cache", {})
 
 
-def test_get_single_oid_ipv6(snmpsim, backend, monkeypatch):
+def test_get_single_oid_ipv6(snmpsim, backend):
     if backend == "stored_snmp":
         pytest.skip("Not relevant")
 
     host_config = snmp_utils.SNMPHostConfig(
+        is_ipv6_primary=True,
         ipaddress="::1",
         hostname="localhost",
         credentials="public",
@@ -148,16 +150,16 @@ def test_get_single_oid_ipv6(snmpsim, backend, monkeypatch):
         bulk_walk_size_of=10,
         timing={},
     )
-    monkeypatch.setattr(config, "is_ipv6_primary", lambda h: True)
     result = snmp.get_single_oid(host_config, ".1.3.6.1.2.1.1.1.0")
     assert result == "Linux zeus 4.8.6.5-smp #2 SMP Sun Nov 13 14:58:11 CDT 2016 i686"
 
 
-def test_get_single_oid_snmpv3(snmpsim, backend, monkeypatch):
+def test_get_single_oid_snmpv3(snmpsim, backend):
     if backend == "stored_snmp":
         pytest.skip("Not relevant")
 
     host_config = snmp_utils.SNMPHostConfig(
+        is_ipv6_primary=False,
         ipaddress="127.0.0.1",
         hostname="localhost",
         credentials=('authNoPriv', 'md5', 'authOnlyUser', 'authOnlyUser'),
@@ -261,6 +263,7 @@ def test_get_single_oid_not_resolvable(snmpsim, backend):
         pytest.skip("Not relevant")
 
     host_config = snmp_utils.SNMPHostConfig(
+        is_ipv6_primary=False,
         ipaddress="bla.local",
         hostname="localhost",
         credentials="public",
@@ -330,7 +333,7 @@ def test_get_simple_snmp_table_wrong_credentials(snmpsim, backend):
 
 
 @pytest.mark.parametrize("bulk", [True, False])
-def test_get_simple_snmp_table_bulkwalk(snmpsim, backend, monkeypatch, bulk):
+def test_get_simple_snmp_table_bulkwalk(snmpsim, backend, bulk):
     cfg_dict = snmpsim[1]._asdict()
     cfg_dict["is_bulkwalk_host"] = bulk
     host_config = snmp_utils.SNMPHostConfig(**cfg_dict)

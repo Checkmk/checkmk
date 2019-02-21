@@ -28,13 +28,11 @@ import os
 import subprocess
 import signal
 
-import six
-
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, MKTimeout
 
 import cmk_base.console as console
-import cmk_base.config as config
+import cmk_base.snmp_utils as snmp_utils
 from cmk_base.exceptions import MKSNMPError
 
 #.
@@ -190,7 +188,7 @@ def _snmp_port_spec(host_config):
 
 
 def _snmp_proto_spec(host_config):
-    if config.is_ipv6_primary(host_config.hostname):
+    if host_config.is_ipv6_primary:
         return "udp6:"
 
     return ""
@@ -226,7 +224,7 @@ def _snmp_base_command(what, host_config, context_name):
     else:
         command = ['snmpwalk']
 
-    if isinstance(host_config.credentials, six.string_types):
+    if not snmp_utils.is_snmpv3_host(host_config):
         # Handle V1 and V2C
         if host_config.is_bulkwalk_host:
             options.append('-v2c')

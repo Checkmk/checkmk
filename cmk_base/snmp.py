@@ -141,6 +141,15 @@ def _clear_other_hosts_oid_cache(hostname):
 #   '----------------------------------------------------------------------'
 
 
+def create_snmp_host_config(hostname):
+    # type: (str) -> cmk_base.snmp_utils.SNMPHostConfig
+    return cmk_base.snmp_utils.SNMPHostConfig(
+        hostname=hostname,
+        ipaddress=ip_lookup.lookup_ipv4_address(hostname),
+        credentials=config.snmp_credentials_of(hostname),
+    )
+
+
 # TODO: OID_END_OCTET_STRING is not used at all. Drop it.
 def get_snmp_table(host_config, check_plugin_name, oid_info, use_snmpwalk_cache):
     # oid_info is either ( oid, columns ) or
@@ -738,11 +747,7 @@ def do_snmpwalk(options, hostnames):
 
     for hostname in hostnames:
         #TODO: What about SNMP management boards?
-        host_config = cmk_base.snmp_utils.SNMPHostConfig(
-            hostname=hostname,
-            ipaddress=ip_lookup.lookup_ipv4_address(hostname),
-            credentials=config.snmp_credentials_of(hostname),
-        )
+        host_config = create_snmp_host_config(hostname)
 
         try:
             _do_snmpwalk_on(host_config, options, cmk.utils.paths.snmpwalks_dir + "/" + hostname)
@@ -810,11 +815,7 @@ def do_snmpget(*args):
 
     for hostname in hostnames:
         #TODO what about SNMP management boards?
-        host_config = cmk_base.snmp_utils.SNMPHostConfig(
-            hostname=hostname,
-            ipaddress=ip_lookup.lookup_ipv4_address(hostname),
-            credentials=config.snmp_credentials_of(hostname),
-        )
+        host_config = create_snmp_host_config(hostname)
 
         value = get_single_oid(host_config, oid)
         console.output("%s (%s): %r\n" % (hostname, host_config.ipaddress, value))

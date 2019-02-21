@@ -1,0 +1,16 @@
+Title: Fixed site filtering when creating availability PDF reports
+Level: 1
+Component: reporting
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.6.0i1
+Date: 1550673927
+
+When having a filtered availability view which shows information of specific
+sites in distributed setups, the PDF reports created with "Export as PDF" were
+not applying the site filter. In this situation a query was sent to all
+distributed sites for fetching the data. It was not only querying too many
+sites, the PDFs also contained more hosts / services than intended in this
+situation.

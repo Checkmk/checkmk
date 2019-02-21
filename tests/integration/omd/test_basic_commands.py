@@ -4,6 +4,7 @@
 import os
 import stat
 
+
 def test_basic_commands(site):
     commands = [
         "bin/mkp",

@@ -7,13 +7,15 @@ from testlib import web
 
 import cmk_base.config as config
 
+
 @pytest.fixture(scope="module")
 def test_cfg(web, site):
     print "Applying default config"
-    web.add_host("test-host", attributes={
-        "ipaddress": "127.0.0.1",
-        "tag_agent": "no-agent",
-    })
+    web.add_host(
+        "test-host", attributes={
+            "ipaddress": "127.0.0.1",
+            "tag_agent": "no-agent",
+        })
 
     web.activate_changes()
     yield None
@@ -26,16 +28,17 @@ def test_cfg(web, site):
     web.delete_host("test-host")
 
 
-@pytest.mark.parametrize(("core"), [ "nagios", "cmc" ])
+@pytest.mark.parametrize(("core"), ["nagios", "cmc"])
 def test_active_check_execution(test_cfg, site, web, core):
     site.set_config("CORE", core, with_restart=True)
 
     try:
-        web.set_ruleset("custom_checks", {
-            "ruleset": {
-                # Main folder
-                "": [
-                    {
+        web.set_ruleset(
+            "custom_checks",
+            {
+                "ruleset": {
+                    # Main folder
+                    "": [{
                         "value": {
                             'service_description': u'\xc4ctive-Check',
                             'command_line': 'echo "123"'
@@ -45,15 +48,16 @@ def test_active_check_execution(test_cfg, site, web, core):
                             "host_tags": [],
                         },
                         "options": {},
-                    },
-                ],
-            }
-        })
+                    },],
+                }
+            })
         web.activate_changes()
 
         site.schedule_check("test-host", u'\xc4ctive-Check', 0)
 
-        result = site.live.query_row("GET services\nColumns: host_name description state plugin_output has_been_checked\nFilter: host_name = test-host\nFilter: description = Äctive-Check")
+        result = site.live.query_row(
+            "GET services\nColumns: host_name description state plugin_output has_been_checked\nFilter: host_name = test-host\nFilter: description = Äctive-Check"
+        )
         print "Result: %r" % result
         assert result[4] == 1
         assert result[0] == "test-host"
@@ -61,24 +65,28 @@ def test_active_check_execution(test_cfg, site, web, core):
         assert result[2] == 0
         assert result[3] == "123"
     finally:
-        web.set_ruleset("custom_checks", {
-            "ruleset": {
-                "": [], # -> folder
-            }
-        })
+        web.set_ruleset(
+            "custom_checks",
+            {
+                "ruleset": {
+                    "": [],  # -> folder
+                }
+            })
         web.activate_changes()
 
 
-@pytest.mark.parametrize(("core"), [ "nagios", "cmc" ])
+@pytest.mark.parametrize(("core"), ["nagios", "cmc"])
 def test_active_check_macros(test_cfg, site, web, core):
     site.set_config("CORE", core, with_restart=True)
 
     macros = {
         "$HOSTADDRESS$": "127.0.0.1",
         "$HOSTNAME$": "test-host",
-        "$_HOSTTAGS$": " ".join(sorted(["/wato/", "ip-v4", "ip-v4-only", "lan",
-                                        "no-agent", "no-snmp", "ping",
-                                        "prod", "site:%s" % site.id, "wato"])),
+        "$_HOSTTAGS$": " ".join(
+            sorted([
+                "/wato/", "ip-v4", "ip-v4-only", "lan", "no-agent", "no-snmp", "ping", "prod",
+                "site:%s" % site.id, "wato"
+            ])),
         "$_HOSTADDRESS_4$": "127.0.0.1",
         "$_HOSTADDRESS_6$": "",
         "$_HOSTADDRESS_FAMILY$": "4",
@@ -105,12 +113,14 @@ def test_active_check_macros(test_cfg, site, web, core):
         })
 
     try:
-        web.set_ruleset("custom_checks", {
-            "ruleset": {
-                # Main folder
-                "": ruleset,
-            }
-        })
+        web.set_ruleset(
+            "custom_checks",
+            {
+                "ruleset": {
+                    # Main folder
+                    "": ruleset,
+                }
+            })
         web.activate_changes()
 
         for var, value in macros.items():
@@ -121,8 +131,7 @@ def test_active_check_macros(test_cfg, site, web, core):
                 "GET services\n"
                 "Columns: host_name description state plugin_output has_been_checked\n"
                 "Filter: host_name = test-host\n"
-                "Filter: description = %s\n" % description
-            )
+                "Filter: description = %s\n" % description)
 
             name, description, state, plugin_output, has_been_checked = row
 
@@ -143,9 +152,11 @@ def test_active_check_macros(test_cfg, site, web, core):
                 "Macro %s has wrong value (%r instead of %r)" % (var, plugin_output, expected_output)
 
     finally:
-        web.set_ruleset("custom_checks", {
-            "ruleset": {
-                "": [], # -> folder
-            }
-        })
+        web.set_ruleset(
+            "custom_checks",
+            {
+                "ruleset": {
+                    "": [],  # -> folder
+                }
+            })
         web.activate_changes()

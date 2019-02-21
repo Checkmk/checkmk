@@ -13,6 +13,7 @@ import cmk.ec.settings
 import cmk.utils.paths
 import cmk.ec.main
 
+
 class FakeStatusSocket(object):
     def __init__(self, query):
         self._query = query
@@ -40,11 +41,8 @@ class FakeStatusSocket(object):
 
 @pytest.fixture(scope="function")
 def settings():
-    return cmk.ec.settings.settings(
-        '1.2.3i45',
-        pathlib.Path(cmk.utils.paths.omd_root),
-        pathlib.Path(cmk.utils.paths.default_config_dir),
-        ['mkeventd'])
+    return cmk.ec.settings.settings('1.2.3i45', pathlib.Path(cmk.utils.paths.omd_root),
+                                    pathlib.Path(cmk.utils.paths.default_config_dir), ['mkeventd'])
 
 
 @pytest.fixture(scope="function")
@@ -64,7 +62,9 @@ def config(settings, slave_status):
 
 @pytest.fixture(scope="function")
 def history(settings, config):
-    return cmk.ec.history.History(settings, config, logging.getLogger("cmk.mkeventd"), cmk.ec.main.StatusTableEvents.columns, cmk.ec.main.StatusTableHistory.columns)
+    return cmk.ec.history.History(settings, config, logging.getLogger("cmk.mkeventd"),
+                                  cmk.ec.main.StatusTableEvents.columns,
+                                  cmk.ec.main.StatusTableHistory.columns)
 
 
 @pytest.fixture(scope="function")
@@ -74,17 +74,24 @@ def perfcounters():
 
 @pytest.fixture(scope="function")
 def event_status(settings, config, perfcounters, history):
-    return cmk.ec.main.EventStatus(settings, config, perfcounters, history, logging.getLogger("cmk.mkeventd.EventStatus"))
+    return cmk.ec.main.EventStatus(settings, config, perfcounters, history,
+                                   logging.getLogger("cmk.mkeventd.EventStatus"))
 
 
 @pytest.fixture(scope="function")
-def event_server(settings, config, slave_status, perfcounters, lock_configuration, history, event_status):
-    return cmk.ec.main.EventServer(logging.getLogger("cmk.mkeventd.EventServer"), settings, config, slave_status, perfcounters, lock_configuration, history, event_status, cmk.ec.main.StatusTableEvents.columns)
+def event_server(settings, config, slave_status, perfcounters, lock_configuration, history,
+                 event_status):
+    return cmk.ec.main.EventServer(
+        logging.getLogger("cmk.mkeventd.EventServer"), settings, config, slave_status, perfcounters,
+        lock_configuration, history, event_status, cmk.ec.main.StatusTableEvents.columns)
 
 
 @pytest.fixture(scope="function")
-def status_server(settings, config, slave_status, perfcounters, lock_configuration, history, event_status, event_server):
-    return cmk.ec.main.StatusServer(logging.getLogger("cmk.mkeventd.StatusServer"), settings, config, slave_status, perfcounters, lock_configuration, history, event_status, event_server, threading.Event())
+def status_server(settings, config, slave_status, perfcounters, lock_configuration, history,
+                  event_status, event_server):
+    return cmk.ec.main.StatusServer(
+        logging.getLogger("cmk.mkeventd.StatusServer"), settings, config, slave_status,
+        perfcounters, lock_configuration, history, event_status, event_server, threading.Event())
 
 
 def test_handle_client(status_server):
@@ -109,11 +116,11 @@ def test_mkevent_check_query_perf(config, event_status, status_server):
     assert len(event_status.events()) == 10000
 
     s = FakeStatusSocket("GET events\n"
-        "Filter: event_host in heute-1 127.0.0.1 heute123\n"
-        "Filter: event_phase in open ack\n"
-        #"OutputFormat: plain\n"
-        #"Filter: event_application ~~ xxx\n"
-    )
+                         "Filter: event_host in heute-1 127.0.0.1 heute123\n"
+                         "Filter: event_phase in open ack\n"
+                         #"OutputFormat: plain\n"
+                         #"Filter: event_application ~~ xxx\n"
+                        )
 
     before = time.time()
 
@@ -149,7 +156,7 @@ def ensure_core_and_get_connection(site, ec, core):
     return live
 
 
-@pytest.mark.parametrize(("core"), [ "nagios", "cmc" ])
+@pytest.mark.parametrize(("core"), ["nagios", "cmc"])
 def test_command_reload(site, ec, core):
     print "Checking core: %s" % core
 
@@ -159,9 +166,9 @@ def test_command_reload(site, ec, core):
     print "Old config load time: %s" % old_t
     assert old_t > time.time() - 86400
 
-    time.sleep(1) # needed to have at least one second after EC start
+    time.sleep(1)  # needed to have at least one second after EC start
     live.command("[%d] EC_RELOAD" % (int(time.time())))
-    time.sleep(1) # needed to have at least one second after EC reload
+    time.sleep(1)  # needed to have at least one second after EC reload
 
     new_t = live.query_value("GET eventconsolestatus\nColumns: status_config_load_time\n")
     print "New config load time: %s" % old_t
@@ -169,7 +176,7 @@ def test_command_reload(site, ec, core):
 
 
 # core is None means direct query to status socket
-@pytest.mark.parametrize(("core"), [ None, "nagios", "cmc" ])
+@pytest.mark.parametrize(("core"), [None, "nagios", "cmc"])
 def test_status_table_via_core(site, ec, core):
     print "Checking core: %s" % core
 
@@ -213,15 +220,16 @@ def test_status_table_via_core(site, ec, core):
             'status_event_limit_host',
             'status_event_limit_rule',
             'status_event_limit_overall',
-        ]:
+    ]:
         assert column_name in status
 
     assert type(status["status_event_limit_host"]) == int
     assert type(status["status_event_limit_rule"]) == int
     assert type(status["status_event_limit_overall"]) == int
 
+
 # core is None means direct query to status socket
-@pytest.mark.parametrize(("core"), [ None, "nagios", "cmc" ])
+@pytest.mark.parametrize(("core"), [None, "nagios", "cmc"])
 def test_rules_table_via_core(site, ec, core):
     print "Checking core: %s" % core
 

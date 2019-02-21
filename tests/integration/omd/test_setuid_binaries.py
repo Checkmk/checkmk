@@ -4,6 +4,7 @@
 import os
 import stat
 
+
 def test_setuid_binaries(site):
     setuid_binaries = [
         "bin/mkeventd_open514",

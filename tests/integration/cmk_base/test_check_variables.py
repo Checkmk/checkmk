@@ -5,15 +5,19 @@ from testlib import web
 import cmk_base.config as config
 import cmk_base.check_api as check_api
 
+
 @pytest.fixture(scope="module")
 def test_cfg(web, site):
     print "Applying default config"
-    web.add_host("modes-test-host", attributes={
-        "ipaddress": "127.0.0.1",
-    })
+    web.add_host(
+        "modes-test-host", attributes={
+            "ipaddress": "127.0.0.1",
+        })
 
-    site.write_file("etc/check_mk/conf.d/modes-test-host.mk",
-        "datasource_programs.append(('cat ~/var/check_mk/agent_output/<HOST>', [], ['modes-test-host']))\n")
+    site.write_file(
+        "etc/check_mk/conf.d/modes-test-host.mk",
+        "datasource_programs.append(('cat ~/var/check_mk/agent_output/<HOST>', [], ['modes-test-host']))\n"
+    )
 
     site.makedirs("var/check_mk/agent_output/")
     web.activate_changes()
@@ -43,7 +47,8 @@ def test_test_check_1(request, test_cfg, site, web):
 
     request.addfinalizer(cleanup)
 
-    site.write_file(test_check_path, """
+    site.write_file(
+        test_check_path, """
 
 test_check_1_default_levels = 10.0, 20.0
 
@@ -61,8 +66,7 @@ check_info["test_check_1"] = {
 }
 """)
 
-    site.write_file("var/check_mk/agent_output/modes-test-host",
-                    "<<<test_check_1>>>\n1 2\n")
+    site.write_file("var/check_mk/agent_output/modes-test-host", "<<<test_check_1>>>\n1 2\n")
 
     config.load_checks(check_api.get_check_api_context, ["%s/%s" % (site.root, test_check_path)])
 
@@ -82,7 +86,8 @@ check_info["test_check_1"] = {
 
     # Now execute the check function to verify the variable is available
     p = site.execute(["cmk", "-nv", "modes-test-host"],
-                     stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                     stdout=subprocess.PIPE,
+                     stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
     assert "OK - (10.0, 20.0)" in stdout
     assert stderr == ""
@@ -90,10 +95,11 @@ check_info["test_check_1"] = {
 
     # And now overwrite the setting in the config
     site.write_file("etc/check_mk/conf.d/test_check_1.mk",
-        "test_check_1_default_levels = 5.0, 30.1\n")
+                    "test_check_1_default_levels = 5.0, 30.1\n")
 
     p = site.execute(["cmk", "-nv", "modes-test-host"],
-                     stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                     stdout=subprocess.PIPE,
+                     stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
     assert "OK - (10.0, 20.0)" not in stdout
     assert "OK - (5.0, 30.1)" in stdout
@@ -111,9 +117,11 @@ def test_test_check_2(request, test_cfg, site, web):
         if site.file_exists("var/check_mk/autochecks/modes-test-host.mk"):
             site.delete_file("var/check_mk/autochecks/modes-test-host.mk")
         site.delete_file(test_check_path)
+
     request.addfinalizer(cleanup)
 
-    site.write_file(test_check_path, """
+    site.write_file(
+        test_check_path, """
 
 discover_service = False
 
@@ -131,8 +139,7 @@ check_info["test_check_2"] = {
 }
 """)
 
-    site.write_file("var/check_mk/agent_output/modes-test-host",
-                    "<<<test_check_2>>>\n1 2\n")
+    site.write_file("var/check_mk/agent_output/modes-test-host", "<<<test_check_2>>>\n1 2\n")
 
     config.load_checks(check_api.get_check_api_context, ["%s/%s" % (site.root, test_check_path)])
 
@@ -150,8 +157,7 @@ check_info["test_check_2"] = {
     web.discover_services("modes-test-host")
 
     # And now overwrite the setting in the config
-    site.write_file("etc/check_mk/conf.d/test_check_2.mk",
-        "discover_service = True\n")
+    site.write_file("etc/check_mk/conf.d/test_check_2.mk", "discover_service = True\n")
 
     web.discover_services("modes-test-host")
 
@@ -172,9 +178,11 @@ def test_check_factory_settings(request, test_cfg, site, web):
         if site.file_exists("var/check_mk/autochecks/modes-test-host.mk"):
             site.delete_file("var/check_mk/autochecks/modes-test-host.mk")
         site.delete_file(test_check_path)
+
     request.addfinalizer(cleanup)
 
-    site.write_file(test_check_path, """
+    site.write_file(
+        test_check_path, """
 
 factory_settings["test_check_3_default_levels"] = {
     "param1": 123,
@@ -195,8 +203,7 @@ check_info["test_check_3"] = {
 }
 """)
 
-    site.write_file("var/check_mk/agent_output/modes-test-host",
-                    "<<<test_check_3>>>\n1 2\n")
+    site.write_file("var/check_mk/agent_output/modes-test-host", "<<<test_check_3>>>\n1 2\n")
 
     config.load_checks(check_api.get_check_api_context, ["%s/%s" % (site.root, test_check_path)])
 
@@ -216,14 +223,16 @@ check_info["test_check_3"] = {
 
     # Now execute the check function to verify the variable is available
     p = site.execute(["cmk", "-nv", "modes-test-host"],
-                     stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                     stdout=subprocess.PIPE,
+                     stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
     assert "OK - {'param1': 123}\n" in stdout
     assert stderr == ""
     assert p.returncode == 0
 
     # And now overwrite the setting in the config
-    site.write_file("etc/check_mk/conf.d/test_check_3.mk", """
+    site.write_file(
+        "etc/check_mk/conf.d/test_check_3.mk", """
 checkgroup_parameters.setdefault('asd', [])
 
 checkgroup_parameters['asd'] = [
@@ -233,7 +242,8 @@ checkgroup_parameters['asd'] = [
 
     # And execute the check again to check for the parameters
     p = site.execute(["cmk", "-nv", "modes-test-host"],
-                     stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                     stdout=subprocess.PIPE,
+                     stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
     assert "'param1': 123" in stdout
     assert "'param2': 'xxx'" in stdout

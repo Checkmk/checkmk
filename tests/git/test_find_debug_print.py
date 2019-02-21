@@ -23,16 +23,12 @@ check_paths = [
     "agents/plugins",
 ]
 
+exclude_folders = ["plugins/build", "plugins/build_32", "chroot"]
 
-exclude_folders = [
-    "plugins/build",
-    "plugins/build_32",
-    "chroot"
-]
 
 def test_find_debug_code():
     scanned = 0
-    for base_path in [ cmk_path(), cmc_path(), cme_path() ]:
+    for base_path in [cmk_path(), cmc_path(), cme_path()]:
         for dir_path in check_paths:
             path = "%s/%s" % (base_path, dir_path)
             if not os.path.exists(path):
@@ -47,7 +43,7 @@ def test_find_debug_code():
 
                     for nr, line in enumerate(open(file_path)):
                         if nr == 0 and ("bash" in line or "php" in line):
-                            break # skip non python files
+                            break  # skip non python files
 
                         l = line.lstrip()
                         assert not l.startswith("print("), \

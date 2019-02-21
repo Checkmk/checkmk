@@ -3,13 +3,14 @@ import time
 
 from testlib import web, WatchLog
 
+
 @pytest.fixture()
 def test_config(web):
     users = {
         "hh": {
             "alias": "Harry Hirsch",
             "password": "1234",
-            "email": u"%s@localhost"% web.site.id,
+            "email": u"%s@localhost" % web.site.id,
             'contactgroups': ['all'],
         },
     }
@@ -20,9 +21,10 @@ def test_config(web):
     assert not expected_users - set(all_users.keys())
 
     # Notify
-    web.add_host("notify-test", attributes={
-        "ipaddress": "127.0.0.1",
-    })
+    web.add_host(
+        "notify-test", attributes={
+            "ipaddress": "127.0.0.1",
+        })
     web.activate_changes()
 
     yield
@@ -32,7 +34,7 @@ def test_config(web):
     web.activate_changes()
 
 
-@pytest.mark.parametrize("core", [ "nagios", "cmc" ])
+@pytest.mark.parametrize("core", ["nagios", "cmc"])
 def test_simple_rbn_notification(test_config, site, core):
     site.set_config("CORE", core, with_restart=True)
 

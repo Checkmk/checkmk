@@ -45,11 +45,13 @@ def test_cfg(web, clear_config_caches, enable_debug):
     if web.folder_exists("folder1"):
         web.delete_folder("folder1")
 
-    web.set_ruleset("management_board_config", {
-        "ruleset": {
-            "": [], # -> folder
-        }
-    })
+    web.set_ruleset(
+        "management_board_config",
+        {
+            "ruleset": {
+                "": [],  # -> folder
+            }
+        })
 
     web.activate_changes()
 
@@ -57,16 +59,18 @@ def test_cfg(web, clear_config_caches, enable_debug):
 @pytest.mark.parametrize("protocol,cred_attribute,credentials", [
     ("snmp", "management_snmp_community", "HOST"),
     ("ipmi", "management_ipmi_credentials", {
-        "username"      : "USER",
-        "password"      : "PASS",
+        "username": "USER",
+        "password": "PASS",
     }),
 ])
 def test_mgmt_explicit_settings(web, protocol, cred_attribute, credentials):
-    web.add_host("mgmt-host", attributes={
-        "ipaddress": "127.0.0.1",
-        "management_protocol": protocol,
-        cred_attribute: credentials,
-    })
+    web.add_host(
+        "mgmt-host",
+        attributes={
+            "ipaddress": "127.0.0.1",
+            "management_protocol": protocol,
+            cred_attribute: credentials,
+        })
 
     reload_config()
     assert config.has_management_board("mgmt-host")
@@ -76,11 +80,13 @@ def test_mgmt_explicit_settings(web, protocol, cred_attribute, credentials):
 
 
 def test_mgmt_explicit_address(web):
-    web.add_host("mgmt-host", attributes={
-        "ipaddress": "127.0.0.1",
-        "management_protocol": "snmp",
-        "management_address": "127.0.0.2",
-    })
+    web.add_host(
+        "mgmt-host",
+        attributes={
+            "ipaddress": "127.0.0.1",
+            "management_protocol": "snmp",
+            "management_address": "127.0.0.2",
+        })
 
     reload_config()
     assert config.has_management_board("mgmt-host")
@@ -90,12 +96,14 @@ def test_mgmt_explicit_address(web):
 
 
 def test_mgmt_disabled(web):
-    web.add_host("mgmt-host", attributes={
-        "ipaddress": "127.0.0.1",
-        "management_protocol": None,
-        "management_address": "127.0.0.1",
-        "management_snmp_community": "HOST",
-    })
+    web.add_host(
+        "mgmt-host",
+        attributes={
+            "ipaddress": "127.0.0.1",
+            "management_protocol": None,
+            "management_address": "127.0.0.1",
+            "management_snmp_community": "HOST",
+        })
 
     reload_config()
     assert config.has_management_board("mgmt-host") == False
@@ -107,23 +115,28 @@ def test_mgmt_disabled(web):
 @pytest.mark.parametrize("protocol,cred_attribute,credentials,folder_credentials", [
     ("snmp", "management_snmp_community", "HOST", "FOLDER"),
     ("ipmi", "management_ipmi_credentials", {
-        "username"      : "USER",
-        "password"      : "PASS",
+        "username": "USER",
+        "password": "PASS",
     }, {
-        "username"      : "FOLDERUSER",
-        "password"      : "FOLDERPASS",
+        "username": "FOLDERUSER",
+        "password": "FOLDERPASS",
     }),
 ])
-def test_mgmt_inherit_credentials_explicit_host(web, protocol, cred_attribute, credentials, folder_credentials):
-    web.add_folder("folder1", attributes={
-        cred_attribute: folder_credentials,
-    })
+def test_mgmt_inherit_credentials_explicit_host(web, protocol, cred_attribute, credentials,
+                                                folder_credentials):
+    web.add_folder(
+        "folder1", attributes={
+            cred_attribute: folder_credentials,
+        })
 
-    web.add_host("mgmt-host", folder="folder1", attributes={
-        "ipaddress": "127.0.0.1",
-        "management_protocol": protocol,
-        cred_attribute: credentials,
-    })
+    web.add_host(
+        "mgmt-host",
+        folder="folder1",
+        attributes={
+            "ipaddress": "127.0.0.1",
+            "management_protocol": protocol,
+            cred_attribute: credentials,
+        })
 
     reload_config()
     assert config.has_management_board("mgmt-host")
@@ -132,26 +145,29 @@ def test_mgmt_inherit_credentials_explicit_host(web, protocol, cred_attribute, c
     assert config.management_credentials_of("mgmt-host") == credentials
 
 
-
 @pytest.mark.parametrize("protocol,cred_attribute,credentials,folder_credentials", [
     ("snmp", "management_snmp_community", "HOST", "FOLDER"),
     ("ipmi", "management_ipmi_credentials", {
-        "username"      : "USER",
-        "password"      : "PASS",
+        "username": "USER",
+        "password": "PASS",
     }, {
-        "username"      : "FOLDERUSER",
-        "password"      : "FOLDERPASS",
+        "username": "FOLDERUSER",
+        "password": "FOLDERPASS",
     }),
 ])
 def test_mgmt_inherit_credentials(web, protocol, cred_attribute, credentials, folder_credentials):
-    web.add_folder("folder1", attributes={
-        cred_attribute: folder_credentials,
-    })
+    web.add_folder(
+        "folder1", attributes={
+            cred_attribute: folder_credentials,
+        })
 
-    web.add_host("mgmt-host", folder="folder1", attributes={
-        "ipaddress": "127.0.0.1",
-        "management_protocol": protocol,
-    })
+    web.add_host(
+        "mgmt-host",
+        folder="folder1",
+        attributes={
+            "ipaddress": "127.0.0.1",
+            "management_protocol": protocol,
+        })
 
     reload_config()
     assert config.has_management_board("mgmt-host")
@@ -163,24 +179,29 @@ def test_mgmt_inherit_credentials(web, protocol, cred_attribute, credentials, fo
 @pytest.mark.parametrize("protocol,cred_attribute,credentials,folder_credentials", [
     ("snmp", "management_snmp_community", "HOST", "FOLDER"),
     ("ipmi", "management_ipmi_credentials", {
-        "username"      : "USER",
-        "password"      : "PASS",
+        "username": "USER",
+        "password": "PASS",
     }, {
-        "username"      : "FOLDERUSER",
-        "password"      : "FOLDERPASS",
+        "username": "FOLDERUSER",
+        "password": "FOLDERPASS",
     }),
 ])
-def test_mgmt_inherit_protocol_explicit_host(web, protocol, cred_attribute, credentials, folder_credentials):
-    web.add_folder("folder1", attributes={
-        "management_protocol": None,
-        cred_attribute: folder_credentials,
-    })
+def test_mgmt_inherit_protocol_explicit_host(web, protocol, cred_attribute, credentials,
+                                             folder_credentials):
+    web.add_folder(
+        "folder1", attributes={
+            "management_protocol": None,
+            cred_attribute: folder_credentials,
+        })
 
-    web.add_host("mgmt-host", folder="folder1", attributes={
-        "ipaddress": "127.0.0.1",
-        "management_protocol": protocol,
-        cred_attribute: credentials,
-    })
+    web.add_host(
+        "mgmt-host",
+        folder="folder1",
+        attributes={
+            "ipaddress": "127.0.0.1",
+            "management_protocol": protocol,
+            cred_attribute: credentials,
+        })
 
     reload_config()
     assert config.has_management_board("mgmt-host")
@@ -189,26 +210,28 @@ def test_mgmt_inherit_protocol_explicit_host(web, protocol, cred_attribute, cred
     assert config.management_credentials_of("mgmt-host") == credentials
 
 
-
 @pytest.mark.parametrize("protocol,cred_attribute,credentials,folder_credentials", [
     ("snmp", "management_snmp_community", "HOST", "FOLDER"),
     ("ipmi", "management_ipmi_credentials", {
-        "username"      : "USER",
-        "password"      : "PASS",
+        "username": "USER",
+        "password": "PASS",
     }, {
-        "username"      : "FOLDERUSER",
-        "password"      : "FOLDERPASS",
+        "username": "FOLDERUSER",
+        "password": "FOLDERPASS",
     }),
 ])
 def test_mgmt_inherit_protocol(web, protocol, cred_attribute, credentials, folder_credentials):
-    web.add_folder("folder1", attributes={
-        "management_protocol": protocol,
-        cred_attribute: folder_credentials,
-    })
+    web.add_folder(
+        "folder1",
+        attributes={
+            "management_protocol": protocol,
+            cred_attribute: folder_credentials,
+        })
 
-    web.add_host("mgmt-host", folder="folder1", attributes={
-        "ipaddress": "127.0.0.1",
-    })
+    web.add_host(
+        "mgmt-host", folder="folder1", attributes={
+            "ipaddress": "127.0.0.1",
+        })
 
     reload_config()
     assert config.has_management_board("mgmt-host")
@@ -220,35 +243,40 @@ def test_mgmt_inherit_protocol(web, protocol, cred_attribute, credentials, folde
 @pytest.mark.parametrize("protocol,cred_attribute,credentials,ruleset_credentials", [
     ("snmp", "management_snmp_community", "HOST", "RULESET"),
     ("ipmi", "management_ipmi_credentials", {
-        "username"      : "USER",
-        "password"      : "PASS",
+        "username": "USER",
+        "password": "PASS",
     }, {
-        "username"      : "RULESETUSER",
-        "password"      : "RULESETPASS",
+        "username": "RULESETUSER",
+        "password": "RULESETPASS",
     }),
 ])
 def test_mgmt_config_ruleset(web, protocol, cred_attribute, credentials, ruleset_credentials):
-    web.set_ruleset("management_board_config", {
-        "ruleset": {
-            "": [ # "" -> folder
-                {
-                    'conditions': {
-                        'host_specs': ['@all'],
-                        'host_tags': []
+    web.set_ruleset(
+        "management_board_config",
+        {
+            "ruleset": {
+                "": [  # "" -> folder
+                    {
+                        'conditions': {
+                            'host_specs': ['@all'],
+                            'host_tags': []
+                        },
+                        'options': {},
+                        'value': (protocol, ruleset_credentials),
                     },
-                    'options': {},
-                    'value': (protocol, ruleset_credentials),
-                },
-            ],
-        }
-    })
+                ],
+            }
+        })
 
     web.add_folder("folder1")
 
-    web.add_host("mgmt-host", folder="folder1", attributes={
-        "ipaddress": "127.0.0.1",
-        "management_protocol": protocol,
-    })
+    web.add_host(
+        "mgmt-host",
+        folder="folder1",
+        attributes={
+            "ipaddress": "127.0.0.1",
+            "management_protocol": protocol,
+        })
 
     reload_config()
     assert config.has_management_board("mgmt-host")
@@ -260,37 +288,44 @@ def test_mgmt_config_ruleset(web, protocol, cred_attribute, credentials, ruleset
 @pytest.mark.parametrize("protocol,cred_attribute,folder_credentials,ruleset_credentials", [
     ("snmp", "management_snmp_community", "FOLDER", "RULESET"),
     ("ipmi", "management_ipmi_credentials", {
-        "username"      : "FOLDERUSER",
-        "password"      : "FOLDERPASS",
+        "username": "FOLDERUSER",
+        "password": "FOLDERPASS",
     }, {
-        "username"      : "RULESETUSER",
-        "password"      : "RULESETPASS",
+        "username": "RULESETUSER",
+        "password": "RULESETPASS",
     }),
 ])
-def test_mgmt_config_ruleset_overidden_by_explicit_setting(web, protocol, cred_attribute, folder_credentials, ruleset_credentials):
-    web.set_ruleset("management_board_config", {
-        "ruleset": {
-            "": [ # "" -> folder
-                {
-                    'conditions': {
-                        'host_specs': ['@all'],
-                        'host_tags': []
+def test_mgmt_config_ruleset_overidden_by_explicit_setting(web, protocol, cred_attribute,
+                                                           folder_credentials, ruleset_credentials):
+    web.set_ruleset(
+        "management_board_config",
+        {
+            "ruleset": {
+                "": [  # "" -> folder
+                    {
+                        'conditions': {
+                            'host_specs': ['@all'],
+                            'host_tags': []
+                        },
+                        'options': {},
+                        'value': (protocol, ruleset_credentials),
                     },
-                    'options': {},
-                    'value': (protocol, ruleset_credentials),
-                },
-            ],
-        }
-    })
+                ],
+            }
+        })
 
-    web.add_folder("folder1", attributes={
-        cred_attribute: folder_credentials,
-    })
+    web.add_folder(
+        "folder1", attributes={
+            cred_attribute: folder_credentials,
+        })
 
-    web.add_host("mgmt-host", folder="folder1", attributes={
-        "ipaddress": "127.0.0.1",
-        "management_protocol": protocol,
-    })
+    web.add_host(
+        "mgmt-host",
+        folder="folder1",
+        attributes={
+            "ipaddress": "127.0.0.1",
+            "management_protocol": protocol,
+        })
 
     reload_config()
     assert config.has_management_board("mgmt-host")
@@ -300,35 +335,40 @@ def test_mgmt_config_ruleset_overidden_by_explicit_setting(web, protocol, cred_a
 
 
 def test_mgmt_config_ruleset_order(web):
-    web.set_ruleset("management_board_config", {
-        "ruleset": {
-            "": [ # "" -> folder
-                {
-                    'conditions': {
-                        'host_specs': ['@all'],
-                        'host_tags': []
+    web.set_ruleset(
+        "management_board_config",
+        {
+            "ruleset": {
+                "": [  # "" -> folder
+                    {
+                        'conditions': {
+                            'host_specs': ['@all'],
+                            'host_tags': []
+                        },
+                        'options': {},
+                        'value': ("snmp", "RULESET1"),
                     },
-                    'options': {},
-                    'value': ("snmp", "RULESET1"),
-                },
-                {
-                    'conditions': {
-                        'host_specs': ['@all'],
-                        'host_tags': []
+                    {
+                        'conditions': {
+                            'host_specs': ['@all'],
+                            'host_tags': []
+                        },
+                        'options': {},
+                        'value': ("snmp", "RULESET2"),
                     },
-                    'options': {},
-                    'value': ("snmp", "RULESET2"),
-                },
-            ],
-        }
-    })
+                ],
+            }
+        })
 
     web.add_folder("folder1")
 
-    web.add_host("mgmt-host", folder="folder1", attributes={
-        "ipaddress": "127.0.0.1",
-        "management_protocol": "snmp",
-    })
+    web.add_host(
+        "mgmt-host",
+        folder="folder1",
+        attributes={
+            "ipaddress": "127.0.0.1",
+            "management_protocol": "snmp",
+        })
 
     reload_config()
     assert config.has_management_board("mgmt-host")

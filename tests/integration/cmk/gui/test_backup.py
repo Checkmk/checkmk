@@ -1,5 +1,6 @@
 # encoding: utf-8
 
+
 def test_backup_key_create_web(site, monkeypatch):
     if site.file_exists("etc/check_mk/backup_keys.mk"):
         site.delete_file("etc/check_mk/backup_keys.mk")

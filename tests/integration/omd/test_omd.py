@@ -1,6 +1,7 @@
 import pytest
 import subprocess
 
+
 def test_run_omd(site):
     p = site.execute(["omd"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
@@ -40,7 +41,7 @@ def test_run_omd_versions(site):
     stdout, stderr = p.communicate()
     assert p.wait() == 0
     assert stderr == ""
-    versions = [ v.split(" ", 1)[0] for v in stdout.split("\n") ]
+    versions = [v.split(" ", 1)[0] for v in stdout.split("\n")]
     assert len(versions) >= 1
     assert site.version.omd_version() in versions
 

@@ -4,6 +4,7 @@
 import pytest
 from testlib import CMKWebSession
 
+
 def test_01_login_and_logout(site):
     web = CMKWebSession(site)
 

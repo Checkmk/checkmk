@@ -132,7 +132,7 @@ def _execute_restore(site, backup_id, env=None):
     with BackupLock():
         os.system("ps -ef")
         os.system("mount")
-        os.system("ps -U %s" % site.id)
+        os.system("ps -U %s" % site.id)  # nosec
         p = site.execute(["mkbackup", "restore", "test-target", backup_id],
                          stdout=subprocess.PIPE,
                          stderr=subprocess.PIPE,

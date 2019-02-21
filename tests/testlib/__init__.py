@@ -206,7 +206,7 @@ class CMKVersion(object):
         if os.path.exists(self._build_system_package_path()):
             return True
 
-        response = requests.head(
+        response = requests.head(  # nosec
             self.package_url(), auth=get_cmk_download_credentials(), verify=False)
         return response.status_code == 200
 
@@ -226,7 +226,7 @@ class CMKVersion(object):
         temp_package_path = "/tmp/%s" % self.package_name()
 
         print(self.package_url())
-        response = requests.get(
+        response = requests.get(  # nosec
             self.package_url(), auth=get_cmk_download_credentials(), verify=False)
         if response.status_code != 200:
             raise Exception("Failed to load package: %s" % self.package_url())
@@ -248,7 +248,7 @@ class CMKVersion(object):
             cmd = "sudo /usr/bin/gdebi --non-interactive %s" % package_path
             print(cmd)
             sys.stdout.flush()
-            if os.system(cmd) >> 8 != 0:
+            if os.system(cmd) >> 8 != 0:  # nosec
                 raise Exception("Failed to install package: %s" % package_path)
 
         assert self.is_installed()
@@ -409,10 +409,11 @@ class Site(object):
                 pipes.quote(" ".join([pipes.quote(p) for p in cmd]))
             ]
             cmd_txt = " ".join(cmd)
-            return subprocess.Popen(cmd_txt, shell=True, *args, **kwargs)
+            return subprocess.Popen(cmd_txt, shell=True, *args, **kwargs)  # nosec
         else:
             sys.stdout.write("Executing (site): %s\n" % subprocess.list2cmdline(cmd))
-            return subprocess.Popen(subprocess.list2cmdline(cmd), shell=True, *args, **kwargs)
+            return subprocess.Popen(  # nosec
+                subprocess.list2cmdline(cmd), shell=True, *args, **kwargs)
 
     def omd(self, mode, *args):
         if not self._is_running_as_site_user():
@@ -563,7 +564,7 @@ class Site(object):
 
         def execute(cmd):
             print("Executing: %s" % cmd)
-            rc = os.system(cmd) >> 8
+            rc = os.system(cmd) >> 8  # nosec
             if rc != 0:
                 raise Exception("Failed to execute '%s'. Exit code: %d" % (cmd, rc))
 
@@ -636,7 +637,7 @@ class Site(object):
             if os.path.exists("%s/.f12" % path):
                 print("Executing .f12 in \"%s\"..." % path)
                 sys.stdout.flush()
-                assert os.system(
+                assert os.system(  # nosec
                     "cd \"%s\" ; "
                     "sudo PATH=$PATH ONLY_COPY=1 ALL_EDITIONS=0 SITE=%s "
                     "CHROOT_BASE_PATH=$CHROOT_BASE_PATH CHROOT_BUILD_DIR=$CHROOT_BUILD_DIR "
@@ -678,11 +679,11 @@ class Site(object):
             #if "cffi" in file_name:
             #    continue
 
-            assert os.system("sudo rsync -a --chown %s:%s %s %s/local/lib/python/" %
+            assert os.system("sudo rsync -a --chown %s:%s %s %s/local/lib/python/" %  # nosec
                              (self.id, self.id, packages_dir / file_name, self.root)) >> 8 == 0
 
         for file_name in ["py.test", "pytest"]:
-            assert os.system("sudo rsync -a --chown %s:%s %s %s/local/bin" %
+            assert os.system("sudo rsync -a --chown %s:%s %s %s/local/bin" %  # nosec
                              (self.id, self.id, bin_dir / file_name, self.root)) >> 8 == 0
 
     def rm_if_not_reusing(self):

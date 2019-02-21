@@ -1,7 +1,11 @@
 import socket
 import ssl
 from contextlib import closing
-from pathlib2 import Path
+try:
+    from pathlib import Path  # Py3 first
+except ImportError:
+    from pathlib2 import Path
+
 import pytest  # type: ignore
 
 import omdlib.certs as certs
@@ -25,13 +29,13 @@ def sock_path(monkeypatch, tmpdir):
 
 
 @pytest.mark.parametrize("query_part", [
+    "xyz\nabc",
     u"xyz\nabc",
     b"xyz\nabc",
 ])
 def test_lqencode(query_part):
     result = livestatus.lqencode(query_part)
-    assert isinstance(result, type(query_part))
-    assert result == "xyzabc"
+    assert result == u"xyzabc"
 
 
 def test_livestatus_local_connection_omd_root_not_set(monkeypatch, tmpdir):

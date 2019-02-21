@@ -52,6 +52,12 @@ persistent_connections = {}  # type: Dict[str, socket.socket]
 remove_cache_regex = re.compile("\nCache:[^\n]*")  # type: Pattern
 
 
+def ensure_unicode(text):
+    if hasattr(text, "decode"):
+        return text.decode("utf-8")
+    return text
+
+
 class MKLivestatusException(Exception):
     def __init__(self, value):
         self.parameter = value
@@ -97,7 +103,7 @@ def lqencode(s):
     # It is not enough to strip off \n\n, because one might submit "\n \n",
     # which is also interpreted as termination of the last query and beginning
     # of the next query.
-    return s.replace('\n', '')
+    return ensure_unicode(s).replace(u"\n", u"")
 
 
 def site_local_ca_path():
@@ -238,18 +244,12 @@ class Query(object):
     def __init__(self, query, suppress_exceptions=None):
         super(Query, self).__init__()
 
-        self._query = self._ensure_unicode(query)
+        self._query = ensure_unicode(query)
 
         if suppress_exceptions is None:
             self.suppress_exceptions = self.default_suppressed_exceptions
         else:
             self.suppress_exceptions = suppress_exceptions
-
-    def _ensure_unicode(self, thing):
-        try:
-            return unicode(thing)
-        except UnicodeDecodeError:
-            return thing.decode("utf-8")
 
     def __unicode__(self):
         return self._query
@@ -377,7 +377,7 @@ class SingleSiteConnection(Helpers):
         if family_txt == "unix":
             return socket.AF_UNIX, url
 
-        elif family_txt in ["tcp", "tcp6"]:
+        if family_txt in ["tcp", "tcp6"]:
             try:
                 host, port_txt = url.rsplit(":", 1)
                 port = int(port_txt)
@@ -407,16 +407,16 @@ class SingleSiteConnection(Helpers):
                 pass
 
     def receive_data(self, size):
-        result = ""
+        result = u""
         # Timeout is only honored when connecting
         self.socket.settimeout(None)
         while size > 0:
             packet = self.socket.recv(size)
-            if len(packet) == 0:
+            if not packet:
                 raise MKLivestatusSocketClosed(
                     "Read zero data from socket, nagios server closed connection")
             size -= len(packet)
-            result += packet
+            result += packet.decode("utf-8")
         return result
 
     def do_query(self, query, add_headers=""):
@@ -447,8 +447,7 @@ class SingleSiteConnection(Helpers):
         try:
             # socket.send() will implicitely cast to str(), we need ot
             # convert to UTF-8 in order to avoid exceptions
-            if isinstance(query, unicode):
-                query = query.encode("utf-8")
+            query = query.encode("utf-8")
             self.socket.send(query)
         except IOError as e:
             if self.persist:
@@ -641,7 +640,9 @@ class MultiSiteConnection(Helpers):
         # hosts at the same time.
 
         status_hosts = {}  # dict from site to list of status_hosts
-        for sitename, site in sites.items() + extra_status_sites.items():
+        sites_dict = sites.copy()
+        sites_dict.update(extra_status_sites)
+        for sitename, site in sites_dict.items():
             status_host = site.get("status_host")
             if status_host:
                 if not isinstance(status_host, tuple) or len(status_host) != 2:

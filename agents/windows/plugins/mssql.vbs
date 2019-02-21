@@ -203,6 +203,21 @@ Set registry = Nothing
 
 Dim CONN, RS, CFG, AUTH
 
+' Function to check for any connection errors and return those concatenated, if any
+Function checkConnErrors(conn)
+    Dim error_msg, errObj
+    error_msg = ""
+    If conn.Errors.Count > 0 Then
+        error_msg = "ERROR: "
+        For Each errObj in CONN.Errors
+            error_msg = error_msg & errObj.Description & " (SQLState: " & _
+                        errObj.SQLState & "/NativeError: " & errObj.NativeError & ") "
+        Next
+    End If
+    Err.Clear
+    checkConnErrors = error_msg
+End Function
+
 ' Initialize database connection objects
 Set CONN      = CreateObject("ADODB.Connection")
 Set RS        = CreateObject("ADODB.Recordset")
@@ -249,23 +264,18 @@ For Each instance_id In instances.Keys: Do ' Continue trick
     ' in case the connection could not be established.
     On Error Resume Next
     CONN.Open
-    On Error GoTo 0
 
     ' Collect eventual error messages of errors occured during connecting. Hopefully
-    ' there is only on error in the list of errors.
-    Dim error_msg
-    If CONN.Errors.Count > 0 Then
-        error_msg = CONN.Errors(0).Description
-    End If
-    Err.Clear
-
+    ' there is only one error in the list of errors.
+    Dim errMsg
+    errMsg = checkConnErrors(CONN)
     addOutput(sections("instance"))
     ' 0 - closed
     ' 1 - open
     ' 2 - connecting
     ' 4 - executing a command
     ' 8 - rows are being fetched
-    addOutput("MSSQL_" & instance_id & "|state|" & CONN.State & "|" & error_msg)
+    addOutput("MSSQL_" & instance_id & "|state|" & CONN.State & "|" & errMsg)
 
     ' adStateClosed = 0
     If CONN.State = 0 Then
@@ -290,46 +300,63 @@ For Each instance_id In instances.Keys: Do ' Continue trick
             "FROM sys.dm_os_performance_counters " & _
             "WHERE object_name NOT LIKE '%Deprecated%'", CONN
 
-    Dim objectName, counterName, instanceName, value
-    Do While NOT RS.Eof
-        objectName   = Replace(Replace(Trim(RS("object_name")), " ", "_"), "$", "_")
-        counterName  = LCase(Replace(Trim(RS("counter_name")), " ", "_"))
-        instanceName = Replace(Trim(RS("instance_name")), " ", "_")
-        value        = Trim(RS("cntr_value"))
-        addOutput( objectName & "|" & counterName & "|" & instanceName & "|" & value )
-        RS.MoveNext
-    Loop
+    errMsg = checkConnErrors(CONN)
+    If Not errMsg = "" Then
+        addOutput("||" & instance_id & "||" & errMsg)
+    Else
+        Dim objectName, counterName, instanceName, value
+        Do While NOT RS.Eof
+            objectName   = Replace(Replace(Trim(RS("object_name")), " ", "_"), "$", "_")
+            counterName  = LCase(Replace(Trim(RS("counter_name")), " ", "_"))
+            instanceName = Replace(Trim(RS("instance_name")), " ", "_")
+            If instanceName = "" Then
+                instanceName = "None"
+            End If
+            value = Trim(RS("cntr_value"))
+            addOutput( objectName & "|" & counterName & "|" & instanceName & "|" & value )
+            RS.MoveNext
+        Loop
+    End If
     RS.Close
 
+    addOutput(sections("blocked_sessions"))
     RS.Open "SELECT session_id, wait_duration_ms, wait_type, blocking_session_id " & _
             "FROM sys.dm_os_waiting_tasks " & _
             "WHERE blocking_session_id <> 0 ", CONN
-    addOutput(sections("blocked_sessions"))
-    Dim instanceName, session_id, wait_duration_ms, wait_type, blocking_session_id
-    Do While NOT RS.Eof
-        instanceName = Replace(Trim(RS("instance_name")), " ", "_")
-        If instanceName = "" Then
-            instanceName = "None"
-        End If
-        session_id = Trim(RS("session_id"))
-        wait_duration_ms = Trim(RS("wait_duration_ms"))
-        wait_type = Trim(RS("wait_type"))
-        blocking_session_id = Trim(RS("blocking_session_id"))
-        addOutput(instanceName & "|" session_id & "|" & wait_duration_ms & "|" & _
-                  wait_type & "|" & blocking_session_id)
-        RS.MoveNext
-    Loop
+
+    errMsg = checkConnErrors(CONN)
+    If Not errMsg = "" Then
+        addOutput("||" & instance_id & "||" & errMsg)
+    Else
+        Dim session_id, wait_duration_ms, wait_type, blocking_session_id
+        Do While NOT RS.Eof
+            session_id = Trim(RS("session_id"))
+            wait_duration_ms = Trim(RS("wait_duration_ms"))
+            wait_type = Trim(RS("wait_type"))
+            blocking_session_id = Trim(RS("blocking_session_id"))
+            addOutput(session_id & "|" & wait_duration_ms & "|" & wait_type & "|" & blocking_session_id)
+            RS.MoveNext
+        Loop
+    End If
     RS.Close
 
     ' First only read all databases in this instance and save it to the db names dict
     RS.Open "EXEC sp_databases", CONN
-    Dim x, dbName, dbNames
-    Set dbNames = CreateObject("Scripting.Dictionary")
-    Do While NOT RS.Eof
-        dbName = RS("DATABASE_NAME")
-        dbNames.add dbName, ""
-       RS.MoveNext
-    Loop
+
+    errMsg = checkConnErrors(CONN)
+    If Not errMsg = "" Then
+        ' Achtung, am Besten "databases" hier hin vorziehen, denn dann wird die Prozedur
+        ' hier nicht benoetigt und man kann direkt ein "exit do"bei Fehlern machen
+        ' addOutput("||" & instance_id & "||" & errMsg)
+    Else
+        Dim x, dbName, dbNames
+        Set dbNames = CreateObject("Scripting.Dictionary")
+        Do While NOT RS.Eof
+           dbName = RS("DATABASE_NAME")
+           dbNames.add dbName, ""
+           RS.MoveNext
+        Loop
+    End If
     RS.Close
 
     ' Now gather the db size and unallocated space
@@ -341,35 +368,42 @@ For Each instance_id In instances.Keys: Do ' Continue trick
         ' sp_spaceused is a stored procedure which returns two selects
         ' which need to be looped
         RS.Open "EXEC sp_spaceused", CONN
-        i = 0
-        Do Until RS Is Nothing
-            Do While NOT RS.Eof
-                'For Each x in RS.fields
-                '    wscript.echo x.name & " " & x.value
-                'Next
-                If i = 0 Then
-                    ' Size of the current database in megabytes. database_size includes both data and log files.
-                    dbSize      = Trim(RS("database_size"))
-                    ' Space in the database that has not been reserved for database objects.
-                    unallocated = Trim(RS("unallocated space"))
-                Elseif i = 1 Then
-                    ' Total amount of space allocated by objects in the database.
-                    reserved    = Trim(RS("reserved"))
-                    ' Total amount of space used by data.
-                    data        = Trim(RS("data"))
-                    ' Total amount of space used by indexes.
-                    indexSize   = Trim(RS("index_size"))
-                    ' Total amount of space reserved for objects in the database, but not yet used.
-                    unused      = Trim(RS("unused"))
-                End If
-                RS.MoveNext
+
+        errMsg = checkConnErrors(CONN)
+        If Not errMsg = "" Then
+            addOutput("MSSQL_" & instance_id &  " " & Replace(dbName, " ", "_") & _
+                      " - - - - - - - - - - - - " & errMsg)
+        Else
+            i = 0
+            Do Until RS Is Nothing
+                Do While NOT RS.Eof
+                    'For Each x in RS.fields
+                    '    wscript.echo x.name & " " & x.value
+                    'Next
+                    If i = 0 Then
+                        ' Size of the current database in megabytes. database_size includes both data and log files.
+                        dbSize      = Trim(RS("database_size"))
+                        ' Space in the database that has not been reserved for database objects.
+                        unallocated = Trim(RS("unallocated space"))
+                    Elseif i = 1 Then
+                        ' Total amount of space allocated by objects in the database.
+                        reserved    = Trim(RS("reserved"))
+                        ' Total amount of space used by data.
+                        data        = Trim(RS("data"))
+                        ' Total amount of space used by indexes.
+                        indexSize   = Trim(RS("index_size"))
+                        ' Total amount of space reserved for objects in the database, but not yet used.
+                        unused      = Trim(RS("unused"))
+                        End If
+                    RS.MoveNext
+                Loop
+                Set RS = RS.NextRecordset
+                i = i + 1
             Loop
-            Set RS = RS.NextRecordset
-            i = i + 1
-        Loop
-        addOutput("MSSQL_" & instance_id & " " & Replace(dbName, " ", "_") & " " & dbSize & " " & _
-                  unallocated & " " & reserved & " " & data & " " & indexSize & " " & unused)
-        Set RS = CreateObject("ADODB.Recordset")
+            addOutput("MSSQL_" & instance_id & " " & Replace(dbName, " ", "_") & " " & dbSize & " " & _
+                unallocated & " " & reserved & " " & data & " " & indexSize & " " & unused)
+            Set RS = CreateObject("ADODB.Recordset")
+        End If
     Next
 
     ' Loop all databases to get the date of the last backup. Only show databases
@@ -389,41 +423,48 @@ For Each instance_id In instances.Keys: Do ' Continue trick
                 "END " & _
                 "ELSE " & _
                 "BEGIN " & _
-                "SET @SQLCommand = 'SELECT CONVERT(VARCHAR, DATEADD(s, DATEDIFF(s, ''19700101'', MAX(b.backup_finish_date)), ''19700101''), 120) AS last_backup_date,  " & _
-                "b.type, b.machine_name, isnull(rep.is_primary_replica,0) as is_primary_replica, rep.is_local, isnull(convert(varchar(40), rep.replica_id), '''') AS replica_id  " & _
-                "FROM msdb.dbo.backupset b  " & _
-                "LEFT OUTER JOIN sys.databases db ON b.database_name = db.name  " & _
-                "LEFT OUTER JOIN sys.dm_hadr_database_replica_states rep ON db.database_id = rep.database_id  " & _
-                "WHERE database_name = ''" & dbName & "'' AND (rep.is_local is null or rep.is_local = 1)  " & _
-                "AND (rep.is_primary_replica is null or rep.is_primary_replica = ''True'') and machine_name = SERVERPROPERTY(''Machinename'') " & _
-                "GROUP BY type, rep.replica_id, rep.is_primary_replica, rep.is_local, b.database_name, b.machine_name, rep.synchronization_state, rep.synchronization_health' " & _
+                    "SET @SQLCommand = 'SELECT CONVERT(VARCHAR, DATEADD(s, DATEDIFF(s, ''19700101'', MAX(b.backup_finish_date)), ''19700101''), 120) AS last_backup_date,  " & _
+                    "b.type, b.machine_name, isnull(rep.is_primary_replica,0) as is_primary_replica, rep.is_local, isnull(convert(varchar(40), rep.replica_id), '''') AS replica_id  " & _
+                    "FROM msdb.dbo.backupset b  " & _
+                    "LEFT OUTER JOIN sys.databases db ON b.database_name = db.name  " & _
+                    "LEFT OUTER JOIN sys.dm_hadr_database_replica_states rep ON db.database_id = rep.database_id  " & _
+                    "WHERE database_name = ''" & dbName & "'' AND (rep.is_local is null or rep.is_local = 1)  " & _
+                    "AND (rep.is_primary_replica is null or rep.is_primary_replica = ''True'') and machine_name = SERVERPROPERTY(''Machinename'') " & _
+                    "GROUP BY type, rep.replica_id, rep.is_primary_replica, rep.is_local, b.database_name, b.machine_name, rep.synchronization_state, rep.synchronization_health' " & _
                 "END " & _
-                "EXEC (@SQLCommand)" ,CONN
+                "EXEC (@SQLCommand)", CONN
 
-        If RS.Eof Then
+        errMsg = checkConnErrors(CONN)
+        If Not errMsg = "" Then
             addOutput("MSSQL_" & instance_id & "|" & Replace(dbName, " ", "_") & _
-                      "|-|-|-|no backup found")
+                      "|-|-|-|" & errMsg)
+        Else
+            If RS.Eof Then
+                addOutput("MSSQL_" & instance_id & "|" & Replace(dbName, " ", "_") & _
+                          "|-|-|-|no backup found")
+            End If
+
+            Do While Not RS.Eof
+                lastBackupDate = Trim(RS("last_backup_date"))
+
+                backup_type = Trim(RS("type"))
+                If backup_type = "" Then
+                    backup_type = "-"
+                End If
+
+                replica_id = Trim(RS("replica_id"))
+                is_primary_replica = Trim(RS("is_primary_replica"))
+                backup_machine_name = Trim(RS("machine_name"))
+
+                If lastBackupDate <> "" and (replica_id = "" or is_primary_replica = "True") Then
+                    addOutput("MSSQL_" & instance_id & "|" & Replace(dbName, " ", "_") & _
+                              "|" & Replace(lastBackupDate, " ", "|") & "|" & backup_type)
+                End If
+
+                RS.MoveNext
+            Loop
         End If
 
-        Do While Not RS.Eof
-            lastBackupDate = Trim(RS("last_backup_date"))
-
-            backup_type = Trim(RS("type"))
-            If backup_type = "" Then
-                backup_type = "-"
-            End If
-
-            replica_id = Trim(RS("replica_id"))
-            is_primary_replica = Trim(RS("is_primary_replica"))
-            backup_machine_name = Trim(RS("machine_name"))
-
-            If lastBackupDate <> "" and (replica_id = "" or is_primary_replica = "True") Then
-                addOutput("MSSQL_" & instance_id & "|" & Replace(dbName, " ", "_") & _
-                          "|" & Replace(lastBackupDate, " ", "|") & "|" & backup_type)
-            End If
-
-            RS.MoveNext
-        Loop
         RS.Close
     Next
 
@@ -435,16 +476,23 @@ For Each instance_id In instances.Keys: Do ' Continue trick
                 "  cast(max_size/128 as bigint) as MaxSize," &_
                 "  cast(size/128 as bigint) as AllocatedSize," &_
                 "  cast(FILEPROPERTY (name, 'spaceused')/128 as bigint) as UsedSize," &_
-                "  case when max_size = '-1' then '1' else '0' end as Unlimited" &
+                "  case when max_size = '-1' then '1' else '0' end as Unlimited" &_
                 " FROM sys.database_files WHERE type_desc = 'LOG'", CONN
-        Do While Not RS.Eof
-            addOutput(instance_id & "|" & Replace(dbName, " ", "_") & "|" & Replace(RS("name"), " ", "_") & _
-                      "|" & Replace(RS("physical_name"), " ", "_") & "|" & _
-                      RS("MaxSize") & "|" & RS("AllocatedSize") & "|" & RS("UsedSize")) & _
-                      "|" & RS("Unlimited")
-            RS.MoveNext
-        Loop
-        RS.Close
+
+        errMsg = checkConnErrors(CONN)
+        If Not errMsg = "" Then
+            addOutput(instance_id &  "|" & Replace(dbName, " ", "_") & _
+                      "|-|-|-|-|-|-|" & errMsg)
+        Else
+            Do While Not RS.Eof
+                addOutput(instance_id & "|" & Replace(dbName, " ", "_") & "|" & Replace(RS("name"), " ", "_") & _
+                          "|" & Replace(RS("physical_name"), " ", "_") & "|" & _
+                          RS("MaxSize") & "|" & RS("AllocatedSize") & "|" & RS("UsedSize")) & _
+                          "|" & RS("Unlimited")
+                RS.MoveNext
+            Loop
+            RS.Close
+        End If
     Next
 
     ' Loop all databases to get the size of the transaction log
@@ -457,14 +505,20 @@ For Each instance_id In instances.Keys: Do ' Continue trick
                 "  cast(FILEPROPERTY (name, 'spaceused')/128 as bigint) as UsedSize," &_
                 "  case when max_size = '-1' then '1' else '0' end as Unlimited" &_
                 " FROM sys.database_files WHERE type_desc = 'ROWS'", CONN
-        Do While Not RS.Eof
-            addOutput( instance_id & "|" & Replace(dbName, " ", "_") & "|" & Replace(RS("name"), " ", "_") & _
-                      "|" & Replace(RS("physical_name"), " ", "_") & "|" & _
-                      RS("MaxSize") & "|" & RS("AllocatedSize") & "|" & RS("UsedSize")) & _
-                      "|" & RS("Unlimited")
-            RS.MoveNext
-        Loop
-        RS.Close
+
+        If Not errMsg = "" Then
+            addOutput(instance_id &  "|" & Replace(dbName, " ", "_") & _
+                      "|-|-|-|-|-|-|" & errMsg)
+        Else
+            Do While Not RS.Eof
+                addOutput(instance_id & "|" & Replace(dbName, " ", "_") & "|" & Replace(RS("name"), " ", "_") & _
+                          "|" & Replace(RS("physical_name"), " ", "_") & "|" & _
+                          RS("MaxSize") & "|" & RS("AllocatedSize") & "|" & RS("UsedSize")) & _
+                          "|" & RS("Unlimited")
+                RS.MoveNext
+            Loop
+            RS.Close
+        End If
     Next
 
     ' Database properties, full list at https://msdn.microsoft.com/en-us/library/ms186823.aspx
@@ -475,13 +529,19 @@ For Each instance_id In instances.Keys: Do ' Continue trick
             "DATABASEPROPERTYEX(name, 'IsAutoClose') AS auto_close, " & _
             "DATABASEPROPERTYEX(name, 'IsAutoShrink') AS auto_shrink " & _
             "FROM master.dbo.sysdatabases", CONN
-    Do While Not RS.Eof
-        ' instance db_name status recovery auto_close auto_shrink
-        addOutput( instance_id & "|" & Replace(Trim(RS("name")), " ", "_") & "|" & Trim(RS("Status")) & _
-                   "|" & Trim(RS("Recovery")) & "|" & Trim(RS("auto_close")) & "|" & Trim(RS("auto_shrink")) )
-        RS.MoveNext
-    Loop
-    RS.Close
+
+    errMsg = checkConnErrors(CONN)
+    If Not errMsg = "" Then
+        addOutput(instance_id & "|-|" & errMsg & "|-|-|-")
+    Else
+        Do While Not RS.Eof
+            ' instance db_name status recovery auto_close auto_shrink
+            addOutput(instance_id & "|" & Replace(Trim(RS("name")), " ", "_") & "|" & Trim(RS("Status")) & _
+                      "|" & Trim(RS("Recovery")) & "|" & Trim(RS("auto_close")) & "|" & Trim(RS("auto_shrink")) )
+            RS.MoveNext
+        Loop
+        RS.Close
+    End If
 
     addOutput(sections("clusters"))
     Dim active_node, nodes
@@ -525,13 +585,19 @@ For Each instance_id In instances.Keys: Do ' Continue trick
     "sys.sysprocesses WHERE dbid > 0 AND name = DB_NAME(dbid) GROUP BY dbid ),0) AS NumberOfConnections " &_
     "FROM sys.databases", CONN
 
-    Do While Not RS.Eof
-        database_name = RS("DBName")
-        connection_count = RS("NumberOfConnections")
+    errMsg = checkConnErrors(CONN)
+    If Not errMsg = "" Then
+        addOutput(instance_id & " " & errMsg)
+    Else
+        Do While Not RS.Eof
+            database_name = RS("DBName")
+            connection_count = RS("NumberOfConnections")
 
-        addOutput(instance_id & " " & Replace(database_name, " ", "_") & " " & connection_count)
-        RS.MoveNext
-    Loop
+            addOutput(instance_id & " " & Replace(database_name, " ", "_") & " " & connection_count)
+            RS.MoveNext
+        Loop
+        RS.Close
+    End If
 
     CONN.Close
 

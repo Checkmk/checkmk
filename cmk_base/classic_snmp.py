@@ -219,7 +219,7 @@ def _snmp_base_command(what, host_config, context_name):
         command = ['snmpget']
     elif what == 'getnext':
         command = ['snmpgetnext', '-Cf']
-    elif config.is_bulkwalk_host(host_config.hostname):
+    elif host_config.is_bulkwalk_host:
         command = ['snmpbulkwalk']
 
         options.append("-Cr%d" % config.bulk_walk_size_of(host_config.hostname))
@@ -228,7 +228,7 @@ def _snmp_base_command(what, host_config, context_name):
 
     if isinstance(host_config.credentials, six.string_types):
         # Handle V1 and V2C
-        if config.is_bulkwalk_host(host_config.hostname):
+        if host_config.is_bulkwalk_host:
             options.append('-v2c')
         else:
             if what == 'walk':

@@ -76,4 +76,5 @@ SNMPHostConfig = NamedTuple("SNMPHostConfig", [
     ("ipaddress", str),
     ("credentials", SNMPCredentials),
     ("port", int),
+    ("is_bulkwalk_host", bool),
 ])

@@ -1217,12 +1217,12 @@ class AutomationDiagHost(Automation):
 
                 # SNMP versions
                 if test in ['snmpv2', 'snmpv3']:
-                    config.bulkwalk_hosts = [hostname]
+                    is_bulkwalk_host = True
                 elif test == 'snmpv2_nobulk':
-                    config.bulkwalk_hosts = []
+                    is_bulkwalk_host = False
                     config.snmpv2c_hosts = [hostname]
                 elif test == 'snmpv1':
-                    config.bulkwalk_hosts = []
+                    is_bulkwalk_host = False
                     config.snmpv2c_hosts = []
 
                 else:
@@ -1234,6 +1234,7 @@ class AutomationDiagHost(Automation):
                     ipaddress=ipaddress,
                     credentials=config.snmp_credentials_of(hostname),
                     port=config.snmp_port_of(hostname),
+                    is_bulkwalk_host=is_bulkwalk_host,
                 )
                 data = snmp.get_snmp_table(
                     host_config,

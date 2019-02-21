@@ -24,6 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+from typing import NamedTuple, Union, Tuple
+
 OID_END = 0  # Suffix-part of OID that was not specified
 OID_STRING = -1  # Complete OID as string ".1.3.6.1.4.1.343...."
 OID_BIN = -2  # Complete OID as binary string "\x01\x03\x06\x01..."
@@ -54,3 +56,23 @@ def binstring_to_int(binstring):
         value += mult * ord(byte)
         mult *= 256
     return value
+
+
+# TODO: Be more specific about the possible tuples
+# if the credentials are a string, we use that as community,
+# if it is a four-tuple, we use it as V3 auth parameters:
+# (1) security level (-l)
+# (2) auth protocol (-a, e.g. 'md5')
+# (3) security name (-u)
+# (4) auth password (-A)
+# And if it is a six-tuple, it has the following additional arguments:
+# (5) privacy protocol (DES|AES) (-x)
+# (6) privacy protocol pass phrase (-X)
+SNMPCredentials = Union[str, Tuple[str, str, str, str], Tuple[str, str, str, str], Tuple[str, str]]
+
+# Wraps the configuration of a host into a single object for the SNMP code
+SNMPHostConfig = NamedTuple("SNMPHostConfig", [
+    ("hostname", str),
+    ("ipaddress", str),
+    ("credentials", SNMPCredentials),
+])

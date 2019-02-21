@@ -50,13 +50,14 @@ from cmk_base.exceptions import MKSNMPError
 #   '----------------------------------------------------------------------'
 
 
-def walk(access_data, oid, hex_plain=False, context_name=None):
-    hostname = access_data["hostname"]
-    ipaddress = access_data["ipaddress"]
-    protospec = _snmp_proto_spec(hostname)
-    portspec = _snmp_port_spec(hostname)
-    command = _snmp_walk_command(access_data, context_name)
-    command += ["-OQ", "-OU", "-On", "-Ot", "%s%s%s" % (protospec, ipaddress, portspec), oid]
+def walk(host_config, oid, hex_plain=False, context_name=None):
+    protospec = _snmp_proto_spec(host_config.hostname)
+    portspec = _snmp_port_spec(host_config.hostname)
+    command = _snmp_walk_command(host_config, context_name)
+    command += [
+        "-OQ", "-OU", "-On", "-Ot",
+        "%s%s%s" % (protospec, host_config.ipaddress, portspec), oid
+    ]
 
     console.vverbose("Running '%s'\n" % subprocess.list2cmdline(command))
 
@@ -93,8 +94,8 @@ def walk(access_data, oid, hex_plain=False, context_name=None):
     if exitstatus:
         console.verbose(tty.red + tty.bold + "ERROR: " + tty.normal +
                         "SNMP error: %s\n" % error.strip())
-        raise MKSNMPError(
-            "SNMP Error on %s: %s (Exit-Code: %d)" % (ipaddress, error.strip(), exitstatus))
+        raise MKSNMPError("SNMP Error on %s: %s (Exit-Code: %d)" % (host_config.ipaddress,
+                                                                    error.strip(), exitstatus))
     return rowinfo
 
 
@@ -135,9 +136,7 @@ def _get_rowinfo_from_snmp_process(snmp_process, hex_plain):
     return rowinfo
 
 
-def get(access_data, oid, context_name=None):
-    hostname = access_data["hostname"]
-    ipaddress = access_data["ipaddress"]
+def get(host_config, oid, context_name=None):
     if oid.endswith(".*"):
         oid_prefix = oid[:-2]
         commandtype = "getnext"
@@ -145,11 +144,11 @@ def get(access_data, oid, context_name=None):
         oid_prefix = oid
         commandtype = "get"
 
-    protospec = _snmp_proto_spec(hostname)
-    portspec = _snmp_port_spec(hostname)
-    command = _snmp_base_command(commandtype, access_data, context_name) + \
+    protospec = _snmp_proto_spec(host_config.hostname)
+    portspec = _snmp_port_spec(host_config.hostname)
+    command = _snmp_base_command(commandtype, host_config, context_name) + \
                [ "-On", "-OQ", "-Oe", "-Ot",
-                 "%s%s%s" % (protospec, ipaddress, portspec),
+                 "%s%s%s" % (protospec, host_config.ipaddress, portspec),
                  oid_prefix ]
 
     console.vverbose("Running '%s'\n" % subprocess.list2cmdline(command))
@@ -202,8 +201,8 @@ def _snmp_proto_spec(hostname):
 # Returns command lines for snmpwalk and snmpget including
 # options for authentication. This handles communities and
 # authentication for SNMP V3. Also bulkwalk hosts
-def _snmp_walk_command(access_data, context_name):
-    return _snmp_base_command('walk', access_data, context_name) + ["-Cc"]
+def _snmp_walk_command(host_config, context_name):
+    return _snmp_base_command('walk', host_config, context_name) + ["-Cc"]
 
 
 # if the credentials are a string, we use that as community,
@@ -215,60 +214,59 @@ def _snmp_walk_command(access_data, context_name):
 # And if it is a six-tuple, it has the following additional arguments:
 # (5) privacy protocol (DES|AES) (-x)
 # (6) privacy protocol pass phrase (-X)
-def _snmp_base_command(what, access_data, context_name):
-    hostname = access_data["hostname"]
-    credentials = access_data["credentials"]
+def _snmp_base_command(what, host_config, context_name):
     options = []
 
     if what == 'get':
         command = ['snmpget']
     elif what == 'getnext':
         command = ['snmpgetnext', '-Cf']
-    elif config.is_bulkwalk_host(hostname):
+    elif config.is_bulkwalk_host(host_config.hostname):
         command = ['snmpbulkwalk']
 
-        options.append("-Cr%d" % config.bulk_walk_size_of(hostname))
+        options.append("-Cr%d" % config.bulk_walk_size_of(host_config.hostname))
     else:
         command = ['snmpwalk']
 
-    if isinstance(credentials, six.string_types):
+    if isinstance(host_config.credentials, six.string_types):
         # Handle V1 and V2C
-        if config.is_bulkwalk_host(hostname):
+        if config.is_bulkwalk_host(host_config.hostname):
             options.append('-v2c')
         else:
             if what == 'walk':
                 command = ['snmpwalk']
-            if config.is_snmpv2c_host(hostname):
+            if config.is_snmpv2c_host(host_config.hostname):
                 options.append('-v2c')
             else:
                 options.append('-v1')
 
-        options += ["-c", credentials]
+        options += ["-c", host_config.credentials]
 
     else:
         # Handle V3
-        if len(credentials) == 6:
+        if len(host_config.credentials) == 6:
             options += [
-                "-v3", "-l", credentials[0], "-a", credentials[1], "-u", credentials[2], "-A",
-                credentials[3], "-x", credentials[4], "-X", credentials[5]
+                "-v3", "-l", host_config.credentials[0], "-a", host_config.credentials[1], "-u",
+                host_config.credentials[2], "-A", host_config.credentials[3], "-x",
+                host_config.credentials[4], "-X", host_config.credentials[5]
             ]
-        elif len(credentials) == 4:
+        elif len(host_config.credentials) == 4:
             options += [
-                "-v3", "-l", credentials[0], "-a", credentials[1], "-u", credentials[2], "-A",
-                credentials[3]
+                "-v3", "-l", host_config.credentials[0], "-a", host_config.credentials[1], "-u",
+                host_config.credentials[2], "-A", host_config.credentials[3]
             ]
-        elif len(credentials) == 2:
-            options += ["-v3", "-l", credentials[0], "-u", credentials[1]]
+        elif len(host_config.credentials) == 2:
+            options += ["-v3", "-l", host_config.credentials[0], "-u", host_config.credentials[1]]
         else:
-            raise MKGeneralException(
-                "Invalid SNMP credentials '%r' for host %s: must be "
-                "string, 2-tuple, 4-tuple or 6-tuple" % (credentials, hostname))
+            raise MKGeneralException("Invalid SNMP credentials '%r' for host %s: must be "
+                                     "string, 2-tuple, 4-tuple or 6-tuple" %
+                                     (host_config.credentials, host_config.hostname))
 
     # Do not load *any* MIB files. This save lot's of CPU.
     options += ["-m", "", "-M", ""]
 
     # Configuration of timing and retries
-    settings = config.snmp_timing_of(hostname)
+    settings = config.snmp_timing_of(host_config.hostname)
     if "timeout" in settings:
         options += ["-t", "%0.2f" % settings["timeout"]]
     if "retries" in settings:

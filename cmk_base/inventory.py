@@ -279,12 +279,12 @@ def _do_inv_for_realhost(sources, multi_host_sections, hostname, ipaddress, inve
     console.verbose("\n")
 
 
-def _gather_snmp_check_plugin_names_inventory(access_data,
+def _gather_snmp_check_plugin_names_inventory(host_config,
                                               on_error,
                                               do_snmp_scan,
                                               for_mgmt_board=False):
     return snmp_scan.gather_snmp_check_plugin_names(
-        access_data, on_error, do_snmp_scan, for_inventory=True, for_mgmt_board=for_mgmt_board)
+        host_config, on_error, do_snmp_scan, for_inventory=True, for_mgmt_board=for_mgmt_board)
 
 
 def _get_inv_params(hostname, section_name):

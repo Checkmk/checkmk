@@ -2,6 +2,7 @@ import collections
 import pytest
 import cmk_base.config as config
 import cmk_base.classic_snmp as classic_snmp
+import cmk_base.snmp_utils as snmp_utils
 
 
 @pytest.mark.parametrize("port,expected", [
@@ -23,7 +24,7 @@ def test_snmp_proto_spec(monkeypatch, is_ipv6, expected):
 
 
 SNMPSettings = collections.namedtuple("SNMPSettings", [
-    "access_data",
+    "host_config",
     "is_bulkwalk_host",
     "bulk_walk_size_of",
     "is_snmpv2c_host",
@@ -34,11 +35,11 @@ SNMPSettings = collections.namedtuple("SNMPSettings", [
 
 @pytest.mark.parametrize("settings,expected", [
     (SNMPSettings(
-        access_data={
-            "hostname": "localhost",
-            "ipaddress": "127.0.0.1",
-            "credentials": "public",
-        },
+        host_config=snmp_utils.SNMPHostConfig(
+            hostname="localhost",
+            ipaddress="127.0.0.1",
+            credentials="public",
+        ),
         is_bulkwalk_host=True,
         bulk_walk_size_of=10,
         is_snmpv2c_host=True,
@@ -52,11 +53,11 @@ SNMPSettings = collections.namedtuple("SNMPSettings", [
         '3', '-Cc'
     ]),
     (SNMPSettings(
-        access_data={
-            "hostname": "lohost",
-            "ipaddress": "127.0.0.1",
-            "credentials": "public",
-        },
+        host_config=snmp_utils.SNMPHostConfig(
+            hostname="lohost",
+            ipaddress="127.0.0.1",
+            credentials="public",
+        ),
         is_bulkwalk_host=False,
         bulk_walk_size_of=5,
         is_snmpv2c_host=False,
@@ -70,11 +71,11 @@ SNMPSettings = collections.namedtuple("SNMPSettings", [
         'blabla', '-Cc'
     ]),
     (SNMPSettings(
-        access_data={
-            "hostname": "lohost",
-            "ipaddress": "public",
-            "credentials": ("authNoPriv", "abc", "md5", "abc"),
-        },
+        host_config=snmp_utils.SNMPHostConfig(
+            hostname="lohost",
+            ipaddress="public",
+            credentials=("authNoPriv", "abc", "md5", "abc"),
+        ),
         is_bulkwalk_host=False,
         bulk_walk_size_of=5,
         is_snmpv2c_host=False,
@@ -88,11 +89,11 @@ SNMPSettings = collections.namedtuple("SNMPSettings", [
         '-M', '', '-t', '5.00', '-r', '1', '-n', 'blabla', '-Cc'
     ]),
     (SNMPSettings(
-        access_data={
-            "hostname": "lohost",
-            "ipaddress": "public",
-            "credentials": ('noAuthNoPriv', 'secname'),
-        },
+        host_config=snmp_utils.SNMPHostConfig(
+            hostname="lohost",
+            ipaddress="public",
+            credentials=('noAuthNoPriv', 'secname'),
+        ),
         is_bulkwalk_host=False,
         bulk_walk_size_of=5,
         is_snmpv2c_host=False,
@@ -106,11 +107,11 @@ SNMPSettings = collections.namedtuple("SNMPSettings", [
         '-r', '1', '-Cc'
     ]),
     (SNMPSettings(
-        access_data={
-            "hostname": "lohost",
-            "ipaddress": "127.0.0.1",
-            "credentials": ('authPriv', 'md5', 'secname', 'auhtpassword', 'DES', 'privacybla'),
-        },
+        host_config=snmp_utils.SNMPHostConfig(
+            hostname="lohost",
+            ipaddress="127.0.0.1",
+            credentials=('authPriv', 'md5', 'secname', 'auhtpassword', 'DES', 'privacybla'),
+        ),
         is_bulkwalk_host=False,
         bulk_walk_size_of=5,
         is_snmpv2c_host=False,
@@ -130,4 +131,4 @@ def test_snmp_walk_command(monkeypatch, settings, expected):
     monkeypatch.setattr(config, "is_snmpv2c_host", lambda h: settings.is_snmpv2c_host)
     monkeypatch.setattr(config, "snmp_timing_of", lambda h: settings.snmp_timing_of)
     monkeypatch.setattr(config, "snmp_timing_of", lambda h: settings.snmp_timing_of)
-    assert classic_snmp._snmp_walk_command(settings.access_data, settings.context_name) == expected
+    assert classic_snmp._snmp_walk_command(settings.host_config, settings.context_name) == expected

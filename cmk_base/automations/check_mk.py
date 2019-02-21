@@ -44,6 +44,7 @@ import cmk_base.config as config
 import cmk_base.core
 import cmk_base.core_config as core_config
 import cmk_base.snmp as snmp
+import cmk_base.snmp_utils as snmp_utils
 import cmk_base.discovery as discovery
 import cmk_base.check_table as check_table
 from cmk_base.automations import automations, Automation, MKAutomationError
@@ -1228,13 +1229,13 @@ class AutomationDiagHost(Automation):
                     return 1, "SNMP command not implemented"
 
                 #TODO: What about SNMP management boards?
-                access_data = {
-                    "hostname": hostname,
-                    "ipaddress": ipaddress,
-                    "credentials": config.snmp_credentials_of(hostname),
-                }
+                host_config = snmp_utils.SNMPHostConfig(
+                    hostname=hostname,
+                    ipaddress=ipaddress,
+                    credentials=config.snmp_credentials_of(hostname),
+                )
                 data = snmp.get_snmp_table(
-                    access_data,
+                    host_config,
                     None, ('.1.3.6.1.2.1.1', ['1.0', '4.0', '5.0', '6.0']),
                     use_snmpwalk_cache=True)
 
@@ -1391,16 +1392,16 @@ class AutomationGetAgentOutput(Automation):
                         success = False
                         output += "[%s] %s\n" % (source.id(), source_output)
             else:
-                access_data = {
-                    "hostname": hostname,
-                    "ipaddress": ip_lookup.lookup_ipv4_address(hostname),
-                    "credentials": config.snmp_credentials_of(hostname),
-                }
+                host_config = snmp_utils.SNMPHostConfig(
+                    hostname=hostname,
+                    ipaddress=ip_lookup.lookup_ipv4_address(hostname),
+                    credentials=config.snmp_credentials_of(hostname),
+                )
 
                 lines = []
                 for walk_oid in snmp.oids_to_walk():
                     try:
-                        for oid, value in snmp.walk_for_export(access_data, walk_oid):
+                        for oid, value in snmp.walk_for_export(host_config, walk_oid):
                             lines.append("%s %s\n" % (oid, value))
                     except Exception as e:
                         if cmk.utils.debug.enabled():

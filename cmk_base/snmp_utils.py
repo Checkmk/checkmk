@@ -71,12 +71,16 @@ def binstring_to_int(binstring):
 SNMPCredentials = Union[str, Tuple[str, str, str, str], Tuple[str, str, str, str], Tuple[str, str]]
 
 # Wraps the configuration of a host into a single object for the SNMP code
-SNMPHostConfig = NamedTuple("SNMPHostConfig", [
-    ("hostname", str),
-    ("ipaddress", str),
-    ("credentials", SNMPCredentials),
-    ("port", int),
-    ("is_bulkwalk_host", bool),
-    ("is_snmpv2c_host", bool),
-    ("bulk_walk_size_of", int),
-])
+SNMPHostConfig = NamedTuple(
+    "SNMPHostConfig",
+    [
+        ("hostname", str),
+        ("ipaddress", str),
+        ("credentials", SNMPCredentials),
+        ("port", int),
+        ("is_bulkwalk_host", bool),
+        ("is_snmpv2c_host", bool),
+        ("bulk_walk_size_of", int),
+        # TODO: Cleanup to named tuple
+        ("timing", dict),
+    ])

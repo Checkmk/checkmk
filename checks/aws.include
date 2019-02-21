@@ -101,3 +101,18 @@ def inventory_aws_generic(parsed, required_metrics):
 def inventory_aws_generic_single(parsed, required_metrics):
     if all(required_metric in parsed for required_metric in required_metrics):
         return [(None, {})]
+
+
+def check_aws_limits(aws_service, params, parsed):
+    for resource, resource_title, limit, amount in parsed:
+        p_limit, (warn, crit) = params['%s_limit_levels' % resource]
+        if p_limit is not None:
+            limit_ref = p_limit
+        else:
+            limit_ref = limit
+        yield 0, '%s: %s (of max. %s)' % (resource_title, amount, limit_ref)
+        yield check_levels(
+            100.0 * amount / limit,
+            "aws_%s_%s_limits" % (aws_service, resource), (warn, crit),
+            human_readable_func=get_percent_human_readable,
+            infoname="Usage")

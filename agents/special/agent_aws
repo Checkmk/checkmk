@@ -105,6 +105,13 @@ AWSSectionResult = NamedTuple("AWSSectionResult", [
     ("content", Any),
 ])
 
+AWSLimit = NamedTuple("AWSLimit", [
+    ("key", AnyStr),
+    ("title", AnyStr),
+    ("limit", int),
+    ("amount", int),
+])
+
 AWSColleagueContents = NamedTuple("AWSColleagueContents", [
     ("content", Any),
     ("cache_timestamp", float),
@@ -307,6 +314,24 @@ class AWSSection(object):
         pass
 
 
+class AWSSectionLimits(AWSSection):
+    __metaclass__ = abc.ABCMeta
+
+    def __init__(self, client, region, config, distributor=None):
+        super(AWSSectionLimits, self).__init__(client, region, config, distributor=distributor)
+        self._limits = {}
+
+    def _add_limit(self, piggyback_hostname, limit):
+        assert isinstance(limit, AWSLimit), "%s: Limit must be of type 'AWSLimit'" % self.name
+        self._limits.setdefault(piggyback_hostname, []).append(limit)
+
+    def _create_results(self, computed_content):
+        return [
+            AWSSectionResult(piggyback_hostname, limits)
+            for piggyback_hostname, limits in self._limits.iteritems()
+        ]
+
+
 class AWSSectionGeneric(AWSSection):
     __metaclass__ = abc.ABCMeta
 
@@ -429,8 +454,8 @@ class CostsAndUsage(AWSSectionGeneric):
 class EC2Summary(AWSSectionGeneric):
     def __init__(self, client, region, config, distributor=None):
         super(EC2Summary, self).__init__(client, region, config, distributor=distributor)
-        self._names = self._config.service_config['ec2']['names']
-        self._tags = self._config.service_config['ec2']['tags']
+        self._names = self._config.service_config['ec2_names']
+        self._tags = self._config.service_config['ec2_tags']
 
     @property
     def name(self):
@@ -473,8 +498,8 @@ class EC2Summary(AWSSectionGeneric):
 class EC2SecurityGroups(AWSSectionGeneric):
     def __init__(self, client, region, config, distributor=None):
         super(EC2SecurityGroups, self).__init__(client, region, config, distributor=distributor)
-        self._names = self._config.service_config['ec2']['names']
-        self._tags = self._config.service_config['ec2']['tags']
+        self._names = self._config.service_config['ec2_names']
+        self._tags = self._config.service_config['ec2_tags']
 
     @property
     def name(self):
@@ -597,11 +622,36 @@ class EC2(AWSSectionCloudwatch):
 #   '----------------------------------------------------------------------'
 
 
+class S3Limits(AWSSectionLimits):
+    @property
+    def name(self):
+        return "s3_limits"
+
+    @property
+    def interval(self):
+        return 86400
+
+    def _get_colleague_contents(self):
+        return AWSColleagueContents(None, 0.0)
+
+    def _fetch_raw_content(self, colleague_contents):
+        response = self._client.list_buckets()
+        try:
+            return response['Buckets']
+        except KeyError as e:
+            logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
+            return []
+
+    def _compute_content(self, raw_content, colleague_contents):
+        self._add_limit("", AWSLimit('buckets', 'Buckets', 100, len(raw_content.content)))
+        return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
+
+
 class S3Summary(AWSSectionGeneric):
     def __init__(self, client, region, config, distributor=None):
         super(S3Summary, self).__init__(client, region, config, distributor=distributor)
-        self._names = self._config.service_config['s3']['names']
-        self._tags = self._prepare_s3_tags(self._config.service_config['s3']['tags'])
+        self._names = self._config.service_config['s3_names']
+        self._tags = self._prepare_s3_tags(self._config.service_config['s3_tags'])
 
     def _prepare_s3_tags(self, tags):
         """
@@ -621,11 +671,14 @@ class S3Summary(AWSSectionGeneric):
         return 86400
 
     def _get_colleague_contents(self):
-        return AWSColleagueContents(None, 0.0)
+        colleague = self._received_results.get('s3_limits')
+        if colleague and colleague.content:
+            return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
+        return AWSColleagueContents({}, 0.0)
 
     def _fetch_raw_content(self, colleague_contents):
         found_buckets = []
-        for bucket in self._list_buckets():
+        for bucket in self._list_buckets(colleague_contents):
             bucket_name = bucket['Name']
             response = self._client.get_bucket_location(Bucket=bucket_name)
             try:
@@ -657,14 +710,19 @@ class S3Summary(AWSSectionGeneric):
             except KeyError as e:
                 logging.info("%s/%s: KeyError %s; Available are %s", self.name, bucket_name, e,
                              response.keys())
-            if self._matches_conditions(tagging):
+            if self._matches_tag_conditions(tagging):
                 bucket['Tagging'] = tagging
                 found_buckets.append(bucket)
         return found_buckets
 
-    def _list_buckets(self):
+    def _list_buckets(self, colleague_contents):
         if self._tags is None and self._names is not None:
+            if colleague_contents.content:
+                return [
+                    bucket for bucket in colleague_contents.content if bucket['Name'] in self._names
+                ]
             return [{'Name': n} for n in self._names]
+
         response = self._client.list_buckets()
         try:
             return response['Buckets']
@@ -672,7 +730,7 @@ class S3Summary(AWSSectionGeneric):
             logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
             return []
 
-    def _matches_conditions(self, tagging):
+    def _matches_tag_conditions(self, tagging):
         if self._names is not None:
             return True
         if self._tags is None:
@@ -833,8 +891,8 @@ class S3Requests(AWSSectionCloudwatch):
 class ELBSummary(AWSSectionGeneric):
     def __init__(self, client, region, config, distributor=None):
         super(ELBSummary, self).__init__(client, region, config, distributor=distributor)
-        self._names = self._config.service_config['elb']['names']
-        self._tags = self._prepare_elb_tags(self._config.service_config['elb']['tags'])
+        self._names = self._config.service_config['elb_names']
+        self._tags = self._prepare_elb_tags(self._config.service_config['elb_tags'])
 
     def _prepare_elb_tags(self, tags):
         """
@@ -872,7 +930,7 @@ class ELBSummary(AWSSectionGeneric):
             except KeyError as e:
                 logging.info("%s/%s: KeyError %s; Available are %s", self.name, load_balancer_name,
                              e, response.keys())
-            if self._matches_conditions(tagging):
+            if self._matches_tag_conditions(tagging):
                 load_balancer['TagDescriptions'] = tagging
                 found_load_balancers.append(load_balancer)
         return found_load_balancers
@@ -888,7 +946,7 @@ class ELBSummary(AWSSectionGeneric):
             logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
             return []
 
-    def _matches_conditions(self, tagging):
+    def _matches_tag_conditions(self, tagging):
         if self._names is not None:
             return True
         if self._tags is None:
@@ -1030,8 +1088,8 @@ class ELB(AWSSectionCloudwatch):
 class EBSSummary(AWSSectionGeneric):
     def __init__(self, client, region, config, distributor=None):
         super(EBSSummary, self).__init__(client, region, config, distributor=distributor)
-        self._names = self._config.service_config['ebs']['names']
-        self._tags = self._config.service_config['ebs']['tags']
+        self._names = self._config.service_config['ebs_names']
+        self._tags = self._config.service_config['ebs_tags']
 
     @property
     def name(self):
@@ -1188,8 +1246,8 @@ class EBS(AWSSectionCloudwatch):
 class RDSSummary(AWSSectionGeneric):
     def __init__(self, client, region, config, distributor=None):
         super(RDSSummary, self).__init__(client, region, config, distributor=distributor)
-        self._names = self._config.service_config['rds']['names']
-        self._tags = self._config.service_config['rds']['tags']
+        self._names = self._config.service_config['rds_names']
+        self._tags = self._config.service_config['rds_tags']
 
     @property
     def name(self):
@@ -1445,14 +1503,20 @@ class AWSSectionsGeneric(AWSSections):
         ec2_summary_distributor = ResultDistributor()
         elb_summary_distributor = ResultDistributor()
         ebs_summary_distributor = ResultDistributor()
+
+        s3_limits_distributor = ResultDistributor()
         s3_summary_distributor = ResultDistributor()
+
         rds_summary_distributor = ResultDistributor()
 
         #---sections with distributors--------------------------------------
         ec2_summary = EC2Summary(ec2_client, region, config, ec2_summary_distributor)
         ebs_summary = EBSSummary(ec2_client, region, config, ebs_summary_distributor)
         elb_summary = ELBSummary(elb_client, region, config, elb_summary_distributor)
+
+        s3_limits = S3Limits(s3_client, region, config, s3_limits_distributor)
         s3_summary = S3Summary(s3_client, region, config, s3_summary_distributor)
+
         rds_summary = RDSSummary(rds_client, region, config, rds_summary_distributor)
 
         #---sections--------------------------------------------------------
@@ -1461,8 +1525,10 @@ class AWSSectionsGeneric(AWSSections):
         ec2 = EC2(cloudwatch_client, region, config)
         ebs = EBS(cloudwatch_client, region, config)
         elb = ELB(cloudwatch_client, region, config)
+
         s3 = S3(cloudwatch_client, region, config)
         s3_requests = S3Requests(cloudwatch_client, region, config)
+
         rds = RDS(cloudwatch_client, region, config)
 
         #---register sections to distributors-------------------------------
@@ -1473,8 +1539,11 @@ class AWSSectionsGeneric(AWSSections):
         ebs_summary_distributor.add(ebs)
         elb_summary_distributor.add(elb_health)
         elb_summary_distributor.add(elb)
+
+        s3_limits_distributor.add(s3_summary)
         s3_summary_distributor.add(s3)
         s3_summary_distributor.add(s3_requests)
+
         rds_summary_distributor.add(rds)
 
         #---register sections for execution---------------------------------
@@ -1509,6 +1578,8 @@ class AWSSectionsGeneric(AWSSections):
             self._sections.append(elb)
 
         if 's3' in services:
+            if config.service_config.get('s3_limits'):
+                self._sections.append(s3_limits)
             self._sections.append(s3_summary)
             self._sections.append(s3)
             if config.service_config['s3_requests']:
@@ -1556,15 +1627,46 @@ AWSServiceAttributes = NamedTuple("AWSServiceAttributes", [
     ("title", str),
     ("global_service", bool),
     ("filter_by_names_or_tags", bool),
+    ("limits", bool),
 ])
 
 AWSServices = [
-    AWSServiceAttributes("ce", "Costs and usage", True, False),
-    AWSServiceAttributes("ec2", "Elastic Compute Cloud (EC2)", False, True),
-    AWSServiceAttributes("ebs", "Elastic Block Storage (EBS)", False, True),
-    AWSServiceAttributes("s3", "Simple Storage Service (S3)", False, True),
-    AWSServiceAttributes("elb", "Elastic Load Balancing (ELB)", False, True),
-    AWSServiceAttributes("rds", "Relational Database Service (RDS)", False, True),
+    AWSServiceAttributes(
+        key="ce",
+        title="Costs and usage",
+        global_service=True,
+        filter_by_names_or_tags=False,
+        limits=False),
+    AWSServiceAttributes(
+        key="ec2",
+        title="Elastic Compute Cloud (EC2)",
+        global_service=False,
+        filter_by_names_or_tags=True,
+        limits=False),
+    AWSServiceAttributes(
+        key="ebs",
+        title="Elastic Block Storage (EBS)",
+        global_service=False,
+        filter_by_names_or_tags=True,
+        limits=False),
+    AWSServiceAttributes(
+        key="s3",
+        title="Simple Storage Service (S3)",
+        global_service=False,
+        filter_by_names_or_tags=True,
+        limits=True),
+    AWSServiceAttributes(
+        key="elb",
+        title="Elastic Load Balancing (ELB)",
+        global_service=False,
+        filter_by_names_or_tags=True,
+        limits=False),
+    AWSServiceAttributes(
+        key="rds",
+        title="Relational Database Service (RDS)",
+        global_service=False,
+        filter_by_names_or_tags=True,
+        limits=False),
 ]
 
 
@@ -1617,6 +1719,11 @@ def parse_arguments(argv):
                 nargs='+',
                 action='append',
                 help="Tag values for %s" % service.title)
+        if service.limits:
+            parser.add_argument(
+                '--%s-limits' % service.key,
+                action="store_true",
+                help="Monitor limits for %s" % service.title)
 
     parser.add_argument(
         "--s3-requests",
@@ -1657,14 +1764,12 @@ class AWSConfig(object):
         self._overall_tags = self._prepare_tags(overall_tags)
         self.service_config = {}
 
-    def add_service_config(self, key, names, tags):
-        self.service_config.setdefault(key, {"names": None, "tags": None})
-        if names:
-            self.service_config[key]["names"] = names
+    def add_service_tags(self, tags_key, tags):
+        self.service_config.setdefault(tags_key, None)
         if tags != (None, None):
-            self.service_config[key]["tags"] = self._prepare_tags(tags)
+            self.service_config[tags_key] = self._prepare_tags(tags)
         elif self._overall_tags:
-            self.service_config[key]["tags"] = self._overall_tags
+            self.service_config[tags_key] = self._overall_tags
 
     def _prepare_tags(self, tags):
         """
@@ -1694,14 +1799,16 @@ def main(args=None):
     hostname = args.hostname
 
     aws_config = AWSConfig(hostname, (args.overall_tag_key, args.overall_tag_values))
-    for service_key, service_names, service_tags in [
-        ("ec2", args.ec2_names, (args.ec2_tag_key, args.ec2_tag_values)),
-        ("ebs", args.ebs_names, (args.ebs_tag_key, args.ebs_tag_values)),
-        ("s3", args.s3_names, (args.s3_tag_key, args.s3_tag_values)),
-        ("elb", args.elb_names, (args.elb_tag_key, args.elb_tag_values)),
-        ("rds", args.rds_names, (args.rds_tag_key, args.rds_tag_values)),
+    for service_key, service_names, service_tags, service_limits in [
+        ("ec2", args.ec2_names, (args.ec2_tag_key, args.ec2_tag_values), None),
+        ("ebs", args.ebs_names, (args.ebs_tag_key, args.ebs_tag_values), None),
+        ("s3", args.s3_names, (args.s3_tag_key, args.s3_tag_values), args.s3_limits),
+        ("elb", args.elb_names, (args.elb_tag_key, args.elb_tag_values), None),
+        ("rds", args.rds_names, (args.rds_tag_key, args.rds_tag_values), None),
     ]:
-        aws_config.add_service_config(service_key, service_names, service_tags)
+        aws_config.add_single_service_config("%s_names" % service_key, service_names)
+        aws_config.add_service_tags("%s_tags" % service_key, service_tags)
+        aws_config.add_single_service_config("%s_limits" % service_key, service_limits)
 
     aws_config.add_single_service_config("s3_requests", args.s3_requests)
 

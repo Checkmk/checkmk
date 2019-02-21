@@ -143,6 +143,43 @@ def _vs_latency():
             ))
 
 
+def _vs_limits(resource):
+    return Tuple(
+        title=_("Set limit and levels for %s" % resource.lower()),
+        elements=[
+            Alternative(
+                style="dropdown",
+                orientation="horizontal",
+                elements=[
+                    Integer(
+                        title=_("Set limit"),
+                        unit=_("%s" % resource),
+                        min_value=1,
+                        default_value=100),
+                    FixedValue(None, totext="", title=_("No limit")),
+                ]),
+            Alternative(
+                style="dropdown",
+                orientation="horizontal",
+                elements=[
+                    Tuple(
+                        title=_("Set levels"),
+                        orientation="horizontal",
+                        elements=[
+                            Percentage(title=_("Warning at"), default_value=80),
+                            Percentage(title=_("Critical at"), default_value=90),
+                        ]),
+                    Tuple(
+                        title=_("No levels"),
+                        elements=[
+                            FixedValue(None, totext=""),
+                            FixedValue(None, totext=""),
+                        ]),
+                ]),
+        ])
+
+
+#.
 #   .--S3------------------------------------------------------------------.
 #   |                             ____ _____                               |
 #   |                            / ___|___ /                               |
@@ -382,6 +419,29 @@ class RulespecCheckgroupParametersAwsS3Latency(CheckParameterRulespecWithItem):
     @property
     def item_spec(self):
         return TextAscii(title=_("The bucket name"))
+
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersAwsS3Limits(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "aws_s3_limits"
+
+    @property
+    def title(self):
+        return _("AWS/S3 Limits")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(elements=[('buckets_limit_levels', _vs_limits("Buckets"))])
 
 
 #.

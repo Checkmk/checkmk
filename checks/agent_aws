@@ -35,18 +35,21 @@ def _get_tag_options(tag_values, prefix):
     return options
 
 
-def _get_services_selection(services):
+def _get_services_config(services):
     # '--services': {
     #   's3': {'selection': ('tags', [('KEY', ['VAL1', 'VAL2'])])},
     #   'ec2': {'selection': 'all'},
     #   'ebs': {'selection': ('names', ['ebs1', 'ebs2'])},
     # }
     service_args = []
-    for service_name, service_selection in services.iteritems():
-        if service_selection is None:
+    for service_name, service_config in services.iteritems():
+        if service_config is None:
             continue
 
-        selection = service_selection.get('selection')
+        if service_config.get("limits"):
+            service_args += ['--%s-limits' % service_name]
+
+        selection = service_config.get('selection')
         if not isinstance(selection, tuple):
             # 'all' is handled by services.keys()
             continue
@@ -89,7 +92,7 @@ def agent_aws_arguments(params, hostname, ipaddress):
         # We need to sort the inner services-as-a-dict-params
         # in order to create reliable tests
         args += sorted(services.keys())
-        args += _get_services_selection(services)
+        args += _get_services_config(services)
 
     if 'requests' in services.get('s3', {}):
         args += ["--s3-requests"]

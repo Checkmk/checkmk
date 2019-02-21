@@ -33,6 +33,7 @@ from cmk.utils.exceptions import MKGeneralException
 
 import cmk_base.config as config
 import cmk_base.snmp as snmp
+import cmk_base.snmp_utils as snmp_utils
 
 from .abstract import DataSource, ManagementBoardDataSource
 from .host_sections import HostSections
@@ -73,12 +74,12 @@ class SNMPDataSource(DataSource):
     def _cpu_tracking_id(self):
         return "snmp"
 
-    def _get_access_data(self):
-        return {
-            "hostname": self._hostname,
-            "ipaddress": self._ipaddress,
-            "credentials": self._credentials,
-        }
+    def _get_host_config(self):
+        return snmp_utils.SNMPHostConfig(
+            hostname=self._hostname,
+            ipaddress=self._ipaddress,
+            credentials=self._credentials,
+        )
 
     def describe(self):
         if config.is_usewalk_host(self._hostname):
@@ -156,7 +157,7 @@ class SNMPDataSource(DataSource):
             return self._check_plugin_names[(self._hostname, self._ipaddress)]
         except KeyError:
             check_plugin_names = self._check_plugin_name_filter_func(
-                self._get_access_data(),
+                self._get_host_config(),
                 on_error=self._on_error,
                 do_snmp_scan=self._do_snmp_scan,
                 for_mgmt_board=self._for_mgmt_board)
@@ -170,7 +171,7 @@ class SNMPDataSource(DataSource):
 
         check_plugin_names = self.get_check_plugin_names()
 
-        access_data = self._get_access_data()
+        host_config = self._get_host_config()
         info = {}
         for check_plugin_name in self._sort_check_plugin_names(check_plugin_names):
             # Is this an SNMP table check? Then snmp_info specifies the OID to fetch
@@ -213,7 +214,7 @@ class SNMPDataSource(DataSource):
             if isinstance(oid_info, list):
                 check_info = []
                 for entry in oid_info:
-                    check_info_part = snmp.get_snmp_table(access_data, check_plugin_name, entry,
+                    check_info_part = snmp.get_snmp_table(host_config, check_plugin_name, entry,
                                                           self._use_snmpwalk_cache)
 
                     # If at least one query fails, we discard the whole info table
@@ -223,7 +224,7 @@ class SNMPDataSource(DataSource):
                     else:
                         check_info.append(check_info_part)
             else:
-                check_info = snmp.get_snmp_table(access_data, check_plugin_name, oid_info,
+                check_info = snmp.get_snmp_table(host_config, check_plugin_name, oid_info,
                                                  self._use_snmpwalk_cache)
 
             info[section_name] = check_info

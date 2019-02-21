@@ -36,7 +36,7 @@ import cmk_base.check_api_utils as check_api_utils
 
 
 # gather auto_discovered check_plugin_names for this host
-def gather_snmp_check_plugin_names(access_data,
+def gather_snmp_check_plugin_names(host_config,
                                    on_error,
                                    do_snmp_scan,
                                    for_inventory=False,
@@ -46,7 +46,7 @@ def gather_snmp_check_plugin_names(access_data,
     try:
         check_plugin_names.update(
             _snmp_scan(
-                access_data,
+                host_config,
                 on_error=on_error,
                 do_snmp_scan=do_snmp_scan,
                 for_inv=for_inventory,
@@ -60,26 +60,24 @@ def gather_snmp_check_plugin_names(access_data,
     return list(check_plugin_names)
 
 
-def _snmp_scan(access_data,
+def _snmp_scan(host_config,
                on_error="ignore",
                for_inv=False,
                do_snmp_scan=True,
                for_mgmt_board=False):
     import cmk_base.inventory_plugins as inventory_plugins
 
-    hostname = access_data["hostname"]
-
     # Make hostname globally available for scan functions.
     # This is rarely used, but e.g. the scan for if/if64 needs
     # this to evaluate if_disabled_if64_checks.
-    check_api_utils.set_hostname(hostname)
+    check_api_utils.set_hostname(host_config.hostname)
 
-    snmp.initialize_single_oid_cache(access_data)
+    snmp.initialize_single_oid_cache(host_config)
     console.vverbose("  SNMP scan:\n")
-    if not config.in_binary_hostlist(hostname, config.snmp_without_sys_descr):
+    if not config.in_binary_hostlist(host_config.hostname, config.snmp_without_sys_descr):
         for oid, name in [(".1.3.6.1.2.1.1.1.0", "system description"),
                           (".1.3.6.1.2.1.1.2.0", "system object")]:
-            value = snmp.get_single_oid(access_data, oid, do_snmp_scan=do_snmp_scan)
+            value = snmp.get_single_oid(host_config, oid, do_snmp_scan=do_snmp_scan)
             if value is None:
                 raise MKSNMPError(
                     "Cannot fetch %s OID %s. This might be OK for some bogus devices. "
@@ -90,8 +88,8 @@ def _snmp_scan(access_data,
         # Fake OID values to prevent issues with a lot of scan functions
         console.vverbose("       Skipping system description OID "
                          "(Set .1.3.6.1.2.1.1.1.0 and .1.3.6.1.2.1.1.2.0 to \"\")\n")
-        snmp.set_single_oid_cache(hostname, ".1.3.6.1.2.1.1.1.0", "")
-        snmp.set_single_oid_cache(hostname, ".1.3.6.1.2.1.1.2.0", "")
+        snmp.set_single_oid_cache(host_config.hostname, ".1.3.6.1.2.1.1.1.0", "")
+        snmp.set_single_oid_cache(host_config.hostname, ".1.3.6.1.2.1.1.2.0", "")
 
     found_check_plugin_names = []
     if for_inv:
@@ -130,7 +128,7 @@ def _snmp_scan(access_data,
 
                 def oid_function(oid, default_value=None, cp_name=check_plugin_name):
                     value = snmp.get_single_oid(
-                        access_data, oid, cp_name, do_snmp_scan=do_snmp_scan)
+                        host_config, oid, cp_name, do_snmp_scan=do_snmp_scan)
                     return default_value if value is None else value
 
                 result = scan_function(oid_function)
@@ -161,14 +159,14 @@ def _snmp_scan(access_data,
         _output_snmp_check_plugins("SNMP without scan function", default_found)
 
     filtered = config.filter_by_management_board(
-        hostname,
+        host_config.hostname,
         found_check_plugin_names,
         for_mgmt_board,
         for_discovery=True,
         for_inventory=for_inv)
 
     _output_snmp_check_plugins("SNMP filtered check plugin names", filtered)
-    snmp.write_single_oid_cache(access_data)
+    snmp.write_single_oid_cache(host_config)
     return sorted(filtered)
 
 

@@ -5,22 +5,31 @@ import cmk_base.classic_snmp as classic_snmp
 import cmk_base.snmp_utils as snmp_utils
 
 
+@pytest.fixture
+def host_config():
+    return snmp_utils.SNMPHostConfig(
+        hostname="localhost",
+        ipaddress="127.0.0.1",
+        credentials="public",
+    )
+
+
 @pytest.mark.parametrize("port,expected", [
     (None, ""),
     (1234, ":1234"),
 ])
-def test_snmp_port_spec(monkeypatch, port, expected):
+def test_snmp_port_spec(monkeypatch, port, expected, host_config):
     monkeypatch.setattr(config, "snmp_port_of", lambda h: port)
-    assert classic_snmp._snmp_port_spec("localhost") == expected
+    assert classic_snmp._snmp_port_spec(host_config) == expected
 
 
 @pytest.mark.parametrize("is_ipv6,expected", [
     (True, "udp6:"),
     (False, ""),
 ])
-def test_snmp_proto_spec(monkeypatch, is_ipv6, expected):
+def test_snmp_proto_spec(monkeypatch, is_ipv6, expected, host_config):
     monkeypatch.setattr(config, "is_ipv6_primary", lambda h: is_ipv6)
-    assert classic_snmp._snmp_proto_spec("localhost") == expected
+    assert classic_snmp._snmp_proto_spec(host_config) == expected
 
 
 SNMPSettings = collections.namedtuple("SNMPSettings", [

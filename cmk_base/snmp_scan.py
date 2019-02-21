@@ -88,8 +88,8 @@ def _snmp_scan(host_config,
         # Fake OID values to prevent issues with a lot of scan functions
         console.vverbose("       Skipping system description OID "
                          "(Set .1.3.6.1.2.1.1.1.0 and .1.3.6.1.2.1.1.2.0 to \"\")\n")
-        snmp.set_single_oid_cache(host_config.hostname, ".1.3.6.1.2.1.1.1.0", "")
-        snmp.set_single_oid_cache(host_config.hostname, ".1.3.6.1.2.1.1.2.0", "")
+        snmp.set_single_oid_cache(host_config, ".1.3.6.1.2.1.1.1.0", "")
+        snmp.set_single_oid_cache(host_config, ".1.3.6.1.2.1.1.2.0", "")
 
     found_check_plugin_names = []
     if for_inv:

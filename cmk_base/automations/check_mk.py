@@ -1218,12 +1218,13 @@ class AutomationDiagHost(Automation):
                 # SNMP versions
                 if test in ['snmpv2', 'snmpv3']:
                     is_bulkwalk_host = True
+                    is_snmpv2c_host = False
                 elif test == 'snmpv2_nobulk':
                     is_bulkwalk_host = False
-                    config.snmpv2c_hosts = [hostname]
+                    is_snmpv2c_host = True
                 elif test == 'snmpv1':
                     is_bulkwalk_host = False
-                    config.snmpv2c_hosts = []
+                    is_snmpv2c_host = False
 
                 else:
                     return 1, "SNMP command not implemented"
@@ -1235,6 +1236,7 @@ class AutomationDiagHost(Automation):
                     credentials=config.snmp_credentials_of(hostname),
                     port=config.snmp_port_of(hostname),
                     is_bulkwalk_host=is_bulkwalk_host,
+                    is_snmpv2c_host=is_snmpv2c_host,
                 )
                 data = snmp.get_snmp_table(
                     host_config,

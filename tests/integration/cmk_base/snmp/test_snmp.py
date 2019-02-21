@@ -35,7 +35,7 @@ def monkeymodule(request):
 
 
 @pytest.fixture(scope="module")
-def snmpsim(site, request, tmp_path_factory, monkeymodule):
+def snmpsim(site, request, tmp_path_factory):
     tmp_path = tmp_path_factory.getbasetemp()
 
     cmd = "%s/.venv/bin/snmpsimd.py" % cmk_path()
@@ -43,9 +43,6 @@ def snmpsim(site, request, tmp_path_factory, monkeymodule):
 
     log.set_verbosity(2)
     debug.enable()
-
-    # TODO: Use SNMPv2 over v1 for the moment
-    monkeymodule.setattr(config, "is_snmpv2c_host", lambda h: True)
 
     p = subprocess.Popen(
         [
@@ -74,7 +71,9 @@ def snmpsim(site, request, tmp_path_factory, monkeymodule):
         hostname="localhost",
         credentials="public",
         port=1337,
+        # TODO: Use SNMPv2 over v1 for the moment
         is_bulkwalk_host=False,
+        is_snmpv2c_host=True,
     )
 
     # Ensure that snmpsim is ready for clients before starting with the tests
@@ -143,6 +142,7 @@ def test_get_single_oid_ipv6(snmpsim, backend, monkeypatch):
         credentials="public",
         port=1337,
         is_bulkwalk_host=False,
+        is_snmpv2c_host=True,
     )
     monkeypatch.setattr(config, "is_ipv6_primary", lambda h: True)
     result = snmp.get_single_oid(host_config, ".1.3.6.1.2.1.1.1.0")
@@ -159,6 +159,7 @@ def test_get_single_oid_snmpv3(snmpsim, backend, monkeypatch):
         credentials=('authNoPriv', 'md5', 'authOnlyUser', 'authOnlyUser'),
         port=1337,
         is_bulkwalk_host=False,
+        is_snmpv2c_host=True,
     )
     result = snmp.get_single_oid(host_config, ".1.3.6.1.2.1.1.1.0")
     assert result == "Linux zeus 4.8.6.5-smp #2 SMP Sun Nov 13 14:58:11 CDT 2016 i686"
@@ -258,7 +259,8 @@ def test_get_single_oid_not_resolvable(snmpsim, backend):
         hostname="localhost",
         credentials="public",
         port=1337,
-        is_bulkwalk_host=False,
+        is_bulkwalk_host=True,
+        is_snmpv2c_host=True,
     )
     assert snmp.get_single_oid(host_config, ".1.3.6.1.2.1.1.7.0") is None
 

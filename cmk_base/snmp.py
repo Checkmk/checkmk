@@ -149,6 +149,7 @@ def create_snmp_host_config(hostname):
         credentials=config.snmp_credentials_of(hostname),
         port=config.snmp_port_of(hostname),
         is_bulkwalk_host=config.is_bulkwalk_host(hostname),
+        is_snmpv2c_host=config.is_snmpv2c_host(hostname),
     )
 
 

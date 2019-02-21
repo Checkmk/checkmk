@@ -13,6 +13,7 @@ def host_config():
         credentials="public",
         port=161,
         is_bulkwalk_host=False,
+        is_snmpv2c_host=False,
     )
 
 
@@ -27,6 +28,7 @@ def test_snmp_port_spec(port, expected):
         credentials="public",
         port=port,
         is_bulkwalk_host=False,
+        is_snmpv2c_host=False,
     )
     assert classic_snmp._snmp_port_spec(host_config) == expected
 
@@ -43,7 +45,6 @@ def test_snmp_proto_spec(monkeypatch, is_ipv6, expected, host_config):
 SNMPSettings = collections.namedtuple("SNMPSettings", [
     "host_config",
     "bulk_walk_size_of",
-    "is_snmpv2c_host",
     "snmp_timing_of",
     "context_name",
 ])
@@ -57,9 +58,9 @@ SNMPSettings = collections.namedtuple("SNMPSettings", [
             credentials="public",
             port=161,
             is_bulkwalk_host=True,
+            is_snmpv2c_host=True,
         ),
         bulk_walk_size_of=10,
-        is_snmpv2c_host=True,
         snmp_timing_of={
             "timeout": 2,
             "retries": 3
@@ -76,9 +77,9 @@ SNMPSettings = collections.namedtuple("SNMPSettings", [
             credentials="public",
             port=161,
             is_bulkwalk_host=False,
+            is_snmpv2c_host=False,
         ),
         bulk_walk_size_of=5,
-        is_snmpv2c_host=False,
         snmp_timing_of={
             "timeout": 5,
             "retries": 1
@@ -95,9 +96,9 @@ SNMPSettings = collections.namedtuple("SNMPSettings", [
             credentials=("authNoPriv", "abc", "md5", "abc"),
             port=161,
             is_bulkwalk_host=False,
+            is_snmpv2c_host=False,
         ),
         bulk_walk_size_of=5,
-        is_snmpv2c_host=False,
         snmp_timing_of={
             "timeout": 5,
             "retries": 1
@@ -114,9 +115,9 @@ SNMPSettings = collections.namedtuple("SNMPSettings", [
             credentials=('noAuthNoPriv', 'secname'),
             port=161,
             is_bulkwalk_host=False,
+            is_snmpv2c_host=False,
         ),
         bulk_walk_size_of=5,
-        is_snmpv2c_host=False,
         snmp_timing_of={
             "timeout": 5,
             "retries": 1
@@ -133,9 +134,9 @@ SNMPSettings = collections.namedtuple("SNMPSettings", [
             credentials=('authPriv', 'md5', 'secname', 'auhtpassword', 'DES', 'privacybla'),
             port=161,
             is_bulkwalk_host=False,
+            is_snmpv2c_host=False,
         ),
         bulk_walk_size_of=5,
-        is_snmpv2c_host=False,
         snmp_timing_of={
             "timeout": 5,
             "retries": 1
@@ -148,7 +149,6 @@ SNMPSettings = collections.namedtuple("SNMPSettings", [
 ])
 def test_snmp_walk_command(monkeypatch, settings, expected):
     monkeypatch.setattr(config, "bulk_walk_size_of", lambda h: settings.bulk_walk_size_of)
-    monkeypatch.setattr(config, "is_snmpv2c_host", lambda h: settings.is_snmpv2c_host)
     monkeypatch.setattr(config, "snmp_timing_of", lambda h: settings.snmp_timing_of)
     monkeypatch.setattr(config, "snmp_timing_of", lambda h: settings.snmp_timing_of)
     assert classic_snmp._snmp_walk_command(settings.host_config, settings.context_name) == expected

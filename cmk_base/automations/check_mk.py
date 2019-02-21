@@ -1179,6 +1179,8 @@ class AutomationDiagHost(Automation):
                 # ('authNoPriv', 'md5', '11111111', '22222222')
                 # ('authPriv', 'md5', '11111111', '22222222', 'DES', '33333333')
 
+                credentials = config.snmp_credentials_of(hostname)
+
                 # Insert preconfigured communitiy
                 if test == "snmpv3":
                     if snmpv3_use:
@@ -1191,9 +1193,9 @@ class AutomationDiagHost(Automation):
                         if snmpv3_use == "authPriv":
                             snmpv3_credentials.extend(
                                 [snmpv3_privacy_proto, snmpv3_privacy_password])
-                        config.explicit_snmp_communities[hostname] = tuple(snmpv3_credentials)
+                        credentials = tuple(snmpv3_credentials)
                 elif snmp_community:
-                    config.explicit_snmp_communities[hostname] = snmp_community
+                    credentials = snmp_community
 
                 # Determine SNMPv2/v3 community
                 if hostname not in config.explicit_snmp_communities:
@@ -1205,15 +1207,8 @@ class AutomationDiagHost(Automation):
                         if (test != "snmpv3") and isinstance(entry, tuple):
                             continue
 
-                        config.explicit_snmp_communities[hostname] = entry
+                        credentials = entry
                         break
-
-                # Enforce automation call timing settings
-                timing = {
-                    'timeout': snmp_timeout,
-                    'retries': snmp_retries,
-                }
-                config.snmp_timing.insert(0, (timing, [], [hostname]))
 
                 # SNMP versions
                 if test in ['snmpv2', 'snmpv3']:
@@ -1233,11 +1228,15 @@ class AutomationDiagHost(Automation):
                 host_config = snmp_utils.SNMPHostConfig(
                     hostname=hostname,
                     ipaddress=ipaddress,
-                    credentials=config.snmp_credentials_of(hostname),
+                    credentials=credentials,
                     port=config.snmp_port_of(hostname),
                     is_bulkwalk_host=is_bulkwalk_host,
                     is_snmpv2c_host=is_snmpv2c_host,
                     bulk_walk_size_of=config.bulk_walk_size_of(hostname),
+                    timing={
+                        'timeout': snmp_timeout,
+                        'retries': snmp_retries,
+                    },
                 )
                 data = snmp.get_snmp_table(
                     host_config,

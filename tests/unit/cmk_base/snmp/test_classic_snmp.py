@@ -15,6 +15,7 @@ def host_config():
         is_bulkwalk_host=False,
         is_snmpv2c_host=False,
         bulk_walk_size_of=10,
+        timing={},
     )
 
 
@@ -31,6 +32,7 @@ def test_snmp_port_spec(port, expected):
         is_bulkwalk_host=False,
         is_snmpv2c_host=False,
         bulk_walk_size_of=10,
+        timing={},
     )
     assert classic_snmp._snmp_port_spec(host_config) == expected
 
@@ -46,7 +48,6 @@ def test_snmp_proto_spec(monkeypatch, is_ipv6, expected, host_config):
 
 SNMPSettings = collections.namedtuple("SNMPSettings", [
     "host_config",
-    "snmp_timing_of",
     "context_name",
 ])
 
@@ -61,11 +62,11 @@ SNMPSettings = collections.namedtuple("SNMPSettings", [
             is_bulkwalk_host=True,
             is_snmpv2c_host=True,
             bulk_walk_size_of=10,
+            timing={
+                "timeout": 2,
+                "retries": 3
+            },
         ),
-        snmp_timing_of={
-            "timeout": 2,
-            "retries": 3
-        },
         context_name=None,
     ), [
         'snmpbulkwalk', '-Cr10', '-v2c', '-c', 'public', '-m', '', '-M', '', '-t', '2.00', '-r',
@@ -80,11 +81,11 @@ SNMPSettings = collections.namedtuple("SNMPSettings", [
             is_bulkwalk_host=False,
             is_snmpv2c_host=False,
             bulk_walk_size_of=5,
+            timing={
+                "timeout": 5,
+                "retries": 1
+            },
         ),
-        snmp_timing_of={
-            "timeout": 5,
-            "retries": 1
-        },
         context_name="blabla",
     ), [
         'snmpwalk', '-v1', '-c', 'public', '-m', '', '-M', '', '-t', '5.00', '-r', '1', '-n',
@@ -99,11 +100,11 @@ SNMPSettings = collections.namedtuple("SNMPSettings", [
             is_bulkwalk_host=False,
             is_snmpv2c_host=False,
             bulk_walk_size_of=5,
+            timing={
+                "timeout": 5,
+                "retries": 1
+            },
         ),
-        snmp_timing_of={
-            "timeout": 5,
-            "retries": 1
-        },
         context_name="blabla",
     ), [
         'snmpwalk', '-v3', '-l', 'authNoPriv', '-a', 'abc', '-u', 'md5', '-A', 'abc', '-m', '',
@@ -118,11 +119,11 @@ SNMPSettings = collections.namedtuple("SNMPSettings", [
             is_bulkwalk_host=False,
             is_snmpv2c_host=False,
             bulk_walk_size_of=5,
+            timing={
+                "timeout": 5,
+                "retries": 1
+            },
         ),
-        snmp_timing_of={
-            "timeout": 5,
-            "retries": 1
-        },
         context_name=None,
     ), [
         'snmpwalk', '-v3', '-l', 'noAuthNoPriv', '-u', 'secname', '-m', '', '-M', '', '-t', '5.00',
@@ -137,11 +138,11 @@ SNMPSettings = collections.namedtuple("SNMPSettings", [
             is_bulkwalk_host=False,
             is_snmpv2c_host=False,
             bulk_walk_size_of=5,
+            timing={
+                "timeout": 5,
+                "retries": 1
+            },
         ),
-        snmp_timing_of={
-            "timeout": 5,
-            "retries": 1
-        },
         context_name=None,
     ), [
         'snmpwalk', '-v3', '-l', 'authPriv', '-a', 'md5', '-u', 'secname', '-A', 'auhtpassword',
@@ -149,5 +150,4 @@ SNMPSettings = collections.namedtuple("SNMPSettings", [
     ]),
 ])
 def test_snmp_walk_command(monkeypatch, settings, expected):
-    monkeypatch.setattr(config, "snmp_timing_of", lambda h: settings.snmp_timing_of)
     assert classic_snmp._snmp_walk_command(settings.host_config, settings.context_name) == expected

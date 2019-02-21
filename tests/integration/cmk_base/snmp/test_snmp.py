@@ -75,6 +75,7 @@ def snmpsim(site, request, tmp_path_factory):
         is_bulkwalk_host=False,
         is_snmpv2c_host=True,
         bulk_walk_size_of=10,
+        timing={},
     )
 
     # Ensure that snmpsim is ready for clients before starting with the tests
@@ -145,6 +146,7 @@ def test_get_single_oid_ipv6(snmpsim, backend, monkeypatch):
         is_bulkwalk_host=False,
         is_snmpv2c_host=True,
         bulk_walk_size_of=10,
+        timing={},
     )
     monkeypatch.setattr(config, "is_ipv6_primary", lambda h: True)
     result = snmp.get_single_oid(host_config, ".1.3.6.1.2.1.1.1.0")
@@ -163,6 +165,7 @@ def test_get_single_oid_snmpv3(snmpsim, backend, monkeypatch):
         is_bulkwalk_host=False,
         is_snmpv2c_host=True,
         bulk_walk_size_of=10,
+        timing={},
     )
     result = snmp.get_single_oid(host_config, ".1.3.6.1.2.1.1.1.0")
     assert result == "Linux zeus 4.8.6.5-smp #2 SMP Sun Nov 13 14:58:11 CDT 2016 i686"
@@ -265,6 +268,7 @@ def test_get_single_oid_not_resolvable(snmpsim, backend):
         is_bulkwalk_host=True,
         is_snmpv2c_host=True,
         bulk_walk_size_of=10,
+        timing={},
     )
     assert snmp.get_single_oid(host_config, ".1.3.6.1.2.1.1.7.0") is None
 

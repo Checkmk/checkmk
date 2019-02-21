@@ -86,6 +86,7 @@ class SNMPDataSource(DataSource):
             is_bulkwalk_host=self._is_bulkwalk_host,
             is_snmpv2c_host=self._is_snmpv2c_host,
             bulk_walk_size_of=config.bulk_walk_size_of(self._hostname),
+            timing=config.snmp_timing_of(self._hostname),
         )
 
     def describe(self):

@@ -1,6 +1,7 @@
 import os
 import pytest
 
+
 @pytest.fixture(scope="module")
 def version_path():
     path = os.environ.get("VERSION_PATH")

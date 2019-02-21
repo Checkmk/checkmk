@@ -7,9 +7,8 @@ import astroid
 
 from pylint.checkers import BaseChecker, utils
 from pylint.interfaces import IAstroidChecker
-
-
 """Checker for incorrect string translation functions."""
+
 
 def register(linter):
     """Register checkers."""
@@ -22,6 +21,7 @@ def register(linter):
 # Help functions
 #
 
+
 def is_constant_string(first):
     return isinstance(first, astroid.Const) and isinstance(first.value, six.string_types)
 
@@ -32,7 +32,8 @@ def parent_is_HTML(node):
         return isinstance(node.parent.func, astroid.Name) and node.parent.func.name == "HTML"
     elif str(node.parent) == "BinOp()" and str(node.parent.parent) == "Call()":
         # Case HTML(_("sth %s usw") % "etc")
-        return isinstance(node.parent.parent.func, astroid.Name) and node.parent.parent.func.name == "HTML"
+        return isinstance(node.parent.parent.func,
+                          astroid.Name) and node.parent.parent.func.name == "HTML"
     else:
         return False
 
@@ -53,6 +54,7 @@ def all_tags_are_unescapable(first):
 # Checker classes
 #
 
+
 class TranslationBaseChecker(BaseChecker):
     """
     Checks for i18n translation functions (_, ugettext, ungettext, and many
@@ -63,11 +65,17 @@ class TranslationBaseChecker(BaseChecker):
     TRANSLATION_FUNCTIONS = set([
         '_',
         'gettext',
-        'ngettext', 'ngettext_lazy',
-        'npgettext', 'npgettext_lazy',
-        'pgettext', 'pgettext_lazy',
-        'ugettext', 'ugettext_lazy', 'ugettext_noop',
-        'ungettext', 'ungettext_lazy',
+        'ngettext',
+        'ngettext_lazy',
+        'npgettext',
+        'npgettext_lazy',
+        'pgettext',
+        'pgettext_lazy',
+        'ugettext',
+        'ugettext_lazy',
+        'ugettext_noop',
+        'ungettext',
+        'ungettext_lazy',
     ])
 
     name = 'translation-base-checker'
@@ -81,11 +89,9 @@ class TranslationBaseChecker(BaseChecker):
         ),
     }
 
-
     # return true if check worked, else add message and return false
     def check(self, node):
         raise NotImplementedError()
-
 
     @utils.check_messages(MESSAGE_ID)
     def visit_callfunc(self, node):
@@ -169,6 +175,7 @@ class EscapingProtectionChecker(TranslationBaseChecker):
             "YO!",
         ),
     }
+
     def check(self, node):
         first = node.args[0]
         if is_constant_string(first):

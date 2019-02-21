@@ -3,6 +3,7 @@
 
 import pytest
 
+
 # Override the global site fixture. Not wanted for git tests!
 @pytest.fixture
 def site(request):

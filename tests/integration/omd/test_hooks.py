@@ -4,6 +4,7 @@
 import os
 import stat
 
+
 def test_hooks(site):
     hooks = [
         "ADMIN_MAIL",

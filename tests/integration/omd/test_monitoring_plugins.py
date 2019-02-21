@@ -4,6 +4,7 @@
 import pytest
 import os
 
+
 @pytest.mark.parametrize("plugin", [
     "check_apt",
     "check_bi_aggr",

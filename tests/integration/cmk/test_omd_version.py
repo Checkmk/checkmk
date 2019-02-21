@@ -1,6 +1,7 @@
 import os
 import cmk
 
+
 # Would move this to unit tests, but it would not work, because the
 # unit tests monkeypatch the cmk.omd_version() function
 def test_omd_version(tmpdir, monkeypatch):

@@ -4,11 +4,12 @@
 import time
 import os
 import pytest
-from testlib import web, WatchLog, wait_until # pylint: disable=unused-import
+from testlib import web, WatchLog, wait_until  # pylint: disable=unused-import
 
-STATE_UP          = 0
-STATE_DOWN        = 1
+STATE_UP = 0
+STATE_DOWN = 1
 STATE_UNREACHABLE = 2
+
 
 class Scenario(object):
     @classmethod
@@ -20,19 +21,20 @@ class Scenario(object):
 
         return "%s-%s" % (scenario.core, unreachable_label)
 
-
     def __init__(self, core, unreachable_enabled):
         self.core = core
         self.unreachable_enabled = unreachable_enabled
 
 
-
-@pytest.fixture(scope="module", params=[
-    Scenario(core="nagios", unreachable_enabled=True),
-    Scenario(core="cmc", unreachable_enabled=True),
-    Scenario(core="nagios", unreachable_enabled=False),
-    Scenario(core="cmc", unreachable_enabled=False),
-], ids=Scenario.get_test_id)
+@pytest.fixture(
+    scope="module",
+    params=[
+        Scenario(core="nagios", unreachable_enabled=True),
+        Scenario(core="cmc", unreachable_enabled=True),
+        Scenario(core="nagios", unreachable_enabled=False),
+        Scenario(core="cmc", unreachable_enabled=False),
+    ],
+    ids=Scenario.get_test_id)
 def scenario(request, web, site):
     core = request.param.core
     unreachable_enabled = request.param.unreachable_enabled
@@ -41,14 +43,17 @@ def scenario(request, web, site):
     try:
         print "Applying test config"
 
-        web.add_host("notify-test-parent", attributes={
-            "ipaddress": "127.0.0.1",
-        })
+        web.add_host(
+            "notify-test-parent", attributes={
+                "ipaddress": "127.0.0.1",
+            })
 
-        web.add_host("notify-test-child", attributes={
-            "ipaddress": "127.0.0.1",
-            "parents": [ "notify-test-parent" ],
-        })
+        web.add_host(
+            "notify-test-child",
+            attributes={
+                "ipaddress": "127.0.0.1",
+                "parents": ["notify-test-parent"],
+            })
 
         if unreachable_enabled:
             notification_options = 'd,u,r,f,s'
@@ -57,15 +62,22 @@ def scenario(request, web, site):
 
         rule_result = web.get_ruleset("extra_host_conf:notification_options")
         rule_result["ruleset"] = {
-            "": [{'conditions': {'host_specs': ['@all'], 'host_tags': []}, 'options': {}, 'value': notification_options}]
+            "": [{
+                'conditions': {
+                    'host_specs': ['@all'],
+                    'host_tags': []
+                },
+                'options': {},
+                'value': notification_options
+            }]
         }
         web.set_ruleset("extra_host_conf:notification_options", rule_result)
 
         # Make nagios check more often for incoming commands and add more
         # details to the log
         site.write_file("etc/nagios/nagios.d/zzz_test_unreachable_notifications.cfg",
-            "log_passive_checks=1\n"
-            "command_check_interval=1s\n")
+                        "log_passive_checks=1\n"
+                        "command_check_interval=1s\n")
 
         web.activate_changes()
 
@@ -112,7 +124,7 @@ def initial_state(site, scenario):
     else:
         site.delete_file("var/nagios/nagios.log")
 
-    time.sleep(1) # TODO: Add check for rotation
+    time.sleep(1)  # TODO: Add check for rotation
 
 
 class HistoryLog(WatchLog):
@@ -126,7 +138,6 @@ class HistoryLog(WatchLog):
             return "var/nagios/nagios.log"
         else:
             raise NotImplementedError()
-
 
 
 def _send_child_down(scenario, site, log):
@@ -161,13 +172,16 @@ def _send_child_recovery(scenario, site, log):
 
 def _send_child_down_expect_unreachable(scenario, site, log):
     assert site.get_host_state("notify-test-child") == STATE_UP
-    site.send_host_check_result("notify-test-child", STATE_DOWN, "DOWN", expected_state=STATE_UNREACHABLE)
+    site.send_host_check_result(
+        "notify-test-child", STATE_DOWN, "DOWN", expected_state=STATE_UNREACHABLE)
 
     log.check_logged("HOST ALERT: notify-test-child;UNREACHABLE;HARD;1;")
     if scenario.unreachable_enabled:
-        log.check_logged("HOST NOTIFICATION: check-mk-notify;notify-test-child;UNREACHABLE;check-mk-notify;")
+        log.check_logged(
+            "HOST NOTIFICATION: check-mk-notify;notify-test-child;UNREACHABLE;check-mk-notify;")
     else:
-        log.check_not_logged("HOST NOTIFICATION: check-mk-notify;notify-test-child;UNREACHABLE;check-mk-notify;")
+        log.check_not_logged(
+            "HOST NOTIFICATION: check-mk-notify;notify-test-child;UNREACHABLE;check-mk-notify;")
 
 
 # Test the situation where:
@@ -187,22 +201,27 @@ def test_unreachable_child_down_before_parent_down(scenario, site, initial_state
         log.check_logged("HOST ALERT: notify-test-child;UNREACHABLE;HARD;1;")
 
         if scenario.unreachable_enabled:
-            log.check_logged("HOST NOTIFICATION: check-mk-notify;notify-test-child;UNREACHABLE;check-mk-notify;")
+            log.check_logged(
+                "HOST NOTIFICATION: check-mk-notify;notify-test-child;UNREACHABLE;check-mk-notify;")
         # TODO: Can not check this at the moment
         #else:
         #    log.check_not_logged("HOST NOTIFICATION: check-mk-notify;notify-test-child;UNREACHABLE;check-mk-notify;")
-        log.check_logged("HOST NOTIFICATION: check-mk-notify;notify-test-parent;DOWN;check-mk-notify;")
+        log.check_logged(
+            "HOST NOTIFICATION: check-mk-notify;notify-test-parent;DOWN;check-mk-notify;")
 
     elif scenario.core == "nagios":
-        log.check_logged("HOST NOTIFICATION: check-mk-notify;notify-test-parent;DOWN;check-mk-notify;")
+        log.check_logged(
+            "HOST NOTIFICATION: check-mk-notify;notify-test-parent;DOWN;check-mk-notify;")
 
         # Difference beween nagios/cmc: when sending DOWN via PROCESS_HOST_CHECK_RESULT
         # the nagios core needs another child down check result to report it as unreachable.
-        site.send_host_check_result("notify-test-child", STATE_DOWN, "DOWN", expected_state=STATE_UNREACHABLE)
+        site.send_host_check_result(
+            "notify-test-child", STATE_DOWN, "DOWN", expected_state=STATE_UNREACHABLE)
         log.check_logged("HOST ALERT: notify-test-child;UNREACHABLE;HARD;1;")
 
         if scenario.unreachable_enabled:
-            log.check_logged("HOST NOTIFICATION: check-mk-notify;notify-test-child;UNREACHABLE;check-mk-notify;")
+            log.check_logged(
+                "HOST NOTIFICATION: check-mk-notify;notify-test-child;UNREACHABLE;check-mk-notify;")
         # TODO: Can not check this at the moment
         #else:
         #    log.check_not_logged("HOST NOTIFICATION: check-mk-notify;notify-test-child;UNREACHABLE;check-mk-notify;")
@@ -254,13 +273,16 @@ def test_parent_down_child_state_changes(scenario, site, initial_state):
 
     # - set child down, expect UNREACHABLE notification
     assert site.get_host_state("notify-test-child") == STATE_UP
-    site.send_host_check_result("notify-test-child", STATE_DOWN, "DOWN", expected_state=STATE_UNREACHABLE)
+    site.send_host_check_result(
+        "notify-test-child", STATE_DOWN, "DOWN", expected_state=STATE_UNREACHABLE)
     log.check_logged("HOST ALERT: notify-test-child;UNREACHABLE;HARD;1;")
 
     if scenario.unreachable_enabled:
-        log.check_logged("HOST NOTIFICATION: check-mk-notify;notify-test-child;UNREACHABLE;check-mk-notify;")
+        log.check_logged(
+            "HOST NOTIFICATION: check-mk-notify;notify-test-child;UNREACHABLE;check-mk-notify;")
     else:
-        log.check_not_logged("HOST NOTIFICATION: check-mk-notify;notify-test-child;UNREACHABLE;check-mk-notify;")
+        log.check_not_logged(
+            "HOST NOTIFICATION: check-mk-notify;notify-test-child;UNREACHABLE;check-mk-notify;")
 
     # - set child up, expect UP notification
     site.send_host_check_result("notify-test-child", STATE_UP, "UP")
@@ -273,13 +295,16 @@ def test_parent_down_child_state_changes(scenario, site, initial_state):
 
     # - set child down, expect UNREACHABLE notification
     assert site.get_host_state("notify-test-child") == STATE_UP
-    site.send_host_check_result("notify-test-child", STATE_DOWN, "DOWN", expected_state=STATE_UNREACHABLE)
+    site.send_host_check_result(
+        "notify-test-child", STATE_DOWN, "DOWN", expected_state=STATE_UNREACHABLE)
     log.check_logged("HOST ALERT: notify-test-child;UNREACHABLE;HARD;1;")
 
     if scenario.unreachable_enabled:
-        log.check_logged("HOST NOTIFICATION: check-mk-notify;notify-test-child;UNREACHABLE;check-mk-notify;")
+        log.check_logged(
+            "HOST NOTIFICATION: check-mk-notify;notify-test-child;UNREACHABLE;check-mk-notify;")
     else:
-        log.check_not_logged("HOST NOTIFICATION: check-mk-notify;notify-test-child;UNREACHABLE;check-mk-notify;")
+        log.check_not_logged(
+            "HOST NOTIFICATION: check-mk-notify;notify-test-child;UNREACHABLE;check-mk-notify;")
 
 
 # Test the situation where:
@@ -339,7 +364,8 @@ def test_child_up_after_parent_recovers(scenario, site, initial_state):
     if scenario.unreachable_enabled:
         log.check_logged("HOST NOTIFICATION: check-mk-notify;notify-test-child;UP;check-mk-notify;")
     else:
-        log.check_not_logged("HOST NOTIFICATION: check-mk-notify;notify-test-child;UP;check-mk-notify;")
+        log.check_not_logged(
+            "HOST NOTIFICATION: check-mk-notify;notify-test-child;UP;check-mk-notify;")
 
 
 # Test the situation where:
@@ -389,22 +415,27 @@ def test_down_child_becomes_unreachable_and_down_again(scenario, site, initial_s
         log.check_logged("HOST ALERT: notify-test-child;UNREACHABLE;HARD;1;")
 
         if scenario.unreachable_enabled:
-            log.check_logged("HOST NOTIFICATION: check-mk-notify;notify-test-child;UNREACHABLE;check-mk-notify;")
+            log.check_logged(
+                "HOST NOTIFICATION: check-mk-notify;notify-test-child;UNREACHABLE;check-mk-notify;")
         # TODO: Can not test this because it drains too many entries from the log. HistoryLog could deal
         # with this by readding the read lines after succeeded test or similar
         #else:
         #    log.check_not_logged("HOST NOTIFICATION: check-mk-notify;notify-test-child;UNREACHABLE;check-mk-notify;")
 
-        log.check_logged("HOST NOTIFICATION: check-mk-notify;notify-test-parent;DOWN;check-mk-notify;")
+        log.check_logged(
+            "HOST NOTIFICATION: check-mk-notify;notify-test-parent;DOWN;check-mk-notify;")
 
     elif scenario.core == "nagios":
-        log.check_logged("HOST NOTIFICATION: check-mk-notify;notify-test-parent;DOWN;check-mk-notify;")
+        log.check_logged(
+            "HOST NOTIFICATION: check-mk-notify;notify-test-parent;DOWN;check-mk-notify;")
 
-        site.send_host_check_result("notify-test-child", STATE_DOWN, "DOWN", expected_state=STATE_UNREACHABLE)
+        site.send_host_check_result(
+            "notify-test-child", STATE_DOWN, "DOWN", expected_state=STATE_UNREACHABLE)
         log.check_logged("HOST ALERT: notify-test-child;UNREACHABLE;HARD;1;")
 
         if scenario.unreachable_enabled:
-            log.check_logged("HOST NOTIFICATION: check-mk-notify;notify-test-child;UNREACHABLE;check-mk-notify;")
+            log.check_logged(
+                "HOST NOTIFICATION: check-mk-notify;notify-test-child;UNREACHABLE;check-mk-notify;")
 
     # - Set parent up, expect UP notification
     _send_parent_recovery(scenario, site, log)
@@ -451,22 +482,27 @@ def test_down_child_becomes_unreachable_then_up(scenario, site, initial_state):
         log.check_logged("HOST ALERT: notify-test-child;UNREACHABLE;HARD;1;")
 
         if scenario.unreachable_enabled:
-            log.check_logged("HOST NOTIFICATION: check-mk-notify;notify-test-child;UNREACHABLE;check-mk-notify;")
+            log.check_logged(
+                "HOST NOTIFICATION: check-mk-notify;notify-test-child;UNREACHABLE;check-mk-notify;")
         # TODO: Can not test this because it drains too many entries from the log. HistoryLog could deal
         # with this by readding the read lines after succeeded test or similar
         #else:
         #    log.check_not_logged("HOST NOTIFICATION: check-mk-notify;notify-test-child;UNREACHABLE;check-mk-notify;")
 
-        log.check_logged("HOST NOTIFICATION: check-mk-notify;notify-test-parent;DOWN;check-mk-notify;")
+        log.check_logged(
+            "HOST NOTIFICATION: check-mk-notify;notify-test-parent;DOWN;check-mk-notify;")
 
     elif scenario.core == "nagios":
-        log.check_logged("HOST NOTIFICATION: check-mk-notify;notify-test-parent;DOWN;check-mk-notify;")
+        log.check_logged(
+            "HOST NOTIFICATION: check-mk-notify;notify-test-parent;DOWN;check-mk-notify;")
 
-        site.send_host_check_result("notify-test-child", STATE_DOWN, "DOWN", expected_state=STATE_UNREACHABLE)
+        site.send_host_check_result(
+            "notify-test-child", STATE_DOWN, "DOWN", expected_state=STATE_UNREACHABLE)
         log.check_logged("HOST ALERT: notify-test-child;UNREACHABLE;HARD;1;")
 
         if scenario.unreachable_enabled:
-            log.check_logged("HOST NOTIFICATION: check-mk-notify;notify-test-child;UNREACHABLE;check-mk-notify;")
+            log.check_logged(
+                "HOST NOTIFICATION: check-mk-notify;notify-test-child;UNREACHABLE;check-mk-notify;")
 
     # - Set child up, expect:
     #   cmc: pending UP notification, and sent up notification after next parent check

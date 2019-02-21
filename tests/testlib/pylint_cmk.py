@@ -16,9 +16,9 @@ from pylint.utils import Message
 
 from testlib import repo_path, cmk_path, cmc_path, cme_path
 
+
 def check_files(base_dir):
-    filelist = sorted([ base_dir + "/" + f for f in os.listdir(base_dir)
-                         if not f.startswith(".") ])
+    filelist = sorted([base_dir + "/" + f for f in os.listdir(base_dir) if not f.startswith(".")])
 
     # Sort: first includes, then other
     filelist = [ f for f in filelist if f.endswith(".include") ] + \
@@ -37,7 +37,7 @@ def add_file(f, path):
     f.write(file(path).read())
 
 
-def run_pylint(base_path, check_files=None): #, cleanup_test_dir=False):
+def run_pylint(base_path, check_files=None):  #, cleanup_test_dir=False):
     args = os.environ.get("PYLINT_ARGS", "")
     if args:
         pylint_args = args.split(" ")
@@ -50,11 +50,14 @@ def run_pylint(base_path, check_files=None): #, cleanup_test_dir=False):
         check_files = get_pylint_files(base_path, "*")
         if not check_files:
             print("Nothing to do...")
-            return 0 # nothing to do
+            return 0  # nothing to do
 
     cmd = [
-        "python", "-m", "pylint",
-        "--rcfile", pylint_cfg,
+        "python",
+        "-m",
+        "pylint",
+        "--rcfile",
+        pylint_cfg,
         "--jobs=%d" % num_jobs_to_use(),
     ] + pylint_args + check_files
 
@@ -72,6 +75,7 @@ def run_pylint(base_path, check_files=None): #, cleanup_test_dir=False):
 
     return exit_code
 
+
 def num_jobs_to_use():
     # Naive heuristic, but looks OK for our use cases: Normal quad core CPUs
     # with HT report 8 CPUs (=> 6 jobs), our server 24-core CPU reports 48 CPUs
@@ -83,7 +87,7 @@ def num_jobs_to_use():
 def get_pylint_files(base_path, file_pattern):
     files = []
     for path in glob.glob("%s/%s" % (base_path, file_pattern)):
-        f = path[len(base_path)+1:]
+        f = path[len(base_path) + 1:]
 
         if is_python_file(path):
             files.append(f)
@@ -127,10 +131,8 @@ class CMKFixFileMixin(object):
 
         super(CMKFixFileMixin, self).handle_message(msg)
 
-
     def _change_path_to_repo_path(self, msg):
         return os.path.relpath(msg.abspath, cmk_path())
-
 
     def _orig_location_from_compiled_file(self, msg):
         lines = file(msg.abspath).readlines()
@@ -150,10 +152,8 @@ class CMKFixFileMixin(object):
         return orig_file, went_back
 
 
-
 class CMKColorizedTextReporter(CMKFixFileMixin, ColorizedTextReporter):
     name = "cmk_colorized"
-
 
 
 class CMKParseableTextReporter(CMKFixFileMixin, ParseableTextReporter):

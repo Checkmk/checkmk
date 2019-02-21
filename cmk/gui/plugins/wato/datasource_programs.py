@@ -1862,6 +1862,16 @@ def _vs_element_aws_service_selection():
             ]))
 
 
+def _vs_element_aws_limits():
+    return ("limits",
+            FixedValue(
+                True,
+                help=_("If limits are enabled all instances are fetched regardless of "
+                       "possibly configured restriction to names or tags"),
+                title=_("Service limits"),
+                totext=_("Monitor service limits")))
+
+
 @rulespec_registry.register
 class RulespecSpecialAgentsAws(HostRulespec):
     @property
@@ -1954,6 +1964,7 @@ class RulespecSpecialAgentsAws(HostRulespec):
                               title=_("Simple Storage Service (S3)"),
                               elements=[
                                   _vs_element_aws_service_selection(),
+                                  _vs_element_aws_limits(),
                                   ("requests",
                                    FixedValue(
                                        None,
@@ -1964,7 +1975,8 @@ class RulespecSpecialAgentsAws(HostRulespec):
                                            "enable request metric monitoring in the AWS/S3 console. "
                                            "This is a paid feature"))),
                               ],
-                              optional_keys=["requests"],
+                              optional_keys=["limits", "requests"],
+                              default_keys=["limits"],
                           )),
                          ("elb",
                           Dictionary(
@@ -1983,6 +1995,7 @@ class RulespecSpecialAgentsAws(HostRulespec):
                               optional_keys=[],
                           )),
                      ],
+                     default_keys=["ec2", "ebs", "s3", "elb", "rds"],
                  )),
                 ("overall_tags", _vs_aws_tags(
                     _("Restrict monitoring services by one of these tags"))),

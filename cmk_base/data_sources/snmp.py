@@ -66,6 +66,7 @@ class SNMPDataSource(DataSource):
         self._credentials = config.snmp_credentials_of(self._hostname)
         self._port = config.snmp_port_of(self._hostname)
         self._is_bulkwalk_host = config.is_bulkwalk_host(self._hostname)
+        self._is_snmpv2c_host = config.is_snmpv2c_host(self._hostname)
 
     def id(self):
         return "snmp"
@@ -83,6 +84,7 @@ class SNMPDataSource(DataSource):
             credentials=self._credentials,
             port=self._port,
             is_bulkwalk_host=self._is_bulkwalk_host,
+            is_snmpv2c_host=self._is_snmpv2c_host,
         )
 
     def describe(self):

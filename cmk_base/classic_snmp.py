@@ -233,7 +233,7 @@ def _snmp_base_command(what, host_config, context_name):
         else:
             if what == 'walk':
                 command = ['snmpwalk']
-            if config.is_snmpv2c_host(host_config.hostname):
+            if host_config.is_snmpv2c_host:
                 options.append('-v2c')
             else:
                 options.append('-v1')

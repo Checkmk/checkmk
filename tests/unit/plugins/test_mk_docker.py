@@ -16,7 +16,7 @@ PLUGIN_CHECKSUMS = {
 
 
 def test_docker_plugin_version():
-    with open(mk_docker.__file__) as source:
+    with open(mk_docker.__file__.rstrip('c')) as source:
         md5 = hashlib.md5(source.read()).hexdigest()
     assert md5 == PLUGIN_CHECKSUMS.get(mk_docker.VERSION), """
     Plugin source code has changed.

@@ -64,6 +64,7 @@ class SNMPDataSource(DataSource):
         self._ignore_check_interval = False
         self._fetched_check_plugin_names = []
         self._credentials = config.snmp_credentials_of(self._hostname)
+        self._port = config.snmp_port_of(self._hostname)
 
     def id(self):
         return "snmp"
@@ -79,6 +80,7 @@ class SNMPDataSource(DataSource):
             hostname=self._hostname,
             ipaddress=self._ipaddress,
             credentials=self._credentials,
+            port=self._port,
         )
 
     def describe(self):
@@ -100,12 +102,8 @@ class SNMPDataSource(DataSource):
         else:
             bulk = "no"
 
-        portinfo = config.snmp_port_of(self._hostname)
-        if portinfo is None:
-            portinfo = 'default'
-
-        return "%s (%s, Bulk walk: %s, Port: %s, Inline: %s)" % \
-               (self.title(), credentials_text, bulk, portinfo, inline)
+        return "%s (%s, Bulk walk: %s, Port: %d, Inline: %s)" % \
+               (self.title(), credentials_text, bulk, self._port, inline)
 
     def _from_cache_file(self, raw_data):
         return ast.literal_eval(raw_data)

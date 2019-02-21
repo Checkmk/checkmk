@@ -27,8 +27,6 @@
 import ast
 import time
 
-import six
-
 from cmk.utils.exceptions import MKGeneralException
 
 import cmk_base.config as config
@@ -79,6 +77,7 @@ class SNMPDataSource(DataSource):
 
     def _get_host_config(self):
         return snmp_utils.SNMPHostConfig(
+            is_ipv6_primary=config.is_ipv6_primary(self._hostname),
             hostname=self._hostname,
             ipaddress=self._ipaddress,
             credentials=self._credentials,
@@ -98,12 +97,12 @@ class SNMPDataSource(DataSource):
         else:
             inline = "no"
 
-        if isinstance(self._credentials, six.string_types):
-            credentials_text = "Community: %r" % self._credentials
-        else:
+        if snmp_utils.is_snmpv3_host(self._get_host_config()):
             credentials_text = "Credentials: '%s'" % ", ".join(self._credentials)
+        else:
+            credentials_text = "Community: %r" % self._credentials
 
-        if config.is_snmpv3_host(self._hostname) or self._is_bulkwalk_host:
+        if snmp_utils.is_snmpv3_host(self._get_host_config()) or self._is_bulkwalk_host:
             bulk = "yes"
         else:
             bulk = "no"

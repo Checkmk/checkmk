@@ -58,6 +58,10 @@ def binstring_to_int(binstring):
     return value
 
 
+def is_snmpv3_host(host_config):
+    return isinstance(host_config.credentials, tuple)
+
+
 # TODO: Be more specific about the possible tuples
 # if the credentials are a string, we use that as community,
 # if it is a four-tuple, we use it as V3 auth parameters:
@@ -74,6 +78,7 @@ SNMPCredentials = Union[str, Tuple[str, str, str, str], Tuple[str, str, str, str
 SNMPHostConfig = NamedTuple(
     "SNMPHostConfig",
     [
+        ("is_ipv6_primary", bool),
         ("hostname", str),
         ("ipaddress", str),
         ("credentials", SNMPCredentials),

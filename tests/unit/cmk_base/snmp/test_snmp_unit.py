@@ -19,3 +19,11 @@ import cmk_base.snmp as snmp
 def test_sanitize_snmp_encoding(monkeypatch, encoding, columns, expected):
     monkeypatch.setattr(config, "snmp_character_encoding_of", lambda h: encoding)
     assert snmp._sanitize_snmp_encoding("localhost", columns) == expected
+
+
+def test_is_bulkwalk_host(monkeypatch):
+    monkeypatch.setattr(config, "bulkwalk_hosts", [
+        ([], ["localhost"], {}),
+    ])
+    assert config.is_bulkwalk_host("abc") is False
+    assert config.is_bulkwalk_host("localhost") is True

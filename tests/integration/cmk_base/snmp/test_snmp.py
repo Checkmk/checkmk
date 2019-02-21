@@ -74,6 +74,7 @@ def snmpsim(site, request, tmp_path_factory, monkeymodule):
         hostname="localhost",
         credentials="public",
         port=1337,
+        is_bulkwalk_host=False,
     )
 
     # Ensure that snmpsim is ready for clients before starting with the tests
@@ -141,6 +142,7 @@ def test_get_single_oid_ipv6(snmpsim, backend, monkeypatch):
         hostname="localhost",
         credentials="public",
         port=1337,
+        is_bulkwalk_host=False,
     )
     monkeypatch.setattr(config, "is_ipv6_primary", lambda h: True)
     result = snmp.get_single_oid(host_config, ".1.3.6.1.2.1.1.1.0")
@@ -156,6 +158,7 @@ def test_get_single_oid_snmpv3(snmpsim, backend, monkeypatch):
         hostname="localhost",
         credentials=('authNoPriv', 'md5', 'authOnlyUser', 'authOnlyUser'),
         port=1337,
+        is_bulkwalk_host=False,
     )
     result = snmp.get_single_oid(host_config, ".1.3.6.1.2.1.1.1.0")
     assert result == "Linux zeus 4.8.6.5-smp #2 SMP Sun Nov 13 14:58:11 CDT 2016 i686"
@@ -255,6 +258,7 @@ def test_get_single_oid_not_resolvable(snmpsim, backend):
         hostname="localhost",
         credentials="public",
         port=1337,
+        is_bulkwalk_host=False,
     )
     assert snmp.get_single_oid(host_config, ".1.3.6.1.2.1.1.7.0") is None
 
@@ -317,9 +321,9 @@ def test_get_simple_snmp_table_wrong_credentials(snmpsim, backend):
 
 @pytest.mark.parametrize("bulk", [True, False])
 def test_get_simple_snmp_table_bulkwalk(snmpsim, backend, monkeypatch, bulk):
-    host_config = snmpsim[1]
-
-    monkeypatch.setattr(config, "is_bulkwalk_host", lambda h: bulk)
+    cfg_dict = snmpsim[1]._asdict()
+    cfg_dict["is_bulkwalk_host"] = bulk
+    host_config = snmp_utils.SNMPHostConfig(**cfg_dict)
 
     table = snmp.get_snmp_table(
         host_config,

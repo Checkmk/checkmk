@@ -1053,6 +1053,7 @@ def is_snmpv3_host(hostname):
 
 
 def is_bulkwalk_host(hostname):
+    # type: (str) -> bool
     if bulkwalk_hosts:
         return in_binary_hostlist(hostname, bulkwalk_hosts)
 

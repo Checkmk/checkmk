@@ -65,6 +65,7 @@ class SNMPDataSource(DataSource):
         self._fetched_check_plugin_names = []
         self._credentials = config.snmp_credentials_of(self._hostname)
         self._port = config.snmp_port_of(self._hostname)
+        self._is_bulkwalk_host = config.is_bulkwalk_host(self._hostname)
 
     def id(self):
         return "snmp"
@@ -81,6 +82,7 @@ class SNMPDataSource(DataSource):
             ipaddress=self._ipaddress,
             credentials=self._credentials,
             port=self._port,
+            is_bulkwalk_host=self._is_bulkwalk_host,
         )
 
     def describe(self):
@@ -97,7 +99,7 @@ class SNMPDataSource(DataSource):
         else:
             credentials_text = "Credentials: '%s'" % ", ".join(self._credentials)
 
-        if config.is_snmpv3_host(self._hostname) or config.is_bulkwalk_host(self._hostname):
+        if config.is_snmpv3_host(self._hostname) or self._is_bulkwalk_host:
             bulk = "yes"
         else:
             bulk = "no"

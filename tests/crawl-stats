@@ -2,6 +2,7 @@
 
 stats = eval(file("var/crawl.stats").read())
 
+
 def print_url(title, entry):
     print
     print "%s:" % title

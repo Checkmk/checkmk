@@ -1699,6 +1699,11 @@ def unmount_tmpfs(site, output=True, kill=False):
         sys.stdout.write("Unmounting temporary filesystem...")
 
     for _t in range(0, 10):
+        if not tmpfs_mounted(site.name):
+            if output:
+                ok()
+            return True
+
         if subprocess.call(["umount", site.tmp_dir]) == 0:
             if output:
                 ok()

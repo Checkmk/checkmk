@@ -153,6 +153,7 @@ def create_snmp_host_config(hostname):
         is_snmpv2c_host=config.is_snmpv2c_host(hostname),
         bulk_walk_size_of=config.bulk_walk_size_of(hostname),
         timing=config.snmp_timing_of(hostname),
+        oid_range_limits=config.oid_range_limits_of(hostname),
     )
 
 

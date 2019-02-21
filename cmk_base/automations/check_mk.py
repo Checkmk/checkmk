@@ -1238,6 +1238,7 @@ class AutomationDiagHost(Automation):
                         'timeout': snmp_timeout,
                         'retries': snmp_retries,
                     },
+                    oid_range_limits=config.oid_range_limits_of(hostname),
                 )
                 data = snmp.get_snmp_table(
                     host_config,

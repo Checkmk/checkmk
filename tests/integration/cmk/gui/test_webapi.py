@@ -618,6 +618,18 @@ def graph_test_config(web, site):
             "test-host-get-graph", attributes={
                 "ipaddress": "127.0.0.1",
             })
+
+        site.write_file(
+            "etc/check_mk/conf.d/test-host-get-graph.mk",
+            "datasource_programs.append(('cat ~/var/check_mk/agent_output/<HOST>', [], ['test-host-get-graph']))\n"
+        )
+
+        site.makedirs("var/check_mk/agent_output/")
+        site.write_file(
+            "var/check_mk/agent_output/test-host-get-graph",
+            file(
+                "%s/tests/integration/cmk_base/test-files/linux-agent-output" % repo_path()).read())
+
         web.discover_services("test-host-get-graph")
         web.activate_changes()
         site.schedule_check("test-host-get-graph", "Check_MK", 0)
@@ -640,6 +652,7 @@ def graph_test_config(web, site):
         yield
     finally:
         web.delete_host("test-host-get-graph")
+        site.delete_file("etc/check_mk/conf.d/test-host-get-graph.mk")
     web.activate_changes()
 
 
@@ -647,11 +660,12 @@ def test_get_graph_api(web, graph_test_config):
     # Now we get a graph
     data = web.get_regular_graph("test-host-get-graph", "Check_MK", 0)
 
-    assert len(data["curves"]) == 4
+    assert len(data["curves"]) == 5
     assert data["curves"][0]["title"] == "CPU time in user space"
     assert data["curves"][1]["title"] == "CPU time in operating system"
     assert data["curves"][2]["title"] == "Time spent waiting for Check_MK agent"
-    assert data["curves"][3]["title"] == "Total execution time"
+    assert data["curves"][3]["title"] == "Time spent waiting for special agent"
+    assert data["curves"][4]["title"] == "Total execution time"
 
 
 def test_get_graph_image(web, graph_test_config):

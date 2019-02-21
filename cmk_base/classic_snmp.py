@@ -222,7 +222,7 @@ def _snmp_base_command(what, host_config, context_name):
     elif host_config.is_bulkwalk_host:
         command = ['snmpbulkwalk']
 
-        options.append("-Cr%d" % config.bulk_walk_size_of(host_config.hostname))
+        options.append("-Cr%d" % host_config.bulk_walk_size_of)
     else:
         command = ['snmpwalk']
 

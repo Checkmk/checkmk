@@ -1237,6 +1237,7 @@ class AutomationDiagHost(Automation):
                     port=config.snmp_port_of(hostname),
                     is_bulkwalk_host=is_bulkwalk_host,
                     is_snmpv2c_host=is_snmpv2c_host,
+                    bulk_walk_size_of=config.bulk_walk_size_of(hostname),
                 )
                 data = snmp.get_snmp_table(
                     host_config,

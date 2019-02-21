@@ -23,8 +23,14 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+$warn = $WARN[1];
+$crit = $CRIT[1];
+
 $title = str_replace("_", " ", $servicedesc);
-$opt[1] = "--vertical-label 'active sessions' -l0 -u $CRIT[1] --title \"$title\" ";
+$opt[1] = "--vertical-label 'active sessions' -l0 --title \"$title\" ";
+if (is_numeric($crit)) {
+    $opt[1] .= "-u $crit ";
+}
 
 $def[1] = "DEF:sessions=$RRDFILE[1]:$DS[1]:MAX ";
 $def[1] .= "AREA:sessions#00ff48: ";
@@ -32,6 +38,10 @@ $def[1] .= "LINE:sessions#008f38: ";
 $def[1] .= "GPRINT:sessions:LAST:\"last\: %3.0lf\" ";
 $def[1] .= "GPRINT:sessions:AVERAGE:\"avg\: %3.0lf\" ";
 $def[1] .= "GPRINT:sessions:MAX:\"max\: %3.0lf\" ";
-$def[1] .= "HRULE:$WARN[1]#ffcf00:\"Warning at $WARN[1]\" ";
-$def[1] .= "HRULE:$CRIT[1]#ff0000:\"Critical at $CRIT[1]\" ";
+if (is_numeric($warn)) {
+    $def[1] .= "HRULE:$WARN[1]#ffcf00:\"Warning at $WARN[1]\" ";
+}
+if (is_numeric($crit)) {
+    $def[1] .= "HRULE:$CRIT[1]#ff0000:\"Critical at $CRIT[1]\" ";
+}
 ?>

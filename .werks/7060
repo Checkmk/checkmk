@@ -1,0 +1,12 @@
+Title: oracle_sessions: show graphs in the cre if no absolute levels are set
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.4.0p39
+Date: 1550737544
+Class: fix
+
+If no absolute levels were given the graphs could not be shown in the
+raw edition, because the pnp template assumed that the levels are
+always present.

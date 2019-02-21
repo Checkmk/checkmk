@@ -184,11 +184,9 @@ def get(host_config, oid, context_name=None):
 
 
 def _snmp_port_spec(host_config):
-    port = config.snmp_port_of(host_config.hostname)
-    if port is None:
+    if host_config.port == 161:
         return ""
-
-    return ":%d" % port
+    return ":%d" % host_config.port
 
 
 def _snmp_proto_spec(host_config):

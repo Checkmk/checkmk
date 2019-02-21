@@ -1041,9 +1041,10 @@ def oid_range_limits_of(hostname):
 
 
 def snmp_port_of(hostname):
+    # type: (str) -> int
     ports = host_extra_conf(hostname, snmp_ports)
     if len(ports) == 0:
-        return None  # do not specify a port, use default
+        return 161
     return ports[0]
 
 

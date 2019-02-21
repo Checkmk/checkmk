@@ -75,4 +75,5 @@ SNMPHostConfig = NamedTuple("SNMPHostConfig", [
     ("hostname", str),
     ("ipaddress", str),
     ("credentials", SNMPCredentials),
+    ("port", int),
 ])

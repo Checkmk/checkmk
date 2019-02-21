@@ -1233,6 +1233,7 @@ class AutomationDiagHost(Automation):
                     hostname=hostname,
                     ipaddress=ipaddress,
                     credentials=config.snmp_credentials_of(hostname),
+                    port=config.snmp_port_of(hostname),
                 )
                 data = snmp.get_snmp_table(
                     host_config,

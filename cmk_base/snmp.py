@@ -147,6 +147,7 @@ def create_snmp_host_config(hostname):
         hostname=hostname,
         ipaddress=ip_lookup.lookup_ipv4_address(hostname),
         credentials=config.snmp_credentials_of(hostname),
+        port=config.snmp_port_of(hostname),
     )
 
 

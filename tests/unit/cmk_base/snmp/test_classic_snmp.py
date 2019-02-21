@@ -11,15 +11,21 @@ def host_config():
         hostname="localhost",
         ipaddress="127.0.0.1",
         credentials="public",
+        port=161,
     )
 
 
 @pytest.mark.parametrize("port,expected", [
-    (None, ""),
+    (161, ""),
     (1234, ":1234"),
 ])
-def test_snmp_port_spec(monkeypatch, port, expected, host_config):
-    monkeypatch.setattr(config, "snmp_port_of", lambda h: port)
+def test_snmp_port_spec(port, expected):
+    host_config = snmp_utils.SNMPHostConfig(
+        hostname="localhost",
+        ipaddress="127.0.0.1",
+        credentials="public",
+        port=port,
+    )
     assert classic_snmp._snmp_port_spec(host_config) == expected
 
 
@@ -48,6 +54,7 @@ SNMPSettings = collections.namedtuple("SNMPSettings", [
             hostname="localhost",
             ipaddress="127.0.0.1",
             credentials="public",
+            port=161,
         ),
         is_bulkwalk_host=True,
         bulk_walk_size_of=10,
@@ -66,6 +73,7 @@ SNMPSettings = collections.namedtuple("SNMPSettings", [
             hostname="lohost",
             ipaddress="127.0.0.1",
             credentials="public",
+            port=161,
         ),
         is_bulkwalk_host=False,
         bulk_walk_size_of=5,
@@ -84,6 +92,7 @@ SNMPSettings = collections.namedtuple("SNMPSettings", [
             hostname="lohost",
             ipaddress="public",
             credentials=("authNoPriv", "abc", "md5", "abc"),
+            port=161,
         ),
         is_bulkwalk_host=False,
         bulk_walk_size_of=5,
@@ -102,6 +111,7 @@ SNMPSettings = collections.namedtuple("SNMPSettings", [
             hostname="lohost",
             ipaddress="public",
             credentials=('noAuthNoPriv', 'secname'),
+            port=161,
         ),
         is_bulkwalk_host=False,
         bulk_walk_size_of=5,
@@ -120,6 +130,7 @@ SNMPSettings = collections.namedtuple("SNMPSettings", [
             hostname="lohost",
             ipaddress="127.0.0.1",
             credentials=('authPriv', 'md5', 'secname', 'auhtpassword', 'DES', 'privacybla'),
+            port=161,
         ),
         is_bulkwalk_host=False,
         bulk_walk_size_of=5,

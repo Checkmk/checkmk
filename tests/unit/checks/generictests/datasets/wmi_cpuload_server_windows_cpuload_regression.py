@@ -1,3 +1,4 @@
+# yapf: disable
 checkname = 'wmi_cpuload'
 
 info = [[u'[system_perf]'],

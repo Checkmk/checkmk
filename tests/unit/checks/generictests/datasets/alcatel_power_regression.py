@@ -1,3 +1,4 @@
+# yapf: disable
 checkname = 'alcatel_power'
 
 info = [[u'1', u'1', u'0x35000001', u'0'], [u'2', u'1', u'0x35000001', u'1'],

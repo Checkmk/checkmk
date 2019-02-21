@@ -1,3 +1,4 @@
+# yapf: disable
 checkname = 'vms_cpu'
 
 info = [['1', '99.17', '0.54', '0.18', '0.00']]

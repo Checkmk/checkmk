@@ -1,3 +1,4 @@
+# yapf: disable
 checkname = 'hp_msa_fan'
 
 info = [[u'fan', u'2', u'durable-id', u'fan_1.1'],

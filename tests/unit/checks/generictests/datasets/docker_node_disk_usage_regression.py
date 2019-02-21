@@ -1,3 +1,4 @@
+# yapf: disable
 checkname = 'docker_node_disk_usage'
 
 info = [[

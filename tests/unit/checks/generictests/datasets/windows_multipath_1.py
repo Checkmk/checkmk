@@ -1,3 +1,4 @@
+# yapf: disable
 checkname = 'windows_multipath'
 
 info = [[

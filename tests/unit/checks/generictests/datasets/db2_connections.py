@@ -1,3 +1,4 @@
+# yapf: disable
 checkname = 'db2_connections'
 
 info = [

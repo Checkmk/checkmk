@@ -1,3 +1,4 @@
+# yapf: disable
 checkname = 'systemd_units'
 
 info = [

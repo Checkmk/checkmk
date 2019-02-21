@@ -1,3 +1,4 @@
+# yapf: disable
 # Check the output of a LUN and a controller for ESX version 5.5
 
 checkname = 'esx_vsphere_hostsystem'

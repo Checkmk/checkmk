@@ -1,3 +1,4 @@
+# yapf: disable
 checkname = 'hp_msa_volume'
 
 info = [[u'volumes', u'1', u'durable-id', u'V3'], [u'volumes', u'1', u'virtual-disk-name', u'A'],

@@ -1,3 +1,4 @@
+# yapf: disable
 checkname = 'acme_sbc_snmp'
 
 info = [

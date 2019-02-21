@@ -1,3 +1,4 @@
+# yapf: disable
 checkname = 'nfsmounts'
 
 info = [['/path/to/share', 'ok', '1611668', '794767', '712899', '32768']]

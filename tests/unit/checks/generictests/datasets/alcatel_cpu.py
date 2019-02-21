@@ -1,3 +1,4 @@
+# yapf: disable
 checkname = 'alcatel_cpu'
 
 info = [['17', 'doesnt matter', 'doesnt matter'], ['doesnt matter']]

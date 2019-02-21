@@ -1,3 +1,4 @@
+# yapf: disable
 checkname = 'cups_queues'
 
 info = [[

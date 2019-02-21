@@ -1,3 +1,4 @@
+# yapf: disable
 checkname = 'winperf_if'
 
 info = [[u'1457449582.48', u'510'],

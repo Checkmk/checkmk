@@ -1,3 +1,4 @@
+# yapf: disable
 import pytest  # type: ignore
 from pathlib2 import Path
 import cmk.gui.config as config

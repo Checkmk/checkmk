@@ -1,3 +1,4 @@
+# yapf: disable
 checkname = 'varnish'
 
 info = [[u'MGT.child_start', u'1', u'0.00', u'Child', u'process', u'started'],

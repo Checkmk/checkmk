@@ -1,4 +1,5 @@
 # *--encoding: UTF-8--*
+# yapf: disable
 # pylint: disable=too-many-lines
 # pylint: disable=line-too-long
 # pylint: disable=invalid-name

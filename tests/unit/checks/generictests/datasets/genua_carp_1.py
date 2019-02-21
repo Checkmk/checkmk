@@ -1,3 +1,4 @@
+# yapf: disable
 checkname = 'genua_carp'
 
 info = [[[u'carp0', u'2', u'2'], [u'carp1', u'2', u'2'], [u'carp2', u'1', u'0']], []]

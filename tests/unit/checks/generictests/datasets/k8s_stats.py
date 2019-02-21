@@ -1,3 +1,4 @@
+# yapf: disable
 checkname = 'k8s_stats'
 
 info = [[

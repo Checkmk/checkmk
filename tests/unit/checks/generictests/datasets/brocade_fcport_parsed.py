@@ -1,3 +1,4 @@
+# yapf: disable
 checkname = 'brocade_fcport'
 
 parsed = [{

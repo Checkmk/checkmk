@@ -1,3 +1,4 @@
+# yapf: disable
 import pytest  # type: ignore
 
 # Triggers plugin loading of plugins.wato which registers all the plugins

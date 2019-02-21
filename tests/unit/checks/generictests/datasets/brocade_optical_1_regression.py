@@ -1,3 +1,4 @@
+# yapf: disable
 checkname = 'brocade_optical'
 
 info = [[[u'1', u'10GigabitEthernet1/1/1', u'6',

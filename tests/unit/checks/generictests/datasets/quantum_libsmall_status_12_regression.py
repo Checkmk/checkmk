@@ -1,3 +1,4 @@
+# yapf: disable
 checkname = 'quantum_libsmall_status'
 
 info = [[],

@@ -1,3 +1,4 @@
+# yapf: disable
 checkname = 'alcatel_temp_aos7'
 
 info = [[

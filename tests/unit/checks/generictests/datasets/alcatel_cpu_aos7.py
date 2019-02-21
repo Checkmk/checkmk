@@ -1,3 +1,4 @@
+# yapf: disable
 checkname = 'alcatel_cpu_aos7'
 
 info = [['17']]

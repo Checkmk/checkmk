@@ -1,3 +1,4 @@
+# yapf: disable
 checkname = 'dotnet_clrmemory'
 
 info = [

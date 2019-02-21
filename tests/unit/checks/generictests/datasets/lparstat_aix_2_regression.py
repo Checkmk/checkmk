@@ -1,3 +1,4 @@
+# yapf: disable
 checkname = 'lparstat_aix'
 
 info = [[

@@ -2,7 +2,10 @@
 
 import OpenSSL
 import pytest  # type: ignore
-from pathlib2 import Path
+try:
+    from pathlib import Path
+except ImportError:
+    from pathlib2 import Path
 
 import omdlib.certs as certs
 

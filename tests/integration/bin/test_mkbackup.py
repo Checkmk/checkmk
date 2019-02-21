@@ -4,6 +4,7 @@ import subprocess
 import re
 import os
 import tarfile
+import time
 import fnmatch
 import fasteners
 import pytest  # type: ignore
@@ -129,12 +130,19 @@ def _execute_backup(site, job_id="testjob"):
 
 def _execute_restore(site, backup_id, env=None):
     with BackupLock():
+        os.system("ps -ef")
+        os.system("mount")
+        os.system("ps -U %s" % site.id)
         p = site.execute(["mkbackup", "restore", "test-target", backup_id],
                          stdout=subprocess.PIPE,
                          stderr=subprocess.PIPE,
                          env=env)
         stdout, stderr = p.communicate()
-        assert "Restore completed" in stdout, "Invalid output: %r" % stdout
+        try:
+            assert "Restore completed" in stdout, "Invalid output: %r" % stdout
+        except AssertionError:
+            time.sleep(1000)
+            raise
         assert stderr == ""
         assert p.wait() == 0
 

@@ -16,6 +16,10 @@ body.main {
   font-weight: $theme-font-weight-global;
   color: $theme-color-text; }
 
+body.main.screenshotmode table.nform {
+    background-color: #ffffff;
+}
+
 .link, .title {
   display: inline-block;
   padding: 4px 2px;

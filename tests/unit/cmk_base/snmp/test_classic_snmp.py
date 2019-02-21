@@ -14,6 +14,7 @@ def host_config():
         port=161,
         is_bulkwalk_host=False,
         is_snmpv2c_host=False,
+        bulk_walk_size_of=10,
     )
 
 
@@ -29,6 +30,7 @@ def test_snmp_port_spec(port, expected):
         port=port,
         is_bulkwalk_host=False,
         is_snmpv2c_host=False,
+        bulk_walk_size_of=10,
     )
     assert classic_snmp._snmp_port_spec(host_config) == expected
 
@@ -44,7 +46,6 @@ def test_snmp_proto_spec(monkeypatch, is_ipv6, expected, host_config):
 
 SNMPSettings = collections.namedtuple("SNMPSettings", [
     "host_config",
-    "bulk_walk_size_of",
     "snmp_timing_of",
     "context_name",
 ])
@@ -59,8 +60,8 @@ SNMPSettings = collections.namedtuple("SNMPSettings", [
             port=161,
             is_bulkwalk_host=True,
             is_snmpv2c_host=True,
+            bulk_walk_size_of=10,
         ),
-        bulk_walk_size_of=10,
         snmp_timing_of={
             "timeout": 2,
             "retries": 3
@@ -78,8 +79,8 @@ SNMPSettings = collections.namedtuple("SNMPSettings", [
             port=161,
             is_bulkwalk_host=False,
             is_snmpv2c_host=False,
+            bulk_walk_size_of=5,
         ),
-        bulk_walk_size_of=5,
         snmp_timing_of={
             "timeout": 5,
             "retries": 1
@@ -97,8 +98,8 @@ SNMPSettings = collections.namedtuple("SNMPSettings", [
             port=161,
             is_bulkwalk_host=False,
             is_snmpv2c_host=False,
+            bulk_walk_size_of=5,
         ),
-        bulk_walk_size_of=5,
         snmp_timing_of={
             "timeout": 5,
             "retries": 1
@@ -116,8 +117,8 @@ SNMPSettings = collections.namedtuple("SNMPSettings", [
             port=161,
             is_bulkwalk_host=False,
             is_snmpv2c_host=False,
+            bulk_walk_size_of=5,
         ),
-        bulk_walk_size_of=5,
         snmp_timing_of={
             "timeout": 5,
             "retries": 1
@@ -135,8 +136,8 @@ SNMPSettings = collections.namedtuple("SNMPSettings", [
             port=161,
             is_bulkwalk_host=False,
             is_snmpv2c_host=False,
+            bulk_walk_size_of=5,
         ),
-        bulk_walk_size_of=5,
         snmp_timing_of={
             "timeout": 5,
             "retries": 1
@@ -148,7 +149,5 @@ SNMPSettings = collections.namedtuple("SNMPSettings", [
     ]),
 ])
 def test_snmp_walk_command(monkeypatch, settings, expected):
-    monkeypatch.setattr(config, "bulk_walk_size_of", lambda h: settings.bulk_walk_size_of)
-    monkeypatch.setattr(config, "snmp_timing_of", lambda h: settings.snmp_timing_of)
     monkeypatch.setattr(config, "snmp_timing_of", lambda h: settings.snmp_timing_of)
     assert classic_snmp._snmp_walk_command(settings.host_config, settings.context_name) == expected

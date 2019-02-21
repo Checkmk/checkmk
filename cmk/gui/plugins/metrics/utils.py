@@ -210,10 +210,10 @@ def _split_perf_data(perf_data_string):
         return [s.decode('utf-8') for s in shlex.split(perf_data_string.encode('utf-8'))]
 
 
-def perfvar_translation(perfvar_nr, perfvar_name, check_command):
+def perfvar_translation(perfvar_name, check_command):
     """Get translation info for one performance var."""
     cm = check_metrics.get(check_command, {})
-    translation_entry = {}  # Default: no translation neccessary
+    translation_entry = {}  # Default: no translation necessary
 
     if perfvar_name in cm:
         translation_entry = cm[perfvar_name]
@@ -224,70 +224,72 @@ def perfvar_translation(perfvar_nr, perfvar_name, check_command):
                 translation_entry = te
                 break
 
-    metric_name = translation_entry.get("name", perfvar_name)
-    scale = translation_entry.get("scale", 1.0)
-
     return {
-        "name": metric_name,
-        "scale": scale,
-        "auto_graph": translation_entry.get("auto_graph", True)
+        "name": translation_entry.get("name", perfvar_name),
+        "scale": translation_entry.get("scale", 1.0),
+        "auto_graph": translation_entry.get("auto_graph", True),
     }
+
+
+def normalize_perf_data(perf_data, check_command):
+    translation_entry = perfvar_translation(perf_data[0], check_command)
+
+    new_entry = {
+        "orig_name": perf_data[0],
+        "value": perf_data[1] * translation_entry["scale"],
+        "scalar": {},
+        "scale": translation_entry["scale"],  # needed for graph recipes
+        # Do not create graphs for ungraphed metrics if listed here
+        "auto_graph": translation_entry["auto_graph"],
+    }
+
+    # Add warn, crit, min, max
+    for perf_value, name in zip(perf_data[3:], ["warn", "crit", "min", "max"]):
+        if perf_value is not None:
+            try:
+                new_entry["scalar"][name] = perf_value * translation_entry["scale"]
+            except Exception as exc:
+                if config.debug:
+                    raise exc
+    return translation_entry["name"], new_entry
+
+
+def get_metric_info(metric_name, color_index):
+
+    if metric_name not in metric_info:
+        color_index += 1
+        palette_color = get_palette_color_by_index(color_index)
+        mi = {
+            "title": metric_name.title(),
+            "unit": "",
+            "color": parse_color_into_hexrgb(palette_color),
+        }
+    else:
+        mi = metric_info[metric_name].copy()
+        mi["color"] = parse_color_into_hexrgb(mi["color"])
+
+    return mi, color_index
 
 
 def translate_metrics(perf_data, check_command):
     """Convert Ascii-based performance data as output from a check plugin
-    into floating point numbers, do scaling if neccessary.
+    into floating point numbers, do scaling if necessary.
 
     Simple example for perf_data: [(u'temp', u'48.1', u'', u'70', u'80', u'', u'')]
     Result for this example:
-    { "temp" : "value" : 48.1, "warn" : 70, "crit" : 80, "unit" : { ... } }
+    { "temp" : {"value" : 48.1, "scalar": {"warn" : 70, "crit" : 80}, "unit" : { ... } }}
     """
     translated_metrics = {}
     color_index = 0
-    for nr, entry in enumerate(perf_data):
-        varname = entry[0]
-        value = entry[1]
+    for entry in perf_data:
 
-        translation_entry = perfvar_translation(nr, varname, check_command)
-        metric_name = translation_entry["name"]
-
+        metric_name, new_entry = normalize_perf_data(entry, check_command)
         if metric_name in translated_metrics:
             continue  # ignore duplicate value
 
-        if metric_name not in metric_info:
-            color_index += 1
-            palette_color = get_palette_color_by_index(color_index)
-            mi = {
-                "title": metric_name.title(),
-                "unit": "",
-                "color": parse_color_into_hexrgb(palette_color),
-            }
-        else:
-            mi = metric_info[metric_name].copy()
-            mi["color"] = parse_color_into_hexrgb(mi["color"])
-
-        new_entry = {
-            "value": value * translation_entry["scale"],
-            "orig_name": varname,
-            "scale": translation_entry["scale"],  # needed for graph recipes
-            "scalar": {},
-        }
-
-        # Do not create graphs for ungraphed metrics if listed here
-        new_entry["auto_graph"] = translation_entry["auto_graph"]
-
-        # Add warn, crit, min, max
-        for index, key in [(3, "warn"), (4, "crit"), (5, "min"), (6, "max")]:
-            if len(entry) < index + 1:
-                break
-            elif entry[index] is not None:
-                try:
-                    new_entry["scalar"][key] = entry[index] * translation_entry["scale"]
-                except:
-                    if config.debug:
-                        raise
-
+        mi, color_index = get_metric_info(metric_name, color_index)
         new_entry.update(mi)
+
         new_entry["unit"] = unit_info[new_entry["unit"]]
 
         translated_metrics[metric_name] = new_entry
@@ -764,7 +766,8 @@ def _get_hue_by_weight_index(weight_index):
 def parse_color_into_hexrgb(color_string):
     if color_string[0] == "#":
         return color_string
-    elif "/" in color_string:
+
+    if "/" in color_string:
         cmk_color_index, color_shading = color_string.split("/")
         hsv = list(_cmk_color_palette[cmk_color_index])
 
@@ -783,8 +786,8 @@ def parse_color_into_hexrgb(color_string):
 
         color_hexrgb = hsv_to_hexrgb(hsv)
         return color_hexrgb
-    else:
-        return "#808080"
+
+    return "#808080"
 
 
 def hsv_to_hexrgb(hsv):

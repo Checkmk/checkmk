@@ -333,30 +333,36 @@ class JolokiaInstance(object):
             sys.stderr.write("ERROR: %s\n" % exc)
             raise SkipMBean(exc)
 
-        if raw_response.status_code == 401:
-            sys.stderr.write("ERROR: Unauthorized (authentication failed/missing)\n")
-            raise SkipInstance("auth failed")
-        elif raw_response.status_code != 200:
-            sys.stderr.write('ERROR: Invalid response when posting %r\n' % post_data)
-            raise SkipMBean("HTTP Error (%s)" % raw_response.status_code)
+        return validate_response(raw_response)
 
-        response = raw_response.json()
-        if VERBOSE:
-            sys.stderr.write("DEBUG: Result: %r\n" % response)
-        return response
+
+def validate_response(raw):
+    '''return loaded response or raise exception'''
+    # check the status of the http server
+    if not 200 <= raw.status_code < 300:
+        sys.stderr.write("ERROR: HTTP STATUS: %d" % raw.status_code)
+        # Unauthorized, Forbidden, Bad Gateway
+        if raw.status_code in (401, 403, 502):
+            raise SkipInstance("HTTP STATUS", raw.status_code)
+        raise SkipMBean("HTTP STATUS", raw.status_code)
+
+    response = raw.json()
+    # check the status of the jolokia response
+    if response.status != 200:
+        sys.stderr.write("ERROR: JAVA: %s" % response.error)
+        raise SkipMBean("JAVA", response.error)
+
+    if "value" not in response:
+        sys.stderr.write("ERROR: missing 'value': %r\n" % response)
+        raise SkipMBean("ERROR", "missing 'value'")
+
+    return response
 
 
 def fetch_var(inst, function, path, use_target=False):
     data = inst.get_post_data(path, function, use_target=use_target)
     obj = inst.post(data)
-
-    try:
-        return obj['value']
-    except KeyError:
-        msg = "not found: %s" % path
-        if VERBOSE:
-            sys.stderr.write("ERROR: %s\n" % msg)
-        raise SkipMBean(msg)
+    return obj['value']
 
 
 # convert single values into lists of items in

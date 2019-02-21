@@ -1392,11 +1392,7 @@ class AutomationGetAgentOutput(Automation):
                         success = False
                         output += "[%s] %s\n" % (source.id(), source_output)
             else:
-                host_config = snmp_utils.SNMPHostConfig(
-                    hostname=hostname,
-                    ipaddress=ip_lookup.lookup_ipv4_address(hostname),
-                    credentials=config.snmp_credentials_of(hostname),
-                )
+                host_config = snmp.create_snmp_host_config(hostname)
 
                 lines = []
                 for walk_oid in snmp.oids_to_walk():

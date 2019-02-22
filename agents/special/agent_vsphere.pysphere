@@ -24,6 +24,9 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# No need to improve this. It should be dropped soon(TM)
+# pylint: skip-file
+
 # Useful resources:
 # http://pubs.vmware.com/vsphere-51/topic/com.vmware.ICbase/PDF/wssdk_510_dsg.pdf
 # http://pubs.vmware.com/vsphere-51/topic/com.vmware.ICbase/PDF/wssdk_prog_guide_5_1.pdf

@@ -66,13 +66,13 @@ factory_settings["mssql_backup_default_levels"] = {
 
 
 def parse_mssql_backup(info):
-    def _parse_date_and_time(backup_date, backup_time):
+    def _parse_date_and_time(b_date, b_time):
         try:
-            timestamp = time.mktime(
-                time.strptime("%s %s" % (backup_date, backup_time), '%Y-%m-%d %H:%M:%S'))
+            if b_time is None:
+                return int(b_date)
+            return time.mktime(time.strptime("%s %s" % (b_date, b_time), '%Y-%m-%d %H:%M:%S'))
         except ValueError:
-            timestamp = None
-        return timestamp
+            return None
 
     map_backup_types = {
         "D": "database",
@@ -88,37 +88,21 @@ def parse_mssql_backup(info):
     parsed = {}
     Backup = collections.namedtuple("Backup", ["timestamp", "type", "state"])
     for line in info:
-        backup_state = None
-        backup_type = None
-        if len(line) == 6:
-            inst, tablespace, backup_date, backup_time, backup_type, backup_state = line
-            timestamp = _parse_date_and_time(backup_date, backup_time)
-
-        elif len(line) == 5:
-            inst, tablespace, backup_date, backup_time, backup_type = line
-            timestamp = _parse_date_and_time(backup_date, backup_time)
-
-        elif len(line) == 4:
-            inst, tablespace = line[:2]
-            try:
-                backup_date, backup_time = line[2].split(" ")
-                backup_type = line[3]
-            except ValueError:
-                backup_date, backup_time = line[2:4]
-            timestamp = _parse_date_and_time(backup_date, backup_time)
-
-        elif len(line) == 3:
-            inst, tablespace, backup_timestamp = line
-            try:
-                timestamp = int(backup_timestamp)
-            except ValueError:
-                timestamp = None
-
-        else:
+        if len(line) <= 2:
             continue
+        # handle one special case where spaces are in date/time:
+        if len(line) == 4 and " " in line[2]:
+            line = line[:2] + line[2].split(" ") + line[3:]
 
-        parsed.setdefault("%s %s" % (inst, tablespace), []).append(
-            Backup(timestamp, map_backup_types.get(backup_type), backup_state))
+        # fill up with Nones:
+        line += [None] * (6 - len(line))
+
+        inst, tablespace, b_date, b_time, b_type, b_state = line
+        timestamp = _parse_date_and_time(b_date, b_time)
+
+        item = "%s %s" % (inst, tablespace)
+        backup = Backup(timestamp, map_backup_types.get(b_type), b_state)
+        parsed.setdefault(item, []).append(backup)
 
     return parsed
 
@@ -127,7 +111,7 @@ def inventory_mssql_backup(parsed):
     discovery_mode = _mssql_backup_discovery_mode()
     if discovery_mode != "summary":
         return
-    for db_name in parsed.iterkeys():
+    for db_name in parsed:
         yield db_name, {}
 
 
@@ -151,7 +135,7 @@ def check_mssql_backup(item, params, parsed):
 
     for backup in data:
         if backup.state == "no backup found":
-            yield params.get("not_found", 1), "State: %s" % backup.state
+            yield params.get("not_found", 1), "No backup found"
             continue
         if backup.type is None:
             backup_type_var = "database"
@@ -222,17 +206,13 @@ def inventory_mssql_backup_per_type(parsed):
 
 
 def check_mssql_backup_per_type(item, params, parsed):
-    data = None
     for db_name, attrs in parsed.iteritems():
         for backup in attrs:
             if item == _mssql_backup_per_type_item(db_name, backup):
-                data = backup
-                break
-    if data is None:
-        # Assume general connection problem to the database, which is reported
-        # by the "X Instance" service and skip this check.
-        raise MKCounterWrapped("Failed to connect to database")
-    return _check_mssql_backup(data, params.get("levels", (None, None)), "backup_age")
+                return _check_mssql_backup(backup, params.get("levels", (None, None)), "backup_age")
+    # Assume general connection problem to the database, which is reported
+    # by the "X Instance" service and skip this check.
+    raise MKCounterWrapped("Failed to connect to database")
 
 
 check_info['mssql_backup.per_type'] = {

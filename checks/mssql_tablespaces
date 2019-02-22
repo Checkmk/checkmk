@@ -69,6 +69,9 @@ def parse_mssql_tablespaces(info):
         values = (to_bytes(*p) for p in pairs[1:])
         data = dict(zip(keys, values))
 
+        if len(line) > 14 and line[14].startswith("ERROR: "):
+            data["error"] = line[14][7:]
+
         parsed.setdefault(item, data)
 
     return parsed
@@ -82,17 +85,20 @@ def check_mssql_tablespaces(item, params, parsed):
         raise MKCounterWrapped("Tablespace not found")
 
     size = tablespace["size"]
+    if "error" in tablespace:
+        yield 2, tablespace["error"]
+
     if size is not None:
         levels = params.get("size", (None, None))
         yield check_levels(
             size, 'size', levels, human_readable_func=get_bytes_human_readable, infoname="Size")
 
-    for key, title, levels_info, upper_bounds in [
-        ('unallocated', 'Unallocated space', 'below', False),
-        ('reserved', 'Reserved space', 'at', True),
-        ('data', 'Data', 'at', True),
-        ('indexes', 'Indexes', 'at', True),
-        ('unused', 'Unused', 'at', True),
+    for key, title, is_upper in [
+        ('unallocated', 'Unallocated space', False),
+        ('reserved', 'Reserved space', True),
+        ('data', 'Data', True),
+        ('indexes', 'Indexes', True),
+        ('unused', 'Unused', True),
     ]:
         value_bytes = tablespace[key]
         if value_bytes is None:
@@ -117,12 +123,13 @@ def check_mssql_tablespaces(item, params, parsed):
             continue
 
         state = 0
-        if upper_bounds and value >= crit or not upper_bounds and value <= crit:
+        if is_upper and value >= crit or not is_upper and value <= crit:
             state = 2
-        elif upper_bounds and value >= warn or not upper_bounds and value <= warn:
+        elif is_upper and value >= warn or not is_upper and value <= warn:
             state = 1
         if state:
-            infotext += " (warn/crit %s %s/%s)" % (levels_info, readable_f(warn), readable_f(crit))
+            infotext += " (warn/crit %s %s/%s)" % (
+                ('below', 'at')[is_upper], readable_f(warn), readable_f(crit))
         yield state, infotext
 
 

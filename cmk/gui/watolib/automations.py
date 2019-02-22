@@ -178,7 +178,7 @@ def check_mk_remote_automation(site_id,
 # If the site is not up-to-date, synchronize it first.
 def sync_changes_before_remote_automation(site_id):
     # TODO: Cleanup this local import
-    import cmk.gui.watolib.activate_changes
+    import cmk.gui.watolib.activate_changes  # pylint: disable=redefined-outer-name
     manager = cmk.gui.watolib.activate_changes.ActivateChangesManager()
     manager.load()
 
@@ -213,7 +213,7 @@ def sync_changes_before_remote_automation(site_id):
 def call_hook_pre_activate_changes():
     if hooks.registered('pre-activate-changes'):
         # TODO: Cleanup this local import
-        import cmk.gui.watolib.hosts_and_folders
+        import cmk.gui.watolib.hosts_and_folders  # pylint: disable=redefined-outer-name
         hooks.call("pre-activate-changes", cmk.gui.watolib.hosts_and_folders.collect_all_hosts())
 
 
@@ -229,7 +229,7 @@ def call_hook_pre_activate_changes():
 def call_hook_activate_changes():
     if hooks.registered('activate-changes'):
         # TODO: Cleanup this local import
-        import cmk.gui.watolib.hosts_and_folders
+        import cmk.gui.watolib.hosts_and_folders  # pylint: disable=redefined-outer-name
         hooks.call("activate-changes", cmk.gui.watolib.hosts_and_folders.collect_all_hosts())
 
 

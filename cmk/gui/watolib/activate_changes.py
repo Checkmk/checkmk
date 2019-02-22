@@ -445,7 +445,7 @@ class ActivateChangesManager(ActivateChanges):
 
     def _verify_valid_host_config(self):
         # TODO: Cleanup this local import
-        import cmk.gui.watolib.hosts_and_folders
+        import cmk.gui.watolib.hosts_and_folders  # pylint: disable=redefined-outer-name
         defective_hosts = cmk.gui.watolib.hosts_and_folders.validate_all_hosts([], force_all=True)
         if defective_hosts:
             raise MKUserError(
@@ -542,7 +542,7 @@ class ActivateChangesManager(ActivateChanges):
     # the activation)
     def _pre_activate_changes(self):
         # TODO: Cleanup this local import
-        import cmk.gui.watolib.hosts_and_folders
+        import cmk.gui.watolib.hosts_and_folders  # pylint: disable=redefined-outer-name
         try:
             if hooks.registered('pre-distribute-changes'):
                 hooks.call("pre-distribute-changes",
@@ -677,7 +677,7 @@ class ActivateChangesManager(ActivateChanges):
 
     def create_site_globals_file(self, site_id, tmp_dir, sites=None):
         # TODO: Cleanup this local import
-        import cmk.gui.watolib.sites
+        import cmk.gui.watolib.sites  # pylint: disable=redefined-outer-name
 
         try:
             os.makedirs(tmp_dir)

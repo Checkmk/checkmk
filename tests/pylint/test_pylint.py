@@ -129,7 +129,7 @@ def inv_tree(path, default_value=None):
         # add the modules
         # These pylint warnings are incompatible with our "concatenation technology".
         f.write(
-            "# pylint: disable=reimported,ungrouped-imports,wrong-import-order,wrong-import-position\n"
+            "# pylint: disable=reimported,ungrouped-imports,wrong-import-order,wrong-import-position,redefined-outer-name\n"
         )
         pylint_cmk.add_file(f, repo_path() + "/cmk_base/check_api.py")
         pylint_cmk.add_file(f, repo_path() + "/cmk_base/inventory_plugins.py")

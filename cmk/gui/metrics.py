@@ -608,18 +608,51 @@ class MetricometerRendererDual(MetricometerRenderer):
 #   '----------------------------------------------------------------------'
 
 
-# Called with exactly one variable: the template ID. Example:
-# "check_mk-kernel.util:guest,steal,system,user,wait".
+def _scalar_description(expression, description, value):
+    if description:
+        return description
+    if expression.endswith(':warn'):
+        return 'Warning at %.1f' % value
+    if expression.endswith(':crit'):
+        return 'Critical at %.1f' % value
+    return None
+
+
+def _scalar_value_command(scalar, translated_metrics):
+    if isinstance(scalar, tuple):
+        expression, description = scalar
+    else:
+        expression, description = scalar, None
+
+    try:
+        value, _unit, color = evaluate(expression, translated_metrics)
+    except Exception:
+        return ""
+
+    if not value:
+        return ""
+
+    rule_txt = _scalar_description(expression, description, value)
+    if not rule_txt:
+        return "HRULE:%s%s " % (value, color)
+
+    return "HRULE:%s%s:\"%s\" COMMENT:\"\\n\" " % (
+        value,
+        color,
+        rule_txt,
+    )
+
+
 @cmk.gui.pages.register("noauth:pnp_template")
 def page_pnp_template():
     try:
         template_id = html.request.var("id")
 
-        check_command, perf_var_string = template_id.split(":", 1)
-        perf_var_names = perf_var_string.split(",")
+        check_command, perf_string = template_id.split(":", 1)
 
-        # Fake performance values in order to be able to find possible graphs
-        perf_data = [(varname, 1, "", 1, 1, 1, 1) for varname in perf_var_names]
+        # TODO: pnp-templates/default.php still returns a default value of
+        # 1 for the value and "" for the unit.
+        perf_data, _ = parse_perf_data(perf_string)
         translated_metrics = translate_metrics(perf_data, check_command)
         if not translated_metrics:
             return  # check not supported
@@ -794,6 +827,10 @@ def render_graph_pnp(graph_template, translated_metrics):
             rrdgraph_commands += "GPRINT:%%s_LEGSCALED:%%s:\"%%%%8.%dlf%%s %%s\" "  % legend_precision % \
                         (metric_name, what, legend_symbol, what_title)
         rrdgraph_commands += "COMMENT:\"\\n\" "
+
+    # add horizontal rules for warn and crit scalars
+    for scalar in graph_template.get("scalars", []):
+        rrdgraph_commands += _scalar_value_command(scalar, translated_metrics)
 
     # For graphs with both up and down, paint a gray rule at 0
     if have_upside_down:

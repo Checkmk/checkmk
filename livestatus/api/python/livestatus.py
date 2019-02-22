@@ -54,8 +54,18 @@ remove_cache_regex = re.compile("\nCache:[^\n]*")  # type: Pattern
 
 def ensure_unicode(text):
     if hasattr(text, "decode"):
-        return text.decode("utf-8")
+        try:
+            return text.decode("utf-8")
+        except UnicodeEncodeError:
+            return text
     return text
+
+
+def ensure_bytestr(text):
+    try:
+        return text.encode("utf-8")
+    except UnicodeDecodeError:
+        return text
 
 
 class MKLivestatusException(Exception):
@@ -445,9 +455,8 @@ class SingleSiteConnection(Helpers):
         query += "\n"
 
         try:
-            # socket.send() will implicitely cast to str(), we need ot
-            # convert to UTF-8 in order to avoid exceptions
-            query = query.encode("utf-8")
+            # socket.send() only works with byte strings
+            query = ensure_bytestr(query)
             self.socket.send(query)
         except IOError as e:
             if self.persist:

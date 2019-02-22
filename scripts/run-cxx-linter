@@ -1,7 +1,12 @@
-#! /bin/sh
+#!/bin/bash
 set -e
 TARGET=$1
 PATCHSET_REVISION=$2
+
+REPO_DIR="$(dirname $(cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd))"
+
+# Prevpare Makefiles, otherwise "make compile_commands.json" will fail
+make -C $REPO_DIR config.h
 
 # To really compute *only* the files which need checking, we better make sure
 # that our project is up-to-date without any further changes first (i.e. target

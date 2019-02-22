@@ -6,12 +6,14 @@ checkname = 'mssql_tablespaces'
 info = [
     ['MSSQL_SQLEXPRESS', 'master', '5.25', 'MB', '1.59', 'MB', '2464',
      'KB', '1096', 'KB', '1024', 'KB', '344', 'KB'],
+    ['MSSQL_Katze', 'Kitty'] + ['-'] * 12 + ['ERROR: Kitty ist auf die Nase gefallen!'],
 ]
 
 
 discovery = {
     '': [
         ('MSSQL_SQLEXPRESS master', {}),
+        ('MSSQL_Katze Kitty', {}),
     ],
 }
 
@@ -33,6 +35,9 @@ checks = {
             (0, 'Data: 1.07 MB, 20.4%', []),
             (0, 'Indexes: 1.00 MB, 19.0%', []),
             (0, 'Unused: 344.00 kB, 6.4%', []),
+        ]),
+        ('MSSQL_Katze Kitty', {}, [
+            (2, 'Kitty ist auf die Nase gefallen!'),
         ]),
     ],
 }

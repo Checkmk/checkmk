@@ -33,7 +33,8 @@
 
 #  0: process instance
 #  1: tablespace name
-#  2: db size (Size of the current database in megabytes. database_size includes both data and log files.))
+#  2: db size (Size of the current database in megabytes.
+#     database_size includes both data and log files.)
 #  3: uom
 #  4: unallocated space (Space in the database that has not been reserved for database objects.)
 #  5: uom
@@ -51,67 +52,40 @@ factory_settings["mssql_tablespace_default_levels"] = {}
 
 def parse_mssql_tablespaces(info):
     def to_bytes(value, uom):
+        exponent = {'KB': 1, 'MB': 2, 'GB': 3, 'TB': 4}.get(uom, 0)
         try:
-            value = float(value)
+            return float(value) * (1024**exponent)
         except ValueError:
             return None
-        if uom == 'KB':
-            val_bytes = value * 1024
-        elif uom == 'MB':
-            val_bytes = value * 1024 * 1024
-        elif uom == 'GB':
-            val_bytes = value * 1024 * 1024 * 1024
-        elif uom == 'TB':
-            val_bytes = value * 1024 * 1024 * 1024 * 1024
-        else:
-            val_bytes = value
-        return val_bytes
 
     parsed = {}
     for line in info:
         if len(line) < 14:
             continue
 
-        parsed.setdefault(
-            "%s %s" % (line[0], line[1]), {
-                'size': to_bytes(line[2], line[3]),
-                'unallocated': to_bytes(line[4], line[5]),
-                'reserved': to_bytes(line[6], line[7]),
-                'data': to_bytes(line[8], line[9]),
-                'indexes': to_bytes(line[10], line[11]),
-                'unused': to_bytes(line[12], line[13]),
-            })
+        pairs = zip(line[:14:2], line[1:14:2])
+        item = "%s %s" % pairs[0]
+        keys = ('size', 'unallocated', 'reserved', 'data', 'indexes', 'unused')
+        values = (to_bytes(*p) for p in pairs[1:])
+        data = dict(zip(keys, values))
+
+        parsed.setdefault(item, data)
 
     return parsed
 
 
-def inventory_mssql_tablespaces(parsed):
-    for tablespace_name in parsed:
-        yield tablespace_name, {}
-
-
 def check_mssql_tablespaces(item, params, parsed):
-    tablespace_data = parsed.get(item)
-    if tablespace_data is None:
+    tablespace = parsed.get(item)
+    if tablespace is None:
         # Assume general connection problem to the database, which is reported
         # by the "X Instance" service and skip this check.
         raise MKCounterWrapped("Tablespace not found")
 
-    size = tablespace_data["size"]
+    size = tablespace["size"]
     if size is not None:
-        infotext = 'Size: %s' % get_bytes_human_readable(size)
-        warn, crit = params.get("size", (None, None))
-
-        if crit is not None and size >= crit:
-            state = 2
-        elif warn is not None and size >= warn:
-            state = 1
-        else:
-            state = 0
-        if state:
-            infotext += " (warn/crit at %s/%s)" % (get_bytes_human_readable(warn),
-                                                   get_bytes_human_readable(crit))
-        yield state, infotext, [("size", size, warn, crit)]
+        levels = params.get("size", (None, None))
+        yield check_levels(
+            size, 'size', levels, human_readable_func=get_bytes_human_readable, infoname="Size")
 
     for key, title, levels_info, upper_bounds in [
         ('unallocated', 'Unallocated space', 'below', False),
@@ -120,7 +94,7 @@ def check_mssql_tablespaces(item, params, parsed):
         ('indexes', 'Indexes', 'at', True),
         ('unused', 'Unused', 'at', True),
     ]:
-        value_bytes = tablespace_data[key]
+        value_bytes = tablespace[key]
         if value_bytes is None:
             continue
 
@@ -154,7 +128,7 @@ def check_mssql_tablespaces(item, params, parsed):
 
 check_info['mssql_tablespaces'] = {
     'parse_function': parse_mssql_tablespaces,
-    'inventory_function': inventory_mssql_tablespaces,
+    'inventory_function': discover(),
     'check_function': check_mssql_tablespaces,
     'service_description': 'MSSQL %s Sizes',
     'group': 'mssql_tablespaces',

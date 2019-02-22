@@ -114,16 +114,14 @@ def get_full_uri(host, uri):
     return '%s://%s%s%s' % (proto, host, portspec, uri)
 
 
+# TODO: Refactor to requests
 def init_http():
-    global g_cookies, g_opener
-    g_cookies = cookielib.CookieJar()
-    g_opener = urllib2.build_opener(urllib2.HTTPRedirectHandler(),
-                                    urllib2.HTTPHandler(debuglevel=0),
-                                    urllib2.HTTPSHandler(debuglevel=0),
-                                    urllib2.HTTPCookieProcessor(g_cookies))
+    return urllib2.build_opener(urllib2.HTTPRedirectHandler(), urllib2.HTTPHandler(debuglevel=0),
+                                urllib2.HTTPSHandler(debuglevel=0),
+                                urllib2.HTTPCookieProcessor(cookielib.CookieJar()))
 
 
-def open_url(url, method='GET', data=None):
+def open_url(client, url, method='GET', data=None):
     if method == 'GET' and data is not None:
         # Add the query string to the url in this case
         start = '&' if '?' in url else '?'
@@ -135,10 +133,10 @@ def open_url(url, method='GET', data=None):
             debug('POST %s' % url)
             data = urllib.urlencode(data.items())
             debug('  => %s' % data)
-            fd = g_opener.open(url, data, timeout)  # will be a POST
+            fd = client.open(url, data, timeout)  # will be a POST
         else:
             debug('GET %s' % url)
-            fd = g_opener.open(url, timeout=timeout)  # GET
+            fd = client.open(url, timeout=timeout)  # GET
     except urllib2.HTTPError, e:
         new_state(2, 'Unable to open %s: [%d] %s' % (url, e.code, e))
     except urllib2.URLError, e:
@@ -253,8 +251,6 @@ opt_debug = False
 timeout = 10  # seconds
 num_warn = None
 num_crit = None
-g_cookies = None
-g_opener = None
 
 for o, a in opts:
     if o in ['-h', '--help']:
@@ -304,14 +300,14 @@ else:
     portspec = ':%d' % port
 
 try:
-    init_http()
+    client = init_http()
 
     states = {}
     for host in hosts:
         try:
             # Perform first HTTP request to fetch the page containing the form(s)
             url = get_full_uri(host, uri)
-            code, real_url, body = open_url(url)
+            code, real_url, body = open_url(client, url)
 
             form = parse_form(body)
 
@@ -330,7 +326,7 @@ try:
                 # relative URL
                 target = '%s/%s' % ('/'.join(real_url.rstrip('/').split('/')[:-1]), target)
 
-            code, real_url, content = open_url(target, method, form_vars)
+            code, real_url, content = open_url(client, target, method, form_vars)
 
             # If a expect_regex is given, check wether or not it is present in the response
             if expect_regex is not None:

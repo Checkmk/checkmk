@@ -14,7 +14,6 @@ description:
 
  When the refclock state is "not available" CRIT is raised and a WARN state is issued
  if the refclock state is "not synchronized".
- If the number of good satellites drops below 3, a CRIT state is raised.
 
 inventory:
  One service per non-gps refclock is created.

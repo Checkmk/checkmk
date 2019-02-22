@@ -1,0 +1,14 @@
+Title: mbg_lantime_ng_refclock.gps: only apply satellite levels if required
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1550756859
+
+The check now only applies levels for the number of connected satellites if the device
+substate indicates that a satellite connection is necessary. Substates that require
+a satellite connection are "GPS sync", "GPS tracking", "GPS antenna disconnected",
+"GPS warm boot", "GPS cold boot", "GPS antenna short circuit" and "MRS GPS sync".

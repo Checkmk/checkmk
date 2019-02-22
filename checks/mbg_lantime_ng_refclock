@@ -187,22 +187,21 @@ def check_lantime_ng_refclock_gps(item, params, info):
             if substate not in ("1", "2"):
                 yield 0, "Next leap second: %s" % str(leapsecond_date)
 
-            good_sats = int(status_a)
-            total_sats = int(max_status_a)
-            # levels are not "at" but "below" because we must be
-            # compatible with old mbg_lantime_refclock check
-            warn, crit = params
-            if good_sats < crit:
-                state = 2
-                levels_txt = " (warn/crit below %d/%d)" % params
-            elif good_sats < warn:
-                state = 1
-                levels_txt = " (warn/crit below %d/%d)" % params
-            else:
-                state = 0
-                levels_txt = ""
+            # Levels for satellites are checked only if we have a substate
+            # that indicates that a GPS connection is needed. For the
+            # LANTIME M600/MRS the GPS antenna is e.g. optional.
+            if substate in ("1", "2", "3", "4", "5", "6", "150"):
+                state, levels_txt = 0, ""
+                good_sats, total_sats = int(status_a), int(max_status_a)
+                warn, crit = params
+                if good_sats < crit:
+                    state = 2
+                    levels_txt = " (warn/crit below %d/%d)" % params
+                elif good_sats < warn:
+                    state = 1
+                    levels_txt = " (warn/crit below %d/%d)" % params
 
-            yield state, "Satellites: %d/%d%s" % (good_sats, total_sats, levels_txt)
+                yield state, "Satellites: %d/%d%s" % (good_sats, total_sats, levels_txt)
 
 
 check_info["mbg_lantime_ng_refclock.gps"] = {

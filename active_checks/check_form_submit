@@ -86,79 +86,6 @@ OPTIONS:
 """)
 
 
-short_options = 'I:u:p:H:f:q:e:t:n:sd'
-long_options = ["help"]
-
-try:
-    opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
-except getopt.GetoptError, err:
-    sys.stderr.write("%s\n" % err)
-    sys.exit(1)
-
-hosts = []
-multiple = False
-uri = '/'
-port = 80
-ssl = False
-vhost = None
-form_name = None
-params = {}
-expect_regex = None
-opt_debug = False
-timeout = 10  # seconds
-num_warn = None
-num_crit = None
-g_cookies = None
-g_opener = None
-
-for o, a in opts:
-    if o in ['-h', '--help']:
-        usage()
-        sys.exit(0)
-    elif o == '-I':
-        hosts.append(a)
-    elif o == '-u':
-        uri = a
-    elif o == '-p':
-        port = int(a)
-    elif o == '-s':
-        ssl = True
-    elif o == '-H':
-        vhost = a
-    elif o == '-f':
-        form_name = a
-    elif o == '-q':
-        params = dict([parts.split('=', 1) for parts in a.split('&')])
-    elif o == '-e':
-        expect_regex = a
-    elif o == '-t':
-        timeout = int(a)
-    elif o == '-n':
-        if ',' in a:
-            num_warn, num_crit = map(int, a.split(',', 1))
-        else:
-            num_warn = int(a)
-    elif o == '-d':
-        opt_debug = True
-
-if not hosts:
-    sys.stderr.write('Please provide the host to query via -I <HOSTADDRESS>.\n')
-    usage()
-    sys.exit(1)
-
-if len(hosts) > 1:
-    multiple = True
-
-if not ssl and port == 443:
-    ssl = True
-
-proto = 'https' if ssl else 'http'
-if (proto == 'http' and port == 80) or (proto == 'https' and port == 443):
-    portspec = ''
-else:
-    portspec = ':%d' % port
-
-
 def debug(msg):
     if opt_debug:
         sys.stderr.write('%s\n' % msg)
@@ -303,6 +230,78 @@ def update_form_vars(form_elem):
     v.update(params)
     return v
 
+
+short_options = 'I:u:p:H:f:q:e:t:n:sd'
+long_options = ["help"]
+
+try:
+    opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
+except getopt.GetoptError, err:
+    sys.stderr.write("%s\n" % err)
+    sys.exit(1)
+
+hosts = []
+multiple = False
+uri = '/'
+port = 80
+ssl = False
+vhost = None
+form_name = None
+params = {}
+expect_regex = None
+opt_debug = False
+timeout = 10  # seconds
+num_warn = None
+num_crit = None
+g_cookies = None
+g_opener = None
+
+for o, a in opts:
+    if o in ['-h', '--help']:
+        usage()
+        sys.exit(0)
+    elif o == '-I':
+        hosts.append(a)
+    elif o == '-u':
+        uri = a
+    elif o == '-p':
+        port = int(a)
+    elif o == '-s':
+        ssl = True
+    elif o == '-H':
+        vhost = a
+    elif o == '-f':
+        form_name = a
+    elif o == '-q':
+        params = dict([parts.split('=', 1) for parts in a.split('&')])
+    elif o == '-e':
+        expect_regex = a
+    elif o == '-t':
+        timeout = int(a)
+    elif o == '-n':
+        if ',' in a:
+            num_warn, num_crit = map(int, a.split(',', 1))
+        else:
+            num_warn = int(a)
+    elif o == '-d':
+        opt_debug = True
+
+if not hosts:
+    sys.stderr.write('Please provide the host to query via -I <HOSTADDRESS>.\n')
+    usage()
+    sys.exit(1)
+
+if len(hosts) > 1:
+    multiple = True
+
+if not ssl and port == 443:
+    ssl = True
+
+proto = 'https' if ssl else 'http'
+if (proto == 'http' and port == 80) or (proto == 'https' and port == 443):
+    portspec = ''
+else:
+    portspec = ':%d' % port
 
 try:
     init_http()

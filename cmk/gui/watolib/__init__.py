@@ -518,7 +518,7 @@ def _create_sample_config():
     save_notification_rules(notification_rules)
 
     try:
-        import cmk.gui.cee.plugins.wato.sample_config
+        import cmk.gui.cee.plugins.wato.sample_config  # pylint: disable=redefined-outer-name
         cmk.gui.cee.plugins.wato.sample_config.create_cee_sample_config()
     except ImportError:
         pass

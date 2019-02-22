@@ -28,12 +28,11 @@ else {
 if (!file_exists($template_cache_dir))
     mkdir($template_cache_dir, 0755, TRUE);
 
-# Get the list of performance variables and convert them to a string,
-# prepend the command name, # e.g. "check_mk-hr_fs:fs_trend,fs_used,zabelfoobar"
-$perf_vars = Array();
-foreach ($NAME as $i => $n) {
-    $perf_vars[] = $n;
-}
+# Build an array of performance data. We use a fake value of 1 for the
+# value since the performance data are used to calculate the hash for
+# the pnp template cache.
+$perf_vars = array_map(function($name,$warn,$crit,$min,$max) {return $name."=1;".$warn.";".$crit.";".$min.';'.$max;},
+                       $NAME, $WARN, $CRIT, $MIN, $MAX);
 sort($perf_vars);
 # We have to separate the check command name from the rest on
 # the right place, i.d. the first "!", to prevent errors while
@@ -44,7 +43,7 @@ sort($perf_vars);
 #
 # If no "!" exists then $CHECK_COMMAND = $NAGIOS_CHECK_COMMAND
 $check_command_parts = explode("!", $NAGIOS_CHECK_COMMAND);
-$id_string = $check_command_parts[0] . ":" . implode(",", $perf_vars);
+$id_string = $check_command_parts[0] . ":" . implode(" ", $perf_vars);
 
 # Get current state of previously cached template data for this ID
 $template_cache_path = $template_cache_dir . "/" . md5($id_string);

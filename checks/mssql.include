@@ -112,6 +112,8 @@ mssql_transactionlogs_discovery = []
 def parse_mssql_datafiles(info):
     parsed = {}
     for line in info:
+        if line[-1].startswith("ERROR: "):
+            continue
         if len(line) == 8:
             inst, database, file_name, _physical_name, max_size, allocated_size, used_size, unlimited = line
             unlimited = unlimited == '1'

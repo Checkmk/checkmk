@@ -1,0 +1,11 @@
+Title: aws_elb_limits: New check which monitors AWS/ELB limits
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1551098372
+Class: feature
+
+To make this check work you have to configure the related
+special agent {Amazon Web Services (AWS)}.

@@ -143,7 +143,7 @@ def _vs_latency():
             ))
 
 
-def _vs_limits(resource):
+def _vs_limits(resource, default_limit):
     return Tuple(
         title=_("Set limit and levels for %s" % resource.lower()),
         elements=[
@@ -155,7 +155,7 @@ def _vs_limits(resource):
                         title=_("Set limit"),
                         unit=_("%s" % resource),
                         min_value=1,
-                        default_value=100),
+                        default_value=default_limit),
                     FixedValue(None, totext="", title=_("No limit")),
                 ]),
             Alternative(
@@ -164,10 +164,9 @@ def _vs_limits(resource):
                 elements=[
                     Tuple(
                         title=_("Set levels"),
-                        orientation="horizontal",
                         elements=[
-                            Percentage(title=_("Warning at"), default_value=80),
-                            Percentage(title=_("Critical at"), default_value=90),
+                            Percentage(title=_("Warning at"), default_value=80.0),
+                            Percentage(title=_("Critical at"), default_value=90.0),
                         ]),
                     Tuple(
                         title=_("No levels"),
@@ -441,7 +440,7 @@ class RulespecCheckgroupParametersAwsS3Limits(CheckParameterRulespecWithoutItem)
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(elements=[('buckets_limit_levels', _vs_limits("Buckets"))])
+        return Dictionary(elements=[('buckets_limit_levels', _vs_limits("Buckets", 100))])
 
 
 #.
@@ -688,6 +687,35 @@ class RulespecCheckgroupParametersAwsElbBackendConnectionErrors(CheckParameterRu
                     ],
                 ),
             )],)
+
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersAwsElbLimits(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "aws_elb_limits"
+
+    @property
+    def title(self):
+        return _("AWS/ELB Limits")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(elements=[
+            ('load_balancers_limit_levels', _vs_limits("Load balancers", 20)),
+            ('load_balancer_listeners_limit_levels',
+             _vs_limits("Listeners per load balancer", 100)),
+            ('load_balancer_registered_instances_limit_levels',
+             _vs_limits("Registered instances per load balancer", 1000)),
+        ])
 
 
 #.

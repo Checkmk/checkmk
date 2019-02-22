@@ -1,0 +1,24 @@
+title: AWS ELB Limits
+agents: aws
+catalog: cloud/aws
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the AWS/ELB limits, ie. the number of
+ allowed load balancers and the registered instances and
+ listeners per load balancer.
+ To make this check work you have to configure the related
+ special agent {Amazon Web Services (AWS)}.
+
+ Default levels are set to 80, 90 percent and the default max.
+ value is fetched from the API, ie.
+ - 20 load balancers
+ - 100 listeners per load balancer
+ - 1000 registered instances per load balancer.
+ These levels are configurable.
+
+ If limits are enabled all load balancers are fetched regardless of
+ possibly configured restriction to names or tags.
+
+inventory:
+ One service per bucket will be created.

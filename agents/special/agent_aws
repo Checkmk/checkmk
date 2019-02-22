@@ -888,6 +888,56 @@ class S3Requests(AWSSectionCloudwatch):
 #   '----------------------------------------------------------------------'
 
 
+class ELBLimits(AWSSectionLimits):
+    @property
+    def name(self):
+        return "elb_limits"
+
+    @property
+    def interval(self):
+        return 300
+
+    def _get_colleague_contents(self):
+        return AWSColleagueContents(None, 0.0)
+
+    def _fetch_raw_content(self, colleague_contents):
+        response = self._client.describe_load_balancers()
+        try:
+            load_balancers = response['LoadBalancerDescriptions']
+        except KeyError, e:
+            logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
+            load_balancers = []
+
+        response = self._client.describe_account_limits()
+        try:
+            limits = response['Limits']
+        except KeyError, e:
+            logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
+            limits = []
+        return load_balancers, limits
+
+    def _compute_content(self, raw_content, colleague_contents):
+        load_balancers, limits = raw_content.content
+        limits = {r["Name"]: int(r['Max']) for r in limits}
+
+        self._add_limit(
+            "",
+            AWSLimit("load_balancers", "Load balancers", limits['classic-load-balancers'],
+                     len(load_balancers)))
+
+        for load_balancer in load_balancers:
+            load_balancer_name = load_balancer['LoadBalancerName']
+            self._add_limit(
+                load_balancer_name,
+                AWSLimit("load_balancer_listeners", "Listeners", limits['classic-listeners'],
+                         len(load_balancer['ListenerDescriptions'])))
+            self._add_limit(
+                load_balancer_name,
+                AWSLimit("load_balancer_registered_instances", "Registered instances",
+                         limits['classic-registered-instances'], len(load_balancer['Instances'])))
+        return AWSComputedContent(load_balancers, raw_content.cache_timestamp)
+
+
 class ELBSummary(AWSSectionGeneric):
     def __init__(self, client, region, config, distributor=None):
         super(ELBSummary, self).__init__(client, region, config, distributor=distributor)
@@ -916,7 +966,7 @@ class ELBSummary(AWSSectionGeneric):
 
     def _fetch_raw_content(self, colleague_contents):
         found_load_balancers = []
-        for load_balancer in self._describe_load_balancers():
+        for load_balancer in self._describe_load_balancers(colleague_contents):
             load_balancer_name = load_balancer['LoadBalancerName']
             tagging = []
             try:
@@ -935,8 +985,13 @@ class ELBSummary(AWSSectionGeneric):
                 found_load_balancers.append(load_balancer)
         return found_load_balancers
 
-    def _describe_load_balancers(self):
+    def _describe_load_balancers(self, colleague_contents):
         if self._tags is None and self._names is not None:
+            if colleague_contents.content:
+                return [
+                    load_balancer for load_balancer in colleague_contents.content
+                    if load_balancer['LoadBalancerName'] in self._names
+                ]
             response = self._client.describe_load_balancers(LoadBalancerNames=self._names)
         else:
             response = self._client.describe_load_balancers()
@@ -1501,7 +1556,10 @@ class AWSSectionsGeneric(AWSSections):
 
         #---distributors----------------------------------------------------
         ec2_summary_distributor = ResultDistributor()
+
+        elb_limits_distributor = ResultDistributor()
         elb_summary_distributor = ResultDistributor()
+
         ebs_summary_distributor = ResultDistributor()
 
         s3_limits_distributor = ResultDistributor()
@@ -1512,6 +1570,8 @@ class AWSSectionsGeneric(AWSSections):
         #---sections with distributors--------------------------------------
         ec2_summary = EC2Summary(ec2_client, region, config, ec2_summary_distributor)
         ebs_summary = EBSSummary(ec2_client, region, config, ebs_summary_distributor)
+
+        elb_limits = ELBLimits(elb_client, region, config, elb_limits_distributor)
         elb_summary = ELBSummary(elb_client, region, config, elb_summary_distributor)
 
         s3_limits = S3Limits(s3_client, region, config, s3_limits_distributor)
@@ -1537,6 +1597,8 @@ class AWSSectionsGeneric(AWSSections):
         ec2_summary_distributor.add(ebs_summary)
         ec2_summary_distributor.add(ebs)
         ebs_summary_distributor.add(ebs)
+
+        elb_limits_distributor.add(elb_summary)
         elb_summary_distributor.add(elb_health)
         elb_summary_distributor.add(elb)
 
@@ -1573,6 +1635,8 @@ class AWSSectionsGeneric(AWSSections):
             self._sections.append(ebs)
 
         if 'elb' in services:
+            if config.service_config.get('elb_limits'):
+                self._sections.append(elb_limits)
             self._sections.append(elb_summary)
             self._sections.append(elb_health)
             self._sections.append(elb)
@@ -1660,7 +1724,7 @@ AWSServices = [
         title="Elastic Load Balancing (ELB)",
         global_service=False,
         filter_by_names_or_tags=True,
-        limits=False),
+        limits=True),
     AWSServiceAttributes(
         key="rds",
         title="Relational Database Service (RDS)",
@@ -1803,7 +1867,7 @@ def main(args=None):
         ("ec2", args.ec2_names, (args.ec2_tag_key, args.ec2_tag_values), None),
         ("ebs", args.ebs_names, (args.ebs_tag_key, args.ebs_tag_values), None),
         ("s3", args.s3_names, (args.s3_tag_key, args.s3_tag_values), args.s3_limits),
-        ("elb", args.elb_names, (args.elb_tag_key, args.elb_tag_values), None),
+        ("elb", args.elb_names, (args.elb_tag_key, args.elb_tag_values), args.elb_limits),
         ("rds", args.rds_names, (args.rds_tag_key, args.rds_tag_values), None),
     ]:
         aws_config.add_single_service_config("%s_names" % service_key, service_names)

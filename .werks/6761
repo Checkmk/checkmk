@@ -1,0 +1,14 @@
+Title: agent_ipmi_sensors: Fixed crash if ipmi driver or bmc key option is used
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p39
+Date: 1550823224
+
+The special agent crashed if the mentioned options has been used because
+a hidden behaviour in python prevented that these options are interpreted
+correctly. This bug has been in place, since these options have been
+introduced.

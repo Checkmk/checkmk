@@ -109,11 +109,11 @@ def agent_ipmi_sensors_main( cmdline_args ):
         elif o in [ '-l' ]:
             privilege_lvl = a
         elif o in [ '-D' ]:
-            additional_opts += [ "%s %s" % (o, a) ]
+            additional_opts += [ "%s" % o, "%s" % a ]
         elif o in [ '--driver-type' ]:
             additional_opts += [ "%s=%s" % (o, a) ]
         elif o in [ '-k' ]:
-            additional_opts += [ "%s %s" % (o, a) ]
+            additional_opts += [ "%s" % o, "%s" % a ]
         elif o in [ '--quiet-cache' ]:
             additional_opts.append( o )
         elif o in [ '--sdr-cache-recreate' ]:

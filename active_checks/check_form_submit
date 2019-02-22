@@ -110,8 +110,17 @@ def bail_out(rc, s):
     sys.exit(rc)
 
 
-def get_full_uri(host, uri):
-    return '%s://%s%s%s' % (proto, host, portspec, uri)
+def get_base_url(ssl, host, port):
+    if not ssl and port == 443:
+        ssl = True
+
+    proto = 'https' if ssl else 'http'
+    if (proto == 'http' and port == 80) or (proto == 'https' and port == 443):
+        portspec = ''
+    else:
+        portspec = ':%d' % port
+
+    return '%s://%s%s' % (proto, host, portspec)
 
 
 # TODO: Refactor to requests
@@ -121,7 +130,7 @@ def init_http():
                                 urllib2.HTTPCookieProcessor(cookielib.CookieJar()))
 
 
-def open_url(client, url, method='GET', data=None):
+def open_url(client, url, method='GET', data=None, timeout=None):
     if method == 'GET' and data is not None:
         # Add the query string to the url in this case
         start = '&' if '?' in url else '?'
@@ -223,7 +232,7 @@ def parse_form(content):
     return form
 
 
-def update_form_vars(form_elem):
+def update_form_vars(form_elem, params):
     v = form_elem['elements'].copy()
     v.update(params)
     return v
@@ -290,30 +299,21 @@ if not hosts:
 if len(hosts) > 1:
     multiple = True
 
-if not ssl and port == 443:
-    ssl = True
-
-proto = 'https' if ssl else 'http'
-if (proto == 'http' and port == 80) or (proto == 'https' and port == 443):
-    portspec = ''
-else:
-    portspec = ':%d' % port
-
 try:
     client = init_http()
 
     states = {}
     for host in hosts:
+        base_url = get_base_url(ssl, host, port)
         try:
             # Perform first HTTP request to fetch the page containing the form(s)
-            url = get_full_uri(host, uri)
-            code, real_url, body = open_url(client, url)
+            code, real_url, body = open_url(client, base_url + uri, timeout=timeout)
 
             form = parse_form(body)
 
             # Get all fields and prefilled values from that form
             # Put the values of the given query params in these forms
-            form_vars = update_form_vars(form)
+            form_vars = update_form_vars(form, params)
 
             # Issue a HTTP request with those parameters
             # Extract the form target and method
@@ -321,12 +321,12 @@ try:
             target = form['attrs'].get('action', real_url)
             if target[0] == '/':
                 # target is given as absolute path, relative to hostname
-                target = get_full_uri(host, target)
+                target = base_url + target
             elif target[0] != '':
                 # relative URL
                 target = '%s/%s' % ('/'.join(real_url.rstrip('/').split('/')[:-1]), target)
 
-            code, real_url, content = open_url(client, target, method, form_vars)
+            code, real_url, content = open_url(client, target, method, form_vars, timeout=timeout)
 
             # If a expect_regex is given, check wether or not it is present in the response
             if expect_regex is not None:

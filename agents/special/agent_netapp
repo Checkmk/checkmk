@@ -29,6 +29,26 @@ import sys
 import time
 import getopt
 import warnings
+import requests
+import urllib3  # type: ignore
+
+try:
+    # lxml was quite promising in our test environment: Uses 2 times less CPU resources
+    # Unfortunaly, it is not a builtin module and need to be installed manually with
+    # pip install lxml
+    import lxml.etree as ET  # type: ignore
+except:
+    import xml.etree.ElementTree as ET  # type: ignore
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+urllib3.util.ssl_.DEFAULT_CIPHERS += ":" + ":".join([
+    "DH+3DES",
+    "DH+HIGH",
+    "ECDH+3DES",
+    "ECDH+HIGH",
+    "RSA+3DES",
+    "RSA+HIGH",
+])
 
 # This suppress deprecated warning on older python versions
 warnings.filterwarnings("ignore")
@@ -111,314 +131,251 @@ Cluster-Mode specific:
 """)
 
 
-# NetApp credentials
-user = None
-secret = None
+#.
+#   .--Direct XML----------------------------------------------------------.
+#   |            ____  _               _    __  ____  __ _                 |
+#   |           |  _ \(_)_ __ ___  ___| |_  \ \/ /  \/  | |                |
+#   |           | | | | | '__/ _ \/ __| __|  \  /| |\/| | |                |
+#   |           | |_| | | | |  __/ (__| |_   /  \| |  | | |___             |
+#   |           |____/|_|_|  \___|\___|\__| /_/\_\_|  |_|_____|            |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Replaces the NaServer/NaElements based legacy mode                   |
+#   '----------------------------------------------------------------------'
 
-opt_timeout = 120
-opt_debug = False
-opt_dump_xml = False
-opt_no_counters = []
-opt_legacy = False
 
-short_options = 'hu:s:t:o'
-long_options = ['help', 'debug', 'user=', 'secret=', 'timeout=', 'xml', "nocounters=", "legacy"]
+def prettify(elem):
+    from xml.dom import minidom  # type: ignore
+    rough_string = ET.tostring(elem)
+    reparsed = minidom.parseString(rough_string)
+    return reparsed.toprettyxml(indent="\t")
 
-section_errors = []
 
-try:
-    opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
-except getopt.GetoptError, err:
-    sys.stderr.write("%s\n" % err)
-    sys.exit(1)
+class ErrorMessages(object):
+    def __init__(self):
+        self.messages = set()
 
-for o, a in opts:
-    if o in ['--debug']:
-        opt_debug = True
-    elif o in ['--legacy']:
-        opt_legacy = True
-    elif o in ['-u', '--user']:
-        user = a
-    elif o in ['-s', '--secret']:
-        secret = a
-    elif o in ['--nocounters']:
-        opt_no_counters = a.split(",")
-    elif o in ['--xml']:
-        opt_dump_xml = True
-    elif o in ['-t', '--timeout']:
-        opt_timeout = int(a)
-    elif o in ['-h', '--help']:
-        usage()
-        sys.exit(0)
+    def add_message(self, message):
+        self.messages.add(message)
 
-if len(args) == 1:
-    host_address = args[0]
-elif not args:
-    sys.stderr.write("ERROR: No host given.\n")
-    sys.exit(1)
-else:
-    sys.stderr.write("ERROR: Please specify exactly one host.\n")
-    sys.exit(1)
+    def remove_messages(self, infix_text):
+        new_messages = set()
+        for message in self.messages:
+            if infix_text in message:
+                continue
+            new_messages.add(message)
+        self.messages = new_messages
 
-if opt_legacy:
-    try:
-        from NaElement import NaElement  # pylint: disable=import-error
-        from NaServer import NaServer  # pylint: disable=import-error
-    except Exception, e:
-        sys.stderr.write("Unable to import the files NaServer.py/NaElement.py.\nThese files are "\
-                         "provided by the NetApp Managability SDK and must be put into "\
-                         "the sites folder ~/local/lib/python.\nDetailed error: %s\n" % e)
-        sys.exit(1)
-else:
-    # The following code in the else: block completely replaces the used functionality of NaServer/NaElements
-    import requests
-    import urllib3
+    def format_messages(self):
+        return "\n".join(self.messages)
 
-    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-    urllib3.util.ssl_.DEFAULT_CIPHERS += ":" + ":".join([
-        "DH+3DES",
-        "DH+HIGH",
-        "ECDH+3DES",
-        "ECDH+HIGH",
-        "RSA+3DES",
-        "RSA+HIGH",
-    ])
 
-    try:
-        # lxml was quite promising in our test environment: Uses 2 times less CPU resources
-        # Unfortunaly, it is not a builtin module and need to be installed manually with
-        # pip install lxml
-        import lxml.etree as ET
-    except:
-        import xml.etree.ElementTree as ET
+class NetAppConnection(object):
+    def __init__(self, hostname, user, password):
+        self.hostname = hostname
+        self.user = user
+        self.password = password
+        self.vfiler = None
 
-    def prettify(elem):
-        from xml.dom import minidom
-        rough_string = ET.tostring(elem)
-        reparsed = minidom.parseString(rough_string)
-        return reparsed.toprettyxml(indent="\t")
+        self.status = None
+        self.error_messages = ErrorMessages()
+        self.suppress_errors = False
 
-    class ErrorMessages(object):
-        def __init__(self):
-            self.messages = set()
+        self.headers = {}
+        self.headers["Content-type"] = "text/xml; charset=\"UTF-8\""
+        self.session = requests.Session()
+        self.debug = False
 
-        def add_message(self, message):
-            self.messages.add(message)
+    def get_xml_message_from_node(self, node):
+        return ET.tostring(node, encoding="UTF-8")
 
-        def remove_messages(self, infix_text):
-            new_messages = set()
-            for message in self.messages:
-                if infix_text in message:
-                    continue
-                new_messages.add(message)
-            self.messages = new_messages
+    def add_error_message(self, message):
+        if not self.suppress_errors:
+            self.error_messages.add_message(message)
 
-        def format_messages(self):
-            return "\n".join(self.messages)
+    # Converts: ['perf-object-get-instances', [['objectname', 'nfsv3'], ['instance-uuids', [['instance-uuid', '5']]]]]
+    # into a xml etree:
+    #    <perf-object-get-instances>
+    #        <objectname>nfsv3</objectname>
+    #        <instance-uuids>
+    #            <instance-uuid>5</instance-uuid>
+    #        </instance-uuids>
+    #    </perf-object-get-instances>
+    def create_node_from_list(self, the_list, parent_node):
+        new_node = ET.Element(the_list[0])
+        if len(the_list) > 1:
+            for entry in the_list[1]:
+                if isinstance(entry[1], list):
+                    self.create_node_from_list(entry, new_node)
+                else:  # simple (key, value) pair
+                    ET.SubElement(new_node, entry[0]).text = entry[1]
 
-    class NetAppConnection(object):
-        def __init__(self, hostname, user, password):
-            self.hostname = hostname
-            self.user = user
-            self.password = password
-            self.vfiler = None
+        if parent_node is None:
+            parent_node = new_node
+        else:
+            parent_node.append(new_node)
+        return parent_node
 
-            self.status = None
-            self.error_messages = ErrorMessages()
-            self.suppress_errors = False
+    def get_response(self, query_content):
+        node = self.create_node_from_list(query_content, None)
 
-            self.headers = {}
-            self.headers["Content-type"] = "text/xml; charset=\"UTF-8\""
-            self.session = requests.Session()
-            self.debug = False
+        # Nodes are always enveloped in the root_node
+        root_node = NetAppRootNode(vfiler=self.vfiler)
+        root_node.append(node)
 
-        def get_xml_message_from_node(self, node):
-            return ET.tostring(node, encoding="UTF-8")
+        request_message = self.get_xml_message_from_node(root_node.get_node())
+        if self.debug:
+            print "######## START QUERY ########"
+            print prettify(root_node.get_node())
 
-        def add_error_message(self, message):
-            if not self.suppress_errors:
-                self.error_messages.add_message(message)
+        req = requests.Request(
+            'POST',
+            "https://%s/servlets/netapp.servlets.admin.XMLrequest_filer" % self.hostname,
+            data=request_message,
+            headers=self.headers,
+            auth=(self.user, self.password))
+        prepped = self.session.prepare_request(req)
+        # No SSL certificate check..
 
-        # Converts: ['perf-object-get-instances', [['objectname', 'nfsv3'], ['instance-uuids', [['instance-uuid', '5']]]]]
-        # into a xml etree:
-        #    <perf-object-get-instances>
-        #        <objectname>nfsv3</objectname>
-        #        <instance-uuids>
-        #            <instance-uuid>5</instance-uuid>
-        #        </instance-uuids>
-        #    </perf-object-get-instances>
-        def create_node_from_list(self, the_list, parent_node):
-            new_node = ET.Element(the_list[0])
-            if len(the_list) > 1:
-                for entry in the_list[1]:
-                    if isinstance(entry[1], list):
-                        self.create_node_from_list(entry, new_node)
-                    else:  # simple (key, value) pair
-                        ET.SubElement(new_node, entry[0]).text = entry[1]
+        response = self.session.send(prepped, verify=False)
 
-            if parent_node is None:
-                parent_node = new_node
-            else:
-                parent_node.append(new_node)
-            return parent_node
+        netapp_response = NetAppResponse(response)
 
-        def get_response(self, query_content):
-            node = self.create_node_from_list(query_content, None)
-
-            # Nodes are always enveloped in the root_node
-            root_node = NetAppRootNode(vfiler=self.vfiler)
-            root_node.append(node)
-
-            request_message = self.get_xml_message_from_node(root_node.get_node())
-            if self.debug:
-                print "######## START QUERY ########"
-                print prettify(root_node.get_node())
-
-            req = requests.Request(
-                'POST',
-                "https://%s/servlets/netapp.servlets.admin.XMLrequest_filer" % self.hostname,
-                data=request_message,
-                headers=self.headers,
-                auth=(self.user, self.password))
-            prepped = self.session.prepare_request(req)
-            # No SSL certificate check..
-
-            response = self.session.send(prepped, verify=False)
-
-            netapp_response = NetAppResponse(response)
-
-            if self.debug:
-                print "######## GOT RESPONSE #######"
-                if netapp_response.results_status() != "passed":
-                    print "Error: Unable to parse content of response:\n%s" % netapp_response.results_reason(
-                    )
-                    if netapp_response.results_status() == "parse-exception":
-                        print "Raw response text:\n%r" % netapp_response.raw_response_text
-                else:
-                    print prettify(netapp_response.get_results().get_node())
-
+        if self.debug:
+            print "######## GOT RESPONSE #######"
             if netapp_response.results_status() != "passed":
-                if not netapp_response.results_reason().startswith("Unable to find API"):
-                    self.add_error_message(
-                        "Querying class %s: %s" % (node.tag, netapp_response.results_reason()))
+                print "Error: Unable to parse content of response:\n%s" % netapp_response.results_reason(
+                )
+                if netapp_response.results_status() == "parse-exception":
+                    print "Raw response text:\n%r" % netapp_response.raw_response_text
+            else:
+                print prettify(netapp_response.get_results().get_node())
 
-            return netapp_response
+        if netapp_response.results_status() != "passed":
+            if not netapp_response.results_reason().startswith("Unable to find API"):
+                self.add_error_message(
+                    "Querying class %s: %s" % (node.tag, netapp_response.results_reason()))
 
-        def invoke(self, *args):
-            invoke_list = [args[0], map(list, zip(args[1::2], args[2::2]))]
-            response = self.get_response(invoke_list)
-            if response:
-                return response.get_results()
+        return netapp_response
 
-        def set_vfiler(self, name):
-            self.vfiler = name
+    def invoke(self, *args):
+        invoke_list = [args[0], map(list, zip(args[1::2], args[2::2]))]
+        response = self.get_response(invoke_list)
+        if response:
+            return response.get_results()
 
-    class NetAppNode(object):
-        def __init__(self, xml_element):
-            if isinstance(xml_element, str):
-                xml_element = ET.Element(xml_element)
-            self.node = xml_element
-            self.element = self
+    def set_vfiler(self, name):
+        self.vfiler = name
 
-        def __getitem__(self, what):
-            if what == "name":
-                return self.node.tag.split("}")[-1]
-            elif what == "content":
-                return self.node.text or ""
 
-        def __getattr__(self, what):
-            return object.__getattribute__(self, what)
+class NetAppNode(object):
+    def __init__(self, xml_element):
+        if isinstance(xml_element, str):
+            xml_element = ET.Element(xml_element)
+        self.node = xml_element
+        self.element = self
 
-        def child_get_string(self, what):
-            for element in list(self.node):
-                if element.tag.split("}")[-1] == what:
-                    return element.text
-            return None
+    def __getitem__(self, what):
+        if what == "name":
+            return self.node.tag.split("}")[-1]
+        elif what == "content":
+            return self.node.text or ""
 
-        def child_get(self, what):
-            for element in list(self.node):
-                if element.tag.split("}")[-1] == what:
-                    return NetAppNode(element)
-            return None
+    def __getattr__(self, what):
+        return object.__getattribute__(self, what)
 
-        def children_get(self):
-            return map(NetAppNode, self.node)
+    def child_get_string(self, what):
+        for element in list(self.node):
+            if element.tag.split("}")[-1] == what:
+                return element.text
+        return None
 
-        def append(self, what):
-            self.node.append(what)
+    def child_get(self, what):
+        for element in list(self.node):
+            if element.tag.split("}")[-1] == what:
+                return NetAppNode(element)
+        return None
 
-        def extend_attributes_list(self, new_attrs):
-            for child in self.node:
-                if child.tag.endswith("attributes-list"):
-                    child.extend(new_attrs.get_node())
+    def children_get(self):
+        return map(NetAppNode, self.node)
 
-        def extend_instances_list(self, new_attrs):
-            for child in self.node:
-                if child.tag.endswith("instances"):
-                    child.extend(new_attrs.get_node())
+    def append(self, what):
+        self.node.append(what)
 
-        def get_node(self):
-            return self.node
+    def extend_attributes_list(self, new_attrs):
+        for child in self.node:
+            if child.tag.endswith("attributes-list"):
+                child.extend(new_attrs.get_node())
 
-    class NetAppRootNode(NetAppNode):
-        def __init__(self, vfiler=False):
-            root_node = ET.Element(
-                "netapp",
-                version="1.8",
-                xmlns="http://www.netapp.com/filer/admin",
-                nmsdk_language="Python",
-                nmsdk_version="5.2",
-            )
-            NetAppNode.__init__(self, root_node)
-            if vfiler:
-                self.node.attrib["vfiler"] = vfiler
+    def extend_instances_list(self, new_attrs):
+        for child in self.node:
+            if child.tag.endswith("instances"):
+                child.extend(new_attrs.get_node())
 
-    # NetApp Response Oject, holds the actual content in the NetAppNode member variable
-    class NetAppResponse(object):
+    def get_node(self):
+        return self.node
 
-        # We have seen devices (NetApp Release 8.3.2P9) occasionally send
-        # invalid XML characters, leading to an exception during parsing.
-        # In that case replace them and try again.
-        # According to https://www.w3.org/TR/xml/#charsets
-        # these should never be in an XML output:
-        INVALID_XML = re.compile(u'[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F]')
 
-        def __init__(self, response):
-            self.content = None
-            self.reason = None
+class NetAppRootNode(NetAppNode):
+    def __init__(self, vfiler=False):
+        root_node = ET.Element(
+            "netapp",
+            version="1.8",
+            xmlns="http://www.netapp.com/filer/admin",
+            nmsdk_language="Python",
+            nmsdk_version="5.2",
+        )
+        NetAppNode.__init__(self, root_node)
+        if vfiler:
+            self.node.attrib["vfiler"] = vfiler
 
-            self.raw_response_text = response.text.encode("utf-8")
 
-            # Check for invalid authorization
-            if response.status_code == 401:
-                self.status = "failed"
-                self.reason = "Authorization failed"
-                return
+# NetApp Response Oject, holds the actual content in the NetAppNode member variable
+class NetAppResponse(object):
 
-            # We except an XML answer (not HTML)
+    # We have seen devices (NetApp Release 8.3.2P9) occasionally send
+    # invalid XML characters, leading to an exception during parsing.
+    # In that case replace them and try again.
+    # According to https://www.w3.org/TR/xml/#charsets
+    # these should never be in an XML output:
+    INVALID_XML = re.compile(u'[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F]')
+
+    def __init__(self, response):
+        self.content = None
+        self.reason = None
+
+        self.raw_response_text = response.text.encode("utf-8")
+
+        # Check for invalid authorization
+        if response.status_code == 401:
+            self.status = "failed"
+            self.reason = "Authorization failed"
+            return
+
+        # We except an XML answer (not HTML)
+        try:
+            self.content = NetAppNode(ET.fromstring(self.raw_response_text))
+        except ET.ParseError:
             try:
-                self.content = NetAppNode(ET.fromstring(self.raw_response_text))
-            except ET.ParseError:
-                try:
-                    clean = NetAppResponse.INVALID_XML.sub('', self.raw_response_text)
-                    self.content = NetAppNode(ET.fromstring(clean))
-                except ET.ParseError, exc:
-                    self.status = "parse-exception"
-                    self.reason = str(exc)
-                return
+                clean = NetAppResponse.INVALID_XML.sub('', self.raw_response_text)
+                self.content = NetAppNode(ET.fromstring(clean))
+            except ET.ParseError, exc:
+                self.status = "parse-exception"
+                self.reason = str(exc)
+            return
 
-            self.status = self.content.child_get("results").node.attrib["status"]
-            if self.status != "passed":
-                self.reason = self.content.child_get("results").node.attrib["reason"]
+        self.status = self.content.child_get("results").node.attrib["status"]
+        if self.status != "passed":
+            self.reason = self.content.child_get("results").node.attrib["reason"]
 
-        def results_status(self):
-            return self.status
+    def results_status(self):
+        return self.status
 
-        def results_reason(self):
-            return self.reason
+    def results_reason(self):
+        return self.reason
 
-        def get_results(self):
-            return self.content.child_get("results")
+    def get_results(self):
+        return self.content.child_get("results")
 
 
 #.
@@ -591,10 +548,9 @@ def output_error_section():
         print server.error_messages.format_messages()
 
 
-nodes = []
-
-
 def query_nodes(what, node_attribute="node-name"):
+    # pylint: disable=used-before-assignment
+    # TODO: Will be fixed in one of the next commits
     global nodes
     if opt_legacy:
         if not nodes:
@@ -841,6 +797,67 @@ def query_counters(what):
 #   |                       |_|  |_|\__,_|_|_| |_|                         |
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
+
+nodes = []
+
+# NetApp credentials
+user = None
+secret = None
+
+opt_timeout = 120
+opt_debug = False
+opt_dump_xml = False
+opt_no_counters = []
+opt_legacy = False
+
+short_options = 'hu:s:t:o'
+long_options = ['help', 'debug', 'user=', 'secret=', 'timeout=', 'xml', "nocounters=", "legacy"]
+
+section_errors = []
+
+try:
+    opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
+except getopt.GetoptError, err:
+    sys.stderr.write("%s\n" % err)
+    sys.exit(1)
+
+for o, a in opts:
+    if o in ['--debug']:
+        opt_debug = True
+    elif o in ['--legacy']:
+        opt_legacy = True
+    elif o in ['-u', '--user']:
+        user = a
+    elif o in ['-s', '--secret']:
+        secret = a
+    elif o in ['--nocounters']:
+        opt_no_counters = a.split(",")
+    elif o in ['--xml']:
+        opt_dump_xml = True
+    elif o in ['-t', '--timeout']:
+        opt_timeout = int(a)
+    elif o in ['-h', '--help']:
+        usage()
+        sys.exit(0)
+
+if len(args) == 1:
+    host_address = args[0]
+elif not args:
+    sys.stderr.write("ERROR: No host given.\n")
+    sys.exit(1)
+else:
+    sys.stderr.write("ERROR: Please specify exactly one host.\n")
+    sys.exit(1)
+
+if opt_legacy:
+    try:
+        from NaElement import NaElement  # pylint: disable=import-error
+        from NaServer import NaServer  # pylint: disable=import-error
+    except Exception, e:
+        sys.stderr.write("Unable to import the files NaServer.py/NaElement.py.\nThese files are "\
+                         "provided by the NetApp Managability SDK and must be put into "\
+                         "the sites folder ~/local/lib/python.\nDetailed error: %s\n" % e)
+        sys.exit(1)
 
 # Login
 try:

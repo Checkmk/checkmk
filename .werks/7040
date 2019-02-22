@@ -1,0 +1,12 @@
+Title: ucs_c_rack_server_topsystem: Topsystem Information
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1550822320
+Class: feature
+
+This werk adds a check which displays information about Cisco UCS C-Series Rack Servers.
+
+CMK-1067

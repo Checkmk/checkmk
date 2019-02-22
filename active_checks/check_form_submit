@@ -60,7 +60,7 @@ from HTMLParser import HTMLParser
 
 def usage():
     sys.stderr.write("""
-USAGE: check_form_submit -I <HOSTADDRESS> [-u <URI>] [-p <PORT>] [-s] [-H <VHOST>]
+USAGE: check_form_submit -I <HOSTADDRESS> [-u <URI>] [-p <PORT>] [-s]
             [-f <FORMNAME>] [-q <QUERYPARAMS>] [-e <REGEX>] [-t <TIMEOUT> ]
             [-n <WARN>,<CRIT>]
 
@@ -71,7 +71,6 @@ OPTIONS:
   -u URI                        The URL string to query, "/" by default
   -p PORT                       TCP Port to communicate with
   -s                            Encrypt the connection using SSL
-  -H VHOST                      Virtual Host specification to ask for
   -f FORMNAME                   Name of the form to fill, must match with the
                                 contents of the "name" attribute
   -q QUERYPARAMS                Keys/Values of form fields to be popuplated
@@ -98,10 +97,7 @@ class HostResult(Exception):
 
 
 def new_state(rc, s):
-    if multiple:
-        raise HostResult((rc, s))
-    else:
-        bail_out(rc, s)
+    raise HostResult((rc, s))
 
 
 def bail_out(rc, s):
@@ -200,7 +196,7 @@ class FormParser(HTMLParser):
 # One form found and no form_name given, use that one
 # Loop all forms for the given form_name, use the matching one
 # otherwise raise an exception
-def parse_form(content):
+def parse_form(content, form_name):
     parser = FormParser()
     parser.feed(content)
     forms = parser.forms
@@ -238,131 +234,140 @@ def update_form_vars(form_elem, params):
     return v
 
 
-short_options = 'I:u:p:H:f:q:e:t:n:sd'
-long_options = ["help"]
-
-try:
-    opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
-except getopt.GetoptError, err:
-    sys.stderr.write("%s\n" % err)
-    sys.exit(1)
-
-hosts = []
-multiple = False
-uri = '/'
-port = 80
-ssl = False
-vhost = None
-form_name = None
-params = {}
-expect_regex = None
 opt_debug = False
-timeout = 10  # seconds
-num_warn = None
-num_crit = None
 
-for o, a in opts:
-    if o in ['-h', '--help']:
-        usage()
-        sys.exit(0)
-    elif o == '-I':
-        hosts.append(a)
-    elif o == '-u':
-        uri = a
-    elif o == '-p':
-        port = int(a)
-    elif o == '-s':
-        ssl = True
-    elif o == '-H':
-        vhost = a
-    elif o == '-f':
-        form_name = a
-    elif o == '-q':
-        params = dict([parts.split('=', 1) for parts in a.split('&')])
-    elif o == '-e':
-        expect_regex = a
-    elif o == '-t':
-        timeout = int(a)
-    elif o == '-n':
-        if ',' in a:
-            num_warn, num_crit = map(int, a.split(',', 1))
-        else:
-            num_warn = int(a)
-    elif o == '-d':
-        opt_debug = True
 
-if not hosts:
-    sys.stderr.write('Please provide the host to query via -I <HOSTADDRESS>.\n')
-    usage()
-    sys.exit(1)
+def main():
+    global opt_debug
+    short_options = 'I:u:p:H:f:q:e:t:n:sd'
+    long_options = ["help"]
 
-if len(hosts) > 1:
-    multiple = True
+    try:
+        opts = getopt.getopt(sys.argv[1:], short_options, long_options)[0]
+    except getopt.GetoptError, err:
+        sys.stderr.write("%s\n" % err)
+        sys.exit(1)
 
-try:
-    client = init_http()
+    hosts = []
+    multiple = False
+    uri = '/'
+    port = 80
+    ssl = False
+    form_name = None
+    params = {}
+    expect_regex = None
+    timeout = 10  # seconds
+    num_warn = None
+    num_crit = None
 
-    states = {}
-    for host in hosts:
-        base_url = get_base_url(ssl, host, port)
-        try:
-            # Perform first HTTP request to fetch the page containing the form(s)
-            code, real_url, body = open_url(client, base_url + uri, timeout=timeout)
-
-            form = parse_form(body)
-
-            # Get all fields and prefilled values from that form
-            # Put the values of the given query params in these forms
-            form_vars = update_form_vars(form, params)
-
-            # Issue a HTTP request with those parameters
-            # Extract the form target and method
-            method = form['attrs'].get('method', 'GET').upper()
-            target = form['attrs'].get('action', real_url)
-            if target[0] == '/':
-                # target is given as absolute path, relative to hostname
-                target = base_url + target
-            elif target[0] != '':
-                # relative URL
-                target = '%s/%s' % ('/'.join(real_url.rstrip('/').split('/')[:-1]), target)
-
-            code, real_url, content = open_url(client, target, method, form_vars, timeout=timeout)
-
-            # If a expect_regex is given, check wether or not it is present in the response
-            if expect_regex is not None:
-                matches = re.search(expect_regex, content)
-                if matches is not None:
-                    new_state(0, 'Found expected regex "%s" in form response' % expect_regex)
-                else:
-                    new_state(
-                        2, 'Expected regex "%s" could not be found in form response' % expect_regex)
+    for o, a in opts:
+        if o in ['-h', '--help']:
+            usage()
+            sys.exit(0)
+        elif o == '-I':
+            hosts.append(a)
+        elif o == '-u':
+            uri = a
+        elif o == '-p':
+            port = int(a)
+        elif o == '-s':
+            ssl = True
+        elif o == '-f':
+            form_name = a
+        elif o == '-q':
+            params = dict([parts.split('=', 1) for parts in a.split('&')])
+        elif o == '-e':
+            expect_regex = a
+        elif o == '-t':
+            timeout = int(a)
+        elif o == '-n':
+            if ',' in a:
+                num_warn, num_crit = map(int, a.split(',', 1))
             else:
-                new_state(0, 'Form has been submitted')
-        except HostResult, e:
-            states[host] = e.result
+                num_warn = int(a)
+        elif o == '-d':
+            opt_debug = True
 
-    if multiple:
-        failed = [pair for pair in states.items() if pair[1][0] != 0]
-        success = [pair for pair in states.items() if pair[1][0] == 0]
-        max_state = max([state for state, output in states.values()])
+    if not hosts:
+        sys.stderr.write('Please provide the host to query via -I <HOSTADDRESS>.\n')
+        usage()
+        sys.exit(1)
 
-        sum_state = 0
-        if num_warn is None and num_crit is None:
-            # use the worst state as summary state
-            sum_state = max_state
+    if len(hosts) > 1:
+        multiple = True
 
-        elif num_crit is not None and len(success) <= num_crit:
-            sum_state = 2
+    try:
+        client = init_http()
 
-        elif num_warn is not None and len(success) <= num_warn:
-            sum_state = 1
+        states = {}
+        for host in hosts:
+            base_url = get_base_url(ssl, host, port)
+            try:
+                # Perform first HTTP request to fetch the page containing the form(s)
+                _code, real_url, body = open_url(client, base_url + uri, timeout=timeout)
 
-        txt = '%d succeeded, %d failed' % (len(success), len(failed))
-        if failed:
-            txt += ' (%s)' % ', '.join(['%s: %s' % (n, msg[1]) for n, msg in failed])
-        bail_out(sum_state, txt)
+                form = parse_form(body, form_name)
 
-except Exception, e:
-    if opt_debug:
-        raise
-    bail_out(3, 'Exception occured: %s\n' % e)
+                # Get all fields and prefilled values from that form
+                # Put the values of the given query params in these forms
+                form_vars = update_form_vars(form, params)
+
+                # Issue a HTTP request with those parameters
+                # Extract the form target and method
+                method = form['attrs'].get('method', 'GET').upper()
+                target = form['attrs'].get('action', real_url)
+                if target[0] == '/':
+                    # target is given as absolute path, relative to hostname
+                    target = base_url + target
+                elif target[0] != '':
+                    # relative URL
+                    target = '%s/%s' % ('/'.join(real_url.rstrip('/').split('/')[:-1]), target)
+
+                _code, real_url, content = open_url(
+                    client, target, method, form_vars, timeout=timeout)
+
+                # If a expect_regex is given, check wether or not it is present in the response
+                if expect_regex is not None:
+                    matches = re.search(expect_regex, content)
+                    if matches is not None:
+                        new_state(0, 'Found expected regex "%s" in form response' % expect_regex)
+                    else:
+                        new_state(
+                            2, 'Expected regex "%s" could not be found in form response' %
+                            expect_regex)
+                else:
+                    new_state(0, 'Form has been submitted')
+            except HostResult, e:
+                if not multiple:
+                    bail_out(*e.result)
+                states[host] = e.result
+
+        if multiple:
+            failed = [pair for pair in states.items() if pair[1][0] != 0]
+            success = [pair for pair in states.items() if pair[1][0] == 0]
+            max_state = max([state for state, _output in states.values()])
+
+            sum_state = 0
+            if num_warn is None and num_crit is None:
+                # use the worst state as summary state
+                sum_state = max_state
+
+            elif num_crit is not None and len(success) <= num_crit:
+                sum_state = 2
+
+            elif num_warn is not None and len(success) <= num_warn:
+                sum_state = 1
+
+            txt = '%d succeeded, %d failed' % (len(success), len(failed))
+            if failed:
+                txt += ' (%s)' % ', '.join(['%s: %s' % (n, msg[1]) for n, msg in failed])
+            bail_out(sum_state, txt)
+
+    except Exception, e:
+        if opt_debug:
+            raise
+        bail_out(3, 'Exception occured: %s\n' % e)
+
+
+if __name__ == "__main__":
+    main()

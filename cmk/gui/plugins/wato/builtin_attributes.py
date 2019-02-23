@@ -734,21 +734,31 @@ class HostAttributeLockedBy(ABCHostAttributeValueSpec):
 
     def valuespec(self):
         return Transform(
-            Tuple(
-                orientation="horizontal",
-                title_br=False,
-                elements=[
-                    SiteChoice(),
-                    ID(title=_("Program"),),
-                    ID(title=_("Connection ID"),),
-                ],
-                title=_("Locked by"),
-                help=_("The host is (partially) managed by an automatic data source like the "
-                       "Dynamic Configuration."),
-            ),
+            LockedByValuespec(),
             forth=tuple,
             back=list,
         )
+
+
+class LockedByValuespec(Tuple):
+    def __init__(self):
+        super(LockedByValuespec, self).__init__(
+            orientation="horizontal",
+            title_br=False,
+            elements=[
+                SiteChoice(),
+                ID(title=_("Program"),),
+                ID(title=_("Connection ID"),),
+            ],
+            title=_("Locked by"),
+            help=_("The host is (partially) managed by an automatic data source like the "
+                   "Dynamic Configuration."),
+        )
+
+    def value_to_text(self, value):
+        if not value or not value[1] or not value[2]:
+            return _("Not locked")
+        return super(LockedByValuespec, self).value_to_text(value)
 
 
 @host_attribute_registry.register
@@ -781,4 +791,5 @@ class HostAttributeLockedAttributes(ABCHostAttributeValueSpec):
         return ListOf(
             DropdownChoice(choices=host_attribute_registry.get_choices),
             title=_("Locked attributes"),
+            text_if_empty=_("Not locked"),
         )

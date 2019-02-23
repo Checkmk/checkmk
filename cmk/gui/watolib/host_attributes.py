@@ -277,8 +277,8 @@ class ABCHostAttribute(object):
 
     def editable(self):
         # type: () -> bool
-        """Whether or not this attribute can be edited after creation
-        of the object"""
+        """Whether or not this attribute can be edited using the GUI.
+        This makes the attribute a read only attribute in the GUI."""
         return True
 
     def is_mandatory(self):

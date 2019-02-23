@@ -1563,7 +1563,7 @@ def configure_attributes(new,
             if for_what == "host_search":
                 is_editable = True
 
-            if not new and not is_editable:
+            if not is_editable:
                 # Bug in pylint 1.9.2 https://github.com/PyCQA/pylint/issues/1984, already fixed in master.
                 if active:  # pylint: disable=simplifiable-if-statement
                     force_entry = True

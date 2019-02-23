@@ -1,0 +1,22 @@
+Title: Improved handling of common issues during distributed site login
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0p13
+Date: 1550953247
+Class: fix
+
+When connecting a new distributed site to a central site an issue that could
+happend accidentally was that the remote site had a pending change in WATO in
+the moment the central site is establishing the configuration connection.
+
+This resulted in an error message like this during the first activation:
+"There are 1 pending changes that would get lost".
+
+Since the user already confirms that the site configuration should be overwritten
+during site login, the step now automatically confirms all pending changes.
+
+Additionally the site login now creates a pending change for the new remote
+site in the central WATO to trigger an activation for this site after the login
+even without a configuration change.

@@ -42,7 +42,7 @@ from cmk.gui.watolib.bulk_discovery import (
     vs_bulk_discovery,
     get_tasks,
 )
-from cmk.gui.watolib.hosts_and_folders import Folder
+from cmk.gui.watolib.hosts_and_folders import Host
 
 
 @api_call_collection_registry.register
@@ -121,7 +121,7 @@ class APICallBulkDiscovery(APICallCollection):
 
         hosts_to_discover = []
         for host_name in request["hostnames"]:
-            host = Folder.current().host(host_name)
+            host = Host.host(host_name)
             if host is None:
                 raise MKUserError(None, _("The host '%s' does not exist") % host_name)
             host.need_permission("write")

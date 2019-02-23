@@ -16,25 +16,29 @@ from testlib import web, APIError, wait_until, repo_path  # pylint: disable=unus
 
 
 @pytest.fixture
-def local_test_host(web, site):
-    web.add_host(
-        "test-host", attributes={
-            "ipaddress": "127.0.0.1",
-        })
-
-    site.write_file(
-        "etc/check_mk/conf.d/test-host.mk",
-        "datasource_programs.append(('cat ~/var/check_mk/agent_output/<HOST>', [], ['test-host']))\n"
-    )
-
+def local_test_hosts(web, site):
     site.makedirs("var/check_mk/agent_output/")
-    site.write_file(
-        "var/check_mk/agent_output/test-host",
-        file("%s/tests/integration/cmk_base/test-files/linux-agent-output" % repo_path()).read())
+
+    web.add_hosts([
+        ("test-host", "", {
+            "ipaddress": "127.0.0.1",
+        }),
+        ("test-host2", "xy/zzz", {
+            "ipaddress": "127.0.0.1",
+        }),
+    ])
+
+    for hostname in ["test-host", "test-host2"]:
+        site.write_file(
+            "var/check_mk/agent_output/%s.mk" % hostname,
+            file(
+                "%s/tests/integration/cmk_base/test-files/linux-agent-output" % repo_path()).read())
 
     yield
-    web.delete_host("test-host")
-    site.delete_file("etc/check_mk/conf.d/test-host.mk")
+
+    for hostname in ["test-host", "test-host2"]:
+        web.delete_host(hostname)
+        site.delete_file("var/check_mk/agent_output/%s.mk" % hostname)
 
 
 def test_global_settings(site, web):
@@ -553,7 +557,7 @@ def _wait_for_bulk_discovery_job(web):
     wait_until(job_completed, timeout=15, interval=1)
 
 
-def test_bulk_discovery_start_with_defaults(web, local_test_host):
+def test_bulk_discovery_start_with_defaults(web, local_test_hosts):
     result = web.bulk_discovery_start({
         "hostnames": ["test-host"],
     })
@@ -571,9 +575,27 @@ def test_bulk_discovery_start_with_defaults(web, local_test_host):
     assert "discovery successful" in status["job"]["output"]
 
 
-def test_bulk_discovery_start_with_parameters(web, local_test_host):
+def test_bulk_discovery_start_with_parameters(web, local_test_hosts):
     result = web.bulk_discovery_start({
         "hostnames": ["test-host"],
+        "mode": "new",
+        "use_cache": True,
+        "do_scan": True,
+        "bulk_size": 5,
+        "ignore_single_check_errors": True,
+    })
+    assert result["started"] is True
+
+    _wait_for_bulk_discovery_job(web)
+
+    status = web.bulk_discovery_status()
+    assert status["is_running"] is False
+    assert status["job"]["state"] == "finished"
+
+
+def test_bulk_discovery_start_multiple_with_subdir(web, local_test_hosts):
+    result = web.bulk_discovery_start({
+        "hostnames": ["test-host", "test-host2"],
         "mode": "new",
         "use_cache": True,
         "do_scan": True,

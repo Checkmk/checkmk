@@ -10256,7 +10256,7 @@ class ModeDistributedMonitoring(ModeSites):
                 site["secret"] = secret
                 self._site_mgmt.save_sites(configured_sites)
                 message = _("Successfully logged into remote site %s.") % html.render_tt(site["alias"])
-                watolib.log_audit(None, "edit-site", message)
+                add_change("edit-sites", message, sites=[login_id], domains=watolib.ConfigDomain.enabled_domains())
                 return None, message
 
             except watolib.MKAutomationException, e:
@@ -10919,6 +10919,12 @@ def page_automation_login():
     # a login secret. If such a secret is not yet present it is created on
     # the fly.
     html.set_output_format("python")
+
+    # When doing the site login the user confirmed to overwrite the remote site
+    # configuration. The user will execute the first activation on this site
+    # in the next step. Confirm all currently pending changes to make sure that
+    # the activation will not be blocked by already pending local changes.
+    watolib.confirm_all_local_changes()
 
     if not html.has_var("_version"):
         # Be compatible to calls from sites using versions before 1.5.0p10.

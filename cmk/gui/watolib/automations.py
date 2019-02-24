@@ -130,7 +130,7 @@ def check_mk_local_automation(command, args=None, indata="", stdin_data=None, ti
 
     try:
         return ast.literal_eval(outdata)
-    except Exception as e:
+    except SyntaxError as e:
         raise MKGeneralException(
             "Error running <tt>%s</tt>. Invalid output from webservice (%s): <pre>%s</pre>" %
             (" ".join(cmd), e, outdata))
@@ -253,7 +253,7 @@ def do_remote_automation(site, command, vars_, timeout=None):
 
     try:
         response = ast.literal_eval(response)
-    except:
+    except SyntaxError:
         # The remote site will send non-Python data in case of an error.
         raise MKAutomationException("%s: <pre>%s</pre>" % (_("Got invalid data"), response))
 
@@ -317,5 +317,5 @@ def do_site_login(site_id, name, password):
     else:
         try:
             return ast.literal_eval(response)
-        except:
+        except SyntaxError:
             raise MKAutomationException(response)

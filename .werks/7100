@@ -1,0 +1,38 @@
+Title: mk_sap_hana: Refactored plugin; Deprecated old checks; Add new checks
+Level: 2
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.6.0i1
+Date: 1551023733
+Class: feature
+
+Deprecated checks are:
+sap_hana_filesystem,
+sap_hana_full_backup,
+sap_hana_mem,
+sap_hana_process_list,
+sap_hana_version,
+
+New checks are:
+sap_hana_backup,
+sap_hana_data_volume,
+sap_hana_diskusage,
+sap_hana_ess,
+sap_hana_events,
+sap_hana_license,
+sap_hana_memrate,
+sap_hana_proc,
+sap_hana_replication_status,
+sap_hana_status,
+
+In order to make the SAP HANA checks work you have to install
+the agent plugin {{mk_sap_hana}} on your clients.
+
+If you have installed the old agent plugin then you have to
+replace it with the new agent plugin and perform a rediscovery
+of these hosts.
+
+The old check plugins are not discoverable any more and show
+the message WARN - "This check is deprecated. Please rediscover the
+services of that host."

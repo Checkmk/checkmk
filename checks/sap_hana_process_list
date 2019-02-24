@@ -25,53 +25,15 @@
 # Boston, MA 02110-1301 USA.
 
 
-def parse_sap_hana_process_list(info):
-    parsed = {}
-    header = None
-    instance = ""
-    for line in info:
-        if line[0].startswith("[[[") and line[0].endswith("]]]"):
-            instance = line[0][3:-3]
-            continue
-
-        if len(line) < 7:
-            continue
-
-        line = [x.replace('"', '').strip() for x in line]
-        if line == [
-                'name',
-                'description',
-                'dispstatus',
-                'textstatus',
-                'starttime',
-                'elapsedtime',
-                'pid',
-        ]:
-            header = line[1:]
-        elif header is not None:
-            parsed.setdefault(("%s %s" % (instance, line[0])).strip(), dict(zip(header, line[1:])))
-    return parsed
-
-
 def inventory_sap_hana_process_list(parsed):
-    return [(process_name, {}) for process_name in parsed]
+    return
 
 
 def check_sap_hana_process_list(item, params, parsed):
-    if item not in parsed:
-        return
-
-    data = parsed[item]
-    state = 0
-    dispstatus = data['dispstatus']
-    if dispstatus != 'GREEN':
-        state = 2
-    return state, '[%s] Status: %s (%s)' % \
-           (data["description"], data['textstatus'], dispstatus)
+    return 1, "This check is deprecated. Please have a look at werk #7100."
 
 
 check_info['sap_hana_process_list'] = {
-    'parse_function': parse_sap_hana_process_list,
     'inventory_function': inventory_sap_hana_process_list,
     'check_function': check_sap_hana_process_list,
     'service_description': 'SAP HANA Process %s',

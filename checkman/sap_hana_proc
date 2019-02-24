@@ -1,0 +1,23 @@
+title: SAP HANA Process
+agents: linux
+catalog: app/sap_hana
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the process status SAP HANA.
+ To make this check work you have to install the agent plugin
+ {{mk_sap_hana}}.
+
+ The check is WARN if the process coordinator type changes from the initial
+ state which is remember during discovery, ie. when the type changes from
+ master to backup.
+
+ If the active status is not YES the check goes CRIT.
+
+ This check is also cluster-aware.
+
+item:
+ The instance and process name
+
+inventory:
+ One service is created per instance and process.

@@ -1,0 +1,87 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+def parse_sap_hana_ess(info):
+    parsed = {}
+    for (sid_instance, node), lines in parse_sap_hana(info).iteritems():
+        inst_data = {}
+        for line in lines:
+            if len(line) < 2:
+                continue
+
+            key = line[0]
+            if key == "started":
+                try:
+                    inst_data[key] = int(line[1])
+                except ValueError:
+                    pass
+            else:
+                inst_data[key] = line[1]
+        if inst_data:
+            parsed.setdefault((sid_instance, node), inst_data)
+    return parsed
+
+
+def inventory_sap_hana_ess(parsed):
+    for (sid_instance, _node) in parsed.iterkeys():
+        yield sid_instance, {}
+
+
+def check_sap_hana_ess(item, params, parsed):
+    for (sid_instance, node), data in parsed.iteritems():
+        if item != sid_instance:
+            continue
+
+        if node:
+            yield 0, 'On node: %s' % node
+
+        active_state_name = data['active']
+        if active_state_name == 'unknown':
+            state = 3
+        elif active_state_name in ['false', 'no']:
+            state = 2
+        else:
+            state = 0
+        yield state, "Active status: %s" % active_state_name
+
+        started_threads = data.get('started')
+        if started_threads is None or started_threads < 1:
+            state = 2
+        else:
+            state = 2
+        yield state, 'Started threads: %s' % started_threads, [('threads', started_threads)]
+
+
+check_info['sap_hana_ess'] = {
+    'parse_function': parse_sap_hana_ess,
+    'inventory_function': inventory_sap_hana_ess,
+    'check_function': check_sap_hana_ess,
+    'service_description': 'SAP HANA ESS %s',
+    'includes': ['sap_hana.include'],
+    "has_perfdata": True,
+    "node_info": True,
+}

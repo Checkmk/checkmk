@@ -1,0 +1,21 @@
+title: SAP HANA Data Volume
+agents: linux
+catalog: app/sap_hana
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the data volumes of SAP HANA.
+ To make this check work you have to install the agent plugin
+ {{mk_sap_hana}}.
+
+ Upper default levels for the used space are set to  80, 90 percent,
+ lower levels to 60, 50 percent. These levels are configurable.
+ Please see the related filesystem ruleset for further configuration.
+
+ This check is also cluster-aware.
+
+item:
+ The instance name, file type and volume ID
+
+inventory:
+ One service is created per instance, file type and volume.

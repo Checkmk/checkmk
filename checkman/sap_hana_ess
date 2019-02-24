@@ -1,0 +1,23 @@
+title: SAP HANA Statistics Server
+agents: linux
+catalog: app/sap_hana
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the SAP HANA statistics server.
+ To make this check work you have to install the agent plugin
+ {{mk_sap_hana}}.
+
+ If the active state is UNKNOWN then the check is UNKNOWN, if the
+ active state is FALSE or NO, the check state is CRIT, otherwise
+ the check goes OK.
+
+ If there are no startet threads the check goes CRIT.
+
+ This check is also cluster-aware.
+
+item:
+ The instance name
+
+inventory:
+ One service is created per instance.

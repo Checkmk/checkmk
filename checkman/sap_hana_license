@@ -1,0 +1,28 @@
+title: SAP HANA License
+agents: linux
+catalog: app/sap_hana
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the SAP HANA license usage.
+ To make this check work you have to install the agent plugin
+ {{mk_sap_hana}}.
+
+ Upper default levels for the license usage are set to 80, 90 percent.
+ These levels are configurable.
+
+ If license is enforced then the usage is checked against the configured
+ levels. If the license is not enforced (unlimited usage), the check is OK.
+ If this value is unknown the check goes UNKNOWN.
+
+ If the license is permanent the check is OK; otherwise WARN.
+ If the license is valid the check is OK; otherwise WARN.
+ If the expiration date is given the check goes WARN; otherwise OK.
+
+ This check is also cluster-aware.
+
+item:
+ The instance name
+
+inventory:
+ One service is created per instance.

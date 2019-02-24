@@ -24,59 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# TODO WATO group 'memory_simple' for items
-
-
-def parse_sap_hana_mem(info):
-    pparsed = {}
-    section = None
-    instance = ""
-    for line in info:
-        if line[0] in ["[[[resident]]]", "[[[database]]]"]:
-            section = line[0][3:-3]
-            continue
-
-        if line[0].startswith("[[[") and line[0].endswith("]]]"):
-            instance = line[0][3:-3]
-            continue
-
-        if section is None:
-            continue
-
-        line = [x.replace('"', '').strip() for x in line]
-        inst_data = pparsed.setdefault("%s %s" % (instance, line[0]), {})
-        # all memory values in bytes
-        if section == 'resident':
-            # used
-            data = int(line[1])
-        elif section == 'database':
-            # used, max, resident_max
-            data = map(int, line[1:])
-        else:
-            continue
-        inst_data.setdefault(section, data)
-
-    parsed = {}
-    for instance, attrs in pparsed.iteritems():
-        inst_data = parsed.setdefault(instance, {})
-        resident_used = attrs['resident']
-        db_used, db_max, resident_max = attrs['database']
-        inst_data.setdefault('database', [db_used, db_max])
-        inst_data.setdefault('resident', [resident_used, resident_max])
-    return parsed
-
-
-def inventory_sap_hana_mem(parsed, _type):
-    return [(instance, {}) for instance, attrs in parsed.iteritems() if _type in attrs]
-
-
-def check_sap_hana_mem(item, params, parsed, _type):
-    if item in parsed:
-        data = parsed[item]
-        used, total = data[_type]
-        return check_memory_simple(used, total, params)
-
-
 #   .--resident------------------------------------------------------------.
 #   |                              _     _            _                    |
 #   |                _ __ ___  ___(_) __| | ___ _ __ | |_                  |
@@ -90,21 +37,17 @@ factory_settings["sap_hana_mem_resident_default_levels"] = {"levels": ("perc_use
 
 
 def inventory_sap_hana_mem_resident(parsed):
-    return inventory_sap_hana_mem(parsed, 'resident')
+    return
 
 
 def check_sap_hana_mem_resident(item, params, parsed):
-    return check_sap_hana_mem(item, params, parsed, 'resident')
+    return 1, "This check is deprecated. Please have a look at werk #7100."
 
 
 check_info['sap_hana_mem'] = {
-    'parse_function': parse_sap_hana_mem,
     'inventory_function': inventory_sap_hana_mem_resident,
     'check_function': check_sap_hana_mem_resident,
     'service_description': 'SAP HANA Resident Memory %s',
-    'includes': ['memory.include'],
-    #'group'                 : 'memory_simple',
-    'has_perfdata': True,
     'default_levels_variable': 'sap_hana_mem_resident_default_levels',
 }
 
@@ -121,20 +64,17 @@ check_info['sap_hana_mem'] = {
 factory_settings["sap_hana_mem_database_default_levels"] = {"levels": ("perc_used", (80.0, 90.0))}
 
 
-def inventory_sap_hana_mem_db(parsed):
-    return inventory_sap_hana_mem(parsed, 'database')
+def inventory_sap_hana_mem_database(parsed):
+    return
 
 
-def check_sap_hana_mem_db(item, params, parsed):
-    return check_sap_hana_mem(item, params, parsed, 'database')
+def check_sap_hana_mem_database(item, params, parsed):
+    return 1, "This check is deprecated. Please have a look at werk #7100."
 
 
 check_info['sap_hana_mem.database'] = {
-    'inventory_function': inventory_sap_hana_mem_db,
-    'check_function': check_sap_hana_mem_db,
+    'inventory_function': inventory_sap_hana_mem_database,
+    'check_function': check_sap_hana_mem_database,
     'service_description': 'SAP HANA Used Memory %s',
-    'includes': ['memory.include'],
-    #'group'                 : 'memory_simple',
-    'has_perfdata': True,
     'default_levels_variable': 'sap_hana_mem_database_default_levels',
 }

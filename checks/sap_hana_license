@@ -1,0 +1,138 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+factory_settings['sap_hana_license_default_levels'] = {
+    'license_usage_perc': (80.0, 90.0),
+}
+
+SAP_HANA_MAYBE = collections.namedtuple("SAP_HANA_MAYBE", ["bool", "value"])
+
+
+def parse_sap_hana_license(info):
+    parsed = {}
+    for (sid_instance, node), lines in parse_sap_hana(info).iteritems():
+        for line in lines:
+            if len(line) < 7:
+                continue
+
+            inst = parsed.setdefault((sid_instance, node), {})
+            for index, key, in [
+                (0, "enforced"),
+                (1, "permanent"),
+                (2, "locked"),
+                (5, "valid"),
+            ]:
+                value = line[index]
+                inst[key] = SAP_HANA_MAYBE(_parse_maybe_bool(value), value)
+
+            for index, key, in [
+                (3, "size"),
+                (4, "limit"),
+            ]:
+                try:
+                    inst[key] = int(line[index])
+                except ValueError:
+                    pass
+            inst["expiration_date"] = line[6]
+    return parsed
+
+
+def _parse_maybe_bool(value):
+    if value.lower() == "true":
+        return True
+    elif value.lower() == "false":
+        return False
+    return
+
+
+def inventory_sap_hana_license(parsed):
+    for (sid_instance, _node) in parsed.iterkeys():
+        yield sid_instance, {}
+
+
+def check_sap_hana_license(item, params, parsed):
+    for (sid_instance, node), data in parsed.iteritems():
+        if item != sid_instance:
+            continue
+
+        if node:
+            yield 0, 'On node: %s' % node
+
+        enforced = data['enforced']
+        if enforced.bool:
+            yield _check_product_usage(data['size'], data['limit'], params)
+        elif enforced.bool is None:
+            yield 3, "Status: unknown[%s]" % enforced.value
+        else:
+            yield 0, "Status: unlimited"
+
+        permanent = data["permanent"]
+        if permanent.bool:
+            yield 0, 'License: %s' % permanent.value
+        else:
+            yield 1, 'License: not %s' % permanent.value
+
+        valid = data["valid"]
+        if not valid.bool:
+            yield 1, 'not %s' % valid.value
+
+        expiration_date = data["expiration_date"]
+        if expiration_date == "?":
+            yield 1, 'Expiration date: %s' % expiration_date
+
+
+def _check_product_usage(size, limit, params):
+    yield check_levels(
+        size,
+        "license_size",
+        params.get('license_size', (None, None)),
+        human_readable_func=get_bytes_human_readable,
+        infoname="Size")
+
+    try:
+        usage_perc = 100.0 * size / limit
+    except ZeroDivisionError:
+        yield 1, 'Usage: cannot calculate'
+    else:
+        yield check_levels(
+            usage_perc,
+            "license_usage_perc",
+            params.get('license_usage_perc', (None, None)),
+            human_readable_func=get_percent_human_readable,
+            infoname="Usage")
+
+
+check_info['sap_hana_license'] = {
+    'parse_function': parse_sap_hana_license,
+    'inventory_function': inventory_sap_hana_license,
+    'check_function': check_sap_hana_license,
+    'service_description': 'SAP HANA License %s',
+    'includes': ['sap_hana.include'],
+    "has_perfdata": True,
+    "node_info": True,
+    'default_levels_variable': 'sap_hana_license_default_levels',
+    'group': 'sap_hana_license',
+}

@@ -25,47 +25,15 @@
 # Boston, MA 02110-1301 USA.
 
 
-def parse_sap_hana_full_backup(info):
-    parsed = {}
-    instance = ""
-    for line in info:
-        if line[0].startswith("[[[") and line[0].endswith("]]]"):
-            instance = line[0][3:-3]
-            continue
-        date, age_days, duration, backup_state = [x.strip() for x in line[:4]]
-        parsed.setdefault(
-            instance, {
-                "age_days": age_days,
-                "duration": duration,
-                "date": date.replace('"', ''),
-                "state": backup_state.replace('"', ''),
-            })
-    return parsed
-
-
 def inventory_sap_hana_full_backup(parsed):
-    return [(instance, {}) for instance in parsed]
+    return
 
 
 def check_sap_hana_full_backup(item, params, parsed):
-    data = parsed.get(item)
-    if not data:
-        return
-    backup_state = data["state"]
-    infotext = "Status: %s" % backup_state
-    if backup_state == "running":
-        return 0, infotext
-
-    state = 0
-    if backup_state != "successful":
-        state = 2
-    return state, '%s, Duration: %s, %s days ago' % \
-           (infotext, get_age_human_readable(int(data["duration"])),
-            int(data["age_days"]))
+    return 1, "This check is deprecated. Please have a look at werk #7100."
 
 
 check_info['sap_hana_full_backup'] = {
-    'parse_function': parse_sap_hana_full_backup,
     'inventory_function': inventory_sap_hana_full_backup,
     'check_function': check_sap_hana_full_backup,
     'service_description': 'SAP HANA Full Backup %s',

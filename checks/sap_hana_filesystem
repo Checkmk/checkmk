@@ -25,31 +25,16 @@
 # Boston, MA 02110-1301 USA.
 
 
-def parse_sap_hana_filesystem(info):
-    parsed = []
-    instance = ""
-    for line in info:
-        if line[0].startswith("[[[") and line[0].endswith("]]]"):
-            instance = line[0][3:-3]
-            continue
-        name, disk_type, used, size = [x.replace('"', '').strip() for x in line]
-        used_mb = int(used) / (1024**2)
-        size_mb = int(size) / (1024**2)
-        avail_mb = size_mb - used_mb
-        itemname = ("%s %s %s" % (instance, name, disk_type)).strip()
-        parsed.append((itemname, size_mb, avail_mb, 0))
-    return parsed
-
-
 def inventory_sap_hana_filesystem(parsed):
-    return [(line[0], {}) for line in parsed]
+    return
+
+
+def check_sap_hana_filesystem(item, params, parsed):
+    return 1, "This check is deprecated. Please have a look at werk #7100."
 
 
 check_info["sap_hana_filesystem"] = {
-    "parse_function": parse_sap_hana_filesystem,
     "inventory_function": inventory_sap_hana_filesystem,
-    "check_function": df_check_filesystem_list,
+    "check_function": check_sap_hana_filesystem,
     "service_description": "SAP HANA Filesystem %s",
-    "includes": ["df.include", "size_trend.include"],
-    "has_perfdata": True,
 }

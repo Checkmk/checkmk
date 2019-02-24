@@ -1,0 +1,86 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public tmpl  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public tmpl for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# tmpl along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+def parse_sap_hana_proc(info):
+    parsed = {}
+    for (sid_instance, node), lines in parse_sap_hana(info).iteritems():
+        for line in lines:
+            if len(line) < 2:
+                continue
+
+            inst = parsed.setdefault(
+                ("%s %s" % (sid_instance, line[1]), node), {
+                    "port": line[0],
+                    "pid": line[2],
+                    "detail": line[3],
+                    "acting": line[4],
+                    "coordin": line[6],
+                })
+            try:
+                inst["sql_port"] = int(line[5])
+            except ValueError:
+                inst["sql_port"] = None
+    return parsed
+
+
+def inventory_sap_hana_proc(parsed):
+    for (sid_instance, _node), data in parsed.iteritems():
+        yield sid_instance, {'coordin': data['coordin']}
+
+
+def check_sap_hana_proc(item, params, parsed):
+    for (sid_instance, node), data in parsed.iteritems():
+        if item != sid_instance:
+            continue
+
+        if node:
+            yield 0, 'On node: %s' % node
+
+        yield 0, 'Port: %s, PID: %s' % (data['port'], data['pid'])
+
+        p_coordin = params['coordin']
+        coordin = data['coordin']
+        if p_coordin != coordin:
+            yield 1, "Role: changed from %s to %s" % (p_coordin, coordin)
+        elif coordin.lower() != 'none':
+            yield 0, "Role: %s" % coordin
+
+        sql_port = data['sql_port']
+        if sql_port:
+            yield 0, "SQL-Port: %s" % sql_port
+        if data['acting'].lower() != 'yes':
+            yield 2, "not acting"
+
+
+check_info['sap_hana_proc'] = {
+    'parse_function': parse_sap_hana_proc,
+    'inventory_function': inventory_sap_hana_proc,
+    'check_function': check_sap_hana_proc,
+    'service_description': 'SAP HANA Process %s',
+    'includes': ['sap_hana.include'],
+    "node_info": True,
+}

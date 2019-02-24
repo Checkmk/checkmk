@@ -28,7 +28,6 @@ import os
 import shutil
 import time
 import multiprocessing
-import six
 
 import cmk.utils
 import cmk.utils.daemon as daemon
@@ -1058,43 +1057,12 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
                 ])
         except cmk.gui.watolib.automations.MKAutomationException as e:
             if "Invalid automation command: activate-changes" in "%s" % e:
-                return self._call_legacy_activate_changes_automation()
+                raise MKGeneralException(
+                    "Activate changes failed (%s). The version of this site may be too old.")
             else:
                 raise
 
         return response
-
-    # This is needed to be able to activate the changes on legacy (pre 1.4.0i3) slave sites.
-    # Sadly this is only possible by syncing the snapshot a second time.
-    def _call_legacy_activate_changes_automation(self):
-        site = config.site(self._site_id)
-
-        url = html.makeuri_contextless(
-            [
-                ("command", "push-snapshot"),
-                ("secret", site["secret"]),
-                ("siteid", site["id"]),
-                ("mode", "slave"),
-                ("restart", "yes"),
-                ("debug", config.debug and "1" or ""),
-            ],
-            filename=site["multisiteurl"] + "automation.py",
-        )
-
-        response_text = self._upload_file(url, site.get('insecure', False))
-
-        try:
-            cmk_configuration_warnings = ast.literal_eval(response_text)
-
-            # In case of an exception it returns a str/unicode message. Wrap the
-            # message in a list to be compatible to regular response
-            if isinstance(cmk_configuration_warnings, six.string_types):
-                cmk_configuration_warnings = [cmk_configuration_warnings]
-
-            return {"check_mk": cmk_configuration_warnings}
-        except:
-            raise cmk.gui.watolib.automations.MKAutomationException(
-                _("Garbled automation response from site %s: '%s'") % (site["id"], response_text))
 
     def _get_domains_needing_activation(self):
         domains = set([])

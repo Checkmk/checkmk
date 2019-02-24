@@ -33,10 +33,12 @@ import re
 import uuid
 import marshal
 import urlparse
+import itertools
 
 import cmk.utils.paths
 
 from cmk.gui.i18n import _
+from cmk.gui.log import logger
 from cmk.gui.exceptions import MKUserError
 
 
@@ -158,13 +160,17 @@ def gen_id():
         return str(uuid.uuid4())
 
 
-# Load all files below share/check_mk/web/plugins/WHAT into a
-# specified context (global variables). Also honors the
-# local-hierarchy for OMD
-# TODO: Couldn't we precompile all our plugins during packaging to make loading faster?
-# TODO: Replace the execfile thing by some more pythonic plugin structure. But this would
-#       be a large rewrite :-/
+# This may not be moved to current_app.g, because this needs to be request
+# independent
+_failed_plugins = {}
+
+
+# Load all files below share/check_mk/web/plugins/WHAT into a specified context
+# (global variables). Also honors the local-hierarchy for OMD
+# TODO: This is kept for pre 1.6.0i1 plugins
 def load_web_plugins(forwhat, globalvars):
+    _failed_plugins[forwhat] = []
+
     for plugins_path in [
             cmk.utils.paths.web_dir + "/plugins/" + forwhat,
             cmk.utils.paths.local_web_dir + "/plugins/" + forwhat
@@ -175,10 +181,19 @@ def load_web_plugins(forwhat, globalvars):
         for fn in sorted(os.listdir(plugins_path)):
             file_path = plugins_path + "/" + fn
 
-            if fn.endswith(".py") and not os.path.exists(file_path + "c"):
-                execfile(file_path, globalvars)
+            try:
+                if fn.endswith(".py") and not os.path.exists(file_path + "c"):
+                    execfile(file_path, globalvars)
 
-            elif fn.endswith(".pyc"):
-                code_bytes = file(file_path).read()[8:]
-                code = marshal.loads(code_bytes)
-                exec code in globalvars
+                elif fn.endswith(".pyc"):
+                    code_bytes = file(file_path).read()[8:]
+                    code = marshal.loads(code_bytes)
+                    exec code in globalvars
+
+            except Exception as e:
+                logger.error("Failed to load plugin %s: %s", file_path, e, exc_info=True)
+                _failed_plugins[forwhat].append((file_path, e))
+
+
+def get_failed_plugins():
+    return itertools.chain(*_failed_plugins.values())

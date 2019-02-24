@@ -334,7 +334,11 @@ class AutomationServiceDiscoveryJob(AutomationCommand):
             raise MKGeneralException(_("Host is missing"))
         host = watolib.Host.host(host_name)
         if host is None:
-            raise MKGeneralException(_("Host does not exist"))
+            raise MKGeneralException(
+                _("Host %s does not exist on remote site %s. This "
+                  "may be caused by a failed configuration synchronization. Have a look at "
+                  "the <a href=\"wato.py?folder=&mode=changelog\">activate changes page</a> "
+                  "for further information."))
         host.need_permission("read")
 
         options = json.loads(html.get_ascii_input("options"))

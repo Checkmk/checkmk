@@ -1,0 +1,23 @@
+Title: Improved GUI extension error handling
+Level: 2
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1551029903
+Class: feature
+
+When extending the standard GUI functionality, using either a manually
+installed <tt>local/share/check_mk/web</tt> plugin or a Check_MK extension
+package (MKP), exceptions may occur while loading the plugin.
+
+In previous versions these exceptions caused the whole GUI to fail making it
+impossible to repair the problem using the GUI, for example via the extension
+package manager of the CEE/CME.
+
+The extension related loading errors are now all catched and logged to the
+<tt>var/log/web.log</tt> instead of making the whole application fail. In
+addition to this, an error message will be shown on the "Extension packages"
+WATO page. We've also added a new Analyze configuration check "Broken GUI
+extensions" which will report a CRIT state when broken GUI extensions are
+found.

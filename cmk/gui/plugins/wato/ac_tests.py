@@ -30,6 +30,7 @@ import subprocess
 import requests
 import urllib3
 
+import cmk.gui.utils
 import cmk.gui.userdb as userdb
 import cmk.gui.sites as sites
 import cmk.gui.watolib as watolib
@@ -768,6 +769,32 @@ class ACTestSizeOfExtensions(ACTest):
         return int(
             subprocess.check_output(["du", "-sb",
                                      "%s/local" % cmk.utils.paths.omd_root]).split()[0])
+
+
+@ac_test_registry.register
+class ACTestBrokenGUIExtension(ACTest):
+    def category(self):
+        return ACTestCategories.deprecations
+
+    def title(self):
+        return _("Broken GUI extensions")
+
+    def help(self):
+        return _(
+            "Since 1.6.0i1 broken GUI extensions don't block the whole GUI initialization anymore. "
+            "Instead of this, the errors are logged in <tt>var/log/web.log</tt>. In addition to this, "
+            "the errors are displayed here.")
+
+    def is_relevant(self):
+        return True
+
+    def execute(self):
+        errors = cmk.gui.utils.get_failed_plugins()
+        if not errors:
+            yield ACResultOK(_("No broken extensions were found."))
+
+        for plugin_path, e in errors:
+            yield ACResultCRIT(_("Loading \"%s\" failed: %s") % (plugin_path, e))
 
 
 @ac_test_registry.register

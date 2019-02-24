@@ -11,6 +11,7 @@ def test_registered_ac_tests():
         'ACTestApacheProcessUsage',
         'ACTestBackupConfigured',
         'ACTestBackupNotEncryptedConfigured',
+        'ACTestBrokenGUIExtension',
         'ACTestCheckMKHelperUsage',
         'ACTestESXDatasources',
         'ACTestGenericCheckHelperUsage',

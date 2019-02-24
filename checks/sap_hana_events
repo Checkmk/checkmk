@@ -1,0 +1,83 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+def parse_sap_hana_events(info):
+    parsed = {}
+    for (sid_instance, node), lines in parse_sap_hana(info).iteritems():
+        inst_data = {}
+        for line in lines:
+            if len(line) < 2:
+                continue
+
+            try:
+                inst_data[line[0]] = int(line[1])
+            except ValueError:
+                pass
+        if inst_data:
+            parsed.setdefault((sid_instance, node), inst_data)
+    return parsed
+
+
+def inventory_sap_hana_events(parsed):
+    for (sid_instance, _node) in parsed.iterkeys():
+        yield sid_instance, {}
+
+
+SAP_HANA_EVENTS_MAP = {
+    'open_events': (2, 'Unacknowledged events'),
+    'disabled_alerts': (1, 'Disabled alerts'),
+    'high_alerts': (2, 'High alerts'),
+}
+
+
+def check_sap_hana_events(item, params, parsed):
+    for (sid_instance, node), data in parsed.iteritems():
+        if item != sid_instance:
+            continue
+
+        if node:
+            yield 0, 'On node: %s' % node
+
+        for event_key, event_count in data.iteritems():
+            event_state, event_state_readable = SAP_HANA_EVENTS_MAP.get(
+                event_key, (3, "unknown[%s]" % event_key))
+            state = 0
+            if event_count > 0:
+                state = event_state
+            yield state, "%s: %s" % (event_state_readable, event_count), [("num_%s" % event_key,
+                                                                           event_count)]
+
+
+check_info['sap_hana_events'] = {
+    'parse_function': parse_sap_hana_events,
+    'inventory_function': inventory_sap_hana_events,
+    'check_function': check_sap_hana_events,
+    'service_description': 'SAP HANA Events %s',
+    'includes': ['sap_hana.include'],
+    "has_perfdata": True,
+    "node_info": True,
+}

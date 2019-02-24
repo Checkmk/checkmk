@@ -1,0 +1,103 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+factory_settings['sap_hana_backup'] = {
+    'backup_age_levels': (24 * 60 * 60, 2 * 24 * 60 * 60),
+}
+
+
+def parse_sap_hana_backup(info):
+    parsed = {}
+    for (sid_instance, node), lines in parse_sap_hana(info).iteritems():
+        for line in lines:
+            if len(line) < 5:
+                continue
+
+            backup_time_readable = line[1].rsplit(".", 1)[0]
+            parsed.setdefault(
+                ("%s %s" % (sid_instance, line[0]), node), {
+                    "sys_end_time": time.mktime(
+                        time.strptime(backup_time_readable, "%Y-%m-%d %H:%M:%S")),
+                    "backup_time_readable": backup_time_readable,
+                    "state_name": line[2],
+                    "comment": line[3],
+                    "message": line[4],
+                })
+    return parsed
+
+
+def inventory_sap_hana_backup(parsed):
+    for (sid_instance_backup_type, _node) in parsed.iterkeys():
+        yield sid_instance_backup_type, {}
+
+
+def check_sap_hana_backup(item, params, parsed):
+    for (sid_instance_backup_type, node), data in parsed.iteritems():
+        if item != sid_instance_backup_type:
+            continue
+
+        if node:
+            yield 0, 'On node: %s' % node
+
+        state_name = data['state_name']
+        if state_name == 'failed':
+            state = 2
+        elif state_name in ['cancel pending', 'canceled']:
+            state = 1
+        elif state_name in ['ok', 'successful', 'running']:
+            state = 0
+        else:
+            state = 3
+        yield state, "Status: %s" % state_name
+
+        yield 0, "Last: %s" % data['backup_time_readable']
+        yield check_levels(
+            time.time() - data['sys_end_time'],
+            "backup_age",
+            params['backup_age_levels'],
+            human_readable_func=get_age_human_readable,
+            infoname="Age")
+
+        comment = data["comment"]
+        if comment:
+            yield 0, "Comment: %s" % comment
+
+        message = data["message"]
+        if message:
+            yield 0, "Message: %s" % message
+
+
+check_info['sap_hana_backup'] = {
+    'parse_function': parse_sap_hana_backup,
+    'inventory_function': inventory_sap_hana_backup,
+    'check_function': check_sap_hana_backup,
+    'service_description': 'SAP HANA Backup %s',
+    'includes': ['sap_hana.include'],
+    "node_info": True,
+    "has_perfdata": True,
+    'group': 'sap_hana_backup',
+    'default_levels_variable': 'sap_hana_backup',
+}

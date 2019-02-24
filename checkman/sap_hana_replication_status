@@ -1,0 +1,24 @@
+title: SAP HANA Replication Status
+agents: linux
+catalog: app/sap_hana
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the replication status of SAP HANA.
+ To make this check work you have to install the agent plugin
+ {{mk_sap_hana}}.
+
+ The replication status comes from the script
+ /usr/sap/.../exe/python_support/systemReplicationStatus.py
+ If it returns 0 the checks is UNKNOWN. If it returns 10, 11 or 12
+ the checks goes CRIT. If it returns 13 the checks is WARN.
+ If it returns 14 or 15 the check is OK. Otherwise the check
+ reports UNKNOWN.
+
+ This check is also cluster-aware.
+
+item:
+ The instance name
+
+inventory:
+ One service is created per instance if and only if the mode is PRIMARY.

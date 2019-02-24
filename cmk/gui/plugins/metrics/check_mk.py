@@ -2734,6 +2734,18 @@ metric_info["num_open_events"] = {
     "color": "26/b",
 }
 
+metric_info["num_high_alerts"] = {
+    "title": _("High alerts"),
+    "unit": "count",
+    "color": "22/a",
+}
+
+metric_info["num_disabled_alerts"] = {
+    "title": _("Disabled alerts"),
+    "unit": "count",
+    "color": "24/a",
+}
+
 metric_info["average_message_rate"] = {
     "title": _("Incoming messages"),
     "unit": "1/s",
@@ -2990,6 +3002,18 @@ metric_info["licenses"] = {
     "title": _("Used licenses"),
     "unit": "count",
     "color": "#ff6234",
+}
+
+metric_info["license_size"] = {
+    "title": _("Size of license"),
+    "unit": "bytes",
+    "color": "11/a",
+}
+
+metric_info["license_usage_perc"] = {
+    "title": _("License usage"),
+    "unit": "%",
+    "color": "13/a",
 }
 
 metric_info["files_open"] = {

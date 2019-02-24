@@ -1,0 +1,96 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+def parse_sap_hana_data_volume(info):
+    parsed = {}
+    for (sid_instance, node), lines in parse_sap_hana(info).iteritems():
+        for line in lines:
+            if len(line) < 8:
+                continue
+
+            inst = parsed.setdefault(("%s %s %s" % (sid_instance, line[0], line[2]), node), {
+                "service": line[1],
+                "path": line[3],
+            })
+            for key, index in [
+                ("size", 7),
+                ("used", 6),
+            ]:
+                try:
+                    inst[key] = float(line[index]) / 1048576.0
+                except ValueError:
+                    pass
+
+            inst = parsed.setdefault(("%s %s %s Disk" % (sid_instance, line[0], line[2]), node), {})
+            for key, index in [
+                ("size", 5),
+                ("used", 4),
+            ]:
+                try:
+                    inst[key] = float(line[index]) / 1048576.0
+                except ValueError:
+                    pass
+    return parsed
+
+
+def inventory_sap_hana_data_volume(parsed):
+    for (sid_instance, _node) in parsed.iterkeys():
+        yield sid_instance, {}
+
+
+def check_sap_hana_data_volume(item, params, parsed):
+    for (sid_instance, node), data in parsed.iteritems():
+        if item != sid_instance:
+            continue
+
+        if node:
+            yield 0, 'On node: %s' % node
+
+        size = data['size']
+        used = data['used']
+        avail = size - used
+        yield df_check_filesystem_list(item, params, [(item, size, avail, 0)])
+
+        service = data.get('service')
+        if service:
+            yield 0, 'Service: %s' % service
+        path = data.get('path')
+        if path:
+            yield 0, 'Path: %s' % path
+
+
+check_info['sap_hana_data_volume'] = {
+    'parse_function': parse_sap_hana_data_volume,
+    'inventory_function': inventory_sap_hana_data_volume,
+    'check_function': check_sap_hana_data_volume,
+    'service_description': 'SAP HANA Volume %s',
+    'includes': ['sap_hana.include', 'size_trend.include', 'df.include'],
+    "node_info": True,
+    "has_perfdata": True,
+    'default_levels_variable': 'filesystem_default_levels',
+    'group': 'filesystem',
+}

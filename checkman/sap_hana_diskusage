@@ -1,0 +1,24 @@
+title: SAP HANA Disk Usage
+agents: linux
+catalog: app/sap_hana
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the state and disk usage of SAP HANA disks.
+ To make this check work you have to install the agent plugin
+ {{mk_sap_hana}}.
+
+ Upper default levels for the used space are set to  80, 90 percent,
+ lower levels to 60, 50 percent. These levels are configurable.
+ Please see the related filesystem ruleset for further configuration.
+
+ If the disk reports OK the check state is OK, if it reports UNKNOWN,
+ the check state is also UNKNOWN, otherwise CRIT.
+
+ This check is also cluster-aware.
+
+item:
+ The instance name and disk type.
+
+inventory:
+ One service is created per instance and disk type.

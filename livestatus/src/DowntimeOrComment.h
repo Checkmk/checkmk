@@ -29,6 +29,7 @@
 #include <ctime>
 #include <string>
 #include "nagios.h"
+class MonitoringCore;
 
 /* The structs for downtime and comment are so similar, that
    we handle them with the same logic */
@@ -90,8 +91,11 @@ public:
     std::string _comment;
     unsigned long _id;
 
-    DowntimeOrComment(nebstruct_downtime_struct *dt, unsigned long id);
     virtual ~DowntimeOrComment();
+
+protected:
+    DowntimeOrComment(MonitoringCore *mc, nebstruct_downtime_struct *dt,
+                      unsigned long id);
 };
 
 class Downtime : public DowntimeOrComment {
@@ -103,7 +107,7 @@ public:
     // OffsetIntColumn, should be unsigned long
     int _duration;
     int _triggered_by;
-    explicit Downtime(nebstruct_downtime_struct *dt);
+    explicit Downtime(MonitoringCore *mc, nebstruct_downtime_struct *dt);
 };
 
 class Comment : public DowntimeOrComment {
@@ -113,7 +117,7 @@ public:
     int _source;
     int _entry_type;
     int _expires;
-    explicit Comment(nebstruct_comment_struct *co);
+    explicit Comment(MonitoringCore *mc, nebstruct_comment_struct *co);
 };
 
 #endif  // DowntimeOrComment_h

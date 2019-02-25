@@ -41,6 +41,7 @@
 #include "FixedIntColumn.h"
 #include "Logger.h"
 #include "MetricsColumn.h"
+#include "MonitoringCore.h"
 #include "OffsetDoubleColumn.h"
 #include "OffsetIntColumn.h"
 #include "OffsetPerfdataColumn.h"
@@ -478,8 +479,9 @@ void TableServices::answerQuery(Query *query) {
     // do we know the host?
     if (auto value = query->stringValueRestrictionFor("host_name")) {
         Debug(logger()) << "using host name index with '" << *value << "'";
-        // Older Nagios headers are not const-correct... :-P
-        if (host *host = find_host(const_cast<char *>(value->c_str()))) {
+        // TODO(sp): Remove ugly cast.
+        if (host *host =
+                reinterpret_cast<::host *>(core()->find_host(*value))) {
             for (servicesmember *m = host->services; m != nullptr;
                  m = m->next) {
                 if (!query->processDataset(Row(m->service_ptr))) {

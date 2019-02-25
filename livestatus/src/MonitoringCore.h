@@ -72,6 +72,7 @@ public:
 
     virtual ~MonitoringCore() = default;
 
+    virtual Host *find_host(const std::string &name) = 0;
     virtual Host *getHostByDesignation(const std::string &designation) = 0;
     virtual ContactGroup *find_contactgroup(const std::string &name) = 0;
 

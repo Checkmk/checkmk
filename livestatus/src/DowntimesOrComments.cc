@@ -27,15 +27,15 @@
 #include "DowntimeOrComment.h"
 #include "Logger.h"
 
-DowntimesOrComments::DowntimesOrComments()
-    : _logger(Logger::getLogger("cmk.livestatus")) {}
+DowntimesOrComments::DowntimesOrComments(MonitoringCore *mc)
+    : _mc(mc), _logger(Logger::getLogger("cmk.livestatus")) {}
 
 void DowntimesOrComments::registerDowntime(nebstruct_downtime_data *data) {
     unsigned long id = data->downtime_id;
     switch (data->type) {
         case NEBTYPE_DOWNTIME_ADD:
         case NEBTYPE_DOWNTIME_LOAD:
-            _entries[id] = std::make_unique<Downtime>(data);
+            _entries[id] = std::make_unique<Downtime>(_mc, data);
             break;
         case NEBTYPE_DOWNTIME_DELETE:
             if (_entries.erase(id) == 0) {
@@ -53,7 +53,7 @@ void DowntimesOrComments::registerComment(nebstruct_comment_data *data) {
     switch (data->type) {
         case NEBTYPE_COMMENT_ADD:
         case NEBTYPE_COMMENT_LOAD:
-            _entries[id] = std::make_unique<Comment>(data);
+            _entries[id] = std::make_unique<Comment>(_mc, data);
             break;
         case NEBTYPE_COMMENT_DELETE:
             if (_entries.erase(id) == 0) {

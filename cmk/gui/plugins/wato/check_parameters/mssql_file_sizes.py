@@ -66,7 +66,7 @@ class RulespecCheckgroupParametersMssqlFileSizes(CheckParameterRulespecWithItem)
             elements=[
                 ("data_files",
                  Tuple(
-                     title=_("Levels for Datafiles"),
+                     title=_("Total data file size: Absolute upper levels"),
                      elements=[
                          Filesize(title=_("Warning at")),
                          Filesize(title=_("Critical at")),
@@ -74,13 +74,13 @@ class RulespecCheckgroupParametersMssqlFileSizes(CheckParameterRulespecWithItem)
                  )),
                 ("log_files",
                  Tuple(
-                     title=_("Log files: Absolute upper thresholds"),
+                     title=_("Total log file size: Absolute upper levels"),
                      elements=[Filesize(title=_("Warning at")),
                                Filesize(title=_("Critical at"))],
                  )),
                 ("log_files_used",
                  Alternative(
-                     title=_("Levels for log files used"),
+                     title=_("Used log files: Absolute or relative upper levels"),
                      elements=[
                          Tuple(
                              title=_("Upper absolute levels"),

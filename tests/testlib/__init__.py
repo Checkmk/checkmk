@@ -323,7 +323,7 @@ class Site(object):
                                   expected_state)
 
     def schedule_check(self, hostname, service_description, expected_state):
-        last_check_before = self._get_last_check(hostname)
+        last_check_before = self._get_last_check(hostname, service_description)
         schedule_ts, wait_timeout = int(time.time()), 20
 
         # Ensure the next check result is not in same second as the previous check

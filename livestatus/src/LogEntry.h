@@ -123,7 +123,7 @@ public:
 
     host *_host;
     service *_service;
-    contact *_contact;
+    const contact *_contact;
     Command _command;
 
     // NOTE: line gets modified!

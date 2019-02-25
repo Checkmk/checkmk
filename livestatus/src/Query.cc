@@ -50,11 +50,8 @@
 #include "opids.h"
 #include "strutil.h"
 
-// for find_contact, ugly...
-#ifdef CMC
-#include "cmc.h"
-#else
-#include "nagios.h"
+#ifndef CMC
+#include "nagios.h"  // for contact
 #endif
 
 namespace {
@@ -427,7 +424,9 @@ void Query::parseFilterLine(char *line, FilterStack &filters) {
 }
 
 void Query::parseAuthUserHeader(char *line) {
-    _auth_user = find_contact(line);
+    // TODO(sp): Remove ugly cast.
+    _auth_user =
+        reinterpret_cast<const contact *>(_table.core()->find_contact(line));
     if (_auth_user == nullptr) {
         // Do not handle this as error any more. In a multi site setup
         // not all users might be present on all sites by design.

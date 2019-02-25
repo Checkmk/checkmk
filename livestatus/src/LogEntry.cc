@@ -415,8 +415,9 @@ unsigned LogEntry::updateReferences(MonitoringCore *mc) {
         updated++;
     }
     if (!_contact_name.empty()) {
-        // Older Nagios headers are not const-correct... :-P
-        _contact = find_contact(const_cast<char *>(_contact_name.c_str()));
+        // TODO(sp): Remove ugly cast.
+        _contact =
+            reinterpret_cast<const contact *>(mc->find_contact(_contact_name));
         updated++;
     }
     if (!_command_name.empty()) {

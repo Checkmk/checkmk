@@ -1,0 +1,16 @@
+Title: Metrics: Do not auto graph metrics that are part of a graph but have no metric_info
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1551094759
+Class: fix
+
+When adding a new metric to a service, the metric system automatically renders this metric
+as single graph until a graph definition is added that renders this metric. In this moment
+the automatically rendered metric is hidden.
+
+This logic only worked for metrics that already have a metric_info definition. Now, if
+you add a new metric without specifying a metric_info for it, but add it to a graph_info,
+the automatically created single metric graph will now also be hidden.

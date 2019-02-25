@@ -1151,6 +1151,14 @@ class html(HTMLGenerator):
                 _("The given text is wrong encoded. "
                   "You need to provide a UTF-8 encoded text."))
 
+    def get_item_input(self, varname, collection):
+        """Helper to get an item from the given collection
+        Raises a MKUserError() in case the requested item is not available."""
+        item = self.get_ascii_input(varname)
+        if item not in collection:
+            raise MKUserError(varname, _("The requested item %s does not exist") % item)
+        return collection[item], item
+
     def get_integer_input(self, varname, deflt=None):
         if deflt is not None and not self.request.has_var(varname):
             return deflt

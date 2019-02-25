@@ -451,13 +451,10 @@ def page_create_view(next_url=None):
 
 @cmk.gui.pages.register("create_view_infos")
 def page_create_view_infos():
-    ds_name = html.request.var('datasource')
-    if ds_name not in data_source_registry:
-        raise MKGeneralException(_('The given datasource is not supported'))
-
+    ds_class, ds_name = html.get_item_input("datasource", data_source_registry)
     visuals.page_create_visual(
         'views',
-        data_source_registry[ds_name]().infos,
+        ds_class().infos,
         next_url='edit_view.py?mode=create&datasource=%s&single_infos=%%s' % ds_name)
 
 
@@ -907,12 +904,7 @@ def show_filter_form(is_open, filters):
 
 @cmk.gui.pages.register("view")
 def page_view():
-    view_name = html.get_ascii_input("view_name")
-    if view_name is None:
-        raise MKUserError("view_name", _("Missing the variable view_name in the URL."))
-    view = get_permitted_views().get(view_name)
-    if not view:
-        raise MKUserError("view_name", _("No view defined with the name '%s'.") % view_name)
+    view, view_name = html.get_item_input("view_name", get_permitted_views())
 
     # Gather the page context which is needed for the "add to visual" popup menu
     # to add e.g. views to dashboards or reports

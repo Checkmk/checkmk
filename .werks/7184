@@ -1,0 +1,11 @@
+Title: Add missing painter for additional host addresses
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.5.0p13
+Date: 1551096001
+Class: fix
+
+The additional addresses of a host can now be added to view using the painter
+"Host addresses (additional)".

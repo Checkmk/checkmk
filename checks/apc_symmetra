@@ -251,13 +251,17 @@ def check_apc_symmetra(_no_item, params, parsed):
                 state = 2
             elif battery_time_remain < battery_time_warn:
                 state = 1
+            perfdata = [("runtime", battery_time_remain / 60, battery_time_warn / 60,
+                         battery_time_crit / 60)]
+        else:
+            perfdata = [("runtime", battery_time_remain / 60)]
+
         if state:
             levelstxt = " (warn/crit below %s/%s)" % \
                           (get_age_human_readable(battery_time_warn),
                            get_age_human_readable(battery_time_crit))
 
-        yield state, "Time remaining: %s%s" % (battery_time_remain_readable, levelstxt), \
-              [("runtime", battery_time_remain/60, battery_time_warn, battery_time_crit)]
+        yield state, "Time remaining: %s%s" % (battery_time_remain_readable, levelstxt), perfdata
 
 
 check_info['apc_symmetra'] = {

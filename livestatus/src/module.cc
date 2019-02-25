@@ -577,6 +577,14 @@ public:
                                                    : fromImpl(it->second);
     }
 
+    Service *find_service(const std::string &host_name,
+                          const std::string &service_description) override {
+        // Older Nagios headers are not const-correct... :-P
+        return fromImpl(
+            ::find_service(const_cast<char *>(host_name.c_str()),
+                           const_cast<char *>(service_description.c_str())));
+    }
+
     bool host_has_contact(const Host *host, const Contact *contact) override {
         return is_authorized_for(this, toImpl(contact), toImpl(host), nullptr);
     }
@@ -698,26 +706,27 @@ private:
     static const Contact *fromImpl(const contact *c) {
         return reinterpret_cast<const Contact *>(c);
     }
-
     static const contact *toImpl(const Contact *c) {
         return reinterpret_cast<const contact *>(c);
-    }
-
-    static const contactgroup *toImpl(const ContactGroup *g) {
-        return reinterpret_cast<const contactgroup *>(g);
     }
 
     static ContactGroup *fromImpl(contactgroup *g) {
         return reinterpret_cast<ContactGroup *>(g);
     }
+    static const contactgroup *toImpl(const ContactGroup *g) {
+        return reinterpret_cast<const contactgroup *>(g);
+    }
 
+    static Host *fromImpl(host *h) { return reinterpret_cast<Host *>(h); }
     static const host *toImpl(const Host *h) {
         return reinterpret_cast<const host *>(h);
     }
-    static Host *fromImpl(host *h) { return reinterpret_cast<Host *>(h); }
 
-    static const service *toImpl(const Service *h) {
-        return reinterpret_cast<const service *>(h);
+    static Service *fromImpl(service *s) {
+        return reinterpret_cast<Service *>(s);
+    }
+    static const service *toImpl(const Service *s) {
+        return reinterpret_cast<const service *>(s);
     }
 
     std::vector<DowntimeData> downtimes_for_object(const ::host *h,

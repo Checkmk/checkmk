@@ -101,7 +101,6 @@ def test_jolokia_yield_configured_instances():
     assert next(yci) == {"server": "s2", "port": 1234}
 
 
-
 class _MockHttpResponse(object):
     def __init__(self, status, jolo=None):
         self.status_code = status
@@ -134,7 +133,6 @@ def test_jolokia_validate_response_skip_mbean():
         mk_jolokia.validate_response(_MockHttpResponse(200, joresp))
 
 
-
 def test_jolokia_validate_response_skip_instance():
     for status in (401, 403, 502):
         with pytest.raises(mk_jolokia.SkipInstance):
@@ -142,7 +140,9 @@ def test_jolokia_validate_response_skip_instance():
 
 
 @pytest.mark.parametrize("data", [
-    {"value": 23},
+    {
+        "value": 23
+    },
 ])
 def test_jolokia_validate_response_ok(data):
     joresp = _MockJolokiaResponse(200)

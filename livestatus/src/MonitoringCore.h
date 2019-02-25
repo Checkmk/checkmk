@@ -82,7 +82,7 @@ public:
     virtual std::chrono::system_clock::time_point last_logfile_rotation() = 0;
     virtual size_t maxLinesPerLogFile() const = 0;
 
-    virtual Command find_command(std::string name) const = 0;
+    virtual Command find_command(const std::string &name) const = 0;
     virtual std::vector<Command> commands() const = 0;
 
     virtual std::vector<DowntimeData> downtimes_for_host(

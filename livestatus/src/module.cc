@@ -596,7 +596,7 @@ public:
         return std::chrono::system_clock::from_time_t(last_log_rotation);
     }
 
-    Command find_command(std::string name) const override {
+    Command find_command(const std::string &name) const override {
         // Older Nagios headers are not const-correct... :-P
         if (command *cmd = ::find_command(const_cast<char *>(name.c_str()))) {
             return {cmd->name, cmd->command_line};

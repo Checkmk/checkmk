@@ -598,8 +598,10 @@ def _metrics_used_in_definition(metric_definition):
     parts = without_color.split(",")
     for part in parts:
         metric_name = part.split(".")[0]  # drop .min, .max, .average
-        if metric_name in metric_info:
-            yield metric_name
+        if metric_name in rpn_operators:
+            continue
+
+        yield metric_name
 
 
 def _graph_possible(graph_template, translated_metrics):

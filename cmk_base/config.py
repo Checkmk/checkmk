@@ -1064,9 +1064,8 @@ def bulk_walk_size_of(hostname):
     return bulk_sizes[0]
 
 
-def is_snmpv2c_host(hostname):
-    return is_bulkwalk_host(hostname) or \
-        in_binary_hostlist(hostname, snmpv2c_hosts)
+def is_snmpv2or3_without_bulkwalk_host(hostname):
+    return in_binary_hostlist(hostname, snmpv2c_hosts)
 
 
 def is_usewalk_host(hostname):

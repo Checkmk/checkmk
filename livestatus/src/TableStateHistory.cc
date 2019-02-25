@@ -423,18 +423,8 @@ void TableStateHistory::answerQuery(Query *query) {
                     state->_is_host = entry->_service_description.empty();
                     state->_host = entry->_host;
                     state->_service = entry->_service;
-#ifdef CMC
-                    state->_host_name = entry->_host->name();
-                    state->_service_description = entry->_service == nullptr
-                                                      ? ""
-                                                      : entry->_service->name();
-#else
-                    state->_host_name = entry->_host->name;
-                    state->_service_description =
-                        entry->_service == nullptr
-                            ? ""
-                            : entry->_service->description;
-#endif
+                    state->_host_name = entry->_host_name;
+                    state->_service_description = entry->_service_description;
 
                     // No state found. Now check if this host/services is
                     // filtered out.  Note: we currently do not filter out hosts

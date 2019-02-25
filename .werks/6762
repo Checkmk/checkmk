@@ -1,0 +1,13 @@
+Title: zfsget: Fixed different behaviour of the plugin in Solaris and Linux
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1551088721
+Class: fix
+
+Previously the implementation of getting zfs information was slightly
+different in Linux and Solaris. Now both agents are fetching data only for
+volumes and filesystems and are using the quota for computing the total size of
+a filesystem or volume. So the information of each service will be more precise.

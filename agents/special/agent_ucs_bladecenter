@@ -248,7 +248,7 @@ class Server(object):
 
     def get_data_from_entities(self, entities):
         """
-        Returns dict[k: header, v: dict[k: class_id, v: List[Tuple[attribute, attribute data]]]]
+        Returns dict[k: header, v: List[Tuple[class_id, List[Tuple[attribute, attribute data]]]]]
         from entities (B_SERIES_ENTITIES, C_SERIES_ENTITIES).
         """
         logging.debug("Server.get_data_from_entities: Try to get entities")
@@ -267,14 +267,15 @@ class Server(object):
                     continue  # skip entity
 
                 for xml_object in xml_objects:
+                    xml_data = []
                     for attribute in attributes:
                         attribute_data = xml_object.attrib.get(attribute)
                         if attribute_data is None:
                             logging.debug("No such attribute '%s'", attribute)
                             attribute_data = ''  # ensure order of entries in
                             # related check plugins is consistent
-                        data.setdefault(header, {}).setdefault(class_id, [])\
-                            .append((attribute, attribute_data))
+                        xml_data.append((attribute, attribute_data))
+                    data.setdefault(header, []).append((class_id, xml_data))
         return data
 
     def _get_class_data(self, class_id):
@@ -427,16 +428,10 @@ def main(args=None):
         handle.logout()
         return 1
 
-    logging.debug("Write agent sections to stdout")
-    # data:
-    # dict[k: header, v: dict[k: class_id, v: List[Tuple[attribute, attribute data]]]]
     for header, class_data in data.iteritems():
-        logging.debug("  section '%s'", header)
         sys.stdout.write("<<<%s:sep(9)>>>\n" % header)
-        for class_id, values in class_data.iteritems():
-            logging.debug("  class_id '%s'", class_id)
+        for class_id, values in class_data:
             values_str = "\t".join(["%s %s" % v for v in values])
-            logging.debug("  attributes and value '%s'", values_str)
             sys.stdout.write("%s\t%s\n" % (class_id, values_str))
 
     handle.logout()

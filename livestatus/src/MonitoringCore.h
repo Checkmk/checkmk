@@ -74,6 +74,8 @@ public:
 
     virtual Host *find_host(const std::string &name) = 0;
     virtual Host *getHostByDesignation(const std::string &designation) = 0;
+    virtual Service *find_service(const std::string &host_name,
+                                  const std::string &service_description) = 0;
     virtual ContactGroup *find_contactgroup(const std::string &name) = 0;
 
     virtual const Contact *find_contact(const std::string &name) = 0;

@@ -548,8 +548,5 @@ Row TableServices::findObject(const std::string &objectspec) const {
             ? mk::nextField(objectspec)
             : make_pair(mk::rstrip(objectspec.substr(0, semicolon)),
                         mk::rstrip(objectspec.substr(semicolon + 1)));
-    auto foo = find_service(const_cast<char *>(host_and_desc.first.c_str()),
-                            const_cast<char *>(host_and_desc.second.c_str()));
-
-    return Row(foo);
+    return Row(core()->find_service(host_and_desc.first, host_and_desc.second));
 }

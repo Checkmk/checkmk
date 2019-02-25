@@ -408,10 +408,9 @@ unsigned LogEntry::updateReferences(MonitoringCore *mc) {
         updated++;
     }
     if (!_service_description.empty()) {
-        // Older Nagios headers are not const-correct... :-P
-        _service =
-            find_service(const_cast<char *>(_host_name.c_str()),
-                         const_cast<char *>(_service_description.c_str()));
+        // TODO(sp): Remove ugly cast.
+        _service = reinterpret_cast<service *>(
+            mc->find_service(_host_name, _service_description));
         updated++;
     }
     if (!_contact_name.empty()) {

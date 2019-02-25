@@ -32,9 +32,9 @@ DowntimeOrComment::DowntimeOrComment(MonitoringCore *mc,
     : _type(dt->downtime_type)
     , _is_service(dt->service_description != nullptr)
     , _host(reinterpret_cast<host *>(mc->find_host(dt->host_name)))
-    , _service(_is_service
-                   ? find_service(dt->host_name, dt->service_description)
-                   : nullptr)
+    , _service(_is_service ? reinterpret_cast<service *>(mc->find_service(
+                                 dt->host_name, dt->service_description))
+                           : nullptr)
     , _entry_time(dt->entry_time)
     , _author_name(dt->author_name)
     , _comment(dt->comment_data)

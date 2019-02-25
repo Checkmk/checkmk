@@ -206,6 +206,7 @@ Dim CONN, RS, CFG, AUTH
 ' Initialize database connection objects
 Set CONN      = CreateObject("ADODB.Connection")
 Set RS        = CreateObject("ADODB.Recordset")
+
 CONN.Provider = "sqloledb"
 ' It's a local connection. 2 seconds should be enough!
 CONN.ConnectionTimeout = 2
@@ -378,17 +379,17 @@ For Each instance_id In instances.Keys: Do ' Continue trick
     For Each dbName in dbNames.Keys
         RS.Open "USE [master]", CONN
         RS.Open "DECLARE @HADRStatus sql_variant; DECLARE @SQLCommand nvarchar(max); " & _
-				"SET @HADRStatus = (SELECT SERVERPROPERTY ('IsHadrEnabled')); " & _
-				"IF (@HADRStatus IS NULL or @HADRStatus <> 1) " & _
-				"BEGIN " & _
-					"SET @SQLCommand = 'SELECT CONVERT(VARCHAR, DATEADD(s, DATEDIFF(s, ''19700101'', MAX(backup_finish_date)), ''19700101''), 120) AS last_backup_date, " & _
-					"type, machine_name, ''True'' as is_primary_replica, ''1'' as is_local, '''' as replica_id FROM msdb.dbo.backupset " & _
-					"WHERE database_name = ''" & dbName & "'' AND  machine_name = SERVERPROPERTY(''Machinename'') " & _
-					"GROUP BY type, machine_name ' " & _
-				"END " & _
-				"ELSE " & _
-				"BEGIN " & _
-				"SET @SQLCommand = 'SELECT CONVERT(VARCHAR, DATEADD(s, DATEDIFF(s, ''19700101'', MAX(b.backup_finish_date)), ''19700101''), 120) AS last_backup_date,  " & _
+                "SET @HADRStatus = (SELECT SERVERPROPERTY ('IsHadrEnabled')); " & _
+                "IF (@HADRStatus IS NULL or @HADRStatus <> 1) " & _
+                "BEGIN " & _
+                    "SET @SQLCommand = 'SELECT CONVERT(VARCHAR, DATEADD(s, DATEDIFF(s, ''19700101'', MAX(backup_finish_date)), ''19700101''), 120) AS last_backup_date, " & _
+                    "type, machine_name, ''True'' as is_primary_replica, ''1'' as is_local, '''' as replica_id FROM msdb.dbo.backupset " & _
+                    "WHERE database_name = ''" & dbName & "'' AND  machine_name = SERVERPROPERTY(''Machinename'') " & _
+                    "GROUP BY type, machine_name ' " & _
+                "END " & _
+                "ELSE " & _
+                "BEGIN " & _
+                "SET @SQLCommand = 'SELECT CONVERT(VARCHAR, DATEADD(s, DATEDIFF(s, ''19700101'', MAX(b.backup_finish_date)), ''19700101''), 120) AS last_backup_date,  " & _
                 "b.type, b.machine_name, isnull(rep.is_primary_replica,0) as is_primary_replica, rep.is_local, isnull(convert(varchar(40), rep.replica_id), '''') AS replica_id  " & _
                 "FROM msdb.dbo.backupset b  " & _
                 "LEFT OUTER JOIN sys.databases db ON b.database_name = db.name  " & _
@@ -396,12 +397,12 @@ For Each instance_id In instances.Keys: Do ' Continue trick
                 "WHERE database_name = ''" & dbName & "'' AND (rep.is_local is null or rep.is_local = 1)  " & _
                 "AND (rep.is_primary_replica is null or rep.is_primary_replica = ''True'') and machine_name = SERVERPROPERTY(''Machinename'') " & _
                 "GROUP BY type, rep.replica_id, rep.is_primary_replica, rep.is_local, b.database_name, b.machine_name, rep.synchronization_state, rep.synchronization_health' " & _
-				"END " & _
-				"EXEC (@SQLCommand)" ,CONN
+                "END " & _
+                "EXEC (@SQLCommand)" ,CONN
 
         If RS.Eof Then
             addOutput("MSSQL_" & instance_id & "|" & Replace(dbName, " ", "_") & _
-                          "|-|-|-|no backup found")
+                      "|-|-|-|no backup found")
         End If
 
         Do While Not RS.Eof
@@ -429,15 +430,15 @@ For Each instance_id In instances.Keys: Do ' Continue trick
     ' Loop all databases to get the size of the transaction log
     addOutput(sections("transactionlogs"))
     For Each dbName in dbNames.Keys
-       RS.Open "USE [" & dbName & "];", CONN
-       RS.Open "SELECT name, physical_name," &_
-                  "  cast(max_size/128 as bigint) as MaxSize," &_
-                  "  cast(size/128 as bigint) as AllocatedSize," &_
-                  "  cast(FILEPROPERTY (name, 'spaceused')/128 as bigint) as UsedSize," &_
-                  "  case when max_size = '-1' then '1' else '0' end as Unlimited" &_
-                  " FROM sys.database_files WHERE type_desc = 'LOG'", CONN
+        RS.Open "USE [" & dbName & "];", CONN
+        RS.Open "SELECT name, physical_name," &_
+                "  cast(max_size/128 as bigint) as MaxSize," &_
+                "  cast(size/128 as bigint) as AllocatedSize," &_
+                "  cast(FILEPROPERTY (name, 'spaceused')/128 as bigint) as UsedSize," &_
+                "  case when max_size = '-1' then '1' else '0' end as Unlimited" &
+                " FROM sys.database_files WHERE type_desc = 'LOG'", CONN
         Do While Not RS.Eof
-            addOutput( instance_id & "|" & Replace(dbName, " ", "_") & "|" & Replace(RS("name"), " ", "_") & _
+            addOutput(instance_id & "|" & Replace(dbName, " ", "_") & "|" & Replace(RS("name"), " ", "_") & _
                       "|" & Replace(RS("physical_name"), " ", "_") & "|" & _
                       RS("MaxSize") & "|" & RS("AllocatedSize") & "|" & RS("UsedSize")) & _
                       "|" & RS("Unlimited")

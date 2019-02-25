@@ -121,6 +121,7 @@ public:
     std::string _plugin_output;
     std::string _comment;
 
+    // NOTE: The following four fields contain only derived information.
     host *_host;
     service *_service;
     const contact *_contact;

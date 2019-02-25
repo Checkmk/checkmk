@@ -31,10 +31,11 @@
 #include "nagios.h"
 class DowntimeOrComment;
 class Logger;
+class MonitoringCore;
 
 class DowntimesOrComments {
 public:
-    DowntimesOrComments();
+    explicit DowntimesOrComments(MonitoringCore *mc);
     void registerDowntime(nebstruct_downtime_data *data);
     void registerComment(nebstruct_comment_data *data);
     auto begin() const { return _entries.cbegin(); }
@@ -42,6 +43,7 @@ public:
 
 private:
     std::map<unsigned long, std::unique_ptr<DowntimeOrComment>> _entries;
+    MonitoringCore *const _mc;
     Logger *const _logger;
 };
 

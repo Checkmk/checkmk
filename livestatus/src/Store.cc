@@ -45,6 +45,8 @@
 
 Store::Store(MonitoringCore *mc)
     : _mc(mc)
+    , _downtimes(mc)
+    , _comments(mc)
     , _log_cache(mc, mc->maxCachedMessages())
     , _table_columns(mc)
     , _table_commands(mc)

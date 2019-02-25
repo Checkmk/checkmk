@@ -23,12 +23,15 @@
 // Boston, MA 02110-1301 USA.
 
 #include "DowntimeOrComment.h"
+#include "MonitoringCore.h"
 
-DowntimeOrComment::DowntimeOrComment(nebstruct_downtime_struct *dt,
+// TODO(sp): Remove ugly cast.
+DowntimeOrComment::DowntimeOrComment(MonitoringCore *mc,
+                                     nebstruct_downtime_struct *dt,
                                      unsigned long id)
     : _type(dt->downtime_type)
     , _is_service(dt->service_description != nullptr)
-    , _host(find_host(dt->host_name))
+    , _host(reinterpret_cast<host *>(mc->find_host(dt->host_name)))
     , _service(_is_service
                    ? find_service(dt->host_name, dt->service_description)
                    : nullptr)
@@ -39,16 +42,16 @@ DowntimeOrComment::DowntimeOrComment(nebstruct_downtime_struct *dt,
 
 DowntimeOrComment::~DowntimeOrComment() = default;
 
-Downtime::Downtime(nebstruct_downtime_struct *dt)
-    : DowntimeOrComment(dt, dt->downtime_id)
+Downtime::Downtime(MonitoringCore *mc, nebstruct_downtime_struct *dt)
+    : DowntimeOrComment(mc, dt, dt->downtime_id)
     , _start_time(dt->start_time)
     , _end_time(dt->end_time)
     , _fixed(dt->fixed)
     , _duration(static_cast<int>(dt->duration))
     , _triggered_by(static_cast<int>(dt->triggered_by)) {}
 
-Comment::Comment(nebstruct_comment_struct *co)
-    : DowntimeOrComment(reinterpret_cast<nebstruct_downtime_struct *>(co),
+Comment::Comment(MonitoringCore *mc, nebstruct_comment_struct *co)
+    : DowntimeOrComment(mc, reinterpret_cast<nebstruct_downtime_struct *>(co),
                         co->comment_id)
     , _expire_time(co->expire_time)
     , _persistent(co->persistent)

@@ -403,8 +403,8 @@ HostState LogEntry::parseHostState(const std::string &str) {
 unsigned LogEntry::updateReferences(MonitoringCore *mc) {
     unsigned updated = 0;
     if (!_host_name.empty()) {
-        // Older Nagios headers are not const-correct... :-P
-        _host = find_host(const_cast<char *>(_host_name.c_str()));
+        // TODO(sp): Remove ugly cast.
+        _host = reinterpret_cast<host *>(mc->find_host(_host_name));
         updated++;
     }
     if (!_service_description.empty()) {

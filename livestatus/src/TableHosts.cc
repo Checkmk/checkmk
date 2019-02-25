@@ -683,5 +683,5 @@ bool TableHosts::isAuthorized(Row row, const contact *ctc) const {
 }
 
 Row TableHosts::findObject(const std::string &objectspec) const {
-    return Row(find_host(const_cast<char *>(objectspec.c_str())));
+    return Row(core()->find_host(objectspec));
 }

@@ -566,6 +566,11 @@ int broker_event(int event_type __attribute__((__unused__)), void *data) {
 
 class NagiosCore : public MonitoringCore {
 public:
+    Host *find_host(const std::string &name) override {
+        // Older Nagios headers are not const-correct... :-P
+        return fromImpl(::find_host(const_cast<char *>(name.c_str())));
+    }
+
     Host *getHostByDesignation(const std::string &designation) override {
         auto it = fl_hosts_by_designation.find(mk::unsafe_tolower(designation));
         return it == fl_hosts_by_designation.end() ? nullptr

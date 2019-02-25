@@ -247,7 +247,7 @@ def normalize_perf_data(perf_data, check_command):
     for perf_value, name in zip(perf_data[3:], ["warn", "crit", "min", "max"]):
         if perf_value is not None:
             try:
-                new_entry["scalar"][name] = perf_value * translation_entry["scale"]
+                new_entry["scalar"][name] = float(perf_value) * translation_entry["scale"]
             except Exception as exc:
                 if config.debug:
                     raise exc

@@ -18,6 +18,6 @@ checks = {'': [(None,
                 {},
                 [(0, 'DN: sys', []),
                  (0, 'IP: 192.168.1.1', []),
-                 (0, 'Date and time: 2019-02-06 09:12:12', []),
                  (0, 'Mode: stand-alone', []),
-                 (0, 'Name: CIMC-istreamer2a-etn', [])])]}
+                 (0, 'Name: CIMC-istreamer2a-etn', []),
+                 (0, 'Date and time: 2019-02-06 09:12:12', [])])]}

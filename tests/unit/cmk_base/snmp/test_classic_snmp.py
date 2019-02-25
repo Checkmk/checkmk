@@ -16,7 +16,7 @@ def test_snmp_port_spec(port, expected):
         credentials="public",
         port=port,
         is_bulkwalk_host=False,
-        is_snmpv2c_host=False,
+        is_snmpv2or3_without_bulkwalk_host=False,
         bulk_walk_size_of=10,
         timing={},
         oid_range_limits=[],
@@ -36,7 +36,7 @@ def test_snmp_proto_spec(monkeypatch, is_ipv6, expected):
         credentials="public",
         port=161,
         is_bulkwalk_host=False,
-        is_snmpv2c_host=False,
+        is_snmpv2or3_without_bulkwalk_host=False,
         bulk_walk_size_of=10,
         timing={},
         oid_range_limits=[],
@@ -59,7 +59,7 @@ SNMPSettings = collections.namedtuple("SNMPSettings", [
             credentials="public",
             port=161,
             is_bulkwalk_host=True,
-            is_snmpv2c_host=True,
+            is_snmpv2or3_without_bulkwalk_host=True,
             bulk_walk_size_of=10,
             timing={
                 "timeout": 2,
@@ -80,7 +80,7 @@ SNMPSettings = collections.namedtuple("SNMPSettings", [
             credentials="public",
             port=161,
             is_bulkwalk_host=False,
-            is_snmpv2c_host=False,
+            is_snmpv2or3_without_bulkwalk_host=False,
             bulk_walk_size_of=5,
             timing={
                 "timeout": 5,
@@ -101,7 +101,7 @@ SNMPSettings = collections.namedtuple("SNMPSettings", [
             credentials=("authNoPriv", "abc", "md5", "abc"),
             port=161,
             is_bulkwalk_host=False,
-            is_snmpv2c_host=False,
+            is_snmpv2or3_without_bulkwalk_host=False,
             bulk_walk_size_of=5,
             timing={
                 "timeout": 5,
@@ -122,7 +122,7 @@ SNMPSettings = collections.namedtuple("SNMPSettings", [
             credentials=('noAuthNoPriv', 'secname'),
             port=161,
             is_bulkwalk_host=False,
-            is_snmpv2c_host=False,
+            is_snmpv2or3_without_bulkwalk_host=False,
             bulk_walk_size_of=5,
             timing={
                 "timeout": 5,
@@ -143,7 +143,7 @@ SNMPSettings = collections.namedtuple("SNMPSettings", [
             credentials=('authPriv', 'md5', 'secname', 'auhtpassword', 'DES', 'privacybla'),
             port=161,
             is_bulkwalk_host=False,
-            is_snmpv2c_host=False,
+            is_snmpv2or3_without_bulkwalk_host=False,
             bulk_walk_size_of=5,
             timing={
                 "timeout": 5,

@@ -84,7 +84,7 @@ SNMPHostConfig = NamedTuple(
         ("credentials", SNMPCredentials),
         ("port", int),
         ("is_bulkwalk_host", bool),
-        ("is_snmpv2c_host", bool),
+        ("is_snmpv2or3_without_bulkwalk_host", bool),
         ("bulk_walk_size_of", int),
         # TODO: Cleanup to named tuple
         ("timing", dict),

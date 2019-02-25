@@ -6786,8 +6786,14 @@ check_metrics["check_mk-f5_bigip_vserver"] = {
 
 check_metrics["check_mk-arcserve_backup"] = {
     "size": {
-        "name": "backup_size"
+        "name": "backup_size",
     },
+    "dirs": {
+        "name": "directories",
+    },
+    "files": {
+        "name": "file_count",
+    }
 }
 
 check_metrics["check_mk-oracle_rman"] = {

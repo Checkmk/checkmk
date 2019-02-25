@@ -28,9 +28,14 @@ def local_test_hosts(web, site):
         }),
     ])
 
+    site.write_file(
+        "etc/check_mk/conf.d/local-test-hosts.mk",
+        "datasource_programs.append(('cat ~/var/check_mk/agent_output/<HOST>', [], ['test-host', 'test-host2']))\n"
+    )
+
     for hostname in ["test-host", "test-host2"]:
         site.write_file(
-            "var/check_mk/agent_output/%s.mk" % hostname,
+            "var/check_mk/agent_output/%s" % hostname,
             file(
                 "%s/tests/integration/cmk_base/test-files/linux-agent-output" % repo_path()).read())
 
@@ -38,7 +43,8 @@ def local_test_hosts(web, site):
 
     for hostname in ["test-host", "test-host2"]:
         web.delete_host(hostname)
-        site.delete_file("var/check_mk/agent_output/%s.mk" % hostname)
+        site.delete_file("var/check_mk/agent_output/%s" % hostname)
+    site.delete_file("etc/check_mk/conf.d/local-test-hosts.mk")
 
 
 def test_global_settings(site, web):

@@ -581,6 +581,11 @@ public:
         return fromImpl(::find_contactgroup(const_cast<char *>(name.c_str())));
     }
 
+    const Contact *find_contact(const std::string &name) override {
+        // Older Nagios headers are not const-correct... :-P
+        return fromImpl(::find_contact(const_cast<char *>(name.c_str())));
+    }
+
     bool is_contact_member_of_contactgroup(const ContactGroup *group,
                                            const Contact *contact) override {
         // Older Nagios headers are not const-correct... :-P
@@ -684,6 +689,10 @@ public:
 
 private:
     void *implInternal() const override { return fl_store; }
+
+    static const Contact *fromImpl(const contact *c) {
+        return reinterpret_cast<const Contact *>(c);
+    }
 
     static const contact *toImpl(const Contact *c) {
         return reinterpret_cast<const contact *>(c);

@@ -30,6 +30,7 @@
 #include "CustomVarsDictColumn.h"
 #include "CustomVarsNamesColumn.h"
 #include "CustomVarsValuesColumn.h"
+#include "MonitoringCore.h"
 #include "OffsetIntColumn.h"
 #include "OffsetStringColumn.h"
 #include "Query.h"
@@ -138,5 +139,5 @@ void TableContacts::answerQuery(Query *query) {
 }
 
 Row TableContacts::findObject(const std::string &objectspec) const {
-    return Row(find_contact(const_cast<char *>(objectspec.c_str())));
+    return Row(core()->find_contact(objectspec));
 }

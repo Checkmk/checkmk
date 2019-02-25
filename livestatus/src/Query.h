@@ -98,7 +98,7 @@ private:
     bool _keepalive;
     using FilterStack = Filters;
     std::unique_ptr<Filter> _filter;
-    contact *_auth_user;
+    const contact *_auth_user;
     std::unique_ptr<Filter> _wait_condition;
     std::chrono::milliseconds _wait_timeout;
     Triggers::Kind _wait_trigger;

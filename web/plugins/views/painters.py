@@ -1633,6 +1633,28 @@ multisite_painters["host_addresses"] = {
     "paint"   : paint_host_addresses,
 }
 
+def paint_additional_host_addresses(row):
+    custom_vars = dict(zip(row["host_custom_variable_names"],
+                           row["host_custom_variable_values"]))
+
+    ipv4_addresses = custom_vars.get("ADDRESSES_4", "").strip()
+    ipv6_addresses = custom_vars.get("ADDRESSES_6", "").strip()
+
+    addresses = []
+    if ipv4_addresses:
+        addresses += ipv4_addresses.split(" ")
+    if ipv6_addresses:
+        addresses += ipv6_addresses.split(" ")
+
+    return "", ", ".join(addresses)
+
+multisite_painters["host_addresses"] = {
+    "title"   : _("Host addresses (additional)"),
+    "short"   : _("Add. addresses"),
+    "columns" : [ "host_custom_variable_names", "host_custom_variable_values" ],
+    "paint"   : paint_additional_host_addresses,
+}
+
 multisite_painters["host_address_family"] = {
     "title"   : _("Host address family (Primary)"),
     "short"   : _("Address family"),

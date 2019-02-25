@@ -196,4 +196,4 @@ def load_web_plugins(forwhat, globalvars):
 
 
 def get_failed_plugins():
-    return itertools.chain(*_failed_plugins.values())
+    return list(itertools.chain(*_failed_plugins.values()))

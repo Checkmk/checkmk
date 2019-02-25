@@ -46,25 +46,25 @@ def parse_ucs_c_rack_server_topsystem(info):
         formatted = time.strftime('%Y-%m-%d %H:%M:%S', struct_time)
         return formatted
 
-    parsed = {}
+    parsed = []
     # The element count of info lines is under our control (agent output) and
     # ensured to have expected length. It is ensured that elements contain a
     # string. No bad case handling required here.
     for _, dn, ip, date_and_time, mode, name in info:
         # If more than one info line given or in case of unexpected info list element format the
         # parsed dict will be empty.
-        parsed.update({
-            'DN': dn.replace("dn ", ""),
-            'IP': ip.replace("address ", ""),
-            'Mode': mode.replace("mode ", ""),
-            'Name': name.replace("name ", ""),
-        })
+        parsed.extend([
+            ('DN', dn.replace("dn ", "")),
+            ('IP', ip.replace("address ", "")),
+            ('Mode', mode.replace("mode ", "")),
+            ('Name', name.replace("name ", "")),
+        ])
         try:
-            parsed.update(
-                {'Date and time': format_data_and_time(date_and_time.replace("currentTime ", ""))})
+            date_time_value = format_data_and_time(date_and_time.replace("currentTime ", ""))
         except ValueError:
             # indicate date and time format not supported
-            parsed.update({'Date and time': 'unknown[%s]' % date_and_time[4:]})
+            date_time_value = 'unknown[%s]' % date_and_time[4:]
+        parsed.append(('Date and time', date_time_value))
     return parsed
 
 
@@ -75,7 +75,7 @@ def inventory_ucs_c_rack_server_topsystem(parsed):
 
 #@get_parsed_item_data
 def check_ucs_c_rack_server_topsystem(item, _no_params, data):
-    for title, value in data.items():
+    for title, value in data:
         yield 0, "%s: %s" % (title, value)
 
 

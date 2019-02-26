@@ -3,8 +3,6 @@
 
 import subprocess
 
-import cmk
-
 
 def test_dcd_exists(site):
     assert site.file_exists("bin/dcd")
@@ -19,7 +17,7 @@ def test_dcd_path(site):
 def test_dcd_version(site):
     p = site.execute(["dcd", "-V"], stderr=subprocess.PIPE)
     version = p.stderr.read()
-    assert version.startswith("dcd version %s" % cmk.__version__)
+    assert version.startswith("dcd version %s" % site.version.version)
 
 
 def test_dcd_daemon(site):

@@ -26,6 +26,7 @@
 #define Store_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <cstddef>
 #include <list>
 #include <map>
 #include <string>
@@ -100,6 +101,7 @@ public:
     void registerComment(nebstruct_comment_data *data);
 #endif
     Logger *logger() const;
+    size_t numCachedLogMessages() const;
 
 private:
     struct TableDummy : public Table {

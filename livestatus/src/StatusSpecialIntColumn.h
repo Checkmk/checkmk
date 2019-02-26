@@ -38,7 +38,8 @@ public:
     enum class Type {
         mk_inventory_last,
         num_queued_notifications,
-        num_queued_alerts
+        num_queued_alerts,
+        num_cached_log_messages
     };
 
     StatusSpecialIntColumn(const std::string& name,

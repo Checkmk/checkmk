@@ -1,0 +1,49 @@
+properties([
+  parameters([
+    string(name: 'DISTROS', defaultValue: DISTRO_LIST_MASTER, description: 'List of targeted distros' )
+   ])
+])
+
+DISTRO_LIST = DISTROS.split(' ');
+
+println("Building for the following Distros:")
+println(DISTRO_LIST)
+currentBuild.description = currentBuild.description + '\nBuilding for the following Distros:\n' + DISTRO_LIST
+
+def DOCKER_BUILDS = [:]
+
+node {
+    docker.image(DOCKER_REGISTRY + '/ubuntu-18.04-common').inside('-u 0:0 --cap-add=SYS_ADMIN --network infrastructure_local-infra') {
+        stage('checkout sources') {
+            cleanWs()
+            checkout(scm)
+            stash name: 'distroinfos', includes: 'omd/distros/*.mk'
+            stash name: 'dockerfiles', includes: 'buildscripts/infrastructure/os-nodes/*/Dockerfile'
+        }
+    }
+}
+
+DISTRO_LIST.each { DISTRO ->
+    DOCKER_BUILDS[DISTRO] = {
+        node {
+            docker.image(DOCKER_REGISTRY + '/ubuntu-18.04-common').inside('-u 0:0 -v /var/run/docker.sock:/var/run/docker.sock --cap-add=SYS_ADMIN --network ci_local-infra') {
+                stage('build ' + DISTRO + ' os-image') {
+                    unstash name: 'dockerfiles'
+                    unstash name: 'distroinfos'
+                    def DISTRO_INFO = 'omd/distros/' + sh(script: "echo \'$DISTRO\' | tr 'a-z' 'A-Z' | tr '-' '_'", returnStdout: true).trim() + '.mk'
+                    def OS_PACKAGES = sh(script: """
+                        cat \'$DISTRO_INFO\'  | sed 's/OS_PACKAGES\\s\\++=\\s\\+\\(.*\\)/\\1/;t;d' | sed 's/#.*\$//' | tr '\\n' ' '
+                        """,
+                        returnStdout: true).trim()
+                    dir('buildscripts/infrastructure/os-nodes/' + DISTRO) {
+                        docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
+                            sh "docker build -t $DOCKER_REGISTRY/$DISTRO-os-image --build-arg PACKAGES='$OS_PACKAGES' --network ci_local-infra ."
+                            sh "docker push $DOCKER_REGISTRY/$DISTRO-os-image"
+                        }
+                    }
+               } 
+            }
+        }
+    }
+}
+parallel DOCKER_BUILDS

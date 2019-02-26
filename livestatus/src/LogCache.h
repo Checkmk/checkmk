@@ -54,8 +54,8 @@ public:
 private:
     MonitoringCore *const _mc;
     size_t _num_cached_log_messages;
-    unsigned long _max_cached_messages;
-    unsigned long _num_at_last_check;
+    size_t _max_cached_messages;
+    size_t _num_at_last_check;
     logfiles_t _logfiles;
     std::chrono::system_clock::time_point _last_index_update;
 

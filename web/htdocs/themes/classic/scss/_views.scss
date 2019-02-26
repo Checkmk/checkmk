@@ -146,6 +146,16 @@ div.floatfilter .content .filtertime select {
     width: 136px;
 }
 
+div.floatfilter.service_custom_variable input, div.floatfilter.host_custom_variable input,
+div.floatfilter.service_custom_variable select, div.floatfilter.host_custom_variable select {
+    display: inline-block;
+    width: 45%;
+}
+
+div.floatfilter.service_custom_variable select, div.floatfilter.host_custom_variable select {
+    margin-right: 10px;
+}
+
 /* Improving styling of floatfilters that are contained in a ListOf() */
 table.valuespec_listof.filter {
     width: 300px;

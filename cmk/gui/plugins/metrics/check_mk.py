@@ -8458,6 +8458,7 @@ graph_info["qos_class_traffic"] = {
         ("qos_outbound_bytes_rate,8,*@bits/s", "area", _("QoS outbound bits")),
         ("qos_dropped_bytes_rate,8,*@bits/s", "-area", _("QoS dropped bits")),
     ],
+    "range": ("qos_dropped_bytes_rate:max,8,*,-1,*", "qos_outbound_bytes_rate:max,8,*")
 }
 
 graph_info["read_and_written_blocks"] = {
@@ -8547,6 +8548,17 @@ graph_info["cache_hit_ratio"] = {
         ("prefetch_metadata_hit_ratio", "line"),
         ("prefetch_data_hit_ratio", "area"),
     ],
+}
+
+graph_info["citrix_licenses"] = {
+    "title": _("Citrix licenses"),
+    "metrics": [("licenses", "area"),],
+    "scalars": [
+        "licenses:warn",
+        "licenses:crit",
+        ("licenses:max#000000", "Installed licenses"),
+    ],
+    "range": (0, "licenses:max"),
 }
 
 graph_info["citrix_serverload"] = {

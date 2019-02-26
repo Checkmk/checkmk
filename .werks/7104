@@ -1,0 +1,27 @@
+Title: aws_rds_limits: New check which monitors AWS/RDS limits
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1551267276
+Class: feature
+
+These monitored limits are:
+<ul>
+<li>DB clusters,</li>
+<li>DB cluster parameter groups,</li>
+<li>DB instances,</li>
+<li>Event subscriptions,</li>
+<li>Manual snapshots,</li>
+<li>Option groups,</li>
+<li>DB parameter groups,</li>
+<li>Read replica per master,</li>
+<li>Reserved DB instances,</li>
+<li>DB security groups,</li>
+<li>DB subnet groups,</li>
+<li>Subnet per DB subnet groups,</li>
+<li>Allocated storage,</li>
+<li>Authorizations per DB security group,</li>
+<li>DB cluster roles,</li>
+</ul>

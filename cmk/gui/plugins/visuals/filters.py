@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import abc
 import re
 import json
 
@@ -2578,6 +2579,84 @@ class FilterHostAuxTags(Filter):
 
     def double_height(self):
         return True
+
+
+class ABCFilterCustomAttribute(Filter):
+    __metaclass__ = abc.ABCMeta
+
+    @property
+    def sort_index(self):
+        return 103
+
+    def __init__(self, info):
+        Filter.__init__(
+            self, info=info, htmlvars=[self.name_varname, self.value_varname], link_columns=[])
+
+    @property
+    def name_varname(self):
+        return "%s_name" % self.ident
+
+    @property
+    def value_varname(self):
+        return "%s_value" % self.ident
+
+    def display(self):
+        html.dropdown(self.name_varname, [("", "")] + self._custom_attribute_choices())
+        html.text_input(self.value_varname)
+
+    @abc.abstractmethod
+    def _custom_attribute_choices(self):
+        raise NotImplementedError()
+
+    def filter(self, infoname):
+        if not html.get_ascii_input(self.name_varname):
+            return ""
+
+        attribute_id = html.get_item_input(self.name_varname,
+                                           dict(self._custom_attribute_choices()))[1]
+        value = html.get_unicode_input(self.value_varname)
+        return "Filter: %s_custom_variables ~~ %s ^%s\n" % (
+            self.info, livestatus.lqencode(attribute_id.upper()), livestatus.lqencode(value))
+
+
+@filter_registry.register
+class FilterCustomServiceAttribute(ABCFilterCustomAttribute):
+    @property
+    def ident(self):
+        return "service_custom_variable"
+
+    @property
+    def title(self):
+        return _("Service custom attribute")
+
+    def __init__(self):
+        ABCFilterCustomAttribute.__init__(self, info="service")
+
+    def _custom_attribute_choices(self):
+        choices = []
+        for ident, attr_spec in config.custom_service_attributes.items():
+            choices.append((ident, attr_spec["title"]))
+        return sorted(choices, key=lambda x: x[1])
+
+
+@filter_registry.register
+class FilterCustomHostAttribute(ABCFilterCustomAttribute):
+    @property
+    def ident(self):
+        return "host_custom_variable"
+
+    @property
+    def title(self):
+        return _("Host custom attribute")
+
+    def __init__(self):
+        ABCFilterCustomAttribute.__init__(self, info="host")
+
+    def _custom_attribute_choices(self):
+        choices = []
+        for attr_spec in config.wato_host_attrs:
+            choices.append((attr_spec["name"], attr_spec["title"]))
+        return sorted(choices, key=lambda x: x[1])
 
 
 # choices = [ (value, "readable"), .. ]

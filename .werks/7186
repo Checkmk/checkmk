@@ -1,0 +1,15 @@
+Title: Add painters & filters for host & service custom attributes
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1551192605
+Class: feature
+
+In addition to the already existing "Custom variables" painters that render a
+table of custom variables, painters and filters have been added to work with
+single custom attributes.
+
+The naming has been cleaned up: All elements now use the term "Custom attributes"
+instead of "Custom variables".

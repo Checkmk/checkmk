@@ -1034,7 +1034,7 @@ class ContactGroupChoice(DualListChoice):
 
 
 def show_filter(f):
-    html.open_div(class_=["floatfilter", "double" if f.double_height() else "single"])
+    html.open_div(class_=["floatfilter", "double" if f.double_height() else "single", f.ident])
     html.div(f.title, class_="legend")
     html.open_div(class_="content")
     try:

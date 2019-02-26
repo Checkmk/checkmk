@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import abc
 import os
 import time
 
@@ -1750,14 +1751,14 @@ def paint_custom_vars(what, row, blacklist=None):
 
 
 @painter_registry.register
-class PainterSvcCustomVars(Painter):
+class PainterServiceCustomVariables(Painter):
     @property
     def ident(self):
         return "svc_custom_vars"
 
     @property
     def title(self):
-        return _("Service custom variables")
+        return _("Service custom attributes")
 
     @property
     def columns(self):
@@ -1768,6 +1769,107 @@ class PainterSvcCustomVars(Painter):
 
     def render(self, row, cell):
         return paint_custom_vars('service', row)
+
+
+class ABCPainterCustomVariable(Painter):
+    __metaclass__ = abc.ABCMeta
+
+    @property
+    def title(self):
+        return self._dynamic_title
+
+    @property
+    def short_title(self):
+        return self._dynamic_title
+
+    def _dynamic_title(self, params=None):
+        if params is None:
+            # Happens in view editor when adding a painter
+            return self._default_title
+
+        try:
+            return config.custom_service_attributes[params["ident"]]["title"]
+        except KeyError:
+            return self._default_title
+
+    @abc.abstractproperty
+    def _default_title(self):
+        raise NotImplementedError()
+
+    @abc.abstractproperty
+    def _object_type(self):
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def _custom_attribute_choices(self):
+        raise NotImplementedError()
+
+    @property
+    def parameters(self):
+        return Dictionary(
+            elements=[
+                ("ident", DropdownChoice(
+                    choices=self._custom_attribute_choices,
+                    title=_("ID"),
+                )),
+            ],
+            title=_("Options"),
+            optional_keys=[],
+        )
+
+    def render(self, row, cell):
+        params = cell.painter_parameters()
+        return paint_custom_var(self._object_type, params["ident"].upper(), row)
+
+
+@painter_registry.register
+class PainterServiceCustomVariable(ABCPainterCustomVariable):
+    @property
+    def ident(self):
+        return "service_custom_variable"
+
+    @property
+    def columns(self):
+        return ['service_custom_variable_names', 'service_custom_variable_values']
+
+    @property
+    def _default_title(self):
+        return _("Service custom attribute")
+
+    @property
+    def _object_type(self):
+        return "service"
+
+    def _custom_attribute_choices(self):
+        choices = []
+        for ident, attr_spec in config.custom_service_attributes.items():
+            choices.append((ident, attr_spec["title"]))
+        return sorted(choices, key=lambda x: x[1])
+
+
+@painter_registry.register
+class PainterHostCustomVariable(ABCPainterCustomVariable):
+    @property
+    def ident(self):
+        return "host_custom_variable"
+
+    @property
+    def columns(self):
+        return ['host_custom_variable_names', 'host_custom_variable_values']
+
+    @property
+    def _default_title(self):
+        return _("Host custom attribute")
+
+    @property
+    def _object_type(self):
+        return "host"
+
+    def _custom_attribute_choices(self):
+        choices = []
+        for attr_spec in config.wato_host_attrs:
+            choices.append((attr_spec["name"], attr_spec["title"]))
+        return sorted(choices, key=lambda x: x[1])
 
 
 #.
@@ -3288,14 +3390,14 @@ class PainterHostServicelevel(Painter):
 
 
 @painter_registry.register
-class PainterHostCustomVars(Painter):
+class PainterHostCustomVariables(Painter):
     @property
     def ident(self):
         return "host_custom_vars"
 
     @property
     def title(self):
-        return _("Host custom variables")
+        return _("Host custom attributes")
 
     @property
     def columns(self):

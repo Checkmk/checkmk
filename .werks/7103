@@ -1,0 +1,13 @@
+Title: Fixed possibly permanent PENDING or STALE services
+Level: 1
+Component: config
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1551192479
+Class: fix
+
+This was caused by a missing lock release if a timeout occurs
+while loading data from a file.
+For example loading or saving files which contain counter
+values for calculating rate or average values.

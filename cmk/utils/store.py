@@ -149,7 +149,10 @@ def load_data_from_file(path, default=None, lock=False):
             return default
 
     except MKTimeout:
+        if lock:
+            release_lock(path)
         raise
+
     except Exception as e:
         if lock:
             release_lock(path)

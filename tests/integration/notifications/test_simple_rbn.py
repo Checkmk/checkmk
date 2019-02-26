@@ -1,11 +1,13 @@
-import pytest
-import time
+# pylint: disable=redefined-outer-name
 
-from testlib import web, WatchLog
+import time
+import pytest
+
+from testlib import web, WatchLog  # pylint: disable=unused-import
 
 
 @pytest.fixture()
-def test_config(web):
+def test_config(web, site):
     users = {
         "hh": {
             "alias": "Harry Hirsch",
@@ -16,7 +18,7 @@ def test_config(web):
     }
 
     expected_users = set(["cmkadmin", "automation"] + users.keys())
-    response = web.add_htpasswd_users(users)
+    web.add_htpasswd_users(users)
     all_users = web.get_all_users()
     assert not expected_users - set(all_users.keys())
 
@@ -26,6 +28,8 @@ def test_config(web):
             "ipaddress": "127.0.0.1",
         })
     web.activate_changes()
+
+    site.live.command("[%d] DISABLE_HOST_CHECK;notify-test" % time.time())
 
     yield
 

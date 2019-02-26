@@ -96,7 +96,7 @@ def snmpsim(site, request, tmp_path_factory):
         import netsnmp
         var = netsnmp.Varbind("sysDescr.0")
         result = netsnmp.snmpget(var, Version=2, DestHost="127.0.0.1:1337", Community="public")
-        if value is None or value[0] is None:
+        if result is None or value[0] is None:
             return False
         return True
 

@@ -1546,6 +1546,7 @@ div.info {
     width: 100%; }
   .filterform > tbody > tr > td div.floatfilter .content {
     width: 100%;
+    display: block;
     box-sizing: border-box;
     padding: 12px; }
     .filterform > tbody > tr > td div.floatfilter .content .checkbox {
@@ -1565,6 +1566,16 @@ div.info {
     .filterform > tbody > tr > td div.floatfilter .content .valuespec_tuple {
       width: 100%;
       border-spacing: 2px 2px; }
+
+div.floatfilter.service_custom_variable input, div.floatfilter.host_custom_variable input,
+div.floatfilter.service_custom_variable select, div.floatfilter.host_custom_variable select {
+    display: inline-block;
+    width: 45%;
+}
+
+div.floatfilter.service_custom_variable select, div.floatfilter.host_custom_variable select {
+    margin-right: 10px;
+}
 
 .age input, .age select, .age textarea, .age div.snapin select, div.snapin .age select, .age div.snapin textarea, div.snapin .age textarea, .age #mk_side_search_field {
   box-sizing: content-box !important; }

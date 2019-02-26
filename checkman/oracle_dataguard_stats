@@ -11,10 +11,11 @@ description:
  The apply_lag_min is only useful when an apply lag is configured
  in Data Guard. Otherwise the apply lag is 0.
 
- This check only works on Enterprise Edition with Data Guard.
-
  The init.ora-Parameter log_archive_config must be configured.
  Oracle Enterprise Edition is required for Oracle Data-Guard.
+
+ The Broker and Observer are automatically detected and monitored
+ as well.
 
  This check needs the Check_MK {mk_oracle}-plugin installed in
  the agent. Please refer to the online documentation

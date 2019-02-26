@@ -1,0 +1,18 @@
+Title: oracle_dataguard_stats: added support for Broker, Observer and Default parameters
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1551700404
+Class: feature
+
+The check has been enhanced with the following feautures:
+
+Real dedection of running recovery process in stanbdy database. A CRIT
+state is reported when no recovery has been started.
+Check the Broker State when dg_broker_start has been set to true.
+Check for a possible started Observer
+Check the switchover state in primary and standby Database.
+The recovery process is monitored and
+Default values for apply lag with 1h/4h for warn/crit.

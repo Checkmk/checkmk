@@ -143,7 +143,13 @@ def _vs_latency():
             ))
 
 
-def _vs_limits(resource, default_limit):
+def _vs_limits(resource, default_limit, vs_limit_cls=None):
+    if vs_limit_cls is None:
+        vs_limit = Integer(
+            title=_("Set limit"), unit=_("%s" % resource), min_value=1, default_value=default_limit)
+    else:
+        vs_limit = vs_limit_cls(title=_("Set limit"), min_value=1, default_value=default_limit)
+
     return Tuple(
         title=_("Set limit and levels for %s" % resource.lower()),
         elements=[
@@ -151,11 +157,7 @@ def _vs_limits(resource, default_limit):
                 style="dropdown",
                 orientation="horizontal",
                 elements=[
-                    Integer(
-                        title=_("Set limit"),
-                        unit=_("%s" % resource),
-                        min_value=1,
-                        default_value=default_limit),
+                    vs_limit,
                     FixedValue(None, totext="", title=_("No limit")),
                 ]),
             Alternative(
@@ -947,3 +949,44 @@ class RulespecCheckgroupParametersAwsRdsReplicaLag(CheckParameterRulespecWithIte
     @property
     def item_spec(self):
         return TextAscii(title=_("Database identifier"))
+
+
+@rulespec_registry.register
+class RulespecCheckgroupParametersAwsRdsLimits(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "aws_rds_limits"
+
+    @property
+    def title(self):
+        return _("AWS/RDS Limits")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(elements=[
+            ('db_instances', _vs_limits("DB instances", 40)),
+            ('reserved_db_instances', _vs_limits("Reserved DB instances", 40)),
+            ('allocated_storage',
+             _vs_limits("Allocated storage", 100 * 1024**4, vs_limit_cls=Filesize)),
+            ('db_security_groups', _vs_limits("DB security groups", 25)),
+            ('auths_per_db_security_groups',
+             _vs_limits("Authorizations per DB security group", 20)),
+            ('db_parameter_groups', _vs_limits("DB parameter groups", 50)),
+            ('manual_snapshots', _vs_limits("Manual snapshots", 100)),
+            ('event_subscriptions', _vs_limits("Event subscriptions", 20)),
+            ('db_subnet_groups', _vs_limits("DB subnet groups", 50)),
+            ('option_groups', _vs_limits("Option groups", 20)),
+            ('subnet_per_db_subnet_groups', _vs_limits("Subnet per DB subnet groups", 20)),
+            ('read_replica_per_master', _vs_limits("Read replica per master", 5)),
+            ('db_clusters', _vs_limits("DB clusters", 40)),
+            ('db_cluster_parameter_groups', _vs_limits("DB cluster parameter groups", 50)),
+            ('db_cluster_roles', _vs_limits("DB cluster roles", 5)),
+        ])

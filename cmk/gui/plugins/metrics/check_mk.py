@@ -5040,6 +5040,96 @@ metric_info['aws_elb_load_balancer_registered_instances'] = {
     'color': '13/a',
 }
 
+metric_info['aws_rds_db_clusters'] = {
+    'title': _('DB clusters'),
+    'unit': 'count',
+    'color': '11/a',
+}
+
+metric_info['aws_rds_db_cluster_parameter_groups'] = {
+    'title': _('DB cluster parameter groups'),
+    'unit': 'count',
+    'color': '12/a',
+}
+
+metric_info['aws_rds_db_instances'] = {
+    'title': _('DB instances'),
+    'unit': 'count',
+    'color': '13/a',
+}
+
+metric_info['aws_rds_event_subscriptions'] = {
+    'title': _('Event subscriptions'),
+    'unit': 'count',
+    'color': '14/a',
+}
+
+metric_info['aws_rds_manual_snapshots'] = {
+    'title': _('Manual snapshots'),
+    'unit': 'count',
+    'color': '15/a',
+}
+
+metric_info['aws_rds_option_groups'] = {
+    'title': _('Option groups'),
+    'unit': 'count',
+    'color': '16/a',
+}
+
+metric_info['aws_rds_db_parameter_groups'] = {
+    'title': _('DB parameter groups'),
+    'unit': 'count',
+    'color': '21/a',
+}
+
+metric_info['aws_rds_read_replica_per_master'] = {
+    'title': _('Read replica per master'),
+    'unit': 'count',
+    'color': '22/a',
+}
+
+metric_info['aws_rds_reserved_db_instances'] = {
+    'title': _('Reserved DB instances'),
+    'unit': 'count',
+    'color': '23/a',
+}
+
+metric_info['aws_rds_db_security_groups'] = {
+    'title': _('DB security groups'),
+    'unit': 'count',
+    'color': '24/a',
+}
+
+metric_info['aws_rds_db_subnet_groups'] = {
+    'title': _('DB subnet groups'),
+    'unit': 'count',
+    'color': '25/a',
+}
+
+metric_info['aws_rds_subnet_per_db_subnet_groups'] = {
+    'title': _('Subnet per DB subnet groups'),
+    'unit': 'count',
+    'color': '26/a',
+}
+
+metric_info['aws_rds_allocated_storage'] = {
+    'title': _('Allocated storage'),
+    'unit': 'bytes',
+    'color': '31/a',
+}
+
+metric_info['aws_rds_auths_per_db_security_groups'] = {
+    'title': _('Authorizations per DB security group'),
+    'unit': 'count',
+    'color': '32/a',
+}
+
+metric_info['aws_rds_db_cluster_roles'] = {
+    'title': _('DB cluster roles'),
+    'unit': 'count',
+    'color': '33/a',
+}
+
 metric_info["elapsed_time"] = {
     "title": _("Elapsed time"),
     "unit": "s",

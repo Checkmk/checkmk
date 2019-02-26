@@ -1,0 +1,40 @@
+title: AWS RDS Limits
+agents: aws
+catalog: cloud/aws
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the AWS/RDS limits.
+ To make this check work you have to configure the related
+ special agent {Amazon Web Services (AWS)}.
+
+ From the AWS API method {{describe_account_attributes}}
+ we get the following default limits:
+ - DB instances: 40
+ - Reserved DB instances: 40,
+ - Allocated storage: 100 TB
+ - DB security groups: 25
+ - Authorizations per DB security group: 20
+ - DB parameter groups: 50
+ - Manual snapshots: 100
+ - Event subscriptions: 20
+ - DB subnet groups: 50
+ - Option groups: 20
+ - Subnet per DB subnet groups: 20
+ - Read replica per master: 5
+ - DB clusters: 40
+ - DB cluster parameter groups: 50
+ - DB cluster roles: 5
+
+ From above API method we addtionally get the amount of used
+ instances/space per limit type.
+
+ With both values we calculate the usage of each limit type
+ in percent. Default levels are set to 80, 90 percent per type.
+ For each limit type the limit and usage levels are configurable.
+
+ If limits are enabled account attributes of RDS resource are
+ additionally fetched.
+
+inventory:
+ One service per bucket will be created.

@@ -1,0 +1,71 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2018             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+factory_settings['aws_rds_limits_default_levels'] = {
+    "db_instances": (None, (80.0, 90.0)),
+    "reserved_db_instances": (None, (80.0, 90.0)),
+    "allocated_storage": (None, (80.0, 90.0)),
+    "db_security_groups": (None, (80.0, 90.0)),
+    "auths_per_db_security_groups": (None, (80.0, 90.0)),
+    "db_parameter_groups": (None, (80.0, 90.0)),
+    "manual_snapshots": (None, (80.0, 90.0)),
+    "event_subscriptions": (None, (80.0, 90.0)),
+    "db_subnet_groups": (None, (80.0, 90.0)),
+    "option_groups": (None, (80.0, 90.0)),
+    "subnet_per_db_subnet_groups": (None, (80.0, 90.0)),
+    "read_replica_per_master": (None, (80.0, 90.0)),
+    "db_clusters": (None, (80.0, 90.0)),
+    "db_cluster_parameter_groups": (None, (80.0, 90.0)),
+    "db_cluster_roles": (None, (80.0, 90.0)),
+}
+
+
+def parse_aws_rds_limits(info):
+    parsed = []
+    for resource_key, resource_title, limit, amount in parse_aws(info):
+        if resource_key == "allocated_storage":
+            # Allocated Storage has unit TiB
+            factor = 1024**4 / 1000
+            limit = limit * factor
+            amount = amount * factor
+        parsed.append(resource_key, resource_title, limit, amount, get_bytes_human_readable)
+    return parsed
+
+
+def check_aws_rds_limits(item, params, parsed):
+    return check_aws_limits("rds", params, parsed)
+
+
+check_info['aws_rds_limits'] = {
+    'parse_function': parse_aws_rds_limits,
+    'inventory_function': discover_single,
+    'check_function': check_aws_rds_limits,
+    'service_description': 'AWS/RDS Limits',
+    'includes': ['aws.include'],
+    'group': 'aws_rds_limits',
+    'default_levels_variable': 'aws_rds_limits_default_levels',
+    'has_perfdata': True,
+}

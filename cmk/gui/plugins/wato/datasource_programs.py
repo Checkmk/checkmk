@@ -1993,8 +1993,10 @@ class RulespecSpecialAgentsAws(HostRulespec):
                               title=_("Relational Database Service (RDS)"),
                               elements=[
                                   _vs_element_aws_service_selection(),
+                                  _vs_element_aws_limits(),
                               ],
-                              optional_keys=[],
+                              optional_keys=["limits"],
+                              default_keys=["limits"],
                           )),
                      ],
                      default_keys=["ec2", "ebs", "s3", "elb", "rds"],

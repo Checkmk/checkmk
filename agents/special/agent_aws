@@ -1306,6 +1306,60 @@ class EBS(AWSSectionCloudwatch):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+AWSRDSLimitNameMap = {
+    "DBClusters": ("db_clusters", "DB clusters"),
+    "DBClusterParameterGroups": ("db_cluster_parameter_groups", "DB cluster parameter groups"),
+    "DBInstances": ("db_instances", "DB instances"),
+    "EventSubscriptions": ("event_subscriptions", "Event subscriptions"),
+    "ManualSnapshots": ("manual_snapshots", "Manual snapshots"),
+    "OptionGroups": ("option_groups", "Option groups"),
+    "DBParameterGroups": ("db_parameter_groups", "DB parameter groups"),
+    "ReadReplicasPerMaster": ("read_replica_per_master", "Read replica per master"),
+    "ReservedDBInstances": ("reserved_db_instances", "Reserved DB instances"),
+    "DBSecurityGroups": ("db_security_groups", "DB security groups"),
+    "DBSubnetGroups": ("db_subnet_groups", "DB subnet groups"),
+    "SubnetsPerDBSubnetGroup": ("subnet_per_db_subnet_groups", "Subnet per DB subnet groups"),
+    "AllocatedStorage": ("allocated_storage", "Allocated storage"),
+    "AuthorizationsPerDBSecurityGroup": ("auths_per_db_security_groups",
+                                         "Authorizations per DB security group"),
+    "DBClusterRoles": ("db_cluster_roles", "DB cluster roles"),
+}
+
+
+class RDSLimits(AWSSectionLimits):
+    @property
+    def name(self):
+        return "rds_limits"
+
+    @property
+    def interval(self):
+        return 300
+
+    def _get_colleague_contents(self):
+        return AWSColleagueContents(None, 0.0)
+
+    def _fetch_raw_content(self, colleague_contents):
+        """
+        AWS/RDS API method 'describe_account_attributes' already sends
+        limit and usage values.
+        """
+        response = self._client.describe_account_attributes()
+        try:
+            return response['AccountQuotas']
+        except KeyError, e:
+            logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
+            return []
+
+    def _compute_content(self, raw_content, colleague_contents):
+        for limit in raw_content.content:
+            quota_name = limit['AccountQuotaName']
+            key, title = AWSRDSLimitNameMap.get(quota_name, (None, None))
+            if key is None or title is None:
+                logging.info("%s: Unhandled account quota name: '%s'", self.name, quota_name)
+                continue
+            self._add_limit("", AWSLimit(key, title, int(limit['Max']), int(limit['Used'])))
+        return AWSComputedContent(None, 0.0)
+
 
 class RDSSummary(AWSSectionGeneric):
     def __init__(self, client, region, config, distributor=None):
@@ -1598,6 +1652,7 @@ class AWSSectionsGeneric(AWSSections):
         s3 = S3(cloudwatch_client, region, config)
         s3_requests = S3Requests(cloudwatch_client, region, config)
 
+        rds_limits = RDSLimits(rds_client, region, config)
         rds = RDS(cloudwatch_client, region, config)
 
         #---register sections to distributors-------------------------------
@@ -1659,6 +1714,8 @@ class AWSSectionsGeneric(AWSSections):
                 self._sections.append(s3_requests)
 
         if 'rds' in services:
+            if config.service_config.get('rds_limits'):
+                self._sections.append(rds_limits)
             self._sections.append(rds_summary)
             self._sections.append(rds)
 
@@ -1739,7 +1796,7 @@ AWSServices = [
         title="Relational Database Service (RDS)",
         global_service=False,
         filter_by_names_or_tags=True,
-        limits=False),
+        limits=True),
 ]
 
 
@@ -1877,7 +1934,7 @@ def main(args=None):
         ("ebs", args.ebs_names, (args.ebs_tag_key, args.ebs_tag_values), None),
         ("s3", args.s3_names, (args.s3_tag_key, args.s3_tag_values), args.s3_limits),
         ("elb", args.elb_names, (args.elb_tag_key, args.elb_tag_values), args.elb_limits),
-        ("rds", args.rds_names, (args.rds_tag_key, args.rds_tag_values), None),
+        ("rds", args.rds_names, (args.rds_tag_key, args.rds_tag_values), args.rds_limits),
     ]:
         aws_config.add_single_service_config("%s_names" % service_key, service_names)
         aws_config.add_service_tags("%s_tags" % service_key, service_tags)

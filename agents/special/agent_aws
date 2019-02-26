@@ -926,13 +926,13 @@ class ELBLimits(AWSSectionLimits):
                      len(load_balancers)))
 
         for load_balancer in load_balancers:
-            load_balancer_name = load_balancer['LoadBalancerName']
+            dns_name = load_balancer['DNSName']
             self._add_limit(
-                load_balancer_name,
+                dns_name,
                 AWSLimit("load_balancer_listeners", "Listeners", limits['classic-listeners'],
                          len(load_balancer['ListenerDescriptions'])))
             self._add_limit(
-                load_balancer_name,
+                dns_name,
                 AWSLimit("load_balancer_registered_instances", "Registered instances",
                          limits['classic-registered-instances'], len(load_balancer['Instances'])))
         return AWSComputedContent(load_balancers, raw_content.cache_timestamp)

@@ -45,6 +45,7 @@ public:
 #ifdef CMC
     void setMaxCachedMessages(unsigned long m);
 #endif
+    size_t numCachedLogMessages() const;
     void logLineHasBeenAdded(Logfile *logfile, unsigned logclasses);
     void update();
     auto begin() { return _logfiles.begin(); }
@@ -52,6 +53,7 @@ public:
 
 private:
     MonitoringCore *const _mc;
+    size_t _num_cached_log_messages;
     unsigned long _max_cached_messages;
     unsigned long _num_at_last_check;
     logfiles_t _logfiles;

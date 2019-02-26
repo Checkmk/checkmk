@@ -23,7 +23,6 @@
 // Boston, MA 02110-1301 USA.
 
 #include "Store.h"
-#include <cstring>
 #include <ctime>
 #include <memory>
 #include <sstream>
@@ -311,3 +310,7 @@ bool Store::answerGetRequest(const std::list<std::string> &lines,
 }
 
 Logger *Store::logger() const { return _mc->loggerLivestatus(); }
+
+size_t Store::numCachedLogMessages() const {
+    return _log_cache.numCachedLogMessages();
+}

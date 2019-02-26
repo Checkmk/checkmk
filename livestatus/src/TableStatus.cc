@@ -57,7 +57,6 @@ extern int check_host_freshness;
 extern int enable_flap_detection;
 extern int process_performance_data;
 extern int check_external_commands;
-extern int num_cached_log_messages;
 extern int interval_length;
 extern int g_num_hosts;
 extern int g_num_services;
@@ -212,10 +211,10 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
 #endif  // NAGIOS4
 
     // Livestatus' own status
-    addColumn(std::make_unique<IntPointerColumn>(
+    addColumn(std::make_unique<StatusSpecialIntColumn>(
         "cached_log_messages",
-        "The current number of log messages MK Livestatus keeps in memory",
-        &num_cached_log_messages));
+        "The current number of log messages MK Livestatus keeps in memory", -1,
+        -1, -1, 0, mc, StatusSpecialIntColumn::Type::num_cached_log_messages));
     addColumn(std::make_unique<StringPointerColumn>(
         "livestatus_version", "The version of the MK Livestatus module",
         VERSION));

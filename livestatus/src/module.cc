@@ -700,6 +700,10 @@ public:
     size_t numQueuedNotifications() override { return 0; }
     size_t numQueuedAlerts() override { return 0; }
 
+    size_t numCachedLogMessages() override {
+        return fl_store->numCachedLogMessages();
+    }
+
 private:
     void *implInternal() const override { return fl_store; }
 

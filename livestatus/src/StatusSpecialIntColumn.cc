@@ -39,6 +39,8 @@ int32_t StatusSpecialIntColumn::getValue(Row /* row */,
             return static_cast<int32_t>(_mc->numQueuedNotifications());
         case Type::num_queued_alerts:
             return static_cast<int32_t>(_mc->numQueuedAlerts());
+        case Type::num_cached_log_messages:
+            return static_cast<int32_t>(_mc->numCachedLogMessages());
     }
     // never reached, make -Wall happy
     return 0;

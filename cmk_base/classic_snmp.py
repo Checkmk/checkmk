@@ -53,6 +53,8 @@ def walk(access_data, oid, hex_plain=False, context_name=None):
     hostname = access_data["hostname"]
     ipaddress = access_data["ipaddress"]
     protospec = _snmp_proto_spec(hostname)
+    if protospec == "udp6:":
+        ipaddress = "[" + ipaddress + "]"
     portspec = _snmp_port_spec(hostname)
     command = _snmp_walk_command(access_data, context_name)
     command += [ "-OQ", "-OU", "-On", "-Ot", "%s%s%s" % (protospec, ipaddress, portspec), oid ]
@@ -138,6 +140,8 @@ def get(access_data, oid, context_name=None):
         commandtype = "get"
 
     protospec = _snmp_proto_spec(hostname)
+    if protospec == "udp6:":
+        ipaddress = "[" + ipaddress + "]"
     portspec = _snmp_port_spec(hostname)
     command = _snmp_base_command(commandtype, access_data, context_name) + \
                [ "-On", "-OQ", "-Oe", "-Ot",

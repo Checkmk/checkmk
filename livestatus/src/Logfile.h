@@ -47,7 +47,7 @@ using logfile_entries_t = std::map<uint64_t, std::unique_ptr<LogEntry>>;
 
 class Logfile {
 public:
-    Logfile(MonitoringCore *mc, LogCache *logcache, fs::path path, bool watch);
+    Logfile(MonitoringCore *mc, LogCache *log_cache, fs::path path, bool watch);
     fs::path path() const { return _path; }
 
     // for tricky protocol between LogCache::logLineHasBeenAdded and this class
@@ -65,7 +65,7 @@ public:
 
 private:
     MonitoringCore *const _mc;
-    LogCache *const _logcache;
+    LogCache *const _log_cache;
     const fs::path _path;
     const time_t _since;  // time of first entry
     const bool _watch;    // true only for current logfile

@@ -65,10 +65,10 @@ time_t firstTimestampOf(const fs::path &path, Logger *logger) {
 }
 }  // namespace
 
-Logfile::Logfile(MonitoringCore *mc, LogCache *logcache, fs::path path,
+Logfile::Logfile(MonitoringCore *mc, LogCache *log_cache, fs::path path,
                  bool watch)
     : _mc(mc)
-    , _logcache(logcache)
+    , _log_cache(log_cache)
     , _path(std::move(path))
     , _since(firstTimestampOf(_path, logger()))
     , _watch(watch)
@@ -158,7 +158,7 @@ void Logfile::loadRange(FILE *file, unsigned missing_types,
             }
         }
         if (processLogLine(_lineno, &linebuffer[0], missing_types)) {
-            _logcache->logLineHasBeenAdded(this, logclasses);
+            _log_cache->logLineHasBeenAdded(this, logclasses);
         }
     }
 }

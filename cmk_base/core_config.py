@@ -28,6 +28,7 @@ import abc
 import numbers
 import os
 import sys
+import itertools
 from typing import Any, List  # pylint: disable=unused-import
 
 import cmk.utils.paths
@@ -169,6 +170,12 @@ def autodetect_plugin(command_line):
         except:
             pass
     return command_line
+
+
+def custom_service_attributes_of(hostname, service_description):
+    return dict(
+        itertools.chain(*config.service_extra_conf(hostname, service_description,
+                                                   config.custom_service_attributes)))
 
 
 def icons_and_actions_of(what, hostname, svcdesc=None, checkname=None, params=None):

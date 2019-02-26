@@ -202,6 +202,7 @@ notification_parameters = {}  # Rulesets for parameters of notification scripts
 use_new_descriptions_for = []
 host_icons_and_actions = []  # Custom user icons / actions to be configured
 service_icons_and_actions = []  # Custom user icons / actions to be configured
+custom_service_attributes = []  # Match all ruleset to assign custom service attributes
 
 # Rulesets for agent bakery
 agent_config = {}

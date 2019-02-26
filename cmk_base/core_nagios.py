@@ -890,6 +890,11 @@ def _extra_service_conf_of(cfg, hostname, description):
         if config.define_servicegroups:
             cfg.servicegroups_to_define.update(sergr)
     conf += _extra_conf_of(config.extra_service_conf, hostname, description)
+
+    for varname, value in core_config.custom_service_attributes_of(hostname,
+                                                                   description).iteritems():
+        conf += "  _%s\t\t%s\n" % (varname.upper(), value)
+
     return conf.encode("utf-8")
 
 

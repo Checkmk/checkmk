@@ -167,7 +167,8 @@ void TableLog::answerQuery(Query *query) {
     }
 
     while (true) {
-        if (!it->second->answerQueryReverse(query, since, until, classmask)) {
+        auto entries = it->second->getEntriesFor(classmask);
+        if (!answerQueryReverse(entries, query, since, until)) {
             break;  // end of time range found
         }
         if (it == _log_cache->begin()) {
@@ -175,6 +176,21 @@ void TableLog::answerQuery(Query *query) {
         }
         --it;
     }
+}
+
+// static
+bool TableLog::answerQueryReverse(const logfile_entries_t *entries,
+                                  Query *query, time_t since, time_t until) {
+    auto it = entries->upper_bound(Logfile::makeKey(until, 999999999));
+    while (it != entries->begin()) {
+        --it;
+        // end found or limit exceeded?
+        if (it->second->_time < since ||
+            !query->processDataset(Row(it->second.get()))) {
+            return false;
+        }
+    }
+    return true;
 }
 
 bool TableLog::isAuthorized(Row row, const contact *ctc) const {

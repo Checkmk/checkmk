@@ -4,33 +4,16 @@
 import pytest
 import itertools
 
-from testlib import web
+from testlib import web, create_linux_test_host
 
 
 @pytest.fixture(scope="module")
-def default_cfg(web):
+def default_cfg(request, site, web):
     print "Applying default config"
-    web.add_host(
-        "livestatus-test-host", attributes={
-            "ipaddress": "127.0.0.1",
-        })
-    web.add_host(
-        "livestatus-test-host.domain", attributes={
-            "ipaddress": "127.0.0.1",
-        })
-
+    create_linux_test_host(request, web, site, "livestatus-test-host")
+    create_linux_test_host(request, web, site, "livestatus-test-host.domain")
     web.discover_services("livestatus-test-host")
-
     web.activate_changes()
-    yield None
-
-    #
-    # Cleanup code
-    #
-    print "Cleaning up default config"
-
-    web.delete_host("livestatus-test-host")
-    web.delete_host("livestatus-test-host.domain")
 
 
 # Simply detects all tables by querying the columns table and then

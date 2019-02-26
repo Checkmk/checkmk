@@ -1,0 +1,132 @@
+import java.text.SimpleDateFormat
+
+properties([
+  parameters([
+    string(name: 'DISTROS', defaultValue: DISTRO_LIST_MASTER, description: 'List of targeted distros' )
+   ])
+])
+
+DISTRO_LIST = DISTROS.split(' ');
+
+println("Building for the following Distros:")
+println(DISTRO_LIST)
+currentBuild.description = '\nBuilding for the following Distros:\n' + DISTRO_LIST
+
+def DOCKER_BUILDS = [:]
+def dateFormat = new SimpleDateFormat("yyyy.MM.dd")
+def date = new Date()
+def CMK_VERSION = dateFormat.format(date)
+def TEST_DATA = '/var/jenkins_home/test-data/' + BRANCH_NAME.replaceAll("/","-") + '/' + CMK_VERSION
+
+node {
+    docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
+        println(DOCKER_REGISTRY)
+        IMAGE = 'ubuntu-18.04-common'
+        println(IMAGE)
+        docker.image(IMAGE).pull()
+        docker.image(IMAGE).inside('-u 0:0 --cap-add=SYS_ADMIN --network ci_local-infra') {
+            stage('checkout sources') {
+                cleanWs()
+                dir(TEST_DATA + '/git') {
+                    checkout(scm)
+                }
+            }
+        }
+    }
+}
+
+DISTRO_LIST.each { DISTRO ->
+    DOCKER_BUILDS[DISTRO] = {
+        node {
+            docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
+                docker.image(DISTRO + '-os-image').pull()
+                docker.image(DISTRO + '-os-image').inside("-u 0:0 -v /bauwelt/download/$CMK_VERSION:/bauwelt/download/$CMK_VERSION:ro -v $TEST_DATA:$TEST_DATA --init --privileged --network ci_local-infra --network bridge") {
+                    stage('install ' + DISTRO + ' omd') {
+                        DISTRO_CODE = sh ( script: """
+                            case $DISTRO in
+                                'debian-7')
+                                    DISTRO_CODE='_0.wheezy_amd64.deb'
+                                    ;;
+                                'debian-8')
+                                    DISTRO_CODE='_0.jessie_amd64.deb'
+                                    ;;
+                                'debian-9')
+                                    DISTRO_CODE='_0.stretch_amd64.deb'
+                                    ;;
+                                'ubuntu-14.04')
+                                    DISTRO_CODE='_0.trusty_amd64.deb'
+                                    ;;
+                                'ubuntu-16.04')
+                                    DISTRO_CODE='_0.xenial_amd64.deb'
+                                    ;;
+                                'ubuntu-17.10')
+                                    DISTRO_CODE='_0.artful_amd64.deb'
+                                    ;;
+                                'ubuntu-18.04')
+                                    DISTRO_CODE='_0.bionic_amd64.deb'
+                                    ;;
+                                'ubuntu-18.10')
+                                    DISTRO_CODE='_0.cosmic_amd64.deb'
+                                    ;;
+                                'centos-6')
+                                    DISTRO_CODE='-el6-38.x86_64.rpm'
+                                    ;;
+                                'centos-7')
+                                    DISTRO_CODE='-el7-38.x86_64.rpm'
+                                    ;;
+                                *)
+                                    DISTRO_CODE_TMP=\$(echo $DISTRO | tr -d '-')
+                                    DISTRO_CODE="-\${DISTRO_CODE_TMP}-38.x86_64.rpm"
+                                    ;;
+                            esac
+                            echo \$DISTRO_CODE
+                        """,
+                        returnStdout: true
+                        ).trim()
+                        def PACKAGE = '/bauwelt/download/' + CMK_VERSION + '/check-mk-enterprise-' + CMK_VERSION + DISTRO_CODE
+                        sh """
+                            case $DISTRO in
+                                centos*|rh*)
+                                    yum -y install $PACKAGE
+                                    ;;
+                                sles*|opensuse*)
+                                    zypper --no-gpg-checks in -y $PACKAGE
+                                    ;;
+                                *)
+                                    apt-get update
+                                    if test -e /bin/systemctl; then
+                                        mv /bin/systemctl /bin/systemctl-real
+                                        ln -s /bin/true /bin/systemctl
+                                    fi
+                                    gdebi -n $PACKAGE
+                                    ;;
+                            esac
+                        """
+                    }
+//                    stage('test ' + DISTRO + ' omd') {
+//                        sh 'omd create test'
+//                        sh 'su -c \"python -c \'from OpenSSL import crypto, SSL; SSL.Context(SSL.SSLv23_METHOD)\'\" - test'
+//                        sh 'su -c \"python -c \'import kubernetes\'\" - test'
+//                        sh 'su -c \"python -c \'import boto3\'\" - test'
+//                        sh 'su -c \"python -c \'import botocore\'\" - test'
+//                        sh 'su -c \"python -c \'import azure.mgmt.monitor\'\" - test'
+//                        sh 'su -c \"python -c \'import azure.mgmt.resource\'\" - test'
+//                        sh 'su -c \"python -c \'import azure.mgmt.compute\'\" - test'
+//                    }
+                    stage('integration test ' + DISTRO + ' omd') {
+                        sh 'rm -rf /bin/systemctl; ln -s /bin/true /bin/systemctl'
+                        sh "mkdir -p $DISTRO-work $DISTRO-dest"
+                        sh "mount -t overlay overlay -o lowerdir=${TEST_DATA}/git,upperdir=${WORKSPACE}/$DISTRO-dest,workdir=${WORKSPACE}/$DISTRO-work ${WORKSPACE}/$DISTRO-dest"
+                        sh 'ls -lah'
+                        dir (DISTRO + '-dest') {
+                            sh 'rm -rf .venv'
+                            sh 'make -C tests test-integration'
+                        }
+                        sh "until umount $DISTRO-dest; do sleep 1; done"
+                    }
+                }
+            }
+        }
+    }
+}
+parallel DOCKER_BUILDS

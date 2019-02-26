@@ -634,7 +634,7 @@ def fetch_pnp_data(context, params):
             'utf-8')
         env = {
             'REMOTE_USER': "check-mk",
-            "SKIP_AUTHORIZATION": 1,
+            "SKIP_AUTHORIZATION": "1",
         }
     except:
         # Non-omd environment - use plugin argument 1

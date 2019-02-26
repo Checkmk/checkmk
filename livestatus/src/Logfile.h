@@ -37,7 +37,6 @@ class LogCache;
 class LogEntry;
 class Logger;
 class MonitoringCore;
-class Query;
 
 #ifdef CMC
 class World;
@@ -58,12 +57,11 @@ public:
     size_t size() const { return _entries.size(); }
     long freeMessages(unsigned logclasses);
 
-    // for TableStateHistory
+    // for TableStateHistory and TableLog
     const logfile_entries_t *getEntriesFor(unsigned logclasses);
 
     // for TableLog::answerQuery
-    bool answerQueryReverse(Query *query, time_t since, time_t until,
-                            unsigned logclasses);
+    static uint64_t makeKey(time_t t, size_t lineno);
 
 private:
     MonitoringCore *const _mc;
@@ -82,7 +80,6 @@ private:
     void load(unsigned logclasses);
     void loadRange(FILE *file, unsigned missing_types, unsigned logclasses);
     bool processLogLine(size_t lineno, std::string line, unsigned logclasses);
-    uint64_t makeKey(time_t t, size_t lineno);
     void updateReferences();
     Logger *logger() const;
 };

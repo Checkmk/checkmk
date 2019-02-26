@@ -29,10 +29,10 @@
 #include <ctime>
 #include <memory>
 #include <string>
+#include "Logfile.h"
 #include "Table.h"
 #include "contact_fwd.h"
 class Column;
-class Logfile;
 class LogCache;
 class MonitoringCore;
 class Query;
@@ -50,7 +50,8 @@ public:
 
 private:
     LogCache *_log_cache;
-    bool answerQuery(Query *, Logfile *, time_t, time_t);
+    static bool answerQueryReverse(const logfile_entries_t *entries,
+                                   Query *query, time_t since, time_t until);
 };
 
 #endif  // TableLog_h

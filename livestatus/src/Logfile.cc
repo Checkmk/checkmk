@@ -34,8 +34,6 @@
 #include "LogEntry.h"
 #include "Logger.h"
 #include "MonitoringCore.h"
-#include "Query.h"
-#include "Row.h"
 
 #ifdef CMC
 #include "cmc.h"
@@ -211,22 +209,7 @@ const logfile_entries_t *Logfile::getEntriesFor(unsigned logclasses) {
     return &_entries;
 }
 
-bool Logfile::answerQueryReverse(Query *query, time_t since, time_t until,
-                                 unsigned logclasses) {
-    auto entries = getEntriesFor(logclasses);
-    // TODO(sp) Move the stuff below out of this class. Tricky part: makeKey
-    auto it = entries->upper_bound(makeKey(until, 999999999));
-    while (it != entries->begin()) {
-        --it;
-        // end found or limit exceeded?
-        if (it->second->_time < since ||
-            !query->processDataset(Row(it->second.get()))) {
-            return false;
-        }
-    }
-    return true;
-}
-
+// static
 uint64_t Logfile::makeKey(time_t t, size_t lineno) {
     return (static_cast<uint64_t>(t) << 32) | static_cast<uint64_t>(lineno);
 }

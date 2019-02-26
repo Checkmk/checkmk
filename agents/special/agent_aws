@@ -635,6 +635,10 @@ class S3Limits(AWSSectionLimits):
         return AWSColleagueContents(None, 0.0)
 
     def _fetch_raw_content(self, colleague_contents):
+        """
+        There's no API method for getting account limits thus we have to
+        fetch all buckets.
+        """
         response = self._client.list_buckets()
         try:
             return response['Buckets']
@@ -901,6 +905,11 @@ class ELBLimits(AWSSectionLimits):
         return AWSColleagueContents(None, 0.0)
 
     def _fetch_raw_content(self, colleague_contents):
+        """
+        The AWS/ELB API method 'describe_account_limits' provides limit values
+        but no values about the usage per limit thus we have to gather the usage
+        values from 'describe_load_balancers'.
+        """
         response = self._client.describe_load_balancers()
         try:
             load_balancers = response['LoadBalancerDescriptions']

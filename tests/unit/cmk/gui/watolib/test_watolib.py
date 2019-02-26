@@ -100,6 +100,7 @@ def test_registered_configvars():
         'config',
         'context_buttons_to_show',
         'crash_report_target',
+        'custom_service_attributes',
         'dcd_log_levels',
         'dcd_web_api_connection',
         'debug',

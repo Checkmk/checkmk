@@ -365,6 +365,9 @@ user_localizations = {
 # Contains user specified icons and actions for hosts and services
 user_icons_and_actions = {}
 
+# Defintions of custom attributes to be used for services
+custom_service_attributes = {}
+
 user_downtime_timeranges = [
     {
         'title': "2 hours",

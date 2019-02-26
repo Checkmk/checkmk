@@ -1141,6 +1141,140 @@ class ConfigVariableUserIconsAndActions(ConfigVariable):
 
 
 @config_variable_registry.register
+class ConfigVariableCustomServiceAttributes(ConfigVariable):
+    def group(self):
+        return ConfigVariableGroupUserInterface
+
+    def domain(self):
+        return ConfigDomainGUI
+
+    def ident(self):
+        return "custom_service_attributes"
+
+    def valuespec(self):
+        return Transform(
+            ListOf(
+                Dictionary(
+                    elements=[
+                        ("ident",
+                         TextAscii(
+                             title=_("ID"),
+                             help=_("The ID will be used as internal identifier and the custom "
+                                    "service attribute will be computed based on the ID. The "
+                                    "custom service attribute will be named <tt>_[ID]</tt> in "
+                                    "the core configuration and can be gathered using the "
+                                    "Livestatus column <tt>custom_variables</tt> using the "
+                                    "<tt>[ID]</tt>. The custom service attributes are available "
+                                    "to notification scripts as environment variable named "
+                                    "<tt>SERVICE_[ID]</tt>."),
+                             validate=self._validate_id,
+                             regex=re.compile('^[A-Z_][-A-Z0-9_]*$'),
+                             regex_error=_(
+                                 "An identifier must only consist of letters, digits, dash and "
+                                 "underscore and it must start with a letter or underscore.") + " "
+                             + _("Only upper case letters are allowed"))),
+                        ('title', TextUnicode(title=_('Title'),)),
+                        ("type",
+                         DropdownChoice(
+                             title=_("Data type"),
+                             choices=[
+                                 ('TextAscii', _('Simple Text')),
+                             ],
+                         )),
+                    ],
+                    optional_keys=[],
+                ),
+                title=_("Custom service attributes"),
+                help=_("These custom service attributes can be assigned to services "
+                       "using the ruleset <a href=\"%s\">%s</a>.") %
+                ("wato.py?mode=edit_ruleset&varname=custom_service_attributes",
+                 _("Custom service attributes")),
+                movable=False,
+                totext=_("%d custom service attributes"),
+                allow_empty=False,
+                # Unique IDs are ensured by the transform below. The Transform is executed
+                # before the validation function has the chance to validate it and print a
+                # custom error message.
+                validate=self._validate_unique_entries,
+            ),
+            forth=lambda v: v.values(),
+            back=lambda v: {p["ident"]: p for p in v},
+        )
+
+    def _validate_id(self, value, varprefix):
+        internal_ids = [
+            "ESCAPE_PLUGIN_OUTPUT",
+            "EC_SL",
+            "EC_CONTACT",
+            "SERVICE_PERIOD",
+            "ACTIONS",
+        ]
+        if value.upper() in internal_ids:
+            raise MKUserError(varprefix, _("This ID can not be used as custom attribute"))
+
+    def _validate_unique_entries(self, value, varprefix):
+        seen_titles = []
+        for entry in value:
+            if entry["title"] in seen_titles:
+                raise MKUserError(varprefix,
+                                  _("Found multiple entries using the title '%s'") % entry["title"])
+            seen_titles.append(entry["title"])
+
+
+@rulespec_registry.register
+class RulespecCustomServiceAttributes(ServiceRulespec):
+    @property
+    def group(self):
+        return RulespecGroupMonitoringConfigurationServiceChecks
+
+    @property
+    def name(self):
+        return "custom_service_attributes"
+
+    @property
+    def match_type(self):
+        return "all"
+
+    @property
+    def item_type(self):
+        return "service"
+
+    @property
+    def valuespec(self):
+        return ListOf(
+            CascadingDropdown(
+                choices=self._custom_service_attribute_choices(),
+                orientation="horizontal",
+            ),
+            title=_("Custom service attributes"),
+            help=_("Use this ruleset to assign <a href=\"%s\">%s</a> to services.") %
+            ("wato.py?mode=edit_configvar&varname=custom_service_attributes",
+             _("Custom service attributes")),
+            allow_empty=False,
+            validate=self._validate_unique_entries,
+        )
+
+    def _custom_service_attribute_choices(self):
+        choices = []
+
+        for ident, attr_spec in config.custom_service_attributes.items():
+            if attr_spec["type"] == "TextAscii":
+                vs = TextAscii()
+            else:
+                raise NotImplementedError()
+            choices.append((ident, attr_spec["title"], vs))
+
+        return sorted(choices, key=lambda x: x[1])
+
+    def _validate_unique_entries(self, value, varprefix):
+        seen_ids = []
+        for entry in value:
+            if entry[0] in seen_ids:
+                raise MKUserError(varprefix, _("Found multiple entries using for '%s'") % entry[0])
+            seen_ids.append(entry[0])
+
+
+@config_variable_registry.register
 class ConfigVariableUserDowntimeTimeranges(ConfigVariable):
     def group(self):
         return ConfigVariableGroupUserInterface

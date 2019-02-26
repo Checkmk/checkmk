@@ -1,0 +1,29 @@
+Title: Custom service attributes can now be configured
+Level: 2
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1551182982
+Class: feature
+
+It is now possible to configure arbitrary custom attributes for all services
+just like it was already possible for hosts and users in previous versions.
+
+The configuration procedure is working equally, you first need to define an
+attribute in the first place, to be able to refer to the attribute and assign
+it to services.  The definition of custom attributes is done using the Global
+Setting "Custom service attributes".
+
+Once you have defined a custom service attribute, you can assign it to a
+collection of services using the equal named ruleset "Custom service attributes".
+
+In general, you should keep the number of rules low. To support you in this,
+the rule is structured so that you can select several custom attributes for
+each rule.
+
+The custom service attribute will be named <tt>_[ID]</tt> in the core
+configuration and can be gathered using the Livestatus column
+<tt>custom_variables</tt> using the <tt>[ID]</tt>. The custom service
+attributes are available to notification scripts as environment variable
+named <tt>SERVICE_[ID]</tt>.

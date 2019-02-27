@@ -70,11 +70,6 @@ Logfile::Logfile(Logger *logger, LogCache *log_cache, fs::path path, bool watch)
     , _lineno(0)
     , _logclasses_read(0) {}
 
-void Logfile::flush() {
-    _entries.clear();
-    _logclasses_read = 0;
-}
-
 void Logfile::load(size_t max_lines_per_logfile, unsigned logclasses) {
     unsigned missing_types = logclasses & ~_logclasses_read;
     // The current logfile has the _watch flag set to true.

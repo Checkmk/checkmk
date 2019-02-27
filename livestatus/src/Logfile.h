@@ -46,7 +46,6 @@ public:
     fs::path path() const { return _path; }
 
     // for tricky protocol between LogCache::logLineHasBeenAdded and this class
-    void flush();
     time_t since() const { return _since; }
     unsigned classesRead() const { return _logclasses_read; }
     size_t size() const { return _entries.size(); }

@@ -123,8 +123,7 @@ void LogCache::logLineHasBeenAdded(Logfile *logfile, unsigned logclasses) {
             break;
         }
         if (it->second->size() > 0) {
-            _num_cached_log_messages -= it->second->size();
-            it->second->flush();  // drop all messages of that file
+            _num_cached_log_messages -= it->second->freeMessages(~0);
             if (_num_cached_log_messages <= _mc->maxCachedMessages()) {
                 // remember the number of log messages in cache when
                 // the last memory-release was done. No further
@@ -148,8 +147,7 @@ void LogCache::logLineHasBeenAdded(Logfile *logfile, unsigned logclasses) {
             Debug(logger()) << "freeing classes " << ~logclasses << " of file "
                             << it->second->path();
             // flush only messages not needed for current query
-            long freed = it->second->freeMessages(~logclasses);
-            _num_cached_log_messages -= freed;
+            _num_cached_log_messages -= it->second->freeMessages(~logclasses);
             if (_num_cached_log_messages <= _mc->maxCachedMessages()) {
                 _num_at_last_check = _num_cached_log_messages;
                 return;
@@ -165,8 +163,7 @@ void LogCache::logLineHasBeenAdded(Logfile *logfile, unsigned logclasses) {
         if (it->second->size() > 0) {
             Debug(logger()) << "flush newer log, " << it->second->size()
                             << " number of entries";
-            _num_cached_log_messages -= it->second->size();
-            it->second->flush();
+            _num_cached_log_messages -= it->second->freeMessages(~0);
             if (_num_cached_log_messages <= _mc->maxCachedMessages()) {
                 _num_at_last_check = _num_cached_log_messages;
                 return;

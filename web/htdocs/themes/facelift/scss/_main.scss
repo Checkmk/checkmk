@@ -1767,3 +1767,9 @@ img.glass {
   display: block; }
 #hover_menu .graph_container div.time {
   letter-spacing: 0px; }
+
+#profile_repl .site {
+    box-shadow: none;
+    background: $theme-color-white;
+    border: 1px solid $theme-color-table-border;
+}

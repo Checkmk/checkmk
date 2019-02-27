@@ -60,9 +60,9 @@ export function start(siteid, est, progress_text) {
 }
 
 function set_status(siteid, image, text) {
-    var oImg = document.getElementById("site-" + siteid).childNodes[0];
-    oImg.title = text;
-    oImg.src = "images/icon_"+image+".png";
+    var icon = document.getElementById("site-" + siteid).getElementsByClassName("repl_status")[0];
+    icon.title = text;
+    icon.className = "icon repl_status " + image;
 }
 
 export function step(siteid, est, progress_text) {

@@ -35,10 +35,6 @@
 #include "Logger.h"
 #include "MonitoringCore.h"
 
-#ifdef CMC
-#include "cmc.h"
-#endif
-
 namespace {
 time_t firstTimestampOf(const fs::path &path, Logger *logger) {
     std::ifstream is(path, std::ios::binary);
@@ -74,11 +70,7 @@ Logfile::Logfile(MonitoringCore *mc, LogCache *log_cache, fs::path path,
     , _watch(watch)
     , _read_pos{}
     , _lineno(0)
-#ifdef CMC
-    , _world(nullptr)
-#endif
-    , _logclasses_read(0) {
-}
+    , _logclasses_read(0) {}
 
 void Logfile::flush() {
     _entries.clear();
@@ -183,7 +175,7 @@ long Logfile::freeMessages(unsigned logclasses) {
 
 bool Logfile::processLogLine(size_t lineno, std::string line,
                              unsigned logclasses) {
-    auto entry = std::make_unique<LogEntry>(_mc, lineno, std::move(line));
+    auto entry = std::make_unique<LogEntry>(lineno, std::move(line));
     // ignored invalid lines
     if (entry->_class == LogEntry::Class::invalid) {
         return false;
@@ -202,8 +194,6 @@ bool Logfile::processLogLine(size_t lineno, std::string line,
 }
 
 const logfile_entries_t *Logfile::getEntriesFor(unsigned logclasses) {
-    // Make sure existing references to objects point to correct world
-    updateReferences();
     // make sure all messages are present
     load(logclasses);
     return &_entries;
@@ -212,22 +202,6 @@ const logfile_entries_t *Logfile::getEntriesFor(unsigned logclasses) {
 // static
 uint64_t Logfile::makeKey(time_t t, size_t lineno) {
     return (static_cast<uint64_t>(t) << 32) | static_cast<uint64_t>(lineno);
-}
-
-void Logfile::updateReferences() {
-#ifdef CMC
-    // If our references in cached log entries do not point to the currently
-    // active configuration world, then update all references
-    if (_world != g_live_world) {
-        unsigned num = 0;
-        for (auto &entry : _entries) {
-            num += entry.second->updateReferences(_mc);
-        }
-        Notice(logger()) << "updated " << num << " log cache references of "
-                         << _path << " to new world.";
-        _world = g_live_world;
-    }
-#endif
 }
 
 Logger *Logfile::logger() const { return _mc->loggerLivestatus(); }

@@ -27,7 +27,6 @@
 #include <stdexcept>
 #include <unordered_map>
 #include <utility>
-#include "MonitoringCore.h"
 
 // 0123456789012345678901234567890
 // [1234567890] FOO BAR: blah blah
@@ -35,13 +34,11 @@ static constexpr size_t timestamp_prefix_length = 13;
 
 // TODO(sp) Fix classifyLogMessage() below to always set all fields and remove
 // this set-me-to-zero-to-be-sure-block.
-LogEntry::LogEntry(MonitoringCore *mc, size_t lineno, std::string line)
+LogEntry::LogEntry(size_t lineno, std::string line)
     : _lineno(static_cast<int32_t>(lineno))
     , _message(std::move(line))
     , _state(0)
-    , _attempt(0)
-    , _host(nullptr)
-    , _service(nullptr) {
+    , _attempt(0) {
     // pointer to options (everything after ':')
     size_t pos = _message.find(':');
     if (pos != std::string::npos) {
@@ -66,7 +63,6 @@ LogEntry::LogEntry(MonitoringCore *mc, size_t lineno, std::string line)
 
     classifyLogMessage();
     applyWorkarounds();
-    updateReferences(mc);
 }
 
 bool LogEntry::assign(Param par, const std::string &field) {
@@ -389,28 +385,14 @@ std::unordered_map<std::string, HostState> hostStateTypes{
     {"UNKNOWN", HostState::up}};
 }  // namespace
 
+// static
 ServiceState LogEntry::parseServiceState(const std::string &str) {
     auto it = serviceStateTypes.find(extractStateType(str));
     return it == serviceStateTypes.end() ? ServiceState::ok : it->second;
 }
 
+// static
 HostState LogEntry::parseHostState(const std::string &str) {
     auto it = hostStateTypes.find(extractStateType(str));
     return it == hostStateTypes.end() ? HostState::up : it->second;
-}
-
-unsigned LogEntry::updateReferences(MonitoringCore *mc) {
-    unsigned updated = 0;
-    if (!_host_name.empty()) {
-        // TODO(sp): Remove ugly cast.
-        _host = reinterpret_cast<host *>(mc->find_host(_host_name));
-        updated++;
-    }
-    if (!_service_description.empty()) {
-        // TODO(sp): Remove ugly cast.
-        _service = reinterpret_cast<service *>(
-            mc->find_service(_host_name, _service_description));
-        updated++;
-    }
-    return updated;
 }

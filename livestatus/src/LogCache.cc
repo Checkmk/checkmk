@@ -91,43 +91,35 @@ void LogCache::addToIndex(std::unique_ptr<Logfile> logfile) {
     _logfiles.emplace(since, std::move(logfile));
 }
 
-/* This method is called each time a log message is loaded
-   into memory. If the number of messages loaded in memory
-   is to large, memory will be freed by flushing logfiles
-   and message not needed by the current query.
-
-   The parameters to this method reflect the current query,
-   not the messages that just has been loaded.
- */
+// This method is called each time a log message is loaded into memory. If the
+// number of messages loaded in memory is too large, memory will be freed by
+// flushing logfiles and message not needed by the current query.
+//
+// The parameters to this method reflect the current query, not the messages
+// that have just been loaded.
 void LogCache::logLineHasBeenAdded(Logfile *logfile, unsigned logclasses) {
     if (++_num_cached_log_messages <= _mc->maxCachedMessages()) {
         return;  // current message count still allowed, everything ok
     }
 
-    /* Memory checking an freeing consumes CPU resources. We save
-       resources, by avoiding to make the memory check each time
-       a new message is loaded when being in a sitation where no
-       memory can be freed. We do this by suppressing the check when
-       the number of messages loaded into memory has not grown
-       by at least check_mem_cycle messages */
+    // Memory checking and freeing consumes CPU resources. We save resources by
+    // avoiding the memory check each time a new message is loaded when being in
+    // a sitation where no memory can be freed. We do this by suppressing the
+    // check when the number of messages loaded into memory has not grown by at
+    // least check_mem_cycle messages.
     if (_num_cached_log_messages < _num_at_last_check + check_mem_cycle) {
         return;  // Do not check this time
     }
 
-    // [1] Begin by deleting old logfiles
-    // Begin deleting with the oldest logfile available
+    // [1] Delete old logfiles: Begin deleting with the oldest logfile available
     logfiles_t::iterator it;
     for (it = _logfiles.begin(); it != _logfiles.end(); ++it) {
         if (it->second.get() == logfile) {
-            // Do not touch the logfile the Query is currently accessing
-            break;
+            break;  // Do not touch the logfile the Query is currently accessing
         }
         if (it->second->size() > 0) {
             _num_cached_log_messages -= it->second->freeMessages(~0);
             if (_num_cached_log_messages <= _mc->maxCachedMessages()) {
-                // remember the number of log messages in cache when
-                // the last memory-release was done. No further
-                // release-check shall be done until that number changes.
                 _num_at_last_check = _num_cached_log_messages;
                 return;
             }
@@ -138,15 +130,14 @@ void LogCache::logLineHasBeenAdded(Logfile *logfile, unsigned logclasses) {
     // We save that pointer for later.
     auto queryit = it;
 
-    // [2] Delete message classes irrelevent to current query
-    // Starting from the current logfile (wo broke out of the
-    // previous loop just when 'it' pointed to that)
+    // [2] Delete message classes irrelevent to current query: Starting from the
+    // current logfile (we broke out of the previous loop just when 'it' pointed
+    // to that)
     for (; it != _logfiles.end(); ++it) {
         if (it->second->size() > 0 &&
             (it->second->classesRead() & ~logclasses) != 0) {
             Debug(logger()) << "freeing classes " << ~logclasses << " of file "
                             << it->second->path();
-            // flush only messages not needed for current query
             _num_cached_log_messages -= it->second->freeMessages(~logclasses);
             if (_num_cached_log_messages <= _mc->maxCachedMessages()) {
                 _num_at_last_check = _num_cached_log_messages;
@@ -155,10 +146,9 @@ void LogCache::logLineHasBeenAdded(Logfile *logfile, unsigned logclasses) {
         }
     }
 
-    // [3] Flush newest logfiles
-    // If there are still too many messages loaded, continue
-    // flushing logfiles from the oldest to the newest starting
-    // at the file just after (i.e. newer than) the current logfile
+    // [3] Flush newest logfiles: If there are still too many messages loaded,
+    // continue flushing logfiles from the oldest to the newest starting at the
+    // file just after (i.e. newer than) the current logfile
     for (it = ++queryit; it != _logfiles.end(); ++it) {
         if (it->second->size() > 0) {
             Debug(logger()) << "flush newer log, " << it->second->size()
@@ -170,11 +160,9 @@ void LogCache::logLineHasBeenAdded(Logfile *logfile, unsigned logclasses) {
             }
         }
     }
+    // If we reach this point, no more logfiles can be unloaded, despite the
+    // fact that there are still too many messages loaded.
     _num_at_last_check = _num_cached_log_messages;
-    // If we reach this point, no more logfiles can be unloaded,
-    // despite the fact that there are still too many messages
-    // loaded.
-
     Debug(logger()) << "cannot unload more messages, still "
                     << _num_cached_log_messages << " loaded (max is "
                     << _mc->maxCachedMessages() << ")";

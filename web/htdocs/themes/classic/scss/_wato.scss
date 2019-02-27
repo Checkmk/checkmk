@@ -1395,10 +1395,42 @@ table.nform.rulesettings td.legend div.title {
     text-overflow: ellipsis;
 }
 
-#profile_repl .site img, #profile_repl .site span {
+#profile_repl div.site div, #profile_repl div.site span {
     vertical-align: middle;
+    display: inline-block;
 }
 
+#profile_repl div.repl_status {
+    background-size: contain;
+}
+
+#profile_repl div.repl_locked {
+    background-image: url(images/icon_repl_locked.png);
+}
+
+#profile_repl div.repl_pending {
+    background-image: url(images/icon_repl_pending.png);
+}
+
+#profile_repl div.repl_failed {
+    background-image: url(images/icon_repl_failed.png);
+}
+
+#profile_repl div.repl_25 {
+    background-image: url(images/icon_repl_25.png);
+}
+
+#profile_repl div.repl_50 {
+    background-image: url(images/icon_repl_50.png);
+}
+
+#profile_repl div.repl_75 {
+    background-image: url(images/icon_repl_75.png);
+}
+
+#profile_repl div.repl_success {
+    background-image: url(images/icon_success.png);
+}
 
 .wato table.data.check_catalog td.title {
     width: 500px;

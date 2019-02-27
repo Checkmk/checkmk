@@ -82,8 +82,7 @@ def user_profile_async_replication_dialog(sites):
             icon = 'repl_pending'
 
         html.open_div(class_="site", id_="site-%s" % site_id)
-
-        html.icon(status_txt, icon)
+        html.div("", title=status_txt, class_=["icon", "repl_status", icon])
         if start_sync:
             changes_manager = watolib.ActivateChanges()
             changes_manager.load()

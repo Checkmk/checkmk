@@ -42,6 +42,7 @@ from cmk.gui.valuespec import (
     IconSelector,
     Alternative,
     FixedValue,
+    OptionalDropdownChoice,
 )
 
 from . import (
@@ -135,22 +136,42 @@ class BookmarkList(pagetypes.Overridable):
 
     @classmethod
     def _vs_topic(cls):
+        choices = cls._topic_choices()
+
         return Alternative(
             elements=[
                 FixedValue(
                     None,
                     title=_("Use default topic"),
-                    totext=_("(default topic)"),
+                    totext=_(""),
                 ),
-                TextUnicode(
+                OptionalDropdownChoice(
                     title=_("Individual topic"),
-                    size=30,
-                    allow_empty=False,
+                    choices=choices,
+                    default_value=choices[0][0] if choices else "",
+                    explicit=TextUnicode(
+                        size=30,
+                        allow_empty=False,
+                    ),
+                    otherlabel="%s" % _("Add new topic"),
                 ),
             ],
             title=_("Topic") + "<sup>*</sup>",
             style="dropdown",
+            orientation="horizontal",
         )
+
+    @classmethod
+    def _topic_choices(cls):
+        topics = set()
+        for instance in cls.instances_sorted():
+            if (instance.is_mine() and instance.may_see()) or \
+               (not instance.is_mine() and instance.is_public() and instance.may_see()):
+                for topic, _bookmarks in instance.bookmarks_by_topic():
+                    if topic is None:
+                        topic = instance.default_bookmark_topic()
+                    topics.add(topic)
+        return [(t, t) for t in sorted(list(topics))]
 
     @classmethod
     def validate_url(cls, value, varprefix):

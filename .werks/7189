@@ -1,0 +1,11 @@
+Title: Bookmark lists: Individual topics per bookmark can now be choosen from predefined topics
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1551274970
+Class: feature
+
+The individual topics that are defined in an existing bookmark list can now be choosen from
+a dropdown field when creating new bookmark entries with individual topic.

@@ -35,6 +35,7 @@
 #include "LogCache.h"
 #include "LogEntry.h"
 #include "Logfile.h"
+#include "MonitoringCore.h"
 #include "OffsetIntColumn.h"
 #include "OffsetSStringColumn.h"
 #include "OffsetStringColumn.h"
@@ -53,71 +54,81 @@
 #include "nagios.h"
 #endif
 
+struct LogRow {
+    LogEntry *_entry;
+    host *_host;
+    service *_service;
+    const contact *_contact;
+    Command _command;
+};
+
 TableLog::TableLog(MonitoringCore *mc, LogCache *log_cache)
     : Table(mc), _log_cache(log_cache) {
+    auto entry_offset = DANGEROUS_OFFSETOF(LogRow, _entry);
     addColumn(std::make_unique<OffsetTimeColumn>(
-        "time", "Time of the log event (UNIX timestamp)", -1, -1, -1,
+        "time", "Time of the log event (UNIX timestamp)", entry_offset, -1, -1,
         DANGEROUS_OFFSETOF(LogEntry, _time)));
     addColumn(std::make_unique<OffsetIntColumn>(
-        "lineno", "The number of the line in the log file", -1, -1, -1,
-        DANGEROUS_OFFSETOF(LogEntry, _lineno)));
+        "lineno", "The number of the line in the log file", entry_offset, -1,
+        -1, DANGEROUS_OFFSETOF(LogEntry, _lineno)));
     addColumn(std::make_unique<OffsetIntColumn>(
         "class",
         "The class of the message as integer (0:info, 1:state, 2:program, 3:notification, 4:passive, 5:command)",
-        -1, -1, -1, DANGEROUS_OFFSETOF(LogEntry, _class)));
+        entry_offset - 1, -1, -1, DANGEROUS_OFFSETOF(LogEntry, _class)));
     addColumn(std::make_unique<OffsetSStringColumn>(
-        "message", "The complete message line including the timestamp", -1, -1,
-        -1, DANGEROUS_OFFSETOF(LogEntry, _message)));
+        "message", "The complete message line including the timestamp",
+        entry_offset, -1, -1, DANGEROUS_OFFSETOF(LogEntry, _message)));
     addColumn(std::make_unique<OffsetStringColumn>(
         "type",
         "The type of the message (text before the colon), the message itself for info messages",
-        -1, -1, -1, DANGEROUS_OFFSETOF(LogEntry, _type)));
+        entry_offset - 1, -1, -1, DANGEROUS_OFFSETOF(LogEntry, _type)));
     addColumn(std::make_unique<OffsetStringColumn>(
-        "options", "The part of the message after the ':'", -1, -1, -1,
-        DANGEROUS_OFFSETOF(LogEntry, _options)));
+        "options", "The part of the message after the ':'", entry_offset, -1,
+        -1, DANGEROUS_OFFSETOF(LogEntry, _options)));
     addColumn(std::make_unique<OffsetSStringColumn>(
-        "comment", "A comment field used in various message types", -1, -1, -1,
-        DANGEROUS_OFFSETOF(LogEntry, _comment)));
+        "comment", "A comment field used in various message types",
+        entry_offset, -1, -1, DANGEROUS_OFFSETOF(LogEntry, _comment)));
     addColumn(std::make_unique<OffsetSStringColumn>(
         "plugin_output",
-        "The output of the check, if any is associated with the message", -1,
-        -1, -1, DANGEROUS_OFFSETOF(LogEntry, _plugin_output)));
+        "The output of the check, if any is associated with the message",
+        entry_offset, -1, -1, DANGEROUS_OFFSETOF(LogEntry, _plugin_output)));
     addColumn(std::make_unique<OffsetIntColumn>(
-        "state", "The state of the host or service in question", -1, -1, -1,
-        DANGEROUS_OFFSETOF(LogEntry, _state)));
+        "state", "The state of the host or service in question", entry_offset,
+        -1, -1, DANGEROUS_OFFSETOF(LogEntry, _state)));
     addColumn(std::make_unique<OffsetSStringColumn>(
         "state_type", "The type of the state (varies on different log classes)",
-        -1, -1, -1, DANGEROUS_OFFSETOF(LogEntry, _state_type)));
+        entry_offset - 1, -1, -1, DANGEROUS_OFFSETOF(LogEntry, _state_type)));
     addColumn(std::make_unique<OffsetIntColumn>(
-        "attempt", "The number of the check attempt", -1, -1, -1,
+        "attempt", "The number of the check attempt", entry_offset, -1, -1,
         DANGEROUS_OFFSETOF(LogEntry, _attempt)));
     addColumn(std::make_unique<OffsetSStringColumn>(
         "service_description",
         "The description of the service log entry is about (might be empty)",
-        -1, -1, -1, DANGEROUS_OFFSETOF(LogEntry, _service_description)));
+        entry_offset - 1, -1, -1,
+        DANGEROUS_OFFSETOF(LogEntry, _service_description)));
     addColumn(std::make_unique<OffsetSStringColumn>(
         "host_name",
-        "The name of the host the log entry is about (might be empty)", -1, -1,
-        -1, DANGEROUS_OFFSETOF(LogEntry, _host_name)));
+        "The name of the host the log entry is about (might be empty)",
+        entry_offset, -1, -1, DANGEROUS_OFFSETOF(LogEntry, _host_name)));
     addColumn(std::make_unique<OffsetSStringColumn>(
         "contact_name",
-        "The name of the contact the log entry is about (might be empty)", -1,
-        -1, -1, DANGEROUS_OFFSETOF(LogEntry, _contact_name)));
+        "The name of the contact the log entry is about (might be empty)",
+        entry_offset, -1, -1, DANGEROUS_OFFSETOF(LogEntry, _contact_name)));
     addColumn(std::make_unique<OffsetSStringColumn>(
         "command_name",
-        "The name of the command of the log entry (e.g. for notifications)", -1,
-        -1, -1, DANGEROUS_OFFSETOF(LogEntry, _command_name)));
+        "The name of the command of the log entry (e.g. for notifications)",
+        entry_offset, -1, -1, DANGEROUS_OFFSETOF(LogEntry, _command_name)));
 
     // join host and service tables
     TableHosts::addColumns(this, "current_host_",
-                           DANGEROUS_OFFSETOF(LogEntry, _host), -1);
+                           DANGEROUS_OFFSETOF(LogRow, _host), -1);
     TableServices::addColumns(this, "current_service_",
-                              DANGEROUS_OFFSETOF(LogEntry, _service),
+                              DANGEROUS_OFFSETOF(LogRow, _service),
                               false /* no hosts table */);
     TableContacts::addColumns(this, "current_contact_",
-                              DANGEROUS_OFFSETOF(LogEntry, _contact));
+                              DANGEROUS_OFFSETOF(LogRow, _contact));
     TableCommands::addColumns(this, "current_command_",
-                              DANGEROUS_OFFSETOF(LogEntry, _command));
+                              DANGEROUS_OFFSETOF(LogRow, _command));
 }
 
 std::string TableLog::name() const { return "log"; }
@@ -178,15 +189,25 @@ void TableLog::answerQuery(Query *query) {
     }
 }
 
-// static
 bool TableLog::answerQueryReverse(const logfile_entries_t *entries,
                                   Query *query, time_t since, time_t until) {
     auto it = entries->upper_bound(Logfile::makeKey(until, 999999999));
     while (it != entries->begin()) {
         --it;
-        // end found or limit exceeded?
-        if (it->second->_time < since ||
-            !query->processDataset(Row(it->second.get()))) {
+        if (it->second->_time < since) {
+            return false;  // time limit exceeded
+        }
+        auto entry = it->second.get();
+        // TODO(sp): Remove ugly casts.
+        LogRow lr{
+            entry,
+            reinterpret_cast<host *>(core()->find_host(entry->_host_name)),
+            reinterpret_cast<service *>(core()->find_service(
+                entry->_host_name, entry->_service_description)),
+            reinterpret_cast<const contact *>(
+                core()->find_contact(entry->_contact_name)),
+            core()->find_command(entry->_command_name)};
+        if (!query->processDataset(Row(&lr))) {
             return false;
         }
     }
@@ -194,20 +215,21 @@ bool TableLog::answerQueryReverse(const logfile_entries_t *entries,
 }
 
 bool TableLog::isAuthorized(Row row, const contact *ctc) const {
-    auto entry = rowData<LogEntry>(row);
-    service *svc = entry->_service;
-    host *hst = entry->_host;
+    auto lr = rowData<LogRow>(row);
+    service *svc = lr->_service;
+    host *hst = lr->_host;
 
-    if ((hst != nullptr) || (svc != nullptr)) {
+    if (hst != nullptr || svc != nullptr) {
         return is_authorized_for(core(), ctc, hst, svc);
         // suppress entries for messages that belong to hosts that do not exist
         // anymore.
     }
-    return !(entry->_class == LogEntry::Class::alert ||
-             entry->_class == LogEntry::Class::hs_notification ||
-             entry->_class == LogEntry::Class::passivecheck ||
-             entry->_class == LogEntry::Class::alert_handlers ||
-             entry->_class == LogEntry::Class::state);
+    auto clazz = lr->_entry->_class;
+    return !(clazz == LogEntry::Class::alert ||
+             clazz == LogEntry::Class::hs_notification ||
+             clazz == LogEntry::Class::passivecheck ||
+             clazz == LogEntry::Class::alert_handlers ||
+             clazz == LogEntry::Class::state);
 }
 
 std::shared_ptr<Column> TableLog::column(std::string colname) const {

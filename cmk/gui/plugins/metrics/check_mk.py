@@ -4576,19 +4576,19 @@ metric_info["k8s_memory_capacity"] = {
 }
 
 metric_info["k8s_pods_usage"] = {
-    "title": _("Pod usage"),
+    "title": _("Pod request"),
     "unit": "%",
     "color": "31/a",
 }
 
 metric_info["k8s_memory_usage"] = {
-    "title": _("Memory usage"),
+    "title": _("Memory request"),
     "unit": "%",
     "color": "31/a",
 }
 
 metric_info["k8s_cpu_usage"] = {
-    "title": _("CPU usage"),
+    "title": _("CPU request"),
     "unit": "%",
     "color": "31/a",
 }
@@ -8615,7 +8615,7 @@ graph_info["citrix_serverload"] = {
 }
 
 graph_info["k8s_resources.pods"] = {
-    "title": _("Pods"),
+    "title": _("Pod resources"),
     "metrics": [
         ("k8s_pods_capacity", "area"),
         ("k8s_pods_allocatable", "area"),
@@ -8624,7 +8624,7 @@ graph_info["k8s_resources.pods"] = {
 }
 
 graph_info["k8s_resources.cpu"] = {
-    "title": _("CPU"),
+    "title": _("CPU resources"),
     "metrics": [
         ("k8s_cpu_capacity", "area"),
         ("k8s_cpu_allocatable", "area"),
@@ -8635,7 +8635,7 @@ graph_info["k8s_resources.cpu"] = {
 }
 
 graph_info["k8s_resources.memory"] = {
-    "title": _("Memory"),
+    "title": _("Memory resources"),
     "metrics": [
         ("k8s_memory_capacity", "area"),
         ("k8s_memory_allocatable", "area"),

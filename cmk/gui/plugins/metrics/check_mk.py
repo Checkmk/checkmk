@@ -5224,6 +5224,18 @@ check_metrics["check_mk-hitachi_hnas_cpu"] = {
     },
 }
 
+check_metrics["check_mk-hitachi_hnas_cifs"] = {
+    "users": {
+        "name": "cifs_share_users"
+    },
+}
+
+check_metrics["check_mk-hitachi_hnas_fan"] = {
+    "fanspeed": {
+        "name": "fan"
+    },
+}
+
 check_metrics["check_mk-statgrab_disk"] = {
     "read": {
         "name": "disk_read_throughput"
@@ -8693,6 +8705,7 @@ graph_info["util_average_1"] = {
         "util:crit",
     ],
     "range": ("util:min", "util:max"),
+    "optional_metrics": ["util_average"],
 }
 
 graph_info["util_average_2"] = {
@@ -9625,11 +9638,6 @@ graph_info["net_data_traffic"] = {
         ("net_data_recv", "stack"),
         ("net_data_sent", "stack"),
     ],
-}
-
-graph_info["number_of_processes"] = {
-    "title": _("Number of processes"),
-    "metrics": [("processes", "area"),]
 }
 
 graph_info["size_of_processes"] = {

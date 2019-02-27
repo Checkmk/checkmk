@@ -1,0 +1,12 @@
+Title: SNMP with IPv6only hosts: Fixed bug which caused connection errors
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1551188496
+
+IPv6 addresses were not correctly quoted with brackets, hereby causing
+connection errors with classic and inline-snmp connections.

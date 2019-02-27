@@ -139,6 +139,8 @@ multisite_sorters = {}
 
 @visual_type_registry.register
 class VisualTypeViews(VisualType):
+    """Register the views as a visual type"""
+
     @property
     def ident(self):
         return "views"
@@ -198,6 +200,32 @@ class PermissionSectionViews(PermissionSection):
         return True
 
 
+class View(object):
+    """Manages processing of a single view, e.g. during rendering"""
+
+    def __init__(self, view_name, view_spec):
+        # type: (str, Dict) -> None
+        super(View, self).__init__()
+        self.name = view_name
+        self.spec = view_spec
+
+    @property
+    def datasource(self):
+        try:
+            return data_source_registry[self.spec["datasource"]]()
+        except KeyError:
+            if self.spec["datasource"].startswith("mkeventd_"):
+                raise MKUserError(
+                    None,
+                    _("The Event Console view '%s' can not be rendered. The Event Console is possibly "
+                      "disabled.") % self.name)
+            else:
+                raise MKUserError(
+                    None,
+                    _("The view '%s' using the datasource '%s' can not be rendered "
+                      "because the datasource does not exist.") % (self.name, self.datasource))
+
+
 # Load all view plugins
 def load_plugins(force):
     global loaded_with_language
@@ -254,9 +282,10 @@ def load_plugins(force):
     visuals.declare_visual_permissions('views', _("views"))
 
     # Declare permissions for builtin views
-    for name, view in multisite_builtin_views.items():
-        declare_permission("view.%s" % name, format_view_title(name, view),
-                           "%s - %s" % (name, _u(view["description"])), config.builtin_role_ids)
+    for name, view_spec in multisite_builtin_views.items():
+        declare_permission("view.%s" % name, format_view_title(name, view_spec),
+                           "%s - %s" % (name, _u(view_spec["description"])),
+                           config.builtin_role_ids)
 
     # Make sure that custom views also have permissions
     config.declare_dynamic_permissions(lambda: visuals.declare_custom_permissions('views'))
@@ -904,18 +933,19 @@ def show_filter_form(is_open, filters):
 
 @cmk.gui.pages.register("view")
 def page_view():
-    view, view_name = html.get_item_input("view_name", get_permitted_views())
+    view_spec, view_name = html.get_item_input("view_name", get_permitted_views())
+
+    view = View(view_name, view_spec)
 
     # Gather the page context which is needed for the "add to visual" popup menu
     # to add e.g. views to dashboards or reports
-    datasource = data_source_registry[view['datasource']]()
-    context = visuals.get_context_from_uri_vars(datasource.infos)
-    context.update(visuals.get_singlecontext_html_vars(view))
+    context = visuals.get_context_from_uri_vars(view.datasource.infos)
+    context.update(visuals.get_singlecontext_html_vars(view.spec))
     html.set_page_context(context)
 
     painter_options = PainterOptions.get_instance()
-    painter_options.load(view_name)
-    painter_options.update_from_url(view_name, view)
+    painter_options.load(view.name)
+    painter_options.update_from_url(view.name, view.spec)
 
     show_view(view, show_heading=True, show_buttons=True, show_footer=True)
 
@@ -934,29 +964,24 @@ def show_view(view,
 
     # Load from hard painter options > view > hard coded default
     painter_options = PainterOptions.get_instance()
-    num_columns = painter_options.get("num_columns", view.get("num_columns", 1))
-    browser_reload = painter_options.get("refresh", view.get("browser_reload", None))
+    num_columns = painter_options.get("num_columns", view.spec.get("num_columns", 1))
+    browser_reload = painter_options.get("refresh", view.spec.get("browser_reload", None))
 
-    force_checkboxes = view.get("force_checkboxes", False)
+    force_checkboxes = view.spec.get("force_checkboxes", False)
     show_checkboxes = force_checkboxes or html.request.var('show_checkboxes', '0') == '1'
 
-    # Get the datasource (i.e. the logical table)
-    datasource = _get_datasource(view)
-
-    tablename = datasource.table
-
     # Always allow the users to specify all allowed filters using the URL
-    use_filters = visuals.filters_allowed_for_infos(datasource.infos).values()
+    use_filters = visuals.filters_allowed_for_infos(view.datasource.infos).values()
 
     # Not all filters are really shown later in show_filter_form(), because filters which
     # have a hardcoded value are not changeable by the user
     show_filters = visuals.filters_of_visual(
-        view, datasource.infos, link_filters=datasource.link_filters)
+        view.spec, view.datasource.infos, link_filters=view.datasource.link_filters)
     show_filters = visuals.visible_filters_of_visual(view, show_filters)
 
     # FIXME TODO HACK to make grouping single contextes possible on host/service infos
     # Is hopefully cleaned up soon.
-    if view['datasource'] in ['hosts', 'services']:
+    if view.datasource.ident in ['hosts', 'services']:
         if html.request.has_var('hostgroup') and not html.request.has_var("opthost_group"):
             html.request.set_var("opthost_group", html.request.var("hostgroup"))
         if html.request.has_var('servicegroup') and not html.request.has_var("optservice_group"):
@@ -972,8 +997,8 @@ def show_view(view,
     # Another idea: We could change these views to non single context views, but then we would not
     # be able to show the buttons to other host related views, which is also bad. So better stick
     # with the current mode.
-    if view["datasource"] in [ "mkeventd_events", "mkeventd_history" ] \
-       and "host" in view["single_infos"] and view["name"] != "ec_events_of_monhost":
+    if view.datasource.ident in [ "mkeventd_events", "mkeventd_history" ] \
+       and "host" in view.spec["single_infos"] and view.spec["name"] != "ec_events_of_monhost":
         # Remove the original host name filter
         use_filters = [f for f in use_filters if f.ident != "host"]
 
@@ -986,10 +1011,10 @@ def show_view(view,
     #
     # a) single context vars of the view are enforced
     # b) multi context vars can be overwritten by existing HTML vars
-    visuals.add_context_to_uri_vars(view, only_count)
+    visuals.add_context_to_uri_vars(view.spec, only_count)
 
     # Check that all needed information for configured single contexts are available
-    visuals.verify_single_contexts('views', view, datasource.link_filters)
+    visuals.verify_single_contexts('views', view.spec, view.datasource.link_filters)
 
     # Prepare Filter headers for Livestatus
     # TODO: When this is used by the reporting then *all* filters are
@@ -1000,7 +1025,7 @@ def show_view(view,
     all_active_filters = [f for f in use_filters if f.available()]
     for filt in all_active_filters:
         try:
-            header = filt.filter(tablename)
+            header = filt.filter(view.datasource.tablename)
         except MKUserError as e:
             html.add_user_error(e.varname, e)
             continue
@@ -1018,31 +1043,31 @@ def show_view(view,
     # lines of the log processed. This resulted in wrong stats.
     # For these datasources we ignore the query limits.
     if limit is None:  # Otherwise: specified as argument
-        if not datasource.ignore_limit:
+        if not view.datasource.ignore_limit:
             limit = get_limit()
 
     # Fork to availability view. We just need the filter headers, since we do not query the normal
     # hosts and service table, but "statehist". This is *not* true for BI availability, though (see later)
-    if html.request.var("mode") == "availability" and ("aggr" not in datasource.infos or
+    if html.request.var("mode") == "availability" and ("aggr" not in view.datasource.infos or
                                                        html.request.var("timeline_aggr")):
 
-        context = visuals.get_context_from_uri_vars(datasource.infos)
-        context.update(visuals.get_singlecontext_html_vars(view))
+        context = visuals.get_context_from_uri_vars(view.datasource.infos)
+        context.update(visuals.get_singlecontext_html_vars(view.spec))
 
         return cmk.gui.plugins.views.availability.render_availability_page(
-            view, datasource, context, filterheaders, only_sites, limit)
+            view.spec, view.datasource, context, filterheaders, only_sites, limit)
 
-    query = filterheaders + view.get("add_headers", "")
+    query = filterheaders + view.spec.get("add_headers", "")
 
     # Sorting - use view sorters and URL supplied sorters
-    sorters = get_sorters(view, only_count, html.request.var("sort"))
+    sorters = get_sorters(view.spec, only_count, html.request.var("sort"))
 
     # Prepare cells of the view
     # Group cells:   Are displayed as titles of grouped rows
     # Regular cells: Are displaying information about the rows of the type the view is about
     # Join cells:    Are displaying information of a joined source (e.g.service data on host views)
-    group_cells = get_group_cells(view)
-    cells = get_cells(view)
+    group_cells = get_group_cells(view.spec)
+    cells = get_cells(view.spec)
     join_cells = get_join_cells(cells)
 
     # Now compute the list of all columns we need to query via Livestatus.
@@ -1051,32 +1076,32 @@ def show_view(view,
     # satisfy external references (filters) of views we link to. The last bit
     # is the trickiest. Also compute this list of view options use by the
     # painters
-    columns = _get_needed_regular_columns(group_cells + cells, sorters, datasource)
+    columns = _get_needed_regular_columns(group_cells + cells, sorters, view.datasource)
     join_columns = _get_needed_join_columns(join_cells, sorters)
 
     # Fetch data. Some views show data only after pressing [Search]
-    if (only_count or (not view.get("mustsearch")) or
+    if (only_count or (not view.spec.get("mustsearch")) or
             html.request.var("filled_in") in ["filter", 'actions', 'confirm', 'painteroptions']):
         # names for additional columns (through Stats: headers)
-        add_columns = datasource.add_columns
+        add_columns = view.datasource.add_columns
 
-        # tablename may be a function instead of a livestatus tablename
+        # view.datasource.table may be a function instead of a livestatus table name
         # In that case that function is used to compute the result.
         # It may also be a tuple. In this case the first element is a function and the second element
         # is a list of argument to hand over to the function together with all other arguments that
         # are passed to query_data().
-
-        if callable(tablename):
-            rows = tablename(columns, query, only_sites, limit, all_active_filters)
-        elif isinstance(tablename, tuple):
-            func, args = tablename
-            rows = func(datasource, columns, add_columns, query, only_sites, limit, *args)
+        if callable(view.datasource.table):
+            rows = view.datasource.table(columns, query, only_sites, limit, all_active_filters)
+        elif isinstance(view.datasource.table, tuple):
+            func, args = view.datasource.table
+            rows = func(view.datasource, columns, add_columns, query, only_sites, limit, *args)
         else:
-            rows = query_data(datasource, columns, add_columns, query, only_sites, limit)
+            rows = query_data(view.datasource, columns, add_columns, query, only_sites, limit)
 
         # Now add join information, if there are join columns
         if join_cells:
-            _do_table_join(datasource, rows, filterheaders, join_cells, join_columns, only_sites)
+            _do_table_join(view.datasource, rows, filterheaders, join_cells, join_columns,
+                           only_sites)
 
         # If any painter, sorter or filter needs the information about the host's
         # inventory, then we load it and attach it as column "host_inventory"
@@ -1105,12 +1130,12 @@ def show_view(view,
         rows = filter_.filter_table(rows)
 
     if html.request.var("mode") == "availability":
-        cmk.gui.plugins.views.availability.render_bi_availability(view_title(view), rows)
+        cmk.gui.plugins.views.availability.render_bi_availability(view_title(view.spec), rows)
         return
 
     # TODO: Use livestatus Stats: instead of fetching rows!
     if only_count:
-        for filter_vars in view["context"].itervalues():
+        for filter_vars in view.spec["context"].itervalues():
             for varname in filter_vars.iterkeys():
                 html.request.del_var(varname)
         return len(rows)
@@ -1122,14 +1147,14 @@ def show_view(view,
     # report itself.
     # TODO: CSV export should be handled by the layouts. It cannot
     # be done generic in most cases
-    if "layout" in view:
-        layout = layout_registry[view["layout"]]()
+    if "layout" in view.spec:
+        layout = layout_registry[view.spec["layout"]]()
     else:
         layout = None
 
     if html.output_format != "html":
         if layout and layout.has_individual_csv_export:
-            layout.csv_export(rows, view, group_cells, cells)
+            layout.csv_export(rows, view.spec, group_cells, cells)
             return
 
         # Generic layout of export
@@ -1154,24 +1179,9 @@ def show_view(view,
     if not render_function:
         render_function = render_view
 
-    render_function(view, rows, datasource, group_cells, cells, show_heading, show_buttons,
-                    show_checkboxes, layout, num_columns, show_filters, show_footer, browser_reload)
-
-
-def _get_datasource(view):
-    try:
-        return data_source_registry[view["datasource"]]()
-    except KeyError:
-        if view["datasource"].startswith("mkeventd_"):
-            raise MKUserError(
-                None,
-                _("The Event Console view '%s' can not be rendered. The Event Console is possibly "
-                  "disabled.") % view["name"])
-        else:
-            raise MKUserError(
-                None,
-                _("The view '%s' using the datasource '%s' can not be rendered "
-                  "because the datasource does not exist.") % (view["name"], view["datasource"]))
+    render_function(view.spec, rows, view.datasource, group_cells, cells, show_heading,
+                    show_buttons, show_checkboxes, layout, num_columns, show_filters, show_footer,
+                    browser_reload)
 
 
 SorterEntry = namedtuple("SorterEntry", ["sorter", "negate", "join_key"])

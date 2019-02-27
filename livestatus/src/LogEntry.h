@@ -30,8 +30,6 @@
 #include <ctime>
 #include <string>
 #include <vector>
-#include "nagios.h"
-class MonitoringCore;
 
 enum class ServiceState { ok = 0, warning = 1, critical = 2, unknown = 3 };
 
@@ -121,13 +119,8 @@ public:
     std::string _plugin_output;
     std::string _comment;
 
-    // NOTE: The following two fields contain only derived information.
-    host *_host;
-    service *_service;
-
     // NOTE: line gets modified!
-    LogEntry(MonitoringCore *mc, size_t lineno, std::string line);
-    unsigned updateReferences(MonitoringCore *mc);
+    LogEntry(size_t lineno, std::string line);
     static ServiceState parseServiceState(const std::string &str);
     static HostState parseHostState(const std::string &str);
 

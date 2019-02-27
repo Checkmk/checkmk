@@ -38,10 +38,6 @@ class LogEntry;
 class Logger;
 class MonitoringCore;
 
-#ifdef CMC
-class World;
-#endif
-
 // key is time_t . lineno
 using logfile_entries_t = std::map<uint64_t, std::unique_ptr<LogEntry>>;
 
@@ -72,15 +68,11 @@ private:
     fpos_t _read_pos;     // read until this position
     size_t _lineno;       // read until this line
     logfile_entries_t _entries;
-#ifdef CMC
-    World *_world;  // CMC: world our references point into
-#endif
     unsigned _logclasses_read;  // only these types have been read
 
     void load(unsigned logclasses);
     void loadRange(FILE *file, unsigned missing_types, unsigned logclasses);
     bool processLogLine(size_t lineno, std::string line, unsigned logclasses);
-    void updateReferences();
     Logger *logger() const;
 };
 

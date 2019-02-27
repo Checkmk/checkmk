@@ -37,24 +37,10 @@ namespace {
 constexpr unsigned long check_mem_cycle = 1000;
 }  // namespace
 
-LogCache::LogCache(MonitoringCore *mc, unsigned long max_cached_messages)
-    : _mc(mc)
-    , _num_cached_log_messages(0)
-    , _max_cached_messages(max_cached_messages)
-    , _num_at_last_check(0) {
+LogCache::LogCache(MonitoringCore *mc)
+    : _mc(mc), _num_cached_log_messages(0), _num_at_last_check(0) {
     update();
 }
-
-#ifdef CMC
-void LogCache::setMaxCachedMessages(unsigned long m) {
-    if (m != _max_cached_messages) {
-        Notice(logger())
-            << "changing maximum number of messages for log file cache to "
-            << m;
-        _max_cached_messages = m;
-    }
-}
-#endif
 
 void LogCache::update() {
     if (!_logfiles.empty() &&
@@ -114,7 +100,7 @@ void LogCache::addToIndex(std::unique_ptr<Logfile> logfile) {
    not the messages that just has been loaded.
  */
 void LogCache::logLineHasBeenAdded(Logfile *logfile, unsigned logclasses) {
-    if (++_num_cached_log_messages <= _max_cached_messages) {
+    if (++_num_cached_log_messages <= _mc->maxCachedMessages()) {
         return;  // current message count still allowed, everything ok
     }
 
@@ -139,7 +125,7 @@ void LogCache::logLineHasBeenAdded(Logfile *logfile, unsigned logclasses) {
         if (it->second->size() > 0) {
             _num_cached_log_messages -= it->second->size();
             it->second->flush();  // drop all messages of that file
-            if (_num_cached_log_messages <= _max_cached_messages) {
+            if (_num_cached_log_messages <= _mc->maxCachedMessages()) {
                 // remember the number of log messages in cache when
                 // the last memory-release was done. No further
                 // release-check shall be done until that number changes.
@@ -164,7 +150,7 @@ void LogCache::logLineHasBeenAdded(Logfile *logfile, unsigned logclasses) {
             // flush only messages not needed for current query
             long freed = it->second->freeMessages(~logclasses);
             _num_cached_log_messages -= freed;
-            if (_num_cached_log_messages <= _max_cached_messages) {
+            if (_num_cached_log_messages <= _mc->maxCachedMessages()) {
                 _num_at_last_check = _num_cached_log_messages;
                 return;
             }
@@ -181,7 +167,7 @@ void LogCache::logLineHasBeenAdded(Logfile *logfile, unsigned logclasses) {
                             << " number of entries";
             _num_cached_log_messages -= it->second->size();
             it->second->flush();
-            if (_num_cached_log_messages <= _max_cached_messages) {
+            if (_num_cached_log_messages <= _mc->maxCachedMessages()) {
                 _num_at_last_check = _num_cached_log_messages;
                 return;
             }
@@ -194,7 +180,7 @@ void LogCache::logLineHasBeenAdded(Logfile *logfile, unsigned logclasses) {
 
     Debug(logger()) << "cannot unload more messages, still "
                     << _num_cached_log_messages << " loaded (max is "
-                    << _max_cached_messages << ")";
+                    << _mc->maxCachedMessages() << ")";
 }
 
 size_t LogCache::numCachedLogMessages() const {

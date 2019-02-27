@@ -41,10 +41,7 @@ class LogCache {
 public:
     std::mutex _lock;
 
-    LogCache(MonitoringCore *mc, unsigned long max_cached_messages);
-#ifdef CMC
-    void setMaxCachedMessages(unsigned long m);
-#endif
+    explicit LogCache(MonitoringCore *mc);
     size_t numCachedLogMessages() const;
     void logLineHasBeenAdded(Logfile *logfile, unsigned logclasses);
     void update();
@@ -54,7 +51,6 @@ public:
 private:
     MonitoringCore *const _mc;
     size_t _num_cached_log_messages;
-    size_t _max_cached_messages;
     size_t _num_at_last_check;
     logfiles_t _logfiles;
     std::chrono::system_clock::time_point _last_index_update;

@@ -178,7 +178,8 @@ void TableLog::answerQuery(Query *query) {
     }
 
     while (true) {
-        auto entries = it->second->getEntriesFor(classmask);
+        auto entries =
+            it->second->getEntriesFor(core()->maxLinesPerLogFile(), classmask);
         if (!answerQueryReverse(entries, query, since, until)) {
             break;  // end of time range found
         }

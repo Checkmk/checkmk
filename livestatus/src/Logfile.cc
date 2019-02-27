@@ -33,7 +33,6 @@
 #include "LogCache.h"
 #include "LogEntry.h"
 #include "Logger.h"
-#include "MonitoringCore.h"
 
 namespace {
 time_t firstTimestampOf(const fs::path &path, Logger *logger) {
@@ -61,12 +60,11 @@ time_t firstTimestampOf(const fs::path &path, Logger *logger) {
 }
 }  // namespace
 
-Logfile::Logfile(MonitoringCore *mc, LogCache *log_cache, fs::path path,
-                 bool watch)
-    : _mc(mc)
+Logfile::Logfile(Logger *logger, LogCache *log_cache, fs::path path, bool watch)
+    : _logger(logger)
     , _log_cache(log_cache)
     , _path(std::move(path))
-    , _since(firstTimestampOf(_path, logger()))
+    , _since(firstTimestampOf(_path, _logger))
     , _watch(watch)
     , _read_pos{}
     , _lineno(0)
@@ -77,7 +75,7 @@ void Logfile::flush() {
     _logclasses_read = 0;
 }
 
-void Logfile::load(unsigned logclasses) {
+void Logfile::load(size_t max_lines_per_logfile, unsigned logclasses) {
     unsigned missing_types = logclasses & ~_logclasses_read;
     // The current logfile has the _watch flag set to true.
     // In that case, if the logfile has grown, we need to
@@ -87,7 +85,7 @@ void Logfile::load(unsigned logclasses) {
         FILE *file = fopen(_path.c_str(), "r");
         if (file == nullptr) {
             generic_error ge("cannot open logfile " + _path.string());
-            Informational(logger()) << ge;
+            Informational(_logger) << ge;
             return;
         }
         // If we read this file for the first time, we initialize
@@ -100,13 +98,14 @@ void Logfile::load(unsigned logclasses) {
         // have read to the end of the file
         if (_logclasses_read != 0u) {
             fsetpos(file, &_read_pos);  // continue at previous end
-            loadRange(file, _logclasses_read, logclasses);
+            loadRange(max_lines_per_logfile, file, _logclasses_read,
+                      logclasses);
             fgetpos(file, &_read_pos);
         }
         if (missing_types != 0u) {
             fseek(file, 0, SEEK_SET);
             _lineno = 0;
-            loadRange(file, missing_types, logclasses);
+            loadRange(max_lines_per_logfile, file, missing_types, logclasses);
             _logclasses_read |= missing_types;
             fgetpos(file, &_read_pos);  // remember current end of file
         }
@@ -119,26 +118,26 @@ void Logfile::load(unsigned logclasses) {
         FILE *file = fopen(_path.c_str(), "r");
         if (file == nullptr) {
             generic_error ge("cannot open logfile " + _path.string());
-            Informational(logger()) << ge;
+            Informational(_logger) << ge;
             return;
         }
 
         _lineno = 0;
-        loadRange(file, missing_types, logclasses);
+        loadRange(max_lines_per_logfile, file, missing_types, logclasses);
         _logclasses_read |= missing_types;
         fclose(file);
     }
 }
 
-void Logfile::loadRange(FILE *file, unsigned missing_types,
-                        unsigned logclasses) {
+void Logfile::loadRange(size_t max_lines_per_logfile, FILE *file,
+                        unsigned missing_types, unsigned logclasses) {
     std::vector<char> linebuffer(65536);
     // TODO(sp) We should really use C++ I/O here...
     while (fgets(&linebuffer[0], static_cast<int>(linebuffer.size()), file) !=
            nullptr) {
-        if (_lineno >= _mc->maxLinesPerLogFile()) {
-            Error(logger()) << "more than " << _mc->maxLinesPerLogFile()
-                            << " lines in " << _path << ", ignoring the rest!";
+        if (_lineno >= max_lines_per_logfile) {
+            Error(_logger) << "more than " << max_lines_per_logfile
+                           << " lines in " << _path << ", ignoring the rest!";
             return;
         }
         _lineno++;
@@ -186,16 +185,17 @@ bool Logfile::processLogLine(size_t lineno, std::string line,
     uint64_t key = makeKey(entry->_time, entry->_lineno);
     if (_entries.find(key) != _entries.end()) {
         // this should never happen. The lineno must be unique!
-        Error(logger()) << "strange duplicate logfile line " << entry->_message;
+        Error(_logger) << "strange duplicate logfile line " << entry->_message;
         return false;
     }
     _entries[key] = std::move(entry);
     return true;
 }
 
-const logfile_entries_t *Logfile::getEntriesFor(unsigned logclasses) {
+const logfile_entries_t *Logfile::getEntriesFor(size_t max_lines_per_logfile,
+                                                unsigned logclasses) {
     // make sure all messages are present
-    load(logclasses);
+    load(max_lines_per_logfile, logclasses);
     return &_entries;
 }
 
@@ -203,5 +203,3 @@ const logfile_entries_t *Logfile::getEntriesFor(unsigned logclasses) {
 uint64_t Logfile::makeKey(time_t t, size_t lineno) {
     return (static_cast<uint64_t>(t) << 32) | static_cast<uint64_t>(lineno);
 }
-
-Logger *Logfile::logger() const { return _mc->loggerLivestatus(); }

@@ -2697,6 +2697,40 @@ class PainterHostAddresses(Painter):
 
 
 @painter_registry.register
+class PainterHostAddresses(Painter):
+    @property
+    def ident(self):
+        return "host_addresses_additional"
+
+    @property
+    def title(self):
+        return _("Host addresses (additional)")
+
+    @property
+    def short_title(self):
+        return _("Add. addresses")
+
+    @property
+    def columns(self):
+        return ["host_custom_variable_names", "host_custom_variable_values"]
+
+    def render(self, row, cell):
+        custom_vars = dict(
+            zip(row["host_custom_variable_names"], row["host_custom_variable_values"]))
+
+        ipv4_addresses = custom_vars.get("ADDRESSES_4", "").strip()
+        ipv6_addresses = custom_vars.get("ADDRESSES_6", "").strip()
+
+        addresses = []
+        if ipv4_addresses:
+            addresses += ipv4_addresses.split(" ")
+        if ipv6_addresses:
+            addresses += ipv6_addresses.split(" ")
+
+        return "", ", ".join(addresses)
+
+
+@painter_registry.register
 class PainterHostAddressFamily(Painter):
     @property
     def ident(self):

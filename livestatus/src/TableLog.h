@@ -50,8 +50,8 @@ public:
 
 private:
     LogCache *_log_cache;
-    static bool answerQueryReverse(const logfile_entries_t *entries,
-                                   Query *query, time_t since, time_t until);
+    bool answerQueryReverse(const logfile_entries_t *entries, Query *query,
+                            time_t since, time_t until);
 };
 
 #endif  // TableLog_h

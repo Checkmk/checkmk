@@ -30,8 +30,8 @@
 #include <ctime>
 #include <string>
 #include <vector>
-#include "MonitoringCore.h"
 #include "nagios.h"
+class MonitoringCore;
 
 enum class ServiceState { ok = 0, warning = 1, critical = 2, unknown = 3 };
 
@@ -121,11 +121,9 @@ public:
     std::string _plugin_output;
     std::string _comment;
 
-    // NOTE: The following four fields contain only derived information.
+    // NOTE: The following two fields contain only derived information.
     host *_host;
     service *_service;
-    const contact *_contact;
-    Command _command;
 
     // NOTE: line gets modified!
     LogEntry(MonitoringCore *mc, size_t lineno, std::string line);

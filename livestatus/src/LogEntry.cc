@@ -41,8 +41,7 @@ LogEntry::LogEntry(MonitoringCore *mc, size_t lineno, std::string line)
     , _state(0)
     , _attempt(0)
     , _host(nullptr)
-    , _service(nullptr)
-    , _contact(nullptr) {
+    , _service(nullptr) {
     // pointer to options (everything after ':')
     size_t pos = _message.find(':');
     if (pos != std::string::npos) {
@@ -411,16 +410,6 @@ unsigned LogEntry::updateReferences(MonitoringCore *mc) {
         // TODO(sp): Remove ugly cast.
         _service = reinterpret_cast<service *>(
             mc->find_service(_host_name, _service_description));
-        updated++;
-    }
-    if (!_contact_name.empty()) {
-        // TODO(sp): Remove ugly cast.
-        _contact =
-            reinterpret_cast<const contact *>(mc->find_contact(_contact_name));
-        updated++;
-    }
-    if (!_command_name.empty()) {
-        _command = mc->find_command(_command_name);
         updated++;
     }
     return updated;

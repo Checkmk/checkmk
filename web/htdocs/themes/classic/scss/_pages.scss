@@ -1458,6 +1458,8 @@ div.pnp_graph a.popup_trigger {
     display: block;
     width: 20px;
     height: 20px;
+    background-image: url(images/icon_menu.png);
+    background-size: contain;
 }
 
 div.pnp_graph a.popup_trigger:hover {

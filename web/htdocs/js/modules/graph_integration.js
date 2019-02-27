@@ -116,7 +116,6 @@ function create_pnp_graph(data, params) {
         var visualadd = document.createElement("a");
         visualadd.title = data["add_txt"];
         visualadd.className = "popup_trigger";
-        visualadd.innerHTML = "<img src=\"images/icon_menu.png\" class=\"icon\">";
         visualadd.onclick = function(host, service, view, source) {
             return function(event) {
                 popup_menu.toggle_popup(event, this, "add_visual", "add_visual",

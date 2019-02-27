@@ -1,0 +1,18 @@
+Title: More GUI elements can be shared with specific contact groups
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1551278398
+Class: feature
+
+Views, reports and dashboard could already be shared with the users of specific
+contact groups.
+
+For a consistent user experience other customizable elements can now also be
+shared with a specific group of users instead of all users.
+
+This change affects the following elements: The bookmark lists and snapins for
+all Check_MK Editions and the Graph Collections, Custom Graphs, Graph Tunings
+and SLAs for the Enterprise and Managed Services Edition

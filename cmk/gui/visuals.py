@@ -38,7 +38,6 @@ from cmk.gui.exceptions import HTTPRedirect, MKGeneralException, MKAuthException
 from cmk.gui.permissions import declare_permission
 from cmk.gui.valuespec import (
     Dictionary,
-    CascadingDropdown,
     ListChoice,
     ValueSpec,
     ListOfMultiple,
@@ -47,11 +46,9 @@ from cmk.gui.valuespec import (
     TextUnicode,
     TextAscii,
     TextAreaUnicode,
-    DualListChoice,
 )
 import cmk.gui.config as config
 import cmk.gui.forms as forms
-import cmk.gui.sites as sites
 from cmk.gui.table import table_element
 import cmk.gui.userdb as userdb
 import cmk.gui.pagetypes as pagetypes
@@ -835,7 +832,7 @@ def page_edit_visual(what,
     if config.user.may("general.publish_" + what):
         with_foreign_groups = config.user.may("general.publish_" + what + "_to_foreign_groups")
         visibility_elements.append(('public',
-                                    PublishTo(
+                                    pagetypes.PublishTo(
                                         type_title=visual_type.title,
                                         with_foreign_groups=with_foreign_groups,
                                     )))
@@ -987,37 +984,6 @@ def page_edit_visual(what,
     html.hidden_fields()
     html.end_form()
     html.footer()
-
-
-class PublishTo(CascadingDropdown):
-    def __init__(self, type_title=None, with_foreign_groups=True, **kwargs):
-        super(PublishTo, self).__init__(
-            choices=[
-                (True, _("Publish to all users")),
-                ("contact_groups", _("Publish to members of contact groups"),
-                 ContactGroupChoice(
-                     with_foreign_groups=with_foreign_groups,
-                     title=_("Publish to members of contact groups"),
-                     rows=5,
-                     size=80,
-                 )),
-            ],
-            title=_('Make this %s available for other users') % type_title,
-            **kwargs)
-
-
-class ContactGroupChoice(DualListChoice):
-    """A multiple selection of contact groups that are part of the current active config"""
-
-    def __init__(self, with_foreign_groups=True, **kwargs):
-        super(ContactGroupChoice, self).__init__(choices=self._load_groups, **kwargs)
-        self._with_foreign_groups = with_foreign_groups
-
-    def _load_groups(self):
-        contact_group_choices = sites.all_groups("contact")
-        return [(group_id, alias)
-                for (group_id, alias) in contact_group_choices
-                if self._with_foreign_groups or group_id in config.user.contact_groups()]
 
 
 #.

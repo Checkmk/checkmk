@@ -695,14 +695,14 @@ class ModeAjaxServiceDiscovery(WatoWebApiMode):
                     services_to_save[(check_type, item)] = paramstring
                     saved_services.add(descr)
                 elif table_target == DiscoveryState.IGNORED:
-                    add_disabled_rule.append(descr)
+                    add_disabled_rule.add(descr)
 
             elif table_source == DiscoveryState.VANISHED:
                 if table_target != DiscoveryState.REMOVED:
                     services_to_save[(check_type, item)] = paramstring
                     saved_services.add(descr)
                 if table_target == DiscoveryState.IGNORED:
-                    add_disabled_rule.append(descr)
+                    add_disabled_rule.add(descr)
 
             elif table_source == DiscoveryState.MONITORED:
                 if table_target in [
@@ -712,7 +712,7 @@ class ModeAjaxServiceDiscovery(WatoWebApiMode):
                     services_to_save[(check_type, item)] = paramstring
                     saved_services.add(descr)
                 if table_target == DiscoveryState.IGNORED:
-                    add_disabled_rule.append(descr)
+                    add_disabled_rule.add(descr)
 
             elif table_source == DiscoveryState.IGNORED:
                 if table_target in [
@@ -720,7 +720,7 @@ class ModeAjaxServiceDiscovery(WatoWebApiMode):
                         DiscoveryState.UNDECIDED,
                         DiscoveryState.VANISHED,
                 ]:
-                    remove_disabled_rule.append(descr)
+                    remove_disabled_rule.add(descr)
                 if table_target in [
                         DiscoveryState.MONITORED,
                         DiscoveryState.IGNORED,
@@ -728,7 +728,7 @@ class ModeAjaxServiceDiscovery(WatoWebApiMode):
                     services_to_save[(check_type, item)] = paramstring
                     saved_services.add(descr)
                 if table_target == DiscoveryState.IGNORED:
-                    add_disabled_rule.append(descr)
+                    add_disabled_rule.add(descr)
 
             elif table_source in [
                     DiscoveryState.CLUSTERED_NEW,

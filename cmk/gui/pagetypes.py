@@ -43,6 +43,7 @@ import json
 import cmk.utils.store as store
 
 import cmk.gui.pages
+import cmk.gui.sites as sites
 import cmk.gui.config as config
 from cmk.gui.table import table_element
 import cmk.gui.forms as forms
@@ -53,6 +54,9 @@ from cmk.gui.valuespec import (
     Checkbox,
     TextUnicode,
     TextAreaUnicode,
+    CascadingDropdown,
+    DualListChoice,
+    Optional,
 )
 from cmk.gui.i18n import _u, _
 from cmk.gui.globals import html
@@ -432,13 +436,24 @@ class Overridable(Base):
         parameters = super(Overridable, cls).parameters(mode)
 
         if cls.has_overriding_permission("publish"):
-            parameters += [(_("General Properties"), [
-                (2.2, 'public',
-                 Checkbox(
-                     title=_("Visibility"),
-                     label=_('Make available for all users'),
-                 )),
-            ])]
+
+            parameters += [
+                (_("General Properties"), [
+                    (2.2, 'public',
+                     Optional(
+                         title=_("Visibility"),
+                         label=_('Make this %s available for other users') % cls.phrase("title"),
+                         none_label=_("Don't publish to other users"),
+                         none_value=False,
+                         valuespec=PublishTo(
+                             title="",
+                             type_title=cls.phrase("title"),
+                             with_foreign_groups=cls.has_overriding_permission(
+                                 "publish_to_foreign_groups"),
+                         ),
+                     )),
+                ]),
+            ]
 
         return parameters
 
@@ -457,16 +472,32 @@ class Overridable(Base):
             header += " (%s)" % self.owner()
         return header
 
-    # Checks whether a page is publicly visible. This does not only need a flag
-    # in the page itself, but also the permission from its owner to publish it.
     def is_public(self):
-        return self._["public"] and (not self.owner() or config.user_may(
-            self.owner(), "general.publish_" + self.type_name()))
+        """Checks whether a page is visible to other users than the owner.
+
+        This does not only need a flag in the page itself, but also the
+        permission from its owner to publish it."""
+        if self._["public"] is False:
+            return False
+
+        return not self.owner() or config.user_may(self.owner(),
+                                                   "general.publish_" + self.type_name())
 
     # Same, but checks if the owner has the permission to override builtin views
     def is_public_forced(self):
         return self.is_public() and \
           config.user_may(self.owner(), "general.force_" + self.type_name())
+
+    def is_published_to_me(self):
+        """Whether or not the page is published to the currently active user"""
+        if self._["public"] is True:
+            return True
+
+        if isinstance(self._["public"], tuple) and self._["public"][0] == "contact_groups":
+            if set(config.user.contact_groups()).intersection(self._["public"][1]):
+                return True
+
+        return False
 
     def is_hidden(self):
         return self._.get("hidden", False)
@@ -495,7 +526,7 @@ class Overridable(Base):
         if page and page.owner() != self.owner():
             return False
 
-        return self.is_public()
+        return self.is_published_to_me()
 
     @classmethod
     def _delete_permission(cls):
@@ -530,7 +561,7 @@ class Overridable(Base):
         instances = []
         for instance in cls.instances_sorted():
             if (instance.is_mine() and instance.may_see()) or \
-               (not instance.is_mine() and instance.is_public() and instance.may_see()):
+               (not instance.is_mine() and instance.is_published_to_me() and instance.may_see()):
                 instances.append(instance)
         return instances
 
@@ -600,6 +631,14 @@ class Overridable(Base):
             ["admin", "user"],
         )
 
+        config.declare_permission(
+            "general.publish_to_foreign_groups_" + cls.type_name(),
+            _("Publish %s to foreign contact groups") % cls.phrase("title_plural"),
+            _("Make %s visible and usable for users of contact groups the publishing user is not a member of."
+             ) % cls.phrase("title_plural"),
+            ["admin"],
+        )
+
         # TODO: Bug: This permission does not seem to be used
         declare_permission(
             "general.see_user_" + cls.type_name(),
@@ -650,17 +689,17 @@ class Overridable(Base):
 
         # Builtin pages
         for page in cls.instances():
-            if page.is_public() and page.may_see() and page.is_builtin():
+            if page.is_published_to_me() and page.may_see() and page.is_builtin():
                 pages[page.name()] = page
 
         # Public pages by normal other users
         for page in cls.instances():
-            if page.is_public() and page.may_see():
+            if page.is_published_to_me() and page.may_see():
                 pages[page.name()] = page
 
         # Public pages by admin users, forcing their versions over others
         for page in cls.instances():
-            if page.is_public() and page.may_see() and page.is_public_forced():
+            if page.is_published_to_me() and page.may_see() and page.is_public_forced():
                 pages[page.name()] = page
 
         # My own pages
@@ -690,7 +729,7 @@ class Overridable(Base):
             if page.is_mine_and_may_have_own():
                 mine = page
 
-            elif page.is_public() and page.may_see():
+            elif page.is_published_to_me() and page.may_see():
                 if page.is_public_forced():
                     forced = page
                 elif page.is_builtin():
@@ -987,7 +1026,7 @@ class Overridable(Base):
                     builtin_instances.append(instance)
                 elif instance.is_mine():
                     my_instances.append(instance)
-                elif instance.is_public() \
+                elif instance.is_published_to_me() \
                      or instance.may_delete() or instance.may_edit():
                     foreign_instances.append(instance)
 
@@ -1134,6 +1173,37 @@ class Overridable(Base):
 
         html.footer()
         return
+
+
+class PublishTo(CascadingDropdown):
+    def __init__(self, type_title=None, with_foreign_groups=True, **kwargs):
+        kwargs.setdefault("title", _('Make this %s available for other users') % type_title)
+        super(PublishTo, self).__init__(
+            choices=[
+                (True, _("Publish to all users")),
+                ("contact_groups", _("Publish to members of contact groups"),
+                 ContactGroupChoice(
+                     with_foreign_groups=with_foreign_groups,
+                     title=_("Publish to members of contact groups"),
+                     rows=5,
+                     size=80,
+                 )),
+            ],
+            **kwargs)
+
+
+class ContactGroupChoice(DualListChoice):
+    """A multiple selection of contact groups that are part of the current active config"""
+
+    def __init__(self, with_foreign_groups=True, **kwargs):
+        super(ContactGroupChoice, self).__init__(choices=self._load_groups, **kwargs)
+        self._with_foreign_groups = with_foreign_groups
+
+    def _load_groups(self):
+        contact_group_choices = sites.all_groups("contact")
+        return [(group_id, alias)
+                for (group_id, alias) in contact_group_choices
+                if self._with_foreign_groups or group_id in config.user.contact_groups()]
 
 
 #.

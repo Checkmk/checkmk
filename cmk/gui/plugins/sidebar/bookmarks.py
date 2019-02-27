@@ -166,7 +166,7 @@ class BookmarkList(pagetypes.Overridable):
         topics = set()
         for instance in cls.instances_sorted():
             if (instance.is_mine() and instance.may_see()) or \
-               (not instance.is_mine() and instance.is_public() and instance.may_see()):
+               (not instance.is_mine() and instance.is_published_to_me() and instance.may_see()):
                 for topic, _bookmarks in instance.bookmarks_by_topic():
                     if topic is None:
                         topic = instance.default_bookmark_topic()
@@ -293,7 +293,7 @@ function add_bookmark() {
         BookmarkList.load()
         for instance in BookmarkList.instances_sorted():
             if (instance.is_mine() and instance.may_see()) or \
-               (not instance.is_mine() and instance.is_public() and instance.may_see()):
+               (not instance.is_mine() and instance.is_published_to_me() and instance.may_see()):
                 for topic, bookmarks in instance.bookmarks_by_topic():
                     if topic is None:
                         topic = instance.default_bookmark_topic()

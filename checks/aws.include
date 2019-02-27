@@ -104,15 +104,48 @@ def inventory_aws_generic_single(parsed, required_metrics):
 
 
 def check_aws_limits(aws_service, params, parsed):
-    for resource, resource_title, limit, amount in parsed:
-        p_limit, (warn, crit) = params['%s_limit_levels' % resource]
-        if p_limit is not None:
-            limit_ref = p_limit
-        else:
+    """
+    Generic check for checking limits of AWS resource.
+    - levels: use plain resource_key
+    - performance data: aws_%s_%s % AWS resource, resource_key
+    """
+    long_output = []
+    levels_reached = []
+    max_state = 0
+    perfdata = []
+    for resource_key, resource_title, limit, amount, human_readable_func in parsed:
+        if human_readable_func is None:
+            human_readable_func = lambda x: "%s" % x
+
+        p_limit, (warn, crit) = params[resource_key]
+        if p_limit is None:
             limit_ref = limit
-        yield 0, '%s: %s (of max. %s)' % (resource_title, amount, limit_ref)
-        yield check_levels(
-            100.0 * amount / limit,
-            "aws_%s_%s_limits" % (aws_service, resource), (warn, crit),
+        else:
+            limit_ref = p_limit
+
+        infotext = '%s: %s (of max. %s)' % (resource_title, human_readable_func(amount),
+                                            human_readable_func(limit_ref))
+        perfvar = "aws_%s_%s" % (aws_service, resource_key)
+        perfdata.append((perfvar, amount))
+
+        if not limit_ref:
+            continue
+
+        state, extrainfo, _perfdata = check_levels(
+            100.0 * amount / limit_ref,
+            "%s_usage" % perfvar, (warn, crit),
             human_readable_func=get_percent_human_readable,
             infoname="Usage")
+
+        max_state = max(state, max_state)
+        if state:
+            levels_reached.append(resource_title)
+            infotext += ", %s%s" % (extrainfo, state_markers[state])
+        long_output.append(infotext)
+
+    if levels_reached:
+        yield max_state, 'Levels reached: %s' % ", ".join(levels_reached), perfdata
+    else:
+        yield 0, 'No levels reached', perfdata
+    if long_output:
+        yield 0, "\n%s" % "\n".join(long_output)

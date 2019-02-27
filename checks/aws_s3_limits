@@ -25,8 +25,13 @@
 # Boston, MA 02110-1301 USA.
 
 factory_settings['aws_s3_limits_default_levels'] = {
-    'buckets_limit_levels': (None, (80.0, 90.0)),
+    'buckets': (None, (80.0, 90.0)),
 }
+
+
+def parse_aws_s3_limits(info):
+    return [(resource_key, resource_title, limit, amount, None)
+            for resource_key, resource_title, limit, amount in parse_aws(info)]
 
 
 def check_aws_s3_limits(item, params, parsed):
@@ -34,11 +39,12 @@ def check_aws_s3_limits(item, params, parsed):
 
 
 check_info['aws_s3_limits'] = {
-    'parse_function': parse_aws,
+    'parse_function': parse_aws_s3_limits,
     'inventory_function': discover_single,
     'check_function': check_aws_s3_limits,
     'service_description': 'AWS/S3 Limits',
     'includes': ['aws.include'],
     'group': 'aws_s3_limits',
     'default_levels_variable': 'aws_s3_limits_default_levels',
+    'has_perfdata': True,
 }

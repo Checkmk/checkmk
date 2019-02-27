@@ -440,7 +440,7 @@ class RulespecCheckgroupParametersAwsS3Limits(CheckParameterRulespecWithoutItem)
 
     @property
     def parameter_valuespec(self):
-        return Dictionary(elements=[('buckets_limit_levels', _vs_limits("Buckets", 100))])
+        return Dictionary(elements=[('buckets', _vs_limits("Buckets", 100))])
 
 
 #.
@@ -710,10 +710,9 @@ class RulespecCheckgroupParametersAwsElbLimits(CheckParameterRulespecWithoutItem
     @property
     def parameter_valuespec(self):
         return Dictionary(elements=[
-            ('load_balancers_limit_levels', _vs_limits("Load balancers", 20)),
-            ('load_balancer_listeners_limit_levels',
-             _vs_limits("Listeners per load balancer", 100)),
-            ('load_balancer_registered_instances_limit_levels',
+            ('load_balancers', _vs_limits("Load balancers", 20)),
+            ('load_balancer_listeners', _vs_limits("Listeners per load balancer", 100)),
+            ('load_balancer_registered_instances',
              _vs_limits("Registered instances per load balancer", 1000)),
         ])
 

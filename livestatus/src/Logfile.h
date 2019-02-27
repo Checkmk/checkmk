@@ -36,14 +36,13 @@
 class LogCache;
 class LogEntry;
 class Logger;
-class MonitoringCore;
 
 // key is time_t . lineno
 using logfile_entries_t = std::map<uint64_t, std::unique_ptr<LogEntry>>;
 
 class Logfile {
 public:
-    Logfile(MonitoringCore *mc, LogCache *log_cache, fs::path path, bool watch);
+    Logfile(Logger *logger, LogCache *log_cache, fs::path path, bool watch);
     fs::path path() const { return _path; }
 
     // for tricky protocol between LogCache::logLineHasBeenAdded and this class
@@ -54,13 +53,14 @@ public:
     long freeMessages(unsigned logclasses);
 
     // for TableStateHistory and TableLog
-    const logfile_entries_t *getEntriesFor(unsigned logclasses);
+    const logfile_entries_t *getEntriesFor(size_t max_lines_per_logfile,
+                                           unsigned logclasses);
 
     // for TableLog::answerQuery
     static uint64_t makeKey(time_t t, size_t lineno);
 
 private:
-    MonitoringCore *const _mc;
+    Logger *const _logger;
     LogCache *const _log_cache;
     const fs::path _path;
     const time_t _since;  // time of first entry
@@ -70,10 +70,10 @@ private:
     logfile_entries_t _entries;
     unsigned _logclasses_read;  // only these types have been read
 
-    void load(unsigned logclasses);
-    void loadRange(FILE *file, unsigned missing_types, unsigned logclasses);
+    void load(size_t max_lines_per_logfile, unsigned logclasses);
+    void loadRange(size_t max_lines_per_logfile, FILE *file,
+                   unsigned missing_types, unsigned logclasses);
     bool processLogLine(size_t lineno, std::string line, unsigned logclasses);
-    Logger *logger() const;
 };
 
 #endif  // Logfile_h

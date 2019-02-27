@@ -213,7 +213,8 @@ void TableStateHistory::getPreviousLogentry() {
             return;
         }
         --_it_logs;
-        _entries = _it_logs->second->getEntriesFor(classmask_statehist);
+        _entries = _it_logs->second->getEntriesFor(core()->maxLinesPerLogFile(),
+                                                   classmask_statehist);
         _it_entries = _entries->end();
     }
     --_it_entries;
@@ -230,7 +231,8 @@ LogEntry *TableStateHistory::getNextLogentry() {
             return nullptr;
         }
         ++_it_logs;
-        _entries = _it_logs->second->getEntriesFor(classmask_statehist);
+        _entries = _it_logs->second->getEntriesFor(core()->maxLinesPerLogFile(),
+                                                   classmask_statehist);
         _it_entries = _entries->begin();
     }
     return _it_entries->second.get();
@@ -328,7 +330,8 @@ void TableStateHistory::answerQuery(Query *query) {
     }
 
     // Determine initial logentry
-    _entries = _it_logs->second->getEntriesFor(classmask_statehist);
+    _entries = _it_logs->second->getEntriesFor(core()->maxLinesPerLogFile(),
+                                               classmask_statehist);
     if (!_entries->empty() && _it_logs != newest_log) {
         _it_entries = _entries->end();
         // Check last entry. If it's younger than _since -> use this logfile too

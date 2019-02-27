@@ -24,7 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-from typing import NamedTuple, Union, Tuple
+import abc
+from typing import NamedTuple, Union, Tuple, Optional  # pylint: disable=unused-import
 
 OID_END = 0  # Suffix-part of OID that was not specified
 OID_STRING = -1  # Complete OID as string ".1.3.6.1.4.1.343...."
@@ -90,3 +91,17 @@ SNMPHostConfig = NamedTuple(
         ("timing", dict),
         ("oid_range_limits", list),
     ])
+
+
+class ABCSNMPBackend(object):
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractmethod
+    def get(self, host_config, oid, context_name=None):
+        # type: (SNMPHostConfig, str, Optional[str]) -> Optional[str]
+        """Fetch a single OID from the given host in the given SNMP context
+
+        The OID may end with .* to perform a GETNEXT request. Otherwise a GET
+        request is sent to the given host.
+        """
+        raise NotImplementedError()

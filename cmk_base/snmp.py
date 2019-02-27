@@ -264,9 +264,9 @@ def get_snmp_table(host_config, check_plugin_name, oid_info, use_snmpwalk_cache)
 
 # Contextes can only be used when check_plugin_name is given.
 def get_single_oid(host_config, oid, check_plugin_name=None, do_snmp_scan=True):
-    # New in Check_MK 1.1.11: oid can end with ".*". In that case
-    # we do a snmpgetnext and try to find an OID with the prefix
-    # in question. The *cache* is working including the X, however.
+    # The OID can end with ".*". In that case we do a snmpgetnext and try to
+    # find an OID with the prefix in question. The *cache* is working including
+    # the X, however.
     if oid[0] != '.':
         if cmk.utils.debug.enabled():
             raise MKGeneralException("OID definition '%s' does not begin with a '.'" % oid)
@@ -280,39 +280,32 @@ def get_single_oid(host_config, oid, check_plugin_name=None, do_snmp_scan=True):
         console.vverbose("%s%s%s%s\n" % (tty.bold, tty.green, value, tty.normal))
         return value
 
-    console.vverbose("       Getting OID %s: " % oid)
-    if _enforce_stored_walks or config.is_usewalk_host(host_config.hostname):
-        walk = _get_stored_snmpwalk(host_config.hostname, oid)
-        # get_stored_snmpwalk returns all oids that start with oid but here
-        # we need an exact match
-        if len(walk) == 1 and oid == walk[0][0]:
-            value = walk[0][1]
-        elif oid.endswith(".*") and len(walk) > 0:
-            value = walk[0][1]
-        else:
-            value = None
-
+    # get_single_oid() can only return a single value. When SNMPv3 is used with multiple
+    # SNMP contexts, all contextes will be queried until the first answer is received.
+    if check_plugin_name is not None and cmk_base.snmp_utils.is_snmpv3_host(host_config):
+        snmp_contexts = _snmpv3_contexts_of(host_config.hostname, check_plugin_name)
     else:
-        # get_single_oid() can only return a single value. When SNMPv3 is used with multiple
-        # SNMP contexts, all contextes will be queried until the first answer is received.
-        if check_plugin_name is not None and cmk_base.snmp_utils.is_snmpv3_host(host_config):
-            snmp_contexts = _snmpv3_contexts_of(host_config.hostname, check_plugin_name)
-        else:
-            snmp_contexts = [None]
+        snmp_contexts = [None]
 
-        for context_name in snmp_contexts:
-            try:
-                if config.is_inline_snmp_host(host_config.hostname):
-                    value = inline_snmp.get(host_config, oid, context_name=context_name)
-                else:
-                    value = classic_snmp.get(host_config, oid, context_name=context_name)
+    console.vverbose("       Getting OID %s: " % oid)
+    for context_name in snmp_contexts:
+        try:
+            if _enforce_stored_walks or config.is_usewalk_host(host_config.hostname):
+                value = StoredWalkSNMPBackend().get(host_config, oid, context_name)
 
-                if value is not None:
-                    break  # Use first received answer in case of multiple contextes
-            except:
-                if cmk.utils.debug.enabled():
-                    raise
-                value = None
+            elif config.is_inline_snmp_host(host_config.hostname):
+                value = inline_snmp.InlineSNMPBackend().get(
+                    host_config, oid, context_name=context_name)
+            else:
+                value = classic_snmp.ClassicSNMPBackend().get(
+                    host_config, oid, context_name=context_name)
+
+            if value is not None:
+                break  # Use first received answer in case of multiple contextes
+        except:
+            if cmk.utils.debug.enabled():
+                raise
+            value = None
 
     if value is not None:
         console.vverbose("%s%s%s%s\n" % (tty.bold, tty.green, value, tty.normal))
@@ -321,6 +314,21 @@ def get_single_oid(host_config, oid, check_plugin_name=None, do_snmp_scan=True):
 
     set_single_oid_cache(host_config, oid, value)
     return value
+
+
+class StoredWalkSNMPBackend(cmk_base.snmp_utils.ABCSNMPBackend):
+    def get(self, host_config, oid, context_name=None):
+        walk = _get_stored_snmpwalk(host_config.hostname, oid)
+
+        # get_stored_snmpwalk returns all oids that start with oid but here
+        # we need an exact match
+        if len(walk) == 1 and oid == walk[0][0]:
+            return walk[0][1]
+
+        elif oid.endswith(".*") and len(walk) > 0:
+            return walk[0][1]
+
+        return None
 
 
 def walk_for_export(host_config, oid):

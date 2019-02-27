@@ -135,54 +135,55 @@ def _get_rowinfo_from_snmp_process(snmp_process, hex_plain):
     return rowinfo
 
 
-def get(host_config, oid, context_name=None):
-    if oid.endswith(".*"):
-        oid_prefix = oid[:-2]
-        commandtype = "getnext"
-    else:
-        oid_prefix = oid
-        commandtype = "get"
+class ClassicSNMPBackend(snmp_utils.ABCSNMPBackend):
+    def get(self, host_config, oid, context_name=None):
+        if oid.endswith(".*"):
+            oid_prefix = oid[:-2]
+            commandtype = "getnext"
+        else:
+            oid_prefix = oid
+            commandtype = "get"
 
-    protospec = _snmp_proto_spec(host_config)
-    ipaddress = host_config.ipaddress
-    if protospec == "udp6:":
-        ipaddress = "[" + ipaddress + "]"
-    portspec = _snmp_port_spec(host_config)
-    command = _snmp_base_command(commandtype, host_config, context_name) + \
-               [ "-On", "-OQ", "-Oe", "-Ot",
-                 "%s%s%s" % (protospec, ipaddress, portspec),
-                 oid_prefix ]
+        protospec = _snmp_proto_spec(host_config)
+        ipaddress = host_config.ipaddress
+        if protospec == "udp6:":
+            ipaddress = "[" + ipaddress + "]"
+        portspec = _snmp_port_spec(host_config)
+        command = _snmp_base_command(commandtype, host_config, context_name) + \
+                   [ "-On", "-OQ", "-Oe", "-Ot",
+                     "%s%s%s" % (protospec, ipaddress, portspec),
+                     oid_prefix ]
 
-    console.vverbose("Running '%s'\n" % subprocess.list2cmdline(command))
+        console.vverbose("Running '%s'\n" % subprocess.list2cmdline(command))
 
-    snmp_process = subprocess.Popen(
-        command, close_fds=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    exitstatus = snmp_process.wait()
-    if exitstatus:
-        console.verbose(tty.red + tty.bold + "ERROR: " + tty.normal + "SNMP error\n")
-        console.verbose(snmp_process.stderr.read() + "\n")
-        return None
+        snmp_process = subprocess.Popen(
+            command, close_fds=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        exitstatus = snmp_process.wait()
+        if exitstatus:
+            console.verbose(tty.red + tty.bold + "ERROR: " + tty.normal + "SNMP error\n")
+            console.verbose(snmp_process.stderr.read() + "\n")
+            return None
 
-    line = snmp_process.stdout.readline().strip()
-    if not line:
-        console.verbose("Error in response to snmpget.\n")
-        return None
+        line = snmp_process.stdout.readline().strip()
+        if not line:
+            console.verbose("Error in response to snmpget.\n")
+            return None
 
-    item, value = line.split("=", 1)
-    value = value.strip()
-    console.vverbose("SNMP answer: ==> [%s]\n" % value)
-    if value.startswith('No more variables') or value.startswith('End of MIB') \
-       or value.startswith('No Such Object available') or value.startswith('No Such Instance currently exists'):
-        value = None
+        item, value = line.split("=", 1)
+        value = value.strip()
+        console.vverbose("SNMP answer: ==> [%s]\n" % value)
+        if value.startswith('No more variables') or value.startswith('End of MIB') \
+           or value.startswith('No Such Object available') or value.startswith('No Such Instance currently exists'):
+            value = None
 
-    # In case of .*, check if prefix is the one we are looking for
-    if commandtype == "getnext" and not item.startswith(oid_prefix + "."):
-        value = None
+        # In case of .*, check if prefix is the one we are looking for
+        if commandtype == "getnext" and not item.startswith(oid_prefix + "."):
+            value = None
 
-    # Strip quotes
-    if value and value.startswith('"') and value.endswith('"'):
-        value = value[1:-1]
-    return value
+        # Strip quotes
+        if value and value.startswith('"') and value.endswith('"'):
+            value = value[1:-1]
+        return value
 
 
 def _snmp_port_spec(host_config):

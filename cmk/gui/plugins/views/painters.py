@@ -2670,7 +2670,7 @@ class PainterHostAddresses(Painter):
 
     @property
     def title(self):
-        return _("Host addresses")
+        return _("Host addresses (IPv4/IPv6)")
 
     @property
     def short_title(self):

@@ -86,7 +86,11 @@ CLUSTER my_cluster
 CLUSTER another_cluster
  192.168.1.5
  192.168.1.6
- 1762:0:0:0:0:B03:1:AF18"""
+ 1762:0:0:0:0:B03:1:AF18
+
+CLUSTER yet_another_cluster
+ 192.168.1.0/24
+ 1762:0000:0000:0000:0000:0000:0000:0000/64"""
 
 
 @pytest.fixture(scope="module")
@@ -171,10 +175,19 @@ def test_read_config(agent_plugin_as_module, tmpdir):
         assert isinstance(cc, mk_logwatch.ClusterConfig)
     cluster_config = actual_config[3]
     assert cluster_config.name == "my_cluster"
-    assert cluster_config.ips == ['192.168.1.1', '192.168.1.2', '192.168.1.3', '192.168.1.4']
+    assert cluster_config.ips_or_subnets == [
+        '192.168.1.1', '192.168.1.2', '192.168.1.3', '192.168.1.4'
+    ]
     another_cluster = actual_config[4]
     assert another_cluster.name == "another_cluster"
-    assert another_cluster.ips == ['192.168.1.5', '192.168.1.6', '1762:0:0:0:0:B03:1:AF18']
+    assert another_cluster.ips_or_subnets == [
+        '192.168.1.5', '192.168.1.6', '1762:0:0:0:0:B03:1:AF18'
+    ]
+    yet_another_cluster = actual_config[5]
+    assert yet_another_cluster.name == "yet_another_cluster"
+    assert yet_another_cluster.ips_or_subnets == [
+        '192.168.1.0/24', '1762:0000:0000:0000:0000:0000:0000:0000/64'
+    ]
 
 
 @pytest.mark.parametrize(
@@ -258,6 +271,16 @@ def test_find_matching_logfiles(agent_plugin_as_module, fake_filesystem, pattern
     fake_fs_path = str(fake_filesystem)
     files = mk_logwatch.find_matching_logfiles(fake_fs_path + pattern_suffix)
     assert sorted(files) == [fake_fs_path + fs for fs in file_suffixes]
+
+
+def test_ip_in_subnetwork(agent_plugin_as_module):
+    mk_logwatch = agent_plugin_as_module
+    assert mk_logwatch.ip_in_subnetwork("192.168.1.1", "192.168.1.0/24") is True
+    assert mk_logwatch.ip_in_subnetwork("192.160.1.1", "192.168.1.0/24") is False
+    assert mk_logwatch.ip_in_subnetwork("1762:0:0:0:0:B03:1:AF18",
+                                        "1762:0000:0000:0000:0000:0000:0000:0000/64") is True
+    assert mk_logwatch.ip_in_subnetwork("1760:0:0:0:0:B03:1:AF18",
+                                        "1762:0000:0000:0000:0000:0000:0000:0000/64") is False
 
 
 @pytest.fixture

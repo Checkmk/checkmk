@@ -1,0 +1,14 @@
+Title: mk_logwatch: Support lookup of remote ip against subnetworks in cluster mapping
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1551285209
+Class: feature
+
+This werk adds support for the lookup of the remote ip against IPv4 and IPv6 subnetworks
+(CIDR notation) in the logwatch cluster configurations. Until now the cluster mapping allowed
+lookup of the remote ip against IPv4 and IPv6 addressess only.
+
+CMK-1690

@@ -31,6 +31,8 @@ import re
 import shutil
 import sys
 import time
+import socket
+import binascii
 
 from collections import namedtuple  # from Python2.6, Python3.1 onwards
 
@@ -38,9 +40,9 @@ from collections import namedtuple  # from Python2.6, Python3.1 onwards
 # types: LogfilesConfig[List[str], Tuple[str, sre.SRE_Pattern object, List[str], List[str]]]
 LogfilesConfig = namedtuple('LogfilesConfig', 'files, patterns')
 
-# logical: ClusterConfig(name, ips)
+# logical: ClusterConfig(name, ips_or_subnets)
 # types: ClusterConfig[str, List[str]]
-ClusterConfig = namedtuple('ClusterConfig', 'name, ips')
+ClusterConfig = namedtuple('ClusterConfig', 'name, ips_or_subnets')
 
 LOGGER = logging.getLogger(__name__)
 
@@ -221,13 +223,23 @@ def get_status_filename(config):
     LOGGER.debug("Cluster configurations:")
     LOGGER.debug(cluster_configs)
     for nt in cluster_configs:
-        for ip in nt.ips:
-            if remote_ip == ip:
-                # cluster name may not contain whitespaces (must be provided from
+        for ip_or_subnet in nt.ips_or_subnets:
+            if remote_ip == ip_or_subnet:
+                # Entry in cluster configuration is IP address.
+                # Cluster name may not contain whitespaces (must be provided from
                 # the WATO config as type ID or hostname).
                 cluster_name = nt.name
-                LOGGER.info("matching cluster ip %s", ip)
+                LOGGER.info("matching cluster ip %s", remote_ip)
                 LOGGER.info("matching cluster name %s", cluster_name)
+            else:
+                # Entry in cluster configuration is subnetwork in CIDR notation.
+                try:
+                    if ip_in_subnetwork(remote_ip, ip_or_subnet):
+                        cluster_name = nt.name
+                        LOGGER.info("matching cluster ip %s", remote_ip)
+                        LOGGER.info("matching cluster name %s", cluster_name)
+                except ValueError:
+                    continue  # valid subnetwork configuration expected
     if cluster_name:
         status_filename = "%s/logwatch.state.%s" % (mk_vardir(), cluster_name)
     elif remote_hostname != "":
@@ -295,7 +307,7 @@ def read_config(files):
 
     Returns configuration as list. List elements are namedtuples.
     Namedtuple either describes logile patterns and is LogfilesConfig(files, patterns).
-    Or tuple describes optional cluster mapping and is ClusterConfig(name, ips)
+    Or tuple describes optional cluster mapping and is ClusterConfig(name, ips_or_subnets)
     with ips as list of strings.
     """
     LOGGER.debug("config files:")
@@ -317,14 +329,14 @@ def read_config(files):
     rewrite_list = []
     # only cluster_mapping context requires parse context
     section_context = "no_section"  # valid: "no_section", "logfiles", "cluster"
-    cluster_ips = []
+    cluster_ips_or_subnets = []
     # parsing has to consider the following possible lines:
     # - comment lines (begin with #)
     # - logfiles line (begin not with #, are not empty and do not contain CLUSTER)
     # - cluster lines (begin with CLUSTER)
     # - logfiles patterns (follow logfiles lines, begin with whitespace)
-    # - cluster ips (follow cluster lines, begin with whitespace)
-    # Needs to consider end of lines to append ips to clusters as well.
+    # - cluster ips or subnets (follow cluster lines, begin with whitespace)
+    # Needs to consider end of lines to append ips/subnets to clusters as well.
     for line in config_lines:
         if is_comment(line):
             continue  # skip comments
@@ -342,9 +354,9 @@ def read_config(files):
                 LOGGER.debug("filenames: %s", filenames)
             elif line.startswith("CLUSTER"):
                 section_context = "cluster"
-                cluster_ips = []
+                cluster_ips_or_subnets = []
                 cluster_name = line.replace("CLUSTER ", "").strip()
-                cluster_configs.append(ClusterConfig(cluster_name, cluster_ips))
+                cluster_configs.append(ClusterConfig(cluster_name, cluster_ips_or_subnets))
                 LOGGER.debug("new cluster: %s", cluster_name)
             else:
                 raise Exception("Parsing error. (section: %s, line: %s)" % (section_context, line))
@@ -371,9 +383,9 @@ def read_config(files):
         elif section_context == "cluster":
             if not is_pattern_or_ip(line):
                 raise Exception("Parsing error. (section: %s, line: %s)" % (section_context, line))
-            ip = line.strip()
-            cluster_ips.append(ip)
-            LOGGER.debug("cluster ip: %s", ip)
+            ip_or_subnet = line.strip()
+            cluster_ips_or_subnets.append(ip_or_subnet)
+            LOGGER.debug("cluster ip: %s", ip_or_subnet)
         else:
             raise Exception("Parsing error. (section: %s, line: %s)" % (section_context, line))
 
@@ -782,6 +794,61 @@ def parse_sections(config):
                 logfile_patterns[logfile] = (present_patterns, present_options)
 
     return logfile_patterns.items()
+
+
+def ip_in_subnetwork(ip_address, subnetwork):
+    """
+    Accepts ip address as string e.g. "192.168.1.1" and CIDR notation as string e.g."192.168.1.0/24".
+    Raises ValueError in case of incompatible IP versions.
+
+    Implementation depends on Python2 and Python3 standard lib dependencies only.
+    Do not use Python3 only ipaddress or other Python major and/or minor version specific implementations here.
+    """
+    (ip_integer, version1) = _ip_to_integer(ip_address)
+    (ip_lower, ip_upper, version2) = _subnetwork_to_ip_range(subnetwork)
+    if version1 != version2:
+        raise ValueError("incompatible IP versions")
+    return ip_lower <= ip_integer <= ip_upper
+
+
+def _ip_to_integer(ip_address):
+    """
+    Raises ValueError in case of invalid IP address.
+    """
+    # try parsing the IP address first as IPv4, then as IPv6
+    for version in (socket.AF_INET, socket.AF_INET6):
+        try:
+            ip_hex = socket.inet_pton(version, ip_address)
+            ip_integer = int(binascii.hexlify(ip_hex), 16)
+            return (ip_integer, 4 if version == socket.AF_INET else 6)
+        except:
+            pass
+    raise ValueError("invalid IP address")
+
+
+def _subnetwork_to_ip_range(subnetwork):
+    """
+    Raises ValueError in case of invalid subnetwork.
+    """
+    try:
+        fragments = subnetwork.split('/')
+        network_prefix = fragments[0]
+        netmask_len = int(fragments[1])
+        # try parsing the subnetwork first as IPv4, then as IPv6
+        for version in (socket.AF_INET, socket.AF_INET6):
+            ip_len = 32 if version == socket.AF_INET else 128
+            try:
+                suffix_mask = (1 << (ip_len - netmask_len)) - 1
+                netmask = ((1 << ip_len) - 1) - suffix_mask
+                ip_hex = socket.inet_pton(version, network_prefix)
+                ip_lower = int(binascii.hexlify(ip_hex), 16) & netmask
+                ip_upper = ip_lower + suffix_mask
+                return (ip_lower, ip_upper, 4 if version == socket.AF_INET else 6)
+            except:
+                pass
+    except:
+        pass
+    raise ValueError("invalid subnetwork")
 
 
 def main():

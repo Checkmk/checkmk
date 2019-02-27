@@ -1,0 +1,13 @@
+Title: Rule condition editor: Fixed toggling of "Monitor via SNMP" tag
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0p13
+Date: 1551263361
+Class: fix
+
+When trying to enable the tag condition "Monitor via SNMP", the tag
+condition for the "SNMP" tag group was toggled. The same could happen
+when configuring a tag group ID manually that is also present as
+an auxiliary tag.

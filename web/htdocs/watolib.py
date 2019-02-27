@@ -7317,7 +7317,8 @@ def render_condition_editor(tag_specs, varprefix=""):
     def tag_condition_dropdown(tagtype, deflt, id):
         html.open_td()
         dropdown_id = varprefix + tagtype + "_" + id
-        onchange="valuespec_toggle_dropdownn(this, '%stag_sel_%s');" % (varprefix, id)
+        tag_container_id = "%s_%s_tag_sel_%s" % (varprefix, tagtype, id)
+        onchange="valuespec_toggle_dropdownn(this, '%s');" % (tag_container_id)
         choices = [("ignore", _("ignore")),
                    ("is",     _("is")),
                    ("isnot",  _("isnot"))]
@@ -7329,7 +7330,7 @@ def render_condition_editor(tag_specs, varprefix=""):
             div_is_open = html.var(dropdown_id, "ignore") != "ignore"
         else:
             div_is_open = deflt != "ignore"
-        html.open_div(id_="%stag_sel_%s" % (varprefix, id), style="display: none;" if not div_is_open else None)
+        html.open_div(id_=tag_container_id, style="display: none;" if not div_is_open else None)
 
 
     auxtags = group_hosttags_by_topic(configured_aux_tags())

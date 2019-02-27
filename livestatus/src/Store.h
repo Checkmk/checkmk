@@ -84,7 +84,6 @@ public:
     bool answerGetRequest(const std::list<std::string> &lines,
                           OutputBuffer &output, const std::string &tablename);
     void answerCommandRequest(const char *command, Logger *logger);
-    void setMaxCachedMessages(unsigned long m);
     void switchStatehistTable();
     void buildStatehistCache();
     void flushStatehistCache();

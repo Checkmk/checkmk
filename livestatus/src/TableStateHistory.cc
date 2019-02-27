@@ -38,6 +38,7 @@
 #include "HostServiceState.h"
 #include "LogEntry.h"
 #include "Logger.h"
+#include "MonitoringCore.h"
 #include "OffsetDoubleColumn.h"
 #include "OffsetIntColumn.h"
 #include "OffsetSStringColumn.h"
@@ -378,6 +379,11 @@ void TableStateHistory::answerQuery(Query *query) {
 
         HostServiceKey key = nullptr;
         bool is_service = false;
+        // TODO(sp): Remove ugly casts.
+        auto entry_host =
+            reinterpret_cast<host *>(core()->find_host(entry->_host_name));
+        auto entry_service = reinterpret_cast<service *>(core()->find_service(
+            entry->_host_name, entry->_service_description));
         switch (entry->_kind) {
             case LogEntryKind::none:
             case LogEntryKind::core_starting:
@@ -391,7 +397,7 @@ void TableStateHistory::answerQuery(Query *query) {
             case LogEntryKind::state_service_initial:
             case LogEntryKind::downtime_alert_service:
             case LogEntryKind::flapping_service:
-                key = entry->_service;
+                key = entry_service;
                 is_service = true;
             // fall-through
             case LogEntryKind::alert_host:
@@ -400,7 +406,7 @@ void TableStateHistory::answerQuery(Query *query) {
             case LogEntryKind::downtime_alert_host:
             case LogEntryKind::flapping_host: {
                 if (!is_service) {
-                    key = entry->_host;
+                    key = entry_host;
                 }
 
                 if (key == nullptr) {
@@ -421,8 +427,8 @@ void TableStateHistory::answerQuery(Query *query) {
                     // now
                     state = new HostServiceState();
                     state->_is_host = entry->_service_description.empty();
-                    state->_host = entry->_host;
-                    state->_service = entry->_service;
+                    state->_host = entry_host;
+                    state->_service = entry_service;
                     state->_host_name = entry->_host_name;
                     state->_service_description = entry->_service_description;
 

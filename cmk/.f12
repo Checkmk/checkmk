@@ -5,6 +5,9 @@ SITE=${SITE:-$(cat ../.site 2>/dev/null || true)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 
+CMK_VERSION=$(basename $(readlink $ROOT/version))
+CMK_VERSION=${CMK_VERSION%.*}
+
 echo "Update site $SITE..."
 
 echo "Copy CRE files..."
@@ -14,6 +17,10 @@ sudo rsync \
     --exclude=cme \
     --exclude=cme.py \
     -a * $ROOT/lib/python/cmk/
+
+# Restore site version after .f12
+sudo sed -i "s|^__version__.*$|__version__ = \"$CMK_VERSION\"|g" $ROOT/lib/python/cmk/__init__.py
+
 sudo pycompile -q $ROOT/lib/python/cmk/
 
 # Also deploy all other directories of same type

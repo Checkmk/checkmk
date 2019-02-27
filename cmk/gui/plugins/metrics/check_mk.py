@@ -4992,6 +4992,30 @@ metric_info['aws_s3_select_object_returned'] = {
     'color': '41/a',
 }
 
+metric_info['aws_s3_buckets'] = {
+    'title': _('Buckets'),
+    'unit': 'count',
+    'color': '11/a',
+}
+
+metric_info['aws_elb_load_balancers'] = {
+    'title': _('Load balancers'),
+    'unit': 'count',
+    'color': '11/a',
+}
+
+metric_info['aws_elb_load_balancer_listeners'] = {
+    'title': _('Load balancer listeners'),
+    'unit': 'count',
+    'color': '12/a',
+}
+
+metric_info['aws_elb_load_balancer_registered_instances'] = {
+    'title': _('Load balancer registered instances'),
+    'unit': 'count',
+    'color': '13/a',
+}
+
 metric_info["elapsed_time"] = {
     "title": _("Elapsed time"),
     "unit": "s",

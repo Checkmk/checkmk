@@ -656,7 +656,8 @@ class ModeAjaxServiceDiscovery(WatoWebApiMode):
         return discovery_result
 
     def _do_discovery(self, discovery_result, request):
-        services_to_save, remove_disabled_rule, add_disabled_rule = {}, [], []
+        services_to_save, remove_disabled_rule, add_disabled_rule, saved_services = {}, set(), set(
+        ), set()
         apply_changes = False
         for table_source, check_type, _checkgroup, item, paramstring, _params, \
             descr, _state, _output, _perfdata in discovery_result.check_table:
@@ -682,12 +683,14 @@ class ModeAjaxServiceDiscovery(WatoWebApiMode):
             if table_source == DiscoveryState.UNDECIDED:
                 if table_target == DiscoveryState.MONITORED:
                     services_to_save[(check_type, item)] = paramstring
+                    saved_services.add(descr)
                 elif table_target == DiscoveryState.IGNORED:
                     add_disabled_rule.append(descr)
 
             elif table_source == DiscoveryState.VANISHED:
                 if table_target != DiscoveryState.REMOVED:
                     services_to_save[(check_type, item)] = paramstring
+                    saved_services.add(descr)
                 if table_target == DiscoveryState.IGNORED:
                     add_disabled_rule.append(descr)
 
@@ -697,6 +700,7 @@ class ModeAjaxServiceDiscovery(WatoWebApiMode):
                         DiscoveryState.IGNORED,
                 ]:
                     services_to_save[(check_type, item)] = paramstring
+                    saved_services.add(descr)
                 if table_target == DiscoveryState.IGNORED:
                     add_disabled_rule.append(descr)
 
@@ -712,6 +716,7 @@ class ModeAjaxServiceDiscovery(WatoWebApiMode):
                         DiscoveryState.IGNORED,
                 ]:
                     services_to_save[(check_type, item)] = paramstring
+                    saved_services.add(descr)
                 if table_target == DiscoveryState.IGNORED:
                     add_disabled_rule.append(descr)
 
@@ -720,10 +725,12 @@ class ModeAjaxServiceDiscovery(WatoWebApiMode):
                     DiscoveryState.CLUSTERED_OLD,
             ]:
                 services_to_save[(check_type, item)] = paramstring
+                saved_services.add(descr)
 
         if apply_changes:
             need_sync = False
             if remove_disabled_rule or add_disabled_rule:
+                add_disabled_rule = add_disabled_rule - remove_disabled_rule - saved_services
                 self._save_host_service_enable_disable_rules(remove_disabled_rule,
                                                              add_disabled_rule)
                 need_sync = True

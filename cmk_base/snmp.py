@@ -290,15 +290,9 @@ def get_single_oid(host_config, oid, check_plugin_name=None, do_snmp_scan=True):
     console.vverbose("       Getting OID %s: " % oid)
     for context_name in snmp_contexts:
         try:
-            if _enforce_stored_walks or config.is_usewalk_host(host_config.hostname):
-                value = StoredWalkSNMPBackend().get(host_config, oid, context_name)
-
-            elif config.is_inline_snmp_host(host_config.hostname):
-                value = inline_snmp.InlineSNMPBackend().get(
-                    host_config, oid, context_name=context_name)
-            else:
-                value = classic_snmp.ClassicSNMPBackend().get(
-                    host_config, oid, context_name=context_name)
+            snmp_backend = SNMPBackendFactory().factory(
+                host_config, enforce_stored_walks=_enforce_stored_walks)
+            value = snmp_backend.get(host_config, oid, context_name)
 
             if value is not None:
                 break  # Use first received answer in case of multiple contextes
@@ -314,6 +308,18 @@ def get_single_oid(host_config, oid, check_plugin_name=None, do_snmp_scan=True):
 
     set_single_oid_cache(host_config, oid, value)
     return value
+
+
+class SNMPBackendFactory(object):
+    @staticmethod
+    def factory(host_config, enforce_stored_walks):
+        if enforce_stored_walks or config.is_usewalk_host(host_config.hostname):
+            return StoredWalkSNMPBackend()
+
+        if config.is_inline_snmp_host(host_config.hostname):
+            return inline_snmp.InlineSNMPBackend()
+
+        return classic_snmp.ClassicSNMPBackend()
 
 
 class StoredWalkSNMPBackend(cmk_base.snmp_utils.ABCSNMPBackend):

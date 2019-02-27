@@ -218,6 +218,16 @@ class ModeDiscovery(WatoMode):
                 watolib.folder_preserving_link([("mode", "diag_host"),
                                                 ("host", self._host.name())]), "diagnose")
 
+        html.context_button(
+            _("Disabled services"),
+            watolib.folder_preserving_link([("mode", "edit_ruleset"),
+                                            ("varname", "ignored_services")]), "disabled_service")
+
+        html.context_button(
+            _("Disabled checks"),
+            watolib.folder_preserving_link([("mode", "edit_ruleset"),
+                                            ("varname", "ignored_checks")]), "check_parameters")
+
     def page(self):
         self._async_progress_msg_container()
         self._service_container()

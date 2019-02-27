@@ -2697,7 +2697,7 @@ class PainterHostAddresses(Painter):
 
 
 @painter_registry.register
-class PainterHostAddresses(Painter):
+class PainterHostAddressesAdditional(Painter):
     @property
     def ident(self):
         return "host_addresses_additional"

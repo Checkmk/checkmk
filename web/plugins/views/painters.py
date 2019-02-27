@@ -1648,7 +1648,7 @@ def paint_additional_host_addresses(row):
 
     return "", ", ".join(addresses)
 
-multisite_painters["host_addresses"] = {
+multisite_painters["host_addresses_additional"] = {
     "title"   : _("Host addresses (additional)"),
     "short"   : _("Add. addresses"),
     "columns" : [ "host_custom_variable_names", "host_custom_variable_values" ],

@@ -50,12 +50,13 @@ from cmk_base.exceptions import MKSNMPError
 
 def walk(host_config, oid, hex_plain=False, context_name=None):
     protospec = _snmp_proto_spec(host_config)
+
+    ipaddress = host_config.ipaddress
+    if protospec == "udp6:":
+        ipaddress = "[" + ipaddress + "]"
     portspec = _snmp_port_spec(host_config)
     command = _snmp_walk_command(host_config, context_name)
-    command += [
-        "-OQ", "-OU", "-On", "-Ot",
-        "%s%s%s" % (protospec, host_config.ipaddress, portspec), oid
-    ]
+    command += ["-OQ", "-OU", "-On", "-Ot", "%s%s%s" % (protospec, ipaddress, portspec), oid]
 
     console.vverbose("Running '%s'\n" % subprocess.list2cmdline(command))
 
@@ -92,8 +93,8 @@ def walk(host_config, oid, hex_plain=False, context_name=None):
     if exitstatus:
         console.verbose(tty.red + tty.bold + "ERROR: " + tty.normal +
                         "SNMP error: %s\n" % error.strip())
-        raise MKSNMPError("SNMP Error on %s: %s (Exit-Code: %d)" % (host_config.ipaddress,
-                                                                    error.strip(), exitstatus))
+        raise MKSNMPError(
+            "SNMP Error on %s: %s (Exit-Code: %d)" % (ipaddress, error.strip(), exitstatus))
     return rowinfo
 
 
@@ -143,10 +144,13 @@ def get(host_config, oid, context_name=None):
         commandtype = "get"
 
     protospec = _snmp_proto_spec(host_config)
+    ipaddress = host_config.ipaddress
+    if protospec == "udp6:":
+        ipaddress = "[" + ipaddress + "]"
     portspec = _snmp_port_spec(host_config)
     command = _snmp_base_command(commandtype, host_config, context_name) + \
                [ "-On", "-OQ", "-Oe", "-Ot",
-                 "%s%s%s" % (protospec, host_config.ipaddress, portspec),
+                 "%s%s%s" % (protospec, ipaddress, portspec),
                  oid_prefix ]
 
     console.vverbose("Running '%s'\n" % subprocess.list2cmdline(command))

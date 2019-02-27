@@ -121,22 +121,7 @@ class BookmarkList(pagetypes.Overridable):
                                         validate=cls.validate_url,
                                     )),
                                     (IconSelector(title=_("Icon"),)),
-                                    (Alternative(
-                                        elements=[
-                                            FixedValue(
-                                                None,
-                                                title=_("Use default topic"),
-                                                totext=_("(default topic)"),
-                                            ),
-                                            TextUnicode(
-                                                title=_("Individual topic"),
-                                                size=30,
-                                                allow_empty=False,
-                                            ),
-                                        ],
-                                        title=_("Topic") + "<sup>*</sup>",
-                                        style="dropdown",
-                                    )),
+                                    (cls._vs_topic()),
                                 ],
                                 orientation="horizontal",
                                 title=_("Bookmarks"),
@@ -147,6 +132,25 @@ class BookmarkList(pagetypes.Overridable):
             ])]
 
         return parameters
+
+    @classmethod
+    def _vs_topic(cls):
+        return Alternative(
+            elements=[
+                FixedValue(
+                    None,
+                    title=_("Use default topic"),
+                    totext=_("(default topic)"),
+                ),
+                TextUnicode(
+                    title=_("Individual topic"),
+                    size=30,
+                    allow_empty=False,
+                ),
+            ],
+            title=_("Topic") + "<sup>*</sup>",
+            style="dropdown",
+        )
 
     @classmethod
     def validate_url(cls, value, varprefix):

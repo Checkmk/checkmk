@@ -1,4 +1,5 @@
 # yapf: disable
+# pylint: disable=redefined-outer-name
 import copy
 import pytest
 from pathlib2 import Path
@@ -5719,14 +5720,16 @@ def test_register_sorter(monkeypatch):
 
 
 def test_get_needed_regular_columns(register_builtin_html, load_view_plugins):
-    view = cmk.gui.views.multisite_builtin_views["allhosts"]
+    view_name = "allhosts"
+    view_spec = cmk.gui.views.multisite_builtin_views[view_name]
 
-    datasource = cmk.gui.views._get_datasource(view)
-    sorters = cmk.gui.views.get_sorters(view, only_count=False, user_sort_parameter=None)
-    group_cells = cmk.gui.views.get_group_cells(view)
-    cells = cmk.gui.views.get_cells(view)
+    view = cmk.gui.views.View(view_name, view_spec)
 
-    columns = cmk.gui.views._get_needed_regular_columns(group_cells + cells, sorters, datasource)
+    sorters = cmk.gui.views.get_sorters(view.spec, only_count=False, user_sort_parameter=None)
+    group_cells = cmk.gui.views.get_group_cells(view.spec)
+    cells = cmk.gui.views.get_cells(view.spec)
+
+    columns = cmk.gui.views._get_needed_regular_columns(group_cells + cells, sorters, view.datasource)
     assert sorted(columns) == sorted([
         'host_scheduled_downtime_depth',
         'host_in_check_period',
@@ -5765,13 +5768,16 @@ def test_get_needed_regular_columns(register_builtin_html, load_view_plugins):
 
 
 def test_get_needed_join_columns(register_builtin_html, load_view_plugins):
-    builtin_view = cmk.gui.views.multisite_builtin_views["allhosts"]
+    view_name = "allhosts"
+    builtin_view_spec = cmk.gui.views.multisite_builtin_views[view_name]
 
-    view = copy.deepcopy(builtin_view)
-    view["painters"].append(('service_description', None, None, u'CPU load'))
+    view_spec = copy.deepcopy(builtin_view_spec)
+    view_spec["painters"].append(('service_description', None, None, u'CPU load'))
 
-    sorters = cmk.gui.views.get_sorters(view, only_count=False, user_sort_parameter=None)
-    cells = cmk.gui.views.get_cells(view)
+    view = cmk.gui.views.View(view_name, view_spec)
+
+    sorters = cmk.gui.views.get_sorters(view.spec, only_count=False, user_sort_parameter=None)
+    cells = cmk.gui.views.get_cells(view.spec)
     join_cells = cmk.gui.views.get_join_cells(cells)
 
     columns = cmk.gui.views._get_needed_join_columns(join_cells, sorters)
@@ -5779,3 +5785,12 @@ def test_get_needed_join_columns(register_builtin_html, load_view_plugins):
         'host_name',
         'service_description',
     ])
+
+def test_create_view_basics(register_builtin_html, load_view_plugins):
+    view_name = "allhosts"
+    view_spec = cmk.gui.views.multisite_builtin_views[view_name]
+
+    view = cmk.gui.views.View(view_name, view_spec)
+    assert view.name == view_name
+    assert view.spec == view_spec
+    assert isinstance(view.datasource, cmk.gui.plugins.views.utils.DataSource)

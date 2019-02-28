@@ -1,0 +1,22 @@
+title: Number of JVM threads
+agents: linux
+catalog: app/java
+license: GPL
+distribution: check_mk
+description:
+ This check works on the number of threads running in a JVM.
+ Levels con be imposed on the number of threads, the rate
+ (per second) at which new threads are created, and the number
+ of daemon threads.
+
+ To use this plugin, Jolokia and the agent plugin need to be installed
+ on the monitored server.
+
+
+item:
+ The name of the application server instance as configured by the agent.
+
+inventory:
+ One check is created per JVM sent by the Jolokia agent.
+
+

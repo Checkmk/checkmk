@@ -51,9 +51,35 @@ jolokia_metrics_serv_req_default_levels = (-1, -1, 5000, 6000)
 
 jolokia_metrics_queue_default_levels = (20, 50)
 
-# Tomcat ThreadPools Count/Busy in relation to max value
-factory_settings["jolokia_metrics_tp_default_levels"] = {
-    'currentThreadsBusy': (80, 90),
+#.
+#   .--Deprecated Checks----------------------------------------.
+#   |     ____                                _           _     |
+#   |    |  _ \  ___ _ __  _ __ ___  ___ __ _| |_ ___  __| |    |
+#   |    | | | |/ _ \ '_ \| '__/ _ \/ __/ _` | __/ _ \/ _` |    |
+#   |    | |_| |  __/ |_) | | |  __/ (_| (_| | ||  __/ (_| |    |
+#   |    |____/ \___| .__/|_|  \___|\___\__,_|\__\___|\__,_|    |
+#   |               |_|                                         |
+#   +-----------------------------------------------------------+
+#   |                                                           |
+#   '-----------------------------------------------------------+
+
+
+def check_deprecated(_no_item, _no_params, _no_info):
+    return 1, "This check is deprecated. Please rediscover the services of this host."
+
+
+factory_settings["jolokia_metrics_tp_default_levels"] = {}
+
+check_info["jolokia_metrics.tp"] = {
+    "service_description": "JVM %s",
+    "check_function": check_deprecated,
+    "inventory_function": lambda i: None,
+}
+
+check_info["jolokia_metrics.threads"] = {
+    "service_description": "JVM %s Threads",
+    "check_function": check_deprecated,
+    "inventory_function": lambda i: None,
 }
 
 #.
@@ -267,98 +293,6 @@ check_info["jolokia_metrics.gc"] = {
 }
 
 #.
-#   .--Tomcat thread pool--------------------------------------------------.
-#   | _____                         _     _   _                        _   |
-#   ||_   _|__  _ __ ___   ___ __ _| |_  | |_| |__  _ __ ___  __ _  __| |  |
-#   |  | |/ _ \| '_ ` _ \ / __/ _` | __| | __| '_ \| '__/ _ \/ _` |/ _` |  |
-#   |  | | (_) | | | | | | (_| (_| | |_  | |_| | | | | |  __/ (_| | (_| |  |
-#   |  |_|\___/|_| |_| |_|\___\__,_|\__|  \__|_| |_|_|  \___|\__,_|\__,_|  |
-#   |                                                                      |
-#   |                                           _                          |
-#   |                         _ __   ___   ___ | |                         |
-#   |                        | '_ \ / _ \ / _ \| |                         |
-#   |                        | |_) | (_) | (_) | |                         |
-#   |                        | .__/ \___/ \___/|_|                         |
-#   |                        |_|                                           |
-#   '----------------------------------------------------------------------'
-
-
-def jolokia_metrics_tp(info, split_item):
-    inst, _typ, threadpool_name = split_item
-    parsed = jolokia_metrics_parse(info)
-    if parsed.get(inst, "") is None:
-        raise MKCounterWrapped("No information from Jolokia agent")
-
-    if not inst in parsed \
-       or not threadpool_name in parsed[inst].get('tp', {}):
-        return None
-    return parsed[inst]['tp'][threadpool_name]
-
-
-def inventory_jolokia_metrics_tp(info):
-    inv = []
-    parsed = jolokia_metrics_parse(info)
-    for inst, vals in parsed.iteritems():
-        if vals is None:
-            continue  # no data from agent
-        for threadpool_name, threadpool_info in vals.get('tp', {}).iteritems():
-            if "maxThreads" in threadpool_info:
-                inv.append(("%s ThreadPool %s" % (inst, threadpool_name), {}))
-    return inv
-
-
-def check_jolokia_metrics_tp(item, params, info):
-
-    if params is None:
-        params = {}
-
-    threadpool_info = jolokia_metrics_tp(info, item.split())
-
-    if threadpool_info is None or "maxThreads" not in threadpool_info:
-        return
-
-    max_threads = float(threadpool_info["maxThreads"])
-
-    def check_thread_levels(what):
-        threads_abs = int(threadpool_info[what])
-        threads_perc = threads_abs * 100. / max_threads
-        infotext = "%s: %d (%s)" % (what, threads_abs, get_percent_human_readable(threads_perc))
-        status = 0
-
-        _params = params.get(what)
-        if _params and _params[0] is not None and _params[1] is not None:
-            warn, crit = params[what]
-            levelstext = " (warn/crit at %s/%s)" % (get_percent_human_readable(warn),
-                                                    get_percent_human_readable(crit))
-            if threads_perc >= crit:
-                status = 2
-                infotext += levelstext
-            elif threads_perc >= warn:
-                status = 1
-                infotext += levelstext
-        else:
-            warn, crit = ("", "")
-        perfdata = [(what, threads_abs, warn, crit, 0, max_threads)]
-        return status, infotext, perfdata
-
-    if 'currentThreadsBusy' in threadpool_info:
-        yield check_thread_levels('currentThreadsBusy')
-    if 'currentThreadCount' in threadpool_info:
-        yield check_thread_levels('currentThreadCount')
-    yield 0, "Maximum threads: %d" % max_threads
-
-
-check_info["jolokia_metrics.tp"] = {
-    "includes": ["jolokia.include"],
-    "default_levels_variable": "jolokia_metrics_tp_default_levels",
-    "service_description": "JVM %s",
-    "check_function": check_jolokia_metrics_tp,
-    "inventory_function": inventory_jolokia_metrics_tp,
-    "group": "jvm_tp",
-    "has_perfdata": True,
-}
-
-#.
 #   .--Memory--------------------------------------------------------------.
 #   |               __  __                                                 |
 #   |              |  \/  | ___ _ __ ___   ___  _ __ _   _                 |
@@ -476,65 +410,6 @@ check_info["jolokia_metrics.mem"] = {
     "has_perfdata": True,
     "group": "jvm_memory",
     "default_levels_variable": "jolokia_metrics_mem_default_levels"
-}
-
-#.
-#   .--Threads-------------------------------------------------------------.
-#   |                _____ _                        _                      |
-#   |               |_   _| |__  _ __ ___  __ _  __| |___                  |
-#   |                 | | | '_ \| '__/ _ \/ _` |/ _` / __|                 |
-#   |                 | | | | | | | |  __/ (_| | (_| \__ \                 |
-#   |                 |_| |_| |_|_|  \___|\__,_|\__,_|___/                 |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-
-def check_jolokia_metrics_threads(item, params, info):
-    warn, crit = params
-    parsed = jolokia_metrics_parse(info)
-    if parsed.get(item, "") is None:
-        raise MKCounterWrapped("No information from Jolokia agent")
-    if item not in parsed:
-        return (3, "data not found in agent output")
-    d = parsed[item]
-
-    this_time = time.time()
-    perfdata = []
-    output = []
-    status = 0
-    for key in ['ThreadCount', 'DeamonThreadCount', 'PeakThreadCount', 'TotalStartedThreadCount']:
-        if key not in d:
-            continue  # The keys might be optional (saw jboss only sending ThreadCount)
-
-        val = int(d[key])
-        status_info = ""
-        if key == 'ThreadCount':
-            # Thread count might lead to a warn/crit state
-            if val >= crit:
-                status = 2
-                status_info = "(!!) (Levels at %d/%d)" % (warn, crit)
-            elif val >= warn:
-                status = 1
-                status_info = "(!) (Levels at %d/%d)" % (warn, crit)
-
-            # Calculate the thread increase rate
-            rate = get_rate(
-                "jolokia_metrics.threads.%s" % item, this_time, val, allow_negative=True)
-            output.append('ThreadRate: %0.2f' % rate)
-            perfdata.append(('ThreadRate', rate))
-
-        perfdata.append((key, val))
-        output.append('%s: %d%s' % (key, val, status_info))
-    return (status, ', '.join(output), perfdata)
-
-
-check_info["jolokia_metrics.threads"] = {
-    "includes": ["jolokia.include"],
-    "service_description": "JVM %s Threads",
-    "check_function": check_jolokia_metrics_threads,
-    "inventory_function": lambda i: inventory_jolokia_metrics(i, "threads"),
-    "group": "jvm_threads",
-    "has_perfdata": True,
 }
 
 #.

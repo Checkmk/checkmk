@@ -1,0 +1,24 @@
+Title: jolokia_jvm_threading: new check for JVM threads
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.6.0i1
+Date: 1551703334
+Class: feature
+
+The new check jolokia_jvm_threading is introduced. It creates the services
+"JVM <instance> Threading" and optionally "JVM <instance> ThreadPool <pool name>",
+replacing the former checks jolokia_metrics.threads and jolokia_metrics.tp.
+
+The new "JVM Threading" check now allows to set rules on the thread count as well as on
+the rate at which new threads are created. Additionally levels for the daemon threads
+can be configured.
+Unlike for the old check 'jolokia_metrics.threads', no default levels are imposed
+on the thread count.
+Users who had a rule in place for the ThreadCount metric of the old check
+need to set up a new rule "JVM threading".
+
+The "JVM ThreadPool" check applies the same rule as the previous check did.
+
+A rediscovery is required for affected hosts.

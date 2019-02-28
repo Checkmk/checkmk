@@ -55,15 +55,22 @@ except ImportError as import_error:
 VERBOSE = '--verbose' in sys.argv
 DEBUG = '--debug' in sys.argv
 
-QUERY_SPECS_GENERIC = [
+MBEAN_SECTIONS = {
+    'jvm_threading': ("java.lang:type=Threading",),
+}
+
+MBEAN_SECTIONS_SPECIFIC = {
+    'tomcat': {
+        'jvm_threading': (
+            "*:name=*,type=ThreadPool/maxThreads,currentThreadCount,currentThreadsBusy/",),
+    },
+}
+
+QUERY_SPECS_LEGACY = [
     ("java.lang:type=Memory", "NonHeapMemoryUsage/used", "NonHeapMemoryUsage", [], False),
     ("java.lang:type=Memory", "NonHeapMemoryUsage/max", "NonHeapMemoryMax", [], False),
     ("java.lang:type=Memory", "HeapMemoryUsage/used", "HeapMemoryUsage", [], False),
     ("java.lang:type=Memory", "HeapMemoryUsage/max", "HeapMemoryMax", [], False),
-    ("java.lang:type=Threading", "ThreadCount", "ThreadCount", [], False),
-    ("java.lang:type=Threading", "DaemonThreadCount", "DeamonThreadCount", [], False),
-    ("java.lang:type=Threading", "PeakThreadCount", "PeakThreadCount", [], False),
-    ("java.lang:type=Threading", "TotalStartedThreadCount", "TotalStartedThreadCount", [], False),
     ("java.lang:type=Runtime", "Uptime", "Uptime", [], False),
     ("java.lang:type=GarbageCollector,name=*", "CollectionCount", "", [], False),
     ("java.lang:type=GarbageCollector,name=*", "CollectionTime", "", [], False),
@@ -111,7 +118,7 @@ QUERY_SPECS_GENERIC = [
      [], True),
 ]
 
-QUERY_SPECS_SPECIFIC = {
+QUERY_SPECS_SPECIFIC_LEGACY = {
     "weblogic": [
         ("*:*", "CompletedRequestCount", None, ["ServerRuntime"], False),
         ("*:*", "QueueLength", None, ["ServerRuntime"], False),
@@ -128,15 +135,15 @@ QUERY_SPECS_SPECIFIC = {
         ("*:j2eeType=Servlet,name=default,*", "stateName", None, ["WebModule"], False),
         # Check not yet working
         ("*:j2eeType=Servlet,name=default,*", "requestCount", None, ["WebModule"], False),
-        ("*:name=*,type=ThreadPool", "maxThreads", None, [], False),
-        ("*:name=*,type=ThreadPool", "currentThreadCount", None, [], False),
-        ("*:name=*,type=ThreadPool", "currentThreadsBusy", None, [], False),
         # too wide location for addressing the right info
         # ( "*:j2eeType=Servlet,*", "requestCount", None, [ "WebModule" ] , False),
     ],
     "jboss": [("*:type=Manager,*", "activeSessions,maxActiveSessions", None, ["path", "context"],
                False),],
 }
+
+AVAILABLE_PRODUCTS = sorted(
+    set(QUERY_SPECS_SPECIFIC_LEGACY.keys() + MBEAN_SECTIONS_SPECIFIC.keys()))
 
 # Default global configuration: key, value [, help]
 DEFAULT_CONFIG_TUPLES = (
@@ -156,7 +163,7 @@ DEFAULT_CONFIG_TUPLES = (
     ("service_password", None),
     ("product", None, "Product description. Available: %s. If not provided," \
                       " we try to detect the product from the jolokia info section." % \
-                      ", ".join(QUERY_SPECS_SPECIFIC.keys())),
+                      ", ".join(AVAILABLE_PRODUCTS)),
     ("timeout", 1.0, "Connection/read timeout for requests."),
     ("custom_vars", []),
     # List of instances to monitor. Each instance is a dict where
@@ -337,7 +344,7 @@ def validate_response(raw):
     '''return loaded response or raise exception'''
     # check the status of the http server
     if not 200 <= raw.status_code < 300:
-        sys.stderr.write("ERROR: HTTP STATUS: %d" % raw.status_code)
+        sys.stderr.write("ERROR: HTTP STATUS: %d\n" % raw.status_code)
         # Unauthorized, Forbidden, Bad Gateway
         if raw.status_code in (401, 403, 502):
             raise SkipInstance("HTTP STATUS", raw.status_code)
@@ -347,7 +354,7 @@ def validate_response(raw):
     # check the status of the jolokia response
     if response.get("status") != 200:
         errmsg = response.get("error", "unkown error")
-        sys.stderr.write("ERROR: JAVA: %s" % errmsg)
+        sys.stderr.write("ERROR: JAVA: %s\n" % errmsg)
         raise SkipMBean("JAVA", errmsg)
 
     if "value" not in response:
@@ -475,9 +482,15 @@ def query_instance(inst):
     write_section('jolokia_info', generate_jolokia_info(inst))
 
     # now (after jolokia_info) we're sure about the product
-    specs_specific = QUERY_SPECS_SPECIFIC.get(inst.product, [])
+    specs_specific = QUERY_SPECS_SPECIFIC_LEGACY.get(inst.product, [])
     write_section('jolokia_metrics', generate_values(inst, specs_specific))
-    write_section('jolokia_metrics', generate_values(inst, QUERY_SPECS_GENERIC))
+    write_section('jolokia_metrics', generate_values(inst, QUERY_SPECS_LEGACY))
+
+    sections_specific = MBEAN_SECTIONS_SPECIFIC.get(inst.product, {})
+    for section_name, mbeans in sections_specific.iteritems():
+        write_section('jolokia_%s' % section_name, generate_json(inst, mbeans))
+    for section_name, mbeans in MBEAN_SECTIONS.iteritems():
+        write_section('jolokia_%s' % section_name, generate_json(inst, mbeans))
 
     write_section('jolokia_generic', generate_values(inst, inst.custom_vars))
 
@@ -514,6 +527,18 @@ def generate_values(inst, var_list):
                 yield item, title, value, value_type
             else:
                 yield item, title, value
+
+
+def generate_json(inst, mbeans):
+    for mbean in mbeans:
+        try:
+            data = inst.get_post_data(mbean, "read", use_target=True)
+            obj = inst.post(data)
+            yield inst.name, mbean, json.dumps(obj['value'])
+        except (IOError, socket.timeout):
+            raise SkipInstance()
+        except SkipMBean if DEBUG else Exception:
+            pass
 
 
 def yield_configured_instances(custom_config=None):

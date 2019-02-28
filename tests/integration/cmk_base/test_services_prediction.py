@@ -16,13 +16,11 @@ from testlib import web, repo_path, create_linux_test_host  # pylint: disable=un
 
 @pytest.fixture(scope="module")
 def cfg_setup(request, web, site):
-    create_linux_test_host(request, web, site, "test-prediction")
-    web.discover_services("test-prediction")
-    web.activate_changes()
+    hostname = "test-prediction"
 
     # Enforce use of the pre-created RRD file from the git. The restart of the core
     # is needed to make it renew it's internal RRD file cache
-    site.makedirs("var/check_mk/rrd/test-prediction/")
+    site.makedirs("var/check_mk/rrd/test-prediction")
     site.write_file(
         "var/check_mk/rrd/test-prediction/CPU_load.rrd",
         file("%s/tests/integration/cmk_base/test-files/CPU_load.rrd" % repo_path()).read())
@@ -31,10 +29,24 @@ def cfg_setup(request, web, site):
         file("%s/tests/integration/cmk_base/test-files/CPU_load.info" % repo_path()).read())
     site.omd("restart", "cmc")
 
+    create_linux_test_host(request, web, site, "test-prediction")
+
+    site.write_file(
+        "etc/check_mk/conf.d/linux_test_host_%s_cpu_load.mk" % hostname, """
+globals().setdefault('custom_checks', [])
+
+custom_checks = [
+    ( {'service_description': u'CPU load', 'has_perfdata': True}, [], ALL_HOSTS, {} ),
+] + custom_checks
+""")
+
+    web.activate_changes()
+
     yield
 
     # Cleanup
-    site.delete_dir("var/check_mk/rrd/")
+    site.delete_file("etc/check_mk/conf.d/linux_test_host_%s_cpu_load.mk" % hostname)
+    site.delete_dir("var/check_mk/rrd")
 
 
 @pytest.mark.parametrize('date, period, result', [
@@ -115,7 +127,7 @@ def test_get_rrd_data_fails(cfg_setup):
 
     # Empty response, because non-existent perf_data variable
     step, data = cmk.utils.prediction.get_rrd_data(
-        'test-prediction', 'CPU utilization', 'untracked_prefdata', 'MAX', from_time, until_time)
+        'test-prediction', 'CPU load', 'untracked_prefdata', 'MAX', from_time, until_time)
 
     # The worst resolution in an rrd file is 6 hours, because query always
     # replies. step is a huge number which meaning I don't understand but

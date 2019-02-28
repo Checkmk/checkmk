@@ -1,6 +1,6 @@
 title: ESX VSphere Licenses
-agents: windows
-catalog: app/vmware
+agents: vsphere
+catalog: os/misc
 license: GPL
 distribution: check_mk
 description:

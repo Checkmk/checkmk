@@ -55,7 +55,7 @@ check_info["vms_system.ios"] = {
 
 def check_vms_system_procs(_no_item, params, info):
     procs = int(float(info[0][2]))
-    perfdata = [('procs', procs, 0, 0, 0)]
+    perfdata = [('procs', procs, None, None, 0)]
 
     if params:
         warn, crit = params

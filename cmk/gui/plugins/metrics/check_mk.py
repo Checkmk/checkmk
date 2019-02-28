@@ -1318,19 +1318,19 @@ metric_info["invol_context_switches"] = {
 metric_info["tapes_total"] = {
     "title": _("Total number of tapes"),
     "unit": "count",
-    "color": "#8040f0",
+    "color": "36/a",
 }
 
 metric_info["tapes_free"] = {
     "title": _("Free tapes"),
     "unit": "count",
-    "color": "#8044ff",
+    "color": "45/b",
 }
 
 metric_info["tapes_util"] = {
     "title": _("Tape utilization"),
     "unit": "count",
-    "color": "#ff8020",
+    "color": "33/a",
 }
 
 metric_info["fs_free"] = {
@@ -3184,13 +3184,13 @@ metric_info["database_apply_lag"] = {
 metric_info["direct_io"] = {
     "title": _("Direct I/O"),
     "unit": "bytes/s",
-    "color": "#006040",
+    "color": "21/a",
 }
 
 metric_info["buffered_io"] = {
     "title": _("Buffered I/O"),
     "unit": "bytes/s",
-    "color": "#006040",
+    "color": "23/a",
 }
 
 metric_info["write_cache_usage"] = {
@@ -5210,6 +5210,12 @@ check_metrics["check_mk-jolokia_metrics.gc"] = {
 }
 
 check_metrics["check_mk-rmon_stats"] = {
+    "bcast": {
+        "name": "broadcast_packets"
+    },
+    "mcast": {
+        "name": "multicast_packets"
+    },
     "0-63b": {
         "name": "rmon_packets_63"
     },
@@ -5237,6 +5243,12 @@ check_metrics["check_mk-cpu.loads"] = {
 }
 
 check_metrics["check_mk-ucd_cpu_load"] = {
+    "load5": {
+        "auto_graph": False
+    },
+}
+
+check_metrics["check_mk-statgrab_load"] = {
     "load5": {
         "auto_graph": False
     },
@@ -8049,7 +8061,7 @@ perfometer_info.append({
             "type": "logarithmic",
             "metric": "buffered_io",
             "half_value": 25,
-            "expoent": 2,
+            "exponent": 2,
         },
     ],
 })
@@ -8567,6 +8579,7 @@ graph_info["ntp_time_offset"] = {
         ("0,time_offset:crit,-", _("Lower critical level")),
     ],
     "range": ("0,time_offset:crit,-", "time_offset:crit"),
+    "optional_metrics": ["jitter"],
 }
 
 graph_info["total_cache_usage"] = {
@@ -8707,13 +8720,17 @@ graph_info["cpu_load"] = {
     "title": _("CPU Load - %(load1:max@count) CPU Cores"),
     "metrics": [
         ("load1", "area"),
+        ("load5", "line"),
         ("load15", "line"),
     ],
     "scalars": [
         "load1:warn",
         "load1:crit",
     ],
-    "optional_metrics": ["load15",],
+    "optional_metrics": [
+        "load5",
+        "load15",
+    ],
 }
 
 graph_info["fgpa_utilization"] = {
@@ -9544,35 +9561,6 @@ graph_info["pending_updates"] = {
         ("security_updates", "stack"),
     ],
 }
-
-graph_info["dhcp_leases"] = {
-    "title": _("DHCP Leases"),
-    "metrics": [
-        ("used_dhcp_leases", "area"),
-        ("free_dhcp_leases", "stack"),
-        ("pending_dhcp_leases", "stack"),
-    ],
-    "scalars": [
-        "free_dhcp_leases:warn",
-        "free_dhcp_leases:crit",
-    ],
-    "range": (0, "free_dhcp_leases:max"),
-    "omit_zero_metrics": True,
-    "optional_metrics": ["pending_dhcp_leases"]
-}
-
-#graph_info["used_dhcp_leases"] = {
-#    "title" : _("Used DHCP Leases"),
-#    "metrics" : [
-#        ( "used_dhcp_leases",    "area" ),
-#    ],
-#    "range" : (0, "used_dhcp_leases:max"),
-#    "scalars" : [
-#        "used_dhcp_leases:warn",
-#        "used_dhcp_leases:crit",
-#        ("used_dhcp_leases:max#000000", _("Total number of leases")),
-#    ]
-#}
 
 graph_info["handled_requests"] = {
     "title": _("Handled Requests"),

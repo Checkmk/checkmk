@@ -136,7 +136,7 @@ C_SERIES_ENTITIES = [
             "voltage",
         ]),
     ]),
-    ("ucs_c_rack_server_motherboard_power", [
+    ("ucs_c_rack_server_power", [
         ("computeMbPowerStats", [
             "dn",
             "consumedPower",
@@ -144,7 +144,7 @@ C_SERIES_ENTITIES = [
             "inputVoltage",
         ]),
     ]),
-    ("ucs_c_rack_server_motherboard_temp", [
+    ("ucs_c_rack_server_temp", [
         ("computeRackUnitMbTempStats", [
             "dn",
             "ambientTemp",
@@ -170,7 +170,7 @@ C_SERIES_ENTITIES = [
             "temperature",
         ]),
     ]),
-    ("ucs_c_rack_server_storage_controller", [
+    ("ucs_c_rack_server_health", [
         ("storageControllerHealth", [
             "dn",
             "id",

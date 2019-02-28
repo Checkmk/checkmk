@@ -53,7 +53,11 @@ custom_checks = [
     pytest.param("2018-11-28 12", "minute", (60, 60), id='1 min resolution in hour query'),
     pytest.param("2018-11-27 12", "minute", (300, 12), id='5 min resolution in hour query'),
     pytest.param("2018-11-15 12", "minute", (1800, 2), id='30 min resolution in hour query'),
-    pytest.param("2018-07-15 12", "minute", (21600, 0), id='hour query when resolution is 6hrs', marks=pytest.mark.xfail),
+    pytest.param(
+        "2018-07-15 12",
+        "minute", (21600, 0),
+        id='hour query when resolution is 6hrs',
+        marks=pytest.mark.xfail),
     pytest.param("2018-11-28 12", "wday", (240, 360), id='max 360 points of data response'),
     pytest.param("2018-11-27 12", "wday", (300, 288), id='5 min resolution in day query'),
     pytest.param("2018-11-10 12", "day", (1800, 48), id='30 min resolution in day query'),

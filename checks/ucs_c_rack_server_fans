@@ -26,7 +26,7 @@
 
 # exemplary agent output (separator is <TAB> and is tabulator):
 # <<<ucs_c_rack_server_fans:sep(9)>>>
-# equipmentFan<TAB>dn sys/rack-unit-1/fan-module-1-1/fan-1<TAB>id 1<TAB>operability operable
+# equipmentFan<TAB>dn sys/rack-unit-1/fan-module-1-1/fan-1<TAB>id 1<TAB>model <TAB>operability operable
 
 
 def parse_ucs_c_rack_server_fans(info):
@@ -39,7 +39,7 @@ def parse_ucs_c_rack_server_fans(info):
                                                 "").replace("rack-unit-", "Rack Unit ").replace(
                                                     "/fan-module-", " Module ").replace(
                                                         "/fan-", " ")
-            parsed[fan] = {'operability': key_value_pairs[2][1]}
+            parsed[fan] = {'operability': key_value_pairs[3][1]}
         except (IndexError, ValueError):
             pass
 

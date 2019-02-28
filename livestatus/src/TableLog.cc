@@ -97,14 +97,14 @@ TableLog::TableLog(MonitoringCore *mc, LogCache *log_cache)
         -1, -1, DANGEROUS_OFFSETOF(LogEntry, _state)));
     addColumn(std::make_unique<OffsetSStringColumn>(
         "state_type", "The type of the state (varies on different log classes)",
-        entry_offset - 1, -1, -1, DANGEROUS_OFFSETOF(LogEntry, _state_type)));
+        entry_offset, -1, -1, DANGEROUS_OFFSETOF(LogEntry, _state_type)));
     addColumn(std::make_unique<OffsetIntColumn>(
         "attempt", "The number of the check attempt", entry_offset, -1, -1,
         DANGEROUS_OFFSETOF(LogEntry, _attempt)));
     addColumn(std::make_unique<OffsetSStringColumn>(
         "service_description",
         "The description of the service log entry is about (might be empty)",
-        entry_offset - 1, -1, -1,
+        entry_offset, -1, -1,
         DANGEROUS_OFFSETOF(LogEntry, _service_description)));
     addColumn(std::make_unique<OffsetSStringColumn>(
         "host_name",

@@ -1,6 +1,6 @@
 title: Stormshield: Temperature CPU
 agents: snmp
-catalog: app/Stormshield
+catalog: app/stormshield
 license: GPL
 distribution: check_mk
 description:

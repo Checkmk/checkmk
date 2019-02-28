@@ -1,6 +1,6 @@
 title: Stormshield Info
 agents: snmp
-catalog: app/Stormshield
+catalog: app/stormshield
 license: GPL
 distribution: check_mk
 description:

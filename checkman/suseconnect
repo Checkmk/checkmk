@@ -1,6 +1,6 @@
-title: SLES license information
+title: SuSE Linux Enterprise Server license information
 agents: linux
-catalog: app/sles
+catalog: os/linux
 license: GPL
 distribution: check_mk
 description:

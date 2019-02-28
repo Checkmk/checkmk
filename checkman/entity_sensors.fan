@@ -1,6 +1,6 @@
 title: ENTITY-SENSORS MIB: Fan Speed RPM
 agents: snmp
-catalog: hw/environmental/palo_alto
+catalog: hw/environment/palo_alto
 license: GPL
 distribution: check_mk
 description:

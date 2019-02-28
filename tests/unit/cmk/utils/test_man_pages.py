@@ -227,3 +227,14 @@ def test_print_man_page(capsys):
 
     assert out.startswith(" if64    ")
     assert "\n License: " in out
+
+
+def test_missing_catalog_entries_of_man_pages():
+    catalog_titles = set(man_pages.catalog_titles.keys())
+    found_catalog_entries_from_man_pages = set()
+    for name in man_pages.all_man_pages().keys():
+        man_page = man_pages.load_man_page(name)
+        found_catalog_entries_from_man_pages |= set(man_page['header']['catalog'].split("/"))
+    missing_catalog_entries = found_catalog_entries_from_man_pages - catalog_titles
+    assert missing_catalog_entries == set(), "Found missing catalog entries: %s" % ", ".join(
+        sorted(missing_catalog_entries))

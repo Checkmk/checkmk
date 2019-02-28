@@ -1,0 +1,6 @@
+{
+    "files.exclude": {
+        "**/build": true,
+        "**/extlibs": true
+    }
+}

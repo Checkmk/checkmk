@@ -1,0 +1,71 @@
+
+Transport in Windows Agent
+
+External Transport:
+
+- Located in the namespace cma::world
+- files
+    external_port.h
+    external_port.cpp
+    test-external-port.cpp
+- Uses ASIO standalone implementation
+- Implemented in the class ExternalPort according to asio original documentation and working example(async echo server)
+- Supporting Important Classes
+    AsioSession - modified reference implementation from the ASIO documentation
+    ExternalPort::server - a bit modified reference implementation from the ASIO documentation
+- API
+    ctor/dtor
+    startIo(replyFunc)
+        non-blocking!
+        replyFunc is lambda or functor to
+            get IP of client
+            perform any actions
+            returns data block
+    shutdown
+- Port 6556, in the future will be configured from the config file
+- unit tested
+    basic testing only
+- thread safe
+- asynchronous
+- Important Notes
+    Current Algorythm
+        listen
+        accept connection
+        save IP
+        call replyFunc
+        disconnect
+        goto listen...
+    Future
+        mode without disconnect
+    shutdown correcly deletes all data and stops all thread
+    owner of the external port object should keep it safe till shutodwn called
+- Performance theoretically unlimited(to be measured)
+- VIP
+    object itself
+    private thread
+         created startIo
+         ended shutdown
+- example of usage
+{
+    using namespace std::chrono;
+    cma::world::ReplyFunc reply =
+        [](const std::string Ip) -> std::vector<uint8_t> {
+        char reply_text[] = "I am test\n";
+        auto len = strlen(reply_text) + 1;
+        std::vector<uint8_t> v;
+        v.resize(len);
+        for (unsigned int i = 0; i < len; i++) v[i] = reply_text[i];
+        return v;
+    };
+    
+    cma::world::ExternalPort test_port(64351);  //
+    auto ret = test_port.startIo(reply);        //
+    // wait a bit just for fun
+    // or connect to port 64531 and print result
+    std::this_thread::sleep_until(steady_clock::now() + 1000ms);
+    test_port.shutdownIo();  //
+}
+
+
+
+

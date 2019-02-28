@@ -1,0 +1,16 @@
+# Example configuration for Windows agent
+
+# Almost every section can have flag enabled
+# You may use anchors to parametrize your config
+# Windows file names better to close in ''
+# Use online yaml validator to check your config http://yaml-online-parser.appspot.com/?url=http%3A%2F%2F
+# all root section may have key enabled. Default is yes. If set to no, then this section is ignored
+load:
+    - file: global.yml 
+    - file: winperf.yml
+    - file: logfiles.yml
+    - file: logwatch.yml
+    - file: other.yml
+    
+#now override    
+global:

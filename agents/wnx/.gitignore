@@ -1,0 +1,12 @@
+*.res
+*.obj
+*.exe
+*.msi
+Debug/
+Release/
+x86/
+x64/
+*.ipch
+extlibs/
+.vs/
+*vcxproj.user

@@ -1,0 +1,376 @@
+// Configuration Parameters for whole Agent
+#include "stdafx.h"
+
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+
+#include <shellapi.h>
+#include <shlobj.h>  // known path
+
+#include <filesystem>
+#include <string>
+
+#include "common/cfg_info.h"
+#include "common/wtools.h"
+
+#include "tools/_raii.h"  // on out
+#include "tools/_tgt.h"   // we need IsDebug
+
+#include "yaml-cpp/yaml.h"
+
+#include "cfg.h"
+
+namespace cma::cfg {
+
+// stores EVERYTHING which can be configured
+namespace groups {
+Global global;
+WinPerf winperf;
+Plugins plugins;
+Plugins localGroup;
+};  // namespace groups
+
+Global::Global() {
+    setDefaults();
+    calcDerivatives();
+    setupEnvironment();
+}
+
+// loader of yaml is going here
+void Global::loadFromMainConfig() {
+    using namespace std;
+    auto config = cma::cfg::GetLoadedConfig();
+
+    {
+        reset();
+        std::lock_guard lk(lock_);
+        me_.reset();
+        try {
+            me_ = config[groups::kGlobal];
+            exist_in_cfg_ = true;
+        } catch (std::exception&) {
+            me_.reset();
+        }
+
+        port_ = GetVal(groups::kGlobal, vars::kPort, cma::cfg::kMainPort);
+        enabled_in_cfg_ =
+            GetVal(groups::kGlobal, vars::kEnabled, exist_in_cfg_);
+        name_ = GetVal(groups::kGlobal, vars::kName, std::string(""));
+        ipv6_ = GetVal(groups::kGlobal, vars::kIpv6, false);
+        async_ = GetVal(groups::kGlobal, vars::kAsync, true);
+        flush_tcp_ = GetVal(groups::kGlobal, vars::kSectionFlush, false);
+
+        password_ =
+            GetVal(groups::kGlobal, vars::kGlobalPassword, std::string(""));
+
+        encrypt_ = GetVal(groups::kGlobal, vars::kGlobalEncrypt, false);
+
+        execute_ = GetArray<string>(groups::kGlobal, vars::kExecute);
+
+        only_from_ = GetArray<string>(groups::kGlobal, vars::kOnlyFrom);
+
+        enabled_sections_ =
+            GetArray<string>(groups::kGlobal, vars::kSectionsEnabled);
+        disabled_sections_ =
+            GetArray<string>(groups::kGlobal, vars::kSectionsDisabled);
+        auto realtime = GetNode(groups::kGlobal, vars::kRealTime);
+
+        realtime_encrypt_ = GetVal(realtime, vars::kRtEncrypt, false);
+
+        realtime_timeout_ =
+            GetVal(realtime, vars::kRtTimeout, kDefaultRealtimeTimeout);
+
+        wmi_timeout_ = GetVal(groups::kGlobal, vars::kGlobalWmiTimeout,
+                              kDefaultWmiTimeout);
+
+        realtime_sections_ = GetArray<string>(realtime, vars::kRtRun);
+        auto logging = GetNode(groups::kGlobal, vars::kLogging);
+
+        public_log_ = GetVal(logging, vars::kLogPublic, true);
+
+        std::string default_debug = tgt::IsDebug() ? "yes" : "no";
+        auto debug_level = GetVal(logging, vars::kLogDebug, default_debug);
+        if (debug_level == "" || debug_level == "no")
+            debug_level_ = LogLevel::kLogBase;
+        else if (debug_level == "yes")
+            debug_level_ = LogLevel::kLogDebug;
+        else if (debug_level == "all")
+            debug_level_ = LogLevel::kLogBase;
+        else
+            debug_level_ =
+                tgt::IsDebug() ? LogLevel::kLogDebug : LogLevel::kLogBase;
+
+        windbg_ = GetVal(logging, vars::kLogWinDbg, true);
+
+        event_log_ = GetVal(logging, vars::kLogEvent, true);
+
+        log_file_name_ = GetVal(logging, vars::kLogFile, std::string());
+
+        calcDerivatives();
+    }
+    // UNLOCK HERE
+}
+
+// Software defaults
+// Predefined and as logic as possible
+// as safe as possible
+void Global::setDefaults() {
+    std::lock_guard lk(lock_);
+    me_.reset();
+    port_ = cma::cfg::kMainPort;
+    enabled_in_cfg_ = false;
+    name_ = "";
+    ipv6_ = false;
+    async_ = true;
+    flush_tcp_ = false;
+    encrypt_ = false;
+    only_from_ = {};
+    enabled_sections_ = {};
+    disabled_sections_ = {};
+    // realtime
+    realtime_encrypt_ = false;
+    realtime_timeout_ = kDefaultRealtimeTimeout;
+    wmi_timeout_ = kDefaultWmiTimeout;
+    password_ = "";
+    realtime_sections_ = {};
+
+    // log
+    public_log_ = true;
+    debug_level_ = tgt::IsDebug() ? LogLevel::kLogDebug : LogLevel::kLogBase;
+    windbg_ = true;
+    event_log_ = true;
+    log_file_name_ = kDefaultLogFileName;
+}
+
+// optimization
+void Global::calcDerivatives() {
+    auto rfid = public_log_ ? cma::cfg::kPublicFolderId : kWindowsFolderId;
+    const auto dir = cma::tools::win::GetSomeSystemFolder(rfid);
+    logfile_dir_ = dir;
+    if (!public_log_) logfile_dir_ = logfile_dir_ / "Logs";
+
+    if (log_file_name_ == "") log_file_name_ = kDefaultLogFileName;
+    logfile_ = logfile_dir_ / log_file_name_;
+    logfile_as_string_ = logfile_.u8string();
+    logfile_as_wide_ = logfile_.wstring();
+}
+
+// transfer global data into app environment
+void Global::setupEnvironment() {
+    using namespace XLOG;
+
+    setup::Configure(logfile_as_string_, debug_level_, windbg_, event_log_);
+    details::G_ConfigInfo.setLogFileDir(logfile_dir_.wstring());
+}
+
+// loader
+// gtest[+] partially
+void WinPerf::loadFromMainConfig() {
+    using namespace std;
+    auto config = cma::cfg::GetLoadedConfig();
+
+    std::lock_guard lk(lock_);
+    // reset all
+    reset();
+    counters_.resize(0);
+
+    // attempt to load all
+    try {
+        // if section not present
+        auto yaml = GetLoadedConfig();
+        auto me = yaml[groups::kWinPerf];
+        if (!me.IsMap()) {
+            XLOG::l("Section {} absent or invalid", groups::kWinPerf);
+            return;
+        }
+        exist_in_cfg_ = true;
+
+        exe_name_ = GetVal(groups::kWinPerf, vars::kWinPerfExe,
+                           std::string("perf_counter.exe"));
+
+        prefix_ = GetVal(groups::kWinPerf, vars::kWinPerfPrefixName,
+                         std::string("winperf"));
+
+        timeout_ = GetVal(groups::kWinPerf, vars::kWinPerfTimeout,
+                          cma::cfg::kDefaultWinPerfTimeout);
+
+        enabled_in_cfg_ =
+            GetVal(groups::kWinPerf, vars::kEnabled, exist_in_cfg_);
+        auto counters =
+            GetArray<YAML::Node>(groups::kWinPerf, vars::kWinPerfCounters);
+        for (const auto& entry : counters) {
+            auto id = entry[vars::kWinPerfId].as<std::string>();
+            auto name = entry[vars::kWinPerfName].as<std::string>();
+            counters_.emplace_back(id, name);
+        }
+    } catch (std::exception& e) {
+        XLOG::l("Section {} ", groups::kWinPerf, e.what());
+    }
+}
+
+bool ReplaceInString(std::string& InOut, const std::string Marker,
+                     const std::string Replace) {
+    auto pos = InOut.find(Marker);
+    if (pos != std::string::npos) {
+        InOut.replace(pos, Marker.length(), Replace);
+        return true;
+    }
+    return false;
+}
+
+std::string ReplacePredefinedMarkers(const std::string Path) {
+    auto f = Path;
+    const std::pair<const std::string, const std::wstring> pairs[] = {
+        {vars::kPluginCoreFolder, GetSystemPluginsDir()},
+        {vars::kPluginUserFolder, GetUserPluginsDir()},
+        {vars::kProgramDataFolder, GetUserDir()}
+
+    };
+
+    for (const auto& p : pairs) {
+        if (ReplaceInString(f, p.first, wtools::ConvertToUTF8(p.second)))
+            return f;
+    }
+
+    return f;
+}
+
+void LoadExeUnitsFromYaml(std::vector<Plugins::ExeUnit>& ExeUnit,
+                          const std::vector<YAML::Node> Yaml) {
+    for (const auto& entry : Yaml) {
+        try {
+            // --exception control start --
+            auto pattern = entry[vars::kPluginPattern].as<std::string>();
+            pattern = ReplacePredefinedMarkers(pattern);
+            auto async = entry[vars::kPluginAsync].as<bool>(false);
+            auto run = entry[vars::kPluginRun].as<bool>(true);
+            auto retry = entry[vars::kPluginRetry].as<int>(0);
+            auto timeout =
+                entry[vars::kPluginTimeout].as<int>(kDefaultPluginTimeout);
+            auto cache_age =
+                entry[vars::kPluginCacheAge].as<int>(async ? 3600 : 0);
+
+            ExeUnit.emplace_back(pattern, async, timeout, cache_age, retry,
+                                 run);
+            // --exception control end  --
+        } catch (const std::exception& e) {
+            XLOG::l("bad entry at {} {} exc {}", groups::kPlugins,
+                    vars::kPluginsExecution, e.what());
+        }
+    }
+}
+
+void Plugins::loadFromMainConfig(const std::string GroupName) {
+    using namespace std;
+    using namespace cma::cfg;
+    auto config = GetLoadedConfig();
+
+    std::lock_guard lk(lock_);
+    // reset all
+    reset();
+    units_.resize(0);
+
+    local_ = GroupName == groups::kLocalGroup;
+
+    // attempt to load all
+    try {
+        // if section not present
+        auto yaml = GetLoadedConfig();
+        auto me = yaml[GroupName];
+        if (!me.IsMap()) {
+            XLOG::l("Section {} absent or invalid", GroupName);
+            return;
+        }
+        exist_in_cfg_ = true;
+
+        enabled_in_cfg_ = GetVal(GroupName, vars::kEnabled, exist_in_cfg_);
+
+        exe_name_ =
+            GetVal(GroupName, vars::kPluginExe, string("plugin_player.exe"));
+
+        auto units = GetArray<YAML::Node>(GroupName, vars::kPluginsExecution);
+        LoadExeUnitsFromYaml(units_, units);
+
+        auto folders = GetArray<std::string>(GroupName, vars::kPluginsFolders);
+        folders_.clear();
+        if (local_) {
+            folders_.push_back(cma::cfg::GetLocalDir());
+        } else {
+            for (const auto& folder : folders) {
+                auto f = ReplacePredefinedMarkers(folder);
+                folders_.push_back(wtools::ConvertToUTF16(f));
+            }
+        }
+    } catch (std::exception& e) {
+        XLOG::l("Section {} exception {}", GroupName, e.what());
+    }
+}
+
+// To be used in plugin player
+// constructs command line from folders and patterns
+Plugins::CmdLineInfo Plugins::buildCmdLine() const {
+    using namespace std;
+    namespace fs = std::filesystem;
+
+    // pickup protected data from the structure
+    unique_lock lk(lock_);
+    auto units = units_;
+    auto folders = folders_;
+    lk.unlock();
+
+    // case when there is NO folder in array
+    const auto default_folder_mark =
+        wtools::ConvertToUTF16(vars::kPluginsDefaultFolderMark);
+    auto default_plugins_folder =
+        cma::cfg::details::G_ConfigInfo.getSystemPluginsDir();
+    if (folders.size() == 0) folders.emplace_back(default_folder_mark);
+
+    Plugins::CmdLineInfo cli;
+
+    int count_of_folders = 0;
+    int count_of_files = 0;
+    vector<wstring> files;
+    for (auto& folder : folders) {
+        if (folder == default_folder_mark) {
+            folder = default_plugins_folder;
+        }
+        std::error_code ec;
+        if (!fs::exists(folder, ec)) continue;
+        count_of_folders++;
+
+        for (const auto& unit : units) {
+            // THIS IS NOT VALID CODE
+            // must be complicated full folder scanning by mask
+            fs::path file = folder;
+            file /= unit.pattern();
+            if (fs::exists(file, ec)) {
+                count_of_files++;
+                files.emplace_back(file.lexically_normal().wstring());
+                cli.timeouts_.emplace_back(unit.timeout());
+            }
+        }
+    }
+
+    XLOG::d() << "we have processed:" << count_of_folders << " folders and "
+              << count_of_files << " files";
+    // remove duplicates
+    sort(files.begin(), files.end());
+    auto undefined = unique(files.begin(), files.end());
+    files.erase(undefined, files.end());
+
+    // build command line
+    for (const auto& f : files) {
+        cli.cmd_line_ += L"\"";
+        cli.cmd_line_ += f.c_str();
+        cli.cmd_line_ += L"\" ";
+    }
+    if (cli.cmd_line_.empty()) {
+        XLOG::l("Unexpected, but no plugins to execute");
+        return cli;
+    }
+    if (cli.cmd_line_.back() == L' ') cli.cmd_line_.pop_back();
+
+    return cli;
+}  // namespace cma::cfg
+
+}  // namespace cma::cfg

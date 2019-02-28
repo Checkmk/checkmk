@@ -1,0 +1,13 @@
+winperf:
+    enabled: no
+    # Select counters to extract. The following counters
+    # are needed by checks shipped with check_mk.
+    # id is OS is
+    # name is check mk name
+    counters:
+        - id: 10332 
+          name: msx_queues
+        - id: 638
+          name: tcp_conn
+        - id: Terminal Services
+          name: ts_sessions

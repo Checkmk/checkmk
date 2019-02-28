@@ -1,0 +1,37 @@
+logwatch:
+    enabled: no
+    # activate modern eventlog api introduced in vista
+    # pro: supports new logs introduced with vista
+    # contra: only on vista (server 2008) and newer, less well tested, maybe slower
+    # Note: setting this does not change the default set of monitored logs that
+    # are found in Windows registry.
+    vista_api: yes
+
+    # Testing: output *all* messages from the eventlogs
+    sendall: yes
+
+    logs:
+        # From application log send only critical messages
+        application: 
+            level:crit
+
+        # From system log send only warning/critical messages,
+        # but suppress any context messages
+        system: 
+            level: warn
+            context: no
+        # Switch all other logfiles off. Default is warn:
+        # send messages of type warn or crit
+        other: 
+            level: off
+
+        # below is detailed by app
+        logfiles:
+            # Activate a specific log. Requires vista_api = yes. This can be used to
+            # activate the monitoring of a log not found in Windows registry. Note:
+            # wildcards only work with standard logs that are found in Windows registry.
+            # To find the correct name for a log, right-click on the log in
+            # event-viewer -> Properties and use the name from "Full Name"
+            - Microsoft-Windows-GroupPolicy/Operational: 
+                level: warn
+                context: yes

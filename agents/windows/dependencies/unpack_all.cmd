@@ -53,6 +53,26 @@ set out_dir_name=%nm%
 powershell Write-Host "%out_dir_name%:" -ForegroundColor blue
 call %unpack_cmd% %unpacker_exe% %src_dir_name% %src_file_name% %out_root% %out_dir_name% *
 
+rem with internal folder in the tar.gz
+set nm=yaml-cpp
+set vv=-master
+set src_dir_name=%omd_path%\%nm%
+if not exist %src_dir_name% set src_dir_name=%agent_path%\%nm%
+set src_file_name=%nm%%vv%
+set out_dir_name=%nm%
+powershell Write-Host "%out_dir_name%:" -ForegroundColor blue
+call %unpack_cmd% %unpacker_exe% %src_dir_name% %src_file_name% %out_root% %out_dir_name% *
+
+rem with internal folder in the tar.gz
+set nm=json
+set vv=-master-3.4.0
+set src_dir_name=%omd_path%\%nm%
+if not exist %src_dir_name% set src_dir_name=%agent_path%\%nm%
+set src_file_name=%nm%%vv%
+set out_dir_name=%nm%
+powershell Write-Host "%out_dir_name%:" -ForegroundColor blue
+call %unpack_cmd% %unpacker_exe% %src_dir_name% %src_file_name% %out_root% %out_dir_name% *
+
 
 rem without internal folder in the tar.gz
 set nm=simpleini

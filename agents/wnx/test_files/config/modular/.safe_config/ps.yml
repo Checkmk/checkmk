@@ -1,0 +1,4 @@
+#customized file
+ps:
+    # original behavior
+    wmi: no

@@ -49,4 +49,5 @@ tests/web/data/*
 .venv
 *.gcov
 htmlcov/
+artefacts/
 node_modules/

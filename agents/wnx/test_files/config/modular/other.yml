@@ -1,0 +1,110 @@
+mrpe:
+    # Run classical monitoring plugins. The word before the command
+    # line is the service description for the monitoring. Use backslashes
+    # in Windows-paths.
+    # Note: The windows agent will prefix all commands without an absolute
+    #       path with the agents executable dir. So if you want to use
+    #       system wide commands like cscript or ping, you need to specify
+    #       them with an absolute path
+    # check = Dummy mrpe\check_crit
+    # check = IP_Configuration mrpe\check_ipconfig 1.2.3.4
+    # check = Whatever c:\myplugins\check_whatever -w 10 -c 20
+    #
+    # The option include allows you to define additional include files and the
+    # user domain in which include files should be executed.
+    #
+    # include \\exampleuser = C:\includes\exampleuser_mrpe.cfg
+    #
+    # If you omit the user the file is executed with the current user
+    #
+    # include = C:\includes\default.cfg
+    #
+    # The syntax in the mrpe include file is the same as in the mrpe section,
+    # with the exception that you cannot add further includes in a include file.
+    # There is also no need to define a [mrpe] section in an included file. You
+    # just need to define the <tt>check</tt> lines here.
+    #
+    # exampleuser_mrpe.cfg
+    #     check = Dummy mrpe\check_crit
+    #     check = IP_Configuration mrpe\check_ipconfig 1.2.3.4
+    #
+    #     # Paths or plugin parameters containing spaces must be quoted:
+    #     check = Dummy "C:\Program Files (x86)\check_mk\mrpe\check_crit.bat"
+    #     some param "with space"
+    #
+    # Important: Keep in mind that the agent needs the permission to run
+    # scripts as other user. Internally it uses the windows command runas /User:
+    # which prompts for a password if agent has no permission to change to this user.
+    # In this case the check_mk agent will get stuck!
+
+fileinfo:
+    path: 'C:\Programs\Foo\*.log'
+    # path = M:\Bar Test\*.*
+    # Recursive wildcards can also be used:
+    # path = C:\MyDocuments\Foo\**
+
+local:
+    # local folder!
+    enabled: no
+    # default value, you may dsiable all scripts in local with no
+    run: yes
+    # scripts in local
+    # define timeouts for local scripts matching
+    # specific patterns - first match wins
+    execution:
+        - pattern     : '*.vbs'
+          timeout     : 20
+          description : For VBS 20 sec wait
+        - pattern     : '*.bat'
+          timeout     : 10
+          description : For VBS 10 sec wait
+        - pattern     : '*'
+          timeout     : 30
+          description : For all other file only 30 sec wait
+
+plugins:
+    # scripts in plugin
+    enabled: no
+    # default value, you may dsiable all scripts in local with no
+    run: yes
+    # folder: default or 'c:\myfolder\'  or whatever your want
+    folder: 
+        - default   # special keyword to use default location 
+        - c:\mydlx  # 
+        - c:\zx     # 
+    # example: the windows_updates.vbs
+    # plugin is executed asynchronous
+    # and is only updated every 3600 seconds
+    # it may fail (timeout / error) up to 3 times before the last known data is discarded
+    execution:
+        # execution pattern for  windows-updates.vbs:   
+        - pattern     : windows_updates.vbs
+          async       : yes
+          timeout     : 120
+          cache_age   : 3600
+          retry_count : 3
+          description : Update!!!!
+
+        
+        - pattern     : ps_perf.ps1
+          timeout     : 20
+        
+        - pattern     : '*.ps1'
+          timeout     : 10
+        
+        - pattern     : '*'
+          timeout     : 30
+    # When using the Check_MK Inventory plugin, it is a good idea to make the
+    # plugin being executed asynchronous to prevent it from hooking up the
+    # whole agent processing. Additionally it should have a execution timeout.
+        - pattern     : mk_inventory.ps1
+          async       : yes
+          timeout     : 240
+
+ps:
+    # This is required for the additional ps feature below.
+    wmi: yes
+    # Include the whole path of a process and its arguments in the process list.
+    full_path: no
+    arguments: no
+    other: no

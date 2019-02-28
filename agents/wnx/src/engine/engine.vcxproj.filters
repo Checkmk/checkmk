@@ -1,0 +1,404 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="yaml-cpp">
+      <UniqueIdentifier>{0a91ac1f-8883-4673-85da-64dbc432c6d1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="data">
+      <UniqueIdentifier>{fab2d1a0-f758-4e0d-ba44-8f07c5363ce4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="snippets">
+      <UniqueIdentifier>{72740dc8-3dcb-4307-b833-889320cc5828}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lwa">
+      <UniqueIdentifier>{96efc889-0a49-4c63-a0bd-5010caf93b62}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="stdafx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\tools\_raii.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\tools\_xdbg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\tools\_xlog.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="external_port.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="async_answer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\cfg_info.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="read_file.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="service_processor.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="windows_service_api.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\wtools.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\mailslot_transport.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\tools\_kbd.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\tools\_misc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\tools\_process.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="service_api.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cfg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx_defines.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\tools\_tgt.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="providers\internal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="providers\p_perf_counters.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cfg_details.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="logger.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="providers\df.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="providers\system_time.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="providers\check_mk.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="providers\mem.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="providers\services.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\version.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="providers\wmi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="carrier.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="providers\fileinfo.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="providers\logwatch_event.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="providers\logwatch_event_details.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="eventlog\eventlogvista.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="providers\plugins.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="providers\ps.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="providers\fileinfo_details.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="eventlog\eventlogstd.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="eventlog\eventlogbase.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="providers\mrpe.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="providers\ohm.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="providers\spool.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cvt.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lwa\stringutil.h">
+      <Filter>lwa</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lwa\Configuration.h">
+      <Filter>lwa</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lwa\Configurable.h">
+      <Filter>lwa</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lwa\SettingsCollector.h">
+      <Filter>lwa</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lwa\types.h">
+      <Filter>lwa</Filter>
+    </ClInclude>
+    <ClInclude Include="cap.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="windows_service_api.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\wtools.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="service_processor.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="external_port.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="async_answer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="service_api.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="providers\p_perf_counters.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="carrier.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\extlibs\yaml-cpp\src\binary.cpp">
+      <Filter>yaml-cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\extlibs\yaml-cpp\src\convert.cpp">
+      <Filter>yaml-cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\extlibs\yaml-cpp\src\directives.cpp">
+      <Filter>yaml-cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\extlibs\yaml-cpp\src\emit.cpp">
+      <Filter>yaml-cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\extlibs\yaml-cpp\src\emitfromevents.cpp">
+      <Filter>yaml-cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\extlibs\yaml-cpp\src\emitter.cpp">
+      <Filter>yaml-cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\extlibs\yaml-cpp\src\emitterstate.cpp">
+      <Filter>yaml-cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\extlibs\yaml-cpp\src\emitterutils.cpp">
+      <Filter>yaml-cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\extlibs\yaml-cpp\src\exceptions.cpp">
+      <Filter>yaml-cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\extlibs\yaml-cpp\src\exp.cpp">
+      <Filter>yaml-cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\extlibs\yaml-cpp\src\memory.cpp">
+      <Filter>yaml-cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\extlibs\yaml-cpp\src\node.cpp">
+      <Filter>yaml-cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\extlibs\yaml-cpp\src\node_data.cpp">
+      <Filter>yaml-cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\extlibs\yaml-cpp\src\nodebuilder.cpp">
+      <Filter>yaml-cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\extlibs\yaml-cpp\src\nodeevents.cpp">
+      <Filter>yaml-cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\extlibs\yaml-cpp\src\null.cpp">
+      <Filter>yaml-cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\extlibs\yaml-cpp\src\ostream_wrapper.cpp">
+      <Filter>yaml-cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\extlibs\yaml-cpp\src\parse.cpp">
+      <Filter>yaml-cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\extlibs\yaml-cpp\src\parser.cpp">
+      <Filter>yaml-cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\extlibs\yaml-cpp\src\regex_yaml.cpp">
+      <Filter>yaml-cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\extlibs\yaml-cpp\src\scanner.cpp">
+      <Filter>yaml-cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\extlibs\yaml-cpp\src\scanscalar.cpp">
+      <Filter>yaml-cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\extlibs\yaml-cpp\src\scantag.cpp">
+      <Filter>yaml-cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\extlibs\yaml-cpp\src\scantoken.cpp">
+      <Filter>yaml-cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\extlibs\yaml-cpp\src\simplekey.cpp">
+      <Filter>yaml-cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\extlibs\yaml-cpp\src\singledocparser.cpp">
+      <Filter>yaml-cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\extlibs\yaml-cpp\src\stream.cpp">
+      <Filter>yaml-cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\extlibs\yaml-cpp\src\tag.cpp">
+      <Filter>yaml-cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="cfg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="logger.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="on_start.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="groups.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="providers\internal.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="providers\df.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="providers\mem.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="providers\system_time.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="providers\services.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="providers\check_mk.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="providers\wmi.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="providers\ps.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="providers\fileinfo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="providers\logwatch_event.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="eventlog\eventlogbase.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="eventlog\eventlogstd.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="eventlog\eventlogvista.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cma_core.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="providers\plugins.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="providers\mrpe.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="providers\ohm.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="providers\skype.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="providers\spool.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cvt.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lwa\stringutil.cpp">
+      <Filter>lwa</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lwa\Configuration.cpp">
+      <Filter>lwa</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lwa\types.cc">
+      <Filter>lwa</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lwa\win_error.cc">
+      <Filter>lwa</Filter>
+    </ClCompile>
+    <ClCompile Include="cap.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="unpack_packs.cmd">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="..\..\test_files\config\check_mk.example.ini">
+      <Filter>data</Filter>
+    </None>
+    <None Include="..\..\test_files\config\check_mk_dev.yml">
+      <Filter>data</Filter>
+    </None>
+    <None Include="..\..\test_files\config\check_mk_dev_minimum.yml">
+      <Filter>data</Filter>
+    </None>
+    <None Include="..\..\test_files\config\check_mk_dev_default.yml">
+      <Filter>data</Filter>
+    </None>
+    <None Include="..\..\test_files\config\check_mk_dev_unit_testing.yml">
+      <Filter>data</Filter>
+    </None>
+  </ItemGroup>
+</Project>

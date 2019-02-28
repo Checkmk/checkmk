@@ -1,6 +1,6 @@
 title: SAP HANA: Filesystem
 agents: linux
-catalog: app/sap-hana
+catalog: app/sap_hana
 license: GPL
 distribution: check_mk
 description:

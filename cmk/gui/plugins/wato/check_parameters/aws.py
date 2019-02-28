@@ -757,6 +757,44 @@ class RulespecCheckgroupParametersAwsEbsBurstBalance(CheckParameterRulespecWithI
         return TextAscii(title=_("Block storage name"))
 
 
+@rulespec_registry.register
+class RulespecCheckgroupParametersAwsEbsLimits(CheckParameterRulespecWithoutItem):
+    @property
+    def group(self):
+        return RulespecGroupCheckParametersApplications
+
+    @property
+    def check_group_name(self):
+        return "aws_ebs_limits"
+
+    @property
+    def title(self):
+        return _("AWS/EBS Limits")
+
+    @property
+    def match_type(self):
+        return "dict"
+
+    @property
+    def parameter_valuespec(self):
+        return Dictionary(elements=[
+            ('block_store_snapshots', _vs_limits("Total Block store snapshots", 100000)),
+            ('block_store_space_standard',
+             _vs_limits("Total Magnetic volumes space", 300 * 1024**4, vs_limit_cls=Filesize)),
+            ('block_store_space_io1',
+             _vs_limits("Total Provisioned IOPS SSD space", 300 * 1024**4, vs_limit_cls=Filesize)),
+            ('block_store_iops_io1',
+             _vs_limits("Total Provisioned IOPS SSD IO operations per seconds", 300000)),
+            ('block_store_space_gp2',
+             _vs_limits("Total General Purpose SSD space", 300 * 1024**4, vs_limit_cls=Filesize)),
+            ('block_store_space_sc1',
+             _vs_limits("Total Cold HDD space", 300 * 1024**4, vs_limit_cls=Filesize)),
+            ('block_store_space_st1',
+             _vs_limits(
+                 "Total Throughput Optimized HDD space", 300 * 1024**4, vs_limit_cls=Filesize)),
+        ])
+
+
 #.
 #   .--RDS-----------------------------------------------------------------.
 #   |                          ____  ____  ____                            |

@@ -1149,6 +1149,87 @@ class ELB(AWSSectionCloudwatch):
 # instance as piggyback host.
 
 
+class EBSLimits(AWSSectionLimits):
+    @property
+    def name(self):
+        return "ebs_limits"
+
+    @property
+    def interval(self):
+        return 300
+
+    def _get_colleague_contents(self):
+        return AWSColleagueContents(None, 0.0)
+
+    def _fetch_raw_content(self, colleague_contents):
+        response = self._client.describe_volumes()
+        try:
+            volumes = response['Volumes']
+        except KeyError as e:
+            logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
+            volumes = []
+
+        response = self._client.describe_snapshots()
+        try:
+            snapshots = response['Snapshots']
+        except KeyError as e:
+            logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
+            snapshots = []
+        return volumes, snapshots
+
+    def _compute_content(self, raw_content, colleague_contents):
+        volumes, snapshots = raw_content.content
+
+        vol_storage_standard = 0
+        vol_storage_io1 = 0
+        vol_storage_gp2 = 0
+        vol_storage_sc1 = 0
+        vol_storage_st1 = 0
+        vol_iops_io1 = 0
+        for volume in volumes:
+            vol_type = volume['VolumeType']
+            vol_size = volume['Size']
+            if vol_type == 'standard':
+                vol_storage_standard += vol_size
+            elif vol_type == 'io1':
+                vol_storage_io1 += vol_size
+                vol_iops_io1 += volume['Iops']
+            elif vol_type == 'gp2':
+                vol_storage_gp2 += vol_size
+            elif vol_type == 'sc1':
+                vol_storage_sc1 += vol_size
+            elif vol_type == 'st1':
+                vol_storage_st1 += vol_size
+            else:
+                logging.info("%s: Unhandled volume type: '%s'", self.name, vol_type)
+
+        # These are total limits and not instance specific
+        # Space values are in TiB.
+        self._add_limit(
+            "", AWSLimit('block_store_snapshots', 'Block store snapshots', 100000, len(snapshots)))
+        self._add_limit(
+            "",
+            AWSLimit('block_store_space_standard', 'Magnetic volumes space', 300,
+                     vol_storage_standard))
+        self._add_limit(
+            "", AWSLimit('block_store_space_io1', 'Provisioned IOPS SSD space', 300,
+                         vol_storage_io1))
+        self._add_limit(
+            "",
+            AWSLimit('block_store_iops_io1', 'Provisioned IOPS SSD IO operations per second',
+                     300000, vol_storage_io1))
+        self._add_limit(
+            "", AWSLimit('block_store_space_gp2', 'General Purpose SSD space', 300,
+                         vol_storage_gp2))
+        self._add_limit("", AWSLimit('block_store_space_sc1', 'Cold HDD space', 300,
+                                     vol_storage_sc1))
+        self._add_limit(
+            "",
+            AWSLimit('block_store_space_st1', 'Throughput Optimized HDD space', 300,
+                     vol_storage_st1))
+        return AWSComputedContent(volumes, raw_content.cache_timestamp)
+
+
 class EBSSummary(AWSSectionGeneric):
     def __init__(self, client, region, config, distributor=None):
         super(EBSSummary, self).__init__(client, region, config, distributor=distributor)
@@ -1164,40 +1245,84 @@ class EBSSummary(AWSSectionGeneric):
         return 300
 
     def _get_colleague_contents(self):
-        colleague = self._received_results.get('ec2_summary')
+        colleague = self._received_results.get('ebs_limits')
+        volumes = []
+        max_cache_timestamp = 0.0
         if colleague and colleague.content:
-            return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
-        return AWSColleagueContents({}, 0.0)
+            max_cache_timestamp = max(max_cache_timestamp, colleague.cache_timestamp)
+            volumes = colleague.content
+
+        colleague = self._received_results.get('ec2_summary')
+        instances = []
+        if colleague and colleague.content:
+            max_cache_timestamp = max(max_cache_timestamp, colleague.cache_timestamp)
+            instances = colleague.content
+
+        return AWSColleagueContents((volumes, instances), max_cache_timestamp)
 
     def _fetch_raw_content(self, colleague_contents):
-        response_volumes, response_volume_stats = self._describe_volumes()
-        try:
-            volumes = {r['VolumeId']: r for r in response_volumes['Volumes']}
-        except KeyError as e:
-            logging.info("%s: KeyError %s; Available are %s", self.name, e, response_volumes.keys())
-            volumes = {}
+        col_volumes, _col_instances = colleague_contents.content
+        if self._tags is None and self._names is not None:
+            return self._fetch_volumes_filtered_by_names(col_volumes)
+        if self._tags is not None:
+            return self._fetch_volumes_filtered_by_tags(col_volumes)
+        return self._fetch_volumes_without_filter()
 
-        try:
-            volume_states = {r['VolumeId']: r for r in response_volume_stats['VolumeStatuses']}
-        except KeyError as e:
-            logging.info("%s: KeyError %s; Available are %s", self.name, e,
-                         response_volume_stats.keys())
-            volume_states = {}
-        return volumes, volume_states
-
-    def _describe_volumes(self):
-        if self._names is not None:
-            response_volumes = self._client.describe_volumes(VolumeIds=self._names)
-            response_volume_stats = self._client.describe_volume_status(VolumeIds=self._names)
-        elif self._tags is not None:
-            response_volumes = self._client.describe_volumes(Filters=self._tags)
-            response_volume_stats = self._client.describe_volume_status(Filters=self._tags)
+    def _fetch_volumes_filtered_by_names(self, col_volumes):
+        if col_volumes:
+            volumes = {
+                vol['VolumeId']: vol for vol in col_volumes if vol['VolumeId'] in self._names
+            }
         else:
-            response_volumes = self._client.describe_volumes()
-            response_volume_stats = self._client.describe_volume_status()
-        return response_volumes, response_volume_stats
+            volumes = self._format_volumes(self._client.describe_volumes(VolumeIds=self._names))
+        return (volumes,
+                self._format_volume_states(
+                    self._client.describe_volume_status(VolumeIds=self._names)))
+
+    def _fetch_volumes_filtered_by_tags(self, col_volumes):
+        if col_volumes:
+            tags = self._prepare_ebs_tags(self._tags)
+            volumes = {
+                vol['VolumeId']: vol for vol in col_volumes for tag in vol['Tags'] if tag in tags
+            }
+        else:
+            volumes = self._format_volumes(self._client.describe_volumes(Filters=self._tags))
+        return (volumes,
+                self._format_volume_states(self._client.describe_volume_status(Filters=self._tags)))
+
+    def _prepare_ebs_tags(self, tags):
+        """
+        We need to change the format, in order to filter out volumes with specific
+        tags if and only if we already fetched volumes by ebs_limits. The format from
+        the API is:
+        [{'Key': KEY, 'Value': VALUE}, ...]
+        """
+        if not tags:
+            return
+        return [{'Key': e['Name'].strip("tag:"), 'Value': v} for e in tags for v in e['Values']]
+
+    def _fetch_volumes_without_filter(self):
+        return (self._format_volumes(self._client.describe_volumes()),
+                self._format_volume_states(self._client.describe_volume_status()))
+
+    def _format_volumes(self, response):
+        try:
+            return {r['VolumeId']: r for r in response['Volumes']}
+        except KeyError as e:
+            logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
+            return {}
+
+    def _format_volume_states(self, response):
+        try:
+            return {r['VolumeId']: r for r in response['VolumeStatuses']}
+        except KeyError as e:
+            logging.info("%s: KeyError %s; Available are %s", self.name, e, response.keys())
+            return {}
 
     def _compute_content(self, raw_content, colleague_contents):
+        _col_volumes, col_instances = colleague_contents.content
+        instance_name_mapping = {v['InstanceId']: k for k, v in col_instances.iteritems()}
+
         volumes, volume_states = raw_content.content
         content = []
         for volume_id in set(volumes.keys()).union(set(volume_states.keys())):
@@ -1205,9 +1330,6 @@ class EBSSummary(AWSSectionGeneric):
             volume.update(volume_states.get(volume_id, {}))
             content.append(volume)
 
-        instance_name_mapping = {
-            v['InstanceId']: k for k, v in colleague_contents.content.iteritems()
-        }
         content_by_piggyback_hosts = {}
         for row in content:
             for attachment in row['Attachments']:
@@ -1623,6 +1745,7 @@ class AWSSectionsGeneric(AWSSections):
         elb_limits_distributor = ResultDistributor()
         elb_summary_distributor = ResultDistributor()
 
+        ebs_limits_distributor = ResultDistributor()
         ebs_summary_distributor = ResultDistributor()
 
         s3_limits_distributor = ResultDistributor()
@@ -1632,6 +1755,8 @@ class AWSSectionsGeneric(AWSSections):
 
         #---sections with distributors--------------------------------------
         ec2_summary = EC2Summary(ec2_client, region, config, ec2_summary_distributor)
+
+        ebs_limits = EBSLimits(ec2_client, region, config, ebs_limits_distributor)
         ebs_summary = EBSSummary(ec2_client, region, config, ebs_summary_distributor)
 
         elb_limits = ELBLimits(elb_client, region, config, elb_limits_distributor)
@@ -1646,6 +1771,7 @@ class AWSSectionsGeneric(AWSSections):
         elb_health = ELBHealth(elb_client, region, config)
         ec2_security_groups = EC2SecurityGroups(ec2_client, region, config)
         ec2 = EC2(cloudwatch_client, region, config)
+
         ebs = EBS(cloudwatch_client, region, config)
         elb = ELB(cloudwatch_client, region, config)
 
@@ -1660,6 +1786,8 @@ class AWSSectionsGeneric(AWSSections):
         ec2_summary_distributor.add(ec2)
         ec2_summary_distributor.add(ebs_summary)
         ec2_summary_distributor.add(ebs)
+
+        ebs_limits_distributor.add(ebs_summary)
         ebs_summary_distributor.add(ebs)
 
         elb_limits_distributor.add(elb_summary)
@@ -1695,6 +1823,8 @@ class AWSSectionsGeneric(AWSSections):
             self._sections.append(ec2)
 
         if 'ebs' in services:
+            if config.service_config.get('ebs_limits'):
+                self._sections.append(ebs_limits)
             self._sections.append(ebs_summary)
             self._sections.append(ebs)
 
@@ -1778,7 +1908,7 @@ AWSServices = [
         title="Elastic Block Storage (EBS)",
         global_service=False,
         filter_by_names_or_tags=True,
-        limits=False),
+        limits=True),
     AWSServiceAttributes(
         key="s3",
         title="Simple Storage Service (S3)",
@@ -1931,7 +2061,7 @@ def main(args=None):
     aws_config = AWSConfig(hostname, (args.overall_tag_key, args.overall_tag_values))
     for service_key, service_names, service_tags, service_limits in [
         ("ec2", args.ec2_names, (args.ec2_tag_key, args.ec2_tag_values), None),
-        ("ebs", args.ebs_names, (args.ebs_tag_key, args.ebs_tag_values), None),
+        ("ebs", args.ebs_names, (args.ebs_tag_key, args.ebs_tag_values), args.ebs_limits),
         ("s3", args.s3_names, (args.s3_tag_key, args.s3_tag_values), args.s3_limits),
         ("elb", args.elb_names, (args.elb_tag_key, args.elb_tag_values), args.elb_limits),
         ("rds", args.rds_names, (args.rds_tag_key, args.rds_tag_values), args.rds_limits),

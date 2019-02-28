@@ -1,0 +1,73 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2018             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+factory_settings['aws_ebs_limits_default_levels'] = {
+    'block_store_snapshots': (None, (80.0, 90.0)),
+    'block_store_space_standard': (None, (80.0, 90.0)),
+    'block_store_space_io1': (None, (80.0, 90.0)),
+    'block_store_iops_io1': (None, (80.0, 90.0)),
+    'block_store_space_gp2': (None, (80.0, 90.0)),
+    'block_store_space_sc1': (None, (80.0, 90.0)),
+    'block_store_space_st1': (None, (80.0, 90.0)),
+}
+
+
+def parse_aws_ebs_limits(info):
+    parsed = []
+    for resource_key, resource_title, limit, amount in parse_aws(info):
+        if resource_key in [
+                "block_store_space_standard",
+                "block_store_space_io1",
+                "block_store_space_gp2",
+                "block_store_space_sc1",
+                "block_store_space_st1",
+        ]:
+            # Limit has unit TiB, amount is measured in GiB
+            limit *= 1024**4
+            amount *= 1024**3
+            human_readable_func = get_bytes_human_readable
+        elif resource_key == "block_store_iops_io1":
+            human_readable_func = lambda x: "%s/s" % x
+        else:
+            human_readable_func = None
+        parsed.append((resource_key, resource_title, limit, amount, human_readable_func))
+    return parsed
+
+
+def check_aws_ebs_limits(item, params, parsed):
+    return check_aws_limits("ebs", params, parsed)
+
+
+check_info['aws_ebs_limits'] = {
+    'parse_function': parse_aws_ebs_limits,
+    'inventory_function': discover_single,
+    'check_function': check_aws_ebs_limits,
+    'service_description': 'AWS/EBS Limits',
+    'includes': ['aws.include'],
+    'group': 'aws_ebs_limits',
+    'default_levels_variable': 'aws_ebs_limits_default_levels',
+    'has_perfdata': True,
+}

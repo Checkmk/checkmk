@@ -1,0 +1,19 @@
+Title: aws_ebs_limits: New check which monitors AWS/EBS limits
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1551970412
+Class: feature
+
+The monitored limits and default limit values are
+<ul>
+<li>Total Block store snapshots, 100000,</li>
+<li>Total Magnetic volumes space, 300 TiB,</li>
+<li>Total Provisioned IOPS SSD space: 300 TiB,</li>
+<li>Total Provisioned IOPS SSD IO operations per second: 300000,</li>
+<li>Total General Purpose SSD space: 300 TiB,</li>
+<li>Total Cold HDD space: 300 TiB,</li>
+<li>Total Throughput Optimized HDD space: 300 TiB,</li>
+</ul>

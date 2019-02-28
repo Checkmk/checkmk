@@ -5148,6 +5148,48 @@ metric_info['aws_rds_db_cluster_roles'] = {
     'color': '33/a',
 }
 
+metric_info['aws_ebs_block_store_snapshots'] = {
+    'title': _('Block store snapshots'),
+    'unit': 'count',
+    'color': '11/a',
+}
+
+metric_info['aws_ebs_block_store_space_standard'] = {
+    'title': _('Magnetic volumes space'),
+    'unit': 'bytes',
+    'color': '12/a',
+}
+
+metric_info['aws_ebs_block_store_space_io1'] = {
+    'title': _('Provisioned IOPS SSD space'),
+    'unit': 'bytes',
+    'color': '13/a',
+}
+
+metric_info['aws_ebs_block_store_iops_io1'] = {
+    'title': _('Provisioned IOPS SSD IO operations per second'),
+    'unit': '1/s',
+    'color': '14/a',
+}
+
+metric_info['aws_ebs_block_store_space_gp2'] = {
+    'title': _('General Purpose SSD space'),
+    'unit': 'bytes',
+    'color': '15/a',
+}
+
+metric_info['aws_ebs_block_store_space_sc1'] = {
+    'title': _('Cold HDD space'),
+    'unit': 'bytes',
+    'color': '16/a',
+}
+
+metric_info['aws_ebs_block_store_space_st1'] = {
+    'title': _('Throughput Optimized HDD space'),
+    'unit': 'bytes',
+    'color': '21/a',
+}
+
 metric_info["elapsed_time"] = {
     "title": _("Elapsed time"),
     "unit": "s",

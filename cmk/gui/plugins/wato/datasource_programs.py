@@ -1956,8 +1956,10 @@ class RulespecSpecialAgentsAws(HostRulespec):
                               title=_("Elastic Block Storage (EBS)"),
                               elements=[
                                   _vs_element_aws_service_selection(),
+                                  _vs_element_aws_limits(),
                               ],
-                              optional_keys=[],
+                              optional_keys=["limits"],
+                              default_keys=["limits"],
                           )),
                          ("s3",
                           Dictionary(

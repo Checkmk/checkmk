@@ -1,0 +1,31 @@
+title: AWS EBS Limits
+agents: aws
+catalog: cloud/aws
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the AWS/EBS limits
+ To make this check work you have to configure the related
+ special agent {Amazon Web Services (AWS)}.
+
+ We get the following default limits:
+ - Total Block store snapshots: 100000
+ - Total Magnetic volumes space: 300 TiB
+ - Total Provisioned IOPS SSD space: 300 TiB
+ - Total Provisioned IOPS SSD IO operations per second: 300000
+ - Total General Purpose SSD space: 300 TiB
+ - Total Cold HDD space: 300 TiB
+ - Total Throughput Optimized HDD space: 300 TiB
+
+ The current value for each limit type is calculated by summing
+ up the related values from API method {{describe_volumes}}.
+
+ With both values we calculate the usage of each limit type
+ in percent. Default levels are set to 80, 90 percent per type.
+ For each limit type the limit and usage levels are configurable.
+
+ If limits are enabled all volumes are fetched regardless of
+ possibly configured restriction to names or tags.
+
+inventory:
+ One service per bucket will be created.

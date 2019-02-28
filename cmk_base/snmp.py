@@ -54,6 +54,7 @@ _enforce_stored_walks = False
 _g_single_oid_hostname = None
 _g_single_oid_ipaddress = None
 _g_single_oid_cache = None
+# TODO: Move to StoredWalkSNMPBackend?
 _g_walk_cache = {}  # type: Dict[str, List[str]]
 
 #.
@@ -353,22 +354,6 @@ class StoredWalkSNMPBackend(cmk_base.snmp_utils.ABCSNMPBackend):
 
         rowinfo = []
 
-        # New implementation: use binary search
-        def to_bin_string(oid):
-            try:
-                return tuple(map(int, oid.strip(".").split(".")))
-            except:
-                raise MKGeneralException("Invalid OID %s" % oid)
-
-        def compare_oids(a, b):
-            aa = to_bin_string(a)
-            bb = to_bin_string(b)
-            if len(aa) <= len(bb) and bb[:len(aa)] == aa:
-                result = 0
-            else:
-                result = cmp(aa, bb)
-            return result
-
         if host_config.hostname in _g_walk_cache:
             lines = _g_walk_cache[host_config.hostname]
         else:
@@ -385,7 +370,7 @@ class StoredWalkSNMPBackend(cmk_base.snmp_utils.ABCSNMPBackend):
             current = (begin + end) / 2
             parts = lines[current].split(None, 1)
             comp = parts[0]
-            hit = compare_oids(oid_prefix, comp)
+            hit = self._compare_oids(oid_prefix, comp)
             if hit == 0:
                 break
             elif hit == 1:  # we are too low
@@ -396,45 +381,60 @@ class StoredWalkSNMPBackend(cmk_base.snmp_utils.ABCSNMPBackend):
         if hit != 0:
             return []  # not found
 
-        def collect_until(index, direction):
-            rows = []
-            # Handle case, where we run after the end of the lines list
-            if index >= len(lines):
-                if direction > 0:
-                    return []
-                else:
-                    index -= 1
-            while True:
-                line = lines[index]
-                parts = line.split(None, 1)
-                o = parts[0]
-                if o.startswith('.'):
-                    o = o[1:]
-                if o == oid or o.startswith(oid_prefix + "."):
-                    if len(parts) > 1:
-                        try:
-                            value = cmk_base.agent_simulator.process(parts[1])
-                        except:
-                            value = parts[1]  # agent simulator missing in precompiled mode
-                    else:
-                        value = ""
-                    # Fix for missing starting oids
-                    rows.append(('.' + o, classic_snmp.strip_snmp_value(value)))
-                    index += direction
-                    if index < 0 or index >= len(lines):
-                        break
-                else:
-                    break
-            return rows
-
-        rowinfo = collect_until(current, -1)
+        rowinfo = self._collect_until(oid, oid_prefix, lines, current, -1)
         rowinfo.reverse()
-        rowinfo += collect_until(current + 1, 1)
+        rowinfo += self._collect_until(oid, oid_prefix, lines, current + 1, 1)
 
         if dot_star:
             return [rowinfo[0]]
 
         return rowinfo
+
+    def _compare_oids(self, a, b):
+        aa = self._to_bin_string(a)
+        bb = self._to_bin_string(b)
+        if len(aa) <= len(bb) and bb[:len(aa)] == aa:
+            result = 0
+        else:
+            result = cmp(aa, bb)
+        return result
+
+    def _to_bin_string(self, oid):
+        try:
+            return tuple(map(int, oid.strip(".").split(".")))
+        except:
+            raise MKGeneralException("Invalid OID %s" % oid)
+
+    def _collect_until(self, oid, oid_prefix, lines, index, direction):
+        rows = []
+        # Handle case, where we run after the end of the lines list
+        if index >= len(lines):
+            if direction > 0:
+                return []
+            else:
+                index -= 1
+        while True:
+            line = lines[index]
+            parts = line.split(None, 1)
+            o = parts[0]
+            if o.startswith('.'):
+                o = o[1:]
+            if o == oid or o.startswith(oid_prefix + "."):
+                if len(parts) > 1:
+                    try:
+                        value = cmk_base.agent_simulator.process(parts[1])
+                    except:
+                        value = parts[1]  # agent simulator missing in precompiled mode
+                else:
+                    value = ""
+                # Fix for missing starting oids
+                rows.append(('.' + o, classic_snmp.strip_snmp_value(value)))
+                index += direction
+                if index < 0 or index >= len(lines):
+                    break
+            else:
+                break
+        return rows
 
 
 def walk_for_export(host_config, oid):

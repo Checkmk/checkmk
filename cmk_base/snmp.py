@@ -324,7 +324,7 @@ class SNMPBackendFactory(object):
 
 class StoredWalkSNMPBackend(cmk_base.snmp_utils.ABCSNMPBackend):
     def get(self, host_config, oid, context_name=None):
-        walk = _get_stored_snmpwalk(host_config.hostname, oid)
+        walk = self.walk(host_config, oid)
 
         # get_stored_snmpwalk returns all oids that start with oid but here
         # we need an exact match
@@ -335,6 +335,106 @@ class StoredWalkSNMPBackend(cmk_base.snmp_utils.ABCSNMPBackend):
             return walk[0][1]
 
         return None
+
+    def walk(self, host_config, oid):
+        if oid.startswith("."):
+            oid = oid[1:]
+
+        if oid.endswith(".*"):
+            oid_prefix = oid[:-2]
+            dot_star = True
+        else:
+            oid_prefix = oid
+            dot_star = False
+
+        path = cmk.utils.paths.snmpwalks_dir + "/" + host_config.hostname
+
+        console.vverbose("  Loading %s from %s\n" % (oid, path))
+
+        rowinfo = []
+
+        # New implementation: use binary search
+        def to_bin_string(oid):
+            try:
+                return tuple(map(int, oid.strip(".").split(".")))
+            except:
+                raise MKGeneralException("Invalid OID %s" % oid)
+
+        def compare_oids(a, b):
+            aa = to_bin_string(a)
+            bb = to_bin_string(b)
+            if len(aa) <= len(bb) and bb[:len(aa)] == aa:
+                result = 0
+            else:
+                result = cmp(aa, bb)
+            return result
+
+        if host_config.hostname in _g_walk_cache:
+            lines = _g_walk_cache[host_config.hostname]
+        else:
+            try:
+                lines = file(path).readlines()
+            except IOError:
+                raise MKSNMPError("No snmpwalk file %s" % path)
+            _g_walk_cache[host_config.hostname] = lines
+
+        begin = 0
+        end = len(lines)
+        hit = None
+        while end - begin > 0:
+            current = (begin + end) / 2
+            parts = lines[current].split(None, 1)
+            comp = parts[0]
+            hit = compare_oids(oid_prefix, comp)
+            if hit == 0:
+                break
+            elif hit == 1:  # we are too low
+                begin = current + 1
+            else:
+                end = current
+
+        if hit != 0:
+            return []  # not found
+
+        def collect_until(index, direction):
+            rows = []
+            # Handle case, where we run after the end of the lines list
+            if index >= len(lines):
+                if direction > 0:
+                    return []
+                else:
+                    index -= 1
+            while True:
+                line = lines[index]
+                parts = line.split(None, 1)
+                o = parts[0]
+                if o.startswith('.'):
+                    o = o[1:]
+                if o == oid or o.startswith(oid_prefix + "."):
+                    if len(parts) > 1:
+                        try:
+                            value = cmk_base.agent_simulator.process(parts[1])
+                        except:
+                            value = parts[1]  # agent simulator missing in precompiled mode
+                    else:
+                        value = ""
+                    # Fix for missing starting oids
+                    rows.append(('.' + o, classic_snmp.strip_snmp_value(value)))
+                    index += direction
+                    if index < 0 or index >= len(lines):
+                        break
+                else:
+                    break
+            return rows
+
+        rowinfo = collect_until(current, -1)
+        rowinfo.reverse()
+        rowinfo += collect_until(current + 1, 1)
+
+        if dot_star:
+            return [rowinfo[0]]
+
+        return rowinfo
 
 
 def walk_for_export(host_config, oid):
@@ -403,7 +503,7 @@ def _get_snmpwalk(host_config, check_plugin_name, oid, fetchoid, column, use_snm
 
     if rowinfo is None:
         if _enforce_stored_walks or config.is_usewalk_host(host_config.hostname):
-            rowinfo = _get_stored_snmpwalk(host_config.hostname, fetchoid)
+            rowinfo = StoredWalkSNMPBackend().walk(host_config, fetchoid)
         else:
             rowinfo = _perform_snmpwalk(host_config, check_plugin_name, oid, fetchoid)
 
@@ -589,107 +689,6 @@ def _save_snmpwalk_cache(hostname, fetchoid, rowinfo):
 
 def _snmpwalk_cache_path(hostname, fetchoid):
     return os.path.join(cmk.utils.paths.var_dir, "snmp_cache", hostname, fetchoid)
-
-
-def _get_stored_snmpwalk(hostname, oid):
-    if oid.startswith("."):
-        oid = oid[1:]
-
-    if oid.endswith(".*"):
-        oid_prefix = oid[:-2]
-        dot_star = True
-    else:
-        oid_prefix = oid
-        dot_star = False
-
-    path = cmk.utils.paths.snmpwalks_dir + "/" + hostname
-
-    console.vverbose("  Loading %s from %s\n" % (oid, path))
-
-    rowinfo = []
-
-    # New implementation: use binary search
-    def to_bin_string(oid):
-        try:
-            return tuple(map(int, oid.strip(".").split(".")))
-        except:
-            raise MKGeneralException("Invalid OID %s" % oid)
-
-    def compare_oids(a, b):
-        aa = to_bin_string(a)
-        bb = to_bin_string(b)
-        if len(aa) <= len(bb) and bb[:len(aa)] == aa:
-            result = 0
-        else:
-            result = cmp(aa, bb)
-        return result
-
-    if hostname in _g_walk_cache:
-        lines = _g_walk_cache[hostname]
-    else:
-        try:
-            lines = file(path).readlines()
-        except IOError:
-            raise MKSNMPError("No snmpwalk file %s" % path)
-        _g_walk_cache[hostname] = lines
-
-    begin = 0
-    end = len(lines)
-    hit = None
-    while end - begin > 0:
-        current = (begin + end) / 2
-        parts = lines[current].split(None, 1)
-        comp = parts[0]
-        hit = compare_oids(oid_prefix, comp)
-        if hit == 0:
-            break
-        elif hit == 1:  # we are too low
-            begin = current + 1
-        else:
-            end = current
-
-    if hit != 0:
-        return []  # not found
-
-    def collect_until(index, direction):
-        rows = []
-        # Handle case, where we run after the end of the lines list
-        if index >= len(lines):
-            if direction > 0:
-                return []
-            else:
-                index -= 1
-        while True:
-            line = lines[index]
-            parts = line.split(None, 1)
-            o = parts[0]
-            if o.startswith('.'):
-                o = o[1:]
-            if o == oid or o.startswith(oid_prefix + "."):
-                if len(parts) > 1:
-                    try:
-                        value = cmk_base.agent_simulator.process(parts[1])
-                    except:
-                        value = parts[1]  # agent simulator missing in precompiled mode
-                else:
-                    value = ""
-                # Fix for missing starting oids
-                rows.append(('.' + o, classic_snmp.strip_snmp_value(value)))
-                index += direction
-                if index < 0 or index >= len(lines):
-                    break
-            else:
-                break
-        return rows
-
-    rowinfo = collect_until(current, -1)
-    rowinfo.reverse()
-    rowinfo += collect_until(current + 1, 1)
-
-    if dot_star:
-        return [rowinfo[0]]
-
-    return rowinfo
 
 
 #.

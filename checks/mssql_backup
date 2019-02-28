@@ -101,7 +101,7 @@ def parse_mssql_backup(info):
         timestamp = _parse_date_and_time(b_date, b_time)
 
         item = "%s %s" % (inst, tablespace)
-        backup = Backup(timestamp, map_backup_types.get(b_type), b_state)
+        backup = Backup(timestamp, map_backup_types.get(b_type), b_state or "")
         parsed.setdefault(item, []).append(backup)
 
     return parsed
@@ -136,6 +136,9 @@ def check_mssql_backup(item, params, parsed):
     for backup in data:
         if backup.state == "no backup found":
             yield params.get("not_found", 1), "No backup found"
+            continue
+        if backup.state.startswith("ERROR: "):
+            yield 2, backup.state[7:]
             continue
         if backup.type is None:
             backup_type_var = "database"

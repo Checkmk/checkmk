@@ -12,6 +12,7 @@ info = [
      ['MSSQL_SQL0x4', 'msdb', '-', '-', '-', 'no backup found'],
      ['MSSQL_SQL0x4', 'foo'],
      ['MSSQL_SQL0x4', 'bar', '12345678'],
+     ['MSSQL_Parrot', 'Polly', '-', '-', '-', 'ERROR: Polly has no crackers']
 ]
 
 
@@ -21,6 +22,7 @@ discovery = {
         ("MSSQL_SQL0x4 model", {}),
         ("MSSQL_SQL0x4 msdb", {}),
         ("MSSQL_SQL0x4 bar", {}),
+        ("MSSQL_Parrot Polly", {}),
     ],
     'per_type': [],
 }

@@ -1,1 +1,0 @@
-check_mk-stulz_humidity.php

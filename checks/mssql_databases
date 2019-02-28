@@ -57,32 +57,30 @@ def parse_mssql_databases(info):
     return parsed
 
 
-def inventory_mssql_databases(parsed):
-    return [(db_name, {}) for db_name in parsed]
-
-
-def check_mssql_databases(item, params, parsed):
+@get_parsed_item_data
+def check_mssql_databases(_no_item, params, data):
     map_states = {
         "1": (1, "on"),
         "0": (0, "off"),
     }
 
-    if item in parsed:
-        data = parsed[item]
-        db_state = data["Status"]
-        state = params.get("map_db_states", {}).get(db_state.replace(" ", "_").upper(), 0)
-        yield state, 'Status: %s' % db_state
-        yield 0, 'Recovery: %s' % data["Recovery"]
+    db_state = data["Status"]
+    if db_state.startswith("ERROR: "):
+        yield 2, db_state[7:]
+        return
+    state = params.get("map_db_states", {}).get(db_state.replace(" ", "_").upper(), 0)
+    yield state, 'Status: %s' % db_state
+    yield 0, 'Recovery: %s' % data["Recovery"]
 
-        for what in ["close", "shrink"]:
-            state, state_readable = map_states[data["auto_%s" % what]]
-            state = params.get("map_auto_%s_state" % what, {}).get(state_readable, state)
-            yield state, 'Auto %s: %s' % (what, state_readable)
+    for what in ["close", "shrink"]:
+        state, state_readable = map_states[data["auto_%s" % what]]
+        state = params.get("map_auto_%s_state" % what, {}).get(state_readable, state)
+        yield state, 'Auto %s: %s' % (what, state_readable)
 
 
 check_info['mssql_databases'] = {
     'parse_function': parse_mssql_databases,
-    'inventory_function': inventory_mssql_databases,
+    'inventory_function': discover(),
     'check_function': check_mssql_databases,
     'service_description': 'MSSQL %s Database',
     'group': 'mssql_databases',

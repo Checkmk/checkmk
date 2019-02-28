@@ -1637,6 +1637,7 @@ sql_asm_diskgroup () {
 
 unset_custom_sqls_vars () {
     unset SQLS_SECTION_NAME SQLS_SECTION_SEP SQLS_SIDS SQLS_DIR SQLS_SQL SQLS_PARAMETERS SQLS_MAX_CACHE_AGE SQLS_ITEM_NAME MK_CUSTOM_SQLS_SECTION MK_CUSTOM_SQLS_SECTION_HEADER MK_CUSTOM_SQLS_ITEM MK_CUSTOM_SQLS_SECTION_QUERY
+    unset SQLS_DBUSER SQLS_DBPASSWORD SQLS_DBSYSCONNECT SQLS_TNSALIAS
 }
 
 
@@ -1727,6 +1728,10 @@ do_custom_sqls () {
         else
             local max_cache_age="$custom_sqls_max_cache_age"
         fi
+
+        # set custom credentials from section
+        db_connect=$(mk_ora_db_connect "$sid")
+        export MK_DB_CONNECT=$db_connect
 
         unset_custom_sqls_vars
 
@@ -2058,9 +2063,9 @@ mk_ora_db_connect () {
     fi
 
     offset=${offset:-0}
-    ORADBUSER=$(echo "${ORACFGLINE}" | cut -d":" -f$((1+offset)))
-    DBPASSWORD=$(echo "${ORACFGLINE}" | cut -d":" -f$((2+offset)))
-    DBSYSCONNECT=$(echo "${ORACFGLINE}" | cut -d":" -f$((3+offset)))
+    ORADBUSER=${SQLS_DBUSER:-$(echo "${ORACFGLINE}" | cut -d":" -f$((1+offset)))}
+    DBPASSWORD=${SQLS_DBPASSWORD:-$(echo "${ORACFGLINE}" | cut -d":" -f$((2+offset)))}
+    DBSYSCONNECT=${SQLS_DBSYSCONNECT:-$(echo "${ORACFGLINE}" | cut -d":" -f$((3+offset)))}
     DBHOST=$(echo "${ORACFGLINE}" | cut -d":" -f$((4+offset)))
     DBPORT=$(echo "${ORACFGLINE}" | cut -d":" -f$((5+offset)))
 
@@ -2094,8 +2099,8 @@ mk_ora_db_connect () {
             fi
         fi
 
-        if "${ORACLE_HOME}"/bin/tnsping "${P_TNSALIAS_P}" >/dev/null 2>&1; then
-            TNSALIAS="$P_TNSALIAS_P"
+        TNSALIAS=${SQLS_TNSALIAS:-${P_TNSALIAS_P}}
+        if "${ORACLE_HOME}"/bin/tnsping "$TNSALIAS" >/dev/null 2>&1; then
             TNSPINGOK=yes
         else
             unset TNSALIAS
@@ -2113,7 +2118,7 @@ mk_ora_db_connect () {
         # => use the wallet with tnsnames.ora or EZCONNECT
         TNSALIAS=${TNSALIAS:-"localhost:1521/${ORACLE_SID}"}
     else
-        if [ "${DBSYSCONNECT}" ]; then
+        if [ ! "${DBSYSCONNECT:-'None'}" = "None" ]; then
             assysdbaconnect=" as "${DBSYSCONNECT}
         fi
 
@@ -2438,6 +2443,8 @@ for sid in $SIDS; do
     export MK_DB_CONNECT=$db_connect
 
     do_checks
+
+    # MK_DB_CONNECT could be changed by do_custom_sqls!
     do_custom_sqls
 done
 

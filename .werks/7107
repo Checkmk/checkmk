@@ -1,0 +1,26 @@
+Title: mk_oracle: Support for custom credentials in custom_sqls
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1551700089
+Class: feature
+
+Dedicated credentials for each section in custom_sqls
+could be configured. The following parameters are valid:
+
+my_custom_sql () {
+SQLS_DBUSER=customuser
+SQLS_DBPASSWORD=secretpwd
+SQLS_DBSYSCONNECT="None"
+SQLS_TNSALIAS=testdb123
+
+These are the new parameters.
+An  important note against SQLS_DBSYSCONNECT:
+If sysdba or sysoper has been set in DBUSER inside mk_oracle.cfg, the
+SQLS_DBSYSCONNECT="None" is needed to overwrite the default from DBUSER.
+This is often needed in environments with connections to mounted
+databases.
+SQLS_DBSYSCONNECT could be ignored, when sysdba or sysoper is not set in
+DBUSER.

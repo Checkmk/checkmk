@@ -1,0 +1,26 @@
+# Example configuration for Windows agent
+
+# Almost every section can have flag enabled
+# You may use anchors to parametrize your config
+# Windows file names better to close in ''
+# Use online yaml validator to check your config http://yaml-online-parser.appspot.com/?url=http%3A%2F%2F
+# all root section may have key enabled. Default is yes. If set to no, then this section is ignored
+
+#first section to load
+load:
+    - global.yml 
+    - winperf.yml
+    - logfiles.yml
+    - logwatch.yml
+    - other.yml
+
+#second section to load
+custom:
+    - ps_custom.yml 
+    
+#now override 
+global:
+    port: 6556
+    # Disable ipv6 support. By default, ipv4 is always supported
+    # and ipv6 is enabled additionally if supported by the system.
+    ipv6: no

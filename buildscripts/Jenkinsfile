@@ -1,0 +1,66 @@
+pipeline {
+    agent { node { label 'windows' }}
+    stages {
+        stage ('Windows Agent Build') {
+            steps {
+                bat '@echo "------- building --------"'
+                bat 'cd agents\\wnx && call build_release.cmd'
+            }
+            post {
+                success {
+                  bat '@echo Build successful'
+                }
+                failure {
+                  bat '@echo Build failed'
+                }
+                changed {
+                  bat '@echo Pipeline has changed'
+                }
+             }
+        }
+
+        stage ('Windows Agent Unit Tests') {
+            steps {
+                bat '@echo "------- testing --------"'
+                bat 'cd agents\\wnx && call call_unit_tests.cmd'
+            }
+            post {
+                success {
+                  bat '@echo Tests: success'
+                }
+                failure {
+                  bat '@echo Tests: fail'
+                }
+                changed {
+                  bat '@echo Pipeline has changed'
+                }
+             }
+        }
+
+        stage ('Windows Agent Deployment Tests') {
+            steps {
+                bat '@echo "------- deploying --------"'
+                bat 'cd agents\\wnx && call call_deploy.cmd'
+            }
+            post {
+                success {
+                  bat '@echo Deploy: success'
+                }
+                failure {
+                  bat '@echo Deploy: fail'
+                }
+                changed {
+                  bat '@echo Pipeline has changed'
+                }
+            }
+        }
+
+    }
+
+    post {
+        success {
+            bat '@echo "Saving artefacts"'
+            archiveArtifacts artifacts: 'artefacts/check_mk_service.msi'
+        } 
+    }
+}

@@ -1,0 +1,322 @@
+# Example configuration for Windows agent
+
+# Almost every section can have flag enabled
+# You may use anchors to parametrize your config
+# Windows file names better to close in ''
+# Use online yaml validator to check your config http://yaml-online-parser.appspot.com/?url=http%3A%2F%2F
+# all root section may have key enabled. Default is yes. If set to no, then this section is ignored
+
+global:
+    # use name to have mor clear logs
+    name: Descriptive name of the configuration file
+    # if file defined then used other file
+    #file: 'c:\systemconfigs\my perfect  config in yaml.yml'
+    enabled: no
+    # Restrict access to certain IP addresses
+    # If ipv6 is enabled, all listed ipv4 adresses are also accepted as
+    # source adresses in their ipv6-mapped form. I.e. if
+    # 192.168.56.0/24 is listed, connections from ::ffff:c0a8:3800/120
+    # are also possible
+    only_from: 
+        - 127.0.0.1 
+        - 192.168.56.0/24 
+        - ::1
+
+    # Change port where the agent is listening ( default 6556 )
+    port: 6556
+
+    # Disable ipv6 support. By default, ipv4 is always supported
+    # and ipv6 is enabled additionally if supported by the system.
+    ipv6: no
+
+    # Do only execute programs and scripts with
+    # the following suffixes (in local and plugins).
+    # Per default all extensions except txt and dir
+    # are being executed.
+    execute: 
+        - exe 
+        - bat 
+        - vbs
+        - cmd
+        - ps1
+
+    # Run async scripts in parallel (to each other). Default is "sequential",
+    # which means the scripts are run asynchronously to the agent itself but
+    # one after the other. Setting this to parallel may improve the delay before
+    # new data is reported but may also lead to the agent having more noticable
+    # impact on the system performance
+    async: yes
+
+    # Restrict the following configuration variables
+    # in [global] to the following hosts
+    # ?????????
+    host: 
+        - winsrv* 
+        - zab???ad
+
+    # Just output certain sections (e.g. for upper hosts)
+    sections:
+        - check_mk 
+        - winperf
+        #- ps
+        # forced to not use
+    sections_disabled:
+        - logfiles
+        # output sections in realtime updates. Please note that not all
+        # sections can be used in realtime updates, the following is the
+        # complete list
+    realtime:
+        # specifies how long (in seconds) realtime updates are sent to
+        # the last monitoring system that requested an update.
+        # this should be longer than the request frequency (usually
+        # one minute).
+        # Please note that any new request cancels previous realtime
+        # update schedules, so no more than one update is sent per second,
+        # no matter if this timeout is "too high" or how many monitoring
+        # systems are querying the agent.
+        timeout: 90
+        # enable/disable encryption of regular agent output (default: disabled) 
+        # yes or no
+        encrypted: default
+        # passphrase for encrypted communication.
+        passphrase: this is my password
+        # which sections are realtime
+        run:
+            - mem 
+            - df 
+            - winperf_processor
+
+    # Write a logfile for tackling down crashes of the agent
+    debug:
+        crash: yes
+        # you may specify name of log file
+        file: 
+    trace:
+        # you may trace agent in realtime using DbgView or WinDbg
+        debugger: no
+        file: 'c:\windows\logs\win_agent.log'
+        
+    # by default the agent flushes the socket for each agent section.
+    # this is mostly for debugging purposes in case the agent is slow
+    # to respond.
+    # Disabling this may (very) slightly reduce network traffic.
+    section_flush: no
+
+winperf:
+    enabled: no
+    # Select counters to extract. The following counters
+    # are needed by checks shipped with check_mk.
+    # id is OS is
+    # name is check mk name
+    counters:
+        - id: 10332 
+          name: msx_queues
+        - id: 638
+          name: tcp_conn
+        - id: Terminal Services
+          name: ts_sessions
+
+logfiles:
+    enabled: no
+    # # Define textfiles to be monitored, separated by |
+    logs:
+        - name: My usual log for daily use with my friends # this is name of the check
+          observe:
+              - 'C:\tmp': # this is folder
+                  # below list of file to view on location
+                  - 'logfiles\message_*.log' 
+                  - 'logfile\my*.log'
+              - 'D:\log': #this is folder
+                  - 'sample1.txt'
+                  - 'sample2.txt'
+              - 'c:\Windows\Logs\setupapi.log'
+          patterns:
+              - ok:     'Successfully logged in*'
+              - crit:   'Error in*'
+              - warn:   'Unable to contact*'
+              - ignore: 'Backup * saved'
+        - name: My special logs
+          observe: 
+                - 'C:\tmp\memo.udf'
+          patterns:
+                - ok:     '*mail sent*'
+                - warn:   '*overdue*'
+        - name: My interesting logs
+          description: > 
+                this is my description which I can add to almost any iten 
+                item ib the config file and see it in the log
+          observe: 
+              - 'C:\tmp\memo.crit':
+                    # below is default
+                    rotated: no     
+                    context: yes      
+                    from_start: no
+          patterns:
+              - ok:     '*mail sent*'
+              - warn:   '*overdue*'
+                
+
+    # # handling of the log can be customized through tags prepended to the name
+    # #
+    # # don't send context lines around relevant lines
+    # textfile = nocontext d:\log\sample.txt
+    # # read new files from the first line. Otherwise the agent will start at the
+    # # last line at the time the agent first sees the file 
+    # textfile = from_start d:\log\sample*.txt
+    # # treat the file as a rotated log (one where in certain intervals a new file is
+    # # created and the previous file is at some point moved away).
+    # # In this case all files matching this pattern are treated as one service
+    # # and the agent will try to read each file to the end and then continue to the
+    # # next newer one.
+    # textfile = rotated d:\log\sample_*.txt
+    # # Of course these tags can be combined
+    # textfile = nocontext rotated d:\log\sample_*.txt
+
+logwatch:
+    enabled: no
+    # activate modern eventlog api introduced in vista
+    # pro: supports new logs introduced with vista
+    # contra: only on vista (server 2008) and newer, less well tested, maybe slower
+    # Note: setting this does not change the default set of monitored logs that
+    # are found in Windows registry.
+    vista_api: yes
+
+    # Testing: output *all* messages from the eventlogs
+    sendall: yes
+
+    logs:
+        # From application log send only critical messages
+        application: 
+            level:crit
+
+        # From system log send only warning/critical messages,
+        # but suppress any context messages
+        system: 
+            level: warn
+            context: no
+        # Switch all other logfiles off. Default is warn:
+        # send messages of type warn or crit
+        other: 
+            level: off
+
+        # below is detailed by app
+        logfiles:
+            # Activate a specific log. Requires vista_api = yes. This can be used to
+            # activate the monitoring of a log not found in Windows registry. Note:
+            # wildcards only work with standard logs that are found in Windows registry.
+            # To find the correct name for a log, right-click on the log in
+            # event-viewer -> Properties and use the name from "Full Name"
+            - Microsoft-Windows-GroupPolicy/Operational: 
+                level: warn
+                context: yes
+
+mrpe:
+    # Run classical monitoring plugins. The word before the command
+    # line is the service description for the monitoring. Use backslashes
+    # in Windows-paths.
+    # Note: The windows agent will prefix all commands without an absolute
+    #       path with the agents executable dir. So if you want to use
+    #       system wide commands like cscript or ping, you need to specify
+    #       them with an absolute path
+    # check = Dummy mrpe\check_crit
+    # check = IP_Configuration mrpe\check_ipconfig 1.2.3.4
+    # check = Whatever c:\myplugins\check_whatever -w 10 -c 20
+    #
+    # The option include allows you to define additional include files and the
+    # user domain in which include files should be executed.
+    #
+    # include \\exampleuser = C:\includes\exampleuser_mrpe.cfg
+    #
+    # If you omit the user the file is executed with the current user
+    #
+    # include = C:\includes\default.cfg
+    #
+    # The syntax in the mrpe include file is the same as in the mrpe section,
+    # with the exception that you cannot add further includes in a include file.
+    # There is also no need to define a [mrpe] section in an included file. You
+    # just need to define the <tt>check</tt> lines here.
+    #
+    # exampleuser_mrpe.cfg
+    #     check = Dummy mrpe\check_crit
+    #     check = IP_Configuration mrpe\check_ipconfig 1.2.3.4
+    #
+    #     # Paths or plugin parameters containing spaces must be quoted:
+    #     check = Dummy "C:\Program Files (x86)\check_mk\mrpe\check_crit.bat"
+    #     some param "with space"
+    #
+    # Important: Keep in mind that the agent needs the permission to run
+    # scripts as other user. Internally it uses the windows command runas /User:
+    # which prompts for a password if agent has no permission to change to this user.
+    # In this case the check_mk agent will get stuck!
+
+fileinfo:
+    path: 'C:\Programs\Foo\*.log'
+    # path = M:\Bar Test\*.*
+    # Recursive wildcards can also be used:
+    # path = C:\MyDocuments\Foo\**
+
+local:
+    # local folder!
+    enabled: no
+    # default value, you may dsiable all scripts in local with no
+    run: yes
+    # scripts in local
+    # define timeouts for local scripts matching
+    # specific patterns - first match wins
+    execution:
+        - pattern     : '*.vbs'
+          timeout     : 20
+          description : For VBS 20 sec wait
+        - pattern     : '*.bat'
+          timeout     : 10
+          description : For VBS 10 sec wait
+        - pattern     : '*'
+          timeout     : 30
+          description : For all other file only 30 sec wait
+
+plugins:
+    # scripts in plugin
+    enabled: no
+    # default value, you may dsiable all scripts in local with no
+    run: yes
+    # folder: default or 'c:\myfolder\'  or whatever your want
+    folder: 
+        - default   # special keyword to use default location 
+        - c:\mydlx  # 
+        - c:\zx     # 
+    # example: the windows_updates.vbs
+    # plugin is executed asynchronous
+    # and is only updated every 3600 seconds
+    # it may fail (timeout / error) up to 3 times before the last known data is discarded
+    execution:
+        # execution pattern for  windows-updates.vbs:   
+        - pattern     : windows_updates.vbs
+          async       : yes
+          timeout     : 120
+          cache_age   : 3600
+          retry_count : 3
+          description : Update!!!!
+
+        
+        - pattern     : ps_perf.ps1
+          timeout     : 20
+        
+        - pattern     : '*.ps1'
+          timeout     : 10
+        
+        - pattern     : '*'
+          timeout     : 30
+    # When using the Check_MK Inventory plugin, it is a good idea to make the
+    # plugin being executed asynchronous to prevent it from hooking up the
+    # whole agent processing. Additionally it should have a execution timeout.
+        - pattern     : mk_inventory.ps1
+          async       : yes
+          timeout     : 240
+
+ps:
+    # This is required for the additional ps feature below.
+    wmi: yes
+    # Include the whole path of a process and its arguments in the process list.
+    full_path: no
+    arguments: no
+    other: no

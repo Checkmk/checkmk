@@ -1,0 +1,141 @@
+[fileinfo]
+path = C:\Programs\Foo\*.log
+path = M:\Bar Test\*.*
+path = C:\MyDocuments\Foo\**
+[global]
+async_script_execution = 0
+caching_method = 0
+crash_debug = 0
+disabled_sections =
+encrypted = 0
+encrypted_rt = 1
+execute = exe bat vbs
+ipv6 = 0
+only_from = 127.0.0.1/32 192.168.56.0/24 0:0:0:0:0:0:0:1/128
+passphrase = 
+port = 6556
+realtime_port = 6559
+realtime_sections =
+realtime_timeout = 90
+section_flush = 1
+sections =
+[local]
+timeout *.vbs = 20
+timeout *.bat = 10
+timeout * = 30
+[logfiles]
+crit = 
+[tokens]
+<pattern: C:\tmp logfiles\message_*.log, nocontext: false, from_start: false, rotated: false, found_match: false>
+<pattern: D:\log\sample.txt, nocontext: false, from_start: false, rotated: false, found_match: false>
+[patterns]
+<state: O, glob_pattern: Successfully logged in*>
+<state: C, glob_pattern: Error in*>
+<state: W, glob_pattern: Unable to contact*>
+<state: I, glob_pattern: Backup * saved>
+
+crit = 
+[tokens]
+<pattern: C:\tmp\memo.udf, nocontext: false, from_start: false, rotated: false, found_match: false>
+[patterns]
+<state: W, glob_pattern: *overdue*>
+<state: O, glob_pattern: *mail sent*>
+
+crit = 
+[tokens]
+<pattern: d:\log\sample.txt, nocontext: true, from_start: false, rotated: false, found_match: false>
+[patterns]
+
+crit = 
+[tokens]
+<pattern: d:\log\sample*.txt, nocontext: false, from_start: true, rotated: false, found_match: false>
+[patterns]
+
+crit = 
+[tokens]
+<pattern: d:\log\sample_*.txt, nocontext: false, from_start: false, rotated: true, found_match: false>
+[patterns]
+
+crit = 
+[tokens]
+<pattern: d:\log\sample_*.txt, nocontext: true, from_start: false, rotated: true, found_match: false>
+[patterns]
+
+ignore = 
+[tokens]
+<pattern: C:\tmp logfiles\message_*.log, nocontext: false, from_start: false, rotated: false, found_match: false>
+<pattern: D:\log\sample.txt, nocontext: false, from_start: false, rotated: false, found_match: false>
+[patterns]
+<state: O, glob_pattern: Successfully logged in*>
+<state: C, glob_pattern: Error in*>
+<state: W, glob_pattern: Unable to contact*>
+<state: I, glob_pattern: Backup * saved>
+
+ignore = 
+[tokens]
+<pattern: C:\tmp\memo.udf, nocontext: false, from_start: false, rotated: false, found_match: false>
+[patterns]
+<state: W, glob_pattern: *overdue*>
+<state: O, glob_pattern: *mail sent*>
+
+ignore = 
+[tokens]
+<pattern: d:\log\sample.txt, nocontext: true, from_start: false, rotated: false, found_match: false>
+[patterns]
+
+ignore = 
+[tokens]
+<pattern: d:\log\sample*.txt, nocontext: false, from_start: true, rotated: false, found_match: false>
+[patterns]
+
+ignore = 
+[tokens]
+<pattern: d:\log\sample_*.txt, nocontext: false, from_start: false, rotated: true, found_match: false>
+[patterns]
+
+ignore = 
+[tokens]
+<pattern: d:\log\sample_*.txt, nocontext: true, from_start: false, rotated: true, found_match: false>
+[patterns]
+
+ok = 
+[tokens]
+<pattern: C:\tmp logfiles\message_*.log, nocontext: false, from_start: false, rotated: false, found_match: false>
+<pattern: D:\log\sample.txt, nocontext: false, from_start: false, rotated: false, found_match: false>
+[patterns]
+<state: O, glob_pattern: Successfully logged in*>
+<state: C, glob_pattern: Error in*>
+<state: W, glob_pattern: Unable to contact*>
+<state: I, glob_pattern: Backup * saved>
+
+ok = 
+[tokens]
+<pattern: C:\tmp\memo.udf, nocontext: false, from_start: false, rotated: false, found_match: false>
+[patterns]
+<state: W, glob_pattern: *overdue*>
+<state: O, glob_pattern: *mail sent*>
+
+ok = 
+[tokens]
+<pattern: d:\log\sample.txt, nocontext: true, from_start: false, rotated: false, found_match: false>
+[patterns]
+
+ok = 
+[tokens]
+<pattern: d:\log\sample*.txt, nocontext: false, from_start: true, rotated: false, found_match: false>
+[patterns]
+
+ok = 
+[tokens]
+<pattern: d:\log\sample_*.txt, nocontext: false, from_start: false, rotated: true, found_match: false>
+[patterns]
+
+ok = 
+[tokens]
+<pattern: d:\log\sample_*.txt, nocontext: true, from_start: false, rotated: true, found_match: false>
+[patterns]
+
+textfile = 
+[tokens]
+<pattern: C:\tmp logfiles\message_*.log, nocontext: false, from_start: false, rotated: false, found_match: false>
+<pattern: D:\log\sample.txt, noco

@@ -1,0 +1,14 @@
+Title: Solaris Agent: fixed wrong ps command in CPU section
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p39
+Date: 1551336188
+
+On Solaris the option "--no-headers" is missing and caused a crash in the check
+cpu.threads.
+
+

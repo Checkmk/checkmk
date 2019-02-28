@@ -502,10 +502,7 @@ def _get_snmpwalk(host_config, check_plugin_name, oid, fetchoid, column, use_snm
         rowinfo = _get_cached_snmpwalk(host_config.hostname, fetchoid)
 
     if rowinfo is None:
-        if _enforce_stored_walks or config.is_usewalk_host(host_config.hostname):
-            rowinfo = StoredWalkSNMPBackend().walk(host_config, fetchoid)
-        else:
-            rowinfo = _perform_snmpwalk(host_config, check_plugin_name, oid, fetchoid)
+        rowinfo = _perform_snmpwalk(host_config, check_plugin_name, oid, fetchoid)
 
         if is_cachable:
             _save_snmpwalk_cache(host_config.hostname, fetchoid, rowinfo)
@@ -522,7 +519,10 @@ def _perform_snmpwalk(host_config, check_plugin_name, base_oid, fetchoid):
         snmp_contexts = [None]
 
     for context_name in snmp_contexts:
-        if config.is_inline_snmp_host(host_config.hostname):
+        if _enforce_stored_walks or config.is_usewalk_host(host_config.hostname):
+            rows = StoredWalkSNMPBackend().walk(host_config, fetchoid)
+
+        elif config.is_inline_snmp_host(host_config.hostname):
             rows = inline_snmp.walk(
                 host_config, check_plugin_name, fetchoid, base_oid, context_name=context_name)
         else:

@@ -1,6 +1,6 @@
 title: RMS200 Unit: Temperatures
 agents: snmp
-catalog: hw/environment/infratec-plus
+catalog: hw/environment/infratec_plus
 license: GPL
 distribution: check_mk
 description:

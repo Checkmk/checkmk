@@ -1,6 +1,6 @@
 title: Papouch TH2E Devices: Temperature Sensors
 agents: snmp
-catalog: hw/environmental/papouch
+catalog: hw/environment/papouch
 license: GPL
 distribution: check_mk
 description:

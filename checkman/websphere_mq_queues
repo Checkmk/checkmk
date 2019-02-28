@@ -1,6 +1,6 @@
 title: IBM Websphere MQ Queue Status and Message count
 agents: aix, linux
-catalog: app/WebsphereMQ
+catalog: app/websphere_mq
 license: GPL
 distribution: check_mk
 description:

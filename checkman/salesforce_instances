@@ -1,6 +1,6 @@
 title: Salesforce: Instances
 agents: salesforce
-catalog: hw/networking/salesforce
+catalog: hw/network/salesforce
 license: GPL
 distribution: check_mk
 description:

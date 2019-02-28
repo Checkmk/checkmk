@@ -55,65 +55,61 @@ except ImportError as import_error:
 VERBOSE = '--verbose' in sys.argv
 DEBUG = '--debug' in sys.argv
 
-QUERY_SPECS_GENERIC = {
-    'metrics': [
-        ("java.lang:type=Memory", "NonHeapMemoryUsage/used", "NonHeapMemoryUsage", [], False),
-        ("java.lang:type=Memory", "NonHeapMemoryUsage/max", "NonHeapMemoryMax", [], False),
-        ("java.lang:type=Memory", "HeapMemoryUsage/used", "HeapMemoryUsage", [], False),
-        ("java.lang:type=Memory", "HeapMemoryUsage/max", "HeapMemoryMax", [], False),
-        ("java.lang:type=Threading", "ThreadCount", "ThreadCount", [], False),
-        ("java.lang:type=Threading", "DaemonThreadCount", "DeamonThreadCount", [], False),
-        ("java.lang:type=Threading", "PeakThreadCount", "PeakThreadCount", [], False),
-        ("java.lang:type=Threading", "TotalStartedThreadCount", "TotalStartedThreadCount", [],
-         False),
-        ("java.lang:type=Runtime", "Uptime", "Uptime", [], False),
-        ("java.lang:type=GarbageCollector,name=*", "CollectionCount", "", [], False),
-        ("java.lang:type=GarbageCollector,name=*", "CollectionTime", "", [], False),
-        ("java.lang:name=CMS%20Perm%20Gen,type=MemoryPool", "Usage/used", "PermGenUsage", [],
-         False),
-        ("java.lang:name=CMS%20Perm%20Gen,type=MemoryPool", "Usage/max", "PermGenMax", [], False),
-        ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
-         "OffHeapHits", "", [], True),
-        ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
-         "OnDiskHits", "", [], True),
-        ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
-         "InMemoryHitPercentage", "", [], True),
-        ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
-         "CacheMisses", "", [], True),
-        ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
-         "OnDiskHitPercentage", "", [], True),
-        ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
-         "MemoryStoreObjectCount", "", [], True),
-        ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
-         "DiskStoreObjectCount", "", [], True),
-        ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
-         "CacheMissPercentage", "", [], True),
-        ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
-         "CacheHitPercentage", "", [], True),
-        ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
-         "OffHeapHitPercentage", "", [], True),
-        ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
-         "InMemoryMisses", "", [], True),
-        ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
-         "OffHeapStoreObjectCount", "", [], True),
-        ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
-         "WriterQueueLength", "", [], True),
-        ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
-         "WriterMaxQueueSize", "", [], True),
-        ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
-         "OffHeapMisses", "", [], True),
-        ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
-         "InMemoryHits", "", [], True),
-        ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
-         "AssociatedCacheName", "", [], True),
-        ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
-         "ObjectCount", "", [], True),
-        ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
-         "OnDiskMisses", "", [], True),
-        ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "CacheHits",
-         "", [], True),
-    ],
-}
+QUERY_SPECS_GENERIC = [
+    ("java.lang:type=Memory", "NonHeapMemoryUsage/used", "NonHeapMemoryUsage", [], False),
+    ("java.lang:type=Memory", "NonHeapMemoryUsage/max", "NonHeapMemoryMax", [], False),
+    ("java.lang:type=Memory", "HeapMemoryUsage/used", "HeapMemoryUsage", [], False),
+    ("java.lang:type=Memory", "HeapMemoryUsage/max", "HeapMemoryMax", [], False),
+    ("java.lang:type=Threading", "ThreadCount", "ThreadCount", [], False),
+    ("java.lang:type=Threading", "DaemonThreadCount", "DeamonThreadCount", [], False),
+    ("java.lang:type=Threading", "PeakThreadCount", "PeakThreadCount", [], False),
+    ("java.lang:type=Threading", "TotalStartedThreadCount", "TotalStartedThreadCount", [], False),
+    ("java.lang:type=Runtime", "Uptime", "Uptime", [], False),
+    ("java.lang:type=GarbageCollector,name=*", "CollectionCount", "", [], False),
+    ("java.lang:type=GarbageCollector,name=*", "CollectionTime", "", [], False),
+    ("java.lang:name=CMS%20Perm%20Gen,type=MemoryPool", "Usage/used", "PermGenUsage", [], False),
+    ("java.lang:name=CMS%20Perm%20Gen,type=MemoryPool", "Usage/max", "PermGenMax", [], False),
+    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "OffHeapHits",
+     "", [], True),
+    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "OnDiskHits",
+     "", [], True),
+    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
+     "InMemoryHitPercentage", "", [], True),
+    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "CacheMisses",
+     "", [], True),
+    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
+     "OnDiskHitPercentage", "", [], True),
+    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
+     "MemoryStoreObjectCount", "", [], True),
+    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
+     "DiskStoreObjectCount", "", [], True),
+    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
+     "CacheMissPercentage", "", [], True),
+    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
+     "CacheHitPercentage", "", [], True),
+    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
+     "OffHeapHitPercentage", "", [], True),
+    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
+     "InMemoryMisses", "", [], True),
+    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
+     "OffHeapStoreObjectCount", "", [], True),
+    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
+     "WriterQueueLength", "", [], True),
+    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
+     "WriterMaxQueueSize", "", [], True),
+    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "OffHeapMisses",
+     "", [], True),
+    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "InMemoryHits",
+     "", [], True),
+    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics",
+     "AssociatedCacheName", "", [], True),
+    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "ObjectCount",
+     "", [], True),
+    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "OnDiskMisses",
+     "", [], True),
+    ("net.sf.ehcache:CacheManager=CacheManagerApplication*,*,type=CacheStatistics", "CacheHits", "",
+     [], True),
+]
 
 QUERY_SPECS_SPECIFIC = {
     "weblogic": [
@@ -348,13 +344,17 @@ def validate_response(raw):
 
     response = raw.json()
     # check the status of the jolokia response
-    if response.status != 200:
-        sys.stderr.write("ERROR: JAVA: %s" % response.error)
-        raise SkipMBean("JAVA", response.error)
+    if response.get("status") != 200:
+        errmsg = response.get("error", "unkown error")
+        sys.stderr.write("ERROR: JAVA: %s" % errmsg)
+        raise SkipMBean("JAVA", errmsg)
 
     if "value" not in response:
         sys.stderr.write("ERROR: missing 'value': %r\n" % response)
         raise SkipMBean("ERROR", "missing 'value'")
+
+    if VERBOSE:
+        sys.stderr.write("\nDEBUG: RESPONSE: %r\n" % response)
 
     return response
 
@@ -476,8 +476,7 @@ def query_instance(inst):
     # now (after jolokia_info) we're sure about the product
     specs_specific = QUERY_SPECS_SPECIFIC.get(inst.product, [])
     write_section('jolokia_metrics', generate_values(inst, specs_specific))
-    for section_name, specs_shipped in QUERY_SPECS_GENERIC.iteritems():
-        write_section('jolokia_%s' % section_name, generate_values(inst, specs_shipped))
+    write_section('jolokia_metrics', generate_values(inst, QUERY_SPECS_GENERIC))
 
     write_section('jolokia_generic', generate_values(inst, inst.custom_vars))
 

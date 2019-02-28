@@ -102,19 +102,12 @@ def test_jolokia_yield_configured_instances():
 
 
 class _MockHttpResponse(object):
-    def __init__(self, status, jolo=None):
-        self.status_code = status
-        self._jolo = jolo
+    def __init__(self, http_status, **kwargs):
+        self.status_code = http_status
+        self._payload = kwargs
 
     def json(self):
-        return self._jolo
-
-
-class _MockJolokiaResponse(dict):
-    def __init__(self, status):
-        super(_MockJolokiaResponse, self).__init__()
-        self.status = status
-        self.error = "you are thinking too much"
+        return self._payload
 
 
 def test_jolokia_validate_response_skip_mbean():
@@ -124,13 +117,11 @@ def test_jolokia_validate_response_skip_mbean():
 
     # MBean not found
     with pytest.raises(mk_jolokia.SkipMBean):
-        joresp = _MockJolokiaResponse(404)
-        mk_jolokia.validate_response(_MockHttpResponse(200, joresp))
+        mk_jolokia.validate_response(_MockHttpResponse(200, status=404))
 
     # value not found in MBean
     with pytest.raises(mk_jolokia.SkipMBean):
-        joresp = _MockJolokiaResponse(200)
-        mk_jolokia.validate_response(_MockHttpResponse(200, joresp))
+        mk_jolokia.validate_response(_MockHttpResponse(200, status=200))
 
 
 def test_jolokia_validate_response_skip_instance():
@@ -141,10 +132,9 @@ def test_jolokia_validate_response_skip_instance():
 
 @pytest.mark.parametrize("data", [
     {
-        "value": 23
+        "status": 200,
+        "value": 23,
     },
 ])
 def test_jolokia_validate_response_ok(data):
-    joresp = _MockJolokiaResponse(200)
-    joresp.update(data)
-    assert joresp == mk_jolokia.validate_response(_MockHttpResponse(200, joresp))
+    assert data == mk_jolokia.validate_response(_MockHttpResponse(200, **data))

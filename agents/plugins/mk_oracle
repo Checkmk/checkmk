@@ -1736,9 +1736,9 @@ do_custom_sqls () {
         unset_custom_sqls_vars
 
         MK_CUSTOM_SQLS_SECTION="$section"
-        MK_CUSTOM_SQLS_SECTION_QUERY=$(custom_sql_section "$sql_dir" "$sql" "$parameters")
         export MK_CUSTOM_SQLS_SECTION_HEADER="$section_header"
         export MK_CUSTOM_SQLS_ITEM="$item"
+        MK_CUSTOM_SQLS_SECTION_QUERY=$(custom_sql_section "$sql_dir" "$sql" "$parameters")
         export MK_CUSTOM_SQLS_SECTION_QUERY
 
         logging "[${MK_SID}] [${section}] [custom_sql]"\

@@ -26,14 +26,14 @@
 
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
-    Integer,
+    Dictionary,
     TextAscii,
-    Tuple,
 )
 
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
+    Levels,
     RulespecGroupCheckParametersApplications,
 )
 
@@ -41,39 +41,33 @@ from cmk.gui.plugins.wato import (
 @rulespec_registry.register
 class RulespecCheckgroupParametersJvmThreads(CheckParameterRulespecWithItem):
     @property
-    def is_deprecated(self):
-        return True
-
-    @property
     def group(self):
         return RulespecGroupCheckParametersApplications
 
     @property
     def check_group_name(self):
-        return "jvm_threads"
+        return "jvm_threading"
 
     @property
     def title(self):
-        return _("JVM threads")
+        return _("JVM threading")
 
     @property
     def parameter_valuespec(self):
-        return Tuple(
-            help=_("This rule sets the warn and crit levels for the number of threads "
-                   "running in a JVM."),
+        return Dictionary(
             elements=[
-                Integer(
-                    title=_("Warning at"),
-                    unit=_("threads"),
-                    default_value=80,
-                ),
-                Integer(
-                    title=_("Critical at"),
-                    unit=_("threads"),
-                    default_value=100,
-                ),
-            ],
-        )
+                ("threadcount_levels",
+                 Levels(
+                     title=_("Maximal number of threads"),
+                     default_value=None,
+                 )),
+                ("threadrate_levels",
+                 Levels(
+                     title=_("Maximal rate of thread count"),
+                     default_value=None,
+                 )),
+                ("daemonthreadcount_levels", Levels(title=_("Maximal number of daemon threads"))),
+            ],)
 
     @property
     def item_spec(self):

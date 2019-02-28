@@ -1,0 +1,20 @@
+title: Tomcat number of threads in thread pool
+agents: linux
+license: GPL
+catalog: app/java
+distribution: check_mk
+description:
+ This check monitors the number of threads in a tomcat thread pool.
+ It can alert if the configured percentage of max threads is
+ exceeded or the configured percentage of max threads is busy.
+ By default only levels for currentThreadsbusy are configured.
+
+ To use this plugin, Jolokia and the agent plugin need to be installed
+ on the monitored server.
+
+item:
+ The name of the application server instance as configured by the agent.
+
+inventory:
+ One check is created per thread pool sent by the Jolokia agent.
+

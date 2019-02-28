@@ -70,10 +70,8 @@ def inventory_hwg_temp(parsed):
             yield index, {}
 
 
-def check_hwg_temp(item, params, parsed):
-    if item not in parsed:
-        return
-
+@get_parsed_item_data
+def check_hwg_temp(item, params, attrs):
     map_readable_states = {
         "invalid": 3,
         "normal": 0,
@@ -83,8 +81,7 @@ def check_hwg_temp(item, params, parsed):
         "alarm high": 2,
     }
 
-    attrs = parsed[item]
-    state = map_readable_states.get(attrs["dev_status"], 3)
+    state = map_readable_states.get(attrs["dev_status_name"], 3)
     state_readable = attrs["dev_status_name"]
     temp = attrs["temperature"]
     if temp is None:

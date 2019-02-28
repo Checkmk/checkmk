@@ -108,7 +108,8 @@ def inventory_job(parsed):
                 yield jobname, {}
 
 
-def check_job(item, params, parsed):
+@get_parsed_item_data
+def check_job(item, params, nodes):
     def process_start_time(value, state, warn, crit):
         display_value = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(value))
         job_age = time.time() - value
@@ -120,12 +121,7 @@ def check_job(item, params, parsed):
             display_value += "(!!) (more than %s ago)" % get_age_human_readable(warn)
         return state, display_value
 
-    if item not in parsed:
-        yield 3, 'Got no information for this job'
-        return
-
     states = []
-    nodes = parsed[item]
     warn, crit = params.get('age')
     results = []
     for node_info, job in nodes.iteritems():

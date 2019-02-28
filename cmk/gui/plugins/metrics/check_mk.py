@@ -2956,6 +2956,12 @@ metric_info["pages_bw_a3"] = {
     "color": "52/a",
 }
 
+metric_info["pages"] = {
+    "title": _("Remaining supply"),
+    "unit": "%",
+    "color": "34/a",
+}
+
 metric_info["supply_toner_cyan"] = {
     "title": _("Supply toner cyan"),
     "unit": "%",
@@ -8565,6 +8571,11 @@ graph_info["ntp_time_offset"] = {
 
 graph_info["total_cache_usage"] = {
     "metrics": [("total_cache_usage", "area")],
+    "range": (0, 100),
+}
+
+graph_info["write_cache_usage"] = {
+    "metrics": [("write_cache_usage", "area")],
     "range": (0, 100),
 }
 

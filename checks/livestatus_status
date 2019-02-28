@@ -148,13 +148,14 @@ def check_livestatus_status(item, params, sections):
         days_left = (int(cert_valid_until) - time.time()) / 86400.0
         valid_until_formatted = time.strftime("%Y-%m-%d %H:%M:%S",
                                               time.localtime(int(cert_valid_until)))
-        yield check_levels(
+        ssl_state, ssl_infotext, _ssl_perfdata = check_levels(
             value=days_left,
             dsname="site_cert_days",
             infoname="Site certificate validity (until %s)" % valid_until_formatted,
             unit="days",
             params=(None, None, params["site_cert_days"][0], params["site_cert_days"][1]),
         )
+        yield ssl_state, ssl_infotext
 
     settings = [
         ("execute_host_checks", "Active host checks are disabled"),

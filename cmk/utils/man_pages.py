@@ -175,6 +175,7 @@ catalog_titles = {
         "qmail"         : "qmail",
         "ruckus"        : "Ruckus Spot",
         "sap"           : "SAP R/3",
+        "sap_hana"      : "SAP HANA",
         "tsm"           : "IBM Tivoli Storage Manager (TSM)",
         "unitrends"     : "Unitrends",
         "sansymphony"   : "Datacore SANsymphony",

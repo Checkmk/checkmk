@@ -38,15 +38,14 @@ def monkeymodule(request):
 def snmpsim(site, request, tmp_path_factory):
     tmp_path = tmp_path_factory.getbasetemp()
 
-    cmd = "%s/.venv/bin/snmpsimd.py" % cmk_path()
+    snmpsimd_path = "%s/.venv/bin/snmpsimd.py" % cmk_path()
     source_data_dir = Path(request.fspath.dirname) / "snmp_data"
 
     log.set_verbosity(2)
     debug.enable()
-
-    p = subprocess.Popen(
-        [
-            cmd,
+    cmd = [
+            "%s/.venv/bin/python" % cmk_path()
+            snmpsimd_path,
             #"--log-level=error",
             "--cache-dir",
             str(tmp_path / "snmpsim"),
@@ -59,7 +58,9 @@ def snmpsim(site, request, tmp_path_factory):
             "--v3-user=authOnlyUser",
             "--v3-auth-key=authOnlyUser",
             "--v3-auth-proto=MD5",
-        ],
+        ]
+
+    p = subprocess.Popen(cmd,
         close_fds=True,
         # Silence the very noisy output. May be useful to enable this for debugging tests
         #stdout=open(os.devnull, "w"),
@@ -82,13 +83,21 @@ def snmpsim(site, request, tmp_path_factory):
 
     # Ensure that snmpsim is ready for clients before starting with the tests
     def is_listening():
+        if p.poll() is not None:
+            raise Exception("snmpsimd died. Exit code: %d" % p.poll())
+
         num_sockets = 0
-        for e in os.listdir("/proc/%d/fd" % p.pid):
-            try:
-                if os.readlink("/proc/%d/fd/%s" % (p.pid, e)).startswith("socket:"):
-                    num_sockets += 1
-            except OSError:
-                pass
+        try:
+            for e in os.listdir("/proc/%d/fd" % p.pid):
+                try:
+                    if os.readlink("/proc/%d/fd/%s" % (p.pid, e)).startswith("socket:"):
+                        num_sockets += 1
+                except OSError:
+                    pass
+        except OSError:
+            if p.poll() is None:
+                raise
+            raise Exception("snmpsimd died. Exit code: %d" % p.poll())
 
         if num_sockets < 2:
             return False

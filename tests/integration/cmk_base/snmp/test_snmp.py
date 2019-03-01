@@ -1,3 +1,4 @@
+# pylint: disable=redefined-outer-name
 import subprocess
 import logging
 import os
@@ -44,23 +45,24 @@ def snmpsim(site, request, tmp_path_factory):
     log.set_verbosity(2)
     debug.enable()
     cmd = [
-            "%s/.venv/bin/python" % cmk_path()
-            snmpsimd_path,
-            #"--log-level=error",
-            "--cache-dir",
-            str(tmp_path / "snmpsim"),
-            "--data-dir",
-            str(source_data_dir),
-            # TODO: Fix port allocation to prevent problems with parallel tests
-            #"--agent-unix-endpoint="
-            "--agent-udpv4-endpoint=127.0.0.1:1337",
-            "--agent-udpv6-endpoint=[::1]:1337",
-            "--v3-user=authOnlyUser",
-            "--v3-auth-key=authOnlyUser",
-            "--v3-auth-proto=MD5",
-        ]
+        "%s/.venv/bin/python" % cmk_path(),
+        snmpsimd_path,
+        #"--log-level=error",
+        "--cache-dir",
+        str(tmp_path / "snmpsim"),
+        "--data-dir",
+        str(source_data_dir),
+        # TODO: Fix port allocation to prevent problems with parallel tests
+        #"--agent-unix-endpoint="
+        "--agent-udpv4-endpoint=127.0.0.1:1337",
+        "--agent-udpv6-endpoint=[::1]:1337",
+        "--v3-user=authOnlyUser",
+        "--v3-auth-key=authOnlyUser",
+        "--v3-auth-proto=MD5",
+    ]
 
-    p = subprocess.Popen(cmd,
+    p = subprocess.Popen(
+        cmd,
         close_fds=True,
         # Silence the very noisy output. May be useful to enable this for debugging tests
         #stdout=open(os.devnull, "w"),

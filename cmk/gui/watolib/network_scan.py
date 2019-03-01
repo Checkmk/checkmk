@@ -162,8 +162,18 @@ def _mask_bits_to_int(n):
 
 # This will not scale well. Do you have a better idea?
 def _known_ip_addresses():
-    addresses = (host.attribute("ipaddress") for host in Host.all().itervalues())
-    return [address for address in addresses if address]
+    addresses = set()
+
+    for host in Host.all().itervalues():
+        attributes = host.attributes()
+
+        address = attributes.get("ipaddress")
+        if address:
+            addresses.add(address)
+
+        addresses.update(attributes.get("additional_ipv4addresses", []))
+
+    return addresses
 
 
 def _excludes_by_regexes(addresses, exclude_specs):

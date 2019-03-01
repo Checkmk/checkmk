@@ -95,7 +95,7 @@ def test_start_job():
     assert status["state"] == background_job.JobStatus.state_initialized
 
     job.start()
-    assert job.is_running()
+    testlib.wait_until(job.is_running, timeout=5, interval=0.1)
 
     with pytest.raises(background_job.BackgroundJobAlreadyRunning):
         job.start()

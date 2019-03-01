@@ -1,0 +1,12 @@
+Title: Network scan: Exclude IPv4 addresses that are configured as addition IPv4 addresses
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1551442640
+Class: fix
+
+The network scan discovered hosts from IPv4 addresses that are configured as additional
+IPv4 addresses for existing hosts. The scan now completely ignores these IPv4 addresses
+just like it is done for pirmary IPv4 addresses.

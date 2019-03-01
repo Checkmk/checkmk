@@ -1,0 +1,27 @@
+title: Alcatel switches: Power Supplies
+agents: snmp
+catalog: hw/network/alcatel
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the status of power supplies in Alcatel switches running
+ operating system AOS7 or higher. Please consider that this check does not
+ behave like {alcatel_power} for Alcatel switches running operating system
+ AOS6 or lower.
+
+ Check status:
+ - {OK} in case the monitored value is one of:
+   up, master
+ - {WARN} in case the monitored value is one of:
+   testing, secondary, idle, pwrsave
+ - {CRIT} in case the monitored value is one of:
+   down, unpowered
+ - {UNKNOWN} in case the monitored value is one of:
+   unknown
+
+item:
+ The ID of the power supply as output from the SNMP agent.
+
+inventory:
+ One check is created for each present power supply.
+

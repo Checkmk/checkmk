@@ -6,24 +6,24 @@ import os
 import glob
 import pwd
 import time
-import pytest
 import platform
 import re
-import requests
 import socket
-import pathlib2 as pathlib
 import pipes
 import subprocess
 import sys
 import shutil
-import fasteners
 import ast
 import abc
-import urllib3
 import json
-
 from urlparse import urlparse
-from bs4 import BeautifulSoup
+
+import pathlib2 as pathlib
+import pytest  # type: ignore
+import requests  # type: ignore
+import fasteners  # type: ignore
+import urllib3  # type: ignore
+from bs4 import BeautifulSoup  # type: ignore
 
 # Disable insecure requests warning message during SSL testing
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -172,7 +172,7 @@ class CMKVersion(object):
             "lsb_release -a 2>/dev/null | grep Codename | awk '{print $2}'").read().strip()
 
     def _needed_architecture(self):
-        return platform.architecture()[0] == "64bit" and "amd64" or "i386"
+        return "amd64" if platform.architecture()[0] == "64bit" else "i386"
 
     def package_name(self):
         return self.package_name_of_distro(self._needed_distro())
@@ -226,7 +226,7 @@ class CMKVersion(object):
     def _download_package(self):
         temp_package_path = "/tmp/%s" % self.package_name()
 
-        print(self.package_url())
+        print self.package_url()
         response = requests.get(  # nosec
             self.package_url(), auth=get_cmk_download_credentials(), verify=False)
         if response.status_code != 200:
@@ -239,15 +239,15 @@ class CMKVersion(object):
         # manager task being active. Try to wait for other task to finish. Sure
         # this is not race free, but hope it's sufficient.
         while os.system("sudo fuser /var/lib/dpkg/lock >/dev/null 2>&1") >> 8 == 0:
-            print("Waiting for other dpkg process to complete...\n")
+            print "Waiting for other dpkg process to complete..."
             time.sleep(1)
 
         # Improve the protection against other test runs installing packages
-        print("Getting install file lock (/tmp/cmk-test-install-version.lock)...")
+        print "Getting install file lock (/tmp/cmk-test-install-version.lock)..."
         with fasteners.InterProcessLock("/tmp/cmk-test-install-version"):
-            print("Have install file lock")
+            print "Have install file lock"
             cmd = "sudo /usr/bin/gdebi --non-interactive %s" % package_path
-            print(cmd)
+            print cmd
             sys.stdout.flush()
             if os.system(cmd) >> 8 != 0:  # nosec
                 raise Exception("Failed to install package: %s" % package_path)
@@ -418,8 +418,7 @@ class Site(object):
                 "GET hosts\n" \
                 "Columns: last_check\n" \
                 "Filter: host_name = %s\n" % (hostname))
-        else:
-            return self.live.query_value(
+        return self.live.query_value(
                 "GET services\n" \
                 "Columns: last_check\n" \
                 "Filter: host_name = %s\n" \
@@ -432,7 +431,7 @@ class Site(object):
         return pwd.getpwuid(os.getuid()).pw_name == self.id
 
     def execute(self, cmd, *args, **kwargs):
-        assert type(cmd) == list, "The command must be given as list"
+        assert isinstance(cmd, list), "The command must be given as list"
 
         if not self._is_running_as_site_user():
             sys.stdout.write("Executing (sudo): %s\n" % subprocess.list2cmdline(cmd))
@@ -442,10 +441,10 @@ class Site(object):
             ]
             cmd_txt = " ".join(cmd)
             return subprocess.Popen(cmd_txt, shell=True, *args, **kwargs)  # nosec
-        else:
-            sys.stdout.write("Executing (site): %s\n" % subprocess.list2cmdline(cmd))
-            return subprocess.Popen(  # nosec
-                subprocess.list2cmdline(cmd), shell=True, *args, **kwargs)
+
+        sys.stdout.write("Executing (site): %s\n" % subprocess.list2cmdline(cmd))
+        return subprocess.Popen(  # nosec
+            subprocess.list2cmdline(cmd), shell=True, *args, **kwargs)
 
     def omd(self, mode, *args):
         if not self._is_running_as_site_user():
@@ -522,8 +521,8 @@ class Site(object):
         if not self._is_running_as_site_user():
             p = self.execute(["test", "-e", self.path(rel_path)], stdout=subprocess.PIPE)
             return p.wait() == 0
-        else:
-            return os.path.exists(self.path(rel_path))
+
+        return os.path.exists(self.path(rel_path))
 
     def makedirs(self, rel_path):
         p = self.execute(["mkdir", "-p", self.path(rel_path)])
@@ -553,18 +552,18 @@ class Site(object):
             raise Exception("The site %s already exists." % self.id)
 
         if not self.exists():
-            print("Getting site create lock (/tmp/cmk-test-create-site.lock)...")
+            print "Getting site create lock (/tmp/cmk-test-create-site.lock)..."
             with fasteners.InterProcessLock("/tmp/cmk-test-create-site"):
-                print("Have site create lock")
+                print "Have site create lock"
 
-                print("[%0.2f] Creating site '%s'" % (time.time(), self.id))
+                print "[%0.2f] Creating site '%s'" % (time.time(), self.id)
                 p = subprocess.Popen([
                     "/usr/bin/sudo", "/usr/bin/omd", "-V",
                     self.version.version_directory(), "create", "--admin-password", "cmk",
                     "--apache-reload", self.id
                 ])
                 exit_code = p.wait()
-                print("[%0.2f] Executed create command" % time.time())
+                print "[%0.2f] Executed create command" % time.time()
                 assert exit_code == 0
                 assert os.path.exists("/omd/sites/%s" % self.id)
 
@@ -590,12 +589,12 @@ class Site(object):
         new_version_name = "%s-%s" % (src_version, os.environ["BUILD_NUMBER"])
         self.version = CMKVersion(new_version_name, self.version._edition, self.version._branch)
 
-        print("Copy CMK '%s' to '%s'" % (src_path, self.version.version_path()))
+        print "Copy CMK '%s' to '%s'" % (src_path, self.version.version_path())
         assert not os.path.exists(self.version.version_path()), \
             "New version path '%s' already exists" % self.version.version_path()
 
         def execute(cmd):
-            print("Executing: %s" % cmd)
+            print "Executing: %s" % cmd
             rc = os.system(cmd) >> 8  # nosec
             if rc != 0:
                 raise Exception("Failed to execute '%s'. Exit code: %d" % (cmd, rc))
@@ -662,19 +661,19 @@ class Site(object):
             ]
 
         # Prevent build problems of livestatus
-        print("Cleanup git files")
+        print "Cleanup git files"
         assert os.system("sudo git clean -xfd -e .venv") >> 8 == 0
 
         for path in paths:
             if os.path.exists("%s/.f12" % path):
-                print("Executing .f12 in \"%s\"..." % path)
+                print "Executing .f12 in \"%s\"..." % path
                 sys.stdout.flush()
                 assert os.system(  # nosec
                     "cd \"%s\" ; "
                     "sudo PATH=$PATH ONLY_COPY=1 ALL_EDITIONS=0 SITE=%s "
                     "CHROOT_BASE_PATH=$CHROOT_BASE_PATH CHROOT_BUILD_DIR=$CHROOT_BUILD_DIR "
                     "bash -x .f12" % (path, self.id)) >> 8 == 0
-                print("Executing .f12 in \"%s\" DONE" % path)
+                print "Executing .f12 in \"%s\" DONE" % path
                 sys.stdout.flush()
 
     def _enabled_liveproxyd_debug_logging(self):
@@ -749,7 +748,7 @@ class Site(object):
                 if i > 10:
                     self.execute(["/usr/bin/omd", "status"]).wait()
                     raise Exception("Could not start site %s" % self.id)
-                print("The site %s is not running yet, sleeping... (round %d)" % (self.id, i))
+                print "The site %s is not running yet, sleeping... (round %d)" % (self.id, i)
                 sys.stdout.flush()
                 time.sleep(0.2)
 
@@ -761,7 +760,7 @@ class Site(object):
                 i += 1
                 if i > 10:
                     raise Exception("Could not stop site %s" % self.id)
-                print("The site %s is still running, sleeping... (round %d)" % (self.id, i))
+                print "The site %s is still running, sleeping... (round %d)" % (self.id, i)
                 sys.stdout.flush()
                 time.sleep(0.2)
 
@@ -1172,9 +1171,9 @@ class CMKWebSession(WebSession):
 
         if self.via_system_apache:
             return '%s://%s%s' % (self.site.http_proto, self.site.http_address, path)
-        else:
-            return '%s://%s:%d%s' % (self.site.http_proto, self.site.http_address,
-                                     self.site.apache_port, path)
+
+        return '%s://%s:%d%s' % (self.site.http_proto, self.site.http_address,
+                                 self.site.apache_port, path)
 
     def login(self, username="cmkadmin", password="cmk"):
         login_page = self.get("", allow_redirect_to_login=True).text
@@ -1232,7 +1231,8 @@ class CMKWebSession(WebSession):
     #
 
     def _automation_credentials(self):
-        secret = self.site.read_file("var/check_mk/web/automation/automation.secret")
+        secret_path = "var/check_mk/web/automation/automation.secret"
+        secret = self.site.read_file(secret_path)
 
         if secret == "":
             raise Exception("Failed to read secret from %s" % secret_path)
@@ -1370,7 +1370,7 @@ class CMKWebSession(WebSession):
                 }),
             })
 
-        assert type(result) == dict
+        assert isinstance(result, dict)
         assert "hostname" in result
         assert "path" in result
         assert "attributes" in result
@@ -1390,7 +1390,7 @@ class CMKWebSession(WebSession):
             else:
                 raise
 
-        assert type(result) == dict
+        assert isinstance(result, dict)
         return "hostname" in result
 
     def add_folder(self, folder_path, attributes=None, create_folders=True, expect_error=False):
@@ -1421,7 +1421,7 @@ class CMKWebSession(WebSession):
                 }),
             })
 
-        assert type(result) == dict
+        assert isinstance(result, dict)
         assert "attributes" in result
 
         return result
@@ -1439,7 +1439,7 @@ class CMKWebSession(WebSession):
             else:
                 raise
 
-        assert type(result) == dict
+        assert isinstance(result, dict)
         return "folder" in result
 
     def delete_folder(self, folder_path):
@@ -1461,7 +1461,7 @@ class CMKWebSession(WebSession):
             },
             output_format="python")
 
-        assert type(result) == dict
+        assert isinstance(result, dict)
         assert "ruleset" in result
         assert "configuration_hash" in result
 
@@ -1488,7 +1488,7 @@ class CMKWebSession(WebSession):
             }),
         })
 
-        assert type(result) == dict
+        assert isinstance(result, dict)
         return result
 
     def delete_host(self, hostname):
@@ -1529,7 +1529,7 @@ class CMKWebSession(WebSession):
             })},
             output_format="python")
 
-        assert result == None
+        assert result is None
 
     def get_site(self, site_id):
         result = self._api_request(
@@ -1537,13 +1537,13 @@ class CMKWebSession(WebSession):
             {"request": json.dumps({"site_id": site_id})},
             output_format="python")
 
-        assert result != None
+        assert result is not None
         return result
 
     def get_all_sites(self):
         result = self._api_request(
             "webapi.py?action=get_all_sites&output_format=python", {}, output_format="python")
-        assert result != None
+        assert result is not None
         return result
 
     def delete_site(self, site_id):
@@ -1558,7 +1558,7 @@ class CMKWebSession(WebSession):
         result = self._api_request("webapi.py?action=set_all_sites&request_format=python",
                                    {"request": repr(configuration)})
 
-        assert result == None
+        assert result is None
 
     def add_group(self, group_type, group_name, attributes, expect_error=False):
         request_object = {"groupname": group_name}
@@ -1588,7 +1588,7 @@ class CMKWebSession(WebSession):
             })},
             expect_error=expect_error)
 
-        assert result == None
+        assert result is None
 
     def get_all_users(self):
         return self._api_request("webapi.py?action=get_all_users", {})
@@ -1622,7 +1622,7 @@ class CMKWebSession(WebSession):
             "request": json.dumps(request),
         })
 
-        assert type(result) == unicode
+        assert isinstance(result, unicode)
         assert result.startswith("Service discovery successful"), "Failed to discover: %r" % result
 
     def bulk_discovery_start(self, request, expect_error=False):
@@ -1655,7 +1655,7 @@ class CMKWebSession(WebSession):
             "request": json.dumps(request),
         })
 
-        assert type(result) == dict
+        assert isinstance(result, dict)
         assert len(result["sites"]) > 0
 
         for site_id, status in result["sites"].items():
@@ -1685,15 +1685,15 @@ class CMKWebSession(WebSession):
             },
             expect_error=expect_error)
 
-        assert type(result) == dict
+        assert isinstance(result, dict)
         assert "start_time" in result
-        assert type(result["start_time"]) == int
+        assert isinstance(result["start_time"], int)
         assert "end_time" in result
-        assert type(result["end_time"]) == int
+        assert isinstance(result["end_time"], int)
         assert "step" in result
-        assert type(result["step"]) == int
+        assert isinstance(result["step"], int)
         assert "curves" in result
-        assert type(result["curves"]) == list
+        assert isinstance(result["curves"], list)
         assert len(result["curves"]) > 0
 
         for curve in result["curves"]:
@@ -1965,9 +1965,8 @@ class CheckManager(object):
             config.load_all_checks(check_api.get_check_api_context)  # loads all checks
         else:
             config._initialize_data_structures()
-            config.load_checks(
-                check_api.get_check_api_context,
-                map(lambda f: os.path.join(cmk.utils.paths.checks_dir, f), file_names))
+            config.load_checks(check_api.get_check_api_context,
+                               [os.path.join(cmk.utils.paths.checks_dir, f) for f in file_names])
 
         return self
 
@@ -1998,6 +1997,7 @@ class BaseCheck(object):
         self.set_hostname = cmk_base.check_api_utils.set_hostname
         self.set_service = cmk_base.check_api_utils.set_service
         self.name = name
+        self.info = {}
 
     def set_check_api_utils_globals(self, item=None, set_service=False):
         description = None

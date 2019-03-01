@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# pylint: disable=redefined-outer-name
 # These tests verify the behaviour of the Check_MK base methods
 # that do the actual checking/discovery/inventory work. Especially
 # the default caching and handling of global options affecting the
@@ -319,28 +320,31 @@ def test_mode_check_explicit_host_no_cache(test_cfg, monkeypatch):
     assert _counter_run == 2
 
 
-def test_mode_dump_agent_explicit_host(test_cfg, monkeypatch):
+def test_mode_dump_agent_explicit_host(test_cfg, monkeypatch, capsys):
     _patch_data_source_run(monkeypatch)
     cmk_base.modes.check_mk.mode_dump_agent("ds-test-host1")
     assert _counter_run == 2
+    assert "<<<check_mk>>>" in capsys.readouterr().out
 
 
-def test_mode_dump_agent_explicit_host_cache(test_cfg, monkeypatch):
+def test_mode_dump_agent_explicit_host_cache(test_cfg, monkeypatch, capsys):
     try:
         _patch_data_source_run(monkeypatch, _may_use_cache_file=True, _use_outdated_cache_file=True)
         cmk_base.modes.check_mk.option_cache()
         cmk_base.modes.check_mk.mode_dump_agent("ds-test-host1")
         assert _counter_run == 2
+        assert "<<<check_mk>>>" in capsys.readouterr().out
     finally:
         # TODO: Can't the mode clean this up on it's own?
         cmk_base.data_sources.abstract.DataSource.set_use_outdated_cache_file(False)
 
 
-def test_mode_dump_agent_explicit_host_no_cache(test_cfg, monkeypatch):
+def test_mode_dump_agent_explicit_host_no_cache(test_cfg, monkeypatch, capsys):
     _patch_data_source_run(monkeypatch, _no_cache=True, _max_cachefile_age=0)
     cmk_base.modes.check_mk.option_no_cache()  # --no-cache
     cmk_base.modes.check_mk.mode_dump_agent("ds-test-host1")
     assert _counter_run == 2
+    assert "<<<check_mk>>>" in capsys.readouterr().out
 
 
 @pytest.mark.parametrize(("scan"), [

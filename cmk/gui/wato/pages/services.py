@@ -348,7 +348,7 @@ class AutomationServiceDiscoveryJob(AutomationCommand):
                 _("Host %s does not exist on remote site %s. This "
                   "may be caused by a failed configuration synchronization. Have a look at "
                   "the <a href=\"wato.py?folder=&mode=changelog\">activate changes page</a> "
-                  "for further information."))
+                  "for further information.") % (host_name, config.omd_site()))
         host.need_permission("read")
 
         options = json.loads(html.get_ascii_input("options"))

@@ -431,7 +431,7 @@ def check_diskstat_dict(item, params, disks):
             util,
             "disk_utilization",
             params.get("utilization"),
-            unit="%",
+            human_readable_func=get_percent_human_readable,
             scale=0.01,
             statemarkers=False,
             infoname=prefix + "Utilization")
@@ -444,10 +444,10 @@ def check_diskstat_dict(item, params, disks):
                 throughput,
                 "disk_" + what + "_throughput",
                 params.get(what),
-                unit="MB/s",
+                unit="/s",
                 scale=1048576,
                 statemarkers=False,
-                human_readable_func=lambda x: get_bytes_human_readable(x) + '/s',
+                human_readable_func=get_bytes_human_readable,
                 infoname=what.title())
             yield state, infotext, extraperf
 

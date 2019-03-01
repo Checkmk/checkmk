@@ -334,25 +334,25 @@ def _normalize_bounds(levels):
     return warn_upper, crit_upper, warn_lower, crit_lower
 
 
-def _check_boundaries(value, levels, human_readable_func=str):
-    def levelsinfo_ty(ty, warn, crit, human_readable_func):
-        if human_readable_func is None:
-            human_readable_func = str
-        return " (warn/crit %s %s/%s)" % (ty, human_readable_func(warn), human_readable_func(crit))
-
+def _check_boundaries(value, levels, human_readable_func, unit_info):
     warn_upper, crit_upper, warn_lower, crit_lower = _normalize_bounds(levels)
     # Critical cases
     if crit_upper is not None and value >= crit_upper:
-        return 2, levelsinfo_ty("at", warn_upper, crit_upper, human_readable_func)
+        return 2, _levelsinfo_ty("at", warn_upper, crit_upper, human_readable_func, unit_info)
     if crit_lower is not None and value < crit_lower:
-        return 2, levelsinfo_ty("below", warn_lower, crit_lower, human_readable_func)
+        return 2, _levelsinfo_ty("below", warn_lower, crit_lower, human_readable_func, unit_info)
 
     # Warning cases
     if warn_upper is not None and value >= warn_upper:
-        return 1, levelsinfo_ty("at", warn_upper, crit_upper, human_readable_func)
+        return 1, _levelsinfo_ty("at", warn_upper, crit_upper, human_readable_func, unit_info)
     if warn_lower is not None and value < warn_lower:
-        return 1, levelsinfo_ty("below", warn_lower, crit_lower, human_readable_func)
+        return 1, _levelsinfo_ty("below", warn_lower, crit_lower, human_readable_func, unit_info)
     return 0, ""
+
+
+def _levelsinfo_ty(ty, warn, crit, human_readable_func, unit_info):
+    return " (warn/crit {0} {1}{3}/{2}{3})".format(ty, human_readable_func(warn),
+                                                   human_readable_func(crit), unit_info)
 
 
 def check_levels(value,
@@ -370,7 +370,13 @@ def check_levels(value,
 
     value:   currently measured value
     dsname:  name of the datasource in the RRD that corresponds to this value
-    unit:    unit to be displayed in the plugin output, e.g. "MB/s"
+    unit:    unit to be displayed in the plugin output.
+             Be aware: if a (builtin) human_readable_func is stated which already
+             provides a unit info, then this unit is not necessary. An additional
+             unit info is useful if a rate is calculated, eg.
+                unit="/s",
+                human_readable_func=get_bytes_human_readable,
+             results in 'X B/s'.
     factor:  the levels are multiplied with this factor before applying
              them to the value. This is being used for the CPU load check
              currently. The levels here are "per CPU", so the number of
@@ -379,24 +385,35 @@ def check_levels(value,
              For example if the levels are specified in GB and the RRD store KB, then
              the scale is 1024*1024.
     human_readable_func: Single argument function to present in a human readable fashion
-                         the value. It has priority over the unit argument.
-    infoname: Perf value name for infotext, defaults to dsname
+                         the value. Builtin human_readable-functions already provide a unit:
+                         - get_percent_human_readable
+                         - get_age_human_readable
+                         - get_bytes_human_readable
+                         - get_filesize_human_readable
+                         - get_nic_speed_human_readable
+                         - get_timestamp_human_readable
+                         - get_relative_date_human_readable
+    infoname: Perf value name for infotext like a title.
     """
-    if unit not in ('', '%'):
-        unit = " " + unit  # Insert space before MB, GB, etc.
-    elif unit == "%" and not human_readable_func:
-        human_readable_func = get_percent_human_readable
+    unit_info = ""
+    if unit.startswith('/'):
+        unit_info = unit
+    elif unit:
+        unit_info = " %s" % unit
 
     if human_readable_func is None:
-        human_readable_func = lambda x: "%.2f%s" % (x / scale, unit)
+        human_readable_func = lambda x: "%.2f" % (x / scale)
 
     def scale_value(v):
         if v is None:
             return None
-
         return v * factor * scale
 
-    infotext = "%s: %s" % (infoname or dsname, human_readable_func(value))
+    if infoname:
+        infotext = "%s: %s%s" % (infoname, human_readable_func(value), unit_info)
+    else:
+        infotext = "%s%s" % (human_readable_func(value), unit_info)
+
     perf_value = (dsname, value)
     # None, {} or (None, None) -> do not check any levels
     if not params or params == (None, None):
@@ -432,10 +449,8 @@ def check_levels(value,
         if predictive_levels_msg:
             infotext += " (%s)" % predictive_levels_msg
 
-    state, levelstext = _check_boundaries(value, levels, human_readable_func)
-
+    state, levelstext = _check_boundaries(value, levels, human_readable_func, unit_info)
     infotext += levelstext
-
     if statemarkers:
         infotext += state_markers[state]
 

@@ -89,7 +89,7 @@ def check_aws_s3_requests(item, params, metrics):
                 requests_perc,
                 '%s_perc' % perf_key,
                 params.get('levels_%s_perc' % perf_key),
-                unit='%',
+                human_readable_func=get_percent_human_readable,
                 infoname="%s of total requests" % title)
 
 
@@ -138,7 +138,7 @@ def check_aws_s3_http_errors(item, params, metrics):
                 http_errors_perc,
                 'http_%sxx_perc' % http_errors_nr,
                 params.get('levels_http_%sxx_perc' % http_errors_nr),
-                unit='%',
+                human_readable_func=get_percent_human_readable,
                 infoname="%s00-Errors of total requests" % http_errors_nr)
 
 
@@ -170,7 +170,7 @@ def check_aws_s3_latency(item, params, metrics):
         'aws_request_latency',
         params.get('levels_latency'),
         human_readable_func=get_age_human_readable,
-        infoname="Latency")
+        infoname="Total request latency")
 
     first_byte_latency = metrics.get('FirstByteLatency')
     if first_byte_latency is not None:

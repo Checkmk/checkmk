@@ -25,12 +25,12 @@ def cpu_info(t):
 
 def reference_result(deviation):
     reference = [
-        (0, 'user: 16.0%', [('user', 16.0, None, None, None, None)]),
-        (0, 'system: 34.0%', [('system', 34.0, None, None, None, None)]),
-        (0, 'wait: 10.0%', [('wait', 10.0, None, None, None, None)]),
-        (0, 'steal: 12.0%', [('steal', 12.0, None, None, None, None)]),
-        (0, 'guest: 12.0%', [('guest', 12.0, None, None, None, None)]),
-        (0, 'total cpu: 84.0%', [('util', 84.0, None, None, 0, None)]),
+        (0, 'User: 16.0%', [('user', 16.0, None, None, None, None)]),
+        (0, 'System: 34.0%', [('system', 34.0, None, None, None, None)]),
+        (0, 'Wait: 10.0%', [('wait', 10.0, None, None, None, None)]),
+        (0, 'Steal: 12.0%', [('steal', 12.0, None, None, None, None)]),
+        (0, 'Guest: 12.0%', [('guest', 12.0, None, None, None, None)]),
+        (0, 'Total CPU: 84.0%', [('util', 84.0, None, None, 0, None)]),
     ]
     if isinstance(deviation, tuple):
         reference[deviation[0]] = deviation[1]
@@ -48,7 +48,7 @@ def reference_result(deviation):
     ({}, None),
     ({
         'iowait': (5, 6)
-    }, (2, (2, 'wait: 10.0% (warn/crit at 5.0%/6.0%)', [('wait', 10.0, 5.0, 6.0, None, None)]))),
+    }, (2, (2, 'Wait: 10.0% (warn/crit at 5.0%/6.0%)', [('wait', 10.0, 5.0, 6.0, None, None)]))),
     ({
         'core_util_graph': True
     }, lambda x: x.extend([(0, '', [('cpu_core_util_0', 96.0)]),

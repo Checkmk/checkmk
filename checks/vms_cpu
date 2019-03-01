@@ -56,9 +56,16 @@ def check_vms_cpu(_no_item, params, parsed):
     util = 100. - parsed["idle"]
     system = util - user - wait
 
-    yield check_levels(user, "user", None, '%')
-    yield check_levels(system, "system", None, '%')
-    yield check_levels(wait, "wait", params.get("iowait"), '%')
+    yield check_levels(
+        user, "user", None, human_readable_func=get_percent_human_readable, infoname="User")
+    yield check_levels(
+        system, "system", None, human_readable_func=get_percent_human_readable, infoname="System")
+    yield check_levels(
+        wait,
+        "wait",
+        params.get("iowait"),
+        human_readable_func=get_percent_human_readable,
+        infoname="Wait")
 
     for util_result in check_cpu_util(util, params):
         yield util_result

@@ -119,7 +119,7 @@ def check_brocade_sfp(item, params, parsed):
     #       the API because its behaviour is undesirable, such as
     #       not providing an infotext or perfdata when no levels
     #       are set.
-    def check_levels(value, perf_name, params, infotext_prefix, unit):
+    def _check_levels(value, perf_name, params, infotext_prefix, unit):
         infotext = infotext_prefix + ("%.2f %s" % (value, unit))
         if not params:
             return 0, infotext, [(perf_name, value)]
@@ -138,12 +138,12 @@ def check_brocade_sfp(item, params, parsed):
     port_info = parsed[port_index]  #       item to brocade.include and do the same
     #       for brocade.fcport.
 
-    yield check_levels(port_info["rx_power"], "input_signal_power_dbm", params.get("rx_power"),
-                       "Rx: ", "dBm")
-    yield check_levels(port_info["tx_power"], "output_signal_power_dbm", params.get("tx_power"),
-                       "Tx: ", "dBm")
-    yield check_levels(port_info["current"], "current", params.get("current"), "current: ", "A")
-    yield check_levels(port_info["voltage"], "voltage", params.get("voltage"), "voltage: ", "V")
+    yield _check_levels(port_info["rx_power"], "input_signal_power_dbm", params.get("rx_power"),
+                        "Rx: ", "dBm")
+    yield _check_levels(port_info["tx_power"], "output_signal_power_dbm", params.get("tx_power"),
+                        "Tx: ", "dBm")
+    yield _check_levels(port_info["current"], "current", params.get("current"), "current: ", "A")
+    yield _check_levels(port_info["voltage"], "voltage", params.get("voltage"), "voltage: ", "V")
 
 
 check_info['brocade_sfp'] = {

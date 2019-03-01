@@ -70,7 +70,7 @@ checks = {
             'cpu_percent_levels': (85.0, 95.0)
         },
         [
-            (0, 'total cpu: 0%', [('util', 0.0, 85., 95., 0, 100)]),
+            (0, 'Total CPU: 0%', [('util', 0.0, 85., 95., 0, 100)]),
         ],
     )],
     'storage': [(u'hugo-server/Testdatabase', {

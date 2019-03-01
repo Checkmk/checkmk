@@ -395,7 +395,7 @@ def inventory_esx_vsphere_vm_snapshots(info):
 
 
 def check_esx_vsphere_vm_snapshots(_no_item, params, info):
-    def check_levels(age, warn, crit):
+    def _check_levels(age, warn, crit):
         if age >= crit:
             return (2, "snapshot is older than %s" % get_age_human_readable(age))
         elif age >= warn:
@@ -425,7 +425,7 @@ def check_esx_vsphere_vm_snapshots(_no_item, params, info):
     perfdata = []
     if params.get("age"):
         warn, crit = params["age"]
-        state, message = check_levels(latest_snapshot_age, warn, crit)
+        state, message = _check_levels(latest_snapshot_age, warn, crit)
         if state > 0:
             yield state, "Latest %s" % message,
             perfdata = [("age", latest_snapshot_age, warn, crit)]
@@ -442,7 +442,7 @@ def check_esx_vsphere_vm_snapshots(_no_item, params, info):
         oldest_snapshot_age = time.time() - oldest_snapshot.time
         if params.get("age_oldest"):
             warn, crit = params["age_oldest"]
-            state, message = check_levels(oldest_snapshot_age, warn, crit)
+            state, message = _check_levels(oldest_snapshot_age, warn, crit)
             if state > 0:
                 yield state, "Oldest %s" % message,
                 perfdata = [("age_oldest", oldest_snapshot_age, warn, crit)]

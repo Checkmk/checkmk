@@ -56,7 +56,7 @@ DISCOVERY = [
         'state': ['1']
     }, [(
         0,
-        '[vboxnet0] (up) MAC: 0A:00:27:00:00:00, 10 Mbit/s, in: 0.00 B/s (0.0%), out: 0.00 B/s (0.0%)',
+        '[vboxnet0] (up) MAC: 0A:00:27:00:00:00, 10 Mbit/s, In: 0.00 B/s (0.0%), Out: 0.00 B/s (0.0%)',
         [
             ('in', 0.0, 62500.0, 250000.0, 0, 1250000.0),
             ('inucast', 0.0, None, None, None, None),
@@ -80,7 +80,7 @@ DISCOVERY = [
         'state': ['1']
     }, [(
         2,
-        '[wlp2s0] (up) MAC: 64:5D:86:E4:50:2F, assuming 100 Mbit/s, in: 781.25 kB/s (warn/crit at 610.35 kB/s/2.38 MB/s)(!) (6.4%), out: 3.05 MB/s (warn/crit at 610.35 kB/s/2.38 MB/s)(!!) (25.6%)',
+        '[wlp2s0] (up) MAC: 64:5D:86:E4:50:2F, assuming 100 Mbit/s, In: 781.25 kB/s (warn/crit at 610.35 kB/s/2.38 MB/s)(!) (6.4%), Out: 3.05 MB/s (warn/crit at 610.35 kB/s/2.38 MB/s)(!!) (25.6%)',
         [
             ('in', 800000.0, 625000.0, 2500000.0, 0, 12500000.0),
             ('inucast', 0.0, None, None, None, None),

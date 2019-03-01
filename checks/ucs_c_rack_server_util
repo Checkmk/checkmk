@@ -86,8 +86,7 @@ def check_ucs_c_rack_server_util(item, params, data):
         data['overallUtilization'],
         'overall_util',
         params['upper_levels'],
-        human_readable_func=get_percent_human_readable,
-        infoname='Overall Utilization')
+        human_readable_func=get_percent_human_readable)
 
 
 check_info["ucs_c_rack_server_util"] = {
@@ -140,8 +139,7 @@ def check_ucs_c_rack_server_util_pci_io(item, params, data):
         data['ioUtilization'],
         'pci_io_util',
         params['upper_levels'],
-        human_readable_func=get_percent_human_readable,
-        infoname='PCI IO Utilization')
+        human_readable_func=get_percent_human_readable)
 
 
 check_info["ucs_c_rack_server_util.pci_io"] = {
@@ -168,8 +166,7 @@ def check_ucs_c_rack_server_util_mem(item, params, data):
         data['memoryUtilization'],
         'memory_util',
         params['upper_levels'],
-        human_readable_func=get_percent_human_readable,
-        infoname='Memory Utilization')
+        human_readable_func=get_percent_human_readable)
 
 
 check_info["ucs_c_rack_server_util.mem"] = {

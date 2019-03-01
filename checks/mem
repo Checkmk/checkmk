@@ -598,13 +598,20 @@ def check_mem_windows(_no_item, params, info):
 
         # Predictive levels
         else:
+            if "average" in params:
+                titleinfo = title
+                dsname = "%s_avg" % paramname
+            else:
+                titleinfo = title
+                dsname = paramname
+
             state, infoadd, perfadd = check_levels(
                 used_mb,  # Current value stored in MB in RRDs
-                "average" in params and paramname + "_avg" or paramname,  # Name of RRD variable
+                dsname,
                 params[paramname],
                 unit="GB",  # Levels are specified in GB...
                 scale=1024,  # ... in WATO ValueSpec
-            )
+                infoname=titleinfo)
             if infoadd:
                 infotext += ", " + infoadd
             perfdata += perfadd

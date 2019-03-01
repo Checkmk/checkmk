@@ -169,7 +169,7 @@ class BackgroundProcess(multiprocessing.Process):
     def _handle_sigterm(self, signum, frame):
         status = self._jobstatus.get_status()
         if not status.get("stoppable", True):
-            self._logger.warning("Skip termination of background job (Job ID: %s, PID: %d)",
+            self._logger.warning("Skip termination of background job (Job ID: %s, PID: %s)",
                                  self._job_parameters["job_id"], status["pid"])
             return
 
@@ -193,6 +193,7 @@ class BackgroundProcess(multiprocessing.Process):
         try:
             self.initialize_environment()
             self._jobstatus.update_status({"progress_info": BackgroundProcessInterface.parse_progress_info(""),
+                                           "pid": self.pid,
                                            "state": JobStatus.state_running})
 
             # The actual function call
@@ -372,21 +373,23 @@ class BackgroundJob(object):
         if job_status["state"] == JobStatus.state_finished:
             return False
 
-        if "pid" in job_status:
-            try:
-                p = psutil.Process(job_status["pid"])
-                if job_status["state"] == JobStatus.state_initialized:
-                    # The process was just created, but has/may not been renamed yet
-                    # Additionally it has no open file handle to the status file
-                    # The _is_correct_process check will fail in this gray area
-                    # We consider this scenario as OK, if the start time was recent enough
-                    if time.time() - job_status["started"] < 5: # 5 seconds
-                        return True
+        if job_status["pid"] is None:
+            return False
 
-                if self._is_correct_process(job_status, p):
+        try:
+            p = psutil.Process(job_status["pid"])
+            if job_status["state"] == JobStatus.state_initialized:
+                # The process was just created, but has/may not been renamed yet
+                # Additionally it has no open file handle to the status file
+                # The _is_correct_process check will fail in this gray area
+                # We consider this scenario as OK, if the start time was recent enough
+                if time.time() - job_status["started"] < 5: # 5 seconds
                     return True
-            except (psutil.NoSuchProcess, psutil.AccessDenied) as e:
-                return False
+
+            if self._is_correct_process(job_status, p):
+                return True
+        except (psutil.NoSuchProcess, psutil.AccessDenied) as e:
+            return False
 
         return False
 
@@ -431,7 +434,7 @@ class BackgroundJob(object):
     def _terminate_processes(self):
         job_status = self.get_status()
 
-        if not job_status.get("pid"):
+        if job_status["pid"] is None:
             return
 
         # Send SIGTERM
@@ -483,7 +486,7 @@ class BackgroundJob(object):
         status = self._jobstatus.get_status()
 
         # Some dynamic stuff
-        if status.get("state", "") == JobStatus.state_running:
+        if status.get("state", "") == JobStatus.state_running and status["pid"] is not None:
             try:
                 p = psutil.Process(status["pid"])
                 if not self._is_correct_process(status, p):
@@ -531,7 +534,7 @@ class BackgroundJob(object):
         p.join()
 
         job_status = self.get_status()
-        self._logger.debug("Started job \"%s\" (PID: %d)" % (self._job_id, job_status["pid"]))
+        self._logger.debug("Started job \"%s\" (PID: %s)" % (self._job_id, job_status["pid"]))
 
 
     def _prepare_work_dir(self):
@@ -543,7 +546,6 @@ class BackgroundJob(object):
         try:
             p = self._background_process_class(job_parameters)
             p.start()
-            self._jobstatus.update_status({"pid": p.pid})
         except Exception, e:
             self._logger.error("Error while starting subprocess: %s" % e)
         os._exit(0)
@@ -563,7 +565,12 @@ class JobStatus(object):
 
 
     def get_status(self):
-        return store.load_data_from_file(self._job_statusfilepath, default={})
+        status = store.load_data_from_file(self._job_statusfilepath, default={})
+        # Pre 1.5.0p13 had "pid" as optional field which is expected to be set in job states
+        # During intialization phase the pid may be none. Before entering the running phase,
+        # the pid has to be set to the process pid.
+        status.setdefault("pid", None)
+        return status
 
 
     def statusfile_exists(self):

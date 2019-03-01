@@ -1,0 +1,17 @@
+Title: Background jobs: Fixed possible "pid" KeyError exception
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.5.0p13
+Date: 1551445523
+Class: fix
+
+When background jobs terminated during initialization, the status
+information of the job was missing necessary information which
+led to exceptions in the status overview of the jobs and the
+job cleanup code.
+
+In case you experienced such an issue in previous versions, you
+could remove the state files from <tt>var/check_mk/background_jobs/[job]/jobstatus.mk</tt>
+to temporarily fix the problem.

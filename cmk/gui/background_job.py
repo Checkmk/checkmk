@@ -162,6 +162,7 @@ class BackgroundProcess(BackgroundProcessInterface, multiprocessing.Process):
             self._logger.verbose(
                 "Initialized background job (Job ID: %s)" % self._job_parameters["job_id"])
             self._jobstatus.update_status({
+                "pid": self.pid,
                 "state": JobStatus.state_running,
             })
 
@@ -309,21 +310,23 @@ class BackgroundJob(object):
         ]:
             return False
 
-        if "pid" in job_status:
-            try:
-                p = psutil.Process(job_status["pid"])
-                if job_status["state"] == JobStatus.state_initialized:
-                    # The process was just created, but has/may not been renamed yet
-                    # Additionally it has no open file handle to the status file
-                    # The _is_correct_process check will fail in this gray area
-                    # We consider this scenario as OK, if the start time was recent enough
-                    if time.time() - job_status["started"] < 5:  # 5 seconds
-                        return True
+        if job_status["pid"] is None:
+            return False
 
-                if self._is_correct_process(job_status, p):
+        try:
+            p = psutil.Process(job_status["pid"])
+            if job_status["state"] == JobStatus.state_initialized:
+                # The process was just created, but has/may not been renamed yet
+                # Additionally it has no open file handle to the status file
+                # The _is_correct_process check will fail in this gray area
+                # We consider this scenario as OK, if the start time was recent enough
+                if time.time() - job_status["started"] < 5:  # 5 seconds
                     return True
-            except (psutil.NoSuchProcess, psutil.AccessDenied):
-                return False
+
+            if self._is_correct_process(job_status, p):
+                return True
+        except (psutil.NoSuchProcess, psutil.AccessDenied):
+            return False
 
         return False
 
@@ -365,11 +368,11 @@ class BackgroundJob(object):
     def _terminate_processes(self):
         job_status = self.get_status()
 
-        if not job_status.get("pid"):
+        if job_status["pid"] is None:
             return
 
         # Send SIGTERM
-        self._logger.debug("Stopping job using SIGTERM \"%s\" (PID: %d)", self._job_id,
+        self._logger.debug("Stopping job using SIGTERM \"%s\" (PID: %s)", self._job_id,
                            job_status["pid"])
         try:
             process = psutil.Process(job_status["pid"])
@@ -414,7 +417,7 @@ class BackgroundJob(object):
         status = self._jobstatus.get_status()
 
         # Some dynamic stuff
-        if status.get("state", "") == JobStatus.state_running:
+        if status.get("state", "") == JobStatus.state_running and status["pid"] is not None:
             try:
                 p = psutil.Process(status["pid"])
                 if not self._is_correct_process(status, p):
@@ -464,7 +467,7 @@ class BackgroundJob(object):
 
         if p.exitcode == 0:
             job_status = self.get_status()
-            self._logger.debug("Started job \"%s\" (PID: %s)", self._job_id, job_status.get("pid"))
+            self._logger.debug("Started job \"%s\" (PID: %s)", self._job_id, job_status["pid"])
 
     def _prepare_work_dir(self):
         self._delete_work_dir()
@@ -474,7 +477,6 @@ class BackgroundJob(object):
         try:
             p = self._background_process_class(job_parameters)
             p.start()
-            self._jobstatus.update_status({"pid": p.pid})
         except Exception as e:
             self._logger.error("Error while starting subprocess: %s", e, exc_info=True)
             os._exit(1)
@@ -502,6 +504,7 @@ class JobStatus(object):
 
         data.setdefault("state", JobStatus.state_initialized)
         data.setdefault("duration", 0.0)
+        data.setdefault("pid", None)
 
         data["loginfo"] = {}
         for field_id, field_path in [("JobProgressUpdate", self._progress_update_path),

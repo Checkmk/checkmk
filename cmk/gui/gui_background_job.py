@@ -499,7 +499,7 @@ class JobRenderer(object):
                                                job_status["estimated_duration"]))
         for left, right in [
             (_("Runtime"), runtime_info),
-            (_("PID"), job_status.get("pid", "")),
+            (_("PID"), job_status["pid"] or ""),
             (_("Result"), "<br>".join(loginfo["JobResult"])),
         ]:
             if right is None:
@@ -622,7 +622,7 @@ class JobRenderer(object):
         html.td(job_status.get("user", _("Unknown user")), css="job_owner")
 
         # PID
-        html.td(job_status.get("pid", ""), css="job_pid")
+        html.td(job_status["pid"] or "", css="job_pid")
 
         # Druation
         html.td(cmk.utils.render.timespan(job_status.get("duration", 0)), css="job_runtime")

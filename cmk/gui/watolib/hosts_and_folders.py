@@ -1149,8 +1149,9 @@ class CREFolder(BaseFolder):
                 return host
 
     def _user_needs_permission(self, how):
-        if config.user.may("wato.all_folders"):
+        if how == "write" and config.user.may("wato.all_folders"):
             return
+
         if how == "read" and config.user.may("wato.see_all_folders"):
             return
 
@@ -1976,8 +1977,11 @@ class CREHost(WithPermissionsAndAttributes):
         return self.folder().groups(self)
 
     def _user_needs_permission(self, how):
-        if config.user.may("wato.all_folders"):
-            return True
+        if how == "write" and config.user.may("wato.all_folders"):
+            return
+
+        if how == "read" and config.user.may("wato.see_all_folders"):
+            return
 
         if how == "write":
             config.user.need_permission("wato.edit_hosts")

@@ -2003,9 +2003,10 @@ class CREFolder(BaseFolder):
 
 
     def user_needs_permission(self, user_id, how):
-        if config.user_may(user_id, "wato.all_folders"):
+        if how == "write" and config.user.may("wato.all_folders"):
             return
-        if how == "read" and config.user_may(user_id, "wato.see_all_folders"):
+
+        if how == "read" and config.user.may("wato.see_all_folders"):
             return
 
         permitted_groups, folder_contactgroups, use_for_services = self.groups()
@@ -2902,8 +2903,11 @@ class CREHost(WithPermissionsAndAttributes):
 
 
     def user_needs_permission(self, user_id, how):
-        if config.user.may("wato.all_folders"):
-            return True
+        if how == "write" and config.user.may("wato.all_folders"):
+            return
+
+        if how == "read" and config.user.may("wato.see_all_folders"):
+            return
 
         if how == "write":
             config.user.need_permission("wato.edit_hosts")

@@ -1,0 +1,24 @@
+Title: get_all_hosts: Users with read but not write access to all hosts/folders can now use this call
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0p13
+Date: 1551431255
+Class: fix
+
+There was a bug in the permission checking logic of the get_all_hosts API call. In case one
+tried to create a "read only" for exporting all hosts, this was not possible without the write
+permission.
+
+The following permissions should be needed:
+
+<ul>
+<li>Use Multisite at all</li>
+<li>Access to Web-API</li>
+<li>Use WATO</li>
+<li>Read access to all hosts and folders</li>
+</ul>
+
+In previous versions the permission "Write access to all hosts and folders" was needed in
+addition.

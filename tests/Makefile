@@ -4,7 +4,7 @@ NODE_MODULES := ../node_modules
 PIPENV   := PIPENV_VENV_IN_PROJECT=true pipenv
 BANDIT   := $(PIPENV) run bandit
 COVERAGE := $(PIPENV) run coverage
-PYTEST   := $(PIPENV) run py.test -s -vv
+PYTEST   := $(PIPENV) run py.test -vv
 YAPF     := $(PIPENV) run yapf
 
 .PHONY: help pipenv-check test-bandit test-docker test-format-python \

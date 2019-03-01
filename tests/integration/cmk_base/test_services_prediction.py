@@ -27,7 +27,8 @@ def cfg_setup(request, web, site):
     site.write_file(
         "var/check_mk/rrd/test-prediction/CPU_load.info",
         file("%s/tests/integration/cmk_base/test-files/CPU_load.info" % repo_path()).read())
-    site.omd("restart", "cmc")
+
+    site.restart_core()
 
     create_linux_test_host(request, web, site, "test-prediction")
 

@@ -2266,8 +2266,14 @@ do_checks () {
         local do_async_sections=${ASYNC_ASM_SECTIONS}
         local do_sync_sections=${SYNC_ASM_SECTIONS}
     else
-        local do_sync_sections=${SYNC_SECTIONS}
-        local do_async_sections=${ASYNC_SECTIONS}
+        local dummy="SYNC_SECTIONS_${ORACLE_SID}"
+        local SYNC_SECTIONS_SID=${!dummy}
+        local do_sync_sections=${SYNC_SECTIONS_SID:-${SYNC_SECTIONS}}
+        unset dummy
+
+        local dummy="ASYNC_SECTIONS_${ORACLE_SID}"
+        local ASYNC_SECTIONS_SID=${!dummy}
+        local do_async_sections=${ASYNC_SECTIONS_SID:-${ASYNC_SECTIONS}}
     fi
 
     if [ -n "${MK_ORA_SECTIONS[*]}" ]; then

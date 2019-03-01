@@ -1,0 +1,21 @@
+Title: Support for ASYNC/SYNC section for each SID
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1551699977
+Class: feature
+
+The SYNC and ASYNC sections could be configured for each
+ORACLE_SID in mk_oracle.cfg.
+SYNC_SECTIONS_testdb1='instance'
+ASYNC_SECTIONS_testdb1='tablespaces'
+
+Be aware when defining an empty list for ASYNC_SECTIONS.
+This must be done with a space. Do not use an empty string.
+
+ASYNC_SECTIONS_testdb1=' '
+
+Do not remove the instance section from SYNC_SERCTIONS,
+because this is the major check for mk_oracle!

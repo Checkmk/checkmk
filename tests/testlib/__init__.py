@@ -304,6 +304,37 @@ class Site(object):
         live.set_timeout(2)
         return live
 
+    def wait_for_core_reloaded(self, after):
+        # Activating changes can involve an asynchronous(!) monitoring
+        # core restart/reload, so e.g. querying a Livestatus table immediately
+        # might not reflect the changes yet. Ask the core for a successful reload.
+        def config_reloaded():
+            import livestatus
+            try:
+                new_t = self.live.query_value("GET status\nColumns: program_start\n")
+            except livestatus.MKLivestatusException:
+                # Seems like the socket may vanish for a short time. Keep waiting in case
+                # of livestatus (connection) issues...
+                return False
+
+            return new_t > after
+
+        reload_time, timeout = time.time(), 10
+        while not config_reloaded():
+            if time.time() > reload_time + timeout:
+                raise Exception("Config did not update within %d seconds" % timeout)
+            time.sleep(0.2)
+
+        assert config_reloaded()
+
+    def restart_core(self):
+        # Remember the time for the core reload check and wait a second because the program_start
+        # is reported as integer and wait_for_core_reloaded() compares with ">".
+        before_restart = time.time()
+        time.sleep(1)
+        self.omd("restart", "core")
+        self.wait_for_core_reloaded(before_restart)
+
     def send_host_check_result(self, hostname, state, output, expected_state=None):
         if expected_state is None:
             expected_state = state
@@ -1632,27 +1663,7 @@ class CMKWebSession(WebSession):
                 "Failed to activate %s: %r" % (site_id, status)
             assert status["_time_ended"] > time_started
 
-        # Activating changes can involve an asynchronous(!) monitoring
-        # core restart/reload, so e.g. querying a Livestatus table immediately
-        # might not reflect the changes yet. Ask the core for a successful reload.
-        def config_reloaded():
-            import livestatus
-            try:
-                new_t = self.site.live.query_value("GET status\nColumns: program_start\n")
-            except livestatus.MKLivestatusException:
-                # Seems like the socket may vanish for a short time. Keep waiting in case
-                # of livestatus (connection) issues...
-                return False
-
-            return new_t > old_t
-
-        reload_time, timeout = time.time(), 10
-        while not config_reloaded():
-            if time.time() > reload_time + timeout:
-                raise Exception("Config did not update within %d seconds" % timeout)
-            time.sleep(0.2)
-
-        assert config_reloaded()
+        self.site.wait_for_core_reloaded(old_t)
 
     def get_regular_graph(self, hostname, service_description, graph_index, expect_error=False):
         result = self._api_request(

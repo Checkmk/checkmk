@@ -1,11 +1,12 @@
 checkname = 'ucs_c_rack_server_health'
 
 info = [[
-    'storageControllerHealth', 'dn sys/rack-unit-1/board/storage-SAS-SLOT-HBA/vd-0', 'health Good'
+    'storageControllerHealth', 'dn sys/rack-unit-1/board/storage-SAS-SLOT-HBA/vd-0', 'id SLOT-HBA',
+    'health Good'
 ],
         [
             'storageControllerHealth', 'dn sys/rack-unit-2/board/storage-SAS-SLOT-HBA/vd-0',
-            'health AnythingElse'
+            'id SLOT-HBA', 'health AnythingElse'
         ]]
 
 discovery = {

@@ -84,7 +84,7 @@ def check_ddn_s2a_statsdelay(item, params, parsed):
             total_time += time_interval * value
         return total_time / number_of_values
 
-    def check_levels(infotext_formatstring, value, levels, perfname):
+    def _check_levels(infotext_formatstring, value, levels, perfname):
         infotext = infotext_formatstring % value
         if levels:
             warn, crit = levels
@@ -137,12 +137,12 @@ def check_ddn_s2a_statsdelay(item, params, parsed):
     else:
         read_min, read_max, read_avg = 0, 0, 0
 
-    yield check_levels("Average read wait: %.2f s", read_avg, params.get("read_avg"),
-                       "disk_average_read_wait")
-    yield check_levels("Min. read wait: %.2f s", read_min, params.get("read_min"),
-                       "disk_min_read_wait")
-    yield check_levels("Max. read wait: %.2f s", read_max, params.get("read_max"),
-                       "disk_max_read_wait")
+    yield _check_levels("Average read wait: %.2f s", read_avg, params.get("read_avg"),
+                        "disk_average_read_wait")
+    yield _check_levels("Min. read wait: %.2f s", read_min, params.get("read_min"),
+                        "disk_min_read_wait")
+    yield _check_levels("Max. read wait: %.2f s", read_max, params.get("read_max"),
+                        "disk_max_read_wait")
 
     if not is_zero(writes_since_last_check):
         write_min = histogram_min(time_intervals, writes_since_last_check)
@@ -151,12 +151,12 @@ def check_ddn_s2a_statsdelay(item, params, parsed):
     else:
         write_min, write_max, write_avg = 0, 0, 0
 
-    yield check_levels("Average write wait: %.2f s", write_avg, params.get("write_avg"),
-                       "disk_average_write_wait")
-    yield check_levels("Min. write wait: %.2f s", write_min, params.get("write_min"),
-                       "disk_min_write_wait")
-    yield check_levels("Max. write wait: %.2f s", write_max, params.get("write_max"),
-                       "disk_max_write_wait")
+    yield _check_levels("Average write wait: %.2f s", write_avg, params.get("write_avg"),
+                        "disk_average_write_wait")
+    yield _check_levels("Min. write wait: %.2f s", write_min, params.get("write_min"),
+                        "disk_min_write_wait")
+    yield _check_levels("Max. write wait: %.2f s", write_max, params.get("write_max"),
+                        "disk_max_write_wait")
 
 
 check_info['ddn_s2a_statsdelay'] = {

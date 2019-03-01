@@ -1,0 +1,39 @@
+Title: Check API: Make usage of dsname, unit, human_readable_func and infoname in check_levels clearer
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.6.0i1
+Date: 1551435810
+Class: fix
+
+Previously the dsname was also used as title if and only if the infoname was not stated.
+Therewith we got cryptic and not readable titles. The dsname should only be used for
+performance data variables.
+
+Sometimes a title is not needed because the service description already gives the
+relevant information; especially in check plugins where there is just one {{thing}}
+to check, eg. in CPU services:
+Previously: CPU utilization OK - CPU utilization: 23.5%
+Now: CPU utilization OK - 23.5%
+
+In general the structure is as following:
+<ul>
+<li>If the infoname is specified the service detail is prefixed with this infoname as a title "TITLE: "</li>
+<li>If a human_readable_func is given the value and levels are converted with this function</li>
+<li>If a unit is given it is append to the value and each level.</li>
+</ul>
+
+Be aware:
+Every builtin human_readable_func already provides a unit. Thus the unit is not needed in general.
+There may be situations where a human_readable_func which provides a unit AND an additional unit info
+is useful, eg. when a bytes rate is calculated. In this case the service details should display
+"23.5 B/s" whereby
+C+
+unit="/s",
+human_readable_func=get_bytes_human_readable,
+C-
+
+If you use this API function {{check_levels}} in your check plugins you possibly
+need to adapt your check plugin functions. Otherwise duplicate unit infos may be
+displayed or there are missing titles ({{infoname}}).

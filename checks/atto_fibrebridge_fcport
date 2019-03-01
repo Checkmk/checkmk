@@ -43,14 +43,14 @@ def check_atto_fibrebridge_fcport(item, params, info):
             fc_rx_words = get_rate(item + "rx", now, int(line[2]))
 
     if not params["fc_tx_words"]:
-        yield 0, "Tx: %.2f words/s" % fc_tx_words, [("fc_tx_words", fc_tx_words)]
+        yield 0, "TX: %.2f words/s" % fc_tx_words, [("fc_tx_words", fc_tx_words)]
     else:
-        yield check_levels(fc_tx_words, "fc_tx_words", params["fc_tx_words"])
+        yield check_levels(fc_tx_words, "fc_tx_words", params["fc_tx_words"], infoname="TX")
 
     if not params["fc_rx_words"]:
-        yield 0, "Rx: %.2f words/s" % fc_rx_words, [("fc_rx_words", fc_rx_words)]
+        yield 0, "RX: %.2f words/s" % fc_rx_words, [("fc_rx_words", fc_rx_words)]
     else:
-        yield check_levels(fc_rx_words, "fc_rx_words", params["fc_rx_words"])
+        yield check_levels(fc_rx_words, "fc_rx_words", params["fc_rx_words"], infoname="RX")
 
 
 check_info["atto_fibrebridge_fcport"] = {

@@ -190,33 +190,42 @@ def test_discover_exceptions(parsed, selector, error):
         next(check_api.discover(selector)(parsed))
 
 
-@pytest.mark.parametrize("value, levels, representation, result", [
-    (5, (3, 6), None, (1, " (warn/crit at 3/6)")),
-    (7, (3, 6), lambda x: "%.1f m" % x, (2, " (warn/crit at 3.0 m/6.0 m)")),
-    (2, (3, 6, 1, 0), None, (0, "")),
-    (1, (3, 6, 1, 0), None, (0, "")),
-    (0, (3, 6, 1, 0), None, (1, " (warn/crit below 1/0)")),
-    (-1, (3, 6, 1, 0), None, (2, " (warn/crit below 1/0)")),
+@pytest.mark.parametrize("value, levels, representation, unit, result", [
+    (5, (3, 6), int, "", (1, " (warn/crit at 3/6)")),
+    (7, (3, 6), lambda x: "%.1f m" % x, "", (2, " (warn/crit at 3.0 m/6.0 m)")),
+    (7, (3, 6), lambda x: "%.1f" % x, " m", (2, " (warn/crit at 3.0 m/6.0 m)")),
+    (2, (3, 6, 1, 0), int, "", (0, "")),
+    (1, (3, 6, 1, 0), int, "", (0, "")),
+    (0, (3, 6, 1, 0), int, "", (1, " (warn/crit below 1/0)")),
+    (-1, (3, 6, 1, 0), int, "", (2, " (warn/crit below 1/0)")),
 ])
-def test_boundaries(value, levels, representation, result):
-    assert check_api._check_boundaries(value, levels, representation) == result
+def test_boundaries(value, levels, representation, unit, result):
+    assert check_api._check_boundaries(value, levels, representation, unit) == result
 
 
 @pytest.mark.parametrize("value, dsname, params, kwargs, result", [
     (5, "battery", None, {
         "human_readable_func": check_api.get_percent_human_readable
-    }, (0, "battery: 5.0%", [("battery", 5)])),
+    }, (0, "5.0%", [("battery", 5)])),
     (6, "disk", (4, 8), {
         "unit": "years",
         "infoname": "Disk Age"
     }, (1, "Disk Age: 6.00 years (warn/crit at 4.00 years/8.00 years)", [("disk", 6.0, 4, 8)])),
     (5e-7, "H_concentration", (4e-7, 8e-7, 5e-8, 2e-8), {
         "human_readable_func": lambda x: "pH %.1f" % -math.log10(x),
-        "unit": "M",
         "infoname": "Water acidity"
     }, (
         1,
         "Water acidity: pH 6.3 (warn/crit at pH 6.4/pH 6.1)",
+        [("H_concentration", 5e-7, 4e-7, 8e-7)],
+    )),
+    (5e-7, "H_concentration", (4e-7, 8e-7, 5e-8, 2e-8), {
+        "human_readable_func": lambda x: "pH %.1f" % -math.log10(x),
+        "unit": "??",
+        "infoname": "Water acidity"
+    }, (
+        1,
+        "Water acidity: pH 6.3 ?? (warn/crit at pH 6.4 ??/pH 6.1 ??)",
         [("H_concentration", 5e-7, 4e-7, 8e-7)],
     )),
 ])

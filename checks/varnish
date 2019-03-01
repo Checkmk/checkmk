@@ -365,12 +365,12 @@ def check_varnish_stats(_no_item, params, parsed, expected_keys):
         data = parsed.get(key)
         if not data:
             continue
-        descr = "%s/s" % data['descr']
+        descr_per_sec = "%s/s" % data['descr']
         yield check_levels(
             get_rate("varnish.%s" % key, this_time, data['value']),
             data['perf_var_name'],
             params.get(data['params_var_name'], (None, None)),
-            human_readable_func=lambda r, d=descr: ("%.1f " + d) % r)
+            human_readable_func=lambda r, d=descr_per_sec: ("%.1f " + d) % r)
 
 
 def check_varnish_ratio(_no_item, params, parsed, ratio_keys):

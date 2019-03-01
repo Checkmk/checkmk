@@ -114,8 +114,7 @@ def check_aws_elb_latency(item, params, parsed):
             latency,
             'aws_load_balancer_latency',
             params.get('levels_latency'),
-            human_readable_func=get_age_human_readable,
-            infoname="Latency")
+            human_readable_func=get_age_human_readable)
 
 
 check_info['aws_elb.latency'] = {
@@ -165,7 +164,7 @@ def check_aws_elb_http_elb(item, params, parsed):
                 http_errors_perc,
                 'http_%sxx_perc' % http_errors_nr,
                 params.get('levels_http_%sxx_perc' % http_errors_nr),
-                unit='%',
+                human_readable_func=get_percent_human_readable,
                 infoname="%s00-Errors of total requests" % http_errors_nr)
 
 
@@ -217,7 +216,7 @@ def check_aws_elb_http_backend(item, params, parsed):
                 http_errors_perc,
                 'http_%sxx_perc' % http_errors_nr,
                 params.get('levels_http_%sxx_perc' % http_errors_nr),
-                unit='%',
+                human_readable_func=get_percent_human_readable,
                 infoname="%s00-Errors of total requests" % http_errors_nr)
 
     http_backend_2xx = parsed.get('HTTPCode_Backend_2XX')

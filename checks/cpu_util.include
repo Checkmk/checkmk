@@ -151,7 +151,7 @@ def check_cpu_util(util, params, this_time=None, cores=None, perf_max=100):
             "util",
             levels,
             human_readable_func=get_percent_human_readable,
-            infoname="total cpu")
+            infoname="Total CPU")
 
     perfdata += extraperf[1:]  # reference curve for predictive levels
     yield state, infotext, perfdata
@@ -180,19 +180,40 @@ def check_cpu_util_unix(values, params, cores=None, values_counter=True):
         wait_perc = values.iowait
         util_total_perc = values.util_total
 
-    yield check_levels(user_perc, 'user', None, "%")
-    yield check_levels(system_perc, 'system', None, "%")
-    yield check_levels(wait_perc, 'wait', params.get('iowait'), "%")
+    yield check_levels(
+        user_perc, 'user', None, human_readable_func=get_percent_human_readable, infoname="User")
+    yield check_levels(
+        system_perc,
+        'system',
+        None,
+        human_readable_func=get_percent_human_readable,
+        infoname="System")
+    yield check_levels(
+        wait_perc,
+        'wait',
+        params.get('iowait'),
+        human_readable_func=get_percent_human_readable,
+        infoname="Wait")
 
     # Compute values used in virtualized environments (Xen, etc.)
     # Only do this for counters that have counted at least one tick
     # since the system boot. This avoids silly output in systems
     # where these counters are not being used
     if values.steal:
-        yield check_levels(steal_perc, "steal", params.get('steal'), "%")
+        yield check_levels(
+            steal_perc,
+            "steal",
+            params.get('steal'),
+            human_readable_func=get_percent_human_readable,
+            infoname="Steal")
 
     if values.guest:
-        yield check_levels(guest_perc, 'guest', None, "%")
+        yield check_levels(
+            guest_perc,
+            'guest',
+            None,
+            human_readable_func=get_percent_human_readable,
+            infoname="Guest")
 
     summary_cores = []
     if cores:
@@ -219,9 +240,10 @@ def util_perfdata(core, total_perc, core_index, this_time, params):
 
     state, infotext, _ = check_levels(
         total_perc,
-        "Core %s" % core,
+        "core_%s" % core,  # Not used in perfdata
         params.get('levels_single'),
-        human_readable_func=get_percent_human_readable)
+        human_readable_func=get_percent_human_readable,
+        infoname="Core %s" % core)
     if state:
         yield state, infotext, []
 
@@ -243,8 +265,10 @@ def cpu_util_time(this_time, core, perc, threshold, warn_core, crit_core):
         high_load_duration = (this_time - timestamp)
         state, infotext, _ = check_levels(
             high_load_duration,
-            "%s is under high load for" % core, (warn_core, crit_core),
-            human_readable_func=get_age_human_readable)
+            "%s_is_under_high_load_for" % core,  # Not used
+            (warn_core, crit_core),
+            human_readable_func=get_age_human_readable,
+            infoname="%s is under high load for" % core)
         if timestamp == 0:
             set_item_state(core_state_name, this_time)
         elif state:

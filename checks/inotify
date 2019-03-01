@@ -98,7 +98,7 @@ def check_inotify(item, params, parsed):
     set_item_state(None, last_status)
     now = time.time()
 
-    def check_levels(what):
+    def _check_levels(what):
         for mode, warn, crit in params.get("age_last_operation", []):
             if mode != what:
                 continue
@@ -111,7 +111,7 @@ def check_inotify(item, params, parsed):
 
     for mode in sorted(last_status.keys()):
         attr = last_status[mode]
-        levels_info = check_levels(mode)
+        levels_info = _check_levels(mode)
         if levels_info:
             state = levels_info[0]
             yield state, "Last %s: %s ago (%s)" % (

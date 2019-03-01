@@ -1,0 +1,13 @@
+Title: alcatel_power_aos7: Support for new switches
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1551451576
+Class: feature
+
+This werk adds power supply monitoring (equivalent to alcatel_power) support
+for the new switch devices running at least AOS7.
+
+CMK-1775

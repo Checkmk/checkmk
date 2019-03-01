@@ -1636,7 +1636,14 @@ class CMKWebSession(WebSession):
         # core restart/reload, so e.g. querying a Livestatus table immediately
         # might not reflect the changes yet. Ask the core for a successful reload.
         def config_reloaded():
-            new_t = self.site.live.query_value("GET status\nColumns: program_start\n")
+            import livestatus
+            try:
+                new_t = self.site.live.query_value("GET status\nColumns: program_start\n")
+            except livestatus.MKLivestatusException:
+                # Seems like the socket may vanish for a short time. Keep waiting in case
+                # of livestatus (connection) issues...
+                return False
+
             return new_t > old_t
 
         reload_time, timeout = time.time(), 10

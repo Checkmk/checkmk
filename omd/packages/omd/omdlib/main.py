@@ -37,9 +37,7 @@ import fcntl
 import shlex
 import random
 import shutil
-import socket
 import string
-import fnmatch
 import tarfile
 import termios
 import traceback
@@ -53,6 +51,7 @@ from pathlib2 import Path
 
 import omdlib
 import omdlib.certs
+import omdlib.backup
 
 #   .--Logging-------------------------------------------------------------.
 #   |                _                      _                              |
@@ -635,18 +634,13 @@ def all_sites():
     return l
 
 
-def site_is_stopped(site):
-    """Check if site is completely stopped"""
-    return check_status(site, display=False) == 1
-
-
 def start_site(site):
     prepare_and_populate_tmpfs(site)
     call_init_scripts(site, "start")
 
 
 def stop_if_not_stopped(site):
-    if not site_is_stopped(site):
+    if not site.is_stopped():
         stop_site(site)
 
 
@@ -2069,7 +2063,7 @@ def initialize_site_ca(site):
 def config_change(site, config_hooks):
     # Check whether or not site needs to be stopped. Stop and remember to start again later
     site_was_stopped = False
-    if not site_is_stopped(site):
+    if not site.is_stopped():
         site_was_stopped = True
         stop_site(site)
 
@@ -2131,7 +2125,7 @@ def config_set(site, config_hooks, args):
         config_usage()
         return
 
-    if not site_is_stopped(site):
+    if not site.is_stopped():
         sys.stderr.write("Cannot change config variables while site is running.\n")
         return
 
@@ -2283,7 +2277,7 @@ def config_configure(site, config_hooks):
 
 
 def config_configure_hook(site, config_hooks, hook_name):
-    if not site_is_stopped(site):
+    if not site.is_stopped():
         if not dialog_yesno("You cannot change configuration value while the "
                             "site is running. Do you want me to stop the site now?"):
             return
@@ -2988,37 +2982,6 @@ def set_conflict_option(options):
         bail_out("Argument to --conflict must be one of ask, install, keepold and abort.")
 
 
-def get_exclude_patterns(options):
-    excludes = []
-    if "no-rrds" in options or "no-past" in options:
-        excludes.append("var/pnp4nagios/perfdata/*")
-        excludes.append("var/pnp4nagios/spool/*")
-        excludes.append("var/rrdcached/*")
-        excludes.append("var/pnp4nagios/states/*")
-        excludes.append("var/check_mk/rrd/*")
-
-    if "no-logs" in options or "no-past" in options:
-        # Logs of different components
-        excludes.append("var/log/*.log")
-        excludes.append("var/log/*/*")
-        excludes.append("var/pnp4nagios/log/*")
-        excludes.append("var/pnp4nagios/perfdata.dump")
-        # Nagios monitoring history
-        excludes.append("var/nagios/nagios.log")
-        excludes.append("var/nagios/archive/")
-        # Event console
-        excludes.append("var/mkeventd/history/*")
-        # Microcore monitoring history
-        excludes.append("var/check_mk/core/history")
-        excludes.append("var/check_mk/core/archive/*")
-        # HW/SW Inventory history
-        excludes.append("var/check_mk/inventory_archive/*/*")
-        # WATO
-        excludes.append("var/check_mk/wato/snapshots/*.tar")
-
-    return excludes
-
-
 def main_mv_or_cp(old_site, what, args, options=None):
     if options is None:
         options = {}
@@ -3039,7 +3002,7 @@ def main_mv_or_cp(old_site, what, args, options=None):
 
     sitename_must_be_valid(new_site, reuse)
 
-    if not site_is_stopped(old_site):
+    if not old_site.is_stopped():
         bail_out("Cannot %s site '%s' while it is running." % (action, old_site.name))
 
     pids = find_processes_of_user(old_site.name)
@@ -3073,7 +3036,7 @@ def main_mv_or_cp(old_site, what, args, options=None):
             os.mkdir(new_site.dir)
 
         addopts = ""
-        for p in get_exclude_patterns(options):
+        for p in omdlib.backup.get_exclude_patterns(options):
             addopts += " --exclude '/%s'" % p
 
         if opt_verbose:
@@ -3252,7 +3215,7 @@ def main_update(site, args, options=None):
 
     set_conflict_option(options)
 
-    if not site_is_stopped(site):
+    if not site.is_stopped():
         bail_out("Please completely stop '%s' before updating it." % site.name)
 
     # Unmount tmp. We need to recreate the files and directories
@@ -3399,7 +3362,7 @@ def main_umount(site, args, options=None):
                 continue
 
             # Skip the site even when it is partly running
-            if not site_is_stopped(site):
+            if not site.is_stopped():
                 sys.stderr.write(
                     "Cannot unmount tmpfs of site '%s' while it is running.\n" % site.name)
                 continue
@@ -3412,7 +3375,7 @@ def main_umount(site, args, options=None):
                 exit_status = 1
     else:
         # Skip the site even when it is partly running
-        if not site_is_stopped(site):
+        if not site.is_stopped():
             bail_out("Cannot unmount tmpfs of site '%s' while it is running." % site.name)
         unmount_tmpfs(site, kill="kill" in options)
     sys.exit(exit_status)
@@ -3559,7 +3522,7 @@ def main_config(site, args, options=None):
         options = {}
 
     if (len(args) == 0 or args[0] != "show") and \
-        not site_is_stopped(site) and opt_force:
+        not site.is_stopped() and opt_force:
         need_start = True
         stop_site(site)
     else:
@@ -3594,158 +3557,6 @@ def main_su(site, args, options=None):
         bail_out("Cannot open a shell for user %s" % site.name)
 
 
-def backup_site_files_to_tarfile(site, tar, options):
-    exclude = get_exclude_patterns(options)
-    exclude.append("tmp/*")  # Exclude all tmpfs files
-
-    # exclude all temporary files that are created during cmk.utils.store writes
-    exclude.append("*.mk.new*")
-    exclude.append("var/log/.liveproxyd.state.new*")
-
-    # exclude section cache because files may vanish during backup. It would
-    # be better to have them in the backup and simply don't make the backup
-    # fail in case a file vanishes during the backup, but the tarfile module
-    # does not allow this.
-    exclude.append("var/check_mk/persisted/*")
-    exclude.append("var/check_mk/persisted_sections/*")
-
-    def filter_files(filename):
-        for glob_pattern in exclude:
-            # patterns are relative to site directory, filename is full path.
-            # strip of the site.dir prefix from full path
-            if fnmatch.fnmatch(filename[len(site.dir) + 1:], glob_pattern):
-                return True  # exclude this file
-        return False
-
-    tar.add(site.dir, site.name, exclude=filter_files)
-
-
-# We need to use our tarfile class here to perform a rrdcached SUSPEND/RESUME
-# to prevent writing to individual RRDs during backups.
-class BackupTarFile(tarfile.TarFile):
-    def __init__(self, *args, **kwargs):
-        self._site = kwargs.pop("site")
-        self._site_stopped = site_is_stopped(self._site)
-        self._rrdcached_socket_path = self._site.dir + "/tmp/run/rrdcached.sock"
-        self._sock = None
-        self._sites_path = os.path.realpath("/omd/sites")
-
-        super(BackupTarFile, self).__init__(*args, **kwargs)
-
-    def addfile(self, tarinfo, fileobj=None):
-        # In case of a stopped site or stopped rrdcached there is no
-        # need to suspend rrd updates
-        if self._site_stopped or not os.path.exists(self._rrdcached_socket_path):
-            super(BackupTarFile, self).addfile(tarinfo, fileobj)
-            return
-
-        site_rel_path = tarinfo.name[len(self._site.name) + 1:]
-
-        is_rrd = (site_rel_path.startswith("var/pnp4nagios/perfdata") \
-                  or site_rel_path.startswith("var/check_mk/rrd")) \
-                 and site_rel_path.endswith(".rrd")
-
-        # rrdcached works realpath
-        rrd_file_path = os.path.join(self._sites_path, tarinfo.name)
-
-        if is_rrd:
-            self._suspend_rrd_update(rrd_file_path)
-
-        try:
-            super(BackupTarFile, self).addfile(tarinfo, fileobj)
-        finally:
-            if is_rrd:
-                self._resume_rrd_update(rrd_file_path)
-
-    def _suspend_rrd_update(self, path):
-        if opt_verbose:
-            sys.stdout.write("Pausing RRD updates for %s\n" % path)
-        self._send_rrdcached_command("SUSPEND %s" % path)
-
-    def _resume_rrd_update(self, path):
-        if opt_verbose:
-            sys.stdout.write("Resuming RRD updates for %s\n" % path)
-        self._send_rrdcached_command("RESUME %s" % path)
-
-    def _resume_all_rrds(self):
-        if opt_verbose:
-            sys.stdout.write("Resuming RRD updates for ALL\n")
-        self._send_rrdcached_command("RESUMEALL")
-
-    def _send_rrdcached_command(self, cmd):
-        if not self._sock:
-            self._sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-            try:
-                self._sock.connect(self._rrdcached_socket_path)
-            except socket.error as e:
-                # ECONNRESET: Broken pipe
-                # EPIPE:      Connection reset by peer
-                #             Happens, for example, when the rrdcached is reloaded/restarted during backup
-                if e.errno in (errno.ECONNRESET, errno.EPIPE):
-                    self._sock = None
-                    if opt_verbose:
-                        sys.stdout.write("skipping rrdcached command (%s)\n" % e)
-                    return
-                else:
-                    raise
-
-        try:
-            if opt_verbose:
-                sys.stdout.write("rrdcached command: %s\n" % cmd)
-            self._sock.sendall("%s\n" % cmd)
-
-            answer = ""
-            while not answer.endswith("\n"):
-                answer += self._sock.recv(1024)
-        except socket.error as e:
-            if e.errno == 32:  # Broken pipe
-                self._sock = None
-                if opt_verbose:
-                    sys.stdout.write("skipping rrdcached command (broken pipe)\n")
-                return
-            else:
-                raise
-
-        code, msg = answer.strip().split(" ", 1)
-        if code == "-1":
-            if opt_verbose:
-                sys.stdout.write("rrdcached response: %r\n" % (answer))
-
-            if cmd.startswith("SUSPEND") and msg.endswith("already suspended"):
-                pass  # is fine when trying to suspend
-            elif cmd.startswith("RESUME") and msg.endswith("not suspended"):
-                pass  # is fine when trying to resume
-            elif msg.endswith("No such file or directory"):
-                pass  # is fine (unknown RRD)
-            else:
-                raise Exception("Error while processing rrdcached command (%s): %s" % (cmd, msg))
-
-        elif opt_verbose:
-            sys.stdout.write("rrdcached response: %r\n" % (answer))
-
-    def close(self):
-        super(BackupTarFile, self).close()
-
-        if self._sock:
-            self._resume_all_rrds()
-            self._sock.close()
-
-
-def backup_site_to_tarfile(site, fh, mode, options):
-    tar = BackupTarFile.open(fileobj=fh, mode=mode, site=site)
-    try:
-        # Add the version symlink as first file to be able to
-        # check a) the sitename and b) the version before reading
-        # the whole tar archive. Important for streaming.
-        # The file is added twice to get the first for validation
-        # and the second for excration during restore.
-        tar.add(site.dir + "/version", site.name + "/version")
-        backup_site_files_to_tarfile(site, tar, options)
-        tar.close()
-    except IOError as e:
-        bail_out("Failed to perform backup: %s" % e)
-
-
 def main_backup(site, args, options=None):
     if options is None:
         options = {}
@@ -3768,7 +3579,10 @@ def main_backup(site, args, options=None):
     if "no-compression" not in options:
         tar_mode += "gz"
 
-    backup_site_to_tarfile(site, fh, tar_mode, options)
+    try:
+        omdlib.backup.backup_site_to_tarfile(site, fh, tar_mode, options, opt_verbose)
+    except IOError as e:
+        bail_out("Failed to perform backup: %s" % e)
 
 
 def main_restore(site, args, options=None):
@@ -3899,7 +3713,7 @@ def prepare_restore_as_root(site, options):
     sitename_must_be_valid(site, reuse)
 
     if reuse:
-        if not site_is_stopped(site) and not "kill" in options:
+        if not site.is_stopped() and not "kill" in options:
             bail_out("Cannot restore '%s' while it is running." % (site.name))
         else:
             os.system('omd stop %s' % site.name)  # nosec
@@ -3918,7 +3732,7 @@ def prepare_restore_as_root(site, options):
 
 
 def prepare_restore_as_site_user(site, options):
-    if not site_is_stopped(site) and not "kill" in options:
+    if not site.is_stopped() and not "kill" in options:
         bail_out("Cannot restore site while it is running.")
 
     verify_directory_write_access(site)
@@ -4354,6 +4168,10 @@ class SiteContext(AbstractSiteContext):
         """Whether or not this site has been disabled with 'omd disable'"""
         apache_conf = "/omd/apache/%s.conf" % self.name
         return not os.path.exists(apache_conf)
+
+    def is_stopped(self):
+        """Check if site is completely stopped"""
+        return check_status(self, display=False) == 1
 
     @staticmethod
     def is_site_context():

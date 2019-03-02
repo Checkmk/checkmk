@@ -30,6 +30,7 @@ import errno
 import socket
 import tarfile
 import fnmatch
+from typing import Tuple  # pylint: disable=unused-import
 
 
 def backup_site_to_tarfile(site, fh, mode, options, verbose):
@@ -212,3 +213,25 @@ class BackupTarFile(tarfile.TarFile):
         if self._sock:
             self._resume_all_rrds()
             self._sock.close()
+
+
+def get_site_and_version_from_backup(tar):
+    # type: (tarfile.TarFile) -> Tuple[str, str]
+    """Get the first file of the tar archive. Expecting <site>/version symlink
+    for validation reasons."""
+    site_tarinfo = tar.next()
+    if site_tarinfo is None:
+        raise Exception("Failed to detect version of backed up site.")
+
+    try:
+        sitename, version_name = site_tarinfo.name.split("/", 1)
+    except ValueError:
+        raise Exception("Failed to detect version of backed up site. "
+                        "Maybe the backup is from an incompatible version.")
+
+    if version_name == "version":
+        version = site_tarinfo.linkname.split('/')[-1]
+    else:
+        raise Exception("Failed to detect version of backed up site.")
+
+    return sitename, version

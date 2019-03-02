@@ -3610,19 +3610,10 @@ def main_restore(site, args, options=None):
     except tarfile.ReadError as e:
         bail_out("Failed to open the backup: %s" % e)
 
-    # Get the first file of the tar archive. Expecting <site>/version symlink
-    # for validation reasons.
-    site_tarinfo = tar.next()
     try:
-        sitename, version_name = site_tarinfo.name.split("/", 1)
-    except ValueError:
-        bail_out("Failed to detect version of backed up site. "
-                 "Maybe the backup is from an incompatible version.")
-
-    if version_name == "version":
-        version = site_tarinfo.linkname.split('/')[-1]
-    else:
-        bail_out("Failed to detect version of backed up site.")
+        sitename, version = omdlib.backup.get_site_and_version_from_backup(tar)
+    except Exception as e:
+        bail_out(e)
 
     if not version_exists(version):
         bail_out("You need to have version %s installed to be able to restore "

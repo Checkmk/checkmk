@@ -233,17 +233,18 @@ def page_index():
         right_button=("javascript:document.location.reload();", _("Reload"), "refresh"),
         id_="data")
     items = []
-    for view_name, view in views.get_permitted_views().items():
-        if view.get("mobile") and not view.get("hidden"):
+    for view_name, view_spec in views.get_permitted_views().items():
+        if view_spec.get("mobile") and not view_spec.get("hidden"):
+            view = views.View(view_name, view_spec)
             url = "mobile_view.py?view_name=%s" % view_name
             count = ""
-            if not view.get("mustsearch"):
+            if not view_spec.get("mustsearch"):
                 painter_options = PainterOptions.get_instance()
                 painter_options.load(view_name)
                 count = views.show_view(view, only_count=True)
                 count = '<span class="ui-li-count">%d</span>' % count
-            items.append((view.get("topic"), url,
-                          '%s %s' % (view.get("linktitle", view["title"]), count)))
+            items.append((view_spec.get("topic"), url,
+                          '%s %s' % (view_spec.get("linktitle", view_spec["title"]), count)))
     jqm_page_index(_("Check_MK Mobile"), items)
     # Link to non-mobile GUI
 
@@ -274,11 +275,13 @@ def page_view():
     if not view_name:
         return page_index()
 
-    view = views.get_permitted_views().get(view_name)
-    if not view:
+    view_spec = views.get_permitted_views().get(view_name)
+    if not view_spec:
         raise MKUserError("view_name", "No view defined with the name '%s'." % view_name)
 
-    title = views.view_title(view)
+    view = views.View(view_name, view_spec)
+
+    title = views.view_title(view_spec)
     mobile_html_head(title)
 
     painter_options = PainterOptions.get_instance()
@@ -301,28 +304,28 @@ def page_view():
 
 def render_view(view, rows, datasource, group_painters, painters, show_heading, show_buttons,
                 show_checkboxes, layout, num_columns, show_filters, show_footer, browser_reload):
-
+    view_spec = view.spec
     home = ("mobile.py", "Home", "home")
 
     page = html.request.var("page")
     if not page:
-        if view.get("mustsearch"):
+        if view_spec.get("mustsearch"):
             page = "filter"
         else:
             page = "data"
 
-    title = views.view_title(view)
+    title = views.view_title(view_spec)
     navbar = [("data", _("Results"), "grid", 'results_button'),
               ("filter", _("Filter"), "search", False)]
     if config.user.may("general.act"):
         navbar.append(("commands", _("Commands"), "gear", False))
 
     # Should we show a page with context links?
-    context_links = visuals.collect_context_links(view, mobile=True, only_types=['views'])
+    context_links = visuals.collect_context_links(view_spec, mobile=True, only_types=['views'])
 
     if context_links:
         navbar.append(("context", _("Context"), "arrow-r", False))
-    page_id = "view_" + view["name"]
+    page_id = "view_" + view_spec["name"]
 
     if page == "filter":
         jqm_page_header(_("Filter / Search"), left_button=home, id_="filter")
@@ -336,13 +339,13 @@ def render_view(view, rows, datasource, group_painters, painters, show_heading, 
             show_commands = True
             if html.request.has_var("_do_actions"):
                 try:
-                    show_commands = do_commands(view, datasource["infos"][0], rows)
+                    show_commands = do_commands(view_spec, datasource["infos"][0], rows)
                 except MKUserError as e:
                     html.show_error(e)
                     html.add_user_error(e.varname, e)
                     show_commands = True
             if show_commands:
-                show_command_form(view, datasource, rows)
+                show_command_form(view_spec, datasource, rows)
             jqm_page_navfooter(navbar, 'commands', page_id)
 
     elif page == "data":
@@ -358,8 +361,8 @@ def render_view(view, rows, datasource, group_painters, painters, show_heading, 
         else:
             try:
                 cmk.gui.view_utils.check_limit(rows, views.get_limit(), config.user)
-                layout.render(rows, view, group_painters, painters, num_columns, show_checkboxes and
-                              not html.do_actions())
+                layout.render(rows, view_spec, group_painters, painters, num_columns,
+                              show_checkboxes and not html.do_actions())
             except Exception as e:
                 html.write(_("Error showing view: %s") % e)
         html.close_div()

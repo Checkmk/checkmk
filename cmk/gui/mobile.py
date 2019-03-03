@@ -290,8 +290,7 @@ def page_view():
 
     try:
         view_renderer = MobileViewRenderer(view)
-        views.show_view(
-            view, view_renderer, show_heading=False, show_buttons=False, show_footer=False)
+        views.show_view(view, view_renderer)
     except Exception as e:
         if config.debug:
             raise
@@ -301,8 +300,8 @@ def page_view():
 
 
 class MobileViewRenderer(views.ViewRenderer):
-    def render(self, rows, group_cells, cells, show_heading, show_buttons, show_checkboxes, layout,
-               num_columns, show_filters, show_footer, browser_reload):
+    def render(self, rows, group_cells, cells, show_checkboxes, layout, num_columns, show_filters,
+               browser_reload):
         view_spec = self.view.spec
         home = ("mobile.py", "Home", "home")
 

@@ -233,6 +233,7 @@ catalog_titles = {
     "containerization" : "Containerization",
         "docker"       : "Docker",
         "kubernetes"   : "Kubernetes",
+        "lxc"          : "Linux Container",
     "agentless": "Networking checks without agent",
     "generic"  : "Generic check plugins",
     "unsorted" : "Uncategorized",

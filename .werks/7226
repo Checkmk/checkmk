@@ -1,0 +1,23 @@
+Title: LXC: Add basic support for Linux containers
+Level: 2
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1551686646
+Class: feature
+
+The agent is now detecting when it is executed in a Linux container
+context and changes it's behaviour depending the environment.
+
+In containers the agent currently does the following:
+
+<ul>
+<li>lxc_container_cpu: This check is used instead of the normal CPU
+utilization check</li>
+<li>zfs filesystems are not excluded for the df section anymore</li>
+<li>kernel section is not processed, because it's the host systems
+kernel the agent reports information for</li>
+<li>drbd section is not processed for the same reason</li>
+<li>lnx_thermal section is not processed for the same reason</li>
+</ul>

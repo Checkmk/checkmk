@@ -241,7 +241,8 @@ def page_index():
             if not view_spec.get("mustsearch"):
                 painter_options = PainterOptions.get_instance()
                 painter_options.load(view_name)
-                count = views.show_view(view, only_count=True)
+                view_renderer = MobileViewRenderer(view)
+                count = views.show_view(view, view_renderer, only_count=True)
                 count = '<span class="ui-li-count">%d</span>' % count
             items.append((view_spec.get("topic"), url,
                           '%s %s' % (view_spec.get("linktitle", view_spec["title"]), count)))
@@ -288,12 +289,9 @@ def page_view():
     painter_options.load(view_name)
 
     try:
+        view_renderer = MobileViewRenderer(view)
         views.show_view(
-            view,
-            show_heading=False,
-            show_buttons=False,
-            show_footer=False,
-            render_function=render_view)
+            view, view_renderer, show_heading=False, show_buttons=False, show_footer=False)
     except Exception as e:
         if config.debug:
             raise
@@ -302,78 +300,79 @@ def page_view():
     mobile_html_foot()
 
 
-def render_view(view, rows, datasource, group_painters, painters, show_heading, show_buttons,
-                show_checkboxes, layout, num_columns, show_filters, show_footer, browser_reload):
-    view_spec = view.spec
-    home = ("mobile.py", "Home", "home")
+class MobileViewRenderer(views.ViewRenderer):
+    def render(self, rows, datasource, group_cells, cells, show_heading, show_buttons,
+               show_checkboxes, layout, num_columns, show_filters, show_footer, browser_reload):
+        view_spec = self.view.spec
+        home = ("mobile.py", "Home", "home")
 
-    page = html.request.var("page")
-    if not page:
-        if view_spec.get("mustsearch"):
-            page = "filter"
-        else:
-            page = "data"
+        page = html.request.var("page")
+        if not page:
+            if view_spec.get("mustsearch"):
+                page = "filter"
+            else:
+                page = "data"
 
-    title = views.view_title(view_spec)
-    navbar = [("data", _("Results"), "grid", 'results_button'),
-              ("filter", _("Filter"), "search", False)]
-    if config.user.may("general.act"):
-        navbar.append(("commands", _("Commands"), "gear", False))
-
-    # Should we show a page with context links?
-    context_links = visuals.collect_context_links(view_spec, mobile=True, only_types=['views'])
-
-    if context_links:
-        navbar.append(("context", _("Context"), "arrow-r", False))
-    page_id = "view_" + view_spec["name"]
-
-    if page == "filter":
-        jqm_page_header(_("Filter / Search"), left_button=home, id_="filter")
-        show_filter_form(show_filters)
-        jqm_page_navfooter(navbar, 'filter', page_id)
-
-    elif page == "commands":
-        # Page: Commands
+        title = views.view_title(view_spec)
+        navbar = [("data", _("Results"), "grid", 'results_button'),
+                  ("filter", _("Filter"), "search", False)]
         if config.user.may("general.act"):
-            jqm_page_header(_("Commands"), left_button=home, id_="commands")
-            show_commands = True
-            if html.request.has_var("_do_actions"):
+            navbar.append(("commands", _("Commands"), "gear", False))
+
+        # Should we show a page with context links?
+        context_links = visuals.collect_context_links(view_spec, mobile=True, only_types=['views'])
+
+        if context_links:
+            navbar.append(("context", _("Context"), "arrow-r", False))
+        page_id = "view_" + view_spec["name"]
+
+        if page == "filter":
+            jqm_page_header(_("Filter / Search"), left_button=home, id_="filter")
+            show_filter_form(show_filters)
+            jqm_page_navfooter(navbar, 'filter', page_id)
+
+        elif page == "commands":
+            # Page: Commands
+            if config.user.may("general.act"):
+                jqm_page_header(_("Commands"), left_button=home, id_="commands")
+                show_commands = True
+                if html.request.has_var("_do_actions"):
+                    try:
+                        show_commands = do_commands(view_spec, datasource["infos"][0], rows)
+                    except MKUserError as e:
+                        html.show_error(e)
+                        html.add_user_error(e.varname, e)
+                        show_commands = True
+                if show_commands:
+                    show_command_form(view_spec, datasource, rows)
+                jqm_page_navfooter(navbar, 'commands', page_id)
+
+        elif page == "data":
+            # Page: data rows of view
+            jqm_page_header(
+                title,
+                left_button=home,
+                right_button=("javascript:document.location.reload();", _("Reload"), "refresh"),
+                id_="data")
+            html.open_div(id_="view_results")
+            if len(rows) == 0:
+                html.write(_("No hosts/services found."))
+            else:
                 try:
-                    show_commands = do_commands(view_spec, datasource["infos"][0], rows)
-                except MKUserError as e:
-                    html.show_error(e)
-                    html.add_user_error(e.varname, e)
-                    show_commands = True
-            if show_commands:
-                show_command_form(view_spec, datasource, rows)
-            jqm_page_navfooter(navbar, 'commands', page_id)
+                    cmk.gui.view_utils.check_limit(rows, views.get_limit(), config.user)
+                    layout.render(rows, view_spec, group_cells, cells, num_columns,
+                                  show_checkboxes and not html.do_actions())
+                except Exception as e:
+                    html.write(_("Error showing view: %s") % e)
+            html.close_div()
+            jqm_page_navfooter(navbar, 'data', page_id)
 
-    elif page == "data":
-        # Page: data rows of view
-        jqm_page_header(
-            title,
-            left_button=home,
-            right_button=("javascript:document.location.reload();", _("Reload"), "refresh"),
-            id_="data")
-        html.open_div(id_="view_results")
-        if len(rows) == 0:
-            html.write(_("No hosts/services found."))
-        else:
-            try:
-                cmk.gui.view_utils.check_limit(rows, views.get_limit(), config.user)
-                layout.render(rows, view_spec, group_painters, painters, num_columns,
-                              show_checkboxes and not html.do_actions())
-            except Exception as e:
-                html.write(_("Error showing view: %s") % e)
-        html.close_div()
-        jqm_page_navfooter(navbar, 'data', page_id)
-
-    # Page: Context buttons
-    #if context_links:
-    elif page == "context":
-        jqm_page_header(_("Context"), left_button=home, id_="context")
-        show_context_links(context_links)
-        jqm_page_navfooter(navbar, 'context', page_id)
+        # Page: Context buttons
+        #if context_links:
+        elif page == "context":
+            jqm_page_header(_("Context"), left_button=home, id_="context")
+            show_context_links(context_links)
+            jqm_page_navfooter(navbar, 'context', page_id)
 
 
 def show_filter_form(show_filters):

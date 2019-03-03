@@ -209,6 +209,7 @@ class View(object):
         super(View, self).__init__()
         self.name = view_name
         self.spec = view_spec
+        self._row_limit = None  # type: Optional[int]
 
     @property
     def datasource(self):
@@ -225,6 +226,17 @@ class View(object):
                     None,
                     _("The view '%s' using the datasource '%s' can not be rendered "
                       "because the datasource does not exist.") % (self.name, self.datasource))
+
+    @property
+    def row_limit(self):
+        if self.datasource.ignore_limit:
+            return None
+
+        return self._row_limit
+
+    @row_limit.setter
+    def row_limit(self, row_limit):
+        self._row_limit = row_limit
 
 
 class ViewRenderer(object):
@@ -349,7 +361,7 @@ class GUIViewRenderer(ViewRenderer):
         if not has_done_actions:
             # Limit exceeded? Show warning
             if display_options.enabled(display_options.W):
-                cmk.gui.view_utils.check_limit(rows, get_limit(), config.user)
+                cmk.gui.view_utils.check_limit(rows, self.view.row_limit, config.user)
             layout.render(rows, view_spec, group_cells, cells, num_columns, show_checkboxes and
                           not html.do_actions())
             headinfo = "%d %s" % (row_count, _("row") if row_count == 1 else _("rows"))
@@ -1115,6 +1127,7 @@ def page_view():
     view_spec, view_name = html.get_item_input("view_name", get_permitted_views())
 
     view = View(view_name, view_spec)
+    view.row_limit = get_limit()
 
     # Gather the page context which is needed for the "add to visual" popup menu
     # to add e.g. views to dashboards or reports
@@ -1132,8 +1145,7 @@ def page_view():
 
 # Display view with real data. This is *the* function everying
 # is about.
-def show_view(view, view_renderer, only_count=False, limit=None):
-
+def show_view(view, view_renderer, only_count=False):
     display_options.load_from_html()
 
     # Load from hard painter options > view > hard coded default
@@ -1211,15 +1223,6 @@ def show_view(view, view_renderer, only_count=False, limit=None):
     else:
         only_sites = None
 
-    # Prepare limit:
-    # We had a problem with stats queries on the logtable where
-    # the limit was not applied on the resulting rows but on the
-    # lines of the log processed. This resulted in wrong stats.
-    # For these datasources we ignore the query limits.
-    if limit is None:  # Otherwise: specified as argument
-        if not view.datasource.ignore_limit:
-            limit = get_limit()
-
     # Fork to availability view. We just need the filter headers, since we do not query the normal
     # hosts and service table, but "statehist". This is *not* true for BI availability, though (see later)
     if html.request.var("mode") == "availability" and ("aggr" not in view.datasource.infos or
@@ -1229,7 +1232,7 @@ def show_view(view, view_renderer, only_count=False, limit=None):
         context.update(visuals.get_singlecontext_html_vars(view.spec))
 
         return cmk.gui.plugins.views.availability.render_availability_page(
-            view.spec, view.datasource, context, filterheaders, only_sites, limit)
+            view.spec, view.datasource, context, filterheaders, only_sites, view.row_limit)
 
     query = filterheaders + view.spec.get("add_headers", "")
 
@@ -1265,12 +1268,15 @@ def show_view(view, view_renderer, only_count=False, limit=None):
         # is a list of argument to hand over to the function together with all other arguments that
         # are passed to query_data().
         if callable(view.datasource.table):
-            rows = view.datasource.table(columns, query, only_sites, limit, all_active_filters)
+            rows = view.datasource.table(columns, query, only_sites, view.row_limit,
+                                         all_active_filters)
         elif isinstance(view.datasource.table, tuple):
             func, args = view.datasource.table
-            rows = func(view.datasource, columns, add_columns, query, only_sites, limit, *args)
+            rows = func(view.datasource, columns, add_columns, query, only_sites, view.row_limit,
+                        *args)
         else:
-            rows = query_data(view.datasource, columns, add_columns, query, only_sites, limit)
+            rows = query_data(view.datasource, columns, add_columns, query, only_sites,
+                              view.row_limit)
 
         # Now add join information, if there are join columns
         if join_cells:
@@ -1548,8 +1554,8 @@ def play_alarm_sounds():
             break  # only one sound at one time
 
 
-# How many data rows may the user query?
 def get_limit():
+    """How many data rows may the user query?"""
     limitvar = html.request.var("limit", "soft")
     if limitvar == "hard" and config.user.may("general.ignore_soft_limit"):
         return config.hard_query_limit

@@ -977,7 +977,7 @@ def show_view(view,
     # have a hardcoded value are not changeable by the user
     show_filters = visuals.filters_of_visual(
         view.spec, view.datasource.infos, link_filters=view.datasource.link_filters)
-    show_filters = visuals.visible_filters_of_visual(view, show_filters)
+    show_filters = visuals.visible_filters_of_visual(view.spec, show_filters)
 
     # FIXME TODO HACK to make grouping single contextes possible on host/service infos
     # Is hopefully cleaned up soon.
@@ -1025,7 +1025,7 @@ def show_view(view,
     all_active_filters = [f for f in use_filters if f.available()]
     for filt in all_active_filters:
         try:
-            header = filt.filter(view.datasource.tablename)
+            header = filt.filter(view.datasource.table)
         except MKUserError as e:
             html.add_user_error(e.varname, e)
             continue
@@ -1179,9 +1179,8 @@ def show_view(view,
     if not render_function:
         render_function = render_view
 
-    render_function(view.spec, rows, view.datasource, group_cells, cells, show_heading,
-                    show_buttons, show_checkboxes, layout, num_columns, show_filters, show_footer,
-                    browser_reload)
+    render_function(view, rows, view.datasource, group_cells, cells, show_heading, show_buttons,
+                    show_checkboxes, layout, num_columns, show_filters, show_footer, browser_reload)
 
 
 SorterEntry = namedtuple("SorterEntry", ["sorter", "negate", "join_key"])
@@ -1303,6 +1302,7 @@ def columns_of_cells(cells):
 # then please also do this in htdocs/mobile.py!
 def render_view(view, rows, datasource, group_painters, painters, show_heading, show_buttons,
                 show_checkboxes, layout, num_columns, show_filters, show_footer, browser_reload):
+    view_spec = view.spec
 
     if html.transaction_valid() and html.do_actions():
         html.set_browser_reload(0)
@@ -1311,10 +1311,10 @@ def render_view(view, rows, datasource, group_painters, painters, show_heading, 
     if show_heading:
         # Show/Hide the header with page title, MK logo, etc.
         if display_options.enabled(display_options.H):
-            html.body_start(view_title(view))
+            html.body_start(view_title(view_spec))
 
         if display_options.enabled(display_options.T):
-            html.top_heading(view_title(view))
+            html.top_heading(view_title(view_spec))
 
     has_done_actions = False
     row_count = len(rows)
@@ -1333,12 +1333,12 @@ def render_view(view, rows, datasource, group_painters, painters, show_heading, 
             (isinstance(datasource.table, str)) and \
             ("host" in datasource.table or "service" in datasource.table)
         _show_context_links(
-            view,
+            view_spec,
             show_filters,
             # Take into account: permissions, display_options
             row_count > 0 and command_form,
             # Take into account: layout capabilities
-            layout.can_display_checkboxes and not view.get("force_checkboxes"),
+            layout.can_display_checkboxes and not view_spec.get("force_checkboxes"),
             show_checkboxes,
             # Show link to availability
             datasource.table in ["hosts", "services"] or "aggr" in datasource.infos,
@@ -1349,7 +1349,7 @@ def render_view(view, rows, datasource, group_painters, painters, show_heading, 
     html.show_user_errors()
 
     # Filter form
-    filter_isopen = view.get("mustsearch") and not html.request.var("filled_in")
+    filter_isopen = view_spec.get("mustsearch") and not html.request.var("filled_in")
     if display_options.enabled(display_options.F) and len(show_filters) > 0:
         show_filter_form(filter_isopen, show_filters)
 
@@ -1358,18 +1358,19 @@ def render_view(view, rows, datasource, group_painters, painters, show_heading, 
         # If we are currently within an action (confirming or executing), then
         # we display only the selected rows (if checkbox mode is active)
         if show_checkboxes and html.do_actions():
-            rows = filter_selected_rows(view, rows, weblib.get_rowselection('view-' + view['name']))
+            rows = filter_selected_rows(view_spec, rows,
+                                        weblib.get_rowselection('view-' + view_spec['name']))
 
         # There are one shot actions which only want to affect one row, filter the rows
         # by this id during actions
         if html.request.has_var("_row_id") and html.do_actions():
-            rows = filter_by_row_id(view, rows)
+            rows = filter_by_row_id(view_spec, rows)
 
         if html.do_actions() and html.transaction_valid():  # submit button pressed, no reload
             try:
                 # Create URI with all actions variables removed
                 backurl = html.makeuri([], delvars=['filled_in', 'actions'])
-                has_done_actions = do_actions(view, datasource.infos[0], rows, backurl)
+                has_done_actions = do_actions(view_spec, datasource.infos[0], rows, backurl)
             except MKUserError as e:
                 html.show_error(e)
                 html.add_user_error(e.varname, e)
@@ -1388,15 +1389,15 @@ def render_view(view, rows, datasource, group_painters, painters, show_heading, 
         # There are one shot actions which only want to affect one row, filter the rows
         # by this id during actions
         if html.request.has_var("_row_id") and html.do_actions():
-            rows = filter_by_row_id(view, rows)
+            rows = filter_by_row_id(view_spec, rows)
 
         try:
-            do_actions(view, datasource.infos[0], rows, '')
+            do_actions(view_spec, datasource.infos[0], rows, '')
         except:
             pass  # currently no feed back on webservice
 
     painter_options = PainterOptions.get_instance()
-    painter_options.show_form(view)
+    painter_options.show_form(view_spec)
 
     # The refreshing content container
     if display_options.enabled(display_options.R):
@@ -1406,12 +1407,12 @@ def render_view(view, rows, datasource, group_painters, painters, show_heading, 
         # Limit exceeded? Show warning
         if display_options.enabled(display_options.W):
             cmk.gui.view_utils.check_limit(rows, get_limit(), config.user)
-        layout.render(rows, view, group_painters, painters, num_columns, show_checkboxes and
+        layout.render(rows, view_spec, group_painters, painters, num_columns, show_checkboxes and
                       not html.do_actions())
         headinfo = "%d %s" % (row_count, _("row") if row_count == 1 else _("rows"))
         if show_checkboxes:
-            selected = filter_selected_rows(view, rows,
-                                            weblib.get_rowselection('view-' + view['name']))
+            selected = filter_selected_rows(view_spec, rows,
+                                            weblib.get_rowselection('view-' + view_spec['name']))
             headinfo = "%d/%s" % (len(selected), headinfo)
 
         if html.output_format == "html":
@@ -1427,7 +1428,7 @@ def render_view(view, rows, datasource, group_painters, painters, show_heading, 
                     layout.can_display_checkboxes)
 
         # Play alarm sounds, if critical events have been displayed
-        if display_options.enabled(display_options.S) and view.get("play_sounds"):
+        if display_options.enabled(display_options.S) and view_spec.get("play_sounds"):
             play_alarm_sounds()
     else:
         # Always hide action related context links in this situation

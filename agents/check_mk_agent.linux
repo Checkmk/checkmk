@@ -79,9 +79,9 @@ fi
 # Detect whether or not the agent is being executed in a container
 # environment.
 if [ -f /.dockerenv ]; then
-    MK_IN_CONTAINER=1
+    IS_DOCKERIZED=1
 else
-    unset MK_IN_CONTAINER
+    unset IS_DOCKERIZED
 fi
 
 # Prefer (relatively) new /usr/bin/timeout from coreutils against
@@ -116,7 +116,7 @@ fi
 
 function section_mem()
 {
-    if [ -z "$MK_IN_CONTAINER" ]; then
+    if [ -z "$IS_DOCKERIZED" ]; then
         echo '<<<mem>>>'
         grep -E -v '^Swap:|^Mem:|total:' < /proc/meminfo
     else
@@ -139,7 +139,7 @@ function section_cpu()
     fi
     NUM_CPUS=$(grep -c -E $CPU_REGEX < /proc/cpuinfo)
 
-    if [ -z "$MK_IN_CONTAINER" ]; then
+    if [ -z "$IS_DOCKERIZED" ]; then
         echo '<<<cpu>>>'
         echo "$(cat /proc/loadavg) $NUM_CPUS"
     else
@@ -153,7 +153,7 @@ function section_cpu()
 function section_uptime()
 {
     echo '<<<uptime>>>'
-    if [ -z "$MK_IN_CONTAINER" ]; then
+    if [ -z "$IS_DOCKERIZED" ]; then
         cat /proc/uptime
     else
         echo "$(($(date +%s) - $(stat -c %Z /dev/pts)))"
@@ -168,7 +168,7 @@ function section_uptime()
 # These should generally be monitored on the NFS server, not on the clients.
 function section_df()
 {
-    if [ -n "$MK_IN_CONTAINER" ]; then
+    if [ -n "$IS_DOCKERIZED" ]; then
         return
     fi
 
@@ -507,7 +507,7 @@ if type multipath >/dev/null ; then
 fi
 
 # Performancecounter Platten
-if [ -z "$MK_IN_CONTAINER" ]; then
+if [ -z "$IS_DOCKERIZED" ]; then
     echo '<<<diskstat>>>'
     date +%s
     grep -E ' (x?[shv]d[a-z]*[0-9]*|cciss/c[0-9]+d[0-9]+|emcpower[a-z]+|dm-[0-9]+|VxVM.*|mmcblk.*|dasd[a-z]*|bcache[0-9]+|nvme[0-9]+n[0-9]+) ' < /proc/diskstats
@@ -536,7 +536,7 @@ fi
 
 
 # Performancecounter Kernel
-if [ -z "$MK_IN_CONTAINER" ]; then
+if [ -z "$IS_DOCKERIZED" ]; then
     echo '<<<kernel>>>'
     date +%s
     cat /proc/vmstat /proc/stat
@@ -696,7 +696,7 @@ then
     done
 fi
 
-if [ -z "$MK_IN_CONTAINER" ] && [ -e /proc/drbd ]; then
+if [ -z "$IS_DOCKERIZED" ] && [ -e /proc/drbd ]; then
   echo '<<<drbd>>>'
   cat /proc/drbd
 fi
@@ -1017,7 +1017,7 @@ fi
 
 # Gather thermal information provided e.g. by acpi
 # At the moment only supporting thermal sensors
-if [ -z "$MK_IN_CONTAINER" ] && ls /sys/class/thermal/thermal_zone* >/dev/null 2>&1; then
+if [ -z "$IS_DOCKERIZED" ] && ls /sys/class/thermal/thermal_zone* >/dev/null 2>&1; then
     echo '<<<lnx_thermal:sep(124)>>>'
     for F in /sys/class/thermal/thermal_zone*; do
         line="${F##*/}"

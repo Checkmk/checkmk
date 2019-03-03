@@ -9,6 +9,7 @@ import cmk.gui.config as config
 import cmk.gui.views  # pylint: disable=unused-import
 import cmk.gui.default_permissions
 
+from cmk.gui.globals import html
 from cmk.gui.valuespec import ValueSpec
 import cmk.gui.plugins.views
 import cmk.gui.modules as modules
@@ -5794,3 +5795,34 @@ def test_create_view_basics(register_builtin_html, load_view_plugins):
     assert view.name == view_name
     assert view.spec == view_spec
     assert isinstance(view.datasource, cmk.gui.plugins.views.utils.DataSource)
+    assert view.row_limit is None
+
+def test_view_row_limit(register_builtin_html, load_view_plugins):
+    view_name = "allhosts"
+    view_spec = cmk.gui.views.multisite_builtin_views[view_name]
+
+    view = cmk.gui.views.View(view_name, view_spec)
+    assert view.row_limit is None
+    view.row_limit = 101
+    assert view.row_limit == 101
+    assert cmk.gui.views.get_limit() == 1000
+
+@pytest.mark.parametrize("limit,permissions,result", [
+    ("soft", [], 1000),
+    ("hard", [], 1000),
+    ("none", [], 1000),
+
+    ("soft", ["general.ignore_soft_limit"], 1000),
+    ("hard", ["general.ignore_soft_limit"], 5000),
+    # Strange. Shouldn't this stick to the hard limit?
+    ("none", ["general.ignore_soft_limit"], 1000),
+
+    ("soft", ["general.ignore_soft_limit", "general.ignore_hard_limit"], 1000),
+    ("hard", ["general.ignore_soft_limit", "general.ignore_hard_limit"], 5000),
+    ("none", ["general.ignore_soft_limit", "general.ignore_hard_limit"], None),
+])
+def test_gui_view_row_limit(register_builtin_html, monkeypatch, limit, permissions, result):
+    monkeypatch.setitem(html.request._vars, "limit", limit)
+    for perm in permissions:
+        monkeypatch.setitem(config.user.permissions, perm, True)
+    assert cmk.gui.views.get_limit() == result

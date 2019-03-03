@@ -236,6 +236,8 @@ def page_index():
     for view_name, view_spec in views.get_permitted_views().items():
         if view_spec.get("mobile") and not view_spec.get("hidden"):
             view = views.View(view_name, view_spec)
+            view.row_limit = views.get_limit()
+
             url = "mobile_view.py?view_name=%s" % view_name
             count = ""
             if not view_spec.get("mustsearch"):
@@ -281,6 +283,7 @@ def page_view():
         raise MKUserError("view_name", "No view defined with the name '%s'." % view_name)
 
     view = views.View(view_name, view_spec)
+    view.row_limit = views.get_limit()
 
     title = views.view_title(view_spec)
     mobile_html_head(title)
@@ -357,7 +360,7 @@ class MobileViewRenderer(views.ViewRenderer):
                 html.write(_("No hosts/services found."))
             else:
                 try:
-                    cmk.gui.view_utils.check_limit(rows, views.get_limit(), config.user)
+                    cmk.gui.view_utils.check_limit(rows, self.view.row_limit, config.user)
                     layout.render(rows, view_spec, group_cells, cells, num_columns,
                                   show_checkboxes and not html.do_actions())
                 except Exception as e:

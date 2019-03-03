@@ -80,8 +80,16 @@ fi
 # environment.
 if [ -f /.dockerenv ]; then
     IS_DOCKERIZED=1
+elif grep container=lxc /proc/1/environ >/dev/null 2>&1; then
+    # Works in lxc environment e.g. on Ubuntu bionic, but does not
+    # seem to work in proxmox (see CMK-1561)
+    IS_LXC_CONTAINER=1
+elif grep 'lxcfs /proc/cpuinfo fuse.lxcfs' /proc/mounts >/dev/null 2>&1; then
+    # Seems to work in proxmox
+    IS_LXC_CONTAINER=1
 else
     unset IS_DOCKERIZED
+    unset IS_LXC_CONTAINER
 fi
 
 # Prefer (relatively) new /usr/bin/timeout from coreutils against
@@ -139,11 +147,15 @@ function section_cpu()
     fi
     NUM_CPUS=$(grep -c -E $CPU_REGEX < /proc/cpuinfo)
 
-    if [ -z "$IS_DOCKERIZED" ]; then
+    if [ -z "$IS_DOCKERIZED" ] && [ -z "$IS_LXC_CONTAINER" ]; then
         echo '<<<cpu>>>'
         echo "$(cat /proc/loadavg) $NUM_CPUS"
     else
-        echo '<<<docker_container_cpu>>>'
+        if [ -n "$IS_DOCKERIZED" ]; then
+            echo '<<<docker_container_cpu>>>'
+        else
+            echo '<<<lxc_container_cpu>>>'
+        fi
         grep "^cpu " /proc/stat
         echo "num_cpus $NUM_CPUS"
         cat /sys/fs/cgroup/cpuacct/cpuacct.stat
@@ -172,10 +184,14 @@ function section_df()
         return
     fi
 
-    echo '<<<df>>>'
     # The exclusion list is getting a bit of a problem. -l should hide any remote FS but seems
     # to be all but working.
-    local excludefs="-x smbfs -x cifs -x iso9660 -x udf -x nfsv4 -x nfs -x mvfs -x zfs -x prl_fs -x squashfs"
+    local excludefs="-x smbfs -x cifs -x iso9660 -x udf -x nfsv4 -x nfs -x mvfs -x prl_fs -x squashfs"
+    if [ -n "$IS_LXC_CONTAINER" ]; then
+        excludefs+=" -x zfs"
+    fi
+
+    echo '<<<df>>>'
     df -PTlk $excludefs | sed 1d
 
     # df inodes information
@@ -536,7 +552,7 @@ fi
 
 
 # Performancecounter Kernel
-if [ -z "$IS_DOCKERIZED" ]; then
+if [ -z "$IS_DOCKERIZED" ] && [ -z "$IS_LXC_CONTAINER" ]; then
     echo '<<<kernel>>>'
     date +%s
     cat /proc/vmstat /proc/stat
@@ -696,7 +712,7 @@ then
     done
 fi
 
-if [ -z "$IS_DOCKERIZED" ] && [ -e /proc/drbd ]; then
+if [ -z "$IS_DOCKERIZED" ] && [ -z "$IS_LXC_CONTAINER" ] && [ -e /proc/drbd ]; then
   echo '<<<drbd>>>'
   cat /proc/drbd
 fi
@@ -1017,7 +1033,7 @@ fi
 
 # Gather thermal information provided e.g. by acpi
 # At the moment only supporting thermal sensors
-if [ -z "$IS_DOCKERIZED" ] && ls /sys/class/thermal/thermal_zone* >/dev/null 2>&1; then
+if [ -z "$IS_DOCKERIZED" ] && [ -z "$IS_LXC_CONTAINER" ] && ls /sys/class/thermal/thermal_zone* >/dev/null 2>&1; then
     echo '<<<lnx_thermal:sep(124)>>>'
     for F in /sys/class/thermal/thermal_zone*; do
         line="${F##*/}"

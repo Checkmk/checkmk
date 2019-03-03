@@ -235,27 +235,29 @@ class ViewRenderer(object):
         self.view = view
 
     @abc.abstractmethod
-    def render(self, rows, group_cells, cells, show_heading, show_buttons, show_checkboxes, layout,
-               num_columns, show_filters, show_footer, browser_reload):
+    def render(self, rows, group_cells, cells, show_checkboxes, layout, num_columns, show_filters,
+               browser_reload):
         raise NotImplementedError()
 
 
 class GUIViewRenderer(ViewRenderer):
-    def render(self, rows, group_cells, cells, show_heading, show_buttons, show_checkboxes, layout,
-               num_columns, show_filters, show_footer, browser_reload):
+    def __init__(self, view, show_buttons):
+        super(GUIViewRenderer, self).__init__(view)
+        self._show_buttons = show_buttons
+
+    def render(self, rows, group_cells, cells, show_checkboxes, layout, num_columns, show_filters,
+               browser_reload):
         view_spec = self.view.spec
 
         if html.transaction_valid() and html.do_actions():
             html.set_browser_reload(0)
 
-        # Show heading (change between "preview" mode and full page mode)
-        if show_heading:
-            # Show/Hide the header with page title, MK logo, etc.
-            if display_options.enabled(display_options.H):
-                html.body_start(view_title(view_spec))
+        # Show/Hide the header with page title, MK logo, etc.
+        if display_options.enabled(display_options.H):
+            html.body_start(view_title(view_spec))
 
-            if display_options.enabled(display_options.T):
-                html.top_heading(view_title(view_spec))
+        if display_options.enabled(display_options.T):
+            html.top_heading(view_title(view_spec))
 
         has_done_actions = False
         row_count = len(rows)
@@ -268,7 +270,7 @@ class GUIViewRenderer(ViewRenderer):
         if command_form:
             weblib.init_selection()
 
-        if show_buttons:
+        if self._show_buttons:
             show_combined_graphs_button  = \
                 ("host" in self.view.datasource.infos or "service" in self.view.datasource.infos) and \
                 (isinstance(self.view.datasource.table, str)) and \
@@ -362,7 +364,7 @@ class GUIViewRenderer(ViewRenderer):
                 html.javascript("cmk.utils.update_header_info(%s);" % json.dumps(headinfo))
 
                 # The number of rows might have changed to enable/disable actions and checkboxes
-                if show_buttons:
+                if self._show_buttons:
                     update_context_links(
                         # don't take display_options into account here ('c' is set during reload)
                         row_count > 0 and
@@ -391,20 +393,18 @@ class GUIViewRenderer(ViewRenderer):
         if display_options.enabled(display_options.R):
             html.close_div()
 
-        if show_footer:
-            pid = os.getpid()
-            if sites.live().successfully_persisted():
-                html.add_status_icon(
-                    "persist",
-                    _("Reused persistent livestatus connection from earlier request (PID %d)") %
-                    pid)
+        pid = os.getpid()
+        if sites.live().successfully_persisted():
+            html.add_status_icon(
+                "persist",
+                _("Reused persistent livestatus connection from earlier request (PID %d)") % pid)
 
-            html.bottom_focuscode()
-            if display_options.enabled(display_options.Z):
-                html.bottom_footer()
+        html.bottom_focuscode()
+        if display_options.enabled(display_options.Z):
+            html.bottom_footer()
 
-            if display_options.enabled(display_options.H):
-                html.body_end()
+        if display_options.enabled(display_options.H):
+            html.body_end()
 
 
 # Load all view plugins
@@ -1128,19 +1128,13 @@ def page_view():
     painter_options.load(view.name)
     painter_options.update_from_url(view.name, view.spec)
 
-    view_renderer = GUIViewRenderer(view)
-    show_view(view, view_renderer, show_heading=True, show_buttons=True, show_footer=True)
+    view_renderer = GUIViewRenderer(view, show_buttons=True)
+    show_view(view, view_renderer)
 
 
 # Display view with real data. This is *the* function everying
 # is about.
-def show_view(view,
-              view_renderer,
-              show_heading=False,
-              show_buttons=True,
-              show_footer=True,
-              only_count=False,
-              limit=None):
+def show_view(view, view_renderer, only_count=False, limit=None):
 
     display_options.load_from_html()
 
@@ -1357,8 +1351,8 @@ def show_view(view,
 
     # Until now no single byte of HTML code has been output.
     # Now let's render the view
-    view_renderer.render(rows, group_cells, cells, show_heading, show_buttons, show_checkboxes,
-                         layout, num_columns, show_filters, show_footer, browser_reload)
+    view_renderer.render(rows, group_cells, cells, show_checkboxes, layout, num_columns,
+                         show_filters, browser_reload)
 
 
 SorterEntry = namedtuple("SorterEntry", ["sorter", "negate", "join_key"])

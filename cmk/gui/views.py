@@ -235,14 +235,14 @@ class ViewRenderer(object):
         self.view = view
 
     @abc.abstractmethod
-    def render(self, rows, datasource, group_cells, cells, show_heading, show_buttons,
-               show_checkboxes, layout, num_columns, show_filters, show_footer, browser_reload):
+    def render(self, rows, group_cells, cells, show_heading, show_buttons, show_checkboxes, layout,
+               num_columns, show_filters, show_footer, browser_reload):
         raise NotImplementedError()
 
 
 class GUIViewRenderer(ViewRenderer):
-    def render(self, rows, datasource, group_cells, cells, show_heading, show_buttons,
-               show_checkboxes, layout, num_columns, show_filters, show_footer, browser_reload):
+    def render(self, rows, group_cells, cells, show_heading, show_buttons, show_checkboxes, layout,
+               num_columns, show_filters, show_footer, browser_reload):
         view_spec = self.view.spec
 
         if html.transaction_valid() and html.do_actions():
@@ -263,16 +263,16 @@ class GUIViewRenderer(ViewRenderer):
         # This is a general flag which makes the command form render when the current
         # view might be able to handle commands. When no commands are possible due missing
         # permissions or datasources without commands, the form is not rendered
-        command_form = should_show_command_form(datasource)
+        command_form = should_show_command_form(self.view.datasource)
 
         if command_form:
             weblib.init_selection()
 
         if show_buttons:
             show_combined_graphs_button  = \
-                ("host" in datasource.infos or "service" in datasource.infos) and \
-                (isinstance(datasource.table, str)) and \
-                ("host" in datasource.table or "service" in datasource.table)
+                ("host" in self.view.datasource.infos or "service" in self.view.datasource.infos) and \
+                (isinstance(self.view.datasource.table, str)) and \
+                ("host" in self.view.datasource.table or "service" in self.view.datasource.table)
             _show_context_links(
                 view_spec,
                 show_filters,
@@ -282,7 +282,8 @@ class GUIViewRenderer(ViewRenderer):
                 layout.can_display_checkboxes and not view_spec.get("force_checkboxes"),
                 show_checkboxes,
                 # Show link to availability
-                datasource.table in ["hosts", "services"] or "aggr" in datasource.infos,
+                self.view.datasource.table in ["hosts", "services"] or
+                "aggr" in self.view.datasource.infos,
                 # Show link to combined graphs
                 show_combined_graphs_button,
             )
@@ -311,16 +312,17 @@ class GUIViewRenderer(ViewRenderer):
                 try:
                     # Create URI with all actions variables removed
                     backurl = html.makeuri([], delvars=['filled_in', 'actions'])
-                    has_done_actions = do_actions(view_spec, datasource.infos[0], rows, backurl)
+                    has_done_actions = do_actions(view_spec, self.view.datasource.infos[0], rows,
+                                                  backurl)
                 except MKUserError as e:
                     html.show_error(e)
                     html.add_user_error(e.varname, e)
                     if display_options.enabled(display_options.C):
-                        show_command_form(True, datasource)
+                        show_command_form(True, self.view.datasource)
 
             elif display_options.enabled(
                     display_options.C):  # (*not* display open, if checkboxes are currently shown)
-                show_command_form(False, datasource)
+                show_command_form(False, self.view.datasource)
 
         # Also execute commands in cases without command form (needed for Python-
         # web service e.g. for NagStaMon)
@@ -333,7 +335,7 @@ class GUIViewRenderer(ViewRenderer):
                 rows = filter_by_row_id(view_spec, rows)
 
             try:
-                do_actions(view_spec, datasource.infos[0], rows, '')
+                do_actions(view_spec, self.view.datasource.infos[0], rows, '')
             except:
                 pass  # currently no feed back on webservice
 
@@ -364,7 +366,7 @@ class GUIViewRenderer(ViewRenderer):
                     update_context_links(
                         # don't take display_options into account here ('c' is set during reload)
                         row_count > 0 and
-                        should_show_command_form(datasource, ignore_display_option=True),
+                        should_show_command_form(self.view.datasource, ignore_display_option=True),
                         # and not html.do_actions(),
                         layout.can_display_checkboxes)
 
@@ -1355,9 +1357,8 @@ def show_view(view,
 
     # Until now no single byte of HTML code has been output.
     # Now let's render the view
-    view_renderer.render(rows, view.datasource, group_cells, cells, show_heading, show_buttons,
-                         show_checkboxes, layout, num_columns, show_filters, show_footer,
-                         browser_reload)
+    view_renderer.render(rows, group_cells, cells, show_heading, show_buttons, show_checkboxes,
+                         layout, num_columns, show_filters, show_footer, browser_reload)
 
 
 SorterEntry = namedtuple("SorterEntry", ["sorter", "negate", "join_key"])

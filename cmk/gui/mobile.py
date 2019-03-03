@@ -301,8 +301,8 @@ def page_view():
 
 
 class MobileViewRenderer(views.ViewRenderer):
-    def render(self, rows, datasource, group_cells, cells, show_heading, show_buttons,
-               show_checkboxes, layout, num_columns, show_filters, show_footer, browser_reload):
+    def render(self, rows, group_cells, cells, show_heading, show_buttons, show_checkboxes, layout,
+               num_columns, show_filters, show_footer, browser_reload):
         view_spec = self.view.spec
         home = ("mobile.py", "Home", "home")
 
@@ -338,13 +338,13 @@ class MobileViewRenderer(views.ViewRenderer):
                 show_commands = True
                 if html.request.has_var("_do_actions"):
                     try:
-                        show_commands = do_commands(view_spec, datasource["infos"][0], rows)
+                        show_commands = do_commands(view_spec, self.view.datasource.infos[0], rows)
                     except MKUserError as e:
                         html.show_error(e)
                         html.add_user_error(e.varname, e)
                         show_commands = True
                 if show_commands:
-                    show_command_form(view_spec, datasource, rows)
+                    show_command_form(view_spec, self.view.datasource, rows)
                 jqm_page_navfooter(navbar, 'commands', page_id)
 
         elif page == "data":
@@ -401,7 +401,7 @@ def show_filter_form(show_filters):
 
 
 def show_command_form(view, datasource, rows):
-    what = datasource["infos"][0]
+    what = datasource.infos[0]
     html.javascript("""
     $(document).ready(function() {
       $('.command_group').has('x').trigger('expand');

@@ -300,8 +300,7 @@ def page_view():
 
 
 class MobileViewRenderer(views.ViewRenderer):
-    def render(self, rows, group_cells, cells, show_checkboxes, layout, num_columns, show_filters,
-               browser_reload):
+    def render(self, rows, group_cells, cells, show_checkboxes, layout, num_columns, show_filters):
         view_spec = self.view.spec
         home = ("mobile.py", "Home", "home")
 

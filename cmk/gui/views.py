@@ -235,8 +235,7 @@ class ViewRenderer(object):
         self.view = view
 
     @abc.abstractmethod
-    def render(self, rows, group_cells, cells, show_checkboxes, layout, num_columns, show_filters,
-               browser_reload):
+    def render(self, rows, group_cells, cells, show_checkboxes, layout, num_columns, show_filters):
         raise NotImplementedError()
 
 
@@ -245,8 +244,7 @@ class GUIViewRenderer(ViewRenderer):
         super(GUIViewRenderer, self).__init__(view)
         self._show_buttons = show_buttons
 
-    def render(self, rows, group_cells, cells, show_checkboxes, layout, num_columns, show_filters,
-               browser_reload):
+    def render(self, rows, group_cells, cells, show_checkboxes, layout, num_columns, show_filters):
         view_spec = self.view.spec
 
         if html.transaction_valid() and html.do_actions():
@@ -1352,7 +1350,7 @@ def show_view(view, view_renderer, only_count=False, limit=None):
     # Until now no single byte of HTML code has been output.
     # Now let's render the view
     view_renderer.render(rows, group_cells, cells, show_checkboxes, layout, num_columns,
-                         show_filters, browser_reload)
+                         show_filters)
 
 
 SorterEntry = namedtuple("SorterEntry", ["sorter", "negate", "join_key"])

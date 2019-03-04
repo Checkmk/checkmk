@@ -92,6 +92,7 @@ from cmk.gui.plugins.views.utils import (
     sorter_registry,
     get_permitted_views,
     get_all_views,
+    painter_exists,
     PainterOptions,
 )
 
@@ -105,7 +106,7 @@ from cmk.gui.plugins.views.utils import (  # pylint: disable=unused-import
     cmp_insensitive_string, cmp_num_split, cmp_custom_variable, cmp_service_name_equiv,
     cmp_string_list, cmp_ip_address, get_custom_var, get_perfdata_nth_value, get_tag_group,
     query_data, do_query_data, join_row, get_view_infos, replace_action_url_macros, Cell, JoinCell,
-    get_cells, get_group_cells, register_legacy_command, register_painter, register_sorter,
+    register_legacy_command, register_painter, register_sorter,
 )
 
 # Needed for legacy (pre 1.6) plugins
@@ -226,6 +227,33 @@ class View(object):
                     None,
                     _("The view '%s' using the datasource '%s' can not be rendered "
                       "because the datasource does not exist.") % (self.name, self.datasource))
+
+    @property
+    def row_cells(self):
+        # type: () -> List[Cell]
+        """Regular cells are displaying information about the rows of the type the view is about"""
+        cells = []
+        for e in self.spec["painters"]:
+            if not painter_exists(e):
+                continue
+
+            if Cell.is_join_cell(e):
+                cells.append(JoinCell(self, e))
+            else:
+                cells.append(Cell(self, e))
+
+        return cells
+
+    @property
+    def group_cells(self):
+        # type: () -> List[Cell]
+        """Group cells are displayed as titles of grouped rows"""
+        return [Cell(self, e) for e in self.spec["group_painters"] if painter_exists(e)]
+
+    @property
+    def join_cells(self):
+        """Join cells are displaying information of a joined source (e.g.service data on host views)"""
+        return [x for x in self.row_cells if isinstance(x, JoinCell)]
 
     @property
     def sorters(self):
@@ -1287,12 +1315,9 @@ def show_view(view, view_renderer, only_count=False):
         sorters = view.sorters
 
     # Prepare cells of the view
-    # Group cells:   Are displayed as titles of grouped rows
-    # Regular cells: Are displaying information about the rows of the type the view is about
-    # Join cells:    Are displaying information of a joined source (e.g.service data on host views)
-    group_cells = get_group_cells(view)
-    cells = get_cells(view)
-    join_cells = get_join_cells(cells)
+    group_cells = view.group_cells
+    cells = view.row_cells
+    join_cells = view.join_cells
 
     # Now compute the list of all columns we need to query via Livestatus.
     # Those are: (1) columns used by the sorters in use, (2) columns use by
@@ -1390,14 +1415,6 @@ def show_view(view, view_renderer, only_count=False):
 
 
 SorterEntry = namedtuple("SorterEntry", ["sorter", "negate", "join_key"])
-
-
-def get_join_cells(cell_list):
-    return [x for x in cell_list if isinstance(x, JoinCell)]
-
-
-def get_regular_cells(cell_list):
-    return [x for x in cell_list if isinstance(x, Cell)]
 
 
 def _get_needed_regular_columns(cells, sorters, datasource):

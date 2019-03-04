@@ -89,7 +89,7 @@ class PainterOptions(object):
     def _load_used_options(self, view):
         options = set([])
 
-        for cell in get_group_cells(view) + get_cells(view):
+        for cell in view.group_cells + view.row_cells:
             options.update(cell.painter_options())
 
         # Also layouts can register painter options
@@ -1964,25 +1964,6 @@ class EmptyCell(Cell):
 
     def paint(self, row, tdattrs="", is_last_cell=False):
         return False
-
-
-def get_cells(view):
-    cells = []
-    for e in view.spec["painters"]:
-        if not painter_exists(e):
-            continue
-
-        if Cell.is_join_cell(e):
-            cells.append(JoinCell(view, e))
-
-        else:
-            cells.append(Cell(view, e))
-
-    return cells
-
-
-def get_group_cells(view):
-    return [Cell(view, e) for e in view.spec["group_painters"] if painter_exists(e)]
 
 
 def output_csv_headers(view):

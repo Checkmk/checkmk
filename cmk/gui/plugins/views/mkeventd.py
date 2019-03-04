@@ -39,6 +39,7 @@ from cmk.gui.plugins.views import (
     Command,
     data_source_registry,
     DataSource,
+    RowTableLivestatus,
     painter_registry,
     Painter,
     multisite_builtin_views,
@@ -49,7 +50,6 @@ from cmk.gui.plugins.views import (
     cmp_simple_number,
     cmp_simple_string,
     cmp_num_split,
-    query_data,
 )
 
 from cmk.gui.permissions import (
@@ -67,32 +67,32 @@ from cmk.gui.permissions import (
 #   '----------------------------------------------------------------------'
 
 
-def query_ec_table(datasource, columns, add_columns, query, only_sites, limit, tablename):
-    for c in ["event_contact_groups", "host_contact_groups", "event_host"]:
-        if c not in columns:
-            columns.append(c)
+class RowTableEC(RowTableLivestatus):
+    def query(self, view, columns, add_columns, query, only_sites, limit, all_active_filters):
+        for c in ["event_contact_groups", "host_contact_groups", "event_host"]:
+            if c not in columns:
+                columns.append(c)
 
-    rows = query_data(
-        datasource, columns, add_columns, query, only_sites, limit, tablename=tablename)
+        rows = super(RowTableEC, self).query(view, columns, add_columns, query, only_sites, limit)
 
-    if not rows:
+        if not rows:
+            return rows
+
+        _ec_filter_host_information_of_not_permitted_hosts(rows)
+
+        if not config.user.may("mkeventd.seeall") and not config.user.may("mkeventd.seeunrelated"):
+            # user is not allowed to see all events returned by the core
+            rows = [r for r in rows if r["event_contact_groups"] != [] or r["host_name"] != ""]
+
+        # Now we don't need to distinguish anymore between unrelated and related events. We
+        # need the host_name field for rendering the views. Try our best and use the
+        # event_host value as host_name.
+        for row in rows:
+            if not row.get("host_name"):
+                row["host_name"] = row["event_host"]
+                row["event_is_unrelated"] = True
+
         return rows
-
-    _ec_filter_host_information_of_not_permitted_hosts(rows)
-
-    if not config.user.may("mkeventd.seeall") and not config.user.may("mkeventd.seeunrelated"):
-        # user is not allowed to see all events returned by the core
-        rows = [r for r in rows if r["event_contact_groups"] != [] or r["host_name"] != ""]
-
-    # Now we don't need to distinguish anymore between unrelated and related events. We
-    # need the host_name field for rendering the views. Try our best and use the
-    # event_host value as host_name.
-    for row in rows:
-        if not row.get("host_name"):
-            row["host_name"] = row["event_host"]
-            row["event_is_unrelated"] = True
-
-    return rows
 
 
 # Handle the case where a user is allowed to see all events (-> events for hosts he
@@ -227,7 +227,7 @@ class DataSourceECEvents(DataSource):
 
     @property
     def table(self):
-        return (query_ec_table, ["eventconsoleevents"])
+        return RowTableEC("eventconsoleevents")
 
     @property
     def infos(self):
@@ -262,7 +262,7 @@ class DataSourceECEventHistory(DataSource):
 
     @property
     def table(self):
-        return (query_ec_table, ["eventconsolehistory"])
+        return RowTableEC("eventconsolehistory")
 
     @property
     def infos(self):

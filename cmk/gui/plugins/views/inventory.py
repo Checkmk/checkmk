@@ -63,6 +63,7 @@ from cmk.gui.plugins.visuals.inventory import (
 from cmk.gui.plugins.views import (
     data_source_registry,
     DataSource,
+    RowTable,
     painter_registry,
     Painter,
     register_painter,
@@ -1515,12 +1516,18 @@ def declare_invtable_column(infoname, name, topic, title, short_title, sortfunc,
     filter_registry.register(filter_class)
 
 
+class RowTableInventory(RowTable):
+    def __init__(self, info_name, inventory_path):
+        self._info_name = info_name
+        self._inventory_path = inventory_path
+
+    def query(self, view, columns, add_columns, query, only_sites, limit, all_active_filters):
+        return inv_multisite_table(self._info_name, self._inventory_path, columns, query,
+                                   only_sites, limit, all_active_filters)
+
+
 # One master function that does all
 def declare_invtable_view(infoname, invpath, title_singular, title_plural):
-    def inv_table(self, columns, add_headers, only_sites, limit, filters):
-        return inv_multisite_table(infoname, invpath, columns, add_headers, only_sites, limit,
-                                   filters)
-
     # Declare the "info" (like a database table)
     info_class = type(
         "VisualInfo%s" % infoname.title(), (VisualInfo,), {
@@ -1538,12 +1545,12 @@ def declare_invtable_view(infoname, invpath, title_singular, title_plural):
     ds_class = type(
         "DataSourceInventory%s" % infoname.title(), (DataSource,), {
             "_ident": infoname,
+            "_inventory_path": invpath,
             "_title": "%s: %s" % (_("Inventory"), title_plural),
-            "_table": inv_table,
             "_infos": ["host", infoname],
             "ident": property(lambda s: s._ident),
             "title": property(lambda s: s._title),
-            "table": property(lambda s: s._table),
+            "table": property(lambda s: RowTableInventory(s._ident, s._inventory_path)),
             "infos": property(lambda s: s._infos),
             "keys": property(lambda s: []),
             "id_keys": property(lambda s: []),
@@ -1952,8 +1959,10 @@ multisite_builtin_views["inv_hosts_ports"] = {
 #   '----------------------------------------------------------------------'
 
 
-def inv_history_table(columns, add_headers, only_sites, limit, filters):
-    return inv_multisite_table("invhist", None, columns, add_headers, only_sites, limit, filters)
+class RowTableInventoryHistory(RowTable):
+    def query(self, view, columns, add_columns, query, only_sites, limit, all_active_filters):
+        return inv_multisite_table("invhist", None, columns, query, only_sites, limit,
+                                   all_active_filters)
 
 
 def _create_hist_rows(hostname, columns):
@@ -1981,7 +1990,7 @@ class DataSourceInventoryHistory(DataSource):
 
     @property
     def table(self):
-        return inv_history_table
+        return RowTableInventoryHistory()
 
     @property
     def infos(self):

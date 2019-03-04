@@ -35,6 +35,7 @@ from cmk.gui.globals import html
 from cmk.gui.plugins.views import (
     data_source_registry,
     DataSource,
+    RowTable,
     PainterOptions,
     painter_option_registry,
     PainterOption,
@@ -62,7 +63,7 @@ class DataSourceBIAggregations(DataSource):
 
     @property
     def table(self):
-        return bi.table
+        return RowTableBIAggregations()
 
     @property
     def infos(self):
@@ -77,6 +78,11 @@ class DataSourceBIAggregations(DataSource):
         return ["aggr_name"]
 
 
+class RowTableBIAggregations(RowTable):
+    def query(self, view, columns, add_columns, query, only_sites, limit, all_active_filters):
+        return bi.table(view, columns, add_columns, query, only_sites, limit, all_active_filters)
+
+
 @data_source_registry.register
 class DataSourceBIHostAggregations(DataSource):
     @property
@@ -89,7 +95,7 @@ class DataSourceBIHostAggregations(DataSource):
 
     @property
     def table(self):
-        return bi.host_table
+        return RowTableBIHostAggregations()
 
     @property
     def infos(self):
@@ -102,6 +108,12 @@ class DataSourceBIHostAggregations(DataSource):
     @property
     def id_keys(self):
         return ["aggr_name"]
+
+
+class RowTableBIHostAggregations(RowTable):
+    def query(self, view, columns, add_columns, query, only_sites, limit, all_active_filters):
+        return bi.host_table(view, columns, add_columns, query, only_sites, limit,
+                             all_active_filters)
 
 
 @data_source_registry.register
@@ -119,7 +131,7 @@ class DataSourceBIHostnameAggregations(DataSource):
 
     @property
     def table(self):
-        return bi.hostname_table
+        return RowTableBIHostnameAggregations()
 
     @property
     def infos(self):
@@ -132,6 +144,12 @@ class DataSourceBIHostnameAggregations(DataSource):
     @property
     def id_keys(self):
         return ["aggr_name"]
+
+
+class RowTableBIHostnameAggregations(RowTable):
+    def query(self, view, columns, add_columns, query, only_sites, limit, all_active_filters):
+        return bi.hostname_table(view, columns, add_columns, query, only_sites, limit,
+                                 all_active_filters)
 
 
 @data_source_registry.register
@@ -148,7 +166,7 @@ class DataSourceBIHostnameByGroupAggregations(DataSource):
 
     @property
     def table(self):
-        return bi.hostname_by_group_table
+        return RowTableBIHostnameByGroupAggregations()
 
     @property
     def infos(self):
@@ -161,6 +179,12 @@ class DataSourceBIHostnameByGroupAggregations(DataSource):
     @property
     def id_keys(self):
         return ["aggr_name"]
+
+
+class RowTableBIHostnameByGroupAggregations(RowTable):
+    def query(self, view, columns, add_columns, query, only_sites, limit, all_active_filters):
+        return bi.hostname_by_group_table(view, columns, add_columns, query, only_sites, limit,
+                                          all_active_filters)
 
 
 #     ____       _       _

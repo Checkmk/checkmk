@@ -1262,21 +1262,8 @@ def show_view(view, view_renderer, only_count=False):
         # names for additional columns (through Stats: headers)
         add_columns = view.datasource.add_columns
 
-        # view.datasource.table may be a function instead of a livestatus table name
-        # In that case that function is used to compute the result.
-        # It may also be a tuple. In this case the first element is a function and the second element
-        # is a list of argument to hand over to the function together with all other arguments that
-        # are passed to query_data().
-        if callable(view.datasource.table):
-            rows = view.datasource.table(columns, query, only_sites, view.row_limit,
-                                         all_active_filters)
-        elif isinstance(view.datasource.table, tuple):
-            func, args = view.datasource.table
-            rows = func(view.datasource, columns, add_columns, query, only_sites, view.row_limit,
-                        *args)
-        else:
-            rows = query_data(view.datasource, columns, add_columns, query, only_sites,
-                              view.row_limit)
+        rows = view.datasource.table.query(view, columns, add_columns, query, only_sites,
+                                           view.row_limit, all_active_filters)
 
         # Now add join information, if there are join columns
         if join_cells:

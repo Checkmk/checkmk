@@ -29,12 +29,15 @@ from cmk.gui.i18n import _
 from cmk.gui.plugins.views import (
     data_source_registry,
     DataSource,
+    DataSourceLivestatus,
+    RowTable,
+    RowTableLivestatus,
     do_query_data,
 )
 
 
 @data_source_registry.register
-class DataSourceHosts(DataSource):
+class DataSourceHosts(DataSourceLivestatus):
     @property
     def ident(self):
         return "hosts"
@@ -42,10 +45,6 @@ class DataSourceHosts(DataSource):
     @property
     def title(self):
         return _("All hosts")
-
-    @property
-    def table(self):
-        return "hosts"
 
     @property
     def infos(self):
@@ -74,7 +73,7 @@ class DataSourceHosts(DataSource):
 
 
 @data_source_registry.register
-class DataSourceHostsByGroup(DataSource):
+class DataSourceHostsByGroup(DataSourceLivestatus):
     @property
     def ident(self):
         return "hostsbygroup"
@@ -82,10 +81,6 @@ class DataSourceHostsByGroup(DataSource):
     @property
     def title(self):
         return _("Hosts grouped by host groups")
-
-    @property
-    def table(self):
-        return "hostsbygroup"
 
     @property
     def infos(self):
@@ -105,7 +100,7 @@ class DataSourceHostsByGroup(DataSource):
 
 
 @data_source_registry.register
-class DataSourceServices(DataSource):
+class DataSourceServices(DataSourceLivestatus):
     @property
     def ident(self):
         return "services"
@@ -113,10 +108,6 @@ class DataSourceServices(DataSource):
     @property
     def title(self):
         return _("All services")
-
-    @property
-    def table(self):
-        return "services"
 
     @property
     def infos(self):
@@ -146,7 +137,7 @@ class DataSourceServices(DataSource):
 
 
 @data_source_registry.register
-class DataSourceServicesByGroup(DataSource):
+class DataSourceServicesByGroup(DataSourceLivestatus):
     @property
     def ident(self):
         return "servicesbygroup"
@@ -154,10 +145,6 @@ class DataSourceServicesByGroup(DataSource):
     @property
     def title(self):
         return _("Services grouped by service groups")
-
-    @property
-    def table(self):
-        return "servicesbygroup"
 
     @property
     def infos(self):
@@ -173,7 +160,7 @@ class DataSourceServicesByGroup(DataSource):
 
 
 @data_source_registry.register
-class DataSourceServicesByHostGroup(DataSource):
+class DataSourceServicesByHostGroup(DataSourceLivestatus):
     @property
     def ident(self):
         return "servicesbyhostgroup"
@@ -181,10 +168,6 @@ class DataSourceServicesByHostGroup(DataSource):
     @property
     def title(self):
         return _("Services grouped by host groups")
-
-    @property
-    def table(self):
-        return "servicesbyhostgroup"
 
     @property
     def infos(self):
@@ -200,7 +183,7 @@ class DataSourceServicesByHostGroup(DataSource):
 
 
 @data_source_registry.register
-class DataSourceHostGroups(DataSource):
+class DataSourceHostGroups(DataSourceLivestatus):
     @property
     def ident(self):
         return "hostgroups"
@@ -208,10 +191,6 @@ class DataSourceHostGroups(DataSource):
     @property
     def title(self):
         return _("Hostgroups")
-
-    @property
-    def table(self):
-        return "hostgroups"
 
     @property
     def infos(self):
@@ -227,7 +206,7 @@ class DataSourceHostGroups(DataSource):
 
 
 @data_source_registry.register
-class DataSourceMergedHostGroups(DataSource):
+class DataSourceMergedHostGroups(DataSourceLivestatus):
     """Merged groups across sites"""
 
     @property
@@ -237,10 +216,6 @@ class DataSourceMergedHostGroups(DataSource):
     @property
     def title(self):
         return _("Hostgroups, merged")
-
-    @property
-    def table(self):
-        return "hostgroups"
 
     @property
     def infos(self):
@@ -260,7 +235,7 @@ class DataSourceMergedHostGroups(DataSource):
 
 
 @data_source_registry.register
-class DataSourceServiceGroups(DataSource):
+class DataSourceServiceGroups(DataSourceLivestatus):
     @property
     def ident(self):
         return "servicegroups"
@@ -268,10 +243,6 @@ class DataSourceServiceGroups(DataSource):
     @property
     def title(self):
         return _("Servicegroups")
-
-    @property
-    def table(self):
-        return "servicegroups"
 
     @property
     def infos(self):
@@ -300,7 +271,7 @@ class DataSourceMergedServiceGroups(DataSource):
 
     @property
     def table(self):
-        return "servicegroups"
+        return RowTableLivestatus("servicegroups")
 
     @property
     def infos(self):
@@ -320,7 +291,7 @@ class DataSourceMergedServiceGroups(DataSource):
 
 
 @data_source_registry.register
-class DataSourceComments(DataSource):
+class DataSourceComments(DataSourceLivestatus):
     @property
     def ident(self):
         return "comments"
@@ -328,10 +299,6 @@ class DataSourceComments(DataSource):
     @property
     def title(self):
         return _("Host- and Servicecomments")
-
-    @property
-    def table(self):
-        return "comments"
 
     @property
     def infos(self):
@@ -347,7 +314,7 @@ class DataSourceComments(DataSource):
 
 
 @data_source_registry.register
-class DataSourceDowntimes(DataSource):
+class DataSourceDowntimes(DataSourceLivestatus):
     @property
     def ident(self):
         return "downtimes"
@@ -355,10 +322,6 @@ class DataSourceDowntimes(DataSource):
     @property
     def title(self):
         return _("Scheduled Downtimes")
-
-    @property
-    def table(self):
-        return "downtimes"
 
     @property
     def infos(self):
@@ -373,13 +336,9 @@ class DataSourceDowntimes(DataSource):
         return ["downtime_id"]
 
 
-class LogDataSource(DataSource):
+class LogDataSource(DataSourceLivestatus):
     @property
     def ident(self):
-        return "log"
-
-    @property
-    def table(self):
         return "log"
 
     @property
@@ -493,7 +452,7 @@ class DataSourceServiceDiscovery(DataSource):
 
     @property
     def table(self):
-        return query_service_discovery
+        return ServiceDiscoveryRowTable()
 
     @property
     def infos(self):
@@ -516,41 +475,42 @@ class DataSourceServiceDiscovery(DataSource):
         ]
 
 
-# The livestatus query constructed by the filters of the view may
-# contain filters that are related to the discovery info and should only be
-# handled here. We need to extract them from the query, hand over the regular
-# filters to the host livestatus query and apply the others during the discovery
-# service query.
-def query_service_discovery(columns, query, only_sites, limit, all_active_filters):
-    # Hard code the discovery service filter
-    query += "Filter: check_command = check-mk-inventory\n"
+class ServiceDiscoveryRowTable(RowTable):
+    # The livestatus query constructed by the filters of the view may
+    # contain filters that are related to the discovery info and should only be
+    # handled here. We need to extract them from the query, hand over the regular
+    # filters to the host livestatus query and apply the others during the discovery
+    # service query.
+    def query(self, view, columns, add_columns, query, only_sites, limit, all_active_filters):
+        # Hard code the discovery service filter
+        query += "Filter: check_command = check-mk-inventory\n"
 
-    if "long_plugin_output" not in columns:
-        columns.append("long_plugin_output")
+        if "long_plugin_output" not in columns:
+            columns.append("long_plugin_output")
 
-    service_rows = do_query_data("GET services\n", columns, [], [], query, only_sites, limit,
-                                 "read")
+        service_rows = do_query_data("GET services\n", columns, [], [], query, only_sites, limit,
+                                     "read")
 
-    rows = []
-    for row in service_rows:
-        for service_line in row["long_plugin_output"].split("\n"):
-            if not service_line:
-                continue
+        rows = []
+        for row in service_rows:
+            for service_line in row["long_plugin_output"].split("\n"):
+                if not service_line:
+                    continue
 
-            parts = [s.strip() for s in service_line.split(":", 2)]
-            if len(parts) != 3:
-                continue
+                parts = [s.strip() for s in service_line.split(":", 2)]
+                if len(parts) != 3:
+                    continue
 
-            state, check, service_description = parts
-            if state not in ["ignored", "vanished", "unmonitored"]:
-                continue
+                state, check, service_description = parts
+                if state not in ["ignored", "vanished", "unmonitored"]:
+                    continue
 
-            this_row = row.copy()
-            this_row.update({
-                "discovery_state": state,
-                "discovery_check": check,
-                "discovery_service": service_description
-            })
-            rows.append(this_row)
+                this_row = row.copy()
+                this_row.update({
+                    "discovery_state": state,
+                    "discovery_check": check,
+                    "discovery_service": service_description
+                })
+                rows.append(this_row)
 
-    return rows
+        return rows

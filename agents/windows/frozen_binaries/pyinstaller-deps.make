@@ -31,10 +31,10 @@ PyInstaller = $(SRC_DIR)/pip/PyInstaller-3.3.1.tar.gz
 PySocks = $(SRC_DIR)/pip/PySocks-1.6.8.tar.gz
 pyOpenSSL = $(SRC_DIR)/pip/pyOpenSSL-17.5.0-py2.py3-none-any.whl
 pypiwin32 = $(SRC_DIR)/pip/pywin32-223-cp27-cp27m-win32.whl
-requests = $(SRC_DIR)/pip/requests-2.18.4-py2.py3-none-any.whl
+requests = $(SRC_DIR)/pip/requests-2.21.0-py2.py3-none-any.whl
 setuptools = $(SRC_DIR)/pip/setuptools-39.1.0-py2.py3-none-any.whl
 six = $(SRC_DIR)/pip/six-1.11.0-py2.py3-none-any.whl
-urllib3 = $(SRC_DIR)/pip/urllib3-1.22-py2.py3-none-any.whl
+urllib3 = $(SRC_DIR)/pip/urllib3-1.24.1-py2.py3-none-any.whl
 win_inet_pton = $(SRC_DIR)/pip/win_inet_pton-1.0.1.tar.gz
 
 # This list expands to filenames and is meant to be used
@@ -95,7 +95,7 @@ PYTHON_PACKAGES = \
 # When used as target, the target variable
 # must be extended two times in order to obtain the desired download-string.
 # E.g. make PyInstaller -> pip download $($($@))
-$(altgraph) := asn1crypto==0.15
+$(altgraph) := altgraph==0.15
 $(asn1crypto) := asn1crypto==0.24.0
 $(certifi) := certifi==2018.4.16
 $(cffi) := cffi==1.11.5
@@ -113,10 +113,10 @@ $(PyInstaller) := PyInstaller==3.3.1
 $(PySocks) := PySocks==1.6.8
 $(pyOpenSSL) := pyOpenSSL==17.5.0
 $(pypiwin32) := pypiwin32==223
-$(requests) := requests==2.18.4
+$(requests) := requests==2.21.0
 $(setuptools) := setuptools==39.1.0
 $(six) := six==1.11.0
-$(urllib3) := urllib3==1.22
+$(urllib3) := urllib3==1.24.1
 $(win_inet_pton) := win_inet_pton==1.0.1
 
 

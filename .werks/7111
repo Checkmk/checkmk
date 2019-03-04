@@ -1,0 +1,10 @@
+Title: aix_hacmp_services: Fixed parsing of unexpected line 'The cthags Subsystem is not on file'
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1551709598
+Class: fix
+
+

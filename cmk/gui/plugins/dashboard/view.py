@@ -94,6 +94,7 @@ class ViewDashlet(IFrameDashlet):
 
         view = views.View(self._dashlet_spec["name"], self._dashlet_spec)
         view.row_limit = views.get_limit()
+        view.only_sites = views.get_only_sites()
 
         view_renderer = views.GUIViewRenderer(view, show_buttons=False)
         views.show_view(view, view_renderer)

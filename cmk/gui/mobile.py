@@ -237,6 +237,7 @@ def page_index():
         if view_spec.get("mobile") and not view_spec.get("hidden"):
             view = views.View(view_name, view_spec)
             view.row_limit = views.get_limit()
+            view.only_sites = views.get_only_sites()
 
             url = "mobile_view.py?view_name=%s" % view_name
             count = ""
@@ -284,6 +285,7 @@ def page_view():
 
     view = views.View(view_name, view_spec)
     view.row_limit = views.get_limit()
+    view.only_sites = views.get_only_sites()
 
     title = views.view_title(view_spec)
     mobile_html_head(title)

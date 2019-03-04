@@ -5826,3 +5826,12 @@ def test_gui_view_row_limit(register_builtin_html, monkeypatch, limit, permissio
     for perm in permissions:
         monkeypatch.setitem(config.user.permissions, perm, True)
     assert cmk.gui.views.get_limit() == result
+
+def test_view_only_sites(register_builtin_html, load_view_plugins):
+    view_name = "allhosts"
+    view_spec = cmk.gui.views.multisite_builtin_views[view_name]
+
+    view = cmk.gui.views.View(view_name, view_spec)
+    assert view.only_sites is None
+    view.only_sites = ["unit"]
+    assert view.only_sites == ["unit"]

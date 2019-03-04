@@ -31,7 +31,7 @@ import pprint
 import traceback
 import json
 from collections import namedtuple
-from typing import Dict  # pylint: disable=unused-import
+from typing import Dict, Optional, List  # pylint: disable=unused-import
 
 import livestatus
 
@@ -210,6 +210,7 @@ class View(object):
         self.name = view_name
         self.spec = view_spec
         self._row_limit = None  # type: Optional[int]
+        self._only_sites = None  # type: Optional[List[str]]
 
     @property
     def datasource(self):
@@ -237,6 +238,19 @@ class View(object):
     @row_limit.setter
     def row_limit(self, row_limit):
         self._row_limit = row_limit
+
+    @property
+    def only_sites(self):
+        """Optional list of sites to query instead of all sites
+
+        This is a performance feature. It is highly recommended to set the only_sites attribute
+        whenever it is possible. In the moment it is set a livestatus query is not sent to all
+        sites anymore but only to the given list of sites."""
+        return self._only_sites
+
+    @only_sites.setter
+    def only_sites(self, only_sites):
+        self._only_sites = only_sites
 
 
 class ViewRenderer(object):
@@ -1128,6 +1142,7 @@ def page_view():
 
     view = View(view_name, view_spec)
     view.row_limit = get_limit()
+    view.only_sites = get_only_sites()
 
     # Gather the page context which is needed for the "add to visual" popup menu
     # to add e.g. views to dashboards or reports
@@ -1217,12 +1232,6 @@ def show_view(view, view_renderer, only_count=False):
             continue
         filterheaders += header
 
-    # Apply the site hint / filter
-    if html.request.var("site"):
-        only_sites = [html.request.var("site")]
-    else:
-        only_sites = None
-
     # Fork to availability view. We just need the filter headers, since we do not query the normal
     # hosts and service table, but "statehist". This is *not* true for BI availability, though (see later)
     if html.request.var("mode") == "availability" and ("aggr" not in view.datasource.infos or
@@ -1232,7 +1241,7 @@ def show_view(view, view_renderer, only_count=False):
         context.update(visuals.get_singlecontext_html_vars(view.spec))
 
         return cmk.gui.plugins.views.availability.render_availability_page(
-            view.spec, view.datasource, context, filterheaders, only_sites, view.row_limit)
+            view.spec, view.datasource, context, filterheaders, view.only_sites, view.row_limit)
 
     query = filterheaders + view.spec.get("add_headers", "")
 
@@ -1259,13 +1268,12 @@ def show_view(view, view_renderer, only_count=False):
     # Fetch data. Some views show data only after pressing [Search]
     if (only_count or (not view.spec.get("mustsearch")) or
             html.request.var("filled_in") in ["filter", 'actions', 'confirm', 'painteroptions']):
-        rows = view.datasource.table.query(view, columns, query, only_sites, view.row_limit,
+        rows = view.datasource.table.query(view, columns, query, view.only_sites, view.row_limit,
                                            all_active_filters)
 
         # Now add join information, if there are join columns
         if join_cells:
-            _do_table_join(view.datasource, rows, filterheaders, join_cells, join_columns,
-                           only_sites)
+            _do_table_join(view, rows, filterheaders, join_cells, join_columns)
 
         # If any painter, sorter or filter needs the information about the host's
         # inventory, then we load it and attach it as column "host_inventory"
@@ -1458,8 +1466,8 @@ def columns_of_cells(cells):
     return columns
 
 
-def _do_table_join(master_ds, master_rows, master_filters, join_cells, join_columns, only_sites):
-    join_table, join_master_column = master_ds.join
+def _do_table_join(view, master_rows, master_filters, join_cells, join_columns):
+    join_table, join_master_column = view.datasource.join
     slave_ds = data_source_registry[join_table]()
     join_slave_column = slave_ds.join_key
 
@@ -1474,7 +1482,7 @@ def _do_table_join(master_ds, master_rows, master_filters, join_cells, join_colu
         datasource=slave_ds,
         columns=[join_master_column, join_slave_column] + join_columns,
         add_headers=query,
-        only_sites=only_sites,
+        only_sites=view.only_sites,
         limit=None)
     per_master_entry = {}
     current_key = None
@@ -1535,6 +1543,14 @@ def play_alarm_sounds():
         if not state_name or state_name in g_alarm_sound_states:
             html.play_sound(url + wav)
             break  # only one sound at one time
+
+
+def get_only_sites():
+    # type: () -> Optional[List[str]]
+    """Is the view limited to specific sites by request?"""
+    if html.request.var("site"):
+        return [html.request.var("site")]
+    return None
 
 
 def get_limit():

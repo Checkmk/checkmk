@@ -24,33 +24,62 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+alcatel_power_operstate_map = {
+    "1": "up",
+    "2": "down",
+    "3": "testing",
+    "4": "unknown",
+    "5": "secondary",
+    "6": "not present",
+    "7": "unpowered",
+    "9": "master",
+}
+
+alcatel_power_no_power_supply_info = "no power supply"
+
+alcatel_power_type_map = {
+    "0": alcatel_power_no_power_supply_info,
+    "1": "AC",
+    "2": "DC",
+}
+
+AlcatelPowerEntry = collections.namedtuple("AlcatelPowerEntry", [
+    "oper_state_readable",
+    "power_type",
+])
+
 
 def parse_alcatel_power(info):
-    known_types = ['0x35000001', '0x45000002', '0x45000004', '0x45000008', '0x45000009']
+    parsed = {}
+    for oidend, status, power_type in info:
+        parsed.setdefault(
+            oidend,
+            AlcatelPowerEntry(
+                alcatel_power_operstate_map.get(status, 'unknown[%s]' % status),
+                alcatel_power_type_map.get(power_type, alcatel_power_no_power_supply_info),
+            ))
+    return parsed
 
-    def is_power_device(device_type, power_type):
-        return (power_type in ('1', '2') or
-                # for old devices not providing power_type
-                power_type == '' and device_type in known_types)
 
-    return {
-        item: status
-        for (item, status, device_type, power_type) in info
-        if is_power_device(device_type, power_type)
-    }
+@discover
+def inventory_alcatel_power(_oidend, device):
+    return (device.power_type != alcatel_power_no_power_supply_info and
+            device.oper_state_readable != 'not present')
 
 
 @get_parsed_item_data
-def check_alcatel_power(_no_item, _no_params, status):
-    if status == '1':
-        return 0, "Supply status OK"
-    return 2, "Supply in error condition (%s)" % status
+def check_alcatel_power(item, _no_params, device):
+    if device.oper_state_readable == 'up':
+        state = 0
+    else:
+        state = 2
+    yield state, "[%s] Operational status: %s" % (device.power_type, device.oper_state_readable)
 
 
 check_info["alcatel_power"] = {
     "parse_function": parse_alcatel_power,
     "check_function": check_alcatel_power,
-    "inventory_function": discover(),
+    "inventory_function": inventory_alcatel_power,
     "service_description": "Power Supply %s",
     "snmp_scan_function": alcatel_networking_products_scan_function,
     "snmp_info": (
@@ -60,8 +89,6 @@ check_info["alcatel_power"] = {
             2,  # MIB object "chasEntPhysOperStatus":
             #     up(1), down(2), testing(3), unknown(4),
             #     secondary(5), notPresent(6), unpowered(7), master(9)
-            5,  # MIB object "chasEntPhysModuleType":
-            #     Device Type (0x35000001 == Power Supply)
             36,  # MIB object "chasEntPhysPowerType":
             #     0 no power supply, 1 ac, 2 dc (not available on old devices)
         ]),

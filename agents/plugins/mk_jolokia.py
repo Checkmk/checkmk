@@ -154,7 +154,8 @@ DEFAULT_CONFIG_TUPLES = (
     ("service_url", None),
     ("service_user", None),
     ("service_password", None),
-    ("product", None, "Product description. Available: %s" % \
+    ("product", None, "Product description. Available: %s. If not provided," \
+                      " we try to detect the product from the jolokia info section." % \
                       ", ".join(QUERY_SPECS_SPECIFIC.keys())),
     ("timeout", 1.0, "Connection/read timeout for requests."),
     ("custom_vars", []),
@@ -492,8 +493,10 @@ def generate_jolokia_info(inst):
     info = data.get('info', {})
     version = info.get('version', "unknown")
     product = info.get('product', "unknown")
-    if inst.product:
+    if inst.product is not None:
         product = inst.product
+    else:
+        inst.product = product
 
     agentversion = data.get('agent', "unknown")
     yield inst.name, product, version, agentversion

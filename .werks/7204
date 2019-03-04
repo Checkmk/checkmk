@@ -1,0 +1,12 @@
+Title: mk_jolokia.py: Auto-detect product type if not configured
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1551683726
+Class: feature
+
+The plugin now detects the product type from the jolokia info section,
+if the user did not provide it explicitly.
+

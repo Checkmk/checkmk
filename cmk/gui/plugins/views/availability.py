@@ -165,16 +165,16 @@ def render_availability_options(what):
 # Render the page showing availability table or timelines. It
 # is (currently) called by views.py, when showing a view but
 # availability mode is activated.
-def render_availability_page(view, datasource, context, filterheaders, only_sites, limit):
+def render_availability_page(view, context, filterheaders):
     config.user.need_permission("general.see_availability")
 
     if handle_edit_annotations():
         return
 
     # We make reports about hosts, services or BI aggregates
-    if "service" in datasource.infos:
+    if "service" in view.datasource.infos:
         what = "service"
-    elif "aggr_name" in datasource.infos:
+    elif "aggr_name" in view.datasource.infos:
         what = "bi"
     else:
         what = "host"
@@ -210,7 +210,7 @@ def render_availability_page(view, datasource, context, filterheaders, only_site
         title += av_object[2]
     else:
         av_object = None
-        title += view_title(view)
+        title += view_title(view.spec)
 
     # Deletion must take place before computation, since it affects the outcome
     with html.plugged():
@@ -220,7 +220,7 @@ def render_availability_page(view, datasource, context, filterheaders, only_site
     # Now compute all data, we need this also for CSV export
     if not html.has_user_errors():
         av_rawdata, has_reached_logrow_limit = \
-            availability.get_availability_rawdata(what, context, filterheaders, only_sites,
+            availability.get_availability_rawdata(what, context, filterheaders, view.only_sites,
                                                   av_object, av_mode == "timeline", avoptions)
         av_data = availability.compute_availability(what, av_rawdata, avoptions)
 

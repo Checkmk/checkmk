@@ -5726,11 +5726,10 @@ def test_get_needed_regular_columns(register_builtin_html, load_view_plugins):
 
     view = cmk.gui.views.View(view_name, view_spec)
 
-    sorters = cmk.gui.views._get_sorters(view)
     group_cells = cmk.gui.views.get_group_cells(view)
     cells = cmk.gui.views.get_cells(view)
 
-    columns = cmk.gui.views._get_needed_regular_columns(group_cells + cells, sorters, view.datasource)
+    columns = cmk.gui.views._get_needed_regular_columns(group_cells + cells, view.sorters, view.datasource)
     assert sorted(columns) == sorted([
         'host_scheduled_downtime_depth',
         'host_in_check_period',
@@ -5777,11 +5776,10 @@ def test_get_needed_join_columns(register_builtin_html, load_view_plugins):
 
     view = cmk.gui.views.View(view_name, view_spec)
 
-    sorters = cmk.gui.views._get_sorters(view)
     cells = cmk.gui.views.get_cells(view)
     join_cells = cmk.gui.views.get_join_cells(cells)
 
-    columns = cmk.gui.views._get_needed_join_columns(join_cells, sorters)
+    columns = cmk.gui.views._get_needed_join_columns(join_cells, view.sorters)
     assert sorted(columns) == sorted([
         'host_name',
         'service_description',

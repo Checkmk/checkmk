@@ -228,6 +228,25 @@ class View(object):
                       "because the datasource does not exist.") % (self.name, self.datasource))
 
     @property
+    def sorters(self):
+        """Returns the list of effective sorters to be used to sort the rows of this view"""
+        return self._get_sorter_entries(
+            self.user_sorters if self.user_sorters else self.spec["sorters"])
+
+    def _get_sorter_entries(self, sorter_list):
+        sorters = []
+        for entry in sorter_list:
+            if entry[0] not in sorter_registry:
+                continue  # Skip removed sorters
+
+            # e.g. service description
+            join_key = entry[2] if len(entry) > 2 else None
+
+            sorters.append(
+                SorterEntry(sorter=sorter_registry[entry[0]](), negate=entry[1], join_key=join_key))
+        return sorters
+
+    @property
     def row_limit(self):
         if self.datasource.ignore_limit:
             return None
@@ -257,6 +276,7 @@ class View(object):
 
         The user may click on the headers of tables to change the default view sorting. In the
         moment the user overrides the sorting configured for the view in self.spec"""
+        # TODO: Only process in case the view is user sortable
         return self._user_sorters
 
     @user_sorters.setter
@@ -1170,8 +1190,11 @@ def page_view():
     show_view(view, view_renderer)
 
 
-# Display view with real data. This is *the* function everying
-# is about.
+# Display view with real data
+# TODO: Disentangle logic and presentation like this:
+# - Move logic stuff to View class
+# - Move rendering specific stuff to the fitting ViewRenderer
+# - Find the right place for the availability / SLA hacks here
 def show_view(view, view_renderer, only_count=False):
     display_options.load_from_html()
 
@@ -1261,7 +1284,7 @@ def show_view(view, view_renderer, only_count=False):
     if only_count:
         sorters = []
     else:
-        sorters = _get_sorters(view)
+        sorters = view.sorters
 
     # Prepare cells of the view
     # Group cells:   Are displayed as titles of grouped rows
@@ -1367,29 +1390,6 @@ def show_view(view, view_renderer, only_count=False):
 
 
 SorterEntry = namedtuple("SorterEntry", ["sorter", "negate", "join_key"])
-
-
-def _get_sorters(view):
-    if view.user_sorters:
-        sorter_list = view.user_sorters
-    else:
-        sorter_list = view.spec["sorters"]
-
-    return _get_sorter_entries(sorter_list)
-
-
-def _get_sorter_entries(sorter_list):
-    sorters = []
-    for entry in sorter_list:
-        if entry[0] not in sorter_registry:
-            continue  # Skip removed sorters
-
-        # e.g. service description
-        join_key = entry[2] if len(entry) > 2 else None
-
-        sorters.append(
-            SorterEntry(sorter=sorter_registry[entry[0]](), negate=entry[1], join_key=join_key))
-    return sorters
 
 
 def get_join_cells(cell_list):

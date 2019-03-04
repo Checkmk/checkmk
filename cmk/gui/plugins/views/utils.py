@@ -516,9 +516,9 @@ class DataSource(object):
 
     @abc.abstractproperty
     def table(self):
-        # type: () -> Union[str, Callable]
-        """Might be a string which refers to a livestatus table or a function
-        which is called instead of the livestatus function query_data()"""
+        # type: () -> RowTable
+        """Returns a table objec that can provide a list of rows for the provided
+        query using the query() method."""
         raise NotImplementedError()
 
     @abc.abstractproperty
@@ -630,6 +630,14 @@ class DataSource(object):
         return rows
 
 
+class DataSourceLivestatus(DataSource):
+    """Base class for all simple data sources which 1:1 base on a livestatus table"""
+
+    @property
+    def table(self):
+        return RowTableLivestatus(self.ident)
+
+
 class DataSourceRegistry(cmk.utils.plugin_registry.ClassRegistry):
     def plugin_base_class(self):
         return DataSource
@@ -646,6 +654,31 @@ class DataSourceRegistry(cmk.utils.plugin_registry.ClassRegistry):
 
 
 data_source_registry = DataSourceRegistry()
+
+
+class RowTable(object):
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractmethod
+    def query(self, view, columns, add_columns, query, only_sites, limit, all_active_filters):
+        raise NotImplementedError()
+
+
+class RowTableLivestatus(RowTable):
+    def __init__(self, table_name):
+        super(RowTableLivestatus, self).__init__()
+        self._table_name = table_name
+
+    def query(self, view, columns, add_columns, query, only_sites, limit, all_active_filters):
+        # TODO: Move query_data into this class
+        return query_data(
+            view.datasource,
+            columns,
+            add_columns,
+            query,
+            only_sites,
+            view.row_limit,
+            tablename=self._table_name)
 
 
 # TODO: Return value of render() could be cleaned up e.g. to a named tuple with an

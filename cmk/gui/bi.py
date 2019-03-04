@@ -3219,7 +3219,7 @@ def create_aggregation_row(tree, status_info=None):
     }
 
 
-def table(columns, add_headers, only_sites, limit, filters):
+def table(view, columns, add_columns, query, only_sites, limit, all_active_filters):
     load_assumptions()  # user specific, always loaded
     # Hier müsste man jetzt die Filter kennen, damit man nicht sinnlos
     # alle Aggregationen berechnet.
@@ -3232,7 +3232,7 @@ def table(columns, add_headers, only_sites, limit, filters):
     only_service = None
     only_aggr_name = None
     group_prefix = None
-    for filter_ in filters:
+    for filter_ in all_active_filters:
         if filter_.ident == "aggr_group":
             val = filter_.selected_group()
             if val:
@@ -3310,20 +3310,32 @@ def table(columns, add_headers, only_sites, limit, filters):
     return rows
 
 
-# Table of all host aggregations, i.e. aggregations using data from exactly one host
-def hostname_table(columns, add_headers, only_sites, limit, filters):
-    return singlehost_table(columns, add_headers, only_sites, limit, filters, True, bygroup=False)
+def hostname_table(view, columns, add_columns, query, only_sites, limit, all_active_filters):
+    """Table of all host aggregations, i.e. aggregations using data from exactly one host"""
+    return singlehost_table(
+        view, columns, query, only_sites, limit, all_active_filters, joinbyname=True, bygroup=False)
 
 
-def hostname_by_group_table(columns, add_headers, only_sites, limit, filters):
-    return singlehost_table(columns, add_headers, only_sites, limit, filters, True, bygroup=True)
+def hostname_by_group_table(view, columns, add_columns, query, only_sites, limit,
+                            all_active_filters):
+    return singlehost_table(
+        view, columns, query, only_sites, limit, all_active_filters, joinbyname=True, bygroup=True)
 
 
-def host_table(columns, add_headers, only_sites, limit, filters):
-    return singlehost_table(columns, add_headers, only_sites, limit, filters, False, bygroup=False)
+def host_table(view, columns, add_columns, query, only_sites, limit, all_active_filters):
+    return singlehost_table(
+        view,
+        columns,
+        query,
+        only_sites,
+        limit,
+        all_active_filters,
+        joinbyname=False,
+        bygroup=False)
 
 
-def singlehost_table(columns, add_headers, only_sites, limit, filters, joinbyname, bygroup):
+def singlehost_table(view, columns, query, only_sites, limit, all_active_filters, joinbyname,
+                     bygroup):
     log("--------------------------------------------------------------------")
     log("* Starting to compute singlehost_table (joinbyname = %s)" % joinbyname)
     load_assumptions()  # user specific, always loaded
@@ -3333,7 +3345,7 @@ def singlehost_table(columns, add_headers, only_sites, limit, filters, joinbynam
     # simply use all those filters since we have a 1:n mapping between
     # hosts and host aggregations
     filter_code = ""
-    for filt in filters:
+    for filt in all_active_filters:
         header = filt.filter("bi_host_aggregations")
         filter_code += header
 
@@ -3347,7 +3359,7 @@ def singlehost_table(columns, add_headers, only_sites, limit, filters, joinbynam
     # must not compute any aggregations from other aggregation groups and filter
     # them later out again.
     only_groups = None
-    for filt in filters:
+    for filt in all_active_filters:
         if filt.ident == "aggr_group":
             val = filt.selected_group()
             if val:

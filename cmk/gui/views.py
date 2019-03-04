@@ -366,7 +366,7 @@ class GUIViewRenderer(ViewRenderer):
                 pass  # currently no feed back on webservice
 
         painter_options = PainterOptions.get_instance()
-        painter_options.show_form(view_spec)
+        painter_options.show_form(self.view)
 
         # The refreshing content container
         if display_options.enabled(display_options.R):
@@ -1152,7 +1152,7 @@ def page_view():
 
     painter_options = PainterOptions.get_instance()
     painter_options.load(view.name)
-    painter_options.update_from_url(view.name, view.spec)
+    painter_options.update_from_url(view)
 
     view_renderer = GUIViewRenderer(view, show_buttons=True)
     show_view(view, view_renderer)
@@ -1255,8 +1255,8 @@ def show_view(view, view_renderer, only_count=False):
     # Group cells:   Are displayed as titles of grouped rows
     # Regular cells: Are displaying information about the rows of the type the view is about
     # Join cells:    Are displaying information of a joined source (e.g.service data on host views)
-    group_cells = get_group_cells(view.spec)
-    cells = get_cells(view.spec)
+    group_cells = get_group_cells(view)
+    cells = get_cells(view)
     join_cells = get_join_cells(cells)
 
     # Now compute the list of all columns we need to query via Livestatus.

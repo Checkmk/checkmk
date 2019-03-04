@@ -93,7 +93,7 @@ class PainterOptions(object):
             options.update(cell.painter_options())
 
         # Also layouts can register painter options
-        layout_class = layout_registry.get(view.get("layout"))
+        layout_class = layout_registry.get(view.spec.get("layout"))
         if layout_class:
             options.update(layout_class().painter_options)
 
@@ -119,18 +119,18 @@ class PainterOptions(object):
         vo[view_name] = self._options
         config.user.save_file("viewoptions", vo)
 
-    def update_from_url(self, view_name, view):
+    def update_from_url(self, view):
         self._load_used_options(view)
 
         if not self.painter_option_form_enabled():
             return
 
         if html.request.has_var("_reset_painter_options"):
-            self._clear_painter_options(view_name)
+            self._clear_painter_options(view.name)
             return
 
         elif html.request.has_var("_update_painter_options"):
-            self._set_from_submitted_form(view_name)
+            self._set_from_submitted_form(view.name)
 
     def _set_from_submitted_form(self, view_name):
         # TODO: Remove all keys that are in painter_option_registry
@@ -1596,8 +1596,8 @@ def painter_exists(painter_spec):
     return painter_name in painter_registry
 
 
-# A cell is an instance of a painter in a view (-> a cell or a grouping cell)
 class Cell(object):
+    """A cell is an instance of a painter in a view (-> a cell or a grouping cell)"""
 
     # Wanted to have the "parse painter spec logic" in one place (The Cell() class)
     # but this should be cleaned up more. TODO: Move this to another place
@@ -1746,7 +1746,7 @@ class Cell(object):
         onclick = ''
         title = ''
         if display_options.enabled(display_options.L) \
-           and self._view.get('user_sortable', False) \
+           and self._view.spec.get('user_sortable', False) \
            and get_sorter_name_of_painter(self.painter_name()) is not None:
             params = [
                 ('sort', self._sort_url()),
@@ -1754,7 +1754,7 @@ class Cell(object):
             if display_options.title_options:
                 params.append(('display_options', display_options.title_options))
 
-            classes += ["sort", get_primary_sorter_order(self._view, self.painter_name())]
+            classes += ["sort", get_primary_sorter_order(self._view.spec, self.painter_name())]
             onclick = "location.href=\'%s\'" % html.makeuri(params, 'sort')
             title = _('Sort by %s') % self.title()
 
@@ -1776,7 +1776,7 @@ class Cell(object):
         """
         sorter = []
 
-        group_sort, user_sort, view_sort = get_separated_sorters(self._view)
+        group_sort, user_sort, view_sort = get_separated_sorters(self._view.spec)
 
         sorter = group_sort + user_sort + view_sort
 
@@ -1968,7 +1968,7 @@ class EmptyCell(Cell):
 
 def get_cells(view):
     cells = []
-    for e in view["painters"]:
+    for e in view.spec["painters"]:
         if not painter_exists(e):
             continue
 
@@ -1982,7 +1982,7 @@ def get_cells(view):
 
 
 def get_group_cells(view):
-    return [Cell(view, e) for e in view["group_painters"] if painter_exists(e)]
+    return [Cell(view, e) for e in view.spec["group_painters"] if painter_exists(e)]
 
 
 def output_csv_headers(view):

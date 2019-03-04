@@ -660,7 +660,7 @@ class RowTable(object):
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
-    def query(self, view, columns, add_columns, query, only_sites, limit, all_active_filters):
+    def query(self, view, columns, query, only_sites, limit, all_active_filters):
         raise NotImplementedError()
 
 
@@ -669,16 +669,10 @@ class RowTableLivestatus(RowTable):
         super(RowTableLivestatus, self).__init__()
         self._table_name = table_name
 
-    def query(self, view, columns, add_columns, query, only_sites, limit, all_active_filters):
+    def query(self, view, columns, query, only_sites, limit, all_active_filters):
         # TODO: Move query_data into this class
         return query_data(
-            view.datasource,
-            columns,
-            add_columns,
-            query,
-            only_sites,
-            view.row_limit,
-            tablename=self._table_name)
+            view.datasource, columns, query, only_sites, view.row_limit, tablename=self._table_name)
 
 
 # TODO: Return value of render() could be cleaned up e.g. to a named tuple with an
@@ -1192,18 +1186,10 @@ def get_tag_group(tgid):
 # prepare row-function needed for painters
 # datasource: the datasource object as defined in plugins/views/datasources.py
 # columns: the list of livestatus columns to query
-# add_columns: list of columns the datasource is known to add itself
-#  (couldn't we get rid of this parameter by looking that up ourselves?)
 # add_headers: additional livestatus headers to add
 # only_sites: list of sites the query is limited to
 # limit: maximum number of data rows to query
-def query_data(datasource,
-               columns,
-               add_columns,
-               add_headers,
-               only_sites=None,
-               limit=None,
-               tablename=None):
+def query_data(datasource, columns, add_headers, only_sites=None, limit=None, tablename=None):
     if only_sites is None:
         only_sites = []
 
@@ -1231,10 +1217,10 @@ def query_data(datasource,
                 columns.append(c)
 
     # Remove columns which are implicitely added by the datasource
-    columns = [c for c in columns if c not in add_columns]
+    columns = [c for c in columns if c not in datasource.add_columns]
     query = "GET %s\n" % tablename
-    rows = do_query_data(query, columns, add_columns, merge_column, add_headers, only_sites, limit,
-                         datasource.auth_domain)
+    rows = do_query_data(query, columns, datasource.add_columns, merge_column, add_headers,
+                         only_sites, limit, datasource.auth_domain)
 
     return datasource.post_process(rows)
 

@@ -79,8 +79,8 @@ class DataSourceBIAggregations(DataSource):
 
 
 class RowTableBIAggregations(RowTable):
-    def query(self, view, columns, add_columns, query, only_sites, limit, all_active_filters):
-        return bi.table(view, columns, add_columns, query, only_sites, limit, all_active_filters)
+    def query(self, view, columns, query, only_sites, limit, all_active_filters):
+        return bi.table(view, columns, query, only_sites, limit, all_active_filters)
 
 
 @data_source_registry.register
@@ -111,9 +111,8 @@ class DataSourceBIHostAggregations(DataSource):
 
 
 class RowTableBIHostAggregations(RowTable):
-    def query(self, view, columns, add_columns, query, only_sites, limit, all_active_filters):
-        return bi.host_table(view, columns, add_columns, query, only_sites, limit,
-                             all_active_filters)
+    def query(self, view, columns, query, only_sites, limit, all_active_filters):
+        return bi.host_table(view, columns, query, only_sites, limit, all_active_filters)
 
 
 @data_source_registry.register
@@ -147,9 +146,8 @@ class DataSourceBIHostnameAggregations(DataSource):
 
 
 class RowTableBIHostnameAggregations(RowTable):
-    def query(self, view, columns, add_columns, query, only_sites, limit, all_active_filters):
-        return bi.hostname_table(view, columns, add_columns, query, only_sites, limit,
-                                 all_active_filters)
+    def query(self, view, columns, query, only_sites, limit, all_active_filters):
+        return bi.hostname_table(view, columns, query, only_sites, limit, all_active_filters)
 
 
 @data_source_registry.register
@@ -182,8 +180,8 @@ class DataSourceBIHostnameByGroupAggregations(DataSource):
 
 
 class RowTableBIHostnameByGroupAggregations(RowTable):
-    def query(self, view, columns, add_columns, query, only_sites, limit, all_active_filters):
-        return bi.hostname_by_group_table(view, columns, add_columns, query, only_sites, limit,
+    def query(self, view, columns, query, only_sites, limit, all_active_filters):
+        return bi.hostname_by_group_table(view, columns, query, only_sites, limit,
                                           all_active_filters)
 
 

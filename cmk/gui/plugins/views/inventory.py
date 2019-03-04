@@ -1521,7 +1521,7 @@ class RowTableInventory(RowTable):
         self._info_name = info_name
         self._inventory_path = inventory_path
 
-    def query(self, view, columns, add_columns, query, only_sites, limit, all_active_filters):
+    def query(self, view, columns, query, only_sites, limit, all_active_filters):
         return inv_multisite_table(self._info_name, self._inventory_path, columns, query,
                                    only_sites, limit, all_active_filters)
 
@@ -1960,7 +1960,7 @@ multisite_builtin_views["inv_hosts_ports"] = {
 
 
 class RowTableInventoryHistory(RowTable):
-    def query(self, view, columns, add_columns, query, only_sites, limit, all_active_filters):
+    def query(self, view, columns, query, only_sites, limit, all_active_filters):
         return inv_multisite_table("invhist", None, columns, query, only_sites, limit,
                                    all_active_filters)
 

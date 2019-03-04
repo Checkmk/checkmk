@@ -1259,11 +1259,8 @@ def show_view(view, view_renderer, only_count=False):
     # Fetch data. Some views show data only after pressing [Search]
     if (only_count or (not view.spec.get("mustsearch")) or
             html.request.var("filled_in") in ["filter", 'actions', 'confirm', 'painteroptions']):
-        # names for additional columns (through Stats: headers)
-        add_columns = view.datasource.add_columns
-
-        rows = view.datasource.table.query(view, columns, add_columns, query, only_sites,
-                                           view.row_limit, all_active_filters)
+        rows = view.datasource.table.query(view, columns, query, only_sites, view.row_limit,
+                                           all_active_filters)
 
         # Now add join information, if there are join columns
         if join_cells:
@@ -1476,7 +1473,6 @@ def _do_table_join(master_ds, master_rows, master_filters, join_cells, join_colu
     rows = query_data(
         datasource=slave_ds,
         columns=[join_master_column, join_slave_column] + join_columns,
-        add_columns=[],
         add_headers=query,
         only_sites=only_sites,
         limit=None)

@@ -2380,7 +2380,7 @@ def get_status_info(required_hosts):
 # This variant of the function is configured not with a list of
 # hosts but with a livestatus filter header and a list of columns
 # that need to be fetched in any case
-def get_status_info_filtered(filter_header, only_sites, limit, add_columns, precompile_on_demand,
+def get_status_info_filtered(filter_header, only_sites, limit, host_columns, precompile_on_demand,
                              bygroup):
     columns = [
         "name",
@@ -2393,7 +2393,7 @@ def get_status_info_filtered(filter_header, only_sites, limit, add_columns, prec
         "acknowledged",
         "services_with_fullstate",
         "parents",
-    ] + add_columns
+    ] + host_columns
 
     query = "GET hosts%s\n" % ("bygroup" if bygroup else "")
     query += "Columns: " + (" ".join(columns)) + "\n"
@@ -2425,7 +2425,7 @@ def get_status_info_filtered(filter_header, only_sites, limit, add_columns, prec
             parent_filter_txt = ''.join(parent_filter)
             parent_filter_txt += 'Or: %d\n' % len(parent_filter)
 
-            for row in get_status_info_filtered(parent_filter_txt, only_sites, limit, add_columns,
+            for row in get_status_info_filtered(parent_filter_txt, only_sites, limit, host_columns,
                                                 False, bygroup):
                 if row['name'] not in hostnames:
                     rows.append(row)
@@ -3219,7 +3219,7 @@ def create_aggregation_row(tree, status_info=None):
     }
 
 
-def table(view, columns, add_columns, query, only_sites, limit, all_active_filters):
+def table(view, columns, query, only_sites, limit, all_active_filters):
     load_assumptions()  # user specific, always loaded
     # Hier müsste man jetzt die Filter kennen, damit man nicht sinnlos
     # alle Aggregationen berechnet.
@@ -3310,19 +3310,18 @@ def table(view, columns, add_columns, query, only_sites, limit, all_active_filte
     return rows
 
 
-def hostname_table(view, columns, add_columns, query, only_sites, limit, all_active_filters):
+def hostname_table(view, columns, query, only_sites, limit, all_active_filters):
     """Table of all host aggregations, i.e. aggregations using data from exactly one host"""
     return singlehost_table(
         view, columns, query, only_sites, limit, all_active_filters, joinbyname=True, bygroup=False)
 
 
-def hostname_by_group_table(view, columns, add_columns, query, only_sites, limit,
-                            all_active_filters):
+def hostname_by_group_table(view, columns, query, only_sites, limit, all_active_filters):
     return singlehost_table(
         view, columns, query, only_sites, limit, all_active_filters, joinbyname=True, bygroup=True)
 
 
-def host_table(view, columns, add_columns, query, only_sites, limit, all_active_filters):
+def host_table(view, columns, query, only_sites, limit, all_active_filters):
     return singlehost_table(
         view,
         columns,

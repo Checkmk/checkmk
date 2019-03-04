@@ -481,7 +481,7 @@ class ServiceDiscoveryRowTable(RowTable):
     # handled here. We need to extract them from the query, hand over the regular
     # filters to the host livestatus query and apply the others during the discovery
     # service query.
-    def query(self, view, columns, add_columns, query, only_sites, limit, all_active_filters):
+    def query(self, view, columns, query, only_sites, limit, all_active_filters):
         # Hard code the discovery service filter
         query += "Filter: check_command = check-mk-inventory\n"
 

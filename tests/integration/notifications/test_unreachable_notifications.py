@@ -117,8 +117,13 @@ def initial_state(site, scenario):
         site.live.command("[%d] ROTATE_LOGFILE" % time.time())
 
         def rotated_log():
-            return os.path.exists(site.path("var/check_mk/core/history")) \
-                and inode_before != os.stat(site.path("var/check_mk/core/history")).st_ino
+            try:
+                return inode_before != os.stat(site.path("var/check_mk/core/history")).st_ino
+            except OSError as e:
+                if e.errno == 2:
+                    return False
+                else:
+                    raise e
 
         wait_until(rotated_log, timeout=10)
     else:

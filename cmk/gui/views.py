@@ -1241,7 +1241,7 @@ def show_view(view, view_renderer, only_count=False):
         context.update(visuals.get_singlecontext_html_vars(view.spec))
 
         return cmk.gui.plugins.views.availability.render_availability_page(
-            view.spec, view.datasource, context, filterheaders, view.only_sites, view.row_limit)
+            view, context, filterheaders)
 
     query = filterheaders + view.spec.get("add_headers", "")
 

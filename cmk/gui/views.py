@@ -1246,7 +1246,10 @@ def show_view(view, view_renderer, only_count=False):
     query = filterheaders + view.spec.get("add_headers", "")
 
     # Sorting - use view sorters and URL supplied sorters
-    sorters = get_sorters(view.spec, only_count, html.request.var("sort"))
+    if only_count:
+        sorters = []
+    else:
+        sorters = _get_sorters(view.spec, html.request.var("sort"))
 
     # Prepare cells of the view
     # Group cells:   Are displayed as titles of grouped rows
@@ -1354,10 +1357,7 @@ def show_view(view, view_renderer, only_count=False):
 SorterEntry = namedtuple("SorterEntry", ["sorter", "negate", "join_key"])
 
 
-def get_sorters(view, only_count, user_sort_parameter):
-    if only_count:
-        return []
-
+def _get_sorters(view, user_sort_parameter):
     user_sorters = parse_url_sorters(user_sort_parameter)
     if user_sorters:
         sorter_list = user_sorters

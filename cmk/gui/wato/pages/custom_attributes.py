@@ -251,16 +251,16 @@ class ModeEditCustomAttr(WatoMode):
 
         self._add_extra_form_sections()
 
-        forms.section(_('Show in Table'))
+        forms.section(_('Show in WATO host table'))
         html.help(
-            _('This attribute is only visibile on the detail pages by default, but '
-              'you can also make it visible in the overview tables.'))
+            _('This attribute is only visibile on the edit host and folder pages by default, but '
+              'you can also make it visible in the host overview tables of WATO.'))
         html.checkbox(
             'show_in_table',
             self._attr.get('show_in_table', False),
-            label=_("Show the setting of the attribute in the list table"))
+            label=_("Show the setting of the attribute in the WATO host list table"))
 
-        forms.section(_('Add as custom macro'))
+        forms.section(_('Add to monitoring configuration'))
         html.help(self._macro_help)
         html.checkbox(
             'add_custom_macro', self._attr.get('add_custom_macro', False), label=self._macro_label)
@@ -357,14 +357,17 @@ class ModeEditCustomHostAttr(ModeEditCustomAttr):
 
     @property
     def _macro_help(self):
-        return _("The attribute can be added to the host definition in order to "
-                 "use it as monitoring macro in different places, for example "
-                 "as macro in check commands or notifications.")
+        return _(
+            "The attribute can be added to the host definition in order to use it as custom host attribute "
+            "(sometimes called monitoring macro) in different places, for example as in check commands or "
+            "notifications. You can also only display this attribute in the status GUI when enabling this "
+            "option.")
 
     @property
     def _macro_label(self):
-        return _("Make this variable available as monitoring macro, "
-                 "e.g. in check commands or in notifications.")
+        return _(
+            "Make this custom attribute available to check commands, notifications and the status GUI"
+        )
 
     def _update_config(self):
         _update_host_custom_attrs()

@@ -238,6 +238,7 @@ def page_index():
             view = views.View(view_name, view_spec)
             view.row_limit = views.get_limit()
             view.only_sites = views.get_only_sites()
+            view.user_sorters = views.get_user_sorters()
 
             url = "mobile_view.py?view_name=%s" % view_name
             count = ""
@@ -286,6 +287,7 @@ def page_view():
     view = views.View(view_name, view_spec)
     view.row_limit = views.get_limit()
     view.only_sites = views.get_only_sites()
+    view.user_sorters = views.get_user_sorters()
 
     title = views.view_title(view_spec)
     mobile_html_head(title)

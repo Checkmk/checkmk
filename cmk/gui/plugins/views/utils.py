@@ -1747,14 +1747,14 @@ class Cell(object):
         title = ''
         if display_options.enabled(display_options.L) \
            and self._view.spec.get('user_sortable', False) \
-           and get_sorter_name_of_painter(self.painter_name()) is not None:
+           and _get_sorter_name_of_painter(self.painter_name()) is not None:
             params = [
                 ('sort', self._sort_url()),
             ]
             if display_options.title_options:
                 params.append(('display_options', display_options.title_options))
 
-            classes += ["sort", get_primary_sorter_order(self._view.spec, self.painter_name())]
+            classes += ["sort", _get_primary_sorter_order(self._view, self.painter_name())]
             onclick = "location.href=\'%s\'" % html.makeuri(params, 'sort')
             title = _('Sort by %s') % self.title()
 
@@ -1776,7 +1776,7 @@ class Cell(object):
         """
         sorter = []
 
-        group_sort, user_sort, view_sort = get_separated_sorters(self._view.spec)
+        group_sort, user_sort, view_sort = _get_separated_sorters(self._view)
 
         sorter = group_sort + user_sort + view_sort
 
@@ -1784,7 +1784,7 @@ class Cell(object):
         # - Negate/Disable when at first position
         # - Move to the first position when already in sorters
         # - Add in the front of the user sorters when not set
-        sorter_name = get_sorter_name_of_painter(self.painter_name())
+        sorter_name = _get_sorter_name_of_painter(self.painter_name())
         if self.is_joined():
             # TODO: Clean this up and then remove Cell.join_service()
             this_asc_sorter = (sorter_name, False, self.join_service())
@@ -1993,7 +1993,7 @@ def output_csv_headers(view):
     html.response.headers["Content-Disposition"] = "Attachment; filename=\"%s\"" % filename
 
 
-def get_sorter_name_of_painter(painter_name_or_spec):
+def _get_sorter_name_of_painter(painter_name_or_spec):
     painter_name = extract_painter_name(painter_name_or_spec)
     painter = painter_registry[painter_name]()
     if painter.sorter:
@@ -2005,29 +2005,25 @@ def get_sorter_name_of_painter(painter_name_or_spec):
     return None
 
 
-def get_separated_sorters(view):
-    group_sort = [(get_sorter_name_of_painter(p), False)
-                  for p in view['group_painters']
-                  if painter_exists(p) and get_sorter_name_of_painter(p) is not None]
-    view_sort = [s for s in view['sorters'] if not s[0] in group_sort]
+def _get_separated_sorters(view):
+    group_sort = [(_get_sorter_name_of_painter(p), False)
+                  for p in view.spec['group_painters']
+                  if painter_exists(p) and _get_sorter_name_of_painter(p) is not None]
+    view_sort = [s for s in view.spec['sorters'] if not s[0] in group_sort]
 
-    # Get current url individual sorters. Parse the "sort" url parameter,
-    # then remove the group sorters. The left sorters must be the user
-    # individual sorters for this view.
-    # Then remove the user sorters from the view sorters
-    user_sort = parse_url_sorters(html.request.var('sort'))
+    user_sort = view.user_sorters
 
-    substract_sorters(user_sort, group_sort)
-    substract_sorters(view_sort, user_sort)
+    _substract_sorters(user_sort, group_sort)
+    _substract_sorters(view_sort, user_sort)
 
     return group_sort, user_sort, view_sort
 
 
-def get_primary_sorter_order(view, painter_name):
-    sorter_name = get_sorter_name_of_painter(painter_name)
+def _get_primary_sorter_order(view, painter_name):
+    sorter_name = _get_sorter_name_of_painter(painter_name)
     this_asc_sorter = (sorter_name, False)
     this_desc_sorter = (sorter_name, True)
-    _group_sort, user_sort, _view_sort = get_separated_sorters(view)
+    _group_sort, user_sort, _view_sort = _get_separated_sorters(view)
     if user_sort and this_asc_sorter == user_sort[0]:
         return 'asc'
     elif user_sort and this_desc_sorter == user_sort[0]:
@@ -2035,20 +2031,7 @@ def get_primary_sorter_order(view, painter_name):
     return ''
 
 
-def parse_url_sorters(sort):
-    sorters = []
-    if not sort:
-        return sorters
-    for s in sort.split(','):
-        if '~' not in s:
-            sorters.append((s.replace('-', ''), s.startswith('-')))
-        else:
-            sorter, join_index = s.split('~', 1)
-            sorters.append((sorter.replace('-', ''), sorter.startswith('-'), join_index))
-    return sorters
-
-
-def substract_sorters(base, remove):
+def _substract_sorters(base, remove):
     for s in remove:
         if s in base:
             base.remove(s)

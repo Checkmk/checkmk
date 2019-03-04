@@ -105,9 +105,7 @@ from cmk.gui.plugins.views.utils import (  # pylint: disable=unused-import
     cmp_insensitive_string, cmp_num_split, cmp_custom_variable, cmp_service_name_equiv,
     cmp_string_list, cmp_ip_address, get_custom_var, get_perfdata_nth_value, get_tag_group,
     query_data, do_query_data, join_row, get_view_infos, replace_action_url_macros, Cell, JoinCell,
-    get_cells, get_group_cells, get_sorter_name_of_painter, get_separated_sorters,
-    get_primary_sorter_order, parse_url_sorters, substract_sorters, register_legacy_command,
-    register_painter, register_sorter,
+    get_cells, get_group_cells, register_legacy_command, register_painter, register_sorter,
 )
 
 # Needed for legacy (pre 1.6) plugins
@@ -211,6 +209,7 @@ class View(object):
         self.spec = view_spec
         self._row_limit = None  # type: Optional[int]
         self._only_sites = None  # type: Optional[List[str]]
+        self._user_sorters = None  # type: Optional[Tuple]
 
     @property
     def datasource(self):
@@ -251,6 +250,18 @@ class View(object):
     @only_sites.setter
     def only_sites(self, only_sites):
         self._only_sites = only_sites
+
+    @property
+    def user_sorters(self):
+        """Optional list of sorters to use for rendering the view
+
+        The user may click on the headers of tables to change the default view sorting. In the
+        moment the user overrides the sorting configured for the view in self.spec"""
+        return self._user_sorters
+
+    @user_sorters.setter
+    def user_sorters(self, user_sorters):
+        self._user_sorters = user_sorters
 
 
 class ViewRenderer(object):
@@ -1143,6 +1154,7 @@ def page_view():
     view = View(view_name, view_spec)
     view.row_limit = get_limit()
     view.only_sites = get_only_sites()
+    view.user_sorters = get_user_sorters()
 
     # Gather the page context which is needed for the "add to visual" popup menu
     # to add e.g. views to dashboards or reports
@@ -1249,7 +1261,7 @@ def show_view(view, view_renderer, only_count=False):
     if only_count:
         sorters = []
     else:
-        sorters = _get_sorters(view.spec, html.request.var("sort"))
+        sorters = _get_sorters(view)
 
     # Prepare cells of the view
     # Group cells:   Are displayed as titles of grouped rows
@@ -1357,12 +1369,11 @@ def show_view(view, view_renderer, only_count=False):
 SorterEntry = namedtuple("SorterEntry", ["sorter", "negate", "join_key"])
 
 
-def _get_sorters(view, user_sort_parameter):
-    user_sorters = parse_url_sorters(user_sort_parameter)
-    if user_sorters:
-        sorter_list = user_sorters
+def _get_sorters(view):
+    if view.user_sorters:
+        sorter_list = view.user_sorters
     else:
-        sorter_list = view["sorters"]
+        sorter_list = view.spec["sorters"]
 
     return _get_sorter_entries(sorter_list)
 
@@ -1543,6 +1554,24 @@ def play_alarm_sounds():
         if not state_name or state_name in g_alarm_sound_states:
             html.play_sound(url + wav)
             break  # only one sound at one time
+
+
+def get_user_sorters():
+    """Returns a list of optionally set sort parameters from HTTP request"""
+    return _parse_url_sorters(html.request.var("sort"))
+
+
+def _parse_url_sorters(sort):
+    sorters = []
+    if not sort:
+        return sorters
+    for s in sort.split(','):
+        if '~' not in s:
+            sorters.append((s.replace('-', ''), s.startswith('-')))
+        else:
+            sorter, join_index = s.split('~', 1)
+            sorters.append((sorter.replace('-', ''), sorter.startswith('-'), join_index))
+    return sorters
 
 
 def get_only_sites():

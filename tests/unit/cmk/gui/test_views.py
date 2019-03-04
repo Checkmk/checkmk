@@ -5726,7 +5726,7 @@ def test_get_needed_regular_columns(register_builtin_html, load_view_plugins):
 
     view = cmk.gui.views.View(view_name, view_spec)
 
-    sorters = cmk.gui.views._get_sorters(view.spec, user_sort_parameter=None)
+    sorters = cmk.gui.views._get_sorters(view)
     group_cells = cmk.gui.views.get_group_cells(view)
     cells = cmk.gui.views.get_cells(view)
 
@@ -5777,7 +5777,7 @@ def test_get_needed_join_columns(register_builtin_html, load_view_plugins):
 
     view = cmk.gui.views.View(view_name, view_spec)
 
-    sorters = cmk.gui.views._get_sorters(view.spec, user_sort_parameter=None)
+    sorters = cmk.gui.views._get_sorters(view)
     cells = cmk.gui.views.get_cells(view)
     join_cells = cmk.gui.views.get_join_cells(cells)
 
@@ -5835,3 +5835,13 @@ def test_view_only_sites(register_builtin_html, load_view_plugins):
     assert view.only_sites is None
     view.only_sites = ["unit"]
     assert view.only_sites == ["unit"]
+
+def test_view_user_sorters(register_builtin_html, load_view_plugins):
+    view_name = "allhosts"
+    view_spec = cmk.gui.views.multisite_builtin_views[view_name]
+
+    view = cmk.gui.views.View(view_name, view_spec)
+
+    assert view.user_sorters is None
+    view.user_sorters = [("abc", True)]
+    assert view.user_sorters == [("abc", True)]

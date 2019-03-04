@@ -68,12 +68,12 @@ from cmk.gui.permissions import (
 
 
 class RowTableEC(RowTableLivestatus):
-    def query(self, view, columns, add_columns, query, only_sites, limit, all_active_filters):
+    def query(self, view, columns, query, only_sites, limit, all_active_filters):
         for c in ["event_contact_groups", "host_contact_groups", "event_host"]:
             if c not in columns:
                 columns.append(c)
 
-        rows = super(RowTableEC, self).query(view, columns, add_columns, query, only_sites, limit)
+        rows = super(RowTableEC, self).query(view, columns, query, only_sites, limit)
 
         if not rows:
             return rows

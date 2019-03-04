@@ -106,7 +106,7 @@ class BackupTarFile(tarfile.TarFile):
     """We need to use our tarfile class here to perform a rrdcached SUSPEND/RESUME
     to prevent writing to individual RRDs during backups."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, name, mode, fileobj, **kwargs):
         self._site = kwargs.pop("site")
         self._verbose = kwargs.pop("verbose")
         self._site_stopped = self._site.is_stopped()
@@ -114,7 +114,21 @@ class BackupTarFile(tarfile.TarFile):
         self._sock = None
         self._sites_path = os.path.realpath("/omd/sites")
 
-        super(BackupTarFile, self).__init__(*args, **kwargs)
+        super(BackupTarFile, self).__init__(name, mode, fileobj, **kwargs)
+
+    # We override this function to workaround an issue in the builtin add() method in
+    # case it is called in recursive mode and a file vanishes between the os.listdir()
+    # and the first file access (often seen os.lstat()) during backup. Instead of failing
+    # like this we want to skip those files silently during backup.
+    def add(self, name, arcname=None, recursive=True, exclude=None, filter=None):  # pylint: disable=redefined-builtin
+        try:
+            super(BackupTarFile, self).add(name, arcname, recursive, exclude, filter)
+        except OSError as e:
+            if e.errno != errno.ENOENT or arcname == self._site.name:
+                raise
+
+            if self._verbose:
+                sys.stdout.write("Skipping vanished file: %s\n" % arcname)
 
     def addfile(self, tarinfo, fileobj=None):
         # In case of a stopped site or stopped rrdcached there is no

@@ -5726,7 +5726,7 @@ def test_get_needed_regular_columns(register_builtin_html, load_view_plugins):
 
     view = cmk.gui.views.View(view_name, view_spec)
 
-    sorters = cmk.gui.views.get_sorters(view.spec, only_count=False, user_sort_parameter=None)
+    sorters = cmk.gui.views._get_sorters(view.spec, user_sort_parameter=None)
     group_cells = cmk.gui.views.get_group_cells(view.spec)
     cells = cmk.gui.views.get_cells(view.spec)
 
@@ -5777,7 +5777,7 @@ def test_get_needed_join_columns(register_builtin_html, load_view_plugins):
 
     view = cmk.gui.views.View(view_name, view_spec)
 
-    sorters = cmk.gui.views.get_sorters(view.spec, only_count=False, user_sort_parameter=None)
+    sorters = cmk.gui.views._get_sorters(view.spec, user_sort_parameter=None)
     cells = cmk.gui.views.get_cells(view.spec)
     join_cells = cmk.gui.views.get_join_cells(cells)
 

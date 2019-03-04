@@ -1,0 +1,13 @@
+Title: Livestatus proxy: Transport site connect error to GUI
+Level: 1
+Component: liveproxy
+Compatible: compat
+Edition: cee
+Version: 1.6.0i1
+Date: 1551686561
+Class: feature
+
+Instead of always showing a plain "Site connection not initiated yet" message,
+the GUI is now able to show a little more detailed connection error messages
+from the livestatus proxy. This should make debugging of connection errors a
+little easier.

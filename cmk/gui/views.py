@@ -1317,7 +1317,6 @@ def show_view(view, view_renderer, only_count=False):
     # Prepare cells of the view
     group_cells = view.group_cells
     cells = view.row_cells
-    join_cells = view.join_cells
 
     # Now compute the list of all columns we need to query via Livestatus.
     # Those are: (1) columns used by the sorters in use, (2) columns use by
@@ -1326,7 +1325,6 @@ def show_view(view, view_renderer, only_count=False):
     # is the trickiest. Also compute this list of view options use by the
     # painters
     columns = _get_needed_regular_columns(group_cells + cells, sorters, view.datasource)
-    join_columns = _get_needed_join_columns(join_cells, sorters)
 
     # Fetch data. Some views show data only after pressing [Search]
     if (only_count or (not view.spec.get("mustsearch")) or
@@ -1335,8 +1333,8 @@ def show_view(view, view_renderer, only_count=False):
                                            all_active_filters)
 
         # Now add join information, if there are join columns
-        if join_cells:
-            _do_table_join(view, rows, filterheaders, join_cells, join_columns)
+        if view.join_cells:
+            _do_table_join(view, rows, filterheaders, sorters)
 
         # If any painter, sorter or filter needs the information about the host's
         # inventory, then we load it and attach it as column "host_inventory"
@@ -1494,10 +1492,12 @@ def columns_of_cells(cells):
     return columns
 
 
-def _do_table_join(view, master_rows, master_filters, join_cells, join_columns):
+def _do_table_join(view, master_rows, master_filters, sorters):
     join_table, join_master_column = view.datasource.join
     slave_ds = data_source_registry[join_table]()
     join_slave_column = slave_ds.join_key
+    join_cells = view.join_cells
+    join_columns = _get_needed_join_columns(join_cells, sorters)
 
     # Create additional filters
     join_filters = []

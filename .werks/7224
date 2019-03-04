@@ -1,0 +1,44 @@
+Title: Backup/Restore: Fix vanishing files terminating a backup
+Level: 2
+Component: omd
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p13
+Date: 1551685160
+
+The "omd backup" mechanism recursively backups all site related
+files of a Check_MK site. When files in a site directory, that
+is currently being processed vanish, this could lead to failed
+backups with errors like this:
+
+C+:
+Site backup failed: Traceback (most recent call last):
+File "/omd/versions/1.5.0p8.cee/bin/omd", line 4553, in
+command_function(args, command_options)
+File "/omd/versions/1.5.0p8.cee/bin/omd", line 3711, in main_backup
+backup_site_to_tarfile(fh, tar_mode, options)
+File "/omd/versions/1.5.0p8.cee/bin/omd", line 3686, in backup_site_to_tarfile
+backup_site_files_to_tarfile(tar, options)
+File "/omd/versions/1.5.0p8.cee/bin/omd", line 3556, in backup_site_files_to_tarfile
+tar.add(g_sitedir, g_sitename, exclude=filter_files)
+File "/omd/versions/1.5.0p8.cee/lib/python2.7/tarfile.py", line 2032, in add
+recursive, exclude, filter)
+File "/omd/versions/1.5.0p8.cee/lib/python2.7/tarfile.py", line 2032, in add
+recursive, exclude, filter)
+File "/omd/versions/1.5.0p8.cee/lib/python2.7/tarfile.py", line 2032, in add
+recursive, exclude, filter)
+File "/omd/versions/1.5.0p8.cee/lib/python2.7/tarfile.py", line 2032, in add
+recursive, exclude, filter)
+File "/omd/versions/1.5.0p8.cee/lib/python2.7/tarfile.py", line 2032, in add
+recursive, exclude, filter)
+File "/omd/versions/1.5.0p8.cee/lib/python2.7/tarfile.py", line 2009, in add
+tarinfo = self.gettarinfo(name, arcname)
+File "/omd/versions/1.5.0p8.cee/lib/python2.7/tarfile.py", line 1881, in gettarinfo
+statres = os.lstat(name)
+OSError: [Errno 2] No such file or directory: '/omd/sites/xyz/var/pnp4nagios/perfdata/hastenichgesehn/Interface_BG4_2OG_VLAN_421.xml.new'
+C-:
+
+After this change the backup continues in such a situation
+excluding the just vanished file.

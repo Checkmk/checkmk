@@ -26,7 +26,7 @@
 
 # exemplary output of special agent agent_ucs_bladecenter (<TAB> is tabulator):
 #
-# <<<ucsc_psu:sep(9)>>>
+# <<<ucs_c_rack_server_psu:sep(9)>>>
 # equipmentPsu<TAB>dn  sys/rack-unit-1/psu-1<TAB>id 1<TAB>model blabla<TAB>operability operable<TAB>voltage upper-critical
 # equipmentPsu<TAB>dn sys/rack-unit-1/psu-2 <TAB>id 2<TAB>model blabla<TAB>operability inoperable<TAB>voltage ok
 
@@ -63,42 +63,41 @@ def inventory_ucs_c_rack_server_psu(parsed):
 # ucs_c_rack_server_psu #
 #########################
 
-# maps XML API v2.0 XML entity values to check function status values
-operability_to_status_mapping = {
-    "unknown": 3,
-    "operable": 0,
-    "inoperable": 2,
-    "degraded": 2,
-    "powered-off": 1,
-    "power-problem": 2,
-    "removed": 1,
-    "voltage-problem": 2,
-    "thermal-problem": 2,
-    "performance-problem": 2,
-    "accessibility-problem": 2,
-    "identity-unestablishable": 1,
-    "bios-post-timeout": 1,
-    "disabled": 1,
-    "malformed-fru": 1,
-    "fabric-conn-problem": 2,
-    "fabric-unsupported-conn": 1,
-    "config": 1,
-    "equipment-problem": 2,
-    "decomissioning": 1,
-    "chassis-limit-exceeded": 1,
-    "not-supported": 1,
-    "discovery": 1,
-    "discovery-failed": 1,
-    "identify": 1,
-    "post-failure": 1,
-    "upgrade-problem": 1,
-    "peer-comm-problem": 2,
-    "auto-upgrade": 1,
-}
-
 
 @get_parsed_item_data
 def check_ucs_c_rack_server_psu(item, _no_params, data):
+    # maps XML API v2.0 XML entity values to check function status values
+    operability_to_status_mapping = {
+        "unknown": 3,
+        "operable": 0,
+        "inoperable": 2,
+        "degraded": 2,
+        "powered-off": 1,
+        "power-problem": 2,
+        "removed": 1,
+        "voltage-problem": 2,
+        "thermal-problem": 2,
+        "performance-problem": 2,
+        "accessibility-problem": 2,
+        "identity-unestablishable": 1,
+        "bios-post-timeout": 1,
+        "disabled": 1,
+        "malformed-fru": 1,
+        "fabric-conn-problem": 2,
+        "fabric-unsupported-conn": 1,
+        "config": 1,
+        "equipment-problem": 2,
+        "decomissioning": 1,
+        "chassis-limit-exceeded": 1,
+        "not-supported": 1,
+        "discovery": 1,
+        "discovery-failed": 1,
+        "identify": 1,
+        "post-failure": 1,
+        "upgrade-problem": 1,
+        "peer-comm-problem": 2,
+        "auto-upgrade": 1,
+    }
     operability = data["operability"]
     try:
         status = operability_to_status_mapping[operability]
@@ -120,22 +119,21 @@ check_info["ucs_c_rack_server_psu"] = {
 # ucs_c_rack_server_psu.voltage #
 #################################
 
-# maps XML API v2.0 XML entity values to check function status values
-voltage_to_status_mapping = {
-    "unknown": 3,
-    "ok": 0,
-    "upper-non-recoverable": 2,
-    "upper-critical": 2,
-    "upper-non-critical": 1,
-    "lower-non-critical": 1,
-    "lower-critical": 2,
-    "lower-non-recoverable": 2,
-    "not-supported": 1,
-}
-
 
 @get_parsed_item_data
 def check_ucs_c_rack_server_psu_voltage(item, _no_params, data):
+    # maps XML API v2.0 XML entity values to check function status values
+    voltage_to_status_mapping = {
+        "unknown": 3,
+        "ok": 0,
+        "upper-non-recoverable": 2,
+        "upper-critical": 2,
+        "upper-non-critical": 1,
+        "lower-non-critical": 1,
+        "lower-critical": 2,
+        "lower-non-recoverable": 2,
+        "not-supported": 1,
+    }
     voltage_status = data["voltage"]
     try:
         status = voltage_to_status_mapping[voltage_status]

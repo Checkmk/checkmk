@@ -236,11 +236,11 @@ def encode_socket_for_livestatus(site_id, site):
     socket_spec = site["socket"]
     family_spec, address_spec = socket_spec
 
-    if family_spec == "local":
-        return "unix:%s" % cmk.utils.paths.livestatus_unix_socket
-
     if site["proxy"] is not None:
         return "unix:%sproxy/%s" % (cmk.utils.paths.livestatus_unix_socket, site_id)
+
+    if family_spec == "local":
+        return "unix:%s" % cmk.utils.paths.livestatus_unix_socket
 
     if family_spec == "unix":
         return "%s:%s" % (family_spec, address_spec["path"])

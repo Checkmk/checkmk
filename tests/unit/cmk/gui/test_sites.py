@@ -8,6 +8,12 @@ import cmk.gui.sites as sites
         "proxy": None
     }, "unix:tmp/run/live"),
     ({
+        "socket": ("local", None),
+        "proxy": {
+            "params": None
+        },
+    }, "unix:tmp/run/liveproxy/mysite"),
+    ({
         "socket": ("unix", {
             "path": "/a/b/c"
         }),

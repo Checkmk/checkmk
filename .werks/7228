@@ -1,0 +1,15 @@
+Title: Fixed failing liveproxyd activation when process is currently starting
+Level: 1
+Component: liveproxy
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p13
+Date: 1551788397
+
+There was a race condition in the code that made configuration changes fail
+with a message like "Could not reload Livestatus Proxy: invalid literal for
+int() with base 10: \'\'. See web.log for further information." when one
+tried to chang the site configuration while the proxy was currently in a
+specific part of the process startup phase.

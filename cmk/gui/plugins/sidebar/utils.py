@@ -314,15 +314,14 @@ def snapin_site_choice(ident, choices):
     else:
         only_sites = [site]
 
-    site_choices = config.get_event_console_site_choices()
-    if len(site_choices) <= 1:
+    if len(choices) <= 1:
         return None
 
-    site_choices = [
+    choices = [
         ("", _("All sites")),
-    ] + site_choices
+    ] + choices
     onchange = "cmk.sidebar.set_snapin_site(event, %s, this)" % json.dumps(ident)
-    html.dropdown("site", site_choices, deflt=site, onchange=onchange)
+    html.dropdown("site", choices, deflt=site, onchange=onchange)
 
     return only_sites
 

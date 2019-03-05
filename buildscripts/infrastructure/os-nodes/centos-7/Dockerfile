@@ -14,10 +14,13 @@ RUN yum -y --enablerepo=extras install \
     krb5-devel \
     make \
     mysql-devel \
+    nodejs \
+    npm \
     openldap-devel \
     python \
     python-devel \
     rrdtool-devel \
+    sudo \
     which
 RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py \
     && python get-pip.py

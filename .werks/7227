@@ -1,0 +1,12 @@
+Title: Fixed liveproxy activating errors confusing site related web API calls
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1551786567
+Class: fix
+
+Unclean error handling could make site management related web API calls like set_all_sites
+fail because an ASCII error message was sent back as result to the API call instead of
+the expected JSON data structure.

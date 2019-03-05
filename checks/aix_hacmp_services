@@ -89,23 +89,26 @@
 
 def parse_aix_hacmp_services(info):
     parsed = {}
-    check_block = False # are we in the check relevant info block?
+    inst = None
     for line in info:
-
         if line[0] == 'Details':
-            check_block = False
+            inst = None
 
         elif line[0] == 'Status':
-            check_block = True
             subsystem_ty_name = line[3]
             if subsystem_ty_name == 'PowerHA':
                 subsystem_ty_name += " %s" % line[4]
+            inst = parsed.setdefault(subsystem_ty_name, [])
 
-        elif check_block:
-            if line[0] == 'Subsystem':
-                parsed.setdefault(subsystem_ty_name, [])
-            else:
-                parsed[subsystem_ty_name].append((line[0], line[-1]))
+        elif line[0] == 'Subsystem':
+            # header line
+            continue
+
+        elif inst is not None and len(line) in [3, 4]:
+            # Not all lines contain PID:
+            # clcomd   caa  7537142  active
+            # clconfd  caa           inoperative
+            inst.append((line[0], line[-1]))
 
     return parsed
 

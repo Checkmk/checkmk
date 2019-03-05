@@ -3028,6 +3028,18 @@ metric_info["licenses"] = {
     "color": "#ff6234",
 }
 
+metric_info["license_percentage"] = {
+    "title": _("Used licenses"),
+    "unit": "%",
+    "color": "16/a",
+}
+
+metric_info["licenses_total"] = {
+    "title": _("Total licenses"),
+    "unit": "count",
+    "color": "16/b",
+}
+
 metric_info["license_size"] = {
     "title": _("Size of license"),
     "unit": "bytes",
@@ -8530,6 +8542,20 @@ perfometer_info.append({
 })
 
 #.
+perfometer_info.append({
+    "type": "linear",
+    "segments": ["license_percentage"],
+    "total": 100.0,
+    "color": "16/a",
+})
+
+perfometer_info.append({
+    "type": "linear",
+    "segments": ["license_percentage"],
+    "total": 100.0,
+    "color": "16/a",
+})
+
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
 #   |                   / ___|_ __ __ _ _ __ | |__  ___                    |
@@ -10326,4 +10352,18 @@ graph_info['inodes_used'] = {
         ('inodes_used:max', _('Maximum inodes')),
     ],
     'range': (0, 'inodes_used:max'),
+}
+
+graph_info["licenses"] = {
+    "title": _("Licenses"),
+    "metrics": [
+        (
+            "licenses_total",
+            "area",
+        ),
+        (
+            "licenses",
+            "area",
+        ),
+    ],
 }

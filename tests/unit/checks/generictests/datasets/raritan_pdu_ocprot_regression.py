@@ -19,15 +19,15 @@ discovery = {
 
 checks = {
     '': [(u'C1', (14.0, 15.0), [(0, 'Overcurrent protector is closed', []),
-                                (0, 'Current: 0.0 A', [('current', 0.0, 14.0, 15.0, None, None)])]),
+                                (0, 'Current: 0.00 A', [('current', 0.0, 14.0, 15.0, None, None)])]),
          (u'C2', (14.0, 15.0), [(0, 'Overcurrent protector is closed', []),
-                                (0, 'Current: 0.0 A', [('current', 0.0, 14.0, 15.0, None, None)])]),
+                                (0, 'Current: 0.00 A', [('current', 0.0, 14.0, 15.0, None, None)])]),
          (u'C3', (14.0, 15.0), [(0, 'Overcurrent protector is closed', []),
-                                (0, 'Current: 7.0 A', [('current', 7.0, 14.0, 15.0, None, None)])]),
+                                (0, 'Current: 7.00 A', [('current', 7.0, 14.0, 15.0, None, None)])]),
          (u'C4', (14.0, 15.0), [(0, 'Overcurrent protector is closed', []),
-                                (0, 'Current: 0.0 A', [('current', 0.0, 14.0, 15.0, None, None)])]),
+                                (0, 'Current: 0.00 A', [('current', 0.0, 14.0, 15.0, None, None)])]),
          (u'C5', (14.0, 15.0), [(0, 'Overcurrent protector is closed', []),
-                                (0, 'Current: 0.0 A', [('current', 0.0, 14.0, 15.0, None, None)])]),
+                                (0, 'Current: 0.00 A', [('current', 0.0, 14.0, 15.0, None, None)])]),
          (u'C6', (14.0, 15.0), [(0, 'Overcurrent protector is closed', []),
-                                (0, 'Current: 0.0 A', [('current', 0.0, 14.0, 15.0, None, None)])])]
+                                (0, 'Current: 0.00 A', [('current', 0.0, 14.0, 15.0, None, None)])])]
 }

@@ -106,7 +106,6 @@
 #    "system": {...},
 # }
 
-
 # Possible values for ClusState: RUNNING
 # Possible values for SysState: RUNNING, FAULTED, EXITED
 # Possible values for SG State: ONLINE, OFFLINE, FAULTED
@@ -123,15 +122,15 @@ factory_settings['veritas_vcs_defaults'] = {
         'frozen': 2,
     },
     'map_states': {
-        "ONLINE"  : 0,
-        "RUNNING" : 0,
-        "OK"      : 0,
-        "OFFLINE" : 1,
-        "EXITED"  : 1,
-        "PARTIAL" : 1,
-        "FAULTED" : 2,
-        "UNKNOWN" : 3,
-        "default" : 1,
+        "ONLINE": 0,
+        "RUNNING": 0,
+        "OK": 0,
+        "OFFLINE": 1,
+        "EXITED": 1,
+        "PARTIAL": 1,
+        "FAULTED": 2,
+        "UNKNOWN": 3,
+        "default": 1,
     },
 }
 
@@ -161,7 +160,7 @@ def parse_veritas_vcs(info):
         elif len(line) > 3:
             item_name = line[1]
             attr = line[attr_idx]
-            value = line[value_idx].replace("|","")
+            value = line[value_idx].replace("|", "")
             if "UNKNOWN" in value:
                 value = "UNKNOWN"
             section.setdefault(item_name, []).append((node, attr, value, cluster_name))
@@ -186,7 +185,7 @@ def inventory_veritas_vcs(parsed, item_type):
 
 def check_veritas_vcs(item, params, parsed, item_type):
     if item not in parsed[item_type]:
-        return # vanished
+        return  # vanished
 
     states = []
     infotexts = []

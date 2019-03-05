@@ -129,8 +129,8 @@ class ConfigDomainLiveproxy(ConfigDomain):
                     raise
         except Exception as e:
             logger.exception()
-            html.show_warning(
-                _("Could not reload Livestatus Proxy: %s. See web.log "
+            raise MKGeneralException(
+                _("Could not reload Livestatus Proxy: %s. See web.log and liveproxyd.log "
                   "for further information.") % e)
 
     # TODO: Move default values to common module to share

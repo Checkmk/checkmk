@@ -22,6 +22,12 @@ def load_view_plugins(register_builtin_html, monkeypatch, tmpdir):
     monkeypatch.setattr(config, "config_dir", "%s" % config_dir)
     modules.load_all_plugins()
 
+@pytest.fixture()
+def view(register_builtin_html, load_view_plugins):
+    view_name = "allhosts"
+    view_spec = cmk.gui.views.multisite_builtin_views[view_name]
+    return cmk.gui.views.View(view_name, view_spec)
+
 
 def test_registered_painter_options():
     expected = [
@@ -5720,7 +5726,7 @@ def test_register_sorter(monkeypatch):
     assert sorter.cmp.__name__ == cmpfunc.__name__
 
 
-def test_get_needed_regular_columns(register_builtin_html, load_view_plugins):
+def test_get_needed_regular_columns(view):
     view_name = "allhosts"
     view_spec = cmk.gui.views.multisite_builtin_views[view_name]
 
@@ -5764,14 +5770,10 @@ def test_get_needed_regular_columns(register_builtin_html, load_view_plugins):
     ])
 
 
-def test_get_needed_join_columns(register_builtin_html, load_view_plugins):
-    view_name = "allhosts"
-    builtin_view_spec = cmk.gui.views.multisite_builtin_views[view_name]
-
-    view_spec = copy.deepcopy(builtin_view_spec)
+def test_get_needed_join_columns(view):
+    view_spec = copy.deepcopy(view.spec)
     view_spec["painters"].append(('service_description', None, None, u'CPU load'))
-
-    view = cmk.gui.views.View(view_name, view_spec)
+    view = cmk.gui.views.View(view.name, view_spec)
 
     columns = cmk.gui.views._get_needed_join_columns(view.join_cells, view.sorters)
     assert sorted(columns) == sorted([
@@ -5779,27 +5781,27 @@ def test_get_needed_join_columns(register_builtin_html, load_view_plugins):
         'service_description',
     ])
 
-def test_create_view_basics(register_builtin_html, load_view_plugins):
+def test_create_view_basics(load_view_plugins):
     view_name = "allhosts"
     view_spec = cmk.gui.views.multisite_builtin_views[view_name]
-
     view = cmk.gui.views.View(view_name, view_spec)
+
     assert view.name == view_name
     assert view.spec == view_spec
     assert isinstance(view.datasource, cmk.gui.plugins.views.utils.DataSource)
+    assert isinstance(view.datasource.table, cmk.gui.plugins.views.utils.RowTable)
     assert view.row_limit is None
+    assert view.user_sorters is None
+    assert view.only_sites is None
 
-def test_view_row_limit(register_builtin_html, load_view_plugins):
-    view_name = "allhosts"
-    view_spec = cmk.gui.views.multisite_builtin_views[view_name]
-
-    view = cmk.gui.views.View(view_name, view_spec)
+def test_view_row_limit(view):
     assert view.row_limit is None
     view.row_limit = 101
     assert view.row_limit == 101
-    assert cmk.gui.views.get_limit() == 1000
 
 @pytest.mark.parametrize("limit,permissions,result", [
+    (None, [], 1000),
+
     ("soft", [], 1000),
     ("hard", [], 1000),
     ("none", [], 1000),
@@ -5814,26 +5816,19 @@ def test_view_row_limit(register_builtin_html, load_view_plugins):
     ("none", ["general.ignore_soft_limit", "general.ignore_hard_limit"], None),
 ])
 def test_gui_view_row_limit(register_builtin_html, monkeypatch, limit, permissions, result):
-    monkeypatch.setitem(html.request._vars, "limit", limit)
+    if limit is not None:
+        monkeypatch.setitem(html.request._vars, "limit", limit)
+
     for perm in permissions:
         monkeypatch.setitem(config.user.permissions, perm, True)
     assert cmk.gui.views.get_limit() == result
 
-def test_view_only_sites(register_builtin_html, load_view_plugins):
-    view_name = "allhosts"
-    view_spec = cmk.gui.views.multisite_builtin_views[view_name]
-
-    view = cmk.gui.views.View(view_name, view_spec)
+def test_view_only_sites(view):
     assert view.only_sites is None
     view.only_sites = ["unit"]
     assert view.only_sites == ["unit"]
 
-def test_view_user_sorters(register_builtin_html, load_view_plugins):
-    view_name = "allhosts"
-    view_spec = cmk.gui.views.multisite_builtin_views[view_name]
-
-    view = cmk.gui.views.View(view_name, view_spec)
-
+def test_view_user_sorters(view):
     assert view.user_sorters is None
     view.user_sorters = [("abc", True)]
     assert view.user_sorters == [("abc", True)]

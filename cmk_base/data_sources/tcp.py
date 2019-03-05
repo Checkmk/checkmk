@@ -238,15 +238,17 @@ class TCPDataSource(CheckMKAgentDataSource):
     def _summary_result(self):
         agent_info = self._get_agent_info()
         status, output, perfdata = super(TCPDataSource, self)._summary_result()
+        infotexts = [output]
 
         for sub_status, sub_output in [
                 self._sub_result_version(agent_info),
                 self._sub_result_only_from(agent_info),
         ]:
             status = max(status, sub_status)
-            output += ", %s" % sub_output
+            if sub_output:
+                infotexts.append(sub_output)
 
-        return status, output, perfdata
+        return status, ", ".join(infotexts), perfdata
 
     def _is_expected_agent_version(self, agent_version, expected_version):
         try:

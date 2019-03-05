@@ -1,0 +1,20 @@
+Title: stormshield.include: Fixed possible performance losses
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1551791544
+Class: fix
+
+SNMP scan functions have the task to filter out SNMP hosts
+for which it's not worth trying to discover related services.
+
+In order to achieve this every scan function tries
+to find out the right device type by reference to
+SNMP SysObjID and/or SNMP SysDescr.
+
+The stormshield scan functions were not restrictive enough and
+the result was that for every SNMP host the SNMP table
+below .1.3.6.1.4.1.11256 was requested. This might led to
+losses during service discovery of all SNMP devices.

@@ -13,7 +13,10 @@ currentBuild.description = currentBuild.description + '\nBuilding for the follow
 def DOCKER_BUILDS = [:]
 
 node {
-    docker.image(DOCKER_REGISTRY + '/ubuntu-18.04-common').inside('-u 0:0 --cap-add=SYS_ADMIN --network infrastructure_local-infra') {
+    docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
+        IMAGE = 'ubuntu-18.04-common'
+        docker.image(IMAGE).pull()
+        docker.image(IMAGE).inside('-u 0:0 --cap-add=SYS_ADMIN --network infrastructure_local-infra') {
         stage('checkout sources') {
             cleanWs()
             checkout(scm)
@@ -26,7 +29,9 @@ node {
 DISTRO_LIST.each { DISTRO ->
     DOCKER_BUILDS[DISTRO] = {
         node {
-            docker.image(DOCKER_REGISTRY + '/ubuntu-18.04-common').inside('-u 0:0 -v /var/run/docker.sock:/var/run/docker.sock --cap-add=SYS_ADMIN --network ci_local-infra') {
+    docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
+        IMAGE = 'ubuntu-18.04-common'
+        docker.image(IMAGE).inside('-u 0:0 -v /var/run/docker.sock:/var/run/docker.sock --cap-add=SYS_ADMIN --network ci_local-infra') {
                 stage('build ' + DISTRO + ' os-image') {
                     unstash name: 'dockerfiles'
                     unstash name: 'distroinfos'

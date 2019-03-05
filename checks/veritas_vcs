@@ -215,6 +215,13 @@ def check_veritas_vcs(item, params, parsed, item_type):
     yield state, "%s%s" % (", ".join(infotexts), cluster_info)
 
 
+def veritas_vcs_get_check_function(item_type):
+    def check_function(item, params, parsed):
+        return check_veritas_vcs(item, params, parsed, item_type)
+
+    return check_function
+
+
 #   .--cluster - main check -----------------------------------------------.
 #   |                         _           _                                |
 #   |                     ___| |_   _ ___| |_ ___ _ __                     |
@@ -226,15 +233,13 @@ def check_veritas_vcs(item, params, parsed, item_type):
 #   |                           main check                                 |
 #   '----------------------------------------------------------------------'
 
-
 check_info['veritas_vcs'] = {
-    'group'                  : 'veritas_vcs',
-    'parse_function'         : parse_veritas_vcs,
-    'inventory_function'     : lambda parsed: inventory_veritas_vcs(parsed, 'cluster'),
-    'check_function'         : lambda item, _no_params, parsed: \
-                                   check_veritas_vcs(item, _no_params, parsed, "cluster"),
-    'service_description'    : 'VCS Cluster %s',
-    'node_info'              : True,
+    'group': 'veritas_vcs',
+    'parse_function': parse_veritas_vcs,
+    'inventory_function': lambda parsed: inventory_veritas_vcs(parsed, 'cluster'),
+    'check_function': veritas_vcs_get_check_function("cluster"),
+    'service_description': 'VCS Cluster %s',
+    'node_info': True,
     'default_levels_variable': 'veritas_vcs_defaults',
 }
 
@@ -249,12 +254,11 @@ check_info['veritas_vcs'] = {
 #   '----------------------------------------------------------------------'
 
 check_info['veritas_vcs.system'] = {
-    'group'                  : 'veritas_vcs',
-    'inventory_function'     : lambda parsed: inventory_veritas_vcs(parsed, "system"),
-    'check_function'         : lambda item, _no_params, parsed: \
-                                   check_veritas_vcs(item, _no_params, parsed, "system"),
-    'service_description'    : 'VCS System %s',
-    'node_info'              : True,
+    'group': 'veritas_vcs',
+    'inventory_function': lambda parsed: inventory_veritas_vcs(parsed, "system"),
+    'check_function': veritas_vcs_get_check_function("system"),
+    'service_description': 'VCS System %s',
+    'node_info': True,
     'default_levels_variable': 'veritas_vcs_defaults',
 }
 
@@ -269,12 +273,11 @@ check_info['veritas_vcs.system'] = {
 #   '----------------------------------------------------------------------'
 
 check_info['veritas_vcs.servicegroup'] = {
-    'group'                  : 'veritas_vcs',
-    'inventory_function'     : lambda parsed: inventory_veritas_vcs(parsed, 'group'),
-    'check_function'         : lambda item, _no_params, parsed: \
-                                   check_veritas_vcs(item, _no_params, parsed, 'group'),
-    'service_description'    : 'VCS Service Group %s',
-    'node_info'              : True,
+    'group': 'veritas_vcs',
+    'inventory_function': lambda parsed: inventory_veritas_vcs(parsed, 'group'),
+    'check_function': veritas_vcs_get_check_function('group'),
+    'service_description': 'VCS Service Group %s',
+    'node_info': True,
     'default_levels_variable': 'veritas_vcs_defaults',
 }
 
@@ -289,11 +292,10 @@ check_info['veritas_vcs.servicegroup'] = {
 #   '----------------------------------------------------------------------'
 
 check_info['veritas_vcs.resource'] = {
-    'group'                  : 'veritas_vcs',
-    'inventory_function'     : lambda parsed: inventory_veritas_vcs(parsed, 'resource'),
-    'check_function'         : lambda item, _no_params, parsed: \
-                                   check_veritas_vcs(item, _no_params, parsed, 'resource'),
-    'service_description'    : 'VCS Resource %s',
-    'node_info'              : True,
+    'group': 'veritas_vcs',
+    'inventory_function': lambda parsed: inventory_veritas_vcs(parsed, 'resource'),
+    'check_function': veritas_vcs_get_check_function('resource'),
+    'service_description': 'VCS Resource %s',
+    'node_info': True,
     'default_levels_variable': 'veritas_vcs_defaults',
 }

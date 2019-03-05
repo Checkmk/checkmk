@@ -39,7 +39,6 @@ import cmk.gui.config as config
 import cmk.gui.mkeventd as mkeventd
 from cmk.gui.log import logger
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
 from cmk.gui.exceptions import MKGeneralException
 
 from cmk.gui.watolib.changes import log_audit
@@ -127,6 +126,13 @@ class ConfigDomainLiveproxy(ConfigDomain):
                     pass
                 else:
                     raise
+            except ValueError:
+                # ignore empty pid file (may happen during locking in
+                # cmk.utils.daemon.lock_with_pid_file().  We are in the
+                # situation where the livstatus proxy is in early phase of the
+                # startup. The configuration is loaded later -> no reload needed
+                pass
+
         except Exception as e:
             logger.exception()
             raise MKGeneralException(

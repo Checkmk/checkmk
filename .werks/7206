@@ -1,0 +1,10 @@
+Title: raritan_pdu_outletcount,raritan_pdu_plugs: Discover PX3 devices
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1551790472
+Class: feature
+
+

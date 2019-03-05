@@ -12,9 +12,19 @@ discovery = {
 
 checks = {
     '': [
-        (u'1', 7, [(0, u'Status: on', [])]),
-        (u'36', 7, [(0, u'FooName, Status: on', [])]),
-        (u'1', 'on', [(0, u'Status: on', [])]),
-        (u'36', 5, [(2, u'FooName, Status: on', [])]),
+        (u'1', 7, [
+            (0, u'Status: on', []),
+        ]),
+        (u'36', 7, [
+            (0, u'FooName', []),
+            (0, u'Status: on', []),
+        ]),
+        (u'1', 'on', [
+            (0, u'Status: on', []),
+            ]),
+        (u'36', 5, [
+            (0, u'FooName', []),
+            (2, u'Status: on', []),
+        ]),
     ]
 }

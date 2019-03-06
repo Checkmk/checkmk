@@ -1225,6 +1225,12 @@ metric_info["threads"] = {
     "color": "#8040f0",
 }
 
+metric_info["thread_usage"] = {
+    "title": _("Thread usage"),
+    "unit": "%",
+    "color": "22/a",
+}
+
 metric_info["threads_idle"] = {
     "title": _("Idle threads"),
     "unit": "count",
@@ -8696,6 +8702,12 @@ graph_info["threads"] = {
         ("threads_daemon", "stack"),
         ("threads_max", "stack"),
     ],
+}
+
+graph_info["thread_usage"] = {
+    "metrics": [("thread_usage", "area"),],
+    "scalars": ["thread_usage:warn", "thread_usage:crit"],
+    "range": (0, 100),
 }
 
 graph_info["threadpool"] = {

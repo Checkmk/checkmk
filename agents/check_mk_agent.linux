@@ -150,6 +150,9 @@ function section_cpu()
     if [ -z "$IS_DOCKERIZED" ] && [ -z "$IS_LXC_CONTAINER" ]; then
         echo '<<<cpu>>>'
         echo "$(cat /proc/loadavg) $NUM_CPUS"
+        if [ -f "/proc/sys/kernel/threads-max" ]; then
+            cat /proc/sys/kernel/threads-max
+        fi
     else
         if [ -n "$IS_DOCKERIZED" ]; then
             echo '<<<docker_container_cpu>>>'

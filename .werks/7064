@@ -1,0 +1,12 @@
+Title: cpu.threads: now returns the percentage of threads used
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1551881294
+Class: feature
+
+The check cpu.threads is now able to return the percentage of threads
+used on linux systems. To use this feature the check_mk_agent has to
+be updated. Levels for the thread usage can be defined in WATO.

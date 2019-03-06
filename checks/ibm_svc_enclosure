@@ -52,61 +52,136 @@
 # 1:online:control:9843-AE2:6860407:2:2:2:12
 
 
-def inventory_ibm_svc_enclosure(info):
-    inventory = []
-    for line in info:
-        enclosure_id = line[0]
-        inventory.append((enclosure_id, None))
-    return inventory
+def parse_ibm_svc_enclosure(info):
+    dflt_header = _get_ibm_svc_enclosure_dflt_header(info)
+    if dflt_header is None:
+        return {}
+
+    parsed = {}
+    for id_, rows in parse_ibm_svc_with_header(info, dflt_header).iteritems():
+        try:
+            data = rows[0]
+        except IndexError:
+            continue
+        parsed.setdefault(id_, data)
+    return parsed
 
 
-def check_ibm_svc_enclosure(item, _no_params, info):
-    for line in info:
-        if line[0] == item:
-            if len(line) == 9:
-                line = line[:3] + [None, None, None
-                                  ] + line[3:7] + [None] + line[7:] + [None, None, None, None]
-            elif len(line) == 13:
-                line = line + [None, None, None, None]
-            elif len(line) == 15:
-                line = line + [None, None]
-            elif len(line) == 17:
-                pass
-            else:
-                yield 3, "Unknown format"
-                return
+@get_parsed_item_data
+def check_ibm_svc_enclosure(item, _no_params, data):
+    enclosure_status = data['status']
+    if enclosure_status == "online":
+        status = 0
+    else:
+        status = 2
+    yield status, 'Status: %s' % enclosure_status
 
-            _enclosure_id, enclosure_status, _enclosure_type, _managed, _IO_group_id, \
-                _IO_group_name, _product_MTM, _serial_number, total_canisters, online_canisters, \
-                total_PSUs, online_PSUs, _drive_slots, total_fan_modules, online_fan_modules, \
-                total_secondary_expander_modules, online_secondary_expander_modules = line
-
-            # Check status
-            if enclosure_status == "online":
-                status = 0
-            else:
-                status = 2
-            yield status, "Status: %s" % enclosure_status
-
-            for online, total, text in [
-                (online_canisters, total_canisters, 'canisters'),
-                (online_PSUs, total_PSUs, "PSUs"),
-                (online_fan_modules, total_fan_modules, 'fan modules'),
-                (online_secondary_expander_modules, total_secondary_expander_modules,
-                 'secondary expander modules'),
-            ]:
-                if online is None:
-                    continue
-                state = 0
-                infotext = "Online %s: %s" % (text, online)
-                if total is not None and online != total:
-                    state = 2
-                    infotext += " of %s" % total
-                yield state, infotext
+    for total_key, online_key, text in [
+        ('total_canisters', 'online_canisters', 'canisters'),
+        ('total_PSUs', 'online_PSUs', 'PSUs'),
+        ('total_fan_modules', 'online_fan_modules', 'fan modules'),
+        ('total_sems', 'online_sems', 'secondary expander modules'),
+    ]:
+        online = data.get(online_key)
+        total = data.get(total_key)
+        if online is None:
+            continue
+        state = 0
+        infotext = "Online %s: %s" % (text, online)
+        if total is not None and online != total:
+            state = 2
+            infotext += " of %s" % total
+        yield state, infotext
 
 
 check_info["ibm_svc_enclosure"] = {
+    "parse_function": parse_ibm_svc_enclosure,
     "check_function": check_ibm_svc_enclosure,
-    "inventory_function": inventory_ibm_svc_enclosure,
+    "inventory_function": discover(),
     "service_description": "Enclosure %s",
+    "includes": ["ibm_svc.include"],
 }
+
+#   .--helper--------------------------------------------------------------.
+#   |                    _          _                                      |
+#   |                   | |__   ___| |_ __   ___ _ __                      |
+#   |                   | '_ \ / _ \ | '_ \ / _ \ '__|                     |
+#   |                   | | | |  __/ | |_) |  __/ |                        |
+#   |                   |_| |_|\___|_| .__/ \___|_|                        |
+#   |                                |_|                                   |
+#   '----------------------------------------------------------------------'
+
+
+def _get_ibm_svc_enclosure_dflt_header(info):
+    try:
+        first_line = info[0]
+    except IndexError:
+        return
+
+    if len(first_line) == 9:
+        return [
+            'id',
+            'status',
+            'type',
+            'product_MTM',
+            'serial_number',
+            'total_canisters',
+            'online_canisters',
+            'online_PSUs',
+            'drive_slots',
+        ]
+    elif len(first_line) == 13:
+        return [
+            'id',
+            'status',
+            'type',
+            'managed',
+            'IO_group_id',
+            'IO_group_name',
+            'product_MTM',
+            'serial_number',
+            'total_canisters',
+            'online_canisters',
+            'total_PSUs',
+            'online_PSUs',
+            'drive_slots',
+        ]
+    elif len(first_line) == 15:
+        return [
+            'id',
+            'status',
+            'type',
+            'managed',
+            'IO_group_id',
+            'IO_group_name',
+            'product_MTM',
+            'serial_number',
+            'total_canisters',
+            'online_canisters',
+            'total_PSUs',
+            'online_PSUs',
+            'drive_slots',
+            'total_fan_modules',
+            'online_fan_modules',
+        ]
+    elif len(first_line) == 17:
+        return [
+            'id',
+            'status',
+            'type',
+            'managed',
+            'IO_group_id',
+            'IO_group_name',
+            'product_MTM',
+            'serial_number',
+            'total_canisters',
+            'online_canisters',
+            'total_PSUs',
+            'online_PSUs',
+            'drive_slots',
+            'total_fan_modules',
+            'online_fan_modules',
+            'total_sems',
+            'online_sems',
+        ]
+    return

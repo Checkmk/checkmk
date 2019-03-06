@@ -50,7 +50,7 @@ info = [[u'27',
          u'generic_ssd']]
 
 
-discovery = {'': [(u'27', None), (u'28', None), (u'29', None), (u'30', None)]}
+discovery = {'': [(u'27', {}), (u'28', {}), (u'29', {}), (u'30', {})]}
 
 
 checks = {'': [(u'27',

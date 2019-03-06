@@ -82,7 +82,7 @@ info = [[u'1',
          u'']]
 
 
-discovery = {'': [(u'io_grp0', None), (u'io_grp1', None)]}
+discovery = {'': [(u'io_grp0', {}), (u'io_grp1', {})]}
 
 
 checks = {'': [(u'io_grp0',

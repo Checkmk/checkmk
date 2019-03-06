@@ -74,42 +74,42 @@
 # 5:BLUBBSVC02:sas_io:0:0:140325134930
 # [...]
 
-# parses agent output into a structure like:
-# {'Drives BLUBBSVC01': {'r_mb': 0,   'w_mb': 0,   'r_io': 0,    'w_io': 0,    'r_ms': 0, 'w_ms': 0},
-#  'Drives BLUBBSVC02': {'r_mb': 0,   'w_mb': 0,   'r_io': 0,    'w_io': 0,    'r_ms': 0, 'w_ms': 0},
-#  'Drives BLUBBSVC03': {'r_mb': 0,   'w_mb': 0,   'r_io': 0,    'w_io': 0,    'r_ms': 0, 'w_ms': 0},
-#  'Drives BLUBBSVC04': {'r_mb': 0,   'w_mb': 0,   'r_io': 0,    'w_io': 0,    'r_ms': 0, 'w_ms': 0},
-#  'MDisks BLUBBSVC01': {'r_mb': 1,   'w_mb': 16,  'r_io': 15,   'w_io': 865,  'r_ms': 5, 'w_ms': 1},
-#  'MDisks BLUBBSVC02': {'r_mb': 3,   'w_mb': 6,   'r_io': 245,  'w_io': 361,  'r_ms': 6, 'w_ms': 0},
-#  'MDisks BLUBBSVC03': {'r_mb': 28,  'w_mb': 5,   'r_io': 1194, 'w_io': 901,  'r_ms': 3, 'w_ms': 0},
-#  'MDisks BLUBBSVC04': {'r_mb': 0,   'w_mb': 162, 'r_io': 0,    'w_io': 1414, 'r_ms': 7, 'w_ms': 0},
-#  'VDisks BLUBBSVC01': {'r_mb': 0,   'w_mb': 0,   'r_io': 19,   'w_io': 110,  'r_ms': 2, 'w_ms': 0},
-#  'VDisks BLUBBSVC02': {'r_mb': 101, 'w_mb': 13,  'r_io': 1105, 'w_io': 789,  'r_ms': 1, 'w_ms': 0},
-#  'VDisks BLUBBSVC03': {'r_mb': 12,  'w_mb': 80,  'r_io': 1345, 'w_io': 1442, 'r_ms': 1, 'w_ms': 0},
-#  'VDisks BLUBBSVC04': {'r_mb': 0,   'w_mb': 0,   'r_io': 0,    'w_io': 0,    'r_ms': 7, 'w_ms': 0}}
 
-
-def ibm_svc_nodestats_parse(info):
+def parse_ibm_svc_nodestats(info):
+    dflt_header = [
+        'node_id',
+        'node_name',
+        'stat_name',
+        'stat_current',
+        'stat_peak',
+        'stat_peak_time',
+    ]
     parsed = {}
-    for _node_id, node_name, stat_name, stat_current, _stat_peak, _stat_peak_time in info:
-        if stat_name in ("vdisk_r_mb", "vdisk_w_mb", "vdisk_r_io", "vdisk_w_io", "vdisk_r_ms",
-                         "vdisk_w_ms"):
-            if "VDisks %s" % node_name not in parsed.keys():
-                parsed["VDisks %s" % node_name] = {}
-            stat_name = stat_name.replace("vdisk_", "")
-            parsed["VDisks %s" % node_name][stat_name] = int(stat_current)
-        if stat_name in ("mdisk_r_mb", "mdisk_w_mb", "mdisk_r_io", "mdisk_w_io", "mdisk_r_ms",
-                         "mdisk_w_ms"):
-            if "MDisks %s" % node_name not in parsed.keys():
-                parsed["MDisks %s" % node_name] = {}
-            stat_name = stat_name.replace("mdisk_", "")
-            parsed["MDisks %s" % node_name][stat_name] = int(stat_current)
-        if stat_name in ("drive_r_mb", "drive_w_mb", "drive_r_io", "drive_w_io", "drive_r_ms",
-                         "drive_w_ms"):
-            if "Drives %s" % node_name not in parsed.keys():
-                parsed["Drives %s" % node_name] = {}
-            stat_name = stat_name.replace("drive_", "")
-            parsed["Drives %s" % node_name][stat_name] = int(stat_current)
+    for rows in parse_ibm_svc_with_header(info, dflt_header).itervalues():
+        for data in rows:
+            node_name = data['node_name']
+            stat_name = data['stat_name']
+            if stat_name in ("vdisk_r_mb", "vdisk_w_mb", "vdisk_r_io", "vdisk_w_io", "vdisk_r_ms",
+                             "vdisk_w_ms"):
+                item_name = "VDisks %s" % node_name
+                stat_name = stat_name.replace("vdisk_", "")
+            elif stat_name in ("mdisk_r_mb", "mdisk_w_mb", "mdisk_r_io", "mdisk_w_io", "mdisk_r_ms",
+                               "mdisk_w_ms"):
+                item_name = "MDisks %s" % node_name
+                stat_name = stat_name.replace("mdisk_", "")
+            elif stat_name in ("drive_r_mb", "drive_w_mb", "drive_r_io", "drive_w_io", "drive_r_ms",
+                               "drive_w_ms"):
+                item_name = "Drives %s" % node_name
+                stat_name = stat_name.replace("drive_", "")
+            elif stat_name in ("write_cache_pc", "total_cache_pc", "cpu_pc"):
+                item_name = node_name
+            else:
+                continue
+            try:
+                stat_current = int(data['stat_current'])
+            except ValueError:
+                continue
+            parsed.setdefault(item_name, {}).setdefault(stat_name, stat_current)
     return parsed
 
 
@@ -124,17 +124,18 @@ def ibm_svc_nodestats_parse(info):
 
 
 def inventory_ibm_svc_nodestats_diskio(info):
-    return [(key, None) for key in ibm_svc_nodestats_parse(info)]
+    return [(node_name, None)
+            for node_name, data in parse_ibm_svc_nodestats(info).iteritems()
+            if 'r_mb' in data and 'w_mb' in data]
 
 
 def check_ibm_svc_nodestats_diskio(item, _no_params, info):
-    parsed = ibm_svc_nodestats_parse(info)
+    data = parse_ibm_svc_nodestats(info).get(item)
+    if data is None:
+        return
 
-    if item not in parsed.keys():
-        return 3, "%s not found in agent output" % item
-
-    read_bytes = parsed[item]['r_mb'] * 1024 * 1024
-    write_bytes = parsed[item]['w_mb'] * 1024 * 1024
+    read_bytes = data['r_mb'] * 1024 * 1024
+    write_bytes = data['w_mb'] * 1024 * 1024
     perfdata = [("read", read_bytes), ("write", write_bytes)]
 
     return 0, "%s/s read, %s/s write" % \
@@ -146,6 +147,7 @@ check_info["ibm_svc_nodestats.diskio"] = {
     "check_function": check_ibm_svc_nodestats_diskio,
     "inventory_function": inventory_ibm_svc_nodestats_diskio,
     "service_description": "Disk IO %s",
+    "includes": ["ibm_svc.include"],
     "has_perfdata": True,
 }
 
@@ -161,17 +163,18 @@ check_info["ibm_svc_nodestats.diskio"] = {
 
 
 def inventory_ibm_svc_nodestats_iops(info):
-    return [(key, None) for key in ibm_svc_nodestats_parse(info)]
+    return [(node_name, None)
+            for node_name, data in parse_ibm_svc_nodestats(info).iteritems()
+            if 'r_io' in data and 'w_io' in data]
 
 
 def check_ibm_svc_nodestats_iops(item, _no_params, info):
-    parsed = ibm_svc_nodestats_parse(info)
+    data = parse_ibm_svc_nodestats(info).get(item)
+    if data is None:
+        return
 
-    if item not in parsed.keys():
-        return 3, "%s not found in agent output" % item
-
-    read_iops = parsed[item]['r_io']
-    write_iops = parsed[item]['w_io']
+    read_iops = data['r_io']
+    write_iops = data['w_io']
     perfdata = [("read", read_iops), ("write", write_iops)]
 
     return 0, "%s IO/s read, %s IO/s write" % (read_iops, write_iops), perfdata
@@ -196,21 +199,21 @@ check_info["ibm_svc_nodestats.iops"] = {
 
 
 def inventory_ibm_svc_nodestats_disk_latency(info):
-    return [(key, None) for key in ibm_svc_nodestats_parse(info)]
+    return [(node_name, None)
+            for node_name, data in parse_ibm_svc_nodestats(info).iteritems()
+            if 'r_ms' in data and 'w_ms' in data]
 
 
 def check_ibm_svc_nodestats_disk_latency(item, _no_params, info):
-    parsed = ibm_svc_nodestats_parse(info)
+    data = parse_ibm_svc_nodestats(info).get(item)
+    if data is None:
+        return
 
-    if item not in parsed.keys():
-        return 3, "%s not found in agent output" % item
-
-    read_latency = parsed[item]['r_ms']
-    write_latency = parsed[item]['w_ms']
+    read_latency = data['r_ms']
+    write_latency = data['w_ms']
     perfdata = [("read_latency", read_latency), ("write_latency", write_latency)]
 
-    return 0, "Latency is %s ms for read, %s ms for write" % (read_latency, write_latency), \
-        perfdata
+    return 0, "Latency is %s ms for read, %s ms for write" % (read_latency, write_latency), perfdata
 
 
 check_info["ibm_svc_nodestats.disk_latency"] = {
@@ -234,25 +237,22 @@ check_info["ibm_svc_nodestats.disk_latency"] = {
 ibm_svc_cpu_default_levels = (90.0, 95.0)
 
 
-def inventory_ibm_svc_cpu(info):
-    inventory = []
-    for _node_id, node_name, stat_name, _stat_current, _stat_peak, _stat_peak_time in info:
-        if stat_name == "cpu_pc":
-            inventory.append((node_name, "ibm_svc_cpu_default_levels"))
-    return inventory
+def inventory_ibm_svc_nodestats_cpu(info):
+    return [(node_name, "ibm_svc_cpu_default_levels")
+            for node_name, data in parse_ibm_svc_nodestats(info).iteritems()
+            if 'cpu_pc' in data]
 
 
-def check_ibm_svc_cpu(item, params, info):
-    for _node_id, node_name, stat_name, stat_current, _stat_peak, _stat_peak_time in info:
-        if node_name == item and stat_name == "cpu_pc":
-            return check_cpu_util(int(stat_current), params)
-
-    return 3, "value cpu_pc not found in agent output for node %s" % item
+def check_ibm_svc_nodestats_cpu(item, params, info):
+    data = parse_ibm_svc_nodestats(info).get(item)
+    if data is None:
+        return
+    return check_cpu_util(data['cpu_pc'], params)
 
 
 check_info["ibm_svc_nodestats.cpu_util"] = {
-    "check_function": check_ibm_svc_cpu,
-    "inventory_function": inventory_ibm_svc_cpu,
+    "check_function": check_ibm_svc_nodestats_cpu,
+    "inventory_function": inventory_ibm_svc_nodestats_cpu,
     "service_description": "CPU utilization %s",
     "has_perfdata": True,
     "group": "cpu_utilization_multiitem",
@@ -269,35 +269,20 @@ check_info["ibm_svc_nodestats.cpu_util"] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-# parses agent output into a structure like:
-# {'BLUBBSVC01': {'total_cache_pc': 70, 'write_cache_pc': 0},
-#  'BLUBBSVC02': {'total_cache_pc': 75, 'write_cache_pc': 0},
-#  'BLUBBSVC03': {'total_cache_pc': 65, 'write_cache_pc': 0},
-#  'BLUBBSVC04': {'total_cache_pc': 71, 'write_cache_pc': 0}}
+
+def inventory_ibm_svc_nodestats_cache(info):
+    return [(node_name, None)
+            for node_name, data in parse_ibm_svc_nodestats(info).iteritems()
+            if 'write_cache_pc' in data and 'total_cache_pc' in data]
 
 
-def ibm_svc_cache_parse(info):
-    parsed = {}
-    for _node_id, node_name, stat_name, stat_current, _stat_peak, _stat_peak_time in info:
-        if stat_name in ("write_cache_pc", "total_cache_pc"):
-            if node_name not in parsed.keys():
-                parsed[node_name] = {}
-            parsed[node_name][stat_name] = int(stat_current)
-    return parsed
+def check_ibm_svc_nodestats_cache(item, _no_params, info):
+    data = parse_ibm_svc_nodestats(info).get(item)
+    if data is None:
+        return
 
-
-def inventory_ibm_svc_cache(info):
-    return [(key, None) for key in ibm_svc_cache_parse(info)]
-
-
-def check_ibm_svc_cache(item, _no_params, info):
-    parsed = ibm_svc_cache_parse(info)
-
-    if item not in parsed.keys():
-        return 3, "%s not found in agent output" % item
-
-    write_cache_pc = parsed[item]["write_cache_pc"]
-    total_cache_pc = parsed[item]["total_cache_pc"]
+    write_cache_pc = data["write_cache_pc"]
+    total_cache_pc = data["total_cache_pc"]
     perfdata = [("write_cache_pc", write_cache_pc, None, None, 0, 100),
                 ("total_cache_pc", total_cache_pc, None, None, 0, 100)]
 
@@ -306,8 +291,8 @@ def check_ibm_svc_cache(item, _no_params, info):
 
 
 check_info["ibm_svc_nodestats.cache"] = {
-    "check_function": check_ibm_svc_cache,
-    "inventory_function": inventory_ibm_svc_cache,
+    "check_function": check_ibm_svc_nodestats_cache,
+    "inventory_function": inventory_ibm_svc_nodestats_cache,
     "service_description": "Cache %s",
     "has_perfdata": True,
 }

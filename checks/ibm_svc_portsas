@@ -47,42 +47,68 @@
 #id:port_id:port_speed:node_id:node_name:WWPN:status:switch_WWPN:attachment:type:adapter_location:adapter_port_id
 
 
-def inventory_ibm_svc_portsas(info):
-    for line in info:
-        if line[6] != "offline_unconfigured":
-            if len(line) == 12:
-                item = "Node %s Slot %s Port %s" % (line[3], line[10], line[11])
-                yield item, {'current_state': line[6]}
-            elif len(line) == 10:
-                item = "Port %s" % line[0]
-                yield item, {'current_state': line[6]}
+def parse_ibm_svc_portsas(info):
+    dflt_header = [
+        'id',
+        'port_id',
+        'port_speed',
+        'node_id',
+        'node_name',
+        'WWPN',
+        'status',
+        'switch_WWPN',
+        'attachment',
+        'type',
+        'adapter_location',
+        'adapter_port_id',
+    ]
+    parsed = {}
+    for id_, rows in parse_ibm_svc_with_header(info, dflt_header).iteritems():
+        try:
+            data = rows[0]
+        except IndexError:
+            continue
+        if "node_id" in data and "adapter_location" in data and "adapter_port_id" in data:
+            item_name = "Node %s Slot %s Port %s" % (data['node_id'], data['adapter_location'],
+                                                     data['adapter_port_id'])
+        else:
+            item_name = "Port %s" % id_
+        parsed.setdefault(item_name, data)
+    return parsed
 
 
-def check_ibm_svc_portsas(item, params, info):
+def inventory_ibm_svc_portsas(parsed):
+    for item_name, data in parsed.iteritems():
+        status = data['status']
+        if status == 'offline_unconfigured':
+            continue
+        yield item_name, {'current_state': status}
+
+
+@get_parsed_item_data
+def check_ibm_svc_portsas(item, params, data):
     # This can be removed soon, because the age of the check
     # was only about 7 days:
     if not params:
         params = {'current_state': 'offline'}
-    for line in info:
-        if ( len(line) == 12 and item == "Node %s Slot %s Port %s" % (line[3], line[10], line[11]) ) or \
-                ( len(line) == 10 and item == "Port %s" % line[0] ):
-            sasport_status = line[6]
-            sasport_speed = line[2]
-            sasport_type = line[9]
 
-            infotext = "Status: %s" % sasport_status
-            if sasport_status == params['current_state']:
-                state = 0
-            else:
-                state = 2
+    sasport_status = data['status']
 
-            infotext += ", Speed: %s, Type: %s" % (sasport_speed, sasport_type)
+    infotext = "Status: %s" % sasport_status
+    if sasport_status == params['current_state']:
+        state = 0
+    else:
+        state = 2
 
-            return state, infotext
+    infotext += ", Speed: %s, Type: %s" % (data['port_speed'], data['type'])
+
+    return state, infotext
 
 
 check_info["ibm_svc_portsas"] = {
+    "parse_function": parse_ibm_svc_portsas,
     "check_function": check_ibm_svc_portsas,
     "inventory_function": inventory_ibm_svc_portsas,
     "service_description": "SAS %s",
+    "includes": ["ibm_svc.include"],
 }

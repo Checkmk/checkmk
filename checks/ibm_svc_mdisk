@@ -49,26 +49,55 @@ factory_settings['ibm_svc_mdisk_default_levels'] = {
 }
 
 
-def inventory_ibm_svc_mdisk(info):
-    for line in info:
-        if len(line) > 10:
-            yield line[1], {}
+def parse_ibm_svc_mdisk(info):
+    dflt_header = [
+        u'id',
+        u'name',
+        u'status',
+        u'mode',
+        u'mdisk_grp_id',
+        u'mdisk_grp_name',
+        u'capacity',
+        u'ctrl_LUN_#',
+        u'controller_name',
+        u'UID',
+        u'tier',
+        u'encrypt',
+        u'site_id',
+        u'site_name',
+        u'distributed',
+        u'dedupe',
+    ]
+    parsed = {}
+    for rows in parse_ibm_svc_with_header(info, dflt_header).itervalues():
+        try:
+            data = rows[0]
+        except IndexError:
+            continue
+        parsed.setdefault(data['name'], data)
+    return parsed
 
 
-def check_ibm_svc_mdisk(item, params, info):
-    for line in info:
-        if len(line) > 10 and line[1] == item:
-            mdisk_status = line[2]
-            mdisk_mode = line[3]
+def inventory_ibm_svc_mdisk(parsed):
+    for mdisk_name in parsed.iterkeys():
+        yield mdisk_name, {}
 
-            yield params.get("%s_state" % mdisk_status, 1), "Status: %s" % mdisk_status
-            yield params.get("%s_mode" % mdisk_mode, 1), "Mode: %s" % mdisk_mode
+
+@get_parsed_item_data
+def check_ibm_svc_mdisk(item, params, data):
+    mdisk_status = data['status']
+    yield params.get("%s_state" % mdisk_status, 1), "Status: %s" % mdisk_status
+
+    mdisk_mode = data['mode']
+    yield params.get("%s_mode" % mdisk_mode, 1), "Mode: %s" % mdisk_mode
 
 
 check_info["ibm_svc_mdisk"] = {
+    "parse_function": parse_ibm_svc_mdisk,
     "check_function": check_ibm_svc_mdisk,
     "inventory_function": inventory_ibm_svc_mdisk,
     "service_description": "MDisk %s",
+    "includes": ['ibm_svc.include'],
     "group": "ibm_svc_mdisk",
     "default_levels_variable": "ibm_svc_mdisk_default_levels",
 }

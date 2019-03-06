@@ -32,33 +32,45 @@
 # 3:host106:2:2:online
 
 
-def inventory_ibm_svc_host(info):
-    return [(None, {})]
+def parse_ibm_svc_host(info):
+    dflt_header = [
+        u'id',
+        u'name',
+        u'port_count',
+        u'iogrp_count',
+        u'status',
+        u'site_id',
+        u'site_name',
+        u'host_cluster_id',
+        u'host_cluster_name',
+    ]
+    return parse_ibm_svc_with_header(info, dflt_header)
 
 
-def check_ibm_svc_host(item, params, info):
-    degraded = 0
-    offline = 0
-    active = 0
-    inactive = 0
-    other = 0
-
+def check_ibm_svc_host(item, params, parsed):
     if params is None:
         # Old inventory rule until version 1.2.7
         # params were None instead of empty dictionary
         params = {'always_ok': False}
 
-    for line in info:
-        if line[4] == 'degraded':
-            degraded += 1
-        elif line[4] == 'offline':
-            offline += 1
-        elif line[4] == 'active' or line[4] == 'online':
-            active += 1
-        elif line[4] == 'inactive':
-            inactive += 1
-        else:
-            other += 1
+    degraded = 0
+    offline = 0
+    active = 0
+    inactive = 0
+    other = 0
+    for rows in parsed.itervalues():
+        for data in rows:
+            status = data['status']
+            if status == 'degraded':
+                degraded += 1
+            elif status == 'offline':
+                offline += 1
+            elif status in ['active', 'online']:
+                active += 1
+            elif status == 'inactive':
+                inactive += 1
+            else:
+                other += 1
 
     if 'always_ok' in params:
         # Old configuration rule
@@ -106,9 +118,11 @@ def check_ibm_svc_host(item, params, info):
 
 
 check_info["ibm_svc_host"] = {
+    "parse_function": parse_ibm_svc_host,
     "check_function": check_ibm_svc_host,
-    "inventory_function": inventory_ibm_svc_host,
+    "inventory_function": discover_single,
     "service_description": "Hosts",
+    "includes": ['ibm_svc.include'],
     "has_perfdata": True,
     "group": "ibm_svc_host",
 }

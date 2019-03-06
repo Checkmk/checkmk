@@ -1,0 +1,11 @@
+Title: ibm_svc_enclosure: Incorrect parsed agent output led to a false report 'Only 0 of X canisters are online'
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p13
+Date: 1551880134
+
+

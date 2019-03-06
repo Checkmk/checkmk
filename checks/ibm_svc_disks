@@ -52,20 +52,41 @@
 # 1:online::member:sas_hdd:558.4GB:7:V7RZ_mdisk8:3:1:23:::inactive
 
 
-def inventory_ibm_svc_disks(info):
-    return [(None, {})]
+def parse_ibm_svc_disks(info):
+    dflt_header = [
+        'id',
+        'status',
+        'error_sequence_number',
+        'use',
+        'tech_type',
+        'capacity',
+        'mdisk_id',
+        'mdisk_name',
+        'member_id',
+        'enclosure_id',
+        'slot_id',
+        'auto_manage',
+        'drive_class_id',
+    ]
+    parsed = []
+    for rows in parse_ibm_svc_with_header(info, dflt_header).itervalues():
+        parsed.extend(rows)
+    return parsed
 
 
-def check_ibm_svc_disks(_no_item, params, info):
+def check_ibm_svc_disks(_no_item, params, parsed):
     disks = []
-    for line in info:
-        _did, status, _error_sequence_number, use, tech_type,\
-        capacity, _mdisk_id, _mdisk_name, _member_id, enclosure_id,\
-        slot_id, _node_id, _node_name = line[:13]
+    for data in parsed:
+        status = data['status']
+        use = data['use']
+        capacity = data['capacity']
 
         disk = {}
-        disk['identifier'] = "Enclosure: %s, Slot: %s, Type: %s" % (enclosure_id, slot_id,
-                                                                    tech_type)
+        disk['identifier'] = "Enclosure: %s, Slot: %s, Type: %s" % (
+            data['enclosure_id'],
+            data['slot_id'],
+            data['tech_type'],
+        )
 
         if capacity.endswith('GB'):
             disk['capacity'] = float(capacity[:-2]) * 1024 * 1024 * 1024
@@ -87,11 +108,12 @@ def check_ibm_svc_disks(_no_item, params, info):
 
 
 check_info["ibm_svc_disks"] = {
+    'parse_function': parse_ibm_svc_disks,
     'check_function': check_ibm_svc_disks,
-    'inventory_function': inventory_ibm_svc_disks,
+    'inventory_function': discover_single,
     'service_description': 'Disk Summary',
+    'includes': ['ibm_svc.include', 'filerdisks.include'],
     'group': 'netapp_disks',
     'default_levels_variable': 'filer_disks_default_levels',
     'has_perfdata': True,
-    'includes': ['filerdisks.include']
 }

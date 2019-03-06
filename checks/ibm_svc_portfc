@@ -51,35 +51,62 @@
 # 11:4:4:fc:N/A:2:node2:5005076803102127:000000:inactive_unconfigured:none:local_partner
 
 
-def inventory_ibm_svc_portfc(info):
-    for line in info:
-        if len(line) in (11, 12) and line[9] == "active":
-            item = "Port %s" % line[0]
-            yield item, None
-        elif len(line) == 14 and line[9] == "active":
-            item = "Node %s Slot %s Port %s" % (line[5], line[12], line[13])
-            yield item, None
+def parse_ibm_svc_portfc(info):
+    dflt_header = [
+        "id",
+        "fc_io_port_id",
+        "port_id",
+        "type",
+        "port_speed",
+        "node_id",
+        "node_name",
+        "WWPN",
+        "nportid",
+        "status",
+        "attachment",
+        "cluster_use",
+        "adapter_location",
+        "adapter_port_id",
+    ]
+    parsed = {}
+    for id_, rows in parse_ibm_svc_with_header(info, dflt_header).iteritems():
+        try:
+            data = rows[0]
+        except IndexError:
+            continue
+        if "node_id" in data and "adapter_location" in data and "adapter_port_id" in data:
+            item_name = "Node %s Slot %s Port %s" % (data['node_id'], data['adapter_location'],
+                                                     data['adapter_port_id'])
+        else:
+            item_name = "Port %s" % id_
+        parsed.setdefault(item_name, data)
+    return parsed
 
 
-def check_ibm_svc_portfc(item, _no_params, info):
-    if not item.startswith("Port") and\
-            not item.startswith("Node"):
-        return 3, "check had an incompatible change, please re-discover services on this host"
-    for line in info:
-        if ( len(line) in (11, 12) and "Port %s" % line[0] == item) or \
-                ( len(line) == 14 and  "Node %s Slot %s Port %s" % (line[5], line[12], line[13]) ) == item:
-            infotext = "Status: %s, Speed: %s, WWPN: %s" % (line[9], line[4], line[7])
+def inventory_ibm_svc_portfc(parsed):
+    for item_name, data in parsed.iteritems():
+        if data['status'] != 'active':
+            continue
+        yield item_name, None
 
-            if line[9] == "active":
-                state = 0
-            else:
-                state = 2
 
-            return state, infotext
+@get_parsed_item_data
+def check_ibm_svc_portfc(item, _no_params, data):
+    port_status = data['status']
+    infotext = "Status: %s, Speed: %s, WWPN: %s" % (port_status, data['port_speed'], data['WWPN'])
+
+    if port_status == "active":
+        state = 0
+    else:
+        state = 2
+
+    return state, infotext
 
 
 check_info["ibm_svc_portfc"] = {
+    "parse_function": parse_ibm_svc_portfc,
     "check_function": check_ibm_svc_portfc,
     "inventory_function": inventory_ibm_svc_portfc,
     "service_description": "FC %s",
+    "includes": ["ibm_svc.include"],
 }

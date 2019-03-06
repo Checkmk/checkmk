@@ -35,35 +35,47 @@
 # 6:N4_164312:100025E315:500507680100D880:online:1:io_grp1:yes:2040000085543045:CG8:iqn.1986-03.com.ibm:2145.svc-cl.n4164312::164312:::::
 
 
-def inventory_ibm_svc_node(info):
-    io_groups = set()
-    for line in info:
-        _node_id, _node_name, _ups_serial, _wwnn, _node_status, _io_group_id,\
-        io_group_name, _config_node, _ups_unique_id, _hardware, _iscsi_name,\
-        _iscsi_alias, _panel_name, _enclosure_id, _canister_id,\
-        _enclosure_serial_number, _additional = line[:17]
-        io_groups.add(io_group_name)
-    return [(io_group_name, None) for io_group_name in io_groups]
+def parse_ibm_svc_node(info):
+    dflt_header = [
+        'id',
+        'name',
+        'UPS_serial_number',
+        'WWNN',
+        'status',
+        'IO_group_id',
+        'IO_group_name',
+        'config_node',
+        'UPS_unique_id',
+        'hardware',
+        'iscsi_name',
+        'iscsi_alias',
+        'panel_name',
+        'enclosure_id',
+        'canister_id',
+        'enclosure_serial_number',
+        'site_id',
+        'site_name',
+    ]
+    parsed = {}
+    for rows in parse_ibm_svc_with_header(info, dflt_header).itervalues():
+        for data in rows:
+            parsed.setdefault(data['IO_group_name'], []).append(data)
+    return parsed
 
 
-def check_ibm_svc_node(item, _no_params, info):
-    message = ""
+@get_parsed_item_data
+def check_ibm_svc_node(item, _no_params, data):
+    messages = []
     status = 0
     online_nodes = 0
     nodes_of_iogroup = 0
 
-    for line in info:
-        _node_id, node_name, _ups_serial, _wwnn, node_status, _io_group_id,\
-        io_group_name, _config_node, _ups_unique_id, _hardware, _iscsi_name,\
-        _iscsi_alias, _panel_name, _enclosure_id, _canister_id,\
-        _enclosure_serial_number, _additional = line[:17]
-        if io_group_name == item:
-            if message != "":
-                message += ", "
-            message += "Node %s is %s" % (node_name, node_status)
-            nodes_of_iogroup += 1
-            if node_status == "online":
-                online_nodes += 1
+    for row in data:
+        node_status = row['status']
+        messages.append("Node %s is %s" % (row['name'], node_status))
+        nodes_of_iogroup += 1
+        if node_status == "online":
+            online_nodes += 1
 
     if nodes_of_iogroup == 0:
         return 3, "IO Group %s not found in agent output" % item
@@ -75,11 +87,13 @@ def check_ibm_svc_node(item, _no_params, info):
     else:
         status = 1
 
-    return status, message
+    return status, ", ".join(messages)
 
 
 check_info["ibm_svc_node"] = {
+    "parse_function": parse_ibm_svc_node,
     "check_function": check_ibm_svc_node,
-    "inventory_function": inventory_ibm_svc_node,
+    "inventory_function": discover(),
     "service_description": "IO Group %s",
+    "includes": ["ibm_svc.include"],
 }

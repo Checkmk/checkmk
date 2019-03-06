@@ -57,78 +57,118 @@ def ibm_svc_mdiskgrp_to_mb(size):
     return size
 
 
-def inventory_ibm_svc_mdiskgrp(info):
-    for line in info:
-        if len(line) > 10:
-            yield line[1], {}
+def parse_ibm_svc_mdiskgrp(info):
+    dflt_header = [
+        u'id',
+        u'name',
+        u'status',
+        u'mdisk_count',
+        u'vdisk_count',
+        u'capacity',
+        u'extent_size',
+        u'free_capacity',
+        u'virtual_capacity',
+        u'used_capacity',
+        u'real_capacity',
+        u'overallocation',
+        u'warning',
+        u'easy_tier',
+        u'easy_tier_status',
+        u'compression_active',
+        u'compression_virtual_capacity',
+        u'compression_compressed_capacity',
+        u'compression_uncompressed_capacity',
+        u'parent_mdisk_grp_id',
+        u'parent_mdisk_grp_name',
+        u'child_mdisk_grp_count',
+        u'child_mdisk_grp_capacity',
+        u'type',
+        u'encrypt',
+        u'owner_type',
+        u'site_id',
+        u'site_name',
+    ]
+    parsed = {}
+    for rows in parse_ibm_svc_with_header(info, dflt_header).itervalues():
+        try:
+            data = rows[0]
+        except IndexError:
+            continue
+        parsed.setdefault(data['name'], data)
+    return parsed
 
 
-def check_ibm_svc_mdiskgrp(item, params, info):
-    for line in info:
-        if len(line) > 10 and item == line[1]:
-            mgrp_status = line[2]
+def inventory_ibm_svc_mdiskgrp(parsed):
+    for mdisk_name in parsed.iterkeys():
+        yield mdisk_name, {}
 
-            if mgrp_status != "online":
-                yield 2, "Status: %s" % mgrp_status
-                return
 
-            fslist = []
+@get_parsed_item_data
+def check_ibm_svc_mdiskgrp(item, params, data):
+    mgrp_status = data['status']
 
-            # Names of the fields are a bit confusing and not what you would
-            # expect.
+    if mgrp_status != "online":
+        yield 2, "Status: %s" % mgrp_status
+        return
 
-            # 1. Physical size of the pool
-            capacity = ibm_svc_mdiskgrp_to_mb(line[5])  # physikalische Kapazitat
+    fslist = []
 
-            # 2. Part of that that is physically in use
-            real_capacity = ibm_svc_mdiskgrp_to_mb(line[10])  # aktuell belegt
+    # Names of the fields are a bit confusing and not what you would
+    # expect.
 
-            # 3. Provisioned space - can be more than physical size
-            virtual_capacity = ibm_svc_mdiskgrp_to_mb(line[8])  # provisioniert
+    # 1. Physical size of the pool
+    capacity = ibm_svc_mdiskgrp_to_mb(data['capacity'])
 
-            # Compute available (do not use free_capacity, it's something different)
-            avail_mb = capacity - real_capacity
+    # 2. Part of that that is physically in use
+    real_capacity = ibm_svc_mdiskgrp_to_mb(data['real_capacity'])
 
-            fslist.append((item, capacity, avail_mb, 0))
-            status, message, perfdata = df_check_filesystem_list(item, params, fslist)
-            yield status, message, perfdata
+    # 3. Provisioned space - can be more than physical size
+    virtual_capacity = ibm_svc_mdiskgrp_to_mb(data['virtual_capacity'])
 
-            mb = 1024 * 1024
+    # Compute available (do not use free_capacity, it's something different)
+    avail_mb = capacity - real_capacity
 
-            # Compute provisioning
-            if not capacity:
-                return  # provisioning does not make sense when capacity is 0
+    fslist.append((item, capacity, avail_mb, 0))
+    status, message, perfdata = df_check_filesystem_list(item, params, fslist)
+    yield status, message, perfdata
 
-            provisioning = 100.0 * virtual_capacity / capacity
-            infotext = "Provisioning: %s" % get_percent_human_readable(provisioning)
-            state = 0
-            if "provisioning_levels" in params:
-                warn, crit = params["provisioning_levels"]
-                if provisioning >= crit:
-                    state = 2
-                elif provisioning >= warn:
-                    state = 1
-                if state:
-                    infotext += " (warn/crit at %s/%s)" % (get_percent_human_readable(warn),
-                                                           get_percent_human_readable(crit))
-                warn_mb = capacity * mb * warn / 100
-                crit_mb = capacity * mb * crit / 100
-            else:
-                warn_mb = None
-                crit_mb = None
+    mb = 1024 * 1024
 
-            # Note: Performance data is now (with new metric system) normed to
-            # canonical units - i.e. 1 byte in this case.
-            yield state, infotext, [("fs_provisioning", virtual_capacity * mb, warn_mb, crit_mb, 0,
-                                     capacity * mb)]
+    # Compute provisioning
+    if not capacity:
+        return  # provisioning does not make sense when capacity is 0
+
+    provisioning = 100.0 * virtual_capacity / capacity
+    infotext = "Provisioning: %s" % get_percent_human_readable(provisioning)
+    state = 0
+    if "provisioning_levels" in params:
+        warn, crit = params["provisioning_levels"]
+        if provisioning >= crit:
+            state = 2
+        elif provisioning >= warn:
+            state = 1
+        if state:
+            infotext += " (warn/crit at %s/%s)" % (get_percent_human_readable(warn),
+                                                   get_percent_human_readable(crit))
+        warn_mb = capacity * mb * warn / 100
+        crit_mb = capacity * mb * crit / 100
+    else:
+        warn_mb = None
+        crit_mb = None
+
+    # Note: Performance data is now (with new metric system) normed to
+    # canonical units - i.e. 1 byte in this case.
+    yield state, infotext, [("fs_provisioning", virtual_capacity * mb, warn_mb, crit_mb, 0,
+                             capacity * mb)]
 
 
 check_info["ibm_svc_mdiskgrp"] = {
+    "parse_function": parse_ibm_svc_mdiskgrp,
     "check_function": check_ibm_svc_mdiskgrp,
     "inventory_function": inventory_ibm_svc_mdiskgrp,
     "service_description": "Pool Capacity %s",
     "has_perfdata": True,
     "group": "ibm_svc_mdiskgrp",
-    "includes": ["size_trend.include", "df.include"],
+    "includes": ["ibm_svc.include", "size_trend.include", "df.include"],
     "default_levels_variable": "filesystem_default_levels",
 }

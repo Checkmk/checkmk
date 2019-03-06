@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 # needs to issue a command like
-# ssh USER@HOSTNAME 'echo \<\<\<ibm_svc_host:sep\(58\)\>\>\>; lshost -nohdr -delim :; echo \<\<\<ibm_svc_license:sep\(58\)\>\>\>; lslicense -delim :; echo \<\<\<ibm_svc_mdisk:sep\(58\)\>\>\>; lsmdisk -nohdr -delim :; echo \<\<\<ibm_svc_mdiskgrp:sep\(58\)\>\>\>; lsmdiskgrp -nohdr -delim :; echo \<\<\<ibm_svc_node:sep\(58\)\>\>\>; lsnode -nohdr -delim :; echo \<\<\<ibm_svc_nodestats:sep\(58\)\>\>\>; lsnodestats -nohdr -delim :; echo \<\<\<ibm_svc_system:sep\(58\)\>\>\>; lssystem -delim :; echo \<\<\<ibm_svc_systemstats:sep\(58\)\>\>\>; lssystemstats -nohdr -delim :'
+# ssh USER@HOSTNAME 'echo \<\<\<ibm_svc_host:sep\(58\)\>\>\>; lshost -delim :; echo \<\<\<ibm_svc_license:sep\(58\)\>\>\>; lslicense -delim :; echo \<\<\<ibm_svc_mdisk:sep\(58\)\>\>\>; lsmdisk -delim :; echo \<\<\<ibm_svc_mdiskgrp:sep\(58\)\>\>\>; lsmdiskgrp -delim :; echo \<\<\<ibm_svc_node:sep\(58\)\>\>\>; lsnode -delim :; echo \<\<\<ibm_svc_nodestats:sep\(58\)\>\>\>; lsnodestats -delim :; echo \<\<\<ibm_svc_system:sep\(58\)\>\>\>; lssystem -delim :; echo \<\<\<ibm_svc_systemstats:sep\(58\)\>\>\>; lssystemstats -delim :'
 
 import os
 import sys
@@ -98,7 +98,7 @@ command_options = {
     "lshost": {
         "section_header": "ibm_svc_host",
         "active": False,
-        "command": "lshost -nohdr -delim :"
+        "command": "lshost -delim :"
     },
     "lslicense": {
         "section_header": "ibm_svc_license",
@@ -108,22 +108,22 @@ command_options = {
     "lsmdisk": {
         "section_header": "ibm_svc_mdisk",
         "active": False,
-        "command": "lsmdisk -nohdr -delim :"
+        "command": "lsmdisk -delim :"
     },
     "lsmdiskgrp": {
         "section_header": "ibm_svc_mdiskgrp",
         "active": False,
-        "command": "lsmdiskgrp -nohdr -delim :"
+        "command": "lsmdiskgrp -delim :"
     },
     "lsnode": {
         "section_header": "ibm_svc_node",
         "active": False,
-        "command": "lsnode -nohdr -delim :"
+        "command": "lsnode -delim :"
     },
     "lsnodestats": {
         "section_header": "ibm_svc_nodestats",
         "active": False,
-        "command": "lsnodestats -nohdr -delim :"
+        "command": "lsnodestats -delim :"
     },
     "lssystem": {
         "section_header": "ibm_svc_system",
@@ -133,7 +133,7 @@ command_options = {
     "lssystemstats": {
         "section_header": "ibm_svc_systemstats",
         "active": False,
-        "command": "lssystemstats -nohdr -delim :"
+        "command": "lssystemstats -delim :"
     },
     "lseventlog": {
         "section_header": "ibm_svc_eventlog",
@@ -143,32 +143,32 @@ command_options = {
     "lsportfc": {
         "section_header": "ibm_svc_portfc",
         "active": False,
-        "command": "lsportfc -nohdr -delim :"
+        "command": "lsportfc -delim :"
     },
     "lsenclosure": {
         "section_header": "ibm_svc_enclosure",
         "active": False,
-        "command": "lsenclosure -nohdr -delim :"
+        "command": "lsenclosure -delim :"
     },
     "lsenclosurestats": {
         "section_header": "ibm_svc_enclosurestats",
         "active": False,
-        "command": "lsenclosurestats -nohdr -delim :"
+        "command": "lsenclosurestats -delim :"
     },
     "lsarray": {
         "section_header": "ibm_svc_array",
         "active": False,
-        "command": "lsarray -nohdr -delim :"
+        "command": "lsarray -delim :"
     },
     "lsportsas": {
         "section_header": "ibm_svc_portsas",
         "active": False,
-        "command": "lsportsas -nohdr -delim :"
+        "command": "lsportsas -delim :"
     },
     "disks": {
         "section_header": "ibm_svc_disks",
         "active": False,
-        "command": "svcinfo lsdrive -nohdr -delim :"
+        "command": "svcinfo lsdrive -delim :"
     },
 }
 

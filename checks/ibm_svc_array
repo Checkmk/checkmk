@@ -32,36 +32,56 @@
 # 30:SSD_mdisk1:online:2:POOL_1_V7000_BRZ:372.1GB:online:raid1:1:256:generic_ssd
 
 
-def inventory_ibm_svc_array(info):
-    for line in info:
-        if len(line) > 10:
-            yield line[0], None
+def parse_ibm_svc_array(info):
+    dflt_header = [
+        'mdisk_id',
+        'mdisk_name',
+        'status',
+        'mdisk_grp_id',
+        'mdisk_grp_name',
+        'capacity',
+        'raid_status',
+        'raid_level',
+        'redundancy',
+        'strip_size',
+        'tier',
+        'encrypt',
+    ]
+    parsed = {}
+    for id_, rows in parse_ibm_svc_with_header(info, dflt_header).iteritems():
+        try:
+            data = rows[0]
+        except IndexError:
+            continue
+        parsed.setdefault(id_, data)
+    return parsed
 
 
-def check_ibm_svc_array(item, _no_params, info):
-    for line in info:
-        if len(line) > 10 and line[0] == item:
-            raid_status = line[6]
-            raid_level = line[7]
-            tier = line[10]
+@get_parsed_item_data
+def check_ibm_svc_array(item, _no_params, data):
+    raid_status = data['raid_status']
+    raid_level = data['raid_level']
+    tier = data['tier']
 
-            # Check raid_status
-            message = "Status: %s" % raid_status
-            if raid_status == "online":
-                status = 0
-            elif raid_status in ("offline", "degraded"):
-                status = 2
-            else:
-                status = 1
+    # Check raid_status
+    message = "Status: %s" % raid_status
+    if raid_status == "online":
+        status = 0
+    elif raid_status in ("offline", "degraded"):
+        status = 2
+    else:
+        status = 1
 
-            # add information
-            message += ", RAID Level: %s, Tier: %s" % (raid_level, tier)
+    # add information
+    message += ", RAID Level: %s, Tier: %s" % (raid_level, tier)
 
-            return status, message
+    return status, message
 
 
 check_info["ibm_svc_array"] = {
+    "parse_function": parse_ibm_svc_array,
     "check_function": check_ibm_svc_array,
-    "inventory_function": inventory_ibm_svc_array,
+    "inventory_function": discover(),
     "service_description": "RAID Array %s",
+    "includes": ["ibm_svc.include"],
 }

@@ -1,0 +1,12 @@
+Title: cisco_temperature.dom: Make power levels configurable
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1551879575
+Class: feature
+
+This werk adds support for power level configuration. Previously device configuration
+specific power levels have been used only which lead to an unexpected check status in
+case the devices have not been configured properly.

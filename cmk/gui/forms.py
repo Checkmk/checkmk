@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import base64
 import six
 
 from cmk.gui.htmllib import HTML
@@ -235,24 +236,6 @@ def edit_valuespec(vs,
 
 # New functions for painting forms
 
-twofivesix = "".join(map(chr, range(0, 256)))
-
-
-def strip_bad_chars(x):
-    s = "".join([c for c in x if c > ' ' and c < 'z'])
-
-    if isinstance(x, unicode):
-        s = unicode(s)
-        return s.translate({
-            ord(u"'"): None,
-            ord(u"&"): None,
-            ord(u";"): None,
-            ord(u"<"): None,
-            ord(u">"): None,
-            ord(u"\""): None,
-        })
-    return s.translate(twofivesix, "'&;<>\"")
-
 
 def header(title, isopen=True, table_id="", narrow=False, css=None):
     global g_header_open, g_section_open, g_section_isopen
@@ -262,9 +245,13 @@ def header(title, isopen=True, table_id="", narrow=False, css=None):
     html.open_table(
         id_=table_id if table_id else None,
         class_=["nform", "narrow" if narrow else None, css if css else None])
-    fold_id = strip_bad_chars(title)
+
     g_section_isopen = html.begin_foldable_container(
-        html.form_name and html.form_name or "nform", fold_id, isopen, title, indent="nform")
+        treename=html.form_name if html.form_name else "nform",
+        id_=base64.b64encode(title.encode("utf-8") if isinstance(title, unicode) else title),
+        isopen=isopen,
+        title=title,
+        indent="nform")
     html.tr(html.render_td('', colspan=2), class_=["top", "open" if g_section_isopen else "closed"])
     g_header_open = True
     g_section_open = False

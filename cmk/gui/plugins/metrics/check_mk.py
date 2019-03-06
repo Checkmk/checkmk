@@ -1793,6 +1793,12 @@ metric_info["output_signal_power_dbm"] = {
     "color": "#2080c0",
 }
 
+metric_info["signal_power_dbm"] = {
+    "title": _("Power"),
+    "unit": "dbm",
+    "color": "#2080c0",
+}
+
 metric_info["downstream_power"] = {
     "title": _("Downstream power"),
     "unit": "dbmv",

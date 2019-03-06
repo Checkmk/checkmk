@@ -74,14 +74,14 @@ TableLog::TableLog(MonitoringCore *mc, LogCache *log_cache)
     addColumn(std::make_unique<OffsetIntColumn>(
         "class",
         "The class of the message as integer (0:info, 1:state, 2:program, 3:notification, 4:passive, 5:command)",
-        entry_offset - 1, -1, -1, DANGEROUS_OFFSETOF(LogEntry, _class)));
+        entry_offset, -1, -1, DANGEROUS_OFFSETOF(LogEntry, _class)));
     addColumn(std::make_unique<OffsetSStringColumn>(
         "message", "The complete message line including the timestamp",
         entry_offset, -1, -1, DANGEROUS_OFFSETOF(LogEntry, _message)));
     addColumn(std::make_unique<OffsetStringColumn>(
         "type",
         "The type of the message (text before the colon), the message itself for info messages",
-        entry_offset - 1, -1, -1, DANGEROUS_OFFSETOF(LogEntry, _type)));
+        entry_offset, -1, -1, DANGEROUS_OFFSETOF(LogEntry, _type)));
     addColumn(std::make_unique<OffsetStringColumn>(
         "options", "The part of the message after the ':'", entry_offset, -1,
         -1, DANGEROUS_OFFSETOF(LogEntry, _options)));

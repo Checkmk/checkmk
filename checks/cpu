@@ -40,7 +40,7 @@ cpuload_default_levels = (5.0, 10.0)
 
 
 def inventory_cpu_load(info):
-    if len(info) == 1 and len(info[0]) >= 5:
+    if len(info) >= 1 and len(info[0]) >= 5:
         return [(None, "cpuload_default_levels")]
 
 
@@ -88,26 +88,47 @@ check_info["cpu.loads"] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-threads_default_levels = (2000, 4000)
+threads_default_levels = {}  # legacy default levels variable
+
+factory_settings["cpu_threads_default_levels"] = {
+    "levels": (2000, 4000),
+}
 
 
 def inventory_cpu_threads(info):
-    if len(info) == 1 and len(info[0]) >= 5:
-        return [(None, "threads_default_levels")]
+    if len(info) >= 1 and len(info[0]) >= 5:
+        return [(None, {})]
 
 
 def check_cpu_threads(item, params, info):
+    if isinstance(params, tuple):
+        params = {'levels': params}
+
     try:
-        nthreads = int(info[0][3].split('/')[1])
+        num_threads = int(info[0][3].split('/')[1])
     except:
-        return (3, "invalid output from plugin")
-    warn, crit = params
-    perfdata = [('threads', nthreads, warn, crit, 0)]
-    if nthreads >= crit:
-        return (2, "%d threads (critical at %d)" % (nthreads, crit), perfdata)
-    elif nthreads >= warn:
-        return (1, "%d threads (warning at %d)" % (nthreads, warn), perfdata)
-    return (0, "%d threads" % (nthreads,), perfdata)
+        yield (3, "invalid output from plugin")
+        return
+
+    absolute_levels = params.get("levels", (None, None))
+    yield check_levels(
+        num_threads,
+        'threads',
+        absolute_levels,
+        unit="threads",
+        human_readable_func=lambda x: "%.f" % x,
+        infoname="Count")
+
+    if len(info) > 1:
+        max_threads = int(info[1][0])
+        thread_usage = 100.0 * num_threads / max_threads
+        relative_levels = params.get("levels_percent", (None, None))
+        yield check_levels(
+            thread_usage,
+            'thread_usage',
+            relative_levels,
+            human_readable_func=get_percent_human_readable,
+            infoname="Usage")
 
 
 check_info["cpu.threads"] = {
@@ -116,5 +137,6 @@ check_info["cpu.threads"] = {
     "service_description": "Number of threads",
     "has_perfdata": True,
     "group": "threads",
+    "default_levels_variable": "cpu_threads_default_levels",
     "handle_real_time_checks": True,
 }

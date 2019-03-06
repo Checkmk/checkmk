@@ -558,7 +558,8 @@ def test_bulk_discovery_unknown_host(web):
 
 def _wait_for_bulk_discovery_job(web):
     def job_completed():
-        return web.bulk_discovery_status()["is_running"] is False
+        status = web.bulk_discovery_status()
+        return status["job"]["state"] != "initialized" and status["is_running"] is False
 
     wait_until(job_completed, timeout=15, interval=1)
 

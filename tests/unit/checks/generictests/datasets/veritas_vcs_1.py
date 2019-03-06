@@ -1,4 +1,3 @@
-# yapf: disable
 checkname = 'veritas_vcs'
 
 info = [
@@ -110,7 +109,7 @@ checks = {
         (u'gru', {
             'map_frozen': {
                 'frozen': 2,
-                'temporarily frozen': 1
+                'tfrozen': 1
             },
             'map_states': {
                 'FAULTED': 2,
@@ -123,11 +122,11 @@ checks = {
                 'UNKNOWN': 3,
                 'EXITED': 1
             }
-        }, [(0, 'online, cluster: minions')]),
+        }, [(0, 'Online'), (0, 'Cluster: minions')]),
         (u'bob1-db', {
             'map_frozen': {
                 'frozen': 2,
-                'temporarily frozen': 1
+                'tfrozen': 1
             },
             'map_states': {
                 'FAULTED': 2,
@@ -140,11 +139,11 @@ checks = {
                 'UNKNOWN': 3,
                 'EXITED': 1
             }
-        }, [(1, 'offline, cluster: minions')]),
+        }, [(1, 'Offline'), (0, 'Cluster: minions')]),
         (u'bob1-dg', {
             'map_frozen': {
                 'frozen': 2,
-                'temporarily frozen': 1
+                'tfrozen': 1
             },
             'map_states': {
                 'FAULTED': 2,
@@ -157,11 +156,11 @@ checks = {
                 'UNKNOWN': 3,
                 'EXITED': 1
             }
-        }, [(1, 'offline, cluster: minions')]),
+        }, [(1, 'Offline'), (0, 'Cluster: minions')]),
         (u'bob1-ip', {
             'map_frozen': {
                 'frozen': 2,
-                'temporarily frozen': 1
+                'tfrozen': 1
             },
             'map_states': {
                 'FAULTED': 2,
@@ -174,11 +173,11 @@ checks = {
                 'UNKNOWN': 3,
                 'EXITED': 1
             }
-        }, [(1, 'offline, cluster: minions')]),
+        }, [(1, 'Offline'), (0, 'Cluster: minions')]),
         (u'bob1-mnt', {
             'map_frozen': {
                 'frozen': 2,
-                'temporarily frozen': 1
+                'tfrozen': 1
             },
             'map_states': {
                 'FAULTED': 2,
@@ -191,11 +190,11 @@ checks = {
                 'UNKNOWN': 3,
                 'EXITED': 1
             }
-        }, [(1, 'offline, cluster: minions')]),
+        }, [(1, 'Offline'), (0, 'Cluster: minions')]),
         (u'bob1-nic-proxy', {
             'map_frozen': {
                 'frozen': 2,
-                'temporarily frozen': 1
+                'tfrozen': 1
             },
             'map_states': {
                 'FAULTED': 2,
@@ -208,11 +207,11 @@ checks = {
                 'UNKNOWN': 3,
                 'EXITED': 1
             }
-        }, [(0, 'online, cluster: minions')]),
+        }, [(0, 'Online'), (0, 'Cluster: minions')]),
         (u'bob1-vol', {
             'map_frozen': {
                 'frozen': 2,
-                'temporarily frozen': 1
+                'tfrozen': 1
             },
             'map_states': {
                 'FAULTED': 2,
@@ -225,11 +224,11 @@ checks = {
                 'UNKNOWN': 3,
                 'EXITED': 1
             }
-        }, [(1, 'offline, cluster: minions')]),
+        }, [(1, 'Offline'), (0, 'Cluster: minions')]),
         (u'bob2-db', {
             'map_frozen': {
                 'frozen': 2,
-                'temporarily frozen': 1
+                'tfrozen': 1
             },
             'map_states': {
                 'FAULTED': 2,
@@ -242,11 +241,11 @@ checks = {
                 'UNKNOWN': 3,
                 'EXITED': 1
             }
-        }, [(1, 'offline, cluster: minions')]),
+        }, [(1, 'Offline'), (0, 'Cluster: minions')]),
         (u'bob2-dg', {
             'map_frozen': {
                 'frozen': 2,
-                'temporarily frozen': 1
+                'tfrozen': 1
             },
             'map_states': {
                 'FAULTED': 2,
@@ -259,11 +258,11 @@ checks = {
                 'UNKNOWN': 3,
                 'EXITED': 1
             }
-        }, [(1, 'offline, cluster: minions')]),
+        }, [(1, 'Offline'), (0, 'Cluster: minions')]),
         (u'bob2-ip', {
             'map_frozen': {
                 'frozen': 2,
-                'temporarily frozen': 1
+                'tfrozen': 1
             },
             'map_states': {
                 'FAULTED': 2,
@@ -276,11 +275,11 @@ checks = {
                 'UNKNOWN': 3,
                 'EXITED': 1
             }
-        }, [(1, 'offline, cluster: minions')]),
+        }, [(1, 'Offline'), (0, 'Cluster: minions')]),
         (u'bob2-mnt', {
             'map_frozen': {
                 'frozen': 2,
-                'temporarily frozen': 1
+                'tfrozen': 1
             },
             'map_states': {
                 'FAULTED': 2,
@@ -293,11 +292,11 @@ checks = {
                 'UNKNOWN': 3,
                 'EXITED': 1
             }
-        }, [(1, 'offline, cluster: minions')]),
+        }, [(1, 'Offline'), (0, 'Cluster: minions')]),
         (u'bob2-nic-proxy', {
             'map_frozen': {
                 'frozen': 2,
-                'temporarily frozen': 1
+                'tfrozen': 1
             },
             'map_states': {
                 'FAULTED': 2,
@@ -310,11 +309,11 @@ checks = {
                 'UNKNOWN': 3,
                 'EXITED': 1
             }
-        }, [(0, 'online, cluster: minions')]),
+        }, [(0, 'Online'), (0, 'Cluster: minions')]),
         (u'bob2-vol', {
             'map_frozen': {
                 'frozen': 2,
-                'temporarily frozen': 1
+                'tfrozen': 1
             },
             'map_states': {
                 'FAULTED': 2,
@@ -327,11 +326,11 @@ checks = {
                 'UNKNOWN': 3,
                 'EXITED': 1
             }
-        }, [(1, 'offline, cluster: minions')]),
+        }, [(1, 'Offline'), (0, 'Cluster: minions')]),
         (u'bob3-db', {
             'map_frozen': {
                 'frozen': 2,
-                'temporarily frozen': 1
+                'tfrozen': 1
             },
             'map_states': {
                 'FAULTED': 2,
@@ -344,11 +343,11 @@ checks = {
                 'UNKNOWN': 3,
                 'EXITED': 1
             }
-        }, [(1, 'offline, cluster: minions')]),
+        }, [(1, 'Offline'), (0, 'Cluster: minions')]),
         (u'bob3-dg', {
             'map_frozen': {
                 'frozen': 2,
-                'temporarily frozen': 1
+                'tfrozen': 1
             },
             'map_states': {
                 'FAULTED': 2,
@@ -361,11 +360,11 @@ checks = {
                 'UNKNOWN': 3,
                 'EXITED': 1
             }
-        }, [(1, 'offline, cluster: minions')]),
+        }, [(1, 'Offline'), (0, 'Cluster: minions')]),
         (u'bob3-ip', {
             'map_frozen': {
                 'frozen': 2,
-                'temporarily frozen': 1
+                'tfrozen': 1
             },
             'map_states': {
                 'FAULTED': 2,
@@ -378,11 +377,11 @@ checks = {
                 'UNKNOWN': 3,
                 'EXITED': 1
             }
-        }, [(1, 'offline, cluster: minions')]),
+        }, [(1, 'Offline'), (0, 'Cluster: minions')]),
         (u'bob3-mnt', {
             'map_frozen': {
                 'frozen': 2,
-                'temporarily frozen': 1
+                'tfrozen': 1
             },
             'map_states': {
                 'FAULTED': 2,
@@ -395,11 +394,11 @@ checks = {
                 'UNKNOWN': 3,
                 'EXITED': 1
             }
-        }, [(1, 'offline, cluster: minions')]),
+        }, [(1, 'Offline'), (0, 'Cluster: minions')]),
         (u'bob3-nic-proxy', {
             'map_frozen': {
                 'frozen': 2,
-                'temporarily frozen': 1
+                'tfrozen': 1
             },
             'map_states': {
                 'FAULTED': 2,
@@ -412,11 +411,11 @@ checks = {
                 'UNKNOWN': 3,
                 'EXITED': 1
             }
-        }, [(0, 'online, cluster: minions')]),
+        }, [(0, 'Online'), (0, 'Cluster: minions')]),
         (u'bob3-vol', {
             'map_frozen': {
                 'frozen': 2,
-                'temporarily frozen': 1
+                'tfrozen': 1
             },
             'map_states': {
                 'FAULTED': 2,
@@ -429,11 +428,11 @@ checks = {
                 'UNKNOWN': 3,
                 'EXITED': 1
             }
-        }, [(1, 'offline, cluster: minions')]),
+        }, [(1, 'Offline'), (0, 'Cluster: minions')]),
         (u'bob4-db', {
             'map_frozen': {
                 'frozen': 2,
-                'temporarily frozen': 1
+                'tfrozen': 1
             },
             'map_states': {
                 'FAULTED': 2,
@@ -446,11 +445,11 @@ checks = {
                 'UNKNOWN': 3,
                 'EXITED': 1
             }
-        }, [(1, 'offline, cluster: minions')]),
+        }, [(1, 'Offline'), (0, 'Cluster: minions')]),
         (u'bob4-dg', {
             'map_frozen': {
                 'frozen': 2,
-                'temporarily frozen': 1
+                'tfrozen': 1
             },
             'map_states': {
                 'FAULTED': 2,
@@ -463,11 +462,11 @@ checks = {
                 'UNKNOWN': 3,
                 'EXITED': 1
             }
-        }, [(1, 'offline, cluster: minions')]),
+        }, [(1, 'Offline'), (0, 'Cluster: minions')]),
         (u'bob4-ip', {
             'map_frozen': {
                 'frozen': 2,
-                'temporarily frozen': 1
+                'tfrozen': 1
             },
             'map_states': {
                 'FAULTED': 2,
@@ -480,11 +479,11 @@ checks = {
                 'UNKNOWN': 3,
                 'EXITED': 1
             }
-        }, [(1, 'offline, cluster: minions')]),
+        }, [(1, 'Offline'), (0, 'Cluster: minions')]),
         (u'bob4-mnt', {
             'map_frozen': {
                 'frozen': 2,
-                'temporarily frozen': 1
+                'tfrozen': 1
             },
             'map_states': {
                 'FAULTED': 2,
@@ -497,11 +496,11 @@ checks = {
                 'UNKNOWN': 3,
                 'EXITED': 1
             }
-        }, [(1, 'offline, cluster: minions')]),
+        }, [(1, 'Offline'), (0, 'Cluster: minions')]),
         (u'bob4-nic-proxy', {
             'map_frozen': {
                 'frozen': 2,
-                'temporarily frozen': 1
+                'tfrozen': 1
             },
             'map_states': {
                 'FAULTED': 2,
@@ -514,11 +513,11 @@ checks = {
                 'UNKNOWN': 3,
                 'EXITED': 1
             }
-        }, [(0, 'online, cluster: minions')]),
+        }, [(0, 'Online'), (0, 'Cluster: minions')]),
         (u'bob4-vol', {
             'map_frozen': {
                 'frozen': 2,
-                'temporarily frozen': 1
+                'tfrozen': 1
             },
             'map_states': {
                 'FAULTED': 2,
@@ -531,11 +530,11 @@ checks = {
                 'UNKNOWN': 3,
                 'EXITED': 1
             }
-        }, [(1, 'offline, cluster: minions')]),
+        }, [(1, 'Offline'), (0, 'Cluster: minions')]),
         (u'bob5-db', {
             'map_frozen': {
                 'frozen': 2,
-                'temporarily frozen': 1
+                'tfrozen': 1
             },
             'map_states': {
                 'FAULTED': 2,
@@ -548,11 +547,11 @@ checks = {
                 'UNKNOWN': 3,
                 'EXITED': 1
             }
-        }, [(1, 'offline, cluster: minions')]),
+        }, [(1, 'Offline'), (0, 'Cluster: minions')]),
         (u'bob5-dg', {
             'map_frozen': {
                 'frozen': 2,
-                'temporarily frozen': 1
+                'tfrozen': 1
             },
             'map_states': {
                 'FAULTED': 2,
@@ -565,11 +564,11 @@ checks = {
                 'UNKNOWN': 3,
                 'EXITED': 1
             }
-        }, [(1, 'offline, cluster: minions')]),
+        }, [(1, 'Offline'), (0, 'Cluster: minions')]),
         (u'bob5-ip', {
             'map_frozen': {
                 'frozen': 2,
-                'temporarily frozen': 1
+                'tfrozen': 1
             },
             'map_states': {
                 'FAULTED': 2,
@@ -582,11 +581,11 @@ checks = {
                 'UNKNOWN': 3,
                 'EXITED': 1
             }
-        }, [(1, 'offline, cluster: minions')]),
+        }, [(1, 'Offline'), (0, 'Cluster: minions')]),
         (u'bob5-mnt', {
             'map_frozen': {
                 'frozen': 2,
-                'temporarily frozen': 1
+                'tfrozen': 1
             },
             'map_states': {
                 'FAULTED': 2,
@@ -599,11 +598,11 @@ checks = {
                 'UNKNOWN': 3,
                 'EXITED': 1
             }
-        }, [(1, 'offline, cluster: minions')]),
+        }, [(1, 'Offline'), (0, 'Cluster: minions')]),
         (u'bob5-nic-proxy', {
             'map_frozen': {
                 'frozen': 2,
-                'temporarily frozen': 1
+                'tfrozen': 1
             },
             'map_states': {
                 'FAULTED': 2,
@@ -616,11 +615,11 @@ checks = {
                 'UNKNOWN': 3,
                 'EXITED': 1
             }
-        }, [(0, 'online, cluster: minions')]),
+        }, [(0, 'Online'), (0, 'Cluster: minions')]),
         (u'bob5-vol', {
             'map_frozen': {
                 'frozen': 2,
-                'temporarily frozen': 1
+                'tfrozen': 1
             },
             'map_states': {
                 'FAULTED': 2,
@@ -633,11 +632,11 @@ checks = {
                 'UNKNOWN': 3,
                 'EXITED': 1
             }
-        }, [(1, 'offline, cluster: minions')]),
+        }, [(1, 'Offline'), (0, 'Cluster: minions')]),
         (u'agnes-nic', {
             'map_frozen': {
                 'frozen': 2,
-                'temporarily frozen': 1
+                'tfrozen': 1
             },
             'map_states': {
                 'FAULTED': 2,
@@ -650,11 +649,11 @@ checks = {
                 'UNKNOWN': 3,
                 'EXITED': 1
             }
-        }, [(0, 'online, cluster: minions')]),
+        }, [(0, 'Online'), (0, 'Cluster: minions')]),
         (u'agnes-phantom', {
             'map_frozen': {
                 'frozen': 2,
-                'temporarily frozen': 1
+                'tfrozen': 1
             },
             'map_states': {
                 'FAULTED': 2,
@@ -667,11 +666,11 @@ checks = {
                 'UNKNOWN': 3,
                 'EXITED': 1
             }
-        }, [(0, 'online, cluster: minions')]),
+        }, [(0, 'Online'), (0, 'Cluster: minions')]),
         (u'webip', {
             'map_frozen': {
                 'frozen': 2,
-                'temporarily frozen': 1
+                'tfrozen': 1
             },
             'map_states': {
                 'FAULTED': 2,
@@ -684,13 +683,13 @@ checks = {
                 'UNKNOWN': 3,
                 'EXITED': 1
             }
-        }, [(1, 'offline, cluster: minions')]),
+        }, [(1, 'Offline'), (0, 'Cluster: minions')]),
     ],
     'servicegroup': [
         (u'ClusterService', {
             'map_frozen': {
                 'frozen': 2,
-                'temporarily frozen': 1
+                'tfrozen': 1
             },
             'map_states': {
                 'FAULTED': 2,
@@ -703,11 +702,11 @@ checks = {
                 'UNKNOWN': 3,
                 'EXITED': 1
             }
-        }, [(1, 'offline, cluster: minions')]),
+        }, [(1, 'Offline'), (0, 'Cluster: minions')]),
         (u'bob1', {
             'map_frozen': {
                 'frozen': 2,
-                'temporarily frozen': 1
+                'tfrozen': 1
             },
             'map_states': {
                 'FAULTED': 2,
@@ -720,11 +719,11 @@ checks = {
                 'UNKNOWN': 3,
                 'EXITED': 1
             }
-        }, [(1, 'offline, cluster: minions')]),
+        }, [(1, 'Offline'), (0, 'Cluster: minions')]),
         (u'bob2', {
             'map_frozen': {
                 'frozen': 2,
-                'temporarily frozen': 1
+                'tfrozen': 1
             },
             'map_states': {
                 'FAULTED': 2,
@@ -737,11 +736,11 @@ checks = {
                 'UNKNOWN': 3,
                 'EXITED': 1
             }
-        }, [(1, 'offline, cluster: minions')]),
+        }, [(1, 'Offline'), (0, 'Cluster: minions')]),
         (u'bob3', {
             'map_frozen': {
                 'frozen': 2,
-                'temporarily frozen': 1
+                'tfrozen': 1
             },
             'map_states': {
                 'FAULTED': 2,
@@ -754,11 +753,11 @@ checks = {
                 'UNKNOWN': 3,
                 'EXITED': 1
             }
-        }, [(1, 'offline, cluster: minions')]),
+        }, [(1, 'Offline'), (0, 'Cluster: minions')]),
         (u'bob4', {
             'map_frozen': {
                 'frozen': 2,
-                'temporarily frozen': 1
+                'tfrozen': 1
             },
             'map_states': {
                 'FAULTED': 2,
@@ -771,11 +770,11 @@ checks = {
                 'UNKNOWN': 3,
                 'EXITED': 1
             }
-        }, [(1, 'offline, cluster: minions')]),
+        }, [(1, 'Offline'), (0, 'Cluster: minions')]),
         (u'bob5', {
             'map_frozen': {
                 'frozen': 2,
-                'temporarily frozen': 1
+                'tfrozen': 1
             },
             'map_states': {
                 'FAULTED': 2,
@@ -788,11 +787,11 @@ checks = {
                 'UNKNOWN': 3,
                 'EXITED': 1
             }
-        }, [(1, 'offline, cluster: minions')]),
+        }, [(1, 'Offline'), (0, 'Cluster: minions')]),
         (u'agnes', {
             'map_frozen': {
                 'frozen': 2,
-                'temporarily frozen': 1
+                'tfrozen': 1
             },
             'map_states': {
                 'FAULTED': 2,
@@ -805,13 +804,13 @@ checks = {
                 'UNKNOWN': 3,
                 'EXITED': 1
             }
-        }, [(0, 'online, cluster: minions')]),
+        }, [(0, 'Online'), (0, 'Cluster: minions')]),
     ],
     'system': [
         (u'dave', {
             'map_frozen': {
                 'frozen': 2,
-                'temporarily frozen': 1
+                'tfrozen': 1
             },
             'map_states': {
                 'FAULTED': 2,
@@ -824,11 +823,11 @@ checks = {
                 'UNKNOWN': 3,
                 'EXITED': 1
             }
-        }, [(0, 'running, cluster: minions')]),
+        }, [(0, 'Running'), (0, 'Cluster: minions')]),
         (u'stuart', {
             'map_frozen': {
                 'frozen': 2,
-                'temporarily frozen': 1
+                'tfrozen': 1
             },
             'map_states': {
                 'FAULTED': 2,
@@ -841,12 +840,12 @@ checks = {
                 'UNKNOWN': 3,
                 'EXITED': 1
             }
-        }, [(0, 'running, cluster: minions')]),
+        }, [(0, 'Running'), (0, 'Cluster: minions')]),
     ],
     '': [(u'minions', {
         'map_frozen': {
             'frozen': 2,
-            'temporarily frozen': 1
+            'tfrozen': 1
         },
         'map_states': {
             'FAULTED': 2,
@@ -859,5 +858,5 @@ checks = {
             'UNKNOWN': 3,
             'EXITED': 1
         }
-    }, [(0, 'running')]),],
+    }, [(0, 'Running')]),],
 }

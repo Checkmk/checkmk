@@ -1,0 +1,10 @@
+Title: Fixed missing builtin topics in topic dropdown on host tag edit page
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1551855478
+Class: fix
+
+

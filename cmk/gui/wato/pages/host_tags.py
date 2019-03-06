@@ -311,9 +311,16 @@ class ModeEditHosttagConfiguration(WatoMode):
         self._untainted_hosttags_config.load()
 
     def _get_topic_valuespec(self):
+        # Merging of both objects would ne neat here
+        builtin_tags_config = watolib.BuiltinHosttagsConfiguration()
+        builtin_tags_config.load()
+
+        topics = set(builtin_tags_config.get_hosttag_topics())
+        topics.update(self._untainted_hosttags_config.get_hosttag_topics())
+
         return OptionalDropdownChoice(
             title=_("Topic"),
-            choices=self._untainted_hosttags_config.get_hosttag_topics(),
+            choices=list(topics),
             explicit=TextUnicode(),
             otherlabel=_("Create New Topic"),
             default_value=None,
@@ -373,6 +380,7 @@ class ModeEditAuxtag(ModeEditHosttagConfiguration):
 
         changed_hosttags_config = watolib.HosttagsConfiguration()
         changed_hosttags_config.load()
+
         if self._is_new_aux_tag():
             changed_hosttags_config.aux_tag_list.append(changed_aux_tag)
         else:

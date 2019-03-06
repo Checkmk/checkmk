@@ -370,6 +370,15 @@ def check_levels(value,
 
     value:   currently measured value
     dsname:  name of the datasource in the RRD that corresponds to this value
+    params:  None or Tuple(None, None) -> no level checking.
+             Tuple variants with non-None values:
+             Tuple[warn_upper, crit_upper] -> upper level checking only.
+             Tuple[warn_upper, crit_upper, warn_lower, crit_lower]
+             -> upper and lower level checking.
+             Dict containing "lower" as key -> lower level checking.
+             Dict containing "upper" or "levels_upper_min" as key -> upper level checking.
+             Dict containing "lower" and "upper"/"levels_upper_min" as key ->
+             lower and upper level checking.
     unit:    unit to be displayed in the plugin output.
              Be aware: if a (builtin) human_readable_func is stated which already
              provides a unit info, then this unit is not necessary. An additional

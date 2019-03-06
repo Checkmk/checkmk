@@ -46,7 +46,7 @@ import generictests.run
 
 class WritableDataset(object):
     def __init__(self, filename, init_dict):
-        self.comments = ['yapf: disable', '']
+        self.comments = ['yapf: disable']
         self.filename = filename
         self.writelist = (
             'checkname',
@@ -77,7 +77,8 @@ class WritableDataset(object):
             v_str = pprint.pformat(v).replace('\n', '\n' + ' ' * len(k_str))
             content += ['', '', k_str + v_str]
         with open(self.filename, 'w') as f:
-            f.write('\n# '.join(self.comments))
+            for comment in self.comments:
+                f.write('# %s\n' % comment)
             f.write('\n'.join(content))
 
 

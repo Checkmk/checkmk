@@ -277,7 +277,7 @@ def check_cisco_temperature_dom(item, params, parsed):
                 state = 1
             if state:
                 infotext += " (warn/crit at %s/%s dBm)" % (warn, crit)
-        yield state, infotext, [perfdata]
+        yield state, infotext, [tuple(perfdata)]
 
 
 check_info['cisco_temperature.dom'] = {

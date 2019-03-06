@@ -1,0 +1,10 @@
+Title: Ended Support for SLES 11 in version 1.6
+Level: 1
+Component: distros
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1551866384
+Class: feature
+
+Since SLES 11 are using a OpenSSL version before 1.0.0 we decided to end the support for SLES 11 for our next release. Many Python packages, that are used in Check_MK are dependent on newer OpenSSL versions. An old OpenSSL version is not only a security risk but also a threat for compatibility and stability.

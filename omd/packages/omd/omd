@@ -1041,8 +1041,8 @@ def patch_template_file(src, dst, old, new):
     # Now create a patch from old to new and immediately apply on
     # existing - possibly user modified - file.
 
-    result = os.system(
-        "diff -u %s %s | %s/bin/patch --force --backup --forward --silent %s" %  # nosec
+    result = os.system(  # nosec
+        "diff -u %s %s | %s/bin/patch --force --backup --forward --silent %s" %
         (old_orig_path, new_orig_path, site_dir(new), dst))
     try_chown(dst, new)
     try_chown(dst + ".rej", new)
@@ -1098,8 +1098,8 @@ def patch_template_file(src, dst, old, new):
                     os.system("diff -u %s.orig %s" % (dst, dst))  # nosec
                     break
             elif choice == "you":
-                os.system(
-                    "pwd ; diff -u %s %s.orig%s" % (old_orig_path, dst, pipe_pager()))  # nosec
+                os.system(  # nosec
+                    "pwd ; diff -u %s %s.orig%s" % (old_orig_path, dst, pipe_pager()))
             elif choice == "restore":
                 os.rename(dst + ".orig", dst)
                 sys.stdout.write("Restored your version.\n")
@@ -1171,14 +1171,14 @@ def merge_update_file(relpath, old_version, new_version):
                         break
             file("%s-%s" % (user_path, version), "w").write(
                 replace_tags(skel_content, replacements))
-        version_patch = os.popen("diff -u %s-%s %s-%s" % (user_path, old_version, user_path,
-                                                          new_version)).read()  # nosec
+        version_patch = os.popen("diff -u %s-%s %s-%s" % (  # nosec
+            user_path, old_version, user_path, new_version)).read()
 
         # First try to merge the changes in the version into the users' file
         merge = patch_has_merge() and "--merge" or ""
-        f = os.popen(
+        f = os.popen(  # nosec
             "PATH=/omd/versions/default/bin:$PATH patch --force --backup --forward --silent %s %s >/dev/null"
-            % (merge, user_path), "w")  # nosec
+            % (merge, user_path), "w")
         f.write(version_patch)
         status = f.close()
         if status:
@@ -1232,14 +1232,14 @@ def merge_update_file(relpath, old_version, new_version):
         elif choice == "edit":
             os.system("%s '%s'" % (editor, user_path))  # nosec
         elif choice == "diff":
-            os.system("diff -u %s.orig %s-%s%s" % (user_path, user_path, new_version,
-                                                   pipe_pager()))  # nosec
+            os.system("diff -u %s.orig %s-%s%s" % (  # nosec
+                user_path, user_path, new_version, pipe_pager()))
         elif choice == "you":
-            os.system("diff -u %s-%s %s.orig%s" % (user_path, old_version, user_path,
-                                                   pipe_pager()))  # nosec
+            os.system("diff -u %s-%s %s.orig%s" % (  # nosec
+                user_path, old_version, user_path, pipe_pager()))
         elif choice == "new":
-            os.system("diff -u %s-%s %s-%s%s" % (user_path, old_version, user_path, new_version,
-                                                 pipe_pager()))  # nosec
+            os.system("diff -u %s-%s %s-%s%s" % (  # nosec
+                user_path, old_version, user_path, new_version, pipe_pager()))
         elif choice == "missing":
             if os.path.exists(reject_file):
                 sys.stdout.write(tty_bgblue + tty_white + file(reject_file).read() + tty_normal)
@@ -2571,13 +2571,13 @@ def reload_apache():
 
 
 def restart_apache():
-    if os.system(init_cmd(g_info['APACHE_INIT_NAME'], 'status') +
-                 ' >/dev/null 2>&1') >> 8 == 0:  # nosec
+    if os.system(  # nosec
+            init_cmd(g_info['APACHE_INIT_NAME'], 'status') + ' >/dev/null 2>&1') >> 8 == 0:
         sys.stdout.write("Restarting Apache...")
         sys.stdout.flush()
         show_success(
-            os.system(init_cmd(g_info['APACHE_INIT_NAME'], 'restart') + ' >/dev/null') >>
-            8)  # nosec
+            os.system(  # nosec
+                init_cmd(g_info['APACHE_INIT_NAME'], 'restart') + ' >/dev/null') >> 8)
 
 
 def replace_tags(content, replacements):
@@ -3356,8 +3356,8 @@ def print_diff(rel_path, source_path, target_path, source_version, source_perms)
                     diff = "colordiff"
                 else:
                     diff = "diff"
-                os.popen("bash -c \"%s -u <(cat) '%s'\"" % (diff, target_file), "w").write(
-                    source_content)  # nosec
+                os.popen("bash -c \"%s -u <(cat) '%s'\"" % (diff, target_file), "w").write(  # nosec
+                    source_content)
             elif status == 'p':
                 sys.stdout.write("    %s %s %s\n" % (source_perm, arrow, target_perm))
             elif 't' in status:

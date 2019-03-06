@@ -159,13 +159,12 @@ def snapin_site_choice(ident, choices):
     else:
         only_sites = [site]
 
-    site_choices = config.get_event_console_site_choices()
-    if len(site_choices) <= 1:
+    if len(choices) <= 1:
         return None
 
-    site_choices = [ ("", _("All sites")), ] + site_choices
+    choices = [ ("", _("All sites")), ] + choices
     onchange = "set_snapin_site(event, %s, this)" % json.dumps(ident)
-    html.dropdown("site", site_choices, deflt=site, onchange=onchange)
+    html.dropdown("site", choices, deflt=site, onchange=onchange)
 
     return only_sites
 
@@ -627,7 +626,7 @@ def ajax_set_snapin_site():
 
     site  = html.var("site")
     site_choices = dict([ ("", _("All sites")), ] \
-                 +  config.get_event_console_site_choices())
+                 +  config.site_choices())
 
     if site not in site_choices:
         raise MKUserError(None, _("Invalid site"))

@@ -1,0 +1,15 @@
+Title: Snapins like Micro Core Statistics were not shown for slave sites
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p13
+Date: 1551793732
+
+Snapins like Micro Core Statistics were not shown for slave sites if the slave
+site is connected via TCP and Event Console configuration is not pushed. This
+has been fixed.
+
+This fix was contributed by Björn Müller.

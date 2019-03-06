@@ -1,0 +1,59 @@
+Title: Jira: Notification plugin
+Level: 1
+Component: notifications
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1551901386
+Class: feature
+
+Check_MK now supports integration with Jira.
+You can create issues for Host an Service Problems and optional set a resolution on recovery notifications.
+
+In Jira you have to add two custom fields to your project screen as described [https://confluence.atlassian.com/adminjiraserver/adding-a-custom-field-938847222.html here].
+
+In Check_MK, under "WATO - Notifications", create a new notification rule and select Jira.
+Parameters to set:
+<i>JIRA URL<i>: The URL to your Jira environment
+<i>User Name<i>: Jira username 
+<i>Password<i>: Jira password
+<i>Project ID<i>: The Project ID the issues should be created in
+<i>Issue type ID<i>: The issue type ID
+<i>Host custom field ID<i>: The first custom field ID you created in Jira
+<i>Service custom field ID<i>: The second custom field ID you created in Jira
+<i>Monitoring URL<i>: URL of your Check_MK environment to create hyperlinks back to Check_MK (eg. https://server/site)
+<i>Priority ID<i>: The priority ID (optional)
+<i>Summary for host notifications<i>: The summary the created host issue should use (optional)
+<i>Summary for service notifications<i>: The summary the created service issue shoud use (optional)
+<i>Label<i>: Label for Jira issues. If not set, 'monitoring' will be used. (optional)
+<i>Activate resultion with following resolution transistion ID<i>: If set, the created issue will be resolved with the configured resolution ID (optional)
+<i>Set optional timeout for connections to JIRA<i>: Timeout in seconds, default is 10 (optional)
+
+You need different Jira IDs to open/resolve issues. There are different ways to get this IDs:
+LI: [https://confluence.atlassian.com/jirakb/how-to-get-project-id-from-the-jira-user-interface-827341414.html Jira_support]
+LI: Retrieve with the a script (example: project_id):
+
+F+:#!/usr/bin/env python
+F+:
+F+:import requests
+F+:
+F+:USER = "JIRA_USERNAME"
+F+:PW = "JIRA_PASSWORD"
+F+:PROJECT_KEY = "JIRA_PROJECT_NAME"
+F+:JIRA_SERVER = "https://jira.server.your-domain.de"
+F+:
+F+:sess = requests.Session()
+F+:sess.auth = (USER, PW)
+F+:resp = sess.get("%s/rest/api/2/project" % JIRA_SERVER, verify=False)
+F+:
+F+:project_id = [item["id"] for item in resp.json() if item["key"] == PROJECT_KEY][0]
+F+:print(project_id)
+
+For issuetype and priority ID use:
+
+F+:resp = sess.get("%s/rest/api/2/issuetype" % JIRA_SERVER)
+F+:resp = sess.get("%s/rest/api/2/priority" % JIRA_SERVER)
+
+More information about the Jira API can be found [https://docs.atlassian.com/software/jira/docs/api/REST/7.12.0 here].
+
+CMK-1185

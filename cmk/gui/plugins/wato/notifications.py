@@ -510,6 +510,132 @@ $LONGSERVICEOUTPUT$
 
 
 @notification_parameter_registry.register
+class NotificationParameterJIRA_ISSUES(NotificationParameter):
+    @property
+    def ident(self):
+        return "jira_issues"
+
+    @property
+    def spec(self):
+        return Dictionary(
+            optional_keys=[
+                'priority', 'resolution', 'host_summary', 'service_summary', 'ignore_ssl',
+                'timeout', 'label'
+            ],
+            elements=[
+                ("url", HTTPUrl(
+                    title=_("JIRA URL"),
+                    help=_("Configure the JIRA URL here."),
+                )),
+                ("ignore_ssl",
+                 FixedValue(
+                     True,
+                     title=_("Disable SSL certificate verification"),
+                     totext=_("Disable SSL certificate verification"),
+                     help=_("Ignore unverified HTTPS request warnings. Use with caution."),
+                 )),
+                ("username",
+                 TextAscii(
+                     title=_("User Name"),
+                     help=_("Configure the user name here."),
+                     size=40,
+                     allow_empty=False,
+                 )),
+                ("password",
+                 Password(
+                     title=_("Password"),
+                     help=_(
+                         "You need to provide a valid password to be able to send notifications."),
+                     size=40,
+                     allow_empty=False,
+                 )),
+                ("project",
+                 TextAscii(
+                     title=_("Project ID"),
+                     help=_(
+                         "The numerical JIRA project ID. If not set, it will be retrieved from a "
+                         "custom user attribute named <tt>jiraproject</tt>. "
+                         "If that is not set, the notification will fail."),
+                     size=10,
+                 )),
+                ("issuetype",
+                 TextAscii(
+                     title=_("Issue type ID"),
+                     help=_(
+                         "The numerical JIRA issue type ID. If not set, it will be retrieved from a "
+                         "custom user attribute named <tt>jiraissuetype</tt>. "
+                         "If that is not set, the notification will fail."),
+                     size=10,
+                 )),
+                ("host_customid",
+                 TextAscii(
+                     title=_("Host custom field ID"),
+                     help=_("The numerical JIRA custom field ID for host problems."),
+                     size=10,
+                 )),
+                ("service_customid",
+                 TextAscii(
+                     title=_("Service custom field ID"),
+                     help=_("The numerical JIRA custom field ID for service problems."),
+                     size=10,
+                 )),
+                ("monitoring",
+                 HTTPUrl(
+                     title=_("Monitoring URL"),
+                     help=_(
+                         "Configure the base URL for the Monitoring Web-GUI here. Include the site name. "
+                         "Used for link to check_mk out of jira."),
+                 )),
+                ("priority",
+                 TextAscii(
+                     title=_("Priority ID"),
+                     help=_(
+                         "The numerical JIRA priority ID. If not set, it will be retrieved from a "
+                         "custom user attribute named <tt>jirapriority</tt>. "
+                         "If that is not set, the standard priority will be used."),
+                     size=10,
+                 )),
+                ("host_summary",
+                 TextUnicode(
+                     title=_("Summary for host notifications"),
+                     help=_("Here you are allowed to use all macros that are defined in the "
+                            "notification context."),
+                     default_value="Check_MK: $HOSTNAME$ - $HOSTSHORTSTATE$",
+                     size=64,
+                 )),
+                ("service_summary",
+                 TextUnicode(
+                     title=_("Summary for service notifications"),
+                     help=_("Here you are allowed to use all macros that are defined in the "
+                            "notification context."),
+                     default_value="Check_MK: $HOSTNAME$/$SERVICEDESC$ $SERVICESHORTSTATE$",
+                     size=64,
+                 )),
+                ("label",
+                 TextUnicode(
+                     title=_("Label"),
+                     help=_("Here you can set a custom label for new issues. "
+                            "If not set, 'monitoring' will be used."),
+                     size=16,
+                 )),
+                ("resolution",
+                 TextAscii(
+                     title=_("Activate resultion with following resolution transistion ID"),
+                     help=_("The numerical JIRA resolution transition ID. "
+                            "11 - 'To Do', 21 - 'In Progress', 31 - 'Done'"),
+                     size=3,
+                 )),
+                ("timeout",
+                 TextAscii(
+                     title=_("Set optional timeout for connections to JIRA"),
+                     help=_("Here you can configure timeout settings."),
+                     default_value=10,
+                 )),
+            ],
+        )
+
+
+@notification_parameter_registry.register
 class NotificationParameterMKEventDaemon(NotificationParameter):
     @property
     def ident(self):

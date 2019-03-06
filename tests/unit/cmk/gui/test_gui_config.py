@@ -231,6 +231,7 @@ def test_registered_permissions():
         'nagvis.Map_view_*',
         'nagvis.Rotation_view_*',
         'notification_plugin.asciimail',
+        'notification_plugin.jira_issues',
         'notification_plugin.mail',
         'notification_plugin.mkeventd',
         'notification_plugin.pagerduty',

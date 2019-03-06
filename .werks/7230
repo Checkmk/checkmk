@@ -1,0 +1,13 @@
+Title: Fixed selection of checks in "Check intervals for SNMP checks" ruleset
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0p13
+Date: 1551884231
+Class: fix
+
+Instead of selecting individual check types as it was possible before, the section names
+are now selectable as it was intended. As described in help text of this option it is
+not possible to configured this setting for individual sub checks, but only for a family
+of SNMP checks that share a single SNMP section.

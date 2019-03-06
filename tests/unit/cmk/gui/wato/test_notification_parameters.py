@@ -6,6 +6,7 @@ import cmk.gui.watolib.rulespecs as rulespecs
 
 expected_plugins = [
     'asciimail',
+    'jira_issues',
     'mail',
     'mkeventd',
     'pagerduty',

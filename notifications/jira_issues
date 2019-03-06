@@ -1,0 +1,9 @@
+#!/usr/bin/env python
+# JIRA
+# Bulk: no
+
+import sys
+from cmk.notification_plugins import jira_issues
+
+if __name__ == "__main__":
+    sys.exit(jira_issues.main())

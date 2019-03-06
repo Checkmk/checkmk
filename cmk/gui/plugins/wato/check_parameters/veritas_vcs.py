@@ -28,6 +28,7 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
     MonitoringState,
+    TextAscii,
 )
 
 from cmk.gui.plugins.wato import (
@@ -56,6 +57,10 @@ class RulespecCheckgroupParametersVeritasVcs(CheckParameterRulespecWithoutItem):
         return "dict"
 
     @property
+    def item_spec(self):
+        return TextAscii(title=_("Cluster Name"))
+
+    @property
     def parameter_valuespec(self):
         return Dictionary(
             elements=[
@@ -80,8 +85,8 @@ class RulespecCheckgroupParametersVeritasVcs(CheckParameterRulespecWithoutItem):
                  Dictionary(
                      title=_("Map Attribute 'Frozen'"),
                      elements=[
-                         ("temporarily frozen",
-                          MonitoringState(title=_("Temporarily frozen"), default_value=1)),
+                         ("tfrozen", MonitoringState(
+                             title=_("Temporarily frozen"), default_value=1)),
                          ("frozen", MonitoringState(title=_("Frozen"), default_value=2)),
                      ],
                      optional_keys=False,

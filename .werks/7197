@@ -1,0 +1,12 @@
+Title: Solaris Agent: fixed problem with leading spaces in wc command output
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1551986037
+Class: fix
+
+The output of "wc -l" on solaris can lead to leading spaces.
+In that case the check "cpu.threads" can not parse the agent output and will fail.
+This has been fixed.

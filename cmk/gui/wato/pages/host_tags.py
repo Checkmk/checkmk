@@ -164,21 +164,16 @@ class ModeHostTags(WatoMode, watolib.HosttagsConfiguration):
                 add_change("edit-hosttags", _("Removed auxiliary tag %s (%s)") % (message, del_id))
                 return "hosttags", message != True and message or None
 
-        move_nr = html.request.var("_move")
-        if move_nr is not None:
-            if html.check_transaction():
-                move_nr = int(move_nr)
-                if move_nr >= 0:
-                    directory = 1
-                else:
-                    move_nr = -move_nr
-                    directory = -1
-                moved = self._hosttags[move_nr]
-                del self._hosttags[move_nr]
-                self._hosttags[move_nr + directory:move_nr + directory] = [moved]
-                watolib.save_hosttags(self._hosttags, self._auxtags)
-                config.wato_host_tags = self._hosttags
-                watolib.add_change("edit-hosttags", _("Changed order of host tag groups"))
+        if html.request.var("_move") and html.check_transaction():
+            move_nr = html.get_integer_input("_move")
+            move_to = html.get_integer_input("_index")
+
+            moved = self._hosttags.pop(move_nr)
+            self._hosttags.insert(move_to, moved)
+
+            watolib.save_hosttags(self._hosttags, self._auxtags)
+            config.wato_host_tags = self._hosttags
+            watolib.add_change("edit-hosttags", _("Changed order of host tag groups"))
 
     def page(self):
         if not self._hosttags + self._auxtags:
@@ -221,29 +216,7 @@ class ModeHostTags(WatoMode, watolib.HosttagsConfiguration):
                 topic, title = map(_u, watolib.parse_hosttag_title(title))
                 table.row()
                 table.cell(_("Actions"), css="buttons")
-                if watolib.is_builtin_host_tag_group(tag_id):
-                    html.i("(%s)" % _("builtin"))
-                else:
-                    edit_url = watolib.folder_preserving_link([("mode", "edit_hosttag"),
-                                                               ("edit", tag_id)])
-                    delete_url = make_action_link([("mode", "hosttags"), ("_delete", tag_id)])
-                    if nr == 0:
-                        html.empty_icon_button()
-                    else:
-                        html.icon_button(
-                            make_action_link([("mode", "hosttags"), ("_move", str(-nr))]),
-                            _("Move this tag group one position up"), "up")
-
-                    if nr == len(effective_tag_groups) - 1 \
-                       or watolib.is_builtin_host_tag_group(effective_tag_groups[nr+1][0]):
-                        html.empty_icon_button()
-                    else:
-                        html.icon_button(
-                            make_action_link([("mode", "hosttags"), ("_move", str(nr))]),
-                            _("Move this tag group one position down"), "down")
-
-                    html.icon_button(edit_url, _("Edit this tag group"), "edit")
-                    html.icon_button(delete_url, _("Delete this tag group"), "delete")
+                self._show_tag_icons(tag_id, nr, effective_tag_groups)
 
                 table.text_cell(_("ID"), tag_id)
                 table.text_cell(_("Title"), title)
@@ -252,6 +225,20 @@ class ModeHostTags(WatoMode, watolib.HosttagsConfiguration):
                 html.begin_form("tag_%s" % tag_id)
                 watolib.host_attribute("tag_%s" % tag_id).render_input("", None)
                 html.end_form()
+
+    def _show_tag_icons(self, tag_id, nr, effective_tag_groups):
+        if watolib.is_builtin_host_tag_group(tag_id):
+            html.i("(%s)" % _("builtin"))
+            return
+
+        edit_url = watolib.folder_preserving_link([("mode", "edit_hosttag"), ("edit", tag_id)])
+        html.icon_button(edit_url, _("Edit this tag group"), "edit")
+
+        html.element_dragger_url(
+            "tr", base_url=make_action_link([("mode", "hosttags"), ("_move", nr)]))
+
+        delete_url = make_action_link([("mode", "hosttags"), ("_delete", tag_id)])
+        html.icon_button(delete_url, _("Delete this tag group"), "delete")
 
     def _render_aux_tag_list(self):
         with table_element(

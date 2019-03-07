@@ -118,7 +118,7 @@ def check_adva_fsp_if(item, params, info):
 check_info['adva_fsp_if'] = {
     "inventory_function": inventory_adva_fsp_if,
     "check_function": check_adva_fsp_if,
-    "service_description": "Interface %s",
+    "service_description": 'Interface %s',
     "has_perfdata": True,
     "group": "adva_ifs",
     "snmp_info": (

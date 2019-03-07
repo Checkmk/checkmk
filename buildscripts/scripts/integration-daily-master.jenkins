@@ -28,7 +28,8 @@ node {
             stage('checkout sources') {
                 cleanWs()
                 dir(TEST_DATA + '/git') {
-                    checkout(scm)
+                    git branch: 'master', changelog: false, credentialsId: '058f09c4-21c9-49ae-b72b-0b9d2f465da6', poll: false, url: 'ssh://jenkins@review.lan.mathias-kettner.de:29418/check_mk.git'
+                    //checkout(scm)
                 }
             }
         }
@@ -119,9 +120,14 @@ DISTRO_LIST.each { DISTRO ->
                         sh "mount -t overlay overlay -o lowerdir=${TEST_DATA}/git,upperdir=${WORKSPACE}/$DISTRO-dest,workdir=${WORKSPACE}/$DISTRO-work ${WORKSPACE}/$DISTRO-dest"
                         sh 'ls -lah'
                         dir (DISTRO + '-dest') {
-                            sh 'rm -rf .venv'
-                            sh 'PYTEST_ADDOPTS="--maxfail 300" make -C tests test-integration'
+                            sh 'PYTEST_ADDOPTS="--junitxml=/omd/sites/int_master/junit.xml --maxfail 300" make -C tests test-integration'
                         }
+                        sh """
+                            mkdir -p /$DISRTO
+                            cp /omd/sites/int_master/junit.xml /$DISTRO/
+                            cp -r /omd/sites/int_master/var/log /$DISRTO/
+                        """
+                        archiveArtifacts '/$DISTRO'
                         sh "until umount $DISTRO-dest; do sleep 1; done"
                     }
                 }

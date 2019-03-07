@@ -181,7 +181,6 @@ catalog_titles = {
         "mailman"       : "Mailman",
         "mssql"         : "Microsoft SQL Server",
         "mysql"         : "MySQL",
-        "msoffice"      : "MS Office",
         "nginx"         : "NGINX",
         "nullmailer"    : "Nullmailer",
         "omd"           : "Open Monitoring Distribution (OMD)",

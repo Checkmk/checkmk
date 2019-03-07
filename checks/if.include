@@ -70,7 +70,7 @@ if_disable_if64_hosts = []  # Binary host list for disabling if64 on some broken
 #    to avoid duplicate services.
 #
 def has_ifHCInOctets(oid):
-    return oid(".1.3.6.1.2.1.31.1.1.1.6.*") is not None
+    return bool(oid(".1.3.6.1.2.1.31.1.1.1.6.*"))
 
 
 def snmp_scan_function_if_brocade(oid):
@@ -116,7 +116,7 @@ def snmp_scan_function_if_fortigate(oid):
 
 
 def snmp_scan_function_if(oid):
-    return if64_disabled(host_name()) or not oid('.1.3.6.1.2.1.31.1.1.1.6.*')
+    return if64_disabled(host_name()) or not has_ifHCInOctets(oid)
 
 
 def if64_disabled(hostname):
@@ -129,28 +129,14 @@ def need_if64adm():
 
 
 def if64_scan_function(oid, use_if64adm=False):
-    if if64_disabled(host_name()):
-        return False
-
-    sys_descr = oid(".1.3.6.1.2.1.1.1.0")
-    for ignored_sys_descr in [
-            "LANCOM",
-            "ELSA",
-            "T-Systems",
-            "Brocade VDX Switch",
-    ]:
-        if ignored_sys_descr in sys_descr:
-            return False
-
-    sys_obj_id = oid(".1.3.6.1.2.1.1.2.0")
-    for ignored_sys_obj_id in [
-            ".4.1.11863.",
-            ".1.3.6.1.4.1.12356",
-    ]:
-        if ignored_sys_obj_id in sys_obj_id:
-            return False
-
-    if need_if64adm() != use_if64adm:
+    if any((
+            if64_disabled(host_name()),
+            snmp_scan_function_if_lancom(oid),
+            snmp_scan_function_if_brocade(oid),
+            snmp_scan_function_if_fortigate(oid),
+            snmp_scan_function_if64_tplink(oid),
+            need_if64adm() != use_if64adm,
+    )):
         return False
 
     return has_ifHCInOctets(oid)

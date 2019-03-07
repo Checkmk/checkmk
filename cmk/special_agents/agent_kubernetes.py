@@ -166,7 +166,7 @@ class Metadata(object):
         if metadata:
             self.name = metadata.name
             self.namespace = metadata.namespace
-            self.creation_timestamp = (time.mktime(metadata.creation_timestamp.timetuple())
+            self.creation_timestamp = (time.mktime(metadata.creation_timestamp.utctimetuple())
                                        if metadata.creation_timestamp else None)
         else:
             self.name = None

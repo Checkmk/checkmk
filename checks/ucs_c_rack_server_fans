@@ -46,15 +46,13 @@ def parse_ucs_c_rack_server_fans(info):
     return parsed
 
 
-operability_to_status_mapping = {
-    "unknown": 3,
-    "operable": 0,
-    "inoperable": 2,
-}
-
-
 @get_parsed_item_data
 def check_ucs_c_rack_server_fans(item, _no_params, data):
+    operability_to_status_mapping = {
+        "unknown": 3,
+        "operable": 0,
+        "inoperable": 2,
+    }
     operability = data["operability"]
     try:
         status = operability_to_status_mapping[operability]

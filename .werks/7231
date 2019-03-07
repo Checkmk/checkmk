@@ -1,0 +1,11 @@
+Title: Fixed possible broken folding of form parts when using localized GUI
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p13
+Date: 1551885586
+
+

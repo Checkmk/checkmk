@@ -24,6 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import base64
+
 from htmllib import HTML
 from lib import *
 
@@ -207,23 +209,6 @@ def edit_valuespec(vs, value, buttontext=None, method="GET", varprefix="",
 
 # New functions for painting forms
 
-twofivesix = "".join(map(chr, range(0,256)))
-def strip_bad_chars(x):
-    s = "".join([c for c in x if c > ' ' and c < 'z'])
-
-    if type(x) == unicode:
-        s = unicode(s)
-        return s.translate({
-            ord(u"'"): None,
-            ord(u"&"): None,
-            ord(u";"): None,
-            ord(u"<"): None,
-            ord(u">"): None,
-            ord(u"\""): None,
-        })
-    else:
-        return s.translate(twofivesix, "'&;<>\"")
-
 def header(title, isopen = True, table_id = "", narrow = False, css=None):
     #html.guitest_record_output("forms", ("header", title))
     global g_header_open
@@ -237,7 +222,7 @@ def header(title, isopen = True, table_id = "", narrow = False, css=None):
 
     html.open_table(id_=table_id if table_id else None,
                     class_=["nform", "narrow" if narrow else None, css if css else None])
-    fold_id = strip_bad_chars(title)
+    fold_id = base64.b64encode(title.encode("utf-8") if isinstance(title, unicode) else title)
     g_section_isopen = html.begin_foldable_container(
             html.form_name and html.form_name or "nform", fold_id, isopen, title, indent="nform")
     html.tr(html.render_td('', colspan=2), class_=["top", "open" if g_section_isopen else "closed"])

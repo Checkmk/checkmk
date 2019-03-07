@@ -65,7 +65,7 @@ check_info["if_fortigate"] = {
         ]),
     'snmp_scan_function': lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.12356"),
     'has_perfdata': True,
-    'includes': ["if.include", "if64.include"],
+    'includes': ["if.include"],
     'group': 'if',
     'node_info': True,
     'default_levels_variable': 'if_default_levels',

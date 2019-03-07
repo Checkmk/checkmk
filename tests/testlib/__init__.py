@@ -100,7 +100,7 @@ class APIError(Exception):
 def InterProcessLock(filename):
     fd = None
     try:
-        fd = os.open(filename, os.O_RDONLY | os.O_CREAT, 0660)
+        fd = os.open(filename, os.O_RDONLY | os.O_CREAT, 0666)
         fcntl.flock(fd, fcntl.LOCK_EX)
         yield
         fcntl.flock(fd, fcntl.LOCK_UN)

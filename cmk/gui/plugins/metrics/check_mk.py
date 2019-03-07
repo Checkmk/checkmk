@@ -8547,21 +8547,21 @@ perfometer_info.append({
     'exponent': 2.0,
 })
 
+perfometer_info.append({
+    "type": "linear",
+    "segments": ["license_percentage"],
+    "total": 100.0,
+    "color": "16/a",
+})
+
+perfometer_info.append({
+    "type": "linear",
+    "segments": ["license_percentage"],
+    "total": 100.0,
+    "color": "16/a",
+})
+
 #.
-perfometer_info.append({
-    "type": "linear",
-    "segments": ["license_percentage"],
-    "total": 100.0,
-    "color": "16/a",
-})
-
-perfometer_info.append({
-    "type": "linear",
-    "segments": ["license_percentage"],
-    "total": 100.0,
-    "color": "16/a",
-})
-
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
 #   |                   / ___|_ __ __ _ _ __ | |__  ___                    |

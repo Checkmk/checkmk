@@ -191,6 +191,11 @@ PYTHON_MODULES_LIST += google-auth-1.6.1.tar.gz
 PYTHON_MODULES_LIST += PyYAML-3.13.tar.gz
 PYTHON_MODULES_LIST += websocket_client-0.54.0.tar.gz
 PYTHON_MODULES_LIST += kubernetes-8.0.0.tar.gz
+# Added for jira notification script
+PYTHON_MODULES_LIST += defusedxml-0.5.0.tar.gz
+PYTHON_MODULES_LIST += requests-toolbelt-0.9.1.tar.gz
+PYTHON_MODULES_LIST += jira-2.0.0.tar.gz
+
 
 # NOTE: Cruel hack below! We need to have a recent GCC visible in the PATH
 # because the SSSE3 detection in pycryptodomex is slightly broken. :-/

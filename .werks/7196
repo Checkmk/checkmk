@@ -1,0 +1,12 @@
+Title: agent_prism: Fixed wrong usage and capacity detection
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1551954114
+Class: fix
+
+The special agent used the API endpoint "storage.usage_bytes" and "storage.capacity_bytes"
+what leaded to wrong values. New used API endpoints are "storage.user_usage_bytes" and
+"storage.user_capacity_bytes".

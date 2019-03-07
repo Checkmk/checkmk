@@ -143,8 +143,8 @@ def output_containers(opener, headers):
 
     for entity in obj['entities']:
         writer.writerow([
-            entity['name'], entity['usageStats']['storage.usage_bytes'],
-            entity['usageStats']['storage.capacity_bytes']
+            entity['name'], entity['usageStats']['storage.user_usage_bytes'],
+            entity['usageStats']['storage.user_capacity_bytes']
         ])
 
 

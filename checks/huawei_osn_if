@@ -86,7 +86,7 @@ check_info['huawei_osn_if'] = {
             "4.944",  # OPTIX-GLOBAL-NGWDM-MIB::sdh_pathDataPmMonValue.pmRXPBAD     13
             "4.945",  # OPTIX-GLOBAL-NGWDM-MIB::sdh_pathDataPmMonValue.pmTXPBAD     14
         ]),
-    'snmp_scan_function': huawei_osn_scan_function,
+    'snmp_scan_function': snmp_scan_function_huawei_osn_if,
     'has_perfdata': True,
     'includes': ['huawei_osn.include', 'if.include'],
     'group': 'if',

@@ -100,7 +100,15 @@ class APIError(Exception):
 def InterProcessLock(filename):
     fd = None
     try:
-        fd = os.open(filename, os.O_RDONLY | os.O_CREAT, 0666)
+        # Need to unset umask here to get the permissions we need because
+        # os.open() mode is using the given mode not as absolute mode, but
+        # respects the umask "mode & ~umask" (See "man 2 open").
+        old_umask = os.umask(0)
+        try:
+            fd = os.open(filename, os.O_RDONLY | os.O_CREAT, 0666)
+        finally:
+            os.umask(old_umask)
+
         fcntl.flock(fd, fcntl.LOCK_EX)
         yield
         fcntl.flock(fd, fcntl.LOCK_UN)

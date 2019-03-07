@@ -68,12 +68,12 @@ def inv_oracle_tablespaces(parsed, inventory_tree, status_data_tree):
         free_space = 0
 
         for datafile in attrs.get("datafiles", []):
-            # The following values may be None
+            # The following values may be None, see related check plugin
+            # free_space and increment_size are already scaled by block_size
             try:
-                bs = datafile["block_size"]
-                free_space = bs * int(datafile["free_space"])
-                increment_size = bs * int(datafile["increment_size"])
-            except:
+                free_space = int(datafile["free_space"])
+                increment_size = int(datafile["increment_size"])
+            except TypeError:
                 continue
 
             num_files += 1

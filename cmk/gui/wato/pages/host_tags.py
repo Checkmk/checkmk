@@ -87,9 +87,9 @@ class ModeHostTags(WatoMode, watolib.HosttagsConfiguration):
     def buttons(self):
         global_buttons()
         html.context_button(
-            _("New Tag group"), watolib.folder_preserving_link([("mode", "edit_hosttag")]), "new")
+            _("New tag group"), watolib.folder_preserving_link([("mode", "edit_hosttag")]), "new")
         html.context_button(
-            _("New Aux tag"), watolib.folder_preserving_link([("mode", "edit_auxtag")]), "new")
+            _("New aux tag"), watolib.folder_preserving_link([("mode", "edit_auxtag")]), "new")
 
     def action(self):
         # Deletion of tag groups
@@ -329,42 +329,48 @@ class ModeEditAuxtag(ModeEditHosttagConfiguration):
     def permissions(cls):
         return ["hosttags"]
 
-    def title(self):
-        if self._is_new_aux_tag():
-            return _("Create new auxiliary tag")
-        return _("Edit auxiliary tag")
+    def __init__(self):
+        super(ModeEditAuxtag, self).__init__()
+
+        self._new = self._is_new_aux_tag()
+
+        if self._new:
+            self._aux_tag_nr = None
+            self._aux_tag = watolib.AuxTag()
+        else:
+            self._aux_tag_nr = self._get_tag_number()
+            self._aux_tag = self._untainted_hosttags_config.aux_tag_list.get_number(
+                self._aux_tag_nr)
 
     def _is_new_aux_tag(self):
         return html.request.var("edit") is None
+
+    def _get_tag_number(self):
+        return html.get_integer_input("edit")
+
+    def title(self):
+        if self._new:
+            return _("Create new auxiliary tag")
+        return _("Edit auxiliary tag")
 
     def buttons(self):
         html.context_button(
             _("All Hosttags"), watolib.folder_preserving_link([("mode", "hosttags")]), "back")
 
     def action(self):
-        if not html.transaction_valid():
+        if not html.check_transaction():
             return "hosttags"
 
-        html.check_transaction()  # use up transaction id
+        vs = self._valuespec()
+        aux_tag_spec = vs.from_html_vars("aux_tag")
+        vs.validate_value(aux_tag_spec, "aux_tag")
 
-        if self._is_new_aux_tag():
-            changed_aux_tag = watolib.AuxTag()
-            changed_aux_tag.id = self._get_tag_id()
-        else:
-            tag_nr = self._get_tag_number()
-            changed_aux_tag = self._untainted_hosttags_config.aux_tag_list.get_number(tag_nr)
-
-        changed_aux_tag.title = html.get_unicode_input("title").strip()
-
-        topic = forms.get_input(self._get_topic_valuespec(), "topic")
-        if topic != '':
-            changed_aux_tag.topic = topic
-
-        changed_aux_tag.validate()
+        self._aux_tag = watolib.AuxTag(aux_tag_spec)
+        self._aux_tag.validate()
 
         # Make sure that this ID is not used elsewhere
         for tag_group in self._untainted_hosttags_config.tag_groups:
-            if changed_aux_tag.id in tag_group.get_tag_ids():
+            if self._aux_tag.id in tag_group.get_tag_ids():
                 raise MKUserError(
                     "tag_id",
                     _("This tag id is already being used in the host tag group %s") %
@@ -373,61 +379,61 @@ class ModeEditAuxtag(ModeEditHosttagConfiguration):
         changed_hosttags_config = watolib.HosttagsConfiguration()
         changed_hosttags_config.load()
 
-        if self._is_new_aux_tag():
-            changed_hosttags_config.aux_tag_list.append(changed_aux_tag)
+        if self._new:
+            changed_hosttags_config.aux_tag_list.append(self._aux_tag)
         else:
-            changed_hosttags_config.aux_tag_list.update(self._get_tag_number(), changed_aux_tag)
+            changed_hosttags_config.aux_tag_list.update(self._aux_tag_nr, self._aux_tag)
 
         changed_hosttags_config.save()
 
         return "hosttags"
 
-    def _get_tag_number(self):
-        return int(html.request.var("edit"))
-
-    def _get_tag_id(self):
-        return html.request.var("tag_id")
-
     def page(self):
-        if self._is_new_aux_tag():
-            changed_aux_tag = watolib.AuxTag()
-        else:
-            tag_nr = self._get_tag_number()
-            changed_aux_tag = self._untainted_hosttags_config.aux_tag_list.get_number(tag_nr)
+        html.begin_form("aux_tag")
 
-        html.begin_form("auxtag")
-        forms.header(_("Auxiliary Tag"))
+        self._valuespec().render_input("aux_tag", self._aux_tag.get_dict_format())
 
-        # Tag ID
-        forms.section(_("Tag ID"))
-        if self._is_new_aux_tag():
-            html.text_input("tag_id", "")
-            html.set_focus("tag_id")
-        else:
-            html.write_text(self._get_tag_id())
-        html.help(
-            _("The internal name of the tag. The special tags "
-              "<tt>snmp</tt>, <tt>tcp</tt> and <tt>ping</tt> can "
-              "be used here in order to specify the agent type."))
-
-        # Title
-        forms.section(_("Title") + "<sup>*</sup>")
-        html.text_input("title", changed_aux_tag.title, size=30)
-        html.help(_("An alias or description of this auxiliary tag"))
-
-        # The (optional) topic
-        forms.section(_("Topic") + "<sup>*</sup>")
-        html.help(
-            _("Different taggroups can be grouped in topics to make the visualization and "
-              "selections in the GUI more comfortable."))
-        forms.textinput(self._get_topic_valuespec(), "topic", changed_aux_tag.topic)
-
-        # Button and end
         forms.end()
         html.show_localization_hint()
         html.button("save", _("Save"))
         html.hidden_fields()
         html.end_form()
+
+    def _valuespec(self):
+        return Dictionary(
+            title=_("Basic settings"),
+            elements=self._basic_elements(),
+            render="form",
+            form_narrow=True,
+            optional_keys=[],
+        )
+
+    def _basic_elements(self):
+        if self._new:
+            vs_id = ID(
+                title=_("Tag ID"),
+                size=60,
+                allow_empty=False,
+                help=_("The internal ID of the tag is used to store the tag's "
+                       "value in the host properties. It cannot be changed later."),
+            )
+        else:
+            vs_id = FixedValue(
+                self._aux_tag.id,
+                title=_("Tag ID"),
+            )
+
+        return [
+            ("id", vs_id),
+            ("title",
+             TextUnicode(
+                 title=_("Title"),
+                 size=60,
+                 help=_("An alias or description of this auxiliary tag"),
+                 allow_empty=False,
+             )),
+            ("topic", self._get_topic_valuespec()),
+        ]
 
 
 @mode_registry.register

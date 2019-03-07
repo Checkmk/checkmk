@@ -2126,10 +2126,7 @@ mk_ora_db_connect () {
         # => use the wallet with tnsnames.ora or EZCONNECT
         TNSALIAS=${TNSALIAS:-"localhost:1521/${ORACLE_SID}"}
     else
-        if [ ! "${DBSYSCONNECT:-'None'}" = "None" ]; then
-            assysdbaconnect=" as "${DBSYSCONNECT}
-        fi
-
+        assysdbaconnect=${DBSYSCONNECT:-}
         TNSALIAS=${TNSALIAS:-"(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=${DBHOST:-"localhost"})(PORT=${DBPORT:-1521}))(CONNECT_DATA=(SID=${ORACLE_SID})(SERVER=DEDICATED)(UR=A)))"}
 
         # ORADBUSER = '/'? => ignore DBPASSWORD and use the wallet

@@ -1,0 +1,14 @@
+Title: Avoid duplicate services for if_fortigate check
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0p13
+Date: 1551971416
+Class: fix
+
+This fixes the duplicate services warning displayed on the
+discovery page for if/if_fortigate checks.
+
+Services of the if checkplugin are no longer discovered if
+the if_fortigate plugin already found Interfaces.

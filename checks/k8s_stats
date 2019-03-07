@@ -66,18 +66,13 @@ def k8s_network_err_pac(device, params, now):
 
 
 def check_k8s_stats_network(item, params, metrics):
-
     device = sum([
         collections.Counter(device)
         for device in metrics['network']['interfaces']
         if device.get('name') == item
     ], collections.Counter())
 
-    now = [
-        time.mktime(time.strptime(x[:-3], "%Y-%m-%dT%H:%M:%S.%f"))
-        for x in metrics['timestamp'].strip(u'Z').split(u'Z')
-    ]
-    now = sum(now) / float(len(now)) - time.timezone
+    now = metrics['timestamp']
 
     # Bandwidth
     for name, met, dsname in [('In', 'rx_bytes', 'in'), ('Out', 'tx_bytes', 'out')]:

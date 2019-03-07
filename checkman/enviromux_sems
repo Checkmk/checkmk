@@ -1,4 +1,4 @@
-title: enviromux_sensors_sems
+title: NTI Enviromux 16D: SEMS temperature sensors
 agents: snmp
 catalog: hw/environment/nti
 license: GPL

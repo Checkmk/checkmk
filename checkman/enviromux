@@ -1,4 +1,4 @@
-title: enviromux_sensors
+title: NTI Enviromux 16D: Temperature
 agents: snmp
 catalog: hw/environment/nti
 license: GPL

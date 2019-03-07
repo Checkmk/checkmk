@@ -1,4 +1,4 @@
-title: enviromux.humidity
+title: NTI Enviromux 16D: Humidity
 agents: snmp
 catalog: hw/environment/nti
 license: GPL

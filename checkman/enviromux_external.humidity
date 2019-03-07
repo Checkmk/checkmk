@@ -1,4 +1,4 @@
-title: enviromux_external.humidity
+title: NTI Enviromux 16D: External humidity sensor
 agents: snmp
 catalog: hw/environment/nti
 license: GPL

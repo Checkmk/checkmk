@@ -1,4 +1,4 @@
-title: enviromux_aux.voltage
+title: NTI Enviromux 16D: Auxiliary sensor voltage
 agents: snmp
 catalog: hw/environment/nti
 license: GPL

@@ -1,0 +1,11 @@
+Title: mk_oracle: 'locks' section is executed synchronously
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1551958075
+Class: feature
+
+Beside the multitenant implementation in the {{mk_oracle}} the SQL
+for the locks section was refactored and is more performant now.

@@ -4957,8 +4957,8 @@ def get_snmp_checktypes():
 def get_snmp_section_names():
     checks = watolib.check_mk_local_automation("get-check-information")
     snmp_section_names = set(cn.split(".", 1)[0] for (cn, c) in checks.items() if c['snmp'])
-    section_choices = [ (sn, sn) for sn in snmp_section_names ]
-    return [ (None, _('All SNMP Checks')) ] + sorted(section_choices)
+    section_choices = [(sn, sn) for sn in snmp_section_names]
+    return [(None, _('All SNMP Checks'))] + sorted(section_choices)
 
 
 @rulespec_registry.register

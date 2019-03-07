@@ -51,7 +51,7 @@ check_info["if64adm"] = {
     'inventory_function': inventory_if64adm,
     'service_description': 'Interface %s',
     'has_perfdata': True,
-    'includes': ['if.include', 'if64.include'],
+    'includes': ['if.include'],
     'snmp_info': (
         ".1.3.6.1.2.1",
         if64_snmp_end_oids + [

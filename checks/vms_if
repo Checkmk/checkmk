@@ -79,7 +79,7 @@ def check_vms_if(item, params, info):
 check_info['vms_if'] = {
     "check_function": check_vms_if,
     "inventory_function": inventory_vms_if,
-    "service_description": "Interface %s",
+    "service_description": 'Interface %s',
     "has_perfdata": True,
     "includes": ["if.include"],
     "group": "if",

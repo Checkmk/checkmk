@@ -1,0 +1,15 @@
+Title: k8s_stats: fix crashes regarding timestamp parsing
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1551979057
+Class: fix
+
+The Kubernetes API provides timestamps for the k8s_stats checks
+in the RFC3339Nano format with different timezones and a varying
+number of trailing zeros in the seconds field. This lead to
+a crash of the k8s_stats.network check. To resolve this issues
+the timestamps are now converted to unix timestamps in the
+special agent.

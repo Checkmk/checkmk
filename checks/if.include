@@ -126,24 +126,6 @@ def _snmp_scan_function_if_fortigate(oid):
     return oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.12356")
 
 
-def _snmp_scan_function_if(oid):
-    return if64_disabled(host_name()) or not has_ifHCInOctets(oid)
-
-
-def _if64_scan_function(oid, use_if64adm=False):
-    if any((
-            if64_disabled(host_name()),
-            _snmp_scan_function_if_lancom(oid),
-            _snmp_scan_function_if_brocade(oid),
-            _snmp_scan_function_if_fortigate(oid),
-            _snmp_scan_function_if64_tplink(oid),
-            need_if64adm() != use_if64adm,
-    )):
-        return False
-
-    return has_ifHCInOctets(oid)
-
-
 _SPECIFIC_IF_SCANS = collections.OrderedDict({
     'if_brocade': _snmp_scan_function_if_brocade,
     'adva_fsp_if': _snmp_scan_function_adva_fsp_if,
@@ -156,16 +138,34 @@ _SPECIFIC_IF_SCANS = collections.OrderedDict({
 })
 
 
+def is_specific(oid):
+    return any(scan(oid) for scan in _SPECIFIC_IF_SCANS.values())
+
+
 def get_snmp_if_scan_function(plugin_name):
     if plugin_name in _SPECIFIC_IF_SCANS:
         return _SPECIFIC_IF_SCANS[plugin_name]
 
     if plugin_name == 'if':
-        return _snmp_scan_function_if
+
+        def wrapped_scan_function(oid):
+            if is_specific(oid):
+                return False
+            return if64_disabled(host_name()) or not has_ifHCInOctets(oid)
+
     elif plugin_name == 'if64':
-        return _if64_scan_function
+
+        def wrapped_scan_function(oid):
+            if if64_disabled(host_name()) or is_specific(oid):
+                return False
+            if need_if64adm():
+                return False
+            return has_ifHCInOctets(oid)
+
     else:
         raise NotImplementedError("unknown if plugin: %r" % plugin_name)
+
+    return wrapped_scan_function
 
 
 def fix_if_64_highspeed(info):

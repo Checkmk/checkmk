@@ -98,7 +98,7 @@ def check_ibm_svc_enclosurestats_power(item, _no_params, info):
     for enclosure_id, stat_name, stat_current, _stat_peak, _stat_peak_time in info:
         if enclosure_id == item and stat_name == "power_w":
             stat_current = int(stat_current)
-            perfdata = [('power', str(stat_current) + "Watt")]
+            perfdata = [('power', stat_current)]
             return 0, "Enclosure %s Power Consumption is %s Watt" % (enclosure_id,
                                                                      stat_current), perfdata
 

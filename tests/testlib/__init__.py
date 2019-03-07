@@ -16,12 +16,13 @@ import shutil
 import ast
 import abc
 import json
+import fcntl
+from contextlib import contextmanager
 from urlparse import urlparse
 
 import pathlib2 as pathlib
 import pytest  # type: ignore
 import requests  # type: ignore
-import fasteners  # type: ignore
 import urllib3  # type: ignore
 from bs4 import BeautifulSoup  # type: ignore
 
@@ -91,6 +92,20 @@ def wait_until(condition, timeout=1, interval=0.1):
 
 class APIError(Exception):
     pass
+
+
+# Used fasteners before, but that was using a file mode that made it impossible to do
+# inter process locking involving different users (different sites)
+@contextmanager
+def InterProcessLock(filename):
+    try:
+        fd = os.open(filename, os.O_RDONLY | os.O_CREAT, 0660)
+        fcntl.flock(fd, fcntl.LOCK_EX)
+        yield
+        fcntl.flock(fd, fcntl.LOCK_UN)
+    finally:
+        if fd:
+            os.close(fd)
 
 
 # It's ok to make it currently only work on debian based distros
@@ -244,7 +259,7 @@ class CMKVersion(object):
 
         # Improve the protection against other test runs installing packages
         print "Getting install file lock (/tmp/cmk-test-install-version.lock)..."
-        with fasteners.InterProcessLock("/tmp/cmk-test-install-version"):
+        with InterProcessLock("/tmp/cmk-test-install-version"):
             print "Have install file lock"
             cmd = "sudo /usr/bin/gdebi --non-interactive %s" % package_path
             print cmd
@@ -553,7 +568,7 @@ class Site(object):
 
         if not self.exists():
             print "Getting site create lock (/tmp/cmk-test-create-site.lock)..."
-            with fasteners.InterProcessLock("/tmp/cmk-test-create-site"):
+            with InterProcessLock("/tmp/cmk-test-create-site"):
                 print "Have site create lock"
 
                 print "[%0.2f] Creating site '%s'" % (time.time(), self.id)
@@ -923,7 +938,7 @@ class Site(object):
             self.stop()
 
         sys.stdout.write("Getting livestatus port lock (/tmp/cmk-test-open-livestatus-port)...\n")
-        with fasteners.InterProcessLock("/tmp/cmk-test-livestatus-port"):
+        with InterProcessLock("/tmp/cmk-test-livestatus-port"):
             sys.stdout.write("Have livestatus port lock\n")
             self.set_config("LIVESTATUS_TCP", "on")
             self._gather_livestatus_port()

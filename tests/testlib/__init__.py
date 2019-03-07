@@ -98,6 +98,7 @@ class APIError(Exception):
 # inter process locking involving different users (different sites)
 @contextmanager
 def InterProcessLock(filename):
+    fd = None
     try:
         fd = os.open(filename, os.O_RDONLY | os.O_CREAT, 0660)
         fcntl.flock(fd, fcntl.LOCK_EX)

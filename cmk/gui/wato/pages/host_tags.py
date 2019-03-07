@@ -217,7 +217,7 @@ class ModeHostTags(WatoMode, watolib.HosttagsConfiguration):
                 return
 
             for nr, entry in enumerate(effective_tag_groups):
-                tag_id, title, choices = entry[:3]  # fourth: tag dependency information
+                tag_id, title, _choices = entry[:3]  # fourth: tag dependency information
                 topic, title = map(_u, watolib.parse_hosttag_title(title))
                 table.row()
                 table.cell(_("Actions"), css="buttons")
@@ -247,9 +247,7 @@ class ModeHostTags(WatoMode, watolib.HosttagsConfiguration):
 
                 table.text_cell(_("ID"), tag_id)
                 table.text_cell(_("Title"), title)
-                table.text_cell(_("Topic"), topic or '')
-                table.text_cell(_("Type"), (len(choices) == 1 and _("Checkbox") or _("Dropdown")))
-                table.text_cell(_("Choices"), str(len(choices)))
+                table.text_cell(_("Topic"), topic or _("Host tags"))
                 table.cell(_("Demonstration"), sortable=False)
                 html.begin_form("tag_%s" % tag_id)
                 watolib.host_attribute("tag_%s" % tag_id).render_input("", None)
@@ -287,7 +285,7 @@ class ModeHostTags(WatoMode, watolib.HosttagsConfiguration):
                 table.text_cell(_("ID"), tag_id)
 
                 table.text_cell(_("Title"), _u(title))
-                table.text_cell(_("Topic"), _u(topic) or '')
+                table.text_cell(_("Topic"), _u(topic) or _("Host tags"))
                 table.text_cell(
                     _("Tags using this auxiliary tag"), ", ".join(
                         self._get_tags_using_aux_tag(effective_tag_groups, tag_id)))

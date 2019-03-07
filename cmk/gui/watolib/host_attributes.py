@@ -632,12 +632,14 @@ def _transform_attribute_topic_title_to_id(topic_title):
         u"Management Board": "management_board",
         u"Network Scan": "network_scan",
         u"Custom attributes": "custom_attributes",
+        u"Host tags": "host_tags",
         u"Grundeinstellungen": "basic",
         u"Adresse": "address",
         u"Datenquellen": "data_sources",
         u"Management-Board": "management_board",
         u"Netzwerk-Scan": "network_scan",
         u"Eigene Attribute": "custom_attributes",
+        u"Hostmerkmale": "host_tags",
     }
 
     try:

@@ -4,9 +4,8 @@ import pytest
 import subprocess
 import re
 import os
-import lockfile
 
-from testlib import web, repo_path
+from testlib import web, repo_path, InterProcessLock
 
 @pytest.fixture(scope="function")
 def test_cfg(web, site, tmpdir):
@@ -75,7 +74,7 @@ def test_cfg(web, site, tmpdir):
 
 
 def BackupLock():
-    return lockfile.FileLock("/tmp/cmk-test-execute-backup")
+    return InterProcessLock("/tmp/cmk-test-execute-backup")
 
 
 def _execute_backup(site, job_id="testjob"):

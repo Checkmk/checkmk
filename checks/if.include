@@ -54,6 +54,7 @@ if_default_traffic_levels = None, None
 if_default_average = None
 if_disable_if64_hosts = []  # Binary host list for disabling if64 on some broken devices
 
+
 #
 #    +-----------------------------------------------------------------------------+
 #    |                            __                  _   _                        |
@@ -68,11 +69,13 @@ if_disable_if64_hosts = []  # Binary host list for disabling if64 on some broken
 #    Put all if scan functions of "'Interface %s'"- services in one place,
 #    to avoid duplicate services.
 #
+def has_ifHCInOctets(oid):
+    return oid(".1.3.6.1.2.1.31.1.1.1.6.*") is not None
 
 
 def snmp_scan_function_if_brocade(oid):
     return "Brocade VDX Switch" in oid(".1.3.6.1.2.1.1.1.0") and (not if64_disabled(
-        host_name())) and oid(".1.3.6.1.2.1.31.1.1.1.6.*") is not None
+        host_name())) and has_ifHCInOctets(oid)
 
 
 def snmp_scan_function_if64adm(oid):
@@ -84,16 +87,19 @@ def snmp_scan_function_adva_fsp_if(oid):
 
 
 def snmp_scan_function_if64_tplink(oid):
-    return ".4.1.11863." in oid(
-        ".1.3.6.1.2.1.1.2.0") and oid(".1.3.6.1.2.1.31.1.1.1.6.*") is not None
+    return ".4.1.11863." in oid(".1.3.6.1.2.1.1.2.0") and has_ifHCInOctets(oid)
 
 
 def snmp_scan_function_if_lancom(oid):
-    return ("LANCOM" in oid(".1.3.6.1.2.1.1.1.0") or
-            "ELSA" in oid(".1.3.6.1.2.1.1.1.0") or
-            "T-Systems" in oid(".1.3.6.1.2.1.1.1.0")) or \
-           "LAN R800V" in oid(".1.3.6.1.2.1.1.1.0") and \
-           (not if64_disabled(host_name())) and oid(".1.3.6.1.2.1.31.1.1.1.6.*") is not None
+    sys_description = oid(".1.3.6.1.2.1.1.1.0")
+    for name in ("LANCOM", "ELSA", "T-Systems"):
+        if name in sys_description:
+            return True
+
+    if "LAN R800V" not in sys_description or if64_disabled(host_name()):
+        return False
+
+    return has_ifHCInOctets(oid)
 
 
 def snmp_scan_function_emc_vplex_if(oid):
@@ -147,10 +153,7 @@ def if64_scan_function(oid, use_if64adm=False):
     if need_if64adm() != use_if64adm:
         return False
 
-    if oid(".1.3.6.1.2.1.31.1.1.1.6.*") is not None:
-        return True
-
-    return False
+    return has_ifHCInOctets(oid)
 
 
 def fix_if_64_highspeed(info):

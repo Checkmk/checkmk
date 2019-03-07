@@ -24,6 +24,13 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
+def scan_scan_function_if(oid):
+    if oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.12356"):
+        return False  # if_fortigate
+    return if64_disabled(host_name()) or not oid('.1.3.6.1.2.1.31.1.1.1.6.*')
+
+
 def inventory_if(info):
     return inventory_if_common(if_convert_to_if64(info))
 
@@ -64,8 +71,7 @@ check_info["if"] = {
     ]),
     # check if number of network interfaces (IF-MIB::ifNumber.0) is at least 2
     # use if64 if possible and not disabled
-    'snmp_scan_function':      lambda oid: if64_disabled(host_name())\
-                                           or not oid('.1.3.6.1.2.1.31.1.1.1.6.*'),
+    'snmp_scan_function': scan_scan_function_if,
     'group':                   'if',
     'default_levels_variable': 'if_default_levels',
 }

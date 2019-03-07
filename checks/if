@@ -71,7 +71,7 @@ check_info["if"] = {
         ]),
     # check if number of network interfaces (IF-MIB::ifNumber.0) is at least 2
     # use if64 if possible and not disabled
-    'snmp_scan_function': snmp_scan_function_if,
+    'snmp_scan_function': get_snmp_if_scan_function('if'),
     'group': 'if',
     'default_levels_variable': 'if_default_levels',
 }

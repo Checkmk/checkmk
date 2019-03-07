@@ -82,26 +82,26 @@ def need_if64adm():
     return "portstates" in settings and '9' in settings["portstates"]
 
 
-def snmp_scan_function_if_brocade(oid):
+def _snmp_scan_function_if_brocade(oid):
     return "Brocade VDX Switch" in oid(".1.3.6.1.2.1.1.1.0") and (not if64_disabled(
         host_name())) and has_ifHCInOctets(oid)
 
 
-def snmp_scan_function_if64adm(oid):
+def _snmp_scan_function_if64adm(oid):
     if if64_disabled(host_name()) or not need_if64adm():
         return False
     return has_ifHCInOctets(oid)
 
 
-def snmp_scan_function_adva_fsp_if(oid):
+def _snmp_scan_function_adva_fsp_if(oid):
     return oid(".1.3.6.1.2.1.1.1.0") == "Fiber Service Platform F7"
 
 
-def snmp_scan_function_if64_tplink(oid):
+def _snmp_scan_function_if64_tplink(oid):
     return ".4.1.11863." in oid(".1.3.6.1.2.1.1.2.0") and has_ifHCInOctets(oid)
 
 
-def snmp_scan_function_if_lancom(oid):
+def _snmp_scan_function_if_lancom(oid):
     sys_description = oid(".1.3.6.1.2.1.1.1.0")
     for name in ("LANCOM", "ELSA", "T-Systems"):
         if name in sys_description:
@@ -113,35 +113,59 @@ def snmp_scan_function_if_lancom(oid):
     return has_ifHCInOctets(oid)
 
 
-def snmp_scan_function_emc_vplex_if(oid):
+def _snmp_scan_function_emc_vplex_if(oid):
     return oid(".1.3.6.1.2.1.1.1.0") == "" and oid(".1.3.6.1.4.1.1139.21.2.2.8.1.*")
 
 
-def snmp_scan_function_huawei_osn_if(oid):
+def _snmp_scan_function_huawei_osn_if(oid):
     # duplicate code from huawei_osn.include
     return ".1.3.6.1.4.1.2011.2.25.1" in oid(".1.3.6.1.2.1.1.2.0")
 
 
-def snmp_scan_function_if_fortigate(oid):
+def _snmp_scan_function_if_fortigate(oid):
     return oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.12356")
 
 
-def snmp_scan_function_if(oid):
+def _snmp_scan_function_if(oid):
     return if64_disabled(host_name()) or not has_ifHCInOctets(oid)
 
 
-def if64_scan_function(oid, use_if64adm=False):
+def _if64_scan_function(oid, use_if64adm=False):
     if any((
             if64_disabled(host_name()),
-            snmp_scan_function_if_lancom(oid),
-            snmp_scan_function_if_brocade(oid),
-            snmp_scan_function_if_fortigate(oid),
-            snmp_scan_function_if64_tplink(oid),
+            _snmp_scan_function_if_lancom(oid),
+            _snmp_scan_function_if_brocade(oid),
+            _snmp_scan_function_if_fortigate(oid),
+            _snmp_scan_function_if64_tplink(oid),
             need_if64adm() != use_if64adm,
     )):
         return False
 
     return has_ifHCInOctets(oid)
+
+
+_SPECIFIC_IF_SCANS = collections.OrderedDict({
+    'if_brocade': _snmp_scan_function_if_brocade,
+    'adva_fsp_if': _snmp_scan_function_adva_fsp_if,
+    'if64_tplink': _snmp_scan_function_if64_tplink,
+    'if_lancom': _snmp_scan_function_if_lancom,
+    'emc_vplex_if': _snmp_scan_function_emc_vplex_if,
+    'huawei_osn_if': _snmp_scan_function_huawei_osn_if,
+    'if_fortigate': _snmp_scan_function_if_fortigate,
+    'if64adm': _snmp_scan_function_if64adm,
+})
+
+
+def get_snmp_if_scan_function(plugin_name):
+    if plugin_name in _SPECIFIC_IF_SCANS:
+        return _SPECIFIC_IF_SCANS[plugin_name]
+
+    if plugin_name == 'if':
+        return _snmp_scan_function_if
+    elif plugin_name == 'if64':
+        return _if64_scan_function
+    else:
+        raise NotImplementedError("unknown if plugin: %r" % plugin_name)
 
 
 def fix_if_64_highspeed(info):

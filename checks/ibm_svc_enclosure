@@ -77,7 +77,7 @@ def check_ibm_svc_enclosure(item, _no_params, info):
                 yield 3, "Unknown format"
                 return
 
-            enclosure_id, enclosure_status, _enclosure_type, _managed, _IO_group_id, \
+            _enclosure_id, enclosure_status, _enclosure_type, _managed, _IO_group_id, \
                 _IO_group_name, _product_MTM, _serial_number, total_canisters, online_canisters, \
                 total_PSUs, online_PSUs, _drive_slots, total_fan_modules, online_fan_modules, \
                 total_secondary_expander_modules, online_secondary_expander_modules = line

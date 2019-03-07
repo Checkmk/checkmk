@@ -5,10 +5,9 @@ import re
 import os
 import tarfile
 import fnmatch
-import fasteners
 import pytest  # type: ignore
 
-from testlib import web  # pylint: disable=unused-import
+from testlib import web, InterProcessLock  # pylint: disable=unused-import
 
 
 @pytest.fixture()
@@ -90,7 +89,7 @@ def test_cfg(web, site, backup_path):
 
 
 def BackupLock():
-    return fasteners.InterProcessLock("/tmp/cmk-test-execute-backup")
+    return InterProcessLock("/tmp/cmk-test-execute-backup")
 
 
 def _execute_backup(site, job_id="testjob"):

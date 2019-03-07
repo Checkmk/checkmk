@@ -1,4 +1,4 @@
-title: enviromux_aux.humidity
+title: NTI Enviromux 16D: Auxiliary sensor humidity
 agents: snmp
 catalog: hw/environment/nti
 license: GPL

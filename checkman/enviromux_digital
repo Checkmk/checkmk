@@ -1,4 +1,4 @@
-title: enviromux_digital
+title: NTI Enviromux 16D: Digital auxiliary sensors
 agents: snmp
 catalog: hw/environment/nti
 license: GPL

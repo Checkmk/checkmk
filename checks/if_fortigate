@@ -63,7 +63,7 @@ check_info["if_fortigate"] = {
             BINARY("2.2.1.6"),  # ifPhysAddress     19
             "31.1.1.1.15",  # ifHighSpeed           -1  (parse_if64 assumes this is the last element)
         ]),
-    'snmp_scan_function': snmp_scan_function_if_fortigate,
+    'snmp_scan_function': get_snmp_if_scan_function('if_fortigate'),
     'has_perfdata': True,
     'includes': ["if.include"],
     'group': 'if',

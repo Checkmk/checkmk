@@ -67,7 +67,7 @@ check_info["if64_tplink"] = {
             "4.1.11863.1.1.3.2.1.1.1.1.2",  # special for TP Link
             BINARY("2.1.2.2.1.6"),  # ifPhysAddress            19
         ]),
-    'snmp_scan_function': snmp_scan_function_if64_tplink,
+    'snmp_scan_function': get_snmp_if_scan_function('if64_tplink'),
     'group': 'if',
     'default_levels_variable': 'if_default_levels',
 }

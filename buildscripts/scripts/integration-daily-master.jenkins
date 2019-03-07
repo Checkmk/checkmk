@@ -120,7 +120,7 @@ DISTRO_LIST.each { DISTRO ->
                         sh 'ls -lah'
                         dir (DISTRO + '-dest') {
                             sh 'rm -rf .venv'
-                            sh 'make -C tests test-integration'
+                            sh 'PYTEST_ADDOPTS="--maxfail 300" make -C tests test-integration'
                         }
                         sh "until umount $DISTRO-dest; do sleep 1; done"
                     }

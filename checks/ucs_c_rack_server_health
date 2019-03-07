@@ -30,18 +30,6 @@
 # storageControllerHealth<TAB>dn
 # sys/rack-unit-2/board/storage-SAS-SLOT-HBA/vd-0 <TAB>id SLOT-HBA<TAB>health Good
 
-# Dict keys are storage controller health strings provided via special agent -> XML
-# API of servers. Dict values are corresponding check status.
-# For information about the data provided by the special agent
-# "storageControllerHealth" refer to Cisco C-Series Rack Server XML 2.0 Schema files:
-# [https://community.cisco.com/t5/unified-computing-system/cisco-ucs-c-series-standalone-xml-schema/ta-p/3646798]
-# Note: The possible string values are not defined/documented in the XML schema.
-# "Good" is the only value known from exemplary data output. Pre-process the
-# data to lowercase only chars.
-health_to_status_mapping = {
-    'good': 0,
-}
-
 
 def parse_ucs_c_rack_server_health(info):
     """
@@ -72,6 +60,18 @@ def check_ucs_c_rack_server_health(item, params, health):
     Check function is called only in case parsed is a dict and item exists as key in parsed[item].
     All other potential bad case conditions are handled by @get_parsed_item_data.
     """
+    # Dict keys are storage controller health strings provided via special agent -> XML
+    # API of servers. Dict values are corresponding check status.
+    # For information about the data provided by the special agent
+    # "storageControllerHealth" refer to Cisco C-Series Rack Server XML 2.0 Schema files:
+    # [https://community.cisco.com/t5/unified-computing-system/cisco-ucs-c-series-standalone-xml-schema/ta-p/3646798]
+    # Note: The possible string values are not defined/documented in the XML schema.
+    # "Good" is the only value known from exemplary data output. Pre-process the
+    # data to lowercase only chars.
+    health_to_status_mapping = {
+        'good': 0,
+    }
+
     try:
         status = health_to_status_mapping[health]
         status_readable = health

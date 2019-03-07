@@ -1,0 +1,74 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2018             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+#Example output:
+#<<<msoffice_serviceplans>>>
+#msonline:VISIOCLIENT ONEDRIVE_BASIC Success
+#msonline:VISIOCLIENT VISIOONLINE Success
+#msonline:VISIOCLIENT EXCHANGE_S_FOUNDATION Success
+#msonline:VISIOCLIENT VISIO_CLIENT_SUBSCRIPTION Success
+#msonline:POWER_BI_PRO EXCHANGE_S_FOUNDATION Success
+#msonline:POWER_BI_PRO BI_AZURE_P2 Success
+#msonline:WINDOWS_STORE EXCHANGE_S_FOUNDATION Success
+#msonline:WINDOWS_STORE WINDOWS_STORE PendingActivation
+
+
+def inventory_msoffice_serviceplans(info):
+    for bundle, _plan, _status in info:
+        yield bundle, {}
+
+
+def check_msoffice_serviceplans(item, params, info):
+    success = 0
+    pending = 0
+    pending_list = []
+    warn, crit = params.get("levels", (None, None))
+    for bundle, plan, status in info:
+        if bundle == item:
+            if status == "Success":
+                success += 1
+            elif status == "PendingActivation":
+                pending += 1
+                pending_list.append(plan)
+    state = 0
+    infotext = "Success: %d, Pending: %d" % (success, pending)
+    if crit and pending >= crit:
+        state = 2
+    elif warn and pending >= warn:
+        state = 1
+    if state:
+        infotext += " (warn/crit at %d/%d)" % (warn, crit)
+    yield state, infotext
+    if pending_list:
+        yield 0, "Pending Services: %s" % ", ".join(pending_list)
+
+
+check_info["msoffice_serviceplans"] = {
+    "inventory_function": inventory_msoffice_serviceplans,
+    "check_function": check_msoffice_serviceplans,
+    "service_description": "MS Office Serviceplans %s",
+    "group": "msoffice_serviceplans",
+}

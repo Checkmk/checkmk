@@ -73,7 +73,8 @@ class RowTableEC(RowTableLivestatus):
             if c not in columns:
                 columns.append(c)
 
-        rows = super(RowTableEC, self).query(view, columns, query, only_sites, limit)
+        rows = super(RowTableEC, self).query(view, columns, query, only_sites, limit,
+                                             all_active_filters)
 
         if not rows:
             return rows

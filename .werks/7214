@@ -1,0 +1,21 @@
+Title: Interface checks: Introduce scan function API
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.6.0i1
+Date: 1552033415
+Class: feature
+
+In the past conflicting check plugins with services called "Interface <ITEM>"
+could lead to a "duplicate services" warning on the discovery page.
+
+To avoid this issue in the future, all scan functions for those plugins
+are now located in the file "if.include".
+If you add a new "Interface <ITEM>"- service, please add the corresponding
+scan function to the file "if.include", and list in the dictionary
+<tt>_SPECIFIC_IF_SCANS</tt>. You can then access the scan function by specifying
+<tt> 'snmp_scan_function': get_snmp_if_scan_function('my_if_check')</tt>
+in your check plugin.
+The matching devices will then be automatically excluded from the generic if
+and if64 check plugin.

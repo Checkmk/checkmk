@@ -38,9 +38,13 @@ from cmk.gui.valuespec import (
     Foldable,
     Tuple,
     ListOf,
+    Dictionary,
     TextAscii,
     TextUnicode,
     OptionalDropdownChoice,
+    FixedValue,
+    ID,
+    Transform,
 )
 
 from cmk.gui.watolib.host_tags import is_builtin_aux_tag
@@ -304,12 +308,15 @@ class ModeEditHosttagConfiguration(WatoMode):
         topics.update(self._untainted_hosttags_config.get_hosttag_topics())
 
         return OptionalDropdownChoice(
-            title=_("Topic"),
+            title=_("Topic") + "<sup>*</sup>",
             choices=list(topics),
             explicit=TextUnicode(),
-            otherlabel=_("Create New Topic"),
+            otherlabel=_("Create new topic"),
             default_value=None,
-            sorted=True)
+            help=_("Different tag groups can be grouped in topics to make the visualization and "
+                   "selections in the GUI more comfortable."),
+            sorted=True,
+        )
 
 
 @mode_registry.register
@@ -435,44 +442,48 @@ class ModeEditHosttagGroup(ModeEditHosttagConfiguration):
 
     def __init__(self):
         super(ModeEditHosttagGroup, self).__init__()
+        self._tag_group_id = self._get_taggroup_id()
+        self._new = self._is_new_hosttag_group()
+
         self._untainted_tag_group = self._untainted_hosttags_config.get_tag_group(
-            self._get_taggroup_id())
+            self._tag_group_id)
         if not self._untainted_tag_group:
             self._untainted_tag_group = watolib.HosttagGroup()
 
-    def title(self):
-        if self._is_new_hosttag_group():
-            return _("Create new tag group")
-        return _("Edit tag group")
+        self._tag_group = self._untainted_hosttags_config.get_tag_group(
+            self._tag_group_id) or watolib.HosttagGroup()
+
+    def _get_taggroup_id(self):
+        return html.request.var("edit", html.request.var("tag_id"))
 
     def _is_new_hosttag_group(self):
         return html.request.var("edit") is None
+
+    def title(self):
+        if self._new:
+            return _("Create new tag group")
+        return _("Edit tag group")
 
     def buttons(self):
         html.context_button(
             _("All Hosttags"), watolib.folder_preserving_link([("mode", "hosttags")]), "back")
 
     def action(self):
-        if not html.transaction_valid():
+        if not html.check_transaction():
             return "hosttags"
 
-        if self._is_new_hosttag_group():
-            html.check_transaction()  # use up transaction id
-
-        changed_tag_group = watolib.HosttagGroup()
-        changed_tag_group.id = self._get_taggroup_id()
+        vs = self._valuespec()
+        tag_group_spec = vs.from_html_vars("tag_group")
+        vs.validate_value(tag_group_spec, "tag_group")
 
         # Create new object with existing host tags
         changed_hosttags_config = watolib.HosttagsConfiguration()
         changed_hosttags_config.load()
 
-        changed_tag_group.title = html.get_unicode_input("title").strip()
-        changed_tag_group.topic = forms.get_input(self._get_topic_valuespec(), "topic")
+        changed_tag_group = watolib.HosttagGroup(tag_group_spec)
+        self._tag_group = changed_tag_group
 
-        for tag_entry in forms.get_input(self._get_taggroups_valuespec(), "choices"):
-            changed_tag_group.tags.append(watolib.GroupedHosttag(tag_entry))
-
-        if self._is_new_hosttag_group():
+        if self._new:
             # Inserts and verifies changed tag group
             changed_hosttags_config.insert_tag_group(changed_tag_group)
             changed_hosttags_config.save()
@@ -481,96 +492,54 @@ class ModeEditHosttagGroup(ModeEditHosttagConfiguration):
             config.load_config()
             add_change("edit-hosttags", _("Created new host tag group '%s'") % changed_tag_group.id)
             return "hosttags", _("Created new host tag group '%s'") % changed_tag_group.title
-        else:
-            # Updates and verifies changed tag group
-            changed_hosttags_config.update_tag_group(changed_tag_group)
 
-            # This is the major effort of WATO when it comes to
-            # host tags: renaming and deleting of tags that might be
-            # in use by folders, hosts and rules. First we create a
-            # kind of "patch" from the old to the new tags. The renaming
-            # of a tag is detected by comparing the titles. Addition
-            # of new tags is not a problem and need not be handled.
-            # Result of this is the dict 'operations': it's keys are
-            # current tag names, its values the corresponding new names
-            # or False in case of tag removals.
-            operations = {}
+        # Updates and verifies changed tag group
+        changed_hosttags_config.update_tag_group(changed_tag_group)
 
-            # Detect renaming
-            new_by_title = dict([(tag.title, tag.id) for tag in changed_tag_group.tags])
+        # This is the major effort of WATO when it comes to
+        # host tags: renaming and deleting of tags that might be
+        # in use by folders, hosts and rules. First we create a
+        # kind of "patch" from the old to the new tags. The renaming
+        # of a tag is detected by comparing the titles. Addition
+        # of new tags is not a problem and need not be handled.
+        # Result of this is the dict 'operations': it's keys are
+        # current tag names, its values the corresponding new names
+        # or False in case of tag removals.
+        operations = {}
 
-            for former_tag in self._untainted_tag_group.tags:
-                if former_tag.title in new_by_title:
-                    new_id = new_by_title[former_tag.title]
-                    if new_id != former_tag.id:
-                        operations[former_tag.id] = new_id  # might be None
+        # Detect renaming
+        new_by_title = dict([(tag.title, tag.id) for tag in changed_tag_group.tags])
 
-            # Detect removal
-            for former_tag in self._untainted_tag_group.tags:
-                if former_tag.id is not None \
-                    and former_tag.id not in [ tmp_tag.id for tmp_tag in changed_tag_group.tags ] \
-                    and former_tag.id not in operations:
-                    # remove explicit tag (hosts/folders) or remove it from tag specs (rules)
-                    operations[former_tag.id] = False
+        for former_tag in self._untainted_tag_group.tags:
+            if former_tag.title in new_by_title:
+                new_id = new_by_title[former_tag.title]
+                if new_id != former_tag.id:
+                    operations[former_tag.id] = new_id  # might be None
 
-            # Now check, if any folders, hosts or rules are affected
-            message = rename_host_tags_after_confirmation(changed_tag_group.id, operations)
-            if message:
-                changed_hosttags_config.save()
-                config.load_config()
-                add_change("edit-hosttags",
-                           _("Edited host tag group %s (%s)") % (message, self._get_taggroup_id()))
-                return "hosttags", message != True and message or None
+        # Detect removal
+        for former_tag in self._untainted_tag_group.tags:
+            if former_tag.id is not None \
+                and former_tag.id not in [ tmp_tag.id for tmp_tag in changed_tag_group.tags ] \
+                and former_tag.id not in operations:
+                # remove explicit tag (hosts/folders) or remove it from tag specs (rules)
+                operations[former_tag.id] = False
+
+        # Now check, if any folders, hosts or rules are affected
+        message = rename_host_tags_after_confirmation(changed_tag_group.id, operations)
+        if message:
+            changed_hosttags_config.save()
+            config.load_config()
+            add_change("edit-hosttags",
+                       _("Edited host tag group %s (%s)") % (message, self._tag_group_id))
+            return "hosttags", message != True and message or None
 
         return "hosttags"
 
     def page(self):
-        html.begin_form("hosttaggroup", method='POST')
-        forms.header(
-            _("Edit group") +
-            (self._untainted_tag_group.title and " %s" % self._untainted_tag_group.title or ""))
+        html.begin_form("tag_group", method='POST')
 
-        # Tag ID
-        forms.section(_("Internal ID"))
-        html.help(
-            _("The internal ID of the tag group is used to store the tag's "
-              "value in the host properties. It cannot be changed later."))
-        if self._is_new_hosttag_group():
-            html.text_input("tag_id")
-            html.set_focus("tag_id")
-        else:
-            html.write_text(self._untainted_tag_group.id)
+        self._valuespec().render_input("tag_group", self._tag_group.get_dict_format())
 
-        # Title
-        forms.section(_("Title") + "<sup>*</sup>")
-        html.help(_("An alias or description of this tag group"))
-        html.text_input("title", self._untainted_tag_group.title, size=30)
-
-        # The (optional) topic
-        forms.section(_("Topic") + "<sup>*</sup>")
-        html.help(
-            _("Different taggroups can be grouped in topics to make the visualization and "
-              "selections in the GUI more comfortable."))
-        forms.textinput(self._get_topic_valuespec(), "topic", self._untainted_tag_group.topic)
-
-        # Choices
-        forms.section(_("Choices"))
-        html.help(
-            _("The first choice of a tag group will be its default value. "
-              "If a tag group has only one choice, it will be displayed "
-              "as a checkbox and set or not set the only tag. If it has "
-              "more choices you may leave at most one tag id empty. A host "
-              "with that choice will not get any tag of this group.<br><br>"
-              "The tag ID must contain only of letters, digits and "
-              "underscores.<br><br><b>Renaming tags ID:</b> if you want "
-              "to rename the ID of a tag, then please make sure that you do not "
-              "change its title at the same time! Otherwise WATO will not "
-              "be able to detect the renaming and cannot exchange the tags "
-              "in all folders, hosts and rules accordingly."))
-        forms.textinput(self._get_taggroups_valuespec(), "choices",
-                        self._untainted_tag_group.get_tags_legacy_format())
-
-        # Button and end
         forms.end()
         html.show_localization_hint()
 
@@ -578,37 +547,96 @@ class ModeEditHosttagGroup(ModeEditHosttagConfiguration):
         html.hidden_fields()
         html.end_form()
 
-    def _get_taggroup_id(self):
-        return html.request.var("edit", html.request.var("tag_id"))
+    def _valuespec(self):
+        basic_elements = self._basic_elements()
+        tag_choice_elements = self._tag_choices_elements()
 
-    def _get_taggroups_valuespec(self):
+        return Dictionary(
+            elements=basic_elements + tag_choice_elements,
+            headers=[
+                (_("Basic settings"), [k for k, _vs in basic_elements]),
+                (_("Tag choices"), [k for k, _vs in tag_choice_elements]),
+            ],
+            render="form",
+            form_narrow=True,
+            optional_keys=[],
+        )
+
+    def _basic_elements(self):
+        if self._new:
+            vs_id = ID(
+                title=_("Tag group ID"),
+                size=60,
+                allow_empty=False,
+                help=_("The internal ID of the tag group is used to store the tag's "
+                       "value in the host properties. It cannot be changed later."),
+            )
+        else:
+            vs_id = FixedValue(
+                self._tag_group_id,
+                title=_("Tag group ID"),
+            )
+
+        return [
+            ("id", vs_id),
+            ("title",
+             TextUnicode(
+                 title=_("Title"),
+                 size=60,
+                 help=_("An alias or description of this tag group."),
+                 allow_empty=False,
+             )),
+            ("topic", self._get_topic_valuespec()),
+        ]
+
+    def _tag_choices_elements(self):
+        return [
+            ("tags", self._tag_choices_valuespec()),
+        ]
+
+    def _tag_choices_valuespec(self):
         aux_tags = config.BuiltinTags().get_effective_aux_tags(
             self._untainted_hosttags_config.get_legacy_format()[1])
 
-        return ListOf(
-            Tuple(
-                elements=[
-                    TextAscii(
-                        title=_("Tag ID"),
-                        size=16,
-                        regex="^[-a-z0-9A-Z_]*$",
-                        none_is_empty=True,
-                        regex_error=_("Invalid tag ID. Only the characters a-z, A-Z, "
-                                      "0-9, _ and - are allowed.")),
-                    TextUnicode(title=_("Description") + "*", allow_empty=False, size=40),
-                    Foldable(
-                        ListChoice(
+        # We want the compact tuple style visualization which is not
+        # supported by the Dictionary valuespec. Transform!
+        return Transform(
+            ListOf(
+                Tuple(
+                    elements=[
+                        TextAscii(
+                            title=_("Tag ID"),
+                            size=16,
+                            regex="^[-a-z0-9A-Z_]*$",
+                            none_is_empty=True,
+                            regex_error=_("Invalid tag ID. Only the characters a-z, A-Z, "
+                                          "0-9, _ and - are allowed.")),
+                        TextUnicode(title=_("Title") + "*", allow_empty=False, size=40),
+                        Foldable(ListChoice(
                             title=_("Auxiliary tags"),
-                            # help = _("These tags will implicitely added to a host if the "
-                            #          "user selects this entry in the tag group. Select multiple "
-                            #          "entries with the <b>Ctrl</b> key."),
-                            choices=aux_tags)),
-                ],
-                show_titles=True,
-                orientation="horizontal"),
-            add_label=_("Add tag choice"),
-            row_label="@. Choice",
-            sort_by=1,  # sort by description
+                            choices=aux_tags,
+                        )),
+                    ],
+                    show_titles=True,
+                    orientation="horizontal",
+                ),
+                add_label=_("Add tag choice"),
+                row_label="@. Choice",
+                sort_by=1,  # sort by description
+                help=_("The first choice of a tag group will be its default value. "
+                       "If a tag group has only one choice, it will be displayed "
+                       "as a checkbox and set or not set the only tag. If it has "
+                       "more choices you may leave at most one tag id empty. A host "
+                       "with that choice will not get any tag of this group.<br><br>"
+                       "The tag ID must contain only of letters, digits and "
+                       "underscores.<br><br><b>Renaming tags ID:</b> if you want "
+                       "to rename the ID of a tag, then please make sure that you do not "
+                       "change its title at the same time! Otherwise WATO will not "
+                       "be able to detect the renaming and cannot exchange the tags "
+                       "in all folders, hosts and rules accordingly."),
+            ),
+            forth=lambda x: [(c["id"], c["title"], c["aux_tags"]) for c in x],
+            back=lambda x: [dict(zip(["id", "title", "aux_tags"], c)) for c in x],
         )
 
 

@@ -64,9 +64,8 @@ def check_ibm_svc_enclosure(item, _no_params, info):
     for line in info:
         if line[0] == item:
             if len(line) == 9:
-                line = line[:3] + [None, None, None] + line[3:7] + [
-                    None
-                ] + line[7:] + [None, None, None, None]
+                line = line[:3] + [None, None, None
+                                  ] + line[3:7] + [None] + line[7:] + [None, None, None, None]
             elif len(line) == 13:
                 line = line + [None, None, None, None]
             elif len(line) == 15:
@@ -93,8 +92,7 @@ def check_ibm_svc_enclosure(item, _no_params, info):
                 (online_canisters, total_canisters, 'canisters'),
                 (online_PSUs, total_PSUs, "PSUs"),
                 (online_fan_modules, total_fan_modules, 'fan modules'),
-                (online_secondary_expander_modules,
-                 total_secondary_expander_modules,
+                (online_secondary_expander_modules, total_secondary_expander_modules,
                  'secondary expander modules'),
             ]:
                 if online is None:

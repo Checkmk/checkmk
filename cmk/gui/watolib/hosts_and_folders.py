@@ -1258,25 +1258,33 @@ class CREFolder(BaseFolder):
         if time_allowed is None:
             return next_time  # No time frame limit
 
-        # First transform the time given by the user to UTC time
-        brokentime = list(time.localtime(next_time))
-        brokentime[3], brokentime[4] = time_allowed[0]
-        start_time = time.mktime(brokentime)
+        # Transform pre 1.6 single time window to list of time windows
+        times_allowed = [time_allowed] if isinstance(time_allowed, tuple) else time_allowed
 
-        brokentime[3], brokentime[4] = time_allowed[1]
-        end_time = time.mktime(brokentime)
+        # Compute "next time" with all time windows individually and use earliest time
+        next_allowed_times = []
+        for time_allowed in times_allowed:
+            # First transform the time given by the user to UTC time
+            brokentime = list(time.localtime(next_time))
+            brokentime[3], brokentime[4] = time_allowed[0]
+            start_time = time.mktime(brokentime)
 
-        # In case the next time is earlier than the allowed time frame at a day set
-        # the time to the time frame start.
-        # In case the next time is in the time frame leave it at it's value.
-        # In case the next time is later then advance one day to the start of the
-        # time frame.
-        if next_time < start_time:
-            next_time = start_time
-        elif next_time > end_time:
-            next_time = start_time + 86400
+            brokentime[3], brokentime[4] = time_allowed[1]
+            end_time = time.mktime(brokentime)
 
-        return next_time
+            # In case the next time is earlier than the allowed time frame at a day set
+            # the time to the time frame start.
+            # In case the next time is in the time frame leave it at it's value.
+            # In case the next time is later then advance one day to the start of the
+            # time frame.
+            if next_time < start_time:
+                next_allowed_times.append(start_time)
+            elif next_time > end_time:
+                next_allowed_times.append(start_time + 86400)
+            else:
+                next_allowed_times.append(next_time)
+
+        return min(next_allowed_times)
 
     # .-----------------------------------------------------------------------.
     # | MODIFICATIONS                                                         |

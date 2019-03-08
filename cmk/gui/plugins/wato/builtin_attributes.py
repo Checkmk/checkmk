@@ -355,54 +355,75 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
         )
 
     def _network_scan_elements(self):
-        return [
-            ("ip_ranges", ListOf(self._vs_ip_range(),
-                title = _("IP ranges to scan"),
-                add_label = _("Add new IP range"),
-                text_if_empty = _("No IP range configured"),
-            )),
-            ("exclude_ranges", ListOf(self._vs_ip_range(),
-                title = _("IP ranges to exclude"),
-                add_label = _("Add new IP range"),
-                text_if_empty = _("No exclude range configured"),
-            )),
-            ("scan_interval", Age(
-                title = _("Scan interval"),
-                display = [ "days", "hours" ],
-                default_value = 60*60*24,
-                minvalue = 3600, # 1 hour
-            )),
-            ("time_allowed", TimeofdayRange(
-                title = _("Time allowed"),
-                help = _("Limit the execution of the scan to this time range."),
-                allow_empty=False,
-            )),
-            ("set_ipaddress", Checkbox(
-                title = _("Set IPv4 address"),
-                help = _("Whether or not to configure the found IP address as the IPv4 "
-                         "address of the found hosts."),
-                default_value = True,
-            ))] + self._optional_tag_criticality_element() +\
-            [("max_parallel_pings", Integer(
-                title = _("Parallel pings to send"),
-                help = _("Set the maximum number of concurrent pings sent to target IP "
-                         "addresses."),
-                minvalue = 1,
-                maxvalue = 200,
-                default_value = 100,
-            )),
-            ("run_as", DropdownChoice(
-                title = _("Run as"),
-                help = _("Execute the network scan in the Check_MK user context of the "
-                         "choosen user. This user needs the permission to add new hosts "
-                         "to this folder."),
-                choices = self._get_all_user_ids,
-                default_value = lambda: config.user.id,
-            )),
-            ("translate_names", HostnameTranslation(
-                title = _("Translate Hostnames"),
-            ))
+        elements = [
+            ("ip_ranges",
+             ListOf(
+                 self._vs_ip_range(),
+                 title=_("IP ranges to scan"),
+                 add_label=_("Add new IP range"),
+                 text_if_empty=_("No IP range configured"),
+             )),
+            ("exclude_ranges",
+             ListOf(
+                 self._vs_ip_range(),
+                 title=_("IP ranges to exclude"),
+                 add_label=_("Add new IP range"),
+                 text_if_empty=_("No exclude range configured"),
+             )),
+            (
+                "scan_interval",
+                Age(
+                    title=_("Scan interval"),
+                    display=["days", "hours"],
+                    default_value=60 * 60 * 24,
+                    minvalue=3600,  # 1 hour
+                )),
+            ("time_allowed",
+             Transform(
+                 ListOf(
+                     TimeofdayRange(allow_empty=False,),
+                     title=_("Time allowed"),
+                     help=_("Limit the execution of the scan to this time range."),
+                     allow_empty=False,
+                     style=ListOf.Style.FLOATING,
+                     movable=False,
+                 ),
+                 forth=lambda x: [x] if isinstance(x, tuple) else x,
+                 back=sorted,
+             )),
+            ("set_ipaddress",
+             Checkbox(
+                 title=_("Set IPv4 address"),
+                 help=_("Whether or not to configure the found IP address as the IPv4 "
+                        "address of the found hosts."),
+                 default_value=True,
+             )),
         ]
+
+        elements += self._optional_tag_criticality_element()
+        elements += [
+            ("max_parallel_pings",
+             Integer(
+                 title=_("Parallel pings to send"),
+                 help=_("Set the maximum number of concurrent pings sent to target IP "
+                        "addresses."),
+                 minvalue=1,
+                 maxvalue=200,
+                 default_value=100,
+             )),
+            ("run_as",
+             DropdownChoice(
+                 title=_("Run as"),
+                 help=_("Execute the network scan in the Check_MK user context of the "
+                        "choosen user. This user needs the permission to add new hosts "
+                        "to this folder."),
+                 choices=self._get_all_user_ids,
+                 default_value=lambda: config.user.id,
+             )),
+            ("translate_names", HostnameTranslation(title=_("Translate Hostnames"),)),
+        ]
+
+        return elements
 
     def _get_all_user_ids(self):
         return [(user_id, "%s (%s)" % (user_id, user.get("alias", user_id)))

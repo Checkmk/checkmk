@@ -87,7 +87,8 @@ def check_ibm_svc_node(item, _no_params, data):
     else:
         status = 1
 
-    return status, ", ".join(messages)
+    # sorted is needed for deterministic test results
+    return status, ", ".join(sorted(messages))
 
 
 check_info["ibm_svc_node"] = {

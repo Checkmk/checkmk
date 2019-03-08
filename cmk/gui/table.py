@@ -475,7 +475,8 @@ def _sort_rows(rows, sort_col, sort_reverse):
     # see the table in the first place.
     try:
         rows.sort(
-            cmp=lambda a, b: utils.cmp_num_split(a[0][sort_col][0], b[0][sort_col][0]),
+            cmp=lambda a, b: utils.cmp_num_split(
+                html.strip_tags(a[0][sort_col][0]), html.strip_tags(b[0][sort_col][0])),
             reverse=sort_reverse == 1)
     except IndexError:
         pass

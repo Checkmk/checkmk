@@ -96,7 +96,7 @@ described by the following four phases:
       checks only require this information, we can signifficantly reduce data.
 
 You should find an example configuration file at
-'../cfg_examples/mk_filestats.cfg' relative to this file.
+'../cfg_examples/filestats.cfg' relative to this file.
 """
 import re
 import os

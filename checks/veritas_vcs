@@ -118,7 +118,7 @@
 
 factory_settings['veritas_vcs_defaults'] = {
     'map_frozen': {
-        'temporarily frozen': 1,
+        'tfrozen': 1,
         'frozen': 2,
     },
     'map_states': {
@@ -137,6 +137,7 @@ factory_settings['veritas_vcs_defaults'] = {
 
 def parse_veritas_vcs(info):
     parsed = {}
+    Vcs = collections.namedtuple("Vcs", ["node", "attr", "value", "cluster"])
 
     for line in info:
         if len(line) == 2 and line[1] == '#':
@@ -150,7 +151,7 @@ def parse_veritas_vcs(info):
 
         elif line[1] == "ClusterName":
             cluster_name = line[2]
-            section.setdefault(cluster_name, []).append((node, attr, value, None))
+            section.setdefault(cluster_name, []).append(Vcs(node, attr, value, None))
 
         elif line[1].startswith('#'):
             section = parsed.setdefault(line[1][1:].lower(), {})
@@ -163,7 +164,7 @@ def parse_veritas_vcs(info):
             value = line[value_idx].replace("|", "")
             if "UNKNOWN" in value:
                 value = "UNKNOWN"
-            section.setdefault(item_name, []).append((node, attr, value, cluster_name))
+            section.setdefault(item_name, []).append(Vcs(node, attr, value, cluster_name))
 
     return parsed
 
@@ -184,35 +185,37 @@ def inventory_veritas_vcs(parsed, item_type):
 
 
 def check_veritas_vcs(item, params, parsed, item_type):
-    if item not in parsed[item_type]:
+    data = parsed.get(item_type, {}).get(item)
+    if data is None:
         return  # vanished
 
-    states = []
-    infotexts = []
-    cluster_info = ""
     map_frozen = params['map_frozen']
     map_states = params['map_states']
 
-    for node, attr, value, cluster_name in parsed[item_type][item]:
-        if attr.endswith('State'):
-            states.append(value)
+    def fmt(node, string):
+        temp = "%s: %%s" % node if node else "%s"
+        txt = temp % string.lower()
+        return txt[0].upper() + txt[1:]
 
-            infotext = value.lower()
-            if node:
-                infotext = "%s: %s" % (node, infotext)
-            infotexts.append(infotext)
+    infotexts = []
+    for vcs in data:
+        if vcs.attr.endswith('State'):
+            infotexts.append(fmt(vcs.node, vcs.value))
 
-            if cluster_name:
-                cluster_info = ", cluster: %s" % cluster_name
+        if vcs.attr.endswith('Frozen') and vcs.value != '0':
+            frozen_txt = vcs.attr.lower().replace('t', 'temporarily ')
+            yield map_frozen.get(vcs.attr.lower(), 3), fmt(vcs.node, frozen_txt)
 
-        if attr.endswith('Frozen') and value != '0':
-            frozen_txt = attr.lower().replace('t', 'temporarily ')
-            yield map_frozen.get(frozen_txt, 3), frozen_txt
-
+    states = (vcs.value for vcs in data if vcs.attr.endswith('State'))
     state_txt = veritas_vcs_boil_down_states_in_cluster(states)
     state = map_states.get(state_txt, map_states['default'])
 
-    yield state, "%s%s" % (", ".join(infotexts), cluster_info)
+    yield state, "%s" % ", ".join(infotexts)
+
+    # get last not None cluster name
+    cluster_name = reduce(lambda x, y: y if y.cluster else x, data).cluster
+    if cluster_name is not None:
+        yield 0, "Cluster: %s" % cluster_name
 
 
 def veritas_vcs_get_check_function(item_type):

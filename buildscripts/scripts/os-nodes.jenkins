@@ -16,7 +16,7 @@ node {
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
         IMAGE = 'ubuntu-18.04-common'
         docker.image(IMAGE).pull()
-        docker.image(IMAGE).inside('-u 0:0 --cap-add=SYS_ADMIN --network infrastructure_local-infra') {
+        docker.image(IMAGE).inside('-u 0:0 --cap-add=SYS_ADMIN --network ci_local-infra') {
             stage('checkout sources') {
                 cleanWs()
                 checkout(scm)

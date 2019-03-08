@@ -41,7 +41,7 @@ DISTRO_LIST.each { DISTRO ->
         node {
             docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
                 docker.image(DISTRO + '-os-image').pull()
-                docker.image(DISTRO + '-os-image').inside("-u 0:0 -v /bauwelt/download/$CMK_VERSION:/bauwelt/download/$CMK_VERSION:ro -v $TEST_DATA:$TEST_DATA --init --privileged --network ci_local-infra --network bridge") {
+                docker.image(DISTRO + '-os-image').inside("-u 0:0 -v /bauwelt/download/$CMK_VERSION:/bauwelt/download/$CMK_VERSION:ro -v $TEST_DATA:$TEST_DATA --init --privileged --network ci_local-infra") {
                     stage('install ' + DISTRO + ' omd') {
                         DISTRO_CODE = sh ( script: """
                             case $DISTRO in

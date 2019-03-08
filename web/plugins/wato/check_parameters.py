@@ -416,13 +416,13 @@ register_check_parameters(
             ("map_frozen", Dictionary(
                 title=_("Map Attribute 'Frozen'"),
                 elements=[
-                    ("temporarily frozen", MonitoringState(title=_("Temporarily frozen"), default_value=1)),
-                    ("frozen",             MonitoringState(title=_("Frozen"), default_value=2)),
+                    ("tfrozen", MonitoringState(title=_("Temporarily frozen"), default_value=1)),
+                    ("frozen",  MonitoringState(title=_("Frozen"), default_value=2)),
                 ],
                 optional_keys=False,
             )),
         ]),
-        None,
+        TextAscii(title=_("Cluster Name")),
         'dict'
 )
 

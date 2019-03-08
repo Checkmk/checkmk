@@ -1,0 +1,13 @@
+Title: Solaris Agent: fixed wrong path for top command
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p39
+Date: 1552033417
+
+The agent tried to use /usr/local/top instead of /usr/local/bin/top.
+This has been fixed.
+

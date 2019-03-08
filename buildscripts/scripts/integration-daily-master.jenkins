@@ -86,6 +86,12 @@ DISTRO_LIST.each { DISTRO ->
                         ).trim()
                         def PACKAGE = '/bauwelt/download/' + CMK_VERSION + '/check-mk-enterprise-' + CMK_VERSION + DISTRO_CODE
                         sh """
+                            # Workaround: systemctl in docker leads to: Failed to connect to bus: No such file or directory
+                            if SYSCTL=\$(which systemctl); then
+                                rm -rf \$SYSCTL
+                                ln -s \$(which true) \$SYSCTL
+                            fi
+
                             case $DISTRO in
                                 centos*|rh*)
                                     yum -y install $PACKAGE
@@ -95,10 +101,6 @@ DISTRO_LIST.each { DISTRO ->
                                     ;;
                                 *)
                                     apt-get update
-                                    if test -e /bin/systemctl; then
-                                        mv /bin/systemctl /bin/systemctl-real
-                                        ln -s /bin/true /bin/systemctl
-                                    fi
                                     gdebi -n $PACKAGE
                                     ;;
                             esac
@@ -116,7 +118,6 @@ DISTRO_LIST.each { DISTRO ->
 //                    }
                     try {
                         stage('integration test ' + DISTRO + ' omd') {
-                            sh 'rm -rf /bin/systemctl; ln -s /bin/true /bin/systemctl'
                             sh "mkdir -p $DISTRO-work $DISTRO-dest"
                             sh "mount -t overlay overlay -o lowerdir=${TEST_DATA}/git,upperdir=${WORKSPACE}/$DISTRO-dest,workdir=${WORKSPACE}/$DISTRO-work ${WORKSPACE}/$DISTRO-dest"
                             sh 'ls -lah'

@@ -47,6 +47,7 @@ from typing import (  # pylint: disable=unused-import
     Any, Dict, Generic, List, Mapping, Optional, TypeVar, Union,
 )
 
+from dateutil.parser import parse as parse_time
 from kubernetes import client
 
 import cmk.profile
@@ -180,6 +181,9 @@ class Node(Metadata):
         # kubelet replies statistics for the last 2 minutes with 10s
         # intervals. We only need the latest state.
         self.stats = eval(stats)['stats'][-1]
+        # The timestamps are returned in RFC3339Nano format which cannot be parsed
+        # by Pythons time module. Therefore we use dateutils parse function here.
+        self.stats['timestamp'] = time.mktime(parse_time(self.stats['timestamp']).utctimetuple())
 
     @property
     def conditions(self):
@@ -410,8 +414,13 @@ class NodeList(ListLike[Node]):
         return reduce(merge, self.resources().itervalues())
 
     def cluster_stats(self):
+        stats = self.stats()
         merge = functools.partial(left_join_dicts, operation=operator.add)
-        return reduce(merge, self.stats().itervalues())
+        result = reduce(merge, stats.itervalues())
+        # During the merging process the sum of all timestamps is calculated.
+        # To obtain the average time of all nodes devide by the number of nodes.
+        result['timestamp'] = round(result['timestamp'] / len(stats), 1)
+        return result
 
 
 class ComponentStatusList(ListLike[ComponentStatus]):

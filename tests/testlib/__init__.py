@@ -1125,7 +1125,8 @@ class WebSession(requests.Session):
         # There might be other resources like iframe, audio, ... but we don't care about them
 
         self._check_resources(soup, response, "img", "src", ["image/png"])
-        self._check_resources(soup, response, "script", "src", ["application/javascript"])
+        self._check_resources(soup, response, "script", "src",
+                              ["application/javascript", "text/javascript"])
         self._check_resources(
             soup, response, "link", "href", ["text/css"], filters=[("rel", "stylesheet")])
         self._check_resources(

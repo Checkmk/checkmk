@@ -114,20 +114,27 @@ DISTRO_LIST.each { DISTRO ->
 //                        sh 'su -c \"python -c \'import azure.mgmt.resource\'\" - test'
 //                        sh 'su -c \"python -c \'import azure.mgmt.compute\'\" - test'
 //                    }
-                    stage('integration test ' + DISTRO + ' omd') {
-                        sh 'rm -rf /bin/systemctl; ln -s /bin/true /bin/systemctl'
-                        sh "mkdir -p $DISTRO-work $DISTRO-dest"
-                        sh "mount -t overlay overlay -o lowerdir=${TEST_DATA}/git,upperdir=${WORKSPACE}/$DISTRO-dest,workdir=${WORKSPACE}/$DISTRO-work ${WORKSPACE}/$DISTRO-dest"
-                        sh 'ls -lah'
-                        dir (DISTRO + '-dest') {
-                            sh 'PYTEST_ADDOPTS="--junitxml=/omd/sites/int_master/junit.xml --maxfail 300" make -C tests test-integration'
+                    try {
+                        stage('integration test ' + DISTRO + ' omd') {
+                            sh 'rm -rf /bin/systemctl; ln -s /bin/true /bin/systemctl'
+                            sh "mkdir -p $DISTRO-work $DISTRO-dest"
+                            sh "mount -t overlay overlay -o lowerdir=${TEST_DATA}/git,upperdir=${WORKSPACE}/$DISTRO-dest,workdir=${WORKSPACE}/$DISTRO-work ${WORKSPACE}/$DISTRO-dest"
+                            sh 'ls -lah'
+                            dir (DISTRO + '-dest') {
+                                sh 'PYTEST_ADDOPTS="--junitxml=/omd/sites/int_master/junit.xml --maxfail 300" make -C tests test-integration'
+                            }
                         }
+                    }
+                    finally {
                         sh """
-                            mkdir -p /$DISRTO
-                            cp /omd/sites/int_master/junit.xml /$DISTRO/
-                            cp -r /omd/sites/int_master/var/log /$DISRTO/
+                            rm -rf $DISTRO
+                            mkdir -p $DISTRO
+                            cp /omd/sites/int_master/junit.xml $DISTRO/
+                            cp -r /omd/sites/int_master/var/log $DISTRO/
+                            chown -R 112:120 $DISTRO
                         """
-                        archiveArtifacts '/$DISTRO'
+                        archiveArtifacts "$DISTRO/**/*"
+                        xunit([Custom(customXSL: "$JENKINS_HOME/userContent/xunit/JUnit/0.1/pytest-xunit.xsl", deleteOutputFiles: true, failIfNotNew: true, pattern: "$DISTRO/junit.xml", skipNoTestFiles: false, stopProcessingIfError: true)])
                         sh "until umount $DISTRO-dest; do sleep 1; done"
                     }
                 }

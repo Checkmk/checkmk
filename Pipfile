@@ -21,6 +21,7 @@ docker = "*"
 mockldap = "*"
 isort = "*"
 pdbpp = "*"
+freezegun = "*"
 
 [packages]
 setuptools_scm = "==3.1.0"

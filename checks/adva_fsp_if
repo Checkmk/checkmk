@@ -135,4 +135,5 @@ check_info['adva_fsp_if'] = {
         ],
     ),
     "snmp_scan_function": snmp_scan_function_adva_fsp_if,
+    "includes": ["if.include"],
 }

@@ -67,6 +67,10 @@ def test_match_message(m, message, result, match_message, cancel_message, match_
         (2, (2, 2), None, True, False, True),
         (2, (1, 1), None, False, False, False),
         (2, (3, 5), None, False, False, False),
+        (2, (10, 0), None, True, False, True),
+        (2, (2, 2), None, True, False, True),
+        (2, (1, 1), None, False, False, False),
+        (2, (5, 3), None, False, False, False),
         # cancel
         (2, None, (2, 2), True, True, True),
         (2, (3, 5), (2, 2), False, True, True),
@@ -74,6 +78,12 @@ def test_match_message(m, message, result, match_message, cancel_message, match_
         (2, None, (1, 1), True, False, True),
         (2, None, (3, 5), True, False, True),
         (2, (3, 5), (3, 5), False, False, False),
+        (2, None, (2, 2), True, True, True),
+        (2, (5, 3), (2, 2), False, True, True),
+        (2, None, (10, 0), True, True, True),
+        (2, None, (1, 1), True, False, True),
+        (2, None, (5, 3), True, False, True),
+        (2, (5, 3), (5, 3), False, False, False),
         # positive + cancel
         (2, (2, 2), (2, 2), True, True, True),
     ])

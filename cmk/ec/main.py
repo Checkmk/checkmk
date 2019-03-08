@@ -2367,15 +2367,13 @@ class RuleMatcher(object):
         p = event["priority"]
 
         if "match_priority" in rule:
-            prio_from, prio_to = rule["match_priority"]
-            if prio_from > prio_to:
-                prio_to, prio_from = prio_from, prio_to
+            prio_from, prio_to = sorted(rule["match_priority"])
             match_priority["has_match"] = prio_from <= p <= prio_to
         else:
             match_priority["has_match"] = True
 
         if "cancel_priority" in rule:
-            cancel_from, cancel_to = rule["cancel_priority"]
+            cancel_from, cancel_to = sorted(rule["cancel_priority"])
             match_priority["has_canceling_match"] = cancel_from <= p <= cancel_to
         else:
             match_priority["has_canceling_match"] = False

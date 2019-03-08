@@ -1,0 +1,11 @@
+Title: Network scan: Multiple time ranges can be configured
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1552042886
+Class: feature
+
+The network scan can be configured to operate only in a specific time range.
+With this change it is possible to define multiple independent time ranges.

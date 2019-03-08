@@ -10,7 +10,7 @@ Class: feature
 Check_MK now supports integration with Jira.
 You can create issues for Host an Service Problems and optional set a resolution on recovery notifications.
 
-In Jira you have to add two custom fields to your project screen as described [https://confluence.atlassian.com/adminjiraserver/adding-a-custom-field-938847222.html here].
+In Jira you have to add two custom fields to your project screen as described <a href "https://confluence.atlassian.com/adminjiraserver/adding-a-custom-field-938847222.html">here</a>.
 
 In Check_MK, under "WATO - Notifications", create a new notification rule and select Jira.
 Parameters to set:
@@ -30,30 +30,34 @@ Parameters to set:
 <i>Set optional timeout for connections to JIRA<i>: Timeout in seconds, default is 10 (optional)
 
 You need different Jira IDs to open/resolve issues. There are different ways to get this IDs:
-LI: [https://confluence.atlassian.com/jirakb/how-to-get-project-id-from-the-jira-user-interface-827341414.html Jira_support]
+LI: <a href="https://confluence.atlassian.com/jirakb/how-to-get-project-id-from-the-jira-user-interface-827341414.html">Jira_support</a>
 LI: Retrieve with the a script (example: project_id):
 
-F+:#!/usr/bin/env python
-F+:
-F+:import requests
-F+:
-F+:USER = "JIRA_USERNAME"
-F+:PW = "JIRA_PASSWORD"
-F+:PROJECT_KEY = "JIRA_PROJECT_NAME"
-F+:JIRA_SERVER = "https://jira.server.your-domain.de"
-F+:
-F+:sess = requests.Session()
-F+:sess.auth = (USER, PW)
-F+:resp = sess.get("%s/rest/api/2/project" % JIRA_SERVER, verify=False)
-F+:
-F+:project_id = [item["id"] for item in resp.json() if item["key"] == PROJECT_KEY][0]
-F+:print(project_id)
+F+:example_script.py
+#!/usr/bin/env python
+
+import requests
+
+USER = "JIRA_USERNAME"
+PW = "JIRA_PASSWORD"
+PROJECT_KEY = "JIRA_PROJECT_NAME"
+JIRA_SERVER = "https://jira.server.your-domain.de"
+
+sess = requests.Session()
+sess.auth = (USER, PW)
+resp = sess.get("%s/rest/api/2/project" % JIRA_SERVER, verify=False)
+
+project_id = [item["id"] for item in resp.json() if item["key"] == PROJECT_KEY][0]
+print(project_id)
+F-:
 
 For issuetype and priority ID use:
 
-F+:resp = sess.get("%s/rest/api/2/issuetype" % JIRA_SERVER)
-F+:resp = sess.get("%s/rest/api/2/priority" % JIRA_SERVER)
+F+:example_script.py
+resp = sess.get("%s/rest/api/2/issuetype" % JIRA_SERVER)
+resp = sess.get("%s/rest/api/2/priority" % JIRA_SERVER)
+F-:
 
-More information about the Jira API can be found [https://docs.atlassian.com/software/jira/docs/api/REST/7.12.0 here].
+More information about the Jira API can be found <a href "https://docs.atlassian.com/software/jira/docs/api/REST/7.12.0">here</a>.
 
 CMK-1185

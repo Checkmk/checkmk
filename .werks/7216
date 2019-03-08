@@ -1,0 +1,11 @@
+Title: Azure: Select resources by tags
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1552049913
+Class: feature
+
+You can now use Azure resource tags to decide which azure resources should
+be included in your monitoring using the datasource programs rule "Microsoft Azure".

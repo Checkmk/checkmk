@@ -1,0 +1,11 @@
+Title: Fixed wrong sorting of view titles on "edit view page"
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1552037734
+
+

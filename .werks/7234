@@ -1,0 +1,17 @@
+Title: Fixed broken event cancelling by priority (1.5.0p12 regression)
+Level: 1
+Component: ec
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p13
+Date: 1552049108
+
+When a EC rule is configured to cancel an open event by priority and the lower
+priority level is the left of the priority range, the cancelling was not
+working.
+
+For example EMERG to CRIT worked while CRIT to EMERG did not work. This has
+been fixed. The order of both levels should not be relevant for the processing
+of the rules.

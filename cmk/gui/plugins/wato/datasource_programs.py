@@ -1607,6 +1607,7 @@ class RulespecSpecialAgentsAzure(HostRulespec):
                           " resource groups and resources.") % ("12000", "200"),
                         elements=[
                             ('explicit', self._azure_explicit_config()),
+                            ('tag_based', self._azure_tag_based_config()),
                         ],
                     )),
                 ("piggyback_vms",
@@ -1656,6 +1657,30 @@ class RulespecSpecialAgentsAzure(HostRulespec):
             title=_("explicitly specified groups"),
             allow_empty=False,
             add_label=_("Add resource group"),
+        )
+
+    def _azure_tag_based_config(self):
+        return ListOf(
+            Tuple(
+                orientation="horizontal",
+                elements=[
+                    TextAscii(
+                        title=_('The resource tag'),
+                        allow_empty=False,
+                    ),
+                    CascadingDropdown(
+                        orientation="horizontal",
+                        choices=[
+                            ('exists', _("exists")),
+                            ('value', _("is"), TextUnicode(title=_('Tag value'),
+                                                           allow_empty=False)),
+                        ],
+                    ),
+                ],
+            ),
+            title=_('resources matching tag based criteria'),
+            allow_empty=False,
+            add_label=_("Add resource tag"),
         )
 
 

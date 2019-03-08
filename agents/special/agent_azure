@@ -284,6 +284,20 @@ class ExplicitConfig(object):
         return "\n".join(str(group) for group in self.groups.values())
 
 
+class Selector(object):
+    def __init__(self, args):
+        super(Selector, self).__init__()
+        self._explicit_config = ExplicitConfig(raw_list=args.explicit_config)
+
+    def do_monitor(self, resource):
+        if not self._explicit_config.is_configured(resource):
+            return False
+        return True
+
+    def __str__(self):
+        return "Explicitly configured:\n%s" % self._explicit_config
+
+
 class Section(object):
     SEP = 124
     LOCK = Lock()
@@ -597,17 +611,16 @@ def write_exception_to_agent_info_section(exception):
 def main(argv=None):
 
     args = parse_arguments(argv or sys.argv[1:])
-    config = ExplicitConfig(raw_list=args.explicit_config)
-    str_config = "Configuration:\n%s\n" % config
+    selector = Selector(args)
+    str_config = "Configuration:\n%s\n" % selector
     if args.dump_config:
         sys.stdout.write(str_config)
         return 0
-    else:
-        LOG.debug(str_config)
+    LOG.debug(str_config)
 
     try:
         client = AzureClient(args)
-        resources = [r for r in client.discover_resources() if config.is_configured(r)]
+        resources = [r for r in client.discover_resources() if selector.do_monitor(r)]
         client.init_specific(resources)
 
         write_groups(resources)

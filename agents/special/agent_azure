@@ -612,11 +612,10 @@ def main(argv=None):
 
     args = parse_arguments(argv or sys.argv[1:])
     selector = Selector(args)
-    str_config = "Configuration:\n%s\n" % selector
     if args.dump_config:
-        sys.stdout.write(str_config)
+        sys.stdout.write("Configuration:\n%s\n" % selector)
         return 0
-    LOG.debug(str_config)
+    LOG.debug("%s", selector)
 
     try:
         client = AzureClient(args)

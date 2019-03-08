@@ -178,6 +178,22 @@ def parse_arguments(argv):
     parser.add_argument("--secret", required=True, help="Azure authentication secret")
     # CONSTRAIN DATA TO REQUEST
     parser.add_argument(
+        "--require-tag",
+        default=[],
+        metavar='TAG',
+        action='append',
+        help='''Only monitor resources that have the specified TAG. To require multiple tags,
+             provide the option more than once.''')
+    parser.add_argument(
+        "--require-tag-value",
+        default=[],
+        metavar=("TAG", "VALUE"),
+        nargs=2,
+        action='append',
+        help=
+        '''Only monitor resources that have the specified TAG set to VALUE. To require multiple tags,
+             provide the option more than once.''')
+    parser.add_argument(
         "--explicit-config",
         default=[],
         nargs='*',
@@ -284,18 +300,48 @@ class ExplicitConfig(object):
         return "\n".join(str(group) for group in self.groups.values())
 
 
+class TagBasedConfig(object):
+    def __init__(self, required, key_values):
+        super(TagBasedConfig, self).__init__()
+        self._required = required
+        self._values = key_values
+
+    def is_configured(self, resource):
+        if not all(k in resource.tags for k in self._required):
+            return False
+        for key, val in self._values:
+            if resource.tags.get(key) != val:
+                return False
+        return True
+
+    def __str__(self):
+        lines = []
+        if self._required:
+            lines.append("required tags: %s" % ", ".join(self._required))
+        for key, val in self._values:
+            lines.append("required value for %r: %r" % (key, val))
+        return '\n'.join(lines)
+
+
 class Selector(object):
     def __init__(self, args):
         super(Selector, self).__init__()
         self._explicit_config = ExplicitConfig(raw_list=args.explicit_config)
+        self._tag_based_config = TagBasedConfig(args.require_tag, args.require_tag_value)
 
     def do_monitor(self, resource):
         if not self._explicit_config.is_configured(resource):
             return False
+        if not self._tag_based_config.is_configured(resource):
+            return False
         return True
 
     def __str__(self):
-        return "Explicitly configured:\n%s" % self._explicit_config
+        lines = [
+            "Explicit configuration:\n  %s" % str(self._explicit_config).replace("\n", "\n  "),
+            "Tag based configuration:\n  %s" % str(self._tag_based_config).replace("\n", "\n  "),
+        ]
+        return "\n".join(lines)
 
 
 class Section(object):
@@ -410,6 +456,7 @@ class AzureResource(object):
         self.info["subscription"] = match.group(1)
         self.info["group"] = match.group(2)
         self.info["provider"] = match.group(3)
+        self.tags = self.info.get("tags", {})
 
         self.section = resource.type.split('/')[-1].lower()
         self.piggytargets = [self.info["group"]]

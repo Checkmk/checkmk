@@ -1,0 +1,121 @@
+/*
++------------------------------------------------------------------+
+|             ____ _               _        __  __ _  __           |
+|            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+|           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+|           | |___| | | |  __/ (__|   <    | |  | | . \            |
+|            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+|                                                                  |
+| Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
++------------------------------------------------------------------+
+
+This file is part of Check_MK.
+The official homepage is at http://mathias-kettner.de/check_mk.
+
+check_mk is free software;  you can redistribute it and/or modify it
+under the  terms of the  GNU General Public License  as published by
+the Free Software Foundation in version 2.  check_mk is  distributed
+in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+ails.  You should have  received  a copy of the  GNU  General Public
+License along with GNU Make; see the file  COPYING.  If  not,  write
+to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+Boston, MA 02110-1301 USA.
+*/
+
+/*-------------------------------------------------------------------------.
+|                 ____  _     _      _                                     |
+|                / ___|(_) __| | ___| |__   __ _ _ __                      |
+|                \___ \| |/ _` |/ _ \ '_ \ / _` | '__|                     |
+|                 ___) | | (_| |  __/ |_) | (_| | |                        |
+|                |____/|_|\__,_|\___|_.__/ \__,_|_|                        |
+|                                                                          |
++--------------------------------------------------------------------------+
+| Styling for the sidebar and its snapins.                                 |
+'-------------------------------------------------------------------------*/
+
+
+// Styles for wiki and quicksearch sidebar snapins
+#snapin_container_wiki div.content {
+  font-weight: bold;
+  color: #fff;
+}
+
+#snapin_container_wiki div.content p {
+  font-weight: normal;
+}
+
+/* TODO: Reproduce this html element */
+#wiki_navigation {
+  text-align: left;
+}
+
+#mk_side_search, #wiki_search {
+  width: 100%;
+  padding: 0;
+}
+
+#mk_side_search img, #wiki_search img {
+  display: none; }
+
+#mk_side_search input, #wiki_search input {
+  float: left;
+  margin:  0;
+  font-size: 11px;
+  background-repeat: no-repeat;
+}
+
+#mk_side_search input {
+  width: 100%;
+  height: 100%;
+}
+
+#wiki_search input {
+  width: 194px;
+  height: 25px;
+}
+
+#mk_side_search input, #mk_side_search select, #mk_side_search textarea,
+#mk_side_search #mk_side_search_field, #wiki_search input, #wiki_search select,
+#wiki_search textarea, #wiki_search #mk_side_search_field {
+  box-sizing: border-box;
+}
+
+#mk_side_clear, #wiki_side_clear {
+  clear: both;
+}
+
+#mk_side_search div.topic {
+  margin-top: 3px;
+  margin-left: 2px;
+  font-size: 125%;
+}
+
+#mk_search_results {
+  position: relative;
+  float: left;
+  width: 223px;
+  font-size: 80%;
+  color: #000;
+  background-color: #dfdfdf;
+  border: 1px solid #fff;
+}
+
+#mk_search_results a {
+  display: block;
+  width: 217px;
+  padding-left: 5px;
+  color: #000;
+  text-align: left;
+  text-decoration: none;
+}
+
+#mk_search_results a:hover, #mk_search_results a.active {
+  background-color: #bfbfbf;
+}
+
+#mk_search_results div.error, #mk_search_results div.warning {
+  padding: 2px;
+  font-size: 12px;
+}

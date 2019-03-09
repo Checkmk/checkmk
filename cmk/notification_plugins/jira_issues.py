@@ -71,7 +71,7 @@ def main():
         custom_field_value = int(context['SERVICEPROBLEMID'])
 
     context['SUBJECT'] = utils.substitute_context(summary, context)
-    label = context.get['PARAMETER_LABEL'] or tmpl_label
+    label = context.get('PARAMETER_LABEL') or tmpl_label
     newissue = {
         u'labels': [label],
         u'summary': context['SUBJECT'],
@@ -134,8 +134,8 @@ def main():
     if context['NOTIFICATIONTYPE'] == 'RECOVERY' and custom_field_exists:
         if "PARAMETER_RESOLUTION" not in context:
             sys.stderr.write(
-                "Ticket resolution not enabled in wato rule. Don't send a resolution to jira")
-            return 2
+                "Ticket resolution not enabled in wato rule. Don't send a resolution to jira\n")
+            return 0
         else:
             resolution = None
             if 'PARAMETER_RESOLUTION' in context:

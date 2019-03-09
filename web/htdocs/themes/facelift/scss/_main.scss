@@ -93,10 +93,6 @@ div.snapin select {
 div.snapin textarea {
   width: 100% !important; }
 
-#mk_side_search_field {
-  width: 100% !important;
-  height: 100% !important; }
-
 select:not([multiple]) {
   -webkit-appearance: none !important;
   -moz-appearance: none !important;
@@ -1031,9 +1027,6 @@ table.cmc_stats, table.mkeventd_performance, table.performance {
   clear: both;
   margin: 8px 0px 16px; }
 
-#mk_side_search img, #wiki_search img {
-  display: none; }
-
 div.statebullet {
   border-radius: 50%;
   box-shadow: none; }
@@ -1089,11 +1082,6 @@ div#side_footer span#msg_label {
     top: -6px;
     font-size: $theme-font-size-global;
 }
-
-#mk_side_search, #wiki_search {
-  width: 100%; }
-  #mk_side_search input, #mk_side_search select, #mk_side_search textarea, #mk_side_search #mk_side_search_field, #wiki_search input, #wiki_search select, #wiki_search textarea, #wiki_search #mk_side_search_field {
-    box-sizing: border-box; }
 
 .checkbox label::before {
   box-shadow: none;

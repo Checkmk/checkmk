@@ -25,10 +25,12 @@
 # Boston, MA 02110-1301 USA.
 
 import re
+import pprint
 
 import cmk.utils.regex
 import cmk.utils.store as store
 
+import cmk.gui.config as config
 from cmk.gui.log import logger
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
@@ -71,7 +73,7 @@ class RulesetCollection(object):
     def _load_folder_rulesets(self, folder, only_varname=None):
         path = folder.rules_file_path()
 
-        config = {
+        config_dict = {
             "ALL_HOSTS": ALL_HOSTS,
             "ALL_SERVICES": [""],
             "NEGATE": NEGATE,
@@ -85,11 +87,11 @@ class RulesetCollection(object):
         for varname in rulespec_registry.keys():
             if ':' in varname:
                 dictname, _subkey = varname.split(":")
-                config[dictname] = {}
+                config_dict[dictname] = {}
             else:
-                config[varname] = []
+                config_dict[varname] = []
 
-        self.from_config(folder, store.load_mk_file(path, config), only_varname)
+        self.from_config(folder, store.load_mk_file(path, config_dict), only_varname)
 
     def from_config(self, folder, rulesets_config, only_varname=None):
         for varname in rulespec_registry.keys():
@@ -125,7 +127,7 @@ class RulesetCollection(object):
 
             content += ruleset.to_config(folder)
 
-        store.save_mk_file(folder.rules_file_path(), content)
+        store.save_mk_file(folder.rules_file_path(), content, add_header=not config.wato_use_git)
 
     def exists(self, name):
         return name in self._rulesets
@@ -651,8 +653,12 @@ class Rule(object):
     def to_config(self):
         content = "  ( "
 
+        # When using pprint we get a deterministic representation of the
+        # data structures because it cares about sorting of the dict keys
+        repr_func = pprint.pformat if config.wato_use_git else repr
+
         if self.ruleset.valuespec():
-            content += repr(self.value) + ", "
+            content += repr_func(self.value) + ", "
         elif not self.value:
             content += "NEGATE, "
 
@@ -686,8 +692,9 @@ class Rule(object):
                 else:
                     content += repr(self.item_list)
 
-        if self.rule_options:
-            content += ", %r" % self._rule_options_to_config()
+        rule_options = self._rule_options_to_config()
+        if rule_options:
+            content += ", %s" % repr_func(rule_options)
 
         content += " ),\n"
 

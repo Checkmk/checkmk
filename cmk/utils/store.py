@@ -120,9 +120,13 @@ def load_from_mk_file(path, key, default, **kwargs):
     return load_mk_file(path, {key: default}, **kwargs)[key]
 
 
-def save_mk_file(path, mk_content):
-    content = "# Written by Check_MK store (%s)\n\n" % \
-              time.strftime("%Y-%m-%d %H:%M:%S")
+def save_mk_file(path, mk_content, add_header=True):
+    content = ""
+
+    if add_header:
+        content += "# Written by Check_MK store (%s)\n\n" % \
+                    time.strftime("%Y-%m-%d %H:%M:%S")
+
     content += mk_content
     content += "\n"
     save_file(path, content)

@@ -1,0 +1,18 @@
+Title: Deterministic rules.mk when "Use GIT version control for WATO" is enabled
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1552225139
+Class: feature
+
+When "Use GIT version control for WATO" is enabled to keep track of the changes
+that have been made to the Check_MK configuration, the history of the rules.mk
+files was problematic because several contents of that file were not saved in a
+deterministic way. This means that loading and saving the configuration without
+chaning anything resulted in a changed file, e.g. because attributes of
+dictionaries were not sorted.
+
+The rules.mk is now stored in a deterministic way when "Use GIT version control for WATO"
+is enabled.

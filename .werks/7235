@@ -1,0 +1,15 @@
+Title: WATO now stores host/folder creation meta information
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1552219068
+Class: feature
+
+When either a host or folder is being created in WATO it now stores the
+creation time and creator ina meta data attribute. This attribute is shown at
+the bottom of the the host or folder edit dialog.
+
+Hosts or folders created before 1.6 don't have such information stored and will
+show something like "Created sometime before 1.6".

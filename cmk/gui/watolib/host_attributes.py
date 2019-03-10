@@ -190,6 +190,21 @@ class HostAttributeTopicCustomAttributes(HostAttributeTopic):
         return 35
 
 
+@host_attribute_topic_registry.register
+class HostAttributeTopicMetaData(HostAttributeTopic):
+    @property
+    def ident(self):
+        return "meta_data"
+
+    @property
+    def title(self):
+        return _("Meta data")
+
+    @property
+    def sort_index(self):
+        return 60
+
+
 class ABCHostAttribute(object):
     """Base class for all registered host attributes"""
     __metaclass__ = abc.ABCMeta
@@ -328,15 +343,19 @@ class ABCHostAttribute(object):
         return html.request.var('attr_display_%s' % self.name(), "1") == "1"
 
     def is_visible(self, for_what):
-        # type: (str) -> bool
+        # type: (str, bool) -> bool
         """Gets the type of current view as argument and returns whether or not
         this attribute is shown in this type of view"""
+
         if for_what in ["host", "cluster", "bulk"] and not self.show_in_form():
             return False
-        elif for_what == "folder" and not self.show_in_folder():
+
+        if for_what == "folder" and not self.show_in_folder():
             return False
-        elif for_what == "host_search" and not self.show_in_host_search():
+
+        if for_what == "host_search" and not self.show_in_host_search():
             return False
+
         return True
 
     def validate_input(self, value, varprefix):

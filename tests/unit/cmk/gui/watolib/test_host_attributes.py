@@ -1,3 +1,4 @@
+# pylint: disable=redefined-outer-name
 import pytest  # type: ignore
 
 # Triggers plugin loading of plugins.wato which registers all the plugins
@@ -100,7 +101,7 @@ expected_attributes = {
         'show_in_host_search': False,
         'show_in_table': False,
         'show_inherited_value': False,
-        'topic': u'Basic settings',
+        'topic': u'Meta data',
     },
     'locked_by': {
         'class_name': 'ValueSpecAttribute',
@@ -113,7 +114,7 @@ expected_attributes = {
         'show_in_host_search': True,
         'show_in_table': False,
         'show_inherited_value': False,
-        'topic': u'Basic settings',
+        'topic': u'Meta data',
     },
     'management_address': {
         'class_name': 'ValueSpecAttribute',
@@ -166,6 +167,19 @@ expected_attributes = {
         'show_in_table': False,
         'show_inherited_value': True,
         'topic': u'Management Board'
+    },
+    'meta_data': {
+        'class_name': 'ValueSpecAttribute',
+        'depends_on_roles': [],
+        'depends_on_tags': [],
+        'editable': False,
+        'from_config': False,
+        'show_in_folder': True,
+        'show_in_form': True,
+        'show_in_host_search': False,
+        'show_in_table': False,
+        'show_inherited_value': False,
+        'topic': u'Meta data'
     },
     'network_scan': {
         'class_name': 'HostAttributeNetworkScan',
@@ -365,6 +379,7 @@ def test_host_attribute_topics(load_plugins, for_what):
         ("address", u'Address'),
         ("data_sources", u'Data sources'),
         ("management_board", u'Management Board'),
+        ('meta_data', u'Meta data'),
     ]
 
 
@@ -375,6 +390,7 @@ def test_host_attribute_topics_for_folders(load_plugins):
         ('data_sources', u'Data sources'),
         ('network_scan', u'Network Scan'),
         ('management_board', u'Management Board'),
+        ('meta_data', u'Meta data'),
     ]
 
 
@@ -393,8 +409,6 @@ def test_host_attributes(load_plugins, for_what):
             'snmp_community',
             'parents',
             'site',
-            'locked_by',
-            'locked_attributes',
         ],
         "address": [
             'tag_address_family',
@@ -413,6 +427,11 @@ def test_host_attributes(load_plugins, for_what):
             'management_snmp_community',
             'management_ipmi_credentials',
         ],
+        "meta_data": [
+            'locked_by',
+            'locked_attributes',
+            'meta_data',
+        ]
     }
 
     if for_what == "folder":

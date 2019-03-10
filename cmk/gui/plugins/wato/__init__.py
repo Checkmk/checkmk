@@ -65,6 +65,7 @@ from cmk.gui.plugins.wato.utils import (
     HostAttributeTopicNetworkScan,
     HostAttributeTopicManagementBoard,
     HostAttributeTopicCustomAttributes,
+    HostAttributeTopicMetaData,
     host_attribute_topic_registry,
     ABCHostAttributeValueSpec,
     ABCHostAttributeNagiosText,

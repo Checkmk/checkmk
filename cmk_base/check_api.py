@@ -173,6 +173,8 @@ host_name = _check_api_utils.host_name
 service_description = _check_api_utils.service_description
 check_type = _check_api_utils.check_type
 
+network_interface_scan_registry = _snmp_utils.MutexScanRegistry()
+
 
 def saveint(i):
     """Tries to cast a string to an integer and return it. In case this

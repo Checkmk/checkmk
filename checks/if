@@ -25,6 +25,11 @@
 # Boston, MA 02110-1301 USA.
 
 
+@network_interface_scan_registry.as_fallback
+def snmp_scan_if(oid):
+    return if64_disabled(host_name()) or not has_ifHCInOctets(oid)
+
+
 def inventory_if(info):
     return inventory_if_common(if_convert_to_if64(info))
 
@@ -71,7 +76,7 @@ check_info["if"] = {
         ]),
     # check if number of network interfaces (IF-MIB::ifNumber.0) is at least 2
     # use if64 if possible and not disabled
-    'snmp_scan_function': get_snmp_if_scan_function('if'),
+    'snmp_scan_function': snmp_scan_if,
     'group': 'if',
     'default_levels_variable': 'if_default_levels',
 }

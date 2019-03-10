@@ -25,6 +25,11 @@
 # Boston, MA 02110-1301 USA.
 
 
+@network_interface_scan_registry.register
+def snmp_scan_function_if_fortigate(oid):
+    return oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.12356")
+
+
 def inventory_if_fortigate(parsed):
     return inventory_if_common(parsed, has_nodeinfo=True)
 
@@ -63,7 +68,7 @@ check_info["if_fortigate"] = {
             BINARY("2.2.1.6"),  # ifPhysAddress     19
             "31.1.1.1.15",  # ifHighSpeed           -1  (parse_if64 assumes this is the last element)
         ]),
-    'snmp_scan_function': get_snmp_if_scan_function('if_fortigate'),
+    'snmp_scan_function': snmp_scan_function_if_fortigate,
     'has_perfdata': True,
     'includes': ["if.include"],
     'group': 'if',

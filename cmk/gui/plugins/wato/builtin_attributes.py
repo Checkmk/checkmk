@@ -742,7 +742,7 @@ class HostAttributeLockedBy(ABCHostAttributeValueSpec):
         return True
 
     def show_in_folder(self):
-        return True
+        return False
 
     def show_in_host_search(self):
         return True
@@ -797,7 +797,7 @@ class HostAttributeLockedAttributes(ABCHostAttributeValueSpec):
         return True
 
     def show_in_folder(self):
-        return True
+        return False
 
     def show_in_host_search(self):
         return False

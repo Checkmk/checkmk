@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import abc
+import functools
 from typing import NamedTuple, Union, Tuple, Optional  # pylint: disable=unused-import
 
 OID_END = 0  # Suffix-part of OID that was not specified
@@ -105,3 +106,40 @@ class ABCSNMPBackend(object):
         request is sent to the given host.
         """
         raise NotImplementedError()
+
+
+class MutexScanRegistry(object):
+    """Register scan functions that are checked before a fallback is used
+
+    Add any number of scan functions to a registry instance by decorating
+    them like this:
+
+        @mutex_scan_registry_instance.register
+        def my_snmp_scan_function(oid):
+            ...
+
+    You can then declare a scan function to be a fallback to those functions
+    by decorating it with "@mutex_scan_registry_instance.as_fallback",
+    meaning that the fallback function will only be evaluated if all of the
+    scan functions registered earlier return something falsey.
+    """
+
+    def __init__(self):
+        super(MutexScanRegistry, self).__init__()
+        self._specific_scans = []
+
+    def _is_specific(self, oid):
+        return any(scan(oid) for scan in self._specific_scans)
+
+    def register(self, scan_function):
+        self._specific_scans.append(scan_function)
+        return scan_function
+
+    def as_fallback(self, scan_function):
+        @functools.wraps(scan_function)
+        def wrapper(oid):
+            if self._is_specific(oid):
+                return False
+            return scan_function(oid)
+
+        return wrapper

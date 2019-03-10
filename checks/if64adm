@@ -25,6 +25,13 @@
 # Boston, MA 02110-1301 USA.
 
 
+@network_interface_scan_registry.register
+def snmp_scan_function_if64adm(oid):
+    if if64_disabled(host_name()) or not need_if64adm():
+        return False
+    return has_ifHCInOctets(oid)
+
+
 def parse_if64adm(info):
     prepared = []
     for line in info:
@@ -57,7 +64,7 @@ check_info["if64adm"] = {
         if64_snmp_end_oids + [
             "2.2.1.7",  # ifAdminStatus
         ]),
-    'snmp_scan_function': get_snmp_if_scan_function('if64adm'),
+    'snmp_scan_function': snmp_scan_function_if64adm,
     'group': 'if',
     'node_info': True,
     'default_levels_variable': 'if_default_levels',

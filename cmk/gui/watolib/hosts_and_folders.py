@@ -571,6 +571,16 @@ class CREFolder(BaseFolder):
         """Mangle all attribute structures read from the disk to prepare it for the current logic"""
         attributes = self._transform_old_agent_type_in_attributes(attributes)
         attributes = self._transform_none_value_site_attribute(attributes)
+        attributes = self._add_missing_meta_data(attributes)
+        return attributes
+
+    # 1.6 introduced meta_data for hosts and folders to keep information about their
+    # creation time. Populate this attribute for existing objects with empty data.
+    def _add_missing_meta_data(self, attributes):
+        attributes.setdefault("meta_data", {
+            "created_at": None,
+            "created_by": None,
+        })
         return attributes
 
     # Old tag group trans:
@@ -1318,6 +1328,8 @@ class CREFolder(BaseFolder):
         self.need_unlocked_subfolders()
         must_be_in_contactgroups(attributes.get("contactgroups"))
 
+        attributes.setdefault("meta_data", get_meta_data(created_by=config.user.id))
+
         # 2. Actual modification
         new_subfolder = Folder(name, parent_folder=self, title=title, attributes=attributes)
         self._subfolders[name] = new_subfolder
@@ -1444,6 +1456,8 @@ class CREFolder(BaseFolder):
         for host_name, attributes, cluster_nodes in entries:
             must_be_in_contactgroups(attributes.get("contactgroups"))
             validate_host_uniqueness("host", host_name)
+
+            attributes.setdefault("meta_data", get_meta_data(created_by=config.user.id))
 
         # 2. Actual modification
         self._load_hosts_on_demand()
@@ -2464,3 +2478,10 @@ def check_wato_foldername(htmlvarname, name, just_name=False):
         raise MKUserError(
             htmlvarname,
             _("Invalid folder name. Only the characters a-z, A-Z, 0-9, _ and - are allowed."))
+
+
+def get_meta_data(created_by):
+    return {
+        "created_at": time.time(),
+        "created_by": created_by,
+    }

@@ -151,6 +151,7 @@ from cmk.gui.watolib.host_attributes import (
     HostAttributeTopicNetworkScan,
     HostAttributeTopicManagementBoard,
     HostAttributeTopicCustomAttributes,
+    HostAttributeTopicMetaData,
     host_attribute_topic_registry,
     ABCHostAttributeValueSpec,
     ABCHostAttributeNagiosText,

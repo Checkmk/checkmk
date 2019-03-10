@@ -24,6 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import time
+
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.hooks as hooks
@@ -60,6 +62,7 @@ from cmk.gui.plugins.wato import (
     HostAttributeTopicNetworkScan,
     HostAttributeTopicAddress,
     HostAttributeTopicManagementBoard,
+    HostAttributeTopicMetaData,
     ABCHostAttributeValueSpec,
     ABCHostAttributeNagiosText,
     host_attribute_registry,
@@ -387,6 +390,7 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
                      allow_empty=False,
                      style=ListOf.Style.FLOATING,
                      movable=False,
+                     default_value=[((0, 0), (24, 0))],
                  ),
                  forth=lambda x: [x] if isinstance(x, tuple) else x,
                  back=sorted,
@@ -733,7 +737,7 @@ class HostAttributeLockedBy(ABCHostAttributeValueSpec):
         return "locked_by"
 
     def topic(self):
-        return HostAttributeTopicBasicSettings
+        return HostAttributeTopicMetaData
 
     def show_in_table(self):
         return False
@@ -788,7 +792,7 @@ class HostAttributeLockedAttributes(ABCHostAttributeValueSpec):
         return "locked_attributes"
 
     def topic(self):
-        return HostAttributeTopicBasicSettings
+        return HostAttributeTopicMetaData
 
     def show_in_table(self):
         return False
@@ -813,4 +817,73 @@ class HostAttributeLockedAttributes(ABCHostAttributeValueSpec):
             DropdownChoice(choices=host_attribute_registry.get_choices),
             title=_("Locked attributes"),
             text_if_empty=_("Not locked"),
+        )
+
+
+@host_attribute_registry.register
+class HostAttributeMetaData(ABCHostAttributeValueSpec):
+    def name(self):
+        return "meta_data"
+
+    def topic(self):
+        return HostAttributeTopicMetaData
+
+    def show_in_table(self):
+        return False
+
+    def show_in_form(self):
+        return True
+
+    def show_in_folder(self):
+        return True
+
+    def show_in_host_search(self):
+        return False
+
+    def show_inherited_value(self):
+        return False
+
+    def editable(self):
+        return False
+
+    def valuespec(self):
+        return Dictionary(
+            elements=[
+                (
+                    "created_at",
+                    Alternative(
+                        title=_("Created at"),
+                        elements=[
+                            FixedValue(
+                                None,
+                                totext=_("Sometime before 1.6"),
+                            ),
+                            AbsoluteDate(
+                                include_time=True,
+                                default_value=0,
+                            ),
+                        ],
+                        default_value=time.time(),
+                    ),
+                ),
+                (
+                    "created_by",
+                    Alternative(
+                        title=_("Created by"),
+                        elements=[
+                            FixedValue(
+                                None,
+                                totext=_("Someone before 1.6"),
+                            ),
+                            TextUnicode(
+                                title=_("Created by"),
+                                default_value="unknown",
+                            ),
+                        ],
+                        default_value=config.user.id,
+                    ),
+                ),
+            ],
+            title=_("Meta data"),
+            optional_keys=[],
         )

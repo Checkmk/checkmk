@@ -116,6 +116,7 @@ import cmk.gui.mkeventd
 import cmk.gui.forms as forms
 import cmk.gui.backup as backup
 import cmk.gui.watolib as watolib
+import cmk.gui.watolib.hosts_and_folders
 import cmk.gui.background_job as background_job
 import cmk.gui.gui_background_job as gui_background_job
 import cmk.gui.i18n
@@ -845,7 +846,11 @@ def add_scanned_hosts_to_folder(folder, found):
     for host_name, ipaddr in found:
         host_name = cmk.utils.translations.translate_hostname(translation, host_name)
 
-        attrs = {}
+        attrs = {
+            "meta_data":
+                cmk.gui.watolib.hosts_and_folders.get_meta_data(created_by=_("Network scan"))
+        }
+
         if "tag_criticality" in network_scan_properties:
             attrs["tag_criticality"] = network_scan_properties.get("tag_criticality", "offline")
 

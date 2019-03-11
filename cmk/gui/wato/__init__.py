@@ -204,10 +204,10 @@ from cmk.gui.wato.pages.groups import (
 from cmk.gui.wato.pages.host_diagnose import ModeDiagHost
 from cmk.gui.wato.pages.host_rename import ModeBulkRenameHost, ModeRenameHost
 from cmk.gui.wato.pages.tags import (
-    ModeHostTags,
+    ModeTags,
     ModeEditHosttagConfiguration,
     ModeEditAuxtag,
-    ModeEditHosttagGroup,
+    ModeEditTagGroup,
 )
 from cmk.gui.wato.pages.hosts import ModeEditHost, ModeCreateHost, ModeCreateCluster
 from cmk.gui.wato.pages.icons import ModeIcons
@@ -1511,7 +1511,7 @@ class PermissionWATOAllFolders(Permission):
 
 
 @permission_registry.register
-class PermissionWATOHostTags(Permission):
+class PermissionWATOTags(Permission):
     @property
     def section(self):
         return cmk.gui.plugins.wato.utils.PermissionSectionWATO
@@ -1522,11 +1522,11 @@ class PermissionWATOHostTags(Permission):
 
     @property
     def title(self):
-        return _("Manage host tags")
+        return _("Manage tags")
 
     @property
     def description(self):
-        return _("Create, remove and edit host tags. Removing host tags also might remove rules, "
+        return _("Create, remove and edit tags. Removing tags also might remove rules, "
                  "so this permission should not be available to normal users.")
 
     @property

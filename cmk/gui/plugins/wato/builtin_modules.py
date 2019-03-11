@@ -66,27 +66,29 @@ class MainModuleFolder(MainModule):
 
 
 @main_module_registry.register
-class MainModuleHostTags(MainModule):
+class MainModuleTags(MainModule):
     @property
     def mode_or_url(self):
-        return "hosttags"
+        return "tags"
 
     @property
     def title(self):
-        return _("Host Tags")
+        return _("Tags")
 
     @property
     def icon(self):
-        return "hosttag"
+        return "tag"
 
     @property
     def permission(self):
+        # The module was renamed from hosttags to tags during 1.6 development. The permission can not
+        # be changed easily for compatibility reasons. Leave old internal name for simplicity.
         return "hosttags"
 
     @property
     def description(self):
-        return _(
-            "Tags classify hosts and are the fundament of configuration of hosts and services.")
+        return _("Tags classify hosts and services and are the fundament of configuration of hosts "
+                 "and services.")
 
     @property
     def sort_index(self):

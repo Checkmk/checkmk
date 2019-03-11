@@ -1843,8 +1843,7 @@ class HostTagCondition(ValueSpec):
             varprefix += "_"
 
         if not config.aux_tags() + config.host_tag_groups():
-            html.write(
-                _("You have not configured any <a href=\"wato.py?mode=hosttags\">host tags</a>."))
+            html.write(_("You have not configured any <a href=\"wato.py?mode=tags\">tags</a>."))
             return
 
         # Determine current (default) setting of tag by looking

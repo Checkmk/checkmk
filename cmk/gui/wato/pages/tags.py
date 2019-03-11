@@ -68,7 +68,7 @@ from cmk.gui.plugins.wato import (
 
 
 @mode_registry.register
-class ModeTags(WatoMode, watolib.HosttagsConfiguration):
+class ModeTags(WatoMode):
     @classmethod
     def name(cls):
         return "tags"
@@ -79,7 +79,8 @@ class ModeTags(WatoMode, watolib.HosttagsConfiguration):
 
     def __init__(self):
         super(ModeTags, self).__init__()
-        self._tags, self._auxtags = self._load_hosttags()
+        self._tag_config = watolib.HosttagsConfiguration()
+        self._tag_config.load()
 
     def title(self):
         return _("Tag groups")
@@ -95,12 +96,11 @@ class ModeTags(WatoMode, watolib.HosttagsConfiguration):
         # Deletion of tag groups
         del_id = html.request.var("_delete")
         if del_id:
-            operations = None
-            for e in self._tags:
-                if e[0] == del_id:
-                    # In case of tag group deletion, the operations is a pair of tag_id
-                    # and list of choice-ids.
-                    operations = [x[0] for x in e[2]]
+            tag_group = self._tag_config.get_tag_group(del_id)
+            if tag_group:
+                operations = list(tag_group.get_tag_ids())
+            else:
+                operations = None
 
             message = _rename_tags_after_confirmation(del_id, operations)
             if message is True:  # no confirmation yet
@@ -113,8 +113,8 @@ class ModeTags(WatoMode, watolib.HosttagsConfiguration):
                     return None
 
             if message:
-                self._tags = [e for e in self._tags if e[0] != del_id]
-                watolib.save_hosttags(self._tags, self._auxtags)
+                self._tag_config.remove_tag_group(del_id)
+                self._tag_config.save()
                 watolib.Folder.invalidate_caches()
                 watolib.Folder.root_folder().rewrite_hosts_files()
                 add_change("edit-tags", _("Removed tag group %s (%s)") % (message, del_id))
@@ -124,43 +124,31 @@ class ModeTags(WatoMode, watolib.HosttagsConfiguration):
         del_nr = html.request.var("_delaux")
         if del_nr:
             nr = int(del_nr)
-            del_id = self._auxtags[nr][0]
+            del_id = self._tag_config.aux_tag_list.get_number(nr).id
 
             # Make sure that this aux tag is not begin used by any tag group
-            for entry in self._tags:
-                choices = entry[2]
-                for e in choices:
-                    if len(e) > 2:
-                        if del_id in e[2]:
-                            raise MKUserError(
-                                None,
-                                _("You cannot delete this auxiliary tag. "
-                                  "It is being used in the tag group <b>%s</b>.") % entry[1])
+            for group in self._tag_config.tag_groups:
+                for grouped_tag in group.tags:
+                    if del_id in grouped_tag.aux_tag_ids:
+                        raise MKUserError(
+                            None,
+                            _("You cannot delete this auxiliary tag. "
+                              "It is being used in the tag group <b>%s</b>.") % group.title)
 
             operations = {del_id: False}
             message = _rename_tags_after_confirmation(None, operations)
             if message is True:  # no confirmation yet
                 c = wato_confirm(
-                    _("Confirm deletion of the auxiliary "
-                      "tag '%s'") % del_id,
-                    _("Do you really want to delete the "
-                      "auxiliary tag '%s'?") % del_id)
+                    _("Confirm deletion of the auxiliary tag '%s'") % del_id,
+                    _("Do you really want to delete the auxiliary tag '%s'?") % del_id)
                 if c is False:
                     return ""
                 elif c is None:
                     return None
 
             if message:
-                del self._auxtags[nr]
-                # Remove auxiliary tag from all tags
-                for e in self._tags:
-                    choices = e[2]
-                    for choice in choices:
-                        if len(choice) > 2:
-                            if del_id in choice[2]:
-                                choice[2].remove(del_id)
-
-                watolib.save_hosttags(self._tags, self._auxtags)
+                self._tag_config.aux_tag_list.remove(del_id)
+                self._tag_config.save()
                 watolib.Folder.invalidate_caches()
                 watolib.Folder.root_folder().rewrite_hosts_files()
                 add_change("edit-tags", _("Removed auxiliary tag %s (%s)") % (message, del_id))
@@ -170,15 +158,14 @@ class ModeTags(WatoMode, watolib.HosttagsConfiguration):
             move_nr = html.get_integer_input("_move")
             move_to = html.get_integer_input("_index")
 
-            moved = self._tags.pop(move_nr)
-            self._tags.insert(move_to, moved)
+            moved = self._tag_config.tag_groups.pop(move_nr)
+            self._tag_config.tag_groups.insert(move_to, moved)
 
-            watolib.save_hosttags(self._tags, self._auxtags)
-            config.wato_host_tags = self._tags
+            self._tag_config.save()
             watolib.add_change("edit-tags", _("Changed order of tag groups"))
 
     def page(self):
-        if not self._tags + self._auxtags:
+        if not self._tag_config.tag_groups + self._tag_config.get_aux_tags():
             MainMenu([
                 MenuItem(
                     "edit_ttag", _("Create new tag group"), "new", "hosttags",
@@ -251,7 +238,8 @@ class ModeTags(WatoMode, watolib.HosttagsConfiguration):
                 empty_text=_("You haven't defined any auxiliary tags."),
                 searchable=False) as table:
 
-            aux_tags = config.BuiltinTags().get_effective_aux_tags(self._auxtags)
+            aux_tags = config.BuiltinTags().get_effective_aux_tags(
+                self._tag_config.aux_tag_list.get_legacy_format())
             effective_tag_groups = self._get_effective_tag_groups()
 
             if not aux_tags:
@@ -278,7 +266,8 @@ class ModeTags(WatoMode, watolib.HosttagsConfiguration):
                         self._get_tags_using_aux_tag(effective_tag_groups, tag_id)))
 
     def _get_effective_tag_groups(self):
-        return config.BuiltinTags().get_effective_tag_groups(self._tags)
+        return config.BuiltinTags().get_effective_tag_groups(
+            self._tag_config.get_legacy_format()[0])
 
     def _get_tags_using_aux_tag(self, tag_groups, aux_tag):
         used_tags = set()

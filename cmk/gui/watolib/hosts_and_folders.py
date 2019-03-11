@@ -367,7 +367,7 @@ class CREFolder(BaseFolder):
 
     @staticmethod
     def folder_exists(folder_path):
-        return os.path.exists(wato_root_dir + folder_path)
+        return os.path.exists(wato_root_dir() + folder_path)
 
     @staticmethod
     def root_folder():
@@ -445,7 +445,7 @@ class CREFolder(BaseFolder):
         if self._root_dir:
             self._root_dir = root_dir.rstrip("/") + "/"  # FIXME: ugly
         else:
-            self._root_dir = wato_root_dir
+            self._root_dir = wato_root_dir()
 
         if folder_path is not None:
             self._init_by_loading_existing_directory(folder_path)

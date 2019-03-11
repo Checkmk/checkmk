@@ -60,7 +60,7 @@ class ConfigDomainCore(ConfigDomain):
     ident = "check_mk"
 
     def config_dir(self):
-        return wato_root_dir
+        return wato_root_dir()
 
     def activate(self):
         # TODO: Cleanup

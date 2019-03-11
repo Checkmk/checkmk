@@ -48,15 +48,15 @@ def builtin_timeperiods():
 
 
 def load_timeperiods():
-    timeperiods = store.load_from_mk_file(wato_root_dir + "timeperiods.mk", "timeperiods", {})
+    timeperiods = store.load_from_mk_file(wato_root_dir() + "timeperiods.mk", "timeperiods", {})
     timeperiods.update(builtin_timeperiods())
     return timeperiods
 
 
 def save_timeperiods(timeperiods):
-    store.mkdir(wato_root_dir)
+    store.mkdir(wato_root_dir())
     store.save_to_mk_file(
-        wato_root_dir + "timeperiods.mk",
+        wato_root_dir() + "timeperiods.mk",
         "timeperiods",
         _filter_builtin_timeperiods(timeperiods),
         pprint_value=config.wato_pprint_config)

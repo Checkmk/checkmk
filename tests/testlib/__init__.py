@@ -731,11 +731,10 @@ class Site(object):
         packages_dir = venv / "lib/python2.7/site-packages"
 
         for file_name in os.listdir(str(packages_dir)):
-            if file_name == "kubernetes":
+            # Only copy modules that do not exist in regular module path
+            if os.path.exists("%s/lib/python/%s" % (self.root, file_name)) \
+               or os.path.exists("%s/lib/python2.7/site-packages/%s" % (self.root, file_name)):
                 continue
-
-            #if "cffi" in file_name:
-            #    continue
 
             assert os.system("sudo rsync -a --chown %s:%s %s %s/local/lib/python/" %  # nosec
                              (self.id, self.id, packages_dir / file_name, self.root)) >> 8 == 0

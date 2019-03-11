@@ -731,6 +731,9 @@ class Site(object):
         packages_dir = venv / "lib/python2.7/site-packages"
 
         for file_name in os.listdir(str(packages_dir)):
+            if file_name == "kubernetes":
+                continue
+
             #if "cffi" in file_name:
             #    continue
 

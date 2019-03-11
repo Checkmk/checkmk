@@ -59,7 +59,7 @@ def _update_host_custom_attrs():
 
 
 def load_custom_attrs_from_mk_file(lock):
-    filename = os.path.join(watolib.multisite_dir, "custom_attrs.mk")
+    filename = os.path.join(watolib.multisite_dir(), "custom_attrs.mk")
     vars_ = store.load_mk_file(
         filename, {
             'wato_user_attrs': [],
@@ -82,8 +82,8 @@ def save_custom_attrs_to_mk_file(attrs):
             output += "if type(wato_%s_attrs) != list:\n    wato_%s_attrs = []\n" % (what, what)
             output += "wato_%s_attrs += %s\n\n" % (what, pprint.pformat(attrs[what]))
 
-    store.mkdir(watolib.multisite_dir)
-    store.save_file(watolib.multisite_dir + "custom_attrs.mk", output)
+    store.mkdir(watolib.multisite_dir())
+    store.save_file(watolib.multisite_dir() + "custom_attrs.mk", output)
 
 
 def custom_attr_types():

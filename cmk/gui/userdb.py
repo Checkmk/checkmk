@@ -326,8 +326,12 @@ def on_failed_login(username):
         save_users(users)
 
 
-root_dir = cmk.utils.paths.check_mk_config_dir + "/wato/"
-multisite_dir = cmk.utils.paths.default_config_dir + "/multisite.d/wato/"
+def _root_dir():
+    return cmk.utils.paths.check_mk_config_dir + "/wato/"
+
+
+def _multisite_dir():
+    return cmk.utils.paths.default_config_dir + "/multisite.d/wato/"
 
 
 # Old vs:
@@ -595,7 +599,7 @@ def get_user_attributes():
 
 
 def load_users(lock=False):
-    filename = root_dir + "contacts.mk"
+    filename = _root_dir() + "contacts.mk"
 
     if lock:
         # Note: the lock will be released on next save_users() call or at
@@ -611,8 +615,8 @@ def load_users(lock=False):
     contacts = store.load_from_mk_file(filename, "contacts", {})
 
     # Now load information about users from the GUI config world
-    filename = multisite_dir + "users.mk"
-    users = store.load_from_mk_file(multisite_dir + "users.mk", "multisite_users", {})
+    filename = _multisite_dir() + "users.mk"
+    users = store.load_from_mk_file(_multisite_dir() + "users.mk", "multisite_users", {})
 
     # Merge them together. Monitoring users not known to Multisite
     # will be added later as normal users.
@@ -798,7 +802,7 @@ def save_users(profiles):
 
 
 def release_users_lock():
-    store.release_lock(root_dir + "contacts.mk")
+    store.release_lock(_root_dir() + "contacts.mk")
 
 
 # TODO: Isn't this needed only while generating the contacts.mk?
@@ -1048,7 +1052,7 @@ def convert_idle_timeout(value):
 
 def load_roles():
     roles = store.load_from_mk_file(
-        multisite_dir + "roles.mk",
+        _multisite_dir() + "roles.mk",
         "roles",
         default=_get_builtin_roles(),
     )
@@ -1152,13 +1156,13 @@ config.register_post_config_load_hook(update_config_based_user_attributes)
 
 
 def load_connection_config(lock=False):
-    filename = os.path.join(multisite_dir, "user_connections.mk")
+    filename = os.path.join(_multisite_dir(), "user_connections.mk")
     return store.load_from_mk_file(filename, "user_connections", default=[], lock=lock)
 
 
 def save_connection_config(connections, base_dir=None):
     if not base_dir:
-        base_dir = multisite_dir
+        base_dir = _multisite_dir()
     store.mkdir(base_dir)
     store.save_to_mk_file(
         os.path.join(base_dir, "user_connections.mk"), "user_connections", connections)

@@ -83,9 +83,9 @@ class RoleManagement(object):
         # functions from the config module
         config.roles.update(self._roles)
 
-        store.mkdir(watolib.multisite_dir)
+        store.mkdir(watolib.multisite_dir())
         store.save_to_mk_file(
-            watolib.multisite_dir + "roles.mk",
+            watolib.multisite_dir() + "roles.mk",
             "roles",
             self._roles,
             pprint_value=config.wato_pprint_config)

@@ -79,8 +79,6 @@ from cmk.gui.watolib.utils import (
 
 from cmk.gui.plugins.watolib.utils import wato_fileheader
 
-sites_mk = cmk.utils.paths.default_config_dir + "/multisite.d/sites.mk"
-
 
 class SiteManagementFactory(object):
     @staticmethod
@@ -301,11 +299,11 @@ class SiteManagement(object):
 
     @classmethod
     def load_sites(cls):
-        if not os.path.exists(sites_mk):
+        if not os.path.exists(cls._sites_mk()):
             return config.default_single_site_configuration()
 
         config_vars = {"sites": {}}
-        execfile(sites_mk, config_vars, config_vars)
+        execfile(cls._sites_mk(), config_vars, config_vars)
 
         if not config_vars["sites"]:
             return config.default_single_site_configuration()
@@ -321,8 +319,8 @@ class SiteManagement(object):
     def save_sites(cls, sites, activate=True):
         # TODO: Clean this up
         from cmk.gui.watolib.hosts_and_folders import Folder
-        store.mkdir(multisite_dir)
-        store.save_to_mk_file(sites_mk, "sites", sites)
+        store.mkdir(multisite_dir())
+        store.save_to_mk_file(cls._sites_mk(), "sites", sites)
 
         # Do not activate when just the site's global settings have
         # been edited
@@ -336,6 +334,10 @@ class SiteManagement(object):
 
             # Call the sites saved hook
             hooks.call("sites-saved", sites)
+
+    @classmethod
+    def _sites_mk(cls):
+        return cmk.utils.paths.default_config_dir + "/multisite.d/sites.mk"
 
     @classmethod
     def delete_site(cls, site_id):

@@ -166,6 +166,12 @@ class AuxtagList(object):
     def update(self, position, aux_tag):
         self._tags[position] = aux_tag
 
+    def remove(self, aux_tag_id):
+        for index, tmp_aux_tag in enumerate(self._tags[:]):
+            if tmp_aux_tag.id == aux_tag_id:
+                self._tags.pop(index)
+                return
+
     def validate(self):
         seen = set()
         for aux_tag in self._tags:
@@ -290,6 +296,9 @@ class HosttagGroup(object):
 
 
 class HosttagsConfiguration(object):
+    """Container object encapsulating a whole set of configured
+    tag groups with auxiliary tags"""
+
     def __init__(self):
         super(HosttagsConfiguration, self).__init__()
         self._initialize()
@@ -316,6 +325,7 @@ class HosttagsConfiguration(object):
             topic = tag_group.topic
             if topic:
                 names.add((topic, topic))
+        # TODO: Return sorted?
         return list(names)
 
     def get_tag_group(self, tag_group_id):
@@ -323,11 +333,18 @@ class HosttagsConfiguration(object):
             if group.id == tag_group_id:
                 return group
 
+    def remove_tag_group(self, tag_group_id):
+        group = self.get_tag_group(tag_group_id)
+        if group is None:
+            return
+        self.tag_groups.remove(group)
+
+    # TODO: Clean this up and make call sites directly call the wrapped function
     def get_aux_tags(self):
         return self.aux_tag_list.get_tags()
 
-    # Returns the raw ids of the grouped tags and the aux tags
     def get_tag_ids(self):
+        """Returns the raw ids of the grouped tags and the aux tags"""
         response = set()
         for tag_group in self.tag_groups:
             response.update(tag_group.get_tag_ids())
@@ -365,6 +382,7 @@ class HosttagsConfiguration(object):
         for aux_tag_tuple in auxtags_info:
             self.aux_tag_list.append(AuxTag(aux_tag_tuple))
 
+    # TODO: Change API to use __add__/__setitem__?
     def insert_tag_group(self, tag_group):
         if is_builtin_host_tag_group(tag_group.id):
             raise MKUserError("tag_id", _("You can not override a builtin tag group."))
@@ -513,6 +531,7 @@ class BuiltinHosttagsConfiguration(HosttagsConfiguration):
         self._parse_legacy_format(builtin_tags.host_tags(), builtin_tags.aux_tags())
 
 
+# TODO: Cleanup all direct call sites and move to HosttagsConfiguration
 def save_hosttags(hosttags, auxtags):
     output = wato_fileheader()
 

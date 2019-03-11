@@ -277,25 +277,6 @@ def test_paths(test_cfg, site):
 
 
 #.
-#   .--donate--------------------------------------------------------------.
-#   |                       _                   _                          |
-#   |                    __| | ___  _ __   __ _| |_ ___                    |
-#   |                   / _` |/ _ \| '_ \ / _` | __/ _ \                   |
-#   |                  | (_| | (_) | | | | (_| | ||  __/                   |
-#   |                   \__,_|\___/|_| |_|\__,_|\__\___|                   |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-
-def test_donate_no_hosts(test_cfg, site):
-    p = site.execute(["cmk", "--donate"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    stdout, stderr = p.communicate()
-    assert p.wait() == 1
-    assert stderr.startswith("No hosts specified.")
-    assert stdout == ""
-
-
-#.
 #   .--backup/restore------------------------------------------------------.
 #   |      _                _                  __             _            |
 #   |     | |__   __ _  ___| | ___   _ _ __   / / __ ___  ___| |_          |

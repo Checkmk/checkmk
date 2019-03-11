@@ -96,7 +96,7 @@ def add_replication_paths(paths):
 
 def get_replication_paths():
     paths = [
-        ("dir", "check_mk", cmk.gui.watolib.utils.wato_root_dir, ["sitespecific.mk"]),
+        ("dir", "check_mk", cmk.gui.watolib.utils.wato_root_dir(), ["sitespecific.mk"]),
         ("dir", "multisite", cmk.gui.watolib.utils.multisite_dir, ["sitespecific.mk"]),
         ("file", "htpasswd", cmk.utils.paths.htpasswd_file),
         ("file", "auth.secret", '%s/auth.secret' % os.path.dirname(cmk.utils.paths.htpasswd_file)),

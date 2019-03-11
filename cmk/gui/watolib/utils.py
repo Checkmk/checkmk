@@ -47,7 +47,11 @@ NEGATE = '@negate'
 NO_ITEM = {}  # Just an arbitrary unique thing
 ENTRY_NEGATE_CHAR = "!"
 
-wato_root_dir = cmk.utils.paths.check_mk_config_dir + "/wato/"
+
+def wato_root_dir():
+    return cmk.utils.paths.check_mk_config_dir + "/wato/"
+
+
 multisite_dir = cmk.utils.paths.default_config_dir + "/multisite.d/wato/"
 # TODO: Move this to CEE specific code again
 liveproxyd_config_dir = cmk.utils.paths.default_config_dir + "/liveproxyd.d/wato/"

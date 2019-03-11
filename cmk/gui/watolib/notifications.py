@@ -32,7 +32,7 @@ from cmk.gui.watolib.utils import wato_root_dir
 
 
 def load_notification_rules(lock=False):
-    filename = wato_root_dir + "notifications.mk"
+    filename = wato_root_dir() + "notifications.mk"
     notification_rules = store.load_from_mk_file(filename, "notification_rules", [], lock=lock)
 
     # Convert to new plugin configuration format
@@ -47,9 +47,9 @@ def load_notification_rules(lock=False):
 
 
 def save_notification_rules(rules):
-    store.mkdir(wato_root_dir)
+    store.mkdir(wato_root_dir())
     store.save_to_mk_file(
-        wato_root_dir + "notifications.mk",
+        wato_root_dir() + "notifications.mk",
         "notification_rules",
         rules,
         pprint_value=config.wato_pprint_config)

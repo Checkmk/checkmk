@@ -203,7 +203,7 @@ from cmk.gui.wato.pages.groups import (
 )
 from cmk.gui.wato.pages.host_diagnose import ModeDiagHost
 from cmk.gui.wato.pages.host_rename import ModeBulkRenameHost, ModeRenameHost
-from cmk.gui.wato.pages.host_tags import (
+from cmk.gui.wato.pages.tags import (
     ModeHostTags,
     ModeEditHosttagConfiguration,
     ModeEditAuxtag,

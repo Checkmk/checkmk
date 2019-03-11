@@ -47,7 +47,7 @@ from cmk.gui.valuespec import (
     Transform,
 )
 
-from cmk.gui.watolib.host_tags import is_builtin_aux_tag
+from cmk.gui.watolib.tags import is_builtin_aux_tag
 
 from cmk.gui.plugins.wato.utils.main_menu import (
     MainMenu,

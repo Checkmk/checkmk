@@ -41,7 +41,7 @@ from cmk.gui.valuespec import (
     Checkbox,
     DropdownChoice,
 )
-from cmk.gui.watolib.host_tags import group_hosttags_by_topic
+from cmk.gui.watolib.tags import group_hosttags_by_topic
 from cmk.gui.watolib.utils import host_attribute_matches
 
 

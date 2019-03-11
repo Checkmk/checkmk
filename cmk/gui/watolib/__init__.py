@@ -211,7 +211,7 @@ from cmk.gui.watolib.rulesets import (
     Ruleset,
     Rule,
 )
-from cmk.gui.watolib.host_tags import (
+from cmk.gui.watolib.tags import (
     parse_hosttag_title,
     is_builtin_host_tag_group,
     group_hosttags_by_topic,

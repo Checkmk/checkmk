@@ -28,8 +28,6 @@
 # variables that can be overridden in main.mk. Some configuration
 # variables are preset in checks/* as well.
 
-import cmk as _cmk
-
 # TODO: Remove the duplication with cmk_base.config
 _ALL_HOSTS = ['@all']  # physical and cluster hosts
 _NEGATE = '@negate'  # negation in boolean lists
@@ -187,8 +185,6 @@ extra_host_conf = {}
 extra_service_conf = {}
 extra_nagios_conf = ""
 service_descriptions = {}
-donation_hosts = []
-donation_command = 'mail -r checkmk@yoursite.de  -s "Host donation %s" donatehosts@mathias-kettner.de' % _cmk.__version__
 scanparent_hosts = [(_ALL_HOSTS)]
 host_attributes = {}  # needed by WATO, ignored by Check_MK
 ping_levels = []  # special parameters for host/PING check_command

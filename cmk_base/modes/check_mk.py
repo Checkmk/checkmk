@@ -51,7 +51,6 @@ import cmk_base.data_sources.abstract
 import cmk_base.core_nagios
 import cmk_base.parent_scan
 import cmk_base.dump_host
-import cmk_base.donate
 import cmk_base.backup
 import cmk_base.packaging
 import cmk_base.localize
@@ -559,40 +558,6 @@ modes.register(
         handler_function=mode_paths,
         needs_config=False,
         short_help="List all pathnames and directories",
-    ))
-
-#.
-#   .--donate--------------------------------------------------------------.
-#   |                       _                   _                          |
-#   |                    __| | ___  _ __   __ _| |_ ___                    |
-#   |                   / _` |/ _ \| '_ \ / _` | __/ _ \                   |
-#   |                  | (_| | (_) | | | | (_| | ||  __/                   |
-#   |                   \__,_|\___/|_| |_|\__,_|\__\___|                   |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-
-def mode_donate():
-    cmk_base.donate.do_donation()
-
-
-modes.register(
-    Mode(
-        long_option="donate",
-        handler_function=mode_donate,
-        short_help="Email data of configured hosts to MK",
-        long_help=[
-            "This is for those who decided to help the Check_MK project "
-            "by donating live host data. It tars the cached agent data of "
-            "those host which are configured in main.mk:donation_hosts and sends "
-            "them via email to donatehosts@mathias-kettner.de. The host data "
-            "is then publicly available for others and can be used for setting "
-            "up demo sites, implementing checks and so on.",
-            "Do this only with test data from test hosts - not with productive "
-            "data! By donating real-live host data you help others trying out "
-            "Check_MK and developing checks by donating hosts. This is completely "
-            "voluntary and turned off by default."
-        ],
     ))
 
 #.

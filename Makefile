@@ -180,7 +180,7 @@ endif
 	rm -rf check-mk-$(EDITION)-$(OMD_VERSION)
 
 # This tar file is only used by "omd/packages/check_mk/Makefile"
-$(DISTNAME).tar.gz: omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .werks/werks web/htdocs/js/main_min.js web/htdocs/js/mobile_min.js web/htdocs/js/side_min.js web/htdocs/themes/facelift/theme.css ChangeLog web/htdocs/themes/classic/theme.css
+$(DISTNAME).tar.gz: .venv omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .werks/werks web/htdocs/js/main_min.js web/htdocs/js/mobile_min.js web/htdocs/js/side_min.js web/htdocs/themes/facelift/theme.css ChangeLog web/htdocs/themes/classic/theme.css
 	@echo "Making $(DISTNAME)"
 	rm -rf $(DISTNAME)
 	mkdir -p $(DISTNAME)
@@ -188,7 +188,7 @@ $(DISTNAME).tar.gz: omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .
 	tar cf $(DISTNAME)/bin.tar $(TAROPTS) -C bin $$(cd bin ; ls)
 	tar rf $(DISTNAME)/bin.tar $(TAROPTS) -C agents/windows/msibuild msi-update
 	gzip $(DISTNAME)/bin.tar
-	python -m compileall cmk ; \
+	$(PIPENV) run python -m compileall cmk ; \
 	  tar czf $(DISTNAME)/lib.tar.gz $(TAROPTS) \
 	    --exclude "cee" \
 	    --exclude "cee.py*" \
@@ -196,7 +196,7 @@ $(DISTNAME).tar.gz: omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .
 	    --exclude "cme.py*" \
 	    cmk/* ; \
 	  rm cmk/*.pyc
-	python -m compileall cmk_base ; \
+	$(PIPENV) run python -m compileall cmk_base ; \
 	  tar czf $(DISTNAME)/base.tar.gz \
 	    $(TAROPTS) \
 	    --exclude "cee" \
@@ -260,11 +260,11 @@ omd/packages/openhardwaremonitor/OpenHardwareMonitorCLI.exe:
 
 omd/packages/openhardwaremonitor/OpenHardwareMonitorLib.dll: omd/packages/openhardwaremonitor/OpenHardwareMonitorCLI.exe
 
-.werks/werks: $(WERKS)
-	PYTHONPATH=. python scripts/precompile-werks.py .werks .werks/werks cre
+.werks/werks: .venv $(WERKS)
+	PYTHONPATH=${PYTHONPATH}:$(REPO_PATH) $(PIPENV) run scripts/precompile-werks.py .werks .werks/werks cre
 
-ChangeLog: .werks/werks
-	PYTHONPATH=. python scripts/create-changelog.py ChangeLog .werks/werks
+ChangeLog: .venv .werks/werks
+	PYTHONPATH=${PYTHONPATH}:$(REPO_PATH) $(PIPENV) run scripts/create-changelog.py ChangeLog .werks/werks
 
 packages:
 	$(MAKE) -C agents packages

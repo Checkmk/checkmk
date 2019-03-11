@@ -14,7 +14,7 @@ $(CHECK_MK)-install: $(CHECK_MK_INSTALL)
 # This step creates a tar archive containing the sources
 # which are need for the build step
 $(REPO_PATH)/$(DISTNAME).tar.gz:
-	    $(MAKE) -C ../../ $(DISTNAME).tar.gz ; \
+	    $(MAKE) -C $(REPO_PATH) $(DISTNAME).tar.gz ; \
 
 # The build step just extracts the archive
 # which was created in the step before

@@ -139,7 +139,7 @@ class BIManagement(object):
     # '--------------------------------------------------------------------'
 
     def _load_config(self):
-        filename = watolib.multisite_dir + "bi.mk"
+        filename = watolib.multisite_dir() + "bi.mk"
         try:
             vars_ = {
                 "aggregation_rules": {},
@@ -197,8 +197,8 @@ class BIManagement(object):
 
     def save_config(self):
         output = self.generate_bi_config_file_content(self._packs)
-        store.mkdir(watolib.multisite_dir)
-        store.save_file(watolib.multisite_dir + "bi.mk", output)
+        store.mkdir(watolib.multisite_dir())
+        store.save_file(watolib.multisite_dir() + "bi.mk", output)
 
     def generate_bi_config_file_content(self, packs):
         output = watolib.wato_fileheader()

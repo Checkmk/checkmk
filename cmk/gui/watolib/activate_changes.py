@@ -97,7 +97,7 @@ def add_replication_paths(paths):
 def get_replication_paths():
     paths = [
         ("dir", "check_mk", cmk.gui.watolib.utils.wato_root_dir(), ["sitespecific.mk"]),
-        ("dir", "multisite", cmk.gui.watolib.utils.multisite_dir, ["sitespecific.mk"]),
+        ("dir", "multisite", cmk.gui.watolib.utils.multisite_dir(), ["sitespecific.mk"]),
         ("file", "htpasswd", cmk.utils.paths.htpasswd_file),
         ("file", "auth.secret", '%s/auth.secret' % os.path.dirname(cmk.utils.paths.htpasswd_file)),
         ("file", "auth.serials",
@@ -113,7 +113,8 @@ def get_replication_paths():
     # TODO: Move this to CEE specific code again
     if not cmk.is_raw_edition():
         paths += [
-            ("dir", "liveproxyd", cmk.gui.watolib.utils.liveproxyd_config_dir, ["sitespecific.mk"]),
+            ("dir", "liveproxyd", cmk.gui.watolib.utils.liveproxyd_config_dir(),
+             ["sitespecific.mk"]),
         ]
 
     # Include rule configuration into backup/restore/replication. Current

@@ -162,7 +162,6 @@ from cmk.gui.watolib.sites import (
     SiteManagementFactory,
     CEESiteManagement,
     LivestatusViaTCP,
-    sites_mk,
     create_distributed_wato_file,
 )
 from cmk.gui.watolib.changes import (
@@ -336,7 +335,7 @@ def init_wato_datastructures(with_wato_lock=False):
 
 
 def _need_to_create_sample_config():
-    if os.path.exists(multisite_dir + "hosttags.mk") \
+    if os.path.exists(multisite_dir() + "hosttags.mk") \
         or os.path.exists(wato_root_dir() + "rules.mk") \
         or os.path.exists(wato_root_dir() + "groups.mk") \
         or os.path.exists(wato_root_dir() + "notifications.mk") \

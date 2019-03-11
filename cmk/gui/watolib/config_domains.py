@@ -81,7 +81,7 @@ class ConfigDomainGUI(ConfigDomain):
     ident = "multisite"
 
     def config_dir(self):
-        return multisite_dir
+        return multisite_dir()
 
     def activate(self):
         pass
@@ -106,7 +106,7 @@ class ConfigDomainLiveproxy(ConfigDomain):
         return not cmk.is_raw_edition() and config.liveproxyd_enabled
 
     def config_dir(self):
-        return liveproxyd_config_dir
+        return liveproxyd_config_dir()
 
     def save(self, settings, site_specific=False):
         super(ConfigDomainLiveproxy, self).save(settings, site_specific=site_specific)
@@ -210,7 +210,7 @@ class ConfigDomainCACertificates(ConfigDomain):
                          "", re.DOTALL)
 
     def config_dir(self):
-        return multisite_dir
+        return multisite_dir()
 
     def config_file(self, site_specific=False):
         return os.path.join(self.config_dir(), "ca-certificates.mk")

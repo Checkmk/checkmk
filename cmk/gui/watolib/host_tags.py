@@ -461,7 +461,7 @@ class HosttagsConfiguration(object):
             "wato_aux_tags": [],
         }
 
-        tag_config = cmk.utils.store.load_mk_file(multisite_dir + "hosttags.mk", default_config)
+        tag_config = cmk.utils.store.load_mk_file(multisite_dir() + "hosttags.mk", default_config)
 
         self._convert_manual_host_tags(tag_config["wato_host_tags"])
         config.migrate_old_sample_config_tag_groups(tag_config["wato_host_tags"],
@@ -519,8 +519,8 @@ def save_hosttags(hosttags, auxtags):
     output += "wato_host_tags += \\\n%s\n\n" % format_config_value(hosttags)
     output += "wato_aux_tags += \\\n%s\n" % format_config_value(auxtags)
 
-    store.mkdir(multisite_dir)
-    store.save_file(multisite_dir + "hosttags.mk", output)
+    store.mkdir(multisite_dir())
+    store.save_file(multisite_dir() + "hosttags.mk", output)
 
     _export_hosttags_to_php(hosttags, auxtags)
 

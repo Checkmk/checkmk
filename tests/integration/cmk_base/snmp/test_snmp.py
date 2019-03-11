@@ -46,7 +46,7 @@ def snmpsim(site, request, tmp_path_factory):
     log.set_verbosity(2)
     debug.enable()
     cmd = [
-        "%s/.venv/bin/python" % cmk_path(),
+        "%s/bin/python" % site.root,
         snmpsimd_path,
         #"--log-level=error",
         "--cache-dir",

@@ -133,9 +133,16 @@ def _execute_restore(site, backup_id, env=None):
                          stderr=subprocess.PIPE,
                          env=env)
         stdout, stderr = p.communicate()
-        assert "Restore completed" in stdout, "Invalid output: %r" % stdout
-        assert stderr == ""
-        assert p.wait() == 0
+
+        try:
+            assert "Restore completed" in stdout, "Invalid output: %r" % stdout
+            assert stderr == ""
+            assert p.wait() == 0
+        except Exception:
+            # Bring back the site in case the restore test fails which may leave the
+            # site in a stopped state
+            site.start()
+            raise
 
 
 #.

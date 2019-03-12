@@ -40,6 +40,8 @@ from cmk.gui.globals import html
 from cmk.gui.exceptions import MKUserError, MKAuthException, MKException
 from cmk.gui.plugins.userdb.htpasswd import hash_password
 import cmk.gui.watolib.users
+from cmk.gui.watolib.tags import (
+    TagConfigFile,)
 from cmk.gui.watolib.groups import (
     load_contact_group_information,
     load_host_group_information,
@@ -776,7 +778,7 @@ class APICallHosttags(APICallCollection):
 
     def _get(self, request):
         hosttags_config = watolib.HosttagsConfiguration()
-        hosttags_config.load()
+        hosttags_config.parse_config(TagConfigFile().load_for_reading())
 
         hosttags_dict = hosttags_config.get_dict_format()
 
@@ -792,8 +794,9 @@ class APICallHosttags(APICallCollection):
         return builtin_tags_config.get_dict_format()
 
     def _set(self, request):
+        tag_config_file = TagConfigFile()
         hosttags_config = watolib.HosttagsConfiguration()
-        hosttags_config.load()
+        hosttags_config.parse_config(tag_config_file.load_for_modification())
 
         hosttags_dict = hosttags_config.get_dict_format()
         if "configuration_hash" in request:
@@ -831,7 +834,7 @@ class APICallHosttags(APICallCollection):
                   "are still in use, but not mentioned in the updated "
                   "configuration: %s") % ", ".join(missing_tags))
 
-        changed_hosttags_config.save()
+        tag_config_file.save(changed_hosttags_config.get_dict_format())
         watolib.add_change("edit-hosttags", _("Updated host tags through Web-API"))
 
     def _get_used_grouped_tags(self):

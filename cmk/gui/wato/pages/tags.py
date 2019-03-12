@@ -47,7 +47,10 @@ from cmk.gui.valuespec import (
     Transform,
 )
 
-from cmk.gui.watolib.tags import is_builtin_aux_tag
+from cmk.gui.watolib.tags import (
+    is_builtin_aux_tag,
+    TagConfigFile,
+)
 
 from cmk.gui.plugins.wato.utils.main_menu import (
     MainMenu,
@@ -79,8 +82,9 @@ class ModeTags(WatoMode):
 
     def __init__(self):
         super(ModeTags, self).__init__()
+        self._tag_config_file = TagConfigFile()
         self._tag_config = watolib.HosttagsConfiguration()
-        self._tag_config.load()
+        self._tag_config.parse_config(self._tag_config_file.load_for_reading())
 
     def title(self):
         return _("Tag groups")
@@ -114,7 +118,7 @@ class ModeTags(WatoMode):
 
             if message:
                 self._tag_config.remove_tag_group(del_id)
-                self._tag_config.save()
+                self._tag_config_file.save(self._tag_config.get_dict_format())
                 watolib.Folder.invalidate_caches()
                 watolib.Folder.root_folder().rewrite_hosts_files()
                 add_change("edit-tags", _("Removed tag group %s (%s)") % (message, del_id))
@@ -148,7 +152,7 @@ class ModeTags(WatoMode):
 
             if message:
                 self._tag_config.aux_tag_list.remove(del_id)
-                self._tag_config.save()
+                self._tag_config_file.save(self._tag_config.get_dict_format())
                 watolib.Folder.invalidate_caches()
                 watolib.Folder.root_folder().rewrite_hosts_files()
                 add_change("edit-tags", _("Removed auxiliary tag %s (%s)") % (message, del_id))
@@ -161,7 +165,7 @@ class ModeTags(WatoMode):
             moved = self._tag_config.tag_groups.pop(move_nr)
             self._tag_config.tag_groups.insert(move_to, moved)
 
-            self._tag_config.save()
+            self._tag_config_file.save(self._tag_config.get_dict_format())
             watolib.add_change("edit-tags", _("Changed order of tag groups"))
 
     def page(self):
@@ -281,8 +285,9 @@ class ModeTags(WatoMode):
 class ModeEditHosttagConfiguration(WatoMode):
     def __init__(self):
         super(ModeEditHosttagConfiguration, self).__init__()
+        self._tag_config_file = TagConfigFile()
         self._untainted_hosttags_config = watolib.HosttagsConfiguration()
-        self._untainted_hosttags_config.load()
+        self._untainted_hosttags_config.parse_config(self._tag_config_file.load_for_reading())
 
     def _get_topic_valuespec(self):
         # Merging of both objects would ne neat here
@@ -362,14 +367,14 @@ class ModeEditAuxtag(ModeEditHosttagConfiguration):
                     tag_group.title)
 
         changed_hosttags_config = watolib.HosttagsConfiguration()
-        changed_hosttags_config.load()
+        changed_hosttags_config.parse_config(self._tag_config_file.load_for_reading())
 
         if self._new:
             changed_hosttags_config.aux_tag_list.append(self._aux_tag)
         else:
             changed_hosttags_config.aux_tag_list.update(self._aux_tag_nr, self._aux_tag)
 
-        changed_hosttags_config.save()
+        self._tag_config_file.save(changed_hosttags_config.get_dict_format())
 
         return "tags"
 
@@ -469,7 +474,7 @@ class ModeEditTagGroup(ModeEditHosttagConfiguration):
 
         # Create new object with existing host tags
         changed_hosttags_config = watolib.HosttagsConfiguration()
-        changed_hosttags_config.load()
+        changed_hosttags_config.parse_config(self._tag_config_file.load_for_modification())
 
         changed_tag_group = watolib.HosttagGroup(tag_group_spec)
         self._tag_group = changed_tag_group
@@ -477,7 +482,7 @@ class ModeEditTagGroup(ModeEditHosttagConfiguration):
         if self._new:
             # Inserts and verifies changed tag group
             changed_hosttags_config.insert_tag_group(changed_tag_group)
-            changed_hosttags_config.save()
+            self._tag_config_file.save(changed_hosttags_config.get_dict_format())
 
             # Make sure, that all tags are active (also manual ones from main.mk)
             config.load_config()
@@ -518,7 +523,7 @@ class ModeEditTagGroup(ModeEditHosttagConfiguration):
         # Now check, if any folders, hosts or rules are affected
         message = _rename_tags_after_confirmation(changed_tag_group.id, operations)
         if message:
-            changed_hosttags_config.save()
+            self._tag_config_file.save(changed_hosttags_config.get_dict_format())
             config.load_config()
             add_change("edit-hosttags",
                        _("Edited host tag group %s (%s)") % (message, self._tag_group_id))

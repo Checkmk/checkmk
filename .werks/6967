@@ -1,0 +1,13 @@
+Title: Initialize step value for unknown metrics in rrddata columns
+Level: 1
+Component: livestatus
+Compatible: compat
+Edition: cee
+Version: 1.6.0i1
+Date: 1552377187
+Class: fix
+
+When unknown metrics were queried via rrddata Livestatus columns, the step
+value was not initialized, so a more or less random value was returned. 
+Valgrind was of course unhappy about this, too.  This has been fixed, and
+the step value is now zero under such circumstances.

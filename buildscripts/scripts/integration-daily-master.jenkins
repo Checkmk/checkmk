@@ -122,7 +122,7 @@ DISTRO_LIST.each { DISTRO ->
                             sh "mount -t overlay overlay -o lowerdir=${TEST_DATA}/git,upperdir=${WORKSPACE}/$DISTRO-dest,workdir=${WORKSPACE}/$DISTRO-work ${WORKSPACE}/$DISTRO-dest"
                             sh 'ls -lah'
                             dir (DISTRO + '-dest') {
-                                sh 'PYTEST_ADDOPTS="--junitxml=/omd/sites/int_master/junit.xml --maxfail 300" make -C tests test-integration'
+                                sh "PYTEST_ADDOPTS='--junitxml=/omd/sites/int_master/junit.xml -o $DISTRO --maxfail 300' make -C tests test-integration"
                             }
                         }
                     }

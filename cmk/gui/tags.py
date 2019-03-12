@@ -124,6 +124,13 @@ class AuxtagList(object):
     def __init__(self):
         self._tags = []
 
+    def __iadd__(self, other):
+        tag_ids = self.get_tag_ids()
+        for aux_tag in other.get_tags():
+            if aux_tag.id not in tag_ids:
+                self.append(aux_tag)
+        return self
+
     def get_tags(self):
         return self._tags
 
@@ -180,6 +187,9 @@ class AuxtagList(object):
         for tag in self._tags:
             response.append(tag.get_dict_format())
         return response
+
+    def get_choices(self):
+        return [(aux_tag.id, aux_tag.title) for aux_tag in self._tags]
 
 
 class BuiltinAuxtagList(AuxtagList):
@@ -287,6 +297,15 @@ class HosttagsConfiguration(object):
         self.tag_groups = []
         self.aux_tag_list = AuxtagList()
 
+    def __iadd__(self, other):
+        tg_ids = [tg.id for tg in self.tag_groups]
+        for tg in other.tag_groups:
+            if tg.id not in tg_ids:
+                self.tag_groups.append(tg)
+
+        self.aux_tag_list += other.aux_tag_list
+        return self
+
     @staticmethod
     def parse_hosttag_title(title):
         if '/' in title:
@@ -321,6 +340,9 @@ class HosttagsConfiguration(object):
         if group is None:
             return
         self.tag_groups.remove(group)
+
+    #def get_tag_group_choices(self):
+    #    return [(tg.id, tg.title) for tg in self.tag_groups]
 
     # TODO: Clean this up and make call sites directly call the wrapped function
     def get_aux_tags(self):

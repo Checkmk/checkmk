@@ -495,17 +495,11 @@ def load_plugins(force):
     global loaded_with_language
 
     if loaded_with_language == cmk.gui.i18n.get_current_language() and not force:
-        # always reload the hosttag painters, because new hosttags might have been
-        # added during runtime
-        load_host_tag_painters()
-        load_host_tag_sorters()
         clear_alarm_sound_states()
         return
 
     utils.load_web_plugins("views", globals())
     utils.load_web_plugins('icons', globals())
-    load_host_tag_painters()
-    load_host_tag_sorters()
     clear_alarm_sound_states()
 
     transform_old_dict_based_icons()
@@ -574,7 +568,52 @@ def transform_old_dict_based_icons():
         icon_and_action_registry.register(icon_class)
 
 
-def paint_host_tag(row, tgid):
+def _register_tag_plugins():
+    _register_host_tag_painters()
+    _register_host_tag_sorters()
+
+
+config.register_post_config_load_hook(_register_tag_plugins)
+
+
+def _register_host_tag_painters():
+    # first remove all old painters to reflect delted painters during runtime
+    for key in list(painter_registry.keys()):
+        if key.startswith('host_tag_'):
+            del painter_registry[key]
+
+    for tag_group in config.tags.tag_groups:
+        if tag_group.topic:
+            long_title = tag_group.topic + ' / ' + tag_group.title
+        else:
+            long_title = tag_group.title
+
+        ident = "host_tag_" + tag_group.id
+        spec = {
+            "title": _("Host tag:") + ' ' + long_title,
+            "short": tag_group.title,
+            "columns": ["host_custom_variables"],
+        }
+        cls = type(
+            "HostTagPainter%s" % tag_group.id.title(),
+            (Painter,),
+            {
+                "_ident": ident,
+                "_spec": spec,
+                "_tag_id": tag_group.id,
+                "ident": property(lambda self: self._ident),
+                "title": property(lambda self: self._spec["title"]),
+                "columns": property(lambda self: self._spec["columns"]),
+                "render": lambda self, row, cell: _paint_host_tag(row, self._tag_id),
+                "short_title": property(lambda self: self._spec["short"]),
+                # Use title of the tag value for grouping, not the complete
+                # dictionary of custom variables!
+                "group_by": property(lambda self, row: _paint_host_tag(row, self._tag_id)[1]),
+            })
+        painter_registry.register(cls)
+
+
+def _paint_host_tag(row, tgid):
     tags_of_host = get_host_tags(row).split()
 
     for t in get_tag_group(tgid)[1]:
@@ -583,58 +622,12 @@ def paint_host_tag(row, tgid):
     return "", _("N/A")
 
 
-def load_host_tag_painters():
-    # first remove all old painters to reflect delted painters during runtime
-    for key in list(painter_registry.keys()):
-        if key.startswith('host_tag_'):
-            del painter_registry[key]
-
-    for entry in config.host_tag_groups():
-        tgid = entry[0]
-        tit = entry[1]
-
-        long_tit = tit
-        if '/' in tit:
-            topic, tit = tit.split('/', 1)
-            if topic:
-                long_tit = topic + ' / ' + tit
-            else:
-                long_tit = tit
-
-        ident = "host_tag_" + tgid
-        spec = {
-            "title": _("Host tag:") + ' ' + long_tit,
-            "short": tit,
-            "columns": ["host_custom_variables"],
-        }
-        cls = type(
-            "HostTagPainter%s" % tgid.title(),
-            (Painter,),
-            {
-                "_ident": ident,
-                "_spec": spec,
-                "_tag_id": tgid,
-                "ident": property(lambda self: self._ident),
-                "title": property(lambda self: self._spec["title"]),
-                "columns": property(lambda self: self._spec["columns"]),
-                "render": lambda self, row, cell: paint_host_tag(row, self._tag_id),
-                "short_title": property(lambda self: self._spec["short"]),
-                # Use title of the tag value for grouping, not the complete
-                # dictionary of custom variables!
-                "group_by": property(lambda self, row: paint_host_tag(row, self._tag_id)[1]),
-            })
-        painter_registry.register(cls)
-
-
-def load_host_tag_sorters():
-    for _entry in config.host_tag_groups():
-        _tgid = _entry[0]
-        _tit = _entry[1]
-
+def _register_host_tag_sorters():
+    for tag_group in config.tags.tag_groups:
         register_sorter(
-            "host_tag_" + _tgid, {
-                "_tag_id": _tgid,
-                "title": _("Host tag:") + ' ' + _tit,
+            "host_tag_" + tag_group.id, {
+                "_tag_id": tag_group.id,
+                "title": _("Host tag:") + ' ' + tag_group.title,
                 "columns": ["host_custom_variable_names", "host_custom_variable_values"],
                 "cmp": lambda self, r1, r2: _cmp_host_tag(r1, r2, self._spec["_tag_id"]),
             })

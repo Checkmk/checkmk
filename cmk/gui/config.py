@@ -224,7 +224,7 @@ def _prepare_tag_config():
     # Merge builtin tags with configured tags. The logic favors the configured tags, even
     # when the user config should not conflict with the builtin tags. This is something
     # which could be left over from pre 1.5 setups.
-    #tags += BuiltinHosttagsConfiguration()
+    tags += BuiltinHosttagsConfiguration()
 
 
 def execute_post_config_load_hooks():
@@ -862,33 +862,6 @@ class BuiltinHosttagsConfiguration(cmk.gui.tags.HosttagsConfiguration):
         self._insert_tag_group(tag_group)
 
 
-# TODO: Clean this up by implement HosttagsConfiguration.__add__
-class BuiltinTags(object):
-    def get_effective_tag_groups(self, tag_groups):
-        """Extend the given tag group definitions with the builtin tag groups
-        and return the extended list"""
-        tag_groups = tag_groups[:]
-        tag_group_ids = set([tg[0] for tg in tag_groups])
-
-        builtin = BuiltinHosttagsConfiguration()
-        for tag_group in builtin.get_legacy_format()[0]:
-            if tag_group[0] not in tag_group_ids:
-                tag_groups.append(tag_group)
-
-        return tag_groups
-
-    def get_effective_aux_tags(self, aux_tag_list):
-        aux_tags_ = aux_tag_list[:]
-        aux_tag_ids = set([at[0] for at in aux_tag_list])
-
-        builtin = BuiltinHosttagsConfiguration()
-        for aux_tag in builtin.get_legacy_format()[1]:
-            if aux_tag[0] not in aux_tag_ids:
-                aux_tags_.append(aux_tag)
-
-        return aux_tags_
-
-
 def migrate_old_site_config(site_config):
     if not site_config:
         # Prevent problem when user has deleted all sites from his
@@ -1095,18 +1068,20 @@ def extend_user_modified_tag_groups(host_tags):
                 break
 
 
+# TODO: Cleanup all call sites and refactor to use config.tags
 def host_tag_groups():
     """Returns the effective set of tag groups defined. This includes
     the implicitly declared builtin host tags. This function must be used by
     the GUI code to get the tag group definitions."""
-    return BuiltinTags().get_effective_tag_groups(wato_host_tags)
+    return tags.get_legacy_format()[0]
 
 
+# TODO: Cleanup all call sites and refactor to use config.tags
 def aux_tags():
     """Returns the effective set of auxiliary tags defined. This includes
     the implicitly declared builtin host tags. This function must be used by
     the GUI code to get the auxiliay tag definitions."""
-    return BuiltinTags().get_effective_aux_tags(wato_aux_tags)
+    return tags.get_legacy_format()[1]
 
 
 # TODO: Replace this!

@@ -227,3 +227,28 @@ def test_tag_config_save(test_cfg, mocker):
     cfg.parse_config(config_file.load_for_reading())
     assert len(cfg.tag_groups) == 1
     assert cfg.tag_groups[0].id == "tgid2"
+
+
+def test_iadd_hosttags_configuration():
+    cfg1 = tags.HosttagsConfiguration()
+    cfg1.insert_tag_group(tags.HosttagGroup(("tgid2", "Topics/titlor", [("tgid2", "tagid2", [])])))
+    cfg1.aux_tag_list.append(tags.AuxTag(("bla", "BLAAAA")))
+
+    cfg2 = tags.HosttagsConfiguration()
+    cfg2.insert_tag_group(tags.HosttagGroup(("tgid3", "Topics/titlor", [("tgid3", "tagid3", [])])))
+    cfg2.insert_tag_group(tags.HosttagGroup(("tgid2", "BLAAA", [("tgid2", "tagid2", [])])))
+    cfg2.aux_tag_list.append(tags.AuxTag(("blub", "BLUB")))
+    cfg2.aux_tag_list.append(tags.AuxTag(("bla", "BLUB")))
+
+    cfg1 += cfg2
+
+    assert len(cfg1.tag_groups) == 2
+    assert cfg1.tag_groups[0].id == "tgid2"
+    assert cfg1.tag_groups[1].id == "tgid3"
+    assert cfg1.tag_groups[1].title == "titlor"
+
+    aux_tags = cfg1.get_aux_tags()
+    assert len(aux_tags) == 2
+    assert aux_tags[0].id == "bla"
+    assert aux_tags[0].title == "BLAAAA"
+    assert aux_tags[1].id == "blub"

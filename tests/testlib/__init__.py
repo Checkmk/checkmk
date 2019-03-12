@@ -1320,6 +1320,10 @@ class CMKWebSession(WebSession):
 
         assert host["hostname"] == hostname
         assert host["path"] == folder
+
+        # Ignore the automatically generated meta_data attribute for the moment
+        del host["attributes"]["meta_data"]
+
         assert host["attributes"] == attributes
 
     # hosts: List of tuples of this structure: (hostname, folder_path, attributes)
@@ -1364,6 +1368,10 @@ class CMKWebSession(WebSession):
         host = self.get_host(hostname)
 
         assert host["hostname"] == hostname
+
+        # Ignore the automatically generated meta_data attribute for the moment
+        del host["attributes"]["meta_data"]
+
         assert host["attributes"] == attributes
 
     def edit_hosts(self, edit_hosts):

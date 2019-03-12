@@ -39,6 +39,7 @@ OS_PACKAGES    += libpcap1 # needed for ICMP of CMC
 OS_PACKAGES     += libffi4 # needed for pyOpenSSL and dependant
 OS_PACKAGES    += libjpeg62 # needed by PIL
 OS_PACKAGES    += libgthread-2_0-0 # Needed by cmc (rrd library)
+OS_PACKAGES    += libpq5
 USERADD_OPTIONS   = -M
 ADD_USER_TO_GROUP = gpasswd -a %(user)s %(group)s
 PACKAGE_INSTALL   = zypper -n refresh ; zypper -n install

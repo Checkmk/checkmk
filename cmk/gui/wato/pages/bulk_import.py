@@ -402,8 +402,8 @@ class ModeBulkImport(WatoMode):
         ]
 
         # Add tag groups
-        for entry in config.host_tag_groups():
-            attributes.append(("tag_" + entry[0], _("Tag: %s") % entry[1]))
+        for tag_group in config.tags.tag_groups:
+            attributes.append(("tag_" + tag_group.id, _("Tag: %s") % tag_group.title))
 
         # Add custom attributes
         for entry in ModeCustomHostAttrs().get_attributes():

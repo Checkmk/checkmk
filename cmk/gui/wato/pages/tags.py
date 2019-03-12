@@ -81,9 +81,14 @@ class ModeTags(WatoMode):
     def __init__(self):
         super(ModeTags, self).__init__()
         self._builtin_config = config.BuiltinHosttagsConfiguration()
+
         self._tag_config_file = TagConfigFile()
         self._tag_config = cmk.gui.tags.HosttagsConfiguration()
         self._tag_config.parse_config(self._tag_config_file.load_for_reading())
+
+        self._effective_config = cmk.gui.tags.HosttagsConfiguration()
+        self._effective_config.parse_config(self._tag_config.get_dict_format())
+        self._effective_config += self._builtin_config
 
     def title(self):
         return _("Tag groups")
@@ -197,37 +202,30 @@ class ModeTags(WatoMode):
                 searchable=False,
                 sortable=False) as table:
 
-            effective_tag_groups = self._get_effective_tag_groups()
-
-            if not effective_tag_groups:
-                return
-
-            for nr, entry in enumerate(effective_tag_groups):
-                tag_id, title, _choices = entry[:3]  # fourth: tag dependency information
-                topic, title = map(_u, cmk.gui.tags.parse_hosttag_title(title))
+            for nr, tag_group in enumerate(self._effective_config.tag_groups):
                 table.row()
                 table.cell(_("Actions"), css="buttons")
-                self._show_tag_icons(tag_id, nr, effective_tag_groups)
+                self._show_tag_icons(tag_group, nr)
 
-                table.text_cell(_("ID"), tag_id)
-                table.text_cell(_("Title"), title)
-                table.text_cell(_("Topic"), topic or _("Tags"))
+                table.text_cell(_("ID"), tag_group.id)
+                table.text_cell(_("Title"), tag_group.title)
+                table.text_cell(_("Topic"), tag_group.topic or _("Tags"))
                 table.cell(_("Demonstration"), sortable=False)
-                html.begin_form("tag_%s" % tag_id)
-                watolib.host_attribute("tag_%s" % tag_id).render_input("", None)
+                html.begin_form("tag_%s" % tag_group.id)
+                watolib.host_attribute("tag_%s" % tag_group.id).render_input("", None)
                 html.end_form()
 
-    def _show_tag_icons(self, tag_id, nr, effective_tag_groups):
-        if self._builtin_config.tag_group_exists(tag_id):
+    def _show_tag_icons(self, tag_group, nr):
+        if self._builtin_config.tag_group_exists(tag_group.id):
             html.i("(%s)" % _("builtin"))
             return
 
-        edit_url = watolib.folder_preserving_link([("mode", "edit_tag"), ("edit", tag_id)])
+        edit_url = watolib.folder_preserving_link([("mode", "edit_tag"), ("edit", tag_group.id)])
         html.icon_button(edit_url, _("Edit this tag group"), "edit")
 
         html.element_dragger_url("tr", base_url=make_action_link([("mode", "tags"), ("_move", nr)]))
 
-        delete_url = make_action_link([("mode", "tags"), ("_delete", tag_id)])
+        delete_url = make_action_link([("mode", "tags"), ("_delete", tag_group.id)])
         html.icon_button(delete_url, _("Delete this tag group"), "delete")
 
     def _render_aux_tag_list(self):
@@ -241,18 +239,10 @@ class ModeTags(WatoMode):
                 empty_text=_("You haven't defined any auxiliary tags."),
                 searchable=False) as table:
 
-            aux_tags = config.BuiltinTags().get_effective_aux_tags(
-                self._tag_config.aux_tag_list.get_legacy_format())
-            effective_tag_groups = self._get_effective_tag_groups()
-
-            if not aux_tags:
-                return
-
-            for nr, (tag_id, title) in enumerate(aux_tags):
+            for nr, aux_tag in enumerate(self._effective_config.aux_tag_list.get_tags()):
                 table.row()
-                topic, title = cmk.gui.tags.parse_hosttag_title(title)
                 table.cell(_("Actions"), css="buttons")
-                if tag_id in self._builtin_config.aux_tag_list.get_tag_ids():
+                if aux_tag.id in self._builtin_config.aux_tag_list.get_tag_ids():
                     html.i("(%s)" % _("builtin"))
                 else:
                     edit_url = watolib.folder_preserving_link([("mode", "edit_auxtag"), ("edit",
@@ -260,24 +250,20 @@ class ModeTags(WatoMode):
                     delete_url = make_action_link([("mode", "tags"), ("_delaux", nr)])
                     html.icon_button(edit_url, _("Edit this auxiliary tag"), "edit")
                     html.icon_button(delete_url, _("Delete this auxiliary tag"), "delete")
-                table.text_cell(_("ID"), tag_id)
+                table.text_cell(_("ID"), aux_tag.id)
 
-                table.text_cell(_("Title"), _u(title))
-                table.text_cell(_("Topic"), _u(topic) or _("Tags"))
+                table.text_cell(_("Title"), _u(aux_tag.title))
+                table.text_cell(_("Topic"), _u(aux_tag.topic) or _("Tags"))
                 table.text_cell(
                     _("Tags using this auxiliary tag"), ", ".join(
-                        self._get_tags_using_aux_tag(effective_tag_groups, tag_id)))
+                        self._get_tags_using_aux_tag(aux_tag)))
 
-    def _get_effective_tag_groups(self):
-        return config.BuiltinTags().get_effective_tag_groups(
-            self._tag_config.get_legacy_format()[0])
-
-    def _get_tags_using_aux_tag(self, tag_groups, aux_tag):
+    def _get_tags_using_aux_tag(self, aux_tag):
         used_tags = set()
-        for tag_def in tag_groups:
-            for entry in tag_def[2]:
-                if aux_tag in entry[-1]:
-                    used_tags.add(tag_def[1].split("/")[-1])
+        for tag_group in self._effective_config.tag_groups:
+            for tag in tag_group.tags:
+                if aux_tag in tag.aux_tag_ids:
+                    used_tags.add(aux_tag.id)
         return sorted(used_tags)
 
 
@@ -288,15 +274,14 @@ class ModeEditHosttagConfiguration(WatoMode):
         self._untainted_hosttags_config = cmk.gui.tags.HosttagsConfiguration()
         self._untainted_hosttags_config.parse_config(self._tag_config_file.load_for_reading())
 
-    def _get_topic_valuespec(self):
-        # TODO: Merging of both objects would ne neat here
-        builtin_tags_config = config.BuiltinHosttagsConfiguration()
-        topics = set(builtin_tags_config.get_hosttag_topics())
-        topics.update(self._untainted_hosttags_config.get_hosttag_topics())
+        self._effective_config = cmk.gui.tags.HosttagsConfiguration()
+        self._effective_config.parse_config(self._untainted_hosttags_config.get_dict_format())
+        self._effective_config += cmk.gui.config.BuiltinHosttagsConfiguration()
 
+    def _get_topic_valuespec(self):
         return OptionalDropdownChoice(
             title=_("Topic") + "<sup>*</sup>",
-            choices=list(topics),
+            choices=list(self._effective_config.get_hosttag_topics()),
             explicit=TextUnicode(),
             otherlabel=_("Create new topic"),
             default_value=None,
@@ -588,9 +573,6 @@ class ModeEditTagGroup(ModeEditHosttagConfiguration):
         ]
 
     def _tag_choices_valuespec(self):
-        aux_tags = config.BuiltinTags().get_effective_aux_tags(
-            self._untainted_hosttags_config.get_legacy_format()[1])
-
         # We want the compact tuple style visualization which is not
         # supported by the Dictionary valuespec. Transform!
         return Transform(
@@ -605,10 +587,11 @@ class ModeEditTagGroup(ModeEditHosttagConfiguration):
                             regex_error=_("Invalid tag ID. Only the characters a-z, A-Z, "
                                           "0-9, _ and - are allowed.")),
                         TextUnicode(title=_("Title") + "*", allow_empty=False, size=40),
-                        Foldable(ListChoice(
-                            title=_("Auxiliary tags"),
-                            choices=aux_tags,
-                        )),
+                        Foldable(
+                            ListChoice(
+                                title=_("Auxiliary tags"),
+                                choices=self._effective_config.aux_tag_list.get_choices(),
+                            )),
                     ],
                     show_titles=True,
                     orientation="horizontal",

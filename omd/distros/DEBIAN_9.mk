@@ -39,8 +39,9 @@ OS_PACKAGES      += libgsf-1-114 # needed by msitools/Agent Bakery
 OS_PACKAGES      += libglib2.0-0 # needed by msitools/Agent Bakery
 OS_PACKAGES      += cpio # needed for Agent bakery (solaris pkgs)
 OS_PACKAGES      += poppler-utils # needed for preview of PDF in reporting
-OS_PACKAGES       += libffi6 # needed for pyOpenSSL and dependant
+OS_PACKAGES      += libffi6 # needed for pyOpenSSL and dependant
 OS_PACKAGES      += libssl1.0.2 # Needed for net-snmp (https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=828449)
+OS_PACKAGES      += libpq5
 USERADD_OPTIONS   =
 ADD_USER_TO_GROUP = gpasswd -a %(user)s %(group)s
 PACKAGE_INSTALL   = aptitude -y update ; aptitude -y install

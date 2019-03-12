@@ -35,6 +35,7 @@ OS_PACKAGES      += binutils # Needed by Check_MK Agent Bakery
 OS_PACKAGES      += rpm-build # Needed by Check_MK Agent Bakery
 #OS_PACKAGES      += pyOpenSSL # needed for Agent Bakery (deployment)
 OS_PACKAGES       += libffi # needed for pyOpenSSL and dependant
+OS_PACKAGES      += postgresql-libs
 USERADD_OPTIONS   = -M
 ADD_USER_TO_GROUP = gpasswd -a %(user)s %(group)s
 PACKAGE_INSTALL   = yum -y makecache ; yum -y install

@@ -1,0 +1,16 @@
+Title: Restricted WATO sidebar snapin only show up to 10+ changes
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0p13
+Date: 1552391861
+Class: fix
+
+The sidebar snapin and the WATO main page now use the same infotext to display the number of pending changes.
+This infotext currently displays only up to 10 changes in detail. Any number above 10 is abstracted with the text <tt>10+ changes</tt>.
+The reasoning behind this is, that there may be some sites with thousands of pending changes.
+Determining the exact number generally takes some time, hereby slowing down the rending of any page showing this infotext.
+
+
+The <tt>10+ changes</tt> limit may be lifted in the future, once a more performant changes measurement functionality has been introduced.

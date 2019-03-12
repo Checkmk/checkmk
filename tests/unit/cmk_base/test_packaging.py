@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import cmk.utils.paths
 import cmk_base.packaging as packaging
 
 
@@ -27,5 +28,5 @@ def test_package_parts():
 def test_config_parts():
     assert packaging.config_parts == [
         packaging.PackagePart("ec_rule_packs", "Event Console rule packs",
-                              "etc/check_mk/mkeventd.d/mkp/rule_packs")
+                              "%s/mkeventd.d/mkp/rule_packs" % cmk.utils.paths.default_config_dir)
     ]

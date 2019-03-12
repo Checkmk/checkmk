@@ -306,8 +306,8 @@ def get_language(default=None):
 
 def tag_alias(tag):
     for entry in host_tag_groups():
-        tag_id, _title, tags = entry[:3]
-        for t in tags:
+        tag_id, _title, tag_choices = entry[:3]
+        for t in tag_choices:
             if t[0] == tag:
                 return t[1]
 
@@ -318,8 +318,8 @@ def tag_alias(tag):
 
 def tag_group_title(tag):
     for entry in host_tag_groups():
-        _tag_id, title, tags = entry[:3]
-        for t in tags:
+        _tag_id, title, tag_choices = entry[:3]
+        for t in tag_choices:
             if t[0] == tag:
                 return title
 

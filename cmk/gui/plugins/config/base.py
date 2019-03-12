@@ -439,9 +439,16 @@ mkeventd_service_levels = [
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-wato_enabled = True
+# Pre 1.6 tag configuration variables
 wato_host_tags = []
 wato_aux_tags = []
+# Tag configuration variable since 1.6
+wato_tags = {
+    "tag_groups": [],
+    "aux_tags": [],
+}
+
+wato_enabled = True
 wato_hide_filenames = True
 wato_hide_hosttags = False
 wato_upload_insecure_snapshots = False

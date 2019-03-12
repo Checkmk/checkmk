@@ -27,6 +27,7 @@
 
 import re
 import os
+from pathlib2 import Path
 
 import cmk.utils.paths
 import cmk.utils.store as store
@@ -34,11 +35,45 @@ import cmk.utils.store as store
 import cmk.gui.config as config
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.plugins.watolib.utils import wato_fileheader
-from cmk.gui.watolib.utils import (
-    format_config_value,
-    multisite_dir,
-)
+from cmk.gui.watolib.simple_config_file import WatoSimpleConfigFile
+from cmk.gui.watolib.utils import multisite_dir
+
+
+class TagConfigFile(WatoSimpleConfigFile):
+    """Handles loading the 1.6 tag definitions from tags.mk or
+    the pre 1.6 tag configuration from hosttags.mk"""
+
+    def __init__(self):
+        file_path = Path(multisite_dir()) / "tags.mk"
+        super(TagConfigFile, self).__init__(config_file_path=file_path, config_variable="wato_tags")
+
+    def _load_file(self, lock=False):
+        if not self._config_file_path.exists():
+            return self._load_pre_16_config(lock=lock)
+        return super(TagConfigFile, self)._load_file(lock=lock)
+
+    def _load_pre_16_config(self, lock):
+        file_path = Path(multisite_dir()) / "hosttags.mk"
+        legacy_cfg = store.load_mk_file(
+            str(file_path), {
+                "wato_host_tags": [],
+                "wato_aux_tags": []
+            }, lock=lock)
+
+        # TODO: Move legacy handling out of tag classes
+        cfg = HosttagsConfiguration()
+        cfg.parse_config((legacy_cfg["wato_host_tags"], legacy_cfg["wato_aux_tags"]))
+        return cfg.get_dict_format()
+
+    # TODO: Move the hosttag export to a hook
+    def save(self, cfg):
+        super(TagConfigFile, self).save(cfg)
+
+        tag_config = HosttagsConfiguration()
+        tag_config.parse_config(cfg)
+        hosttags, auxtags = tag_config.get_legacy_format()
+
+        _export_hosttags_to_php(hosttags, auxtags)
 
 
 def parse_hosttag_title(title):
@@ -466,27 +501,6 @@ class HosttagsConfiguration(object):
         if len(tag_group.tags) == 1 and tag_group.tags[0] is None:
             raise MKUserError("id_0", _("Tags with only one choice must have an ID."))
 
-    def load(self):
-        hosttags, auxtags = self._load_hosttags()
-        self._parse_legacy_format(hosttags, auxtags)
-
-    # Current specification for hosttag entries: One tag definition is stored
-    # as tuple of at least three elements. The elements are used as follows:
-    # taggroup_id, group_title, list_of_choices, depends_on_tags, depends_on_roles, editable
-    def _load_hosttags(self):
-        default_config = {
-            "wato_host_tags": [],
-            "wato_aux_tags": [],
-        }
-
-        tag_config = cmk.utils.store.load_mk_file(multisite_dir() + "hosttags.mk", default_config)
-
-        self._convert_manual_host_tags(tag_config["wato_host_tags"])
-        config.migrate_old_sample_config_tag_groups(tag_config["wato_host_tags"],
-                                                    tag_config["wato_aux_tags"])
-
-        return tag_config["wato_host_tags"], tag_config["wato_aux_tags"]
-
     # Convert manually crafted host tags tags WATO-style. This
     # makes the migration easier
     def _convert_manual_host_tags(self, host_tags):
@@ -494,11 +508,6 @@ class HosttagsConfiguration(object):
             for nr, entry in enumerate(taggroup[2]):
                 if len(entry) <= 2:
                     taggroup[2][nr] = entry + ([],)
-
-    def save(self):
-        self.validate_config()
-        hosttags, auxtags = self.get_legacy_format()
-        save_hosttags(hosttags, auxtags)
 
     def get_legacy_format(self):  # Convert new style to old style
         tag_groups_response = []
@@ -529,19 +538,6 @@ class BuiltinHosttagsConfiguration(HosttagsConfiguration):
     def load(self):
         builtin_tags = config.BuiltinTags()
         self._parse_legacy_format(builtin_tags.host_tags(), builtin_tags.aux_tags())
-
-
-# TODO: Cleanup all direct call sites and move to HosttagsConfiguration
-def save_hosttags(hosttags, auxtags):
-    output = wato_fileheader()
-
-    output += "wato_host_tags += \\\n%s\n\n" % format_config_value(hosttags)
-    output += "wato_aux_tags += \\\n%s\n" % format_config_value(auxtags)
-
-    store.mkdir(multisite_dir())
-    store.save_file(multisite_dir() + "hosttags.mk", output)
-
-    _export_hosttags_to_php(hosttags, auxtags)
 
 
 # Creates a includable PHP file which provides some functions which

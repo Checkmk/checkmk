@@ -222,8 +222,8 @@ from cmk.gui.watolib.tags import (
     GroupedHosttag,
     HosttagGroup,
     HosttagsConfiguration,
+    TagConfigFile,
     BuiltinHosttagsConfiguration,
-    save_hosttags,
 )
 from cmk.gui.watolib.hosts_and_folders import (
     Folder,
@@ -431,23 +431,7 @@ def _create_sample_config():
     save_group_information(groups)
 
     # Basic setting of host tags
-    wato_host_tags = \
-    [('criticality',
-      u'Criticality',
-      [('prod', u'Productive system', []),
-       ('critical', u'Business critical', []),
-       ('test', u'Test system', []),
-       ('offline', u'Do not monitor this host', [])]),
-     ('networking',
-      u'Networking Segment',
-      [('lan', u'Local network (low latency)', []),
-       ('wan', u'WAN (high latency)', []),
-       ('dmz', u'DMZ (low latency, secure access)', [])]),
-    ]
-
-    wato_aux_tags = []
-
-    save_hosttags(wato_host_tags, wato_aux_tags)
+    _initialize_tag_config()
 
     # Rules that match the upper host tag definition
     ruleset_config = {
@@ -522,10 +506,6 @@ def _create_sample_config():
     except ImportError:
         pass
 
-    # Make sure the host tag attributes are immediately declared!
-    config.wato_host_tags = wato_host_tags
-    config.wato_aux_tags = wato_aux_tags
-
     # Initial baking of agents (when bakery is available)
     if has_agent_bakery():
         import cmk.gui.cee.plugins.wato.agent_bakery
@@ -544,3 +524,25 @@ def _create_sample_config():
     cmk.gui.wato.mkeventd.save_mkeventd_sample_config()
 
     userdb.create_cmk_automation_user()
+
+
+def _initialize_tag_config():
+    tag_config = HosttagsConfiguration().parse_config((
+        [
+            ('criticality', u'Criticality', [
+                ('prod', u'Productive system', []),
+                ('critical', u'Business critical', []),
+                ('test', u'Test system', []),
+                ('offline', u'Do not monitor this host', []),
+            ]),
+            ('networking', u'Networking Segment', [
+                ('lan', u'Local network (low latency)', []),
+                ('wan', u'WAN (high latency)', []),
+                ('dmz', u'DMZ (low latency, secure access)', []),
+            ]),
+        ],
+        [],
+    ))
+    TagConfigFile().save(tag_config.get_dict_format())
+    # Make sure the host tag attributes are immediately declared!
+    config.wato_host_tags, config.wato_aux_tags = tag_config.get_legacy_format()

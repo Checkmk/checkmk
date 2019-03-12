@@ -46,7 +46,7 @@ def test_tag_config():
 
 def test_tag_config_load(test_cfg):
     cfg = tags.HosttagsConfiguration()
-    cfg.load()
+    cfg.parse_config(tags.TagConfigFile().load_for_reading())
 
     assert len(cfg.tag_groups) == 2
     tag_group = cfg.tag_groups[0]
@@ -87,7 +87,7 @@ def test_tag_config_get_hosttag_topics(test_cfg):
 
 def test_tag_config_remove_tag_group(test_cfg):
     cfg = tags.HosttagsConfiguration()
-    cfg.load()
+    cfg.parse_config(tags.TagConfigFile().load_for_reading())
 
     assert cfg.get_tag_group("xyz") is None
     cfg.remove_tag_group("xyz")  # not existing -> fine
@@ -99,7 +99,7 @@ def test_tag_config_remove_tag_group(test_cfg):
 
 def test_tag_config_remove_aux_tag(test_cfg):
     cfg = tags.HosttagsConfiguration()
-    cfg.load()
+    cfg.parse_config(tags.TagConfigFile().load_for_reading())
 
     assert "xyz" not in cfg.aux_tag_list.get_tag_ids()
     cfg.aux_tag_list.remove("xyz")  # not existing -> fine
@@ -111,7 +111,7 @@ def test_tag_config_remove_aux_tag(test_cfg):
 
 def test_tag_config_get_tag_group(test_cfg):
     cfg = tags.HosttagsConfiguration()
-    cfg.load()
+    cfg.parse_config(tags.TagConfigFile().load_for_reading())
 
     assert cfg.get_tag_group("xyz") is None
     assert isinstance(cfg.get_tag_group("networking"), tags.HosttagGroup)
@@ -119,20 +119,20 @@ def test_tag_config_get_tag_group(test_cfg):
 
 def test_tag_config_get_aux_tags(test_cfg):
     cfg = tags.HosttagsConfiguration()
-    cfg.load()
+    cfg.parse_config(tags.TagConfigFile().load_for_reading())
     assert [a.id for a in cfg.get_aux_tags()] == ["bla"]
 
 
 def test_tag_config_get_tag_ids(test_cfg):
     cfg = tags.HosttagsConfiguration()
-    cfg.load()
+    cfg.parse_config(tags.TagConfigFile().load_for_reading())
     assert cfg.get_tag_ids() == set(
         ['bla', 'critical', 'dmz', 'lan', 'offline', 'prod', 'test', 'wan'])
 
 
 def test_tag_config_get_tag_ids_with_group_prefix(test_cfg):
     cfg = tags.HosttagsConfiguration()
-    cfg.load()
+    cfg.parse_config(tags.TagConfigFile().load_for_reading())
     assert cfg.get_tag_ids_with_group_prefix() == set([
         'bla',
         'criticality/critical',
@@ -213,13 +213,15 @@ def test_tag_config_update_tag_group(test_cfg):
 def test_tag_config_save(test_cfg, mocker):
     export_mock = mocker.patch.object(tags, "_export_hosttags_to_php")
 
+    config_file = tags.TagConfigFile()
+
     cfg = tags.HosttagsConfiguration()
     cfg.insert_tag_group(tags.HosttagGroup(("tgid2", "Topics/titlor", [("tgid2", "tagid2", [])])))
-    cfg.save()
+    config_file.save(cfg.get_dict_format())
 
     export_mock.assert_called_once()
 
     cfg = tags.HosttagsConfiguration()
-    cfg.load()
+    cfg.parse_config(config_file.load_for_reading())
     assert len(cfg.tag_groups) == 1
     assert cfg.tag_groups[0].id == "tgid2"

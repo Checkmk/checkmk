@@ -122,6 +122,7 @@ def fake_version_and_paths():
                         os.path.join(tmp_dir, "check_mk/check_includes"))
     monkeypatch.setattr("cmk.utils.paths.check_mk_config_dir",
                         os.path.join(tmp_dir, "etc/check_mk/conf.d"))
+    monkeypatch.setattr("cmk.utils.paths.default_config_dir", os.path.join(tmp_dir, "etc/check_mk"))
 
 
 # Cleanup temporary directory created above

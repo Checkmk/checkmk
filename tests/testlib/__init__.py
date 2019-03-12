@@ -1448,6 +1448,10 @@ class CMKWebSession(WebSession):
         assert result is None
 
         folder = self.get_folder(folder_path)
+
+        # Ignore the automatically generated meta_data attribute for the moment
+        del folder["attributes"]["meta_data"]
+
         assert folder["attributes"] == attributes
 
     def get_folder(self, folder_path, effective_attributes=False):

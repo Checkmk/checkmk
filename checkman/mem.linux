@@ -26,8 +26,16 @@ description:
  before. That is because Linux has taken RAM from processes in order to
  increase disk buffers.
 
- Per default there are various crit/warn levels set. Please use WATO
- for viewing and adapting these levels.
+ Check Status:
+ Per default the check status is either {OK} in case no RAM is corrupted or
+ {CRIT} in case at least 1 Byte of RAM is corrupted. It is possible to
+ change this behaviour by configuring the warning and critical levels in WATO
+ group {OS} rule {Memory and Swap usage on Linux}. In case the parameter
+ {Upper levels for Hardware Corrupted} is configured with {Absolute levels} or
+ with {Percentual levels} the corresponding levels are considered to generate
+ check status {WARN} or {CRIT}. In case the parameter is configured to
+ {Do not impose levels} the check status is always {OK} independent of a
+ possible RAM corruption.
 
 item:
  {None}

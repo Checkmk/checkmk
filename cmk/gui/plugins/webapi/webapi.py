@@ -790,9 +790,7 @@ class APICallHosttags(APICallCollection):
         return hosttags_dict
 
     def _get_builtin_tags_configuration(self):
-        builtin_tags_config = config.BuiltinHosttagsConfiguration()
-        builtin_tags_config.load()
-        return builtin_tags_config.get_dict_format()
+        return config.BuiltinHosttagsConfiguration().get_dict_format()
 
     def _set(self, request):
         tag_config_file = TagConfigFile()
@@ -817,15 +815,8 @@ class APICallHosttags(APICallCollection):
         new_tags.update(changed_hosttags_config.get_tag_ids_with_group_prefix())
 
         # Remove the builtin hoststags from the list of used_tags
-        for builtin_tag_group in config.BuiltinTags().host_tags():
-            tag_group_id = builtin_tag_group[0]
-            tags = builtin_tag_group[2]
-            for tag_id, _tag_title, _aux_tags in tags:
-                used_tags.discard("%s/%s" % (tag_group_id, tag_id))
-                used_tags.discard(tag_id)
-
-        for tag_id, _tag_title in config.BuiltinTags().aux_tags():
-            used_tags.discard(tag_id)
+        builtin_config = config.BuiltinHosttagsConfiguration()
+        used_tags.discard(builtin_config.get_tag_ids_with_group_prefix())
 
         missing_tags = used_tags - new_tags
         if missing_tags:

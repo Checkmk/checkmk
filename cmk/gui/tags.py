@@ -308,6 +308,9 @@ class HosttagsConfiguration(object):
         # TODO: Return sorted?
         return list(names)
 
+    def tag_group_exists(self, tag_group_id):
+        return self.get_tag_group(tag_group_id) is not None
+
     def get_tag_group(self, tag_group_id):
         for group in self.tag_groups:
             if group.id == tag_group_id:

@@ -729,6 +729,11 @@ class BuiltinTags(object):
                 ("special-agents", _("Use all enabled datasource programs"), ["tcp"]),
                 ("no-agent", _("No agent"), []),
             ], ["!ping"]),
+            ("piggyback", "%s/%s" % (_("Data sources"), _("Piggyback")), [
+                (None, _("Legacy: Automatically detect piggyback usage"), []),
+                ("piggyback", _("Use piggyback data"), []),
+                ("no-piggyback", _("Do not use piggyback data"), []),
+            ], ["!ping"]),
             ("snmp", "%s/%s" % (_("Data sources"), _("SNMP")), [
                 ("no-snmp", _("No SNMP"), []),
                 ("snmp-v2", _("SNMP v2 or v3"), ["snmp"]),

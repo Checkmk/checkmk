@@ -720,89 +720,158 @@ def save_user_file(name, data, user_id, unlock=False):
 
 
 class BuiltinHosttagsConfiguration(cmk.gui.tags.HosttagsConfiguration):
+    def __init__(self):
+        super(BuiltinHosttagsConfiguration, self).__init__()
+        self.parse_config({
+            "tag_groups": self._builtin_tag_groups(),
+            "aux_tags": self._builtin_aux_tags(),
+        })
+
     def _initialize(self):
         self.tag_groups = []
         self.aux_tag_list = cmk.gui.tags.BuiltinAuxtagList()
 
+    def _builtin_tag_groups(self):
+        return [
+            {
+                'id': 'agent',
+                'title': _('Check_MK Agent'),
+                'topic': _('Data sources'),
+                'tags': [
+                    {
+                        'id': 'cmk-agent',
+                        'title': _('Contact either Check_MK Agent or use datasource program'),
+                        'aux_tags': ['tcp'],
+                    },
+                    {
+                        'id': 'all-agents',
+                        'title': _('Contact Check_MK agent and all enabled datasource programs'),
+                        'aux_tags': ['tcp'],
+                    },
+                    {
+                        'id': 'special-agents',
+                        'title': _('Use all enabled datasource programs'),
+                        'aux_tags': ['tcp'],
+                    },
+                    {
+                        'id': 'no-agent',
+                        'title': _('No agent'),
+                        'aux_tags': [],
+                    },
+                ],
+            },
+            {
+                'id': 'piggyback',
+                'title': _("Piggyback"),
+                'topic': _('Data sources'),
+                'tags': [
+                    {
+                        "id": None,
+                        "title": _("Legacy: Automatically detect piggyback usage"),
+                        "aux_tags": []
+                    },
+                    {
+                        "id": "piggyback",
+                        "title": _("Use piggyback data"),
+                        "aux_tags": [],
+                    },
+                    {
+                        "id": "no-piggyback",
+                        "title": _("Do not use piggyback data"),
+                        "aux_tags": [],
+                    },
+                ],
+            },
+            {
+                'id': 'snmp',
+                'title': _('SNMP'),
+                'topic': _('Data sources'),
+                'tags': [{
+                    'id': 'no-snmp',
+                    'title': _('No SNMP'),
+                    'aux_tags': [],
+                }, {
+                    'id': 'snmp-v2',
+                    'title': _('SNMP v2 or v3'),
+                    'aux_tags': ['snmp'],
+                }, {
+                    'id': 'snmp-v1',
+                    'title': _('SNMP v1'),
+                    'aux_tags': ['snmp'],
+                }],
+            },
+            {
+                'id': 'address_family',
+                'title': _('IP Address Family'),
+                'topic': u'Address',
+                'tags': [
+                    {
+                        'id': 'ip-v4-only',
+                        'title': _('IPv4 only'),
+                        'aux_tags': ['ip-v4'],
+                    },
+                    {
+                        'id': 'ip-v6-only',
+                        'title': _('IPv6 only'),
+                        'aux_tags': ['ip-v6'],
+                    },
+                    {
+                        'id': 'ip-v4v6',
+                        'title': _('IPv4/IPv6 dual-stack'),
+                        'aux_tags': ['ip-v4', 'ip-v6'],
+                    },
+                    {
+                        'id': 'no-ip',
+                        'title': _('No IP'),
+                        'aux_tags': [],
+                    },
+                ],
+            },
+        ]
+
+    def _builtin_aux_tags(self):
+        return [
+            {
+                'id': 'ip-v4',
+                'topic': _('Address'),
+                'title': _('IPv4'),
+            },
+            {
+                'id': 'ip-v6',
+                'topic': _('Address'),
+                'title': _('IPv6'),
+            },
+            {
+                'id': 'snmp',
+                'topic': _('Data sources'),
+                'title': _('Monitor via SNMP'),
+            },
+            {
+                'id': 'tcp',
+                'topic': _('Data sources'),
+                'title': _('Monitor via Check_MK Agent'),
+            },
+            {
+                'id': 'ping',
+                'topic': _('Data sources'),
+                'title': _('Only ping this device'),
+            },
+        ]
+
     def insert_tag_group(self, tag_group):
         self._insert_tag_group(tag_group)
 
-    def load(self):
-        builtin_tags = BuiltinTags()
-        self._parse_legacy_format(builtin_tags.host_tags(), builtin_tags.aux_tags())
 
-
-# TODO: Clean this up!
-def is_builtin_host_tag_group(tag_group_id):
-    # Special handling for the agent tag group. It was a tag group created with
-    # the sample WATO configuration until version 1.5x. This means users could've
-    # customized the group. In case we find such a customization we treat it as
-    # not builtin tag group.
-    if tag_group_id == "agent":
-        for tag_group in wato_host_tags:
-            if tag_group[0] == tag_group_id:
-                return False
-        return True
-
-    for tag_group in BuiltinTags().host_tags():
-        if tag_group[0] == tag_group_id:
-            return True
-    return False
-
-
-# TODO: Clean this up!
-def is_builtin_aux_tag(taggroup_id):
-    for builtin_taggroup in BuiltinTags().aux_tags():
-        if builtin_taggroup[0] == taggroup_id:
-            return True
-    return False
-
-
+# TODO: Clean this up by implement HosttagsConfiguration.__add__
 class BuiltinTags(object):
-    def host_tags(self):
-        return [
-            ("agent", "%s/%s" % (_("Data sources"), _("Check_MK Agent")), [
-                ("cmk-agent", _("Contact either Check_MK Agent or use datasource program"),
-                 ["tcp"]),
-                ("all-agents", _("Contact Check_MK agent and all enabled datasource programs"),
-                 ["tcp"]),
-                ("special-agents", _("Use all enabled datasource programs"), ["tcp"]),
-                ("no-agent", _("No agent"), []),
-            ], ["!ping"]),
-            ("piggyback", "%s/%s" % (_("Data sources"), _("Piggyback")), [
-                (None, _("Legacy: Automatically detect piggyback usage"), []),
-                ("piggyback", _("Use piggyback data"), []),
-                ("no-piggyback", _("Do not use piggyback data"), []),
-            ], ["!ping"]),
-            ("snmp", "%s/%s" % (_("Data sources"), _("SNMP")), [
-                ("no-snmp", _("No SNMP"), []),
-                ("snmp-v2", _("SNMP v2 or v3"), ["snmp"]),
-                ("snmp-v1", _("SNMP v1"), ["snmp"]),
-            ], ["!ping"]),
-            ("address_family", "%s/%s " % (_("Address"), _("IP Address Family")), [
-                ("ip-v4-only", _("IPv4 only"), ["ip-v4"]),
-                ("ip-v6-only", _("IPv6 only"), ["ip-v6"]),
-                ("ip-v4v6", _("IPv4/IPv6 dual-stack"), ["ip-v4", "ip-v6"]),
-                ("no-ip", _("No IP"), []),
-            ]),
-        ]
-
-    def aux_tags(self):
-        return [
-            ("ip-v4", "%s/%s" % (_("Address"), _("IPv4"))),
-            ("ip-v6", "%s/%s" % (_("Address"), _("IPv6"))),
-            ("snmp", "%s/%s" % (_("Data sources"), _("Monitor via SNMP"))),
-            ("tcp", "%s/%s" % (_("Data sources"), _("Monitor via Check_MK Agent"))),
-            ("ping", "%s/%s" % (_("Data sources"), _("Only ping this device"))),
-        ]
-
     def get_effective_tag_groups(self, tag_groups):
         """Extend the given tag group definitions with the builtin tag groups
         and return the extended list"""
         tag_groups = tag_groups[:]
         tag_group_ids = set([tg[0] for tg in tag_groups])
 
-        for tag_group in self.host_tags():
+        builtin = BuiltinHosttagsConfiguration()
+        for tag_group in builtin.get_legacy_format()[0]:
             if tag_group[0] not in tag_group_ids:
                 tag_groups.append(tag_group)
 
@@ -812,7 +881,8 @@ class BuiltinTags(object):
         aux_tags_ = aux_tag_list[:]
         aux_tag_ids = set([at[0] for at in aux_tag_list])
 
-        for aux_tag in self.aux_tags():
+        builtin = BuiltinHosttagsConfiguration()
+        for aux_tag in builtin.get_legacy_format()[1]:
             if aux_tag[0] not in aux_tag_ids:
                 aux_tags_.append(aux_tag)
 

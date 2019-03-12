@@ -80,6 +80,7 @@ class ModeTags(WatoMode):
 
     def __init__(self):
         super(ModeTags, self).__init__()
+        self._builtin_config = config.BuiltinHosttagsConfiguration()
         self._tag_config_file = TagConfigFile()
         self._tag_config = cmk.gui.tags.HosttagsConfiguration()
         self._tag_config.parse_config(self._tag_config_file.load_for_reading())
@@ -217,7 +218,7 @@ class ModeTags(WatoMode):
                 html.end_form()
 
     def _show_tag_icons(self, tag_id, nr, effective_tag_groups):
-        if config.is_builtin_host_tag_group(tag_id):
+        if self._builtin_config.tag_group_exists(tag_id):
             html.i("(%s)" % _("builtin"))
             return
 
@@ -251,7 +252,7 @@ class ModeTags(WatoMode):
                 table.row()
                 topic, title = cmk.gui.tags.parse_hosttag_title(title)
                 table.cell(_("Actions"), css="buttons")
-                if config.is_builtin_aux_tag(tag_id):
+                if tag_id in self._builtin_config.aux_tag_list.get_tag_ids():
                     html.i("(%s)" % _("builtin"))
                 else:
                     edit_url = watolib.folder_preserving_link([("mode", "edit_auxtag"), ("edit",
@@ -288,10 +289,8 @@ class ModeEditHosttagConfiguration(WatoMode):
         self._untainted_hosttags_config.parse_config(self._tag_config_file.load_for_reading())
 
     def _get_topic_valuespec(self):
-        # Merging of both objects would ne neat here
+        # TODO: Merging of both objects would ne neat here
         builtin_tags_config = config.BuiltinHosttagsConfiguration()
-        builtin_tags_config.load()
-
         topics = set(builtin_tags_config.get_hosttag_topics())
         topics.update(self._untainted_hosttags_config.get_hosttag_topics())
 

@@ -827,11 +827,23 @@ def is_ping_host(hostname):
        and not has_management_board(hostname)
 
 
+# Deprecated: Use HostConfig:is_agent_host instance instead
 def is_agent_host(hostname):
-    import cmk_base.data_sources as data_sources
-    return is_tcp_host(hostname) or \
-            piggyback.has_piggyback_raw_data(piggyback_max_cachefile_age, hostname) or \
-            data_sources.has_persisted_piggyback_agent_sections(hostname)
+    if is_tcp_host(hostname):
+        return True
+
+    tags = tags_of_host(hostname)
+
+    if "piggyback" in tags:
+        is_piggyback_host = True
+    elif "no-piggyback" in tags:
+        is_piggyback_host = False
+    else:  # Legacy automatic detection
+        import cmk_base.data_sources as data_sources
+        is_piggyback_host = piggyback.has_piggyback_raw_data(piggyback_max_cachefile_age, hostname) or \
+                            data_sources.has_persisted_piggyback_agent_sections(hostname)
+
+    return is_piggyback_host
 
 
 def is_dual_host(hostname):
@@ -2729,10 +2741,21 @@ class HostConfig(object):
         self.is_tcp_host = self._config_cache.in_binary_hostlist(hostname, tcp_hosts)
         self.is_snmp_host = self._config_cache.in_binary_hostlist(hostname, snmp_hosts)
 
+        if "piggyback" in self.tags:
+            self.is_piggyback_host = True
+        elif "no-piggyback" in self.tags:
+            self.is_piggyback_host = False
+        else:  # Legacy automatic detection
+            self.is_piggyback_host = self.has_piggyback_data
+
         # Agent types
+        self.is_agent_host = self.is_tcp_host or self.is_piggyback_host
         self.management_protocol = management_protocol_of(hostname)
         self.has_management_board = self.management_protocol is not None
-        self.is_ping_host = not self.is_snmp_host and not self.is_agent_host and not self.has_management_board
+
+        self.is_ping_host = not self.is_snmp_host and\
+                            not self.is_agent_host and\
+                            not self.has_management_board
 
         self.is_dual_host = self.is_tcp_host and self.is_snmp_host
         self.is_all_agents_host = "all-agents" in self.tags
@@ -2749,11 +2772,10 @@ class HostConfig(object):
                                 or (self.is_ipv4v6_host and _primary_ip_address_family_of(hostname) == "ipv6")
 
     @property
-    def is_agent_host(self):
+    def has_piggyback_data(self):
         import cmk_base.data_sources as data_sources
-        return self.is_tcp_host or \
-                piggyback.has_piggyback_raw_data(piggyback_max_cachefile_age, self.hostname) or \
-                data_sources.has_persisted_piggyback_agent_sections(self.hostname)
+        return piggyback.has_piggyback_raw_data(piggyback_max_cachefile_age, self.hostname) or \
+               data_sources.has_persisted_piggyback_agent_sections(self.hostname)
 
 
 #.

@@ -419,6 +419,7 @@ def test_host_attributes(load_plugins, for_what):
         ],
         "data_sources": [
             'tag_agent',
+            'tag_piggyback',
             'tag_snmp',
         ],
         "management_board": [

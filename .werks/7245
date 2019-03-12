@@ -1,0 +1,24 @@
+Title: New builtin tag group "piggyback" allows to explictly turn piggyback data usage on/off
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0i1
+Date: 1552398906
+Class: feature
+
+Piggyback data is currently only read when the host has a Check_MK service.
+For some systems, the existance of the Check_MK service solely depends on the
+existance of piggyback files for the given host.
+During the config generation phase of the monitoring core, race conditions could apply,
+where a host might receive no Check_MK service.
+
+
+This werk introduces an explicit piggyback host tag, which allows you to enforce/disable the use of piggyback data.
+Per default this option is currently set to <tt>Automatically detect piggyback usage</tt>, to be compatible with the previous
+behaviour.
+
+
+You should explictly set the <tt>Use piggyback data</tt> option if you have a ping only host,
+which receives additional piggyback data from another host. This actively prevents beforementioned race conditions.
+

@@ -26,6 +26,7 @@
 
 import time
 
+import cmk.gui.tags
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.hooks as hooks
@@ -435,7 +436,7 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
 
     def _get_criticality_choices(self):
         """Returns the current configuration of the tag_group criticality"""
-        tags = watolib.HosttagsConfiguration()
+        tags = cmk.gui.tags.HosttagsConfiguration()
         tags.parse_config(watolib.TagConfigFile().load_for_reading())
         criticality_group = tags.get_tag_group("criticality")
         if not criticality_group:
@@ -444,7 +445,7 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
 
     def _optional_tag_criticality_element(self):
         """This element is optional. The user may have deleted the tag group criticality"""
-        tags = watolib.HosttagsConfiguration()
+        tags = cmk.gui.tags.HosttagsConfiguration()
         tags.parse_config(watolib.TagConfigFile().load_for_reading())
         criticality_group = tags.get_tag_group("criticality")
         if not criticality_group:

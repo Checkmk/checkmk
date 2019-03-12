@@ -34,6 +34,7 @@ import six
 from pathlib2 import Path
 
 import cmk.gui.utils as utils
+import cmk.gui.tags
 import cmk.gui.i18n
 from cmk.gui.i18n import _
 import cmk.gui.log as log
@@ -69,6 +70,7 @@ if cmk.is_managed_edition():
 sites = {}
 multisite_users = {}
 admin_users = []
+tags = cmk.gui.tags.HosttagsConfiguration()
 
 # hard coded in various permissions
 builtin_role_ids = ["user", "admin", "guest"]
@@ -201,9 +203,28 @@ def load_config():
     else:
         sites = default_single_site_configuration()
 
-    migrate_old_sample_config_tag_groups(wato_host_tags, wato_aux_tags)
-
+    _prepare_tag_config()
     execute_post_config_load_hooks()
+
+
+def _prepare_tag_config():
+    global tags
+
+    # When the user config does not contain "tags" a pre 1.6 config is loaded. Convert
+    # the wato_host_tags and wato_aux_tags to the new structure
+    tag_config = wato_tags
+    if any(tag_config) and (wato_host_tags or wato_aux_tags):
+        migrate_old_sample_config_tag_groups(wato_host_tags, wato_aux_tags)
+        tag_config = cmk.gui.tags.transform_pre_16_tags(wato_host_tags, wato_aux_tags)
+
+    # We don't want to access the plain config data structure during GUI code processing
+    tags = cmk.gui.tags.HosttagsConfiguration()
+    tags.parse_config(tag_config)
+
+    # Merge builtin tags with configured tags. The logic favors the configured tags, even
+    # when the user config should not conflict with the builtin tags. This is something
+    # which could be left over from pre 1.5 setups.
+    #tags += BuiltinHosttagsConfiguration()
 
 
 def execute_post_config_load_hooks():
@@ -302,26 +323,6 @@ def get_language(default=None):
     if default is None:
         return default_language
     return default
-
-
-def tag_alias(tag):
-    for entry in host_tag_groups():
-        tag_id, _title, tag_choices = entry[:3]
-        for t in tag_choices:
-            if t[0] == tag:
-                return t[1]
-
-    for tag_id, alias in aux_tags():
-        if tag_id == tag:
-            return alias
-
-
-def tag_group_title(tag):
-    for entry in host_tag_groups():
-        _tag_id, title, tag_choices = entry[:3]
-        for t in tag_choices:
-            if t[0] == tag:
-                return title
 
 
 #.
@@ -718,6 +719,45 @@ def save_user_file(name, data, user_id, unlock=False):
 #   '----------------------------------------------------------------------'
 
 
+class BuiltinHosttagsConfiguration(cmk.gui.tags.HosttagsConfiguration):
+    def _initialize(self):
+        self.tag_groups = []
+        self.aux_tag_list = cmk.gui.tags.BuiltinAuxtagList()
+
+    def insert_tag_group(self, tag_group):
+        self._insert_tag_group(tag_group)
+
+    def load(self):
+        builtin_tags = BuiltinTags()
+        self._parse_legacy_format(builtin_tags.host_tags(), builtin_tags.aux_tags())
+
+
+# TODO: Clean this up!
+def is_builtin_host_tag_group(tag_group_id):
+    # Special handling for the agent tag group. It was a tag group created with
+    # the sample WATO configuration until version 1.5x. This means users could've
+    # customized the group. In case we find such a customization we treat it as
+    # not builtin tag group.
+    if tag_group_id == "agent":
+        for tag_group in wato_host_tags:
+            if tag_group[0] == tag_group_id:
+                return False
+        return True
+
+    for tag_group in BuiltinTags().host_tags():
+        if tag_group[0] == tag_group_id:
+            return True
+    return False
+
+
+# TODO: Clean this up!
+def is_builtin_aux_tag(taggroup_id):
+    for builtin_taggroup in BuiltinTags().aux_tags():
+        if builtin_taggroup[0] == taggroup_id:
+            return True
+    return False
+
+
 class BuiltinTags(object):
     def host_tags(self):
         return [
@@ -997,6 +1037,28 @@ def aux_tags():
     the implicitly declared builtin host tags. This function must be used by
     the GUI code to get the auxiliay tag definitions."""
     return BuiltinTags().get_effective_aux_tags(wato_aux_tags)
+
+
+# TODO: Replace this!
+def tag_alias(tag):
+    for entry in host_tag_groups():
+        tag_id, _title, tag_choices = entry[:3]
+        for t in tag_choices:
+            if t[0] == tag:
+                return t[1]
+
+    for tag_id, alias in aux_tags():
+        if tag_id == tag:
+            return alias
+
+
+# TODO: Replace this!
+def tag_group_title(tag):
+    for entry in host_tag_groups():
+        _tag_id, title, tag_choices = entry[:3]
+        for t in tag_choices:
+            if t[0] == tag:
+                return title
 
 
 #.

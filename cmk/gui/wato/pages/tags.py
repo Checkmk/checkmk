@@ -47,10 +47,8 @@ from cmk.gui.valuespec import (
     Transform,
 )
 
-from cmk.gui.watolib.tags import (
-    is_builtin_aux_tag,
-    TagConfigFile,
-)
+import cmk.gui.tags
+from cmk.gui.watolib.tags import TagConfigFile
 
 from cmk.gui.plugins.wato.utils.main_menu import (
     MainMenu,
@@ -83,7 +81,7 @@ class ModeTags(WatoMode):
     def __init__(self):
         super(ModeTags, self).__init__()
         self._tag_config_file = TagConfigFile()
-        self._tag_config = watolib.HosttagsConfiguration()
+        self._tag_config = cmk.gui.tags.HosttagsConfiguration()
         self._tag_config.parse_config(self._tag_config_file.load_for_reading())
 
     def title(self):
@@ -205,7 +203,7 @@ class ModeTags(WatoMode):
 
             for nr, entry in enumerate(effective_tag_groups):
                 tag_id, title, _choices = entry[:3]  # fourth: tag dependency information
-                topic, title = map(_u, watolib.parse_hosttag_title(title))
+                topic, title = map(_u, cmk.gui.tags.parse_hosttag_title(title))
                 table.row()
                 table.cell(_("Actions"), css="buttons")
                 self._show_tag_icons(tag_id, nr, effective_tag_groups)
@@ -219,7 +217,7 @@ class ModeTags(WatoMode):
                 html.end_form()
 
     def _show_tag_icons(self, tag_id, nr, effective_tag_groups):
-        if watolib.is_builtin_host_tag_group(tag_id):
+        if config.is_builtin_host_tag_group(tag_id):
             html.i("(%s)" % _("builtin"))
             return
 
@@ -251,9 +249,9 @@ class ModeTags(WatoMode):
 
             for nr, (tag_id, title) in enumerate(aux_tags):
                 table.row()
-                topic, title = watolib.parse_hosttag_title(title)
+                topic, title = cmk.gui.tags.parse_hosttag_title(title)
                 table.cell(_("Actions"), css="buttons")
-                if is_builtin_aux_tag(tag_id):
+                if config.is_builtin_aux_tag(tag_id):
                     html.i("(%s)" % _("builtin"))
                 else:
                     edit_url = watolib.folder_preserving_link([("mode", "edit_auxtag"), ("edit",
@@ -286,12 +284,12 @@ class ModeEditHosttagConfiguration(WatoMode):
     def __init__(self):
         super(ModeEditHosttagConfiguration, self).__init__()
         self._tag_config_file = TagConfigFile()
-        self._untainted_hosttags_config = watolib.HosttagsConfiguration()
+        self._untainted_hosttags_config = cmk.gui.tags.HosttagsConfiguration()
         self._untainted_hosttags_config.parse_config(self._tag_config_file.load_for_reading())
 
     def _get_topic_valuespec(self):
         # Merging of both objects would ne neat here
-        builtin_tags_config = watolib.BuiltinHosttagsConfiguration()
+        builtin_tags_config = config.BuiltinHosttagsConfiguration()
         builtin_tags_config.load()
 
         topics = set(builtin_tags_config.get_hosttag_topics())
@@ -326,7 +324,7 @@ class ModeEditAuxtag(ModeEditHosttagConfiguration):
 
         if self._new:
             self._aux_tag_nr = None
-            self._aux_tag = watolib.AuxTag()
+            self._aux_tag = cmk.gui.tags.AuxTag()
         else:
             self._aux_tag_nr = self._get_tag_number()
             self._aux_tag = self._untainted_hosttags_config.aux_tag_list.get_number(
@@ -355,7 +353,7 @@ class ModeEditAuxtag(ModeEditHosttagConfiguration):
         aux_tag_spec = vs.from_html_vars("aux_tag")
         vs.validate_value(aux_tag_spec, "aux_tag")
 
-        self._aux_tag = watolib.AuxTag(aux_tag_spec)
+        self._aux_tag = cmk.gui.tags.AuxTag(aux_tag_spec)
         self._aux_tag.validate()
 
         # Make sure that this ID is not used elsewhere
@@ -366,7 +364,7 @@ class ModeEditAuxtag(ModeEditHosttagConfiguration):
                     _("This tag id is already being used in the host tag group %s") %
                     tag_group.title)
 
-        changed_hosttags_config = watolib.HosttagsConfiguration()
+        changed_hosttags_config = cmk.gui.tags.HosttagsConfiguration()
         changed_hosttags_config.parse_config(self._tag_config_file.load_for_reading())
 
         if self._new:
@@ -444,10 +442,10 @@ class ModeEditTagGroup(ModeEditHosttagConfiguration):
         self._untainted_tag_group = self._untainted_hosttags_config.get_tag_group(
             self._tag_group_id)
         if not self._untainted_tag_group:
-            self._untainted_tag_group = watolib.HosttagGroup()
+            self._untainted_tag_group = cmk.gui.tags.HosttagGroup()
 
         self._tag_group = self._untainted_hosttags_config.get_tag_group(
-            self._tag_group_id) or watolib.HosttagGroup()
+            self._tag_group_id) or cmk.gui.tags.HosttagGroup()
 
     def _get_taggroup_id(self):
         return html.request.var("edit", html.request.var("tag_id"))
@@ -473,10 +471,10 @@ class ModeEditTagGroup(ModeEditHosttagConfiguration):
         vs.validate_value(tag_group_spec, "tag_group")
 
         # Create new object with existing host tags
-        changed_hosttags_config = watolib.HosttagsConfiguration()
+        changed_hosttags_config = cmk.gui.tags.HosttagsConfiguration()
         changed_hosttags_config.parse_config(self._tag_config_file.load_for_modification())
 
-        changed_tag_group = watolib.HosttagGroup(tag_group_spec)
+        changed_tag_group = cmk.gui.tags.HosttagGroup(tag_group_spec)
         self._tag_group = changed_tag_group
 
         if self._new:

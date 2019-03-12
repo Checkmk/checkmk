@@ -71,6 +71,7 @@ import cmk.utils.plugin_registry
 
 import cmk.gui.utils
 import cmk.gui.sites
+import cmk.gui.tags
 import cmk.gui.config as config
 import cmk.gui.hooks as hooks
 import cmk.gui.userdb as userdb
@@ -211,20 +212,7 @@ from cmk.gui.watolib.rulesets import (
     Ruleset,
     Rule,
 )
-from cmk.gui.watolib.tags import (
-    parse_hosttag_title,
-    is_builtin_host_tag_group,
-    group_hosttags_by_topic,
-    Hosttag,
-    AuxTag,
-    AuxtagList,
-    BuiltinAuxtagList,
-    GroupedHosttag,
-    HosttagGroup,
-    HosttagsConfiguration,
-    TagConfigFile,
-    BuiltinHosttagsConfiguration,
-)
+from cmk.gui.watolib.tags import TagConfigFile
 from cmk.gui.watolib.hosts_and_folders import (
     Folder,
     Host,
@@ -430,7 +418,6 @@ def _create_sample_config():
     }
     save_group_information(groups)
 
-    # Basic setting of host tags
     _initialize_tag_config()
 
     # Rules that match the upper host tag definition
@@ -527,7 +514,7 @@ def _create_sample_config():
 
 
 def _initialize_tag_config():
-    tag_config = HosttagsConfiguration().parse_config((
+    tag_config = cmk.gui.tags.HosttagsConfiguration().parse_config((
         [
             ('criticality', u'Criticality', [
                 ('prod', u'Productive system', []),
@@ -543,6 +530,8 @@ def _initialize_tag_config():
         ],
         [],
     ))
+
     TagConfigFile().save(tag_config.get_dict_format())
+
     # Make sure the host tag attributes are immediately declared!
-    config.wato_host_tags, config.wato_aux_tags = tag_config.get_legacy_format()
+    config.tags = tag_config

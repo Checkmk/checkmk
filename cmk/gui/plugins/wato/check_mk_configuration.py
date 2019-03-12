@@ -30,6 +30,7 @@ import logging
 import cmk
 import cmk.utils.paths
 
+import cmk.gui.tags
 import cmk.gui.sites as sites
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
@@ -722,7 +723,7 @@ class ConfigVariableVirtualHostTrees(ConfigVariable):
         by_topic = {}
         for entry in config.host_tag_groups():
             tgid = entry[0]
-            topic, tit = watolib.parse_hosttag_title(entry[1])
+            topic, tit = cmk.gui.tags.parse_hosttag_title(entry[1])
             choices.append((tgid, tit))
             by_topic.setdefault(topic, []).append(entry)
 

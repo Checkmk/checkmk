@@ -154,6 +154,7 @@ factory_settings["mem_linux_default_levels"] = {
     "levels_committed": ("perc_used", (100.0, 150.0)),
     "levels_commitlimit": ("perc_free", (20.0, 10.0)),
     "levels_vmalloc": ("abs_free", (50 * 1024 * 1024, 30 * 1024 * 1024)),
+    "levels_hardwarecorrupted": ("abs_used", (1, 1)),
 }
 
 
@@ -389,10 +390,15 @@ def check_mem_linux(_no_item, params, info):
             yield r  # only display if non-OK
 
     # HardwareCorrupted
-    hwc = meminfo.get("HardwareCorrupted")
-    if hwc:
-        yield params.get("handle_hw_corrupted_error",
-                         2), "Hardware defect of %s" % get_bytes_human_readable(hwc)
+    if "HardwareCorrupted" in meminfo:
+        r = check_mem_levels(
+            "Hardware Corrupted",
+            meminfo["HardwareCorrupted"],
+            meminfo["MemTotal"],
+            params.get("levels_hardwarecorrupted"),
+            of_what="RAM")
+        if r[0]:
+            yield r  # only display if non-OK
 
     # Now send performance data. We simply output *all* fields of meminfo
     # except for a few really useless values

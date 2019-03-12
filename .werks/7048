@@ -1,0 +1,16 @@
+Title: mem.linux: Optional levels for corrupted memory configurable
+Level: 1
+Component: checks
+Compatible: incompat
+Edition: cre
+Version: 1.6.0i1
+Date: 1552403287
+Class: feature
+
+Previously the check status was either OK in case no RAM was corrupted or a
+custom check status (default: CRIT) in case RAM was corrupted dependent on the
+configuration of WATO rule Memory Swap usage on Linux, value Handle Hardware
+Corrupted Error. Now it is possible to configure the WARN and CRIT levels
+for the corrupted memory with the renamed WATO value Hardware Corrupted.
+Existing configurations of WATO rule value Handle Hardware Corrupted Error are
+converted to WATO rule value Hardware Corrupted (1, 1) for consistent behaviour.

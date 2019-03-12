@@ -1994,6 +1994,7 @@ register_rule(group,
         help = _("With this setting you can set links to documentations "
                  "for each service"),
         attrencode = True,
+        size = 80,
     ),
     itemtype = "service")
 
@@ -2005,6 +2006,7 @@ register_rule(group,
         help = _("With this setting you can set links to documentations "
                  "for Hosts"),
         attrencode = True,
+        size = 80,
     ),
 )
 

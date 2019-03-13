@@ -617,7 +617,7 @@ def load_host_tag_painters():
                 "ident": property(lambda self: self._ident),
                 "title": property(lambda self: self._spec["title"]),
                 "columns": property(lambda self: self._spec["columns"]),
-                "render": lambda self, row: paint_host_tag(row, self._tag_id),
+                "render": lambda self, row, cell: paint_host_tag(row, self._tag_id),
                 "short_title": property(lambda self: self._spec["short"]),
                 # Use title of the tag value for grouping, not the complete
                 # dictionary of custom variables!

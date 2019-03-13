@@ -211,14 +211,12 @@ class VirtualHostTree(SidebarSnapin):
 
         for nr, (level_spec, tag) in enumerate(zip(tag_tree_spec, tag_node_values)):
             if level_spec.startswith("topic:"):
-                # Find correct tag group for this tag
-                for entry in config.host_tag_groups():
-                    for tagentry in entry[2]:
-                        if tagentry[0] == tag:  # Found our tag
-                            taggroup = entry[0]
-                            urlvars.append(("host_tag_%d_grp" % nr, taggroup))
+                for tag_group in config.tags.tag_groups:
+                    for grouped_tag in tag_group.tags:
+                        if grouped_tag.id == tag:
+                            urlvars.append(("host_tag_%d_grp" % nr, tag_group.id))
                             urlvars.append(("host_tag_%d_op" % nr, "is"))
-                            urlvars.append(("host_tag_%d_val" % nr, tag))
+                            urlvars.append(("host_tag_%d_val" % nr, grouped_tag.id))
                             break
 
             else:
@@ -336,14 +334,12 @@ function virtual_host_tree_enter(path)
                         continue  # silently skip not existing topics
 
                     # Iterate over all host tag groups with that topic
-                    for entry in topics[topic]:
-                        group = entry[2]
-                        for tagentry in group:
-                            tag_value, tag_title = tagentry[:2]
-                            if tag_value in tags:
+                    for tag_group in topics[topic]:
+                        for tag in tag_group.tags:
+                            if tag.id in tags:
                                 this_level_branches.append(
                                     tree_entry.setdefault("_children", {}).setdefault(
-                                        (tag_title, tag_value), {}))
+                                        (tag.title, tag.id), {}))
 
                 elif level_spec.startswith("folder:"):
                     level = int(level_spec.split(":", 1)[1])
@@ -414,15 +410,10 @@ function virtual_host_tree_enter(path)
     def _get_tag_config(self):
         tag_groups = {}
         topics = {}
-        for entry in config.host_tag_groups():
-            grouptitle = entry[1]
-            if '/' in grouptitle:
-                topic, grouptitle = grouptitle.split("/", 1)
-                topics.setdefault(topic, []).append(entry)
-
-            groupname = entry[0]
-            group = entry[2]
-            tag_groups[groupname] = group
+        for tag_group in config.tags.tag_groups:
+            if tag_group.topic:
+                topics.setdefault(tag_group.topic, []).append(tag_group)
+            tag_groups[tag_group.id] = tag_group
 
         return tag_groups, config
 
@@ -460,17 +451,18 @@ function virtual_host_tree_enter(path)
 
         return state, have_svc_problems
 
-    def _get_tag_group_value(self, groupentries, tags):
-        for entry in groupentries:
-            if entry[0] in tags:
-                return entry[0], entry[1]  # tag, title
+    def _get_tag_group_value(self, tag_group, tags):
+        for grouped_tag in tag_group.tags:
+            if grouped_tag.id in tags:
+                return grouped_tag.id, grouped_tag.title
+
         # Not found -> try empty entry
-        for entry in groupentries:
-            if entry[0] is None:
-                return None, entry[1]
+        for grouped_tag in tag_group.tags:
+            if grouped_tag.id is None:
+                return None, grouped_tag.title
 
         # No empty entry found -> get default (i.e. first entry)
-        return groupentries[0][:2]
+        return tag_group.tags[0].id, tag_group.tags[0].title
 
     def page_handlers(self):
         return {

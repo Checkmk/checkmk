@@ -800,37 +800,39 @@ class ModeEditRuleset(WatoMode):
         html.close_ul()
 
     def _tag_conditions(self, rule):
-        # Host tags
         for tagspec in rule.tag_specs:
             if tagspec[0] == '!':
                 negate = True
-                tag = tagspec[1:]
+                tag_id = tagspec[1:]
             else:
                 negate = False
-                tag = tagspec
+                tag_id = tagspec
 
             html.open_li(class_="condition")
-            alias = config.tag_alias(tag)
-            group_alias = config.tag_group_title(tag)
-            if alias:
-                if group_alias:
-                    html.write_text(_("Host") + ": " + group_alias + " " + _("is") + " ")
-                    if negate:
-                        html.b(_("not") + " ")
-                else:
-                    if negate:
-                        html.write_text(_("Host does not have tag") + " ")
-                    else:
-                        html.write_text(_("Host has tag") + " ")
-                html.b(alias)
+            self._single_tag_condition(tag_id, negate)
+            html.close_li()
+
+    def _single_tag_condition(self, tag_id, negate):
+        tag = config.tags.get_tag_or_aux_tag(tag_id)
+        if tag and tag.title:
+            if not tag.is_aux_tag:
+                html.write_text(_("Host") + ": " + tag.group.title + " " + _("is") + " ")
+                if negate:
+                    html.b(_("not") + " ")
             else:
                 if negate:
-                    html.write_text(_("Host has <b>not</b> the tag") + " ")
-                    html.tt(tag)
+                    html.write_text(_("Host does not have tag") + " ")
                 else:
-                    html.write_text(_("Host has the tag") + " ")
-                    html.tt(tag)
-            html.close_li()
+                    html.write_text(_("Host has tag") + " ")
+            html.b(tag.title)
+            return
+
+        if negate:
+            html.write_text(_("Host has <b>not</b> the tag") + " ")
+            html.tt(tag_id)
+        else:
+            html.write_text(_("Host has the tag") + " ")
+            html.tt(tag_id)
 
     def _host_conditions(self, rule):
         if rule.host_list == watolib.ALL_HOSTS:

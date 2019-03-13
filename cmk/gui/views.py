@@ -104,8 +104,8 @@ from cmk.gui.plugins.views.utils import (  # pylint: disable=unused-import
     link_to_view, url_to_view, get_host_tags, row_id, group_value, view_is_enabled, paint_age,
     declare_1to1_sorter, declare_simple_sorter, cmp_simple_number, cmp_simple_string,
     cmp_insensitive_string, cmp_num_split, cmp_custom_variable, cmp_service_name_equiv,
-    cmp_string_list, cmp_ip_address, get_custom_var, get_perfdata_nth_value, get_tag_group,
-    query_data, do_query_data, join_row, get_view_infos, replace_action_url_macros, Cell, JoinCell,
+    cmp_string_list, cmp_ip_address, get_custom_var, get_perfdata_nth_value, query_data,
+    do_query_data, join_row, get_view_infos, replace_action_url_macros, Cell, JoinCell,
     register_legacy_command, register_painter, register_sorter,
 )
 
@@ -600,15 +600,15 @@ def _register_host_tag_painters():
             {
                 "_ident": ident,
                 "_spec": spec,
-                "_tag_id": tag_group.id,
+                "_tag_group_id": tag_group.id,
                 "ident": property(lambda self: self._ident),
                 "title": property(lambda self: self._spec["title"]),
                 "columns": property(lambda self: self._spec["columns"]),
-                "render": lambda self, row, cell: _paint_host_tag(row, self._tag_id),
+                "render": lambda self, row, cell: _paint_host_tag(row, self._tag_group_id),
                 "short_title": property(lambda self: self._spec["short"]),
                 # Use title of the tag value for grouping, not the complete
                 # dictionary of custom variables!
-                "group_by": property(lambda self, row: _paint_host_tag(row, self._tag_id)[1]),
+                "group_by": property(lambda self, row: _paint_host_tag(row, self._tag_group_id)[1]),
             })
         painter_registry.register(cls)
 
@@ -616,9 +616,12 @@ def _register_host_tag_painters():
 def _paint_host_tag(row, tgid):
     tags_of_host = get_host_tags(row).split()
 
-    for t in get_tag_group(tgid)[1]:
-        if t[0] in tags_of_host:
-            return "", t[1]
+    tag_group = config.tags.get_tag_group(tgid)
+    if tag_group:
+        for grouped_tag in tag_group.tags:
+            if grouped_tag.id in tags_of_host:
+                return "", grouped_tag.title
+
     return "", _("N/A")
 
 
@@ -626,10 +629,10 @@ def _register_host_tag_sorters():
     for tag_group in config.tags.tag_groups:
         register_sorter(
             "host_tag_" + tag_group.id, {
-                "_tag_id": tag_group.id,
+                "_tag_group_id": tag_group.id,
                 "title": _("Host tag:") + ' ' + tag_group.title,
                 "columns": ["host_custom_variable_names", "host_custom_variable_values"],
-                "cmp": lambda self, r1, r2: _cmp_host_tag(r1, r2, self._spec["_tag_id"]),
+                "cmp": lambda self, r1, r2: _cmp_host_tag(r1, r2, self._spec["_tag_group_id"]),
             })
 
 
@@ -639,11 +642,14 @@ def _cmp_host_tag(r1, r2, tgid):
 
     val1 = _('N/A')
     val2 = _('N/A')
-    for t in get_tag_group(tgid)[1]:
-        if t[0] in tags1:
-            val1 = t[1]
-        if t[0] in tags2:
-            val2 = t[1]
+
+    tag_group = config.tags.get_tag_group(tgid)
+    if tag_group:
+        for grouped_tag in tag_group.tags:
+            if grouped_tag.id in tags1:
+                val1 = grouped_tag.title
+            if grouped_tag.id in tags2:
+                val2 = grouped_tag.title
 
     return cmp(val1, val2)
 

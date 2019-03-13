@@ -32,6 +32,7 @@ import cmk.utils.paths
 import cmk.utils.store as store
 
 import cmk.gui.tags
+import cmk.gui.config as config
 from cmk.gui.watolib.simple_config_file import WatoSimpleConfigFile
 from cmk.gui.watolib.utils import multisite_dir
 
@@ -63,12 +64,7 @@ class TagConfigFile(WatoSimpleConfigFile):
     # TODO: Move the hosttag export to a hook
     def save(self, cfg):
         super(TagConfigFile, self).save(cfg)
-
-        tag_config = cmk.gui.tags.HosttagsConfiguration()
-        tag_config.parse_config(cfg)
-        hosttags, auxtags = tag_config.get_legacy_format()
-
-        _export_hosttags_to_php(hosttags, auxtags)
+        _export_hosttags_to_php(cfg)
 
 
 # Creates a includable PHP file which provides some functions which
@@ -90,10 +86,14 @@ class TagConfigFile(WatoSimpleConfigFile):
 # the tag group title and the value contains the value returned by
 # taggroup_choice() for this tag group.
 #
-def _export_hosttags_to_php(hosttags, auxtags):
+def _export_hosttags_to_php(cfg):
     php_api_dir = cmk.utils.paths.var_dir + "/wato/php-api/"
     path = php_api_dir + '/hosttags.php'
     store.mkdir(php_api_dir)
+
+    tag_config = cmk.gui.tags.HosttagsConfiguration()
+    tag_config.parse_config(cfg)
+    tag_config += config.BuiltinHosttagsConfiguration()
 
     # need an extra lock file, since we move the auth.php.tmp file later
     # to auth.php. This move is needed for not having loaded incomplete
@@ -105,14 +105,14 @@ def _export_hosttags_to_php(hosttags, auxtags):
 
     # Transform WATO internal data structures into easier usable ones
     hosttags_dict = {}
-    for entry in hosttags:
-        id_, title, choices = entry[:3]
+    for tag_group in tag_config.tag_groups:
         tags = {}
-        for tag_id, tag_title, tag_auxtags in choices:
-            tags[tag_id] = tag_title, tag_auxtags
-        topic, title = cmk.gui.tags.parse_hosttag_title(title)
-        hosttags_dict[id_] = topic, title, tags
-    auxtags_dict = dict(auxtags)
+        for grouped_tag in tag_group.tags:
+            tags[grouped_tag.id] = (grouped_tag.title, grouped_tag.aux_tag_ids)
+
+        hosttags_dict[tag_group.id] = (tag_group.topic, tag_group.title, tags)
+
+    auxtags_dict = dict(tag_config.aux_tag_list.get_choices())
 
     # First write a temp file and then do a move to prevent syntax errors
     # when reading half written files during creating that new file

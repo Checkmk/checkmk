@@ -38,22 +38,10 @@ def transform_pre_16_tags(tag_groups, aux_tags):
     return cfg.get_dict_format()
 
 
-def parse_hosttag_title(title):
+def _parse_hosttag_title(title):
     if '/' in title:
         return title.split('/', 1)
     return None, title
-
-
-# TODO: Cleanup all call sites
-def group_hosttags_by_topic(hosttags):
-    tags = {}
-    for entry in hosttags:
-        topic, title = parse_hosttag_title(entry[1])
-        if not topic:
-            topic = _('Host tags')
-        tags.setdefault(topic, [])
-        tags[topic].append((entry[0], title) + entry[2:])
-    return sorted(tags.items(), key=lambda x: x[0])
 
 
 def _validate_tag_id(tag_id, varname):
@@ -114,7 +102,7 @@ class AuxTag(Hosttag):
 
     def _parse_legacy_format(self, tag_info):
         super(AuxTag, self)._parse_legacy_format(tag_info)
-        self.topic, self.title = HosttagsConfiguration.parse_hosttag_title(self.title)
+        self.topic, self.title = _parse_hosttag_title(self.title)
 
     def get_legacy_format(self):
         return self.id, HosttagsConfiguration.get_merged_topic_and_title(self)
@@ -258,7 +246,7 @@ class HosttagGroup(object):
         group_id, group_title, tag_list = group_info[:3]
 
         self.id = group_id
-        self.topic, self.title = HosttagsConfiguration.parse_hosttag_title(group_title)
+        self.topic, self.title = _parse_hosttag_title(group_title)
 
         for tag in tag_list:
             self.tags.append(GroupedHosttag(self, tag))
@@ -322,12 +310,6 @@ class HosttagsConfiguration(object):
 
         self.aux_tag_list += other.aux_tag_list
         return self
-
-    @staticmethod
-    def parse_hosttag_title(title):
-        if '/' in title:
-            return title.split('/', 1)
-        return None, title
 
     @staticmethod
     def get_merged_topic_and_title(entity):

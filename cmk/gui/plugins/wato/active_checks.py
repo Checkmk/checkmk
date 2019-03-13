@@ -1569,15 +1569,29 @@ class RulespecActiveChecksSmtp(HostRulespec):
                                      "SMTP AUTH type to check (default none, only LOGIN supported)"
                                  ),
                                  elements=[
-                                     TextAscii(title=_("Username"), size=12, allow_empty=False),
-                                     Password(title=_("Password"), size=12, allow_empty=False),
+                                     TextAscii(
+                                         title=_("Username"),
+                                         size=12,
+                                         allow_empty=False,
+                                     ),
+                                     Password(
+                                         title=_("Password"),
+                                         size=12,
+                                         allow_empty=False,
+                                     ),
                                  ])),
                             ("response_time",
                              Tuple(
                                  title=_("Expected response time"),
                                  elements=[
-                                     Integer(title=_("Warning if above"), unit=_("sec")),
-                                     Integer(title=_("Critical if above"), unit=_("sec")),
+                                     Float(
+                                         title=_("Warning if above"),
+                                         unit=_("sec"),
+                                     ),
+                                     Float(
+                                         title=_("Critical if above"),
+                                         unit=_("sec"),
+                                     ),
                                  ])),
                             ("timeout",
                              Integer(

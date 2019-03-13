@@ -3,7 +3,10 @@ import java.text.SimpleDateFormat
 properties([
   parameters([
     string(name: 'DISTROS', defaultValue: DISTRO_LIST_MASTER, description: 'List of targeted distros' )
-   ])
+  ]),
+  pipelineTriggers([
+    upstream(upstreamProjects: 'cmk_master/nightly_build', threshold: hudson.model.Result.SUCCESS)
+  ])
 ])
 
 DISTRO_LIST = DISTROS.split(' ');

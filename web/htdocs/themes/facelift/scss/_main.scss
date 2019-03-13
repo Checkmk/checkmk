@@ -113,68 +113,6 @@ select:not([multiple]) {
     margin: 0;
     margin-bottom: 8px; }
 
-div#login {
-  background: transparent; }
-  div#login div#login_window {
-    background: $theme-color-sidebar-background;
-    border: 2px solid $theme-color-table-border-dark;
-    border-radius: 8px;
-    box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.1); }
-    div#login div#login_window div#login_error {
-      bottom: 4px;
-      background-image: none;
-      background-color: $theme-color-state-2-background;
-      color: $theme-color-white;
-      border: 1px solid $theme-color-state-error-border;
-      border-radius: $theme-border-radius;
-      left: 92px; }
-      div#login div#login_window div#login_error div.error {
-        color: $theme-color-white; }
-  div#login div#foot {
-    color: $theme-color-darkgrey; }
-    div#login div#foot a, div#login div#foot body.main .popup_menu span, body.main .popup_menu div#login div#foot span {
-      color: $theme-color-darkgrey; }
-  div#login #version {
-    color: $theme-color-lightgrey;
-    letter-spacing: $theme-letter-spacing-table;
-    top: 40px;
-    right: 40px; }
-    div#login #version::before {
-      content: " ";
-      height: 30px;
-      width: 200px;
-      position: absolute;
-      top: -8px;
-      left: -156px;
-      background-image: url(images/mk-logo.png);
-      background-size: auto 24px;
-      background-position: 16px center;
-      background-repeat: no-repeat; }
-  div#login #input_user, div#login #input_pass {
-    left: 140px;
-    border-radius: $theme-border-radius;
-    width: 171px; }
-  div#login #label_user, div#login #label_pass {
-    left: 40px;
-    font-size: $theme-font-size-global;
-    letter-spacing: $theme-letter-spacing-table; }
-  div#login #input_user {
-    top: 72px; }
-  div#login #label_user {
-    top: 80px; }
-  div#login #label_pass {
-    top: 120px; }
-  div#login #input_pass {
-    top: 112px; }
-  div#login #_login {
-    left: 40px !important;
-    margin: 0px;
-    bottom: 40px;
-    padding: 8px 16px !important;
-    font-weight: $theme-font-weight-bold;
-    width: calc(100% - 80px);
-    border-color: $theme-color-state-warning-border !important; }
-
 table.vs_duallist a.control, table.vs_duallist body.main .popup_menu span.control, body.main .popup_menu table.vs_duallist span.control {
   border-style: solid;
   border-color: $theme-color-nuance-1;

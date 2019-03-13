@@ -1468,11 +1468,11 @@ register_rule(group,
                          Tuple(
                              title = _("Expected response time"),
                              elements = [
-                                 Integer(
+                                 Float(
                                      title = _("Warning if above"),
                                      unit = _("sec")
                                  ),
-                                 Integer(
+                                 Float(
                                      title = _("Critical if above"),
                                      unit = _("sec")
                                  ),

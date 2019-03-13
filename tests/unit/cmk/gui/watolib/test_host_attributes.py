@@ -367,13 +367,14 @@ def test_custom_host_attribute_transform(old, new):
     assert transformed_attributes[0]["topic"] == new
 
 
+@pytest.mark.usefixtures("load_plugins", "load_config")
 @pytest.mark.parametrize("for_what", [
     "host",
     "cluster",
     "host_search",
     "bulk",
 ])
-def test_host_attribute_topics(load_plugins, for_what):
+def test_host_attribute_topics(for_what):
     assert attrs.get_sorted_host_attribute_topics(for_what=for_what) == [
         ("basic", u"Basic settings"),
         ("address", u'Address'),
@@ -383,7 +384,8 @@ def test_host_attribute_topics(load_plugins, for_what):
     ]
 
 
-def test_host_attribute_topics_for_folders(load_plugins):
+@pytest.mark.usefixtures("load_plugins", "load_config")
+def test_host_attribute_topics_for_folders():
     assert attrs.get_sorted_host_attribute_topics("folder") == [
         ("basic", u"Basic settings"),
         ('address', u'Address'),
@@ -394,6 +396,7 @@ def test_host_attribute_topics_for_folders(load_plugins):
     ]
 
 
+@pytest.mark.usefixtures("load_plugins", "load_config")
 @pytest.mark.parametrize("for_what", [
     "host",
     "cluster",
@@ -401,7 +404,7 @@ def test_host_attribute_topics_for_folders(load_plugins):
     "host_search",
     "bulk",
 ])
-def test_host_attributes(load_plugins, for_what):
+def test_host_attributes(for_what):
     topics = {
         "basic": [
             'contactgroups',

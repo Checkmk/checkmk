@@ -1,0 +1,16 @@
+Title: heartbeat_crm: Fixed discovery of services in case of failed actions
+Level: 1
+Component: checks
+Class: fix
+Compatible: incomp
+Edition: cre
+State: unknown
+Version: 1.5.0p13
+Date: 1552465401
+
+Because of changes in pacemaker in some cases wrong services named "Heartbeat CRM Failed"
+where discovered if there are open failed actions.
+This has been fixed.
+
+If you already have discovered such services, you need to re-discover the services of the
+affected hosts.

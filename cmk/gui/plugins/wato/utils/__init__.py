@@ -113,7 +113,6 @@ from cmk.gui.plugins.wato.utils.valuespecs import (
 )
 import cmk.gui.watolib as watolib
 from cmk.gui.watolib.password_store import PasswordStore
-from cmk.gui.tags import group_hosttags_by_topic
 from cmk.gui.watolib.timeperiods import TimeperiodSelection
 from cmk.gui.watolib.users import notification_script_title
 from cmk.gui.watolib.groups import (

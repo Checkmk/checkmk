@@ -7,6 +7,7 @@ from pathlib2 import Path
 from cmk.gui.exceptions import MKUserError
 
 import cmk.gui.watolib.utils
+import cmk.gui.config as config
 import cmk.gui.tags as tags
 import cmk.gui.watolib.tags
 from cmk.gui.watolib.tags import TagConfigFile
@@ -258,3 +259,17 @@ def test_iadd_hosttags_configuration():
     assert aux_tags[0].id == "bla"
     assert aux_tags[0].title == "BLAAAA"
     assert aux_tags[1].id == "blub"
+
+
+def test_tag_groups_by_topic(load_config):
+    groups = {
+        u"Address": ["address_family"],
+        u'Data sources': ["agent", "piggyback", "snmp"],
+    }
+
+    grouped = dict(config.tags.get_tag_groups_by_topic())
+    assert sorted(grouped.keys()) == sorted(groups.keys())
+
+    for topic, tag_group_ids in groups.items():
+        tg_ids = [tg.id for tg in grouped[topic]]
+        assert tg_ids == tag_group_ids

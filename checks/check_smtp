@@ -61,7 +61,7 @@ def check_smtp_arguments(params):
         args += ' -f %s' % quote_shell_string(settings["from"])
 
     if "response_time" in settings:
-        args += ' -w %0.4f -c %4f' % (
+        args += ' -w %0.4f -c %0.4f' % (
             settings["response_time"][0],
             settings["response_time"][1])
 

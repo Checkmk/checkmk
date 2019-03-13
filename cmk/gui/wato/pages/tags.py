@@ -281,13 +281,12 @@ class ModeEditHosttagConfiguration(WatoMode):
     def _get_topic_valuespec(self):
         return OptionalDropdownChoice(
             title=_("Topic") + "<sup>*</sup>",
-            choices=list(self._effective_config.get_hosttag_topics()),
+            choices=self._effective_config.get_topic_choices(),
             explicit=TextUnicode(),
             otherlabel=_("Create new topic"),
             default_value=None,
             help=_("Different tag groups can be grouped in topics to make the visualization and "
                    "selections in the GUI more comfortable."),
-            sorted=True,
         )
 
 

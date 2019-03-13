@@ -1068,22 +1068,6 @@ def extend_user_modified_tag_groups(host_tags):
                 break
 
 
-# TODO: Cleanup all call sites and refactor to use config.tags
-def host_tag_groups():
-    """Returns the effective set of tag groups defined. This includes
-    the implicitly declared builtin host tags. This function must be used by
-    the GUI code to get the tag group definitions."""
-    return tags.get_legacy_format()[0]
-
-
-# TODO: Cleanup all call sites and refactor to use config.tags
-def aux_tags():
-    """Returns the effective set of auxiliary tags defined. This includes
-    the implicitly declared builtin host tags. This function must be used by
-    the GUI code to get the auxiliay tag definitions."""
-    return tags.get_legacy_format()[1]
-
-
 #.
 #   .--Sites---------------------------------------------------------------.
 #   |                        ____  _ _                                     |

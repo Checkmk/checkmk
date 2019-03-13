@@ -26,7 +26,7 @@ def test_cfg(monkeypatch):
 
 wato_host_tags += [
     ('criticality', u'Criticality', [
-        ('prod', u'Productive system', []),
+        ('prod', u'Productive system', ['bla']),
         ('critical', u'Business critical', []),
         ('test', u'Test system', []),
         ('offline', u'Do not monitor this host', [])]),
@@ -75,7 +75,7 @@ def test_tag_config_load(test_cfg):
     assert aux_tag.title == u"bläää"
 
 
-def test_tag_config_get_hosttag_topics(test_cfg):
+def test_tag_config_get_topic_choices(test_cfg):
     cfg = tags.HosttagsConfiguration()
     cfg.tag_groups.append(
         tags.HosttagGroup({
@@ -89,9 +89,13 @@ def test_tag_config_get_hosttag_topics(test_cfg):
             }],
         }))
     cfg.tag_groups.append(tags.HosttagGroup(("tgid2", "Topics/titlor", [("tgid2", "tagid2", [])])))
+    cfg.aux_tag_list.append(tags.AuxTag(("bla", "BOOM/BLUB")))
 
-    assert sorted(cfg.get_hosttag_topics()) == sorted([("Topigzr", "Topigzr"), ("Topics",
-                                                                                "Topics")])
+    assert sorted(cfg.get_topic_choices()) == sorted([
+        ("Topigzr", "Topigzr"),
+        ("Topics", "Topics"),
+        ("BOOM", "BOOM"),
+    ])
 
 
 def test_tag_config_remove_tag_group(test_cfg):
@@ -130,6 +134,20 @@ def test_tag_config_get_aux_tags(test_cfg):
     cfg = tags.HosttagsConfiguration()
     cfg.parse_config(TagConfigFile().load_for_reading())
     assert [a.id for a in cfg.get_aux_tags()] == ["bla"]
+
+
+def test_get_aux_tags_by_tags(test_cfg):
+    cfg = tags.HosttagsConfiguration()
+    cfg.parse_config(TagConfigFile().load_for_reading())
+    assert cfg.get_aux_tags_by_tag() == {
+        'critical': [],
+        'dmz': [],
+        'lan': [],
+        'offline': [],
+        'prod': ['bla'],
+        'test': [],
+        'wan': [],
+    }
 
 
 def test_tag_config_get_tag_ids(test_cfg):
@@ -272,4 +290,18 @@ def test_tag_groups_by_topic(load_config):
 
     for topic, tag_group_ids in groups.items():
         tg_ids = [tg.id for tg in grouped[topic]]
-        assert tg_ids == tag_group_ids
+        assert sorted(tg_ids) == sorted(tag_group_ids)
+
+
+def test_aux_tags_by_topic(register_builtin_html, load_config):
+    expected_groups = {
+        u"Address": ["ip-v4", "ip-v6"],
+        u'Data sources': ["snmp", "tcp", "ping"],
+    }
+
+    actual_groups = dict(config.tags.get_aux_tags_by_topic())
+    assert sorted(actual_groups.keys()) == sorted(expected_groups.keys())
+
+    for topic, tag_group_ids in expected_groups.items():
+        tg_ids = [tg.id for tg in actual_groups[topic]]
+        assert sorted(tg_ids) == sorted(tag_group_ids)

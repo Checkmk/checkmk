@@ -1953,7 +1953,7 @@ class CREHost(WithPermissionsAndAttributes):
         # The following code is needed to migrate host/rule matching from <1.5
         # to 1.5 when a user did not modify the "agent type" tag group.  (See
         # migrate_old_sample_config_tag_groups() for more information)
-        aux_tag_ids = [t[0] for t in config.aux_tags()]
+        aux_tag_ids = [t.id for t in config.tags.aux_tag_list.get_tags()]
 
         # Be compatible to: Agent type -> SNMP v2 or v3
         if "no-agent" in tags and "snmp-v2" in tags and "snmp-only" in aux_tag_ids:

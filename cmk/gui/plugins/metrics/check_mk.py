@@ -6120,6 +6120,7 @@ check_metrics["check_mk-if64adm"] = if_translation
 check_metrics["check_mk-hpux_if"] = if_translation
 check_metrics["check_mk-if64_tplink"] = if_translation
 check_metrics["check_mk-if_lancom"] = if_translation
+check_metrics["check_mk-if_brocade"] = if_translation
 check_metrics["check_mk-if"] = if_translation
 check_metrics["check_mk-lnx_if"] = if_translation
 check_metrics["check_mk-mcdata_fcport"] = if_translation

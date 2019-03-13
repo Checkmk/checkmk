@@ -26,8 +26,8 @@ def test_node_timestamps_utc():
     ]
     stats = cluster_stats(node_names, stat_time_formatted)
     utc_timestamp_average = 1550235205.3
-    assert (stats['timestamp'] == pytest.approx(utc_timestamp_average),
-            "The timestamp of a cluster has to be the average timestamp of its nodes")
+    assert stats['timestamp'] == pytest.approx(utc_timestamp_average),\
+        "The timestamp of a cluster has to be the average timestamp of its nodes"
 
 
 def test_node_timestamps_non_utc():
@@ -39,5 +39,5 @@ def test_node_timestamps_non_utc():
     ]
     stats = cluster_stats(node_names, stat_time_formatted)
     utc_timestamp_average = 1551429894.7
-    assert (stats['timestamp'] == pytest.approx(utc_timestamp_average),
-            "The timestamp of a cluster has to be the average timestamp of its nodes")
+    assert stats['timestamp'] == pytest.approx(utc_timestamp_average),\
+        "The timestamp of a cluster has to be the average timestamp of its nodes"

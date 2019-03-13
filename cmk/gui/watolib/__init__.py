@@ -139,8 +139,6 @@ from cmk.gui.watolib.host_attributes import (
     FixedTextAttribute,
     NagiosTextAttribute,
     EnumAttribute,
-    HostTagListAttribute,
-    HostTagCheckboxAttribute,
     NagiosValueSpecAttribute,
 )
 from cmk.gui.watolib.automations import (

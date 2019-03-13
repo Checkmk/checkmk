@@ -26,6 +26,7 @@
 """Helper functions for dealing with Check_MK tags"""
 
 import re
+import abc
 
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError
@@ -43,6 +44,7 @@ def parse_hosttag_title(title):
     return None, title
 
 
+# TODO: Cleanup all call sites
 def group_hosttags_by_topic(hosttags):
     tags = {}
     for entry in hosttags:
@@ -62,6 +64,8 @@ def _validate_tag_id(tag_id, varname):
 
 
 class Hosttag(object):
+    __metaclass__ = abc.ABCMeta
+
     def __init__(self):
         super(Hosttag, self).__init__()
         self._initialize()
@@ -259,6 +263,10 @@ class HosttagGroup(object):
         for tag in tag_list:
             self.tags.append(GroupedHosttag(self, tag))
 
+    @property
+    def is_checkbox_tag_group(self):
+        return len(self.tags) == 1
+
     def get_tag_ids(self):
         return {tag.id for tag in self.tags}
 
@@ -331,6 +339,13 @@ class HosttagsConfiguration(object):
                 names.add((topic, topic))
         # TODO: Return sorted?
         return list(names)
+
+    def get_tag_groups_by_topic(self):
+        by_topic = {}
+        for tag_group in self.tag_groups:
+            topic = tag_group.topic or _('Host tags')
+            by_topic.setdefault(topic, []).append(tag_group)
+        return sorted(by_topic.items(), key=lambda x: x[0])
 
     def tag_group_exists(self, tag_group_id):
         return self.get_tag_group(tag_group_id) is not None

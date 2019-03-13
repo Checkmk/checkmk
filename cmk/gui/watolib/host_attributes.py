@@ -41,7 +41,6 @@ from cmk.gui.valuespec import (
     Checkbox,
     DropdownChoice,
 )
-from cmk.gui.tags import group_hosttags_by_topic
 from cmk.gui.watolib.utils import host_attribute_matches
 
 
@@ -562,39 +561,27 @@ def _clear_config_based_host_attributes():
 
 
 def _declare_host_tag_attributes():
-    for topic, grouped_tags in group_hosttags_by_topic(config.host_tag_groups()):
-        for entry in grouped_tags:
-            # if the entry has o fourth component, then its
-            # the tag dependency defintion.
-            depends_on_tags = []
-            depends_on_roles = []
-            attr_editable = True
-            if len(entry) >= 6:
-                attr_editable = entry[5]
-            if len(entry) >= 5:
-                depends_on_roles = entry[4]
-            if len(entry) >= 4:
-                depends_on_tags = entry[3]
-
-            if not topic:
-                topic = _('Host tags')
-
-            if len(entry[2]) == 1:
-                vs = HostTagCheckboxAttribute(*entry[:3])
-            else:
-                vs = HostTagListAttribute(*entry[:3])
-
+    for topic, tag_groups in config.tags.get_tag_groups_by_topic():
+        for tag_group in tag_groups:
             declare_host_attribute(
-                vs,
+                _create_tag_group_attribute(tag_group),
                 show_in_table=False,
                 show_in_folder=True,
-                editable=attr_editable,
-                depends_on_tags=depends_on_tags,
-                depends_on_roles=depends_on_roles,
                 # TODO: We need to adapt the tag data structure to contain topic IDs
                 topic=_transform_attribute_topic_title_to_id(topic),
                 from_config=True,
             )
+
+
+def _create_tag_group_attribute(tag_group):
+    if tag_group.is_checkbox_tag_group:
+        base_class = ABCHostAttributeHostTagCheckbox
+    else:
+        base_class = ABCHostAttributeHostTagList
+
+    return type("HostAttributeTag%s" % tag_group.id.title(), (base_class,), {
+        "_tag_group": tag_group,
+    })
 
 
 def declare_custom_host_attrs():
@@ -822,43 +809,37 @@ class ABCHostAttributeTag(ABCHostAttributeValueSpec):
         raise NotImplementedError()
 
     @abc.abstractproperty
-    def _tag_id(self):
-        raise NotImplementedError()
-
-    @abc.abstractproperty
-    def _taglist(self):
+    def _tag_group(self):
         raise NotImplementedError()
 
     def name(self):
-        return "tag_%s" % self._tag_id
+        return "tag_%s" % self._tag_group.id
 
     @property
     def is_tag_attribute(self):
         return True
 
-    def _get_tag_choices(self, tag_list):
-        return [(e[0], _u(e[1])) for e in tag_list]
-
     # TODO: Can we move this to some other place?
     def get_tag_value(self, tags):
         """Special function for computing the setting of a specific
         tag group from the total list of tags of a host"""
-        for entry in self._taglist:
-            if entry[0] in tags:
-                return entry[0]
+        for grouped_tag in self._tag_group.tags:
+            if grouped_tag.id in tags:
+                return grouped_tag.id
         return None
 
     # TODO: Can we move this to some other place?
     def get_tag_list(self, value):
         """Return list of host tags to set (handles secondary tags)"""
-        for entry in self._taglist:
-            if entry[0] == value:
-                if len(entry) >= 3:
-                    taglist = [value] + entry[2]
-                else:
-                    taglist = [value]
-                if taglist[0] is None:
-                    taglist = taglist[1:]
+        for grouped_tag in self._tag_group.tags:
+            if grouped_tag.id == value:
+                taglist = []
+
+                if grouped_tag.id is not None:
+                    taglist.append(grouped_tag.id)
+
+                taglist += grouped_tag.aux_tag_ids
+
                 return taglist
         return []  # No matching tag
 
@@ -867,10 +848,11 @@ class ABCHostAttributeHostTagList(ABCHostAttributeTag):
     """A selection dropdown for a host tag"""
 
     def valuespec(self):
+        choices = self._tag_group.get_tag_choices()
         return DropdownChoice(
-            title=self.title(),
-            choices=self._get_tag_choices(self._taglist),
-            default_value=self._taglist[0][0],
+            title=self._tag_group.title,
+            choices=choices,
+            default_value=choices[0][0],
             on_change="cmk.wato.fix_visibility();",
             encode_value=False,
         )
@@ -888,11 +870,12 @@ class ABCHostAttributeHostTagCheckbox(ABCHostAttributeTag):
     """A checkbox for a host tag group"""
 
     def valuespec(self):
+        choice = self._tag_group.get_tag_choices()[0]
         return Checkbox(
-            title=self.title(),
-            label=_u(self._taglist[0][1]),
-            true_label=self.title(),
-            false_label="%s %s" % (_("Not"), self.title()),
+            title=self._tag_group.title,
+            label=_u(choice[1]),
+            true_label=self._tag_group.title,
+            false_label="%s %s" % (_("Not"), self._tag_group.title),
             onclick="cmk.wato.fix_visibility();",
         )
 
@@ -905,7 +888,7 @@ class ABCHostAttributeHostTagCheckbox(ABCHostAttributeTag):
 
     def from_html_vars(self, varprefix):
         if super(ABCHostAttributeHostTagCheckbox, self).from_html_vars(varprefix):
-            return self._taglist[0][0]
+            return self._tag_group.get_tag_choices()[0][0]
         return None
 
 
@@ -1009,27 +992,6 @@ def NagiosValueSpecAttribute(name, nag_name, vs):
             "_nagios_name": nag_name,
             "nagios_name": lambda self: self._nagios_name,
         })
-
-
-# TODO: Kept for pre 1.6 plugin compatibility
-def HostTagListAttribute(tag_id, title, tag_list):
-    return type("HostAttributeHostTagList%s" % tag_id.title(), (ABCHostAttributeHostTagList,), {
-        "_title": title,
-        "title": lambda self: self._title,
-        "_tag_id": tag_id,
-        "_taglist": tag_list,
-    })
-
-
-# TODO: Kept for pre 1.6 plugin compatibility
-def HostTagCheckboxAttribute(tag_id, title, tag_list):
-    return type("HostAttributeHostTagCheckbox%s" % tag_id.title(),
-                (ABCHostAttributeHostTagCheckbox,), {
-                    "_title": title,
-                    "title": lambda self: self._title,
-                    "_tag_id": tag_id,
-                    "_taglist": tag_list,
-                })
 
 
 # TODO: Kept for pre 1.6 plugin compatibility

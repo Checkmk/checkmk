@@ -267,6 +267,10 @@ class HosttagGroup(object):
     def is_checkbox_tag_group(self):
         return len(self.tags) == 1
 
+    @property
+    def default_value(self):
+        return self.tags[0].id
+
     def get_tag_ids(self):
         return {tag.id for tag in self.tags}
 
@@ -331,14 +335,18 @@ class HosttagsConfiguration(object):
             return "%s/%s" % (entity.topic, entity.title)
         return entity.title
 
-    def get_hosttag_topics(self):
+    def get_topic_choices(self):
         names = set([])
         for tag_group in self.tag_groups:
             topic = tag_group.topic
             if topic:
                 names.add((topic, topic))
-        # TODO: Return sorted?
-        return list(names)
+
+        for aux_tag in self.aux_tag_list.get_tags():
+            if aux_tag.topic:
+                names.add((aux_tag.topic, aux_tag.topic))
+
+        return sorted(list(names), key=lambda x: x[1])
 
     def get_tag_groups_by_topic(self):
         by_topic = {}
@@ -362,11 +370,25 @@ class HosttagsConfiguration(object):
         self.tag_groups.remove(group)
 
     def get_tag_group_choices(self):
-        return [(tg.id, tg.title) for tg in self.tag_groups]
+        return [(tg.id, self.get_merged_topic_and_title(tg)) for tg in self.tag_groups]
 
     # TODO: Clean this up and make call sites directly call the wrapped function
     def get_aux_tags(self):
         return self.aux_tag_list.get_tags()
+
+    def get_aux_tags_by_tag(self):
+        aux_tag_map = {}
+        for tag_group in self.tag_groups:
+            for grouped_tag in tag_group.tags:
+                aux_tag_map[grouped_tag.id] = grouped_tag.aux_tag_ids
+        return aux_tag_map
+
+    def get_aux_tags_by_topic(self):
+        by_topic = {}
+        for aux_tag in self.aux_tag_list.get_tags():
+            topic = aux_tag.topic or _('Host tags')
+            by_topic.setdefault(topic, []).append(aux_tag)
+        return sorted(by_topic.items(), key=lambda x: x[0])
 
     def get_tag_ids(self):
         """Returns the raw ids of the grouped tags and the aux tags"""

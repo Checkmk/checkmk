@@ -1665,7 +1665,7 @@ def configure_attributes(new,
         "check_attributes": list(
             set(dependency_mapping_tags.keys() + dependency_mapping_roles.keys() + hide_attributes)
         ),
-        "aux_tags_by_tag": _get_auxtags_by_tag(),
+        "aux_tags_by_tag": config.tags.get_aux_tags_by_tag(),
         "depends_on_tags": dependency_mapping_tags,
         "depends_on_roles": dependency_mapping_roles,
         "volatile_topics": volatile_topics,
@@ -1674,14 +1674,6 @@ def configure_attributes(new,
     }
     html.javascript("cmk.wato.prepare_edit_dialog(%s);"
                     "cmk.wato.fix_visibility();" % json.dumps(dialog_properties))
-
-
-def _get_auxtags_by_tag():
-    aux_tag_map = {}
-    for entry in config.host_tag_groups():
-        for tag_id, _tag_title, aux_tags in entry[2]:
-            aux_tag_map[tag_id] = aux_tags
-    return aux_tag_map
 
 
 # Check if at least one host in a folder (or its subfolders)
@@ -1791,28 +1783,28 @@ class HostTagCondition(ValueSpec):
         """Retrieve current tag condition settings from HTML variables"""
         if varprefix:
             varprefix += "_"
+
         # Main tags
         tag_list = []
-        for entry in config.host_tag_groups():
-            id_, _title, tags = entry[:3]
-            mode = html.request.var(varprefix + "tag_" + id_)
-            if len(tags) == 1:
-                tagvalue = tags[0][0]
+        for tag_group in config.tags.tag_groups:
+            if tag_group.is_checkbox_tag_group:
+                tagvalue = tag_group.default_value
             else:
-                tagvalue = html.request.var(varprefix + "tagvalue_" + id_)
+                tagvalue = html.request.var(varprefix + "tagvalue_" + tag_group.id)
 
+            mode = html.request.var(varprefix + "tag_" + tag_group.id)
             if mode == "is":
                 tag_list.append(tagvalue)
             elif mode == "isnot":
                 tag_list.append("!" + tagvalue)
 
         # Auxiliary tags
-        for id_, _title in config.aux_tags():
-            mode = html.request.var(varprefix + "auxtag_" + id_)
+        for aux_tag in config.tags.aux_tag_list.get_tags():
+            mode = html.request.var(varprefix + "auxtag_" + aux_tag.id)
             if mode == "is":
-                tag_list.append(id_)
+                tag_list.append(aux_tag.id)
             elif mode == "isnot":
-                tag_list.append("!" + id_)
+                tag_list.append("!" + aux_tag.id)
 
         return tag_list
 
@@ -1842,111 +1834,103 @@ class HostTagCondition(ValueSpec):
         if varprefix:
             varprefix += "_"
 
-        if not config.aux_tags() + config.host_tag_groups():
+        if not config.tags.get_tag_ids():
             html.write(_("You have not configured any <a href=\"wato.py?mode=tags\">tags</a>."))
             return
 
-        # Determine current (default) setting of tag by looking
-        # into tag_specs (e.g. [ "snmp", "!tcp", "test" ] )
-        def current_tag_setting(choices):
-            default_tag = None
-            ignore = True
-            for t in tag_specs:
-                if t[0] == '!':
-                    n = True
-                    t = t[1:]
-                else:
-                    n = False
-                if t in [x[0] for x in choices]:
-                    default_tag = t
-                    ignore = False
-                    negate = n
-            if ignore:
-                deflt = "ignore"
-            elif negate:
-                deflt = "isnot"
-            else:
-                deflt = "is"
-            return default_tag, deflt
+        tag_groups_by_topic = dict(config.tags.get_tag_groups_by_topic())
+        aux_tags_by_topic = dict(config.tags.get_aux_tags_by_topic())
 
-        # Show dropdown with "is/isnot/ignore" and beginning
-        # of div that is switched visible by is/isnot
-        def tag_condition_dropdown(tagtype, deflt, id_):
-            html.open_td()
-            dropdown_id = varprefix + tagtype + "_" + id_
-            onchange = "cmk.valuespecs.toggle_tag_dropdown(this, '%stag_sel_%s');" % (varprefix,
-                                                                                      id_)
-            choices = [
-                ("ignore", _("ignore")),
-                ("is", _("is")),
-                ("isnot", _("isnot")),
-            ]
-            html.dropdown(dropdown_id, choices, deflt=deflt, onchange=onchange)
-            html.close_td()
-
-            html.open_td(class_="tag_sel")
-            if html.form_submitted():
-                div_is_open = html.request.var(dropdown_id, "ignore") != "ignore"
-            else:
-                div_is_open = deflt != "ignore"
-            html.open_div(
-                id_="%stag_sel_%s" % (varprefix, id_),
-                style="display: none;" if not div_is_open else None)
-
-        auxtags = group_hosttags_by_topic(config.aux_tags())
-        hosttags = group_hosttags_by_topic(config.host_tag_groups())
-        all_topics = set([])
-        for topic, _taggroups in auxtags + hosttags:
-            all_topics.add(topic)
-        all_topics = list(all_topics)
-        all_topics.sort()
+        all_topics = config.tags.get_topic_choices()
         make_foldable = len(all_topics) > 1
-        for topic in all_topics:
+
+        for topic_id, topic_title in all_topics:
             if make_foldable:
-                html.begin_foldable_container("topic", varprefix + topic, True,
-                                              HTML("<b>%s</b>" % (_u(topic))))
+                html.begin_foldable_container("topic", varprefix + topic_title, True,
+                                              HTML("<b>%s</b>" % (_u(topic_title))))
             html.open_table(class_=["hosttags"])
 
-            # Show main tags
-            for t, grouped_tags in hosttags:
-                if t == topic:
-                    for entry in grouped_tags:
-                        id_, title, choices = entry[:3]
-                        html.open_tr()
-                        html.open_td(class_="title")
-                        html.write("%s: &nbsp;" % _u(title))
-                        html.close_td()
-                        default_tag, deflt = current_tag_setting(choices)
-                        tag_condition_dropdown("tag", deflt, id_)
-                        if len(choices) == 1:
-                            html.write_text(" " + _("set"))
-                        else:
-                            html.dropdown(
-                                varprefix + "tagvalue_" + id_,
-                                [(t[0], _u(t[1])) for t in choices if t[0] is not None],
-                                deflt=default_tag)
-                        html.close_div()
-                        html.close_td()
-                        html.close_tr()
+            for tag_group in tag_groups_by_topic.get(topic_id, []):
+                html.open_tr()
+                html.open_td(class_="title")
+                html.write("%s: &nbsp;" % _u(tag_group.title))
+                html.close_td()
 
-            # And auxiliary tags
-            for t, grouped_tags in auxtags:
-                if t == topic:
-                    for id_, title in grouped_tags:
-                        html.open_tr()
-                        html.open_td(class_="title")
-                        html.write("%s: &nbsp;" % _u(title))
-                        html.close_td()
-                        default_tag, deflt = current_tag_setting([(id_, _u(title))])
-                        tag_condition_dropdown("auxtag", deflt, id_)
-                        html.write_text(" " + _("set"))
-                        html.close_div()
-                        html.close_td()
-                        html.close_tr()
+                choices = tag_group.get_tag_choices()
+                default_tag, deflt = self._current_tag_setting(choices, tag_specs)
+                self._tag_condition_dropdown(varprefix, "tag", deflt, tag_group.id)
+                if tag_group.is_checkbox_tag_group:
+                    html.write_text(" " + _("set"))
+                else:
+                    html.dropdown(
+                        varprefix + "tagvalue_" + tag_group.id,
+                        [(t[0], _u(t[1])) for t in choices if t[0] is not None],
+                        deflt=default_tag)
+
+                html.close_div()
+                html.close_td()
+                html.close_tr()
+
+            for aux_tag in aux_tags_by_topic.get(topic_id, []):
+                html.open_tr()
+                html.open_td(class_="title")
+                html.write("%s: &nbsp;" % _u(aux_tag.title))
+                html.close_td()
+                default_tag, deflt = self._current_tag_setting([(aux_tag.id, _u(aux_tag.title))],
+                                                               tag_specs)
+                self._tag_condition_dropdown(varprefix, "auxtag", deflt, aux_tag.id)
+                html.write_text(" " + _("set"))
+                html.close_div()
+                html.close_td()
+                html.close_tr()
 
             html.close_table()
             if make_foldable:
                 html.end_foldable_container()
+
+    def _current_tag_setting(self, choices, tag_specs):
+        """Determine current (default) setting of tag by looking into tag_specs (e.g. [ "snmp", "!tcp", "test" ] )"""
+        default_tag = None
+        ignore = True
+        for t in tag_specs:
+            if t[0] == '!':
+                n = True
+                t = t[1:]
+            else:
+                n = False
+            if t in [x[0] for x in choices]:
+                default_tag = t
+                ignore = False
+                negate = n
+        if ignore:
+            deflt = "ignore"
+        elif negate:
+            deflt = "isnot"
+        else:
+            deflt = "is"
+        return default_tag, deflt
+
+    def _tag_condition_dropdown(self, varprefix, tagtype, deflt, id_):
+        """Show dropdown with "is/isnot/ignore" and beginning of div that is switched visible by is/isnot"""
+        html.open_td()
+        dropdown_id = varprefix + tagtype + "_" + id_
+        onchange = "cmk.valuespecs.toggle_tag_dropdown(this, '%stag_sel_%s');" % (varprefix, id_)
+        choices = [
+            ("ignore", _("ignore")),
+            ("is", _("is")),
+            ("isnot", _("isnot")),
+        ]
+        html.dropdown(dropdown_id, choices, deflt=deflt, onchange=onchange)
+        html.close_td()
+
+        html.open_td(class_="tag_sel")
+        if html.form_submitted():
+            div_is_open = html.request.var(dropdown_id, "ignore") != "ignore"
+        else:
+            div_is_open = deflt != "ignore"
+        html.open_div(
+            id_="%stag_sel_%s" % (varprefix, id_),
+            style="display: none;" if not div_is_open else None)
 
 
 def transform_simple_to_multi_host_rule_match_conditions(value):

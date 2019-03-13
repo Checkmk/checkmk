@@ -2426,26 +2426,19 @@ class FilterHostTags(Filter):
         Filter.__init__(self, info='host', htmlvars=htmlvars, link_columns=[])
 
     def display(self):
-        groups = [(e[0], e[1].lstrip("/")) for e in config.host_tag_groups()]
+        groups = config.tags.get_tag_group_choices()
         operators = [
             ("is", "="),
             ("isnot", u"≠"),
         ]
 
-        # replace unicode strings, before writing out as "json"
         grouped = {}
-        for entry in config.host_tag_groups():
-            grouped.setdefault(entry[0], [["", ""]])
+        for tag_group in config.tags.tag_groups:
+            grouped.setdefault(tag_group.id, [["", ""]])
 
-            for tag_entry in entry[2]:
-                tag = tag_entry[0]
-                title = tag_entry[1]
-                if tag is None:
-                    tag = ''
-
-                # if type(title) == unicode:
-                #     title = title.encode("utf-8")
-                grouped[entry[0]].append([tag, title])
+            for grouped_tag in tag_group.tags:
+                tag_id = "" if grouped_tag.id is None else grouped_tag.id
+                grouped[tag_group.id].append([tag_id, grouped_tag.title])
 
         html.javascript('cmk.utils.set_host_tag_groups(%s);' % json.dumps(grouped))
         html.open_table()
@@ -2498,19 +2491,18 @@ class FilterHostTags(Filter):
                 else:
                     # empty host tag. Darn. We need to create a filter that excludes all other host tags
                     # of the group
-                    group = html.request.var(prefix + '_grp')
-                    grouptags = None
-                    for entry in config.host_tag_groups():
-                        if entry[0] == group:  # found our group
-                            grouptags = [x[0] for x in entry[2] if x[0]]
-                            break
-                    if grouptags:  # should never be empty, but maybe faked URL
-                        for tag in grouptags:
-                            headers.append(self.hosttag_filter(False, tag))
-                        if len(grouptags) > 1:
-                            headers.append("Or: %d" % len(grouptags))
-                        if op == "is":
-                            headers.append("Negate:")
+                    tag_group = config.tags.get_tag_group(html.request.var(prefix + '_grp'))
+                    if tag_group:
+                        grouptags = [t for t in tag_group.get_tag_ids() if t]
+                        if grouptags:
+                            for tag in grouptags:
+                                headers.append(self.hosttag_filter(False, tag))
+
+                            if len(grouptags) > 1:
+                                headers.append("Or: %d" % len(grouptags))
+
+                            if op == "is":
+                                headers.append("Negate:")
 
             num += 1
 

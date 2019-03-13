@@ -112,7 +112,8 @@ register_configvar(group,
     Transform(
         DropdownChoice(
             choices=[
-                    (20, _("Normal logging")),
+                    (20, _("Minimal logging")),
+                    (15, _("Normal logging")),
                     (10, _("Full dump of all variables and command")),
             ],
         ),

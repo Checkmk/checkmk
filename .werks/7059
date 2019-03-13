@@ -1,0 +1,22 @@
+Title: Add an option to reduce the logging in the notify.log
+Level: 1
+Component: notifications
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0p13
+Date: 1550494196
+
+By default two lines are added for every notification rule in the
+notify.log. They contain a short description of the rule and
+information why the rule does or does not match. In setups with
+a large number of notification rules this may result in up to
+hundreds of lines in the notify.log for every incoming raw
+notification. To optionally reduce the amount of logging this
+werk introduces a new log level that only adds lines for matching
+rules. The new option can be selected in the Global Settings under
+"Notification log level". Be aware that with this option the
+notify.log does not conain information about rules which do not
+match which makes it much harder to analyze why a certain rule
+did not match retrospectively.

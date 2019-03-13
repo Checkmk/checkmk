@@ -135,10 +135,5 @@ def test_get_rrd_data_fails(cfg_setup):
     step, data = cmk.utils.prediction.get_rrd_data(
         'test-prediction', 'CPU load', 'untracked_prefdata', 'MAX', from_time, until_time)
 
-    # The worst resolution in an rrd file is 6 hours, because query always
-    # replies. step is a huge number which meaning I don't understand but
-    # is not constant and is not the timestamp. Thus only test is higher
-    # that worst resolution, and that no data comes out.
-
-    assert step > 3600 * 6
+    assert step == 0
     assert data == []

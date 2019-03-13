@@ -1,0 +1,12 @@
+Title: check_smtp: Float warning / critical thresholds can now be configured using the GUI
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0i1
+Date: 1552466701
+
+The active check check_smtp already supported floating point warning and critical
+thresholds, but the GUI only accepted integral numbers.

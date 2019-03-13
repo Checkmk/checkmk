@@ -5,12 +5,6 @@ import pytest  # type: ignore
 import cmk.gui.wato  # pylint: disable=unused-import
 import cmk.gui.watolib.host_attributes as attrs
 
-
-@pytest.fixture()
-def load_plugins(register_builtin_html):
-    attrs.update_config_based_host_attributes()
-
-
 expected_attributes = {
     'additional_ipv4addresses': {
         'class_name': 'ValueSpecAttribute',
@@ -246,10 +240,58 @@ expected_attributes = {
         'show_inherited_value': True,
         'topic': u'Basic settings',
     },
+    'tag_address_family': {
+        'depends_on_roles': [],
+        'depends_on_tags': [],
+        'editable': True,
+        'from_config': True,
+        'show_in_folder': True,
+        'show_in_form': True,
+        'show_in_host_search': True,
+        'show_in_table': False,
+        'show_inherited_value': True,
+        'topic': u'Address'
+    },
+    'tag_agent': {
+        'depends_on_roles': [],
+        'depends_on_tags': [],
+        'editable': True,
+        'from_config': True,
+        'show_in_folder': True,
+        'show_in_form': True,
+        'show_in_host_search': True,
+        'show_in_table': False,
+        'show_inherited_value': True,
+        'topic': u'Data sources'
+    },
+    'tag_snmp': {
+        'depends_on_roles': [],
+        'depends_on_tags': [],
+        'editable': True,
+        'from_config': True,
+        'show_in_folder': True,
+        'show_in_form': True,
+        'show_in_host_search': True,
+        'show_in_table': False,
+        'show_inherited_value': True,
+        'topic': u'Data sources'
+    },
+    'tag_piggyback': {
+        'depends_on_roles': [],
+        'depends_on_tags': [],
+        'editable': True,
+        'from_config': True,
+        'show_in_folder': True,
+        'show_in_form': True,
+        'show_in_host_search': True,
+        'show_in_table': False,
+        'show_inherited_value': True,
+        'topic': u'Data sources'
+    },
 }
 
 
-def test_registered_host_attributes():
+def test_registered_host_attributes(load_config):
     names = attrs.host_attribute_registry.keys()
     assert sorted(expected_attributes.keys()) == sorted(names)
 
@@ -367,7 +409,7 @@ def test_custom_host_attribute_transform(old, new):
     assert transformed_attributes[0]["topic"] == new
 
 
-@pytest.mark.usefixtures("load_plugins", "load_config")
+@pytest.mark.usefixtures("load_config")
 @pytest.mark.parametrize("for_what", [
     "host",
     "cluster",
@@ -384,7 +426,7 @@ def test_host_attribute_topics(for_what):
     ]
 
 
-@pytest.mark.usefixtures("load_plugins", "load_config")
+@pytest.mark.usefixtures("load_config")
 def test_host_attribute_topics_for_folders():
     assert attrs.get_sorted_host_attribute_topics("folder") == [
         ("basic", u"Basic settings"),
@@ -396,7 +438,7 @@ def test_host_attribute_topics_for_folders():
     ]
 
 
-@pytest.mark.usefixtures("load_plugins", "load_config")
+@pytest.mark.usefixtures("load_config")
 @pytest.mark.parametrize("for_what", [
     "host",
     "cluster",

@@ -146,14 +146,14 @@ def _validate_general_host_attributes(host_attributes):
 
 # Check if the tag group exists and the tag value is valid
 def _validate_host_tags(host_tags):
-    for key, value in host_tags.items():
-        for group_entry in config.host_tag_groups():
-            if group_entry[0] == key:
-                for value_entry in group_entry[2]:
-                    if value_entry[0] == value:
+    for tag_group_id, tag_id in host_tags.items():
+        for tag_group in config.tags.tag_groups:
+            if tag_group.id == tag_group_id:
+                for grouped_tag in tag_group.tags:
+                    if grouped_tag.id == tag_id:
                         break
                 else:
-                    raise MKUserError(None, _("Unknown host tag %s") % html.attrencode(value))
+                    raise MKUserError(None, _("Unknown tag %s") % html.attrencode(tag_id))
                 break
         else:
-            raise MKUserError(None, _("Unknown host tag group %s") % html.attrencode(key))
+            raise MKUserError(None, _("Unknown tag group %s") % html.attrencode(tag_group_id))

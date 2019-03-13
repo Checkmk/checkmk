@@ -5143,12 +5143,17 @@ class PainterHostTagsWithTitles(Painter):
     def render(self, row, cell):
         output = ''
         misc_tags = []
-        for tag in get_host_tags(row).split():
-            group_title = config.tag_group_title(tag)
-            if group_title:
-                output += group_title + ': ' + (config.tag_alias(tag) or tag) + '<br />\n'
-            else:
-                misc_tags.append(tag)
+        for tag_id in get_host_tags(row).split():
+            tag = config.tags.get_tag_or_aux_tag(tag_id)
+            if not tag:
+                misc_tags.append(tag_id)
+                continue
+
+            if tag.is_aux_tag:
+                misc_tags.append(tag.title)
+                continue
+
+            output += tag.group.title + ': ' + tag.title + '<br />\n'
 
         if misc_tags:
             output += _('Misc:') + ' ' + ', '.join(misc_tags)

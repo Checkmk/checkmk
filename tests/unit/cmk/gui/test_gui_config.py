@@ -1,4 +1,5 @@
 # encoding: utf-8
+# pylint: disable=redefined-outer-name
 
 import json
 import six
@@ -809,3 +810,47 @@ def test_html_set_theme(my_theme, register_builtin_html):
 
     html.set_theme("my_theme")
     assert html.get_theme() == "my_theme"
+
+
+@pytest.mark.usefixtures("load_config")
+def test_default_tags():
+    groups = {
+        "snmp": [
+            'no-snmp',
+            'snmp-v1',
+            'snmp-v2',
+        ],
+        "address_family": [
+            'ip-v4-only',
+            'ip-v4v6',
+            'ip-v6-only',
+            'no-ip',
+        ],
+        "piggyback": [
+            None,
+            "piggyback",
+            "no-piggyback",
+        ],
+        "agent": [
+            'all-agents',
+            'cmk-agent',
+            'no-agent',
+            'special-agents',
+        ],
+    }
+
+    assert sorted(dict(config.tags.get_tag_group_choices()).keys()) == sorted(groups.keys())
+
+    for tag_group in config.tags.tag_groups:
+        assert sorted(tag_group.get_tag_ids()) == sorted(groups[tag_group.id])
+
+
+@pytest.mark.usefixtures("load_config")
+def test_default_aux_tags():
+    assert sorted(config.tags.aux_tag_list.get_tag_ids()) == sorted([
+        'ip-v4',
+        'ip-v6',
+        'ping',
+        'snmp',
+        'tcp',
+    ])

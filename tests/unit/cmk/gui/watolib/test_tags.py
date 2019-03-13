@@ -7,7 +7,6 @@ from pathlib2 import Path
 from cmk.gui.exceptions import MKUserError
 
 import cmk.gui.watolib.utils
-import cmk.gui.config as config
 import cmk.gui.tags as tags
 import cmk.gui.watolib.tags
 from cmk.gui.watolib.tags import TagConfigFile
@@ -17,6 +16,7 @@ from cmk.gui.watolib.tags import TagConfigFile
 def test_cfg(monkeypatch):
     multisite_dir = Path(cmk.gui.watolib.utils.multisite_dir())
     multisite_dir.mkdir(parents=True, exist_ok=True)
+    tags_mk = multisite_dir / "tags.mk"
     hosttags_mk = multisite_dir / "hosttags.mk"
 
     with hosttags_mk.open("w", encoding="utf-8") as f:  # pylint: disable=no-member
@@ -38,6 +38,12 @@ wato_host_tags += [
 
 wato_aux_tags += [("bla", u"bläää")]
 """)
+
+    yield
+    if hosttags_mk.exists():  # pylint: disable=no-member
+        hosttags_mk.unlink()  # pylint: disable=no-member
+    if tags_mk.exists():  # pylint: disable=no-member
+        tags_mk.unlink()  # pylint: disable=no-member
 
 
 def test_tag_config():

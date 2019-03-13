@@ -54,7 +54,6 @@ from cmk.gui.plugins.views.utils import (
     get_graph_timerange_from_painter_options,
     get_host_tags,
     get_perfdata_nth_value,
-    get_tag_group,
     group_value,
     inventory_displayhints,
     is_stale,

@@ -1168,20 +1168,6 @@ def get_perfdata_nth_value(row, n, remove_unit=False):
         return str(e)
 
 
-# Get the definition of a tag group
-# TODO: Refactor to caching object
-_taggroups_by_id = {}
-
-
-def get_tag_group(tgid):
-    # Build a cache
-    if not _taggroups_by_id:
-        for entry in config.host_tag_groups():
-            _taggroups_by_id[entry[0]] = (entry[1], entry[2])
-
-    return _taggroups_by_id.get(tgid, (_("N/A"), []))
-
-
 # Retrieve data via livestatus, convert into list of dicts,
 # prepare row-function needed for painters
 # datasource: the datasource object as defined in plugins/views/datasources.py

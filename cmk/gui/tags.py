@@ -95,6 +95,8 @@ class Hosttag(object):
 
 
 class AuxTag(Hosttag):
+    is_aux_tag = True
+
     def __init__(self, data=None):
         super(AuxTag, self).__init__()
         self.topic = None
@@ -198,8 +200,11 @@ class BuiltinAuxtagList(AuxtagList):
 
 
 class GroupedHosttag(Hosttag):
-    def __init__(self, data=None):
+    is_aux_tag = False
+
+    def __init__(self, group, data=None):
         super(GroupedHosttag, self).__init__()
+        self.group = group
         self.aux_tag_ids = []
         self.parse_config(data)
 
@@ -242,7 +247,7 @@ class HosttagGroup(object):
         self.id = group_info["id"]
         self.title = group_info["title"]
         self.topic = group_info.get("topic")
-        self.tags = [GroupedHosttag(tag) for tag in group_info["tags"]]
+        self.tags = [GroupedHosttag(self, tag) for tag in group_info["tags"]]
 
     def _parse_legacy_format(self, group_info):
         self._initialize()
@@ -252,7 +257,7 @@ class HosttagGroup(object):
         self.topic, self.title = HosttagsConfiguration.parse_hosttag_title(group_title)
 
         for tag in tag_list:
-            self.tags.append(GroupedHosttag(tag))
+            self.tags.append(GroupedHosttag(self, tag))
 
     def get_tag_ids(self):
         return {tag.id for tag in self.tags}
@@ -341,8 +346,8 @@ class HosttagsConfiguration(object):
             return
         self.tag_groups.remove(group)
 
-    #def get_tag_group_choices(self):
-    #    return [(tg.id, tg.title) for tg in self.tag_groups]
+    def get_tag_group_choices(self):
+        return [(tg.id, tg.title) for tg in self.tag_groups]
 
     # TODO: Clean this up and make call sites directly call the wrapped function
     def get_aux_tags(self):
@@ -373,6 +378,16 @@ class HosttagsConfiguration(object):
             self._parse_legacy_format(data[0], data[1])
 
         self.validate_config()
+
+    def get_tag_or_aux_tag(self, tag_id):
+        for tag_group in self.tag_groups:
+            for grouped_tag in tag_group.tags:
+                if grouped_tag.id == tag_id:
+                    return grouped_tag
+
+        for aux_tag in self.aux_tag_list.get_tags():
+            if aux_tag.id == tag_id:
+                return aux_tag
 
     def _parse_from_dict(self, tag_info):  # new style
         for tag_group in tag_info["tag_groups"]:

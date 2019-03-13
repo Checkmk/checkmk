@@ -721,20 +721,17 @@ class ConfigVariableVirtualHostTrees(ConfigVariable):
         #  - contain at least two entries
         choices = []
         by_topic = {}
-        for entry in config.host_tag_groups():
-            tgid = entry[0]
-            topic, tit = cmk.gui.tags.parse_hosttag_title(entry[1])
-            choices.append((tgid, tit))
-            by_topic.setdefault(topic, []).append(entry)
+        for tag_group in config.tags.tag_groups:
+            choices.append((tag_group.id, tag_group.title))
+            by_topic.setdefault(tag_group.topic, []).append(tag_group)
 
         # Now search for checkbox-only-topics
-        for topic, entries in by_topic.items():
-            for entry in entries:
-                tgid, _title, tags = entry[:3]
-                if len(tags) != 1:
+        for topic, tag_groups in by_topic.items():
+            for tag_group in tag_groups:
+                if len(tag_group.tags) != 1:
                     break
             else:
-                if len(entries) > 1:
+                if len(tag_groups) > 1:
                     choices.append((
                         "topic:" + topic,
                         _("Topic") + ": " + topic,

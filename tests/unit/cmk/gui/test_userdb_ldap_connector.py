@@ -4,7 +4,8 @@
 import pytest  # type: ignore
 from mockldap import MockLdap, LDAPObject
 
-from cmk.gui.valuespec import Dictionary
+# userdb is needed to make the module register the post-config-load-hooks
+import cmk.gui.userdb  # pylint: disable=unused-import
 import cmk.gui.plugins.userdb.ldap_connector as ldap
 import cmk.gui.plugins.userdb.utils as userdb_utils
 
@@ -19,68 +20,21 @@ def test_connector_registered():
     assert userdb_utils.user_connector_registry.get("ldap") == ldap.LDAPUserConnector
 
 
-expected_plugins = {
-    'alias': {
-        'help': u'Populates the alias attribute of the WATO user by synchronizing an attribute from the LDAP user account. By default the LDAP attribute <tt>cn</tt> is used.',
-        'parameters': [('attr', 'tuple')],
-        'title': u'Alias'
-    },
-    'auth_expire': {
-        'help': u'This plugin fetches all information which are needed to check whether or not an already authenticated user should be deauthenticated, e.g. because the password has changed in LDAP or the account has been locked.',
-        'multisite_attributes': ['ldap_pw_last_changed'],
-        'non_contact_attributes': ['ldap_pw_last_changed'],
-        'parameters': [('attr', 'tuple')],
-        'title': u'Authentication Expiration'
-    },
-    'email': {
-        'help': u'Synchronizes the email of the LDAP user account into Check_MK.',
-        'parameters': [('attr', 'tuple')],
-        'title': u'Email address'
-    },
-    'groups_to_attributes': {
-        'help': u'Sets custom user attributes based on the group memberships in LDAP. This plugin can be used to set custom user attributes to specified values for all users which are member of a group in LDAP. The specified group name must match the common name (CN) of the LDAP group.',
-        'parameters': [('nested', 'tuple'), ('other_connections', 'tuple'), ('groups', 'tuple')],
-        'required_parameters': ['groups'],
-        'title': u'Groups to custom user attributes'
-    },
-    'groups_to_contactgroups': {
-        'help': u'Adds the user to contactgroups based on the group memberships in LDAP. This plugin adds the user only to existing contactgroups while the name of the contactgroup must match the common name (cn) of the LDAP group.',
-        'parameters': [('nested', 'tuple'), ('other_connections', 'tuple')],
-        'title': u'Contactgroup Membership'
-    },
-    'groups_to_roles': {
-        'help': u'Configures the roles of the user depending on its group memberships in LDAP.<br><br>Please note: Additionally the user is assigned to the <a href="wato.py?mode=edit_configvar&varname=default_user_profile&site=&folder=">Default Roles</a>. Deactivate them if unwanted.',
-        'title': u'Roles'
-    },
-    'pager': {
-        'help': u'This plugin synchronizes a field of the users LDAP account to the pager attribute of the WATO user accounts, which is then forwarded to the monitoring core and can be usedfor notifications. By default the LDAP attribute <tt>mobile</tt> is used.',
-        'parameters': [('attr', 'tuple')],
-        'title': u'Pager'
-    },
-}
-
-
-def test_sync_plugins():
-    assert sorted(ldap.ldap_attribute_plugin_registry.keys()) == [
+def test_sync_plugins(load_config):
+    assert sorted(ldap.ldap_attribute_plugin_registry.keys()) == sorted([
         'alias',
         'auth_expire',
         'email',
         'groups_to_attributes',
         'groups_to_contactgroups',
         'groups_to_roles',
+        'disable_notifications',
+        'force_authuser',
+        'force_authuser_webservice',
         'pager',
-    ]
-
-
-def test_sync_plugin_attributes():
-    for plugin_class in ldap.ldap_attribute_plugin_registry.values():
-        plugin = plugin_class()
-        spec = expected_plugins[plugin.ident]
-
-        assert plugin.title == spec["title"]
-        assert plugin.help == spec["help"]
-        if "parameters" in spec:
-            assert isinstance(plugin.parameters(None), Dictionary)
+        'start_url',
+        'ui_theme',
+    ])
 
 
 def _ldap_tree():

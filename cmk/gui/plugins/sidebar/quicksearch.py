@@ -812,11 +812,9 @@ class HosttagMatchPlugin(QuicksearchMatchPlugin):
 
     def _get_hosttag_dict(self):
         lookup_dict = {}
-        for entry in config.host_tag_groups():
-            group, _text, values = entry[:3]
-
-            for value in values:
-                lookup_dict[value[0]] = group
+        for tag_group in config.tags.tag_groups:
+            for grouped_tag in tag_group.tags:
+                lookup_dict[grouped_tag.id] = tag_group.id
         return lookup_dict
 
     def get_match_topic(self):

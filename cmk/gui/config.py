@@ -1084,28 +1084,6 @@ def aux_tags():
     return tags.get_legacy_format()[1]
 
 
-# TODO: Replace this!
-def tag_alias(tag):
-    for entry in host_tag_groups():
-        tag_id, _title, tag_choices = entry[:3]
-        for t in tag_choices:
-            if t[0] == tag:
-                return t[1]
-
-    for tag_id, alias in aux_tags():
-        if tag_id == tag:
-            return alias
-
-
-# TODO: Replace this!
-def tag_group_title(tag):
-    for entry in host_tag_groups():
-        _tag_id, title, tag_choices = entry[:3]
-        for t in tag_choices:
-            if t[0] == tag:
-                return title
-
-
 #.
 #   .--Sites---------------------------------------------------------------.
 #   |                        ____  _ _                                     |

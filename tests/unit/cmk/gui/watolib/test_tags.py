@@ -81,7 +81,8 @@ def test_tag_config_get_hosttag_topics(test_cfg):
         }))
     cfg.tag_groups.append(tags.HosttagGroup(("tgid2", "Topics/titlor", [("tgid2", "tagid2", [])])))
 
-    assert sorted(cfg.get_hosttag_topics()) == sorted([("Topigzr", "Topigzr"), ("Topics", "Topics")])
+    assert sorted(cfg.get_hosttag_topics()) == sorted([("Topigzr", "Topigzr"), ("Topics",
+                                                                                "Topics")])
 
 
 def test_tag_config_remove_tag_group(test_cfg):
